@@ -3,7 +3,30 @@
   "version": "1.0.0",
   "private": true,
   "repository": "https://github.com/coilhq/raio",
+  "scripts": {
+    "lint": "eslint --max-warnings=0 --fix .",
+    "lint:current": "eslint --max-warnings=0 --fix $INIT_CWD",
+    "format": "prettier --write .",
+    "format:current": "prettier --write $INIT_CWD",
+    "test": "jest",
+    "test:current": "jest $INIT_CWD",
+    "postinstall": "husky install"
+  },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "devDependencies": {
+    "@commitlint/cli": "^12.1.1",
+    "@commitlint/config-conventional": "^12.1.1",
+    "@typescript-eslint/eslint-plugin": "^4.22.0",
+    "@typescript-eslint/parser": "^4.22.0",
+    "eslint": "^7.24.0",
+    "eslint-config-prettier": "^8.2.0",
+    "eslint-plugin-react": "^7.23.2",
+    "husky": ">=6",
+    "jest": "^26.6.3",
+    "lint-staged": ">=10",
+    "prettier": "2.2.1",
+    "typescript": "^4.2.4"
+  }
 }

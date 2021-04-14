@@ -4,7 +4,7 @@ This mono repo hosts the code for the raio project.
 
 ## Packages
 
-The mono repo makes use of yarn workspaces. 
+The mono repo makes use of yarn workspaces.
 
 ### Backend
 

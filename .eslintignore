@@ -1,0 +1,6 @@
+.yarn/*
+.pnp.js
+.next
+public
+generated
+dist

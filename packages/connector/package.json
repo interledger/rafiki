@@ -1,3 +1,7 @@
 {
-  "name": "connector"
+  "name": "connector",
+  "scripts": {
+    "lint": "yarn lint:current",
+    "format": "yarn format:current"
+  }
 }

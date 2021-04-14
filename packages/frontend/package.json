@@ -1,3 +1,7 @@
 {
-  "name": "frontend"
+  "name": "frontend",
+  "scripts": {
+    "lint": "yarn lint:current",
+    "format": "yarn format:current"
+  }
 }
