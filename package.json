@@ -1,0 +1,9 @@
+{
+  "name": "raio",
+  "version": "1.0.0",
+  "private": true,
+  "repository": "https://github.com/coilhq/raio",
+  "workspaces": [
+    "packages/*"
+  ]
+}
