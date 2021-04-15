@@ -5,11 +5,11 @@
   "repository": "https://github.com/coilhq/raio",
   "scripts": {
     "lint": "eslint --max-warnings=0 --fix .",
-    "lint:current": "eslint --max-warnings=0 --fix $INIT_CWD",
+    "lint:local": "eslint --max-warnings=0 --fix $INIT_CWD",
     "format": "prettier --write .",
-    "format:current": "prettier --write $INIT_CWD",
+    "format:local": "prettier --write $INIT_CWD",
     "test": "jest",
-    "test:current": "jest $INIT_CWD",
+    "test:local": "jest $INIT_CWD",
     "postinstall": "husky install"
   },
   "workspaces": [

@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "scripts": {
-    "lint": "yarn lint:current",
-    "format": "yarn format:current"
+    "lint": "yarn lint:local",
+    "format": "yarn format:local"
   }
 }
