@@ -26,7 +26,7 @@ which means you won't need to install dependencies when you clone the repo.
 This does have [security implications](https://yarnpkg.com/features/zero-installs)
 that are fairly easy to mitigate.
 
-> DO NOT use `npm install`, this will cause the project to spontaneous self-destruct.
+> DO NOT use `npm install`, this will cause the project to spontaneously self-destruct.
 
 ### Workspaces
 
@@ -99,8 +99,8 @@ Prettier config should not be overridden in any packages.
 ./jest.config.js # config
 ```
 
-Jest config at the route is intended to be a base config that should be extended by
-each package to suite the package's testing requirements.
+Jest config at the root is intended to be a base config that should be extended by
+each package to suit the package's testing requirements.
 
 #### Commit hooks
 
@@ -134,8 +134,8 @@ https://commitlint.js.org
 ./tsconfig.json # config
 ```
 
-Typescript config at the route is intended to be a base config that should be extended by
-each package to suite the package's requirements.
+Typescript config at the root is intended to be a base config that should be extended by
+each package to suit the package's requirements.
 
 ---
 
