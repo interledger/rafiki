@@ -2,6 +2,8 @@
   "name": "backend",
   "scripts": {
     "lint": "yarn lint:local",
-    "format": "yarn format:local"
+    "format": "yarn format:local",
+    "format:check": "yarn format:check:local",
+    "test": "yarn test:local"
   }
 }

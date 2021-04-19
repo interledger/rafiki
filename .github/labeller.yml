@@ -1,0 +1,10 @@
+# This file configures automatic labelling of pr's
+# Adds the 'backend' label if any files change in the backend directory
+backend:
+  - any: ['packages/backend/**/*']
+
+connector:
+  - any: ['packages/connector/**/*']
+
+frontend:
+  - any: ['packages/frontend/**/*']

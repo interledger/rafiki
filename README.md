@@ -11,6 +11,7 @@
       3. [Testing](#testing)
       4. [Commit hooks](#commit-hooks)
       5. [Language](#language)
+      6. [CI](#ci)
 2. [Packages](#packages)
    1. [Backend](#backend)
    2. [Connector](#connector)
@@ -23,7 +24,7 @@
 
 This project uses yarn 2. We use [zero-installs](https://yarnpkg.com/features/zero-installs)
 which means you won't need to install dependencies when you clone the repo.
-This does have [security implications](https://yarnpkg.com/features/zero-installs)
+This does have [security implications](https://yarnpkg.com/features/zero-installs#does-it-have-security-implications)
 that are fairly easy to mitigate.
 
 > DO NOT use `npm install`, this will cause the project to spontaneously self-destruct.
@@ -137,6 +138,12 @@ https://commitlint.js.org
 Typescript config at the root is intended to be a base config that should be extended by
 each package to suit the package's requirements.
 
+#### CI
+
+We use Github actions to manage our CI pipeline.
+
+The workflows can be found in `.github/workflows`
+
 ---
 
 ## Packages
@@ -152,6 +159,8 @@ TODO
 ### Frontend
 
 TODO
+
+---
 
 ## Owners
 

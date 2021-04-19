@@ -1,0 +1,62 @@
+on:
+  push:
+    branches: [!main]
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+name: Build, test, and lint non main branches
+
+jobs:
+  checkout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - uses: actions/cache@v2
+        id: cache-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
+  backend:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: yarn workspace backend lint
+      - run: yarn workspace backend format:check
+      - run: yarn workspace backend test
+
+  connector:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: yarn workspace connector lint
+      - run: yarn workspace connector format:check
+      - run: yarn workspace connector test
+
+  frontend:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: yarn workspace frontend lint
+      - run: yarn workspace frontend format:check
+      - run: yarn workspace frontend test

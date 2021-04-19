@@ -8,8 +8,9 @@
     "lint:local": "eslint --max-warnings=0 --fix $INIT_CWD",
     "format": "prettier --write .",
     "format:local": "prettier --write $INIT_CWD",
-    "test": "jest",
-    "test:local": "jest $INIT_CWD",
+    "format:check:local": "prettier --check $INIT_CWD",
+    "test": "jest --passWithNoTests",
+    "test:local": "jest $INIT_CWD --passWithNoTests",
     "postinstall": "husky install"
   },
   "workspaces": [
