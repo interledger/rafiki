@@ -19,3 +19,4 @@ jobs:
       - run: yarn install --immutable --immutable-cache --check-cache
       - run: yarn lint
       - run: yarn test
+      - run: yarn build
