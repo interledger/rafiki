@@ -117,7 +117,11 @@ export const gracefulShutdown = async (): Promise<void> => {
     })
   }
 }
-export const start = async (): Promise<void> => {
+export const start = async (accounts?: AccountsService): Promise<void> => {
+  if (accounts) {
+    app.accounts = accounts
+  }
+
   let shuttingDown = false
   process.on(
     'SIGINT',
@@ -145,10 +149,9 @@ export const start = async (): Promise<void> => {
     }
   )
 
-  logger.info('🚀 the 🐒')
   server = app.listen(PORT)
+  logger.info(`Connector listening on ${PORT}`)
   adminApi.listen()
-  logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
 
 // If this script is run directly, start the server
