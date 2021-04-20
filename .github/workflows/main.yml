@@ -5,7 +5,7 @@ on:
     branches:
     - main
 
-name: Sanity check main on merge
+name: Sanity check
 
 jobs:
   build:

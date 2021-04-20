@@ -7,7 +7,7 @@ on:
       - opened
       - synchronize
 
-name: Build, test, and lint non main branches
+name: PR checks
 
 jobs:
   checkout:
