@@ -1423,7 +1423,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/uuid@npm:8.3.0":
+"@types/uuid@npm:^8.3.0":
   version: 8.3.0
   resolution: "@types/uuid@npm:8.3.0"
   checksum: 620985aed8fdb4aed153daca5235f4303457a67a4d181efac0021712eabd9edd7e88895f79730c0e651effde7633b1b61e49a81519ac8d4e75019d2ac9b6412f
@@ -2090,6 +2090,7 @@ __metadata:
     "@types/koa__router": ^8.0.4
     "@types/luxon": ^1.26.4
     "@types/pino": ^6.3.7
+    "@types/uuid": ^8.3.0
     add: ^2.0.6
     cross-fetch: ^3.1.4
     fishery: ^1.2.0
@@ -2105,7 +2106,7 @@ __metadata:
     pino: ^6.11.3
     pino-pretty: ^4.7.1
     ts-node-dev: ^1.1.6
-    uuidv4: ^6.2.7
+    uuid: ^8.3.2
   languageName: unknown
   linkType: soft
 
@@ -9720,15 +9721,6 @@ typescript@^4.2.4:
   languageName: node
   linkType: hard
 
-"uuid@npm:8.3.2, uuid@npm:^8.3.0":
-  version: 8.3.2
-  resolution: "uuid@npm:8.3.2"
-  bin:
-    uuid: dist/bin/uuid
-  checksum: aed2bcef341f95635f308fea8831fb9038b18c485fe7e71feb89d2e05602dfecad0cb6f2246fae096d4da425cca6e8a71056f28abd97ad98cf770a2018853248
-  languageName: node
-  linkType: hard
-
 "uuid@npm:^3.3.2":
   version: 3.4.0
   resolution: "uuid@npm:3.4.0"
@@ -9738,13 +9730,12 @@ typescript@^4.2.4:
   languageName: node
   linkType: hard
 
-"uuidv4@npm:^6.2.7":
-  version: 6.2.7
-  resolution: "uuidv4@npm:6.2.7"
-  dependencies:
-    "@types/uuid": 8.3.0
-    uuid: 8.3.2
-  checksum: 2b99356f8d3f1681e1125cffb9f48b39cc4bdaf6d013e3def9af03a5f455f31b195a7937f34ab0a48e90c57dd2a272a8754c36ca5165e82bd06485d5c8926682
+"uuid@npm:^8.3.0, uuid@npm:^8.3.2":
+  version: 8.3.2
+  resolution: "uuid@npm:8.3.2"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: aed2bcef341f95635f308fea8831fb9038b18c485fe7e71feb89d2e05602dfecad0cb6f2246fae096d4da425cca6e8a71056f28abd97ad98cf770a2018853248
   languageName: node
   linkType: hard
 

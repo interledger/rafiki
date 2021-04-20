@@ -2638,6 +2638,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/koa__router", "npm:8.0.4"],
             ["@types/luxon", "npm:1.26.4"],
             ["@types/pino", "npm:6.3.7"],
+            ["@types/uuid", "npm:8.3.0"],
             ["add", "npm:2.0.6"],
             ["cross-fetch", "npm:3.1.4"],
             ["fishery", "npm:1.2.0"],
@@ -2653,7 +2654,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["pino", "npm:6.11.3"],
             ["pino-pretty", "npm:4.7.1"],
             ["ts-node-dev", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.1.6"],
-            ["uuidv4", "npm:6.2.7"]
+            ["uuid", "npm:8.3.2"]
           ],
           "linkType": "SOFT",
         }]
@@ -11287,17 +11288,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         ["npm:8.3.2", {
           "packageLocation": "./.yarn/cache/uuid-npm-8.3.2-eca0baba53-aed2bcef34.zip/node_modules/uuid/",
           "packageDependencies": [
-            ["uuid", "npm:8.3.2"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
-      ["uuidv4", [
-        ["npm:6.2.7", {
-          "packageLocation": "./.yarn/cache/uuidv4-npm-6.2.7-84abdb606a-2b99356f8d.zip/node_modules/uuidv4/",
-          "packageDependencies": [
-            ["uuidv4", "npm:6.2.7"],
-            ["@types/uuid", "npm:8.3.0"],
             ["uuid", "npm:8.3.2"]
           ],
           "linkType": "HARD",

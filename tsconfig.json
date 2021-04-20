@@ -2,9 +2,11 @@
   "references": [
     {
       "path": "packages/backend"
-    },{
+    },
+    {
       "path": "packages/connector"
-    },{
+    },
+    {
       "path": "packages/frontend"
     }
   ],

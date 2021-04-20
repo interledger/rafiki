@@ -1,6 +1,6 @@
 import { Model } from 'objection'
 import { DbErrors } from 'objection-db-errors'
-import { uuid } from 'uuidv4'
+import { v4 as uuid } from 'uuid'
 
 export class BaseModel extends DbErrors(Model) {
   public static get modelPaths(): string[] {

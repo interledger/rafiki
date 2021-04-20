@@ -1,4 +1,5 @@
 .yarn/*
+.github/*
 .pnp.js
 .next
 public
