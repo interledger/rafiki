@@ -1472,6 +1472,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/node", "npm:14.14.39"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:4.26.0", {
+          "packageLocation": "./.yarn/cache/@types-ioredis-npm-4.26.0-e28fee6aa9-5193c3a7d8.zip/node_modules/@types/ioredis/",
+          "packageDependencies": [
+            ["@types/ioredis", "npm:4.26.0"],
+            ["@types/node", "npm:14.14.39"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["@types/istanbul-lib-coverage", [
@@ -3389,7 +3397,31 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         ["workspace:packages/connector", {
           "packageLocation": "./packages/connector/",
           "packageDependencies": [
-            ["connector", "workspace:packages/connector"]
+            ["connector", "workspace:packages/connector"],
+            ["@adonisjs/fold", "npm:8.1.0"],
+            ["@koa/cors", "npm:3.1.0"],
+            ["@koa/router", "npm:10.0.0"],
+            ["@types/ioredis", "npm:4.26.0"],
+            ["@types/jest", "npm:26.0.22"],
+            ["@types/koa", "npm:2.13.1"],
+            ["@types/koa-bodyparser", "npm:4.3.0"],
+            ["@types/koa__cors", "npm:3.0.2"],
+            ["@types/koa__router", "npm:8.0.4"],
+            ["@types/pino", "npm:6.3.7"],
+            ["@types/uuid", "npm:8.3.0"],
+            ["cross-fetch", "npm:3.1.4"],
+            ["graphile-scheduler", "npm:0.8.0"],
+            ["graphile-worker", "npm:0.10.0"],
+            ["ioredis", "npm:4.26.0"],
+            ["knex", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:0.21.19"],
+            ["koa", "npm:2.13.1"],
+            ["koa-bodyparser", "npm:4.3.0"],
+            ["objection", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.2.15"],
+            ["objection-db-errors", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.1.2"],
+            ["pg", "virtual:32e475abcc6dabaea14b24db9aee1b59797d3cabcc03e60dcecd77305a697e5b9687c2679af13682eefd8a3b20c62224e14184bd5b161fae6d8d40f0f55cdb48#npm:8.6.0"],
+            ["pino", "npm:6.11.3"],
+            ["pino-pretty", "npm:4.7.1"],
+            ["uuid", "npm:8.3.2"]
           ],
           "linkType": "SOFT",
         }]
