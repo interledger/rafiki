@@ -7,7 +7,7 @@ on:
       - opened
       - synchronize
 
-name: Build, test, and lint non main branches
+name: PR checks
 
 jobs:
   checkout:
@@ -61,3 +61,17 @@ jobs:
       - run: yarn workspace frontend lint
       - run: yarn workspace frontend format:check
       - run: yarn workspace frontend test
+
+  build:
+    runs-on: ubuntu-latest
+    needs:
+      - backend
+      - connector
+      - frontend
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: yarn build

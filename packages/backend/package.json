@@ -4,6 +4,38 @@
     "lint": "yarn lint:local",
     "format": "yarn format:local",
     "format:check": "yarn format:check:local",
-    "test": "yarn test:local"
+    "test": "yarn test:local",
+    "knex": "knex"
+  },
+  "devDependencies": {
+    "@types/ioredis": "^4.22.3",
+    "@types/koa": "^2.13.1",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/koa__cors": "^3.0.2",
+    "@types/koa__router": "^8.0.4",
+    "@types/luxon": "^1.26.4",
+    "@types/pino": "^6.3.7",
+    "@types/uuid": "^8.3.0",
+    "cross-fetch": "^3.1.4",
+    "ts-node-dev": "^1.1.6"
+  },
+  "dependencies": {
+    "@adonisjs/fold": "^8.1.0",
+    "@koa/cors": "^3.1.0",
+    "@koa/router": "^10.0.0",
+    "add": "^2.0.6",
+    "fishery": "^1.2.0",
+    "got": "^11.8.2",
+    "graphile-scheduler": "^0.8.0",
+    "graphile-worker": "^0.10.0",
+    "ioredis": "^4.26.0",
+    "knex": "^0.21.17",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0",
+    "objection": "^2.2.15",
+    "objection-db-errors": "^1.1.2",
+    "pino": "^6.11.3",
+    "pino-pretty": "^4.7.1",
+    "uuid": "^8.3.2"
   }
 }
