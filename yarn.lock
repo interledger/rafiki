@@ -2094,6 +2094,7 @@ __metadata:
     "@koa/cors": ^3.1.0
     "@koa/router": ^10.0.0
     "@types/ioredis": ^4.22.3
+    "@types/jest": ^26.0.22
     "@types/koa": ^2.13.1
     "@types/koa-bodyparser": ^4.3.0
     "@types/koa__cors": ^3.0.2
@@ -2113,9 +2114,9 @@ __metadata:
     koa-bodyparser: ^4.3.0
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
+    pg: ^8.6.0
     pino: ^6.11.3
     pino-pretty: ^4.7.1
-    ts-node-dev: ^1.1.6
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft
@@ -7581,7 +7582,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pg@npm:>=6.5 <9":
+"pg@npm:>=6.5 <9, pg@npm:^8.6.0":
   version: 8.6.0
   resolution: "pg@npm:8.6.0"
   dependencies:
@@ -7935,7 +7936,9 @@ __metadata:
   dependencies:
     "@commitlint/cli": ^12.1.1
     "@commitlint/config-conventional": ^12.1.1
+    "@jest/types": ^26.6.2
     "@types/jest": ^26.0.22
+    "@types/pino": ^6.3.7
     "@typescript-eslint/eslint-plugin": ^4.22.0
     "@typescript-eslint/parser": ^4.22.0
     eslint: ^7.24.0
@@ -7946,6 +7949,7 @@ __metadata:
     lint-staged: ">=10"
     prettier: 2.2.1
     ts-jest: ^26.5.5
+    ts-node-dev: ^1.1.6
     typescript: ^4.2.4
   languageName: unknown
   linkType: soft

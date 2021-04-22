@@ -97,7 +97,9 @@ Prettier config should not be overridden in any packages.
 [Jest](https://jestjs.io/) is used for testing.
 
 ```shell
-./jest.config.js # config
+./jest.config.js # config used to configure projects and run all tests
+./jest.config.base.js # (base jest config, imported by other packages)
+./packages/*/jest.config.js # jest config file for package * (extends base.config.base.js)
 ```
 
 Jest config at the root is intended to be a base config that should be extended by
