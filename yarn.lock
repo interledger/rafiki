@@ -7641,7 +7641,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pino-pretty@npm:^4.7.1":
+"pino-pretty@npm:*, pino-pretty@npm:^4.7.1":
   version: 4.7.1
   resolution: "pino-pretty@npm:4.7.1"
   dependencies:
