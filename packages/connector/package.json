@@ -5,5 +5,9 @@
     "format": "yarn format:local",
     "format:check": "yarn format:check:local",
     "test": "yarn test:local"
+  },
+  "dependencies": {
+    "@types/koa": "^2.13.1",
+    "koa": "^2.13.1"
   }
 }

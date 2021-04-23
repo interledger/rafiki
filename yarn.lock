@@ -2761,6 +2761,9 @@ __metadata:
 "connector@workspace:packages/connector":
   version: 0.0.0-use.local
   resolution: "connector@workspace:packages/connector"
+  dependencies:
+    "@types/koa": ^2.13.1
+    koa: ^2.13.1
   languageName: unknown
   linkType: soft
 

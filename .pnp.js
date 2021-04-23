@@ -3389,7 +3389,9 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         ["workspace:packages/connector", {
           "packageLocation": "./packages/connector/",
           "packageDependencies": [
-            ["connector", "workspace:packages/connector"]
+            ["connector", "workspace:packages/connector"],
+            ["@types/koa", "npm:2.13.1"],
+            ["koa", "npm:2.13.1"]
           ],
           "linkType": "SOFT",
         }]
