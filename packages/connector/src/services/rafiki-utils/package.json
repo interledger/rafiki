@@ -1,0 +1,31 @@
+{
+  "name": "@interledger/rafiki-utils",
+  "version": "0.1.10",
+  "description": "Utils used by Rafiki",
+  "author": "Matt de Haast <matt.dehaast@coil.com>",
+  "homepage": "https://github.com/interledgerjs/rafiki#readme",
+  "license": "Apache-2.0",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "build/"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interledgerjs/rafiki.git"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -Rf .nyc_output && rm -Rf coverage && rm -Rf build "
+  },
+  "bugs": {
+    "url": "https://github.com/interledgerjs/rafiki/issues"
+  },
+  "dependencies": {
+    "@types/koa": "^2.0.49",
+    "koa": "^2.8.1"
+  }
+}

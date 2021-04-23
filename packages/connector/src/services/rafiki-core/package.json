@@ -1,0 +1,64 @@
+{
+  "name": "@interledger/rafiki-core",
+  "version": "0.2.16",
+  "description": "Core modules needed to construct a connector.",
+  "engines": {
+    "node": ">=10.13"
+  },
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "build/"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -Rf .nyc_output && rm -Rf coverage && rm -Rf build ",
+    "codecov": "codecov --root=../../ -f ./coverage/lcov.info -F core",
+    "doc": "typedoc --options typedoc.js src",
+    "test": "jest --bail",
+    "test:ci": "jest --bail --coverage"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interledgerjs/rafiki.git"
+  },
+  "author": "Interledger Team <info@interledger.org>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@interledger/rafiki-utils": "^0.1.10",
+    "@types/debug": "^4.1.5",
+    "@types/faker": "^4.1.5",
+    "@types/jsonwebtoken": "^8.3.3",
+    "@types/koa": "^2.0.48",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/koa-joi-router": "^5.2.2",
+    "@types/lodash": "^4.14.136",
+    "@types/nanoid": "^2.0.0",
+    "@types/node-fetch": "^2.3.3",
+    "@types/rosie": "0.0.36",
+    "agentkeepalive": "^4.0.2",
+    "axios": "^0.18.0",
+    "change-case": "^3.1.0",
+    "extensible-error": "^1.0.2",
+    "faker": "^4.1.0",
+    "ilp-packet": "^3.0.8",
+    "ilp-protocol-ccp": "^1.1.1",
+    "ilp-protocol-ildcp": "^2.0.1",
+    "ilp-routing": "^20.0.1-beta.1",
+    "jsonwebtoken": "^8.5.1",
+    "koa": "^2.7.0",
+    "koa-bodyparser": "^4.2.1",
+    "koa-joi-router": "^6.0.0",
+    "nanoid": "^2.0.3",
+    "oer-utils": "^4.0.0",
+    "raw-body": "^2.4.1",
+    "rosie": "^2.0.1",
+    "rxjs": "^6.5.2"
+  },
+  "devDependencies": {
+    "typedoc": "^0.14.2"
+  }
+}
