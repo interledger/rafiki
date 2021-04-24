@@ -7,6 +7,7 @@ import Koa, { Context, DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
+// import { TigerBeetle } from 'tigerbeetle'
 
 import { Config as AppConfig } from './config/app'
 import { MessageProducer } from './infrastructure/messageProducer'
@@ -25,6 +26,7 @@ export interface AppServices {
   closeEmitter: Promise<EventEmitter>
   config: Promise<typeof AppConfig>
   workerUtils: Promise<WorkerUtils>
+  // tigerbeetleClient: Promise<TigerBeetle>
 }
 
 export type AppContainer = IocContract<AppServices>

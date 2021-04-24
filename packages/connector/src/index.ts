@@ -5,6 +5,7 @@ import { Model } from 'objection'
 import { makeWorkerUtils } from 'graphile-worker'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import IORedis from 'ioredis'
+// import { createClient as createTigerbeetleClient } from 'tigerbeetle'
 
 import { App, AppServices } from './app'
 import { Config } from './config/app'
@@ -68,6 +69,14 @@ export function initIocContainer(
     const config = await deps.use('config')
     return new IORedis(config.redisUrl)
   })
+  // container.singleton('tigerbeetleClient', async (deps) => {
+  //   const config = await deps.use('config')
+  //   return createTigerbeetleClient({
+  //     client_id: config.tigerbeetleClientId,
+  //     cluster_id: config.tigerbeetleClusterId,
+  //     replica_addresses: config.tigerbeetleReplicaAddresses
+  //   })
+  // })
 
   return container
 }
