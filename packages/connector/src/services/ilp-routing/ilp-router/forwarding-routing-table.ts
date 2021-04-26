@@ -3,9 +3,9 @@ import { Route } from '../types/routing'
 import { uuid } from '../lib/utils'
 
 export interface RouteUpdate {
-  epoch: number;
-  prefix: string;
-  route?: Route;
+  epoch: number
+  prefix: string
+  route?: Route
 }
 
 export default class ForwardingRoutingTable extends PrefixMap<RouteUpdate> {

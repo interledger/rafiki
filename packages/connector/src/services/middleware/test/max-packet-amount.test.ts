@@ -17,10 +17,10 @@ describe('Max Packet Amount Middleware', function () {
   const ctx = createContext<any, RafikiContext>()
   ctx.services = services
   ctx.peers = {
-    get incoming () {
+    get incoming() {
       return Promise.resolve(alice)
     },
-    get outgoing () {
+    get outgoing() {
       return Promise.resolve(bob)
     }
   }

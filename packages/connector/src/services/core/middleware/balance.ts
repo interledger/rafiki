@@ -1,7 +1,7 @@
 import { RafikiContext } from '../rafiki'
 import { Transaction } from '../services/accounts'
 
-export function createIncomingBalanceMiddleware () {
+export function createIncomingBalanceMiddleware() {
   return async (
     { request, response, services, accounts }: RafikiContext,
     next: () => Promise<any>
@@ -37,7 +37,7 @@ export function createIncomingBalanceMiddleware () {
   }
 }
 
-export function createOutgoingBalanceMiddleware () {
+export function createOutgoingBalanceMiddleware() {
   return async (
     { request, response, services, accounts }: RafikiContext,
     next: () => Promise<any>

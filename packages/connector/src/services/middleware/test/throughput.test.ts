@@ -25,10 +25,10 @@ describe('Incoming Throughput Middleware', function () {
   const ctx = createContext<any, RafikiContext>()
   ctx.services = services
   ctx.peers = {
-    get incoming () {
+    get incoming() {
       return Promise.resolve(alice)
     },
-    get outgoing () {
+    get outgoing() {
       return Promise.resolve(bob)
     }
   }
@@ -76,10 +76,10 @@ describe('Incoming Throughput Middleware', function () {
     const next = jest.fn()
     const takeSpy = jest.spyOn(TokenBucket.prototype, 'take')
     ctx.peers = {
-      get incoming () {
+      get incoming() {
         return Promise.resolve(bob)
       },
-      get outgoing () {
+      get outgoing() {
         return Promise.resolve(alice)
       }
     }
@@ -104,10 +104,10 @@ describe('Outgoing Throughput Middleware', function () {
   const ctx = createContext<any, RafikiContext>()
   ctx.services = services
   ctx.peers = {
-    get incoming () {
+    get incoming() {
       return Promise.resolve(alice)
     },
-    get outgoing () {
+    get outgoing() {
       return Promise.resolve(bob)
     }
   }
@@ -155,10 +155,10 @@ describe('Outgoing Throughput Middleware', function () {
     const next = jest.fn()
     const takeSpy = jest.spyOn(TokenBucket.prototype, 'take')
     ctx.peers = {
-      get incoming () {
+      get incoming() {
         return Promise.resolve(bob)
       },
-      get outgoing () {
+      get outgoing() {
         return Promise.resolve(alice)
       }
     }

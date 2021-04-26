@@ -7,37 +7,37 @@ export class RouteManager {
   private peers: Map<string, Peer> = new Map()
   private router: Router
 
-  constructor (router: Router) {
+  constructor(router: Router) {
     this.router = router
   }
 
   // Possibly also allow a route to be added defaulted?
-  addPeer (peerId: string, relation: Relation): void {
+  addPeer(peerId: string, relation: Relation): void {
     const peer = new Peer({ peerId: peerId, relation: relation })
     this.peers.set(peerId, peer)
   }
 
-  removePeer (peerId: string): void {
+  removePeer(peerId: string): void {
     const peer = this.getPeer(peerId)
     if (peer) {
       const prefixes = peer.getPrefixes()
       this.peers.delete(peerId)
-      prefixes.forEach(prefix => this.updatePrefix(prefix))
+      prefixes.forEach((prefix) => this.updatePrefix(prefix))
     } else {
       console.log('no peer found to remove peer')
     }
   }
 
-  getPeer (peerId: string): Peer | undefined {
+  getPeer(peerId: string): Peer | undefined {
     return this.peers.get(peerId)
   }
 
-  getPeerList (): string[] {
+  getPeerList(): string[] {
     return Array.from(this.peers.keys())
   }
 
   // Do a check if the peerId exists as a peer and then also add the route to the routing table
-  addRoute (route: IncomingRoute): void {
+  addRoute(route: IncomingRoute): void {
     const peer = this.getPeer(route.peer)
     if (peer) {
       // Gotcha the insert of the route into the peers routing table must occur before calling updatePrefix
@@ -48,7 +48,7 @@ export class RouteManager {
     }
   }
 
-  removeRoute (peerId: string, prefix: string): void {
+  removeRoute(peerId: string, prefix: string): void {
     const peer = this.getPeer(peerId)
     if (peer) {
       peer.deleteRoute(prefix)
@@ -62,7 +62,7 @@ export class RouteManager {
    * get best peer for prefix and updateRouting based on the new route
    * @param prefix prefix
    */
-  private updatePrefix (prefix: string): void {
+  private updatePrefix(prefix: string): void {
     const newBest = this.getBestPeerForPrefix(prefix)
     this.updateRouteInRouter(prefix, newBest)
   }
@@ -74,9 +74,9 @@ export class RouteManager {
    * 3. If not exact route need to find 'bestRoute' based on peers
    * @param prefix prefix
    */
-  private getBestPeerForPrefix (prefix: string): Route | undefined {
+  private getBestPeerForPrefix(prefix: string): Route | undefined {
     const bestRoute = Array.from(this.peers.values())
-      .map(peer => peer.getPrefix(prefix))
+      .map((peer) => peer.getPrefix(prefix))
       .filter((a): a is IncomingRoute => !!a)
       .sort((a?: IncomingRoute, b?: IncomingRoute) => {
         if (!a && !b) {
@@ -117,7 +117,7 @@ export class RouteManager {
     )
   }
 
-  private updateRouteInRouter (
+  private updateRouteInRouter(
     prefix: string,
     newBest: Route | undefined
   ): void {

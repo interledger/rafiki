@@ -5,13 +5,13 @@ import { verify } from 'jsonwebtoken'
 import { RafikiMiddleware } from '../rafiki'
 
 export interface TokenAuthState extends AuthState {
-  token: string;
-  tokenInfo: TokenInfo;
+  token: string
+  tokenInfo: TokenInfo
 }
 
 export interface TokenAuthConfig {
-  introspect: IntrospectFunction;
-  authenticate: (tokenInfo: TokenInfo) => boolean;
+  introspect: IntrospectFunction
+  authenticate: (tokenInfo: TokenInfo) => boolean
 }
 
 const defaultAuthenticate = (tokenInfo: TokenInfo): boolean => {
@@ -24,7 +24,7 @@ const defaultIntrospect: IntrospectFunction = async (token: string) => {
   return decodedToken as TokenInfo
 }
 
-export function getBearerToken (ctx: Koa.Context): string | undefined {
+export function getBearerToken(ctx: Koa.Context): string | undefined {
   if (!ctx.request.header || !ctx.request.header.authorization) {
     return
   }
@@ -48,7 +48,7 @@ export function getBearerToken (ctx: Koa.Context): string | undefined {
  * @param config.introspect a function to introspect the token
  * @param config.authenticate a function to determine if the user is authenticated based on the introspected token
  */
-export function createTokenAuthMiddleware (
+export function createTokenAuthMiddleware(
   config?: Partial<TokenAuthConfig>
 ): RafikiMiddleware {
   const _auth =
@@ -56,7 +56,7 @@ export function createTokenAuthMiddleware (
   const _introspect =
     config && config.introspect ? config.introspect : defaultIntrospect
 
-  return async function auth (
+  return async function auth(
     ctx: Koa.Context,
     next: () => Promise<any>
   ): Promise<void> {

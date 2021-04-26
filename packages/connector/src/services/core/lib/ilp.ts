@@ -1,5 +1,5 @@
 import { Reader } from 'oer-utils'
-export function dateToInterledgerTime (date: Date): string {
+export function dateToInterledgerTime(date: Date): string {
   const pad = (n: number): string => (n < 10 ? '0' + n : String(n))
 
   return (
@@ -13,7 +13,7 @@ export function dateToInterledgerTime (date: Date): string {
   )
 }
 
-export function modifySerializedIlpPrepare (
+export function modifySerializedIlpPrepare(
   prepare: Buffer,
   amount?: bigint,
   expiresAt?: Date

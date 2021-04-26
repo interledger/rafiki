@@ -1,9 +1,5 @@
 import { Errors } from 'ilp-packet'
-import {
-  PeerInfo,
-  RafikiContext,
-  RafikiMiddleware
-} from '../core'
+import { PeerInfo, RafikiContext, RafikiMiddleware } from '../core'
 import { TokenBucket } from '../utils'
 
 const { RateLimitedError } = Errors
@@ -11,7 +7,7 @@ const { RateLimitedError } = Errors
 const DEFAULT_REFILL_PERIOD = 60 * 1000 // 1 minute
 const DEFAULT_REFILL_COUNT = BigInt(10000)
 
-export function createRateLimitBucketForPeer (peerInfo: PeerInfo): TokenBucket {
+export function createRateLimitBucketForPeer(peerInfo: PeerInfo): TokenBucket {
   const {
     rateLimitRefillPeriod,
     rateLimitRefillCount,
@@ -30,7 +26,7 @@ export function createRateLimitBucketForPeer (peerInfo: PeerInfo): TokenBucket {
 /**
  * Throttles throughput based on the number of requests per minute.
  */
-export function createIncomingRateLimitMiddleware (): RafikiMiddleware {
+export function createIncomingRateLimitMiddleware(): RafikiMiddleware {
   const buckets = new Map<string, TokenBucket>()
   return async (
     { services: { logger }, request: { prepare }, peers }: RafikiContext,

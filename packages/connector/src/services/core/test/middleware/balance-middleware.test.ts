@@ -33,10 +33,10 @@ const accounts = new InMemoryAccountsService()
 const services = RafikiServicesFactory.build({ accounts })
 const ctx = createContext<any, RafikiContext>()
 ctx.accounts = {
-  get incoming () {
+  get incoming() {
     return accounts.get('alice')
   },
-  get outgoing () {
+  get outgoing() {
     return accounts.get('bob')
   }
 }

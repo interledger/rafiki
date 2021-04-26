@@ -10,7 +10,7 @@ export class DebugLogger implements LoggingService {
   private _info: debug.IDebugger
   private _debug: debug.IDebugger
   private _trace: debug.IDebugger
-  constructor (namespace: string) {
+  constructor(namespace: string) {
     this._fatal = debug(namespace + ':fatal')
     this._error = debug(namespace + ':error')
     this._warn = debug(namespace + ':warn')
@@ -21,7 +21,7 @@ export class DebugLogger implements LoggingService {
 
   public fatal(msg: string, ...args: any[]): void
   public fatal(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
-  public fatal (
+  public fatal(
     msgOrObj: string | Record<string, unknown>,
     msgOrArgs?: string | any[],
     ...args: any[]
@@ -31,7 +31,7 @@ export class DebugLogger implements LoggingService {
 
   public error(msg: string, ...args: any[]): void
   public error(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
-  public error (
+  public error(
     msgOrObj: string | Record<string, unknown>,
     msgOrArgs?: string | any[],
     ...args: any[]
@@ -41,7 +41,7 @@ export class DebugLogger implements LoggingService {
 
   public warn(msg: string, ...args: any[]): void
   public warn(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
-  public warn (
+  public warn(
     msgOrObj: string | Record<string, unknown>,
     msgOrArgs?: string | any[],
     ...args: any[]
@@ -51,7 +51,7 @@ export class DebugLogger implements LoggingService {
 
   public info(msg: string, ...args: any[]): void
   public info(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
-  public info (
+  public info(
     msgOrObj: string | Record<string, unknown>,
     msgOrArgs?: string | any[],
     ...args: any[]
@@ -61,7 +61,7 @@ export class DebugLogger implements LoggingService {
 
   public debug(msg: string, ...args: any[]): void
   public debug(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
-  public debug (
+  public debug(
     msgOrObj: string | Record<string, unknown>,
     msgOrArgs?: string | any[],
     ...args: any[]
@@ -71,7 +71,7 @@ export class DebugLogger implements LoggingService {
 
   public trace(msg: string, ...args: any[]): void
   public trace(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
-  public trace (
+  public trace(
     msgOrObj: string | Record<string, unknown>,
     msgOrArgs?: string | any[],
     ...args: any[]

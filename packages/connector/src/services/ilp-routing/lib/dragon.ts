@@ -30,7 +30,7 @@ import ForwardingRoutingTable from '../ilp-router/forwarding-routing-table'
  *    to apply to a lot more situations where otherwise only DRAGON aggregation
  *    would be applicable.
  */
-export function canDragonFilter (
+export function canDragonFilter(
   routingTable: ForwardingRoutingTable,
   getRelation: (prefix: string) => Relation,
   prefix: string,

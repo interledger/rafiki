@@ -15,28 +15,28 @@ const log = debug('rafiki:in-memory-accounts-service')
  * An in-memory account service for development and testing purposes.
  */
 interface InMemoryAccount extends AccountSnapshot {
-  balancePayableInflight: bigint;
-  balancePayable: bigint;
-  balanceReceivable: bigint;
-  balanceReceivableInflight: bigint;
+  balancePayableInflight: bigint
+  balancePayable: bigint
+  balanceReceivable: bigint
+  balanceReceivableInflight: bigint
 }
 
 export class InMemoryAccountsService implements AccountsService {
   private _updatedAccounts: Subject<AccountSnapshot>
   private _accounts: Map<string, InMemoryAccount>
 
-  constructor () {
+  constructor() {
     this._accounts = new Map<string, InMemoryAccount>()
     this._updatedAccounts = new Subject<AccountSnapshot>()
   }
 
-  get updated (): Observable<AccountSnapshot> {
+  get updated(): Observable<AccountSnapshot> {
     return this._updatedAccounts
       .asObservable()
-      .pipe(map(value => Object.assign({}, value)))
+      .pipe(map((value) => Object.assign({}, value)))
   }
 
-  async get (id: string): Promise<InMemoryAccount> {
+  async get(id: string): Promise<InMemoryAccount> {
     const account = this._accounts.get(id)
     if (!account) {
       throw new AccountNotFoundError(id)
@@ -44,7 +44,7 @@ export class InMemoryAccountsService implements AccountsService {
     return account
   }
 
-  add (accountInfo: AccountInfo): void {
+  add(accountInfo: AccountInfo): void {
     const account: InMemoryAccount = {
       ...accountInfo,
       balancePayableInflight: BigInt(0),
@@ -55,18 +55,18 @@ export class InMemoryAccountsService implements AccountsService {
     this._accounts.set(account.id, account)
   }
 
-  update (accountInfo: AccountInfo): void {
+  update(accountInfo: AccountInfo): void {
     const account = this.get(accountInfo.id)
     Object.assign(account, accountInfo)
   }
 
-  remove (id: string): void {
+  remove(id: string): void {
     this._accounts.delete(id)
   }
 
   // Adjust amount the we owe
   // As this is called after we have got the fulfillment. It doesn't actually make much sense
-  public async adjustBalancePayable (
+  public async adjustBalancePayable(
     amount: bigint,
     accountId: string,
     callback: (trx: Transaction) => Promise<any>
@@ -131,7 +131,7 @@ export class InMemoryAccountsService implements AccountsService {
     }
   }
 
-  public async adjustBalanceReceivable (
+  public async adjustBalanceReceivable(
     amount: bigint,
     accountId: string,
     callback: (trx: Transaction) => Promise<any>
@@ -175,7 +175,7 @@ export class InMemoryAccountsService implements AccountsService {
 
   // Can take money from payable and transfer to receivables
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async maybeSettle (account: InMemoryAccount): Promise<void> {
+  public async maybeSettle(account: InMemoryAccount): Promise<void> {
     // // First potentially net.
     // // if payable_balance > 0 && receivable_balance > 0 {
     // //   let amount_to_net = min(payable_balance, receivable_balance);

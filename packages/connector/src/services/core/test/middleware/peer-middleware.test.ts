@@ -67,8 +67,8 @@ describe('Peer Middleware', () => {
     ctx.services = rafikiServices
     ctx.state.user = { sub: 'incomingPeer' }
     const middleware = createPeerMiddleware({
-      getIncomingPeerId: ctx => 'outgoingPeer',
-      getOutgoingPeerId: ctx => 'incomingPeer'
+      getIncomingPeerId: (ctx) => 'outgoingPeer',
+      getOutgoingPeerId: (ctx) => 'incomingPeer'
     })
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()

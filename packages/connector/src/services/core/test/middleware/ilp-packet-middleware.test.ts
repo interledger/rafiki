@@ -6,10 +6,7 @@ import {
   serializeIlpReject,
   deserializeIlpReject
 } from 'ilp-packet'
-import {
-  createContext,
-  MockIncomingMessageOptions
-} from '../../../utils'
+import { createContext, MockIncomingMessageOptions } from '../../../utils'
 import { createIlpPacketMiddleware } from '../../middleware/ilp-packet'
 import {
   IlpPrepareFactory,

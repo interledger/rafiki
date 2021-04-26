@@ -10,21 +10,21 @@ export interface Router {
   handleRouteControl: (
     peerId: string,
     request: CcpRouteControlRequest
-  ) => Promise<CcpRouteControlResponse>;
+  ) => Promise<CcpRouteControlResponse>
 
   handleRouteUpdate: (
     peerId: string,
     request: CcpRouteUpdateRequest
-  ) => Promise<CcpRouteUpdateResponse>;
+  ) => Promise<CcpRouteUpdateResponse>
 
-  getPeerForAddress(destination: string): string;
+  getPeerForAddress(destination: string): string
 
-  getAddresses(peerId: string): string[];
+  getAddresses(peerId: string): string[]
 
-  getRoutingTable(): Record<string, unknown>;
+  getRoutingTable(): Record<string, unknown>
 }
 
-export function getRouteWeight (peerId: string): number {
+export function getRouteWeight(peerId: string): number {
   let weight = 0
   const peer = this._routeManager.getPeer(peerId)
   if (peer) {

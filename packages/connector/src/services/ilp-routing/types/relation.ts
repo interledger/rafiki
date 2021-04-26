@@ -1,6 +1,6 @@
 export type Relation = 'parent' | 'child' | 'peer' | 'local'
 
-export function getRelationPriority (relation: Relation): number {
+export function getRelationPriority(relation: Relation): number {
   return {
     parent: 0,
     peer: 1,

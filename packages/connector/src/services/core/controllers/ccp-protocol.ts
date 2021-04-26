@@ -12,8 +12,8 @@ const { TemporaryApplicationError } = Errors
  *
  * TODO: Should be a controller
  */
-export function createCcpProtocolController () {
-  return async function ccp ({
+export function createCcpProtocolController() {
+  return async function ccp({
     services: { logger, router },
     request,
     response,

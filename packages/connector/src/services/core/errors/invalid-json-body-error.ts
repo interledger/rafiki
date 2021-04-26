@@ -8,14 +8,14 @@ export class InvalidJsonBodyError extends ExtensibleError {
   public httpErrorCode = 400
   protected validationErrors: ErrorObject[]
 
-  constructor (message: string, validationErrors: ErrorObject[]) {
+  constructor(message: string, validationErrors: ErrorObject[]) {
     super(message)
 
     this.ilpErrorCode = Errors.codes.F01_INVALID_PACKET
     this.validationErrors = validationErrors
   }
 
-  debugPrint (
+  debugPrint(
     log: (message: string) => void,
     validationError?: ErrorObject
   ): void {
@@ -29,7 +29,7 @@ export class InvalidJsonBodyError extends ExtensibleError {
     }
 
     const additionalInfo = Object.keys(validationError.params)
-      .map(key => `${key}=${validationError.params[key]}`)
+      .map((key) => `${key}=${validationError.params[key]}`)
       .join(' ')
 
     log(

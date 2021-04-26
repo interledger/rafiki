@@ -3,8 +3,8 @@ import { AuthState } from './auth'
 import { AccountSnapshot } from '../services/accounts'
 
 export interface AccountMiddlewareOptions {
-  getIncomingAccountId?: (ctx: RafikiContext<AuthState>) => Promise<string>;
-  getOutgoingAccountId?: (ctx: RafikiContext) => Promise<string>;
+  getIncomingAccountId?: (ctx: RafikiContext<AuthState>) => Promise<string>
+  getOutgoingAccountId?: (ctx: RafikiContext) => Promise<string>
 }
 
 const defaultGetIncomingAccountId = async (
@@ -26,7 +26,7 @@ const defaultMiddlewareOptions: AccountMiddlewareOptions = {
   getOutgoingAccountId: defaultGetOutgoingAccountId
 }
 
-export function createAccountMiddleware (
+export function createAccountMiddleware(
   config: AccountMiddlewareOptions = defaultMiddlewareOptions
 ): RafikiMiddleware {
   const getIncomingAccountId =
@@ -38,7 +38,7 @@ export function createAccountMiddleware (
       ? config.getOutgoingAccountId
       : defaultGetOutgoingAccountId
 
-  return async function account (
+  return async function account(
     ctx: RafikiContext<AuthState>,
     next: () => Promise<any>
   ): Promise<void> {
@@ -47,12 +47,12 @@ export function createAccountMiddleware (
     let incomingAccount: Promise<AccountSnapshot> | undefined
     let outgoingAccount: Promise<AccountSnapshot> | undefined
     ctx.accounts = {
-      get incoming (): Promise<AccountSnapshot> {
+      get incoming(): Promise<AccountSnapshot> {
         if (incomingAccount) return incomingAccount
         incomingAccount = ctx.services.accounts.get(incomingAccountId)
         return incomingAccount
       },
-      get outgoing (): Promise<AccountSnapshot> {
+      get outgoing(): Promise<AccountSnapshot> {
         if (outgoingAccount) return outgoingAccount
         outgoingAccount = ctx.services.accounts.get(outgoingAccountId)
         return outgoingAccount

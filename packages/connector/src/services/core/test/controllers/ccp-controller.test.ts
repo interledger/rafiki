@@ -31,10 +31,10 @@ describe('CCP Rule', function () {
   const ctx = createContext<any, RafikiContext>()
   ctx.services = services
   ctx.peers = {
-    get incoming () {
+    get incoming() {
       return Promise.resolve(alice)
     },
-    get outgoing () {
+    get outgoing() {
       return Promise.resolve(bob)
     }
   }
@@ -48,7 +48,9 @@ describe('CCP Rule', function () {
 
     expect(services.logger.trace).toHaveBeenCalledWith(
       'received peer.route.update',
-      { request: ctx.request.prepare }
+      {
+        request: ctx.request.prepare
+      }
     )
     expect(ctx.response.rawReply).toEqual(serializeCcpResponse())
     expect(services.router.handleRouteUpdate).toHaveBeenCalledWith(
@@ -65,7 +67,9 @@ describe('CCP Rule', function () {
 
     expect(services.logger.trace).toHaveBeenCalledWith(
       'received peer.route.control',
-      { request: ctx.request.prepare }
+      {
+        request: ctx.request.prepare
+      }
     )
     expect(ctx.response.rawReply).toEqual(serializeCcpResponse())
     expect(services.router.handleRouteControl).toHaveBeenCalledWith(

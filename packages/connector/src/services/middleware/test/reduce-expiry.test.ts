@@ -24,10 +24,10 @@ describe('Outgoing Reduce Expiry Middleware', function () {
   const ctx = createContext<any, RafikiContext>()
   ctx.services = services
   ctx.peers = {
-    get incoming () {
+    get incoming() {
       return Promise.resolve(alice)
     },
-    get outgoing () {
+    get outgoing() {
       return Promise.resolve(bob)
     }
   }
@@ -87,10 +87,10 @@ describe('Outgoing Reduce Expiry Middleware', function () {
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     ctx.peers = {
-      get incoming () {
+      get incoming() {
         return Promise.resolve(alice)
       },
-      get outgoing () {
+      get outgoing() {
         return Promise.resolve(fred)
       }
     }

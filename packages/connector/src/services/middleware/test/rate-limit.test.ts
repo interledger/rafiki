@@ -20,10 +20,10 @@ describe('Rate Limit Middleware', function () {
   test('throws RateLimitedError when payments arrive too quickly', async () => {
     const bucketTakeSpy = jest.spyOn(TokenBucket.prototype, 'take')
     ctx.peers = {
-      get incoming () {
+      get incoming() {
         return Promise.resolve(bob)
       },
-      get outgoing () {
+      get outgoing() {
         return Promise.resolve(alice)
       }
     }
@@ -39,10 +39,10 @@ describe('Rate Limit Middleware', function () {
   test('does not throw error if rate limit is not exceeded', async () => {
     const bucketTakeSpy = jest.spyOn(TokenBucket.prototype, 'take')
     ctx.peers = {
-      get incoming () {
+      get incoming() {
         return Promise.resolve(alice)
       },
-      get outgoing () {
+      get outgoing() {
         return Promise.resolve(bob)
       }
     }

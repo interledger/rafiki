@@ -5,27 +5,27 @@ export interface TokenService {
   /**
    * Introspect a token
    */
-  introspect: IntrospectFunction;
+  introspect: IntrospectFunction
 
   /**
    * Lookup a token given data about it
    */
-  lookup: (tokenInfo: TokenInfo) => Promise<string | undefined>;
+  lookup: (tokenInfo: TokenInfo) => Promise<string | undefined>
 
   /**
    * Store token info for a token
    */
-  store: (token: string, tokenInfo: TokenInfo) => Promise<void>;
+  store: (token: string, tokenInfo: TokenInfo) => Promise<void>
 
   /**
    * Store token info for a token
    */
-  delete: (tokenOrtokenInfo: TokenInfo | string) => Promise<void>;
+  delete: (tokenOrtokenInfo: TokenInfo | string) => Promise<void>
 
   /**
    * Create a new token
    */
-  create: (tokenInfo: TokenInfo) => Promise<string>;
+  create: (tokenInfo: TokenInfo) => Promise<string>
 }
 
 /**
@@ -44,76 +44,76 @@ export interface TokenInfo {
    * before its expiration time).  See Section 4 for information on
    * implementation of such checks.
    */
-  active: boolean;
+  active: boolean
 
   /**
    * OPTIONAL.  A JSON string containing a space-separated list of
    * scopes associated with this token, in the format described in
    * Section 3.3 of OAuth 2.0 [RFC6749].
    */
-  scope?: string;
+  scope?: string
 
   /**
    * OPTIONAL.  Client identifier for the OAuth 2.0 client that
    * requested this token.
    */
-  client_id?: string;
+  client_id?: string
 
   /**
    * OPTIONAL.  Human-readable identifier for the resource owner who
    * authorized this token.
    */
-  username?: string;
+  username?: string
 
   /**
    * OPTIONAL.  Type of the token as defined in Section 5.1 of OAuth
    * 2.0 [RFC6749].
    */
-  token_type?: string;
+  token_type?: string
 
   /**
    * OPTIONAL.  Integer timestamp, measured in the number of seconds
    * since January 1 1970 UTC, indicating when this token will expire,
    * as defined in JWT [RFC7519].
    */
-  exp?: number;
+  exp?: number
 
   /**
    * OPTIONAL.  Integer timestamp, measured in the number of seconds
    * since January 1 1970 UTC, indicating when this token was
    * originally issued, as defined in JWT [RFC7519].
    */
-  iat?: number;
+  iat?: number
 
   /**
    * OPTIONAL.  Integer timestamp, measured in the number of seconds
    * since January 1 1970 UTC, indicating when this token is not to be
    * used before, as defined in JWT [RFC7519].
    */
-  nbf?: number;
+  nbf?: number
 
   /**
    * OPTIONAL.  Subject of the token, as defined in JWT [RFC7519].
    * Usually a machine-readable identifier of the resource owner who
    * authorized this token.
    */
-  sub?: string;
+  sub?: string
 
   /**
    * OPTIONAL.  Service-specific string identifier or list of string
    * identifiers representing the intended audience for this token, as
    * defined in JWT [RFC7519].
    */
-  aud?: string;
+  aud?: string
 
   /**
    * OPTIONAL.  String representing the issuer of this token, as
    * defined in JWT [RFC7519].
    */
-  iss?: string;
+  iss?: string
 
   /**  OPTIONAL.  String identifier for the token, as defined in JWT
    * [RFC7519].
    */
-  jti?: string;
+  jti?: string
 }

@@ -1,8 +1,8 @@
 import { RafikiContext } from '../rafiki'
 import { modifySerializedIlpPrepare } from '../lib'
 
-export function createClientController () {
-  return async function ilpClient ({
+export function createClientController() {
+  return async function ilpClient({
     peers: { outgoing },
     request,
     response

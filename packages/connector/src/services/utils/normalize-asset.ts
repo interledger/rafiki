@@ -1,4 +1,4 @@
-export function normalizeAsset (
+export function normalizeAsset(
   inputScale: number,
   outputScale: number,
   value: bigint

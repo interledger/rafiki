@@ -15,15 +15,15 @@ import createLogger from 'pino'
 const logger = createLogger()
 
 export interface AdminApiOptions {
-  host?: string;
-  port?: number;
+  host?: string
+  port?: number
 }
 
 export interface AdminApiServices {
-  peers: PeersService;
-  auth: RafikiMiddleware | Partial<TokenAuthConfig>;
-  router: Router;
-  accounts: AccountsService;
+  peers: PeersService
+  auth: RafikiMiddleware | Partial<TokenAuthConfig>
+  router: Router
+  accounts: AccountsService
 }
 
 /**
@@ -34,7 +34,7 @@ export class AdminApi {
   private _httpServer?: Server
   private _host?: string
   private _port?: number
-  constructor (
+  constructor(
     { host, port }: AdminApiOptions,
     { peers, accounts }: AdminApiServices
   ) {
@@ -45,11 +45,11 @@ export class AdminApi {
     this._port = port
   }
 
-  shutdown (): void {
+  shutdown(): void {
     if (this._httpServer) this._httpServer.close()
   }
 
-  listen (): void {
+  listen(): void {
     const adminApiHost = this._host || '0.0.0.0'
     const adminApiPort = this._port || 7780
 
@@ -59,7 +59,7 @@ export class AdminApi {
     )
   }
 
-  private _getRoutes (
+  private _getRoutes(
     peers: PeersService,
     accounts: AccountsService
   ): createRouter.Router {

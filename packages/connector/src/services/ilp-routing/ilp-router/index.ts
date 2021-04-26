@@ -11,42 +11,42 @@ export class Router {
   private routingTable: RoutingTable
   private forwardingRoutingTable: ForwardingRoutingTable
 
-  constructor () {
+  constructor() {
     this.routingTable = new RoutingTable()
     this.forwardingRoutingTable = new ForwardingRoutingTable()
     this.globalPrefix = 'g'
   }
 
-  setGlobalPrefix (prefix: string): void {
+  setGlobalPrefix(prefix: string): void {
     this.globalPrefix = prefix
   }
 
-  setOwnAddress (address: string): void {
+  setOwnAddress(address: string): void {
     this.ownAddress = address
   }
 
-  getOwnAddress (): string {
+  getOwnAddress(): string {
     return this.ownAddress
   }
 
-  addRoute (prefix: string, route: Route): void {
+  addRoute(prefix: string, route: Route): void {
     this.updateLocalRoute(prefix, route)
   }
 
-  removeRoute (prefix: string): void {
+  removeRoute(prefix: string): void {
     this.updateLocalRoute(prefix)
   }
 
-  getRoutingTable (): RoutingTable {
+  getRoutingTable(): RoutingTable {
     return this.routingTable
   }
 
-  getForwardingRoutingTable (): ForwardingRoutingTable {
+  getForwardingRoutingTable(): ForwardingRoutingTable {
     return this.forwardingRoutingTable
   }
 
   // TODO: Maybe this shouldn't throw an error and instead just return undefined
-  nextHop (prefix: string): string {
+  nextHop(prefix: string): string {
     const route = this.routingTable.resolve(prefix)
     const nextHop = route && route.nextHop
     if (nextHop) {
@@ -64,7 +64,7 @@ export class Router {
    * @param prefix prefix
    * @param route route
    */
-  private updateLocalRoute (prefix: string, route?: Route): boolean {
+  private updateLocalRoute(prefix: string, route?: Route): boolean {
     const currentBest = this.routingTable.get(prefix)
     const currentNextHop = currentBest && currentBest.nextHop
     const newNextHop = route && route.nextHop
@@ -86,7 +86,7 @@ export class Router {
     return false
   }
 
-  private getGlobalPrefix (): string {
+  private getGlobalPrefix(): string {
     return this.globalPrefix
   }
 
@@ -103,7 +103,7 @@ export class Router {
    * @param prefix prefix
    * @param route route
    */
-  private updateForwardingRoute (prefix: string, route?: Route): void {
+  private updateForwardingRoute(prefix: string, route?: Route): void {
     if (route) {
       route = {
         ...route,
@@ -122,12 +122,12 @@ export class Router {
         (prefix.startsWith(this.getOwnAddress() + '.') &&
           route.path.length === 1) // ||
 
-      // canDragonFilter(
-      //   this.forwardingRoutingTable,
-      //   this.getAccountRelation,
-      //   prefix,
-      //   route
-      // )
+        // canDragonFilter(
+        //   this.forwardingRoutingTable,
+        //   this.getAccountRelation,
+        //   prefix,
+        //   route
+        // )
       ) {
         route = undefined
       }

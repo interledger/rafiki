@@ -30,10 +30,10 @@ describe.skip('ILDCP Controller', function () {
     const ctx = createContext<any, RafikiContext>()
     ctx.services = services
     ctx.peers = {
-      get incoming () {
+      get incoming() {
         return peers.get('alice')
       },
-      get outgoing () {
+      get outgoing() {
         return peers.get(SELF_PEER_ID)
       }
     }

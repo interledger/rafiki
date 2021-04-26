@@ -20,25 +20,25 @@ import getRawBody from 'raw-body'
 
 const CONTENT_TYPE = 'application/octet-stream'
 
-export function ilpAddressToPath (ilpAddress: string, prefix?: string): string {
+export function ilpAddressToPath(ilpAddress: string, prefix?: string): string {
   return (prefix || '') + ilpAddress.replace(/\./g, '/')
 }
 
 export interface IlpPacketMiddlewareOptions {
-  getRawBody?: (req: Readable) => Promise<Buffer>;
+  getRawBody?: (req: Readable) => Promise<Buffer>
 }
 
 interface RawPacket {
-  readonly raw: Buffer;
+  readonly raw: Buffer
 }
 
 export interface RafikiPrepare extends IlpPrepare {
-  intAmount: bigint;
-  readonly originalAmount: bigint;
-  readonly originalExpiresAt: Date;
+  intAmount: bigint
+  readonly originalAmount: bigint
+  readonly originalExpiresAt: Date
 
-  readonly amountChanged: boolean;
-  readonly expiresAtChanged: boolean;
+  readonly amountChanged: boolean
+  readonly expiresAtChanged: boolean
 }
 
 export class ZeroCopyIlpPrepare implements RafikiPrepare {
@@ -49,7 +49,7 @@ export class ZeroCopyIlpPrepare implements RafikiPrepare {
   public _expiresAtChanged = false
   public _amountChanged = false
 
-  constructor (prepare: Buffer | IlpPrepare) {
+  constructor(prepare: Buffer | IlpPrepare) {
     const packet = Buffer.isBuffer(prepare)
       ? deserializeIlpPrepare(prepare)
       : prepare
@@ -58,71 +58,71 @@ export class ZeroCopyIlpPrepare implements RafikiPrepare {
     this._originalExpiresAt = packet.expiresAt
   }
 
-  get destination (): string {
+  get destination(): string {
     return this._prepare.destination
   }
 
-  get executionCondition (): Buffer {
+  get executionCondition(): Buffer {
     return this._prepare.executionCondition
   }
 
-  get data (): Buffer {
+  get data(): Buffer {
     return this._prepare.data
   }
 
-  set expiresAt (val: Date) {
+  set expiresAt(val: Date) {
     this._expiresAtChanged = true
     this._prepare.expiresAt = val
   }
 
-  get expiresAt (): Date {
+  get expiresAt(): Date {
     return this._prepare.expiresAt
   }
 
-  set amount (val: string) {
+  set amount(val: string) {
     this._amountChanged = true
     this._prepare.amount = val
     this._amount = BigInt(val)
   }
 
-  get amount (): string {
+  get amount(): string {
     return this._prepare.amount
   }
 
-  set intAmount (val: bigint) {
+  set intAmount(val: bigint) {
     this._amountChanged = true
     this._prepare.amount = val.toString()
     this._amount = val
   }
 
-  get intAmount (): bigint {
+  get intAmount(): bigint {
     return this._amount
   }
 
-  get amountChanged (): boolean {
+  get amountChanged(): boolean {
     return this._amountChanged
   }
 
-  get expiresAtChanged (): boolean {
+  get expiresAtChanged(): boolean {
     return this._expiresAtChanged
   }
 
-  get originalAmount (): bigint {
+  get originalAmount(): bigint {
     return this._originalAmount
   }
 
-  get originalExpiresAt (): Date {
+  get originalExpiresAt(): Date {
     return this._originalExpiresAt
   }
 }
 
-export function createIlpPacketMiddleware (
+export function createIlpPacketMiddleware(
   config?: IlpPacketMiddlewareOptions
 ): RafikiMiddleware {
   const _getRawBody =
     config && config.getRawBody ? config.getRawBody : getRawBody
 
-  return async function ilpPacket (
+  return async function ilpPacket(
     ctx: RafikiContext,
     next: () => Promise<any>
   ): Promise<void> {

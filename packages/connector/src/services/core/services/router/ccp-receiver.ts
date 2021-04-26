@@ -13,7 +13,7 @@ import debug from 'debug'
 const log = debug('rafiki:ccp-receiver')
 
 export class CcpReceiverService extends Map<string, CcpReceiver> {
-  public getOrThrow (id: string): CcpReceiver {
+  public getOrThrow(id: string): CcpReceiver {
     const receiver = this.get(id)
     if (!receiver) throw new PeerNotFoundError(id)
     return receiver
@@ -21,16 +21,16 @@ export class CcpReceiverService extends Map<string, CcpReceiver> {
 }
 
 export interface CcpReceiverOpts {
-  peerId: string;
-  sendData: (packet: Buffer) => Promise<Buffer>;
-  addRoute: (route: IncomingRoute) => void;
-  removeRoute: (peerId: string, prefix: string) => void;
-  getRouteWeight: (peerId: string) => number;
+  peerId: string
+  sendData: (packet: Buffer) => Promise<Buffer>
+  addRoute: (route: IncomingRoute) => void
+  removeRoute: (peerId: string, prefix: string) => void
+  getRouteWeight: (peerId: string) => number
 }
 
 interface CcpReceiverStatus {
-  routingTableId: string;
-  epoch: number;
+  routingTableId: string
+  epoch: number
 }
 
 const ROUTE_CONTROL_RETRY_INTERVAL = 30000
@@ -56,7 +56,7 @@ export class CcpReceiver {
    */
   private _epoch = 0
 
-  constructor ({
+  constructor({
     peerId,
     sendData,
     addRoute,
@@ -74,14 +74,14 @@ export class CcpReceiver {
     interval.unref()
   }
 
-  public getStatus (): CcpReceiverStatus {
+  public getStatus(): CcpReceiverStatus {
     return {
       routingTableId: this._routingTableId,
       epoch: this._epoch
     }
   }
 
-  public async handleRouteUpdate ({
+  public async handleRouteUpdate({
     routingTableId,
     fromEpochIndex,
     toEpochIndex,
@@ -156,7 +156,7 @@ export class CcpReceiver {
     return {} as CcpRouteUpdateResponse
   }
 
-  public async sendRouteControl (sendOnce = false): Promise<void> {
+  public async sendRouteControl(sendOnce = false): Promise<void> {
     const routeControl: CcpRouteControlRequest = {
       mode: Mode.MODE_SYNC,
       lastKnownRoutingTableId: this._routingTableId,
@@ -194,12 +194,12 @@ export class CcpReceiver {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private _bump (holdDownTime: number): void {
+  private _bump(holdDownTime: number): void {
     // TODO: Should this be now() + holdDownTime?
     this._expiry = Date.now()
   }
 
-  private async _maybeSendRouteControl (): Promise<void> {
+  private async _maybeSendRouteControl(): Promise<void> {
     log('Checking if need to send new route control')
     if (Date.now() - this._expiry > 60 * 1000) {
       await this.sendRouteControl(true)

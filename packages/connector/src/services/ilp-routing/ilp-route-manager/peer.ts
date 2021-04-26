@@ -5,10 +5,10 @@ import { randomBytes } from 'crypto'
 import { hmac, sha256 } from '../lib/utils'
 
 export interface PeerOpts {
-  peerId: string;
-  relation: Relation;
-  routingSecret?: string;
-  shouldAuth?: boolean;
+  peerId: string
+  relation: Relation
+  routingSecret?: string
+  shouldAuth?: boolean
 }
 
 export class Peer {
@@ -19,7 +19,7 @@ export class Peer {
   private routingSecret: Buffer
   private shouldAuth: boolean
 
-  constructor ({ peerId, relation, routingSecret, shouldAuth }: PeerOpts) {
+  constructor({ peerId, relation, routingSecret, shouldAuth }: PeerOpts) {
     this.peerId = peerId
     this.relation = relation
 
@@ -32,11 +32,11 @@ export class Peer {
     this.routes = new PrefixMap()
   }
 
-  getPrefix (prefix: string): IncomingRoute | undefined {
+  getPrefix(prefix: string): IncomingRoute | undefined {
     return this.routes.get(prefix)
   }
 
-  insertRoute (route: IncomingRoute): boolean {
+  insertRoute(route: IncomingRoute): boolean {
     if (this.shouldAuth) {
       const auth = hmac(this.routingSecret, route.prefix)
       if (sha256(auth) !== route.auth) {
@@ -48,18 +48,18 @@ export class Peer {
     return true
   }
 
-  deleteRoute (prefix: string): boolean {
+  deleteRoute(prefix: string): boolean {
     this.routes.delete(prefix)
 
     // TODO Check if actually changed
     return true
   }
 
-  getPrefixes (): string[] {
+  getPrefixes(): string[] {
     return this.routes.keys()
   }
 
-  getRelation (): Relation {
+  getRelation(): Relation {
     return this.relation
   }
 }

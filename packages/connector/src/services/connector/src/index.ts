@@ -159,7 +159,7 @@ export const start = async (): Promise<void> => {
 
 // If this script is run directly, start the server
 if (!module.parent) {
-  start().catch(e => {
+  start().catch((e) => {
     const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
     logger.error(errInfo)
   })

@@ -28,9 +28,9 @@ export const RouteUpdatePreparePacketFactory = {
     )
 }
 
-export const RouteControlRequestFactory = Factory.define<
-  CcpRouteControlRequest
->('RouteControlRequest').attrs({
+export const RouteControlRequestFactory = Factory.define<CcpRouteControlRequest>(
+  'RouteControlRequest'
+).attrs({
   features: new Array<string>(),
   lastKnownEpoch: 0,
   lastKnownRoutingTableId: Faker.datatype.uuid,

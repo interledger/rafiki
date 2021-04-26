@@ -11,7 +11,7 @@ import {
   BroadcastRoute,
   Relation,
   RouteUpdate
-} from '../../ilp-routing'
+} from '../../../ilp-routing'
 import { randomBytes } from 'crypto'
 import { PeerNotFoundError } from '../../errors'
 import debug from 'debug'
@@ -19,7 +19,7 @@ import debug from 'debug'
 const log = debug('rafiki:ccp-sender')
 
 export class CcpSenderService extends Map<string, CcpSender> {
-  public getOrThrow (id: string): CcpSender {
+  public getOrThrow(id: string): CcpSender {
     const sender = this.get(id)
     if (!sender) throw new PeerNotFoundError(id)
     return sender
@@ -27,18 +27,18 @@ export class CcpSenderService extends Map<string, CcpSender> {
 }
 
 export interface CcpSenderOpts {
-  peerId: string;
-  sendData: (packet: Buffer) => Promise<Buffer>;
-  getOwnAddress: () => string;
-  routeExpiry: number;
-  routeBroadcastInterval: number;
-  forwardingRoutingTable: ForwardingRoutingTable;
-  getPeerRelation: (accountId: string) => Relation;
+  peerId: string
+  sendData: (packet: Buffer) => Promise<Buffer>
+  getOwnAddress: () => string
+  routeExpiry: number
+  routeBroadcastInterval: number
+  forwardingRoutingTable: ForwardingRoutingTable
+  getPeerRelation: (accountId: string) => Relation
 }
 
 interface CcpSenderStatus {
-  epoch: number;
-  mode: string;
+  epoch: number
+  mode: string
 }
 
 const MINIMUM_UPDATE_INTERVAL = 150
@@ -62,7 +62,7 @@ export class CcpSender {
   private _lastUpdate = 0
   private _sendRouteUpdateTimer?: NodeJS.Timer
 
-  constructor ({
+  constructor({
     peerId,
     sendData,
     forwardingRoutingTable,
@@ -80,24 +80,24 @@ export class CcpSender {
     this._routeBroadcastInterval = routeBroadcastInterval
   }
 
-  public stop (): void {
+  public stop(): void {
     if (this._sendRouteUpdateTimer) {
       clearTimeout(this._sendRouteUpdateTimer)
     }
   }
 
-  public getLastUpdate (): number {
+  public getLastUpdate(): number {
     return this._lastUpdate
   }
 
-  public getStatus (): CcpSenderStatus {
+  public getStatus(): CcpSenderStatus {
     return {
       epoch: this._lastKnownEpoch,
       mode: ModeReverseMap[this._mode]
     }
   }
 
-  public async handleRouteControl ({
+  public async handleRouteControl({
     mode,
     lastKnownRoutingTableId,
     lastKnownEpoch
@@ -142,7 +142,7 @@ export class CcpSender {
     return {} as CcpRouteControlResponse
   }
 
-  private _scheduleRouteUpdate (): void {
+  private _scheduleRouteUpdate(): void {
     if (this._sendRouteUpdateTimer) {
       clearTimeout(this._sendRouteUpdateTimer)
       this._sendRouteUpdateTimer = undefined
@@ -184,7 +184,7 @@ export class CcpSender {
     this._sendRouteUpdateTimer.unref()
   }
 
-  private async _sendSingleRouteUpdate (): Promise<void> {
+  private async _sendSingleRouteUpdate(): Promise<void> {
     this._lastUpdate = Date.now()
 
     const nextRequestedEpoch = this._lastKnownEpoch
@@ -197,7 +197,7 @@ export class CcpSender {
 
     const relation = this._getPeerRelation(this._peerId)
 
-    function isRouteUpdate (update: RouteUpdate | null): update is RouteUpdate {
+    function isRouteUpdate(update: RouteUpdate | null): update is RouteUpdate {
       return !!update
     }
 
@@ -258,13 +258,13 @@ export class CcpSender {
       currentEpochIndex: this._forwardingRoutingTable.currentEpoch,
       fromEpochIndex: this._lastKnownEpoch,
       toEpochIndex: toEpoch,
-      newRoutes: newRoutes.map(r => ({
+      newRoutes: newRoutes.map((r) => ({
         ...r,
         nextHop: undefined,
         auth,
         props: []
       })),
-      withdrawnRoutes: withdrawnRoutes.map(r => r.prefix)
+      withdrawnRoutes: withdrawnRoutes.map((r) => r.prefix)
     }
 
     // We anticipate that they're going to be happy with our route update and

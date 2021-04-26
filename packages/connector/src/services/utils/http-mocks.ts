@@ -8,11 +8,11 @@ import { Transform } from 'stream'
 import { Socket } from 'net'
 
 export interface MockIncomingMessageOptions {
-  [key: string]: string | undefined | string[] | IncomingHttpHeaders;
-  method?: string;
-  url?: string;
-  headers?: IncomingHttpHeaders;
-  rawHeaders?: string[];
+  [key: string]: string | undefined | string[] | IncomingHttpHeaders
+  method?: string
+  url?: string
+  headers?: IncomingHttpHeaders
+  rawHeaders?: string[]
 }
 
 export class MockIncomingMessage extends Transform {
@@ -21,8 +21,8 @@ export class MockIncomingMessage extends Transform {
   httpVersion: '1.1' = '1.1'
   httpVersionMajor: 1 = 1
   httpVersionMinor: 1 = 1
-  aborted: boolean = false
-  complete: boolean = false
+  aborted = false
+  complete = false
   // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   connection: Socket
   headers: IncomingHttpHeaders
@@ -31,7 +31,7 @@ export class MockIncomingMessage extends Transform {
   rawTrailers: string[] = []
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setTimeout (msecs: number, callback: () => void): this {
+  setTimeout(msecs: number, callback: () => void): this {
     throw new Error('method not implemented.')
   }
 
@@ -45,7 +45,7 @@ export class MockIncomingMessage extends Transform {
 
   private _failError?: Error
 
-  constructor (options: MockIncomingMessageOptions = {}) {
+  constructor(options: MockIncomingMessageOptions = {}) {
     super({
       writableObjectMode: true,
       readableObjectMode: false,
@@ -63,7 +63,7 @@ export class MockIncomingMessage extends Transform {
 
     // Copy unreserved options
     const reservedOptions = ['method', 'url', 'headers', 'rawHeaders']
-    Object.keys(options).forEach(key => {
+    Object.keys(options).forEach((key) => {
       if (reservedOptions.indexOf(key) === -1) {
         this[key] = options[key]
       }
@@ -76,7 +76,7 @@ export class MockIncomingMessage extends Transform {
     this.headers = {}
     this.rawHeaders = []
     if (options.headers) {
-      Object.keys(options.headers).forEach(key => {
+      Object.keys(options.headers).forEach((key) => {
         const header = options.headers![key]
         if (header !== undefined) {
           this.headers[key.toLowerCase()] = header
@@ -98,7 +98,7 @@ export class MockIncomingMessage extends Transform {
     }
   }
 
-  public fail (error: Error): void {
+  public fail(error: Error): void {
     this._failError = error
   }
 }
@@ -107,13 +107,13 @@ export class MockServerResponse extends Transform {
   statusCode: number
   statusMessage: string
 
-  upgrading: boolean = false
-  chunkedEncoding: boolean = false
-  shouldKeepAlive: boolean = false
-  useChunkedEncodingByDefault: boolean = false
-  sendDate: boolean = true
+  upgrading = false
+  chunkedEncoding = false
+  shouldKeepAlive = false
+  useChunkedEncodingByDefault = false
+  sendDate = true
   finished = false
-  headersSent: boolean = false
+  headersSent = false
   // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   connection: Socket
 
@@ -178,7 +178,7 @@ export class MockServerResponse extends Transform {
   _responseData: any[] = []
   _headers: OutgoingHttpHeaders = {}
 
-  constructor (req: IncomingMessage, finish?: () => void) {
+  constructor(req: IncomingMessage, finish?: () => void) {
     super({
       transform: (chunk, encoding, next) => {
         this.push(chunk)

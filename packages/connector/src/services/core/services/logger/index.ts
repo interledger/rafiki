@@ -12,7 +12,7 @@ export interface LoggingService {
    * @param msg: the log message to write
    * @param ...args: format string values when `msg` is a format string
    */
-  fatal: LogFn;
+  fatal: LogFn
   /**
    * Log at `'error'` level the given msg. If the first argument is an object, all its properties will be included in the JSON line.
    * If more args follows `msg`, these will be used to format `msg` using `util.format`.
@@ -21,7 +21,7 @@ export interface LoggingService {
    * @param msg: the log message to write
    * @param ...args: format string values when `msg` is a format string
    */
-  error: LogFn;
+  error: LogFn
   /**
    * Log at `'warn'` level the given msg. If the first argument is an object, all its properties will be included in the JSON line.
    * If more args follows `msg`, these will be used to format `msg` using `util.format`.
@@ -30,7 +30,7 @@ export interface LoggingService {
    * @param msg: the log message to write
    * @param ...args: format string values when `msg` is a format string
    */
-  warn: LogFn;
+  warn: LogFn
   /**
    * Log at `'info'` level the given msg. If the first argument is an object, all its properties will be included in the JSON line.
    * If more args follows `msg`, these will be used to format `msg` using `util.format`.
@@ -39,7 +39,7 @@ export interface LoggingService {
    * @param msg: the log message to write
    * @param ...args: format string values when `msg` is a format string
    */
-  info: LogFn;
+  info: LogFn
   /**
    * Log at `'debug'` level the given msg. If the first argument is an object, all its properties will be included in the JSON line.
    * If more args follows `msg`, these will be used to format `msg` using `util.format`.
@@ -48,7 +48,7 @@ export interface LoggingService {
    * @param msg: the log message to write
    * @param ...args: format string values when `msg` is a format string
    */
-  debug: LogFn;
+  debug: LogFn
   /**
    * Log at `'trace'` level the given msg. If the first argument is an object, all its properties will be included in the JSON line.
    * If more args follows `msg`, these will be used to format `msg` using `util.format`.
@@ -57,12 +57,12 @@ export interface LoggingService {
    * @param msg: the log message to write
    * @param ...args: format string values when `msg` is a format string
    */
-  trace: LogFn;
+  trace: LogFn
 }
 
 export interface LogFn {
-  (msg: string, ...args: any[]): void;
-  (obj: Record<string, unknown>, msg?: string, ...args: any[]): void;
+  (msg: string, ...args: any[]): void
+  (obj: Record<string, unknown>, msg?: string, ...args: any[]): void
 }
 
 export * from './debug'

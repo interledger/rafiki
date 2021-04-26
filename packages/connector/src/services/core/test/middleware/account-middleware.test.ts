@@ -20,10 +20,10 @@ describe('Account Middleware', () => {
   accounts.add(outgoingAccount)
   const rafikiServices = RafikiServicesFactory.build({ accounts })
   const mockPeers = {
-    get incoming () {
+    get incoming() {
       return Promise.resolve(incomingPeerInfo)
     },
-    get outgoing () {
+    get outgoing() {
       return Promise.resolve(outgoingPeerInfo)
     }
   }

@@ -24,7 +24,7 @@ export class InMemoryPeer implements Peer {
 
   readonly axiosClient?: AxiosClient
 
-  constructor (info: PeerInfo) {
+  constructor(info: PeerInfo) {
     // These sets are redundant due to the Object.assign, but necessary to satisfy TypeScript.
     // See: https://github.com/microsoft/TypeScript/issues/26792
     this.id = info.id
@@ -46,7 +46,7 @@ export class InMemoryPeer implements Peer {
     }
   }
 
-  public send (data: Buffer): Promise<Buffer> {
+  public send(data: Buffer): Promise<Buffer> {
     if (!this.axiosClient) throw new Error('No send client configured for peer')
     return this.axiosClient.send(data)
   }
@@ -58,31 +58,31 @@ export class InMemoryPeers implements PeersService {
   private _removedPeers: Subject<string>
   private _peers = new Map<string, InMemoryPeer>()
 
-  constructor () {
+  constructor() {
     this._addedPeers = new Subject<Peer>()
     this._updatedPeers = new Subject<Peer>()
     this._removedPeers = new Subject<string>()
   }
 
-  get added (): Observable<Peer> {
+  get added(): Observable<Peer> {
     return this._addedPeers.asObservable()
   }
 
-  get updated (): Observable<Peer> {
+  get updated(): Observable<Peer> {
     return this._updatedPeers.asObservable()
   }
 
-  get deleted (): Observable<string> {
+  get deleted(): Observable<string> {
     return this._removedPeers.asObservable()
   }
 
-  public async get (id: string): Promise<Peer> {
+  public async get(id: string): Promise<Peer> {
     const peer = this._peers.get(id)
     if (!peer) throw new PeerNotFoundError(id)
     return peer
   }
 
-  async add (peerInfo: Readonly<PeerInfo>): Promise<InMemoryPeer> {
+  async add(peerInfo: Readonly<PeerInfo>): Promise<InMemoryPeer> {
     const peer = new InMemoryPeer(peerInfo)
     this._peers.set(peer.id, peer)
     this._addedPeers.next(peer)
@@ -90,7 +90,7 @@ export class InMemoryPeers implements PeersService {
     return peer
   }
 
-  async update (peerInfo: Readonly<PeerInfo>): Promise<InMemoryPeer> {
+  async update(peerInfo: Readonly<PeerInfo>): Promise<InMemoryPeer> {
     let peer = this._peers.get(peerInfo.id)
     if (!peer) {
       throw new PeerNotFoundError(peerInfo.id)
@@ -102,7 +102,7 @@ export class InMemoryPeers implements PeersService {
     return peer
   }
 
-  async remove (peerId: string): Promise<void> {
+  async remove(peerId: string): Promise<void> {
     const oldPeer = this._peers.get(peerId)
     if (!oldPeer) {
       throw new PeerNotFoundError(peerId)
@@ -112,7 +112,7 @@ export class InMemoryPeers implements PeersService {
     log('removed peer', oldPeer)
   }
 
-  async list (): Promise<Peer[]> {
-    return [...this._peers.values()].map(peer => peer.info)
+  async list(): Promise<Peer[]> {
+    return [...this._peers.values()].map((peer) => peer.info)
   }
 }

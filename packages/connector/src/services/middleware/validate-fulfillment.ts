@@ -4,7 +4,7 @@ import { Errors } from 'ilp-packet'
 
 const { WrongConditionError } = Errors
 
-export function createOutgoingValidateFulfillmentMiddleware (): RafikiMiddleware {
+export function createOutgoingValidateFulfillmentMiddleware(): RafikiMiddleware {
   return async (
     { services: { logger }, request: { prepare }, response }: RafikiContext,
     next: () => Promise<any>

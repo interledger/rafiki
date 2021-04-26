@@ -7,10 +7,7 @@ export const AccountInfoFactory = Factory.define<AccountInfo>(
 ).attrs({
   id: Faker.datatype.uuid,
   peerId: Faker.name.firstName(),
-  assetCode: Faker.finance
-    .currencyCode()
-    .toString()
-    .toUpperCase(),
+  assetCode: Faker.finance.currencyCode().toString().toUpperCase(),
   assetScale: Faker.datatype.number(6),
   maximumPayable: BigInt(Faker.datatype.number({ min: 1000, max: 2000 })),
   maximumReceivable: BigInt(Faker.datatype.number({ min: 1000, max: 2000 })),

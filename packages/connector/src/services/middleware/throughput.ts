@@ -5,7 +5,7 @@ const { InsufficientLiquidityError } = Errors
 
 const DEFAULT_REFILL_PERIOD = 1000 // 1 second
 
-export function createThroughputLimitBucketsForPeer (
+export function createThroughputLimitBucketsForPeer(
   peer: Peer,
   inOrOut: 'incoming' | 'outgoing'
 ): TokenBucket | undefined {
@@ -34,7 +34,7 @@ export function createThroughputLimitBucketsForPeer (
   }
 }
 
-export function createOutgoingThroughputMiddleware (): RafikiMiddleware {
+export function createOutgoingThroughputMiddleware(): RafikiMiddleware {
   const _buckets = new Map<string, TokenBucket>()
 
   return async (
@@ -65,7 +65,7 @@ export function createOutgoingThroughputMiddleware (): RafikiMiddleware {
 /**
  * The Throughput rule throttles throughput based on the amount in the packets.
  */
-export function createIncomingThroughputMiddleware (): RafikiMiddleware {
+export function createIncomingThroughputMiddleware(): RafikiMiddleware {
   const _buckets = new Map<string, TokenBucket>()
 
   return async (

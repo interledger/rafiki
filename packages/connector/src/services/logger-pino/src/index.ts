@@ -14,7 +14,7 @@ import {
 } from '@interledger/rafiki-core'
 import { Middleware } from 'koa'
 
-function serializeIlpPrepare (req: SerializedIlpRequest): SerializedIlpRequest {
+function serializeIlpPrepare(req: SerializedIlpRequest): SerializedIlpRequest {
   if (req.raw && req.raw.prepare) {
     req['ilp-destination'] = req.raw.prepare.destination
     req['ilp-amount'] = req.raw.prepare.amount
@@ -26,7 +26,7 @@ function serializeIlpPrepare (req: SerializedIlpRequest): SerializedIlpRequest {
   return req
 }
 
-function serializeIlpReply (res: SerializedIlpResponse): SerializedIlpResponse {
+function serializeIlpReply(res: SerializedIlpResponse): SerializedIlpResponse {
   if (res.raw && res.raw.fulfill) {
     res['ilp-fulfillment'] = res.raw.fulfill.fulfillment.toString('hex')
   }
@@ -43,12 +43,12 @@ export const serializers = {
   res: wrapResponseSerializer(serializeIlpReply)
 }
 
-export function createPinoMiddleware (
+export function createPinoMiddleware(
   options?: Options,
   stream?: DestinationStream
 ): RafikiMiddleware {
   const pino = logger(options, stream)
-  return async function pinoLogger (
+  return async function pinoLogger(
     ctx: RafikiContext,
     next: () => Promise<any>
   ): Promise<Middleware> {
@@ -61,8 +61,8 @@ export function createPinoMiddleware (
 }
 
 export interface SerializedIlpRequest extends SerializedRequest {
-  raw: IncomingMessage & RafikiRequestMixin;
+  raw: IncomingMessage & RafikiRequestMixin
 }
 export interface SerializedIlpResponse extends SerializedResponse {
-  raw: ServerResponse & RafikiResponseMixin;
+  raw: ServerResponse & RafikiResponseMixin
 }

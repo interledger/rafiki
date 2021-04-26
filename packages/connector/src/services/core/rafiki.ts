@@ -25,50 +25,50 @@ import {
 } from './middleware/account'
 
 export interface RafikiServices {
-  router: Router;
-  peers: PeersService;
-  accounts: AccountsService;
-  logger: LoggingService;
+  router: Router
+  peers: PeersService
+  accounts: AccountsService
+  logger: LoggingService
 }
 
 export interface RafikiIlpConfig
   extends IlpPacketMiddlewareOptions,
     PeerMiddlewareOptions,
     AccountMiddlewareOptions {
-  path?: string;
+  path?: string
 }
 export type RafikiState<T> = T & AuthState
 
 export type RafikiRequestMixin = {
-  prepare: RafikiPrepare;
-  rawPrepare: Buffer;
+  prepare: RafikiPrepare
+  rawPrepare: Buffer
 }
 export type RafikiResponseMixin = {
-  reject?: IlpReject;
-  rawReject?: Buffer;
-  fulfill?: IlpFulfill;
-  rawFulfill?: Buffer;
-  reply?: IlpReply;
-  rawReply?: Buffer;
+  reject?: IlpReject
+  rawReject?: Buffer
+  fulfill?: IlpFulfill
+  rawFulfill?: Buffer
+  reply?: IlpReply
+  rawReply?: Buffer
 }
 
 export type RafikiRequest = Koa.Request & RafikiRequestMixin
 export type RafikiResponse = Koa.Response & RafikiResponseMixin
 
 export type RafikiContextMixin = {
-  services: RafikiServices;
+  services: RafikiServices
   peers: {
-    readonly incoming: Promise<Peer>;
-    readonly outgoing: Promise<Peer>;
-  };
+    readonly incoming: Promise<Peer>
+    readonly outgoing: Promise<Peer>
+  }
   accounts: {
-    readonly incoming: Promise<AccountSnapshot>;
-    readonly outgoing: Promise<AccountSnapshot>;
-  };
-  request: RafikiRequest;
-  response: RafikiResponse;
-  req: IncomingMessage & RafikiRequestMixin;
-  res: ServerResponse & RafikiResponseMixin;
+    readonly incoming: Promise<AccountSnapshot>
+    readonly outgoing: Promise<AccountSnapshot>
+  }
+  request: RafikiRequest
+  response: RafikiResponse
+  req: IncomingMessage & RafikiRequestMixin
+  res: ServerResponse & RafikiResponseMixin
 }
 
 export type RafikiContext<T = any> = Koa.ParameterizedContext<
@@ -81,7 +81,7 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
   private _router?: Router
   private _peers?: PeersService
   private _accounts?: AccountsService
-  constructor (config?: Partial<RafikiServices>) {
+  constructor(config?: Partial<RafikiServices>) {
     super()
 
     this._router = config && config.router ? config.router : undefined
@@ -104,52 +104,52 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
 
     // Set global context that exposes services
     this.context.services = {
-      get peers (): PeersService {
+      get peers(): PeersService {
         return peersOrThrow()
       },
-      get router (): Router {
+      get router(): Router {
         return routerOrThrow()
       },
-      get accounts (): AccountsService {
+      get accounts(): AccountsService {
         return accountsOrThrow()
       },
       logger
     }
   }
 
-  public get router (): Router | undefined {
+  public get router(): Router | undefined {
     return this._router
   }
 
-  public set router (router: Router | undefined) {
+  public set router(router: Router | undefined) {
     this._router = router
   }
 
-  public get peers (): PeersService | undefined {
+  public get peers(): PeersService | undefined {
     return this._peers
   }
 
-  public set peers (peers: PeersService | undefined) {
+  public set peers(peers: PeersService | undefined) {
     this._peers = peers
   }
 
-  public get accounts (): AccountsService | undefined {
+  public get accounts(): AccountsService | undefined {
     return this._accounts
   }
 
-  public set accounts (accounts: AccountsService | undefined) {
+  public set accounts(accounts: AccountsService | undefined) {
     this._accounts = accounts
   }
 
-  public get logger (): LoggingService {
+  public get logger(): LoggingService {
     return this.context.services.logger
   }
 
-  public set logger (logger: LoggingService) {
+  public set logger(logger: LoggingService) {
     this.context.services.logger = logger
   }
 
-  public useIlp (config?: RafikiIlpConfig): void {
+  public useIlp(config?: RafikiIlpConfig): void {
     this.use(createIlpPacketMiddleware())
     this.use(createPeerMiddleware(config))
     this.use(createAccountMiddleware(config))
@@ -157,10 +157,10 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
 }
 
 interface RafikiCreateAppServices extends RafikiServices {
-  auth: RafikiMiddleware<AuthState> | Partial<TokenAuthConfig>;
+  auth: RafikiMiddleware<AuthState> | Partial<TokenAuthConfig>
 }
 
-export function createAuthMiddleware (
+export function createAuthMiddleware(
   auth?: RafikiMiddleware<AuthState> | Partial<TokenAuthConfig>
 ): RafikiMiddleware {
   if (typeof auth === 'function') {
@@ -170,7 +170,7 @@ export function createAuthMiddleware (
   }
 }
 
-export function createApp (
+export function createApp(
   { auth, peers, accounts, router, logger }: Partial<RafikiCreateAppServices>,
   config?: RafikiIlpConfig
 ): Rafiki {
@@ -191,11 +191,11 @@ export function createApp (
 export class RafikiRouter {
   private _router: KoaRouter
 
-  constructor () {
+  constructor() {
     this._router = createRouter()
   }
 
-  public ilpRoute (
+  public ilpRoute(
     ilpAddressPattern: string,
     handler: RafikiMiddleware<any>
   ): void {
@@ -210,7 +210,7 @@ export class RafikiRouter {
     this._router.post(path, handler)
   }
 
-  public routes (): RafikiMiddleware<any> {
+  public routes(): RafikiMiddleware<any> {
     return this._router.middleware()
   }
 }

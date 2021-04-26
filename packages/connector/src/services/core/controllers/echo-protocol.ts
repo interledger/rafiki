@@ -11,8 +11,8 @@ const ECHO_DATA_PREFIX = Buffer.from('ECHOECHOECHOECHO', 'ascii')
 /**
  * Intercepts and handles messages addressed to the connector otherwise forwards it onto next.
  */
-export function createEchoProtocolController (minMessageWindow: number) {
-  return async function echo ({
+export function createEchoProtocolController(minMessageWindow: number) {
+  return async function echo({
     services: { logger },
     request,
     response,

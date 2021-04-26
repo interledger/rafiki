@@ -5,8 +5,8 @@ import { RafikiContext } from '../rafiki'
 /**
  * Intercepts and handles peer.config messages otherwise passes the request onto next.
  */
-export function createIldcpProtocolController () {
-  return async function ildcp (ctx: RafikiContext): Promise<void> {
+export function createIldcpProtocolController() {
+  return async function ildcp(ctx: RafikiContext): Promise<void> {
     const {
       services: { logger, router, accounts },
       request,

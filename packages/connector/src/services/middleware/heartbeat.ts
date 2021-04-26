@@ -3,9 +3,9 @@ import { RafikiContext, RafikiMiddleware } from '@interledger/rafiki-core'
 // const DEFAULT_HEARTBEAT_INTERVAL = 30 * 1000
 
 export interface HeartbeatRuleServices {
-  onSuccessfulHeartbeat: (peerId: string) => void;
-  onFailedHeartbeat: (peerId: string) => void;
-  heartbeatInterval?: number;
+  onSuccessfulHeartbeat: (peerId: string) => void
+  onFailedHeartbeat: (peerId: string) => void
+  heartbeatInterval?: number
 }
 
 /**
@@ -14,7 +14,7 @@ export interface HeartbeatRuleServices {
  *
  * TODO: Should be a controller
  */
-export function createIncomingHeartbeatMiddleware (
+export function createIncomingHeartbeatMiddleware(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   config: HeartbeatRuleServices
 ): RafikiMiddleware {

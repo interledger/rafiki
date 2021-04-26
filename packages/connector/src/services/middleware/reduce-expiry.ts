@@ -1,9 +1,5 @@
 import { IlpPrepare, Errors } from 'ilp-packet'
-import {
-  RafikiContext,
-  LoggingService,
-  RafikiMiddleware
-} from '../core'
+import { RafikiContext, LoggingService, RafikiMiddleware } from '../core'
 const { InsufficientTimeoutError } = Errors
 
 /**
@@ -13,7 +9,7 @@ const { InsufficientTimeoutError } = Errors
  * @param maxHoldWindow The maximum time window (in milliseconds) that the connector is willing to place funds on hold while waiting for the outcome of a transaction
  * @throws {InsufficientTimeoutError} Throws if the new expiry time is less than the minimum expiration time window or the prepare has already expired.
  */
-function getDestinationExpiry (
+function getDestinationExpiry(
   request: IlpPrepare,
   minExpirationWindow: number,
   maxHoldWindow: number,
@@ -63,7 +59,7 @@ function getDestinationExpiry (
  * // TODO: Should we reduce the expiry on the packet or just expire the packet?
  * // TODO: Maybe this should be combined with the expiry checker and the expiry timeout?
  */
-export function createOutgoingReduceExpiryMiddleware (): RafikiMiddleware {
+export function createOutgoingReduceExpiryMiddleware(): RafikiMiddleware {
   return async (
     { services: { logger }, request: { prepare }, peers }: RafikiContext,
     next: () => Promise<any>
