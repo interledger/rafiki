@@ -24,6 +24,7 @@ describe.skip('ILDCP Controller', function () {
   })
 
   test('throws error if destination is not peer.config', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const prepare = new ZeroCopyIlpPrepare(
       IlpPrepareFactory.build({ destination: 'peer.config' })
     )

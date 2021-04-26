@@ -28,10 +28,6 @@ export interface IlpPacketMiddlewareOptions {
   getRawBody?: (req: Readable) => Promise<Buffer>
 }
 
-interface RawPacket {
-  readonly raw: Buffer
-}
-
 export interface RafikiPrepare extends IlpPrepare {
   intAmount: bigint
   readonly originalAmount: bigint

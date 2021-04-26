@@ -1,13 +1,11 @@
 import { createContext } from '../../../utils'
 import {
   PeerFactory,
-  IlpPrepareFactory,
   RafikiServicesFactory,
   AccountInfoFactory
 } from '../../factories'
 import { RafikiContext } from '../../rafiki'
 import { InMemoryAccountsService } from '../../services'
-import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 import { createAccountMiddleware } from '../../middleware/account'
 
 describe('Account Middleware', () => {
@@ -53,9 +51,11 @@ describe('Account Middleware', () => {
     accounts.add(otherIncomingAccountInfo)
     accounts.add(otherOutgoingAccountInfo)
     const middleware = createAccountMiddleware({
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       getIncomingAccountId: (ctx: RafikiContext): Promise<string> => {
         return Promise.resolve('otherIncomingAccount')
       },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       getOutgoingAccountId: (ctx: RafikiContext): Promise<string> => {
         return Promise.resolve('otherOutgoingAccount')
       }

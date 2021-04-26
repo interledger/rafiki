@@ -1,7 +1,6 @@
 import { createContext } from '../../../utils'
 import {
   RafikiContext,
-  InMemoryPeers,
   InMemoryAccountsService,
   ZeroCopyIlpPrepare
 } from '../..'
@@ -11,7 +10,6 @@ import {
 } from '../../middleware'
 import {
   RafikiServicesFactory,
-  PeerInfoFactory,
   AccountInfoFactory,
   IlpPrepareFactory,
   IlpFulfillFactory,

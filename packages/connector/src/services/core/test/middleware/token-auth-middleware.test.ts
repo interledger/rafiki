@@ -44,7 +44,7 @@ describe('Token Auth Middleware', function () {
       })
 
       const authMiddleware = createTokenAuthMiddleware({
-        introspect: (id: string) => {
+        introspect: (_id: string) => {
           return Promise.resolve({ active: false })
         }
       })
@@ -65,7 +65,7 @@ describe('Token Auth Middleware', function () {
       })
 
       const authMiddleware = createTokenAuthMiddleware({
-        introspect: (id: string) => {
+        introspect: (_id: string) => {
           return Promise.resolve({ active: true })
         }
       })
@@ -86,7 +86,7 @@ describe('Token Auth Middleware', function () {
       })
 
       const authMiddleware = createTokenAuthMiddleware({
-        introspect: (id: string) => {
+        introspect: (_id: string) => {
           return Promise.resolve({ active: true, sub: 'alice' })
         }
       })

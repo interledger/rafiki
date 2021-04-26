@@ -17,7 +17,7 @@ describe('Peer Middleware', () => {
     getAddresses: jest.fn(),
     getPeerForAddress: jest
       .fn()
-      .mockImplementation((address: string) => 'outgoingPeer'),
+      .mockImplementation((_address: string) => 'outgoingPeer'),
     getRoutingTable: jest.fn(),
     handleRouteControl: jest.fn(),
     handleRouteUpdate: jest.fn()
@@ -67,8 +67,8 @@ describe('Peer Middleware', () => {
     ctx.services = rafikiServices
     ctx.state.user = { sub: 'incomingPeer' }
     const middleware = createPeerMiddleware({
-      getIncomingPeerId: (ctx) => 'outgoingPeer',
-      getOutgoingPeerId: (ctx) => 'incomingPeer'
+      getIncomingPeerId: (_ctx) => 'outgoingPeer',
+      getOutgoingPeerId: (_ctx) => 'incomingPeer'
     })
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
