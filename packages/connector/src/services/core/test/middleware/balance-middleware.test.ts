@@ -1,14 +1,14 @@
-import { createContext } from '@interledger/rafiki-utils'
+import { createContext } from '../../../utils'
 import {
   RafikiContext,
   InMemoryPeers,
   InMemoryAccountsService,
   ZeroCopyIlpPrepare
-} from '../../src'
+} from '../..'
 import {
   createIncomingBalanceMiddleware,
   createOutgoingBalanceMiddleware
-} from '../../src/middleware'
+} from '../../middleware'
 import {
   RafikiServicesFactory,
   PeerInfoFactory,
@@ -16,7 +16,7 @@ import {
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory
-} from '../../src/factories'
+} from '../../factories'
 
 // TODO: make one peer to many account relationship
 const aliceAccountInfo = AccountInfoFactory.build({

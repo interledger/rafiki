@@ -1,5 +1,5 @@
-import { Peer } from '../src/ilp-route-manager/peer'
-import { IncomingRoute } from '../src/types/routing'
+import { Peer } from '../ilp-route-manager/peer'
+import { IncomingRoute } from '../types/routing'
 
 describe('peer', function () {
   let peer: Peer

@@ -1,14 +1,14 @@
-import { createContext } from '@interledger/rafiki-utils'
-import { RafikiContext } from '../../src/rafiki'
-import { InMemoryPeers, InMemoryRouter } from '../../src/services'
+import { createContext } from '../../../utils'
+import { RafikiContext } from '../../rafiki'
+import { InMemoryPeers, InMemoryRouter } from '../../services'
 import {
   PeerInfoFactory,
   IlpPrepareFactory,
   RafikiServicesFactory
-} from '../../src/factories'
-import { SELF_PEER_ID } from '../../src/constants'
-import { createIldcpProtocolController } from '../../src/controllers/ildcp-protocol'
-import { ZeroCopyIlpPrepare } from '../../src/middleware/ilp-packet'
+} from '../../factories'
+import { SELF_PEER_ID } from '../../constants'
+import { createIldcpProtocolController } from '../../controllers/ildcp-protocol'
+import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 
 // TODO: waiting for peers and accounts interface to be finalised
 describe.skip('ILDCP Controller', function () {

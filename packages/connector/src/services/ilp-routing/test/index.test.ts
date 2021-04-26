@@ -1,4 +1,4 @@
-import { Router } from '../src'
+import { Router } from '..'
 
 describe('ilp-router', function () {
   describe('routes', function () {

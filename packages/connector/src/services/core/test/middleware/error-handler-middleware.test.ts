@@ -1,9 +1,9 @@
-import { createContext } from '@interledger/rafiki-utils'
-import { RafikiContext } from '../../src/rafiki'
-import { PeerInfoFactory, RafikiServicesFactory } from '../../src/factories'
-import { createIncomingErrorHandlerMiddleware } from '../../src/middleware/error-handler'
-import { SELF_PEER_ID } from '../../src/constants'
-import { InMemoryPeers } from '../../src/services'
+import { createContext } from '../../../utils'
+import { RafikiContext } from '../../rafiki'
+import { PeerInfoFactory, RafikiServicesFactory } from '../../factories'
+import { createIncomingErrorHandlerMiddleware } from '../../middleware/error-handler'
+import { SELF_PEER_ID } from '../../constants'
+import { InMemoryPeers } from '../../services'
 
 describe('Error Handler Middleware', () => {
   const peers = new InMemoryPeers()

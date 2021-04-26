@@ -1,13 +1,13 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext } from '@interledger/rafiki-core'
+import { RafikiContext } from '../../core'
 import {
   PeerFactory,
   RafikiServicesFactory,
   IlpPrepareFactory
-} from '@interledger/rafiki-core/build/factories'
-import { createContext } from '@interledger/rafiki-utils'
-import { createOutgoingReduceExpiryMiddleware } from '../src/reduce-expiry'
-import { ZeroCopyIlpPrepare } from '@interledger/rafiki-core/src'
+} from '../../core/factories'
+import { createContext } from '../../utils'
+import { createOutgoingReduceExpiryMiddleware } from '../reduce-expiry'
+import { ZeroCopyIlpPrepare } from '../../core'
 
 const { InsufficientTimeoutError } = Errors
 Date.now = jest.fn(() => 1434412800000) // June 16, 2015 00:00:00 GMT

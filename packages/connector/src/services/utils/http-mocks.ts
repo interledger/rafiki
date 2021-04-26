@@ -16,16 +16,19 @@ export interface MockIncomingMessageOptions {
 }
 
 export class MockIncomingMessage extends Transform {
-  id: string | number | object
-  httpVersion: '1.1'
-  httpVersionMajor: 1
-  httpVersionMinor: 1
-  complete: boolean
+  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
+  id: string | number | Record<string, unknown>
+  httpVersion: '1.1' = '1.1'
+  httpVersionMajor: 1 = 1
+  httpVersionMinor: 1 = 1
+  aborted: boolean = false
+  complete: boolean = false
+  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   connection: Socket
   headers: IncomingHttpHeaders
   rawHeaders: string[]
-  trailers: { [key: string]: string | undefined }
-  rawTrailers: string[]
+  trailers: { [key: string]: string | undefined } = {}
+  rawTrailers: string[] = []
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setTimeout (msecs: number, callback: () => void): this {
@@ -36,6 +39,7 @@ export class MockIncomingMessage extends Transform {
   url?: string | undefined
   statusCode?: number | undefined
   statusMessage?: string | undefined
+  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   socket: Socket
   log: any
 
@@ -103,15 +107,17 @@ export class MockServerResponse extends Transform {
   statusCode: number
   statusMessage: string
 
-  upgrading: boolean
-  chunkedEncoding: boolean
-  shouldKeepAlive: boolean
-  useChunkedEncodingByDefault: boolean
-  sendDate: boolean
+  upgrading: boolean = false
+  chunkedEncoding: boolean = false
+  shouldKeepAlive: boolean = false
+  useChunkedEncodingByDefault: boolean = false
+  sendDate: boolean = true
   finished = false
-  headersSent: boolean
+  headersSent: boolean = false
+  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   connection: Socket
 
+  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   setTimeout: (msecs: number, callback?: () => void) => this
   setHeader = (name: string, value: number | string | string[]): void => {
     this._headers[name.toLowerCase()] = value
@@ -137,9 +143,13 @@ export class MockServerResponse extends Transform {
     delete this._headers[name.toLowerCase()]
   }
 
+  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   addTrailers: (headers: OutgoingHttpHeaders | Array<[string, string]>) => void
+  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   flushHeaders: () => void
+  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   assignSocket: (socket: Socket) => void
+  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   detachSocket: (socket: Socket) => void
 
   writeContinue = (callback?: () => void): void => {
@@ -165,7 +175,7 @@ export class MockServerResponse extends Transform {
     return this
   }
 
-  _responseData: any[]
+  _responseData: any[] = []
   _headers: OutgoingHttpHeaders = {}
 
   constructor (req: IncomingMessage, finish?: () => void) {

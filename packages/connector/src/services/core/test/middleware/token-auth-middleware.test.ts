@@ -1,11 +1,11 @@
-import { createContext } from '@interledger/rafiki-utils'
-import { createTokenAuthMiddleware } from '../../src/middleware'
-import { RafikiContext } from '../../src/rafiki'
+import { createContext } from '../../../utils'
+import { createTokenAuthMiddleware } from '../../middleware'
+import { RafikiContext } from '../../rafiki'
 
 describe('Token Auth Middleware', function () {
   describe('default behaviour', function () {
     test('returns 401 if there is no authorization header', async () => {
-      const ctx = createContext<any, RafikiContext>({
+      const ctx = createContext<unknown, RafikiContext>({
         req: { headers: { 'content-type': 'application/octet-stream' } }
       })
 
@@ -17,7 +17,7 @@ describe('Token Auth Middleware', function () {
     })
 
     test('returns 401 if bearer token is malformed', async () => {
-      const ctx = createContext<any, RafikiContext>({
+      const ctx = createContext<unknown, RafikiContext>({
         req: {
           headers: {
             'content-type': 'application/octet-stream',
@@ -34,7 +34,7 @@ describe('Token Auth Middleware', function () {
     })
 
     test('default authentication fails if introspected token is not active', async () => {
-      const ctx = createContext<any, RafikiContext>({
+      const ctx = createContext<unknown, RafikiContext>({
         req: {
           headers: {
             'content-type': 'application/octet-stream',
@@ -55,7 +55,7 @@ describe('Token Auth Middleware', function () {
     })
 
     test('returns 401 if introspected token does not have a subject', async () => {
-      const ctx = createContext<any, RafikiContext>({
+      const ctx = createContext<unknown, RafikiContext>({
         req: {
           headers: {
             'content-type': 'application/octet-stream',
@@ -76,7 +76,7 @@ describe('Token Auth Middleware', function () {
     })
 
     test('succeeds for valid token and binds data to context', async () => {
-      const ctx = createContext<any, RafikiContext>({
+      const ctx = createContext<unknown, RafikiContext>({
         req: {
           headers: {
             'content-type': 'application/octet-stream',

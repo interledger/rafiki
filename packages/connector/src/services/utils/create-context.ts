@@ -13,7 +13,7 @@ export type Options<StateT, CustomT> = {
   [name: string]: any;
 } & Partial<Omit<CustomT, 'res' | 'req'>>
 
-export function createContext<StateT = any, CustomT = {}> (
+export function createContext<StateT = any, CustomT = any> (
   options: Options<StateT, CustomT> = {}
 ): Koa.ParameterizedContext<StateT, CustomT> {
   const app = options.app || new Koa<StateT, CustomT>()

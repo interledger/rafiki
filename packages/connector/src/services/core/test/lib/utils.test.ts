@@ -1,6 +1,6 @@
 import { serializeIlpPrepare, deserializeIlpPrepare } from 'ilp-packet'
-import { IlpPrepareFactory } from '../../src/factories'
-import { modifySerializedIlpPrepare } from '../../src/lib'
+import { IlpPrepareFactory } from '../../factories'
+import { modifySerializedIlpPrepare } from '../../lib'
 
 describe('modifySerializedIlpPrepare', () => {
   const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT

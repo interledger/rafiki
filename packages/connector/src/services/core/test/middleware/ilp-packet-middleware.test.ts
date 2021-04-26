@@ -9,14 +9,14 @@ import {
 import {
   createContext,
   MockIncomingMessageOptions
-} from '@interledger/rafiki-utils'
-import { createIlpPacketMiddleware } from '../../src/middleware/ilp-packet'
+} from '../../../utils'
+import { createIlpPacketMiddleware } from '../../middleware/ilp-packet'
 import {
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory
-} from '../../src/factories'
-import { RafikiContext } from '../../src/rafiki'
+} from '../../factories'
+import { RafikiContext } from '../../rafiki'
 
 describe('ILP Packet Middleware', () => {
   test('attaches the ilp prepare to the req object', async () => {

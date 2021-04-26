@@ -1,12 +1,12 @@
 import { Errors } from 'ilp-packet'
-import { createContext } from '@interledger/rafiki-utils'
-import { RafikiContext, ZeroCopyIlpPrepare } from '@interledger/rafiki-core'
+import { createContext } from '../../utils'
+import { RafikiContext, ZeroCopyIlpPrepare } from '../../core'
 import {
   RafikiServicesFactory,
   PeerFactory,
   IlpPrepareFactory
-} from '@interledger/rafiki-core/build/factories'
-import { createIncomingMaxPacketAmountMiddleware } from '../src/max-packet-amount'
+} from '../../core/factories'
+import { createIncomingMaxPacketAmountMiddleware } from '../max-packet-amount'
 
 const { AmountTooLargeError } = Errors
 

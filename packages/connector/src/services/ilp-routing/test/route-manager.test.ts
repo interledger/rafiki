@@ -1,6 +1,6 @@
-import { Router } from '../src'
-import { RouteManager } from '../src/ilp-route-manager'
-import { Peer } from '../src/ilp-route-manager/peer'
+import { Router } from '..'
+import { RouteManager } from '../ilp-route-manager'
+import { Peer } from '../ilp-route-manager/peer'
 
 describe('ilp-route-manager', function () {
   let router: Router

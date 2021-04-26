@@ -1,12 +1,12 @@
-import { createContext } from '@interledger/rafiki-utils'
-import { RafikiContext } from '../../src/rafiki'
+import { createContext } from '../../../utils'
+import { RafikiContext } from '../../rafiki'
 import {
   PeerFactory,
   IlpPrepareFactory,
   RafikiServicesFactory
-} from '../../src/factories'
-import { createClientController } from '../../src/controllers/client'
-import { ZeroCopyIlpPrepare } from '../../src/middleware/ilp-packet'
+} from '../../factories'
+import { createClientController } from '../../controllers/client'
+import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 
 describe('Client Controller', function () {
   const alice = PeerFactory.build({ id: 'alice' })

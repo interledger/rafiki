@@ -1,16 +1,16 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext } from '@interledger/rafiki-core'
+import { RafikiContext } from '../../core'
 import {
   PeerFactory,
   RafikiServicesFactory,
   IlpPrepareFactory
-} from '@interledger/rafiki-core/build/factories'
-import { createContext, TokenBucket } from '@interledger/rafiki-utils'
+} from '../../core/factories'
+import { createContext, TokenBucket } from '../../utils'
 import {
   createIncomingThroughputMiddleware,
   createOutgoingThroughputMiddleware
-} from '../src/throughput'
-import { ZeroCopyIlpPrepare } from '@interledger/rafiki-core/src'
+} from '../throughput'
+import { ZeroCopyIlpPrepare } from '../../core'
 
 const { InsufficientLiquidityError } = Errors
 
