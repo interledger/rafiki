@@ -55,6 +55,7 @@ export function initIocContainer(
         max: 10
       },
       migrations: {
+        directory: './',
         tableName: 'knex_migrations'
       }
     })
