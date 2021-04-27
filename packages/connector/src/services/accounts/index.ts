@@ -12,8 +12,6 @@ interface IlpAccountBalance {
   assetCode: string
   assetScale: number
 
-  max?: bigint
-  min?: bigint
   current: bigint
 
   // details of how we implement this TBD
