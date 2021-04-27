@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/ban-ts-comment */
 import {
   IncomingMessage,
   IncomingHttpHeaders,
@@ -42,7 +42,6 @@ export class MockIncomingMessage extends Transform {
   statusMessage?: string | undefined
   // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   socket: Socket
-  log: any
 
   private _failError?: Error
 
@@ -117,6 +116,7 @@ export class MockServerResponse extends Transform {
   headersSent = false
   // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   connection: Socket
+  socket: Socket | null = null
 
   // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   setTimeout: (msecs: number, callback?: () => void) => this
@@ -176,7 +176,11 @@ export class MockServerResponse extends Transform {
     return this
   }
 
-  _responseData: any[] = []
+  writeProcessing = (): void => {
+    /* noop */
+  }
+
+  _responseData: (Buffer | string)[] = []
   _headers: OutgoingHttpHeaders = {}
 
   constructor(req: IncomingMessage, finish?: () => void) {

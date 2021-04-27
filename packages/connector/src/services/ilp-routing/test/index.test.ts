@@ -58,7 +58,9 @@ describe('ilp-router', function () {
     })
   })
 
-  describe('weighting', function () {})
+  describe('weighting', function () {
+    /* TODO */
+  })
 
   // TODO: Need to add functionality to check that adding a route propagates to the forwardingRoutingTable or perhaps the Route Manager should handle that?
 })

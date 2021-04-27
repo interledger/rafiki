@@ -4,7 +4,7 @@ import { Transaction } from '../services/accounts'
 export function createIncomingBalanceMiddleware() {
   return async (
     { request, response, services, accounts }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     const { amount } = request.prepare
 
@@ -40,7 +40,7 @@ export function createIncomingBalanceMiddleware() {
 export function createOutgoingBalanceMiddleware() {
   return async (
     { request, response, services, accounts }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     const { amount } = request.prepare
 

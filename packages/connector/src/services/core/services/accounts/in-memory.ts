@@ -119,6 +119,7 @@ export class InMemoryAccountsService implements AccountsService {
         commit: async () => {
           account.balancePayable += amount
         },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         rollback: async () => {}
       }
 

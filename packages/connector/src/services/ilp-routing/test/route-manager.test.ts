@@ -112,7 +112,9 @@ describe('ilp-route-manager', function () {
     })
 
     // Section for testing weighting stuff
-    describe('weighting', function () {})
+    describe('weighting', function () {
+      /* TODO */
+    })
 
     test('removing a route removes from peer routing table', function () {
       routeManager.addRoute({

@@ -40,7 +40,7 @@ export function createAccountMiddleware(
 
   return async function account(
     ctx: RafikiContext<AuthState>,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> {
     const incomingAccountId = await getIncomingAccountId(ctx)
     const outgoingAccountId = await getOutgoingAccountId(ctx)
