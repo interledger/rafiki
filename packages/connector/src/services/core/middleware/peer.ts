@@ -9,6 +9,7 @@ export interface PeerMiddlewareOptions {
 
 const defaultGetIncomingPeerId = (ctx: RafikiContext<AuthState>): string => {
   ctx.assert(ctx.state.user && ctx.state.user.sub, 401)
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return ctx.state.user!.sub! // Waiting on Sir Anders (https://github.com/microsoft/TypeScript/pull/32695)
 }
 

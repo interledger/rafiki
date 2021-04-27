@@ -16,13 +16,13 @@ export async function sendToPeer(
   data: Buffer,
   peers?: PeersService
 ): Promise<Buffer> {
-  if (typeof peerOrPeerId === 'string' && !peers) {
-    throw new Error('PeerService required')
+  let peer
+  if (typeof peerOrPeerId === 'string') {
+    if (!peers) throw new Error('PeerService required')
+    peer = await peers.get(peerOrPeerId)
+  } else {
+    peer = peerOrPeerId
   }
-  const peer =
-    typeof peerOrPeerId === 'string'
-      ? await peers!.get(peerOrPeerId)
-      : peerOrPeerId
   return peer.send(data)
 }
 

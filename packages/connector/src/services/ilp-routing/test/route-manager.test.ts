@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Router } from '..'
 import { RouteManager } from '../ilp-route-manager'
 import { Peer } from '../ilp-route-manager/peer'

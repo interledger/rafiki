@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Errors } from 'ilp-packet'
 import { RafikiContext } from '../../core'
 import {

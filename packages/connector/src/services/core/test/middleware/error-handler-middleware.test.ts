@@ -46,6 +46,7 @@ describe('Error Handler Middleware', () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.response.reject).toBeDefined()
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(ctx.response.reject!.triggeredBy).toEqual('unknown.self')
   })
 

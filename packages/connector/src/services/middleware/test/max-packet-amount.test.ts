@@ -59,6 +59,7 @@ describe('Max Packet Amount Middleware', function () {
     expect(ctx.services.logger.warn).toHaveBeenCalledWith(
       'rejected a packet due to amount exceeding maxPacketAmount',
       {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         maxPacketAmount: alice.maxPacketAmount!.toString(),
         request: ctx.request
       }
