@@ -5,12 +5,8 @@ import { IlpAccountSettings } from '../../models'
 import * as BalancesService from '../balances'
 import { Balance } from '../balances'
 
-// when are these accounts created?
-const SETTLEMENT_ACCOUNT = 'settlementAccount'
+const SETTLEMENT_ACCOUNT_PREFIX = 'settlementAccount:'
 const LIQUIDITY_ACCOUNT_PREFIX = 'liquidityAccount:'
-BalancesService.createBalance({
-  id: SETTLEMENT_ACCOUNT
-})
 
 interface IlpAccountBalance {
   assetCode: string
@@ -128,6 +124,29 @@ function toIlpAccount(
   return account
 }
 
+function toLiquidityBalanceId(assetCode: string, assetScale: number) {
+  return LIQUIDITY_ACCOUNT_PREFIX + assetCode + assetScale
+}
+
+function toSettlementBalanceId(assetCode: string, assetScale: number) {
+  return SETTLEMENT_ACCOUNT_PREFIX + assetCode + assetScale
+}
+
+async function createCurrencyBalances(
+  assetCode: string,
+  assetScale: number
+): Promise<void> {
+  // try {
+  await BalancesService.createBalance({
+    id: toSettlementBalanceId(assetCode, assetScale)
+  })
+  await BalancesService.createBalance({
+    id: toLiquidityBalanceId(assetCode, assetScale),
+    min: BigInt(0)
+  })
+  // }
+}
+
 export async function createAccount(account: IlpAccount): Promise<IlpAccount> {
   const balance = await BalancesService.createBalance({
     ...account.balance,
@@ -136,10 +155,12 @@ export async function createAccount(account: IlpAccount): Promise<IlpAccount> {
   await IlpAccountSettings.query().insertAndFetch(
     toIlpAccountSettings(account, balance)
   )
+  const { assetCode, assetScale } = account.balance
+  await createCurrencyBalances(assetCode, assetScale)
   if (account.balance.current > BigInt(0)) {
     await BalancesService.createTransfer({
       id: uuid(),
-      sourceBalanceId: SETTLEMENT_ACCOUNT,
+      sourceBalanceId: toSettlementBalanceId(assetCode, assetScale),
       destinationBalanceId: balance.id,
       amount: account.balance.current
     })
@@ -212,27 +233,51 @@ export async function createTransfer(transfer: Transfer): Promise<Transfer> {
 
 // instead of void we might want to return liquidity account info
 export async function depositLiquidity(
-  currency: string,
+  assetCode: string,
+  assetScale: number,
   amount: bigint
 ): Promise<void> {
+  await createCurrencyBalances(assetCode, assetScale)
   await BalancesService.createTransfer({
     id: uuid(),
-    sourceBalanceId: SETTLEMENT_ACCOUNT,
-    destinationBalanceId: LIQUIDITY_ACCOUNT_PREFIX + currency,
+    sourceBalanceId: toSettlementBalanceId(assetCode, assetScale),
+    destinationBalanceId: toLiquidityBalanceId(assetCode, assetScale),
     amount
   })
 }
 
 export async function withdrawLiquidity(
-  currency: string,
+  assetCode: string,
+  assetScale: number,
   amount: bigint
 ): Promise<void> {
+  await createCurrencyBalances(assetCode, assetScale)
   await BalancesService.createTransfer({
     id: uuid(),
-    sourceBalanceId: LIQUIDITY_ACCOUNT_PREFIX + currency,
-    destinationBalanceId: SETTLEMENT_ACCOUNT,
+    sourceBalanceId: toLiquidityBalanceId(assetCode, assetScale),
+    destinationBalanceId: toSettlementBalanceId(assetCode, assetScale),
     amount
   })
+}
+
+export async function getLiquidityBalance(
+  assetCode: string,
+  assetScale: number
+): Promise<bigint> {
+  const balance = await BalancesService.getBalance(
+    toLiquidityBalanceId(assetCode, assetScale)
+  )
+  return balance.current
+}
+
+export async function getSettlementBalance(
+  assetCode: string,
+  assetScale: number
+): Promise<bigint> {
+  const balance = await BalancesService.getBalance(
+    toSettlementBalanceId(assetCode, assetScale)
+  )
+  return balance.current
 }
 
 // we may return account instead of void from here
@@ -240,11 +285,15 @@ export async function deposit(
   accountId: string,
   amount: bigint
 ): Promise<void> {
-  const accountSettings = await IlpAccountSettings.query().findById(accountId)
+  const {
+    assetCode,
+    assetScale,
+    balanceId
+  } = await IlpAccountSettings.query().findById(accountId)
   await BalancesService.createTransfer({
     id: uuid(),
-    sourceBalanceId: SETTLEMENT_ACCOUNT,
-    destinationBalanceId: accountSettings.balanceId,
+    sourceBalanceId: toSettlementBalanceId(assetCode, assetScale),
+    destinationBalanceId: balanceId,
     amount
   })
 }
@@ -253,11 +302,15 @@ export async function withdraw(
   accountId: string,
   amount: bigint
 ): Promise<void> {
-  const accountSettings = await IlpAccountSettings.query().findById(accountId)
+  const {
+    assetCode,
+    assetScale,
+    balanceId
+  } = await IlpAccountSettings.query().findById(accountId)
   await BalancesService.createTransfer({
     id: uuid(),
-    sourceBalanceId: accountSettings.balanceId,
-    destinationBalanceId: SETTLEMENT_ACCOUNT,
+    sourceBalanceId: balanceId,
+    destinationBalanceId: toSettlementBalanceId(assetCode, assetScale),
     amount
   })
 }

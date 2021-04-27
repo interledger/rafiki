@@ -21,9 +21,15 @@ export interface Transfer {
   amount: bigint
 }
 
-const tempBalances = {}
+let tempBalances = {}
+export function clearBalances(): void {
+  tempBalances = {}
+}
 
 // does appContainer need to be passed in to access tigerbeetleClient?
+// export async function createBalances(
+//   balances: CreateBalanceOptions[]
+// ): Promise<Balance[]>
 export async function createBalance(
   balance: CreateBalanceOptions
 ): Promise<Balance> {
@@ -36,10 +42,12 @@ export async function createBalance(
   //   limit_net_debit: balance.min,
   //   limit_net_credit: balance.max
   // }])
-  tempBalances[balance.id] = {
-    current: BigInt(0),
-    max: balance.max,
-    min: balance.min
+  if (!tempBalances[balance.id]) {
+    tempBalances[balance.id] = {
+      current: BigInt(0),
+      max: balance.max,
+      min: balance.min
+    }
   }
   return {
     ...balance,
@@ -65,8 +73,8 @@ export async function getBalance(balanceId: string): Promise<Balance> {
 // export async function updateBalance(balance: Balance): Promise<Balance> {
 // }
 
+// export async function createTransfers(transfers: Transfer[]): Promise<Transfer[]>
 export async function createTransfer(transfer: Transfer): Promise<Transfer> {
-  // TODO: batch me
   // await tigerbeetleClient.createTransfers([{
   //   id: Buffer.from(balance.id),
   //   flags: {
