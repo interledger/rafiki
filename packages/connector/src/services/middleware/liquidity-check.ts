@@ -8,7 +8,7 @@ const { T04_INSUFFICIENT_LIQUIDITY } = Errors.codes
 export function createOutgoingLiquidityCheckMiddleware(): RafikiMiddleware {
   return async (
     { services: { logger }, response, peers }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     await next()
 

@@ -14,7 +14,7 @@ describe('Liquidity Check Middleware', function () {
   const services = RafikiServicesFactory.build()
   const alice = PeerFactory.build({ id: 'alice' })
   const bob = PeerFactory.build({ id: 'bob' })
-  const ctx = createContext<any, RafikiContext>()
+  const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.peers = {
     get incoming() {

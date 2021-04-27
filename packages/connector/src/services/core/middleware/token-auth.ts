@@ -58,7 +58,7 @@ export function createTokenAuthMiddleware(
 
   return async function auth(
     ctx: Koa.Context,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> {
     // Parse out Bearer token
     ctx.state.token = getBearerToken(ctx)

@@ -29,7 +29,7 @@ describe('Account Middleware', () => {
   test('the default sets the accountId to the peerId', async () => {
     const middleware = createAccountMiddleware()
     const next = jest.fn()
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     ctx.services = rafikiServices
     ctx.peers = mockPeers
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
@@ -61,7 +61,7 @@ describe('Account Middleware', () => {
       }
     })
     const next = jest.fn()
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     ctx.services = rafikiServices
     ctx.peers = mockPeers
 

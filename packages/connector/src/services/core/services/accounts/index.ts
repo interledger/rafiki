@@ -7,8 +7,8 @@ export interface AccountSnapshot extends Readonly<AccountInfo> {
 }
 
 export interface Transaction {
-  commit: () => Promise<any>
-  rollback: () => Promise<any>
+  commit: () => Promise<void>
+  rollback: () => Promise<void>
 }
 
 export interface AccountsService {
@@ -25,7 +25,7 @@ export interface AccountsService {
   adjustBalancePayable: (
     amount: bigint,
     accountId: string,
-    callback: (trx: Transaction) => Promise<any>
+    callback: (trx: Transaction) => Promise<unknown>
   ) => Promise<AccountSnapshot>
 
   /**
@@ -34,7 +34,7 @@ export interface AccountsService {
   adjustBalanceReceivable: (
     amount: bigint,
     accountId: string,
-    callback: (trx: Transaction) => Promise<any>
+    callback: (trx: Transaction) => Promise<unknown>
   ) => Promise<AccountSnapshot>
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Koa, { Middleware } from 'koa'
 import createRouter, { Router as KoaRouter } from 'koa-joi-router'
 import { Router } from './services/router'

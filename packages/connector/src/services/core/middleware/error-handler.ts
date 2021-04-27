@@ -11,7 +11,7 @@ import { RafikiContext } from '../rafiki'
 export function createIncomingErrorHandlerMiddleware() {
   return async (
     { response, services: { logger, router } }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     try {
       await next()

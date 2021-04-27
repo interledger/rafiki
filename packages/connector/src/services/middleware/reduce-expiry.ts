@@ -62,7 +62,7 @@ function getDestinationExpiry(
 export function createOutgoingReduceExpiryMiddleware(): RafikiMiddleware {
   return async (
     { services: { logger }, request: { prepare }, peers }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     const { minExpirationWindow, maxHoldWindow } = await peers.outgoing
     // TODO: These values should not be undefined. The defaults should be set in the service

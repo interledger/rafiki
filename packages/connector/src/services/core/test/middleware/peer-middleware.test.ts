@@ -32,7 +32,7 @@ describe('Peer Middleware', () => {
   test('the default getOutgoingPeer asks the router for the next peer', async () => {
     const middleware = createPeerMiddleware()
     const next = jest.fn()
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     ctx.services = rafikiServices
     ctx.request.prepare = new ZeroCopyIlpPrepare(
       IlpPrepareFactory.build({ destination: 'test.rafiki.outgoingPeer' })
@@ -49,7 +49,7 @@ describe('Peer Middleware', () => {
   test('the default getIncomingPeer looks for the user on the ctx state', async () => {
     const middleware = createPeerMiddleware()
     const next = jest.fn()
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     ctx.services = rafikiServices
     ctx.state.user = { sub: 'incomingPeer' }
     ctx.request.prepare = new ZeroCopyIlpPrepare(IlpPrepareFactory.build())
@@ -62,7 +62,7 @@ describe('Peer Middleware', () => {
   })
 
   test('correctly binds functions to get peers', async () => {
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     const next = jest.fn()
     ctx.services = rafikiServices
     ctx.state.user = { sub: 'incomingPeer' }

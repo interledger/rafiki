@@ -28,7 +28,7 @@ describe.skip('ILDCP Controller', function () {
     const prepare = new ZeroCopyIlpPrepare(
       IlpPrepareFactory.build({ destination: 'peer.config' })
     )
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     ctx.services = services
     ctx.peers = {
       get incoming() {

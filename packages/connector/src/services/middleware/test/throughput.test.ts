@@ -22,7 +22,7 @@ describe('Incoming Throughput Middleware', function () {
     incomingThroughputLimitRefillPeriod: 10000
   })
   const bob = PeerFactory.build({ id: 'bob' })
-  const ctx = createContext<any, RafikiContext>()
+  const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.peers = {
     get incoming() {
@@ -101,7 +101,7 @@ describe('Outgoing Throughput Middleware', function () {
     outgoingThroughputLimit: BigInt(10),
     outgoingThroughputLimitRefillPeriod: 10000
   })
-  const ctx = createContext<any, RafikiContext>()
+  const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.peers = {
     get incoming() {

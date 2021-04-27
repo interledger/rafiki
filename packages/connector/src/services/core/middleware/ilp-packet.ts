@@ -120,7 +120,7 @@ export function createIlpPacketMiddleware(
 
   return async function ilpPacket(
     ctx: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> {
     ctx.assert(
       ctx.request.type === CONTENT_TYPE,

@@ -10,7 +10,7 @@ export type Options<StateT, CustomT> = {
   req?: MockIncomingMessageOptions
   res?: () => void
   state?: StateT
-  [name: string]: any
+  [name: string]: unknown
 } & Partial<Omit<CustomT, 'res' | 'req'>>
 
 export function createContext<StateT = unknown, CustomT = unknown>(

@@ -69,7 +69,7 @@ export class InMemoryAccountsService implements AccountsService {
   public async adjustBalancePayable(
     amount: bigint,
     accountId: string,
-    callback: (trx: Transaction) => Promise<any>
+    callback: (trx: Transaction) => Promise<unknown>
   ): Promise<AccountSnapshot> {
     const account = await this.get(accountId)
 
@@ -135,7 +135,7 @@ export class InMemoryAccountsService implements AccountsService {
   public async adjustBalanceReceivable(
     amount: bigint,
     accountId: string,
-    callback: (trx: Transaction) => Promise<any>
+    callback: (trx: Transaction) => Promise<unknown>
   ): Promise<AccountSnapshot> {
     const account = await this.get(accountId)
     const transaction: Transaction = {

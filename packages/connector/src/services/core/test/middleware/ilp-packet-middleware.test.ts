@@ -21,7 +21,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.rawReply = serializeIlpFulfill(IlpFulfillFactory.build())
@@ -43,7 +43,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.rawReply = serializeIlpFulfill(IlpFulfillFactory.build())
@@ -60,7 +60,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.reject = IlpRejectFactory.build()
@@ -84,7 +84,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.reject = IlpRejectFactory.build()
@@ -108,7 +108,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.fulfill = IlpFulfillFactory.build()
@@ -132,7 +132,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.fulfill = IlpFulfillFactory.build()
@@ -156,7 +156,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.reply = IlpFulfillFactory.build()
@@ -177,7 +177,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.reply = IlpRejectFactory.build()
@@ -198,7 +198,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const fulfill = IlpFulfillFactory.build()
     const next = jest.fn().mockImplementation(() => {
@@ -217,7 +217,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const reject = IlpRejectFactory.build()
     const next = jest.fn().mockImplementation(() => {
@@ -236,7 +236,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const rawFulfill = serializeIlpFulfill(IlpFulfillFactory.build())
     const next = jest.fn().mockImplementation(() => {
@@ -255,7 +255,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const rawReject = serializeIlpReject(IlpRejectFactory.build())
     const next = jest.fn().mockImplementation(() => {
@@ -274,7 +274,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.rawReject = serializeIlpReject(IlpRejectFactory.build())
@@ -295,7 +295,7 @@ describe('ILP Packet Middleware', () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<any, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.rawFulfill = serializeIlpFulfill(IlpFulfillFactory.build())

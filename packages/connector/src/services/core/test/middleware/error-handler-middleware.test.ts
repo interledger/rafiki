@@ -15,7 +15,7 @@ describe('Error Handler Middleware', () => {
   })
 
   test('catches errors and converts into ilp reject', async () => {
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     const errorToBeThrown = new Error('Test Error')
     const next = jest.fn().mockImplementation(() => {
       throw errorToBeThrown
@@ -35,7 +35,7 @@ describe('Error Handler Middleware', () => {
   })
 
   test('sets triggeredBy to own address if error is thrown in next', async () => {
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     const errorToBeThrown = new Error('Test Error')
     const next = jest.fn().mockImplementation(() => {
       throw errorToBeThrown
@@ -51,7 +51,7 @@ describe('Error Handler Middleware', () => {
   })
 
   test('creates reject if reply is not set in next', async () => {
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     const next = jest.fn().mockImplementation(() => {
       // don't set reply
     })

@@ -13,7 +13,7 @@ describe('Expire Middleware', function () {
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 10 * 1000)
     })
-    const ctx = createContext<any, RafikiContext>()
+    const ctx = createContext<unknown, RafikiContext>()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     ctx.services = RafikiServicesFactory.build()
     const next = jest.fn().mockImplementation(() => {

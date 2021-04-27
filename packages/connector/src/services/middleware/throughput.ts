@@ -39,7 +39,7 @@ export function createOutgoingThroughputMiddleware(): RafikiMiddleware {
 
   return async (
     { services: { logger }, request: { prepare }, peers }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     const peer = await peers.outgoing
     let outgoingBucket = _buckets.get(peer.id)
@@ -70,7 +70,7 @@ export function createIncomingThroughputMiddleware(): RafikiMiddleware {
 
   return async (
     { services: { logger }, request: { prepare }, peers }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     const peer = await peers.incoming
     let incomingBucket = _buckets.get(peer.id)

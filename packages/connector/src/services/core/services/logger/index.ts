@@ -61,8 +61,8 @@ export interface LoggingService {
 }
 
 export interface LogFn {
-  (msg: string, ...args: any[]): void
-  (obj: Record<string, unknown>, msg?: string, ...args: any[]): void
+  (msg: string, ...args: unknown[]): void
+  (obj: Record<string, unknown>, msg?: string, ...args: unknown[]): void
 }
 
 export * from './debug'

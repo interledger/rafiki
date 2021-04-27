@@ -10,7 +10,7 @@ const { TransferTimedOutError } = Errors
 export function createOutgoingExpireMiddleware() {
   return async (
     { request, services: { logger } }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     const { expiresAt } = request.prepare
     const duration = expiresAt.getTime() - Date.now()

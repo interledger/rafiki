@@ -29,7 +29,7 @@ const bobAccountInfo = AccountInfoFactory.build({
 })
 const accounts = new InMemoryAccountsService()
 const services = RafikiServicesFactory.build({ accounts })
-const ctx = createContext<any, RafikiContext>()
+const ctx = createContext<unknown, RafikiContext>()
 ctx.accounts = {
   get incoming() {
     return accounts.get('alice')

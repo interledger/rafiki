@@ -12,7 +12,7 @@ describe('Client Controller', function () {
   const alice = PeerFactory.build({ id: 'alice' })
   const bob = PeerFactory.build({ id: 'bob' })
   const services = RafikiServicesFactory.build()
-  const ctx = createContext<any, RafikiContext>()
+  const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.peers = {
     get incoming() {

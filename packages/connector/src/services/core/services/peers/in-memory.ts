@@ -12,7 +12,7 @@ const log = debug('rafiki:in-memory-peers-service')
  * An in-memory peer service for development and testing purposes.
  */
 export class InMemoryPeer implements Peer {
-  readonly [key: string]: any
+  readonly [key: string]: unknown
   id: string
   url?: string
   relation: PeerRelation

@@ -37,7 +37,7 @@ export function createPeerMiddleware(
 
   return async function peer(
     ctx: RafikiContext<AuthState>,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> {
     let incomingPeer: Promise<Peer> | undefined
     let outgoingPeer: Promise<Peer> | undefined

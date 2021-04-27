@@ -24,7 +24,7 @@ describe('Echo protocol', function () {
   const alice = PeerFactory.build()
   const bob = PeerFactory.build()
   const services = RafikiServicesFactory.build()
-  const ctx = createContext<any, RafikiContext>()
+  const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.peers = {
     get incoming() {

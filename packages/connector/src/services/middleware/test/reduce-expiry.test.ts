@@ -22,7 +22,7 @@ describe('Outgoing Reduce Expiry Middleware', function () {
     minExpirationWindow: 3000,
     maxHoldWindow: 31000
   })
-  const ctx = createContext<any, RafikiContext>()
+  const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.peers = {
     get incoming() {

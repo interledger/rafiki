@@ -30,7 +30,7 @@ export function createIncomingRateLimitMiddleware(): RafikiMiddleware {
   const buckets = new Map<string, TokenBucket>()
   return async (
     { services: { logger }, request: { prepare }, peers }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     const peer = await peers.incoming
     let bucket = buckets.get(peer.id)

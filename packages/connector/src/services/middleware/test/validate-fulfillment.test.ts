@@ -13,7 +13,7 @@ const { WrongConditionError } = Errors
 
 describe('Validate Fulfillment Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const ctx = createContext<any, RafikiContext>()
+  const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   const middleware = createOutgoingValidateFulfillmentMiddleware()
 

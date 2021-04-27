@@ -13,7 +13,7 @@ describe('Rate Limit Middleware', function () {
   const services = RafikiServicesFactory.build()
   const alice = PeerFactory.build({ id: 'alice', rateLimitCapacity: BigInt(1) }) // bucket that has initial capacity of 1 and refills 10 000 every minute
   const bob = PeerFactory.build({ id: 'bob', rateLimitCapacity: BigInt(0) }) // bucket that has initial capacity of 0 and refills 10 000 every minute
-  const ctx = createContext<any, RafikiContext>()
+  const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   const middleware = createIncomingRateLimitMiddleware()
 

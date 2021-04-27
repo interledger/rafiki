@@ -20,7 +20,7 @@ export function createIncomingHeartbeatMiddleware(
 ): RafikiMiddleware {
   return async (
     { services: { logger }, request, response }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     const { destination, data } = request.prepare
     if (destination === 'peer.heartbeat') {

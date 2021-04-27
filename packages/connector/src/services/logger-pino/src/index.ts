@@ -50,7 +50,7 @@ export function createPinoMiddleware(
   const pino = logger(options, stream)
   return async function pinoLogger(
     ctx: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<Middleware> {
     return pino(ctx, async () => {
       // Attach the pino logger to services

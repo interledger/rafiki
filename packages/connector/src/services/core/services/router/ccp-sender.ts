@@ -173,7 +173,7 @@ export class CcpSender {
     this._sendRouteUpdateTimer = setTimeout(() => {
       this._sendSingleRouteUpdate()
         .then(() => this._scheduleRouteUpdate())
-        .catch((err: any) => {
+        .catch((err: unknown) => {
           const errInfo = err instanceof Object && err.stack ? err.stack : err
           log('failed to broadcast route information to peer', {
             peerId: this._peerId,

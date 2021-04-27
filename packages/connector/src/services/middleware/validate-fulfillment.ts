@@ -7,7 +7,7 @@ const { WrongConditionError } = Errors
 export function createOutgoingValidateFulfillmentMiddleware(): RafikiMiddleware {
   return async (
     { services: { logger }, request: { prepare }, response }: RafikiContext,
-    next: () => Promise<any>
+    next: () => Promise<unknown>
   ): Promise<void> => {
     const { executionCondition } = prepare
     await next()

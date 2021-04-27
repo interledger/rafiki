@@ -19,62 +19,86 @@ export class DebugLogger implements LoggingService {
     this._trace = debug(namespace + ':trace')
   }
 
-  public fatal(msg: string, ...args: any[]): void
-  public fatal(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
+  public fatal(msg: string, ...args: unknown[]): void
+  public fatal(
+    obj: Record<string, unknown>,
+    msg?: string,
+    ...args: unknown[]
+  ): void
   public fatal(
     msgOrObj: string | Record<string, unknown>,
-    msgOrArgs?: string | any[],
-    ...args: any[]
+    msgOrArgs?: string | unknown[],
+    ...args: unknown[]
   ): void {
     this._fatal(msgOrObj, msgOrArgs, args)
   }
 
-  public error(msg: string, ...args: any[]): void
-  public error(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
+  public error(msg: string, ...args: unknown[]): void
+  public error(
+    obj: Record<string, unknown>,
+    msg?: string,
+    ...args: unknown[]
+  ): void
   public error(
     msgOrObj: string | Record<string, unknown>,
-    msgOrArgs?: string | any[],
-    ...args: any[]
+    msgOrArgs?: string | unknown[],
+    ...args: unknown[]
   ): void {
     this._error(msgOrObj, msgOrArgs, args)
   }
 
-  public warn(msg: string, ...args: any[]): void
-  public warn(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
+  public warn(msg: string, ...args: unknown[]): void
+  public warn(
+    obj: Record<string, unknown>,
+    msg?: string,
+    ...args: unknown[]
+  ): void
   public warn(
     msgOrObj: string | Record<string, unknown>,
-    msgOrArgs?: string | any[],
-    ...args: any[]
+    msgOrArgs?: string | unknown[],
+    ...args: unknown[]
   ): void {
     this._warn(msgOrObj, msgOrArgs, args)
   }
 
-  public info(msg: string, ...args: any[]): void
-  public info(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
+  public info(msg: string, ...args: unknown[]): void
+  public info(
+    obj: Record<string, unknown>,
+    msg?: string,
+    ...args: unknown[]
+  ): void
   public info(
     msgOrObj: string | Record<string, unknown>,
-    msgOrArgs?: string | any[],
-    ...args: any[]
+    msgOrArgs?: string | unknown[],
+    ...args: unknown[]
   ): void {
     this._info(msgOrObj, msgOrArgs, args)
   }
 
-  public debug(msg: string, ...args: any[]): void
-  public debug(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
+  public debug(msg: string, ...args: unknown[]): void
+  public debug(
+    obj: Record<string, unknown>,
+    msg?: string,
+    ...args: unknown[]
+  ): void
   public debug(
     msgOrObj: string | Record<string, unknown>,
-    msgOrArgs?: string | any[],
-    ...args: any[]
+    msgOrArgs?: string | unknown[],
+    ...args: unknown[]
   ): void {
     this._debug(msgOrObj, msgOrArgs, args)
   }
 
-  public trace(msg: string, ...args: any[]): void
-  public trace(obj: Record<string, unknown>, msg?: string, ...args: any[]): void
+  public trace(msg: string, ...args: unknown[]): void
+  public trace(
+    obj: Record<string, unknown>,
+    msg?: string,
+    ...args: unknown[]
+  ): void
   public trace(
     msgOrObj: string | Record<string, unknown>,
-    msgOrArgs?: string | any[],
-    ...args: any[]
+    msgOrArgs?: string | unknown[],
+    ...args: unknown[]
   ): void {
     this._trace(msgOrObj, msgOrArgs, args)
   }
