@@ -1,11 +1,8 @@
 import { Errors } from 'ilp-packet'
 import { createContext, TokenBucket } from '../../utils'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../../core'
-import {
-  RafikiServicesFactory,
-  PeerFactory,
-  IlpPrepareFactory
-} from '../../core/factories'
+import { IlpPrepareFactory } from '../../core/factories'
+import { PeerFactory, RafikiServicesFactory } from '../../core/factories/test'
 import { createIncomingRateLimitMiddleware } from '../rate-limit'
 const { RateLimitedError } = Errors
 

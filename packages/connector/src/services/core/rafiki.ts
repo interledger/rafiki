@@ -208,7 +208,8 @@ export class RafikiRouter {
         .join('/') // Trim trailing slash
         .replace('*', '(.*)') // Replace wildcard with regex that only matches valid address chars
 
-    this._router.post(path, handler)
+    // "as any" because of tangled types.
+    this._router.post(path, handler as any)
   }
 
   public routes(): RafikiMiddleware<any> {

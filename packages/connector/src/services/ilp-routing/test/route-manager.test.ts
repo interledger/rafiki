@@ -8,6 +8,7 @@ describe('ilp-route-manager', function () {
 
   beforeEach(function () {
     router = new Router()
+    router.setOwnAddress('test.rafiki')
   })
 
   describe('instantiation', function () {

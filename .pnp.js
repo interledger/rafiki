@@ -1852,6 +1852,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/sonic-boom", "npm:0.7.0"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:6.3.8", {
+          "packageLocation": "./.yarn/cache/@types-pino-npm-6.3.8-fe608df63f-f3cf2324ff.zip/node_modules/@types/pino/",
+          "packageDependencies": [
+            ["@types/pino", "npm:6.3.8"],
+            ["@types/node", "npm:14.14.39"],
+            ["@types/pino-pretty", "npm:4.7.0"],
+            ["@types/pino-std-serializers", "npm:2.4.1"],
+            ["@types/sonic-boom", "npm:0.7.0"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["@types/pino-pretty", [
@@ -3632,11 +3643,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/jsonwebtoken", "npm:8.5.1"],
             ["@types/koa", "npm:2.13.1"],
             ["@types/koa-bodyparser", "npm:4.3.0"],
+            ["@types/koa-compose", "npm:3.2.5"],
             ["@types/koa-joi-router", "npm:5.2.5"],
             ["@types/lodash", "npm:4.14.168"],
             ["@types/nanoid", "npm:2.1.0"],
             ["@types/node", "npm:14.14.41"],
             ["@types/node-fetch", "npm:2.5.10"],
+            ["@types/pino", "npm:6.3.8"],
             ["@types/rosie", "npm:0.0.39"],
             ["agentkeepalive", "npm:4.1.4"],
             ["ajv", "npm:8.1.0"],
@@ -3651,10 +3664,12 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["jsonwebtoken", "npm:8.5.1"],
             ["koa", "npm:2.13.1"],
             ["koa-bodyparser", "npm:4.3.0"],
+            ["koa-compose", "npm:4.1.0"],
             ["koa-joi-router", "npm:7.0.0"],
             ["lodash", "npm:4.17.21"],
             ["nanoid", "npm:3.1.22"],
             ["oer-utils", "npm:5.1.2"],
+            ["pino", "npm:6.11.3"],
             ["raw-body", "npm:2.4.1"],
             ["rosie", "npm:2.1.0"],
             ["rxjs", "npm:6.6.7"]

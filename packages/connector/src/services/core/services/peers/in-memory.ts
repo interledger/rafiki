@@ -113,6 +113,6 @@ export class InMemoryPeers implements PeersService {
   }
 
   async list(): Promise<Peer[]> {
-    return [...this._peers.values()].map((peer) => peer.info)
+    return [...this._peers.values()]
   }
 }

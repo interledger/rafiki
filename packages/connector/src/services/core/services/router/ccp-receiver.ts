@@ -188,7 +188,8 @@ export class CcpReceiver {
           this.sendRouteControl,
           ROUTE_CONTROL_RETRY_INTERVAL
         )
-        retryTimeout.unref()
+        // For some reason TypeScript insists that retryTimeout is a number.
+        retryTimeout['unref']()
       }
     }
   }

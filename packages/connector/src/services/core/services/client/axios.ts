@@ -1,10 +1,10 @@
 import { Client } from '.'
 import Axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
-import Agent from 'agentkeepalive'
+//import Agent from 'agentkeepalive'
 
 export class AxiosClient implements Client {
   readonly axiosInstance: AxiosInstance
-  readonly keepAliveAgent: Agent
+  //readonly keepAliveAgent: Agent
 
   constructor(private _url: string, private _config: AxiosRequestConfig) {
     this.axiosInstance = Axios.create({

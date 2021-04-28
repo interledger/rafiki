@@ -11,24 +11,23 @@ import {
   createCcpProtocolController,
   createOutgoingExpireMiddleware,
   createClientController
-} from '@interledger/rafiki-core'
+} from './services/core'
 import {
   createIncomingMaxPacketAmountMiddleware,
   createIncomingRateLimitMiddleware,
-  createIncomingReduceExpiryMiddleware,
   createIncomingThroughputMiddleware,
   createOutgoingReduceExpiryMiddleware,
   createOutgoingThroughputMiddleware,
   createOutgoingValidateFulfillmentMiddleware
-} from '@interledger/rafiki-middleware'
-import { AdminApi } from '@interledger/rafiki-admin-api'
+} from './services/middleware'
+import { AdminApi } from './services/admin-api'
 
-import { config } from 'dotenv'
+//import { config } from 'dotenv'
 import { Server } from 'http'
 
 import createLogger from 'pino'
 import compose = require('koa-compose')
-config()
+//config()
 const logger = createLogger()
 
 /**
@@ -70,7 +69,6 @@ const incoming = compose([
   createIncomingMaxPacketAmountMiddleware(),
   createIncomingRateLimitMiddleware(),
   createIncomingThroughputMiddleware(),
-  createIncomingReduceExpiryMiddleware(),
   createIncomingBalanceMiddleware()
 ])
 

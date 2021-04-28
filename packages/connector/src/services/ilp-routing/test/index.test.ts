@@ -6,6 +6,7 @@ describe('ilp-router', function () {
 
     beforeEach(function () {
       router = new Router()
+      router.setOwnAddress('test.rafiki')
     })
 
     test('can add a route for a peer', function () {
@@ -42,6 +43,7 @@ describe('ilp-router', function () {
 
     beforeEach(function () {
       router = new Router()
+      router.setOwnAddress('test.rafiki')
       router.addRoute('g.harry', {
         nextHop: 'harry',
         path: []

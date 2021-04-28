@@ -3,7 +3,7 @@ import { IlpPrepare, serializeIlpPrepare } from 'ilp-packet'
 import { createContext } from '../../../utils'
 import { RafikiContext } from '../../rafiki'
 import { createEchoProtocolController } from '../../controllers/echo-protocol'
-import { PeerFactory, RafikiServicesFactory } from '../../factories'
+import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 
 const ECHO_DATA_PREFIX = Buffer.from('ECHOECHOECHOECHO', 'ascii')

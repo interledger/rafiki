@@ -8,12 +8,11 @@ import { createContext } from '../../../utils'
 import { RafikiContext } from '../../rafiki'
 import { createCcpProtocolController } from '../../controllers/ccp-protocol'
 import {
-  PeerFactory,
   IlpPrepareFactory,
-  RafikiServicesFactory,
   RouteUpdatePreparePacketFactory,
   RouteControlPreparePacketFactory
 } from '../../factories'
+import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 
 describe('CCP Rule', function () {

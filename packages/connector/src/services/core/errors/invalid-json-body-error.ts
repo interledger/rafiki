@@ -33,7 +33,7 @@ export class InvalidJsonBodyError extends ExtensibleError {
       .join(' ')
 
     log(
-      `-- ${validationError.dataPath}: ${validationError.message}. ${additionalInfo}`
+      `-- ${validationError.instancePath}: ${validationError.message}. ${additionalInfo}`
     )
   }
 }

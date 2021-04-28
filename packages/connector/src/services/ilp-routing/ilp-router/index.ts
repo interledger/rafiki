@@ -7,7 +7,7 @@ import { sha256 } from '../lib/utils'
 
 export class Router {
   private globalPrefix: string
-  private ownAddress: string
+  private ownAddress?: string
   private routingTable: RoutingTable
   private forwardingRoutingTable: ForwardingRoutingTable
 
@@ -26,6 +26,9 @@ export class Router {
   }
 
   getOwnAddress(): string {
+    if (this.ownAddress === undefined) {
+      throw new Error('ownAddress not set')
+    }
     return this.ownAddress
   }
 

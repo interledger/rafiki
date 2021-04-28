@@ -22,7 +22,7 @@ import debug from 'debug'
 // Implementations SHOULD use a better logger than debug for production services
 const log = debug('rafiki:in-memory-router-service')
 
-export interface ImMemoryRouterConfig {
+export interface InMemoryRouterConfig {
   globalPrefix?: string
   ilpAddress?: string
 }
@@ -38,7 +38,7 @@ export class InMemoryRouter implements Router {
 
   constructor(
     private _peers: PeersService,
-    { globalPrefix, ilpAddress }: ImMemoryRouterConfig
+    { globalPrefix, ilpAddress }: InMemoryRouterConfig
   ) {
     // Setup the `self` peer
     this._routeManager.addPeer(SELF_PEER_ID, 'local')
@@ -97,8 +97,8 @@ export class InMemoryRouter implements Router {
     return peer
       ? peer['routes']['prefixes'].sort((a: string, b: string) => {
           return (
-            peer['routes']['items'][b]['weight'] -
-            peer['routes']['items'][a]['weight']
+            (peer['routes']['items'][b]['weight'] || 0) -
+            (peer['routes']['items'][a]['weight'] || 0)
           )
         })
       : []
@@ -132,7 +132,9 @@ export class InMemoryRouter implements Router {
         removeRoute: (peerId: string, prefix: string): void => {
           this._routeManager.removeRoute(peerId, prefix)
         },
-        getRouteWeight
+        getRouteWeight: (peerId: string): number => {
+          return getRouteWeight(this._routeManager.getPeer(peerId))
+        }
       })
       this._ccpReceivers.set(peerId, receiver)
     }

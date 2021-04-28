@@ -5,7 +5,7 @@ import {
   TokenAuthConfig,
   PeersService,
   AccountsService
-} from '@interledger/rafiki-core'
+} from '../core'
 import { Context } from 'koa'
 import createRouter, { Joi } from 'koa-joi-router'
 import bodyParser from 'koa-bodyparser'

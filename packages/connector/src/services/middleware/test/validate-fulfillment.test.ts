@@ -3,11 +3,11 @@ import { RafikiContext, ZeroCopyIlpPrepare } from '../../core'
 import { createContext } from '../../utils'
 import { createOutgoingValidateFulfillmentMiddleware } from '../validate-fulfillment'
 import {
-  RafikiServicesFactory,
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory
 } from '../../core/factories'
+import { RafikiServicesFactory } from '../../core/factories/test'
 
 const { WrongConditionError } = Errors
 

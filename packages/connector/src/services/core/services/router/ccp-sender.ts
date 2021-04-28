@@ -174,7 +174,7 @@ export class CcpSender {
       this._sendSingleRouteUpdate()
         .then(() => this._scheduleRouteUpdate())
         .catch((err: unknown) => {
-          const errInfo = err instanceof Object && err.stack ? err.stack : err
+          const errInfo = err instanceof Error ? err.stack : err
           log('failed to broadcast route information to peer', {
             peerId: this._peerId,
             error: errInfo

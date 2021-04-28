@@ -1,9 +1,6 @@
 import { createContext } from '../../../utils'
-import {
-  PeerFactory,
-  RafikiServicesFactory,
-  AccountInfoFactory
-} from '../../factories'
+import { AccountInfoFactory } from '../../factories'
+import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
 import { RafikiContext } from '../../rafiki'
 import { InMemoryAccountsService } from '../../services'
 import { createAccountMiddleware } from '../../middleware/account'

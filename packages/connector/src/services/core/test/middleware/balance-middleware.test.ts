@@ -9,12 +9,12 @@ import {
   createOutgoingBalanceMiddleware
 } from '../../middleware'
 import {
-  RafikiServicesFactory,
   AccountInfoFactory,
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory
 } from '../../factories'
+import { RafikiServicesFactory } from '../../factories/test'
 
 // TODO: make one peer to many account relationship
 const aliceAccountInfo = AccountInfoFactory.build({

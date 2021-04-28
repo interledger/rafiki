@@ -1,4 +1,4 @@
-import { RafikiContext, RafikiMiddleware } from '@interledger/rafiki-core'
+import { RafikiContext, RafikiMiddleware } from '../core'
 
 // const DEFAULT_HEARTBEAT_INTERVAL = 30 * 1000
 

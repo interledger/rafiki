@@ -1,11 +1,8 @@
 import { Errors } from 'ilp-packet'
 import { createContext } from '../../utils'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../../core'
-import {
-  RafikiServicesFactory,
-  PeerFactory,
-  IlpPrepareFactory
-} from '../../core/factories'
+import { IlpPrepareFactory } from '../../core/factories'
+import { PeerFactory, RafikiServicesFactory } from '../../core/factories/test'
 import { createIncomingMaxPacketAmountMiddleware } from '../max-packet-amount'
 
 const { AmountTooLargeError } = Errors

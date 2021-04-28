@@ -3,7 +3,8 @@ import {
   IncomingMessage,
   IncomingHttpHeaders,
   STATUS_CODES,
-  OutgoingHttpHeaders
+  OutgoingHttpHeaders,
+  OutgoingHttpHeader
 } from 'http'
 import { Transform } from 'stream'
 import { Socket } from 'net'
@@ -159,8 +160,8 @@ export class MockServerResponse extends Transform {
 
   writeHead = (
     statusCode: number,
-    reasonPhrase?: string | OutgoingHttpHeaders,
-    headers?: OutgoingHttpHeaders
+    reasonPhrase?: string | OutgoingHttpHeaders | OutgoingHttpHeader[],
+    headers?: OutgoingHttpHeaders | OutgoingHttpHeader[]
   ): this => {
     if (typeof reasonPhrase !== 'string') {
       headers = reasonPhrase

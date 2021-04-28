@@ -1,10 +1,7 @@
 import { Errors } from 'ilp-packet'
 import { RafikiContext } from '../../core'
-import {
-  PeerFactory,
-  RafikiServicesFactory,
-  IlpPrepareFactory
-} from '../../core/factories'
+import { IlpPrepareFactory } from '../../core/factories'
+import { PeerFactory, RafikiServicesFactory } from '../../core/factories/test'
 import { createContext, TokenBucket } from '../../utils'
 import {
   createIncomingThroughputMiddleware,

@@ -5,6 +5,7 @@ import {
   CcpRouteUpdateResponse
 } from 'ilp-protocol-ccp'
 import { RelationWeights } from '../../types'
+import { Peer } from '../../../ilp-routing/ilp-route-manager/peer'
 
 export interface Router {
   handleRouteControl: (
@@ -24,9 +25,8 @@ export interface Router {
   getRoutingTable(): Record<string, unknown>
 }
 
-export function getRouteWeight(peerId: string): number {
+export function getRouteWeight(peer?: Peer): number {
   let weight = 0
-  const peer = this._routeManager.getPeer(peerId)
   if (peer) {
     switch (peer.getRelation()) {
       case 'parent':
