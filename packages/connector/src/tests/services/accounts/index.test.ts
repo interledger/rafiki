@@ -121,6 +121,29 @@ describe('Accounting Service', (): void => {
     })
   })
 
+  describe('Update Account', (): void => {
+    test('Can update an account', async (): Promise<void> => {
+      const accountOptions = {
+        id: uuid(),
+        disabled: false,
+        balance: {
+          assetCode: 'USD',
+          assetScale: 9
+        }
+      }
+      const account = await AccountsService.createAccount(accountOptions)
+      const updatedAccount = await AccountsService.updateAccount({
+        id: account.id,
+        disabled: true
+      })
+      const expectedAccount = {
+        ...account,
+        disabled: true
+      }
+      expect(updatedAccount).toEqual(expectedAccount)
+    })
+  })
+
   describe('Create Transfer', (): void => {
     test.skip('Can transfer between accounts', async (): Promise<void> => {
       test.todo('write test')

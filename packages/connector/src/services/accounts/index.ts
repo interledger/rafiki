@@ -51,6 +51,15 @@ export interface IlpAccount extends CreateIlpAccountOptions {
   balance: IlpAccountBalance
 }
 
+export interface UpdateIlpAccountOptions {
+  id: string
+  disabled?: boolean // you can fetch config of disabled account but it will not process packets
+
+  http?: Partial<IlpAccountHttp>
+  stream?: Partial<IlpAccountStream>
+  routing?: Partial<IlpAccountRouting>
+}
+
 export type Transfer = {
   transferId: string
 
@@ -182,10 +191,16 @@ export async function getAccount(accountId: string): Promise<IlpAccount> {
   return toIlpAccount(accountSettings, balance)
 }
 
-// should this be replaced with updateAccountField(s)
-// export async function updateAccount(account: IlpAccount): Promise<IlpAccount> {
-//   return IlpAccountSettings.query().updateAndFetch(account)
-// }
+export async function updateAccount(
+  accountOptions: UpdateIlpAccountOptions
+): Promise<IlpAccount> {
+  const accountSettings = await IlpAccountSettings.query().patchAndFetchById(
+    accountOptions.id,
+    accountOptions
+  )
+  const balance = await BalancesService.getBalance(accountSettings.balanceId)
+  return toIlpAccount(accountSettings, balance)
+}
 
 export async function createTransfer(transfer: Transfer): Promise<Transfer> {
   // use funds flow rules
