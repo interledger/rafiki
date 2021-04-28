@@ -8,14 +8,16 @@ import { Balance } from '../balances'
 const SETTLEMENT_ACCOUNT_PREFIX = 'settlementAccount:'
 const LIQUIDITY_ACCOUNT_PREFIX = 'liquidityAccount:'
 
-interface IlpAccountBalance {
+interface CreateIlpAccountBalanceOptions {
   assetCode: string
   assetScale: number
 
-  current: bigint
-
   // details of how we implement this TBD
   parentAccountId?: string
+}
+
+interface IlpAccountBalance extends CreateIlpAccountBalanceOptions {
+  current: bigint
 }
 
 export interface IlpAccountHttp {
@@ -35,14 +37,18 @@ export interface IlpAccountRouting {
   ilpAddress: string // ILP address for this account
 }
 
-export interface IlpAccount {
+export interface CreateIlpAccountOptions {
   id: string
   disabled: boolean // you can fetch config of disabled account but it will not process packets
 
-  balance: IlpAccountBalance
+  balance: CreateIlpAccountBalanceOptions
   http?: IlpAccountHttp
   stream?: IlpAccountStream
   routing?: IlpAccountRouting
+}
+
+export interface IlpAccount extends CreateIlpAccountOptions {
+  balance: IlpAccountBalance
 }
 
 export type Transfer = {
@@ -62,7 +68,10 @@ export type Transfer = {
     }
 )
 
-function toIlpAccountSettings(account: IlpAccount, balance: Balance) {
+function toIlpAccountSettings(
+  account: CreateIlpAccountOptions,
+  balance: Balance
+) {
   return {
     id: account.id,
     disabled: account.disabled,
@@ -136,7 +145,8 @@ async function createCurrencyBalances(
 ): Promise<void> {
   // try {
   await BalancesService.createBalance({
-    id: toSettlementBalanceId(assetCode, assetScale)
+    id: toSettlementBalanceId(assetCode, assetScale),
+    max: BigInt(0)
   })
   await BalancesService.createBalance({
     id: toLiquidityBalanceId(assetCode, assetScale),
@@ -145,25 +155,25 @@ async function createCurrencyBalances(
   // }
 }
 
-export async function createAccount(account: IlpAccount): Promise<IlpAccount> {
+export async function createAccount(
+  accountOptions: CreateIlpAccountOptions
+): Promise<IlpAccount> {
   const balance = await BalancesService.createBalance({
-    ...account.balance,
+    ...accountOptions.balance,
     id: uuid()
   })
   await IlpAccountSettings.query().insertAndFetch(
-    toIlpAccountSettings(account, balance)
+    toIlpAccountSettings(accountOptions, balance)
   )
-  const { assetCode, assetScale } = account.balance
+  const { assetCode, assetScale } = accountOptions.balance
   await createCurrencyBalances(assetCode, assetScale)
-  if (account.balance.current > BigInt(0)) {
-    await BalancesService.createTransfer({
-      id: uuid(),
-      sourceBalanceId: toSettlementBalanceId(assetCode, assetScale),
-      destinationBalanceId: balance.id,
-      amount: account.balance.current
-    })
+  return {
+    ...accountOptions,
+    balance: {
+      ...accountOptions.balance,
+      current: BigInt(0)
+    }
   }
-  return account
 }
 
 export async function getAccount(accountId: string): Promise<IlpAccount> {

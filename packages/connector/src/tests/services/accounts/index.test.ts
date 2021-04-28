@@ -61,54 +61,35 @@ describe('Accounting Service', (): void => {
 
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {
-      const account = {
+      const accountOptions = {
         id: uuid(),
         disabled: false,
         balance: {
           assetCode: 'USD',
-          assetScale: 9,
+          assetScale: 9
+        }
+      }
+      const createdAccount = await AccountsService.createAccount(accountOptions)
+      const account = {
+        ...accountOptions,
+        balance: {
+          ...accountOptions.balance,
           current: BigInt(0)
         }
       }
-      const createdAccount = await AccountsService.createAccount(account)
       expect(createdAccount).toEqual(account)
       const retrievedAccount = await AccountsService.getAccount(account.id)
       expect(retrievedAccount).toEqual(account)
-    })
-
-    test('Can create an account with an initial balance', async (): Promise<void> => {
-      const assetCode = 'USD'
-      const assetScale = 9
-      const amount = BigInt(100)
-      const account = {
-        id: uuid(),
-        disabled: false,
-        balance: {
-          assetCode,
-          assetScale,
-          current: amount
-        }
-      }
-      const createdAccount = await AccountsService.createAccount(account)
-      expect(createdAccount).toEqual(account)
-      const retrievedAccount = await AccountsService.getAccount(account.id)
-      expect(retrievedAccount).toEqual(account)
-      const settlementBalance = await AccountsService.getSettlementBalance(
-        assetCode,
-        assetScale
-      )
-      expect(settlementBalance).toEqual(-amount)
     })
 
     test('Can create an account with all settings', async (): Promise<void> => {
       const id = uuid()
-      const account = {
+      const accountOptions = {
         id,
         disabled: false,
         balance: {
           assetCode: 'USD',
           assetScale: 9,
-          current: BigInt(0),
           parentAccountId: uuid()
         },
         http: {
@@ -126,7 +107,14 @@ describe('Accounting Service', (): void => {
           prefixes: ['g.raio']
         }
       }
-      const createdAccount = await AccountsService.createAccount(account)
+      const createdAccount = await AccountsService.createAccount(accountOptions)
+      const account = {
+        ...accountOptions,
+        balance: {
+          ...accountOptions.balance,
+          current: BigInt(0)
+        }
+      }
       expect(createdAccount).toEqual(account)
       const retrievedAccount = await AccountsService.getAccount(id)
       expect(retrievedAccount).toEqual(account)
@@ -146,8 +134,7 @@ describe('Accounting Service', (): void => {
         disabled: false,
         balance: {
           assetCode: 'USD',
-          assetScale: 9,
-          current: BigInt(0)
+          assetScale: 9
         }
       })
       const amount = BigInt(10)
@@ -170,16 +157,16 @@ describe('Accounting Service', (): void => {
 
   describe('Account Withdraw', (): void => {
     test('Can withdraw from account', async (): Promise<void> => {
-      const startingBalance = BigInt(10)
       const { id } = await AccountsService.createAccount({
         id: uuid(),
         disabled: false,
         balance: {
           assetCode: 'USD',
-          assetScale: 9,
-          current: startingBalance
+          assetScale: 9
         }
       })
+      const startingBalance = BigInt(10)
+      await AccountsService.deposit(id, startingBalance)
       const amount = BigInt(5)
       await AccountsService.withdraw(id, amount)
       const {
