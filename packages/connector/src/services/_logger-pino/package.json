@@ -1,0 +1,48 @@
+{
+  "name": "@interledger/rafiki-logger-pino",
+  "private": true,
+  "version": "0.2.16",
+  "description": "pino logging rafiki middleware",
+  "keywords": [
+    "interledger",
+    "rafiki",
+    "pino",
+    "logging"
+  ],
+  "homepage": "https://github.com/interledgerjs/rafiki#readme",
+  "license": "Apache-2.0",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "build/**/*.json",
+    "build/**/*.js",
+    "build/**/*.js.map",
+    "build/**/*.d.ts",
+    "build/doc"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -Rf .nyc_output && rm -Rf coverage && rm -Rf build ",
+    "doc": "typedoc --options typedoc.js src"
+  },
+  "author": "Interledger Team <info@interledger.org>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interledgerjs/rafiki.git"
+  },
+  "bugs": {
+    "url": "https://github.com/interledgerjs/rafiki/issues"
+  },
+  "dependencies": {
+    "@interledger/rafiki-core": "^0.2.16",
+    "@types/koa-pino-logger": "^2.1.6",
+    "@types/pino": "^5.8.9",
+    "@types/pino-std-serializers": "^2.4.0",
+    "koa-pino-logger": "^2.1.3",
+    "pino-http": "^4.3.0",
+    "pino-std-serializers": "^2.4.2"
+  }
+}
