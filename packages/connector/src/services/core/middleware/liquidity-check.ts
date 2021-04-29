@@ -1,4 +1,4 @@
-import { RafikiContext, RafikiMiddleware } from '../core'
+import { RafikiContext, RafikiMiddleware } from '..'
 import { Errors } from 'ilp-packet'
 const { T04_INSUFFICIENT_LIQUIDITY } = Errors.codes
 

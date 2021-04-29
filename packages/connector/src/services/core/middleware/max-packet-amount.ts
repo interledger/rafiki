@@ -1,5 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext, RafikiMiddleware } from '../core'
+import { RafikiContext, RafikiMiddleware } from '..'
 const { AmountTooLargeError } = Errors
 
 /**

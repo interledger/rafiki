@@ -1,13 +1,13 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext, ZeroCopyIlpPrepare } from '../../core'
-import { createContext } from '../../utils'
-import { createOutgoingValidateFulfillmentMiddleware } from '../validate-fulfillment'
+import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import { createContext } from '../../../utils'
+import { createOutgoingValidateFulfillmentMiddleware } from '../../middleware/validate-fulfillment'
 import {
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory
-} from '../../core/factories'
-import { RafikiServicesFactory } from '../../core/factories/test'
+} from '../../factories'
+import { RafikiServicesFactory } from '../../factories/test'
 
 const { WrongConditionError } = Errors
 

@@ -1,9 +1,9 @@
 import { Errors } from 'ilp-packet'
-import { createContext, TokenBucket } from '../../utils'
-import { RafikiContext, ZeroCopyIlpPrepare } from '../../core'
-import { IlpPrepareFactory } from '../../core/factories'
-import { PeerFactory, RafikiServicesFactory } from '../../core/factories/test'
-import { createIncomingRateLimitMiddleware } from '../rate-limit'
+import { createContext, TokenBucket } from '../../../utils'
+import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import { IlpPrepareFactory } from '../../factories'
+import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
+import { createIncomingRateLimitMiddleware } from '../../middleware/rate-limit'
 const { RateLimitedError } = Errors
 
 describe('Rate Limit Middleware', function () {

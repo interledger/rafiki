@@ -90,6 +90,7 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
     this._accounts = config && config.accounts ? config.accounts : undefined
     const logger =
       config && config.logger ? config.logger : new DebugLogger('rafiki')
+    // TODO not optional
     const peersOrThrow = (): PeersService => {
       if (this._peers) return this._peers
       throw new Error('No peers service provided to the app')
@@ -134,6 +135,7 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
     this._peers = peers
   }
 
+  // TODO not optional
   public get accounts(): AccountsService | undefined {
     return this._accounts
   }

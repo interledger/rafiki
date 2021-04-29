@@ -1,5 +1,5 @@
 import { createHash } from 'crypto'
-import { RafikiContext, RafikiMiddleware } from '../core'
+import { RafikiContext, RafikiMiddleware } from '..'
 import { Errors } from 'ilp-packet'
 
 const { WrongConditionError } = Errors

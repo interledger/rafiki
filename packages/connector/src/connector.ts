@@ -10,16 +10,14 @@ import {
   createIldcpProtocolController,
   createCcpProtocolController,
   createOutgoingExpireMiddleware,
-  createClientController
-} from './services/core'
-import {
+  createClientController,
   createIncomingMaxPacketAmountMiddleware,
   createIncomingRateLimitMiddleware,
   createIncomingThroughputMiddleware,
   createOutgoingReduceExpiryMiddleware,
   createOutgoingThroughputMiddleware,
   createOutgoingValidateFulfillmentMiddleware
-} from './services/middleware'
+} from './services/core'
 import { AdminApi } from './services/admin-api'
 
 //import { config } from 'dotenv'
