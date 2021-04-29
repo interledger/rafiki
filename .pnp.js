@@ -1792,10 +1792,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],
           "linkType": "HARD",
         }],
-        ["npm:14.14.41", {
-          "packageLocation": "./.yarn/cache/@types-node-npm-14.14.41-86b32c9f0d-37dfb63964.zip/node_modules/@types/node/",
+        ["npm:14.14.43", {
+          "packageLocation": "./.yarn/cache/@types-node-npm-14.14.43-cddd452ab7-b7a9e6df7c.zip/node_modules/@types/node/",
           "packageDependencies": [
-            ["@types/node", "npm:14.14.41"]
+            ["@types/node", "npm:14.14.43"]
           ],
           "linkType": "HARD",
         }]
@@ -3647,7 +3647,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/koa-joi-router", "npm:5.2.5"],
             ["@types/lodash", "npm:4.14.168"],
             ["@types/nanoid", "npm:2.1.0"],
-            ["@types/node", "npm:14.14.41"],
+            ["@types/node", "npm:14.14.43"],
             ["@types/node-fetch", "npm:2.5.10"],
             ["@types/pino", "npm:6.3.8"],
             ["@types/rosie", "npm:0.0.39"],
