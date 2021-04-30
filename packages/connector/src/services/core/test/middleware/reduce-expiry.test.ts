@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Errors } from 'ilp-packet'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
-import { IlpPrepareFactory } from '../../factories'
-import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
+import {
+  IlpPrepareFactory,
+  PeerFactory,
+  RafikiServicesFactory
+} from '../../factories'
 import { createContext } from '../../utils'
 import { createOutgoingReduceExpiryMiddleware } from '../../middleware/reduce-expiry'
 

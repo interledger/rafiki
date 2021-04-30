@@ -1,7 +1,10 @@
 import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
-import { IlpPrepareFactory } from '../../factories'
-import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
+import {
+  IlpPrepareFactory,
+  PeerFactory,
+  RafikiServicesFactory
+} from '../../factories'
 import { createClientController } from '../../controllers/client'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 

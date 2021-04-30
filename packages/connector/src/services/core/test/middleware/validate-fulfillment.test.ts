@@ -5,9 +5,9 @@ import { createOutgoingValidateFulfillmentMiddleware } from '../../middleware/va
 import {
   IlpPrepareFactory,
   IlpFulfillFactory,
-  IlpRejectFactory
+  IlpRejectFactory,
+  RafikiServicesFactory
 } from '../../factories'
-import { RafikiServicesFactory } from '../../factories/test'
 
 const { WrongConditionError } = Errors
 

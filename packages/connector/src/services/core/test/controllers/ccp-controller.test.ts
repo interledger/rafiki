@@ -10,9 +10,10 @@ import { createCcpProtocolController } from '../../controllers/ccp-protocol'
 import {
   IlpPrepareFactory,
   RouteUpdatePreparePacketFactory,
-  RouteControlPreparePacketFactory
+  RouteControlPreparePacketFactory,
+  PeerFactory,
+  RafikiServicesFactory
 } from '../../factories'
-import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 
 describe('CCP Rule', function () {

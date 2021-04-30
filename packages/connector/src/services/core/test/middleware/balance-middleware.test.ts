@@ -12,9 +12,9 @@ import {
   AccountInfoFactory,
   IlpPrepareFactory,
   IlpFulfillFactory,
-  IlpRejectFactory
+  IlpRejectFactory,
+  RafikiServicesFactory
 } from '../../factories'
-import { RafikiServicesFactory } from '../../factories/test'
 
 // TODO: make one peer to many account relationship
 const aliceAccountInfo = AccountInfoFactory.build({

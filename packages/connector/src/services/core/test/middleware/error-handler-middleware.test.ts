@@ -1,7 +1,6 @@
 import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
-import { PeerInfoFactory } from '../../factories'
-import { RafikiServicesFactory } from '../../factories/test'
+import { PeerInfoFactory, RafikiServicesFactory } from '../../factories'
 import { createIncomingErrorHandlerMiddleware } from '../../middleware/error-handler'
 import { SELF_PEER_ID } from '../../constants'
 import { InMemoryPeers } from '../../services'
