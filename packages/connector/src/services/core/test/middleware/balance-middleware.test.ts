@@ -1,4 +1,4 @@
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import {
   RafikiContext,
   InMemoryAccountsService,

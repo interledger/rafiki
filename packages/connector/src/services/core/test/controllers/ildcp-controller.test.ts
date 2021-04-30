@@ -1,4 +1,4 @@
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
 import { InMemoryPeers, InMemoryRouter } from '../../services'
 import { PeerInfoFactory, IlpPrepareFactory } from '../../factories'

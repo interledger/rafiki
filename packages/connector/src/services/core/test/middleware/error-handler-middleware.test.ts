@@ -1,4 +1,4 @@
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
 import { PeerInfoFactory } from '../../factories'
 import { RafikiServicesFactory } from '../../factories/test'

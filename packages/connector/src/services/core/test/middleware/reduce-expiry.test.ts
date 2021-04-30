@@ -3,7 +3,7 @@ import { Errors } from 'ilp-packet'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import { IlpPrepareFactory } from '../../factories'
 import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { createOutgoingReduceExpiryMiddleware } from '../../middleware/reduce-expiry'
 
 const { InsufficientTimeoutError } = Errors

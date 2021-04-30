@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { createTokenAuthMiddleware } from '../../middleware'
 import { RafikiContext } from '../../rafiki'
 

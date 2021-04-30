@@ -1,5 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { RafikiContext } from '../..'
 import { IlpRejectFactory, IlpFulfillFactory } from '../../factories'
 import { PeerFactory, RafikiServicesFactory } from '../../factories/test'

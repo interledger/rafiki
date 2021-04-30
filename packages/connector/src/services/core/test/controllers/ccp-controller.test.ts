@@ -4,7 +4,7 @@ import {
   deserializeCcpRouteControlRequest,
   deserializeCcpRouteUpdateRequest
 } from 'ilp-protocol-ccp'
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
 import { createCcpProtocolController } from '../../controllers/ccp-protocol'
 import {

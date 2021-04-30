@@ -1,6 +1,6 @@
 import { Errors } from 'ilp-packet'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { createOutgoingValidateFulfillmentMiddleware } from '../../middleware/validate-fulfillment'
 import {
   IlpPrepareFactory,

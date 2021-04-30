@@ -1,5 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { createContext, TokenBucket } from '../../../utils'
+import { createContext, TokenBucket } from '../../utils'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import { IlpPrepareFactory } from '../../factories'
 import { PeerFactory, RafikiServicesFactory } from '../../factories/test'

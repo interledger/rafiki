@@ -1,4 +1,4 @@
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { createOutgoingExpireMiddleware } from '../../middleware/expire'
 import { RafikiContext } from '../../rafiki'
 import { IlpPrepareFactory } from '../../factories'

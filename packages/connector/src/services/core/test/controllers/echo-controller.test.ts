@@ -1,6 +1,6 @@
 import { Writer } from 'oer-utils'
 import { IlpPrepare, serializeIlpPrepare } from 'ilp-packet'
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
 import { createEchoProtocolController } from '../../controllers/echo-protocol'
 import { PeerFactory, RafikiServicesFactory } from '../../factories/test'

@@ -1,6 +1,6 @@
 import { RafikiContext, Peer, RafikiMiddleware } from '..'
 import { Errors } from 'ilp-packet'
-import { TokenBucket } from '../../utils'
+import { TokenBucket } from '../utils'
 const { InsufficientLiquidityError } = Errors
 
 const DEFAULT_REFILL_PERIOD = 1000 // 1 second

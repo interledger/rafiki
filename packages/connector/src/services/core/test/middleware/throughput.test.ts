@@ -2,7 +2,7 @@ import { Errors } from 'ilp-packet'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import { IlpPrepareFactory } from '../../factories'
 import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
-import { createContext, TokenBucket } from '../../../utils'
+import { createContext, TokenBucket } from '../../utils'
 import {
   createIncomingThroughputMiddleware,
   createOutgoingThroughputMiddleware
