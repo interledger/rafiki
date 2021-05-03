@@ -1,8 +1,7 @@
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { createOutgoingExpireMiddleware } from '../../middleware/expire'
 import { RafikiContext } from '../../rafiki'
-import { IlpPrepareFactory } from '../../factories'
-import { RafikiServicesFactory } from '../../factories/test'
+import { IlpPrepareFactory, RafikiServicesFactory } from '../../factories'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 import { Errors } from 'ilp-packet'
 const { TransferTimedOutError } = Errors

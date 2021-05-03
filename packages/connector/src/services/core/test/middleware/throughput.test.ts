@@ -1,13 +1,15 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext } from '../../core'
-import { IlpPrepareFactory } from '../../core/factories'
-import { PeerFactory, RafikiServicesFactory } from '../../core/factories/test'
+import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import {
+  IlpPrepareFactory,
+  PeerFactory,
+  RafikiServicesFactory
+} from '../../factories'
 import { createContext, TokenBucket } from '../../utils'
 import {
   createIncomingThroughputMiddleware,
   createOutgoingThroughputMiddleware
-} from '../throughput'
-import { ZeroCopyIlpPrepare } from '../../core'
+} from '../../middleware/throughput'
 
 const { InsufficientLiquidityError } = Errors
 

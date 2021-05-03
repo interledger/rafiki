@@ -1,5 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { PeerInfo, RafikiContext, RafikiMiddleware } from '../core'
+import { PeerInfo, RafikiContext, RafikiMiddleware } from '..'
 import { TokenBucket } from '../utils'
 
 const { RateLimitedError } = Errors

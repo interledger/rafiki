@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Errors } from 'ilp-packet'
-import { RafikiContext } from '../../core'
-import { IlpPrepareFactory } from '../../core/factories'
-import { PeerFactory, RafikiServicesFactory } from '../../core/factories/test'
+import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import {
+  IlpPrepareFactory,
+  PeerFactory,
+  RafikiServicesFactory
+} from '../../factories'
 import { createContext } from '../../utils'
-import { createOutgoingReduceExpiryMiddleware } from '../reduce-expiry'
-import { ZeroCopyIlpPrepare } from '../../core'
+import { createOutgoingReduceExpiryMiddleware } from '../../middleware/reduce-expiry'
 
 const { InsufficientTimeoutError } = Errors
 Date.now = jest.fn(() => 1434412800000) // June 16, 2015 00:00:00 GMT

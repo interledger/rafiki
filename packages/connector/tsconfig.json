@@ -8,6 +8,6 @@
   "exclude": [
     "**/*.test.ts",
     "src/services/_*",
-    "src/services/core/factories/test*.ts"
+    "src/services/core/factories/*"
   ]
 }

@@ -1,4 +1,4 @@
-import { RafikiContext, Peer, RafikiMiddleware } from '../core'
+import { RafikiContext, Peer, RafikiMiddleware } from '..'
 import { Errors } from 'ilp-packet'
 import { TokenBucket } from '../utils'
 const { InsufficientLiquidityError } = Errors

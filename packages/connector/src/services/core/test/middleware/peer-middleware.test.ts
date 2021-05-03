@@ -1,7 +1,10 @@
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { createPeerMiddleware } from '../../middleware/peer'
-import { IlpPrepareFactory } from '../../factories'
-import { PeerFactory, RafikiServicesFactory } from '../../factories/test'
+import {
+  IlpPrepareFactory,
+  PeerFactory,
+  RafikiServicesFactory
+} from '../../factories'
 import { RafikiContext } from '../../rafiki'
 import { InMemoryPeers } from '../../services'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'

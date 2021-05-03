@@ -1,9 +1,13 @@
 import { Errors } from 'ilp-packet'
 import { createContext } from '../../utils'
-import { RafikiContext } from '../../core'
-import { IlpRejectFactory, IlpFulfillFactory } from '../../core/factories'
-import { PeerFactory, RafikiServicesFactory } from '../../core/factories/test'
-import { createOutgoingLiquidityCheckMiddleware } from '../liquidity-check'
+import { RafikiContext } from '../..'
+import {
+  IlpRejectFactory,
+  IlpFulfillFactory,
+  PeerFactory,
+  RafikiServicesFactory
+} from '../../factories'
+import { createOutgoingLiquidityCheckMiddleware } from '../../middleware/liquidity-check'
 const { T04_INSUFFICIENT_LIQUIDITY } = Errors.codes
 
 describe('Liquidity Check Middleware', function () {

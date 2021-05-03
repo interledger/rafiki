@@ -1,5 +1,5 @@
 import { IlpPrepare, Errors } from 'ilp-packet'
-import { RafikiContext, LoggingService, RafikiMiddleware } from '../core'
+import { RafikiContext, LoggingService, RafikiMiddleware } from '..'
 const { InsufficientTimeoutError } = Errors
 
 /**

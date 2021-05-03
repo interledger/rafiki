@@ -1,4 +1,4 @@
-import { RafikiContext, RafikiMiddleware } from '../core'
+import { RafikiContext, RafikiMiddleware } from '..'
 
 // const DEFAULT_HEARTBEAT_INTERVAL = 30 * 1000
 

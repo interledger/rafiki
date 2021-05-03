@@ -1,8 +1,11 @@
-import { createContext } from '../../../utils'
+import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
 import { InMemoryPeers, InMemoryRouter } from '../../services'
-import { PeerInfoFactory, IlpPrepareFactory } from '../../factories'
-import { RafikiServicesFactory } from '../../factories/test'
+import {
+  PeerInfoFactory,
+  IlpPrepareFactory,
+  RafikiServicesFactory
+} from '../../factories'
 import { SELF_PEER_ID } from '../../constants'
 import { createIldcpProtocolController } from '../../controllers/ildcp-protocol'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
