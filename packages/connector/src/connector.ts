@@ -1,11 +1,11 @@
 import {
+  AccountsService,
   createApp,
   InMemoryPeers,
   InMemoryAccountsService,
   InMemoryRouter,
   RafikiRouter,
-  createIncomingBalanceMiddleware,
-  createOutgoingBalanceMiddleware,
+  createBalanceMiddleware,
   createIncomingErrorHandlerMiddleware,
   createIldcpProtocolController,
   createCcpProtocolController,
@@ -66,13 +66,11 @@ const incoming = compose([
   createIncomingErrorHandlerMiddleware(),
   createIncomingMaxPacketAmountMiddleware(),
   createIncomingRateLimitMiddleware(),
-  createIncomingThroughputMiddleware(),
-  createIncomingBalanceMiddleware()
+  createIncomingThroughputMiddleware()
 ])
 
 const outgoing = compose([
   // Outgoing Rules
-  createOutgoingBalanceMiddleware(),
   createOutgoingThroughputMiddleware(),
   createOutgoingReduceExpiryMiddleware(),
   createOutgoingExpireMiddleware(),
@@ -82,7 +80,7 @@ const outgoing = compose([
   createClientController()
 ])
 
-const middleware = compose([incoming, outgoing])
+const middleware = compose([incoming, createBalanceMiddleware(), outgoing])
 
 // TODO Add auth
 const app = createApp({

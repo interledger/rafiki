@@ -15,7 +15,7 @@ import {
   createTokenAuthMiddleware,
   TokenAuthConfig
 } from './middleware/token-auth'
-import { AccountSnapshot, AccountsService } from './services/accounts'
+import { AccountsService } from './services/accounts'
 import { LoggingService } from './services/logger'
 import { IncomingMessage, ServerResponse } from 'http'
 import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
@@ -63,8 +63,8 @@ export type RafikiContextMixin = {
     readonly outgoing: Promise<Peer>
   }
   accounts: {
-    readonly incoming: Promise<AccountSnapshot>
-    readonly outgoing: Promise<AccountSnapshot>
+    readonly incomingId: string
+    readonly outgoingId: string
   }
   request: RafikiRequest
   response: RafikiResponse

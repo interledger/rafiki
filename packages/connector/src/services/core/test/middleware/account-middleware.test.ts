@@ -34,11 +34,8 @@ describe('Account Middleware', () => {
     ctx.peers = mockPeers
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const incomingAccount = await ctx.accounts.incoming
-    const outgoingAccount = await ctx.accounts.outgoing
-
-    expect(incomingAccount).toEqual(await accounts.get(incomingAccount.id))
-    expect(outgoingAccount).toEqual(await accounts.get(outgoingAccount.id))
+    expect(ctx.accounts.incomingId).toEqual(incomingPeerInfo.id)
+    expect(ctx.accounts.outgoingId).toEqual(outgoingPeerInfo.id)
   })
 
   test('can pass a custom function to get accountIds', async () => {
@@ -67,9 +64,7 @@ describe('Account Middleware', () => {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const incomingAccount = await ctx.accounts.incoming
-    const outgoingAccount = await ctx.accounts.outgoing
-    expect(incomingAccount).toEqual(await accounts.get('otherIncomingAccount'))
-    expect(outgoingAccount).toEqual(await accounts.get('otherOutgoingAccount'))
+    expect(ctx.accounts.incomingId).toEqual('otherIncomingAccount')
+    expect(ctx.accounts.outgoingId).toEqual('otherOutgoingAccount')
   })
 })
