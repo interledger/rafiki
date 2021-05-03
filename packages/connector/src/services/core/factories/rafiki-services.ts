@@ -13,7 +13,7 @@ export const RafikiServicesFactory = Factory.define<RafikiServices>('PeerInfo')
     return peers
   })
   .attr('router', ['peers'], (peers: InMemoryPeers) => {
-    return new InMemoryRouter(peers, {})
+    return new InMemoryRouter(peers, { ilpAddress: 'test.rafiki' })
   })
   .attr('accounts', ['peers'], () => {
     return new InMemoryAccountsService()
