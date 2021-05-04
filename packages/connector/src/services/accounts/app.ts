@@ -29,32 +29,22 @@ export interface AppServices {
 export type AppContainer = IocContract<AppServices>
 
 export class App {
-  private koa!: Koa<DefaultState, AppContext>
-  private publicRouter!: Router<DefaultState, AppContext>
+  private koa: Koa<DefaultState, AppContext>
+  private publicRouter: Router<DefaultState, AppContext>
   private server: Server | undefined
-  public closeEmitter!: EventEmitter
   public isShuttingDown = false
-  private logger!: Logger
-  private config!: typeof Config
-  private accounts!: AccountsService
+  private accounts: AccountsService
 
-  public constructor(private container: IocContract<AppServices>) {}
-
-  /**
-   * The boot function exists because the functions that we register on the container with the `bind` method are async.
-   * We then need to await this function when we call use - which can't be done in the constructor. This is a first pass to
-   * get the container working. We can refactor this in future. Perhaps don't use private members and just pass around the container?
-   * Or provide start / shutdown methods on the services in the container?
-   */
-  public async boot(): Promise<void> {
-    this.config = await this.container.use('config')
+  private constructor(
+    private container: IocContract<AppServices>,
+    private config: typeof Config,
+    private logger: Logger,
+    private closeEmitter: EventEmitter // tigerbeetle: Client
+  ) {
     this.koa = new Koa<DefaultState, AppContext>()
-    this.closeEmitter = await this.container.use('closeEmitter')
-    this.logger = await this.container.use('logger')
-    this.accounts = new AccountsService(/* await this.container.use('tigerbeetle') */)
+    this.accounts = new AccountsService(/* tigerbeetle */)
     this.koa.context.container = this.container
-    this.koa.context.logger = await this.container.use('logger')
-    this.koa.context.closeEmitter = await this.container.use('closeEmitter')
+    this.koa.context.logger = this.logger
     this.publicRouter = new Router()
 
     this.koa.use(
@@ -76,6 +66,18 @@ export class App {
       }
     )
     this._setupRoutes()
+  }
+
+  public static async createApp(
+    container: IocContract<AppServices>
+  ): Promise<App> {
+    return new App(
+      container,
+      await container.use('config'),
+      await container.use('logger'),
+      await container.use('closeEmitter')
+      // await container.use('tigerbeetle')
+    )
   }
 
   public listen(port: number | string): void {

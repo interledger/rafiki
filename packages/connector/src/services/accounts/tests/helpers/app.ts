@@ -34,8 +34,7 @@ export const createTestApp = async (
   })
 
   container.bind('logger', async () => logger)
-  const app = new App(container)
-  await start(container, app)
+  const app = await start(container)
   const knex = await container.use('knex')
 
   return {

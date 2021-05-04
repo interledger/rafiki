@@ -8,7 +8,6 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 import { App, AppServices, Config } from './services/accounts'
 
 const container = initIocContainer(Config)
-const app = new App(container)
 
 export function initIocContainer(
   config: typeof Config
@@ -66,11 +65,11 @@ export const gracefulShutdown = async (
 }
 
 export const start = async (
-  container: IocContract<AppServices>,
-  app: App
-): Promise<void> => {
+  container: IocContract<AppServices>
+): Promise<App> => {
   let shuttingDown = false
   const logger = await container.use('logger')
+  const app = await App.createApp(container)
   process.on(
     'SIGINT',
     async (): Promise<void> => {
@@ -126,14 +125,14 @@ export const start = async (
   Model.knex(knex)
 
   const config = await container.use('config')
-  await app.boot()
   app.listen(config.port)
   logger.info(`Accounts service listening on ${app.getPort()}`)
+  return app
 }
 
 // If this script is run directly, start the server
 if (!module.parent) {
-  start(container, app).catch(
+  start(container).catch(
     async (e): Promise<void> => {
       const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
       const logger = await container.use('logger')
