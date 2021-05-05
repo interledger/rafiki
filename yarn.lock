@@ -1415,15 +1415,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/nanoid@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "@types/nanoid@npm:2.1.0"
-  dependencies:
-    "@types/node": "*"
-  checksum: df2afc35210f8e793776af8a14565b606fd88fe99da8da5551dd038a9e9aea534eb36a4ab44d0eb37b884c820e02d4a5ebf004f3f48748eb66f17dba62383634
-  languageName: node
-  linkType: hard
-
 "@types/node-fetch@npm:^2.5.10":
   version: 2.5.10
   resolution: "@types/node-fetch@npm:2.5.10"
@@ -2993,7 +2984,6 @@ __metadata:
     "@types/koa-joi-router": ^5.2.5
     "@types/koa__router": ^8.0.4
     "@types/lodash": ^4.14.168
-    "@types/nanoid": ^2.1.0
     "@types/node": ^14.14.41
     "@types/node-fetch": ^2.5.10
     "@types/pino": ^6.3.8
@@ -3016,7 +3006,6 @@ __metadata:
     koa-compose: ^4.1.0
     koa-joi-router: ^7.0.0
     lodash: ^4.17.21
-    nanoid: ^3.1.22
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
     oer-utils: ^5.1.2
@@ -7340,15 +7329,6 @@ __metadata:
   version: 2.1.3
   resolution: "ms@npm:2.1.3"
   checksum: 6e721e648a544154d5de4c114b32f573d8027ca8ec505cf6c1105e505986d6ac46934a1256735aa0eece8eb2f5b2a1230503b2dddd3b100f9f016fd8a4f15f33
-  languageName: node
-  linkType: hard
-
-"nanoid@npm:^3.1.22":
-  version: 3.1.22
-  resolution: "nanoid@npm:3.1.22"
-  bin:
-    nanoid: bin/nanoid.cjs
-  checksum: 6a38c799816de388cd67233a9fad6216e0ad2abda3ce5b34eb126afbef6905924507223dc65797e2bcbc513f9cd7e078ea7e69448d59f434a6206b491278ae24
   languageName: node
   linkType: hard
 

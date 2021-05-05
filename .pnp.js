@@ -1774,16 +1774,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
-      ["@types/nanoid", [
-        ["npm:2.1.0", {
-          "packageLocation": "./.yarn/cache/@types-nanoid-npm-2.1.0-d570b8fe98-df2afc3521.zip/node_modules/@types/nanoid/",
-          "packageDependencies": [
-            ["@types/nanoid", "npm:2.1.0"],
-            ["@types/node", "npm:14.14.39"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
       ["@types/node", [
         ["npm:14.14.39", {
           "packageLocation": "./.yarn/cache/@types-node-npm-14.14.39-2905947c57-b4d729f65a.zip/node_modules/@types/node/",
@@ -3649,7 +3639,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/koa-joi-router", "npm:5.2.5"],
             ["@types/koa__router", "npm:8.0.4"],
             ["@types/lodash", "npm:4.14.168"],
-            ["@types/nanoid", "npm:2.1.0"],
             ["@types/node", "npm:14.14.43"],
             ["@types/node-fetch", "npm:2.5.10"],
             ["@types/pino", "npm:6.3.8"],
@@ -3672,7 +3661,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["koa-compose", "npm:4.1.0"],
             ["koa-joi-router", "npm:7.0.0"],
             ["lodash", "npm:4.17.21"],
-            ["nanoid", "npm:3.1.22"],
             ["objection", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.2.15"],
             ["objection-db-errors", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.1.2"],
             ["oer-utils", "npm:5.1.2"],
@@ -8582,15 +8570,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/ms-npm-2.1.3-81ff3cfac1-6e721e648a.zip/node_modules/ms/",
           "packageDependencies": [
             ["ms", "npm:2.1.3"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
-      ["nanoid", [
-        ["npm:3.1.22", {
-          "packageLocation": "./.yarn/cache/nanoid-npm-3.1.22-e0ab44a9c0-6a38c79981.zip/node_modules/nanoid/",
-          "packageDependencies": [
-            ["nanoid", "npm:3.1.22"]
           ],
           "linkType": "HARD",
         }]
