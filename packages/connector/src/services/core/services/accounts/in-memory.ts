@@ -1,11 +1,9 @@
 import { AccountInfo } from '../../types'
 import { Observable, Subject } from 'rxjs'
 import { AccountNotFoundError } from '../../errors'
-import { Errors } from 'ilp-packet'
 import { AccountsService, AccountSnapshot, Transaction } from '.'
 import debug from 'debug'
 import { map } from 'rxjs/operators'
-const { InsufficientLiquidityError } = Errors
 
 // Implementations SHOULD use a better logger than debug for production services
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -64,131 +62,57 @@ export class InMemoryAccountsService implements AccountsService {
     this._accounts.delete(id)
   }
 
-  // Adjust amount the we owe
-  // As this is called after we have got the fulfillment. It doesn't actually make much sense
-  public async adjustBalancePayable(
+  public async adjustBalances(
     amount: bigint,
-    accountId: string,
+    incomingAccountId: string,
+    outgoingAccountId: string,
     callback: (trx: Transaction) => Promise<unknown>
-  ): Promise<AccountSnapshot> {
-    const account = await this.get(accountId)
+  ): Promise<void> {
+    const incomingAccount = await this.get(incomingAccountId)
+    const outgoingAccount = await this.get(outgoingAccountId)
 
     if (amount > BigInt(0)) {
       // Need to ensure these are actually called
       const transaction: Transaction = {
         commit: async () => {
-          account.balancePayableInflight -= amount
-          account.balancePayable += amount
+          incomingAccount.balanceReceivableInflight -= amount
+          incomingAccount.balanceReceivable += amount
+          outgoingAccount.balancePayableInflight -= amount
+          outgoingAccount.balancePayable += amount
         },
         rollback: async () => {
-          account.balancePayableInflight -= amount
+          incomingAccount.balanceReceivableInflight -= amount
+          outgoingAccount.balancePayableInflight -= amount
         }
       }
 
       try {
-        // Maybe doing the adjustment must occur before the liquidity check + how to handle atomicity
-        account.balancePayableInflight += amount
-        if (
-          account.balancePayableInflight + account.balancePayable >
-          account.maximumPayable
-        ) {
-          throw new InsufficientLiquidityError(
-            `Max payable exceeded: expected: ${(
-              account.balancePayableInflight + account.balancePayable
-            ).toString()} maximum: ${account.maximumPayable.toString()}`
-          )
-        }
+        incomingAccount.balanceReceivableInflight += amount
+        outgoingAccount.balancePayableInflight += amount
 
         await callback(transaction)
 
         // TODO look at netting
 
-        this._updatedAccounts.next(account)
-
-        return {
-          balanceReceivable: account.balanceReceivable,
-          balancePayable: account.balancePayable
-        } as AccountSnapshot
+        this._updatedAccounts.next(incomingAccount)
+        this._updatedAccounts.next(outgoingAccount)
       } catch (error) {
         // Should this rethrow the the error?
-        account.balancePayableInflight -= amount
+        incomingAccount.balanceReceivableInflight -= amount
+        outgoingAccount.balancePayableInflight -= amount
         throw error(error)
       }
     } else {
       const transaction: Transaction = {
         commit: async () => {
-          account.balancePayable += amount
+          incomingAccount.balanceReceivableInflight -= amount
+          outgoingAccount.balancePayableInflight -= amount
         },
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         rollback: async () => {}
       }
 
       await callback(transaction)
-
-      return {
-        balanceReceivable: account.balanceReceivable,
-        balancePayable: account.balancePayable
-      } as AccountSnapshot
     }
-  }
-
-  public async adjustBalanceReceivable(
-    amount: bigint,
-    accountId: string,
-    callback: (trx: Transaction) => Promise<unknown>
-  ): Promise<AccountSnapshot> {
-    const account = await this.get(accountId)
-    const transaction: Transaction = {
-      commit: async () => {
-        account.balanceReceivableInflight -= amount
-        account.balanceReceivable += amount
-      },
-      rollback: async () => {
-        account.balanceReceivableInflight -= amount
-      }
-    }
-
-    // Try commit or catch and rollback
-    try {
-      // Maybe doing the adjustment must occur before the liquidity check + how to handle atomicity
-      account.balanceReceivableInflight += amount
-      if (
-        account.balanceReceivableInflight + account.balanceReceivable >
-        account.maximumReceivable
-      ) {
-        throw new InsufficientLiquidityError('')
-      }
-
-      await callback(transaction)
-
-      // TODO Need to check if commit/rollback was called else throw
-
-      return {
-        balanceReceivable: account.balanceReceivable,
-        balancePayable: account.balancePayable
-      } as AccountSnapshot
-    } catch (error) {
-      // Should this rethrow the the error?
-      account.balanceReceivableInflight -= amount
-      throw error(error)
-    }
-  }
-
-  // Can take money from payable and transfer to receivables
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async maybeSettle(account: InMemoryAccount): Promise<void> {
-    // // First potentially net.
-    // // if payable_balance > 0 && receivable_balance > 0 {
-    // //   let amount_to_net = min(payable_balance, receivable_balance);
-    // //   payable_balance = payable_balance - amount_to_net;
-    // //   receivable_balance = receivable_balance - amount_to_net;
-    // // }
-    //
-    // // Then try settle
-    // // if (!settlement || !settlementEngine) {
-    // //   logger.debug('Not deciding whether to settle for accountId=' + peer.id + '. No settlement engine configured.')
-    // //   return
-    // // }
-    //
   }
 }

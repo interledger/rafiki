@@ -1,6 +1,5 @@
 import { RafikiContext, RafikiMiddleware } from '../rafiki'
 import { AuthState } from './auth'
-import { AccountSnapshot } from '../services/accounts'
 
 export interface AccountMiddlewareOptions {
   getIncomingAccountId?: (ctx: RafikiContext<AuthState>) => Promise<string>
@@ -44,18 +43,12 @@ export function createAccountMiddleware(
   ): Promise<void> {
     const incomingAccountId = await getIncomingAccountId(ctx)
     const outgoingAccountId = await getOutgoingAccountId(ctx)
-    let incomingAccount: Promise<AccountSnapshot> | undefined
-    let outgoingAccount: Promise<AccountSnapshot> | undefined
     ctx.accounts = {
-      get incoming(): Promise<AccountSnapshot> {
-        if (incomingAccount) return incomingAccount
-        incomingAccount = ctx.services.accounts.get(incomingAccountId)
-        return incomingAccount
+      get incomingId(): string {
+        return incomingAccountId
       },
-      get outgoing(): Promise<AccountSnapshot> {
-        if (outgoingAccount) return outgoingAccount
-        outgoingAccount = ctx.services.accounts.get(outgoingAccountId)
-        return outgoingAccount
+      get outgoingId(): string {
+        return outgoingAccountId
       }
     }
     await next()

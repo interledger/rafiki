@@ -1,11 +1,11 @@
 import {
+  AccountsService,
   createApp,
   InMemoryPeers,
   InMemoryAccountsService,
   InMemoryRouter,
   RafikiRouter,
-  createIncomingBalanceMiddleware,
-  createOutgoingBalanceMiddleware,
+  createBalanceMiddleware,
   createIncomingErrorHandlerMiddleware,
   createIldcpProtocolController,
   createCcpProtocolController,
@@ -66,13 +66,11 @@ const incoming = compose([
   createIncomingErrorHandlerMiddleware(),
   createIncomingMaxPacketAmountMiddleware(),
   createIncomingRateLimitMiddleware(),
-  createIncomingThroughputMiddleware(),
-  createIncomingBalanceMiddleware()
+  createIncomingThroughputMiddleware()
 ])
 
 const outgoing = compose([
   // Outgoing Rules
-  createOutgoingBalanceMiddleware(),
   createOutgoingThroughputMiddleware(),
   createOutgoingReduceExpiryMiddleware(),
   createOutgoingExpireMiddleware(),
@@ -82,7 +80,7 @@ const outgoing = compose([
   createClientController()
 ])
 
-const middleware = compose([incoming, outgoing])
+const middleware = compose([incoming, createBalanceMiddleware(), outgoing])
 
 // TODO Add auth
 const app = createApp({
@@ -119,7 +117,11 @@ export const gracefulShutdown = async (): Promise<void> => {
     })
   }
 }
-export const start = async (): Promise<void> => {
+export const start = async (accounts?: AccountsService): Promise<void> => {
+  if (accounts) {
+    app.accounts = accounts
+  }
+
   let shuttingDown = false
   process.on(
     'SIGINT',
@@ -147,10 +149,9 @@ export const start = async (): Promise<void> => {
     }
   )
 
-  logger.info('🚀 the 🐒')
   server = app.listen(PORT)
+  logger.info(`Connector listening on ${PORT}`)
   adminApi.listen()
-  logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
 
 // If this script is run directly, start the server

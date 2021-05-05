@@ -1792,10 +1792,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],
           "linkType": "HARD",
         }],
-        ["npm:14.14.41", {
-          "packageLocation": "./.yarn/cache/@types-node-npm-14.14.41-86b32c9f0d-37dfb63964.zip/node_modules/@types/node/",
+        ["npm:14.14.43", {
+          "packageLocation": "./.yarn/cache/@types-node-npm-14.14.43-cddd452ab7-b7a9e6df7c.zip/node_modules/@types/node/",
           "packageDependencies": [
-            ["@types/node", "npm:14.14.41"]
+            ["@types/node", "npm:14.14.43"]
           ],
           "linkType": "HARD",
         }]
@@ -3638,6 +3638,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./packages/connector/",
           "packageDependencies": [
             ["connector", "workspace:packages/connector"],
+            ["@adonisjs/fold", "npm:8.1.0"],
+            ["@koa/router", "npm:10.0.0"],
             ["@types/debug", "npm:4.1.5"],
             ["@types/faker", "npm:5.5.3"],
             ["@types/jsonwebtoken", "npm:8.5.1"],
@@ -3645,12 +3647,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/koa-bodyparser", "npm:4.3.0"],
             ["@types/koa-compose", "npm:3.2.5"],
             ["@types/koa-joi-router", "npm:5.2.5"],
+            ["@types/koa__router", "npm:8.0.4"],
             ["@types/lodash", "npm:4.14.168"],
             ["@types/nanoid", "npm:2.1.0"],
-            ["@types/node", "npm:14.14.41"],
+            ["@types/node", "npm:14.14.43"],
             ["@types/node-fetch", "npm:2.5.10"],
             ["@types/pino", "npm:6.3.8"],
             ["@types/rosie", "npm:0.0.39"],
+            ["@types/uuid", "npm:8.3.0"],
             ["agentkeepalive", "npm:4.1.4"],
             ["ajv", "npm:8.1.0"],
             ["axios", "npm:0.21.1"],
@@ -3662,17 +3666,22 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ilp-protocol-ccp", "npm:1.2.2"],
             ["ilp-protocol-ildcp", "npm:2.2.2"],
             ["jsonwebtoken", "npm:8.5.1"],
+            ["knex", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:0.21.19"],
             ["koa", "npm:2.13.1"],
             ["koa-bodyparser", "npm:4.3.0"],
             ["koa-compose", "npm:4.1.0"],
             ["koa-joi-router", "npm:7.0.0"],
             ["lodash", "npm:4.17.21"],
             ["nanoid", "npm:3.1.22"],
+            ["objection", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.2.15"],
+            ["objection-db-errors", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.1.2"],
             ["oer-utils", "npm:5.1.2"],
+            ["pg", "virtual:32e475abcc6dabaea14b24db9aee1b59797d3cabcc03e60dcecd77305a697e5b9687c2679af13682eefd8a3b20c62224e14184bd5b161fae6d8d40f0f55cdb48#npm:8.6.0"],
             ["pino", "npm:6.11.3"],
             ["raw-body", "npm:2.4.1"],
             ["rosie", "npm:2.1.0"],
-            ["rxjs", "npm:6.6.7"]
+            ["rxjs", "npm:6.6.7"],
+            ["uuid", "npm:8.3.2"]
           ],
           "linkType": "SOFT",
         }]
