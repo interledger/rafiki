@@ -7,7 +7,7 @@ import Koa, { Context, DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
-// import { Client } from 'tigerbeetle-node'
+import { Client } from 'tigerbeetle-node'
 
 import { AccountsService } from './services'
 import { Config } from './config'
@@ -23,7 +23,7 @@ export interface AppServices {
   knex: Promise<Knex>
   closeEmitter: Promise<EventEmitter>
   config: Promise<typeof Config>
-  // tigerbeetle: Promise<Client>
+  tigerbeetle: Promise<Client>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -39,10 +39,11 @@ export class App {
     private container: IocContract<AppServices>,
     private config: typeof Config,
     private logger: Logger,
-    private closeEmitter: EventEmitter // tigerbeetle: Client
+    private closeEmitter: EventEmitter,
+    tigerbeetle: Client
   ) {
     this.koa = new Koa<DefaultState, AppContext>()
-    this.accounts = new AccountsService(/* tigerbeetle */)
+    this.accounts = new AccountsService(tigerbeetle)
     this.koa.context.container = this.container
     this.koa.context.logger = this.logger
     this.publicRouter = new Router()
@@ -75,8 +76,8 @@ export class App {
       container,
       await container.use('config'),
       await container.use('logger'),
-      await container.use('closeEmitter')
-      // await container.use('tigerbeetle')
+      await container.use('closeEmitter'),
+      await container.use('tigerbeetle')
     )
   }
 

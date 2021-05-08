@@ -1,20 +1,49 @@
-//import { IlpAccountSettings } from '../models'
-// import { Client } from 'tigerbeetle-node'
+import { v4 as uuid } from 'uuid'
+import { Client, CommitFlags } from 'tigerbeetle-node'
+
+import { IlpAccountSettings } from '../models'
+// import { CreateIlpAccountOptions } from '../types'
+import { uuidToBigInt } from '../utils'
 
 // import { Errors } from 'ilp-packet'
 import {
   AccountsService as ConnectorAccountsService,
   AdjustmentOptions,
   IlpAccount,
-  IlpBalance
-  //Transaction
+  IlpBalance,
+  Transaction
 } from '../../core/services/accounts'
 // const { InsufficientLiquidityError } = Errors
 
+const CUSTOM_FIELDS = {
+  custom_1: BigInt(0),
+  custom_2: BigInt(0),
+  custom_3: BigInt(0)
+}
+
+function toIlpAccountSettings(
+  // account: CreateIlpAccountOptions,
+  account: IlpAccount,
+  balanceId: string
+) {
+  return {
+    id: account.accountId,
+    disabled: account.disabled,
+    assetCode: account.asset.code,
+    assetScale: account.asset.scale,
+    balanceId,
+    parentAccountId: account.parentAccountId,
+    incomingTokens: account.http && account.http.incoming.authTokens,
+    incomingEndpoint: account.http && account.http.incoming.endpoint,
+    outgoingToken: account.http && account.http.outgoing.authToken,
+    outgoingEndpoint: account.http && account.http.outgoing.endpoint,
+    streamEnabled: account.stream && account.stream.enabled,
+    staticIlpAddress: account.routing && account.routing.staticIlpAddress
+  }
+}
+
 export class AccountsService implements ConnectorAccountsService {
-  // private _client: Client
-  // eslint-disable-next-line
-  private _client: any
+  private _client: Client
 
   async getAccount(_accountId: string): Promise<IlpAccount> {
     throw new Error('unimplemented')
@@ -27,51 +56,35 @@ export class AccountsService implements ConnectorAccountsService {
   async getAccountByToken(_token: string): Promise<IlpAccount | null> {
     throw new Error('unimplemented')
   }
-  async createAccount(_account: IlpAccount): Promise<IlpAccount> {
-    throw new Error('unimplemented')
-  }
   async getAccountBalance(_accountId: string): Promise<IlpBalance> {
     throw new Error('unimplemented')
   }
-  async adjustBalances(_options: AdjustmentOptions): Promise<void> {
-    throw new Error('unimplemented')
+
+  constructor(client: Client) {
+    this._client = client
   }
 
-  // constructor(client: Client) {
-  //   this._client = client
-  // }
-
-  /*
-  async get(id: string): Promise<AccountInfo> {
-    const accountSettings = await IlpAccountSettings.query().findById(id)
-    if (!accountSettings) {
-      throw new AccountNotFoundError(id)
-    }
-    return accountSettings
-  }
-
-  public async adjustBalances(
-    amount: bigint,
-    incomingAccountId: string,
-    outgoingAccountId: string,
-    callback: (trx: Transaction) => Promise<unknown>
-  ): Promise<void> {
-    const incomingAccountSettings = await IlpAccountSettings.query().findById(
-      incomingAccountId
+  public async adjustBalances({
+    sourceAmount,
+    sourceAccountId,
+    destinationAccountId,
+    callback
+  }: AdjustmentOptions): Promise<void> {
+    const sourceAccount = await IlpAccountSettings.query().findById(
+      sourceAccountId
     )
-    const outgoingAccountSettings = await IlpAccountSettings.query().findById(
-      outgoingAccountId
+    const destinationAccount = await IlpAccountSettings.query().findById(
+      destinationAccountId
     )
-    if (amount > BigInt(0)) {
-      const transferId = Buffer.from(uuid())
+    if (sourceAmount > BigInt(0)) {
+      const transferId = uuidToBigInt(uuid())
       const transaction: Transaction = {
         commit: async () => {
           const res = await this._client.commitTransfers([
             {
               id: transferId,
-              flags: {
-                // accept
-              }
+              flags: 0n | BigInt(CommitFlags.accept),
+              ...CUSTOM_FIELDS
             }
           ])
           if (res.length) {
@@ -82,9 +95,8 @@ export class AccountsService implements ConnectorAccountsService {
           const res = await this._client.commitTransfers([
             {
               id: transferId,
-              flags: {
-                // reject
-              }
+              flags: 0n | BigInt(CommitFlags.reject),
+              ...CUSTOM_FIELDS
             }
           ])
           if (res.length) {
@@ -97,9 +109,12 @@ export class AccountsService implements ConnectorAccountsService {
         const res = await this._client.createTransfers([
           {
             id: transferId,
-            debitAccountId: Buffer.from(incomingAccountSettings.balanceId),
-            creditAccountId: Buffer.from(outgoingAccountSettings.balanceId),
-            amount
+            debit_account_id: uuidToBigInt(sourceAccount.balanceId),
+            credit_account_id: uuidToBigInt(destinationAccount.balanceId),
+            amount: sourceAmount,
+            ...CUSTOM_FIELDS,
+            flags: BigInt(0),
+            timeout: BigInt(1000)
           }
         ])
         if (res.length) {
@@ -113,5 +128,35 @@ export class AccountsService implements ConnectorAccountsService {
       }
     }
   }
-*/
+
+  public async createAccount(
+    account: IlpAccount
+  ): Promise<IlpAccount> {
+    const balanceId = uuid()
+    await this._client.createAccounts([
+      {
+        id: uuidToBigInt(balanceId),
+        custom: BigInt(0),
+        flags: BigInt(0),
+        unit: BigInt(account.asset.scale),
+        debit_accepted: BigInt(0),
+        debit_reserved: BigInt(0),
+        credit_accepted: BigInt(0),
+        credit_reserved: BigInt(0),
+        debit_accepted_limit: BigInt(0),
+        debit_reserved_limit: BigInt(0),
+        credit_accepted_limit: BigInt(0),
+        credit_reserved_limit: BigInt(0),
+        timestamp: 0n
+        // limit_net_debit: balance.min,
+        // limit_net_credit: balance.max
+      }
+    ])
+    await IlpAccountSettings.query().insertAndFetch(
+      toIlpAccountSettings(account, balanceId)
+    )
+    // const { assetCode, assetScale } = accountOptions.balance
+    // await createCurrencyBalances(assetCode, assetScale)
+    return account
+  }
 }

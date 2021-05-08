@@ -1,6 +1,7 @@
 import createLogger from 'pino'
 import Knex from 'knex'
 import { IocContract } from '@adonisjs/fold'
+import { Client } from 'tigerbeetle-node'
 
 import { start, gracefulShutdown } from '../../../../accounts'
 import { App, AppServices } from '../../app'
@@ -14,6 +15,7 @@ export interface TestContainer {
   app: App
   knex: Knex
   connectionUrl: string
+  tigerbeetle: Client
   shutdown: () => Promise<void>
 }
 
@@ -36,12 +38,14 @@ export const createTestApp = async (
   container.bind('logger', async () => logger)
   const app = await start(container)
   const knex = await container.use('knex')
+  const tigerbeetle = await container.use('tigerbeetle')
 
   return {
     app,
     port: app.getPort(),
     knex,
     connectionUrl: DATABASE_URL,
+    tigerbeetle,
     shutdown: async () => {
       await gracefulShutdown(container, app)
     }

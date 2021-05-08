@@ -18,8 +18,6 @@ export class IlpAccountSettings extends BaseModel {
   public outgoingEndpoint?: string
 
   public streamEnabled?: boolean
-  public streamSuffix?: string // read-only; ILP suffix for STREAM server receiving
 
-  public routingPrefixes?: string[] // prefixes that route to this account
-  public ilpAddress?: string // ILP address for this account
+  public staticIlpAddress?: string // ILP address for this account
 }

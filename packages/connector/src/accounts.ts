@@ -3,7 +3,7 @@ import createLogger from 'pino'
 import Knex from 'knex'
 import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
-// import { createClient } from 'tigerbeetle-node'
+import { createClient } from 'tigerbeetle-node'
 
 import { App, AppServices, Config } from './services/accounts'
 
@@ -41,12 +41,16 @@ export function initIocContainer(
     return knex
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
-  // container.singleton('tigerbeetle', async (deps: IocContract<AppServices>) => {
-  //   const logger = await deps.use('logger')
-  //   const config = await deps.use('config')
-  //   logger.info({ msg: 'creating tigerbeetle client' })
-  //   return createClient(config)
-  // })
+  container.singleton('tigerbeetle', async (deps: IocContract<AppServices>) => {
+    const logger = await deps.use('logger')
+    const config = await deps.use('config')
+    logger.info({ msg: 'creating tigerbeetle client' })
+    return createClient({
+      client_id: config.tigerbeetleClientId,
+      cluster_id: config.tigerbeetleClusterId,
+      replica_addresses: config.tigerbeetleReplicaAddresses
+    })
+  })
 
   return container
 }
@@ -60,8 +64,8 @@ export const gracefulShutdown = async (
   await app.shutdown()
   const knex = await container.use('knex')
   await knex.destroy()
-  // const tigerbeetle = await container.use('tigerbeetle')
-  // tigerbeetle.destroy()
+  const tigerbeetle = await container.use('tigerbeetle')
+  tigerbeetle.destroy()
 }
 
 export const start = async (
