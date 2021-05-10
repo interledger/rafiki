@@ -1,4 +1,4 @@
-# Rafiki all in one
+# Rafiki
 
 ## Table of Contents
 
