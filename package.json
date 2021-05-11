@@ -1,8 +1,8 @@
 {
-  "name": "raio",
+  "name": "@coil/rafiki",
   "version": "1.0.0",
   "private": true,
-  "repository": "https://github.com/coilhq/raio",
+  "repository": "https://github.com/coilhq/rafiki",
   "scripts": {
     "lint": "eslint --max-warnings=0 --fix .",
     "lint:local": "eslint --max-warnings=0 --fix $INIT_CWD",
