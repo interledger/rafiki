@@ -1,5 +1,7 @@
 # Rafiki
 
+I should not be allowed to merge this since I am not on the team. 
+
 ## Table of Contents
 
 1. [Getting Started](#getting-started)
