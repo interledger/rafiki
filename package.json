@@ -2,6 +2,7 @@
   "name": "@coil/rafiki",
   "version": "1.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "repository": "https://github.com/coilhq/rafiki",
   "scripts": {
     "lint": "eslint --max-warnings=0 --fix .",
