@@ -24,7 +24,7 @@ I should not be allowed to merge this since I am not on the team.
 
 ## Getting Started
 
-This project uses yarn 2. We use [zero-installs](https://yarnpkg.com/features/zero-installs)
+This  uses yarn 2. We use [zero-installs](https://yarnpkg.com/features/zero-installs)
 which means you won't need to install dependencies when you clone the repo.
 This does have [security implications](https://yarnpkg.com/features/zero-installs#does-it-have-security-implications)
 that are fairly easy to mitigate.
