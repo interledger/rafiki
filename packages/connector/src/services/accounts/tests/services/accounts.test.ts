@@ -1,15 +1,34 @@
+import { randomInt } from 'crypto'
+
 import { Transaction as KnexTransaction } from 'knex'
 import { Model } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { AccountsService } from '../../services/accounts'
-import { uuidToBigInt } from '../../utils'
+import {
+  toLiquidityId,
+  toSettlementId,
+  uuidToBigInt
+} from '../../utils'
 import { createTestApp, TestContainer } from '../helpers/app'
 import { AppServices, Config, IlpAccountSettings } from '../..'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
-describe.only('Accounts Service', (): void => {
+// Use unique assets as a workaround for not being able to reset
+// Tigerbeetle between tests
+function randomAsset() {
+  const letters = []
+  while (letters.length < 3) {
+    letters.push(randomInt(65, 91))
+  }
+  return {
+    code: String.fromCharCode(...letters),
+    scale: randomInt(0, 256)
+  }
+}
+
+describe('Accounts Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accounts: AccountsService
@@ -49,10 +68,7 @@ describe.only('Accounts Service', (): void => {
       const account = {
         accountId,
         disabled: false,
-        asset: {
-          code: 'USD',
-          scale: 9
-        }
+        asset: randomAsset()
       }
       const createdAccount = await accounts.createAccount(account)
       expect(createdAccount).toEqual(account)
@@ -71,10 +87,7 @@ describe.only('Accounts Service', (): void => {
         accountId,
         disabled: false,
         parentAccountId: uuid(),
-        asset: {
-          code: 'USD',
-          scale: 9
-        },
+        asset: randomAsset(),
         http: {
           incoming: {
             authTokens: [uuid()],
@@ -101,6 +114,48 @@ describe.only('Accounts Service', (): void => {
       expect(balances.length).toEqual(1)
       expect(balances[0].credit_reserved).toEqual(BigInt(0))
       expect(balances[0].credit_accepted).toEqual(BigInt(0))
+    })
+
+    test('Auto-creates corresponding liquidity and settlement accounts', async (): Promise<void> => {
+      const account = {
+        accountId: uuid(),
+        disabled: false,
+        asset: randomAsset()
+      }
+
+      {
+        const balances = await appContainer.tigerbeetle.lookupAccounts([
+          toLiquidityId(account.asset.code, account.asset.scale),
+          toSettlementId(account.asset.code, account.asset.scale)
+        ])
+        expect(balances.length).toBe(0)
+      }
+
+      await accounts.createAccount(account)
+      {
+        const balances = await appContainer.tigerbeetle.lookupAccounts([
+          toLiquidityId(account.asset.code, account.asset.scale),
+          toSettlementId(account.asset.code, account.asset.scale)
+        ])
+        expect(balances.length).toBe(2)
+        balances.forEach((balance) => {
+          expect(balance.credit_reserved).toEqual(BigInt(0))
+          expect(balance.credit_accepted).toEqual(BigInt(0))
+        })
+      }
+
+      await accounts.createAccount({
+        ...account,
+        accountId: uuid()
+      })
+
+      {
+        const balances = await appContainer.tigerbeetle.lookupAccounts([
+          toLiquidityId(account.asset.code, account.asset.scale),
+          toSettlementId(account.asset.code, account.asset.scale)
+        ])
+        expect(balances.length).toBe(2)
+      }
     })
   })
 })

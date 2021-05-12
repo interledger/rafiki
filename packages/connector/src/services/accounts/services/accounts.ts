@@ -2,8 +2,7 @@ import { v4 as uuid } from 'uuid'
 import { Client, CommitFlags } from 'tigerbeetle-node'
 
 import { IlpAccountSettings } from '../models'
-// import { CreateIlpAccountOptions } from '../types'
-import { uuidToBigInt } from '../utils'
+import { toLiquidityId, toSettlementId, uuidToBigInt } from '../utils'
 
 // import { Errors } from 'ilp-packet'
 import {
@@ -19,6 +18,11 @@ const CUSTOM_FIELDS = {
   custom_1: BigInt(0),
   custom_2: BigInt(0),
   custom_3: BigInt(0)
+}
+
+export interface BalanceOptions {
+  id: bigint
+  unit: bigint
 }
 
 function toIlpAccountSettings(
@@ -133,12 +137,39 @@ export class AccountsService implements ConnectorAccountsService {
     account: IlpAccount
   ): Promise<IlpAccount> {
     const balanceId = uuid()
+    await this.createBalance({
+      id: uuidToBigInt(balanceId),
+      unit: BigInt(account.asset.scale)
+    })
+    await IlpAccountSettings.query().insertAndFetch(
+      toIlpAccountSettings(account, balanceId)
+    )
+    await this.createCurrencyBalances(account.asset.code, account.asset.scale)
+    return account
+  }
+
+  private async createCurrencyBalances(
+    assetCode: string,
+    assetScale: number
+  ): Promise<void> {
+    await this.createBalance({
+      id: toSettlementId(assetCode, assetScale),
+      unit: BigInt(assetScale)
+    })
+    await this.createBalance({
+      id: toLiquidityId(assetCode, assetScale),
+      unit: BigInt(assetScale)
+      // min: BigInt(0)
+    })
+  }
+
+  private async createBalance({ id, unit }: BalanceOptions): Promise<void> {
     await this._client.createAccounts([
       {
-        id: uuidToBigInt(balanceId),
+        id,
         custom: BigInt(0),
         flags: BigInt(0),
-        unit: BigInt(account.asset.scale),
+        unit,
         debit_accepted: BigInt(0),
         debit_reserved: BigInt(0),
         credit_accepted: BigInt(0),
@@ -152,11 +183,5 @@ export class AccountsService implements ConnectorAccountsService {
         // limit_net_credit: balance.max
       }
     ])
-    await IlpAccountSettings.query().insertAndFetch(
-      toIlpAccountSettings(account, balanceId)
-    )
-    // const { assetCode, assetScale } = accountOptions.balance
-    // await createCurrencyBalances(assetCode, assetScale)
-    return account
   }
 }
