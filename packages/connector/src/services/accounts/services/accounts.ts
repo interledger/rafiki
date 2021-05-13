@@ -25,6 +25,50 @@ export interface BalanceOptions extends BalanceIds {
   unit: bigint
 }
 
+function toIlpAccount(
+  accountSettings: IlpAccountSettings,
+  balance: bigint
+): IlpAccount {
+  const account: IlpAccount = {
+    id: accountSettings.id,
+    disabled: accountSettings.disabled,
+    balance: {
+      assetCode: accountSettings.assetCode,
+      assetScale: accountSettings.assetScale,
+      current: balance
+    }
+  }
+  if (accountSettings.parentAccountId) {
+    account.balance.parentAccountId = accountSettings.parentAccountId
+  }
+  if (
+    accountSettings.incomingTokens &&
+    accountSettings.incomingEndpoint &&
+    accountSettings.outgoingToken &&
+    accountSettings.outgoingEndpoint
+  ) {
+    account.http = {
+      incomingTokens: accountSettings.incomingTokens,
+      incomingEndpoint: accountSettings.incomingEndpoint,
+      outgoingToken: accountSettings.outgoingToken,
+      outgoingEndpoint: accountSettings.outgoingEndpoint
+    }
+  }
+  if (accountSettings.streamEnabled && accountSettings.streamSuffix) {
+    account.stream = {
+      enabled: accountSettings.streamEnabled,
+      suffix: accountSettings.streamSuffix
+    }
+  }
+  if (accountSettings.ilpAddress && accountSettings.routingPrefixes) {
+    account.routing = {
+      prefixes: accountSettings.routingPrefixes,
+      ilpAddress: accountSettings.ilpAddress
+    }
+  }
+  return account
+}
+
 function toIlpAccountSettings(
   account: IlpAccount,
   balanceId: string,
@@ -158,6 +202,14 @@ export class AccountsService implements ConnectorAccountsService {
     )
     await this.createCurrencyBalances(account.asset.code, account.asset.scale)
     return account
+  }
+
+  public async getAccount(accountId: string): Promise<IlpAccount> {
+    const accountSettings = await IlpAccountSettings.query().findById(accountId)
+    const balance = await this.getBalance(
+      uuidToBigInt(accountSettings.balanceId)
+    )
+    return toIlpAccount(accountSettings, balance)
   }
 
   private async createCurrencyBalances(
@@ -301,5 +353,29 @@ export class AccountsService implements ConnectorAccountsService {
       }
     ])
     // check for error
+  }
+
+  public async deposit(accountId: string, amount: bigint): Promise<void> {
+    const accountSettings = await IlpAccountSettings.query().findById(accountId)
+    if (!accountSettings) {
+      throw new AccountNotFoundError(accountId)
+    }
+    await this.createTransfer(
+      toSettlementIds(accountSettings.assetCode, accountSettings.assetScale).id,
+      uuidToBigInt(accountSettings.balanceId),
+      amount
+    )
+  }
+
+  public async withdraw(accountId: string, amount: bigint): Promise<void> {
+    const accountSettings = await IlpAccountSettings.query().findById(accountId)
+    if (!accountSettings) {
+      throw new AccountNotFoundError(accountId)
+    }
+    await this.createTransfer(
+      uuidToBigInt(accountSettings.balanceId),
+      toSettlementIds(accountSettings.assetCode, accountSettings.assetScale).id,
+      amount
+    )
   }
 }

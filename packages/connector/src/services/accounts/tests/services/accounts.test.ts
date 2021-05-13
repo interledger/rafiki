@@ -11,6 +11,8 @@ import { AppServices, Config, IlpAccountSettings } from '../..'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
+import { AccountNotFoundError } from '../../../core/errors'
+
 // Use unique assets as a workaround for not being able to reset
 // Tigerbeetle between tests
 function randomAsset() {
@@ -240,6 +242,97 @@ describe('Accounts Service', (): void => {
       await accounts.withdrawLiquidity(assetCode, assetScale, amount)
       const balance = await accounts.getLiquidityBalance(assetCode, assetScale)
       expect(balance).toEqual(startingBalance)
+      const settlementBalance = await accounts.getSettlementBalance(
+        assetCode,
+        assetScale
+      )
+      expect(settlementBalance).toEqual(-startingBalance)
+    })
+  })
+
+  describe('Account Deposit', (): void => {
+    test('Can deposit to account', async (): Promise<void> => {
+      const { assetCode, assetScale } = randomAsset()
+      const { id } = await accounts.createAccount({
+        id: uuid(),
+        disabled: false,
+        balance: {
+          assetCode,
+          assetScale
+        }
+      })
+      const amount = BigInt(10)
+      await accounts.deposit(id, amount)
+      const {
+        balance: { current }
+      } = await accounts.getAccount(id)
+      expect(current).toEqual(amount)
+      const settlementBalance = await accounts.getSettlementBalance(
+        assetCode,
+        assetScale
+      )
+      expect(settlementBalance).toEqual(-amount)
+    })
+
+    test("Can't deposit to nonexistent account", async (): Promise<void> => {
+      const id = uuid()
+      await expect(accounts.deposit(id, BigInt(5))).rejects.toThrowError(
+        new AccountNotFoundError(id)
+      )
+    })
+  })
+
+  describe('Account Withdraw', (): void => {
+    test('Can withdraw from account', async (): Promise<void> => {
+      const { assetCode, assetScale } = randomAsset()
+      const { id } = await accounts.createAccount({
+        id: uuid(),
+        disabled: false,
+        balance: {
+          assetCode,
+          assetScale
+        }
+      })
+      const startingBalance = BigInt(10)
+      await accounts.deposit(id, startingBalance)
+      const amount = BigInt(5)
+      await accounts.withdraw(id, amount)
+      const {
+        balance: { current }
+      } = await accounts.getAccount(id)
+      expect(current).toEqual(startingBalance - amount)
+      const settlementBalance = await accounts.getSettlementBalance(
+        assetCode,
+        assetScale
+      )
+      expect(settlementBalance).toEqual(-(startingBalance - amount))
+    })
+
+    test("Can't withdraw from nonexistent account", async (): Promise<void> => {
+      const id = uuid()
+      await expect(accounts.withdraw(id, BigInt(5))).rejects.toThrowError(
+        new AccountNotFoundError(id)
+      )
+    })
+
+    test.skip("Can't withdraw more than the balance", async (): Promise<void> => {
+      const { assetCode, assetScale } = randomAsset()
+      const { id } = await accounts.createAccount({
+        id: uuid(),
+        disabled: false,
+        balance: {
+          assetCode,
+          assetScale
+        }
+      })
+      const startingBalance = BigInt(5)
+      await accounts.deposit(id, startingBalance)
+      const amount = BigInt(10)
+      await accounts.withdraw(id, amount)
+      const {
+        balance: { current }
+      } = await accounts.getAccount(id)
+      expect(current).toEqual(startingBalance)
       const settlementBalance = await accounts.getSettlementBalance(
         assetCode,
         assetScale
