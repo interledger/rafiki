@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid'
-import { Client, CommitFlags } from 'tigerbeetle-node'
+import { Client, CommitFlags, CreateTransferFlags } from 'tigerbeetle-node'
 
 import { IlpAccountSettings } from '../models'
 import { BalanceIds } from '../types'
@@ -227,5 +227,79 @@ export class AccountsService implements ConnectorAccountsService {
         timestamp: 0n
       }
     ])
+  }
+
+  public async depositLiquidity(
+    assetCode: string,
+    assetScale: number,
+    amount: bigint
+  ): Promise<void> {
+    await this.createCurrencyBalances(assetCode, assetScale)
+    await this.createTransfer(
+      toSettlementIds(assetCode, assetScale).id,
+      toLiquidityIds(assetCode, assetScale).id,
+      amount
+    )
+  }
+
+  public async withdrawLiquidity(
+    assetCode: string,
+    assetScale: number,
+    amount: bigint
+  ): Promise<void> {
+    await this.createCurrencyBalances(assetCode, assetScale)
+    await this.createTransfer(
+      toLiquidityIds(assetCode, assetScale).id,
+      toSettlementIds(assetCode, assetScale).id,
+      amount
+    )
+  }
+
+  public async getLiquidityBalance(
+    assetCode: string,
+    assetScale: number
+  ): Promise<bigint> {
+    return this.getBalance(toLiquidityIds(assetCode, assetScale).id)
+  }
+
+  public async getSettlementBalance(
+    assetCode: string,
+    assetScale: number
+  ): Promise<bigint> {
+    return this.getBalance(toSettlementIds(assetCode, assetScale).id)
+  }
+
+  private async getBalance(id: bigint): Promise<bigint> {
+    const balances = await this._client.lookupAccounts([id])
+    if (balances.length == 1) {
+      return (
+        balances[0].credit_accepted -
+        balances[0].debit_accepted -
+        balances[0].debit_reserved
+      )
+    }
+    return BigInt(0)
+  }
+
+  private async createTransfer(
+    sourceBalanceId: bigint,
+    destinationBalanceId: bigint,
+    amount: bigint
+  ): Promise<void> {
+    await this._client.createTransfers([
+      {
+        id: uuidToBigInt(uuid()),
+        debit_account_id: sourceBalanceId,
+        credit_account_id: destinationBalanceId,
+        amount,
+        ...CUSTOM_FIELDS,
+        flags:
+          0n |
+          BigInt(CreateTransferFlags.auto_commit) |
+          BigInt(CreateTransferFlags.accept),
+        timeout: BigInt(0)
+      }
+    ])
+    // check for error
   }
 }
