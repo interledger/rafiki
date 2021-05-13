@@ -10,6 +10,8 @@ export class IlpAccountSettings extends BaseModel {
   public assetCode!: string
   public assetScale!: number
   public balanceId!: string
+  public debtBalanceId!: string
+  public trustlineBalanceId!: string
   public parentAccountId?: string
 
   public incomingTokens?: string[]

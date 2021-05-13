@@ -2,7 +2,8 @@ import { v4 as uuid } from 'uuid'
 import { Client, CommitFlags } from 'tigerbeetle-node'
 
 import { IlpAccountSettings } from '../models'
-import { toLiquidityId, toSettlementId, uuidToBigInt } from '../utils'
+import { BalanceIds } from '../types'
+import { toLiquidityIds, toSettlementIds, uuidToBigInt } from '../utils'
 
 // import { Errors } from 'ilp-packet'
 import {
@@ -20,15 +21,15 @@ const CUSTOM_FIELDS = {
   custom_3: BigInt(0)
 }
 
-export interface BalanceOptions {
-  id: bigint
+export interface BalanceOptions extends BalanceIds {
   unit: bigint
 }
 
 function toIlpAccountSettings(
-  // account: CreateIlpAccountOptions,
   account: IlpAccount,
-  balanceId: string
+  balanceId: string,
+  debtBalanceId: string,
+  trustlineBalanceId: string
 ) {
   return {
     id: account.accountId,
@@ -36,6 +37,8 @@ function toIlpAccountSettings(
     assetCode: account.asset.code,
     assetScale: account.asset.scale,
     balanceId,
+    debtBalanceId,
+    trustlineBalanceId,
     parentAccountId: account.parentAccountId,
     incomingTokens: account.http && account.http.incoming.authTokens,
     incomingEndpoint: account.http && account.http.incoming.endpoint,
@@ -137,12 +140,21 @@ export class AccountsService implements ConnectorAccountsService {
     account: IlpAccount
   ): Promise<IlpAccount> {
     const balanceId = uuid()
-    await this.createBalance({
+    const debtBalanceId = uuid()
+    const trustlineBalanceId = uuid()
+    await this.createBalances({
       id: uuidToBigInt(balanceId),
+      debtId: uuidToBigInt(debtBalanceId),
+      trustlineId: uuidToBigInt(trustlineBalanceId),
       unit: BigInt(account.asset.scale)
     })
     await IlpAccountSettings.query().insertAndFetch(
-      toIlpAccountSettings(account, balanceId)
+      toIlpAccountSettings(
+        account,
+        balanceId,
+        debtBalanceId,
+        trustlineBalanceId
+      )
     )
     await this.createCurrencyBalances(account.asset.code, account.asset.scale)
     return account
@@ -152,18 +164,22 @@ export class AccountsService implements ConnectorAccountsService {
     assetCode: string,
     assetScale: number
   ): Promise<void> {
-    await this.createBalance({
-      id: toSettlementId(assetCode, assetScale),
+    await this.createBalances({
+      ...toSettlementIds(assetCode, assetScale),
       unit: BigInt(assetScale)
     })
-    await this.createBalance({
-      id: toLiquidityId(assetCode, assetScale),
+    await this.createBalances({
+      ...toLiquidityIds(assetCode, assetScale),
       unit: BigInt(assetScale)
-      // min: BigInt(0)
     })
   }
 
-  private async createBalance({ id, unit }: BalanceOptions): Promise<void> {
+  private async createBalances({
+    id,
+    debtId,
+    trustlineId,
+    unit
+  }: BalanceOptions): Promise<void> {
     await this._client.createAccounts([
       {
         id,
@@ -179,8 +195,36 @@ export class AccountsService implements ConnectorAccountsService {
         credit_accepted_limit: BigInt(0),
         credit_reserved_limit: BigInt(0),
         timestamp: 0n
-        // limit_net_debit: balance.min,
-        // limit_net_credit: balance.max
+      },
+      {
+        id: debtId,
+        custom: BigInt(0),
+        flags: BigInt(0),
+        unit,
+        debit_accepted: BigInt(0),
+        debit_reserved: BigInt(0),
+        credit_accepted: BigInt(0),
+        credit_reserved: BigInt(0),
+        debit_accepted_limit: BigInt(0),
+        debit_reserved_limit: BigInt(0),
+        credit_accepted_limit: BigInt(0),
+        credit_reserved_limit: BigInt(0),
+        timestamp: 0n
+      },
+      {
+        id: trustlineId,
+        custom: BigInt(0),
+        flags: BigInt(0),
+        unit,
+        debit_accepted: BigInt(0),
+        debit_reserved: BigInt(0),
+        credit_accepted: BigInt(0),
+        credit_reserved: BigInt(0),
+        debit_accepted_limit: BigInt(0),
+        debit_reserved_limit: BigInt(0),
+        credit_accepted_limit: BigInt(0),
+        credit_reserved_limit: BigInt(0),
+        timestamp: 0n
       }
     ])
   }

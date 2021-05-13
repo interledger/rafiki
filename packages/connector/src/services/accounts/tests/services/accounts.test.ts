@@ -5,11 +5,7 @@ import { Model } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { AccountsService } from '../../services/accounts'
-import {
-  toLiquidityId,
-  toSettlementId,
-  uuidToBigInt
-} from '../../utils'
+import { toLiquidityIds, toSettlementIds, uuidToBigInt } from '../../utils'
 import { createTestApp, TestContainer } from '../helpers/app'
 import { AppServices, Config, IlpAccountSettings } from '../..'
 import { IocContract } from '@adonisjs/fold'
@@ -74,11 +70,15 @@ describe('Accounts Service', (): void => {
       expect(createdAccount).toEqual(account)
       const accountSettings = await IlpAccountSettings.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
-        uuidToBigInt(accountSettings.balanceId)
+        uuidToBigInt(accountSettings.balanceId),
+        uuidToBigInt(accountSettings.debtBalanceId),
+        uuidToBigInt(accountSettings.trustlineBalanceId)
       ])
-      expect(balances.length).toEqual(1)
-      expect(balances[0].credit_reserved).toEqual(BigInt(0))
-      expect(balances[0].credit_accepted).toEqual(BigInt(0))
+      expect(balances.length).toBe(3)
+      balances.forEach((balance) => {
+        expect(balance.credit_reserved).toEqual(BigInt(0))
+        expect(balance.credit_accepted).toEqual(BigInt(0))
+      })
     })
 
     test('Can create an account with all settings', async (): Promise<void> => {
@@ -109,11 +109,15 @@ describe('Accounts Service', (): void => {
       expect(createdAccount).toEqual(account)
       const accountSettings = await IlpAccountSettings.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
-        uuidToBigInt(accountSettings.balanceId)
+        uuidToBigInt(accountSettings.balanceId),
+        uuidToBigInt(accountSettings.debtBalanceId),
+        uuidToBigInt(accountSettings.trustlineBalanceId)
       ])
-      expect(balances.length).toEqual(1)
-      expect(balances[0].credit_reserved).toEqual(BigInt(0))
-      expect(balances[0].credit_accepted).toEqual(BigInt(0))
+      expect(balances.length).toBe(3)
+      balances.forEach((balance) => {
+        expect(balance.credit_reserved).toEqual(BigInt(0))
+        expect(balance.credit_accepted).toEqual(BigInt(0))
+      })
     })
 
     test('Auto-creates corresponding liquidity and settlement accounts', async (): Promise<void> => {
@@ -125,8 +129,8 @@ describe('Accounts Service', (): void => {
 
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          toLiquidityId(account.asset.code, account.asset.scale),
-          toSettlementId(account.asset.code, account.asset.scale)
+          ...Object.values(toLiquidityIds(account.asset.code, account.asset.scale)),
+          ...Object.values(toSettlementIds(account.asset.code, account.asset.scale))
         ])
         expect(balances.length).toBe(0)
       }
@@ -134,10 +138,10 @@ describe('Accounts Service', (): void => {
       await accounts.createAccount(account)
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          toLiquidityId(account.asset.code, account.asset.scale),
-          toSettlementId(account.asset.code, account.asset.scale)
+          ...Object.values(toLiquidityIds(account.asset.code, account.asset.scale)),
+          ...Object.values(toSettlementIds(account.asset.code, account.asset.scale))
         ])
-        expect(balances.length).toBe(2)
+        expect(balances.length).toBe(6)
         balances.forEach((balance) => {
           expect(balance.credit_reserved).toEqual(BigInt(0))
           expect(balance.credit_accepted).toEqual(BigInt(0))
@@ -151,10 +155,10 @@ describe('Accounts Service', (): void => {
 
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          toLiquidityId(account.asset.code, account.asset.scale),
-          toSettlementId(account.asset.code, account.asset.scale)
+          ...Object.values(toLiquidityIds(account.asset.code, account.asset.scale)),
+          ...Object.values(toSettlementIds(account.asset.code, account.asset.scale))
         ])
-        expect(balances.length).toBe(2)
+        expect(balances.length).toBe(6)
       }
     })
   })

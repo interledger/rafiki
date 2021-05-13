@@ -8,6 +8,8 @@ exports.up = function (knex) {
     table.integer('assetScale').notNullable()
 
     table.uuid('balanceId').notNullable()
+    table.uuid('debtBalanceId').notNullable()
+    table.uuid('trustlineBalanceId').notNullable()
     table.uuid('parentAccountId').nullable()
 
     table.specificType('incomingTokens', 'TEXT []').nullable()
