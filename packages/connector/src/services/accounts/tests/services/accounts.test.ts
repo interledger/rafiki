@@ -12,6 +12,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
 import { AccountNotFoundError } from '../../../core/errors'
+import { Transaction } from '../../../core/services/accounts'
 
 // Use unique assets as a workaround for not being able to reset
 // Tigerbeetle between tests
@@ -167,7 +168,7 @@ describe('Accounts Service', (): void => {
 
   describe('Deposit liquidity', (): void => {
     test('Can deposit to liquidity account', async (): Promise<void> => {
-      const { assetCode, assetScale } = randomAsset()
+      const { code: assetCode, scale: assetScale } = randomAsset()
       const amount = BigInt(10)
       {
         await accounts.depositLiquidity(assetCode, assetScale, amount)
@@ -201,7 +202,7 @@ describe('Accounts Service', (): void => {
 
   describe('Withdraw liquidity', (): void => {
     test('Can withdraw liquidity account', async (): Promise<void> => {
-      const { assetCode, assetScale } = randomAsset()
+      const { code: assetCode, scale: assetScale } = randomAsset()
       const startingBalance = BigInt(10)
       await accounts.depositLiquidity(assetCode, assetScale, startingBalance)
       const amount = BigInt(5)
@@ -235,7 +236,7 @@ describe('Accounts Service', (): void => {
     })
 
     test.skip("Can't withdraw more than the balance", async (): Promise<void> => {
-      const { assetCode, assetScale } = randomAsset()
+      const { code: assetCode, scale: assetScale } = randomAsset()
       const startingBalance = BigInt(5)
       await accounts.depositLiquidity(assetCode, assetScale, startingBalance)
       const amount = BigInt(10)
@@ -252,24 +253,20 @@ describe('Accounts Service', (): void => {
 
   describe('Account Deposit', (): void => {
     test('Can deposit to account', async (): Promise<void> => {
-      const { assetCode, assetScale } = randomAsset()
-      const { id } = await accounts.createAccount({
-        id: uuid(),
+      const { accountId, asset } = await accounts.createAccount({
+        accountId: uuid(),
         disabled: false,
-        balance: {
-          assetCode,
-          assetScale
-        }
+        asset: randomAsset()
       })
       const amount = BigInt(10)
-      await accounts.deposit(id, amount)
-      const {
-        balance: { current }
-      } = await accounts.getAccount(id)
-      expect(current).toEqual(amount)
+      await accounts.deposit(accountId, amount)
+      // const {
+      //   balance
+      // } = await accounts.getAccountBalance(accountId)
+      // expect(current).toEqual(amount)
       const settlementBalance = await accounts.getSettlementBalance(
-        assetCode,
-        assetScale
+        asset.code,
+        asset.scale
       )
       expect(settlementBalance).toEqual(-amount)
     })
@@ -284,26 +281,22 @@ describe('Accounts Service', (): void => {
 
   describe('Account Withdraw', (): void => {
     test('Can withdraw from account', async (): Promise<void> => {
-      const { assetCode, assetScale } = randomAsset()
-      const { id } = await accounts.createAccount({
-        id: uuid(),
+      const { accountId, asset } = await accounts.createAccount({
+        accountId: uuid(),
         disabled: false,
-        balance: {
-          assetCode,
-          assetScale
-        }
+        asset: randomAsset()
       })
       const startingBalance = BigInt(10)
-      await accounts.deposit(id, startingBalance)
+      await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(5)
-      await accounts.withdraw(id, amount)
-      const {
-        balance: { current }
-      } = await accounts.getAccount(id)
-      expect(current).toEqual(startingBalance - amount)
+      await accounts.withdraw(accountId, amount)
+      // const {
+      //   balance
+      // } = await accounts.getAccountBalance(accountId)
+      // expect(balance).toEqual(startingBalance - amount)
       const settlementBalance = await accounts.getSettlementBalance(
-        assetCode,
-        assetScale
+        asset.code,
+        asset.scale
       )
       expect(settlementBalance).toEqual(-(startingBalance - amount))
     })
@@ -316,28 +309,101 @@ describe('Accounts Service', (): void => {
     })
 
     test.skip("Can't withdraw more than the balance", async (): Promise<void> => {
-      const { assetCode, assetScale } = randomAsset()
-      const { id } = await accounts.createAccount({
-        id: uuid(),
+      const { accountId, asset } = await accounts.createAccount({
+        accountId: uuid(),
         disabled: false,
-        balance: {
-          assetCode,
-          assetScale
-        }
+        asset: randomAsset()
       })
       const startingBalance = BigInt(5)
-      await accounts.deposit(id, startingBalance)
+      await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(10)
-      await accounts.withdraw(id, amount)
-      const {
-        balance: { current }
-      } = await accounts.getAccount(id)
-      expect(current).toEqual(startingBalance)
+      await accounts.withdraw(accountId, amount)
+      // const {
+      //   balance
+      // } = await accounts.getAccountBalance(accountId)
+      // expect(balance).toEqual(startingBalance)
       const settlementBalance = await accounts.getSettlementBalance(
-        assetCode,
-        assetScale
+        asset.code,
+        asset.scale
       )
       expect(settlementBalance).toEqual(-startingBalance)
     })
+  })
+
+  describe('Adjust Balances', (): void => {
+    test.each([['accept'], ['reject']])(
+      'Can adjust balances for %sed two-phase commit transactions',
+      async (result): Promise<void> => {
+        const asset = randomAsset()
+        const { accountId: sourceAccountId } = await accounts.createAccount({
+          accountId: uuid(),
+          disabled: false,
+          asset
+        })
+        const { accountId: destinationAccountId } = await accounts.createAccount({
+          accountId: uuid(),
+          disabled: false,
+          asset
+        })
+        const startingSourceBalance = BigInt(10)
+        await accounts.deposit(sourceAccountId, startingSourceBalance)
+
+        const amount = BigInt(1)
+        await accounts.adjustBalances({
+          sourceAmount: amount,
+          sourceAccountId,
+          destinationAccountId,
+          callback: async (trx: Transaction) => {
+            {
+              // const {
+              //   balance: sourceBalance
+              // } = await accounts.getAccountBalance(sourceAccountId)
+              // expect(sourceBalance).toEqual(startingSourceBalance - amount)
+
+              // const {
+              //   balance: destinationBalance
+              // } = await accounts.getAccountBalance(destinationAccountId)
+              // expect(destinationBalance).toEqual(BigInt(0))
+
+              const liquidityBalance = await accounts.getLiquidityBalance(
+                asset.code,
+                asset.scale
+              )
+              expect(liquidityBalance).toEqual(-amount)
+            }
+
+            if (result === 'accept') {
+              await trx.commit()
+            } else {
+              await trx.rollback()
+            }
+
+            {
+              // const {
+              //   balance: sourceBalance
+              // } = await accounts.getAccountBalance(sourceAccountId)
+              // const expectedSourceBalance =
+              //   result === 'accept'
+              //     ? startingSourceBalance - amount
+              //     : startingSourceBalance
+              // expect(sourceBalance).toEqual(expectedSourceBalance)
+
+              // const {
+              //   balance: destinationBalance
+              // } = await accounts.getAccountBalance(destinationAccountId)
+              // const expectedDestinationBalance =
+              //   result === 'accept' ? amount : BigInt(0)
+              // expect(destinationBalance).toEqual(expectedDestinationBalance)
+
+              const liquidityBalance = await accounts.getLiquidityBalance(
+                asset.code,
+                asset.scale
+              )
+              expect(liquidityBalance).toEqual(BigInt(0))
+            }
+          }
+        })
+      }
+    )
   })
 })

@@ -5,6 +5,7 @@ import { IlpAccountSettings } from '../models'
 import { BalanceIds } from '../types'
 import { toLiquidityIds, toSettlementIds, uuidToBigInt } from '../utils'
 
+import { AccountNotFoundError } from '../../core/errors'
 // import { Errors } from 'ilp-packet'
 import {
   AccountsService as ConnectorAccountsService,
@@ -30,16 +31,15 @@ function toIlpAccount(
   balance: bigint
 ): IlpAccount {
   const account: IlpAccount = {
-    id: accountSettings.id,
+    accountId: accountSettings.id,
     disabled: accountSettings.disabled,
-    balance: {
-      assetCode: accountSettings.assetCode,
-      assetScale: accountSettings.assetScale,
-      current: balance
+    asset: {
+      code: accountSettings.assetCode,
+      scale: accountSettings.assetScale
     }
   }
   if (accountSettings.parentAccountId) {
-    account.balance.parentAccountId = accountSettings.parentAccountId
+    account.parentAccountId = accountSettings.parentAccountId
   }
   if (
     accountSettings.incomingTokens &&
@@ -48,22 +48,24 @@ function toIlpAccount(
     accountSettings.outgoingEndpoint
   ) {
     account.http = {
-      incomingTokens: accountSettings.incomingTokens,
-      incomingEndpoint: accountSettings.incomingEndpoint,
-      outgoingToken: accountSettings.outgoingToken,
-      outgoingEndpoint: accountSettings.outgoingEndpoint
+      incoming: {
+        authTokens: accountSettings.incomingTokens,
+        endpoint: accountSettings.incomingEndpoint
+      },
+      outgoing: {
+        authToken: accountSettings.outgoingToken,
+        endpoint: accountSettings.outgoingEndpoint
+      }
     }
   }
-  if (accountSettings.streamEnabled && accountSettings.streamSuffix) {
+  if (accountSettings.streamEnabled) {
     account.stream = {
-      enabled: accountSettings.streamEnabled,
-      suffix: accountSettings.streamSuffix
+      enabled: accountSettings.streamEnabled
     }
   }
-  if (accountSettings.ilpAddress && accountSettings.routingPrefixes) {
+  if (accountSettings.staticIlpAddress) {
     account.routing = {
-      prefixes: accountSettings.routingPrefixes,
-      ilpAddress: accountSettings.ilpAddress
+      staticIlpAddress: accountSettings.staticIlpAddress
     }
   }
   return account
@@ -96,9 +98,6 @@ function toIlpAccountSettings(
 export class AccountsService implements ConnectorAccountsService {
   private _client: Client
 
-  async getAccount(_accountId: string): Promise<IlpAccount> {
-    throw new Error('unimplemented')
-  }
   async getAccountByDestinationAddress(
     _destinationAddress: string
   ): Promise<IlpAccount> {
@@ -128,12 +127,18 @@ export class AccountsService implements ConnectorAccountsService {
       destinationAccountId
     )
     if (sourceAmount > BigInt(0)) {
-      const transferId = uuidToBigInt(uuid())
+      const sourceTransferId = uuidToBigInt(uuid())
+      const destinationTransferId = uuidToBigInt(uuid())
       const transaction: Transaction = {
         commit: async () => {
           const res = await this._client.commitTransfers([
             {
-              id: transferId,
+              id: sourceTransferId,
+              flags: 0n | BigInt(CommitFlags.accept),
+              ...CUSTOM_FIELDS
+            },
+            {
+              id: destinationTransferId,
               flags: 0n | BigInt(CommitFlags.accept),
               ...CUSTOM_FIELDS
             }
@@ -145,7 +150,12 @@ export class AccountsService implements ConnectorAccountsService {
         rollback: async () => {
           const res = await this._client.commitTransfers([
             {
-              id: transferId,
+              id: sourceTransferId,
+              flags: 0n | BigInt(CommitFlags.reject),
+              ...CUSTOM_FIELDS
+            },
+            {
+              id: destinationTransferId,
               flags: 0n | BigInt(CommitFlags.reject),
               ...CUSTOM_FIELDS
             }
@@ -159,13 +169,28 @@ export class AccountsService implements ConnectorAccountsService {
       try {
         const res = await this._client.createTransfers([
           {
-            id: transferId,
+            id: sourceTransferId,
             debit_account_id: uuidToBigInt(sourceAccount.balanceId),
+            credit_account_id: toLiquidityIds(
+              sourceAccount.assetCode,
+              sourceAccount.assetScale
+            ).id,
+            amount: sourceAmount,
+            ...CUSTOM_FIELDS,
+            flags: BigInt(0),
+            timeout: BigInt(1000000000)
+          },
+          {
+            id: destinationTransferId,
+            debit_account_id: toLiquidityIds(
+              destinationAccount.assetCode,
+              destinationAccount.assetScale
+            ).id,
             credit_account_id: uuidToBigInt(destinationAccount.balanceId),
             amount: sourceAmount,
             ...CUSTOM_FIELDS,
             flags: BigInt(0),
-            timeout: BigInt(1000)
+            timeout: BigInt(1000000000)
           }
         ])
         if (res.length) {
