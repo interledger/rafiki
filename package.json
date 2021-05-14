@@ -16,7 +16,8 @@
     "postinstall": "husky install"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "testing/*"
   ],
   "devDependencies": {
     "@commitlint/cli": "^12.1.1",
