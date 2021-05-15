@@ -406,4 +406,30 @@ describe('Accounts Service', (): void => {
       }
     )
   })
+
+  describe('Account Tokens', (): void => {
+    test('Can retrieve account by incoming token', async (): Promise<void> => {
+      const incomingToken = uuid()
+      const { id } = await accounts.createAccount({
+        id: uuid(),
+        disabled: false,
+        balance: randomAsset(),
+        http: {
+          incomingTokens: [incomingToken, uuid()],
+          incomingEndpoint: '/incomingEndpoint',
+          outgoingToken: uuid(),
+          outgoingEndpoint: '/outgoingEndpoint'
+        }
+      })
+      const account = await accounts.getAccountByIncomingToken(incomingToken)
+      expect(account).not.toBeNull()
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      expect(account!.id).toEqual(id)
+    })
+
+    test('Returns null if no account exists with token', async (): Promise<void> => {
+      const account = await accounts.getAccountByIncomingToken(uuid())
+      expect(account).toBeNull()
+    })
+  })
 })

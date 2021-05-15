@@ -12,7 +12,10 @@ exports.up = function (knex) {
     table.uuid('trustlineBalanceId').notNullable()
     table.uuid('parentAccountId').nullable()
 
-    table.specificType('incomingTokens', 'TEXT []').nullable()
+    table
+      .specificType('incomingTokens', 'TEXT []')
+      .nullable()
+      .index(null, 'GIN')
     table.string('incomingEndpoint').nullable()
     table.string('outgoingToken').nullable()
     table.string('outgoingEndpoint').nullable()

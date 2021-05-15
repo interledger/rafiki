@@ -1,3 +1,4 @@
+import { raw } from 'objection'
 import { v4 as uuid } from 'uuid'
 import { Client, CommitFlags, CreateTransferFlags } from 'tigerbeetle-node'
 
@@ -402,5 +403,15 @@ export class AccountsService implements ConnectorAccountsService {
       toSettlementIds(accountSettings.assetCode, accountSettings.assetScale).id,
       amount
     )
+  }
+
+  public async getAccountByIncomingToken(
+    token: string
+  ): Promise<AccountInfo | null> {
+    // should tokens be unique across accounts?
+    const accountSettings = await IlpAccountSettings.query()
+      .where(raw('? = ANY(??)', [token, 'incomingTokens']))
+      .first()
+    return accountSettings || null
   }
 }
