@@ -1,7 +1,7 @@
 import { randomInt } from 'crypto'
 
 import { Transaction as KnexTransaction } from 'knex'
-import { Model } from 'objection'
+import { Model, UniqueViolationError } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { AccountsService } from '../../services/accounts'
@@ -121,6 +121,78 @@ describe('Accounts Service', (): void => {
         expect(balance.credit_reserved).toEqual(BigInt(0))
         expect(balance.credit_accepted).toEqual(BigInt(0))
       })
+    })
+
+    test('Cannot create an account with duplicate incoming tokens', async (): Promise<void> => {
+      const accountId = uuid()
+      const incomingToken = uuid()
+      const account = {
+        accountId,
+        disabled: false,
+        asset: randomAsset(),
+        http: {
+          incoming: {
+            authTokens: [incomingToken, incomingToken],
+            endpoint: '/incomingEndpoint'
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoingEndpoint'
+          }
+        }
+      }
+
+      await expect(accounts.createAccount(account)).rejects.toThrow(
+        UniqueViolationError
+      )
+
+      const accountSettings = await IlpAccountSettings.query().findById(accountId)
+      expect(accountSettings).toBeUndefined()
+    })
+
+    test('Cannot create an account with duplicate incoming token', async (): Promise<void> => {
+      const incomingToken = uuid()
+      {
+        const account = {
+          accountId: uuid(),
+          disabled: false,
+          asset: randomAsset(),
+          http: {
+            incoming: {
+              authTokens: [incomingToken],
+              endpoint: '/incomingEndpoint'
+            },
+            outgoing: {
+              authToken: uuid(),
+              endpoint: '/outgoingEndpoint'
+            }
+          }
+        }
+        await accounts.createAccount(account)
+      }
+      {
+        const accountId = uuid()
+        const account = {
+          accountId,
+          disabled: false,
+          asset: randomAsset(),
+          http: {
+            incoming: {
+              authTokens: [incomingToken],
+              endpoint: '/incomingEndpoint'
+            },
+            outgoing: {
+              authToken: uuid(),
+              endpoint: '/outgoingEndpoint'
+            }
+          }
+        }
+        await expect(accounts.createAccount(account)).rejects.toThrow(
+          UniqueViolationError
+        )
+        const accountSettings = await IlpAccountSettings.query().findById(accountId)
+        expect(accountSettings).toBeUndefined()
+      }
     })
 
     test('Auto-creates corresponding liquidity and settlement accounts', async (): Promise<void> => {
@@ -410,25 +482,29 @@ describe('Accounts Service', (): void => {
   describe('Account Tokens', (): void => {
     test('Can retrieve account by incoming token', async (): Promise<void> => {
       const incomingToken = uuid()
-      const { id } = await accounts.createAccount({
-        id: uuid(),
+      const { accountId } = await accounts.createAccount({
+        accountId: uuid(),
         disabled: false,
-        balance: randomAsset(),
+        asset: randomAsset(),
         http: {
-          incomingTokens: [incomingToken, uuid()],
-          incomingEndpoint: '/incomingEndpoint',
-          outgoingToken: uuid(),
-          outgoingEndpoint: '/outgoingEndpoint'
+          incoming: {
+            authTokens: [incomingToken, uuid()],
+            endpoint: '/incomingEndpoint'
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoingEndpoint'
+          }
         }
       })
-      const account = await accounts.getAccountByIncomingToken(incomingToken)
+      const account = await accounts.getAccountByToken(incomingToken)
       expect(account).not.toBeNull()
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      expect(account!.id).toEqual(id)
+      expect(account!.accountId).toEqual(accountId)
     })
 
     test('Returns null if no account exists with token', async (): Promise<void> => {
-      const account = await accounts.getAccountByIncomingToken(uuid())
+      const account = await accounts.getAccountByToken(uuid())
       expect(account).toBeNull()
     })
   })

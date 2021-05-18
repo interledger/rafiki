@@ -1,8 +1,9 @@
-import { raw } from 'objection'
+import { QueryBuilder, transaction, UniqueViolationError } from 'objection'
+import { Logger } from 'pino'
 import { v4 as uuid } from 'uuid'
 import { Client, CommitFlags, CreateTransferFlags } from 'tigerbeetle-node'
 
-import { IlpAccountSettings } from '../models'
+import { IlpAccountSettings, Token } from '../models'
 import { BalanceIds } from '../types'
 import { toLiquidityIds, toSettlementIds, uuidToBigInt } from '../utils'
 
@@ -28,8 +29,7 @@ export interface BalanceOptions extends BalanceIds {
 }
 
 function toIlpAccount(
-  accountSettings: IlpAccountSettings,
-  balance: bigint
+  accountSettings: IlpAccountSettings
 ): IlpAccount {
   const account: IlpAccount = {
     accountId: accountSettings.id,
@@ -50,7 +50,9 @@ function toIlpAccount(
   ) {
     account.http = {
       incoming: {
-        authTokens: accountSettings.incomingTokens,
+        authTokens: accountSettings.incomingTokens.map(
+          (incomingToken) => incomingToken.token
+        ),
         endpoint: accountSettings.incomingEndpoint
       },
       outgoing: {
@@ -87,7 +89,6 @@ function toIlpAccountSettings(
     debtBalanceId,
     trustlineBalanceId,
     parentAccountId: account.parentAccountId,
-    incomingTokens: account.http && account.http.incoming.authTokens,
     incomingEndpoint: account.http && account.http.incoming.endpoint,
     outgoingToken: account.http && account.http.outgoing.authToken,
     outgoingEndpoint: account.http && account.http.outgoing.endpoint,
@@ -97,23 +98,16 @@ function toIlpAccountSettings(
 }
 
 export class AccountsService implements ConnectorAccountsService {
-  private _client: Client
-
   async getAccountByDestinationAddress(
     _destinationAddress: string
   ): Promise<IlpAccount> {
-    throw new Error('unimplemented')
-  }
-  async getAccountByToken(_token: string): Promise<IlpAccount | null> {
     throw new Error('unimplemented')
   }
   async getAccountBalance(_accountId: string): Promise<IlpBalance> {
     throw new Error('unimplemented')
   }
 
-  constructor(client: Client) {
-    this._client = client
-  }
+  constructor(private client: Client, private logger: Logger) {}
 
   public async adjustBalances({
     sourceAmount,
@@ -130,9 +124,9 @@ export class AccountsService implements ConnectorAccountsService {
     if (sourceAmount > BigInt(0)) {
       const sourceTransferId = uuidToBigInt(uuid())
       const destinationTransferId = uuidToBigInt(uuid())
-      const transaction: Transaction = {
+      const tx: Transaction = {
         commit: async () => {
-          const res = await this._client.commitTransfers([
+          const res = await this.client.commitTransfers([
             {
               id: sourceTransferId,
               flags: 0n | BigInt(CommitFlags.accept),
@@ -149,7 +143,7 @@ export class AccountsService implements ConnectorAccountsService {
           }
         },
         rollback: async () => {
-          const res = await this._client.commitTransfers([
+          const res = await this.client.commitTransfers([
             {
               id: sourceTransferId,
               flags: 0n | BigInt(CommitFlags.reject),
@@ -168,7 +162,7 @@ export class AccountsService implements ConnectorAccountsService {
       }
 
       try {
-        const res = await this._client.createTransfers([
+        const res = await this.client.createTransfers([
           {
             id: sourceTransferId,
             debit_account_id: uuidToBigInt(sourceAccount.balanceId),
@@ -198,7 +192,7 @@ export class AccountsService implements ConnectorAccountsService {
           // throw new InsufficientLiquidityError()
         }
 
-        await callback(transaction)
+        await callback(tx)
       } catch (error) {
         // Should this rethrow the error?
         throw error(error)
@@ -218,24 +212,57 @@ export class AccountsService implements ConnectorAccountsService {
       trustlineId: uuidToBigInt(trustlineBalanceId),
       unit: BigInt(account.asset.scale)
     })
-    await IlpAccountSettings.query().insertAndFetch(
-      toIlpAccountSettings(
-        account,
-        balanceId,
-        debtBalanceId,
-        trustlineBalanceId
-      )
+    await transaction(
+      IlpAccountSettings,
+      Token,
+      async (IlpAccountSettings, Token) => {
+        await IlpAccountSettings.query().insert(
+          toIlpAccountSettings(
+            account,
+            balanceId,
+            debtBalanceId,
+            trustlineBalanceId
+          )
+        )
+
+        if (account.http) {
+          try {
+            const incomingTokens = account.http.incoming.authTokens.map(
+              (incomingToken) => {
+                return {
+                  ilpAccountSettingsId: account.accountId,
+                  token: incomingToken
+                }
+              }
+            )
+            await Token.query().insert(incomingTokens)
+          } catch (error) {
+            if (error instanceof UniqueViolationError) {
+              this.logger.info({
+                msg: 'duplicate incoming token attempted to be added',
+                account
+              })
+            }
+            throw error
+          }
+        }
+      }
     )
+
     await this.createCurrencyBalances(account.asset.code, account.asset.scale)
     return account
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount> {
-    const accountSettings = await IlpAccountSettings.query().findById(accountId)
-    const balance = await this.getBalance(
-      uuidToBigInt(accountSettings.balanceId)
-    )
-    return toIlpAccount(accountSettings, balance)
+    const accountSettings = await IlpAccountSettings.query()
+      .withGraphJoined('incomingTokens(selectIncomingToken)')
+      .modifiers({
+        selectIncomingToken(builder: QueryBuilder<Token, Token[]>) {
+          builder.select('token')
+        }
+      })
+      .findById(accountId)
+    return toIlpAccount(accountSettings)
   }
 
   private async createCurrencyBalances(
@@ -258,7 +285,7 @@ export class AccountsService implements ConnectorAccountsService {
     trustlineId,
     unit
   }: BalanceOptions): Promise<void> {
-    await this._client.createAccounts([
+    await this.client.createAccounts([
       {
         id,
         custom: BigInt(0),
@@ -348,7 +375,7 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   private async getBalance(id: bigint): Promise<bigint> {
-    const balances = await this._client.lookupAccounts([id])
+    const balances = await this.client.lookupAccounts([id])
     if (balances.length == 1) {
       return (
         balances[0].credit_accepted -
@@ -364,7 +391,7 @@ export class AccountsService implements ConnectorAccountsService {
     destinationBalanceId: bigint,
     amount: bigint
   ): Promise<void> {
-    await this._client.createTransfers([
+    await this.client.createTransfers([
       {
         id: uuidToBigInt(uuid()),
         debit_account_id: sourceBalanceId,
@@ -405,13 +432,19 @@ export class AccountsService implements ConnectorAccountsService {
     )
   }
 
-  public async getAccountByIncomingToken(
+  public async getAccountByToken(
     token: string
-  ): Promise<AccountInfo | null> {
+  ): Promise<IlpAccount | null> {
     // should tokens be unique across accounts?
     const accountSettings = await IlpAccountSettings.query()
-      .where(raw('? = ANY(??)', [token, 'incomingTokens']))
+      .select(
+        'ilpAccountSettings.id',
+        'ilpAccountSettings.assetCode',
+        'ilpAccountSettings.assetScale'
+      )
+      .withGraphJoined('incomingTokens')
+      .where('incomingTokens.token', token)
       .first()
-    return accountSettings || null
+    return accountSettings ? toIlpAccount(accountSettings) : null
   }
 }
