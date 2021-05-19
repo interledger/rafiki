@@ -7,7 +7,7 @@ const { T04_INSUFFICIENT_LIQUIDITY } = Errors.codes
  */
 export function createOutgoingLiquidityCheckMiddleware(): RafikiMiddleware {
   return async (
-    { services: { logger }, response, peers }: RafikiContext,
+    { services: { logger }, response, accounts: { outgoing } }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
     await next()
@@ -21,7 +21,7 @@ export function createOutgoingLiquidityCheckMiddleware(): RafikiMiddleware {
       if (response.reject.message !== 'exceeded maximum balance.') return
 
       logger.error('Liquidity Check Error', {
-        peerId: (await peers.outgoing).id,
+        peerId: outgoing.accountId,
         triggerBy: response.reject.triggeredBy,
         message: response.reject.message
       })

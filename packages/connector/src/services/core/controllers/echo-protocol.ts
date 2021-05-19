@@ -1,3 +1,4 @@
+import Axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { serializeIlpPrepare } from 'ilp-packet'
 import { Reader, Writer } from 'oer-utils'
 import { Errors } from 'ilp-packet'
@@ -12,11 +13,12 @@ const ECHO_DATA_PREFIX = Buffer.from('ECHOECHOECHOECHO', 'ascii')
  * Intercepts and handles messages addressed to the connector otherwise forwards it onto next.
  */
 export function createEchoProtocolController(minMessageWindow: number) {
+  const axios = Axios.create({ timeout: 30_000 })
   return async function echo({
     services: { logger },
     request,
     response,
-    peers: { outgoing }
+    accounts: { outgoing }
   }: RafikiContext): Promise<void> {
     const { data, amount, expiresAt, executionCondition } = request.prepare
     if (data.length < MINIMUM_ECHO_PACKET_DATA_LENGTH) {
@@ -42,8 +44,13 @@ export function createEchoProtocolController(minMessageWindow: number) {
 
       logger.debug('responding to echo packet', { sourceAddress })
 
+      const { http } = outgoing
+      if (!http) {
+        throw new Errors.UnreachableError('no outgoing endpoint')
+      }
       response.rawReply = await sendToPeer(
-        await outgoing,
+        axios,
+        outgoing,
         serializeIlpPrepare({
           amount: amount,
           destination: sourceAddress,

@@ -1,9 +1,6 @@
 import {
-  Router,
   Rafiki,
   RafikiMiddleware,
-  TokenAuthConfig,
-  PeersService,
   AccountsService
 } from '../core'
 import { Context } from 'koa'
@@ -20,10 +17,8 @@ export interface AdminApiOptions {
 }
 
 export interface AdminApiServices {
-  peers: PeersService
-  auth: RafikiMiddleware | Partial<TokenAuthConfig>
-  router: Router
-  accounts: AccountsService
+  auth: RafikiMiddleware
+  accounts?: AccountsService
 }
 
 /**
@@ -36,11 +31,11 @@ export class AdminApi {
   private _port?: number
   constructor(
     { host, port }: AdminApiOptions,
-    { peers, accounts }: AdminApiServices
+    { accounts }: AdminApiServices
   ) {
     this._koa = new Rafiki()
     // this._koa.use(createAuthMiddleware(auth))
-    this._koa.use(this._getRoutes(peers, accounts).middleware())
+    this._koa.use(this._getRoutes(accounts).middleware())
     this._host = host
     this._port = port
   }
@@ -60,8 +55,7 @@ export class AdminApi {
   }
 
   private _getRoutes(
-    peers: PeersService,
-    accounts: AccountsService
+    accounts?: AccountsService
   ): createRouter.Router {
     const middlewareRouter = createRouter()
 
@@ -88,18 +82,21 @@ export class AdminApi {
       path: '/balance',
       handler: async (ctx: Context) => ctx.assert(false, 500, 'not implemented')
     })
-    middlewareRouter.route({
-      method: 'get',
-      path: '/balance/:id',
-      handler: async (ctx: Context) => {
-        try {
-          const account = await accounts.get(ctx.request.params.id)
-          ctx.body = account
-        } catch (error) {
-          ctx.response.status = 404
+    if (accounts) {
+      middlewareRouter.route({
+        method: 'get',
+        path: '/balance/:id',
+        handler: async (ctx: Context) => {
+          try {
+            const account = await accounts.getAccount(ctx.request.params.id)
+            ctx.body = account
+          } catch (error) {
+            ctx.response.status = 404
+          }
         }
-      }
-    })
+      })
+    }
+    /*
     middlewareRouter.route({
       method: 'post',
       path: '/peers',
@@ -128,6 +125,7 @@ export class AdminApi {
         ctx.body = await peers.list()
       }
     })
+    */
     // router.route({
     //   method: 'get',
     //   path: '/peers/:id/token',

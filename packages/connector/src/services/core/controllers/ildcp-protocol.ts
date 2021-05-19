@@ -1,52 +1,53 @@
 import { serve as ildcpServe } from 'ilp-protocol-ildcp'
-import { SELF_PEER_ID } from '../constants'
+import { Errors } from 'ilp-packet'
+//import { SELF_PEER_ID } from '../constants'
 import { RafikiContext } from '../rafiki'
 
 /**
  * Intercepts and handles peer.config messages otherwise passes the request onto next.
  */
-export function createIldcpProtocolController() {
+export function createIldcpProtocolController(serverAddress: string) {
   return async function ildcp(ctx: RafikiContext): Promise<void> {
     const {
-      services: { logger, router, accounts },
+      services: { logger, accounts },
       request,
       response,
-      peers: { incoming }
+      accounts: { incoming }
     } = ctx
-    if (request.prepare.destination === 'peer.config') {
-      const peer = await incoming
-      const { id, relation } = peer
-      const { assetCode, assetScale } = await accounts.get(id)
-      if (relation !== 'child') {
-        logger.warn('received ILDCP request for peer that is not a child', {
-          peerId: id,
-          relation
-        })
-        throw new Error("Can't generate address for a peer that isn\t a child.")
-      }
-
-      // TODO: Ensure we get at least length > 0
-      const serverAddress = router.getAddresses(SELF_PEER_ID)[0]
-      const clientAddress = router.getAddresses(id)[0]
-
-      logger.info('responding to ILDCP request from child', {
-        peerId: id,
-        address: clientAddress
-      })
-
-      // TODO: Remove unnecessary serialization from ILDCP module
-      response.rawReply = await ildcpServe({
-        requestPacket: request.rawPrepare,
-        handler: () =>
-          Promise.resolve({
-            clientAddress,
-            assetScale,
-            assetCode
-          }),
-        serverAddress
-      })
-    } else {
+    if (request.prepare.destination !== 'peer.config') {
       ctx.throw('Invalid address in ILDCP request')
     }
+
+    const { routing } = incoming
+    if (!routing) {
+      throw new Errors.UnreachableError('not a peer account')
+    }
+
+    const clientAddress = routing.ilpAddress
+    if (!clientAddress) {
+      logger.warn('received ILDCP request for peer without an address', { peerId: incoming.accountId })
+      ctx.throw('ILDCP request from peer without configured address')
+    }
+
+    // TODO: Ensure we get at least length > 0
+    //const serverAddress = router.getAddresses(SELF_PEER_ID)[0]
+    //const clientAddress = router.getAddresses(id)[0]
+
+    logger.info('responding to ILDCP request from child', {
+      peerId: incoming.accountId,
+      address: clientAddress
+    })
+
+    // TODO: Remove unnecessary serialization from ILDCP module
+    response.rawReply = await ildcpServe({
+      requestPacket: request.rawPrepare,
+      handler: () =>
+        Promise.resolve({
+          clientAddress,
+          assetScale: incoming.balance.assetScale,
+          assetCode: incoming.balance.assetCode
+        }),
+      serverAddress
+    })
   }
 }

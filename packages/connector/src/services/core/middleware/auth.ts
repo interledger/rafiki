@@ -1,5 +1,5 @@
-import { TokenInfo } from '../services'
+import { IlpAccount } from '../services'
 
 export interface AuthState {
-  user?: TokenInfo
+  account?: IlpAccount
 }

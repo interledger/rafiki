@@ -8,9 +8,9 @@ import { RafikiContext } from '../rafiki'
  * Important rule! It ensures any errors thrown through the middleware pipe is converted to correct ILP
  * reject that is sent back to sender.
  */
-export function createIncomingErrorHandlerMiddleware() {
+export function createIncomingErrorHandlerMiddleware(serverAddress: string) {
   return async (
-    { response, services: { logger, router } }: RafikiContext,
+    { response, services: { logger } }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
     try {
@@ -25,11 +25,7 @@ export function createIncomingErrorHandlerMiddleware() {
         err = new Error('Non-object thrown: ' + e)
       }
       logger.error('Error thrown in incoming pipeline', { err })
-      const self = router.getAddresses(SELF_PEER_ID)
-      response.reject = errorToIlpReject(
-        self.length > 0 ? self[0] : 'peer',
-        err
-      )
+      response.reject = errorToIlpReject(serverAddress, err)
     }
   }
 }

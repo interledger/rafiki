@@ -1,12 +1,13 @@
-import { RafikiContext, Peer, RafikiMiddleware } from '..'
+import { RafikiContext, RafikiMiddleware } from '..'
 import { Errors } from 'ilp-packet'
 import { TokenBucket } from '../utils'
+import { IlpAccount } from '../services'
 const { InsufficientLiquidityError } = Errors
 
 const DEFAULT_REFILL_PERIOD = 1000 // 1 second
 
 export function createThroughputLimitBucketsForPeer(
-  peer: Peer,
+  peer: IlpAccount,
   inOrOut: 'incoming' | 'outgoing'
 ): TokenBucket | undefined {
   const incomingAmount = peer.incomingThroughputLimit || false
@@ -38,14 +39,13 @@ export function createOutgoingThroughputMiddleware(): RafikiMiddleware {
   const _buckets = new Map<string, TokenBucket>()
 
   return async (
-    { services: { logger }, request: { prepare }, peers }: RafikiContext,
+    { services: { logger }, request: { prepare }, accounts: { outgoing } }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    const peer = await peers.outgoing
-    let outgoingBucket = _buckets.get(peer.id)
+    let outgoingBucket = _buckets.get(outgoing.accountId)
     if (!outgoingBucket) {
-      outgoingBucket = createThroughputLimitBucketsForPeer(peer, 'outgoing')
-      if (outgoingBucket) _buckets.set(peer.id, outgoingBucket)
+      outgoingBucket = createThroughputLimitBucketsForPeer(outgoing, 'outgoing')
+      if (outgoingBucket) _buckets.set(outgoing.accountId, outgoingBucket)
     }
     if (outgoingBucket) {
       if (!outgoingBucket.take(BigInt(prepare.amount))) {
@@ -69,14 +69,13 @@ export function createIncomingThroughputMiddleware(): RafikiMiddleware {
   const _buckets = new Map<string, TokenBucket>()
 
   return async (
-    { services: { logger }, request: { prepare }, peers }: RafikiContext,
+    { services: { logger }, request: { prepare }, accounts: { incoming } }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    const peer = await peers.incoming
-    let incomingBucket = _buckets.get(peer.id)
+    let incomingBucket = _buckets.get(incoming.accountId)
     if (!incomingBucket) {
-      incomingBucket = createThroughputLimitBucketsForPeer(peer, 'incoming')
-      if (incomingBucket) _buckets.set(peer.id, incomingBucket)
+      incomingBucket = createThroughputLimitBucketsForPeer(incoming, 'incoming')
+      if (incomingBucket) _buckets.set(incoming.accountId, incomingBucket)
     }
     if (incomingBucket) {
       if (!incomingBucket.take(BigInt(prepare.amount))) {

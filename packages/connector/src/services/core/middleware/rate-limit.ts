@@ -1,13 +1,14 @@
 import { Errors } from 'ilp-packet'
-import { PeerInfo, RafikiContext, RafikiMiddleware } from '..'
+import { RafikiContext, RafikiMiddleware } from '..'
 import { TokenBucket } from '../utils'
+import { IlpAccount }  from '../services'
 
 const { RateLimitedError } = Errors
 
 const DEFAULT_REFILL_PERIOD = 60 * 1000 // 1 minute
 const DEFAULT_REFILL_COUNT = BigInt(10000)
 
-export function createRateLimitBucketForPeer(peerInfo: PeerInfo): TokenBucket {
+function createRateLimitBucketForPeer(peerInfo: IlpAccount): TokenBucket {
   const {
     rateLimitRefillPeriod,
     rateLimitRefillCount,
@@ -29,17 +30,16 @@ export function createRateLimitBucketForPeer(peerInfo: PeerInfo): TokenBucket {
 export function createIncomingRateLimitMiddleware(): RafikiMiddleware {
   const buckets = new Map<string, TokenBucket>()
   return async (
-    { services: { logger }, request: { prepare }, peers }: RafikiContext,
+    { services: { logger }, request: { prepare }, accounts: { incoming } }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    const peer = await peers.incoming
-    let bucket = buckets.get(peer.id)
+    let bucket = buckets.get(incoming.accountId)
     if (!bucket) {
-      bucket = createRateLimitBucketForPeer(peer)
-      buckets.set(peer.id, bucket)
+      bucket = createRateLimitBucketForPeer(incoming)
+      buckets.set(incoming.accountId, bucket)
     }
     if (!bucket.take()) {
-      logger.warn('rate limited a packet', { bucket, prepare, peer })
+      logger.warn('rate limited a packet', { bucket, prepare, accountId: incoming.accountId })
       throw new RateLimitedError('too many requests, throttling.')
     }
     await next()

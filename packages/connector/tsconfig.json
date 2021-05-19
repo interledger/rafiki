@@ -7,7 +7,7 @@
   "include": ["src/**/*"],
   "exclude": [
     "**/*.test.ts",
-    "src/services/_*",
+    "src/services/**/_*",
     "src/services/core/factories/*"
   ]
 }

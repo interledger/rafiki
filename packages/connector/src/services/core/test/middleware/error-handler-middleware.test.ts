@@ -6,6 +6,7 @@ import { SELF_PEER_ID } from '../../constants'
 import { InMemoryPeers } from '../../services'
 
 describe('Error Handler Middleware', () => {
+  const ADDRESS = 'test.rafiki'
   const peers = new InMemoryPeers()
   const selfPeer = PeerInfoFactory.build({ id: SELF_PEER_ID })
   const services = RafikiServicesFactory.build({}, { peers })
@@ -21,7 +22,7 @@ describe('Error Handler Middleware', () => {
       throw errorToBeThrown
     })
     ctx.services = services
-    const middleware = createIncomingErrorHandlerMiddleware()
+    const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
@@ -41,7 +42,7 @@ describe('Error Handler Middleware', () => {
       throw errorToBeThrown
     })
     ctx.services = services
-    const middleware = createIncomingErrorHandlerMiddleware()
+    const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
@@ -56,7 +57,7 @@ describe('Error Handler Middleware', () => {
       // don't set reply
     })
     ctx.services = services
-    const middleware = createIncomingErrorHandlerMiddleware()
+    const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 

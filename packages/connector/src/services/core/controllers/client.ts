@@ -1,9 +1,15 @@
+import Axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { RafikiContext } from '../rafiki'
 import { modifySerializedIlpPrepare } from '../lib'
+//import { AxiosClient } from '../services/client/axios'
+import { sendToPeer } from '../services/client'
 
 export function createClientController() {
+  // TODO keepalive
+  const axios = Axios.create({ timeout: 30_000 })
+
   return async function ilpClient({
-    peers: { outgoing },
+    accounts: { outgoing },
     request,
     response
   }: RafikiContext): Promise<void> {
@@ -19,7 +25,7 @@ export function createClientController() {
       amount,
       expiresAt
     )
-    const peer = await outgoing
-    response.rawReply = await peer.send(outgoingPrepare)
+
+    response.rawReply = await sendToPeer(axios, outgoing, outgoingPrepare)
   }
 }
