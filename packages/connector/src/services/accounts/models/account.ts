@@ -27,6 +27,8 @@ export class Account extends BaseModel {
   public trustlineBalanceId!: string
   public parentAccountId?: string
 
+  public maxPacketAmount!: bigint
+
   public incomingTokens?: Token[]
   public incomingEndpoint?: string
   public outgoingToken?: string

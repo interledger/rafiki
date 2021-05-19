@@ -67,7 +67,8 @@ describe('Accounts Service', (): void => {
       const account = {
         accountId,
         disabled: false,
-        asset: randomAsset()
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
       }
       const createdAccount = await accounts.createAccount(account)
       expect(createdAccount).toEqual(account)
@@ -91,6 +92,7 @@ describe('Accounts Service', (): void => {
         disabled: false,
         parentAccountId: uuid(),
         asset: randomAsset(),
+        maxPacketAmount: BigInt(100),
         http: {
           incoming: {
             authTokens: [uuid()],
@@ -130,6 +132,7 @@ describe('Accounts Service', (): void => {
         accountId,
         disabled: false,
         asset: randomAsset(),
+        maxPacketAmount: BigInt(100),
         http: {
           incoming: {
             authTokens: [incomingToken, incomingToken],
@@ -157,6 +160,7 @@ describe('Accounts Service', (): void => {
           accountId: uuid(),
           disabled: false,
           asset: randomAsset(),
+          maxPacketAmount: BigInt(100),
           http: {
             incoming: {
               authTokens: [incomingToken],
@@ -176,6 +180,7 @@ describe('Accounts Service', (): void => {
           accountId,
           disabled: false,
           asset: randomAsset(),
+          maxPacketAmount: BigInt(100),
           http: {
             incoming: {
               authTokens: [incomingToken],
@@ -200,7 +205,8 @@ describe('Accounts Service', (): void => {
       const account = {
         accountId: uuid(),
         disabled: false,
-        asset
+        asset,
+        maxPacketAmount: BigInt(100)
       }
 
       {
@@ -244,7 +250,8 @@ describe('Accounts Service', (): void => {
       const { accountId } = await accounts.createAccount({
         accountId: uuid(),
         disabled: false,
-        asset: randomAsset()
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
       })
       const balance = await accounts.getAccountBalance(accountId)
       expect(balance).toEqual({
@@ -351,7 +358,8 @@ describe('Accounts Service', (): void => {
       const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
         disabled: false,
-        asset: randomAsset()
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
       })
       const amount = BigInt(10)
       await accounts.deposit(accountId, amount)
@@ -377,7 +385,8 @@ describe('Accounts Service', (): void => {
       const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
         disabled: false,
-        asset: randomAsset()
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
       })
       const startingBalance = BigInt(10)
       await accounts.deposit(accountId, startingBalance)
@@ -403,7 +412,8 @@ describe('Accounts Service', (): void => {
       const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
         disabled: false,
-        asset: randomAsset()
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
       })
       const startingBalance = BigInt(5)
       await accounts.deposit(accountId, startingBalance)
@@ -427,12 +437,14 @@ describe('Accounts Service', (): void => {
         const { accountId: sourceAccountId } = await accounts.createAccount({
           accountId: uuid(),
           disabled: false,
-          asset
+          asset,
+          maxPacketAmount: BigInt(100)
         })
         const { accountId: destinationAccountId } = await accounts.createAccount({
           accountId: uuid(),
           disabled: false,
-          asset
+          asset,
+          maxPacketAmount: BigInt(100)
         })
         const startingSourceBalance = BigInt(10)
         await accounts.deposit(sourceAccountId, startingSourceBalance)
@@ -503,6 +515,7 @@ describe('Accounts Service', (): void => {
         accountId: uuid(),
         disabled: false,
         asset: randomAsset(),
+        maxPacketAmount: BigInt(100),
         http: {
           incoming: {
             authTokens: [incomingToken, uuid()],

@@ -12,6 +12,8 @@ exports.up = function (knex) {
     table.uuid('trustlineBalanceId').notNullable()
     table.uuid('parentAccountId').nullable()
 
+    table.bigInteger('maxPacketAmount').notNullable()
+
     table.string('incomingEndpoint').nullable()
     table.string('outgoingToken').nullable()
     table.string('outgoingEndpoint').nullable()

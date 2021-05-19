@@ -41,7 +41,8 @@ function toIlpAccount(accountRow: Account): IlpAccount {
       code: accountRow.assetCode,
       scale: accountRow.assetScale
     },
-    parentAccountId: accountRow.parentAccountId
+    parentAccountId: accountRow.parentAccountId,
+    maxPacketAmount: accountRow.maxPacketAmount
   }
   if (
     accountRow.incomingTokens &&
@@ -90,6 +91,7 @@ function toAccountRow(
     debtBalanceId,
     trustlineBalanceId,
     parentAccountId: account.parentAccountId,
+    maxPacketAmount: account.maxPacketAmount,
     incomingEndpoint: account.http && account.http.incoming.endpoint,
     outgoingToken: account.http && account.http.outgoing.authToken,
     outgoingEndpoint: account.http && account.http.outgoing.endpoint,
