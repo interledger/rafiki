@@ -6,5 +6,5 @@ export class Token extends BaseModel {
   }
 
   public token!: string
-  public ilpAccountSettingsId!: string
+  public accountId!: string
 }

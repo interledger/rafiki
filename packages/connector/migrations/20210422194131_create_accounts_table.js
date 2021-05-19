@@ -1,5 +1,5 @@
 exports.up = function (knex) {
-  return knex.schema.createTable('ilpAccountSettings', function (table) {
+  return knex.schema.createTable('accounts', function (table) {
     table.uuid('id').notNullable().primary()
 
     table.boolean('disabled').defaultTo(false)
@@ -26,5 +26,5 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('ilpAccountSettings')
+  return knex.schema.dropTableIfExists('accounts')
 }

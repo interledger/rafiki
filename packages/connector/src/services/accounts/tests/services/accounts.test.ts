@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid'
 import { AccountsService } from '../../services/accounts'
 import { toLiquidityIds, toSettlementIds, uuidToBigInt } from '../../utils'
 import { createTestApp, TestContainer } from '../helpers/app'
-import { AppServices, Config, IlpAccountSettings } from '../..'
+import { Account, AppServices, Config } from '../..'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
@@ -71,11 +71,11 @@ describe('Accounts Service', (): void => {
       }
       const createdAccount = await accounts.createAccount(account)
       expect(createdAccount).toEqual(account)
-      const accountSettings = await IlpAccountSettings.query().findById(accountId)
+      const retrievedAccount = await Account.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
-        uuidToBigInt(accountSettings.balanceId),
-        uuidToBigInt(accountSettings.debtBalanceId),
-        uuidToBigInt(accountSettings.trustlineBalanceId)
+        uuidToBigInt(retrievedAccount.balanceId),
+        uuidToBigInt(retrievedAccount.debtBalanceId),
+        uuidToBigInt(retrievedAccount.trustlineBalanceId)
       ])
       expect(balances.length).toBe(3)
       balances.forEach((balance) => {
@@ -110,11 +110,11 @@ describe('Accounts Service', (): void => {
       }
       const createdAccount = await accounts.createAccount(account)
       expect(createdAccount).toEqual(account)
-      const accountSettings = await IlpAccountSettings.query().findById(accountId)
+      const retrievedAccount = await Account.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
-        uuidToBigInt(accountSettings.balanceId),
-        uuidToBigInt(accountSettings.debtBalanceId),
-        uuidToBigInt(accountSettings.trustlineBalanceId)
+        uuidToBigInt(retrievedAccount.balanceId),
+        uuidToBigInt(retrievedAccount.debtBalanceId),
+        uuidToBigInt(retrievedAccount.trustlineBalanceId)
       ])
       expect(balances.length).toBe(3)
       balances.forEach((balance) => {
@@ -146,8 +146,8 @@ describe('Accounts Service', (): void => {
         UniqueViolationError
       )
 
-      const accountSettings = await IlpAccountSettings.query().findById(accountId)
-      expect(accountSettings).toBeUndefined()
+      const retrievedAccount = await Account.query().findById(accountId)
+      expect(retrievedAccount).toBeUndefined()
     })
 
     test('Cannot create an account with duplicate incoming token', async (): Promise<void> => {
@@ -190,8 +190,8 @@ describe('Accounts Service', (): void => {
         await expect(accounts.createAccount(account)).rejects.toThrow(
           UniqueViolationError
         )
-        const accountSettings = await IlpAccountSettings.query().findById(accountId)
-        expect(accountSettings).toBeUndefined()
+        const retrievedAccount = await Account.query().findById(accountId)
+        expect(retrievedAccount).toBeUndefined()
       }
     })
 

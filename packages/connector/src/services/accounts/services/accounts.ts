@@ -3,7 +3,7 @@ import { Logger } from 'pino'
 import { v4 as uuid } from 'uuid'
 import { Client, CommitFlags, CreateTransferFlags } from 'tigerbeetle-node'
 
-import { IlpAccountSettings, Token } from '../models'
+import { Account, Token } from '../models'
 import { BalanceIds } from '../types'
 import {
   getNetBalance,
@@ -33,49 +33,49 @@ export interface BalanceOptions extends BalanceIds {
   unit: bigint
 }
 
-function toIlpAccount(accountSettings: IlpAccountSettings): IlpAccount {
+function toIlpAccount(accountRow: Account): IlpAccount {
   const account: IlpAccount = {
-    accountId: accountSettings.id,
-    disabled: accountSettings.disabled,
+    accountId: accountRow.id,
+    disabled: accountRow.disabled,
     asset: {
-      code: accountSettings.assetCode,
-      scale: accountSettings.assetScale
+      code: accountRow.assetCode,
+      scale: accountRow.assetScale
     },
-    parentAccountId: accountSettings.parentAccountId
+    parentAccountId: accountRow.parentAccountId
   }
   if (
-    accountSettings.incomingTokens &&
-    accountSettings.incomingEndpoint &&
-    accountSettings.outgoingToken &&
-    accountSettings.outgoingEndpoint
+    accountRow.incomingTokens &&
+    accountRow.incomingEndpoint &&
+    accountRow.outgoingToken &&
+    accountRow.outgoingEndpoint
   ) {
     account.http = {
       incoming: {
-        authTokens: accountSettings.incomingTokens.map(
+        authTokens: accountRow.incomingTokens.map(
           (incomingToken) => incomingToken.token
         ),
-        endpoint: accountSettings.incomingEndpoint
+        endpoint: accountRow.incomingEndpoint
       },
       outgoing: {
-        authToken: accountSettings.outgoingToken,
-        endpoint: accountSettings.outgoingEndpoint
+        authToken: accountRow.outgoingToken,
+        endpoint: accountRow.outgoingEndpoint
       }
     }
   }
-  if (accountSettings.streamEnabled) {
+  if (accountRow.streamEnabled) {
     account.stream = {
-      enabled: accountSettings.streamEnabled
+      enabled: accountRow.streamEnabled
     }
   }
-  if (accountSettings.staticIlpAddress) {
+  if (accountRow.staticIlpAddress) {
     account.routing = {
-      staticIlpAddress: accountSettings.staticIlpAddress
+      staticIlpAddress: accountRow.staticIlpAddress
     }
   }
   return account
 }
 
-function toIlpAccountSettings(
+function toAccountRow(
   account: IlpAccount,
   balanceId: string,
   debtBalanceId: string,
@@ -113,12 +113,10 @@ export class AccountsService implements ConnectorAccountsService {
     destinationAccountId,
     callback
   }: AdjustmentOptions): Promise<void> {
-    const sourceAccount = await IlpAccountSettings.query().findById(
-      sourceAccountId
-    )
-    const destinationAccount = await IlpAccountSettings.query().findById(
+    const [sourceAccount, destinationAccount] = await Account.query().findByIds([
+      sourceAccountId,
       destinationAccountId
-    )
+    ])
     if (sourceAmount > BigInt(0)) {
       const sourceTransferId = uuidToBigInt(uuid())
       const destinationTransferId = uuidToBigInt(uuid())
@@ -208,49 +206,40 @@ export class AccountsService implements ConnectorAccountsService {
       trustlineId: uuidToBigInt(trustlineBalanceId),
       unit: BigInt(account.asset.scale)
     })
-    await transaction(
-      IlpAccountSettings,
-      Token,
-      async (IlpAccountSettings, Token) => {
-        await IlpAccountSettings.query().insert(
-          toIlpAccountSettings(
-            account,
-            balanceId,
-            debtBalanceId,
-            trustlineBalanceId
-          )
-        )
+    await transaction(Account, Token, async (Account, Token) => {
+      await Account.query().insert(
+        toAccountRow(account, balanceId, debtBalanceId, trustlineBalanceId)
+      )
 
-        if (account.http) {
-          try {
-            const incomingTokens = account.http.incoming.authTokens.map(
-              (incomingToken) => {
-                return {
-                  ilpAccountSettingsId: account.accountId,
-                  token: incomingToken
-                }
+      if (account.http) {
+        try {
+          const incomingTokens = account.http.incoming.authTokens.map(
+            (incomingToken) => {
+              return {
+                accountId: account.accountId,
+                token: incomingToken
               }
-            )
-            await Token.query().insert(incomingTokens)
-          } catch (error) {
-            if (error instanceof UniqueViolationError) {
-              this.logger.info({
-                msg: 'duplicate incoming token attempted to be added',
-                account
-              })
             }
-            throw error
+          )
+          await Token.query().insert(incomingTokens)
+        } catch (error) {
+          if (error instanceof UniqueViolationError) {
+            this.logger.info({
+              msg: 'duplicate incoming token attempted to be added',
+              account
+            })
           }
+          throw error
         }
       }
-    )
+    })
 
     await this.createCurrencyBalances(account.asset.code, account.asset.scale)
     return account
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount> {
-    const accountSettings = await IlpAccountSettings.query()
+    const accountRow = await Account.query()
       .withGraphJoined('incomingTokens(selectIncomingToken)')
       .modifiers({
         selectIncomingToken(builder: QueryBuilder<Token, Token[]>) {
@@ -258,11 +247,11 @@ export class AccountsService implements ConnectorAccountsService {
         }
       })
       .findById(accountId)
-    return toIlpAccount(accountSettings)
+    return toIlpAccount(accountRow)
   }
 
   public async getAccountBalance(accountId: string): Promise<IlpBalance> {
-    const accountSettings = await IlpAccountSettings.query()
+    const account = await Account.query()
       .withGraphJoined('incomingTokens(selectIncomingToken)')
       .modifiers({
         selectIncomingToken(builder: QueryBuilder<Token, Token[]>) {
@@ -275,9 +264,9 @@ export class AccountsService implements ConnectorAccountsService {
       debtBalance,
       trustlineBalance
     ] = await this.client.lookupAccounts([
-      uuidToBigInt(accountSettings.balanceId),
-      uuidToBigInt(accountSettings.debtBalanceId),
-      uuidToBigInt(accountSettings.trustlineBalanceId)
+      uuidToBigInt(account.balanceId),
+      uuidToBigInt(account.debtBalanceId),
+      uuidToBigInt(account.trustlineBalanceId)
     ])
 
     if (!trustlineBalance) {
@@ -438,25 +427,25 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async deposit(accountId: string, amount: bigint): Promise<void> {
-    const accountSettings = await IlpAccountSettings.query().findById(accountId)
-    if (!accountSettings) {
+    const account = await Account.query().findById(accountId)
+    if (!account) {
       throw new AccountNotFoundError(accountId)
     }
     await this.createTransfer(
-      toSettlementIds(accountSettings.assetCode, accountSettings.assetScale).id,
-      uuidToBigInt(accountSettings.balanceId),
+      toSettlementIds(account.assetCode, account.assetScale).id,
+      uuidToBigInt(account.balanceId),
       amount
     )
   }
 
   public async withdraw(accountId: string, amount: bigint): Promise<void> {
-    const accountSettings = await IlpAccountSettings.query().findById(accountId)
-    if (!accountSettings) {
+    const account = await Account.query().findById(accountId)
+    if (!account) {
       throw new AccountNotFoundError(accountId)
     }
     await this.createTransfer(
-      uuidToBigInt(accountSettings.balanceId),
-      toSettlementIds(accountSettings.assetCode, accountSettings.assetScale).id,
+      uuidToBigInt(account.balanceId),
+      toSettlementIds(account.assetCode, account.assetScale).id,
       amount
     )
   }
@@ -464,16 +453,11 @@ export class AccountsService implements ConnectorAccountsService {
   public async getAccountByToken(
     token: string
   ): Promise<IlpAccount | null> {
-    // should tokens be unique across accounts?
-    const accountSettings = await IlpAccountSettings.query()
-      .select(
-        'ilpAccountSettings.id',
-        'ilpAccountSettings.assetCode',
-        'ilpAccountSettings.assetScale'
-      )
+    const account = await Account.query()
+      .select('accounts.id', 'accounts.assetCode', 'accounts.assetScale')
       .withGraphJoined('incomingTokens')
       .where('incomingTokens.token', token)
       .first()
-    return accountSettings ? toIlpAccount(accountSettings) : null
+    return account ? toIlpAccount(account) : null
   }
 }

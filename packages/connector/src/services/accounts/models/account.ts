@@ -2,9 +2,9 @@ import { BaseModel } from './base'
 import { Token } from './token'
 import { Model } from 'objection'
 
-export class IlpAccountSettings extends BaseModel {
+export class Account extends BaseModel {
   public static get tableName(): string {
-    return 'ilpAccountSettings'
+    return 'accounts'
   }
 
   static relationMappings = {
@@ -12,8 +12,8 @@ export class IlpAccountSettings extends BaseModel {
       relation: Model.HasManyRelation,
       modelClass: Token,
       join: {
-        from: 'ilpAccountSettings.id',
-        to: 'tokens.ilpAccountSettingsId'
+        from: 'accounts.id',
+        to: 'tokens.accountId'
       }
     }
   }

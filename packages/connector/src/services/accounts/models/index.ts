@@ -1,2 +1,2 @@
-export { IlpAccountSettings } from './ilpAccountSettings'
+export { Account } from './account'
 export { Token } from './token'
