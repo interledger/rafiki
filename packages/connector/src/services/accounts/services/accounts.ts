@@ -5,7 +5,12 @@ import { Client, CommitFlags, CreateTransferFlags } from 'tigerbeetle-node'
 
 import { IlpAccountSettings, Token } from '../models'
 import { BalanceIds } from '../types'
-import { toLiquidityIds, toSettlementIds, uuidToBigInt } from '../utils'
+import {
+  getNetBalance,
+  toLiquidityIds,
+  toSettlementIds,
+  uuidToBigInt
+} from '../utils'
 
 import { AccountNotFoundError } from '../../core/errors'
 // import { Errors } from 'ilp-packet'
@@ -28,19 +33,15 @@ export interface BalanceOptions extends BalanceIds {
   unit: bigint
 }
 
-function toIlpAccount(
-  accountSettings: IlpAccountSettings
-): IlpAccount {
+function toIlpAccount(accountSettings: IlpAccountSettings): IlpAccount {
   const account: IlpAccount = {
     accountId: accountSettings.id,
     disabled: accountSettings.disabled,
     asset: {
       code: accountSettings.assetCode,
       scale: accountSettings.assetScale
-    }
-  }
-  if (accountSettings.parentAccountId) {
-    account.parentAccountId = accountSettings.parentAccountId
+    },
+    parentAccountId: accountSettings.parentAccountId
   }
   if (
     accountSettings.incomingTokens &&
@@ -101,9 +102,6 @@ export class AccountsService implements ConnectorAccountsService {
   async getAccountByDestinationAddress(
     _destinationAddress: string
   ): Promise<IlpAccount> {
-    throw new Error('unimplemented')
-  }
-  async getAccountBalance(_accountId: string): Promise<IlpBalance> {
     throw new Error('unimplemented')
   }
 
@@ -200,9 +198,7 @@ export class AccountsService implements ConnectorAccountsService {
     }
   }
 
-  public async createAccount(
-    account: IlpAccount
-  ): Promise<IlpAccount> {
+  public async createAccount(account: IlpAccount): Promise<IlpAccount> {
     const balanceId = uuid()
     const debtBalanceId = uuid()
     const trustlineBalanceId = uuid()
@@ -263,6 +259,43 @@ export class AccountsService implements ConnectorAccountsService {
       })
       .findById(accountId)
     return toIlpAccount(accountSettings)
+  }
+
+  public async getAccountBalance(accountId: string): Promise<IlpBalance> {
+    const accountSettings = await IlpAccountSettings.query()
+      .withGraphJoined('incomingTokens(selectIncomingToken)')
+      .modifiers({
+        selectIncomingToken(builder: QueryBuilder<Token, Token[]>) {
+          builder.select('token')
+        }
+      })
+      .findById(accountId)
+    const [
+      balance,
+      debtBalance,
+      trustlineBalance
+    ] = await this.client.lookupAccounts([
+      uuidToBigInt(accountSettings.balanceId),
+      uuidToBigInt(accountSettings.debtBalanceId),
+      uuidToBigInt(accountSettings.trustlineBalanceId)
+    ])
+
+    if (!trustlineBalance) {
+      throw new AccountNotFoundError(accountId)
+    }
+
+    return {
+      id: accountId,
+      balance: getNetBalance(balance),
+      // children: {
+      //   availableCredit: bigint
+      //   totalLent: bigint
+      // },
+      parent: {
+        availableCreditLine: getNetBalance(trustlineBalance),
+        totalBorrowed: getNetBalance(debtBalance)
+      }
+    }
   }
 
   private async createCurrencyBalances(
@@ -377,11 +410,7 @@ export class AccountsService implements ConnectorAccountsService {
   private async getBalance(id: bigint): Promise<bigint> {
     const balances = await this.client.lookupAccounts([id])
     if (balances.length == 1) {
-      return (
-        balances[0].credit_accepted -
-        balances[0].debit_accepted -
-        balances[0].debit_reserved
-      )
+      return getNetBalance(balances[0])
     }
     return BigInt(0)
   }

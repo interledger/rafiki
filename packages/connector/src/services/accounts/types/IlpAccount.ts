@@ -1,13 +1,6 @@
-interface CreateIlpAccountBalanceOptions {
-  assetCode: string
-  assetScale: number
-
-  // details of how we implement this TBD
-  parentAccountId?: string
-}
-
-interface IlpAccountBalance extends CreateIlpAccountBalanceOptions {
-  current: bigint
+interface IlpAccountAsset {
+  code: string
+  scale: number
 }
 
 export interface IlpAccountHttp {
@@ -27,18 +20,17 @@ export interface IlpAccountRouting {
   ilpAddress: string // ILP address for this account
 }
 
-export interface CreateIlpAccountOptions {
+export interface IlpAccount {
   id: string
   disabled: boolean // you can fetch config of disabled account but it will not process packets
 
-  balance: CreateIlpAccountBalanceOptions
+  // details of how we implement this TBD
+  parentAccountId?: string
+
+  asset: IlpAccountAsset
   http?: IlpAccountHttp
   stream?: IlpAccountStream
   routing?: IlpAccountRouting
-}
-
-export interface IlpAccount extends CreateIlpAccountOptions {
-  balance: IlpAccountBalance
 }
 
 export interface UpdateIlpAccountOptions {

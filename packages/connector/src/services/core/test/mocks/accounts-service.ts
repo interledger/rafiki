@@ -44,6 +44,7 @@ export class MockAccountsService implements AccountsService {
     const account = this.accounts.get(accountId)
     if (!account) throw new Error('account not found')
     return {
+      id: accountId,
       balance: account.balance
     }
   }

@@ -196,16 +196,17 @@ describe('Accounts Service', (): void => {
     })
 
     test('Auto-creates corresponding liquidity and settlement accounts', async (): Promise<void> => {
+      const asset = randomAsset()
       const account = {
         accountId: uuid(),
         disabled: false,
-        asset: randomAsset()
+        asset
       }
 
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          ...Object.values(toLiquidityIds(account.asset.code, account.asset.scale)),
-          ...Object.values(toSettlementIds(account.asset.code, account.asset.scale))
+          ...Object.values(toLiquidityIds(asset.code, asset.scale)),
+          ...Object.values(toSettlementIds(asset.code, asset.scale))
         ])
         expect(balances.length).toBe(0)
       }
@@ -213,8 +214,8 @@ describe('Accounts Service', (): void => {
       await accounts.createAccount(account)
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          ...Object.values(toLiquidityIds(account.asset.code, account.asset.scale)),
-          ...Object.values(toSettlementIds(account.asset.code, account.asset.scale))
+          ...Object.values(toLiquidityIds(asset.code, asset.scale)),
+          ...Object.values(toSettlementIds(asset.code, asset.scale))
         ])
         expect(balances.length).toBe(6)
         balances.forEach((balance) => {
@@ -230,42 +231,61 @@ describe('Accounts Service', (): void => {
 
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          ...Object.values(toLiquidityIds(account.asset.code, account.asset.scale)),
-          ...Object.values(toSettlementIds(account.asset.code, account.asset.scale))
+          ...Object.values(toLiquidityIds(asset.code, asset.scale)),
+          ...Object.values(toSettlementIds(asset.code, asset.scale))
         ])
         expect(balances.length).toBe(6)
       }
     })
   })
 
+  describe('Get Account Balance', (): void => {
+    test("Can retrieve an account's balance", async (): Promise<void> => {
+      const { accountId } = await accounts.createAccount({
+        accountId: uuid(),
+        disabled: false,
+        asset: randomAsset()
+      })
+      const balance = await accounts.getAccountBalance(accountId)
+      expect(balance).toEqual({
+        id: accountId,
+        balance: BigInt(0),
+        parent: {
+          availableCreditLine: BigInt(0),
+          totalBorrowed: BigInt(0)
+        }
+      })
+    })
+  })
+
   describe('Deposit liquidity', (): void => {
     test('Can deposit to liquidity account', async (): Promise<void> => {
-      const { code: assetCode, scale: assetScale } = randomAsset()
+      const asset = randomAsset()
       const amount = BigInt(10)
       {
-        await accounts.depositLiquidity(assetCode, assetScale, amount)
+        await accounts.depositLiquidity(asset.code, asset.scale, amount)
         const balance = await accounts.getLiquidityBalance(
-          assetCode,
-          assetScale
+          asset.code,
+          asset.scale
         )
         expect(balance).toEqual(amount)
         const settlementBalance = await accounts.getSettlementBalance(
-          assetCode,
-          assetScale
+          asset.code,
+          asset.scale
         )
         expect(settlementBalance).toEqual(-amount)
       }
       const amount2 = BigInt(5)
       {
-        await accounts.depositLiquidity(assetCode, assetScale, amount2)
+        await accounts.depositLiquidity(asset.code, asset.scale, amount2)
         const balance = await accounts.getLiquidityBalance(
-          assetCode,
-          assetScale
+          asset.code,
+          asset.scale
         )
         expect(balance).toEqual(amount + amount2)
         const settlementBalance = await accounts.getSettlementBalance(
-          assetCode,
-          assetScale
+          asset.code,
+          asset.scale
         )
         expect(settlementBalance).toEqual(-(amount + amount2))
       }
@@ -274,50 +294,53 @@ describe('Accounts Service', (): void => {
 
   describe('Withdraw liquidity', (): void => {
     test('Can withdraw liquidity account', async (): Promise<void> => {
-      const { code: assetCode, scale: assetScale } = randomAsset()
+      const asset = randomAsset()
       const startingBalance = BigInt(10)
-      await accounts.depositLiquidity(assetCode, assetScale, startingBalance)
+      await accounts.depositLiquidity(asset.code, asset.scale, startingBalance)
       const amount = BigInt(5)
       {
-        await accounts.withdrawLiquidity(assetCode, assetScale, amount)
+        await accounts.withdrawLiquidity(asset.code, asset.scale, amount)
         const balance = await accounts.getLiquidityBalance(
-          assetCode,
-          assetScale
+          asset.code,
+          asset.scale
         )
         expect(balance).toEqual(startingBalance - amount)
         const settlementBalance = await accounts.getSettlementBalance(
-          assetCode,
-          assetScale
+          asset.code,
+          asset.scale
         )
         expect(settlementBalance).toEqual(-(startingBalance - amount))
       }
       const amount2 = BigInt(5)
       {
-        await accounts.withdrawLiquidity(assetCode, assetScale, amount2)
+        await accounts.withdrawLiquidity(asset.code, asset.scale, amount2)
         const balance = await accounts.getLiquidityBalance(
-          assetCode,
-          assetScale
+          asset.code,
+          asset.scale
         )
         expect(balance).toEqual(startingBalance - amount - amount2)
         const settlementBalance = await accounts.getSettlementBalance(
-          assetCode,
-          assetScale
+          asset.code,
+          asset.scale
         )
         expect(settlementBalance).toEqual(-(startingBalance - amount - amount2))
       }
     })
 
     test.skip("Can't withdraw more than the balance", async (): Promise<void> => {
-      const { code: assetCode, scale: assetScale } = randomAsset()
+      const asset = randomAsset()
       const startingBalance = BigInt(5)
-      await accounts.depositLiquidity(assetCode, assetScale, startingBalance)
+      await accounts.depositLiquidity(asset.code, asset.scale, startingBalance)
       const amount = BigInt(10)
-      await accounts.withdrawLiquidity(assetCode, assetScale, amount)
-      const balance = await accounts.getLiquidityBalance(assetCode, assetScale)
+      await accounts.withdrawLiquidity(asset.code, asset.scale, amount)
+      const balance = await accounts.getLiquidityBalance(
+        asset.code,
+        asset.scale
+      )
       expect(balance).toEqual(startingBalance)
       const settlementBalance = await accounts.getSettlementBalance(
-        assetCode,
-        assetScale
+        asset.code,
+        asset.scale
       )
       expect(settlementBalance).toEqual(-startingBalance)
     })
@@ -332,10 +355,8 @@ describe('Accounts Service', (): void => {
       })
       const amount = BigInt(10)
       await accounts.deposit(accountId, amount)
-      // const {
-      //   balance
-      // } = await accounts.getAccountBalance(accountId)
-      // expect(current).toEqual(amount)
+      const { balance } = await accounts.getAccountBalance(accountId)
+      expect(balance).toEqual(amount)
       const settlementBalance = await accounts.getSettlementBalance(
         asset.code,
         asset.scale
@@ -362,10 +383,8 @@ describe('Accounts Service', (): void => {
       await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(5)
       await accounts.withdraw(accountId, amount)
-      // const {
-      //   balance
-      // } = await accounts.getAccountBalance(accountId)
-      // expect(balance).toEqual(startingBalance - amount)
+      const { balance } = await accounts.getAccountBalance(accountId)
+      expect(balance).toEqual(startingBalance - amount)
       const settlementBalance = await accounts.getSettlementBalance(
         asset.code,
         asset.scale
@@ -390,10 +409,8 @@ describe('Accounts Service', (): void => {
       await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(10)
       await accounts.withdraw(accountId, amount)
-      // const {
-      //   balance
-      // } = await accounts.getAccountBalance(accountId)
-      // expect(balance).toEqual(startingBalance)
+      const { balance } = await accounts.getAccountBalance(accountId)
+      expect(balance).toEqual(startingBalance)
       const settlementBalance = await accounts.getSettlementBalance(
         asset.code,
         asset.scale
@@ -427,15 +444,15 @@ describe('Accounts Service', (): void => {
           destinationAccountId,
           callback: async (trx: Transaction) => {
             {
-              // const {
-              //   balance: sourceBalance
-              // } = await accounts.getAccountBalance(sourceAccountId)
-              // expect(sourceBalance).toEqual(startingSourceBalance - amount)
+              const {
+                balance: sourceBalance
+              } = await accounts.getAccountBalance(sourceAccountId)
+              expect(sourceBalance).toEqual(startingSourceBalance - amount)
 
-              // const {
-              //   balance: destinationBalance
-              // } = await accounts.getAccountBalance(destinationAccountId)
-              // expect(destinationBalance).toEqual(BigInt(0))
+              const {
+                balance: destinationBalance
+              } = await accounts.getAccountBalance(destinationAccountId)
+              expect(destinationBalance).toEqual(BigInt(0))
 
               const liquidityBalance = await accounts.getLiquidityBalance(
                 asset.code,
@@ -451,21 +468,21 @@ describe('Accounts Service', (): void => {
             }
 
             {
-              // const {
-              //   balance: sourceBalance
-              // } = await accounts.getAccountBalance(sourceAccountId)
-              // const expectedSourceBalance =
-              //   result === 'accept'
-              //     ? startingSourceBalance - amount
-              //     : startingSourceBalance
-              // expect(sourceBalance).toEqual(expectedSourceBalance)
+              const {
+                balance: sourceBalance
+              } = await accounts.getAccountBalance(sourceAccountId)
+              const expectedSourceBalance =
+                result === 'accept'
+                  ? startingSourceBalance - amount
+                  : startingSourceBalance
+              expect(sourceBalance).toEqual(expectedSourceBalance)
 
-              // const {
-              //   balance: destinationBalance
-              // } = await accounts.getAccountBalance(destinationAccountId)
-              // const expectedDestinationBalance =
-              //   result === 'accept' ? amount : BigInt(0)
-              // expect(destinationBalance).toEqual(expectedDestinationBalance)
+              const {
+                balance: destinationBalance
+              } = await accounts.getAccountBalance(destinationAccountId)
+              const expectedDestinationBalance =
+                result === 'accept' ? amount : BigInt(0)
+              expect(destinationBalance).toEqual(expectedDestinationBalance)
 
               const liquidityBalance = await accounts.getLiquidityBalance(
                 asset.code,
