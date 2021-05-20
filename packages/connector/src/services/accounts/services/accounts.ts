@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 import { IlpAccountSettings } from '../models'
 // import { Client } from 'tigerbeetle-node'
 
-import { AccountInfo } from '../../core/types'
+import { IlpAccountSettings } from '../../core/types'
 import { AccountNotFoundError } from '../../core/errors'
 // import { Errors } from 'ilp-packet'
 import {

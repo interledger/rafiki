@@ -1,10 +1,6 @@
-import {
-  Rafiki,
-  RafikiMiddleware,
-  AccountsService
-} from '../core'
+import { Rafiki, RafikiMiddleware, AccountsService } from '../core'
 import { Context } from 'koa'
-import createRouter, { Joi } from 'koa-joi-router'
+import createRouter from 'koa-joi-router'
 import bodyParser from 'koa-bodyparser'
 import { Server } from 'http'
 import createLogger from 'pino'
@@ -29,10 +25,7 @@ export class AdminApi {
   private _httpServer?: Server
   private _host?: string
   private _port?: number
-  constructor(
-    { host, port }: AdminApiOptions,
-    { accounts }: AdminApiServices
-  ) {
+  constructor({ host, port }: AdminApiOptions, { accounts }: AdminApiServices) {
     this._koa = new Rafiki()
     // this._koa.use(createAuthMiddleware(auth))
     this._koa.use(this._getRoutes(accounts).middleware())
@@ -54,9 +47,7 @@ export class AdminApi {
     )
   }
 
-  private _getRoutes(
-    accounts?: AccountsService
-  ): createRouter.Router {
+  private _getRoutes(accounts?: AccountsService): createRouter.Router {
     const middlewareRouter = createRouter()
 
     middlewareRouter.use(bodyParser())

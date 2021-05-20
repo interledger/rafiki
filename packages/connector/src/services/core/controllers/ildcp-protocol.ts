@@ -9,7 +9,7 @@ import { RafikiContext } from '../rafiki'
 export function createIldcpProtocolController(serverAddress: string) {
   return async function ildcp(ctx: RafikiContext): Promise<void> {
     const {
-      services: { logger, accounts },
+      services: { logger },
       request,
       response,
       accounts: { incoming }
@@ -25,7 +25,9 @@ export function createIldcpProtocolController(serverAddress: string) {
 
     const clientAddress = routing.ilpAddress
     if (!clientAddress) {
-      logger.warn('received ILDCP request for peer without an address', { peerId: incoming.accountId })
+      logger.warn('received ILDCP request for peer without an address', {
+        peerId: incoming.accountId
+      })
       ctx.throw('ILDCP request from peer without configured address')
     }
 

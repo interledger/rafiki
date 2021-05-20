@@ -1,13 +1,17 @@
 import { AxiosInstance } from 'axios'
 //import { PeersService, Peer } from '../peers'
 import { Errors } from 'ilp-packet'
-import { IlpAccount } from '../accounts'
+import { IlpAccount } from './accounts'
 
 //export interface Client {
 //  send: (data: Buffer) => Promise<Buffer>
 //}
 
-export async function sendToPeer(client: AxiosInstance, account: IlpAccount, prepare: Buffer): Promise<Buffer> {
+export async function sendToPeer(
+  client: AxiosInstance,
+  account: IlpAccount,
+  prepare: Buffer
+): Promise<Buffer> {
   const { http } = account
   if (!http) {
     throw new Errors.UnreachableError('no outgoing endpoint')

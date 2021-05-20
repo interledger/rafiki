@@ -1,5 +1,4 @@
 import { errorToIlpReject } from 'ilp-packet'
-import { SELF_PEER_ID } from '../constants'
 import { RafikiContext } from '../rafiki'
 
 /**

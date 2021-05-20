@@ -1,49 +1,81 @@
+import { IlpPrepare, serializeIlpPrepare } from 'ilp-packet'
+import { deserializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
-import { InMemoryPeers, InMemoryRouter } from '../../services'
 import {
-  PeerInfoFactory,
+  AccountFactory,
+  PeerAccountFactory,
   IlpPrepareFactory,
   RafikiServicesFactory
 } from '../../factories'
-import { SELF_PEER_ID } from '../../constants'
 import { createIldcpProtocolController } from '../../controllers/ildcp-protocol'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 
-// TODO: waiting for peers and accounts interface to be finalised
-describe.skip('ILDCP Controller', function () {
-  const peers = new InMemoryPeers()
-  const router = new InMemoryRouter(peers, { ilpAddress: 'test.rafiki' })
-  const alice = PeerInfoFactory.build({ id: 'alice' })
-  const selfPeer = PeerInfoFactory.build({ id: SELF_PEER_ID })
-  const services = RafikiServicesFactory.build({ router }, { peers })
+describe('ILDCP Controller', function () {
+  const alice = PeerAccountFactory.build({ accountId: 'alice' })
+  const self = PeerAccountFactory.build({ accountId: 'self' })
+  const services = RafikiServicesFactory.build({})
+  const middleware = createIldcpProtocolController('test.rafiki')
+
+  function makeContext(prepare: IlpPrepare): RafikiContext {
+    const ctx = createContext<unknown, RafikiContext>()
+    ctx.services = services
+    ctx.accounts = {
+      get incoming() {
+        return alice
+      },
+      get outgoing() {
+        return self
+      }
+    }
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    ctx.request.rawPrepare = serializeIlpPrepare(ctx.request.prepare)
+    return ctx
+  }
 
   beforeAll(async () => {
-    await peers.add(selfPeer)
-    await peers.add(alice)
+    await services.accounts.createAccount(self)
+    await services.accounts.createAccount(alice)
+  })
+
+  test('returns an ildcp response on success', async () => {
+    const ctx = makeContext(
+      IlpPrepareFactory.build({ destination: 'peer.config' })
+    )
+    await expect(middleware(ctx)).resolves.toBeUndefined()
+
+    const reply = deserializeIldcpResponse(
+      ctx.response.rawReply || Buffer.alloc(0)
+    )
+    expect(reply.clientAddress).toEqual('test.alice')
+    expect(reply.assetScale).toEqual(alice.balance.assetScale)
+    expect(reply.assetCode).toEqual(alice.balance.assetCode)
   })
 
   test('throws error if destination is not peer.config', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const prepare = new ZeroCopyIlpPrepare(
-      IlpPrepareFactory.build({ destination: 'peer.config' })
+    const ctx = makeContext(
+      IlpPrepareFactory.build({ destination: 'test.foo' })
     )
-    const ctx = createContext<unknown, RafikiContext>()
-    ctx.services = services
-    ctx.peers = {
-      get incoming() {
-        return peers.get('alice')
-      },
-      get outgoing() {
-        return peers.get(SELF_PEER_ID)
-      }
-    }
-    const middleware = createIldcpProtocolController()
-
-    await expect(middleware(ctx)).resolves.toBeUndefined()
+    await expect(middleware(ctx)).rejects.toThrowError(
+      'Invalid address in ILDCP request'
+    )
   })
 
-  test('throws error if peer relation is not a child')
-
-  test('sets the reply as an ildcp serve response')
+  test('returns an ildcp response if incoming account is not a peer', async () => {
+    const bob = await services.accounts.createAccount(
+      AccountFactory.build({ accountId: 'bob' })
+    )
+    const ctx = makeContext(
+      IlpPrepareFactory.build({ destination: 'peer.config' })
+    )
+    ctx.accounts = {
+      get incoming() {
+        return bob
+      },
+      get outgoing() {
+        return self
+      }
+    }
+    await expect(middleware(ctx)).rejects.toThrowError('not a peer account')
+  })
 })

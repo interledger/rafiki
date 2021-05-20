@@ -941,6 +941,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/long", "npm:4.0.1"],
             ["ilp-logger", "npm:1.4.2"],
             ["ilp-packet", "npm:3.1.2"],
+            ["ilp-protocol-ildcp", "npm:2.2.2"],
             ["ilp-protocol-stream", "npm:2.7.0"],
             ["long", "npm:4.0.0"],
             ["oer-utils", "npm:5.1.2"]

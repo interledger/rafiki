@@ -36,7 +36,9 @@ export function createTokenAuthMiddleware(): RafikiMiddleware {
       'Bearer token required in Authorization header'
     )
 
-    ctx.state.account = await ctx.accounts.getAccountByToken(ctx.state.token)
+    ctx.state.account = await ctx.services.accounts.getAccountByToken(
+      ctx.state.token
+    )
     ctx.assert(ctx.state.account, 401, 'Access Denied - Invalid Token')
 
     await next()

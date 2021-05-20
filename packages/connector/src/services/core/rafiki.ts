@@ -123,20 +123,16 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
   }
 }
 
-interface RafikiCreateAppServices extends RafikiServices {
-  // TODO(build): don't support passing middleware
-  auth: RafikiMiddleware<AuthState>
-}
-
-export function createApp(
-  { auth, accounts, logger }: Partial<RafikiCreateAppServices>
-): Rafiki {
+export function createApp({
+  accounts,
+  logger
+}: Partial<RafikiServices>): Rafiki {
   const app = new Rafiki({
     accounts,
     logger
   })
 
-  if (auth) app.use(auth)
+  app.use(createTokenAuthMiddleware())
   app.useIlp()
 
   return app

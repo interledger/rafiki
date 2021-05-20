@@ -2,7 +2,7 @@ import { Errors } from 'ilp-packet'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import {
   IlpPrepareFactory,
-  PeerFactory,
+  PeerAccountFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createContext, TokenBucket } from '../../utils'
@@ -15,20 +15,20 @@ const { InsufficientLiquidityError } = Errors
 
 describe('Incoming Throughput Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerFactory.build({
-    id: 'alice',
+  const alice = PeerAccountFactory.build({
+    accountId: 'alice',
     incomingThroughputLimit: BigInt(10),
     incomingThroughputLimitRefillPeriod: 10000
   })
-  const bob = PeerFactory.build({ id: 'bob' })
+  const bob = PeerAccountFactory.build({ accountId: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
-  ctx.peers = {
+  ctx.accounts = {
     get incoming() {
-      return Promise.resolve(alice)
+      return alice
     },
     get outgoing() {
-      return Promise.resolve(bob)
+      return bob
     }
   }
 
@@ -74,12 +74,12 @@ describe('Incoming Throughput Middleware', function () {
     const prepare = IlpPrepareFactory.build({ amount: '10' })
     const next = jest.fn()
     const takeSpy = jest.spyOn(TokenBucket.prototype, 'take')
-    ctx.peers = {
+    ctx.accounts = {
       get incoming() {
-        return Promise.resolve(bob)
+        return bob
       },
       get outgoing() {
-        return Promise.resolve(alice)
+        return alice
       }
     }
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -94,20 +94,20 @@ describe('Incoming Throughput Middleware', function () {
 
 describe('Outgoing Throughput Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerFactory.build({ id: 'alice' })
-  const bob = PeerFactory.build({
-    id: 'bob',
+  const alice = PeerAccountFactory.build({ accountId: 'alice' })
+  const bob = PeerAccountFactory.build({
+    accountId: 'bob',
     outgoingThroughputLimit: BigInt(10),
     outgoingThroughputLimitRefillPeriod: 10000
   })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
-  ctx.peers = {
+  ctx.accounts = {
     get incoming() {
-      return Promise.resolve(alice)
+      return alice
     },
     get outgoing() {
-      return Promise.resolve(bob)
+      return bob
     }
   }
 
@@ -153,12 +153,12 @@ describe('Outgoing Throughput Middleware', function () {
     const prepare = IlpPrepareFactory.build({ amount: '10' })
     const next = jest.fn()
     const takeSpy = jest.spyOn(TokenBucket.prototype, 'take')
-    ctx.peers = {
+    ctx.accounts = {
       get incoming() {
-        return Promise.resolve(bob)
+        return bob
       },
       get outgoing() {
-        return Promise.resolve(alice)
+        return alice
       }
     }
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)

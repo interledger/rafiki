@@ -37,7 +37,7 @@ const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
 /**
  * Connector variables
  */
-const PREFIX = process.env.PREFIX || 'test'
+//const PREFIX = process.env.PREFIX || 'test'
 const ILP_ADDRESS = process.env.ILP_ADDRESS || undefined
 const PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
 const STREAM_SECRET = process.env.STREAM_SECRET
