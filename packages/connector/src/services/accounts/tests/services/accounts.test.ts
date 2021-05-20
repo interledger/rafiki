@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid'
 import { AccountsService } from '../../services/accounts'
 import { toLiquidityIds, toSettlementIds, uuidToBigInt } from '../../utils'
 import { createTestApp, TestContainer } from '../helpers/app'
-import { Account, AppServices, Config } from '../..'
+import { Account, AppServices, Config, InvalidAssetError } from '../..'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
@@ -90,7 +90,6 @@ describe('Accounts Service', (): void => {
       const account = {
         accountId,
         disabled: false,
-        parentAccountId: uuid(),
         asset: randomAsset(),
         maxPacketAmount: BigInt(100),
         http: {
@@ -123,6 +122,51 @@ describe('Accounts Service', (): void => {
         expect(balance.credit_reserved).toEqual(BigInt(0))
         expect(balance.credit_accepted).toEqual(BigInt(0))
       })
+    })
+
+    test('Cannot create an account with non-existent parent', async (): Promise<void> => {
+      const parentAccountId = uuid()
+      const asset = randomAsset()
+      const account = {
+        accountId: uuid(),
+        disabled: false,
+        asset,
+        maxPacketAmount: BigInt(100),
+        parentAccountId
+      }
+
+      await expect(accounts.createAccount(account)).rejects.toThrowError(
+        new AccountNotFoundError(parentAccountId)
+      )
+
+      await accounts.createAccount({
+        accountId: parentAccountId,
+        disabled: false,
+        asset,
+        maxPacketAmount: BigInt(100)
+      })
+
+      await accounts.createAccount(account)
+    })
+
+    test('Cannot create an account with different asset than parent', async (): Promise<void> => {
+      const { accountId: parentAccountId } = await accounts.createAccount({
+        accountId: uuid(),
+        disabled: false,
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+
+      const asset = randomAsset()
+      await expect(
+        accounts.createAccount({
+          accountId: uuid(),
+          disabled: false,
+          asset,
+          maxPacketAmount: BigInt(100),
+          parentAccountId
+        })
+      ).rejects.toThrowError(new InvalidAssetError(asset.code, asset.scale))
     })
 
     test('Cannot create an account with duplicate incoming tokens', async (): Promise<void> => {

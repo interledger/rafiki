@@ -3,6 +3,7 @@ import { Logger } from 'pino'
 import { v4 as uuid } from 'uuid'
 import { Client, CommitFlags, CreateTransferFlags } from 'tigerbeetle-node'
 
+import { InvalidAssetError } from '../errors'
 import { Account, Token } from '../models'
 import { BalanceIds } from '../types'
 import {
@@ -199,6 +200,20 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async createAccount(account: IlpAccount): Promise<IlpAccount> {
+    if (account.parentAccountId) {
+      const parentAccount = await Account.query().findById(
+        account.parentAccountId
+      )
+      if (!parentAccount) {
+        throw new AccountNotFoundError(account.parentAccountId)
+      } else if (
+        account.asset.code !== parentAccount.assetCode ||
+        account.asset.scale !== parentAccount.assetScale
+      ) {
+        throw new InvalidAssetError(account.asset.code, account.asset.scale)
+      }
+    }
+
     const balanceId = uuid()
     const debtBalanceId = uuid()
     const trustlineBalanceId = uuid()
