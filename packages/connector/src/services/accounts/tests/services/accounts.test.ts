@@ -5,7 +5,13 @@ import { Model, UniqueViolationError } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { AccountsService } from '../../services/accounts'
-import { toLiquidityIds, toSettlementIds, uuidToBigInt } from '../../utils'
+import {
+  toLiquidityId,
+  toSettlementId,
+  toSettlementCreditId,
+  toSettlementLoanId,
+  uuidToBigInt
+} from '../../utils'
 import { createTestApp, TestContainer } from '../helpers/app'
 import { Account, AppServices, Config, InvalidAssetError } from '../..'
 import { IocContract } from '@adonisjs/fold'
@@ -169,6 +175,59 @@ describe('Accounts Service', (): void => {
       ).rejects.toThrowError(new InvalidAssetError(asset.code, asset.scale))
     })
 
+    test("Auto-creates parent account's credit and loan balances", async (): Promise<void> => {
+      const { accountId: parentAccountId, asset } = await accounts.createAccount({
+        accountId: uuid(),
+        disabled: false,
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+
+      {
+        const {
+          creditBalanceId,
+          loanBalanceId
+        } = await Account.query()
+          .findById(parentAccountId)
+          .select('creditBalanceId', 'loanBalanceId')
+        expect(creditBalanceId).toBeNull()
+        expect(loanBalanceId).toBeNull()
+      }
+
+      await accounts.createAccount({
+        accountId: uuid(),
+        disabled: false,
+        asset,
+        maxPacketAmount: BigInt(100),
+        parentAccountId
+      })
+
+      {
+        const {
+          creditBalanceId,
+          loanBalanceId
+        } = await Account.query()
+          .findById(parentAccountId)
+          .select('creditBalanceId', 'loanBalanceId')
+        expect(creditBalanceId).not.toBeNull()
+        expect(loanBalanceId).not.toBeNull()
+
+        if (creditBalanceId && loanBalanceId) {
+          const balances = await appContainer.tigerbeetle.lookupAccounts([
+            uuidToBigInt(creditBalanceId),
+            uuidToBigInt(loanBalanceId)
+          ])
+          expect(balances.length).toBe(2)
+          balances.forEach((balance) => {
+            expect(balance.credit_reserved).toEqual(BigInt(0))
+            expect(balance.credit_accepted).toEqual(BigInt(0))
+          })
+        } else {
+          fail()
+        }
+      }
+    })
+
     test('Cannot create an account with duplicate incoming tokens', async (): Promise<void> => {
       const accountId = uuid()
       const incomingToken = uuid()
@@ -255,8 +314,10 @@ describe('Accounts Service', (): void => {
 
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          ...Object.values(toLiquidityIds(asset.code, asset.scale)),
-          ...Object.values(toSettlementIds(asset.code, asset.scale))
+          toLiquidityId(asset.code, asset.scale),
+          toSettlementId(asset.code, asset.scale),
+          toSettlementCreditId(asset.code, asset.scale),
+          toSettlementLoanId(asset.code, asset.scale)
         ])
         expect(balances.length).toBe(0)
       }
@@ -264,10 +325,12 @@ describe('Accounts Service', (): void => {
       await accounts.createAccount(account)
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          ...Object.values(toLiquidityIds(asset.code, asset.scale)),
-          ...Object.values(toSettlementIds(asset.code, asset.scale))
+          toLiquidityId(asset.code, asset.scale),
+          toSettlementId(asset.code, asset.scale),
+          toSettlementCreditId(asset.code, asset.scale),
+          toSettlementLoanId(asset.code, asset.scale)
         ])
-        expect(balances.length).toBe(6)
+        expect(balances.length).toBe(4)
         balances.forEach((balance) => {
           expect(balance.credit_reserved).toEqual(BigInt(0))
           expect(balance.credit_accepted).toEqual(BigInt(0))
@@ -281,31 +344,60 @@ describe('Accounts Service', (): void => {
 
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          ...Object.values(toLiquidityIds(asset.code, asset.scale)),
-          ...Object.values(toSettlementIds(asset.code, asset.scale))
+          toLiquidityId(asset.code, asset.scale),
+          toSettlementId(asset.code, asset.scale),
+          toSettlementCreditId(asset.code, asset.scale),
+          toSettlementLoanId(asset.code, asset.scale)
         ])
-        expect(balances.length).toBe(6)
+        expect(balances.length).toBe(4)
       }
     })
   })
 
   describe('Get Account Balance', (): void => {
     test("Can retrieve an account's balance", async (): Promise<void> => {
-      const { accountId } = await accounts.createAccount({
+      const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
         disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       })
-      const balance = await accounts.getAccountBalance(accountId)
-      expect(balance).toEqual({
-        id: accountId,
-        balance: BigInt(0),
-        parent: {
-          availableCreditLine: BigInt(0),
-          totalBorrowed: BigInt(0)
-        }
+
+      {
+        const balance = await accounts.getAccountBalance(accountId)
+        expect(balance).toEqual({
+          id: accountId,
+          balance: BigInt(0),
+          parent: {
+            availableCreditLine: BigInt(0),
+            totalBorrowed: BigInt(0)
+          }
+        })
+      }
+
+      await accounts.createAccount({
+        accountId: uuid(),
+        disabled: false,
+        asset,
+        maxPacketAmount: BigInt(100),
+        parentAccountId: accountId
       })
+
+      {
+        const balance = await accounts.getAccountBalance(accountId)
+        expect(balance).toEqual({
+          id: accountId,
+          balance: BigInt(0),
+          children: {
+            availableCredit: BigInt(0),
+            totalLent: BigInt(0)
+          },
+          parent: {
+            availableCreditLine: BigInt(0),
+            totalBorrowed: BigInt(0)
+          }
+        })
+      }
     })
   })
 

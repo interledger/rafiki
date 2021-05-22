@@ -1,46 +1,48 @@
-import { BalanceIds } from '../types'
-
 const LIQUIDITY_ID_PREFIX = '6c69717569646974793a' // 'liquidity:'
-const SETTLEMENT_ID_PREFIX = '736574746c656d656e743a' // 'settlement:'
+const SETTLEMENT_ID_PREFIX = '736574746c653a' // 'settle:'
 
-const REAL_ID_CODE = '' // 'real:'
-const DEBT_ID_CODE = '' // 'debt:'
-const TRUSTLINE_ID_CODE = '' // 'trust:'
+const REAL_ID_CODE = '7265616c3a' // 'real:'
+const CREDIT_ID_CODE = '637265643a' // 'cred:'
+const LOAN_ID_CODE = '6c6f616e3a' // 'loan:'
 
-export function toLiquidityIds(
-  assetCode: string,
-  assetScale: number
-): BalanceIds {
+export function toLiquidityId(assetCode: string, assetScale: number): bigint {
   const assetCodeHex = Buffer.from(assetCode).toString('hex')
-  return {
-    id: BigInt(
-      `0x${LIQUIDITY_ID_PREFIX}${REAL_ID_CODE}${assetCodeHex}${assetScale}`
-    ),
-    debtId: BigInt(
-      `0x${LIQUIDITY_ID_PREFIX}${DEBT_ID_CODE}${assetCodeHex}${assetScale}`
-    ),
-    trustlineId: BigInt(
-      `0x${LIQUIDITY_ID_PREFIX}${TRUSTLINE_ID_CODE}${assetCodeHex}${assetScale}`
-    )
-  }
+  return BigInt(
+    `0x${LIQUIDITY_ID_PREFIX}${assetCodeHex}${assetScale.toString(16)}`
+  )
 }
 
-export function toSettlementIds(
+export function toSettlementId(assetCode: string, assetScale: number): bigint {
+  const assetCodeHex = Buffer.from(assetCode).toString('hex')
+  return BigInt(
+    `0x${SETTLEMENT_ID_PREFIX}${REAL_ID_CODE}${assetCodeHex}${assetScale.toString(
+      16
+    )}`
+  )
+}
+
+export function toSettlementCreditId(
   assetCode: string,
   assetScale: number
-): BalanceIds {
+): bigint {
   const assetCodeHex = Buffer.from(assetCode).toString('hex')
-  return {
-    id: BigInt(
-      `0x${SETTLEMENT_ID_PREFIX}${REAL_ID_CODE}${assetCodeHex}${assetScale}`
-    ),
-    debtId: BigInt(
-      `0x${SETTLEMENT_ID_PREFIX}${DEBT_ID_CODE}${assetCodeHex}${assetScale}`
-    ),
-    trustlineId: BigInt(
-      `0x${SETTLEMENT_ID_PREFIX}${TRUSTLINE_ID_CODE}${assetCodeHex}${assetScale}`
-    )
-  }
+  return BigInt(
+    `0x${SETTLEMENT_ID_PREFIX}${CREDIT_ID_CODE}${assetCodeHex}${assetScale.toString(
+      16
+    )}`
+  )
+}
+
+export function toSettlementLoanId(
+  assetCode: string,
+  assetScale: number
+): bigint {
+  const assetCodeHex = Buffer.from(assetCode).toString('hex')
+  return BigInt(
+    `0x${SETTLEMENT_ID_PREFIX}${LOAN_ID_CODE}${assetCodeHex}${assetScale.toString(
+      16
+    )}`
+  )
 }
 
 export function uuidToBigInt(id: string): bigint {

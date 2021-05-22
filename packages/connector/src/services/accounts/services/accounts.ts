@@ -5,11 +5,12 @@ import { Client, CommitFlags, CreateTransferFlags } from 'tigerbeetle-node'
 
 import { InvalidAssetError } from '../errors'
 import { Account, Token } from '../models'
-import { BalanceIds } from '../types'
 import {
   getNetBalance,
-  toLiquidityIds,
-  toSettlementIds,
+  toLiquidityId,
+  toSettlementId,
+  toSettlementCreditId,
+  toSettlementLoanId,
   uuidToBigInt
 } from '../utils'
 
@@ -28,10 +29,6 @@ const CUSTOM_FIELDS = {
   custom_1: BigInt(0),
   custom_2: BigInt(0),
   custom_3: BigInt(0)
-}
-
-export interface BalanceOptions extends BalanceIds {
-  unit: bigint
 }
 
 function toIlpAccount(accountRow: Account): IlpAccount {
@@ -77,12 +74,21 @@ function toIlpAccount(accountRow: Account): IlpAccount {
   return account
 }
 
-function toAccountRow(
-  account: IlpAccount,
-  balanceId: string,
-  debtBalanceId: string,
+function toAccountRow({
+  account,
+  balanceId,
+  debtBalanceId,
+  trustlineBalanceId,
+  loanBalanceId,
+  creditBalanceId
+}: {
+  account: IlpAccount
+  balanceId: string
+  debtBalanceId: string
   trustlineBalanceId: string
-) {
+  loanBalanceId?: string
+  creditBalanceId?: string
+}) {
   return {
     id: account.accountId,
     disabled: account.disabled,
@@ -91,6 +97,8 @@ function toAccountRow(
     balanceId,
     debtBalanceId,
     trustlineBalanceId,
+    loanBalanceId,
+    creditBalanceId,
     parentAccountId: account.parentAccountId,
     maxPacketAmount: account.maxPacketAmount,
     incomingEndpoint: account.http && account.http.incoming.endpoint,
@@ -165,10 +173,10 @@ export class AccountsService implements ConnectorAccountsService {
           {
             id: sourceTransferId,
             debit_account_id: uuidToBigInt(sourceAccount.balanceId),
-            credit_account_id: toLiquidityIds(
+            credit_account_id: toLiquidityId(
               sourceAccount.assetCode,
               sourceAccount.assetScale
-            ).id,
+            ),
             amount: sourceAmount,
             ...CUSTOM_FIELDS,
             flags: BigInt(0),
@@ -176,10 +184,10 @@ export class AccountsService implements ConnectorAccountsService {
           },
           {
             id: destinationTransferId,
-            debit_account_id: toLiquidityIds(
+            debit_account_id: toLiquidityId(
               destinationAccount.assetCode,
               destinationAccount.assetScale
-            ).id,
+            ),
             credit_account_id: uuidToBigInt(destinationAccount.balanceId),
             amount: sourceAmount,
             ...CUSTOM_FIELDS,
@@ -200,32 +208,55 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async createAccount(account: IlpAccount): Promise<IlpAccount> {
-    if (account.parentAccountId) {
-      const parentAccount = await Account.query().findById(
-        account.parentAccountId
-      )
-      if (!parentAccount) {
-        throw new AccountNotFoundError(account.parentAccountId)
-      } else if (
-        account.asset.code !== parentAccount.assetCode ||
-        account.asset.scale !== parentAccount.assetScale
-      ) {
-        throw new InvalidAssetError(account.asset.code, account.asset.scale)
-      }
-    }
-
-    const balanceId = uuid()
-    const debtBalanceId = uuid()
-    const trustlineBalanceId = uuid()
-    await this.createBalances({
-      id: uuidToBigInt(balanceId),
-      debtId: uuidToBigInt(debtBalanceId),
-      trustlineId: uuidToBigInt(trustlineBalanceId),
-      unit: BigInt(account.asset.scale)
-    })
     await transaction(Account, Token, async (Account, Token) => {
+      if (account.parentAccountId) {
+        const parentAccount = await Account.query().findById(
+          account.parentAccountId
+        )
+        if (!parentAccount) {
+          throw new AccountNotFoundError(account.parentAccountId)
+        } else if (
+          account.asset.code !== parentAccount.assetCode ||
+          account.asset.scale !== parentAccount.assetScale
+        ) {
+          throw new InvalidAssetError(account.asset.code, account.asset.scale)
+        }
+        if (!parentAccount.loanBalanceId || !parentAccount.creditBalanceId) {
+          const loanBalanceId = uuid()
+          const creditBalanceId = uuid()
+
+          await this.createBalances(
+            [uuidToBigInt(loanBalanceId), uuidToBigInt(creditBalanceId)],
+            BigInt(account.asset.scale)
+          )
+
+          await Account.query()
+            .patch({
+              creditBalanceId,
+              loanBalanceId
+            })
+            .findById(parentAccount.id)
+        }
+      }
+
+      const balanceId = uuid()
+      const debtBalanceId = uuid()
+      const trustlineBalanceId = uuid()
+      await this.createBalances(
+        [
+          uuidToBigInt(balanceId),
+          uuidToBigInt(debtBalanceId),
+          uuidToBigInt(trustlineBalanceId)
+        ],
+        BigInt(account.asset.scale)
+      )
       await Account.query().insert(
-        toAccountRow(account, balanceId, debtBalanceId, trustlineBalanceId)
+        toAccountRow({
+          account,
+          balanceId,
+          debtBalanceId,
+          trustlineBalanceId
+        })
       )
 
       if (account.http) {
@@ -251,7 +282,9 @@ export class AccountsService implements ConnectorAccountsService {
       }
     })
 
-    await this.createCurrencyBalances(account.asset.code, account.asset.scale)
+    if (!account.parentAccountId) {
+      await this.createCurrencyBalances(account.asset.code, account.asset.scale)
+    }
     return account
   }
 
@@ -276,101 +309,93 @@ export class AccountsService implements ConnectorAccountsService {
         }
       })
       .findById(accountId)
-    const [
-      balance,
-      debtBalance,
-      trustlineBalance
-    ] = await this.client.lookupAccounts([
+      .select(
+        'balanceId',
+        'debtBalanceId',
+        'trustlineBalanceId',
+        'loanBalanceId',
+        'creditBalanceId'
+      )
+
+    const balanceIds = [
       uuidToBigInt(account.balanceId),
       uuidToBigInt(account.debtBalanceId),
       uuidToBigInt(account.trustlineBalanceId)
-    ])
+    ]
+
+    if (account.loanBalanceId && account.creditBalanceId) {
+      balanceIds.push(
+        uuidToBigInt(account.loanBalanceId),
+        uuidToBigInt(account.creditBalanceId)
+      )
+    }
+
+    const [
+      balance,
+      debtBalance,
+      trustlineBalance,
+      loanBalance,
+      creditBalance
+    ] = await this.client.lookupAccounts(balanceIds)
 
     if (!trustlineBalance) {
       throw new AccountNotFoundError(accountId)
     }
 
-    return {
+    const accountBalance: IlpBalance = {
       id: accountId,
       balance: getNetBalance(balance),
-      // children: {
-      //   availableCredit: bigint
-      //   totalLent: bigint
-      // },
       parent: {
         availableCreditLine: getNetBalance(trustlineBalance),
         totalBorrowed: getNetBalance(debtBalance)
       }
     }
+
+    if (loanBalance && creditBalance) {
+      accountBalance.children = {
+        availableCredit: getNetBalance(creditBalance),
+        totalLent: getNetBalance(loanBalance)
+      }
+    }
+
+    return accountBalance
   }
 
   private async createCurrencyBalances(
     assetCode: string,
     assetScale: number
   ): Promise<void> {
-    await this.createBalances({
-      ...toSettlementIds(assetCode, assetScale),
-      unit: BigInt(assetScale)
-    })
-    await this.createBalances({
-      ...toLiquidityIds(assetCode, assetScale),
-      unit: BigInt(assetScale)
-    })
+    await this.createBalances(
+      [
+        toLiquidityId(assetCode, assetScale),
+        toSettlementId(assetCode, assetScale),
+        toSettlementCreditId(assetCode, assetScale),
+        toSettlementLoanId(assetCode, assetScale)
+      ],
+      BigInt(assetScale)
+    )
   }
 
-  private async createBalances({
-    id,
-    debtId,
-    trustlineId,
-    unit
-  }: BalanceOptions): Promise<void> {
-    await this.client.createAccounts([
-      {
-        id,
-        custom: BigInt(0),
-        flags: BigInt(0),
-        unit,
-        debit_accepted: BigInt(0),
-        debit_reserved: BigInt(0),
-        credit_accepted: BigInt(0),
-        credit_reserved: BigInt(0),
-        debit_accepted_limit: BigInt(0),
-        debit_reserved_limit: BigInt(0),
-        credit_accepted_limit: BigInt(0),
-        credit_reserved_limit: BigInt(0),
-        timestamp: 0n
-      },
-      {
-        id: debtId,
-        custom: BigInt(0),
-        flags: BigInt(0),
-        unit,
-        debit_accepted: BigInt(0),
-        debit_reserved: BigInt(0),
-        credit_accepted: BigInt(0),
-        credit_reserved: BigInt(0),
-        debit_accepted_limit: BigInt(0),
-        debit_reserved_limit: BigInt(0),
-        credit_accepted_limit: BigInt(0),
-        credit_reserved_limit: BigInt(0),
-        timestamp: 0n
-      },
-      {
-        id: trustlineId,
-        custom: BigInt(0),
-        flags: BigInt(0),
-        unit,
-        debit_accepted: BigInt(0),
-        debit_reserved: BigInt(0),
-        credit_accepted: BigInt(0),
-        credit_reserved: BigInt(0),
-        debit_accepted_limit: BigInt(0),
-        debit_reserved_limit: BigInt(0),
-        credit_accepted_limit: BigInt(0),
-        credit_reserved_limit: BigInt(0),
-        timestamp: 0n
-      }
-    ])
+  private async createBalances(ids: bigint[], unit: bigint): Promise<void> {
+    await this.client.createAccounts(
+      ids.map((id) => {
+        return {
+          id,
+          custom: BigInt(0),
+          flags: BigInt(0),
+          unit,
+          debit_accepted: BigInt(0),
+          debit_reserved: BigInt(0),
+          credit_accepted: BigInt(0),
+          credit_reserved: BigInt(0),
+          debit_accepted_limit: BigInt(0),
+          debit_reserved_limit: BigInt(0),
+          credit_accepted_limit: BigInt(0),
+          credit_reserved_limit: BigInt(0),
+          timestamp: 0n
+        }
+      })
+    )
   }
 
   public async depositLiquidity(
@@ -380,8 +405,8 @@ export class AccountsService implements ConnectorAccountsService {
   ): Promise<void> {
     await this.createCurrencyBalances(assetCode, assetScale)
     await this.createTransfer(
-      toSettlementIds(assetCode, assetScale).id,
-      toLiquidityIds(assetCode, assetScale).id,
+      toSettlementId(assetCode, assetScale),
+      toLiquidityId(assetCode, assetScale),
       amount
     )
   }
@@ -393,8 +418,8 @@ export class AccountsService implements ConnectorAccountsService {
   ): Promise<void> {
     await this.createCurrencyBalances(assetCode, assetScale)
     await this.createTransfer(
-      toLiquidityIds(assetCode, assetScale).id,
-      toSettlementIds(assetCode, assetScale).id,
+      toLiquidityId(assetCode, assetScale),
+      toSettlementId(assetCode, assetScale),
       amount
     )
   }
@@ -403,14 +428,14 @@ export class AccountsService implements ConnectorAccountsService {
     assetCode: string,
     assetScale: number
   ): Promise<bigint> {
-    return this.getBalance(toLiquidityIds(assetCode, assetScale).id)
+    return this.getBalance(toLiquidityId(assetCode, assetScale))
   }
 
   public async getSettlementBalance(
     assetCode: string,
     assetScale: number
   ): Promise<bigint> {
-    return this.getBalance(toSettlementIds(assetCode, assetScale).id)
+    return this.getBalance(toSettlementId(assetCode, assetScale))
   }
 
   private async getBalance(id: bigint): Promise<bigint> {
@@ -449,7 +474,7 @@ export class AccountsService implements ConnectorAccountsService {
       throw new AccountNotFoundError(accountId)
     }
     await this.createTransfer(
-      toSettlementIds(account.assetCode, account.assetScale).id,
+      toSettlementId(account.assetCode, account.assetScale),
       uuidToBigInt(account.balanceId),
       amount
     )
@@ -462,7 +487,7 @@ export class AccountsService implements ConnectorAccountsService {
     }
     await this.createTransfer(
       uuidToBigInt(account.balanceId),
-      toSettlementIds(account.assetCode, account.assetScale).id,
+      toSettlementId(account.assetCode, account.assetScale),
       amount
     )
   }

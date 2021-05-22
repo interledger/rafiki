@@ -25,6 +25,9 @@ export class Account extends BaseModel {
   public balanceId!: string
   public debtBalanceId!: string
   public trustlineBalanceId!: string
+  public loanBalanceId?: string
+  public creditBalanceId?: string
+
   public parentAccountId?: string
 
   public maxPacketAmount!: bigint

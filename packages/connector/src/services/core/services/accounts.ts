@@ -53,10 +53,10 @@ export interface IlpAccount {
   maxPacketAmount?: bigint
 }
 
-// interface IlpBalanceChildren {
-//   availableCredit: bigint
-//   totalLent: bigint
-// }
+interface IlpBalanceChildren {
+  availableCredit: bigint
+  totalLent: bigint
+}
 
 interface IlpBalanceParent {
   availableCreditLine: bigint
@@ -66,6 +66,6 @@ interface IlpBalanceParent {
 export interface IlpBalance {
   id: string
   balance: bigint
-  // children: IlpBalanceChildren
+  children?: IlpBalanceChildren
   parent?: IlpBalanceParent
 }
