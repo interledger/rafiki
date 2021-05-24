@@ -29,8 +29,8 @@ beforeEach(async () => {
   ctx.response.fulfill = undefined
   ctx.response.reject = undefined
 
-  aliceAccount.balance.current = 0n
-  bobAccount.balance.current = 0n
+  aliceAccount.balance = 0n
+  bobAccount.balance = 0n
 
   await accounts.createAccount(aliceAccount)
   await accounts.createAccount(bobAccount)
@@ -49,10 +49,10 @@ describe('Balance Middleware', function () {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(
-      (await accounts.getAccount(aliceAccount.accountId)).balance.current
+      (await accounts.getAccountBalance(aliceAccount.accountId)).balance
     ).toEqual(BigInt(-100))
     expect(
-      (await accounts.getAccount(bobAccount.accountId)).balance.current
+      (await accounts.getAccountBalance(bobAccount.accountId)).balance
     ).toEqual(BigInt(100))
   })
 
@@ -67,10 +67,10 @@ describe('Balance Middleware', function () {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(
-      (await accounts.getAccount(aliceAccount.accountId)).balance.current
+      (await accounts.getAccountBalance(aliceAccount.accountId)).balance
     ).toEqual(BigInt(0))
     expect(
-      (await accounts.getAccount(bobAccount.accountId)).balance.current
+      (await accounts.getAccountBalance(bobAccount.accountId)).balance
     ).toEqual(BigInt(0))
   })
 
@@ -86,10 +86,10 @@ describe('Balance Middleware', function () {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(
-      (await accounts.getAccount(aliceAccount.accountId)).balance.current
+      (await accounts.getAccountBalance(aliceAccount.accountId)).balance
     ).toEqual(BigInt(0))
     expect(
-      (await accounts.getAccount(bobAccount.accountId)).balance.current
+      (await accounts.getAccountBalance(bobAccount.accountId)).balance
     ).toEqual(BigInt(0))
     expect(adjustBalancesSpy).toHaveBeenCalledTimes(0)
   })

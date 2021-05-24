@@ -1,7 +1,14 @@
-import { AccountsService, IlpAccount, AdjustmentOptions } from '../../services'
+import {
+  AccountsService,
+  IlpAccount,
+  AdjustmentOptions,
+  IlpBalance
+} from '../../services'
+
+type MockIlpAccount = IlpAccount & { balance: bigint }
 
 export class MockAccountsService implements AccountsService {
-  private accounts: Map<string, IlpAccount> = new Map()
+  private accounts: Map<string, MockIlpAccount> = new Map()
 
   getAccount(accountId: string): Promise<IlpAccount> {
     const account = this.accounts.get(accountId)
@@ -16,10 +23,9 @@ export class MockAccountsService implements AccountsService {
     const account = this.find((account) => {
       const { routing } = account
       if (!routing) return false
-      return (
-        routing.ilpAddress === destinationAddress ||
-        routing.prefixes.some((prefix) => destinationAddress.startsWith(prefix))
-      )
+      return destinationAddress.startsWith(routing.staticIlpAddress)
+      //routing.staticIlpAddress === destinationAddress ||
+      //routing.prefixes.some((prefix) => destinationAddress.startsWith(prefix))
     })
     if (account) {
       return account
@@ -30,30 +36,40 @@ export class MockAccountsService implements AccountsService {
 
   async getAccountByToken(token: string): Promise<IlpAccount | null> {
     return this.find(
-      (account) => !!account.http?.incomingTokens.includes(token)
+      (account) => !!account.http?.incoming.authTokens.includes(token)
     )
   }
 
-  async createAccount(account: IlpAccount): Promise<IlpAccount> {
+  async getAccountBalance(accountId: string): Promise<IlpBalance> {
+    const account = this.accounts.get(accountId)
+    if (!account) throw new Error('account not found')
+    return {
+      balance: account.balance
+    }
+  }
+
+  async createAccount(account: MockIlpAccount): Promise<IlpAccount> {
     this.accounts.set(account.accountId, account)
     return account
   }
 
   async adjustBalances(options: AdjustmentOptions): Promise<void> {
-    const src = await this.getAccount(options.sourceAccountId)
-    const dst = await this.getAccount(options.destinationAccountId)
-    if (src.balance.assetCode !== dst.balance.assetCode)
+    const src = this.accounts.get(options.sourceAccountId)
+    const dst = this.accounts.get(options.destinationAccountId)
+    if (!src) throw new Error('src not found')
+    if (!dst) throw new Error('dst not found')
+    if (src.asset.code !== dst.asset.code)
       throw new Error('asset code mismatch')
-    if (src.balance.assetScale !== dst.balance.assetScale)
+    if (src.asset.scale !== dst.asset.scale)
       throw new Error('asset scale mismatch')
 
-    src.balance.current -= options.sourceAmount
+    src.balance -= options.sourceAmount
     options.callback({
       commit: async () => {
-        dst.balance.current += options.sourceAmount
+        dst.balance += options.sourceAmount
       },
       rollback: async () => {
-        src.balance.current += options.sourceAmount
+        src.balance += options.sourceAmount
       }
     })
   }

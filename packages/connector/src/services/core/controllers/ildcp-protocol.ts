@@ -1,6 +1,5 @@
 import { serve as ildcpServe } from 'ilp-protocol-ildcp'
 import { Errors } from 'ilp-packet'
-//import { SELF_PEER_ID } from '../constants'
 import { RafikiContext } from '../rafiki'
 
 /**
@@ -23,13 +22,13 @@ export function createIldcpProtocolController(serverAddress: string) {
       throw new Errors.UnreachableError('not a peer account')
     }
 
-    const clientAddress = routing.ilpAddress
-    if (!clientAddress) {
-      logger.warn('received ILDCP request for peer without an address', {
-        peerId: incoming.accountId
-      })
-      ctx.throw('ILDCP request from peer without configured address')
-    }
+    const clientAddress = routing.staticIlpAddress
+    //if (!clientAddress) {
+    //  logger.warn('received ILDCP request for peer without an address', {
+    //    peerId: incoming.accountId
+    //  })
+    //  ctx.throw('ILDCP request from peer without configured address')
+    //}
 
     // TODO: Ensure we get at least length > 0
     //const serverAddress = router.getAddresses(SELF_PEER_ID)[0]
@@ -46,8 +45,8 @@ export function createIldcpProtocolController(serverAddress: string) {
       handler: () =>
         Promise.resolve({
           clientAddress,
-          assetScale: incoming.balance.assetScale,
-          assetCode: incoming.balance.assetCode
+          assetScale: incoming.asset.scale,
+          assetCode: incoming.asset.code
         }),
       serverAddress
     })

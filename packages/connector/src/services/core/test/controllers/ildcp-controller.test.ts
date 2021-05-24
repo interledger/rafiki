@@ -48,8 +48,8 @@ describe('ILDCP Controller', function () {
       ctx.response.rawReply || Buffer.alloc(0)
     )
     expect(reply.clientAddress).toEqual('test.alice')
-    expect(reply.assetScale).toEqual(alice.balance.assetScale)
-    expect(reply.assetCode).toEqual(alice.balance.assetCode)
+    expect(reply.assetScale).toEqual(alice.asset.scale)
+    expect(reply.assetCode).toEqual(alice.asset.code)
   })
 
   test('throws error if destination is not peer.config', async () => {

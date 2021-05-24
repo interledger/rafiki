@@ -17,8 +17,11 @@ export type TransferOptions = TransferBySourceAmount | TransferByDestinationAmou
 
 export interface AccountsService {
   getAccount(accountId: string): Promise<IlpAccount>
-  getAccountByDestinationAddress(destinationAddress: string): Promise<IlpAccount>
+  getAccountByDestinationAddress(
+    destinationAddress: string
+  ): Promise<IlpAccount>
   getAccountByToken(token: string): Promise<IlpAccount | null>
+  getAccountBalance(accountId: string): Promise<IlpBalance>
   createAccount(account: IlpAccount): Promise<IlpAccount>
   //transferFunds(args: TransferOptions): Promise<Transfer>
   adjustBalances(options: AdjustmentOptions): Promise<void>
@@ -41,12 +44,15 @@ export interface IlpAccount {
   parentAccountId?: string
   disabled: boolean // you can fetch config of disabled account but it will not process packets
 
-  balance: IlpAccountBalance
-  http?: IlpAccountHttp
+  asset: IlpAsset
+  http?: {
+    incoming: IlpAccountHttpIncoming
+    outgoing: IlpAccountHttpOutgoing
+  }
   stream?: IlpAccountStream
   routing?: IlpAccountRouting
 
-  maxPacketAmount?: bigint // TODO?
+  maxPacketAmount?: bigint
   rateLimitRefillPeriod?: number // TODO?
   rateLimitRefillCount?: bigint // TODO?
   rateLimitCapacity?: bigint // TODO?
@@ -58,29 +64,34 @@ export interface IlpAccount {
   outgoingThroughputLimit?: bigint // TODO?
 }
 
-export interface IlpAccountBalance {
-  assetCode: string
-  assetScale: number
-
-  current: bigint
+export interface IlpBalance {
+  //id: string
+  balance: bigint
+  //children?: IlpBalanceChildren
+  //parent: IlpBalanceParent
 }
 
-export interface IlpAccountHttp {
-  incomingTokens: string[]
-  incomingEndpoint: string
+export interface IlpAsset {
+  code: string
+  scale: number
+}
 
-  outgoingToken: string
-  outgoingEndpoint: string
+export interface IlpAccountHttpIncoming {
+  authTokens: string[]
+  endpoint: string
+}
+
+export interface IlpAccountHttpOutgoing {
+  authToken: string
+  endpoint: string
 }
 
 export interface IlpAccountStream {
   enabled: boolean
-  //suffix: string // read-only; ILP suffix for STREAM server receiving
 }
 
 export interface IlpAccountRouting {
-  prefixes: string[] // prefixes that route to this account
-  ilpAddress?: string // ILP address for this account
+  staticIlpAddress: string // ILP address for this account
 }
 
 // TODO: this may not be the best structure

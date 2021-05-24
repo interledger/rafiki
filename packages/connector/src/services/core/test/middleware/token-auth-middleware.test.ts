@@ -49,10 +49,14 @@ describe('Token Auth Middleware', function () {
       const account = PeerAccountFactory.build({
         accountId: 'alice',
         http: {
-          incomingTokens: ['asd123'],
-          incomingEndpoint: Faker.internet.url(),
-          outgoingToken: Faker.datatype.string(32),
-          outgoingEndpoint: Faker.internet.url()
+          incoming: {
+            authTokens: ['asd123'],
+            endpoint: Faker.internet.url()
+          },
+          outgoing: {
+            authToken: Faker.datatype.string(32),
+            endpoint: Faker.internet.url()
+          }
         }
       })
       await ctx.services.accounts.createAccount(account)

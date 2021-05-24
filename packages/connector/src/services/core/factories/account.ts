@@ -5,33 +5,34 @@ import { IlpAccount } from '../services'
 const assetCode = Faker.finance.currencyCode().toString().toUpperCase()
 const assetScale = Faker.datatype.number(6)
 
-export const AccountFactory = Factory.define<IlpAccount>(
+type MockIlpAccount = IlpAccount & { balance: bigint }
+export const AccountFactory = Factory.define<MockIlpAccount>(
   'AccountFactory'
 ).attrs({
   accountId: Faker.datatype.uuid,
   disabled: false,
-  balance: () => ({
-    current: 0n,
-    assetCode,
-    assetScale
-  })
+  asset: { code: assetCode, scale: assetScale },
+  balance: 0n
 })
 
-export const PeerAccountFactory = Factory.define<IlpAccount>(
+export const PeerAccountFactory = Factory.define<MockIlpAccount>(
   'PeerAccountFactory'
 )
   .extend(AccountFactory)
   .attrs({
     http: () => ({
-      incomingTokens: [Faker.datatype.string(32)],
-      incomingEndpoint: Faker.internet.url(),
-      outgoingToken: Faker.datatype.string(32),
-      outgoingEndpoint: Faker.internet.url()
+      incoming: {
+        authTokens: [Faker.datatype.string(32)],
+        endpoint: Faker.internet.url()
+      },
+      outgoing: {
+        authToken: Faker.datatype.string(32),
+        endpoint: Faker.internet.url()
+      }
     })
   })
   .attr('routing', ['accountId'], (id: string) => {
     return {
-      prefixes: [`test.${id}.`],
-      ilpAddress: `test.${id}`
+      staticIlpAddress: `test.${id}`
     }
   })

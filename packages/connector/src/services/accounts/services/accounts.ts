@@ -5,7 +5,8 @@
 import {
   AccountsService as ConnectorAccountsService,
   AdjustmentOptions,
-  IlpAccount
+  IlpAccount,
+  IlpBalance
   //Transaction
 } from '../../core/services/accounts'
 // const { InsufficientLiquidityError } = Errors
@@ -27,6 +28,9 @@ export class AccountsService implements ConnectorAccountsService {
     throw new Error('unimplemented')
   }
   async createAccount(_account: IlpAccount): Promise<IlpAccount> {
+    throw new Error('unimplemented')
+  }
+  async getAccountBalance(_accountId: string): Promise<IlpBalance> {
     throw new Error('unimplemented')
   }
   async adjustBalances(_options: AdjustmentOptions): Promise<void> {
