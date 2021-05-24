@@ -8,8 +8,6 @@ interface StreamControllerOptions {
   serverAddress: string
 }
 
-// If the packet pays into an Open Payments invoice per the encoded paymentTag, the operator should credit that invoice with the delivered amount into its stateful balance system. If the packet is fulfilled, the STREAM server will inform the sender that the amount field of the ILP Prepare was the amount delivered to the recipient, which they will use for their own accounting.
-
 export function createStreamController({
   serverSecret,
   serverAddress
@@ -21,11 +19,7 @@ export function createStreamController({
     ctx: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> {
-    const {
-      //services: { accounts },
-      request,
-      response
-    } = ctx
+    const { request, response } = ctx
 
     const { stream } = ctx.accounts.outgoing
     if (!stream || !stream.enabled) {
