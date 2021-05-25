@@ -16,9 +16,7 @@ const { InsufficientLiquidityError } = Errors
 describe('Incoming Throughput Middleware', function () {
   const services = RafikiServicesFactory.build()
   const alice = PeerAccountFactory.build({
-    accountId: 'alice',
-    incomingThroughputLimit: BigInt(10),
-    incomingThroughputLimitRefillPeriod: 10000
+    accountId: 'alice'
   })
   const bob = PeerAccountFactory.build({ accountId: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
@@ -33,18 +31,26 @@ describe('Incoming Throughput Middleware', function () {
   }
 
   test('throws error if throughput limit exceeded', async () => {
+    const middleware = createIncomingThroughputMiddleware({
+      throughputLimit: BigInt(10),
+      throughputLimitRefillPeriod: 10000
+    })
     Date.now = jest.fn(() => 1434412800000) // June 16, 2015 00:00:00 GMT
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const next = jest.fn()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    const middleware = createIncomingThroughputMiddleware()
 
     await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
       InsufficientLiquidityError
     )
     expect(services.logger.warn).toHaveBeenCalled()
   })
+
   test('allows throughput again after refill period', async () => {
+    const middleware = createIncomingThroughputMiddleware({
+      throughputLimit: BigInt(10),
+      throughputLimitRefillPeriod: 10000
+    })
     const now = 1434412800000
     // first return value for token bucket constructor, subsequent for prepare packets being sent
     Date.now = jest
@@ -56,7 +62,6 @@ describe('Incoming Throughput Middleware', function () {
     const prepare = IlpPrepareFactory.build({ amount: '10' })
     const next = jest.fn()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    const middleware = createIncomingThroughputMiddleware()
 
     // will use up entire throughput limit
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
@@ -70,7 +75,9 @@ describe('Incoming Throughput Middleware', function () {
     // time is 12 seconds after now
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
   })
+
   test('no rate limit bucket is checked if throughput limit is not set', async () => {
+    const middleware = createOutgoingThroughputMiddleware()
     const prepare = IlpPrepareFactory.build({ amount: '10' })
     const next = jest.fn()
     const takeSpy = jest.spyOn(TokenBucket.prototype, 'take')
@@ -83,7 +90,6 @@ describe('Incoming Throughput Middleware', function () {
       }
     }
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    const middleware = createIncomingThroughputMiddleware()
 
     // will use up entire throughput limit
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
@@ -96,9 +102,7 @@ describe('Outgoing Throughput Middleware', function () {
   const services = RafikiServicesFactory.build()
   const alice = PeerAccountFactory.build({ accountId: 'alice' })
   const bob = PeerAccountFactory.build({
-    accountId: 'bob',
-    outgoingThroughputLimit: BigInt(10),
-    outgoingThroughputLimitRefillPeriod: 10000
+    accountId: 'bob'
   })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
@@ -112,18 +116,26 @@ describe('Outgoing Throughput Middleware', function () {
   }
 
   test('throws error if throughput limit exceeded', async () => {
+    const middleware = createOutgoingThroughputMiddleware({
+      throughputLimit: BigInt(10),
+      throughputLimitRefillPeriod: 10000
+    })
     Date.now = jest.fn(() => 1434412800000) // June 16, 2015 00:00:00 GMT
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const next = jest.fn()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    const middleware = createOutgoingThroughputMiddleware()
 
     await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
       InsufficientLiquidityError
     )
     expect(services.logger.warn).toHaveBeenCalled()
   })
+
   test('allows throughput again after refill period', async () => {
+    const middleware = createOutgoingThroughputMiddleware({
+      throughputLimit: BigInt(10),
+      throughputLimitRefillPeriod: 10000
+    })
     const now = 1434412800000
     // first return value for token bucket constructor, subsequent for prepare packets being sent
     Date.now = jest
@@ -135,7 +147,6 @@ describe('Outgoing Throughput Middleware', function () {
     const prepare = IlpPrepareFactory.build({ amount: '10' })
     const next = jest.fn()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    const middleware = createOutgoingThroughputMiddleware()
 
     // will use up entire throughput limit
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
@@ -149,7 +160,9 @@ describe('Outgoing Throughput Middleware', function () {
     // time is 12 seconds after now
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
   })
+
   test('no rate limit bucket is checked if throughput limit is not set', async () => {
+    const middleware = createOutgoingThroughputMiddleware()
     const prepare = IlpPrepareFactory.build({ amount: '10' })
     const next = jest.fn()
     const takeSpy = jest.spyOn(TokenBucket.prototype, 'take')
@@ -162,7 +175,6 @@ describe('Outgoing Throughput Middleware', function () {
       }
     }
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    const middleware = createOutgoingThroughputMiddleware()
 
     // will use up entire throughput limit
     await expect(middleware(ctx, next)).resolves.toBeUndefined()

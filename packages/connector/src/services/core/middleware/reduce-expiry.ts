@@ -2,6 +2,11 @@ import { IlpPrepare, Errors } from 'ilp-packet'
 import { RafikiContext, LoggingService, RafikiMiddleware } from '..'
 const { InsufficientTimeoutError } = Errors
 
+export interface ReduceExpiryMiddlewareOptions {
+  minExpirationWindow?: number
+  maxHoldWindow?: number
+}
+
 /**
  * Calculates a new expiry time for the prepare based on the minimum expiration and maximum hold time windows.
  * @param request The incoming prepare packet
@@ -59,12 +64,14 @@ function getDestinationExpiry(
  * // TODO: Should we reduce the expiry on the packet or just expire the packet?
  * // TODO: Maybe this should be combined with the expiry checker and the expiry timeout?
  */
-export function createOutgoingReduceExpiryMiddleware(): RafikiMiddleware {
+export function createOutgoingReduceExpiryMiddleware({
+  minExpirationWindow,
+  maxHoldWindow
+}: ReduceExpiryMiddlewareOptions): RafikiMiddleware {
   return async (
-    { services: { logger }, request: { prepare }, accounts: { outgoing } }: RafikiContext,
+    { services: { logger }, request: { prepare } }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    const { minExpirationWindow, maxHoldWindow } = outgoing
     // TODO: These values should not be undefined. The defaults should be set in the service
     prepare.expiresAt = getDestinationExpiry(
       prepare,

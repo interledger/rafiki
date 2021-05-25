@@ -59,7 +59,7 @@ const incoming = compose([
   // Incoming Rules
   createIncomingErrorHandlerMiddleware(ILP_ADDRESS),
   createIncomingMaxPacketAmountMiddleware(),
-  createIncomingRateLimitMiddleware(),
+  createIncomingRateLimitMiddleware({}),
   createIncomingThroughputMiddleware()
 ])
 
@@ -70,7 +70,7 @@ const outgoing = compose([
     serverAddress: ILP_ADDRESS
   }),
   createOutgoingThroughputMiddleware(),
-  createOutgoingReduceExpiryMiddleware(),
+  createOutgoingReduceExpiryMiddleware({}),
   createOutgoingExpireMiddleware(),
   createOutgoingValidateFulfillmentMiddleware(),
 

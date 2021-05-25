@@ -16,11 +16,7 @@ describe('Outgoing Reduce Expiry Middleware', function () {
   const now = Date.now()
   const services = RafikiServicesFactory.build()
   const alice = PeerAccountFactory.build({ accountId: 'alice' })
-  const bob = PeerAccountFactory.build({
-    accountId: 'bob',
-    minExpirationWindow: 3000,
-    maxHoldWindow: 31000
-  })
+  const bob = PeerAccountFactory.build({ accountId: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.accounts = {
@@ -31,7 +27,12 @@ describe('Outgoing Reduce Expiry Middleware', function () {
       return bob
     }
   }
-  const middleware = createOutgoingReduceExpiryMiddleware()
+  const minExpirationWindow = 3000
+  const maxHoldWindow = 31000
+  const middleware = createOutgoingReduceExpiryMiddleware({
+    minExpirationWindow,
+    maxHoldWindow
+  })
   test('reduces the expiry time by the minOutgoingExpirationWindow', async () => {
     const originalExpiry = now + 6000
     const prepare = IlpPrepareFactory.build({
@@ -43,7 +44,7 @@ describe('Outgoing Reduce Expiry Middleware', function () {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.request.prepare.expiresAt).toEqual(
-      new Date(originalExpiry - bob.minExpirationWindow!)
+      new Date(originalExpiry - minExpirationWindow)
     )
   })
 
@@ -54,13 +55,13 @@ describe('Outgoing Reduce Expiry Middleware', function () {
     })
     const next = jest.fn()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    const destinationExpiry = originalExpiry - bob.minExpirationWindow!
-    expect(destinationExpiry - now).toBeGreaterThan(bob.maxHoldWindow!)
+    const destinationExpiry = originalExpiry - minExpirationWindow
+    expect(destinationExpiry - now).toBeGreaterThan(maxHoldWindow)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.request.prepare.expiresAt.getTime()).toEqual(
-      new Date(now + bob.maxHoldWindow!).getTime()
+      new Date(now + maxHoldWindow).getTime()
     )
   })
 
@@ -75,15 +76,19 @@ describe('Outgoing Reduce Expiry Middleware', function () {
   })
 
   test('throws error if maxHoldWindow is less than the minOutgoingExpirationWindow', async () => {
+    const minExpirationWindow = 6000
+    const maxHoldWindow = 5000
+    const middleware = createOutgoingReduceExpiryMiddleware({
+      minExpirationWindow,
+      maxHoldWindow
+    })
     const originalExpiry = now + 60000
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(originalExpiry)
     })
     const next = jest.fn()
     const fred = PeerAccountFactory.build({
-      accountId: 'fred',
-      minExpirationWindow: 6000,
-      maxHoldWindow: 5000
+      accountId: 'fred'
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     ctx.accounts = {
@@ -94,8 +99,8 @@ describe('Outgoing Reduce Expiry Middleware', function () {
         return fred
       }
     }
-    const destinationExpiry = originalExpiry - fred.minExpirationWindow!
-    expect(destinationExpiry - now).toBeGreaterThan(fred.maxHoldWindow!) // ensures expiry is capped to maxHoldWindow
+    const destinationExpiry = originalExpiry - minExpirationWindow
+    expect(destinationExpiry - now).toBeGreaterThan(maxHoldWindow) // ensures expiry is capped to maxHoldWindow
 
     await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
       InsufficientTimeoutError

@@ -53,15 +53,6 @@ export interface IlpAccount {
   routing?: IlpAccountRouting
 
   maxPacketAmount?: bigint
-  rateLimitRefillPeriod?: number // TODO?
-  rateLimitRefillCount?: bigint // TODO?
-  rateLimitCapacity?: bigint // TODO?
-  minExpirationWindow?: number // TODO?
-  maxHoldWindow?: number // TODO?
-  incomingThroughputLimitRefillPeriod?: number // TODO?
-  incomingThroughputLimit?: bigint // TODO?
-  outgoingThroughputLimitRefillPeriod?: number // TODO?
-  outgoingThroughputLimit?: bigint // TODO?
 }
 
 export interface IlpBalance {
