@@ -1,10 +1,19 @@
 import { QueryBuilder, raw, transaction, UniqueViolationError } from 'objection'
 import { Logger } from 'pino'
 import { v4 as uuid } from 'uuid'
-import { Client, CommitFlags, CreateTransferFlags } from 'tigerbeetle-node'
+import {
+  Client,
+  CommitFlags,
+  CreateTransferError,
+  CreateTransferFlags
+} from 'tigerbeetle-node'
 
 import { Config } from '../config'
-import { InvalidAssetError } from '../errors'
+import {
+  InvalidAssetError,
+  UnknownAccountError,
+  UnknownBalanceError
+} from '../errors'
 import { Account, Token } from '../models'
 import {
   getNetBalance,
@@ -15,7 +24,6 @@ import {
   uuidToBigInt
 } from '../utils'
 
-import { AccountNotFoundError } from '../../core/errors'
 // import { Errors } from 'ilp-packet'
 import {
   AccountsService as ConnectorAccountsService,
@@ -88,10 +96,12 @@ export class AccountsService implements ConnectorAccountsService {
     destinationAccountId,
     callback
   }: AdjustmentOptions): Promise<void> {
-    const [
-      sourceAccount,
-      destinationAccount
-    ] = await Account.query().findByIds([sourceAccountId, destinationAccountId])
+    const [sourceAccount, destinationAccount] = await Account.query()
+      .findByIds([sourceAccountId, destinationAccountId])
+      .throwIfNotFound()
+    if (!sourceAccount || !destinationAccount) {
+      throw new UnknownAccountError()
+    }
     if (sourceAmount > BigInt(0)) {
       const sourceTransferId = uuidToBigInt(uuid())
       const destinationTransferId = uuidToBigInt(uuid())
@@ -160,13 +170,25 @@ export class AccountsService implements ConnectorAccountsService {
           }
         ])
         if (res.length) {
-          // throw new InsufficientLiquidityError()
+          if (
+            [
+              CreateTransferError.credit_account_not_found,
+              CreateTransferError.debit_account_not_found
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ].includes((res[0] as any).result)
+          ) {
+            console.log('UnknownBalanceError')
+            throw new UnknownBalanceError()
+          }
+          // TODO handle other errors
         }
-
         await callback(tx)
       } catch (error) {
+        this.logger.error({
+          error
+        })
         // Should this rethrow the error?
-        throw error(error)
+        throw error
       }
     }
   }
@@ -174,12 +196,10 @@ export class AccountsService implements ConnectorAccountsService {
   public async createAccount(account: CreateOptions): Promise<IlpAccount> {
     await transaction(Account, Token, async (Account, Token) => {
       if (account.parentAccountId) {
-        const parentAccount = await Account.query().findById(
-          account.parentAccountId
-        )
-        if (!parentAccount) {
-          throw new AccountNotFoundError(account.parentAccountId)
-        } else if (
+        const parentAccount = await Account.query()
+          .findById(account.parentAccountId)
+          .throwIfNotFound()
+        if (
           account.asset.code !== parentAccount.assetCode ||
           account.asset.scale !== parentAccount.assetScale
         ) {
@@ -200,6 +220,7 @@ export class AccountsService implements ConnectorAccountsService {
               loanBalanceId
             })
             .findById(parentAccount.id)
+            .throwIfNotFound()
         }
       }
 
@@ -287,16 +308,15 @@ export class AccountsService implements ConnectorAccountsService {
           throw error
         }
       }
-      const account = await Account.query().patchAndFetchById(
-        accountOptions.accountId,
-        {
+      const account = await Account.query()
+        .patchAndFetchById(accountOptions.accountId, {
           disabled: accountOptions.disabled,
           maxPacketAmount: accountOptions.maxPacketAmount,
           outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
           outgoingToken: accountOptions.http?.outgoing.authToken,
           streamEnabled: accountOptions.stream?.enabled
-        }
-      )
+        })
+        .throwIfNotFound()
       if (accountOptions.http?.incoming?.authTokens) {
         account.incomingTokens = accountOptions.http.incoming.authTokens.map(
           (incomingToken) => {
@@ -312,7 +332,9 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount> {
-    const accountRow = await Account.query().findById(accountId)
+    const accountRow = await Account.query()
+      .findById(accountId)
+      .throwIfNotFound()
     return toIlpAccount(accountRow)
   }
 
@@ -332,6 +354,7 @@ export class AccountsService implements ConnectorAccountsService {
         'loanBalanceId',
         'creditBalanceId'
       )
+      .throwIfNotFound()
 
     const balanceIds = [
       uuidToBigInt(account.balanceId),
@@ -355,7 +378,7 @@ export class AccountsService implements ConnectorAccountsService {
     ] = await this.client.lookupAccounts(balanceIds)
 
     if (!trustlineBalance) {
-      throw new AccountNotFoundError(accountId)
+      throw new UnknownBalanceError()
     }
 
     const accountBalance: IlpBalance = {
@@ -456,10 +479,10 @@ export class AccountsService implements ConnectorAccountsService {
 
   private async getBalance(id: bigint): Promise<bigint> {
     const balances = await this.client.lookupAccounts([id])
-    if (balances.length == 1) {
-      return getNetBalance(balances[0])
+    if (balances.length !== 1) {
+      throw new UnknownBalanceError()
     }
-    return BigInt(0)
+    return getNetBalance(balances[0])
   }
 
   private async createTransfer(
@@ -467,7 +490,7 @@ export class AccountsService implements ConnectorAccountsService {
     destinationBalanceId: bigint,
     amount: bigint
   ): Promise<void> {
-    await this.client.createTransfers([
+    const res = await this.client.createTransfers([
       {
         id: uuidToBigInt(uuid()),
         debit_account_id: sourceBalanceId,
@@ -481,14 +504,24 @@ export class AccountsService implements ConnectorAccountsService {
         timeout: BigInt(0)
       }
     ])
-    // check for error
+
+    if (res.length) {
+      if (
+        [
+          CreateTransferError.credit_account_not_found,
+          CreateTransferError.debit_account_not_found
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ].includes((res[0] as any).result)
+      ) {
+        console.log('UnknownBalanceError')
+        throw new UnknownBalanceError()
+      }
+      // TODO handle other errors
+    }
   }
 
   public async deposit(accountId: string, amount: bigint): Promise<void> {
-    const account = await Account.query().findById(accountId)
-    if (!account) {
-      throw new AccountNotFoundError(accountId)
-    }
+    const account = await Account.query().findById(accountId).throwIfNotFound()
     await this.createTransfer(
       toSettlementId(account.assetCode, account.assetScale),
       uuidToBigInt(account.balanceId),
@@ -497,10 +530,7 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async withdraw(accountId: string, amount: bigint): Promise<void> {
-    const account = await Account.query().findById(accountId)
-    if (!account) {
-      throw new AccountNotFoundError(accountId)
-    }
+    const account = await Account.query().findById(accountId).throwIfNotFound()
     await this.createTransfer(
       uuidToBigInt(account.balanceId),
       toSettlementId(account.assetCode, account.assetScale),

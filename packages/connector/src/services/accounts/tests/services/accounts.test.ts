@@ -18,12 +18,13 @@ import {
   AppServices,
   Config,
   InvalidAssetError,
+  UnknownAccountError,
+  UnknownBalanceError,
   UpdateIlpAccountOptions
 } from '../..'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
-import { AccountNotFoundError } from '../../../core/errors'
 import { CreateOptions, Transaction } from '../../../core/services/accounts'
 
 // Use unique assets as a workaround for not being able to reset
@@ -155,8 +156,8 @@ describe('Accounts Service', (): void => {
         parentAccountId
       }
 
-      await expect(accounts.createAccount(account)).rejects.toThrowError(
-        new AccountNotFoundError(parentAccountId)
+      await expect(accounts.createAccount(account)).rejects.toThrow(
+        UnknownAccountError
       )
 
       await accounts.createAccount({
@@ -371,6 +372,12 @@ describe('Accounts Service', (): void => {
       const retrievedAccount = await accounts.getAccount(account.accountId)
       expect(retrievedAccount).toEqual(account)
     })
+
+    test('Throws for nonexistent account', async (): Promise<void> => {
+      await expect(accounts.getAccount(uuid())).rejects.toThrow(
+        UnknownAccountError
+      )
+    })
   })
 
   describe('Update Account', (): void => {
@@ -421,6 +428,17 @@ describe('Accounts Service', (): void => {
       const account = await accounts.getAccount(accountId)
       expect(account).toEqual(expectedAccount)
     })
+
+    test('Cannot update nonexistent account', async (): Promise<void> => {
+      const updateOptions: UpdateIlpAccountOptions = {
+        accountId: uuid(),
+        disabled: true
+      }
+
+      await expect(accounts.updateAccount(updateOptions)).rejects.toThrow(
+        UnknownAccountError
+      )
+    })
   })
 
   describe('Get Account Balance', (): void => {
@@ -465,6 +483,84 @@ describe('Accounts Service', (): void => {
           }
         })
       }
+    })
+
+    test('Throws for nonexistent account', async (): Promise<void> => {
+      await expect(accounts.getAccountBalance(uuid())).rejects.toThrow(
+        UnknownAccountError
+      )
+    })
+  })
+
+  describe('Get Liquidity Balance', (): void => {
+    test('Can retrieve liquidity account balance', async (): Promise<void> => {
+      const { asset } = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+
+      {
+        const balance = await accounts.getLiquidityBalance(
+          asset.code,
+          asset.scale
+        )
+        expect(balance).toEqual(BigInt(0))
+      }
+
+      const amount = BigInt(10)
+      await accounts.depositLiquidity(asset.code, asset.scale, amount)
+
+      {
+        const balance = await accounts.getLiquidityBalance(
+          asset.code,
+          asset.scale
+        )
+        expect(balance).toEqual(amount)
+      }
+    })
+
+    test('Throws for nonexistent liquidity account', async (): Promise<void> => {
+      const asset = randomAsset()
+      await expect(
+        accounts.getLiquidityBalance(asset.code, asset.scale)
+      ).rejects.toThrow(UnknownBalanceError)
+    })
+  })
+
+  describe('Get Settlement Balance', (): void => {
+    test('Can retrieve settlement account balance', async (): Promise<void> => {
+      const { asset } = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+
+      {
+        const balance = await accounts.getSettlementBalance(
+          asset.code,
+          asset.scale
+        )
+        expect(balance).toEqual(BigInt(0))
+      }
+
+      const amount = BigInt(10)
+      await accounts.depositLiquidity(asset.code, asset.scale, amount)
+
+      {
+        const balance = await accounts.getSettlementBalance(
+          asset.code,
+          asset.scale
+        )
+        expect(balance).toEqual(-amount)
+      }
+    })
+
+    test('Throws for nonexistent settlement account', async (): Promise<void> => {
+      const asset = randomAsset()
+      await expect(
+        accounts.getSettlementBalance(asset.code, asset.scale)
+      ).rejects.toThrow(UnknownBalanceError)
     })
   })
 
@@ -576,8 +672,8 @@ describe('Accounts Service', (): void => {
 
     test("Can't deposit to nonexistent account", async (): Promise<void> => {
       const id = uuid()
-      await expect(accounts.deposit(id, BigInt(5))).rejects.toThrowError(
-        new AccountNotFoundError(id)
+      await expect(accounts.deposit(id, BigInt(5))).rejects.toThrow(
+        UnknownAccountError
       )
     })
   })
@@ -604,8 +700,8 @@ describe('Accounts Service', (): void => {
 
     test("Can't withdraw from nonexistent account", async (): Promise<void> => {
       const id = uuid()
-      await expect(accounts.withdraw(id, BigInt(5))).rejects.toThrowError(
-        new AccountNotFoundError(id)
+      await expect(accounts.withdraw(id, BigInt(5))).rejects.toThrow(
+        UnknownAccountError
       )
     })
 
@@ -706,6 +802,26 @@ describe('Accounts Service', (): void => {
         })
       }
     )
+
+    test('Throws for nonexistent account', async (): Promise<void> => {
+      const { accountId: sourceAccountId } = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+
+      const amount = BigInt(1)
+      await expect(
+        accounts.adjustBalances({
+          sourceAmount: amount,
+          sourceAccountId,
+          destinationAccountId: uuid(),
+          callback: async (trx: Transaction) => {
+            await trx.commit()
+          }
+        })
+      ).rejects.toThrow(UnknownAccountError)
+    })
   })
 
   describe('Account Tokens', (): void => {
