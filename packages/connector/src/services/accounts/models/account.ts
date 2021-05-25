@@ -33,11 +33,10 @@ export class Account extends BaseModel {
   public maxPacketAmount!: bigint
 
   public incomingTokens?: Token[]
-  public incomingEndpoint?: string
   public outgoingToken?: string
   public outgoingEndpoint?: string
 
-  public streamEnabled?: boolean
+  public streamEnabled!: boolean
 
-  public staticIlpAddress?: string // ILP address for this account
+  public staticIlpAddress?: string
 }

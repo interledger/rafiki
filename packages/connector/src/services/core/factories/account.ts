@@ -22,8 +22,7 @@ export const PeerAccountFactory = Factory.define<MockIlpAccount>(
   .attrs({
     http: () => ({
       incoming: {
-        authTokens: [Faker.datatype.string(32)],
-        endpoint: Faker.internet.url()
+        authTokens: [Faker.datatype.string(32)]
       },
       outgoing: {
         authToken: Faker.datatype.string(32),

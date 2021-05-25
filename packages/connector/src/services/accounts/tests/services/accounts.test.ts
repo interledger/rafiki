@@ -72,12 +72,18 @@ describe('Accounts Service', (): void => {
       const accountId = uuid()
       const account = {
         accountId,
-        disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       }
       const createdAccount = await accounts.createAccount(account)
-      expect(createdAccount).toEqual(account)
+      const expectedAccount = {
+        ...account,
+        disabled: false,
+        stream: {
+          enabled: false
+        }
+      }
+      expect(createdAccount).toEqual(expectedAccount)
       const retrievedAccount = await Account.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
         uuidToBigInt(retrievedAccount.balanceId),
@@ -101,7 +107,6 @@ describe('Accounts Service', (): void => {
         http: {
           incoming: {
             authTokens: [uuid()],
-            endpoint: '/incomingEndpoint',
           },
           outgoing: {
             authToken: uuid(),
@@ -112,7 +117,7 @@ describe('Accounts Service', (): void => {
           enabled: true
         },
         routing: {
-          staticIlpAddress: 'g.rafiki/' + accountId
+          staticIlpAddress: 'g.rafiki.' + accountId
         }
       }
       const createdAccount = await accounts.createAccount(account)
@@ -135,7 +140,6 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       const account = {
         accountId: uuid(),
-        disabled: false,
         asset,
         maxPacketAmount: BigInt(100),
         parentAccountId
@@ -158,7 +162,6 @@ describe('Accounts Service', (): void => {
     test('Cannot create an account with different asset than parent', async (): Promise<void> => {
       const { accountId: parentAccountId } = await accounts.createAccount({
         accountId: uuid(),
-        disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       })
@@ -178,7 +181,6 @@ describe('Accounts Service', (): void => {
     test("Auto-creates parent account's credit and loan balances", async (): Promise<void> => {
       const { accountId: parentAccountId, asset } = await accounts.createAccount({
         accountId: uuid(),
-        disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       })
@@ -196,7 +198,6 @@ describe('Accounts Service', (): void => {
 
       await accounts.createAccount({
         accountId: uuid(),
-        disabled: false,
         asset,
         maxPacketAmount: BigInt(100),
         parentAccountId
@@ -233,13 +234,11 @@ describe('Accounts Service', (): void => {
       const incomingToken = uuid()
       const account = {
         accountId,
-        disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100),
         http: {
           incoming: {
-            authTokens: [incomingToken, incomingToken],
-            endpoint: '/incomingEndpoint'
+            authTokens: [incomingToken, incomingToken]
           },
           outgoing: {
             authToken: uuid(),
@@ -261,13 +260,11 @@ describe('Accounts Service', (): void => {
       {
         const account = {
           accountId: uuid(),
-          disabled: false,
           asset: randomAsset(),
           maxPacketAmount: BigInt(100),
           http: {
             incoming: {
-              authTokens: [incomingToken],
-              endpoint: '/incomingEndpoint'
+              authTokens: [incomingToken]
             },
             outgoing: {
               authToken: uuid(),
@@ -281,13 +278,11 @@ describe('Accounts Service', (): void => {
         const accountId = uuid()
         const account = {
           accountId,
-          disabled: false,
           asset: randomAsset(),
           maxPacketAmount: BigInt(100),
           http: {
             incoming: {
-              authTokens: [incomingToken],
-              endpoint: '/incomingEndpoint'
+              authTokens: [incomingToken]
             },
             outgoing: {
               authToken: uuid(),
@@ -307,7 +302,6 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       const account = {
         accountId: uuid(),
-        disabled: false,
         asset,
         maxPacketAmount: BigInt(100)
       }
@@ -358,7 +352,6 @@ describe('Accounts Service', (): void => {
     test("Can retrieve an account's balance", async (): Promise<void> => {
       const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
-        disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       })
@@ -377,7 +370,6 @@ describe('Accounts Service', (): void => {
 
       await accounts.createAccount({
         accountId: uuid(),
-        disabled: false,
         asset,
         maxPacketAmount: BigInt(100),
         parentAccountId: accountId
@@ -493,7 +485,6 @@ describe('Accounts Service', (): void => {
     test('Can deposit to account', async (): Promise<void> => {
       const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
-        disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       })
@@ -520,7 +511,6 @@ describe('Accounts Service', (): void => {
     test('Can withdraw from account', async (): Promise<void> => {
       const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
-        disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       })
@@ -547,7 +537,6 @@ describe('Accounts Service', (): void => {
     test.skip("Can't withdraw more than the balance", async (): Promise<void> => {
       const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
-        disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       })
@@ -572,13 +561,11 @@ describe('Accounts Service', (): void => {
         const asset = randomAsset()
         const { accountId: sourceAccountId } = await accounts.createAccount({
           accountId: uuid(),
-          disabled: false,
           asset,
           maxPacketAmount: BigInt(100)
         })
         const { accountId: destinationAccountId } = await accounts.createAccount({
           accountId: uuid(),
-          disabled: false,
           asset,
           maxPacketAmount: BigInt(100)
         })
@@ -649,13 +636,11 @@ describe('Accounts Service', (): void => {
       const incomingToken = uuid()
       const { accountId } = await accounts.createAccount({
         accountId: uuid(),
-        disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100),
         http: {
           incoming: {
-            authTokens: [incomingToken, uuid()],
-            endpoint: '/incomingEndpoint'
+            authTokens: [incomingToken, uuid()]
           },
           outgoing: {
             authToken: uuid(),

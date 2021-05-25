@@ -39,12 +39,16 @@ function toIlpAccount(accountRow: Account): IlpAccount {
       code: accountRow.assetCode,
       scale: accountRow.assetScale
     },
-    parentAccountId: accountRow.parentAccountId,
-    maxPacketAmount: accountRow.maxPacketAmount
+    maxPacketAmount: accountRow.maxPacketAmount,
+    stream: {
+      enabled: accountRow.streamEnabled
+    }
+  }
+  if (accountRow.parentAccountId) {
+    account.parentAccountId = accountRow.parentAccountId
   }
   if (
     accountRow.incomingTokens &&
-    accountRow.incomingEndpoint &&
     accountRow.outgoingToken &&
     accountRow.outgoingEndpoint
   ) {
@@ -53,17 +57,11 @@ function toIlpAccount(accountRow: Account): IlpAccount {
         authTokens: accountRow.incomingTokens.map(
           (incomingToken) => incomingToken.token
         ),
-        endpoint: accountRow.incomingEndpoint
       },
       outgoing: {
         authToken: accountRow.outgoingToken,
         endpoint: accountRow.outgoingEndpoint
       }
-    }
-  }
-  if (accountRow.streamEnabled) {
-    account.stream = {
-      enabled: accountRow.streamEnabled
     }
   }
   if (accountRow.staticIlpAddress) {
@@ -72,41 +70,6 @@ function toIlpAccount(accountRow: Account): IlpAccount {
     }
   }
   return account
-}
-
-function toAccountRow({
-  account,
-  balanceId,
-  debtBalanceId,
-  trustlineBalanceId,
-  loanBalanceId,
-  creditBalanceId
-}: {
-  account: IlpAccount
-  balanceId: string
-  debtBalanceId: string
-  trustlineBalanceId: string
-  loanBalanceId?: string
-  creditBalanceId?: string
-}) {
-  return {
-    id: account.accountId,
-    disabled: account.disabled,
-    assetCode: account.asset.code,
-    assetScale: account.asset.scale,
-    balanceId,
-    debtBalanceId,
-    trustlineBalanceId,
-    loanBalanceId,
-    creditBalanceId,
-    parentAccountId: account.parentAccountId,
-    maxPacketAmount: account.maxPacketAmount,
-    incomingEndpoint: account.http && account.http.incoming.endpoint,
-    outgoingToken: account.http && account.http.outgoing.authToken,
-    outgoingEndpoint: account.http && account.http.outgoing.endpoint,
-    streamEnabled: account.stream && account.stream.enabled,
-    staticIlpAddress: account.routing && account.routing.staticIlpAddress
-  }
 }
 
 export class AccountsService implements ConnectorAccountsService {
@@ -207,7 +170,9 @@ export class AccountsService implements ConnectorAccountsService {
     }
   }
 
-  public async createAccount(account: IlpAccount): Promise<IlpAccount> {
+  public async createAccount(
+    account: IlpAccount
+  ): Promise<IlpAccount> {
     await transaction(Account, Token, async (Account, Token) => {
       if (account.parentAccountId) {
         const parentAccount = await Account.query().findById(
@@ -250,16 +215,23 @@ export class AccountsService implements ConnectorAccountsService {
         ],
         BigInt(account.asset.scale)
       )
-      await Account.query().insert(
-        toAccountRow({
-          account,
-          balanceId,
-          debtBalanceId,
-          trustlineBalanceId
-        })
-      )
+      await Account.query().insert({
+        id: account.accountId,
+        disabled: account.disabled,
+        assetCode: account.asset.code,
+        assetScale: account.asset.scale,
+        balanceId,
+        debtBalanceId,
+        trustlineBalanceId,
+        parentAccountId: account.parentAccountId,
+        maxPacketAmount: account.maxPacketAmount,
+        outgoingEndpoint: account.http?.outgoing.endpoint,
+        outgoingToken: account.http?.outgoing.authToken,
+        streamEnabled: account.stream?.enabled,
+        staticIlpAddress: account.routing?.staticIlpAddress
+      })
 
-      if (account.http) {
+      if (account.http?.incoming.authTokens) {
         try {
           const incomingTokens = account.http.incoming.authTokens.map(
             (incomingToken) => {
@@ -285,7 +257,7 @@ export class AccountsService implements ConnectorAccountsService {
     if (!account.parentAccountId) {
       await this.createCurrencyBalances(account.asset.code, account.asset.scale)
     }
-    return account
+    return this.getAccount(account.accountId)
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount> {

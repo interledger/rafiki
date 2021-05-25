@@ -50,8 +50,7 @@ describe('Token Auth Middleware', function () {
         accountId: 'alice',
         http: {
           incoming: {
-            authTokens: ['asd123'],
-            endpoint: Faker.internet.url()
+            authTokens: ['asd123']
           },
           outgoing: {
             authToken: Faker.datatype.string(32),

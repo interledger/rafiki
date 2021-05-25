@@ -27,7 +27,7 @@ export interface Transaction {
 export interface IlpAccount {
   accountId: string
   parentAccountId?: string
-  disabled: boolean // you can fetch config of disabled account but it will not process packets
+  disabled?: boolean // you can fetch config of disabled account but it will not process packets
 
   asset: {
     code: string
@@ -36,7 +36,6 @@ export interface IlpAccount {
   http?: {
     incoming: {
       authTokens: string[]
-      endpoint: string
     }
     outgoing: {
       authToken: string

@@ -2,7 +2,7 @@ exports.up = function (knex) {
   return knex.schema.createTable('accounts', function (table) {
     table.uuid('id').notNullable().primary()
 
-    table.boolean('disabled').defaultTo(false)
+    table.boolean('disabled').notNullable().defaultTo(false)
 
     table.string('assetCode').notNullable()
     table.integer('assetScale').notNullable()
@@ -17,11 +17,10 @@ exports.up = function (knex) {
 
     table.bigInteger('maxPacketAmount').notNullable()
 
-    table.string('incomingEndpoint').nullable()
     table.string('outgoingToken').nullable()
     table.string('outgoingEndpoint').nullable()
 
-    table.boolean('streamEnabled').nullable()
+    table.boolean('streamEnabled').notNullable().defaultTo(false)
 
     table.string('staticIlpAddress').nullable()
 
