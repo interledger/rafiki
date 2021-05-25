@@ -4,7 +4,6 @@ import { Transaction as KnexTransaction } from 'knex'
 import { Model, UniqueViolationError } from 'objection'
 import { v4 as uuid } from 'uuid'
 
-import { AccountsService } from '../../services/accounts'
 import {
   toLiquidityId,
   toSettlementId,
@@ -13,12 +12,19 @@ import {
   uuidToBigInt
 } from '../../utils'
 import { createTestApp, TestContainer } from '../helpers/app'
-import { Account, AppServices, Config, InvalidAssetError } from '../..'
+import {
+  Account,
+  AccountsService,
+  AppServices,
+  Config,
+  InvalidAssetError,
+  UpdateIlpAccountOptions
+} from '../..'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
 import { AccountNotFoundError } from '../../../core/errors'
-import { Transaction } from '../../../core/services/accounts'
+import { CreateOptions, Transaction } from '../../../core/services/accounts'
 
 // Use unique assets as a workaround for not being able to reset
 // Tigerbeetle between tests
@@ -99,14 +105,14 @@ describe('Accounts Service', (): void => {
 
     test('Can create an account with all settings', async (): Promise<void> => {
       const accountId = uuid()
-      const account = {
+      const account: CreateOptions = {
         accountId,
         disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100),
         http: {
           incoming: {
-            authTokens: [uuid()],
+            authTokens: [uuid()]
           },
           outgoing: {
             authToken: uuid(),
@@ -121,6 +127,8 @@ describe('Accounts Service', (): void => {
         }
       }
       const createdAccount = await accounts.createAccount(account)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      delete account.http!.incoming
       expect(createdAccount).toEqual(account)
       const retrievedAccount = await Account.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
@@ -179,7 +187,10 @@ describe('Accounts Service', (): void => {
     })
 
     test("Auto-creates parent account's credit and loan balances", async (): Promise<void> => {
-      const { accountId: parentAccountId, asset } = await accounts.createAccount({
+      const {
+        accountId: parentAccountId,
+        asset
+      } = await accounts.createAccount({
         accountId: uuid(),
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
@@ -348,6 +359,18 @@ describe('Accounts Service', (): void => {
     })
   })
 
+  describe('Get Account', (): void => {
+    test('Can get an account', async (): Promise<void> => {
+      const account = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+      const retrievedAccount = await accounts.getAccount(account.accountId)
+      expect(retrievedAccount).toEqual(account)
+    })
+  })
+
   describe('Update Account', (): void => {
     test('Can update an account', async (): Promise<void> => {
       const { accountId, asset } = await accounts.createAccount({
@@ -368,7 +391,7 @@ describe('Accounts Service', (): void => {
           enabled: true
         }
       })
-      const updateOptions = {
+      const updateOptions: UpdateIlpAccountOptions = {
         accountId,
         disabled: true,
         maxPacketAmount: BigInt(200),
@@ -385,8 +408,9 @@ describe('Accounts Service', (): void => {
           enabled: false
         }
       }
-
       const updatedAccount = await accounts.updateAccount(updateOptions)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      delete updateOptions.http!.incoming
       const expectedAccount = {
         ...updateOptions,
         asset
@@ -613,7 +637,9 @@ describe('Accounts Service', (): void => {
           asset,
           maxPacketAmount: BigInt(100)
         })
-        const { accountId: destinationAccountId } = await accounts.createAccount({
+        const {
+          accountId: destinationAccountId
+        } = await accounts.createAccount({
           accountId: uuid(),
           asset,
           maxPacketAmount: BigInt(100)

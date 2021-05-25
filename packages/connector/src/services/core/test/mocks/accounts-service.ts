@@ -1,11 +1,12 @@
 import {
   AccountsService,
+  CreateOptions,
   IlpAccount,
   AdjustmentOptions,
   IlpBalance
 } from '../../services'
 
-type MockIlpAccount = IlpAccount & { balance: bigint }
+type MockIlpAccount = CreateOptions & { balance: bigint }
 
 export class MockAccountsService implements AccountsService {
   private accounts: Map<string, MockIlpAccount> = new Map()
@@ -36,7 +37,7 @@ export class MockAccountsService implements AccountsService {
 
   async getAccountByToken(token: string): Promise<IlpAccount | null> {
     return this.find(
-      (account) => !!account.http?.incoming.authTokens.includes(token)
+      (account) => !!account.http?.incoming?.authTokens.includes(token)
     )
   }
 
@@ -75,7 +76,9 @@ export class MockAccountsService implements AccountsService {
     })
   }
 
-  private find(predicate: (account: IlpAccount) => boolean): IlpAccount | null {
+  private find(
+    predicate: (account: MockIlpAccount) => boolean
+  ): IlpAccount | null {
     for (const [, account] of this.accounts) {
       if (predicate(account)) return account
     }

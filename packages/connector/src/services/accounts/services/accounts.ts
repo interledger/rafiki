@@ -19,6 +19,7 @@ import { AccountNotFoundError } from '../../core/errors'
 import {
   AccountsService as ConnectorAccountsService,
   AdjustmentOptions,
+  CreateOptions,
   IlpAccount,
   IlpBalance,
   Transaction
@@ -47,17 +48,8 @@ function toIlpAccount(accountRow: Account): IlpAccount {
   if (accountRow.parentAccountId) {
     account.parentAccountId = accountRow.parentAccountId
   }
-  if (
-    accountRow.incomingTokens &&
-    accountRow.outgoingToken &&
-    accountRow.outgoingEndpoint
-  ) {
+  if (accountRow.outgoingToken && accountRow.outgoingEndpoint) {
     account.http = {
-      incoming: {
-        authTokens: accountRow.incomingTokens.map(
-          (incomingToken) => incomingToken.token
-        ),
-      },
       outgoing: {
         authToken: accountRow.outgoingToken,
         endpoint: accountRow.outgoingEndpoint
@@ -72,7 +64,10 @@ function toIlpAccount(accountRow: Account): IlpAccount {
   return account
 }
 
-export type UpdateIlpAccountOptions = Omit<IlpAccount, "asset" | "parentAccountId">
+export type UpdateIlpAccountOptions = Omit<
+  CreateOptions,
+  'asset' | 'parentAccountId'
+>
 
 export class AccountsService implements ConnectorAccountsService {
   async getAccountByDestinationAddress(
@@ -89,10 +84,10 @@ export class AccountsService implements ConnectorAccountsService {
     destinationAccountId,
     callback
   }: AdjustmentOptions): Promise<void> {
-    const [sourceAccount, destinationAccount] = await Account.query().findByIds([
-      sourceAccountId,
-      destinationAccountId
-    ])
+    const [
+      sourceAccount,
+      destinationAccount
+    ] = await Account.query().findByIds([sourceAccountId, destinationAccountId])
     if (sourceAmount > BigInt(0)) {
       const sourceTransferId = uuidToBigInt(uuid())
       const destinationTransferId = uuidToBigInt(uuid())
@@ -172,9 +167,7 @@ export class AccountsService implements ConnectorAccountsService {
     }
   }
 
-  public async createAccount(
-    account: IlpAccount
-  ): Promise<IlpAccount> {
+  public async createAccount(account: CreateOptions): Promise<IlpAccount> {
     await transaction(Account, Token, async (Account, Token) => {
       if (account.parentAccountId) {
         const parentAccount = await Account.query().findById(
@@ -233,26 +226,26 @@ export class AccountsService implements ConnectorAccountsService {
         staticIlpAddress: account.routing?.staticIlpAddress
       })
 
-      if (account.http?.incoming.authTokens) {
-        try {
-          const incomingTokens = account.http.incoming.authTokens.map(
-            (incomingToken) => {
-              return {
-                accountId: account.accountId,
-                token: incomingToken
-              }
+      try {
+        const incomingTokens = account.http?.incoming?.authTokens.map(
+          (incomingToken) => {
+            return {
+              accountId: account.accountId,
+              token: incomingToken
             }
-          )
-          await Token.query().insert(incomingTokens)
-        } catch (error) {
-          if (error instanceof UniqueViolationError) {
-            this.logger.info({
-              msg: 'duplicate incoming token attempted to be added',
-              account
-            })
           }
-          throw error
+        )
+        if (incomingTokens) {
+          await Token.query().insert(incomingTokens)
         }
+      } catch (error) {
+        if (error instanceof UniqueViolationError) {
+          this.logger.info({
+            msg: 'duplicate incoming token attempted to be added',
+            account
+          })
+        }
+        throw error
       }
     })
 
@@ -266,7 +259,7 @@ export class AccountsService implements ConnectorAccountsService {
     accountOptions: UpdateIlpAccountOptions
   ): Promise<IlpAccount> {
     return transaction(Account, Token, async (Account, Token) => {
-      if (accountOptions.http && accountOptions.http.incoming.authTokens) {
+      if (accountOptions.http?.incoming?.authTokens) {
         await Token.query().delete().where({
           accountId: accountOptions.accountId
         })
@@ -295,14 +288,12 @@ export class AccountsService implements ConnectorAccountsService {
         {
           disabled: accountOptions.disabled,
           maxPacketAmount: accountOptions.maxPacketAmount,
-          outgoingEndpoint:
-            accountOptions.http && accountOptions.http.outgoing.endpoint,
-          outgoingToken:
-            accountOptions.http && accountOptions.http.outgoing.authToken,
-          streamEnabled: accountOptions.stream && accountOptions.stream.enabled
+          outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
+          outgoingToken: accountOptions.http?.outgoing.authToken,
+          streamEnabled: accountOptions.stream?.enabled
         }
       )
-      if (accountOptions.http && accountOptions.http.incoming.authTokens) {
+      if (accountOptions.http?.incoming?.authTokens) {
         account.incomingTokens = accountOptions.http.incoming.authTokens.map(
           (incomingToken) => {
             return {
@@ -317,14 +308,7 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount> {
-    const accountRow = await Account.query()
-      .withGraphJoined('incomingTokens(selectIncomingToken)')
-      .modifiers({
-        selectIncomingToken(builder: QueryBuilder<Token, Token[]>) {
-          builder.select('token')
-        }
-      })
-      .findById(accountId)
+    const accountRow = await Account.query().findById(accountId)
     return toIlpAccount(accountRow)
   }
 
@@ -520,11 +504,8 @@ export class AccountsService implements ConnectorAccountsService {
     )
   }
 
-  public async getAccountByToken(
-    token: string
-  ): Promise<IlpAccount | null> {
+  public async getAccountByToken(token: string): Promise<IlpAccount | null> {
     const account = await Account.query()
-      .select('accounts.id', 'accounts.assetCode', 'accounts.assetScale')
       .withGraphJoined('incomingTokens')
       .where('incomingTokens.token', token)
       .first()

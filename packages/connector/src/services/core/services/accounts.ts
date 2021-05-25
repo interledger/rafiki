@@ -7,7 +7,7 @@ export interface AccountsService {
   ): Promise<IlpAccount>
   getAccountByToken(token: string): Promise<IlpAccount | null>
   getAccountBalance(accountId: string): Promise<IlpBalance>
-  createAccount(account: IlpAccount): Promise<IlpAccount>
+  createAccount(account: CreateOptions): Promise<IlpAccount>
   //transferFunds(args: TransferOptions): Promise<Transfer>
   adjustBalances(options: AdjustmentOptions): Promise<void>
 }
@@ -34,9 +34,6 @@ export interface IlpAccount {
     scale: number
   }
   http?: {
-    incoming: {
-      authTokens: string[]
-    }
     outgoing: {
       authToken: string
       endpoint: string
@@ -50,6 +47,14 @@ export interface IlpAccount {
   }
 
   maxPacketAmount?: bigint
+}
+
+export type CreateOptions = IlpAccount & {
+  http?: {
+    incoming?: {
+      authTokens: string[]
+    }
+  }
 }
 
 interface IlpBalanceChildren {
