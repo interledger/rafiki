@@ -72,6 +72,8 @@ function toIlpAccount(accountRow: Account): IlpAccount {
   return account
 }
 
+export type UpdateIlpAccountOptions = Omit<IlpAccount, "asset" | "parentAccountId">
+
 export class AccountsService implements ConnectorAccountsService {
   async getAccountByDestinationAddress(
     _destinationAddress: string
@@ -258,6 +260,60 @@ export class AccountsService implements ConnectorAccountsService {
       await this.createCurrencyBalances(account.asset.code, account.asset.scale)
     }
     return this.getAccount(account.accountId)
+  }
+
+  public async updateAccount(
+    accountOptions: UpdateIlpAccountOptions
+  ): Promise<IlpAccount> {
+    return transaction(Account, Token, async (Account, Token) => {
+      if (accountOptions.http && accountOptions.http.incoming.authTokens) {
+        await Token.query().delete().where({
+          accountId: accountOptions.accountId
+        })
+        try {
+          const incomingTokens = accountOptions.http.incoming.authTokens.map(
+            (incomingToken) => {
+              return {
+                accountId: accountOptions.accountId,
+                token: incomingToken
+              }
+            }
+          )
+          await Token.query().insert(incomingTokens)
+        } catch (error) {
+          if (error instanceof UniqueViolationError) {
+            this.logger.info({
+              msg: 'duplicate incoming token attempted to be added',
+              accountOptions
+            })
+          }
+          throw error
+        }
+      }
+      const account = await Account.query().patchAndFetchById(
+        accountOptions.accountId,
+        {
+          disabled: accountOptions.disabled,
+          maxPacketAmount: accountOptions.maxPacketAmount,
+          outgoingEndpoint:
+            accountOptions.http && accountOptions.http.outgoing.endpoint,
+          outgoingToken:
+            accountOptions.http && accountOptions.http.outgoing.authToken,
+          streamEnabled: accountOptions.stream && accountOptions.stream.enabled
+        }
+      )
+      if (accountOptions.http && accountOptions.http.incoming.authTokens) {
+        account.incomingTokens = accountOptions.http.incoming.authTokens.map(
+          (incomingToken) => {
+            return {
+              accountId: accountOptions.accountId,
+              token: incomingToken
+            } as Token
+          }
+        )
+      }
+      return toIlpAccount(account)
+    })
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount> {

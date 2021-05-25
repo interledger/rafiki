@@ -348,6 +348,55 @@ describe('Accounts Service', (): void => {
     })
   })
 
+  describe('Update Account', (): void => {
+    test('Can update an account', async (): Promise<void> => {
+      const { accountId, asset } = await accounts.createAccount({
+        accountId: uuid(),
+        disabled: false,
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100),
+        http: {
+          incoming: {
+            authTokens: [uuid()]
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoingEndpoint'
+          }
+        },
+        stream: {
+          enabled: true
+        }
+      })
+      const updateOptions = {
+        accountId,
+        disabled: true,
+        maxPacketAmount: BigInt(200),
+        http: {
+          incoming: {
+            authTokens: [uuid()]
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoing'
+          }
+        },
+        stream: {
+          enabled: false
+        }
+      }
+
+      const updatedAccount = await accounts.updateAccount(updateOptions)
+      const expectedAccount = {
+        ...updateOptions,
+        asset
+      }
+      expect(updatedAccount).toEqual(expectedAccount)
+      const account = await accounts.getAccount(accountId)
+      expect(account).toEqual(expectedAccount)
+    })
+  })
+
   describe('Get Account Balance', (): void => {
     test("Can retrieve an account's balance", async (): Promise<void> => {
       const { accountId, asset } = await accounts.createAccount({
