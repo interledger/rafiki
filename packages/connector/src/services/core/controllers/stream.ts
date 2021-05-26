@@ -22,13 +22,15 @@ export function createStreamController({
     const { request, response } = ctx
 
     const { stream } = ctx.accounts.outgoing
-    if (!stream || !stream.enabled) {
+    if (
+      !stream ||
+      !stream.enabled ||
+      !server.decodePaymentTag(request.prepare.destination)
+    ) {
       await next()
       return
     }
 
-    // If `stream.enabled` but the destination isn't based on `serverAddress`,
-    // `createReply` will return an F02:Unreachable.
     const moneyOrReply = server.createReply(request.prepare)
     response.reply = isIlpReply(moneyOrReply)
       ? moneyOrReply

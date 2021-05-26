@@ -36,4 +36,33 @@ describe('Account Middleware', () => {
     expect(ctx.accounts.incoming).toEqual(incomingAccount)
     expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
   })
+
+  test('return an error when the source account is disabled', async () => {
+    const middleware = createAccountMiddleware()
+    const next = jest.fn()
+    const ctx = createContext<unknown, RafikiContext>()
+    ctx.state = { account: PeerAccountFactory.build({ disabled: true }) }
+    ctx.services = rafikiServices
+    ctx.request.prepare = new ZeroCopyIlpPrepare(
+      IlpPrepareFactory.build({ destination: 'test.outgoingPeer.123' })
+    )
+    await expect(middleware(ctx, next)).rejects.toThrowError(
+      'source account is disabled'
+    )
+  })
+
+  test('return an error when the destination account is disabled', async () => {
+    outgoingAccount.disabled = true
+    const middleware = createAccountMiddleware()
+    const next = jest.fn()
+    const ctx = createContext<unknown, RafikiContext>()
+    ctx.state = { account: incomingAccount }
+    ctx.services = rafikiServices
+    ctx.request.prepare = new ZeroCopyIlpPrepare(
+      IlpPrepareFactory.build({ destination: 'test.outgoingPeer.123' })
+    )
+    await expect(middleware(ctx, next)).rejects.toThrowError(
+      'destination account is disabled'
+    )
+  })
 })
