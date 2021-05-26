@@ -5,6 +5,13 @@ export class InvalidAssetError extends Error {
   }
 }
 
+export class InvalidAmountError extends Error {
+  constructor() {
+    super('Invalid amount')
+    this.name = 'InvalidAmountError'
+  }
+}
+
 export class UnknownAccountError extends Error {
   constructor() {
     super('Account not found')

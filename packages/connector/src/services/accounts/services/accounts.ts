@@ -11,10 +11,12 @@ import {
 import { Config } from '../config'
 import {
   InvalidAssetError,
+  InvalidAmountError,
   UnknownAccountError,
   UnknownBalanceError
 } from '../errors'
 import { Account, Token } from '../models'
+import { Transfer } from '../types'
 import {
   getNetBalance,
   toLiquidityId,
@@ -77,6 +79,12 @@ export type UpdateIlpAccountOptions = Omit<
   CreateOptions,
   'asset' | 'parentAccountId'
 >
+
+interface BalanceTransfer {
+  sourceBalanceId: bigint
+  destinationBalanceId: bigint
+  amount: bigint
+}
 
 interface Peer {
   accountId: string
@@ -443,11 +451,13 @@ export class AccountsService implements ConnectorAccountsService {
     amount: bigint
   ): Promise<void> {
     await this.createCurrencyBalances(assetCode, assetScale)
-    await this.createTransfer(
-      toSettlementId(assetCode, assetScale),
-      toLiquidityId(assetCode, assetScale),
-      amount
-    )
+    await this.createTransfers([
+      {
+        sourceBalanceId: toSettlementId(assetCode, assetScale),
+        destinationBalanceId: toLiquidityId(assetCode, assetScale),
+        amount
+      }
+    ])
   }
 
   public async withdrawLiquidity(
@@ -456,11 +466,13 @@ export class AccountsService implements ConnectorAccountsService {
     amount: bigint
   ): Promise<void> {
     await this.createCurrencyBalances(assetCode, assetScale)
-    await this.createTransfer(
-      toLiquidityId(assetCode, assetScale),
-      toSettlementId(assetCode, assetScale),
-      amount
-    )
+    await this.createTransfers([
+      {
+        sourceBalanceId: toLiquidityId(assetCode, assetScale),
+        destinationBalanceId: toSettlementId(assetCode, assetScale),
+        amount
+      }
+    ])
   }
 
   public async getLiquidityBalance(
@@ -485,25 +497,23 @@ export class AccountsService implements ConnectorAccountsService {
     return getNetBalance(balances[0])
   }
 
-  private async createTransfer(
-    sourceBalanceId: bigint,
-    destinationBalanceId: bigint,
-    amount: bigint
-  ): Promise<void> {
-    const res = await this.client.createTransfers([
-      {
-        id: uuidToBigInt(uuid()),
-        debit_account_id: sourceBalanceId,
-        credit_account_id: destinationBalanceId,
-        amount,
-        ...CUSTOM_FIELDS,
-        flags:
-          0n |
-          BigInt(CreateTransferFlags.auto_commit) |
-          BigInt(CreateTransferFlags.accept),
-        timeout: BigInt(0)
-      }
-    ])
+  private async createTransfers(transfers: BalanceTransfer[]): Promise<void> {
+    const res = await this.client.createTransfers(
+      transfers.map((transfer) => {
+        return {
+          id: uuidToBigInt(uuid()),
+          debit_account_id: transfer.sourceBalanceId,
+          credit_account_id: transfer.destinationBalanceId,
+          amount: transfer.amount,
+          ...CUSTOM_FIELDS,
+          flags:
+            0n |
+            BigInt(CreateTransferFlags.auto_commit) |
+            BigInt(CreateTransferFlags.accept),
+          timeout: BigInt(0)
+        }
+      })
+    )
 
     if (res.length) {
       if (
@@ -522,20 +532,27 @@ export class AccountsService implements ConnectorAccountsService {
 
   public async deposit(accountId: string, amount: bigint): Promise<void> {
     const account = await Account.query().findById(accountId).throwIfNotFound()
-    await this.createTransfer(
-      toSettlementId(account.assetCode, account.assetScale),
-      uuidToBigInt(account.balanceId),
-      amount
-    )
+    await this.createTransfers([
+      {
+        sourceBalanceId: toSettlementId(account.assetCode, account.assetScale),
+        destinationBalanceId: uuidToBigInt(account.balanceId),
+        amount
+      }
+    ])
   }
 
   public async withdraw(accountId: string, amount: bigint): Promise<void> {
     const account = await Account.query().findById(accountId).throwIfNotFound()
-    await this.createTransfer(
-      uuidToBigInt(account.balanceId),
-      toSettlementId(account.assetCode, account.assetScale),
-      amount
-    )
+    await this.createTransfers([
+      {
+        sourceBalanceId: uuidToBigInt(account.balanceId),
+        destinationBalanceId: toSettlementId(
+          account.assetCode,
+          account.assetScale
+        ),
+        amount
+      }
+    ])
   }
 
   public async getAccountByToken(token: string): Promise<IlpAccount | null> {
@@ -601,5 +618,64 @@ export class AccountsService implements ConnectorAccountsService {
     } catch {
       return null
     }
+  }
+
+  public async transferFunds(transfer: Transfer): Promise<Transfer> {
+    const [
+      sourceAccount,
+      destinationAccount
+    ] = await Account.query()
+      .findByIds([transfer.sourceAccountId, transfer.destinationAccountId])
+      .throwIfNotFound()
+    if (!sourceAccount || !destinationAccount) {
+      throw new UnknownAccountError()
+    }
+    const transfers: BalanceTransfer[] = []
+    if (sourceAccount.assetCode === destinationAccount.assetCode) {
+      if (
+        transfer.sourceAmount &&
+        transfer.destinationAmount &&
+        transfer.sourceAmount !== transfer.destinationAmount
+      ) {
+        throw new InvalidAmountError()
+      }
+      transfers.push({
+        sourceBalanceId: uuidToBigInt(sourceAccount.balanceId),
+        destinationBalanceId: uuidToBigInt(destinationAccount.balanceId),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        amount: transfer.sourceAmount || transfer.destinationAmount!
+      })
+    } else {
+      if (!transfer.sourceAmount) {
+        // TODO rate backend
+      } else if (!transfer.destinationAmount) {
+        // TODO rate backend
+      }
+
+      transfers.push(
+        {
+          sourceBalanceId: uuidToBigInt(sourceAccount.balanceId),
+          destinationBalanceId: toLiquidityId(
+            sourceAccount.assetCode,
+            sourceAccount.assetScale
+          ),
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          amount: transfer.sourceAmount!
+        },
+        {
+          sourceBalanceId: toLiquidityId(
+            destinationAccount.assetCode,
+            destinationAccount.assetScale
+          ),
+          destinationBalanceId: uuidToBigInt(destinationAccount.balanceId),
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          amount: transfer.destinationAmount!
+        }
+      )
+    }
+
+    await this.createTransfers(transfers)
+
+    return transfer
   }
 }
