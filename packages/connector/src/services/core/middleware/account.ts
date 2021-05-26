@@ -23,8 +23,8 @@ export function createAccountMiddleware(): RafikiMiddleware {
     }
 
     ctx.accounts = {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       get incoming(): IlpAccount {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return incomingAccount!
       },
       get outgoing(): IlpAccount {

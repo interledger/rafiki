@@ -1,19 +1,4 @@
-//import { AccountInfo } from '../../types'
 // TODO move all this to types/accounts?
-
-/*
-export interface Transfer {
-  transferId: string
-  sourceAccountId: string
-  destinationAccountId: string
-  sourceAmount: bigint
-  destinationAmount: bigint
-}
-
-export type TransferBySourceAmount = Omit<Transfer, "transferId" | "destinationAmount">
-export type TransferByDestinationAmount = Omit<Transfer, "transferId" | "sourceAmount">
-export type TransferOptions = TransferBySourceAmount | TransferByDestinationAmount
-*/
 
 export interface AccountsService {
   getAccount(accountId: string): Promise<IlpAccount>
@@ -44,13 +29,26 @@ export interface IlpAccount {
   parentAccountId?: string
   disabled: boolean // you can fetch config of disabled account but it will not process packets
 
-  asset: IlpAsset
-  http?: {
-    incoming: IlpAccountHttpIncoming
-    outgoing: IlpAccountHttpOutgoing
+  asset: {
+    code: string
+    scale: number
   }
-  stream?: IlpAccountStream
-  routing?: IlpAccountRouting
+  http?: {
+    incoming: {
+      authTokens: string[]
+      endpoint: string
+    }
+    outgoing: {
+      authToken: string
+      endpoint: string
+    }
+  }
+  stream?: {
+    enabled: boolean
+  }
+  routing?: {
+    staticIlpAddress: string // ILP address for this account
+  }
 
   maxPacketAmount?: bigint
 }
@@ -61,31 +59,3 @@ export interface IlpBalance {
   //children?: IlpBalanceChildren
   //parent: IlpBalanceParent
 }
-
-export interface IlpAsset {
-  code: string
-  scale: number
-}
-
-export interface IlpAccountHttpIncoming {
-  authTokens: string[]
-  endpoint: string
-}
-
-export interface IlpAccountHttpOutgoing {
-  authToken: string
-  endpoint: string
-}
-
-export interface IlpAccountStream {
-  enabled: boolean
-}
-
-export interface IlpAccountRouting {
-  staticIlpAddress: string // ILP address for this account
-}
-
-// TODO: this may not be the best structure
-//interface RoutingTable {
-//  [prefix: string]: accountId
-//}
