@@ -2,7 +2,8 @@
 
 ## Table of Contents
 
-1. [Getting Started](#getting-started)
+1. [What is Rafiki?](#what-is-rafiki)
+2. [Getting Started](#getting-started)
    1. [Workspaces](#workspaces)
       1. [How to share scripts between workspaces?](#how-to-share-scripts-between-workspaces)
    2. [Code quality](#code-quality)
@@ -12,13 +13,29 @@
       4. [Commit hooks](#commit-hooks)
       5. [Language](#language)
       6. [CI](#ci)
-2. [Packages](#packages)
+3. [Packages](#packages)
    1. [Backend](#backend)
    2. [Connector](#connector)
    3. [Frontend](#frontend)
-3. [Owners](#owners)
+4. [Owners](#owners)
 
 ---
+
+## What is Rafiki?
+
+<img width="920" alt="rafiki" src="https://user-images.githubusercontent.com/3362563/119590055-e3347580-bd88-11eb-8ae7-958075433e48.png">
+
+Rafiki is an open source package that exposes a comprehensive set of
+Interledger APIs. It's intended to be run by wallet providers, allowing them to
+offer Interledger functionality to their users.
+
+Rafiki is made up of several components including an Interledger connector, a
+high-throughput accounting database, and an API which can be accessed directly
+by users to implement Interledger applications.
+
+Rafiki also allows for delegated access, offering OAuth-based flows to grant
+third-party applications access to Interledger functionality on a user's
+account.
 
 ## Getting Started
 
