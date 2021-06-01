@@ -4,7 +4,7 @@ import { RafikiContext } from '../..'
 import {
   IlpRejectFactory,
   IlpFulfillFactory,
-  PeerFactory,
+  PeerAccountFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createOutgoingLiquidityCheckMiddleware } from '../../middleware/liquidity-check'
@@ -12,16 +12,16 @@ const { T04_INSUFFICIENT_LIQUIDITY } = Errors.codes
 
 describe('Liquidity Check Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerFactory.build({ id: 'alice' })
-  const bob = PeerFactory.build({ id: 'bob' })
+  const alice = PeerAccountFactory.build({ accountId: 'alice' })
+  const bob = PeerAccountFactory.build({ accountId: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
-  ctx.peers = {
+  ctx.accounts = {
     get incoming() {
-      return Promise.resolve(alice)
+      return alice
     },
     get outgoing() {
-      return Promise.resolve(bob)
+      return bob
     }
   }
   const middleware = createOutgoingLiquidityCheckMiddleware()

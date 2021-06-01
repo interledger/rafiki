@@ -1,23 +1,41 @@
+import Axios, { AxiosInstance } from 'axios'
 import { serializeIlpPrepare } from 'ilp-packet'
 import { Reader, Writer } from 'oer-utils'
 import { Errors } from 'ilp-packet'
-import { sendToPeer } from '../services'
-import { RafikiContext } from '../rafiki'
+import { sendToPeer as sendToPeerDefault, IlpAccount } from '../services'
+import { RafikiContext, RafikiMiddleware } from '../rafiki'
 const { InvalidPacketError } = Errors
 
 const MINIMUM_ECHO_PACKET_DATA_LENGTH = 16 + 1
 const ECHO_DATA_PREFIX = Buffer.from('ECHOECHOECHOECHO', 'ascii')
 
+export interface EchoProtocolControllerOptions {
+  minMessageWindow: number
+  sendToPeer?: (
+    client: AxiosInstance,
+    account: IlpAccount,
+    prepare: Buffer
+  ) => Promise<Buffer>
+}
+
 /**
  * Intercepts and handles messages addressed to the connector otherwise forwards it onto next.
  */
-export function createEchoProtocolController(minMessageWindow: number) {
-  return async function echo({
-    services: { logger },
-    request,
-    response,
-    peers: { outgoing }
-  }: RafikiContext): Promise<void> {
+export function createEchoProtocolController({
+  minMessageWindow,
+  sendToPeer
+}: EchoProtocolControllerOptions): RafikiMiddleware {
+  const send = sendToPeer || sendToPeerDefault
+  const axios = Axios.create({ timeout: 30_000 })
+  return async function echo(
+    {
+      services: { logger },
+      request,
+      response,
+      accounts: { outgoing }
+    }: RafikiContext,
+    _: () => Promise<unknown>
+  ): Promise<void> {
     const { data, amount, expiresAt, executionCondition } = request.prepare
     if (data.length < MINIMUM_ECHO_PACKET_DATA_LENGTH) {
       throw new InvalidPacketError(
@@ -42,8 +60,13 @@ export function createEchoProtocolController(minMessageWindow: number) {
 
       logger.debug('responding to echo packet', { sourceAddress })
 
-      response.rawReply = await sendToPeer(
-        await outgoing,
+      const { http } = outgoing
+      if (!http) {
+        throw new Errors.UnreachableError('no outgoing endpoint')
+      }
+      response.rawReply = await send(
+        axios,
+        outgoing,
         serializeIlpPrepare({
           amount: amount,
           destination: sourceAddress,

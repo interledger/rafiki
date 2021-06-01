@@ -1,12 +1,13 @@
 export * from './auth'
 export * from './balance'
-export * from '../controllers/ccp-protocol'
+//export * from '../controllers/ccp-protocol'
 export * from '../controllers/echo-protocol'
 export * from './error-handler'
 export * from './expire'
 export * from '../controllers/ildcp-protocol'
+export * from '../controllers/stream'
 export * from './ilp-packet'
-export * from './peer'
+//export * from './peer'
 export * from './token-auth'
 
 // export * from './heartbeat' //TODO: is this still being supported?

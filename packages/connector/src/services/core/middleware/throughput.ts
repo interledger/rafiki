@@ -1,51 +1,44 @@
-import { RafikiContext, Peer, RafikiMiddleware } from '..'
+import { RafikiContext, RafikiMiddleware } from '..'
 import { Errors } from 'ilp-packet'
 import { TokenBucket } from '../utils'
 const { InsufficientLiquidityError } = Errors
 
 const DEFAULT_REFILL_PERIOD = 1000 // 1 second
 
-export function createThroughputLimitBucketsForPeer(
-  peer: Peer,
-  inOrOut: 'incoming' | 'outgoing'
-): TokenBucket | undefined {
-  const incomingAmount = peer.incomingThroughputLimit || false
-  const outgoingAmount = peer.outgoingThroughputLimit || false
-
-  if (inOrOut === 'incoming' && incomingAmount) {
-    // TODO: We should handle updates to the peer config
-    const refillPeriod = peer.incomingThroughputLimitRefillPeriod
-      ? peer.incomingThroughputLimitRefillPeriod
-      : DEFAULT_REFILL_PERIOD
-    return new TokenBucket({
-      refillPeriod,
-      refillCount: BigInt(incomingAmount)
-    })
-  }
-  if (inOrOut === 'outgoing' && outgoingAmount) {
-    // TODO: We should handle updates to the peer config
-    const refillPeriod = peer.outgoingThroughputLimitRefillPeriod
-      ? peer.outgoingThroughputLimitRefillPeriod
-      : DEFAULT_REFILL_PERIOD
-    return new TokenBucket({
-      refillPeriod,
-      refillCount: BigInt(outgoingAmount)
-    })
-  }
+export interface ThroughputMiddlewareOptions {
+  throughputLimitRefillPeriod?: number
+  throughputLimit?: bigint
 }
 
-export function createOutgoingThroughputMiddleware(): RafikiMiddleware {
+function createThroughputLimitBucket(
+  options: ThroughputMiddlewareOptions
+): TokenBucket | undefined {
+  if (!options.throughputLimit) return
+  const refillPeriod =
+    options.throughputLimitRefillPeriod || DEFAULT_REFILL_PERIOD
+  return new TokenBucket({
+    refillPeriod,
+    refillCount: options.throughputLimit
+  })
+}
+
+export function createOutgoingThroughputMiddleware(
+  options: ThroughputMiddlewareOptions = {}
+): RafikiMiddleware {
   const _buckets = new Map<string, TokenBucket>()
 
   return async (
-    { services: { logger }, request: { prepare }, peers }: RafikiContext,
+    {
+      services: { logger },
+      request: { prepare },
+      accounts: { outgoing }
+    }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    const peer = await peers.outgoing
-    let outgoingBucket = _buckets.get(peer.id)
+    let outgoingBucket = _buckets.get(outgoing.accountId)
     if (!outgoingBucket) {
-      outgoingBucket = createThroughputLimitBucketsForPeer(peer, 'outgoing')
-      if (outgoingBucket) _buckets.set(peer.id, outgoingBucket)
+      outgoingBucket = createThroughputLimitBucket(options)
+      if (outgoingBucket) _buckets.set(outgoing.accountId, outgoingBucket)
     }
     if (outgoingBucket) {
       if (!outgoingBucket.take(BigInt(prepare.amount))) {
@@ -65,18 +58,23 @@ export function createOutgoingThroughputMiddleware(): RafikiMiddleware {
 /**
  * The Throughput rule throttles throughput based on the amount in the packets.
  */
-export function createIncomingThroughputMiddleware(): RafikiMiddleware {
+export function createIncomingThroughputMiddleware(
+  options: ThroughputMiddlewareOptions = {}
+): RafikiMiddleware {
   const _buckets = new Map<string, TokenBucket>()
 
   return async (
-    { services: { logger }, request: { prepare }, peers }: RafikiContext,
+    {
+      services: { logger },
+      request: { prepare },
+      accounts: { incoming }
+    }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    const peer = await peers.incoming
-    let incomingBucket = _buckets.get(peer.id)
+    let incomingBucket = _buckets.get(incoming.accountId)
     if (!incomingBucket) {
-      incomingBucket = createThroughputLimitBucketsForPeer(peer, 'incoming')
-      if (incomingBucket) _buckets.set(peer.id, incomingBucket)
+      incomingBucket = createThroughputLimitBucket(options)
+      if (incomingBucket) _buckets.set(incoming.accountId, incomingBucket)
     }
     if (incomingBucket) {
       if (!incomingBucket.take(BigInt(prepare.amount))) {

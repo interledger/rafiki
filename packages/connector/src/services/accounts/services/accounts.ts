@@ -1,14 +1,13 @@
-import { v4 as uuid } from 'uuid'
-
-import { IlpAccountSettings } from '../models'
+//import { IlpAccountSettings } from '../models'
 // import { Client } from 'tigerbeetle-node'
 
-import { AccountInfo } from '../../core/types'
-import { AccountNotFoundError } from '../../core/errors'
 // import { Errors } from 'ilp-packet'
 import {
   AccountsService as ConnectorAccountsService,
-  Transaction
+  AdjustmentOptions,
+  IlpAccount,
+  IlpBalance
+  //Transaction
 } from '../../core/services/accounts'
 // const { InsufficientLiquidityError } = Errors
 
@@ -17,10 +16,32 @@ export class AccountsService implements ConnectorAccountsService {
   // eslint-disable-next-line
   private _client: any
 
+  async getAccount(_accountId: string): Promise<IlpAccount> {
+    throw new Error('unimplemented')
+  }
+  async getAccountByDestinationAddress(
+    _destinationAddress: string
+  ): Promise<IlpAccount> {
+    throw new Error('unimplemented')
+  }
+  async getAccountByToken(_token: string): Promise<IlpAccount | null> {
+    throw new Error('unimplemented')
+  }
+  async createAccount(_account: IlpAccount): Promise<IlpAccount> {
+    throw new Error('unimplemented')
+  }
+  async getAccountBalance(_accountId: string): Promise<IlpBalance> {
+    throw new Error('unimplemented')
+  }
+  async adjustBalances(_options: AdjustmentOptions): Promise<void> {
+    throw new Error('unimplemented')
+  }
+
   // constructor(client: Client) {
   //   this._client = client
   // }
 
+  /*
   async get(id: string): Promise<AccountInfo> {
     const accountSettings = await IlpAccountSettings.query().findById(id)
     if (!accountSettings) {
@@ -92,4 +113,5 @@ export class AccountsService implements ConnectorAccountsService {
       }
     }
   }
+*/
 }

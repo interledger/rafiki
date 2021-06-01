@@ -1,12 +1,8 @@
 import { createContext } from '../../utils'
-import {
-  RafikiContext,
-  InMemoryAccountsService,
-  ZeroCopyIlpPrepare
-} from '../..'
+import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import { createBalanceMiddleware } from '../../middleware'
 import {
-  AccountInfoFactory,
+  AccountFactory,
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory,
@@ -14,33 +10,30 @@ import {
 } from '../../factories'
 
 // TODO: make one peer to many account relationship
-const aliceAccountInfo = AccountInfoFactory.build({
-  id: 'alice'
-})
-const bobAccountInfo = AccountInfoFactory.build({
-  id: 'bob'
-})
-const accounts = new InMemoryAccountsService()
-const services = RafikiServicesFactory.build({ accounts })
+const aliceAccount = AccountFactory.build({ accountId: 'alice' })
+const bobAccount = AccountFactory.build({ accountId: 'bob' })
+const services = RafikiServicesFactory.build({})
 const ctx = createContext<unknown, RafikiContext>()
 ctx.accounts = {
-  get incomingId(): string {
-    return 'alice'
+  get incoming() {
+    return aliceAccount
   },
-  get outgoingId(): string {
-    return 'bob'
+  get outgoing() {
+    return bobAccount
   }
 }
 ctx.services = services
+const { accounts } = services
 
-beforeEach(() => {
+beforeEach(async () => {
   ctx.response.fulfill = undefined
   ctx.response.reject = undefined
 
-  accounts.remove('alice')
-  accounts.remove('bob')
-  accounts.add(aliceAccountInfo)
-  accounts.add(bobAccountInfo)
+  aliceAccount.balance = 0n
+  bobAccount.balance = 0n
+
+  await accounts.createAccount(aliceAccount)
+  await accounts.createAccount(bobAccount)
 })
 
 describe('Balance Middleware', function () {
@@ -55,18 +48,12 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    expect((await accounts.get(aliceAccountInfo.id)).balanceReceivable).toEqual(
-      BigInt(100)
-    )
-    expect((await accounts.get(aliceAccountInfo.id)).balancePayable).toEqual(
-      BigInt(0)
-    )
-    expect((await accounts.get(bobAccountInfo.id)).balanceReceivable).toEqual(
-      BigInt(0)
-    )
-    expect((await accounts.get(bobAccountInfo.id)).balancePayable).toEqual(
-      BigInt(100)
-    )
+    expect(
+      (await accounts.getAccountBalance(aliceAccount.accountId)).balance
+    ).toEqual(BigInt(-100))
+    expect(
+      (await accounts.getAccountBalance(bobAccount.accountId)).balance
+    ).toEqual(BigInt(100))
   })
 
   test('reject response does not adjust the account balances', async () => {
@@ -79,18 +66,12 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    expect((await accounts.get(aliceAccountInfo.id)).balanceReceivable).toEqual(
-      BigInt(0)
-    )
-    expect((await accounts.get(aliceAccountInfo.id)).balancePayable).toEqual(
-      BigInt(0)
-    )
-    expect((await accounts.get(bobAccountInfo.id)).balanceReceivable).toEqual(
-      BigInt(0)
-    )
-    expect((await accounts.get(bobAccountInfo.id)).balancePayable).toEqual(
-      BigInt(0)
-    )
+    expect(
+      (await accounts.getAccountBalance(aliceAccount.accountId)).balance
+    ).toEqual(BigInt(0))
+    expect(
+      (await accounts.getAccountBalance(bobAccount.accountId)).balance
+    ).toEqual(BigInt(0))
   })
 
   test('ignores 0 amount packets', async () => {
@@ -104,18 +85,12 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    expect((await accounts.get(aliceAccountInfo.id)).balanceReceivable).toEqual(
-      BigInt(0)
-    )
-    expect((await accounts.get(aliceAccountInfo.id)).balancePayable).toEqual(
-      BigInt(0)
-    )
-    expect((await accounts.get(bobAccountInfo.id)).balanceReceivable).toEqual(
-      BigInt(0)
-    )
-    expect((await accounts.get(bobAccountInfo.id)).balancePayable).toEqual(
-      BigInt(0)
-    )
+    expect(
+      (await accounts.getAccountBalance(aliceAccount.accountId)).balance
+    ).toEqual(BigInt(0))
+    expect(
+      (await accounts.getAccountBalance(bobAccount.accountId)).balance
+    ).toEqual(BigInt(0))
     expect(adjustBalancesSpy).toHaveBeenCalledTimes(0)
   })
 })

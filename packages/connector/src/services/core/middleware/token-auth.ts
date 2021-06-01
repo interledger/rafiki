@@ -1,29 +1,7 @@
 import * as Koa from 'koa'
-import { AuthState } from './auth'
-import { TokenInfo, IntrospectFunction } from '../services/tokens'
-import { verify } from 'jsonwebtoken'
 import { RafikiMiddleware } from '../rafiki'
 
-export interface TokenAuthState extends AuthState {
-  token: string
-  tokenInfo: TokenInfo
-}
-
-export interface TokenAuthConfig {
-  introspect: IntrospectFunction
-  authenticate: (tokenInfo: TokenInfo) => boolean
-}
-
-const defaultAuthenticate = (tokenInfo: TokenInfo): boolean => {
-  return Boolean(tokenInfo.active && tokenInfo.sub)
-}
-
-const defaultIntrospect: IntrospectFunction = async (token: string) => {
-  // TODO use an actual secret
-  const decodedToken = verify(token, 'SECRET')
-  // TODO Ensure token is actually TokenInfo
-  return decodedToken as TokenInfo
-}
+// TODO incomingTokens
 
 export function getBearerToken(ctx: Koa.Context): string | undefined {
   if (!ctx.request.header || !ctx.request.header.authorization) {
@@ -41,22 +19,11 @@ export function getBearerToken(ctx: Koa.Context): string | undefined {
 }
 
 /**
- * Create authentication middleware based on a Bearer token and an introspection service.
+ * Create authentication middleware based on a Bearer token.
  *
- * The context will implement `TokenAuthState` after being processed by this middleware
- *
- * @param config configuration options
- * @param config.introspect a function to introspect the token
- * @param config.authenticate a function to determine if the user is authenticated based on the introspected token
+ * The context will implement `AuthState` after being processed by this middleware
  */
-export function createTokenAuthMiddleware(
-  config?: Partial<TokenAuthConfig>
-): RafikiMiddleware {
-  const _auth =
-    config && config.authenticate ? config.authenticate : defaultAuthenticate
-  const _introspect =
-    config && config.introspect ? config.introspect : defaultIntrospect
-
+export function createTokenAuthMiddleware(): RafikiMiddleware {
   return async function auth(
     ctx: Koa.Context,
     next: () => Promise<unknown>
@@ -69,9 +36,10 @@ export function createTokenAuthMiddleware(
       'Bearer token required in Authorization header'
     )
 
-    // Introspect token
-    ctx.state.user = await _introspect(ctx.state.token)
-    ctx.assert(_auth(ctx.state.user), 401, 'Access Denied - Invalid Token')
+    ctx.state.account = await ctx.services.accounts.getAccountByToken(
+      ctx.state.token
+    )
+    ctx.assert(ctx.state.account, 401, 'Access Denied - Invalid Token')
 
     await next()
   }

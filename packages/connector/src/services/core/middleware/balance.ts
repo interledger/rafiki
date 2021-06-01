@@ -15,11 +15,11 @@ export function createBalanceMiddleware() {
     }
 
     // Update balances on prepare
-    await services.accounts.adjustBalances(
-      BigInt(amount),
-      accounts.incomingId,
-      accounts.outgoingId,
-      async (trx: Transaction) => {
+    await services.accounts.adjustBalances({
+      sourceAccountId: accounts.incoming.accountId,
+      destinationAccountId: accounts.outgoing.accountId,
+      sourceAmount: BigInt(amount),
+      callback: async (trx: Transaction) => {
         await next()
 
         if (response.fulfill) {
@@ -28,6 +28,6 @@ export function createBalanceMiddleware() {
           await trx.rollback()
         }
       }
-    )
+    })
   }
 }

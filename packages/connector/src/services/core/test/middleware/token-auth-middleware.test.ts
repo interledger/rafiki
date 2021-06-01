@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
+import Faker from 'faker'
 import { createContext } from '../../utils'
 import { createTokenAuthMiddleware } from '../../middleware'
 import { RafikiContext } from '../../rafiki'
+import { PeerAccountFactory, RafikiServicesFactory } from '../../factories'
 
 describe('Token Auth Middleware', function () {
   describe('default behaviour', function () {
@@ -34,48 +36,6 @@ describe('Token Auth Middleware', function () {
       )
     })
 
-    test('default authentication fails if introspected token is not active', async () => {
-      const ctx = createContext<unknown, RafikiContext>({
-        req: {
-          headers: {
-            'content-type': 'application/octet-stream',
-            authorization: 'Bearer asd123'
-          }
-        }
-      })
-
-      const authMiddleware = createTokenAuthMiddleware({
-        introspect: (_id: string) => {
-          return Promise.resolve({ active: false })
-        }
-      })
-
-      await expect(authMiddleware(ctx, async () => {})).rejects.toThrow(
-        'Access Denied - Invalid Token'
-      )
-    })
-
-    test('returns 401 if introspected token does not have a subject', async () => {
-      const ctx = createContext<unknown, RafikiContext>({
-        req: {
-          headers: {
-            'content-type': 'application/octet-stream',
-            authorization: 'Bearer asd123'
-          }
-        }
-      })
-
-      const authMiddleware = createTokenAuthMiddleware({
-        introspect: (_id: string) => {
-          return Promise.resolve({ active: true })
-        }
-      })
-
-      await expect(authMiddleware(ctx, async () => {})).rejects.toThrow(
-        'Access Denied - Invalid Token'
-      )
-    })
-
     test('succeeds for valid token and binds data to context', async () => {
       const ctx = createContext<unknown, RafikiContext>({
         req: {
@@ -83,18 +43,26 @@ describe('Token Auth Middleware', function () {
             'content-type': 'application/octet-stream',
             authorization: 'Bearer asd123'
           }
+        },
+        services: RafikiServicesFactory.build({})
+      })
+      const account = PeerAccountFactory.build({
+        accountId: 'alice',
+        http: {
+          incoming: {
+            authTokens: ['asd123'],
+            endpoint: Faker.internet.url()
+          },
+          outgoing: {
+            authToken: Faker.datatype.string(32),
+            endpoint: Faker.internet.url()
+          }
         }
       })
+      await ctx.services.accounts.createAccount(account)
 
-      const authMiddleware = createTokenAuthMiddleware({
-        introspect: (_id: string) => {
-          return Promise.resolve({ active: true, sub: 'alice' })
-        }
-      })
-
-      await authMiddleware(ctx, async () => {})
-      expect(ctx.state.token).toBe('asd123')
-      expect(ctx.state.user).toStrictEqual({ active: true, sub: 'alice' })
+      await createTokenAuthMiddleware()(ctx, async () => {})
+      expect(ctx.state.account).toBe(account)
     })
   })
 })

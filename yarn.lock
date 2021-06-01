@@ -657,6 +657,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@interledger/stream-receiver@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "@interledger/stream-receiver@npm:0.2.2"
+  dependencies:
+    "@types/long": ^4.0.1
+    ilp-logger: ^1.4.2
+    ilp-packet: ^3.1.2
+    ilp-protocol-stream: ^2.6.4
+    long: ^4.0.0
+    oer-utils: ^5.1.2
+  checksum: a34cb037add67f40b1bd01eaa33fb1ac99c601decef61643b64af50c7bc0e781e1b0ceae1e8e76e5cac817fa44b346ff2ac1959d6b5c220e123b0f07435cbb14
+  languageName: node
+  linkType: hard
+
 "@istanbuljs/load-nyc-config@npm:^1.0.0":
   version: 1.1.0
   resolution: "@istanbuljs/load-nyc-config@npm:1.1.0"
@@ -1162,7 +1176,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/debug@npm:^4.1.2, @types/debug@npm:^4.1.5":
+"@types/debug@npm:^4.1.0, @types/debug@npm:^4.1.2, @types/debug@npm:^4.1.5":
   version: 4.1.5
   resolution: "@types/debug@npm:4.1.5"
   checksum: 416ad24bc589be0fb8c78bea972aa7d4ffdf6b136239701b1792674463b2dbf8c6707f6055ec484f79ec1f2b528ffef90c87e55df7e4a0f458184cad5bf0cfc8
@@ -1411,7 +1425,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/long@npm:4.0.1":
+"@types/long@npm:4.0.1, @types/long@npm:^4.0.1":
   version: 4.0.1
   resolution: "@types/long@npm:4.0.1"
   checksum: ed2a125330dbf2b425b2e58b1e1151a37106ceeec973f9f191fba0bda83ed00fae6d858254022e8b6e7165fec5f0c3872b7cb5f425c753383fed54699fb63b38
@@ -1453,6 +1467,13 @@ __metadata:
   version: 14.14.39
   resolution: "@types/node@npm:14.14.39"
   checksum: b4d729f65ae350b9c49a5a5eaa5fd2e73913bb69cad7a9e3802e9d94574228436b74deb1fa415b147bd0b6e31ce5d2da601e9fdf497542c11e304fb0b60c38b3
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^10.14.22":
+  version: 10.17.59
+  resolution: "@types/node@npm:10.17.59"
+  checksum: 558c0e23405e34103c517bdf352f89519001bf0de6f0e14f46ceba77e920c534e67174f309659cf804ccde1cbfdb55c07cdcc6087183f0afb416d0f4815834fb
   languageName: node
   linkType: hard
 
@@ -1835,7 +1856,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"agentkeepalive@npm:^4.1.3, agentkeepalive@npm:^4.1.4":
+"agentkeepalive@npm:^4.1.3":
   version: 4.1.4
   resolution: "agentkeepalive@npm:4.1.4"
   dependencies:
@@ -2453,13 +2474,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"buffer-equal-constant-time@npm:1.0.1":
-  version: 1.0.1
-  resolution: "buffer-equal-constant-time@npm:1.0.1"
-  checksum: a38a6fead170594b97894658d0e62e3686ccaecea480051c0bf69ba29274eca87203452590c3b6a1b589a7da1baef89420da00a8f08c010675c1dbc25f58edf9
-  languageName: node
-  linkType: hard
-
 "buffer-fill@npm:^1.0.0":
   version: 1.0.0
   resolution: "buffer-fill@npm:1.0.0"
@@ -2998,6 +3012,7 @@ __metadata:
   resolution: "connector@workspace:packages/connector"
   dependencies:
     "@adonisjs/fold": ^8.1.0
+    "@interledger/stream-receiver": ^0.2.2
     "@koa/router": ^10.0.0
     "@types/debug": ^4.1.5
     "@types/faker": ^5.5.3
@@ -3013,7 +3028,6 @@ __metadata:
     "@types/pino": ^6.3.8
     "@types/rosie": ^0.0.39
     "@types/uuid": ^8.3.0
-    agentkeepalive: ^4.1.4
     ajv: ^8.1.0
     axios: ^0.21.1
     change-case: ^4.1.2
@@ -3023,7 +3037,6 @@ __metadata:
     ilp-packet: ^3.1.2
     ilp-protocol-ccp: ^1.2.2
     ilp-protocol-ildcp: ^2.2.2
-    jsonwebtoken: ^8.5.1
     knex: ^0.21.17
     koa: ^2.13.1
     koa-bodyparser: ^4.3.0
@@ -3641,15 +3654,6 @@ __metadata:
     jsbn: ~0.1.0
     safer-buffer: ^2.1.0
   checksum: 5b4dd05f24b2b94c1bb882488dba2b878bb5b83182669aa71fbdf53c6941618180cb226c4eb9a3e2fa51ad11f87b5edb0a7d7289cdef468ba2e6024542f73f07
-  languageName: node
-  linkType: hard
-
-"ecdsa-sig-formatter@npm:1.0.11":
-  version: 1.0.11
-  resolution: "ecdsa-sig-formatter@npm:1.0.11"
-  dependencies:
-    safe-buffer: ^5.0.1
-  checksum: 9d07775ee274e0ca3978a562e9eba14ce77ecc804d977d0e94525c2aa4a70d909eda5703810955d22fd06fc6312e6aacf85e233eebdabc7b27a0a38fd62902a4
   languageName: node
   linkType: hard
 
@@ -5120,7 +5124,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ilp-packet@npm:^3.1.2":
+"ilp-logger@npm:^1.3.1, ilp-logger@npm:^1.4.2":
+  version: 1.4.2
+  resolution: "ilp-logger@npm:1.4.2"
+  dependencies:
+    "@types/debug": ^4.1.0
+    debug: ^4.1.0
+    supports-color: ^7.1.0
+  checksum: 850a7cf07302463d233ff1d9e4691fa52e78887acdb2c2d2aba0859fff14da98bdfda012892666430cddaf35b2d22cb2eafcaa5812b97325f40375f2d98cd445
+  languageName: node
+  linkType: hard
+
+"ilp-packet@npm:^3.0.9, ilp-packet@npm:^3.1.2":
   version: 3.1.2
   resolution: "ilp-packet@npm:3.1.2"
   dependencies:
@@ -5140,7 +5155,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ilp-protocol-ildcp@npm:^2.2.2":
+"ilp-protocol-ildcp@npm:^2.1.4, ilp-protocol-ildcp@npm:^2.2.2":
   version: 2.2.2
   resolution: "ilp-protocol-ildcp@npm:2.2.2"
   dependencies:
@@ -5148,6 +5163,21 @@ __metadata:
     ilp-packet: ^3.1.2
     oer-utils: ^5.1.2
   checksum: d288ef8786cbab7a2bd7e8061698dbceedbb7524c96d68518fb0ed6baaa245ad57792ae8267d8da13cac4161b7f9a5ff779b27688d7cce9a08ff7a5bde5f7405
+  languageName: node
+  linkType: hard
+
+"ilp-protocol-stream@npm:^2.6.4":
+  version: 2.7.0
+  resolution: "ilp-protocol-stream@npm:2.7.0"
+  dependencies:
+    "@types/node": ^10.14.22
+    ilp-logger: ^1.3.1
+    ilp-packet: ^3.0.9
+    ilp-protocol-ildcp: ^2.1.4
+    long: ^4.0.0
+    oer-utils: ^5.0.1
+    uuid: ^3.4.0
+  checksum: 692eb2b075c01f9e415a24cf14c70dad2ec66113f0f40952aa3951a91c79bffc78aa578a7b2b300f2d7a1406a2013dab18536c568754f5b81949acf40c2f23e8
   languageName: node
   linkType: hard
 
@@ -6437,24 +6467,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:^8.5.1":
-  version: 8.5.1
-  resolution: "jsonwebtoken@npm:8.5.1"
-  dependencies:
-    jws: ^3.2.2
-    lodash.includes: ^4.3.0
-    lodash.isboolean: ^3.0.3
-    lodash.isinteger: ^4.0.4
-    lodash.isnumber: ^3.0.3
-    lodash.isplainobject: ^4.0.6
-    lodash.isstring: ^4.0.1
-    lodash.once: ^4.0.0
-    ms: ^2.1.1
-    semver: ^5.6.0
-  checksum: ea44bbb7a7abab87eee57711a04093a2a04a5757faa3253f521327b840e07eff751986ed6c20985886c5aaa86245a833aa1eeda6eacb0c3fa9ea4e7074cdb0c3
-  languageName: node
-  linkType: hard
-
 "jsprim@npm:^1.2.2":
   version: 1.4.1
   resolution: "jsprim@npm:1.4.1"
@@ -6474,27 +6486,6 @@ __metadata:
     array-includes: ^3.1.2
     object.assign: ^4.1.2
   checksum: 2a8033e63234d04e6ed77ac91222e2dff527f64cf70c10d2f26fda6f35dc9b78d5e3a43fc3d28df7fe0dab45294b94c9c90e58ab242ecf14e58cd39691ee0ed4
-  languageName: node
-  linkType: hard
-
-"jwa@npm:^1.4.1":
-  version: 1.4.1
-  resolution: "jwa@npm:1.4.1"
-  dependencies:
-    buffer-equal-constant-time: 1.0.1
-    ecdsa-sig-formatter: 1.0.11
-    safe-buffer: ^5.0.1
-  checksum: e3a6234a3a33b0390c35cc7393890b1ca1bac22382755035ad252f6df9e1272dcf0ff0a717c7865657fc30e04b8d5ab07ea27e26f0763c60c557946963402752
-  languageName: node
-  linkType: hard
-
-"jws@npm:^3.2.2":
-  version: 3.2.2
-  resolution: "jws@npm:3.2.2"
-  dependencies:
-    jwa: ^1.4.1
-    safe-buffer: ^5.0.1
-  checksum: 3990b26ebb6f368bf6c53bf580cd327f207052adedeb7900dde665e143fff9ea5d96d0b4282e85a631a6e3af76ada281a1ccc450b1916d579d07e9d36b564a19
   languageName: node
   linkType: hard
 
@@ -6833,59 +6824,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash.includes@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "lodash.includes@npm:4.3.0"
-  checksum: 20d6b1bf7841a4eb21bcb124641a1d5fb368e3c86fb8834d80149ec92caef67f3bf316405e4ec309591f0a83e461cebb7b43b2b57d00fd45d1eb3009fe13be97
-  languageName: node
-  linkType: hard
-
-"lodash.isboolean@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "lodash.isboolean@npm:3.0.3"
-  checksum: e5b7a921f47759773266e66664e4a54f2438cc213fe336c5b96321d4328ebb2785e939bbcd07b29d5a20cdc6140d471abae1e94cdfb25937dc91ddc5150f41a0
-  languageName: node
-  linkType: hard
-
-"lodash.isinteger@npm:^4.0.4":
-  version: 4.0.4
-  resolution: "lodash.isinteger@npm:4.0.4"
-  checksum: a29551cc9aaaf24cc4fdd7ce1734c7a19c748c704f061ef079f6026dc9666ac10e8ae08e4f0cd3aeb6094e20be043a7402c72ce70cbae9ea6ecce67ad997332c
-  languageName: node
-  linkType: hard
-
-"lodash.isnumber@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "lodash.isnumber@npm:3.0.3"
-  checksum: a33b10bf57dd27b32aac0bb4159d3f40db6b294095f42d7ff9f966a004932cdcc12417bf0750a9d3ac0c62690dd020d7d227b05ef486a8c9061963acf2ea3fad
-  languageName: node
-  linkType: hard
-
-"lodash.isplainobject@npm:^4.0.6":
-  version: 4.0.6
-  resolution: "lodash.isplainobject@npm:4.0.6"
-  checksum: 72a114b610ec32a42b8cb47680d1729398caea0ee0631c0b220b97b21e7df19312377cb077acb6593bf6c5abdbdb43c530aa66b440e30d53324986d386808cd0
-  languageName: node
-  linkType: hard
-
-"lodash.isstring@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "lodash.isstring@npm:4.0.1"
-  checksum: 20c46960b74fd63c27b534f1725cd4141ac19b35c7250affee37c8b7899b1a4c5e9820becfafe571a4d48cd4c86206ee03c2e93fe943dbeab82ddd5cab710540
-  languageName: node
-  linkType: hard
-
 "lodash.mergewith@npm:^4.6.2":
   version: 4.6.2
   resolution: "lodash.mergewith@npm:4.6.2"
   checksum: 3561b63cebc629721ab4c016627fc54929ee33cdef1854b4a15ade71dd8eb5f2fc602830efe5395aed41c607d65e2cce356667116aa7156b82468594b42ab95f
-  languageName: node
-  linkType: hard
-
-"lodash.once@npm:^4.0.0":
-  version: 4.1.1
-  resolution: "lodash.once@npm:4.1.1"
-  checksum: 236e00ca5f20304fab5b38aa3aedb034959153dae6edf33d7f9b00406ced8f24ed232a74f1200505d9049165ceea2ce1256199e1683b0a25e9de89091d4b13c2
   languageName: node
   linkType: hard
 
@@ -7720,7 +7662,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oer-utils@npm:^5.1.2":
+"oer-utils@npm:^5.0.1, oer-utils@npm:^5.1.2":
   version: 5.1.2
   resolution: "oer-utils@npm:5.1.2"
   dependencies:
@@ -9026,7 +8968,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"semver@npm:2 || 3 || 4 || 5, semver@npm:^5.5.0, semver@npm:^5.6.0":
+"semver@npm:2 || 3 || 4 || 5, semver@npm:^5.5.0":
   version: 5.7.1
   resolution: "semver@npm:5.7.1"
   bin:
@@ -10320,7 +10262,7 @@ typescript@^4.2.4:
   languageName: node
   linkType: hard
 
-"uuid@npm:^3.3.2":
+"uuid@npm:^3.3.2, uuid@npm:^3.4.0":
   version: 3.4.0
   resolution: "uuid@npm:3.4.0"
   bin:

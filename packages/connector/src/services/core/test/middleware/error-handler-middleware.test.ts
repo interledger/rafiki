@@ -1,18 +1,11 @@
 import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
-import { PeerInfoFactory, RafikiServicesFactory } from '../../factories'
+import { RafikiServicesFactory } from '../../factories'
 import { createIncomingErrorHandlerMiddleware } from '../../middleware/error-handler'
-import { SELF_PEER_ID } from '../../constants'
-import { InMemoryPeers } from '../../services'
 
 describe('Error Handler Middleware', () => {
-  const peers = new InMemoryPeers()
-  const selfPeer = PeerInfoFactory.build({ id: SELF_PEER_ID })
-  const services = RafikiServicesFactory.build({}, { peers })
-
-  beforeAll(async () => {
-    await peers.add(selfPeer)
-  })
+  const ADDRESS = 'test.rafiki'
+  const services = RafikiServicesFactory.build({})
 
   test('catches errors and converts into ilp reject', async () => {
     const ctx = createContext<unknown, RafikiContext>()
@@ -21,7 +14,7 @@ describe('Error Handler Middleware', () => {
       throw errorToBeThrown
     })
     ctx.services = services
-    const middleware = createIncomingErrorHandlerMiddleware()
+    const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
@@ -41,13 +34,13 @@ describe('Error Handler Middleware', () => {
       throw errorToBeThrown
     })
     ctx.services = services
-    const middleware = createIncomingErrorHandlerMiddleware()
+    const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.response.reject).toBeDefined()
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    expect(ctx.response.reject!.triggeredBy).toEqual('unknown.self')
+    expect(ctx.response.reject!.triggeredBy).toEqual(ADDRESS)
   })
 
   test('creates reject if reply is not set in next', async () => {
@@ -56,7 +49,7 @@ describe('Error Handler Middleware', () => {
       // don't set reply
     })
     ctx.services = services
-    const middleware = createIncomingErrorHandlerMiddleware()
+    const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 

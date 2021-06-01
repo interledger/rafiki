@@ -3,7 +3,7 @@ import { createContext } from '../../utils'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import {
   IlpPrepareFactory,
-  PeerFactory,
+  PeerAccountFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createIncomingMaxPacketAmountMiddleware } from '../../middleware/max-packet-amount'
@@ -12,16 +12,19 @@ const { AmountTooLargeError } = Errors
 
 describe('Max Packet Amount Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerFactory.build({ id: 'alice', maxPacketAmount: BigInt(50) })
-  const bob = PeerFactory.build({ id: 'bob' })
+  const alice = PeerAccountFactory.build({
+    accountId: 'alice',
+    maxPacketAmount: BigInt(50)
+  })
+  const bob = PeerAccountFactory.build({ accountId: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
-  ctx.peers = {
+  ctx.accounts = {
     get incoming() {
-      return Promise.resolve(alice)
+      return alice
     },
     get outgoing() {
-      return Promise.resolve(bob)
+      return bob
     }
   }
   const middleware = createIncomingMaxPacketAmountMiddleware()

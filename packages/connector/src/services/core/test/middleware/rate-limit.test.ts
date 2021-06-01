@@ -3,7 +3,7 @@ import { createContext, TokenBucket } from '../../utils'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import {
   IlpPrepareFactory,
-  PeerFactory,
+  PeerAccountFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createIncomingRateLimitMiddleware } from '../../middleware/rate-limit'
@@ -11,22 +11,22 @@ const { RateLimitedError } = Errors
 
 describe('Rate Limit Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerFactory.build({ id: 'alice', rateLimitCapacity: BigInt(1) }) // bucket that has initial capacity of 1 and refills 10 000 every minute
-  const bob = PeerFactory.build({ id: 'bob', rateLimitCapacity: BigInt(0) }) // bucket that has initial capacity of 0 and refills 10 000 every minute
+  const alice = PeerAccountFactory.build({ accountId: 'alice' })
+  const bob = PeerAccountFactory.build({ accountId: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
-  const middleware = createIncomingRateLimitMiddleware()
+  ctx.accounts = {
+    get incoming() {
+      return alice
+    },
+    get outgoing() {
+      return bob
+    }
+  }
 
   test('throws RateLimitedError when payments arrive too quickly', async () => {
+    const middleware = createIncomingRateLimitMiddleware({ capacity: 0n })
     const bucketTakeSpy = jest.spyOn(TokenBucket.prototype, 'take')
-    ctx.peers = {
-      get incoming() {
-        return Promise.resolve(bob)
-      },
-      get outgoing() {
-        return Promise.resolve(alice)
-      }
-    }
     const prepare = IlpPrepareFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     const next = jest.fn()
@@ -37,15 +37,8 @@ describe('Rate Limit Middleware', function () {
   })
 
   test('does not throw error if rate limit is not exceeded', async () => {
+    const middleware = createIncomingRateLimitMiddleware({ capacity: 1n })
     const bucketTakeSpy = jest.spyOn(TokenBucket.prototype, 'take')
-    ctx.peers = {
-      get incoming() {
-        return Promise.resolve(alice)
-      },
-      get outgoing() {
-        return Promise.resolve(bob)
-      }
-    }
     const prepare = IlpPrepareFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     const next = jest.fn()

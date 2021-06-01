@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.0",
+    "@interledger/stream-receiver": "^0.2.2",
     "@koa/router": "^10.0.0",
-    "agentkeepalive": "^4.1.4",
     "ajv": "^8.1.0",
     "axios": "^0.21.1",
     "change-case": "^4.1.2",
@@ -22,7 +22,6 @@
     "ilp-packet": "^3.1.2",
     "ilp-protocol-ccp": "^1.2.2",
     "ilp-protocol-ildcp": "^2.2.2",
-    "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.17",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",

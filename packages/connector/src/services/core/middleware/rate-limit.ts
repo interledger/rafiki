@@ -1,5 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { PeerInfo, RafikiContext, RafikiMiddleware } from '..'
+import { RafikiContext, RafikiMiddleware } from '..'
 import { TokenBucket } from '../utils'
 
 const { RateLimitedError } = Errors
@@ -7,39 +7,45 @@ const { RateLimitedError } = Errors
 const DEFAULT_REFILL_PERIOD = 60 * 1000 // 1 minute
 const DEFAULT_REFILL_COUNT = BigInt(10000)
 
-export function createRateLimitBucketForPeer(peerInfo: PeerInfo): TokenBucket {
-  const {
-    rateLimitRefillPeriod,
-    rateLimitRefillCount,
-    rateLimitCapacity
-  } = peerInfo
-  const refillPeriod: number = rateLimitRefillPeriod || DEFAULT_REFILL_PERIOD
-  const refillCount: bigint = rateLimitRefillCount || DEFAULT_REFILL_COUNT
-  const capacity: bigint =
-    typeof rateLimitCapacity !== 'undefined' ? rateLimitCapacity : refillCount
-
-  // TODO: When we add the ability to update middleware, our state will get
-  //   reset every update, which may not be desired.
-  return new TokenBucket({ refillPeriod, refillCount, capacity })
+export interface RateLimitMiddlewareOptions {
+  refillPeriod?: number
+  refillCount?: bigint
+  capacity?: bigint
 }
 
 /**
  * Throttles throughput based on the number of requests per minute.
  */
-export function createIncomingRateLimitMiddleware(): RafikiMiddleware {
+export function createIncomingRateLimitMiddleware(
+  options: RateLimitMiddlewareOptions
+): RafikiMiddleware {
   const buckets = new Map<string, TokenBucket>()
+  const refillPeriod: number = options.refillPeriod || DEFAULT_REFILL_PERIOD
+  const refillCount: bigint = options.refillCount || DEFAULT_REFILL_COUNT
+  const capacity: bigint =
+    typeof options.capacity !== 'undefined' ? options.capacity : refillCount
+
   return async (
-    { services: { logger }, request: { prepare }, peers }: RafikiContext,
+    {
+      services: { logger },
+      request: { prepare },
+      accounts: { incoming }
+    }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    const peer = await peers.incoming
-    let bucket = buckets.get(peer.id)
+    let bucket = buckets.get(incoming.accountId)
     if (!bucket) {
-      bucket = createRateLimitBucketForPeer(peer)
-      buckets.set(peer.id, bucket)
+      // TODO: When we add the ability to update middleware, our state will get
+      //   reset every update, which may not be desired.
+      bucket = new TokenBucket({ refillPeriod, refillCount, capacity })
+      buckets.set(incoming.accountId, bucket)
     }
     if (!bucket.take()) {
-      logger.warn('rate limited a packet', { bucket, prepare, peer })
+      logger.warn('rate limited a packet', {
+        bucket,
+        prepare,
+        accountId: incoming.accountId
+      })
       throw new RateLimitedError('too many requests, throttling.')
     }
     await next()

@@ -1,14 +1,13 @@
+import { randomBytes } from 'crypto'
 import {
   AccountsService,
   createApp,
-  InMemoryPeers,
-  InMemoryAccountsService,
-  InMemoryRouter,
   RafikiRouter,
   createBalanceMiddleware,
   createIncomingErrorHandlerMiddleware,
   createIldcpProtocolController,
-  createCcpProtocolController,
+  createStreamController,
+  //createCcpProtocolController,
   createOutgoingExpireMiddleware,
   createClientController,
   createIncomingMaxPacketAmountMiddleware,
@@ -38,41 +37,40 @@ const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
 /**
  * Connector variables
  */
-const PREFIX = process.env.PREFIX || 'test'
+//const PREFIX = process.env.PREFIX || 'test'
 const ILP_ADDRESS = process.env.ILP_ADDRESS || undefined
 const PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
+const STREAM_SECRET = process.env.STREAM_SECRET
+  ? Buffer.from(process.env.STREAM_SECRET, 'base64')
+  : randomBytes(32)
 
-const peerService = new InMemoryPeers()
-const accountsService = new InMemoryAccountsService()
+if (!ILP_ADDRESS) {
+  throw new Error('ILP_ADDRESS is required')
+}
+
+/*
 const router = new InMemoryRouter(peerService, {
   globalPrefix: PREFIX,
   ilpAddress: ILP_ADDRESS
 })
-
-const adminApi = new AdminApi(
-  { host: ADMIN_API_HOST, port: ADMIN_API_PORT },
-  {
-    auth: (): boolean => {
-      return true
-    },
-    peers: peerService,
-    accounts: accountsService,
-    router: router
-  }
-)
+*/
 
 const incoming = compose([
   // Incoming Rules
-  createIncomingErrorHandlerMiddleware(),
+  createIncomingErrorHandlerMiddleware(ILP_ADDRESS),
   createIncomingMaxPacketAmountMiddleware(),
-  createIncomingRateLimitMiddleware(),
+  createIncomingRateLimitMiddleware({}),
   createIncomingThroughputMiddleware()
 ])
 
 const outgoing = compose([
   // Outgoing Rules
+  createStreamController({
+    serverSecret: STREAM_SECRET,
+    serverAddress: ILP_ADDRESS
+  }),
   createOutgoingThroughputMiddleware(),
-  createOutgoingReduceExpiryMiddleware(),
+  createOutgoingReduceExpiryMiddleware({}),
   createOutgoingExpireMiddleware(),
   createOutgoingValidateFulfillmentMiddleware(),
 
@@ -82,24 +80,7 @@ const outgoing = compose([
 
 const middleware = compose([incoming, createBalanceMiddleware(), outgoing])
 
-// TODO Add auth
-const app = createApp({
-  peers: peerService,
-  router: router,
-  accounts: accountsService
-})
-
-const appRouter = new RafikiRouter()
-
-// Default ILP routes
-// TODO Understand the priority and workings of the router... Seems to do funky stuff. Maybe worth just writing ILP one?
-appRouter.ilpRoute('test.*', middleware)
-appRouter.ilpRoute('peer.config', createIldcpProtocolController())
-appRouter.ilpRoute('peer.route.*', createCcpProtocolController())
-// TODO Handle echo
-
-app.use(appRouter.routes())
-
+let adminApi: AdminApi
 let server: Server
 
 export const gracefulShutdown = async (): Promise<void> => {
@@ -118,9 +99,31 @@ export const gracefulShutdown = async (): Promise<void> => {
   }
 }
 export const start = async (accounts?: AccountsService): Promise<void> => {
-  if (accounts) {
-    app.accounts = accounts
-  }
+  adminApi = new AdminApi(
+    { host: ADMIN_API_HOST, port: ADMIN_API_PORT },
+    {
+      auth: (): boolean => {
+        return true
+      },
+      accounts
+      //router: router
+    }
+  )
+  // TODO Add auth
+  const app = createApp({
+    //router: router,
+    accounts
+  })
+
+  const appRouter = new RafikiRouter()
+
+  // Default ILP routes
+  // TODO Understand the priority and workings of the router... Seems to do funky stuff. Maybe worth just writing ILP one?
+  appRouter.ilpRoute('test.*', middleware)
+  appRouter.ilpRoute('peer.config', createIldcpProtocolController(ILP_ADDRESS))
+  //appRouter.ilpRoute('peer.route.*', createCcpProtocolController())
+  // TODO Handle echo
+  app.use(appRouter.routes())
 
   let shuttingDown = false
   process.on(
