@@ -1,28 +1,37 @@
 import * as crypto from 'crypto'
-import { StreamServer } from '@interledger/stream-receiver'
 import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
-import { createStreamController } from '../../controllers/stream'
+import {
+  createStreamController,
+  streamReceivedKey
+} from '../../controllers/stream'
 import {
   AccountFactory,
   PeerAccountFactory,
-  IlpPrepareFactory
+  IlpPrepareFactory,
+  RafikiServicesFactory
 } from '../../factories'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 
+const sha256 = (preimage: string): string =>
+  crypto.createHash('sha256').update(preimage).digest('hex')
+
 describe('Stream Controller', function () {
   const alice = PeerAccountFactory.build()
-  const serverOptions = {
-    serverAddress: 'test.rafiki',
-    serverSecret: crypto.randomBytes(32)
-  }
-  const controller = createStreamController(serverOptions)
-  const server = new StreamServer(serverOptions)
+  const controller = createStreamController()
+  const services = RafikiServicesFactory.build()
+
+  afterAll(async () => {
+    await services.redis.disconnect()
+  })
 
   test('constructs a reply when "stream" is enabled', async () => {
     const bob = AccountFactory.build({ stream: { enabled: true } })
     const ctx = createContext<unknown, RafikiContext>()
-    const { ilpAddress } = server.generateCredentials({ paymentTag: 'foo' })
+    const { ilpAddress } = services.streamServer.generateCredentials({
+      paymentTag: 'foo'
+    })
+    ctx.services = services
     ctx.request.prepare = new ZeroCopyIlpPrepare(
       IlpPrepareFactory.build({ destination: ilpAddress })
     )
@@ -43,11 +52,17 @@ describe('Stream Controller', function () {
       data: Buffer.alloc(0)
     })
     expect(next).toHaveBeenCalledTimes(0)
+    expect(
+      await services.redis.get(
+        streamReceivedKey(sha256(ctx.request.prepare.destination))
+      )
+    ).toBeNull()
   })
 
   test("skips when the payment tag can't be decrypted", async () => {
     const bob = AccountFactory.build({ stream: { enabled: true } })
     const ctx = createContext<unknown, RafikiContext>()
+    ctx.services = services
     ctx.request.prepare = new ZeroCopyIlpPrepare(IlpPrepareFactory.build({}))
     ctx.accounts = {
       get incoming() {
@@ -66,6 +81,7 @@ describe('Stream Controller', function () {
   test('skips when "stream" is not set', async () => {
     const bob = AccountFactory.build()
     const ctx = createContext<unknown, RafikiContext>()
+    ctx.services = services
     ctx.accounts = {
       get incoming() {
         return alice
@@ -83,6 +99,7 @@ describe('Stream Controller', function () {
   test('skips when "stream.enabled" is false', async () => {
     const bob = AccountFactory.build({ stream: { enabled: false } })
     const ctx = createContext<unknown, RafikiContext>()
+    ctx.services = services
     ctx.accounts = {
       get incoming() {
         return alice

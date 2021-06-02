@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto'
+import IORedis from 'ioredis'
 import {
   AccountsService,
   createApp,
@@ -33,6 +34,7 @@ const logger = createLogger()
 const ADMIN_API_HOST = process.env.ADMIN_API_HOST || '127.0.0.1'
 const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
 // const ADMIN_API_AUTH_TOKEN = process.env.ADMIN_API_AUTH_TOKEN || '' // TODO
+const REDIS = process.env.REDIS || 'redis://127.0.0.1:6379'
 
 /**
  * Connector variables
@@ -54,6 +56,7 @@ const router = new InMemoryRouter(peerService, {
   ilpAddress: ILP_ADDRESS
 })
 */
+const redis = new IORedis(REDIS)
 
 const incoming = compose([
   // Incoming Rules
@@ -65,10 +68,7 @@ const incoming = compose([
 
 const outgoing = compose([
   // Outgoing Rules
-  createStreamController({
-    serverSecret: STREAM_SECRET,
-    serverAddress: ILP_ADDRESS
-  }),
+  createStreamController(),
   createOutgoingThroughputMiddleware(),
   createOutgoingReduceExpiryMiddleware({}),
   createOutgoingExpireMiddleware(),
@@ -89,6 +89,7 @@ export const gracefulShutdown = async (): Promise<void> => {
   if (server) {
     return new Promise((resolve, reject): void => {
       server.close((err?: Error) => {
+        redis.disconnect()
         if (err) {
           reject(err)
           return
@@ -112,7 +113,12 @@ export const start = async (accounts?: AccountsService): Promise<void> => {
   // TODO Add auth
   const app = createApp({
     //router: router,
-    accounts
+    accounts,
+    redis,
+    stream: {
+      serverSecret: STREAM_SECRET,
+      serverAddress: ILP_ADDRESS
+    }
   })
 
   const appRouter = new RafikiRouter()

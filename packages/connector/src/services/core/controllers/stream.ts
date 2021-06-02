@@ -1,39 +1,46 @@
-import * as assert from 'assert'
-import { StreamServer } from '@interledger/stream-receiver'
 import { isIlpReply } from 'ilp-packet'
 import { RafikiContext, RafikiMiddleware } from '../rafiki'
 
-interface StreamControllerOptions {
-  serverSecret: Buffer
-  serverAddress: string
-}
+const CONNECTION_EXPIRY = 60 * 60 // seconds
 
-export function createStreamController({
-  serverSecret,
-  serverAddress
-}: StreamControllerOptions): RafikiMiddleware {
-  assert.equal(serverSecret.length, 32)
-  const server = new StreamServer({ serverSecret, serverAddress })
+// Track the total amount received per stream connection.
+export const streamReceivedKey = (connectionId: string): string =>
+  `stream_received:${connectionId}`
 
+export function createStreamController(): RafikiMiddleware {
   return async function (
     ctx: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> {
+    const { redis, streamServer } = ctx.services
     const { request, response } = ctx
 
     const { stream } = ctx.accounts.outgoing
     if (
       !stream ||
       !stream.enabled ||
-      !server.decodePaymentTag(request.prepare.destination)
+      !streamServer.decodePaymentTag(request.prepare.destination) // XXX mark this earlier in the middleware pipeline
     ) {
       await next()
       return
     }
 
-    const moneyOrReply = server.createReply(request.prepare)
-    response.reply = isIlpReply(moneyOrReply)
-      ? moneyOrReply
-      : moneyOrReply.accept()
+    const moneyOrReply = streamServer.createReply(request.prepare)
+    if (isIlpReply(moneyOrReply)) {
+      response.reply = moneyOrReply
+      return
+    }
+
+    const { connectionId } = moneyOrReply
+    const totalReceived = await redis.incrby(
+      streamReceivedKey(connectionId),
+      +request.prepare.amount
+    )
+    moneyOrReply.setTotalReceived(totalReceived)
+    if (totalReceived !== +request.prepare.amount) {
+      // Set key expiry once, when the first packet arrives.
+      await redis.expire(connectionId, CONNECTION_EXPIRY)
+    }
+    response.reply = moneyOrReply.accept()
   }
 }

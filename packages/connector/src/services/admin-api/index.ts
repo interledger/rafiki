@@ -1,5 +1,5 @@
-import { Rafiki, RafikiMiddleware, AccountsService } from '../core'
-import { Context } from 'koa'
+import { RafikiMiddleware, AccountsService } from '../core'
+import Koa, { Context } from 'koa'
 import createRouter from 'koa-joi-router'
 import bodyParser from 'koa-bodyparser'
 import { Server } from 'http'
@@ -21,12 +21,12 @@ export interface AdminApiServices {
  * TODO - Current design assumes that the same token service is used for /peer end point functions AND auth of the API
  */
 export class AdminApi {
-  private _koa: Rafiki
+  private _koa: Koa
   private _httpServer?: Server
   private _host?: string
   private _port?: number
   constructor({ host, port }: AdminApiOptions, { accounts }: AdminApiServices) {
-    this._koa = new Rafiki()
+    this._koa = new Koa()
     // this._koa.use(createAuthMiddleware(auth))
     this._koa.use(this._getRoutes(accounts).middleware())
     this._host = host

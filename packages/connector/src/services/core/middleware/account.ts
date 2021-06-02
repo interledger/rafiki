@@ -5,7 +5,7 @@ import { IlpAccount } from '../services'
 
 export function createAccountMiddleware(): RafikiMiddleware {
   return async function account(
-    ctx: RafikiContext<AuthState>,
+    ctx: RafikiContext<AuthState & { streamDestination?: string }>,
     next: () => Promise<unknown>
   ): Promise<void> {
     const incomingAccount = ctx.state.account
@@ -16,7 +16,7 @@ export function createAccountMiddleware(): RafikiMiddleware {
     }
 
     const outgoingAccount = await ctx.services.accounts.getAccountByDestinationAddress(
-      ctx.request.prepare.destination
+      ctx.state.streamDestination || ctx.request.prepare.destination
     )
     if (outgoingAccount.disabled) {
       throw new Errors.UnreachableError('destination account is disabled')
