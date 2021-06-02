@@ -120,11 +120,14 @@ export class AccountsService implements ConnectorAccountsService {
             [
               {
                 id: uuidToBigInt(loanBalanceId),
-                flags: AccountFlags.credits_must_not_exceed_debits
+                flags:
+                  0 |
+                  AccountFlags.credits_must_not_exceed_debits |
+                  AccountFlags.linked
               },
               {
                 id: uuidToBigInt(creditBalanceId),
-                flags: AccountFlags.credits_must_not_exceed_debits
+                flags: 0 | AccountFlags.credits_must_not_exceed_debits
               }
             ],
             account.asset.scale
@@ -147,15 +150,21 @@ export class AccountsService implements ConnectorAccountsService {
         [
           {
             id: uuidToBigInt(balanceId),
-            flags: AccountFlags.debits_must_not_exceed_credits
+            flags:
+              0 |
+              AccountFlags.debits_must_not_exceed_credits |
+              AccountFlags.linked
           },
           {
             id: uuidToBigInt(debtBalanceId),
-            flags: AccountFlags.debits_must_not_exceed_credits
+            flags:
+              0 |
+              AccountFlags.debits_must_not_exceed_credits |
+              AccountFlags.linked
           },
           {
             id: uuidToBigInt(trustlineBalanceId),
-            flags: AccountFlags.debits_must_not_exceed_credits
+            flags: 0 | AccountFlags.debits_must_not_exceed_credits
           }
         ],
         account.asset.scale
@@ -333,19 +342,28 @@ export class AccountsService implements ConnectorAccountsService {
       [
         {
           id: toLiquidityId(assetCode, assetScale),
-          flags: AccountFlags.debits_must_not_exceed_credits
+          flags:
+            0 |
+            AccountFlags.debits_must_not_exceed_credits |
+            AccountFlags.linked
         },
         {
           id: toSettlementId(assetCode, assetScale),
-          flags: AccountFlags.credits_must_not_exceed_debits
+          flags:
+            0 |
+            AccountFlags.credits_must_not_exceed_debits |
+            AccountFlags.linked
         },
         {
           id: toSettlementCreditId(assetCode, assetScale),
-          flags: AccountFlags.credits_must_not_exceed_debits
+          flags:
+            0 |
+            AccountFlags.credits_must_not_exceed_debits |
+            AccountFlags.linked
         },
         {
           id: toSettlementLoanId(assetCode, assetScale),
-          flags: AccountFlags.credits_must_not_exceed_debits
+          flags: 0 | AccountFlags.credits_must_not_exceed_debits
         }
       ],
       assetScale
@@ -395,7 +413,6 @@ export class AccountsService implements ConnectorAccountsService {
     assetScale: number,
     amount: bigint
   ): Promise<void> {
-    await this.createCurrencyBalances(assetCode, assetScale)
     await this.createTransfers([
       {
         sourceBalanceId: toLiquidityId(assetCode, assetScale),
