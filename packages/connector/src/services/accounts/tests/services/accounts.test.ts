@@ -102,8 +102,8 @@ describe('Accounts Service', (): void => {
       ])
       expect(balances.length).toBe(3)
       balances.forEach((balance) => {
-        expect(balance.credit_reserved).toEqual(BigInt(0))
-        expect(balance.credit_accepted).toEqual(BigInt(0))
+        expect(balance.credits_reserved).toEqual(BigInt(0))
+        expect(balance.credits_accepted).toEqual(BigInt(0))
       })
     })
 
@@ -142,8 +142,8 @@ describe('Accounts Service', (): void => {
       ])
       expect(balances.length).toBe(3)
       balances.forEach((balance) => {
-        expect(balance.credit_reserved).toEqual(BigInt(0))
-        expect(balance.credit_accepted).toEqual(BigInt(0))
+        expect(balance.credits_reserved).toEqual(BigInt(0))
+        expect(balance.credits_accepted).toEqual(BigInt(0))
       })
     })
 
@@ -235,8 +235,8 @@ describe('Accounts Service', (): void => {
           ])
           expect(balances.length).toBe(2)
           balances.forEach((balance) => {
-            expect(balance.credit_reserved).toEqual(BigInt(0))
-            expect(balance.credit_accepted).toEqual(BigInt(0))
+            expect(balance.credits_reserved).toEqual(BigInt(0))
+            expect(balance.credits_accepted).toEqual(BigInt(0))
           })
         } else {
           fail()
@@ -341,8 +341,8 @@ describe('Accounts Service', (): void => {
         ])
         expect(balances.length).toBe(4)
         balances.forEach((balance) => {
-          expect(balance.credit_reserved).toEqual(BigInt(0))
-          expect(balance.credit_accepted).toEqual(BigInt(0))
+          expect(balance.credits_reserved).toEqual(BigInt(0))
+          expect(balance.credits_accepted).toEqual(BigInt(0))
         })
       }
 

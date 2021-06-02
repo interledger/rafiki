@@ -46,7 +46,6 @@ export function initIocContainer(
     const config = await deps.use('config')
     logger.info({ msg: 'creating tigerbeetle client' })
     return createClient({
-      client_id: config.tigerbeetleClientId,
       cluster_id: config.tigerbeetleClusterId,
       replica_addresses: config.tigerbeetleReplicaAddresses
     })

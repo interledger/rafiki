@@ -2,11 +2,12 @@ import { QueryBuilder, raw, transaction, UniqueViolationError } from 'objection'
 import { Logger } from 'pino'
 import { v4 as uuid } from 'uuid'
 import {
+  AccountFlags,
   Client,
   CommitFlags,
-  CreateTransfer,
   CreateTransferError,
-  CreateTransferFlags
+  Transfer as ClientTransfer,
+  TransferFlags
 } from 'tigerbeetle-node'
 
 import { Config } from '../config'
@@ -36,12 +37,6 @@ import {
   Transfer
 } from '../../core/services/accounts'
 // const { InsufficientLiquidityError } = Errors
-
-const CUSTOM_FIELDS = {
-  custom_1: BigInt(0),
-  custom_2: BigInt(0),
-  custom_3: BigInt(0)
-}
 
 function toIlpAccount(accountRow: Account): IlpAccount {
   const account: IlpAccount = {
@@ -79,6 +74,10 @@ export type UpdateIlpAccountOptions = Omit<
   CreateOptions,
   'asset' | 'parentAccountId'
 >
+interface BalanceOptions {
+  id: bigint
+  flags: number
+}
 
 interface BalanceTransfer {
   sourceBalanceId: bigint
@@ -90,6 +89,9 @@ interface Peer {
   accountId: string
   ilpAddress: string
 }
+
+const ACCOUNT_RESERVED = Buffer.alloc(48)
+const TRANSFER_RESERVED = Buffer.alloc(32)
 
 export class AccountsService implements ConnectorAccountsService {
   constructor(
@@ -115,8 +117,17 @@ export class AccountsService implements ConnectorAccountsService {
           const creditBalanceId = uuid()
 
           await this.createBalances(
-            [uuidToBigInt(loanBalanceId), uuidToBigInt(creditBalanceId)],
-            BigInt(account.asset.scale)
+            [
+              {
+                id: uuidToBigInt(loanBalanceId),
+                flags: AccountFlags.credits_must_not_exceed_debits
+              },
+              {
+                id: uuidToBigInt(creditBalanceId),
+                flags: AccountFlags.credits_must_not_exceed_debits
+              }
+            ],
+            account.asset.scale
           )
 
           await Account.query()
@@ -134,11 +145,20 @@ export class AccountsService implements ConnectorAccountsService {
       const trustlineBalanceId = uuid()
       await this.createBalances(
         [
-          uuidToBigInt(balanceId),
-          uuidToBigInt(debtBalanceId),
-          uuidToBigInt(trustlineBalanceId)
+          {
+            id: uuidToBigInt(balanceId),
+            flags: AccountFlags.debits_must_not_exceed_credits
+          },
+          {
+            id: uuidToBigInt(debtBalanceId),
+            flags: AccountFlags.debits_must_not_exceed_credits
+          },
+          {
+            id: uuidToBigInt(trustlineBalanceId),
+            flags: AccountFlags.debits_must_not_exceed_credits
+          }
         ],
-        BigInt(account.asset.scale)
+        account.asset.scale
       )
       await Account.query().insert({
         id: account.accountId,
@@ -311,31 +331,44 @@ export class AccountsService implements ConnectorAccountsService {
   ): Promise<void> {
     await this.createBalances(
       [
-        toLiquidityId(assetCode, assetScale),
-        toSettlementId(assetCode, assetScale),
-        toSettlementCreditId(assetCode, assetScale),
-        toSettlementLoanId(assetCode, assetScale)
+        {
+          id: toLiquidityId(assetCode, assetScale),
+          flags: AccountFlags.debits_must_not_exceed_credits
+        },
+        {
+          id: toSettlementId(assetCode, assetScale),
+          flags: AccountFlags.credits_must_not_exceed_debits
+        },
+        {
+          id: toSettlementCreditId(assetCode, assetScale),
+          flags: AccountFlags.credits_must_not_exceed_debits
+        },
+        {
+          id: toSettlementLoanId(assetCode, assetScale),
+          flags: AccountFlags.credits_must_not_exceed_debits
+        }
       ],
-      BigInt(assetScale)
+      assetScale
     )
   }
 
-  private async createBalances(ids: bigint[], unit: bigint): Promise<void> {
+  private async createBalances(
+    balances: BalanceOptions[],
+    unit: number
+  ): Promise<void> {
     await this.client.createAccounts(
-      ids.map((id) => {
+      balances.map(({ id, flags }) => {
         return {
           id,
-          custom: BigInt(0),
-          flags: BigInt(0),
+          user_data: BigInt(0),
+          reserved: ACCOUNT_RESERVED,
           unit,
-          debit_accepted: BigInt(0),
-          debit_reserved: BigInt(0),
-          credit_accepted: BigInt(0),
-          credit_reserved: BigInt(0),
-          debit_accepted_limit: BigInt(0),
-          debit_reserved_limit: BigInt(0),
-          credit_accepted_limit: BigInt(0),
-          credit_reserved_limit: BigInt(0),
+          code: 0,
+          flags,
+          debits_accepted: BigInt(0),
+          debits_reserved: BigInt(0),
+          credits_accepted: BigInt(0),
+          credits_reserved: BigInt(0),
           timestamp: 0n
         }
       })
@@ -402,23 +435,21 @@ export class AccountsService implements ConnectorAccountsService {
           debit_account_id: transfer.sourceBalanceId,
           credit_account_id: transfer.destinationBalanceId,
           amount: transfer.amount,
-          ...CUSTOM_FIELDS,
-          flags:
-            0n |
-            BigInt(CreateTransferFlags.auto_commit) |
-            BigInt(CreateTransferFlags.accept),
-          timeout: BigInt(0)
+          user_data: BigInt(0),
+          reserved: TRANSFER_RESERVED,
+          code: 0,
+          flags: 0,
+          timeout: BigInt(0),
+          timestamp: BigInt(0)
         }
       })
     )
-
     if (res.length) {
       if (
         [
           CreateTransferError.credit_account_not_found,
           CreateTransferError.debit_account_not_found
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ].includes((res[0] as any).result)
+        ].includes(res[0].code)
       ) {
         console.log('UnknownBalanceError')
         throw new UnknownBalanceError()
@@ -552,12 +583,9 @@ export class AccountsService implements ConnectorAccountsService {
       throw new UnknownAccountError()
     }
 
-    const transfers: CreateTransfer[] = []
+    const transfers: ClientTransfer[] = []
 
-    const flags = callback
-      ? BigInt(0)
-      : BigInt(CreateTransferFlags.auto_commit) |
-        BigInt(CreateTransferFlags.accept)
+    const flags = callback ? 0 | TransferFlags.two_phase_commit : 0
     const timeout = callback ? BigInt(1000000000) : BigInt(0)
 
     if (sourceAccount.assetCode === destinationAccount.assetCode) {
@@ -574,9 +602,12 @@ export class AccountsService implements ConnectorAccountsService {
         credit_account_id: uuidToBigInt(destinationAccount.balanceId),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         amount: sourceAmount || destinationAmount!,
-        ...CUSTOM_FIELDS,
         flags,
-        timeout
+        timeout,
+        reserved: TRANSFER_RESERVED,
+        code: 0,
+        user_data: BigInt(0),
+        timestamp: BigInt(0)
       })
     } else {
       if (!sourceAmount) {
@@ -595,9 +626,12 @@ export class AccountsService implements ConnectorAccountsService {
           ),
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           amount: sourceAmount!,
-          ...CUSTOM_FIELDS,
           flags,
-          timeout
+          timeout,
+          reserved: TRANSFER_RESERVED,
+          code: 0,
+          user_data: BigInt(0),
+          timestamp: BigInt(0)
         },
         {
           id: uuidToBigInt(uuid()),
@@ -608,9 +642,12 @@ export class AccountsService implements ConnectorAccountsService {
           credit_account_id: uuidToBigInt(destinationAccount.balanceId),
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           amount: destinationAmount!,
-          ...CUSTOM_FIELDS,
           flags,
-          timeout
+          timeout,
+          reserved: TRANSFER_RESERVED,
+          code: 0,
+          user_data: BigInt(0),
+          timestamp: BigInt(0)
         }
       )
     }
@@ -621,8 +658,7 @@ export class AccountsService implements ConnectorAccountsService {
           [
             CreateTransferError.credit_account_not_found,
             CreateTransferError.debit_account_not_found
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ].includes((res[0] as any).result)
+          ].includes(res[0].code)
         ) {
           console.log('UnknownBalanceError')
           throw new UnknownBalanceError()
@@ -636,8 +672,10 @@ export class AccountsService implements ConnectorAccountsService {
               transfers.map((transfer) => {
                 return {
                   id: transfer.id,
-                  flags: 0n | BigInt(CommitFlags.accept),
-                  ...CUSTOM_FIELDS
+                  flags: 0,
+                  reserved: TRANSFER_RESERVED,
+                  code: 0,
+                  timestamp: BigInt(0)
                 }
               })
             )
@@ -650,8 +688,10 @@ export class AccountsService implements ConnectorAccountsService {
               transfers.map((transfer) => {
                 return {
                   id: transfer.id,
-                  flags: 0n | BigInt(CommitFlags.reject),
-                  ...CUSTOM_FIELDS
+                  flags: 0 | CommitFlags.reject,
+                  reserved: TRANSFER_RESERVED,
+                  code: 0,
+                  timestamp: BigInt(0)
                 }
               })
             )
@@ -664,7 +704,6 @@ export class AccountsService implements ConnectorAccountsService {
       }
       return transfer
     } catch (error) {
-      console.log(error)
       this.logger.error({
         error
       })

@@ -36,7 +36,6 @@ export const Config = {
   peerAddresses: process.env.PEER_ADDRESSES
     ? JSON.parse(process.env.PEER_ADDRESSES)
     : [],
-  tigerbeetleClientId: envBigInt('TIGERBEETLE_CLIENT_ID', 0x0a5ca1ab1ebee11en),
   tigerbeetleClusterId: envBigInt(
     'TIGERBEETLE_CLUSTER_ID',
     0x0a5ca1ab1ebee11en
