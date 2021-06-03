@@ -12,6 +12,7 @@ import {
 
 import { Config } from '../config'
 import {
+  InsufficientBalanceError,
   InvalidAssetError,
   InvalidAmountError,
   UnknownAccountError,
@@ -446,12 +447,12 @@ export class AccountsService implements ConnectorAccountsService {
 
   private async createTransfers(transfers: BalanceTransfer[]): Promise<void> {
     const res = await this.client.createTransfers(
-      transfers.map((transfer) => {
+      transfers.map(({ sourceBalanceId, destinationBalanceId, amount }) => {
         return {
           id: uuidToBigInt(uuid()),
-          debit_account_id: transfer.sourceBalanceId,
-          credit_account_id: transfer.destinationBalanceId,
-          amount: transfer.amount,
+          debit_account_id: sourceBalanceId,
+          credit_account_id: destinationBalanceId,
+          amount,
           user_data: BigInt(0),
           reserved: TRANSFER_RESERVED,
           code: 0,
@@ -461,15 +462,21 @@ export class AccountsService implements ConnectorAccountsService {
         }
       })
     )
-    if (res.length) {
+    for (const { code } of res) {
       if (
         [
           CreateTransferError.credit_account_not_found,
           CreateTransferError.debit_account_not_found
-        ].includes(res[0].code)
+        ].includes(code)
       ) {
-        console.log('UnknownBalanceError')
         throw new UnknownBalanceError()
+      } else if (
+        [
+          CreateTransferError.exceeds_credits,
+          CreateTransferError.exceeds_debits
+        ].includes(code)
+      ) {
+        throw new InsufficientBalanceError()
       }
       // TODO handle other errors
     }
@@ -643,7 +650,7 @@ export class AccountsService implements ConnectorAccountsService {
           ),
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           amount: sourceAmount!,
-          flags,
+          flags: flags | TransferFlags.linked,
           timeout,
           reserved: TRANSFER_RESERVED,
           code: 0,
@@ -670,15 +677,21 @@ export class AccountsService implements ConnectorAccountsService {
     }
     try {
       const res = await this.client.createTransfers(transfers)
-      if (res.length) {
+      for (const { code } of res) {
         if (
           [
             CreateTransferError.credit_account_not_found,
             CreateTransferError.debit_account_not_found
-          ].includes(res[0].code)
+          ].includes(code)
         ) {
-          console.log('UnknownBalanceError')
           throw new UnknownBalanceError()
+        } else if (
+          [
+            CreateTransferError.exceeds_credits,
+            CreateTransferError.exceeds_debits
+          ].includes(code)
+        ) {
+          throw new InsufficientBalanceError()
         }
         // TODO handle other errors
       }
@@ -689,7 +702,10 @@ export class AccountsService implements ConnectorAccountsService {
               transfers.map((transfer) => {
                 return {
                   id: transfer.id,
-                  flags: 0,
+                  flags:
+                    transfer.flags & TransferFlags.linked
+                      ? 0 | CommitFlags.linked
+                      : 0,
                   reserved: TRANSFER_RESERVED,
                   code: 0,
                   timestamp: BigInt(0)
@@ -703,9 +719,13 @@ export class AccountsService implements ConnectorAccountsService {
           rollback: async () => {
             const res = await this.client.commitTransfers(
               transfers.map((transfer) => {
+                const flags =
+                  transfer.flags & TransferFlags.linked
+                    ? 0 | CommitFlags.linked
+                    : 0
                 return {
                   id: transfer.id,
-                  flags: 0 | CommitFlags.reject,
+                  flags: flags | CommitFlags.reject,
                   reserved: TRANSFER_RESERVED,
                   code: 0,
                   timestamp: BigInt(0)

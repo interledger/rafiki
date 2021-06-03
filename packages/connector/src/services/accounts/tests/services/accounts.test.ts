@@ -17,6 +17,7 @@ import {
   AccountsService,
   AppServices,
   Config,
+  InsufficientBalanceError,
   InvalidAssetError,
   InvalidAmountError,
   UnknownAccountError,
@@ -634,12 +635,14 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test.skip("Can't withdraw more than the balance", async (): Promise<void> => {
+    test('Throws for insufficient balance', async (): Promise<void> => {
       const asset = randomAsset()
       const startingBalance = BigInt(5)
       await accounts.depositLiquidity(asset.code, asset.scale, startingBalance)
       const amount = BigInt(10)
-      await accounts.withdrawLiquidity(asset.code, asset.scale, amount)
+      await expect(
+        accounts.withdrawLiquidity(asset.code, asset.scale, amount)
+      ).rejects.toThrow(InsufficientBalanceError)
       const balance = await accounts.getLiquidityBalance(
         asset.code,
         asset.scale
@@ -706,7 +709,7 @@ describe('Accounts Service', (): void => {
       )
     })
 
-    test.skip("Can't withdraw more than the balance", async (): Promise<void> => {
+    test('Throws for insufficient balance', async (): Promise<void> => {
       const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
         asset: randomAsset(),
@@ -715,7 +718,9 @@ describe('Accounts Service', (): void => {
       const startingBalance = BigInt(5)
       await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(10)
-      await accounts.withdraw(accountId, amount)
+      await expect(accounts.withdraw(accountId, amount)).rejects.toThrow(
+        InsufficientBalanceError
+      )
       const { balance } = await accounts.getAccountBalance(accountId)
       expect(balance).toEqual(startingBalance)
       const settlementBalance = await accounts.getSettlementBalance(
@@ -1208,7 +1213,7 @@ describe('Accounts Service', (): void => {
       await accounts.transferFunds(transfer)
     })
 
-    test.skip("Can't transfer more than source balance", async (): Promise<void> => {
+    test('Throws for insufficient source balance', async (): Promise<void> => {
       const {
         accountId: sourceAccountId,
         asset
@@ -1222,35 +1227,37 @@ describe('Accounts Service', (): void => {
         asset,
         maxPacketAmount: BigInt(100)
       })
-      const startingSourceBalance = BigInt(10)
-      await accounts.deposit(sourceAccountId, startingSourceBalance)
-      {
-        const { balance: sourceBalance } = await accounts.getAccountBalance(
-          sourceAccountId
-        )
-        expect(sourceBalance).toEqual(startingSourceBalance)
-        const {
-          balance: destinationBalance
-        } = await accounts.getAccountBalance(destinationAccountId)
-        expect(destinationBalance).toEqual(BigInt(0))
-      }
-      const amount = BigInt(5)
       const transfer = {
         sourceAccountId,
         destinationAccountId,
-        sourceAmount: amount
+        sourceAmount: BigInt(5)
       }
-
-      await accounts.transferFunds(transfer)
+      await expect(accounts.transferFunds(transfer)).rejects.toThrow(
+        InsufficientBalanceError
+      )
+      const { balance: sourceBalance } = await accounts.getAccountBalance(
+        sourceAccountId
+      )
+      expect(sourceBalance).toEqual(BigInt(0))
+      const { balance: destinationBalance } = await accounts.getAccountBalance(
+        destinationAccountId
+      )
+      expect(destinationBalance).toEqual(BigInt(0))
     })
 
-    test.skip("Can't transfer more than destination liquidity balance", async (): Promise<void> => {
-      const { accountId: sourceAccountId } = await accounts.createAccount({
+    test('Throws for insufficient destination liquidity balance', async (): Promise<void> => {
+      const {
+        accountId: sourceAccountId,
+        asset: sourceAsset
+      } = await accounts.createAccount({
         accountId: uuid(),
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       })
-      const { accountId: destinationAccountId } = await accounts.createAccount({
+      const {
+        accountId: destinationAccountId,
+        asset: destinationAsset
+      } = await accounts.createAccount({
         accountId: uuid(),
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
@@ -1262,6 +1269,19 @@ describe('Accounts Service', (): void => {
           sourceAccountId
         )
         expect(sourceBalance).toEqual(startingSourceBalance)
+
+        const sourceLiquidityBalance = await accounts.getLiquidityBalance(
+          sourceAsset.code,
+          sourceAsset.scale
+        )
+        expect(sourceLiquidityBalance).toEqual(BigInt(0))
+
+        const destinationLiquidityBalance = await accounts.getLiquidityBalance(
+          destinationAsset.code,
+          destinationAsset.scale
+        )
+        expect(destinationLiquidityBalance).toEqual(BigInt(0))
+
         const {
           balance: destinationBalance
         } = await accounts.getAccountBalance(destinationAccountId)
@@ -1276,7 +1296,28 @@ describe('Accounts Service', (): void => {
         destinationAmount
       }
 
-      await accounts.transferFunds(transfer)
+      await expect(accounts.transferFunds(transfer)).rejects.toThrow(
+        InsufficientBalanceError
+      )
+
+      const { balance: sourceBalance } = await accounts.getAccountBalance(
+        sourceAccountId
+      )
+      expect(sourceBalance).toEqual(startingSourceBalance)
+      const sourceLiquidityBalance = await accounts.getLiquidityBalance(
+        sourceAsset.code,
+        sourceAsset.scale
+      )
+      expect(sourceLiquidityBalance).toEqual(BigInt(0))
+      const { balance: destinationBalance } = await accounts.getAccountBalance(
+        destinationAccountId
+      )
+      expect(destinationBalance).toEqual(BigInt(0))
+      const destinationLiquidityBalance = await accounts.getLiquidityBalance(
+        destinationAsset.code,
+        destinationAsset.scale
+      )
+      expect(destinationLiquidityBalance).toEqual(BigInt(0))
     })
 
     test('Throws for nonexistent account', async (): Promise<void> => {

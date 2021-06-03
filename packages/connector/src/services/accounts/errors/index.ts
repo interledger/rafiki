@@ -1,3 +1,10 @@
+export class InsufficientBalanceError extends Error {
+  constructor() {
+    super('Insufficient balance')
+    this.name = 'InsufficientBalanceError'
+  }
+}
+
 export class InvalidAssetError extends Error {
   constructor(code: string, scale: number) {
     super('Invalid asset. code=' + code + ' scale=' + scale)
