@@ -89,7 +89,7 @@ export const gracefulShutdown = async (): Promise<void> => {
   if (server) {
     return new Promise((resolve, reject): void => {
       server.close((err?: Error) => {
-        redis.disconnect()
+        redis.quit()
         if (err) {
           reject(err)
           return

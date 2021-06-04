@@ -1,7 +1,7 @@
 import { isIlpReply } from 'ilp-packet'
 import { RafikiContext, RafikiMiddleware } from '../rafiki'
 
-const CONNECTION_EXPIRY = 60 * 60 // seconds
+const CONNECTION_EXPIRY = 60 * 10 // seconds
 
 // Track the total amount received per stream connection.
 export const streamReceivedKey = (connectionId: string): string =>
@@ -32,15 +32,17 @@ export function createStreamController(): RafikiMiddleware {
     }
 
     const { connectionId } = moneyOrReply
-    const totalReceived = await redis.incrby(
-      streamReceivedKey(connectionId),
-      +request.prepare.amount
+    const connectionKey = streamReceivedKey(connectionId)
+    // Pass the amount as a string so that values higher than MAX_SAFE_INTEGER aren't modified by a local float conversion.
+    // Ignore the running total returned by `incrby`, since it is parsed to a `Number`, which may
+    // be inaccurate if the value is higher than MAX_SAFE_INTEGER.
+    await redis.incrby(
+      connectionKey,
+      (request.prepare.amount as unknown) as number
     )
+    await redis.expire(connectionKey, CONNECTION_EXPIRY)
+    const totalReceived = await redis.get(connectionKey)
     moneyOrReply.setTotalReceived(totalReceived)
-    if (totalReceived !== +request.prepare.amount) {
-      // Set key expiry once, when the first packet arrives.
-      await redis.expire(connectionId, CONNECTION_EXPIRY)
-    }
     response.reply = moneyOrReply.accept()
   }
 }
