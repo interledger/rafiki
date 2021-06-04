@@ -2,6 +2,7 @@ import createLogger from 'pino'
 import Knex from 'knex'
 import { IocContract } from '@adonisjs/fold'
 import { Client } from 'tigerbeetle-node'
+import { v4 as uuid } from 'uuid'
 
 import { start, gracefulShutdown } from '../../../../accounts'
 import { App, AppServices } from '../../app'
@@ -26,6 +27,13 @@ export const createTestApp = async (
   config.databaseUrl = DATABASE_URL
   config.port = 0
   // config.adminPort = 0
+  config.ilpAddress = 'test.rafiki'
+  config.peerAddresses = [
+    {
+      accountId: uuid(),
+      ilpAddress: 'test.alice'
+    }
+  ]
   const logger = createLogger({
     prettyPrint: {
       translateTime: true,

@@ -32,6 +32,10 @@ export const Config = {
     'postgresql://postgres:password@localhost:5432/development'
   ),
   env: envString('NODE_ENV', 'development'),
+  ilpAddress: process.env.ILP_ADDRESS,
+  peerAddresses: process.env.PEER_ADDRESSES
+    ? JSON.parse(process.env.PEER_ADDRESSES)
+    : [],
   tigerbeetleClientId: envBigInt('TIGERBEETLE_CLIENT_ID', 0x0a5ca1ab1ebee11en),
   tigerbeetleClusterId: envBigInt(
     'TIGERBEETLE_CLUSTER_ID',

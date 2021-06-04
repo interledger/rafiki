@@ -1,8 +1,9 @@
-import { QueryBuilder, transaction, UniqueViolationError } from 'objection'
+import { QueryBuilder, raw, transaction, UniqueViolationError } from 'objection'
 import { Logger } from 'pino'
 import { v4 as uuid } from 'uuid'
 import { Client, CommitFlags, CreateTransferFlags } from 'tigerbeetle-node'
 
+import { Config } from '../config'
 import { InvalidAssetError } from '../errors'
 import { Account, Token } from '../models'
 import {
@@ -69,14 +70,17 @@ export type UpdateIlpAccountOptions = Omit<
   'asset' | 'parentAccountId'
 >
 
-export class AccountsService implements ConnectorAccountsService {
-  async getAccountByDestinationAddress(
-    _destinationAddress: string
-  ): Promise<IlpAccount> {
-    throw new Error('unimplemented')
-  }
+interface Peer {
+  accountId: string
+  ilpAddress: string
+}
 
-  constructor(private client: Client, private logger: Logger) {}
+export class AccountsService implements ConnectorAccountsService {
+  constructor(
+    private client: Client,
+    private config: typeof Config,
+    private logger: Logger
+  ) {}
 
   public async adjustBalances({
     sourceAmount,
@@ -510,5 +514,62 @@ export class AccountsService implements ConnectorAccountsService {
       .where('incomingTokens.token', token)
       .first()
     return account ? toIlpAccount(account) : null
+  }
+
+  public async getAccountByDestinationAddress(
+    destinationAddress: string
+  ): Promise<IlpAccount | null> {
+    try {
+      const account = await Account.query()
+        // new RegExp('^' + staticIlpAddress + '($|\\.)'))
+        .where(
+          raw('?', [destinationAddress]),
+          'like',
+          raw("?? || '%'", ['staticIlpAddress'])
+        )
+        .andWhere((builder) => {
+          builder
+            .where(
+              raw('length(??)', ['staticIlpAddress']),
+              destinationAddress.length
+            )
+            .orWhere(
+              raw('substring(?, length(??)+1, 1)', [
+                destinationAddress,
+                'staticIlpAddress'
+              ]),
+              '.'
+            )
+        })
+        .first()
+      if (account) {
+        return toIlpAccount(account)
+      }
+      const idx = this.config.peerAddresses.findIndex((peer: Peer) =>
+        new RegExp('^' + peer.ilpAddress + '($|\\.)').test(destinationAddress)
+      )
+      if (idx !== -1) {
+        const account = await Account.query().findById(
+          this.config.peerAddresses[idx].accountId
+        )
+        if (account) {
+          return toIlpAccount(account)
+        }
+      }
+      const found = destinationAddress.match(
+        new RegExp(
+          '(?<=^' + this.config.ilpAddress + '\\.)([a-zA-Z0-9_~-]+)(?=($|[.]))'
+        )
+      )
+      if (found) {
+        const account = await Account.query().findById(found[0])
+        if (account) {
+          return toIlpAccount(account)
+        }
+      }
+      return null
+    } catch {
+      return null
+    }
   }
 }

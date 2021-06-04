@@ -43,7 +43,7 @@ export class App {
     tigerbeetle: Client
   ) {
     this.koa = new Koa<DefaultState, AppContext>()
-    this.accounts = new AccountsService(tigerbeetle, this.logger)
+    this.accounts = new AccountsService(tigerbeetle, this.config, this.logger)
     this.koa.context.container = this.container
     this.koa.context.logger = this.logger
     this.publicRouter = new Router()
@@ -118,5 +118,9 @@ export class App {
 
   public getAccounts(): AccountsService {
     return this.accounts
+  }
+
+  public getConfig(): typeof Config {
+    return this.config
   }
 }

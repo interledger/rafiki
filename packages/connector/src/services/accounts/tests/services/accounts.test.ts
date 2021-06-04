@@ -43,6 +43,7 @@ describe('Accounts Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accounts: AccountsService
+  let config: typeof Config
   let trx: KnexTransaction
 
   beforeAll(
@@ -50,6 +51,7 @@ describe('Accounts Service', (): void => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       accounts = appContainer.app.getAccounts()
+      config = appContainer.app.getConfig()
     }
   )
 
@@ -731,6 +733,117 @@ describe('Accounts Service', (): void => {
 
     test('Returns null if no account exists with token', async (): Promise<void> => {
       const account = await accounts.getAccountByToken(uuid())
+      expect(account).toBeNull()
+    })
+  })
+
+  describe('ILP Address', (): void => {
+    test('Can retrieve account by ILP address', async (): Promise<void> => {
+      const ilpAddress = 'test.rafiki'
+      const { accountId } = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100),
+        routing: {
+          staticIlpAddress: ilpAddress
+        }
+      })
+      {
+        const account = await accounts.getAccountByDestinationAddress(
+          ilpAddress
+        )
+        expect(account).not.toBeNull()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(account!.accountId).toEqual(accountId)
+      }
+      {
+        const account = await accounts.getAccountByDestinationAddress(
+          ilpAddress + '.suffix'
+        )
+        expect(account).not.toBeNull()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(account!.accountId).toEqual(accountId)
+      }
+      {
+        const account = await accounts.getAccountByDestinationAddress(
+          ilpAddress + 'suffix'
+        )
+        expect(account).toBeNull()
+      }
+    })
+
+    test('Can retrieve account by configured peer ILP address', async (): Promise<void> => {
+      const { ilpAddress, accountId } = config.peerAddresses[0]
+      await accounts.createAccount({
+        accountId,
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+      {
+        const account = await accounts.getAccountByDestinationAddress(
+          ilpAddress
+        )
+        expect(account).not.toBeNull()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(account!.accountId).toEqual(accountId)
+      }
+      {
+        const account = await accounts.getAccountByDestinationAddress(
+          ilpAddress + '.suffix'
+        )
+        expect(account).not.toBeNull()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(account!.accountId).toEqual(accountId)
+      }
+      {
+        const account = await accounts.getAccountByDestinationAddress(
+          ilpAddress + 'suffix'
+        )
+        expect(account).toBeNull()
+      }
+    })
+
+    test('Can retrieve account by server ILP address', async (): Promise<void> => {
+      const { accountId } = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+      const ilpAddress = config.ilpAddress + '.' + accountId
+      {
+        const account = await accounts.getAccountByDestinationAddress(
+          ilpAddress
+        )
+        expect(account).not.toBeNull()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(account!.accountId).toEqual(accountId)
+      }
+      {
+        const account = await accounts.getAccountByDestinationAddress(
+          ilpAddress + '.suffix'
+        )
+        expect(account).not.toBeNull()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(account!.accountId).toEqual(accountId)
+      }
+      {
+        const account = await accounts.getAccountByDestinationAddress(
+          ilpAddress + 'suffix'
+        )
+        expect(account).toBeNull()
+      }
+    })
+
+    test('Returns null if no account exists with address', async (): Promise<void> => {
+      await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100),
+        routing: {
+          staticIlpAddress: 'test.rafiki'
+        }
+      })
+      const account = await accounts.getAccountByDestinationAddress('test.nope')
       expect(account).toBeNull()
     })
   })

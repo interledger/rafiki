@@ -4,7 +4,7 @@ export interface AccountsService {
   getAccount(accountId: string): Promise<IlpAccount>
   getAccountByDestinationAddress(
     destinationAddress: string
-  ): Promise<IlpAccount>
+  ): Promise<IlpAccount | null>
   getAccountByToken(token: string): Promise<IlpAccount | null>
   getAccountBalance(accountId: string): Promise<IlpBalance>
   createAccount(account: CreateOptions): Promise<IlpAccount>
