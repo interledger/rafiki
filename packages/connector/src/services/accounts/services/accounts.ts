@@ -104,7 +104,10 @@ export class AccountsService implements ConnectorAccountsService {
     destinationAccountId,
     callback
   }: AdjustmentOptions): Promise<void> {
-    const [sourceAccount, destinationAccount] = await Account.query()
+    const [
+      sourceAccount,
+      destinationAccount
+    ] = await Account.query()
       .findByIds([sourceAccountId, destinationAccountId])
       .throwIfNotFound()
     if (!sourceAccount || !destinationAccount) {
@@ -618,6 +621,23 @@ export class AccountsService implements ConnectorAccountsService {
     } catch {
       return null
     }
+  }
+
+  public async getAddress(accountId: string): Promise<string> {
+    const { staticIlpAddress } = await Account.query()
+      .findById(accountId)
+      .select('staticIlpAddress')
+      .throwIfNotFound()
+    if (staticIlpAddress) {
+      return staticIlpAddress
+    }
+    const idx = this.config.peerAddresses.findIndex(
+      (peer: Peer) => peer.accountId === accountId
+    )
+    if (idx !== -1) {
+      return this.config.peerAddresses[idx].ilpAddress
+    }
+    return this.config.ilpAddress + '.' + accountId
   }
 
   public async transferFunds(transfer: Transfer): Promise<Transfer> {

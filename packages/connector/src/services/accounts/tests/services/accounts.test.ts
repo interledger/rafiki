@@ -854,7 +854,7 @@ describe('Accounts Service', (): void => {
     })
   })
 
-  describe('ILP Address', (): void => {
+  describe('Get Account By ILP Address', (): void => {
     test('Can retrieve account by ILP address', async (): Promise<void> => {
       const ilpAddress = 'test.rafiki'
       const { accountId } = await accounts.createAccount({
@@ -965,9 +965,61 @@ describe('Accounts Service', (): void => {
     })
   })
 
+  describe('Get Account Address', (): void => {
+    test("Can get account's ILP address", async (): Promise<void> => {
+      const ilpAddress = 'test.rafiki'
+      const { accountId } = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100),
+        routing: {
+          staticIlpAddress: ilpAddress
+        }
+      })
+      {
+        const staticIlpAddress = await accounts.getAddress(accountId)
+        expect(staticIlpAddress).toEqual(ilpAddress)
+      }
+    })
+
+    test("Can get account's configured peer ILP address", async (): Promise<void> => {
+      const { ilpAddress, accountId } = config.peerAddresses[0]
+      await accounts.createAccount({
+        accountId,
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+      {
+        const peerAddress = await accounts.getAddress(accountId)
+        expect(peerAddress).toEqual(ilpAddress)
+      }
+    })
+
+    test("Can get account's address by server ILP address", async (): Promise<void> => {
+      const { accountId } = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+      {
+        const ilpAddress = await accounts.getAddress(accountId)
+        expect(ilpAddress).toEqual(config.ilpAddress + '.' + accountId)
+      }
+    })
+
+    test('Throws for nonexistent account', async (): Promise<void> => {
+      await expect(accounts.getAddress(uuid())).rejects.toThrow(
+        UnknownAccountError
+      )
+    })
+  })
+
   describe('Create Transfer', (): void => {
     test('Can transfer between accounts', async (): Promise<void> => {
-      const { accountId: sourceAccountId, asset } = await accounts.createAccount({
+      const {
+        accountId: sourceAccountId,
+        asset
+      } = await accounts.createAccount({
         accountId: uuid(),
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
@@ -1153,7 +1205,10 @@ describe('Accounts Service', (): void => {
     })
 
     test.skip("Can't transfer more than source balance", async (): Promise<void> => {
-      const { accountId: sourceAccountId, asset } = await accounts.createAccount({
+      const {
+        accountId: sourceAccountId,
+        asset
+      } = await accounts.createAccount({
         accountId: uuid(),
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
@@ -1258,7 +1313,10 @@ describe('Accounts Service', (): void => {
     })
 
     test('Throws for invalid amount', async (): Promise<void> => {
-      const { accountId: sourceAccountId, asset } = await accounts.createAccount({
+      const {
+        accountId: sourceAccountId,
+        asset
+      } = await accounts.createAccount({
         accountId: uuid(),
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)

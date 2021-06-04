@@ -11,6 +11,8 @@ type MockIlpAccount = CreateOptions & { balance: bigint }
 export class MockAccountsService implements AccountsService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
+  constructor(private serverIlpAddress: string) {}
+
   getAccount(accountId: string): Promise<IlpAccount> {
     const account = this.accounts.get(accountId)
     return account
@@ -74,6 +76,16 @@ export class MockAccountsService implements AccountsService {
         src.balance += options.sourceAmount
       }
     })
+  }
+
+  async getAddress(accountId: string): Promise<string> {
+    const account = this.accounts.get(accountId)
+    if (!account) throw new Error('account not found')
+    if (account.routing) {
+      return account.routing.staticIlpAddress
+    } else {
+      return this.serverIlpAddress + '.' + accountId
+    }
   }
 
   private find(

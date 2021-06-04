@@ -1,5 +1,4 @@
 import { serve as ildcpServe } from 'ilp-protocol-ildcp'
-import { Errors } from 'ilp-packet'
 import { RafikiContext } from '../rafiki'
 
 /**
@@ -17,12 +16,9 @@ export function createIldcpProtocolController(serverAddress: string) {
       ctx.throw('Invalid address in ILDCP request')
     }
 
-    const { routing } = incoming
-    if (!routing) {
-      throw new Errors.UnreachableError('not a peer account')
-    }
-
-    const clientAddress = routing.staticIlpAddress
+    const clientAddress = await ctx.services.accounts.getAddress(
+      incoming.accountId
+    )
     //if (!clientAddress) {
     //  logger.warn('received ILDCP request for peer without an address', {
     //    peerId: incoming.accountId

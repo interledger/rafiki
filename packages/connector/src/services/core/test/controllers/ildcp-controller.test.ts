@@ -61,7 +61,7 @@ describe('ILDCP Controller', function () {
     )
   })
 
-  test('returns an ildcp response if incoming account is not a peer', async () => {
+  test.skip('returns an ildcp response if incoming account is not a peer', async () => {
     const bob = await services.accounts.createAccount(
       AccountFactory.build({ accountId: 'bob' })
     )

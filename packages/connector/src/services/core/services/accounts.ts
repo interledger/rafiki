@@ -10,6 +10,7 @@ export interface AccountsService {
   createAccount(account: CreateOptions): Promise<IlpAccount>
   //transferFunds(args: TransferOptions): Promise<Transfer>
   adjustBalances(options: AdjustmentOptions): Promise<void>
+  getAddress(accountId: string): Promise<string>
 }
 
 export interface AdjustmentOptions {
