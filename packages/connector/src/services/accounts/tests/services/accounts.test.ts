@@ -726,105 +726,6 @@ describe('Accounts Service', (): void => {
     })
   })
 
-  describe('Adjust Balances', (): void => {
-    test.each([['accept'], ['reject']])(
-      'Can adjust balances for %sed two-phase commit transactions',
-      async (result): Promise<void> => {
-        const asset = randomAsset()
-        const { accountId: sourceAccountId } = await accounts.createAccount({
-          accountId: uuid(),
-          asset,
-          maxPacketAmount: BigInt(100)
-        })
-        const {
-          accountId: destinationAccountId
-        } = await accounts.createAccount({
-          accountId: uuid(),
-          asset,
-          maxPacketAmount: BigInt(100)
-        })
-        const startingSourceBalance = BigInt(10)
-        await accounts.deposit(sourceAccountId, startingSourceBalance)
-
-        const amount = BigInt(1)
-        await accounts.adjustBalances({
-          sourceAmount: amount,
-          sourceAccountId,
-          destinationAccountId,
-          callback: async (trx: Transaction) => {
-            {
-              const {
-                balance: sourceBalance
-              } = await accounts.getAccountBalance(sourceAccountId)
-              expect(sourceBalance).toEqual(startingSourceBalance - amount)
-
-              const {
-                balance: destinationBalance
-              } = await accounts.getAccountBalance(destinationAccountId)
-              expect(destinationBalance).toEqual(BigInt(0))
-
-              const liquidityBalance = await accounts.getLiquidityBalance(
-                asset.code,
-                asset.scale
-              )
-              expect(liquidityBalance).toEqual(-amount)
-            }
-
-            if (result === 'accept') {
-              await trx.commit()
-            } else {
-              await trx.rollback()
-            }
-
-            {
-              const {
-                balance: sourceBalance
-              } = await accounts.getAccountBalance(sourceAccountId)
-              const expectedSourceBalance =
-                result === 'accept'
-                  ? startingSourceBalance - amount
-                  : startingSourceBalance
-              expect(sourceBalance).toEqual(expectedSourceBalance)
-
-              const {
-                balance: destinationBalance
-              } = await accounts.getAccountBalance(destinationAccountId)
-              const expectedDestinationBalance =
-                result === 'accept' ? amount : BigInt(0)
-              expect(destinationBalance).toEqual(expectedDestinationBalance)
-
-              const liquidityBalance = await accounts.getLiquidityBalance(
-                asset.code,
-                asset.scale
-              )
-              expect(liquidityBalance).toEqual(BigInt(0))
-            }
-          }
-        })
-      }
-    )
-
-    test('Throws for nonexistent account', async (): Promise<void> => {
-      const { accountId: sourceAccountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
-
-      const amount = BigInt(1)
-      await expect(
-        accounts.adjustBalances({
-          sourceAmount: amount,
-          sourceAccountId,
-          destinationAccountId: uuid(),
-          callback: async (trx: Transaction) => {
-            await trx.commit()
-          }
-        })
-      ).rejects.toThrow(UnknownAccountError)
-    })
-  })
-
   describe('Account Tokens', (): void => {
     test('Can retrieve account by incoming token', async (): Promise<void> => {
       const incomingToken = uuid()
@@ -1014,135 +915,239 @@ describe('Accounts Service', (): void => {
     })
   })
 
-  describe('Create Transfer', (): void => {
-    test('Can transfer between accounts', async (): Promise<void> => {
-      const {
-        accountId: sourceAccountId,
-        asset
-      } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
-      const { accountId: destinationAccountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset,
-        maxPacketAmount: BigInt(100)
-      })
-      const startingSourceBalance = BigInt(10)
-      await accounts.deposit(sourceAccountId, startingSourceBalance)
-      {
-        const { balance: sourceBalance } = await accounts.getAccountBalance(
-          sourceAccountId
-        )
-        expect(sourceBalance).toEqual(startingSourceBalance)
+  describe('Transfer Funds', (): void => {
+    test.each`
+      crossCurrency
+      ${true}
+      ${false}
+    `(
+      'Can transfer funds between accounts { cross-currency: $crossCurrency }',
+      async ({ crossCurrency }): Promise<void> => {
         const {
-          balance: destinationBalance
-        } = await accounts.getAccountBalance(destinationAccountId)
-        expect(destinationBalance).toEqual(BigInt(0))
-      }
-      const amount = BigInt(5)
-      const transfer = {
-        transferId: uuid(),
-        sourceAccountId,
-        destinationAccountId,
-        sourceAmount: amount
-      }
+          accountId: sourceAccountId,
+          asset: sourceAsset
+        } = await accounts.createAccount({
+          accountId: uuid(),
+          asset: randomAsset(),
+          maxPacketAmount: BigInt(100)
+        })
+        const {
+          accountId: destinationAccountId,
+          asset: destinationAsset
+        } = await accounts.createAccount({
+          accountId: uuid(),
+          asset: crossCurrency ? randomAsset() : sourceAsset,
+          maxPacketAmount: BigInt(100)
+        })
+        const startingSourceBalance = BigInt(10)
+        await accounts.deposit(sourceAccountId, startingSourceBalance)
+        const startingDestinationLiquidity = crossCurrency
+          ? BigInt(100)
+          : BigInt(0)
+        if (crossCurrency) {
+          await accounts.depositLiquidity(
+            destinationAsset.code,
+            destinationAsset.scale,
+            startingDestinationLiquidity
+          )
+        }
+        {
+          const { balance: sourceBalance } = await accounts.getAccountBalance(
+            sourceAccountId
+          )
+          expect(sourceBalance).toEqual(startingSourceBalance)
 
-      const resp = await accounts.transferFunds(transfer)
-      expect(resp).toEqual(transfer)
+          const sourceLiquidityBalance = await accounts.getLiquidityBalance(
+            sourceAsset.code,
+            sourceAsset.scale
+          )
+          expect(sourceLiquidityBalance).toEqual(BigInt(0))
 
-      const { balance: sourceBalance } = await accounts.getAccountBalance(
-        sourceAccountId
-      )
-      expect(sourceBalance).toEqual(startingSourceBalance - amount)
-      const { balance: destinationBalance } = await accounts.getAccountBalance(
-        destinationAccountId
-      )
-      expect(destinationBalance).toEqual(amount)
-    })
+          const destinationLiquidityBalance = await accounts.getLiquidityBalance(
+            destinationAsset.code,
+            destinationAsset.scale
+          )
+          expect(destinationLiquidityBalance).toEqual(
+            startingDestinationLiquidity
+          )
 
-    test('Can cross-currency transfer through liquidity accounts', async (): Promise<void> => {
-      const {
-        accountId: sourceAccountId,
-        asset: sourceAsset
-      } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
-      const {
-        accountId: destinationAccountId,
-        asset: destinationAsset
-      } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
-      const startingSourceBalance = BigInt(10)
-      await accounts.deposit(sourceAccountId, startingSourceBalance)
-      const startingDestinationLiquidity = BigInt(100)
-      await accounts.depositLiquidity(
-        destinationAsset.code,
-        destinationAsset.scale,
-        startingDestinationLiquidity
-      )
-      {
+          const {
+            balance: destinationBalance
+          } = await accounts.getAccountBalance(destinationAccountId)
+          expect(destinationBalance).toEqual(BigInt(0))
+        }
+        const sourceAmount = BigInt(5)
+        const destinationAmount = crossCurrency ? BigInt(10) : undefined
+        const transfer = {
+          sourceAccountId,
+          destinationAccountId,
+          sourceAmount,
+          destinationAmount
+        }
+
+        const resp = await accounts.transferFunds(transfer)
+        expect(resp).toEqual(transfer)
+
         const { balance: sourceBalance } = await accounts.getAccountBalance(
           sourceAccountId
         )
-        expect(sourceBalance).toEqual(startingSourceBalance)
+        expect(sourceBalance).toEqual(startingSourceBalance - sourceAmount)
+
         const sourceLiquidityBalance = await accounts.getLiquidityBalance(
           sourceAsset.code,
           sourceAsset.scale
         )
-        expect(sourceLiquidityBalance).toEqual(BigInt(0))
-        const {
-          balance: destinationBalance
-        } = await accounts.getAccountBalance(destinationAccountId)
-        expect(destinationBalance).toEqual(BigInt(0))
+        expect(sourceLiquidityBalance).toEqual(
+          crossCurrency ? sourceAmount : BigInt(0)
+        )
+
         const destinationLiquidityBalance = await accounts.getLiquidityBalance(
           destinationAsset.code,
           destinationAsset.scale
         )
         expect(destinationLiquidityBalance).toEqual(
-          startingDestinationLiquidity
+          crossCurrency
+            ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              startingDestinationLiquidity - destinationAmount!
+            : startingDestinationLiquidity
+        )
+
+        const {
+          balance: destinationBalance
+        } = await accounts.getAccountBalance(destinationAccountId)
+        expect(destinationBalance).toEqual(
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          crossCurrency ? destinationAmount! : sourceAmount
         )
       }
-      const sourceAmount = BigInt(5)
-      const destinationAmount = BigInt(10)
-      const transfer = {
-        transferId: uuid(),
-        sourceAccountId,
-        destinationAccountId,
-        sourceAmount,
-        destinationAmount
+    )
+
+    test.each`
+      crossCurrency | accept
+      ${true}       | ${true}
+      ${true}       | ${false}
+      ${false}      | ${true}
+      ${false}      | ${false}
+    `(
+      'Can transfer funds with two-phase commit { cross-currency: $crossCurrency, accepted: $accept }',
+      async ({ crossCurrency, accept }): Promise<void> => {
+        const {
+          accountId: sourceAccountId,
+          asset: sourceAsset
+        } = await accounts.createAccount({
+          accountId: uuid(),
+          asset: randomAsset(),
+          maxPacketAmount: BigInt(100)
+        })
+        const {
+          accountId: destinationAccountId,
+          asset: destinationAsset
+        } = await accounts.createAccount({
+          accountId: uuid(),
+          asset: crossCurrency ? randomAsset() : sourceAsset,
+          maxPacketAmount: BigInt(100)
+        })
+        const startingSourceBalance = BigInt(10)
+        await accounts.deposit(sourceAccountId, startingSourceBalance)
+
+        const startingDestinationLiquidity = crossCurrency
+          ? BigInt(100)
+          : BigInt(0)
+        if (crossCurrency) {
+          await accounts.depositLiquidity(
+            destinationAsset.code,
+            destinationAsset.scale,
+            startingDestinationLiquidity
+          )
+        }
+
+        const sourceAmount = BigInt(1)
+        const destinationAmount = crossCurrency ? BigInt(2) : undefined
+        await accounts.transferFunds({
+          sourceAccountId,
+          destinationAccountId,
+          sourceAmount,
+          destinationAmount,
+          callback: async (trx: Transaction) => {
+            {
+              const {
+                balance: sourceBalance
+              } = await accounts.getAccountBalance(sourceAccountId)
+              expect(sourceBalance).toEqual(
+                startingSourceBalance - sourceAmount
+              )
+
+              const sourceLiquidityBalance = await accounts.getLiquidityBalance(
+                sourceAsset.code,
+                sourceAsset.scale
+              )
+              expect(sourceLiquidityBalance).toEqual(BigInt(0))
+
+              const destinationLiquidityBalance = await accounts.getLiquidityBalance(
+                destinationAsset.code,
+                destinationAsset.scale
+              )
+              expect(destinationLiquidityBalance).toEqual(
+                crossCurrency
+                  ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    startingDestinationLiquidity - destinationAmount!
+                  : startingDestinationLiquidity
+              )
+
+              const {
+                balance: destinationBalance
+              } = await accounts.getAccountBalance(destinationAccountId)
+              expect(destinationBalance).toEqual(BigInt(0))
+            }
+
+            if (accept) {
+              await trx.commit()
+            } else {
+              await trx.rollback()
+            }
+
+            {
+              const {
+                balance: sourceBalance
+              } = await accounts.getAccountBalance(sourceAccountId)
+              const expectedSourceBalance = accept
+                ? startingSourceBalance - sourceAmount
+                : startingSourceBalance
+              expect(sourceBalance).toEqual(expectedSourceBalance)
+
+              const sourceLiquidityBalance = await accounts.getLiquidityBalance(
+                sourceAsset.code,
+                sourceAsset.scale
+              )
+              expect(sourceLiquidityBalance).toEqual(
+                crossCurrency && accept ? sourceAmount : BigInt(0)
+              )
+
+              const destinationLiquidityBalance = await accounts.getLiquidityBalance(
+                destinationAsset.code,
+                destinationAsset.scale
+              )
+              expect(destinationLiquidityBalance).toEqual(
+                crossCurrency && accept
+                  ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    startingDestinationLiquidity - destinationAmount!
+                  : startingDestinationLiquidity
+              )
+
+              const {
+                balance: destinationBalance
+              } = await accounts.getAccountBalance(destinationAccountId)
+              const expectedDestinationBalance = accept
+                ? crossCurrency
+                  ? destinationAmount
+                  : sourceAmount
+                : BigInt(0)
+              expect(destinationBalance).toEqual(expectedDestinationBalance)
+            }
+          }
+        })
       }
-
-      const resp = await accounts.transferFunds(transfer)
-      expect(resp).toEqual(transfer)
-
-      const { balance: sourceBalance } = await accounts.getAccountBalance(
-        sourceAccountId
-      )
-      expect(sourceBalance).toEqual(startingSourceBalance - sourceAmount)
-      const sourceLiquidityBalance = await accounts.getLiquidityBalance(
-        sourceAsset.code,
-        sourceAsset.scale
-      )
-      expect(sourceLiquidityBalance).toEqual(sourceAmount)
-      const { balance: destinationBalance } = await accounts.getAccountBalance(
-        destinationAccountId
-      )
-      expect(destinationBalance).toEqual(destinationAmount)
-      const destinationLiquidityBalance = await accounts.getLiquidityBalance(
-        destinationAsset.code,
-        destinationAsset.scale
-      )
-      expect(destinationLiquidityBalance).toEqual(
-        startingDestinationLiquidity - destinationAmount
-      )
-    })
+    )
 
     test.skip('Can transfer between accounts using rate backend', async (): Promise<void> => {
       const {
@@ -1194,7 +1199,6 @@ describe('Accounts Service', (): void => {
       const sourceAmount = BigInt(5)
       const destinationAmount = BigInt(10)
       const transfer = {
-        transferId: uuid(),
         sourceAccountId,
         destinationAccountId,
         sourceAmount,
@@ -1232,7 +1236,6 @@ describe('Accounts Service', (): void => {
       }
       const amount = BigInt(5)
       const transfer = {
-        transferId: uuid(),
         sourceAccountId,
         destinationAccountId,
         sourceAmount: amount
@@ -1267,7 +1270,6 @@ describe('Accounts Service', (): void => {
       const sourceAmount = BigInt(5)
       const destinationAmount = BigInt(10)
       const transfer = {
-        transferId: uuid(),
         sourceAccountId,
         destinationAccountId,
         sourceAmount,
@@ -1280,7 +1282,6 @@ describe('Accounts Service', (): void => {
     test('Throws for nonexistent account', async (): Promise<void> => {
       await expect(
         accounts.transferFunds({
-          transferId: uuid(),
           sourceAccountId: uuid(),
           destinationAccountId: uuid(),
           sourceAmount: BigInt(5)
@@ -1295,7 +1296,6 @@ describe('Accounts Service', (): void => {
 
       await expect(
         accounts.transferFunds({
-          transferId: uuid(),
           sourceAccountId: accountId,
           destinationAccountId: uuid(),
           sourceAmount: BigInt(5)
@@ -1304,7 +1304,6 @@ describe('Accounts Service', (): void => {
 
       await expect(
         accounts.transferFunds({
-          transferId: uuid(),
           sourceAccountId: uuid(),
           destinationAccountId: accountId,
           sourceAmount: BigInt(5)
@@ -1331,7 +1330,6 @@ describe('Accounts Service', (): void => {
 
       await expect(
         accounts.transferFunds({
-          transferId: uuid(),
           sourceAccountId,
           destinationAccountId,
           sourceAmount: BigInt(5),

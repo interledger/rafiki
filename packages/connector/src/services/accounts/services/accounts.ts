@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid'
 import {
   Client,
   CommitFlags,
+  CreateTransfer,
   CreateTransferError,
   CreateTransferFlags
 } from 'tigerbeetle-node'
@@ -16,7 +17,6 @@ import {
   UnknownBalanceError
 } from '../errors'
 import { Account, Token } from '../models'
-import { Transfer } from '../types'
 import {
   getNetBalance,
   toLiquidityId,
@@ -29,11 +29,11 @@ import {
 // import { Errors } from 'ilp-packet'
 import {
   AccountsService as ConnectorAccountsService,
-  AdjustmentOptions,
   CreateOptions,
   IlpAccount,
   IlpBalance,
-  Transaction
+  Transaction,
+  Transfer
 } from '../../core/services/accounts'
 // const { InsufficientLiquidityError } = Errors
 
@@ -97,112 +97,6 @@ export class AccountsService implements ConnectorAccountsService {
     private config: typeof Config,
     private logger: Logger
   ) {}
-
-  public async adjustBalances({
-    sourceAmount,
-    sourceAccountId,
-    destinationAccountId,
-    callback
-  }: AdjustmentOptions): Promise<void> {
-    const [
-      sourceAccount,
-      destinationAccount
-    ] = await Account.query()
-      .findByIds([sourceAccountId, destinationAccountId])
-      .throwIfNotFound()
-    if (!sourceAccount || !destinationAccount) {
-      throw new UnknownAccountError()
-    }
-    if (sourceAmount > BigInt(0)) {
-      const sourceTransferId = uuidToBigInt(uuid())
-      const destinationTransferId = uuidToBigInt(uuid())
-      const tx: Transaction = {
-        commit: async () => {
-          const res = await this.client.commitTransfers([
-            {
-              id: sourceTransferId,
-              flags: 0n | BigInt(CommitFlags.accept),
-              ...CUSTOM_FIELDS
-            },
-            {
-              id: destinationTransferId,
-              flags: 0n | BigInt(CommitFlags.accept),
-              ...CUSTOM_FIELDS
-            }
-          ])
-          if (res.length) {
-            // throw
-          }
-        },
-        rollback: async () => {
-          const res = await this.client.commitTransfers([
-            {
-              id: sourceTransferId,
-              flags: 0n | BigInt(CommitFlags.reject),
-              ...CUSTOM_FIELDS
-            },
-            {
-              id: destinationTransferId,
-              flags: 0n | BigInt(CommitFlags.reject),
-              ...CUSTOM_FIELDS
-            }
-          ])
-          if (res.length) {
-            // throw
-          }
-        }
-      }
-
-      try {
-        const res = await this.client.createTransfers([
-          {
-            id: sourceTransferId,
-            debit_account_id: uuidToBigInt(sourceAccount.balanceId),
-            credit_account_id: toLiquidityId(
-              sourceAccount.assetCode,
-              sourceAccount.assetScale
-            ),
-            amount: sourceAmount,
-            ...CUSTOM_FIELDS,
-            flags: BigInt(0),
-            timeout: BigInt(1000000000)
-          },
-          {
-            id: destinationTransferId,
-            debit_account_id: toLiquidityId(
-              destinationAccount.assetCode,
-              destinationAccount.assetScale
-            ),
-            credit_account_id: uuidToBigInt(destinationAccount.balanceId),
-            amount: sourceAmount,
-            ...CUSTOM_FIELDS,
-            flags: BigInt(0),
-            timeout: BigInt(1000000000)
-          }
-        ])
-        if (res.length) {
-          if (
-            [
-              CreateTransferError.credit_account_not_found,
-              CreateTransferError.debit_account_not_found
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ].includes((res[0] as any).result)
-          ) {
-            console.log('UnknownBalanceError')
-            throw new UnknownBalanceError()
-          }
-          // TODO handle other errors
-        }
-        await callback(tx)
-      } catch (error) {
-        this.logger.error({
-          error
-        })
-        // Should this rethrow the error?
-        throw error
-      }
-    }
-  }
 
   public async createAccount(account: CreateOptions): Promise<IlpAccount> {
     await transaction(Account, Token, async (Account, Token) => {
@@ -641,61 +535,141 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async transferFunds(transfer: Transfer): Promise<Transfer> {
+    const {
+      sourceAccountId,
+      destinationAccountId,
+      sourceAmount,
+      destinationAmount,
+      callback
+    } = transfer
     const [
       sourceAccount,
       destinationAccount
     ] = await Account.query()
-      .findByIds([transfer.sourceAccountId, transfer.destinationAccountId])
+      .findByIds([sourceAccountId, destinationAccountId])
       .throwIfNotFound()
     if (!sourceAccount || !destinationAccount) {
       throw new UnknownAccountError()
     }
-    const transfers: BalanceTransfer[] = []
+
+    const transfers: CreateTransfer[] = []
+
+    const flags = callback
+      ? BigInt(0)
+      : BigInt(CreateTransferFlags.auto_commit) |
+        BigInt(CreateTransferFlags.accept)
+    const timeout = callback ? BigInt(1000000000) : BigInt(0)
+
     if (sourceAccount.assetCode === destinationAccount.assetCode) {
       if (
-        transfer.sourceAmount &&
-        transfer.destinationAmount &&
-        transfer.sourceAmount !== transfer.destinationAmount
+        sourceAmount &&
+        destinationAmount &&
+        sourceAmount !== destinationAmount
       ) {
         throw new InvalidAmountError()
       }
       transfers.push({
-        sourceBalanceId: uuidToBigInt(sourceAccount.balanceId),
-        destinationBalanceId: uuidToBigInt(destinationAccount.balanceId),
+        id: uuidToBigInt(uuid()),
+        debit_account_id: uuidToBigInt(sourceAccount.balanceId),
+        credit_account_id: uuidToBigInt(destinationAccount.balanceId),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        amount: transfer.sourceAmount || transfer.destinationAmount!
+        amount: sourceAmount || destinationAmount!,
+        ...CUSTOM_FIELDS,
+        flags,
+        timeout
       })
     } else {
-      if (!transfer.sourceAmount) {
+      if (!sourceAmount) {
         // TODO rate backend
-      } else if (!transfer.destinationAmount) {
+      } else if (!destinationAmount) {
         // TODO rate backend
       }
 
       transfers.push(
         {
-          sourceBalanceId: uuidToBigInt(sourceAccount.balanceId),
-          destinationBalanceId: toLiquidityId(
+          id: uuidToBigInt(uuid()),
+          debit_account_id: uuidToBigInt(sourceAccount.balanceId),
+          credit_account_id: toLiquidityId(
             sourceAccount.assetCode,
             sourceAccount.assetScale
           ),
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          amount: transfer.sourceAmount!
+          amount: sourceAmount!,
+          ...CUSTOM_FIELDS,
+          flags,
+          timeout
         },
         {
-          sourceBalanceId: toLiquidityId(
+          id: uuidToBigInt(uuid()),
+          debit_account_id: toLiquidityId(
             destinationAccount.assetCode,
             destinationAccount.assetScale
           ),
-          destinationBalanceId: uuidToBigInt(destinationAccount.balanceId),
+          credit_account_id: uuidToBigInt(destinationAccount.balanceId),
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          amount: transfer.destinationAmount!
+          amount: destinationAmount!,
+          ...CUSTOM_FIELDS,
+          flags,
+          timeout
         }
       )
     }
-
-    await this.createTransfers(transfers)
-
-    return transfer
+    try {
+      const res = await this.client.createTransfers(transfers)
+      if (res.length) {
+        if (
+          [
+            CreateTransferError.credit_account_not_found,
+            CreateTransferError.debit_account_not_found
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ].includes((res[0] as any).result)
+        ) {
+          console.log('UnknownBalanceError')
+          throw new UnknownBalanceError()
+        }
+        // TODO handle other errors
+      }
+      if (callback) {
+        const tx: Transaction = {
+          commit: async () => {
+            const res = await this.client.commitTransfers(
+              transfers.map((transfer) => {
+                return {
+                  id: transfer.id,
+                  flags: 0n | BigInt(CommitFlags.accept),
+                  ...CUSTOM_FIELDS
+                }
+              })
+            )
+            if (res.length) {
+              // TODO throw
+            }
+          },
+          rollback: async () => {
+            const res = await this.client.commitTransfers(
+              transfers.map((transfer) => {
+                return {
+                  id: transfer.id,
+                  flags: 0n | BigInt(CommitFlags.reject),
+                  ...CUSTOM_FIELDS
+                }
+              })
+            )
+            if (res.length) {
+              // TODO throw
+            }
+          }
+        }
+        await callback(tx)
+      }
+      return transfer
+    } catch (error) {
+      console.log(error)
+      this.logger.error({
+        error
+      })
+      // Should this rethrow the error?
+      throw error
+    }
   }
 }

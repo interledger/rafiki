@@ -2,8 +2,8 @@ import {
   AccountsService,
   CreateOptions,
   IlpAccount,
-  AdjustmentOptions,
-  IlpBalance
+  IlpBalance,
+  Transfer
 } from '../../services'
 
 type MockIlpAccount = CreateOptions & { balance: bigint }
@@ -57,7 +57,9 @@ export class MockAccountsService implements AccountsService {
     return account
   }
 
-  async adjustBalances(options: AdjustmentOptions): Promise<void> {
+  async transferFunds(options: Transfer): Promise<Transfer> {
+    if (!options.sourceAmount) throw new Error('missing sourceAmount')
+    if (!options.callback) throw new Error('missing callback')
     const src = this.accounts.get(options.sourceAccountId)
     const dst = this.accounts.get(options.destinationAccountId)
     if (!src) throw new Error('src not found')
@@ -66,16 +68,18 @@ export class MockAccountsService implements AccountsService {
       throw new Error('asset code mismatch')
     if (src.asset.scale !== dst.asset.scale)
       throw new Error('asset scale mismatch')
-
     src.balance -= options.sourceAmount
     options.callback({
       commit: async () => {
-        dst.balance += options.sourceAmount
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        dst.balance += options.sourceAmount!
       },
       rollback: async () => {
-        src.balance += options.sourceAmount
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        src.balance += options.sourceAmount!
       }
     })
+    return options
   }
 
   async getAddress(accountId: string): Promise<string> {

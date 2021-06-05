@@ -75,7 +75,7 @@ describe('Balance Middleware', function () {
   })
 
   test('ignores 0 amount packets', async () => {
-    const adjustBalancesSpy = jest.spyOn(accounts, 'adjustBalances')
+    const transferFundsSpy = jest.spyOn(accounts, 'transferFunds')
     const prepare = IlpPrepareFactory.build({ amount: '0' })
     const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -91,6 +91,6 @@ describe('Balance Middleware', function () {
     expect(
       (await accounts.getAccountBalance(bobAccount.accountId)).balance
     ).toEqual(BigInt(0))
-    expect(adjustBalancesSpy).toHaveBeenCalledTimes(0)
+    expect(transferFundsSpy).toHaveBeenCalledTimes(0)
   })
 })

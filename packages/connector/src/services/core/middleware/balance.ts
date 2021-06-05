@@ -15,7 +15,7 @@ export function createBalanceMiddleware() {
     }
 
     // Update balances on prepare
-    await services.accounts.adjustBalances({
+    await services.accounts.transferFunds({
       sourceAccountId: accounts.incoming.accountId,
       destinationAccountId: accounts.outgoing.accountId,
       sourceAmount: BigInt(amount),
