@@ -12,7 +12,7 @@ export function createStreamController(): RafikiMiddleware {
     ctx: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> {
-    const { redis, streamServer } = ctx.services
+    const { logger, redis, streamServer } = ctx.services
     const { request, response } = ctx
 
     const { stream } = ctx.accounts.outgoing
@@ -43,9 +43,15 @@ export function createStreamController(): RafikiMiddleware {
       )
       .expire(connectionKey, CONNECTION_EXPIRY)
       .exec()
-    if (err) throw err
-    if (err2) throw err2
-    moneyOrReply.setTotalReceived(totalReceived)
+    if (typeof totalReceived === 'string' && !err && !err2) {
+      moneyOrReply.setTotalReceived(totalReceived)
+    } else {
+      logger.warn('error incrementing stream totalReceived', {
+        totalReceived,
+        err,
+        err2
+      })
+    }
     response.reply = moneyOrReply.accept()
   }
 }
