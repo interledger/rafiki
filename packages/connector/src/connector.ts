@@ -56,7 +56,10 @@ const router = new InMemoryRouter(peerService, {
   ilpAddress: ILP_ADDRESS
 })
 */
-const redis = new IORedis(REDIS)
+const redis = new IORedis(REDIS, {
+  // This option messes up some types, but helps with (large) number accuracy.
+  stringNumbers: true
+})
 
 const incoming = compose([
   // Incoming Rules
@@ -89,12 +92,11 @@ export const gracefulShutdown = async (): Promise<void> => {
   if (server) {
     return new Promise((resolve, reject): void => {
       server.close((err?: Error) => {
-        redis.quit()
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve()
+        if (err) return reject(err)
+        redis
+          .quit()
+          .then(() => resolve())
+          .catch(reject)
       })
     })
   }

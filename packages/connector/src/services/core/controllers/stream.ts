@@ -33,15 +33,18 @@ export function createStreamController(): RafikiMiddleware {
 
     const { connectionId } = moneyOrReply
     const connectionKey = streamReceivedKey(connectionId)
-    // Pass the amount as a string so that values higher than MAX_SAFE_INTEGER aren't modified by a local float conversion.
-    // Ignore the running total returned by `incrby`, since it is parsed to a `Number`, which may
-    // be inaccurate if the value is higher than MAX_SAFE_INTEGER.
-    await redis.incrby(
-      connectionKey,
-      (request.prepare.amount as unknown) as number
-    )
-    await redis.expire(connectionKey, CONNECTION_EXPIRY)
-    const totalReceived = await redis.get(connectionKey)
+    // Thanks to Redis's `stringNumbers:true`, `incrby` returns a string rather than a number.
+    // This ensures that precision isn't lost when dealing with integers larger than MAX_SAFE_INTEGER.
+    const [[err, totalReceived], [err2]] = await redis
+      .multi()
+      .incrby(
+        connectionKey,
+        (request.prepare.amount.toString() as unknown) as number
+      )
+      .expire(connectionKey, CONNECTION_EXPIRY)
+      .exec()
+    if (err) throw err
+    if (err2) throw err2
     moneyOrReply.setTotalReceived(totalReceived)
     response.reply = moneyOrReply.accept()
   }

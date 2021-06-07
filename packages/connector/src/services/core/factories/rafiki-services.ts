@@ -17,10 +17,10 @@ export const RafikiServicesFactory = Factory.define<RafikiServices>('PeerInfo')
   .attr(
     'redis',
     () =>
-      new IORedis({
-        host: '127.0.0.1',
-        port: 6379,
-        lazyConnect: true
+      new IORedis('redis://127.0.0.1:6379', {
+        // lazyConnect so that tests that don't use Redis don't have to disconnect it when they're finished.
+        lazyConnect: true,
+        stringNumbers: true
       })
   )
   .attr(

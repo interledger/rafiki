@@ -3047,6 +3047,7 @@ __metadata:
     ilp-packet: ^3.1.2
     ilp-protocol-ccp: ^1.2.2
     ilp-protocol-ildcp: ^2.2.2
+    ilp-protocol-stream: ^2.7.0
     ioredis: ^4.27.3
     knex: ^0.21.17
     koa: ^2.13.1
@@ -5177,7 +5178,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ilp-protocol-stream@npm:^2.6.4":
+"ilp-protocol-stream@npm:^2.6.4, ilp-protocol-stream@npm:^2.7.0":
   version: 2.7.0
   resolution: "ilp-protocol-stream@npm:2.7.0"
   dependencies:

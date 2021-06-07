@@ -3703,6 +3703,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ilp-packet", "npm:3.1.2"],
             ["ilp-protocol-ccp", "npm:1.2.2"],
             ["ilp-protocol-ildcp", "npm:2.2.2"],
+            ["ilp-protocol-stream", "npm:2.7.0"],
             ["ioredis", "npm:4.27.3"],
             ["knex", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:0.21.19"],
             ["koa", "npm:2.13.1"],
