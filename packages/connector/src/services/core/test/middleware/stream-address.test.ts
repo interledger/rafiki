@@ -28,12 +28,10 @@ describe('Stream Address Middleware', function () {
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     const next = jest.fn()
-    const { destination } = prepare
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(next).toHaveBeenCalledTimes(1)
-    const suffix = destination.slice(destination.lastIndexOf('.') + 1)
-    expect(ctx.state.streamDestination).toBe('test.rafiki.bob.' + suffix)
+    expect(ctx.state.streamDestination).toBe('bob')
   })
 })

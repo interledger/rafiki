@@ -8,6 +8,7 @@ export function createAccountMiddleware(): RafikiMiddleware {
     ctx: RafikiContext<AuthState & { streamDestination?: string }>,
     next: () => Promise<unknown>
   ): Promise<void> {
+    const { accounts } = ctx.services
     const incomingAccount = ctx.state.account
     ctx.assert(incomingAccount, 401)
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -15,9 +16,11 @@ export function createAccountMiddleware(): RafikiMiddleware {
       throw new Errors.UnreachableError('source account is disabled')
     }
 
-    const outgoingAccount = await ctx.services.accounts.getAccountByDestinationAddress(
-      ctx.state.streamDestination || ctx.request.prepare.destination
-    )
+    const outgoingAccount = ctx.state.streamDestination
+      ? await accounts.getAccount(ctx.state.streamDestination)
+      : await accounts.getAccountByDestinationAddress(
+          ctx.request.prepare.destination
+        )
     if (outgoingAccount.disabled) {
       throw new Errors.UnreachableError('destination account is disabled')
     }

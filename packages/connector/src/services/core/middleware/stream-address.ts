@@ -6,16 +6,8 @@ export function createStreamAddressMiddleware() {
     next: () => Promise<unknown>
   ): Promise<void> => {
     const { destination } = request.prepare
-    const accountId = streamServer.decodePaymentTag(destination)
-    if (!accountId) {
-      await next()
-      return
-    }
-
     // To preserve sender privacy, the accountId wasn't included in the original destination address.
-    const segments = destination.split('.')
-    segments.splice(-1, 0, accountId)
-    state.streamDestination = segments.join('.')
+    state.streamDestination = streamServer.decodePaymentTag(destination)
     await next()
   }
 }

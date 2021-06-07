@@ -22,7 +22,7 @@ describe('Account Middleware', () => {
     await rafikiServices.accounts.createAccount(outgoingAccount)
   })
 
-  test('set the accountId to the state.account', async () => {
+  test('set the accounts according to state and destination', async () => {
     const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createContext<unknown, RafikiContext>()
@@ -30,6 +30,24 @@ describe('Account Middleware', () => {
     ctx.services = rafikiServices
     ctx.request.prepare = new ZeroCopyIlpPrepare(
       IlpPrepareFactory.build({ destination: 'test.outgoingPeer.123' })
+    )
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    expect(ctx.accounts.incoming).toEqual(incomingAccount)
+    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
+  })
+
+  test('set the accounts according to state and streamDestination', async () => {
+    const middleware = createAccountMiddleware()
+    const next = jest.fn()
+    const ctx = createContext<unknown, RafikiContext>()
+    ctx.state = {
+      account: incomingAccount,
+      streamDestination: outgoingAccount.accountId
+    }
+    ctx.services = rafikiServices
+    ctx.request.prepare = new ZeroCopyIlpPrepare(
+      IlpPrepareFactory.build({ destination: 'test.123' })
     )
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
