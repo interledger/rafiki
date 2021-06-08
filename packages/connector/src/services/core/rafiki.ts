@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Koa, { Middleware } from 'koa'
 import createRouter, { Router as KoaRouter } from 'koa-joi-router'
+import { Redis } from 'ioredis'
+import { StreamServer } from '@interledger/stream-receiver'
 //import { Router } from './services/router'
 import {
   createIlpPacketMiddleware,
   ilpAddressToPath,
-  IlpPacketMiddlewareOptions,
   RafikiPrepare
 } from './middleware/ilp-packet'
-import { AuthState } from './middleware/auth'
 import { createTokenAuthMiddleware } from './middleware/token-auth'
 import { AccountsService, IlpAccount } from './services/accounts'
 import { LoggingService } from './services/logger'
@@ -16,17 +16,23 @@ import { IncomingMessage, ServerResponse } from 'http'
 import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
 import { DebugLogger } from './services/logger/debug'
 import { createAccountMiddleware } from './middleware/account'
+import { createStreamAddressMiddleware } from './middleware/stream-address'
 
 export interface RafikiServices {
   //router: Router
   accounts: AccountsService
   logger: LoggingService
+  redis: Redis
+  streamServer: StreamServer
 }
 
-export interface RafikiIlpConfig extends IlpPacketMiddlewareOptions {
-  path?: string
+export type RafikiConfig = Partial<RafikiServices> & {
+  redis: Redis
+  stream: {
+    serverSecret: Buffer
+    serverAddress: string
+  }
 }
-export type RafikiState<T> = T & AuthState
 
 export type RafikiRequestMixin = {
   prepare: RafikiPrepare
@@ -65,10 +71,13 @@ export type RafikiMiddleware<T = any> = Middleware<T, RafikiContextMixin>
 export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
   //private _router?: Router
   private _accounts?: AccountsService
-  constructor(config?: Partial<RafikiServices>) {
+  private streamServer: StreamServer
+  private redis: Redis
+  constructor(config: RafikiConfig) {
     super()
 
     //this._router = config && config.router ? config.router : undefined
+    this.redis = config.redis
     this._accounts = config && config.accounts ? config.accounts : undefined
     const logger =
       config && config.logger ? config.logger : new DebugLogger('rafiki')
@@ -81,11 +90,19 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
     //  throw new Error('No router service provided to the app')
     //}
 
+    this.streamServer = new StreamServer(config.stream)
+    const { redis, streamServer } = this
     // Set global context that exposes services
     this.context.services = {
       //get router(): Router {
       //  return routerOrThrow()
       //},
+      get redis(): Redis {
+        return redis
+      },
+      get streamServer(): StreamServer {
+        return streamServer
+      },
       get accounts(): AccountsService {
         return accountsOrThrow()
       },
@@ -119,18 +136,13 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
 
   public useIlp(): void {
     this.use(createIlpPacketMiddleware())
+    this.use(createStreamAddressMiddleware())
     this.use(createAccountMiddleware())
   }
 }
 
-export function createApp({
-  accounts,
-  logger
-}: Partial<RafikiServices>): Rafiki {
-  const app = new Rafiki({
-    accounts,
-    logger
-  })
+export function createApp(config: RafikiConfig): Rafiki {
+  const app = new Rafiki(config)
 
   app.use(createTokenAuthMiddleware())
   app.useIlp()
