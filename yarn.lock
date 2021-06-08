@@ -3063,7 +3063,7 @@ __metadata:
     raw-body: ^2.4.1
     rosie: ^2.1.0
     rxjs: ^6.6.7
-    tigerbeetle-node: ^0.2.12
+    tigerbeetle-node: ^0.3.1
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft
@@ -9792,10 +9792,10 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"tigerbeetle-node@npm:^0.2.12":
-  version: 0.2.12
-  resolution: "tigerbeetle-node@npm:0.2.12"
-  checksum: f82b4cfad6bd2e433f7ab26db9e943317233dd29a36ecd2bad02b16f122a1a98f8586a9ad55c69b3361c2db9c7b0de1b9776ddc7359066bf9be3f6f19ebcf66b
+"tigerbeetle-node@npm:^0.3.1":
+  version: 0.3.1
+  resolution: "tigerbeetle-node@npm:0.3.1"
+  checksum: a373501a5404c674e005dbfa23a7bad15a6e402ee7dde685ba81d67761c9e20bda1dfdebf52a5e113d36bcfbf0e29c9b0e836a17d2590621f4e1e8d63dfa2d55
   languageName: node
   linkType: hard
 
