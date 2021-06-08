@@ -34,12 +34,12 @@ export class Account extends BaseModel {
   public assetCode!: string
   public assetScale!: number
   public balanceId!: string
-  public debtBalanceId!: string
-  public trustlineBalanceId!: string
-  public loanBalanceId?: string
-  public creditBalanceId?: string
+  // public debtBalanceId!: string
+  // public trustlineBalanceId!: string
+  // public loanBalanceId?: string
+  // public creditBalanceId?: string
 
-  public parentAccountId?: string
+  // public parentAccountId?: string
 
   public maxPacketAmount!: bigint
 

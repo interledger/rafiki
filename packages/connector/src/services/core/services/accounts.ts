@@ -67,19 +67,19 @@ export type CreateOptions = IlpAccount & {
   }
 }
 
-interface IlpBalanceChildren {
-  availableCredit: bigint
-  totalLent: bigint
-}
+// interface IlpBalanceChildren {
+//   availableCredit: bigint
+//   totalLent: bigint
+// }
 
-interface IlpBalanceParent {
-  availableCreditLine: bigint
-  totalBorrowed: bigint
-}
+// interface IlpBalanceParent {
+//   availableCreditLine: bigint
+//   totalBorrowed: bigint
+// }
 
 export interface IlpBalance {
   id: string
   balance: bigint
-  children?: IlpBalanceChildren
-  parent?: IlpBalanceParent
+  // children?: IlpBalanceChildren
+  // parent?: IlpBalanceParent
 }

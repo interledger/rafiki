@@ -8,12 +8,12 @@ exports.up = function (knex) {
     table.integer('assetScale').notNullable()
 
     table.uuid('balanceId').notNullable()
-    table.uuid('debtBalanceId').notNullable()
-    table.uuid('trustlineBalanceId').notNullable()
-    table.uuid('loanBalanceId').nullable()
-    table.uuid('creditBalanceId').nullable()
+    // table.uuid('debtBalanceId').notNullable()
+    // table.uuid('trustlineBalanceId').notNullable()
+    // table.uuid('loanBalanceId').nullable()
+    // table.uuid('creditBalanceId').nullable()
 
-    table.uuid('parentAccountId').nullable()
+    // table.uuid('parentAccountId').nullable()
 
     table.bigInteger('maxPacketAmount').notNullable()
 

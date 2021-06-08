@@ -13,7 +13,7 @@ import {
 import { Config } from '../config'
 import {
   InsufficientBalanceError,
-  InvalidAssetError,
+  // InvalidAssetError,
   InvalidAmountError,
   UnknownAccountError,
   UnknownBalanceError
@@ -23,8 +23,8 @@ import {
   getNetBalance,
   toLiquidityId,
   toSettlementId,
-  toSettlementCreditId,
-  toSettlementLoanId,
+  // toSettlementCreditId,
+  // toSettlementLoanId,
   uuidToBigInt
 } from '../utils'
 
@@ -52,9 +52,9 @@ function toIlpAccount(accountRow: Account): IlpAccount {
       enabled: accountRow.streamEnabled
     }
   }
-  if (accountRow.parentAccountId) {
-    account.parentAccountId = accountRow.parentAccountId
-  }
+  // if (accountRow.parentAccountId) {
+  //   account.parentAccountId = accountRow.parentAccountId
+  // }
   if (accountRow.outgoingToken && accountRow.outgoingEndpoint) {
     account.http = {
       outgoing: {
@@ -73,7 +73,8 @@ function toIlpAccount(accountRow: Account): IlpAccount {
 
 export type UpdateIlpAccountOptions = Omit<
   CreateOptions,
-  'asset' | 'parentAccountId'
+  // 'asset' | 'parentAccountId'
+  'asset'
 >
 interface BalanceOptions {
   id: bigint
@@ -103,68 +104,68 @@ export class AccountsService implements ConnectorAccountsService {
 
   public async createAccount(account: CreateOptions): Promise<IlpAccount> {
     await transaction(Account, Token, async (Account, Token) => {
-      if (account.parentAccountId) {
-        const parentAccount = await Account.query()
-          .findById(account.parentAccountId)
-          .throwIfNotFound()
-        if (
-          account.asset.code !== parentAccount.assetCode ||
-          account.asset.scale !== parentAccount.assetScale
-        ) {
-          throw new InvalidAssetError(account.asset.code, account.asset.scale)
-        }
-        if (!parentAccount.loanBalanceId || !parentAccount.creditBalanceId) {
-          const loanBalanceId = uuid()
-          const creditBalanceId = uuid()
+      // if (account.parentAccountId) {
+      //   const parentAccount = await Account.query()
+      //     .findById(account.parentAccountId)
+      //     .throwIfNotFound()
+      //   if (
+      //     account.asset.code !== parentAccount.assetCode ||
+      //     account.asset.scale !== parentAccount.assetScale
+      //   ) {
+      //     throw new InvalidAssetError(account.asset.code, account.asset.scale)
+      //   }
+      //   if (!parentAccount.loanBalanceId || !parentAccount.creditBalanceId) {
+      //     const loanBalanceId = uuid()
+      //     const creditBalanceId = uuid()
 
-          await this.createBalances(
-            [
-              {
-                id: uuidToBigInt(loanBalanceId),
-                flags:
-                  0 |
-                  AccountFlags.credits_must_not_exceed_debits |
-                  AccountFlags.linked
-              },
-              {
-                id: uuidToBigInt(creditBalanceId),
-                flags: 0 | AccountFlags.credits_must_not_exceed_debits
-              }
-            ],
-            account.asset.scale
-          )
+      //     await this.createBalances(
+      //       [
+      //         {
+      //           id: uuidToBigInt(loanBalanceId),
+      //           flags:
+      //             0 |
+      //             AccountFlags.credits_must_not_exceed_debits |
+      //             AccountFlags.linked
+      //         },
+      //         {
+      //           id: uuidToBigInt(creditBalanceId),
+      //           flags: 0 | AccountFlags.credits_must_not_exceed_debits
+      //         }
+      //       ],
+      //       account.asset.scale
+      //     )
 
-          await Account.query()
-            .patch({
-              creditBalanceId,
-              loanBalanceId
-            })
-            .findById(parentAccount.id)
-            .throwIfNotFound()
-        }
-      }
+      //     await Account.query()
+      //       .patch({
+      //         creditBalanceId,
+      //         loanBalanceId
+      //       })
+      //       .findById(parentAccount.id)
+      //       .throwIfNotFound()
+      //   }
+      // }
 
       const balanceId = uuid()
-      const debtBalanceId = uuid()
-      const trustlineBalanceId = uuid()
+      // const debtBalanceId = uuid()
+      // const trustlineBalanceId = uuid()
       await this.createBalances(
         [
           {
             id: uuidToBigInt(balanceId),
-            flags:
-              0 |
-              AccountFlags.debits_must_not_exceed_credits |
-              AccountFlags.linked
-          },
-          {
-            id: uuidToBigInt(debtBalanceId),
-            flags:
-              0 |
-              AccountFlags.debits_must_not_exceed_credits |
-              AccountFlags.linked
-          },
-          {
-            id: uuidToBigInt(trustlineBalanceId),
+            //   flags:
+            //     0 |
+            //     AccountFlags.debits_must_not_exceed_credits |
+            //     AccountFlags.linked
+            // },
+            // {
+            //   id: uuidToBigInt(debtBalanceId),
+            //   flags:
+            //     0 |
+            //     AccountFlags.debits_must_not_exceed_credits |
+            //     AccountFlags.linked
+            // },
+            // {
+            //   id: uuidToBigInt(trustlineBalanceId),
             flags: 0 | AccountFlags.debits_must_not_exceed_credits
           }
         ],
@@ -176,9 +177,9 @@ export class AccountsService implements ConnectorAccountsService {
         assetCode: account.asset.code,
         assetScale: account.asset.scale,
         balanceId,
-        debtBalanceId,
-        trustlineBalanceId,
-        parentAccountId: account.parentAccountId,
+        // debtBalanceId,
+        // trustlineBalanceId,
+        // parentAccountId: account.parentAccountId,
         maxPacketAmount: account.maxPacketAmount,
         outgoingEndpoint: account.http?.outgoing.endpoint,
         outgoingToken: account.http?.outgoing.authToken,
@@ -209,9 +210,9 @@ export class AccountsService implements ConnectorAccountsService {
       }
     })
 
-    if (!account.parentAccountId) {
-      await this.createCurrencyBalances(account.asset.code, account.asset.scale)
-    }
+    // if (!account.parentAccountId) {
+    await this.createCurrencyBalances(account.asset.code, account.asset.scale)
+    // }
     return this.getAccount(account.accountId)
   }
 
@@ -283,54 +284,54 @@ export class AccountsService implements ConnectorAccountsService {
       })
       .findById(accountId)
       .select(
-        'balanceId',
-        'debtBalanceId',
-        'trustlineBalanceId',
-        'loanBalanceId',
-        'creditBalanceId'
+        'balanceId'
+        // 'debtBalanceId',
+        // 'trustlineBalanceId',
+        // 'loanBalanceId',
+        // 'creditBalanceId'
       )
       .throwIfNotFound()
 
     const balanceIds = [
-      uuidToBigInt(account.balanceId),
-      uuidToBigInt(account.debtBalanceId),
-      uuidToBigInt(account.trustlineBalanceId)
+      uuidToBigInt(account.balanceId)
+      // uuidToBigInt(account.debtBalanceId),
+      // uuidToBigInt(account.trustlineBalanceId)
     ]
 
-    if (account.loanBalanceId && account.creditBalanceId) {
-      balanceIds.push(
-        uuidToBigInt(account.loanBalanceId),
-        uuidToBigInt(account.creditBalanceId)
-      )
-    }
+    // if (account.loanBalanceId && account.creditBalanceId) {
+    //   balanceIds.push(
+    //     uuidToBigInt(account.loanBalanceId),
+    //     uuidToBigInt(account.creditBalanceId)
+    //   )
+    // }
 
     const [
-      balance,
-      debtBalance,
-      trustlineBalance,
-      loanBalance,
-      creditBalance
+      balance
+      // debtBalance,
+      // trustlineBalance,
+      // loanBalance,
+      // creditBalance
     ] = await this.client.lookupAccounts(balanceIds)
 
-    if (!trustlineBalance) {
-      throw new UnknownBalanceError()
-    }
+    // if (!trustlineBalance) {
+    //   throw new UnknownBalanceError()
+    // }
 
     const accountBalance: IlpBalance = {
       id: accountId,
-      balance: getNetBalance(balance),
-      parent: {
-        availableCreditLine: getNetBalance(trustlineBalance),
-        totalBorrowed: getNetBalance(debtBalance)
-      }
+      balance: getNetBalance(balance)
+      // parent: {
+      //   availableCreditLine: getNetBalance(trustlineBalance),
+      //   totalBorrowed: getNetBalance(debtBalance)
+      // }
     }
 
-    if (loanBalance && creditBalance) {
-      accountBalance.children = {
-        availableCredit: getNetBalance(creditBalance),
-        totalLent: getNetBalance(loanBalance)
-      }
-    }
+    // if (loanBalance && creditBalance) {
+    //   accountBalance.children = {
+    //     availableCredit: getNetBalance(creditBalance),
+    //     totalLent: getNetBalance(loanBalance)
+    //   }
+    // }
 
     return accountBalance
   }
@@ -350,20 +351,20 @@ export class AccountsService implements ConnectorAccountsService {
         },
         {
           id: toSettlementId(assetCode, assetScale),
-          flags:
-            0 |
-            AccountFlags.credits_must_not_exceed_debits |
-            AccountFlags.linked
-        },
-        {
-          id: toSettlementCreditId(assetCode, assetScale),
-          flags:
-            0 |
-            AccountFlags.credits_must_not_exceed_debits |
-            AccountFlags.linked
-        },
-        {
-          id: toSettlementLoanId(assetCode, assetScale),
+          //   flags:
+          //     0 |
+          //     AccountFlags.credits_must_not_exceed_debits |
+          //     AccountFlags.linked
+          // },
+          // {
+          //   id: toSettlementCreditId(assetCode, assetScale),
+          //   flags:
+          //     0 |
+          //     AccountFlags.credits_must_not_exceed_debits |
+          //     AccountFlags.linked
+          // },
+          // {
+          //   id: toSettlementLoanId(assetCode, assetScale),
           flags: 0 | AccountFlags.credits_must_not_exceed_debits
         }
       ],
