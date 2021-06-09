@@ -110,4 +110,5 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      - run: yarn install --immutable --immutable-cache
       - run: yarn build
