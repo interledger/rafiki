@@ -1,5 +1,5 @@
-import { Logger as PinoLogger } from './logger'
-import { User } from '../models/user'
+import { Logger as PinoLogger } from '../logger/service'
+import { User } from './model'
 
 type Logger = typeof PinoLogger
 

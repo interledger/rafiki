@@ -8,7 +8,7 @@ import IORedis from 'ioredis'
 
 import { App, AppServices } from './app'
 import { Config } from './config/app'
-import { GraphileProducer } from './infrastructure/graphileProducer'
+import { GraphileProducer } from './messaging/graphileProducer'
 
 const container = initIocContainer(Config)
 const app = new App(container)

@@ -9,7 +9,7 @@ import { Logger } from 'pino'
 import Router from '@koa/router'
 
 import { Config as AppConfig } from './config/app'
-import { MessageProducer } from './infrastructure/messageProducer'
+import { MessageProducer } from './messaging/messageProducer'
 import { WorkerUtils } from 'graphile-worker'
 
 export interface AppContext extends Context {
