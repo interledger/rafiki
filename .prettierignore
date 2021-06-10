@@ -5,3 +5,4 @@
 public
 generated
 dist
+*.yml
