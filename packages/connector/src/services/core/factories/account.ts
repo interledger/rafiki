@@ -5,7 +5,10 @@ import { CreateOptions } from '../services'
 const assetCode = Faker.finance.currencyCode().toString().toUpperCase()
 const assetScale = Faker.datatype.number(6)
 
-type MockIlpAccount = CreateOptions & { balance: bigint }
+type MockIlpAccount = CreateOptions & {
+  disabled: boolean
+  balance: bigint
+}
 export const AccountFactory = Factory.define<MockIlpAccount>(
   'AccountFactory'
 ).attrs({

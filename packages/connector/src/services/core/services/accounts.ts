@@ -37,7 +37,7 @@ export interface Transaction {
 export interface IlpAccount {
   accountId: string
   parentAccountId?: string
-  disabled?: boolean // you can fetch config of disabled account but it will not process packets
+  disabled: boolean // you can fetch config of disabled account but it will not process packets
 
   asset: {
     code: string
@@ -59,7 +59,8 @@ export interface IlpAccount {
   maxPacketAmount?: bigint
 }
 
-export type CreateOptions = IlpAccount & {
+export type CreateOptions = Omit<IlpAccount, 'disabled'> & {
+  disabled?: boolean
   http?: {
     incoming?: {
       authTokens: string[]

@@ -18,11 +18,6 @@ function envBigInt(name: string, value: bigint): bigint {
 //   return envValue == null ? value : Boolean(envValue)
 // }
 
-function envArray(name: string, value: string[]): string[] {
-  const envValue = process.env[name]
-  return envValue == null ? value : envValue.split(' ')
-}
-
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   port: envInt('PORT', 3002),
@@ -40,7 +35,7 @@ export const Config = {
     'TIGERBEETLE_CLUSTER_ID',
     0x0a5ca1ab1ebee11en
   ),
-  tigerbeetleReplicaAddresses: envArray('TIGERBEETLE_REPLICA_ADDRESSES', [
-    '3001'
-  ])
+  tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
+    ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
+    : ['3001']
 }

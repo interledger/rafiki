@@ -1,6 +1,6 @@
 import { raw, transaction, UniqueViolationError } from 'objection'
 import { Logger } from 'pino'
-import { v4 as uuid } from 'uuid'
+import * as uuid from 'uuid'
 import {
   AccountFlags,
   Client,
@@ -92,6 +92,8 @@ interface Peer {
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 const TRANSFER_RESERVED = Buffer.alloc(32)
 
+const UUID_LENGTH = 36
+
 export class AccountsService implements ConnectorAccountsService {
   constructor(
     private client: Client,
@@ -112,8 +114,8 @@ export class AccountsService implements ConnectorAccountsService {
       //     throw new InvalidAssetError(account.asset.code, account.asset.scale)
       //   }
       //   if (!parentAccount.loanBalanceId || !parentAccount.creditBalanceId) {
-      //     const loanBalanceId = uuid()
-      //     const creditBalanceId = uuid()
+      //     const loanBalanceId = uuid.v4()
+      //     const creditBalanceId = uuid.v4()
 
       //     await this.createBalances(
       //       [
@@ -142,9 +144,9 @@ export class AccountsService implements ConnectorAccountsService {
       //   }
       // }
 
-      const balanceId = uuid()
-      // const debtBalanceId = uuid()
-      // const trustlineBalanceId = uuid()
+      const balanceId = uuid.v4()
+      // const debtBalanceId = uuid.v4()
+      // const trustlineBalanceId = uuid.v4()
       await this.createBalances(
         [
           {
@@ -184,27 +186,28 @@ export class AccountsService implements ConnectorAccountsService {
         staticIlpAddress: account.routing?.staticIlpAddress
       })
 
-      try {
-        const incomingTokens = account.http?.incoming?.authTokens.map(
-          (incomingToken) => {
-            return {
-              accountId: account.accountId,
-              token: incomingToken
-            }
+      const incomingTokens = account.http?.incoming?.authTokens.map(
+        (incomingToken) => {
+          return {
+            accountId: account.accountId,
+            token: incomingToken
           }
-        )
-        if (incomingTokens) {
-          await Token.query().insert(incomingTokens)
         }
-      } catch (error) {
-        if (error instanceof UniqueViolationError) {
-          this.logger.info({
-            msg: 'duplicate incoming token attempted to be added',
-            account
+      )
+      if (incomingTokens) {
+        await Token.query()
+          .insert(incomingTokens)
+          .catch((err) => {
+            if (err instanceof UniqueViolationError) {
+              this.logger.info({
+                msg: 'duplicate incoming token attempted to be added',
+                account
+              })
+            }
+            throw err
           })
-        }
-        throw error
       }
+
       // if (!account.parentAccountId) {
       await this.createCurrencyBalances(account.asset.code, account.asset.scale)
       // }
@@ -220,25 +223,25 @@ export class AccountsService implements ConnectorAccountsService {
         await Token.query().delete().where({
           accountId: accountOptions.accountId
         })
-        try {
-          const incomingTokens = accountOptions.http.incoming.authTokens.map(
-            (incomingToken) => {
-              return {
-                accountId: accountOptions.accountId,
-                token: incomingToken
-              }
+        const incomingTokens = accountOptions.http.incoming.authTokens.map(
+          (incomingToken) => {
+            return {
+              accountId: accountOptions.accountId,
+              token: incomingToken
             }
-          )
-          await Token.query().insert(incomingTokens)
-        } catch (error) {
-          if (error instanceof UniqueViolationError) {
-            this.logger.info({
-              msg: 'duplicate incoming token attempted to be added',
-              accountOptions
-            })
           }
-          throw error
-        }
+        )
+        await Token.query()
+          .insert(incomingTokens)
+          .catch((err) => {
+            if (err instanceof UniqueViolationError) {
+              this.logger.info({
+                msg: 'duplicate incoming token attempted to be added',
+                accountOptions
+              })
+            }
+            throw err
+          })
       }
       const account = await Account.query()
         .patchAndFetchById(accountOptions.accountId, {
@@ -430,7 +433,7 @@ export class AccountsService implements ConnectorAccountsService {
     const res = await this.client.createTransfers(
       transfers.map(({ sourceBalanceId, destinationBalanceId, amount }) => {
         return {
-          id: uuidToBigInt(uuid()),
+          id: uuidToBigInt(uuid.v4()),
           debit_account_id: sourceBalanceId,
           credit_account_id: destinationBalanceId,
           amount,
@@ -496,58 +499,65 @@ export class AccountsService implements ConnectorAccountsService {
   public async getAccountByDestinationAddress(
     destinationAddress: string
   ): Promise<IlpAccount | null> {
-    try {
-      const account = await Account.query()
-        // new RegExp('^' + staticIlpAddress + '($|\\.)'))
-        .where(
-          raw('?', [destinationAddress]),
-          'like',
-          raw("?? || '%'", ['staticIlpAddress'])
-        )
-        .andWhere((builder) => {
-          builder
-            .where(
-              raw('length(??)', ['staticIlpAddress']),
-              destinationAddress.length
-            )
-            .orWhere(
-              raw('substring(?, length(??)+1, 1)', [
-                destinationAddress,
-                'staticIlpAddress'
-              ]),
-              '.'
-            )
-        })
-        .first()
+    const account = await Account.query()
+      // new RegExp('^' + staticIlpAddress + '($|\\.)'))
+      .where(
+        raw('?', [destinationAddress]),
+        'like',
+        raw("?? || '%'", ['staticIlpAddress'])
+      )
+      .andWhere((builder) => {
+        builder
+          .where(
+            raw('length(??)', ['staticIlpAddress']),
+            destinationAddress.length
+          )
+          .orWhere(
+            raw('substring(?, length(??)+1, 1)', [
+              destinationAddress,
+              'staticIlpAddress'
+            ]),
+            '.'
+          )
+      })
+      .first()
+    if (account) {
+      return toIlpAccount(account)
+    }
+    const peerAddress = this.config.peerAddresses.find(
+      (peer: Peer) =>
+        destinationAddress.startsWith(peer.ilpAddress) &&
+        (destinationAddress.length === peer.ilpAddress.length ||
+          destinationAddress[peer.ilpAddress.length] === '.')
+    )
+    if (peerAddress) {
+      const account = await Account.query().findById(peerAddress.accountId)
       if (account) {
         return toIlpAccount(account)
       }
-      const idx = this.config.peerAddresses.findIndex((peer: Peer) =>
-        new RegExp('^' + peer.ilpAddress + '($|\\.)').test(destinationAddress)
-      )
-      if (idx !== -1) {
-        const account = await Account.query().findById(
-          this.config.peerAddresses[idx].accountId
-        )
-        if (account) {
-          return toIlpAccount(account)
-        }
-      }
-      const found = destinationAddress.match(
-        new RegExp(
-          '(?<=^' + this.config.ilpAddress + '\\.)([a-zA-Z0-9_~-]+)(?=($|[.]))'
-        )
-      )
-      if (found) {
-        const account = await Account.query().findById(found[0])
-        if (account) {
-          return toIlpAccount(account)
-        }
-      }
-      return null
-    } catch {
-      return null
     }
+    if (this.config.ilpAddress) {
+      if (
+        destinationAddress.startsWith(this.config.ilpAddress + '.') &&
+        (destinationAddress.length ===
+          this.config.ilpAddress.length + 1 + UUID_LENGTH ||
+          destinationAddress[
+            this.config.ilpAddress.length + 1 + UUID_LENGTH
+          ] === '.')
+      ) {
+        const accountId = destinationAddress.slice(
+          this.config.ilpAddress.length + 1,
+          this.config.ilpAddress.length + 1 + UUID_LENGTH
+        )
+        if (uuid.validate(accountId) && uuid.version(accountId) === 4) {
+          const account = await Account.query().findById(accountId)
+          if (account) {
+            return toIlpAccount(account)
+          }
+        }
+      }
+    }
+    return null
   }
 
   public async getAddress(accountId: string): Promise<string> {
@@ -589,7 +599,7 @@ export class AccountsService implements ConnectorAccountsService {
     const transfers: ClientTransfer[] = []
 
     const flags = callback ? 0 | TransferFlags.two_phase_commit : 0
-    const timeout = callback ? BigInt(1000000000) : BigInt(0)
+    const timeout = callback ? BigInt(1e9) : BigInt(0)
 
     if (sourceAccount.assetCode === destinationAccount.assetCode) {
       if (
@@ -600,7 +610,7 @@ export class AccountsService implements ConnectorAccountsService {
         throw new InvalidAmountError()
       }
       transfers.push({
-        id: uuidToBigInt(uuid()),
+        id: uuidToBigInt(uuid.v4()),
         debit_account_id: uuidToBigInt(sourceAccount.balanceId),
         credit_account_id: uuidToBigInt(destinationAccount.balanceId),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -621,7 +631,7 @@ export class AccountsService implements ConnectorAccountsService {
 
       transfers.push(
         {
-          id: uuidToBigInt(uuid()),
+          id: uuidToBigInt(uuid.v4()),
           debit_account_id: uuidToBigInt(sourceAccount.balanceId),
           credit_account_id: toLiquidityId(
             sourceAccount.assetCode,
@@ -637,7 +647,7 @@ export class AccountsService implements ConnectorAccountsService {
           timestamp: BigInt(0)
         },
         {
-          id: uuidToBigInt(uuid()),
+          id: uuidToBigInt(uuid.v4()),
           debit_account_id: toLiquidityId(
             destinationAccount.assetCode,
             destinationAccount.assetScale

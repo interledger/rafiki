@@ -6,7 +6,10 @@ import {
   Transfer
 } from '../../services'
 
-type MockIlpAccount = CreateOptions & { balance: bigint }
+type MockIlpAccount = CreateOptions & {
+  disabled: boolean
+  balance: bigint
+}
 
 export class MockAccountsService implements AccountsService {
   private accounts: Map<string, MockIlpAccount> = new Map()
