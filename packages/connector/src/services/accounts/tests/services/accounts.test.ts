@@ -2,6 +2,7 @@ import { randomInt } from 'crypto'
 
 import { Transaction as KnexTransaction } from 'knex'
 import { Model, UniqueViolationError } from 'objection'
+import { Account as Balance } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import {
@@ -103,7 +104,7 @@ describe('Accounts Service', (): void => {
       ])
       // expect(balances.length).toBe(3)
       expect(balances.length).toBe(1)
-      balances.forEach((balance) => {
+      balances.forEach((balance: Balance) => {
         expect(balance.credits_reserved).toEqual(BigInt(0))
         expect(balance.credits_accepted).toEqual(BigInt(0))
       })
@@ -144,7 +145,7 @@ describe('Accounts Service', (): void => {
       ])
       // expect(balances.length).toBe(3)
       expect(balances.length).toBe(1)
-      balances.forEach((balance) => {
+      balances.forEach((balance: Balance) => {
         expect(balance.credits_reserved).toEqual(BigInt(0))
         expect(balance.credits_accepted).toEqual(BigInt(0))
       })
@@ -237,7 +238,7 @@ describe('Accounts Service', (): void => {
     //         uuidToBigInt(loanBalanceId)
     //       ])
     //       expect(balances.length).toBe(2)
-    //       balances.forEach((balance) => {
+    //       balances.forEach((balance: Balance) => {
     //         expect(balance.credits_reserved).toEqual(BigInt(0))
     //         expect(balance.credits_accepted).toEqual(BigInt(0))
     //       })
@@ -344,7 +345,7 @@ describe('Accounts Service', (): void => {
         ])
         // expect(balances.length).toBe(4)
         expect(balances.length).toBe(2)
-        balances.forEach((balance) => {
+        balances.forEach((balance: Balance) => {
           expect(balance.credits_reserved).toEqual(BigInt(0))
           expect(balance.credits_accepted).toEqual(BigInt(0))
         })
