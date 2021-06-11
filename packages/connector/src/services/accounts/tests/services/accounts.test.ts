@@ -19,10 +19,12 @@ import {
   AppServices,
   Config,
   InsufficientBalanceError,
+  InsufficientLiquidityError,
   InvalidAssetError,
-  InvalidAmountError,
+  InvalidTransferError,
   UnknownAccountError,
-  UnknownBalanceError,
+  UnknownLiquidityAccountError,
+  UnknownSettlementAccountError,
   UpdateIlpAccountOptions
 } from '../..'
 import { IocContract } from '@adonisjs/fold'
@@ -531,7 +533,9 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       await expect(
         accounts.getLiquidityBalance(asset.code, asset.scale)
-      ).rejects.toThrow(UnknownBalanceError)
+      ).rejects.toThrowError(
+        new UnknownLiquidityAccountError(asset.code, asset.scale)
+      )
     })
   })
 
@@ -567,7 +571,9 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       await expect(
         accounts.getSettlementBalance(asset.code, asset.scale)
-      ).rejects.toThrow(UnknownBalanceError)
+      ).rejects.toThrowError(
+        new UnknownSettlementAccountError(asset.code, asset.scale)
+      )
     })
   })
 
@@ -647,7 +653,9 @@ describe('Accounts Service', (): void => {
       const amount = BigInt(10)
       await expect(
         accounts.withdrawLiquidity(asset.code, asset.scale, amount)
-      ).rejects.toThrow(InsufficientBalanceError)
+      ).rejects.toThrowError(
+        new InsufficientLiquidityError(asset.code, asset.scale)
+      )
       const balance = await accounts.getLiquidityBalance(
         asset.code,
         asset.scale
@@ -723,8 +731,8 @@ describe('Accounts Service', (): void => {
       const startingBalance = BigInt(5)
       await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(10)
-      await expect(accounts.withdraw(accountId, amount)).rejects.toThrow(
-        InsufficientBalanceError
+      await expect(accounts.withdraw(accountId, amount)).rejects.toThrowError(
+        new InsufficientBalanceError(accountId)
       )
       const { balance } = await accounts.getAccountBalance(accountId)
       expect(balance).toEqual(startingBalance)
@@ -1237,8 +1245,8 @@ describe('Accounts Service', (): void => {
         destinationAccountId,
         sourceAmount: BigInt(5)
       }
-      await expect(accounts.transferFunds(transfer)).rejects.toThrow(
-        InsufficientBalanceError
+      await expect(accounts.transferFunds(transfer)).rejects.toThrowError(
+        new InsufficientBalanceError(sourceAccountId)
       )
       const { balance: sourceBalance } = await accounts.getAccountBalance(
         sourceAccountId
@@ -1301,8 +1309,11 @@ describe('Accounts Service', (): void => {
         destinationAmount
       }
 
-      await expect(accounts.transferFunds(transfer)).rejects.toThrow(
-        InsufficientBalanceError
+      await expect(accounts.transferFunds(transfer)).rejects.toThrowError(
+        new InsufficientLiquidityError(
+          destinationAsset.code,
+          destinationAsset.scale
+        )
       )
 
       const { balance: sourceBalance } = await accounts.getAccountBalance(
@@ -1340,21 +1351,22 @@ describe('Accounts Service', (): void => {
         maxPacketAmount: BigInt(100)
       })
 
+      const unknownAccountId = uuid()
       await expect(
         accounts.transferFunds({
           sourceAccountId: accountId,
-          destinationAccountId: uuid(),
+          destinationAccountId: unknownAccountId,
           sourceAmount: BigInt(5)
         })
-      ).rejects.toThrow(UnknownAccountError)
+      ).rejects.toThrowError(new UnknownAccountError(unknownAccountId))
 
       await expect(
         accounts.transferFunds({
-          sourceAccountId: uuid(),
+          sourceAccountId: unknownAccountId,
           destinationAccountId: accountId,
           sourceAmount: BigInt(5)
         })
-      ).rejects.toThrow(UnknownAccountError)
+      ).rejects.toThrowError(new UnknownAccountError(unknownAccountId))
     })
 
     test('Throws for invalid amount', async (): Promise<void> => {
@@ -1381,7 +1393,7 @@ describe('Accounts Service', (): void => {
           sourceAmount: BigInt(5),
           destinationAmount: BigInt(10)
         })
-      ).rejects.toThrow(InvalidAmountError)
+      ).rejects.toThrow(InvalidTransferError)
     })
   })
 })
