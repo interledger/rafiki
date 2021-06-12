@@ -3,6 +3,7 @@ import {
   CreateOptions,
   IlpAccount,
   IlpBalance,
+  Transaction,
   Transfer
 } from '../../services'
 
@@ -60,9 +61,7 @@ export class MockAccountsService implements AccountsService {
     return account
   }
 
-  async transferFunds(options: Transfer): Promise<Transfer> {
-    if (!options.sourceAmount) throw new Error('missing sourceAmount')
-    if (!options.callback) throw new Error('missing callback')
+  async transferFunds(options: Transfer): Promise<Transaction> {
     const src = this.accounts.get(options.sourceAccountId)
     const dst = this.accounts.get(options.destinationAccountId)
     if (!src) throw new Error('src not found')
@@ -72,17 +71,14 @@ export class MockAccountsService implements AccountsService {
     if (src.asset.scale !== dst.asset.scale)
       throw new Error('asset scale mismatch')
     src.balance -= options.sourceAmount
-    options.callback({
+    return {
       commit: async () => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        dst.balance += options.sourceAmount!
+        dst.balance += options.sourceAmount
       },
       rollback: async () => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        src.balance += options.sourceAmount!
+        src.balance += options.sourceAmount
       }
-    })
-    return options
+    }
   }
 
   async getAddress(accountId: string): Promise<string> {

@@ -8,7 +8,7 @@ export interface AccountsService {
   getAccountByToken(token: string): Promise<IlpAccount | null>
   getAccountBalance(accountId: string): Promise<IlpBalance>
   createAccount(account: CreateOptions): Promise<IlpAccount>
-  transferFunds(args: Transfer): Promise<Transfer>
+  transferFunds(args: Transfer): Promise<Transaction>
   getAddress(accountId: string): Promise<string>
 }
 
@@ -16,18 +16,9 @@ export type Transfer = {
   sourceAccountId: string
   destinationAccountId: string
 
-  sourceAmount?: bigint
+  sourceAmount: bigint
   destinationAmount?: bigint
-
-  callback?: (trx: Transaction) => Promise<void>
-} & (
-  | {
-      sourceAmount: bigint
-    }
-  | {
-      destinationAmount: bigint
-    }
-)
+}
 
 export interface Transaction {
   commit: () => Promise<void>

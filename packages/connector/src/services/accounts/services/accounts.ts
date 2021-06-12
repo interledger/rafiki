@@ -623,14 +623,12 @@ export class AccountsService implements ConnectorAccountsService {
     return this.config.ilpAddress + '.' + accountId
   }
 
-  public async transferFunds(transfer: Transfer): Promise<Transfer> {
-    const {
-      sourceAccountId,
-      destinationAccountId,
-      sourceAmount,
-      destinationAmount,
-      callback
-    } = transfer
+  public async transferFunds({
+    sourceAccountId,
+    destinationAccountId,
+    sourceAmount,
+    destinationAmount
+  }: Transfer): Promise<Transaction> {
     const [
       sourceAccount,
       destinationAccount
@@ -648,15 +646,11 @@ export class AccountsService implements ConnectorAccountsService {
 
     const transfers: ClientTransfer[] = []
 
-    const flags = callback ? 0 | TransferFlags.two_phase_commit : 0
-    const timeout = callback ? BigInt(1e9) : BigInt(0)
+    const flags = 0 | TransferFlags.two_phase_commit
+    const timeout = BigInt(1e9)
 
     if (sourceAccount.assetCode === destinationAccount.assetCode) {
-      if (
-        sourceAmount &&
-        destinationAmount &&
-        sourceAmount !== destinationAmount
-      ) {
+      if (destinationAmount && sourceAmount !== destinationAmount) {
         throw new InvalidTransferError(
           'sourceAmount and destinationAmount must match for same currency transfer'
         )
@@ -665,8 +659,7 @@ export class AccountsService implements ConnectorAccountsService {
         id: uuidToBigInt(uuid.v4()),
         debit_account_id: uuidToBigInt(sourceAccount.balanceId),
         credit_account_id: uuidToBigInt(destinationAccount.balanceId),
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        amount: sourceAmount || destinationAmount!,
+        amount: sourceAmount,
         flags,
         timeout,
         reserved: TRANSFER_RESERVED,
@@ -675,10 +668,10 @@ export class AccountsService implements ConnectorAccountsService {
         timestamp: BigInt(0)
       })
     } else {
-      if (!sourceAmount) {
-        // TODO rate backend
-      } else if (!destinationAmount) {
-        // TODO rate backend
+      if (!destinationAmount) {
+        throw new InvalidTransferError(
+          'destinationAmount required for cross currency transfer'
+        )
       }
 
       transfers.push(
@@ -689,8 +682,7 @@ export class AccountsService implements ConnectorAccountsService {
             sourceAccount.assetCode,
             sourceAccount.assetScale
           ),
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          amount: sourceAmount!,
+          amount: sourceAmount,
           flags: flags | TransferFlags.linked,
           timeout,
           reserved: TRANSFER_RESERVED,
@@ -705,8 +697,7 @@ export class AccountsService implements ConnectorAccountsService {
             destinationAccount.assetScale
           ),
           credit_account_id: uuidToBigInt(destinationAccount.balanceId),
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          amount: destinationAmount!,
+          amount: destinationAmount,
           flags,
           timeout,
           reserved: TRANSFER_RESERVED,
@@ -716,91 +707,78 @@ export class AccountsService implements ConnectorAccountsService {
         }
       )
     }
-    try {
-      const res = await this.client.createTransfers(transfers)
-      for (const { index, code } of res) {
-        switch (code) {
-          case CreateTransferError.linked_event_failed:
-            break
-          case CreateTransferError.debit_account_not_found:
-            if (index === 1) {
-              throw new UnknownLiquidityAccountError(
-                destinationAccount.assetCode,
-                destinationAccount.assetScale
-              )
-            }
-            throw new UnknownBalanceError(sourceAccountId)
-          case CreateTransferError.credit_account_not_found:
-            if (index === 1) {
-              throw new UnknownBalanceError(destinationAccountId)
-            }
+    const res = await this.client.createTransfers(transfers)
+    for (const { index, code } of res) {
+      switch (code) {
+        case CreateTransferError.linked_event_failed:
+          break
+        case CreateTransferError.debit_account_not_found:
+          if (index === 1) {
             throw new UnknownLiquidityAccountError(
-              sourceAccount.assetCode,
-              sourceAccount.assetScale
+              destinationAccount.assetCode,
+              destinationAccount.assetScale
             )
-          case CreateTransferError.exceeds_credits:
-            if (index === 1) {
-              throw new InsufficientLiquidityError(
-                destinationAccount.assetCode,
-                destinationAccount.assetScale
-              )
-            }
-            throw new InsufficientBalanceError(sourceAccountId)
-          default:
-            throw new TransferError(code)
-        }
-      }
-      if (callback) {
-        const tx: Transaction = {
-          commit: async () => {
-            const res = await this.client.commitTransfers(
-              transfers.map((transfer) => {
-                return {
-                  id: transfer.id,
-                  flags:
-                    transfer.flags & TransferFlags.linked
-                      ? 0 | CommitFlags.linked
-                      : 0,
-                  reserved: TRANSFER_RESERVED,
-                  code: 0,
-                  timestamp: BigInt(0)
-                }
-              })
-            )
-            if (res.length) {
-              // TODO throw
-            }
-          },
-          rollback: async () => {
-            const res = await this.client.commitTransfers(
-              transfers.map((transfer) => {
-                const flags =
-                  transfer.flags & TransferFlags.linked
-                    ? 0 | CommitFlags.linked
-                    : 0
-                return {
-                  id: transfer.id,
-                  flags: flags | CommitFlags.reject,
-                  reserved: TRANSFER_RESERVED,
-                  code: 0,
-                  timestamp: BigInt(0)
-                }
-              })
-            )
-            if (res.length) {
-              // TODO throw
-            }
           }
-        }
-        await callback(tx)
+          throw new UnknownBalanceError(sourceAccountId)
+        case CreateTransferError.credit_account_not_found:
+          if (index === 1) {
+            throw new UnknownBalanceError(destinationAccountId)
+          }
+          throw new UnknownLiquidityAccountError(
+            sourceAccount.assetCode,
+            sourceAccount.assetScale
+          )
+        case CreateTransferError.exceeds_credits:
+          if (index === 1) {
+            throw new InsufficientLiquidityError(
+              destinationAccount.assetCode,
+              destinationAccount.assetScale
+            )
+          }
+          throw new InsufficientBalanceError(sourceAccountId)
+        default:
+          throw new TransferError(code)
       }
-      return transfer
-    } catch (error) {
-      this.logger.error({
-        error
-      })
-      // Should this rethrow the error?
-      throw error
     }
+    const trx: Transaction = {
+      commit: async () => {
+        const res = await this.client.commitTransfers(
+          transfers.map((transfer) => {
+            return {
+              id: transfer.id,
+              flags:
+                transfer.flags & TransferFlags.linked
+                  ? 0 | CommitFlags.linked
+                  : 0,
+              reserved: TRANSFER_RESERVED,
+              code: 0,
+              timestamp: BigInt(0)
+            }
+          })
+        )
+        if (res.length) {
+          // TODO throw
+        }
+      },
+      rollback: async () => {
+        const res = await this.client.commitTransfers(
+          transfers.map((transfer) => {
+            const flags =
+              transfer.flags & TransferFlags.linked ? 0 | CommitFlags.linked : 0
+            return {
+              id: transfer.id,
+              flags: flags | CommitFlags.reject,
+              reserved: TRANSFER_RESERVED,
+              code: 0,
+              timestamp: BigInt(0)
+            }
+          })
+        )
+        if (res.length) {
+          // TODO throw
+        }
+      }
+    }
+    return trx
   }
 }
