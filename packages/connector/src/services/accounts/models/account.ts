@@ -29,11 +29,11 @@ export class Account extends BaseModel {
     }
   }
 
-  public disabled!: boolean
+  public readonly disabled!: boolean
 
-  public assetCode!: string
-  public assetScale!: number
-  public balanceId!: string
+  public readonly assetCode!: string
+  public readonly assetScale!: number
+  public readonly balanceId!: string
   // public debtBalanceId!: string
   // public trustlineBalanceId!: string
   // public loanBalanceId?: string
@@ -41,13 +41,13 @@ export class Account extends BaseModel {
 
   // public parentAccountId?: string
 
-  public maxPacketAmount!: bigint
+  public readonly maxPacketAmount!: bigint
 
-  public incomingTokens?: Token[]
-  public outgoingToken?: string
-  public outgoingEndpoint?: string
+  public readonly incomingTokens?: Token[]
+  public readonly outgoingToken?: string
+  public readonly outgoingEndpoint?: string
 
-  public streamEnabled!: boolean
+  public readonly streamEnabled!: boolean
 
-  public staticIlpAddress?: string
+  public readonly staticIlpAddress?: string
 }

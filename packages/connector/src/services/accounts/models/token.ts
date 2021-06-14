@@ -5,6 +5,6 @@ export class Token extends BaseModel {
     return 'tokens'
   }
 
-  public token!: string
-  public accountId!: string
+  public readonly token!: string
+  public readonly accountId!: string
 }
