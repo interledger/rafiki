@@ -45,6 +45,7 @@ async function createAccount(
   currency: string
 ): Promise<Account> {
   deps.logger.info('Creates an account')
+  // TODO: Create account in connector here (when connector account setup).
   return Account.query(deps.knex).insertAndFetch({
     scale: scale,
     currency: currency
