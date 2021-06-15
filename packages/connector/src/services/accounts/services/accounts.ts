@@ -14,14 +14,12 @@ import { Config } from '../config'
 import {
   InsufficientBalanceError,
   InsufficientLiquidityError,
-  InsufficientSettlementBalanceError,
   // InvalidAssetError,
   InvalidTransferError,
   TransferError,
   UnknownAccountError,
   UnknownBalanceError,
-  UnknownLiquidityAccountError,
-  UnknownSettlementAccountError
+  UnknownLiquidityAccountError
 } from '../errors'
 import { Account, Token } from '../models'
 import {
@@ -33,6 +31,7 @@ import {
   randomId
 } from '../utils'
 import {
+  AccountError,
   AccountsService as ConnectorAccountsService,
   CreateOptions,
   IlpAccount,
@@ -391,49 +390,49 @@ export class AccountsService implements ConnectorAccountsService {
     assetCode: string,
     assetScale: number,
     amount: bigint
-  ): Promise<void> {
+  ): Promise<void | AccountError> {
     await this.createCurrencyBalances(assetCode, assetScale)
-    await this.createTransfer({
+    const error = await this.createTransfer({
       sourceBalanceId: toSettlementId(assetCode, assetScale),
       destinationBalanceId: toLiquidityId(assetCode, assetScale),
       amount
-    }).catch((err) => {
-      if (err instanceof TransferError) {
-        switch (err.code) {
-          case CreateTransferError.debit_account_not_found:
-            throw new UnknownSettlementAccountError(assetCode, assetScale)
-          case CreateTransferError.credit_account_not_found:
-            throw new UnknownLiquidityAccountError(assetCode, assetScale)
-        }
-      }
-      throw err
     })
+    if (error) {
+      switch (error) {
+        case CreateTransferError.debit_account_not_found:
+          return AccountError.UnknownSettlementAccount
+        case CreateTransferError.credit_account_not_found:
+          return AccountError.UnknownLiquidityAccount
+        default:
+          throw new TransferError(error)
+      }
+    }
   }
 
   public async withdrawLiquidity(
     assetCode: string,
     assetScale: number,
     amount: bigint
-  ): Promise<void> {
-    await this.createTransfer({
+  ): Promise<void | AccountError> {
+    const error = await this.createTransfer({
       sourceBalanceId: toLiquidityId(assetCode, assetScale),
       destinationBalanceId: toSettlementId(assetCode, assetScale),
       amount
-    }).catch((err) => {
-      if (err instanceof TransferError) {
-        switch (err.code) {
-          case CreateTransferError.debit_account_not_found:
-            throw new UnknownLiquidityAccountError(assetCode, assetScale)
-          case CreateTransferError.credit_account_not_found:
-            throw new UnknownSettlementAccountError(assetCode, assetScale)
-          case CreateTransferError.exceeds_credits:
-            throw new InsufficientLiquidityError(assetCode, assetScale)
-          case CreateTransferError.exceeds_debits:
-            throw new InsufficientSettlementBalanceError(assetCode, assetScale)
-        }
-      }
-      throw err
     })
+    if (error) {
+      switch (error) {
+        case CreateTransferError.debit_account_not_found:
+          return AccountError.UnknownLiquidityAccount
+        case CreateTransferError.credit_account_not_found:
+          return AccountError.UnknownSettlementAccount
+        case CreateTransferError.exceeds_credits:
+          return AccountError.InsufficientLiquidity
+        case CreateTransferError.exceeds_debits:
+          return AccountError.InsufficientSettlementBalance
+        default:
+          throw new TransferError(error)
+      }
+    }
   }
 
   public async getLiquidityBalance(
@@ -466,7 +465,7 @@ export class AccountsService implements ConnectorAccountsService {
     sourceBalanceId,
     destinationBalanceId,
     amount
-  }: BalanceTransfer): Promise<void> {
+  }: BalanceTransfer): Promise<void | CreateTransferError> {
     const res = await this.client.createTransfers([
       {
         id: randomId(),
@@ -482,57 +481,71 @@ export class AccountsService implements ConnectorAccountsService {
       }
     ])
     if (res.length) {
-      throw new TransferError(res[0].code)
+      return res[0].code
     }
   }
 
-  public async deposit(accountId: string, amount: bigint): Promise<void> {
-    const { assetCode, assetScale, balanceId } = await Account.query()
+  public async deposit(
+    accountId: string,
+    amount: bigint
+  ): Promise<void | AccountError> {
+    const account = await Account.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
-      .throwIfNotFound()
-    await this.createTransfer({
-      sourceBalanceId: toSettlementId(assetCode, assetScale),
-      destinationBalanceId: balanceId,
+    if (!account) {
+      return AccountError.UnknownAccount
+    }
+    const error = await this.createTransfer({
+      sourceBalanceId: toSettlementId(account.assetCode, account.assetScale),
+      destinationBalanceId: account.balanceId,
       amount
-    }).catch((err) => {
-      if (err instanceof TransferError) {
-        switch (err.code) {
-          case CreateTransferError.debit_account_not_found:
-            throw new UnknownSettlementAccountError(assetCode, assetScale)
-          case CreateTransferError.credit_account_not_found:
-            throw new UnknownBalanceError(accountId)
-        }
-      }
-      throw err
     })
+
+    if (error) {
+      switch (error) {
+        case CreateTransferError.debit_account_not_found:
+          return AccountError.UnknownSettlementAccount
+        case CreateTransferError.credit_account_not_found:
+          throw new UnknownBalanceError(accountId)
+        default:
+          throw new TransferError(error)
+      }
+    }
   }
 
-  public async withdraw(accountId: string, amount: bigint): Promise<void> {
-    const { assetCode, assetScale, balanceId } = await Account.query()
+  public async withdraw(
+    accountId: string,
+    amount: bigint
+  ): Promise<void | AccountError> {
+    const account = await Account.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
-      .throwIfNotFound()
-
-    await this.createTransfer({
-      sourceBalanceId: balanceId,
-      destinationBalanceId: toSettlementId(assetCode, assetScale),
+    if (!account) {
+      return AccountError.UnknownAccount
+    }
+    const error = await this.createTransfer({
+      sourceBalanceId: account.balanceId,
+      destinationBalanceId: toSettlementId(
+        account.assetCode,
+        account.assetScale
+      ),
       amount
-    }).catch((err) => {
-      if (err instanceof TransferError) {
-        switch (err.code) {
-          case CreateTransferError.debit_account_not_found:
-            throw new UnknownBalanceError(accountId)
-          case CreateTransferError.credit_account_not_found:
-            throw new UnknownSettlementAccountError(assetCode, assetScale)
-          case CreateTransferError.exceeds_credits:
-            throw new InsufficientBalanceError(accountId)
-          case CreateTransferError.exceeds_debits:
-            throw new InsufficientSettlementBalanceError(assetCode, assetScale)
-        }
-      }
-      throw err
     })
+
+    if (error) {
+      switch (error) {
+        case CreateTransferError.debit_account_not_found:
+          throw new UnknownBalanceError(accountId)
+        case CreateTransferError.credit_account_not_found:
+          return AccountError.UnknownSettlementAccount
+        case CreateTransferError.exceeds_credits:
+          return AccountError.InsufficientBalance
+        case CreateTransferError.exceeds_debits:
+          return AccountError.InsufficientSettlementBalance
+        default:
+          throw new TransferError(error)
+      }
+    }
   }
 
   public async getAccountByToken(token: string): Promise<IlpAccount | null> {

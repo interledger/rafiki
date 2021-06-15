@@ -27,7 +27,11 @@ import {
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
-import { CreateOptions, IlpBalance } from '../../../core/services/accounts'
+import {
+  AccountError,
+  CreateOptions,
+  IlpBalance
+} from '../../../core/services/accounts'
 
 // Use unique assets as a workaround for not being able to reset
 // Tigerbeetle between tests
@@ -607,7 +611,12 @@ describe('Accounts Service', (): void => {
       await accounts.depositLiquidity(asset.code, asset.scale, startingBalance)
       const amount = BigInt(5)
       {
-        await accounts.withdrawLiquidity(asset.code, asset.scale, amount)
+        const error = await accounts.withdrawLiquidity(
+          asset.code,
+          asset.scale,
+          amount
+        )
+        expect(error).toBeUndefined()
         const balance = await accounts.getLiquidityBalance(
           asset.code,
           asset.scale
@@ -621,7 +630,12 @@ describe('Accounts Service', (): void => {
       }
       const amount2 = BigInt(5)
       {
-        await accounts.withdrawLiquidity(asset.code, asset.scale, amount2)
+        const error = await accounts.withdrawLiquidity(
+          asset.code,
+          asset.scale,
+          amount2
+        )
+        expect(error).toBeUndefined()
         const balance = await accounts.getLiquidityBalance(
           asset.code,
           asset.scale
@@ -635,16 +649,15 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test('Throws for insufficient balance', async (): Promise<void> => {
+    test('Returns error for insufficient balance', async (): Promise<void> => {
       const asset = randomAsset()
       const startingBalance = BigInt(5)
       await accounts.depositLiquidity(asset.code, asset.scale, startingBalance)
       const amount = BigInt(10)
       await expect(
         accounts.withdrawLiquidity(asset.code, asset.scale, amount)
-      ).rejects.toThrowError(
-        new InsufficientLiquidityError(asset.code, asset.scale)
-      )
+      ).resolves.toEqual(AccountError.InsufficientLiquidity)
+
       const balance = await accounts.getLiquidityBalance(
         asset.code,
         asset.scale
@@ -656,6 +669,14 @@ describe('Accounts Service', (): void => {
       )
       expect(settlementBalance).toEqual(-startingBalance)
     })
+
+    test('Returns error for unknown liquidity account', async (): Promise<void> => {
+      const asset = randomAsset()
+      const amount = BigInt(10)
+      await expect(
+        accounts.withdrawLiquidity(asset.code, asset.scale, amount)
+      ).resolves.toEqual(AccountError.UnknownLiquidityAccount)
+    })
   })
 
   describe('Account Deposit', (): void => {
@@ -666,7 +687,8 @@ describe('Accounts Service', (): void => {
         maxPacketAmount: BigInt(100)
       })
       const amount = BigInt(10)
-      await accounts.deposit(accountId, amount)
+      const error = await accounts.deposit(accountId, amount)
+      expect(error).toBeUndefined()
       const { balance } = (await accounts.getAccountBalance(
         accountId
       )) as IlpBalance
@@ -680,9 +702,8 @@ describe('Accounts Service', (): void => {
 
     test("Can't deposit to nonexistent account", async (): Promise<void> => {
       const id = uuid()
-      await expect(accounts.deposit(id, BigInt(5))).rejects.toThrow(
-        UnknownAccountError
-      )
+      const error = await accounts.deposit(id, BigInt(5))
+      expect(error).toEqual(AccountError.UnknownAccount)
     })
   })
 
@@ -696,7 +717,8 @@ describe('Accounts Service', (): void => {
       const startingBalance = BigInt(10)
       await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(5)
-      await accounts.withdraw(accountId, amount)
+      const error = await accounts.withdraw(accountId, amount)
+      expect(error).toBeUndefined()
       const { balance } = (await accounts.getAccountBalance(
         accountId
       )) as IlpBalance
@@ -710,12 +732,12 @@ describe('Accounts Service', (): void => {
 
     test("Can't withdraw from nonexistent account", async (): Promise<void> => {
       const id = uuid()
-      await expect(accounts.withdraw(id, BigInt(5))).rejects.toThrow(
-        UnknownAccountError
+      await expect(accounts.withdraw(id, BigInt(5))).resolves.toEqual(
+        AccountError.UnknownAccount
       )
     })
 
-    test('Throws for insufficient balance', async (): Promise<void> => {
+    test('Returns error for insufficient balance', async (): Promise<void> => {
       const { accountId, asset } = await accounts.createAccount({
         accountId: uuid(),
         asset: randomAsset(),
@@ -724,8 +746,8 @@ describe('Accounts Service', (): void => {
       const startingBalance = BigInt(5)
       await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(10)
-      await expect(accounts.withdraw(accountId, amount)).rejects.toThrowError(
-        new InsufficientBalanceError(accountId)
+      await expect(accounts.withdraw(accountId, amount)).resolves.toEqual(
+        AccountError.InsufficientBalance
       )
       const { balance } = (await accounts.getAccountBalance(
         accountId

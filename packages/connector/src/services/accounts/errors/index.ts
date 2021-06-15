@@ -1,3 +1,5 @@
+import { AccountError } from '../../core/services/accounts'
+
 export class InsufficientBalanceError extends Error {
   constructor(accountId: string) {
     super('Insufficient balance. accountId=' + accountId)
@@ -14,18 +16,6 @@ export class InsufficientLiquidityError extends Error {
         assetScale
     )
     this.name = 'InsufficientLiquidityError'
-  }
-}
-
-export class InsufficientSettlementBalanceError extends Error {
-  constructor(assetCode: string, assetScale: number) {
-    super(
-      'Insufficient settlement account balance. asset code=' +
-        assetCode +
-        ' asset scale=' +
-        assetScale
-    )
-    this.name = 'InsufficientSettlementBalanceError'
   }
 }
 
@@ -71,9 +61,6 @@ export class UnknownLiquidityAccountError extends Error {
   }
 }
 
-export class UnknownSettlementAccountError extends Error {
-  constructor(code: string, scale: number) {
-    super('Unknown settlement account. code=' + code + ' scale=' + scale)
-    this.name = 'UnknownSettlementAccountError'
-  }
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isAccountError = (o: any): o is AccountError =>
+  Object.values(AccountError).includes(o)

@@ -75,3 +75,12 @@ export interface IlpBalance {
   // children?: IlpBalanceChildren
   // parent?: IlpBalanceParent
 }
+
+export enum AccountError {
+  InsufficientBalance = 'InsufficientBalance',
+  InsufficientLiquidity = 'InsufficientLiquidity',
+  InsufficientSettlementBalance = 'InsufficientSettlementBalance',
+  UnknownAccount = 'UnknownAccount',
+  UnknownLiquidityAccount = 'UnknownLiquidityAccount',
+  UnknownSettlementAccount = 'UnknownSettlementAccount'
+}
