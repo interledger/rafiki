@@ -39,7 +39,10 @@ describe('Account Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       trx = await appContainer.knex.transaction()
-      accountService = await createAccountService(createLogger(), trx)
+      accountService = await createAccountService({
+        logger: createLogger(),
+        knex: trx
+      })
     }
   )
 
