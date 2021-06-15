@@ -19,12 +19,12 @@ export function createIldcpProtocolController(serverAddress: string) {
     const clientAddress = await ctx.services.accounts.getAddress(
       incoming.accountId
     )
-    //if (!clientAddress) {
-    //  logger.warn('received ILDCP request for peer without an address', {
-    //    peerId: incoming.accountId
-    //  })
-    //  ctx.throw('ILDCP request from peer without configured address')
-    //}
+    if (!clientAddress) {
+      logger.warn('received ILDCP request for peer without an address', {
+        peerId: incoming.accountId
+      })
+      ctx.throw('ILDCP request from peer without configured address')
+    }
 
     // TODO: Ensure we get at least length > 0
     //const serverAddress = router.getAddresses(SELF_PEER_ID)[0]

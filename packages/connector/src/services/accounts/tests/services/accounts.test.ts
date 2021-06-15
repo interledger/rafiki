@@ -22,14 +22,12 @@ import {
   InvalidAssetError,
   InvalidTransferError,
   UnknownAccountError,
-  UnknownLiquidityAccountError,
-  UnknownSettlementAccountError,
   UpdateIlpAccountOptions
 } from '../..'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
-import { CreateOptions } from '../../../core/services/accounts'
+import { CreateOptions, IlpBalance } from '../../../core/services/accounts'
 
 // Use unique assets as a workaround for not being able to reset
 // Tigerbeetle between tests
@@ -381,10 +379,8 @@ describe('Accounts Service', (): void => {
       expect(retrievedAccount).toEqual(account)
     })
 
-    test('Throws for nonexistent account', async (): Promise<void> => {
-      await expect(accounts.getAccount(uuid())).rejects.toThrow(
-        UnknownAccountError
-      )
+    test('Returns null for nonexistent account', async (): Promise<void> => {
+      await expect(accounts.getAccount(uuid())).resolves.toBeNull()
     })
   })
 
@@ -493,10 +489,8 @@ describe('Accounts Service', (): void => {
       // }
     })
 
-    test('Throws for nonexistent account', async (): Promise<void> => {
-      await expect(accounts.getAccountBalance(uuid())).rejects.toThrow(
-        UnknownAccountError
-      )
+    test('Returns null for nonexistent account', async (): Promise<void> => {
+      await expect(accounts.getAccountBalance(uuid())).resolves.toBeNull()
     })
   })
 
@@ -528,13 +522,11 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test('Throws for nonexistent liquidity account', async (): Promise<void> => {
+    test('Returns null for nonexistent liquidity account', async (): Promise<void> => {
       const asset = randomAsset()
       await expect(
         accounts.getLiquidityBalance(asset.code, asset.scale)
-      ).rejects.toThrowError(
-        new UnknownLiquidityAccountError(asset.code, asset.scale)
-      )
+      ).resolves.toBeNull()
     })
   })
 
@@ -566,13 +558,11 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test('Throws for nonexistent settlement account', async (): Promise<void> => {
+    test('Returns null for nonexistent settlement account', async (): Promise<void> => {
       const asset = randomAsset()
       await expect(
         accounts.getSettlementBalance(asset.code, asset.scale)
-      ).rejects.toThrowError(
-        new UnknownSettlementAccountError(asset.code, asset.scale)
-      )
+      ).resolves.toBeNull()
     })
   })
 
@@ -677,7 +667,9 @@ describe('Accounts Service', (): void => {
       })
       const amount = BigInt(10)
       await accounts.deposit(accountId, amount)
-      const { balance } = await accounts.getAccountBalance(accountId)
+      const { balance } = (await accounts.getAccountBalance(
+        accountId
+      )) as IlpBalance
       expect(balance).toEqual(amount)
       const settlementBalance = await accounts.getSettlementBalance(
         asset.code,
@@ -705,7 +697,9 @@ describe('Accounts Service', (): void => {
       await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(5)
       await accounts.withdraw(accountId, amount)
-      const { balance } = await accounts.getAccountBalance(accountId)
+      const { balance } = (await accounts.getAccountBalance(
+        accountId
+      )) as IlpBalance
       expect(balance).toEqual(startingBalance - amount)
       const settlementBalance = await accounts.getSettlementBalance(
         asset.code,
@@ -733,7 +727,9 @@ describe('Accounts Service', (): void => {
       await expect(accounts.withdraw(accountId, amount)).rejects.toThrowError(
         new InsufficientBalanceError(accountId)
       )
-      const { balance } = await accounts.getAccountBalance(accountId)
+      const { balance } = (await accounts.getAccountBalance(
+        accountId
+      )) as IlpBalance
       expect(balance).toEqual(startingBalance)
       const settlementBalance = await accounts.getSettlementBalance(
         asset.code,
@@ -925,10 +921,8 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test('Throws for nonexistent account', async (): Promise<void> => {
-      await expect(accounts.getAddress(uuid())).rejects.toThrow(
-        UnknownAccountError
-      )
+    test('Returns null for nonexistent account', async (): Promise<void> => {
+      await expect(accounts.getAddress(uuid())).resolves.toBeNull()
     })
   })
 
@@ -982,9 +976,9 @@ describe('Accounts Service', (): void => {
         })
 
         {
-          const { balance: sourceBalance } = await accounts.getAccountBalance(
+          const { balance: sourceBalance } = (await accounts.getAccountBalance(
             sourceAccountId
-          )
+          )) as IlpBalance
           expect(sourceBalance).toEqual(startingSourceBalance - sourceAmount)
 
           const sourceLiquidityBalance = await accounts.getLiquidityBalance(
@@ -1006,7 +1000,9 @@ describe('Accounts Service', (): void => {
 
           const {
             balance: destinationBalance
-          } = await accounts.getAccountBalance(destinationAccountId)
+          } = (await accounts.getAccountBalance(
+            destinationAccountId
+          )) as IlpBalance
           expect(destinationBalance).toEqual(BigInt(0))
         }
 
@@ -1017,9 +1013,9 @@ describe('Accounts Service', (): void => {
         }
 
         {
-          const { balance: sourceBalance } = await accounts.getAccountBalance(
+          const { balance: sourceBalance } = (await accounts.getAccountBalance(
             sourceAccountId
-          )
+          )) as IlpBalance
           const expectedSourceBalance = accept
             ? startingSourceBalance - sourceAmount
             : startingSourceBalance
@@ -1046,7 +1042,9 @@ describe('Accounts Service', (): void => {
 
           const {
             balance: destinationBalance
-          } = await accounts.getAccountBalance(destinationAccountId)
+          } = (await accounts.getAccountBalance(
+            destinationAccountId
+          )) as IlpBalance
           const expectedDestinationBalance = accept
             ? crossCurrency
               ? destinationAmount
@@ -1079,13 +1077,13 @@ describe('Accounts Service', (): void => {
       await expect(accounts.transferFunds(transfer)).rejects.toThrowError(
         new InsufficientBalanceError(sourceAccountId)
       )
-      const { balance: sourceBalance } = await accounts.getAccountBalance(
+      const { balance: sourceBalance } = (await accounts.getAccountBalance(
         sourceAccountId
-      )
+      )) as IlpBalance
       expect(sourceBalance).toEqual(BigInt(0))
-      const { balance: destinationBalance } = await accounts.getAccountBalance(
+      const { balance: destinationBalance } = (await accounts.getAccountBalance(
         destinationAccountId
-      )
+      )) as IlpBalance
       expect(destinationBalance).toEqual(BigInt(0))
     })
 
@@ -1109,9 +1107,9 @@ describe('Accounts Service', (): void => {
       const startingSourceBalance = BigInt(10)
       await accounts.deposit(sourceAccountId, startingSourceBalance)
       {
-        const { balance: sourceBalance } = await accounts.getAccountBalance(
+        const { balance: sourceBalance } = (await accounts.getAccountBalance(
           sourceAccountId
-        )
+        )) as IlpBalance
         expect(sourceBalance).toEqual(startingSourceBalance)
 
         const sourceLiquidityBalance = await accounts.getLiquidityBalance(
@@ -1128,7 +1126,9 @@ describe('Accounts Service', (): void => {
 
         const {
           balance: destinationBalance
-        } = await accounts.getAccountBalance(destinationAccountId)
+        } = (await accounts.getAccountBalance(
+          destinationAccountId
+        )) as IlpBalance
         expect(destinationBalance).toEqual(BigInt(0))
       }
       const sourceAmount = BigInt(5)
@@ -1147,18 +1147,18 @@ describe('Accounts Service', (): void => {
         )
       )
 
-      const { balance: sourceBalance } = await accounts.getAccountBalance(
+      const { balance: sourceBalance } = (await accounts.getAccountBalance(
         sourceAccountId
-      )
+      )) as IlpBalance
       expect(sourceBalance).toEqual(startingSourceBalance)
       const sourceLiquidityBalance = await accounts.getLiquidityBalance(
         sourceAsset.code,
         sourceAsset.scale
       )
       expect(sourceLiquidityBalance).toEqual(BigInt(0))
-      const { balance: destinationBalance } = await accounts.getAccountBalance(
+      const { balance: destinationBalance } = (await accounts.getAccountBalance(
         destinationAccountId
-      )
+      )) as IlpBalance
       expect(destinationBalance).toEqual(BigInt(0))
       const destinationLiquidityBalance = await accounts.getLiquidityBalance(
         destinationAsset.code,

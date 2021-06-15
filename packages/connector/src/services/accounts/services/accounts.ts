@@ -261,24 +261,25 @@ export class AccountsService implements ConnectorAccountsService {
     })
   }
 
-  public async getAccount(accountId: string): Promise<IlpAccount> {
-    const accountRow = await Account.query()
-      .findById(accountId)
-      .throwIfNotFound()
-    return toIlpAccount(accountRow)
+  public async getAccount(accountId: string): Promise<IlpAccount | null> {
+    const accountRow = await Account.query().findById(accountId)
+    return accountRow ? toIlpAccount(accountRow) : null
   }
 
-  public async getAccountBalance(accountId: string): Promise<IlpBalance> {
-    const account = await Account.query()
-      .findById(accountId)
-      .select(
-        'balanceId'
-        // 'debtBalanceId',
-        // 'trustlineBalanceId',
-        // 'loanBalanceId',
-        // 'creditBalanceId'
-      )
-      .throwIfNotFound()
+  public async getAccountBalance(
+    accountId: string
+  ): Promise<IlpBalance | null> {
+    const account = await Account.query().findById(accountId).select(
+      'balanceId'
+      // 'debtBalanceId',
+      // 'trustlineBalanceId',
+      // 'loanBalanceId',
+      // 'creditBalanceId'
+    )
+
+    if (!account) {
+      return null
+    }
 
     const balanceIds = [
       account.balanceId
@@ -438,12 +439,12 @@ export class AccountsService implements ConnectorAccountsService {
   public async getLiquidityBalance(
     assetCode: string,
     assetScale: number
-  ): Promise<bigint> {
+  ): Promise<bigint | null> {
     const balances = await this.client.lookupAccounts([
       toLiquidityId(assetCode, assetScale)
     ])
     if (balances.length !== 1) {
-      throw new UnknownLiquidityAccountError(assetCode, assetScale)
+      return null
     }
     return getNetBalance(balances[0])
   }
@@ -451,12 +452,12 @@ export class AccountsService implements ConnectorAccountsService {
   public async getSettlementBalance(
     assetCode: string,
     assetScale: number
-  ): Promise<bigint> {
+  ): Promise<bigint | null> {
     const balances = await this.client.lookupAccounts([
       toSettlementId(assetCode, assetScale)
     ])
     if (balances.length !== 1) {
-      throw new UnknownSettlementAccountError(assetCode, assetScale)
+      return null
     }
     return getNetBalance(balances[0])
   }
@@ -606,13 +607,14 @@ export class AccountsService implements ConnectorAccountsService {
     return null
   }
 
-  public async getAddress(accountId: string): Promise<string> {
-    const { staticIlpAddress } = await Account.query()
+  public async getAddress(accountId: string): Promise<string | null> {
+    const account = await Account.query()
       .findById(accountId)
       .select('staticIlpAddress')
-      .throwIfNotFound()
-    if (staticIlpAddress) {
-      return staticIlpAddress
+    if (!account) {
+      return null
+    } else if (account.staticIlpAddress) {
+      return account.staticIlpAddress
     }
     const idx = this.config.peerAddresses.findIndex(
       (peer: Peer) => peer.accountId === accountId

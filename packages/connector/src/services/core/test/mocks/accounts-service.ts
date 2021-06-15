@@ -17,16 +17,14 @@ export class MockAccountsService implements AccountsService {
 
   constructor(private serverIlpAddress: string) {}
 
-  getAccount(accountId: string): Promise<IlpAccount> {
+  getAccount(accountId: string): Promise<IlpAccount | null> {
     const account = this.accounts.get(accountId)
-    return account
-      ? Promise.resolve(account)
-      : Promise.reject(new Error('no account found'))
+    return Promise.resolve(account || null)
   }
 
   async getAccountByDestinationAddress(
     destinationAddress: string
-  ): Promise<IlpAccount> {
+  ): Promise<IlpAccount | null> {
     const account = this.find((account) => {
       const { routing } = account
       if (!routing) return false
@@ -34,11 +32,7 @@ export class MockAccountsService implements AccountsService {
       //routing.staticIlpAddress === destinationAddress ||
       //routing.prefixes.some((prefix) => destinationAddress.startsWith(prefix))
     })
-    if (account) {
-      return account
-    } else {
-      throw new Error('no account found')
-    }
+    return account || null
   }
 
   async getAccountByToken(token: string): Promise<IlpAccount | null> {
@@ -47,12 +41,15 @@ export class MockAccountsService implements AccountsService {
     )
   }
 
-  async getAccountBalance(accountId: string): Promise<IlpBalance> {
+  async getAccountBalance(accountId: string): Promise<IlpBalance | null> {
     const account = this.accounts.get(accountId)
-    if (!account) throw new Error('account not found')
-    return {
-      id: accountId,
-      balance: account.balance
+    if (account) {
+      return {
+        id: accountId,
+        balance: account.balance
+      }
+    } else {
+      return null
     }
   }
 
@@ -81,9 +78,9 @@ export class MockAccountsService implements AccountsService {
     }
   }
 
-  async getAddress(accountId: string): Promise<string> {
+  async getAddress(accountId: string): Promise<string | null> {
     const account = this.accounts.get(accountId)
-    if (!account) throw new Error('account not found')
+    if (!account) return null
     if (account.routing) {
       return account.routing.staticIlpAddress
     } else {
