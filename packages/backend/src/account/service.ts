@@ -1,23 +1,17 @@
-import { Logger as PinoLogger } from '../logger/service'
 import { Account } from './model'
-import { TransactionOrKnex } from 'objection'
-
-type Logger = typeof PinoLogger
+import { BaseService } from '../shared/baseService'
 
 export interface AccountService {
   get(id: string): Promise<Account>
   create(scale: number, currency: string): Promise<Account>
 }
 
-interface ServiceDependencies {
-  logger: Logger
-  knex: TransactionOrKnex
-}
+type ServiceDependencies = BaseService
 
-export async function createAccountService(
-  logger: Logger,
-  knex: TransactionOrKnex
-): Promise<AccountService> {
+export async function createAccountService({
+  logger,
+  knex
+}: BaseService): Promise<AccountService> {
   const log = logger.child({
     service: 'AccountService'
   })
