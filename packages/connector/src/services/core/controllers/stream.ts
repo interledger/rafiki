@@ -1,39 +1,57 @@
-import * as assert from 'assert'
-import { StreamServer } from '@interledger/stream-receiver'
 import { isIlpReply } from 'ilp-packet'
 import { RafikiContext, RafikiMiddleware } from '../rafiki'
 
-interface StreamControllerOptions {
-  serverSecret: Buffer
-  serverAddress: string
-}
+const CONNECTION_EXPIRY = 60 * 10 // seconds
 
-export function createStreamController({
-  serverSecret,
-  serverAddress
-}: StreamControllerOptions): RafikiMiddleware {
-  assert.equal(serverSecret.length, 32)
-  const server = new StreamServer({ serverSecret, serverAddress })
+// Track the total amount received per stream connection.
+export const streamReceivedKey = (connectionId: string): string =>
+  `stream_received:${connectionId}`
 
+export function createStreamController(): RafikiMiddleware {
   return async function (
     ctx: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> {
+    const { logger, redis, streamServer } = ctx.services
     const { request, response } = ctx
 
     const { stream } = ctx.accounts.outgoing
     if (
       !stream ||
       !stream.enabled ||
-      !server.decodePaymentTag(request.prepare.destination)
+      !streamServer.decodePaymentTag(request.prepare.destination) // XXX mark this earlier in the middleware pipeline
     ) {
       await next()
       return
     }
 
-    const moneyOrReply = server.createReply(request.prepare)
-    response.reply = isIlpReply(moneyOrReply)
-      ? moneyOrReply
-      : moneyOrReply.accept()
+    const moneyOrReply = streamServer.createReply(request.prepare)
+    if (isIlpReply(moneyOrReply)) {
+      response.reply = moneyOrReply
+      return
+    }
+
+    const { connectionId } = moneyOrReply
+    const connectionKey = streamReceivedKey(connectionId)
+    // Thanks to Redis's `stringNumbers:true`, `incrby` returns a string rather than a number.
+    // This ensures that precision isn't lost when dealing with integers larger than MAX_SAFE_INTEGER.
+    const [[err, totalReceived], [err2]] = await redis
+      .multi()
+      .incrby(
+        connectionKey,
+        (request.prepare.amount.toString() as unknown) as number
+      )
+      .expire(connectionKey, CONNECTION_EXPIRY)
+      .exec()
+    if (typeof totalReceived === 'string' && !err && !err2) {
+      moneyOrReply.setTotalReceived(totalReceived)
+    } else {
+      logger.warn('error incrementing stream totalReceived', {
+        totalReceived,
+        err,
+        err2
+      })
+    }
+    response.reply = moneyOrReply.accept()
   }
 }

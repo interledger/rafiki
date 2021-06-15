@@ -67,6 +67,10 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
     steps:
       - uses: actions/cache@v2
         id: restore-build
