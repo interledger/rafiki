@@ -1,6 +1,13 @@
 import { BaseModel } from './base'
 import { Token } from './token'
-import { CreateNotFoundErrorArgs, Model, QueryContext } from 'objection'
+import { uuidToBigInt } from '../utils'
+import {
+  CreateNotFoundErrorArgs,
+  Model,
+  Pojo,
+  QueryContext,
+  raw
+} from 'objection'
 
 import { UnknownAccountError } from '../errors'
 
@@ -33,7 +40,7 @@ export class Account extends BaseModel {
 
   public readonly assetCode!: string
   public readonly assetScale!: number
-  public readonly balanceId!: string
+  public readonly balanceId!: bigint
   // public debtBalanceId!: string
   // public trustlineBalanceId!: string
   // public loanBalanceId?: string
@@ -50,4 +57,24 @@ export class Account extends BaseModel {
   public readonly streamEnabled!: boolean
 
   public readonly staticIlpAddress?: string
+
+  $formatDatabaseJson(json: Pojo): Pojo {
+    const balanceId: bigint = json.balanceId
+    if (balanceId) {
+      json.balanceId = raw('?::uuid', [
+        balanceId.toString(16).padStart(32, '0')
+      ])
+    }
+
+    return super.$formatDatabaseJson(json)
+  }
+
+  $parseDatabaseJson(json: Pojo): Pojo {
+    const formattedJson = super.$parseDatabaseJson(json)
+    if (formattedJson.balanceId) {
+      formattedJson.balanceId = uuidToBigInt(json.balanceId)
+    }
+
+    return formattedJson
+  }
 }

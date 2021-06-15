@@ -7,10 +7,9 @@ import { v4 as uuid } from 'uuid'
 
 import {
   toLiquidityId,
-  toSettlementId,
+  toSettlementId
   // toSettlementCreditId,
   // toSettlementLoanId,
-  uuidToBigInt
 } from '../../utils'
 import { createTestApp, TestContainer } from '../helpers/app'
 import {
@@ -100,7 +99,7 @@ describe('Accounts Service', (): void => {
       expect(createdAccount).toEqual(expectedAccount)
       const retrievedAccount = await Account.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
-        uuidToBigInt(retrievedAccount.balanceId)
+        retrievedAccount.balanceId
         // uuidToBigInt(retrievedAccount.debtBalanceId),
         // uuidToBigInt(retrievedAccount.trustlineBalanceId)
       ])
@@ -141,7 +140,7 @@ describe('Accounts Service', (): void => {
       expect(createdAccount).toEqual(account)
       const retrievedAccount = await Account.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
-        uuidToBigInt(retrievedAccount.balanceId)
+        retrievedAccount.balanceId
         // uuidToBigInt(retrievedAccount.debtBalanceId),
         // uuidToBigInt(retrievedAccount.trustlineBalanceId)
       ])

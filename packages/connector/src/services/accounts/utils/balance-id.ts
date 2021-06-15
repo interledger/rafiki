@@ -1,3 +1,5 @@
+import { v4 as uuid } from 'uuid'
+
 const LIQUIDITY_ID_PREFIX = '6c69717569646974793a' // 'liquidity:'
 const SETTLEMENT_ID_PREFIX = '736574746c3a' // 'settl:'
 
@@ -47,4 +49,8 @@ export function toSettlementId(assetCode: string, assetScale: number): bigint {
 
 export function uuidToBigInt(id: string): bigint {
   return BigInt(`0x${id.replace(/-/g, '')}`)
+}
+
+export function randomId(): bigint {
+  return uuidToBigInt(uuid())
 }

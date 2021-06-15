@@ -30,7 +30,7 @@ import {
   toSettlementId,
   // toSettlementCreditId,
   // toSettlementLoanId,
-  uuidToBigInt
+  randomId
 } from '../utils'
 import {
   AccountsService as ConnectorAccountsService,
@@ -149,13 +149,13 @@ export class AccountsService implements ConnectorAccountsService {
       //   }
       // }
 
-      const balanceId = uuid.v4()
+      const balanceId = randomId()
       // const debtBalanceId = uuid.v4()
       // const trustlineBalanceId = uuid.v4()
       await this.createBalances(
         [
           {
-            id: uuidToBigInt(balanceId),
+            id: balanceId,
             //   flags:
             //     0 |
             //     AccountFlags.debits_must_not_exceed_credits |
@@ -281,7 +281,7 @@ export class AccountsService implements ConnectorAccountsService {
       .throwIfNotFound()
 
     const balanceIds = [
-      uuidToBigInt(account.balanceId)
+      account.balanceId
       // uuidToBigInt(account.debtBalanceId),
       // uuidToBigInt(account.trustlineBalanceId)
     ]
@@ -468,7 +468,7 @@ export class AccountsService implements ConnectorAccountsService {
   }: BalanceTransfer): Promise<void> {
     const res = await this.client.createTransfers([
       {
-        id: uuidToBigInt(uuid.v4()),
+        id: randomId(),
         debit_account_id: sourceBalanceId,
         credit_account_id: destinationBalanceId,
         amount,
@@ -492,7 +492,7 @@ export class AccountsService implements ConnectorAccountsService {
       .throwIfNotFound()
     await this.createTransfer({
       sourceBalanceId: toSettlementId(assetCode, assetScale),
-      destinationBalanceId: uuidToBigInt(balanceId),
+      destinationBalanceId: balanceId,
       amount
     }).catch((err) => {
       if (err instanceof TransferError) {
@@ -514,7 +514,7 @@ export class AccountsService implements ConnectorAccountsService {
       .throwIfNotFound()
 
     await this.createTransfer({
-      sourceBalanceId: uuidToBigInt(balanceId),
+      sourceBalanceId: balanceId,
       destinationBalanceId: toSettlementId(assetCode, assetScale),
       amount
     }).catch((err) => {
@@ -656,9 +656,9 @@ export class AccountsService implements ConnectorAccountsService {
         )
       }
       transfers.push({
-        id: uuidToBigInt(uuid.v4()),
-        debit_account_id: uuidToBigInt(sourceAccount.balanceId),
-        credit_account_id: uuidToBigInt(destinationAccount.balanceId),
+        id: randomId(),
+        debit_account_id: sourceAccount.balanceId,
+        credit_account_id: destinationAccount.balanceId,
         amount: sourceAmount,
         flags,
         timeout,
@@ -676,8 +676,8 @@ export class AccountsService implements ConnectorAccountsService {
 
       transfers.push(
         {
-          id: uuidToBigInt(uuid.v4()),
-          debit_account_id: uuidToBigInt(sourceAccount.balanceId),
+          id: randomId(),
+          debit_account_id: sourceAccount.balanceId,
           credit_account_id: toLiquidityId(
             sourceAccount.assetCode,
             sourceAccount.assetScale
@@ -691,12 +691,12 @@ export class AccountsService implements ConnectorAccountsService {
           timestamp: BigInt(0)
         },
         {
-          id: uuidToBigInt(uuid.v4()),
+          id: randomId(),
           debit_account_id: toLiquidityId(
             destinationAccount.assetCode,
             destinationAccount.assetScale
           ),
-          credit_account_id: uuidToBigInt(destinationAccount.balanceId),
+          credit_account_id: destinationAccount.balanceId,
           amount: destinationAmount,
           flags,
           timeout,
