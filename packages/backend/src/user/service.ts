@@ -1,6 +1,7 @@
 import { Logger as PinoLogger } from '../logger/service'
 import { User } from './model'
 import { TransactionOrKnex } from 'objection'
+import { AccountService, createAccountService } from '../account/service'
 
 type Logger = typeof PinoLogger
 
@@ -12,6 +13,7 @@ export interface UserService {
 interface ServiceDependencies {
   logger: Logger
   knex: TransactionOrKnex
+  accountService: AccountService
 }
 
 export async function createUserService(
@@ -21,9 +23,12 @@ export async function createUserService(
   const log = logger.child({
     service: 'UserService'
   })
+  const accountService = await createAccountService(logger, knex)
+
   const deps: ServiceDependencies = {
     logger: log,
-    knex: knex
+    knex: knex,
+    accountService: accountService
   }
   return {
     get: (id) => getUser(deps, id),
@@ -38,5 +43,8 @@ async function getUser(deps: ServiceDependencies, id: string): Promise<User> {
 
 async function createUser(deps: ServiceDependencies): Promise<User> {
   deps.logger.info('Creates a user')
-  return User.query(deps.knex).insertAndFetch({})
+  const account = await deps.accountService.create(6, 'USD')
+  return User.query(deps.knex).insertAndFetch({
+    accountId: account.id
+  })
 }

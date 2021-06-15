@@ -1,9 +1,9 @@
 import { Transaction as KnexTransaction } from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 
-import { createUserService, UserService } from './service'
+import { createAccountService, AccountService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
-import { User } from './model'
+import { Account } from './model'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { GraphileProducer } from '../messaging/graphileProducer'
 import { Config } from '../config/app'
@@ -12,12 +12,12 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import createLogger from 'pino'
 
-describe('User Service', (): void => {
+describe('Account Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let trx: KnexTransaction
   let workerUtils: WorkerUtils
-  let userService: UserService
+  let accountService: AccountService
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -39,7 +39,7 @@ describe('User Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       trx = await appContainer.knex.transaction()
-      userService = await createUserService(createLogger(), trx)
+      accountService = await createAccountService(createLogger(), trx)
     }
   )
 
@@ -58,19 +58,20 @@ describe('User Service', (): void => {
     }
   )
 
-  describe('User', (): void => {
-    let user: User
+  describe('Account', (): void => {
+    let account: Account
 
     beforeEach(
       async (): Promise<void> => {
-        user = await userService.create()
+        account = await accountService.create(6, 'USD')
       }
     )
 
-    test('A user can be fetched', async (): Promise<void> => {
-      const retrievedUser = await userService.get(user.id)
-      expect(retrievedUser.id).toEqual(user.id)
-      expect(retrievedUser.accountId).toEqual(user.accountId)
+    test('An account can be fetched', async (): Promise<void> => {
+      const retrievedAccount = await accountService.get(account.id)
+      expect(retrievedAccount.id).toEqual(account.id)
+      expect(retrievedAccount.scale).toEqual(account.scale)
+      expect(retrievedAccount.currency).toEqual(account.currency)
     })
   })
 })
