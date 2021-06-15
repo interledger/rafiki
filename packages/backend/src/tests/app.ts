@@ -2,8 +2,8 @@ import createLogger from 'pino'
 import Knex from 'knex'
 import { IocContract } from '@adonisjs/fold'
 
-import { start, gracefulShutdown } from '../../'
-import { App, AppServices } from '../../app'
+import { start, gracefulShutdown } from '../index'
+import { App, AppServices } from '../app'
 
 const DATABASE_URL =
   process.env.DATABASE_URL ||

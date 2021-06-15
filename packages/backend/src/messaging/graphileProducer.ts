@@ -1,5 +1,4 @@
-import { MessageProducer } from './messageProducer'
-import { Message } from '../messages/message'
+import { Message, MessageProducer } from './messageProducer'
 import { WorkerUtils, JobHelpers, Job } from 'graphile-worker'
 
 export class GraphileProducer implements MessageProducer {
