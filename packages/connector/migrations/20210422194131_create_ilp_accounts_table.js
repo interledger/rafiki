@@ -15,7 +15,7 @@ exports.up = function (knex) {
 
     // table.uuid('parentAccountId').nullable()
 
-    table.bigInteger('maxPacketAmount').notNullable()
+    table.bigInteger('maxPacketAmount').nullable()
 
     table.string('outgoingToken').nullable()
     table.string('outgoingEndpoint').nullable()

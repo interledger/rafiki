@@ -49,10 +49,12 @@ function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
       code: accountRow.assetCode,
       scale: accountRow.assetScale
     },
-    maxPacketAmount: accountRow.maxPacketAmount,
     stream: {
       enabled: accountRow.streamEnabled
     }
+  }
+  if (accountRow.maxPacketAmount) {
+    account.maxPacketAmount = accountRow.maxPacketAmount
   }
   // if (accountRow.parentAccountId) {
   //   account.parentAccountId = accountRow.parentAccountId

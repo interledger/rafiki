@@ -75,8 +75,7 @@ describe('Accounts Service', (): void => {
       const accountId = uuid()
       const account = {
         accountId,
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
+        asset: randomAsset()
       }
       const accountOrError = await accounts.createAccount(account)
       expect(isAccountError(accountOrError)).toEqual(false)
@@ -246,8 +245,7 @@ describe('Accounts Service', (): void => {
       await expect(
         accounts.createAccount({
           accountId: account.accountId,
-          asset: randomAsset(),
-          maxPacketAmount: BigInt(200)
+          asset: randomAsset()
         })
       ).resolves.toEqual(AccountError.DuplicateAccountId)
       const retrievedAccount = await accounts.getAccount(account.accountId)
@@ -260,7 +258,6 @@ describe('Accounts Service', (): void => {
       const account = {
         accountId,
         asset: randomAsset(),
-        maxPacketAmount: BigInt(100),
         http: {
           incoming: {
             authTokens: [incomingToken, incomingToken]
@@ -286,7 +283,6 @@ describe('Accounts Service', (): void => {
         const account = {
           accountId: uuid(),
           asset: randomAsset(),
-          maxPacketAmount: BigInt(100),
           http: {
             incoming: {
               authTokens: [incomingToken]
@@ -304,7 +300,6 @@ describe('Accounts Service', (): void => {
         const account = {
           accountId,
           asset: randomAsset(),
-          maxPacketAmount: BigInt(100),
           http: {
             incoming: {
               authTokens: [incomingToken]
@@ -329,8 +324,7 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       const account = {
         accountId: uuid(),
-        asset,
-        maxPacketAmount: BigInt(100)
+        asset
       }
 
       {

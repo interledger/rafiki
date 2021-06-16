@@ -13,8 +13,10 @@ export class AccountFactory {
     const accountOptions: CreateOptions = {
       accountId: options.accountId || uuid(),
       disabled: options.disabled || false,
-      asset: options.asset || randomAsset(),
-      maxPacketAmount: options.maxPacketAmount || BigInt(100)
+      asset: options.asset || randomAsset()
+    }
+    if (options.maxPacketAmount) {
+      accountOptions.maxPacketAmount = options.maxPacketAmount
     }
     if (options.stream) {
       accountOptions.stream = options.stream
