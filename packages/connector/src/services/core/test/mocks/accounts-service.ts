@@ -1,4 +1,5 @@
 import {
+  AccountError,
   AccountsService,
   CreateOptions,
   IlpAccount,
@@ -58,15 +59,18 @@ export class MockAccountsService implements AccountsService {
     return account
   }
 
-  async transferFunds(options: Transfer): Promise<Transaction> {
+  async transferFunds(options: Transfer): Promise<Transaction | AccountError> {
     const src = this.accounts.get(options.sourceAccountId)
+    if (!src) return AccountError.UnknownSourceAccount
     const dst = this.accounts.get(options.destinationAccountId)
-    if (!src) throw new Error('src not found')
-    if (!dst) throw new Error('dst not found')
+    if (!dst) return AccountError.UnknownDestinationAccount
     if (src.asset.code !== dst.asset.code)
       throw new Error('asset code mismatch')
     if (src.asset.scale !== dst.asset.scale)
       throw new Error('asset scale mismatch')
+    if (src.balance < options.sourceAmount) {
+      return AccountError.InsufficientBalance
+    }
     src.balance -= options.sourceAmount
     return {
       commit: async () => {

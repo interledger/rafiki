@@ -8,7 +8,7 @@ export interface AccountsService {
   getAccountByToken(token: string): Promise<IlpAccount | null>
   getAccountBalance(accountId: string): Promise<IlpBalance | null>
   createAccount(account: CreateOptions): Promise<IlpAccount>
-  transferFunds(args: Transfer): Promise<Transaction>
+  transferFunds(args: Transfer): Promise<Transaction | AccountError>
   getAddress(accountId: string): Promise<string | null>
 }
 
@@ -80,7 +80,14 @@ export enum AccountError {
   InsufficientBalance = 'InsufficientBalance',
   InsufficientLiquidity = 'InsufficientLiquidity',
   InsufficientSettlementBalance = 'InsufficientSettlementBalance',
+  InvalidDestinationAmount = 'InvalidDestinationAmount',
   UnknownAccount = 'UnknownAccount',
+  UnknownSourceAccount = 'UnknownSourceAccount',
+  UnknownDestinationAccount = 'UnknownDestinationAccount',
   UnknownLiquidityAccount = 'UnknownLiquidityAccount',
   UnknownSettlementAccount = 'UnknownSettlementAccount'
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isAccountError = (o: any): o is AccountError =>
+  Object.values(AccountError).includes(o)

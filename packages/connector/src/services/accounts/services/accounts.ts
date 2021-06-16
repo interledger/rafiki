@@ -12,12 +12,8 @@ import {
 
 import { Config } from '../config'
 import {
-  InsufficientBalanceError,
-  InsufficientLiquidityError,
   // InvalidAssetError,
-  InvalidTransferError,
   TransferError,
-  UnknownAccountError,
   UnknownBalanceError,
   UnknownLiquidityAccountError
 } from '../errors'
@@ -643,20 +639,19 @@ export class AccountsService implements ConnectorAccountsService {
     destinationAccountId,
     sourceAmount,
     destinationAmount
-  }: Transfer): Promise<Transaction> {
+  }: Transfer): Promise<Transaction | AccountError> {
     const [
       sourceAccount,
       destinationAccount
     ] = await Account.query()
       .findByIds([sourceAccountId, destinationAccountId])
       .select('assetCode', 'assetScale', 'balanceId', 'id')
-      .throwIfNotFound()
     if (!destinationAccount) {
-      throw new UnknownAccountError(
-        sourceAccount.id === sourceAccountId
-          ? destinationAccountId
-          : sourceAccountId
-      )
+      if (!sourceAccount || sourceAccount.id !== sourceAccountId) {
+        return AccountError.UnknownSourceAccount
+      } else {
+        return AccountError.UnknownDestinationAccount
+      }
     }
 
     const transfers: ClientTransfer[] = []
@@ -666,9 +661,7 @@ export class AccountsService implements ConnectorAccountsService {
 
     if (sourceAccount.assetCode === destinationAccount.assetCode) {
       if (destinationAmount && sourceAmount !== destinationAmount) {
-        throw new InvalidTransferError(
-          'sourceAmount and destinationAmount must match for same currency transfer'
-        )
+        return AccountError.InvalidDestinationAmount
       }
       transfers.push({
         id: randomId(),
@@ -684,9 +677,7 @@ export class AccountsService implements ConnectorAccountsService {
       })
     } else {
       if (!destinationAmount) {
-        throw new InvalidTransferError(
-          'destinationAmount required for cross currency transfer'
-        )
+        return AccountError.InvalidDestinationAmount
       }
 
       transfers.push(
@@ -745,12 +736,9 @@ export class AccountsService implements ConnectorAccountsService {
           )
         case CreateTransferError.exceeds_credits:
           if (index === 1) {
-            throw new InsufficientLiquidityError(
-              destinationAccount.assetCode,
-              destinationAccount.assetScale
-            )
+            return AccountError.InsufficientLiquidity
           }
-          throw new InsufficientBalanceError(sourceAccountId)
+          return AccountError.InsufficientBalance
         default:
           throw new TransferError(code)
       }

@@ -1,6 +1,6 @@
 import { randomInt } from 'crypto'
 
-import { Transaction } from 'knex'
+import { Transaction as KnexTransaction } from 'knex'
 import { Model, UniqueViolationError } from 'objection'
 import { Account as Balance } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
@@ -17,10 +17,7 @@ import {
   AccountsService,
   AppServices,
   Config,
-  InsufficientBalanceError,
-  InsufficientLiquidityError,
   InvalidAssetError,
-  InvalidTransferError,
   UnknownAccountError,
   UpdateIlpAccountOptions
 } from '../..'
@@ -30,7 +27,9 @@ import { initIocContainer } from '../../../../accounts'
 import {
   AccountError,
   CreateOptions,
-  IlpBalance
+  IlpBalance,
+  isAccountError,
+  Transaction
 } from '../../../core/services/accounts'
 
 // Use unique assets as a workaround for not being able to reset
@@ -51,7 +50,7 @@ describe('Accounts Service', (): void => {
   let appContainer: TestContainer
   let accounts: AccountsService
   let config: typeof Config
-  let trx: Transaction
+  let trx: KnexTransaction
 
   beforeAll(
     async (): Promise<void> => {
@@ -990,12 +989,13 @@ describe('Accounts Service', (): void => {
 
         const sourceAmount = BigInt(1)
         const destinationAmount = crossCurrency ? BigInt(2) : undefined
-        const trx = await accounts.transferFunds({
+        const trxOrError = await accounts.transferFunds({
           sourceAccountId,
           destinationAccountId,
           sourceAmount,
           destinationAmount
         })
+        expect(isAccountError(trxOrError)).toEqual(false)
 
         {
           const { balance: sourceBalance } = (await accounts.getAccountBalance(
@@ -1029,9 +1029,9 @@ describe('Accounts Service', (): void => {
         }
 
         if (accept) {
-          await trx.commit()
+          await (trxOrError as Transaction).commit()
         } else {
-          await trx.rollback()
+          await (trxOrError as Transaction).rollback()
         }
 
         {
@@ -1077,7 +1077,7 @@ describe('Accounts Service', (): void => {
       }
     )
 
-    test('Throws for insufficient source balance', async (): Promise<void> => {
+    test('Returns error for insufficient source balance', async (): Promise<void> => {
       const {
         accountId: sourceAccountId,
         asset
@@ -1096,8 +1096,8 @@ describe('Accounts Service', (): void => {
         destinationAccountId,
         sourceAmount: BigInt(5)
       }
-      await expect(accounts.transferFunds(transfer)).rejects.toThrowError(
-        new InsufficientBalanceError(sourceAccountId)
+      await expect(accounts.transferFunds(transfer)).resolves.toEqual(
+        AccountError.InsufficientBalance
       )
       const { balance: sourceBalance } = (await accounts.getAccountBalance(
         sourceAccountId
@@ -1109,7 +1109,7 @@ describe('Accounts Service', (): void => {
       expect(destinationBalance).toEqual(BigInt(0))
     })
 
-    test('Throws for insufficient destination liquidity balance', async (): Promise<void> => {
+    test('Returns error for insufficient destination liquidity balance', async (): Promise<void> => {
       const {
         accountId: sourceAccountId,
         asset: sourceAsset
@@ -1162,11 +1162,8 @@ describe('Accounts Service', (): void => {
         destinationAmount
       }
 
-      await expect(accounts.transferFunds(transfer)).rejects.toThrowError(
-        new InsufficientLiquidityError(
-          destinationAsset.code,
-          destinationAsset.scale
-        )
+      await expect(accounts.transferFunds(transfer)).resolves.toEqual(
+        AccountError.InsufficientLiquidity
       )
 
       const { balance: sourceBalance } = (await accounts.getAccountBalance(
@@ -1189,14 +1186,14 @@ describe('Accounts Service', (): void => {
       expect(destinationLiquidityBalance).toEqual(BigInt(0))
     })
 
-    test('Throws for nonexistent account', async (): Promise<void> => {
+    test('Returns error for nonexistent account', async (): Promise<void> => {
       await expect(
         accounts.transferFunds({
           sourceAccountId: uuid(),
           destinationAccountId: uuid(),
           sourceAmount: BigInt(5)
         })
-      ).rejects.toThrow(UnknownAccountError)
+      ).resolves.toEqual(AccountError.UnknownSourceAccount)
 
       const { accountId } = await accounts.createAccount({
         accountId: uuid(),
@@ -1211,7 +1208,7 @@ describe('Accounts Service', (): void => {
           destinationAccountId: unknownAccountId,
           sourceAmount: BigInt(5)
         })
-      ).rejects.toThrowError(new UnknownAccountError(unknownAccountId))
+      ).resolves.toEqual(AccountError.UnknownDestinationAccount)
 
       await expect(
         accounts.transferFunds({
@@ -1219,10 +1216,10 @@ describe('Accounts Service', (): void => {
           destinationAccountId: accountId,
           sourceAmount: BigInt(5)
         })
-      ).rejects.toThrowError(new UnknownAccountError(unknownAccountId))
+      ).resolves.toEqual(AccountError.UnknownSourceAccount)
     })
 
-    test('Throws for invalid amount', async (): Promise<void> => {
+    test('Returns error for invalid amount', async (): Promise<void> => {
       const {
         accountId: sourceAccountId,
         asset
@@ -1246,7 +1243,30 @@ describe('Accounts Service', (): void => {
           sourceAmount: BigInt(5),
           destinationAmount: BigInt(10)
         })
-      ).rejects.toThrow(InvalidTransferError)
+      ).resolves.toEqual(AccountError.InvalidDestinationAmount)
+    })
+
+    test('Returns error for missing destinationAmount amount', async (): Promise<void> => {
+      const { accountId: sourceAccountId } = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+      const { accountId: destinationAccountId } = await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+      const startingSourceBalance = BigInt(10)
+      await accounts.deposit(sourceAccountId, startingSourceBalance)
+
+      await expect(
+        accounts.transferFunds({
+          sourceAccountId,
+          destinationAccountId,
+          sourceAmount: BigInt(5)
+        })
+      ).resolves.toEqual(AccountError.InvalidDestinationAmount)
     })
   })
 })
