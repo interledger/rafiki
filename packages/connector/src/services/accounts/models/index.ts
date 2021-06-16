@@ -1,2 +1,2 @@
-export { Account } from './account'
+export { IlpAccount } from './ilpAccount'
 export { Token } from './token'

@@ -13,7 +13,7 @@ import { createTestApp, TestContainer } from '../helpers/app'
 import { randomAsset } from '../helpers/asset'
 import { AccountFactory } from '../factories'
 import {
-  Account,
+  IlpAccount as IlpAccountModel,
   AccountsService,
   AppServices,
   Config,
@@ -88,7 +88,7 @@ describe('Accounts Service', (): void => {
         }
       }
       expect(accountOrError).toEqual(expectedAccount)
-      const retrievedAccount = await Account.query().findById(accountId)
+      const retrievedAccount = await IlpAccountModel.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
         retrievedAccount.balanceId
         // uuidToBigInt(retrievedAccount.debtBalanceId),
@@ -130,7 +130,7 @@ describe('Accounts Service', (): void => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       delete account.http!.incoming
       expect(accountOrError).toEqual(account)
-      const retrievedAccount = await Account.query().findById(accountId)
+      const retrievedAccount = await IlpAccountModel.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
         retrievedAccount.balanceId
         // uuidToBigInt(retrievedAccount.debtBalanceId),
@@ -201,7 +201,7 @@ describe('Accounts Service', (): void => {
     //     const {
     //       creditBalanceId,
     //       loanBalanceId
-    //     } = await Account.query()
+    //     } = await IlpAccountModel.query()
     //       .findById(parentAccountId)
     //       .select('creditBalanceId', 'loanBalanceId')
     //     expect(creditBalanceId).toBeNull()
@@ -219,7 +219,7 @@ describe('Accounts Service', (): void => {
     //     const {
     //       creditBalanceId,
     //       loanBalanceId
-    //     } = await Account.query()
+    //     } = await IlpAccountModel.query()
     //       .findById(parentAccountId)
     //       .select('creditBalanceId', 'loanBalanceId')
     //     expect(creditBalanceId).not.toBeNull()
@@ -276,7 +276,7 @@ describe('Accounts Service', (): void => {
         AccountError.DuplicateIncomingToken
       )
 
-      const retrievedAccount = await Account.query().findById(accountId)
+      const retrievedAccount = await IlpAccountModel.query().findById(accountId)
       expect(retrievedAccount).toBeUndefined()
     })
 
@@ -318,7 +318,9 @@ describe('Accounts Service', (): void => {
         await expect(accounts.createAccount(account)).resolves.toEqual(
           AccountError.DuplicateIncomingToken
         )
-        const retrievedAccount = await Account.query().findById(accountId)
+        const retrievedAccount = await IlpAccountModel.query().findById(
+          accountId
+        )
         expect(retrievedAccount).toBeUndefined()
       }
     })

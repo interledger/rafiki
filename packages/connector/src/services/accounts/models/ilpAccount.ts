@@ -3,9 +3,9 @@ import { Token } from './token'
 import { uuidToBigInt } from '../utils'
 import { Model, Pojo, raw } from 'objection'
 
-export class Account extends BaseModel {
+export class IlpAccount extends BaseModel {
   public static get tableName(): string {
-    return 'accounts'
+    return 'ilpAccounts'
   }
 
   static relationMappings = {
@@ -13,7 +13,7 @@ export class Account extends BaseModel {
       relation: Model.HasManyRelation,
       modelClass: Token,
       join: {
-        from: 'accounts.id',
+        from: 'ilpAccounts.id',
         to: 'tokens.accountId'
       }
     }

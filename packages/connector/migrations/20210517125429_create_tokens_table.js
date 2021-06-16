@@ -3,7 +3,7 @@ exports.up = function (knex) {
     table.uuid('id').notNullable().primary()
     table.string('token').notNullable().unique().index()
     table.uuid('accountId').notNullable().index()
-    table.foreign('accountId').references('accounts.id').onDelete('CASCADE')
+    table.foreign('accountId').references('ilpAccounts.id').onDelete('CASCADE')
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())

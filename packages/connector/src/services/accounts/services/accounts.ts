@@ -22,7 +22,7 @@ import {
   UnknownBalanceError,
   UnknownLiquidityAccountError
 } from '../errors'
-import { Account, Token } from '../models'
+import { IlpAccount as IlpAccountModel, Token } from '../models'
 import {
   getNetBalance,
   toLiquidityId,
@@ -41,7 +41,7 @@ import {
   Transfer
 } from '../../core/services/accounts'
 
-function toIlpAccount(accountRow: Account): IlpAccount {
+function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   const account: IlpAccount = {
     accountId: accountRow.id,
     disabled: accountRow.disabled,
@@ -110,114 +110,118 @@ export class AccountsService implements ConnectorAccountsService {
     account: CreateOptions
   ): Promise<IlpAccount | AccountError> {
     try {
-      return await transaction(Account, Token, async (Account, Token) => {
-        // if (account.parentAccountId) {
-        //   const parentAccount = await Account.query()
-        //     .findById(account.parentAccountId)
-        //     .throwIfNotFound()
-        //   if (
-        //     account.asset.code !== parentAccount.assetCode ||
-        //     account.asset.scale !== parentAccount.assetScale
-        //   ) {
-        //     throw new InvalidAssetError(account.asset.code, account.asset.scale)
-        //   }
-        //   if (!parentAccount.loanBalanceId || !parentAccount.creditBalanceId) {
-        //     const loanBalanceId = uuid.v4()
-        //     const creditBalanceId = uuid.v4()
+      return await transaction(
+        IlpAccountModel,
+        Token,
+        async (IlpAccountModel, Token) => {
+          // if (account.parentAccountId) {
+          //   const parentAccount = await IlpAccountModel.query()
+          //     .findById(account.parentAccountId)
+          //     .throwIfNotFound()
+          //   if (
+          //     account.asset.code !== parentAccount.assetCode ||
+          //     account.asset.scale !== parentAccount.assetScale
+          //   ) {
+          //     throw new InvalidAssetError(account.asset.code, account.asset.scale)
+          //   }
+          //   if (!parentAccount.loanBalanceId || !parentAccount.creditBalanceId) {
+          //     const loanBalanceId = uuid.v4()
+          //     const creditBalanceId = uuid.v4()
 
-        //     await this.createBalances(
-        //       [
-        //         {
-        //           id: uuidToBigInt(loanBalanceId),
-        //           flags:
-        //             0 |
-        //             AccountFlags.credits_must_not_exceed_debits |
-        //             AccountFlags.linked
-        //         },
-        //         {
-        //           id: uuidToBigInt(creditBalanceId),
-        //           flags: 0 | AccountFlags.credits_must_not_exceed_debits
-        //         }
-        //       ],
-        //       account.asset.scale
-        //     )
+          //     await this.createBalances(
+          //       [
+          //         {
+          //           id: uuidToBigInt(loanBalanceId),
+          //           flags:
+          //             0 |
+          //             AccountFlags.credits_must_not_exceed_debits |
+          //             AccountFlags.linked
+          //         },
+          //         {
+          //           id: uuidToBigInt(creditBalanceId),
+          //           flags: 0 | AccountFlags.credits_must_not_exceed_debits
+          //         }
+          //       ],
+          //       account.asset.scale
+          //     )
 
-        //     await Account.query()
-        //       .patch({
-        //         creditBalanceId,
-        //         loanBalanceId
-        //       })
-        //       .findById(parentAccount.id)
-        //       .throwIfNotFound()
-        //   }
-        // }
+          //     await IlpAccountModel.query()
+          //       .patch({
+          //         creditBalanceId,
+          //         loanBalanceId
+          //       })
+          //       .findById(parentAccount.id)
+          //       .throwIfNotFound()
+          //   }
+          // }
 
-        const balanceId = randomId()
-        // const debtBalanceId = uuid.v4()
-        // const trustlineBalanceId = uuid.v4()
-        await this.createBalances(
-          [
-            {
-              id: balanceId,
-              //   flags:
-              //     0 |
-              //     AccountFlags.debits_must_not_exceed_credits |
-              //     AccountFlags.linked
-              // },
-              // {
-              //   id: uuidToBigInt(debtBalanceId),
-              //   flags:
-              //     0 |
-              //     AccountFlags.debits_must_not_exceed_credits |
-              //     AccountFlags.linked
-              // },
-              // {
-              //   id: uuidToBigInt(trustlineBalanceId),
-              flags: 0 | AccountFlags.debits_must_not_exceed_credits
+          const balanceId = randomId()
+          // const debtBalanceId = uuid.v4()
+          // const trustlineBalanceId = uuid.v4()
+          await this.createBalances(
+            [
+              {
+                id: balanceId,
+                //   flags:
+                //     0 |
+                //     AccountFlags.debits_must_not_exceed_credits |
+                //     AccountFlags.linked
+                // },
+                // {
+                //   id: uuidToBigInt(debtBalanceId),
+                //   flags:
+                //     0 |
+                //     AccountFlags.debits_must_not_exceed_credits |
+                //     AccountFlags.linked
+                // },
+                // {
+                //   id: uuidToBigInt(trustlineBalanceId),
+                flags: 0 | AccountFlags.debits_must_not_exceed_credits
+              }
+            ],
+            account.asset.scale
+          )
+          const accountRow = await IlpAccountModel.query().insertAndFetch({
+            id: account.accountId,
+            disabled: account.disabled,
+            assetCode: account.asset.code,
+            assetScale: account.asset.scale,
+            balanceId,
+            // debtBalanceId,
+            // trustlineBalanceId,
+            // parentAccountId: account.parentAccountId,
+            maxPacketAmount: account.maxPacketAmount,
+            outgoingEndpoint: account.http?.outgoing.endpoint,
+            outgoingToken: account.http?.outgoing.authToken,
+            streamEnabled: account.stream?.enabled,
+            staticIlpAddress: account.routing?.staticIlpAddress
+          })
+
+          const incomingTokens = account.http?.incoming?.authTokens.map(
+            (incomingToken) => {
+              return {
+                accountId: account.accountId,
+                token: incomingToken
+              }
             }
-          ],
-          account.asset.scale
-        )
-        const accountRow = await Account.query().insertAndFetch({
-          id: account.accountId,
-          disabled: account.disabled,
-          assetCode: account.asset.code,
-          assetScale: account.asset.scale,
-          balanceId,
-          // debtBalanceId,
-          // trustlineBalanceId,
-          // parentAccountId: account.parentAccountId,
-          maxPacketAmount: account.maxPacketAmount,
-          outgoingEndpoint: account.http?.outgoing.endpoint,
-          outgoingToken: account.http?.outgoing.authToken,
-          streamEnabled: account.stream?.enabled,
-          staticIlpAddress: account.routing?.staticIlpAddress
-        })
-
-        const incomingTokens = account.http?.incoming?.authTokens.map(
-          (incomingToken) => {
-            return {
-              accountId: account.accountId,
-              token: incomingToken
-            }
+          )
+          if (incomingTokens) {
+            await Token.query().insert(incomingTokens)
           }
-        )
-        if (incomingTokens) {
-          await Token.query().insert(incomingTokens)
-        }
 
-        // if (!account.parentAccountId) {
-        await this.createCurrencyBalances(
-          account.asset.code,
-          account.asset.scale
-        )
-        // }
-        return toIlpAccount(accountRow)
-      })
+          // if (!account.parentAccountId) {
+          await this.createCurrencyBalances(
+            account.asset.code,
+            account.asset.scale
+          )
+          // }
+          return toIlpAccount(accountRow)
+        }
+      )
     } catch (err) {
       if (err instanceof UniqueViolationError) {
         switch (err.constraint) {
-          case 'accounts_pkey':
+          case 'ilpAccounts_pkey':
             return AccountError.DuplicateAccountId
           case 'tokens_token_unique':
             return AccountError.DuplicateIncomingToken
@@ -231,32 +235,36 @@ export class AccountsService implements ConnectorAccountsService {
     accountOptions: UpdateIlpAccountOptions
   ): Promise<IlpAccount | AccountError> {
     try {
-      return await transaction(Account, Token, async (Account, Token) => {
-        if (accountOptions.http?.incoming?.authTokens) {
-          await Token.query().delete().where({
-            accountId: accountOptions.accountId
-          })
-          const incomingTokens = accountOptions.http.incoming.authTokens.map(
-            (incomingToken) => {
-              return {
-                accountId: accountOptions.accountId,
-                token: incomingToken
+      return await transaction(
+        IlpAccountModel,
+        Token,
+        async (IlpAccountModel, Token) => {
+          if (accountOptions.http?.incoming?.authTokens) {
+            await Token.query().delete().where({
+              accountId: accountOptions.accountId
+            })
+            const incomingTokens = accountOptions.http.incoming.authTokens.map(
+              (incomingToken) => {
+                return {
+                  accountId: accountOptions.accountId,
+                  token: incomingToken
+                }
               }
-            }
-          )
-          await Token.query().insert(incomingTokens)
+            )
+            await Token.query().insert(incomingTokens)
+          }
+          const account = await IlpAccountModel.query()
+            .patchAndFetchById(accountOptions.accountId, {
+              disabled: accountOptions.disabled,
+              maxPacketAmount: accountOptions.maxPacketAmount,
+              outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
+              outgoingToken: accountOptions.http?.outgoing.authToken,
+              streamEnabled: accountOptions.stream?.enabled
+            })
+            .throwIfNotFound()
+          return toIlpAccount(account)
         }
-        const account = await Account.query()
-          .patchAndFetchById(accountOptions.accountId, {
-            disabled: accountOptions.disabled,
-            maxPacketAmount: accountOptions.maxPacketAmount,
-            outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
-            outgoingToken: accountOptions.http?.outgoing.authToken,
-            streamEnabled: accountOptions.stream?.enabled
-          })
-          .throwIfNotFound()
-        return toIlpAccount(account)
-      })
+      )
     } catch (err) {
       if (err instanceof UniqueViolationError) {
         return AccountError.DuplicateIncomingToken
@@ -268,14 +276,14 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount | null> {
-    const accountRow = await Account.query().findById(accountId)
+    const accountRow = await IlpAccountModel.query().findById(accountId)
     return accountRow ? toIlpAccount(accountRow) : null
   }
 
   public async getAccountBalance(
     accountId: string
   ): Promise<IlpBalance | null> {
-    const account = await Account.query().findById(accountId).select(
+    const account = await IlpAccountModel.query().findById(accountId).select(
       'balanceId'
       // 'debtBalanceId',
       // 'trustlineBalanceId',
@@ -496,7 +504,7 @@ export class AccountsService implements ConnectorAccountsService {
     accountId: string,
     amount: bigint
   ): Promise<void | AccountError> {
-    const account = await Account.query()
+    const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
     if (!account) {
@@ -524,7 +532,7 @@ export class AccountsService implements ConnectorAccountsService {
     accountId: string,
     amount: bigint
   ): Promise<void | AccountError> {
-    const account = await Account.query()
+    const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
     if (!account) {
@@ -556,7 +564,7 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async getAccountByToken(token: string): Promise<IlpAccount | null> {
-    const account = await Account.query()
+    const account = await IlpAccountModel.query()
       .withGraphJoined('incomingTokens')
       .where('incomingTokens.token', token)
       .first()
@@ -566,7 +574,7 @@ export class AccountsService implements ConnectorAccountsService {
   public async getAccountByDestinationAddress(
     destinationAddress: string
   ): Promise<IlpAccount | null> {
-    const account = await Account.query()
+    const account = await IlpAccountModel.query()
       // new RegExp('^' + staticIlpAddress + '($|\\.)'))
       .where(
         raw('?', [destinationAddress]),
@@ -598,7 +606,9 @@ export class AccountsService implements ConnectorAccountsService {
           destinationAddress[peer.ilpAddress.length] === '.')
     )
     if (peerAddress) {
-      const account = await Account.query().findById(peerAddress.accountId)
+      const account = await IlpAccountModel.query().findById(
+        peerAddress.accountId
+      )
       if (account) {
         return toIlpAccount(account)
       }
@@ -617,7 +627,7 @@ export class AccountsService implements ConnectorAccountsService {
           this.config.ilpAddress.length + 1 + UUID_LENGTH
         )
         if (uuid.validate(accountId) && uuid.version(accountId) === 4) {
-          const account = await Account.query().findById(accountId)
+          const account = await IlpAccountModel.query().findById(accountId)
           if (account) {
             return toIlpAccount(account)
           }
@@ -628,7 +638,7 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async getAddress(accountId: string): Promise<string | null> {
-    const account = await Account.query()
+    const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('staticIlpAddress')
     if (!account) {
@@ -654,7 +664,7 @@ export class AccountsService implements ConnectorAccountsService {
     const [
       sourceAccount,
       destinationAccount
-    ] = await Account.query()
+    ] = await IlpAccountModel.query()
       .findByIds([sourceAccountId, destinationAccountId])
       .select('assetCode', 'assetScale', 'balanceId', 'id')
     if (!destinationAccount) {
