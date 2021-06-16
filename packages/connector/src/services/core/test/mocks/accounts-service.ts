@@ -54,7 +54,9 @@ export class MockAccountsService implements AccountsService {
     }
   }
 
-  async createAccount(account: MockIlpAccount): Promise<IlpAccount> {
+  async createAccount(
+    account: MockIlpAccount
+  ): Promise<IlpAccount | AccountError> {
     this.accounts.set(account.accountId, account)
     return account
   }

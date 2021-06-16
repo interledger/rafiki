@@ -2,6 +2,7 @@ import { IlpPrepare, serializeIlpPrepare } from 'ilp-packet'
 import { deserializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
+import { IlpAccount } from '../../services'
 import {
   AccountFactory,
   PeerAccountFactory,
@@ -70,7 +71,7 @@ describe('ILDCP Controller', function () {
     )
     ctx.accounts = {
       get incoming() {
-        return bob
+        return bob as IlpAccount
       },
       get outgoing() {
         return self

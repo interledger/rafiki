@@ -12,13 +12,6 @@ export class TransferError extends Error {
   }
 }
 
-export class UnknownAccountError extends Error {
-  constructor(accountId?: string) {
-    super('Account not found' + accountId ? '. accountId=' + accountId : '')
-    this.name = 'UnknownAccountError'
-  }
-}
-
 export class UnknownBalanceError extends Error {
   constructor(accountId: string) {
     super('Balance not found. accountId=' + accountId)

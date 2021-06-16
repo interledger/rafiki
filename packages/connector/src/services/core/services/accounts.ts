@@ -7,7 +7,7 @@ export interface AccountsService {
   ): Promise<IlpAccount | null>
   getAccountByToken(token: string): Promise<IlpAccount | null>
   getAccountBalance(accountId: string): Promise<IlpBalance | null>
-  createAccount(account: CreateOptions): Promise<IlpAccount>
+  createAccount(account: CreateOptions): Promise<IlpAccount | AccountError>
   transferFunds(args: Transfer): Promise<Transaction | AccountError>
   getAddress(accountId: string): Promise<string | null>
 }
@@ -77,6 +77,7 @@ export interface IlpBalance {
 }
 
 export enum AccountError {
+  DuplicateAccountId = 'DuplicateAccountId',
   DuplicateIncomingToken = 'DuplicateIncomingToken',
   InsufficientBalance = 'InsufficientBalance',
   InsufficientLiquidity = 'InsufficientLiquidity',

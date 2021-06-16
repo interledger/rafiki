@@ -26,6 +26,6 @@ export class AccountFactory {
       accountOptions.routing = options.routing
     }
     const account = await this.accounts.createAccount(accountOptions)
-    return account
+    return account as IlpAccount
   }
 }

@@ -1,5 +1,5 @@
 import { Transaction as KnexTransaction } from 'knex'
-import { Model, UniqueViolationError } from 'objection'
+import { Model } from 'objection'
 import { Account as Balance } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
@@ -17,8 +17,7 @@ import {
   AccountsService,
   AppServices,
   Config,
-  InvalidAssetError,
-  UnknownAccountError,
+  // InvalidAssetError,
   UpdateIlpAccountOptions
 } from '../..'
 import { IocContract } from '@adonisjs/fold'
@@ -79,7 +78,8 @@ describe('Accounts Service', (): void => {
         asset: randomAsset(),
         maxPacketAmount: BigInt(100)
       }
-      const createdAccount = await accounts.createAccount(account)
+      const accountOrError = await accounts.createAccount(account)
+      expect(isAccountError(accountOrError)).toEqual(false)
       const expectedAccount = {
         ...account,
         disabled: false,
@@ -87,7 +87,7 @@ describe('Accounts Service', (): void => {
           enabled: false
         }
       }
-      expect(createdAccount).toEqual(expectedAccount)
+      expect(accountOrError).toEqual(expectedAccount)
       const retrievedAccount = await Account.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
         retrievedAccount.balanceId
@@ -125,10 +125,11 @@ describe('Accounts Service', (): void => {
           staticIlpAddress: 'g.rafiki.' + accountId
         }
       }
-      const createdAccount = await accounts.createAccount(account)
+      const accountOrError = await accounts.createAccount(account)
+      expect(isAccountError(accountOrError)).toEqual(false)
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       delete account.http!.incoming
-      expect(createdAccount).toEqual(account)
+      expect(accountOrError).toEqual(account)
       const retrievedAccount = await Account.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
         retrievedAccount.balanceId
@@ -143,48 +144,48 @@ describe('Accounts Service', (): void => {
       })
     })
 
-    test.skip('Cannot create an account with non-existent parent', async (): Promise<void> => {
-      const parentAccountId = uuid()
-      const asset = randomAsset()
-      const account = {
-        accountId: uuid(),
-        asset,
-        maxPacketAmount: BigInt(100),
-        parentAccountId
-      }
+    // test.skip('Cannot create an account with non-existent parent', async (): Promise<void> => {
+    //   const parentAccountId = uuid()
+    //   const asset = randomAsset()
+    //   const account = {
+    //     accountId: uuid(),
+    //     asset,
+    //     maxPacketAmount: BigInt(100),
+    //     parentAccountId
+    //   }
 
-      await expect(accounts.createAccount(account)).rejects.toThrow(
-        UnknownAccountError
-      )
+    //   await expect(accounts.createAccount(account)).rejects.toThrow(
+    //     UnknownAccountError
+    //   )
 
-      await accounts.createAccount({
-        accountId: parentAccountId,
-        disabled: false,
-        asset,
-        maxPacketAmount: BigInt(100)
-      })
+    //   await accounts.createAccount({
+    //     accountId: parentAccountId,
+    //     disabled: false,
+    //     asset,
+    //     maxPacketAmount: BigInt(100)
+    //   })
 
-      await accounts.createAccount(account)
-    })
+    //   await accounts.createAccount(account)
+    // })
 
-    test.skip('Cannot create an account with different asset than parent', async (): Promise<void> => {
-      const { accountId: parentAccountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+    // test.skip('Cannot create an account with different asset than parent', async (): Promise<void> => {
+    //   const { accountId: parentAccountId } = await accounts.createAccount({
+    //     accountId: uuid(),
+    //     asset: randomAsset(),
+    //     maxPacketAmount: BigInt(100)
+    //   })
 
-      const asset = randomAsset()
-      await expect(
-        accounts.createAccount({
-          accountId: uuid(),
-          disabled: false,
-          asset,
-          maxPacketAmount: BigInt(100),
-          parentAccountId
-        })
-      ).rejects.toThrowError(new InvalidAssetError(asset.code, asset.scale))
-    })
+    //   const asset = randomAsset()
+    //   await expect(
+    //     accounts.createAccount({
+    //       accountId: uuid(),
+    //       disabled: false,
+    //       asset,
+    //       maxPacketAmount: BigInt(100),
+    //       parentAccountId
+    //     })
+    //   ).rejects.toThrowError(new InvalidAssetError(asset.code, asset.scale))
+    // })
 
     // test("Auto-creates parent account's credit and loan balances", async (): Promise<void> => {
     //   const {
@@ -240,6 +241,19 @@ describe('Accounts Service', (): void => {
     //   }
     // })
 
+    test('Cannot create an account with duplicate id', async (): Promise<void> => {
+      const account = await accountFactory.build()
+      await expect(
+        accounts.createAccount({
+          accountId: account.accountId,
+          asset: randomAsset(),
+          maxPacketAmount: BigInt(200)
+        })
+      ).resolves.toEqual(AccountError.DuplicateAccountId)
+      const retrievedAccount = await accounts.getAccount(account.accountId)
+      expect(retrievedAccount).toEqual(account)
+    })
+
     test('Cannot create an account with duplicate incoming tokens', async (): Promise<void> => {
       const accountId = uuid()
       const incomingToken = uuid()
@@ -258,8 +272,8 @@ describe('Accounts Service', (): void => {
         }
       }
 
-      await expect(accounts.createAccount(account)).rejects.toThrow(
-        UniqueViolationError
+      await expect(accounts.createAccount(account)).resolves.toEqual(
+        AccountError.DuplicateIncomingToken
       )
 
       const retrievedAccount = await Account.query().findById(accountId)
@@ -301,8 +315,8 @@ describe('Accounts Service', (): void => {
             }
           }
         }
-        await expect(accounts.createAccount(account)).rejects.toThrow(
-          UniqueViolationError
+        await expect(accounts.createAccount(account)).resolves.toEqual(
+          AccountError.DuplicateIncomingToken
         )
         const retrievedAccount = await Account.query().findById(accountId)
         expect(retrievedAccount).toBeUndefined()
