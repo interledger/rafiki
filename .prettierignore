@@ -5,4 +5,4 @@
 public
 generated
 dist
-**/docker-compose*
+*.yml
