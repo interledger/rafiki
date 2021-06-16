@@ -1,5 +1,3 @@
-import { randomInt } from 'crypto'
-
 import { Transaction as KnexTransaction } from 'knex'
 import { Model, UniqueViolationError } from 'objection'
 import { Account as Balance } from 'tigerbeetle-node'
@@ -12,6 +10,8 @@ import {
   // toSettlementLoanId,
 } from '../../utils'
 import { createTestApp, TestContainer } from '../helpers/app'
+import { randomAsset } from '../helpers/asset'
+import { AccountFactory } from '../factories'
 import {
   Account,
   AccountsService,
@@ -33,23 +33,11 @@ import {
   Transaction
 } from '../../../core/services/accounts'
 
-// Use unique assets as a workaround for not being able to reset
-// Tigerbeetle between tests
-function randomAsset() {
-  const letters = []
-  while (letters.length < 3) {
-    letters.push(randomInt(65, 91))
-  }
-  return {
-    code: String.fromCharCode(...letters),
-    scale: randomInt(0, 256)
-  }
-}
-
 describe('Accounts Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accounts: AccountsService
+  let accountFactory: AccountFactory
   let config: typeof Config
   let trx: KnexTransaction
 
@@ -59,6 +47,7 @@ describe('Accounts Service', (): void => {
       appContainer = await createTestApp(deps)
       accounts = appContainer.app.getAccounts()
       config = appContainer.app.getConfig()
+      accountFactory = new AccountFactory(accounts)
     }
   )
 
@@ -374,11 +363,7 @@ describe('Accounts Service', (): void => {
 
   describe('Get Account', (): void => {
     test('Can get an account', async (): Promise<void> => {
-      const account = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const account = await accountFactory.build()
       const retrievedAccount = await accounts.getAccount(account.accountId)
       expect(retrievedAccount).toEqual(account)
     })
@@ -390,11 +375,8 @@ describe('Accounts Service', (): void => {
 
   describe('Update Account', (): void => {
     test('Can update an account', async (): Promise<void> => {
-      const { accountId, asset } = await accounts.createAccount({
-        accountId: uuid(),
+      const { accountId, asset } = await accountFactory.build({
         disabled: false,
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100),
         http: {
           incoming: {
             authTokens: [uuid()]
@@ -451,10 +433,7 @@ describe('Accounts Service', (): void => {
 
     test('Returns error for duplicate incoming token', async (): Promise<void> => {
       const incomingToken = uuid()
-      await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100),
+      await accountFactory.build({
         http: {
           incoming: {
             authTokens: [incomingToken]
@@ -466,12 +445,7 @@ describe('Accounts Service', (): void => {
         }
       })
 
-      const account = await accounts.createAccount({
-        accountId: uuid(),
-        disabled: false,
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const account = await accountFactory.build()
       const updateOptions: UpdateIlpAccountOptions = {
         accountId: account.accountId,
         disabled: true,
@@ -496,12 +470,7 @@ describe('Accounts Service', (): void => {
     test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
       const incomingToken = uuid()
 
-      const account = await accounts.createAccount({
-        accountId: uuid(),
-        disabled: false,
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const account = await accountFactory.build()
       const updateOptions: UpdateIlpAccountOptions = {
         accountId: account.accountId,
         disabled: true,
@@ -526,11 +495,7 @@ describe('Accounts Service', (): void => {
 
   describe('Get Account Balance', (): void => {
     test("Can retrieve an account's balance", async (): Promise<void> => {
-      const { accountId /*, asset*/ } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { accountId /*, asset*/ } = await accountFactory.build()
 
       {
         const balance = await accounts.getAccountBalance(accountId)
@@ -575,11 +540,7 @@ describe('Accounts Service', (): void => {
 
   describe('Get Liquidity Balance', (): void => {
     test('Can retrieve liquidity account balance', async (): Promise<void> => {
-      const { asset } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { asset } = await accountFactory.build()
 
       {
         const balance = await accounts.getLiquidityBalance(
@@ -611,11 +572,7 @@ describe('Accounts Service', (): void => {
 
   describe('Get Settlement Balance', (): void => {
     test('Can retrieve settlement account balance', async (): Promise<void> => {
-      const { asset } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { asset } = await accountFactory.build()
 
       {
         const balance = await accounts.getSettlementBalance(
@@ -756,11 +713,7 @@ describe('Accounts Service', (): void => {
 
   describe('Account Deposit', (): void => {
     test('Can deposit to account', async (): Promise<void> => {
-      const { accountId, asset } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { accountId, asset } = await accountFactory.build()
       const amount = BigInt(10)
       const error = await accounts.deposit(accountId, amount)
       expect(error).toBeUndefined()
@@ -784,11 +737,7 @@ describe('Accounts Service', (): void => {
 
   describe('Account Withdraw', (): void => {
     test('Can withdraw from account', async (): Promise<void> => {
-      const { accountId, asset } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(10)
       await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(5)
@@ -813,11 +762,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient balance', async (): Promise<void> => {
-      const { accountId, asset } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(5)
       await accounts.deposit(accountId, startingBalance)
       const amount = BigInt(10)
@@ -839,10 +784,7 @@ describe('Accounts Service', (): void => {
   describe('Account Tokens', (): void => {
     test('Can retrieve account by incoming token', async (): Promise<void> => {
       const incomingToken = uuid()
-      const { accountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100),
+      const { accountId } = await accountFactory.build({
         http: {
           incoming: {
             authTokens: [incomingToken, uuid()]
@@ -868,10 +810,7 @@ describe('Accounts Service', (): void => {
   describe('Get Account By ILP Address', (): void => {
     test('Can retrieve account by ILP address', async (): Promise<void> => {
       const ilpAddress = 'test.rafiki'
-      const { accountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100),
+      const { accountId } = await accountFactory.build({
         routing: {
           staticIlpAddress: ilpAddress
         }
@@ -902,10 +841,8 @@ describe('Accounts Service', (): void => {
 
     test('Can retrieve account by configured peer ILP address', async (): Promise<void> => {
       const { ilpAddress, accountId } = config.peerAddresses[0]
-      await accounts.createAccount({
-        accountId,
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
+      await accountFactory.build({
+        accountId
       })
       {
         const account = await accounts.getAccountByDestinationAddress(
@@ -932,11 +869,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can retrieve account by server ILP address', async (): Promise<void> => {
-      const { accountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { accountId } = await accountFactory.build()
       const ilpAddress = config.ilpAddress + '.' + accountId
       {
         const account = await accounts.getAccountByDestinationAddress(
@@ -963,10 +896,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns null if no account exists with address', async (): Promise<void> => {
-      await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100),
+      await accountFactory.build({
         routing: {
           staticIlpAddress: 'test.rafiki'
         }
@@ -979,10 +909,7 @@ describe('Accounts Service', (): void => {
   describe('Get Account Address', (): void => {
     test("Can get account's ILP address", async (): Promise<void> => {
       const ilpAddress = 'test.rafiki'
-      const { accountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100),
+      const { accountId } = await accountFactory.build({
         routing: {
           staticIlpAddress: ilpAddress
         }
@@ -995,11 +922,7 @@ describe('Accounts Service', (): void => {
 
     test("Can get account's configured peer ILP address", async (): Promise<void> => {
       const { ilpAddress, accountId } = config.peerAddresses[0]
-      await accounts.createAccount({
-        accountId,
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      await accountFactory.build({ accountId })
       {
         const peerAddress = await accounts.getAddress(accountId)
         expect(peerAddress).toEqual(ilpAddress)
@@ -1007,11 +930,7 @@ describe('Accounts Service', (): void => {
     })
 
     test("Can get account's address by server ILP address", async (): Promise<void> => {
-      const { accountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { accountId } = await accountFactory.build()
       {
         const ilpAddress = await accounts.getAddress(accountId)
         expect(ilpAddress).toEqual(config.ilpAddress + '.' + accountId)
@@ -1036,18 +955,12 @@ describe('Accounts Service', (): void => {
         const {
           accountId: sourceAccountId,
           asset: sourceAsset
-        } = await accounts.createAccount({
-          accountId: uuid(),
-          asset: randomAsset(),
-          maxPacketAmount: BigInt(100)
-        })
+        } = await accountFactory.build()
         const {
           accountId: destinationAccountId,
           asset: destinationAsset
-        } = await accounts.createAccount({
-          accountId: uuid(),
-          asset: crossCurrency ? randomAsset() : sourceAsset,
-          maxPacketAmount: BigInt(100)
+        } = await accountFactory.build({
+          asset: crossCurrency ? randomAsset() : sourceAsset
         })
         const startingSourceBalance = BigInt(10)
         await accounts.deposit(sourceAccountId, startingSourceBalance)
@@ -1154,18 +1067,9 @@ describe('Accounts Service', (): void => {
     )
 
     test('Returns error for insufficient source balance', async (): Promise<void> => {
-      const {
-        accountId: sourceAccountId,
+      const { accountId: sourceAccountId, asset } = await accountFactory.build()
+      const { accountId: destinationAccountId } = await accountFactory.build({
         asset
-      } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
-      const { accountId: destinationAccountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset,
-        maxPacketAmount: BigInt(100)
       })
       const transfer = {
         sourceAccountId,
@@ -1189,19 +1093,11 @@ describe('Accounts Service', (): void => {
       const {
         accountId: sourceAccountId,
         asset: sourceAsset
-      } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      } = await accountFactory.build()
       const {
         accountId: destinationAccountId,
         asset: destinationAsset
-      } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
       await accounts.deposit(sourceAccountId, startingSourceBalance)
       {
@@ -1271,11 +1167,7 @@ describe('Accounts Service', (): void => {
         })
       ).resolves.toEqual(AccountError.UnknownSourceAccount)
 
-      const { accountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { accountId } = await accountFactory.build()
 
       const unknownAccountId = uuid()
       await expect(
@@ -1296,18 +1188,9 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for invalid amount', async (): Promise<void> => {
-      const {
-        accountId: sourceAccountId,
+      const { accountId: sourceAccountId, asset } = await accountFactory.build()
+      const { accountId: destinationAccountId } = await accountFactory.build({
         asset
-      } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
-      const { accountId: destinationAccountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset,
-        maxPacketAmount: BigInt(100)
       })
       const startingSourceBalance = BigInt(10)
       await accounts.deposit(sourceAccountId, startingSourceBalance)
@@ -1323,16 +1206,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for missing destinationAmount amount', async (): Promise<void> => {
-      const { accountId: sourceAccountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
-      const { accountId: destinationAccountId } = await accounts.createAccount({
-        accountId: uuid(),
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100)
-      })
+      const { accountId: sourceAccountId } = await accountFactory.build()
+      const { accountId: destinationAccountId } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
       await accounts.deposit(sourceAccountId, startingSourceBalance)
 
