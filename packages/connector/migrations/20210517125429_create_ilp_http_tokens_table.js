@@ -1,5 +1,5 @@
 exports.up = function (knex) {
-  return knex.schema.createTable('tokens', function (table) {
+  return knex.schema.createTable('ilpHttpTokens', function (table) {
     table.uuid('id').notNullable().primary()
     table.string('token').notNullable().unique().index()
     table.uuid('accountId').notNullable().index()
@@ -11,5 +11,5 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('tokens')
+  return knex.schema.dropTableIfExists('ilpHttpTokens')
 }

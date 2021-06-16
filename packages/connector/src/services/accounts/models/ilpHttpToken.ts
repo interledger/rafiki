@@ -1,8 +1,8 @@
 import { BaseModel } from './base'
 
-export class Token extends BaseModel {
+export class IlpHttpToken extends BaseModel {
   public static get tableName(): string {
-    return 'tokens'
+    return 'ilpHttpTokens'
   }
 
   public readonly token!: string

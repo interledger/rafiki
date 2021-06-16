@@ -10,7 +10,7 @@ function envInt(name: string, value: number): number {
 
 function envBigInt(name: string, value: bigint): bigint {
   const envValue = process.env[name]
-  return envValue == null ? value : BigInt(envValue)
+  return envValue ? BigInt(envValue) : value
 }
 
 // function envBool(name: string, value: boolean): boolean {

@@ -22,7 +22,7 @@ import {
   UnknownBalanceError,
   UnknownLiquidityAccountError
 } from '../errors'
-import { IlpAccount as IlpAccountModel, Token } from '../models'
+import { IlpAccount as IlpAccountModel, IlpHttpToken } from '../models'
 import {
   getNetBalance,
   toLiquidityId,
@@ -114,8 +114,8 @@ export class AccountsService implements ConnectorAccountsService {
     try {
       return await transaction(
         IlpAccountModel,
-        Token,
-        async (IlpAccountModel, Token) => {
+        IlpHttpToken,
+        async (IlpAccountModel, IlpHttpToken) => {
           // if (account.parentAccountId) {
           //   const parentAccount = await IlpAccountModel.query()
           //     .findById(account.parentAccountId)
@@ -208,7 +208,7 @@ export class AccountsService implements ConnectorAccountsService {
             }
           )
           if (incomingTokens) {
-            await Token.query().insert(incomingTokens)
+            await IlpHttpToken.query().insert(incomingTokens)
           }
 
           // if (!account.parentAccountId) {
@@ -225,7 +225,7 @@ export class AccountsService implements ConnectorAccountsService {
         switch (err.constraint) {
           case 'ilpAccounts_pkey':
             return AccountError.DuplicateAccountId
-          case 'tokens_token_unique':
+          case 'ilphttptokens_token_unique':
             return AccountError.DuplicateIncomingToken
         }
       }
@@ -239,10 +239,10 @@ export class AccountsService implements ConnectorAccountsService {
     try {
       return await transaction(
         IlpAccountModel,
-        Token,
-        async (IlpAccountModel, Token) => {
+        IlpHttpToken,
+        async (IlpAccountModel, IlpHttpToken) => {
           if (accountOptions.http?.incoming?.authTokens) {
-            await Token.query().delete().where({
+            await IlpHttpToken.query().delete().where({
               accountId: accountOptions.accountId
             })
             const incomingTokens = accountOptions.http.incoming.authTokens.map(
@@ -253,7 +253,7 @@ export class AccountsService implements ConnectorAccountsService {
                 }
               }
             )
-            await Token.query().insert(incomingTokens)
+            await IlpHttpToken.query().insert(incomingTokens)
           }
           const account = await IlpAccountModel.query()
             .patchAndFetchById(accountOptions.accountId, {
