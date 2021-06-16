@@ -22,7 +22,7 @@ export function createAccountMiddleware(): RafikiMiddleware {
       : await accounts.getAccountByDestinationAddress(
           ctx.request.prepare.destination
         )
-    if (outgoingAccount === null) {
+    if (!outgoingAccount) {
       throw new AccountNotFoundError('')
     }
     if (outgoingAccount.disabled) {

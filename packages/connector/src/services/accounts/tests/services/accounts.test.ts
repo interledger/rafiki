@@ -378,8 +378,8 @@ describe('Accounts Service', (): void => {
       expect(retrievedAccount).toEqual(account)
     })
 
-    test('Returns null for nonexistent account', async (): Promise<void> => {
-      await expect(accounts.getAccount(uuid())).resolves.toBeNull()
+    test('Returns undefined for nonexistent account', async (): Promise<void> => {
+      await expect(accounts.getAccount(uuid())).resolves.toBeUndefined()
     })
   })
 
@@ -543,8 +543,8 @@ describe('Accounts Service', (): void => {
       // }
     })
 
-    test('Returns null for nonexistent account', async (): Promise<void> => {
-      await expect(accounts.getAccountBalance(uuid())).resolves.toBeNull()
+    test('Returns undefined for nonexistent account', async (): Promise<void> => {
+      await expect(accounts.getAccountBalance(uuid())).resolves.toBeUndefined()
     })
   })
 
@@ -572,11 +572,11 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test('Returns null for nonexistent liquidity account', async (): Promise<void> => {
+    test('Returns undefined for nonexistent liquidity account', async (): Promise<void> => {
       const asset = randomAsset()
       await expect(
         accounts.getLiquidityBalance(asset.code, asset.scale)
-      ).resolves.toBeNull()
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -604,11 +604,11 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test('Returns null for nonexistent settlement account', async (): Promise<void> => {
+    test('Returns undefined for nonexistent settlement account', async (): Promise<void> => {
       const asset = randomAsset()
       await expect(
         accounts.getSettlementBalance(asset.code, asset.scale)
-      ).resolves.toBeNull()
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -806,14 +806,14 @@ describe('Accounts Service', (): void => {
         }
       })
       const account = await accounts.getAccountByToken(incomingToken)
-      expect(account).not.toBeNull()
+      expect(account).not.toBeUndefined()
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(account!.accountId).toEqual(accountId)
     })
 
-    test('Returns null if no account exists with token', async (): Promise<void> => {
+    test('Returns undefined if no account exists with token', async (): Promise<void> => {
       const account = await accounts.getAccountByToken(uuid())
-      expect(account).toBeNull()
+      expect(account).toBeUndefined()
     })
   })
 
@@ -829,7 +829,7 @@ describe('Accounts Service', (): void => {
         const account = await accounts.getAccountByDestinationAddress(
           ilpAddress
         )
-        expect(account).not.toBeNull()
+        expect(account).not.toBeUndefined()
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         expect(account!.accountId).toEqual(accountId)
       }
@@ -837,7 +837,7 @@ describe('Accounts Service', (): void => {
         const account = await accounts.getAccountByDestinationAddress(
           ilpAddress + '.suffix'
         )
-        expect(account).not.toBeNull()
+        expect(account).not.toBeUndefined()
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         expect(account!.accountId).toEqual(accountId)
       }
@@ -845,7 +845,7 @@ describe('Accounts Service', (): void => {
         const account = await accounts.getAccountByDestinationAddress(
           ilpAddress + 'suffix'
         )
-        expect(account).toBeNull()
+        expect(account).toBeUndefined()
       }
     })
 
@@ -858,7 +858,7 @@ describe('Accounts Service', (): void => {
         const account = await accounts.getAccountByDestinationAddress(
           ilpAddress
         )
-        expect(account).not.toBeNull()
+        expect(account).not.toBeUndefined()
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         expect(account!.accountId).toEqual(accountId)
       }
@@ -866,7 +866,7 @@ describe('Accounts Service', (): void => {
         const account = await accounts.getAccountByDestinationAddress(
           ilpAddress + '.suffix'
         )
-        expect(account).not.toBeNull()
+        expect(account).not.toBeUndefined()
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         expect(account!.accountId).toEqual(accountId)
       }
@@ -874,7 +874,7 @@ describe('Accounts Service', (): void => {
         const account = await accounts.getAccountByDestinationAddress(
           ilpAddress + 'suffix'
         )
-        expect(account).toBeNull()
+        expect(account).toBeUndefined()
       }
     })
 
@@ -885,7 +885,7 @@ describe('Accounts Service', (): void => {
         const account = await accounts.getAccountByDestinationAddress(
           ilpAddress
         )
-        expect(account).not.toBeNull()
+        expect(account).not.toBeUndefined()
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         expect(account!.accountId).toEqual(accountId)
       }
@@ -893,7 +893,7 @@ describe('Accounts Service', (): void => {
         const account = await accounts.getAccountByDestinationAddress(
           ilpAddress + '.suffix'
         )
-        expect(account).not.toBeNull()
+        expect(account).not.toBeUndefined()
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         expect(account!.accountId).toEqual(accountId)
       }
@@ -901,18 +901,18 @@ describe('Accounts Service', (): void => {
         const account = await accounts.getAccountByDestinationAddress(
           ilpAddress + 'suffix'
         )
-        expect(account).toBeNull()
+        expect(account).toBeUndefined()
       }
     })
 
-    test('Returns null if no account exists with address', async (): Promise<void> => {
+    test('Returns undefined if no account exists with address', async (): Promise<void> => {
       await accountFactory.build({
         routing: {
           staticIlpAddress: 'test.rafiki'
         }
       })
       const account = await accounts.getAccountByDestinationAddress('test.nope')
-      expect(account).toBeNull()
+      expect(account).toBeUndefined()
     })
   })
 
@@ -947,8 +947,8 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test('Returns null for nonexistent account', async (): Promise<void> => {
-      await expect(accounts.getAddress(uuid())).resolves.toBeNull()
+    test('Returns undefined for nonexistent account', async (): Promise<void> => {
+      await expect(accounts.getAddress(uuid())).resolves.toBeUndefined()
     })
   })
 

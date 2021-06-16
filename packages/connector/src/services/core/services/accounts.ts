@@ -1,15 +1,15 @@
 // TODO move all this to types/accounts?
 
 export interface AccountsService {
-  getAccount(accountId: string): Promise<IlpAccount | null>
+  getAccount(accountId: string): Promise<IlpAccount | undefined>
   getAccountByDestinationAddress(
     destinationAddress: string
-  ): Promise<IlpAccount | null>
-  getAccountByToken(token: string): Promise<IlpAccount | null>
-  getAccountBalance(accountId: string): Promise<IlpBalance | null>
+  ): Promise<IlpAccount | undefined>
+  getAccountByToken(token: string): Promise<IlpAccount | undefined>
+  getAccountBalance(accountId: string): Promise<IlpBalance | undefined>
   createAccount(account: CreateOptions): Promise<IlpAccount | AccountError>
   transferFunds(args: Transfer): Promise<Transaction | AccountError>
-  getAddress(accountId: string): Promise<string | null>
+  getAddress(accountId: string): Promise<string | undefined>
 }
 
 export type Transfer = {

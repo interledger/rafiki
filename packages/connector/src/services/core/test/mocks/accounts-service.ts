@@ -18,14 +18,14 @@ export class MockAccountsService implements AccountsService {
 
   constructor(private serverIlpAddress: string) {}
 
-  getAccount(accountId: string): Promise<IlpAccount | null> {
+  getAccount(accountId: string): Promise<IlpAccount | undefined> {
     const account = this.accounts.get(accountId)
-    return Promise.resolve(account || null)
+    return Promise.resolve(account)
   }
 
   async getAccountByDestinationAddress(
     destinationAddress: string
-  ): Promise<IlpAccount | null> {
+  ): Promise<IlpAccount | undefined> {
     const account = this.find((account) => {
       const { routing } = account
       if (!routing) return false
@@ -33,24 +33,22 @@ export class MockAccountsService implements AccountsService {
       //routing.staticIlpAddress === destinationAddress ||
       //routing.prefixes.some((prefix) => destinationAddress.startsWith(prefix))
     })
-    return account || null
+    return account
   }
 
-  async getAccountByToken(token: string): Promise<IlpAccount | null> {
+  async getAccountByToken(token: string): Promise<IlpAccount | undefined> {
     return this.find(
       (account) => !!account.http?.incoming?.authTokens.includes(token)
     )
   }
 
-  async getAccountBalance(accountId: string): Promise<IlpBalance | null> {
+  async getAccountBalance(accountId: string): Promise<IlpBalance | undefined> {
     const account = this.accounts.get(accountId)
     if (account) {
       return {
         id: accountId,
         balance: account.balance
       }
-    } else {
-      return null
     }
   }
 
@@ -84,9 +82,9 @@ export class MockAccountsService implements AccountsService {
     }
   }
 
-  async getAddress(accountId: string): Promise<string | null> {
+  async getAddress(accountId: string): Promise<string | undefined> {
     const account = this.accounts.get(accountId)
-    if (!account) return null
+    if (!account) return undefined
     if (account.routing) {
       return account.routing.staticIlpAddress
     } else {
@@ -96,10 +94,9 @@ export class MockAccountsService implements AccountsService {
 
   private find(
     predicate: (account: MockIlpAccount) => boolean
-  ): IlpAccount | null {
+  ): IlpAccount | undefined {
     for (const [, account] of this.accounts) {
       if (predicate(account)) return account
     }
-    return null
   }
 }

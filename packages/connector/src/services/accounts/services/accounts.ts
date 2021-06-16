@@ -277,14 +277,14 @@ export class AccountsService implements ConnectorAccountsService {
     }
   }
 
-  public async getAccount(accountId: string): Promise<IlpAccount | null> {
+  public async getAccount(accountId: string): Promise<IlpAccount | undefined> {
     const accountRow = await IlpAccountModel.query().findById(accountId)
-    return accountRow ? toIlpAccount(accountRow) : null
+    return accountRow ? toIlpAccount(accountRow) : undefined
   }
 
   public async getAccountBalance(
     accountId: string
-  ): Promise<IlpBalance | null> {
+  ): Promise<IlpBalance | undefined> {
     const account = await IlpAccountModel.query().findById(accountId).select(
       'balanceId'
       // 'debtBalanceId',
@@ -294,7 +294,7 @@ export class AccountsService implements ConnectorAccountsService {
     )
 
     if (!account) {
-      return null
+      return undefined
     }
 
     const balanceIds = [
@@ -455,27 +455,25 @@ export class AccountsService implements ConnectorAccountsService {
   public async getLiquidityBalance(
     assetCode: string,
     assetScale: number
-  ): Promise<bigint | null> {
+  ): Promise<bigint | undefined> {
     const balances = await this.client.lookupAccounts([
       toLiquidityId(assetCode, assetScale)
     ])
-    if (balances.length !== 1) {
-      return null
+    if (balances.length === 1) {
+      return getNetBalance(balances[0])
     }
-    return getNetBalance(balances[0])
   }
 
   public async getSettlementBalance(
     assetCode: string,
     assetScale: number
-  ): Promise<bigint | null> {
+  ): Promise<bigint | undefined> {
     const balances = await this.client.lookupAccounts([
       toSettlementId(assetCode, assetScale)
     ])
-    if (balances.length !== 1) {
-      return null
+    if (balances.length === 1) {
+      return getNetBalance(balances[0])
     }
-    return getNetBalance(balances[0])
   }
 
   private async createTransfer({
@@ -565,17 +563,19 @@ export class AccountsService implements ConnectorAccountsService {
     }
   }
 
-  public async getAccountByToken(token: string): Promise<IlpAccount | null> {
+  public async getAccountByToken(
+    token: string
+  ): Promise<IlpAccount | undefined> {
     const account = await IlpAccountModel.query()
       .withGraphJoined('incomingTokens')
       .where('incomingTokens.token', token)
       .first()
-    return account ? toIlpAccount(account) : null
+    return account ? toIlpAccount(account) : undefined
   }
 
   public async getAccountByDestinationAddress(
     destinationAddress: string
-  ): Promise<IlpAccount | null> {
+  ): Promise<IlpAccount | undefined> {
     const account = await IlpAccountModel.query()
       // new RegExp('^' + staticIlpAddress + '($|\\.)'))
       .where(
@@ -636,15 +636,14 @@ export class AccountsService implements ConnectorAccountsService {
         }
       }
     }
-    return null
   }
 
-  public async getAddress(accountId: string): Promise<string | null> {
+  public async getAddress(accountId: string): Promise<string | undefined> {
     const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('staticIlpAddress')
     if (!account) {
-      return null
+      return undefined
     } else if (account.staticIlpAddress) {
       return account.staticIlpAddress
     }
