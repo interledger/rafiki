@@ -77,6 +77,7 @@ export interface IlpBalance {
 }
 
 export enum AccountError {
+  DuplicateIncomingToken = 'DuplicateIncomingToken',
   InsufficientBalance = 'InsufficientBalance',
   InsufficientLiquidity = 'InsufficientLiquidity',
   InsufficientSettlementBalance = 'InsufficientSettlementBalance',

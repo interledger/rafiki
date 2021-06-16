@@ -1,28 +1,11 @@
 import { BaseModel } from './base'
 import { Token } from './token'
 import { uuidToBigInt } from '../utils'
-import {
-  CreateNotFoundErrorArgs,
-  Model,
-  Pojo,
-  QueryContext,
-  raw
-} from 'objection'
-
-import { UnknownAccountError } from '../errors'
+import { Model, Pojo, raw } from 'objection'
 
 export class Account extends BaseModel {
   public static get tableName(): string {
     return 'accounts'
-  }
-
-  static createNotFoundError(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    queryContext: QueryContext,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    args: CreateNotFoundErrorArgs
-  ): Error {
-    return new UnknownAccountError()
   }
 
   static relationMappings = {

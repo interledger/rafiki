@@ -1,4 +1,9 @@
-import { raw, transaction, UniqueViolationError } from 'objection'
+import {
+  NotFoundError,
+  raw,
+  transaction,
+  UniqueViolationError
+} from 'objection'
 import { Logger } from 'pino'
 import * as uuid from 'uuid'
 import {
@@ -217,43 +222,42 @@ export class AccountsService implements ConnectorAccountsService {
 
   public async updateAccount(
     accountOptions: UpdateIlpAccountOptions
-  ): Promise<IlpAccount> {
-    return transaction(Account, Token, async (Account, Token) => {
-      if (accountOptions.http?.incoming?.authTokens) {
-        await Token.query().delete().where({
-          accountId: accountOptions.accountId
-        })
-        const incomingTokens = accountOptions.http.incoming.authTokens.map(
-          (incomingToken) => {
-            return {
-              accountId: accountOptions.accountId,
-              token: incomingToken
-            }
-          }
-        )
-        await Token.query()
-          .insert(incomingTokens)
-          .catch((err) => {
-            if (err instanceof UniqueViolationError) {
-              this.logger.info({
-                msg: 'duplicate incoming token attempted to be added',
-                accountOptions
-              })
-            }
-            throw err
+  ): Promise<IlpAccount | AccountError> {
+    try {
+      return await transaction(Account, Token, async (Account, Token) => {
+        if (accountOptions.http?.incoming?.authTokens) {
+          await Token.query().delete().where({
+            accountId: accountOptions.accountId
           })
+          const incomingTokens = accountOptions.http.incoming.authTokens.map(
+            (incomingToken) => {
+              return {
+                accountId: accountOptions.accountId,
+                token: incomingToken
+              }
+            }
+          )
+          await Token.query().insert(incomingTokens)
+        }
+        const account = await Account.query()
+          .patchAndFetchById(accountOptions.accountId, {
+            disabled: accountOptions.disabled,
+            maxPacketAmount: accountOptions.maxPacketAmount,
+            outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
+            outgoingToken: accountOptions.http?.outgoing.authToken,
+            streamEnabled: accountOptions.stream?.enabled
+          })
+          .throwIfNotFound()
+        return toIlpAccount(account)
+      })
+    } catch (err) {
+      if (err instanceof UniqueViolationError) {
+        return AccountError.DuplicateIncomingToken
+      } else if (err instanceof NotFoundError) {
+        return AccountError.UnknownAccount
       }
-      const account = await Account.query()
-        .patchAndFetchById(accountOptions.accountId, {
-          disabled: accountOptions.disabled,
-          maxPacketAmount: accountOptions.maxPacketAmount,
-          outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
-          outgoingToken: accountOptions.http?.outgoing.authToken,
-          streamEnabled: accountOptions.stream?.enabled
-        })
-        .throwIfNotFound()
-      return toIlpAccount(account)
-    })
+      throw err
+    }
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount | null> {

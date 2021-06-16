@@ -27,6 +27,7 @@ import { initIocContainer } from '../../../../accounts'
 import {
   AccountError,
   CreateOptions,
+  IlpAccount,
   IlpBalance,
   isAccountError,
   Transaction
@@ -424,14 +425,15 @@ describe('Accounts Service', (): void => {
           enabled: false
         }
       }
-      const updatedAccount = await accounts.updateAccount(updateOptions)
+      const accountOrError = await accounts.updateAccount(updateOptions)
+      expect(isAccountError(accountOrError)).toEqual(false)
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       delete updateOptions.http!.incoming
       const expectedAccount = {
         ...updateOptions,
         asset
       }
-      expect(updatedAccount).toEqual(expectedAccount)
+      expect(accountOrError as IlpAccount).toEqual(expectedAccount)
       const account = await accounts.getAccount(accountId)
       expect(account).toEqual(expectedAccount)
     })
@@ -442,9 +444,83 @@ describe('Accounts Service', (): void => {
         disabled: true
       }
 
-      await expect(accounts.updateAccount(updateOptions)).rejects.toThrow(
-        UnknownAccountError
+      await expect(accounts.updateAccount(updateOptions)).resolves.toEqual(
+        AccountError.UnknownAccount
       )
+    })
+
+    test('Returns error for duplicate incoming token', async (): Promise<void> => {
+      const incomingToken = uuid()
+      await accounts.createAccount({
+        accountId: uuid(),
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100),
+        http: {
+          incoming: {
+            authTokens: [incomingToken]
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoingEndpoint'
+          }
+        }
+      })
+
+      const account = await accounts.createAccount({
+        accountId: uuid(),
+        disabled: false,
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+      const updateOptions: UpdateIlpAccountOptions = {
+        accountId: account.accountId,
+        disabled: true,
+        maxPacketAmount: BigInt(200),
+        http: {
+          incoming: {
+            authTokens: [incomingToken]
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoing'
+          }
+        }
+      }
+      await expect(accounts.updateAccount(updateOptions)).resolves.toEqual(
+        AccountError.DuplicateIncomingToken
+      )
+      const retrievedAccount = await accounts.getAccount(account.accountId)
+      expect(retrievedAccount).toEqual(account)
+    })
+
+    test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
+      const incomingToken = uuid()
+
+      const account = await accounts.createAccount({
+        accountId: uuid(),
+        disabled: false,
+        asset: randomAsset(),
+        maxPacketAmount: BigInt(100)
+      })
+      const updateOptions: UpdateIlpAccountOptions = {
+        accountId: account.accountId,
+        disabled: true,
+        maxPacketAmount: BigInt(200),
+        http: {
+          incoming: {
+            authTokens: [incomingToken, incomingToken]
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoing'
+          }
+        }
+      }
+      await expect(accounts.updateAccount(updateOptions)).resolves.toEqual(
+        AccountError.DuplicateIncomingToken
+      )
+      const retrievedAccount = await accounts.getAccount(account.accountId)
+      expect(retrievedAccount).toEqual(account)
     })
   })
 
