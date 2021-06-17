@@ -573,7 +573,7 @@ export class AccountsService implements ConnectorAccountsService {
     return account ? toIlpAccount(account) : undefined
   }
 
-  public async getAccountByDestinationAddress(
+  private async getAccountByStaticIlpAddress(
     destinationAddress: string
   ): Promise<IlpAccount | undefined> {
     const account = await IlpAccountModel.query()
@@ -601,6 +601,11 @@ export class AccountsService implements ConnectorAccountsService {
     if (account) {
       return toIlpAccount(account)
     }
+  }
+
+  private async getAccountByPeerAddress(
+    destinationAddress: string
+  ): Promise<IlpAccount | undefined> {
     const peerAddress = this.config.peerAddresses.find(
       (peer: Peer) =>
         destinationAddress.startsWith(peer.ilpAddress) &&
@@ -615,6 +620,11 @@ export class AccountsService implements ConnectorAccountsService {
         return toIlpAccount(account)
       }
     }
+  }
+
+  private async getAccountByServerAddress(
+    destinationAddress: string
+  ): Promise<IlpAccount | undefined> {
     if (this.config.ilpAddress) {
       if (
         destinationAddress.startsWith(this.config.ilpAddress + '.') &&
@@ -638,6 +648,16 @@ export class AccountsService implements ConnectorAccountsService {
     }
   }
 
+  public async getAccountByDestinationAddress(
+    destinationAddress: string
+  ): Promise<IlpAccount | undefined> {
+    return (
+      (await this.getAccountByStaticIlpAddress(destinationAddress)) ||
+      (await this.getAccountByPeerAddress(destinationAddress)) ||
+      (await this.getAccountByServerAddress(destinationAddress))
+    )
+  }
+
   public async getAddress(accountId: string): Promise<string | undefined> {
     const account = await IlpAccountModel.query()
       .findById(accountId)
@@ -653,7 +673,9 @@ export class AccountsService implements ConnectorAccountsService {
     if (idx !== -1) {
       return this.config.peerAddresses[idx].ilpAddress
     }
-    return this.config.ilpAddress + '.' + accountId
+    if (this.config.ilpAddress) {
+      return this.config.ilpAddress + '.' + accountId
+    }
   }
 
   public async transferFunds({
