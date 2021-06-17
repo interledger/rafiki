@@ -4,6 +4,7 @@ import { Account as Balance } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import {
+  randomId,
   toLiquidityId,
   toSettlementId
   // toSettlementCreditId,
@@ -561,7 +562,11 @@ describe('Accounts Service', (): void => {
       }
 
       const amount = BigInt(10)
-      await accounts.depositLiquidity(asset.code, asset.scale, amount)
+      await accounts.depositLiquidity({
+        assetCode: asset.code,
+        assetScale: asset.scale,
+        amount
+      })
 
       {
         const balance = await accounts.getLiquidityBalance(
@@ -593,7 +598,11 @@ describe('Accounts Service', (): void => {
       }
 
       const amount = BigInt(10)
-      await accounts.depositLiquidity(asset.code, asset.scale, amount)
+      await accounts.depositLiquidity({
+        assetCode: asset.code,
+        assetScale: asset.scale,
+        amount
+      })
 
       {
         const balance = await accounts.getSettlementBalance(
@@ -617,7 +626,12 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       const amount = BigInt(10)
       {
-        await accounts.depositLiquidity(asset.code, asset.scale, amount)
+        const error = await accounts.depositLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          amount
+        })
+        expect(error).toBeUndefined()
         const balance = await accounts.getLiquidityBalance(
           asset.code,
           asset.scale
@@ -631,7 +645,12 @@ describe('Accounts Service', (): void => {
       }
       const amount2 = BigInt(5)
       {
-        await accounts.depositLiquidity(asset.code, asset.scale, amount2)
+        const error = await accounts.depositLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          amount: amount2
+        })
+        expect(error).toBeUndefined()
         const balance = await accounts.getLiquidityBalance(
           asset.code,
           asset.scale
@@ -644,20 +663,58 @@ describe('Accounts Service', (): void => {
         expect(settlementBalance).toEqual(-(amount + amount2))
       }
     })
+
+    test('Can deposit liquidity with idempotency key', async (): Promise<void> => {
+      const asset = randomAsset()
+      const amount = BigInt(10)
+      const depositId = randomId()
+      {
+        const error = await accounts.depositLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          amount,
+          depositId
+        })
+        expect(error).toBeUndefined()
+        const balance = await accounts.getLiquidityBalance(
+          asset.code,
+          asset.scale
+        )
+        expect(balance).toEqual(amount)
+      }
+      {
+        const error = await accounts.depositLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          amount,
+          depositId
+        })
+        expect(error).toEqual(AccountError.DepositExists)
+        const balance = await accounts.getLiquidityBalance(
+          asset.code,
+          asset.scale
+        )
+        expect(balance).toEqual(amount)
+      }
+    })
   })
 
   describe('Withdraw liquidity', (): void => {
     test('Can withdraw liquidity account', async (): Promise<void> => {
       const asset = randomAsset()
       const startingBalance = BigInt(10)
-      await accounts.depositLiquidity(asset.code, asset.scale, startingBalance)
+      await accounts.depositLiquidity({
+        assetCode: asset.code,
+        assetScale: asset.scale,
+        amount: startingBalance
+      })
       const amount = BigInt(5)
       {
-        const error = await accounts.withdrawLiquidity(
-          asset.code,
-          asset.scale,
+        const error = await accounts.withdrawLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
           amount
-        )
+        })
         expect(error).toBeUndefined()
         const balance = await accounts.getLiquidityBalance(
           asset.code,
@@ -672,11 +729,11 @@ describe('Accounts Service', (): void => {
       }
       const amount2 = BigInt(5)
       {
-        const error = await accounts.withdrawLiquidity(
-          asset.code,
-          asset.scale,
-          amount2
-        )
+        const error = await accounts.withdrawLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          amount: amount2
+        })
         expect(error).toBeUndefined()
         const balance = await accounts.getLiquidityBalance(
           asset.code,
@@ -691,13 +748,61 @@ describe('Accounts Service', (): void => {
       }
     })
 
+    test('Can withdraw liquidity with idempotency key', async (): Promise<void> => {
+      const asset = randomAsset()
+      const startingBalance = BigInt(10)
+      await accounts.depositLiquidity({
+        assetCode: asset.code,
+        assetScale: asset.scale,
+        amount: startingBalance
+      })
+      const amount = BigInt(5)
+      const withdrawalId = randomId()
+      {
+        const error = await accounts.withdrawLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          amount,
+          withdrawalId
+        })
+        expect(error).toBeUndefined()
+        const balance = await accounts.getLiquidityBalance(
+          asset.code,
+          asset.scale
+        )
+        expect(balance).toEqual(startingBalance - amount)
+      }
+      {
+        const error = await accounts.withdrawLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          amount,
+          withdrawalId
+        })
+        expect(error).toEqual(AccountError.WithdrawalExists)
+        const balance = await accounts.getLiquidityBalance(
+          asset.code,
+          asset.scale
+        )
+        expect(balance).toEqual(startingBalance - amount)
+      }
+    })
+
     test('Returns error for insufficient balance', async (): Promise<void> => {
       const asset = randomAsset()
       const startingBalance = BigInt(5)
-      await accounts.depositLiquidity(asset.code, asset.scale, startingBalance)
+      await accounts.depositLiquidity({
+        assetCode: asset.code,
+        assetScale: asset.scale,
+        amount: startingBalance
+      })
       const amount = BigInt(10)
       await expect(
-        accounts.withdrawLiquidity(asset.code, asset.scale, amount)
+        accounts.withdrawLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          amount
+        })
       ).resolves.toEqual(AccountError.InsufficientLiquidity)
 
       const balance = await accounts.getLiquidityBalance(
@@ -716,7 +821,11 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       const amount = BigInt(10)
       await expect(
-        accounts.withdrawLiquidity(asset.code, asset.scale, amount)
+        accounts.withdrawLiquidity({
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          amount
+        })
       ).resolves.toEqual(AccountError.UnknownLiquidityAccount)
     })
   })
@@ -725,7 +834,10 @@ describe('Accounts Service', (): void => {
     test('Can deposit to account', async (): Promise<void> => {
       const { accountId, asset } = await accountFactory.build()
       const amount = BigInt(10)
-      const error = await accounts.deposit(accountId, amount)
+      const error = await accounts.deposit({
+        accountId,
+        amount
+      })
       expect(error).toBeUndefined()
       const { balance } = (await accounts.getAccountBalance(
         accountId
@@ -736,12 +848,57 @@ describe('Accounts Service', (): void => {
         asset.scale
       )
       expect(settlementBalance).toEqual(-amount)
+
+      {
+        const error = await accounts.deposit({
+          accountId,
+          amount
+        })
+        expect(error).toBeUndefined()
+        const { balance } = (await accounts.getAccountBalance(
+          accountId
+        )) as IlpBalance
+        expect(balance).toEqual(amount + amount)
+      }
     })
 
     test("Can't deposit to nonexistent account", async (): Promise<void> => {
-      const id = uuid()
-      const error = await accounts.deposit(id, BigInt(5))
+      const accountId = uuid()
+      const error = await accounts.deposit({
+        accountId,
+        amount: BigInt(5)
+      })
       expect(error).toEqual(AccountError.UnknownAccount)
+    })
+
+    test('Can deposit with idempotency key', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      const amount = BigInt(10)
+      const depositId = randomId()
+      {
+        const error = await accounts.deposit({
+          accountId,
+          amount,
+          depositId
+        })
+        expect(error).toBeUndefined()
+        const { balance } = (await accounts.getAccountBalance(
+          accountId
+        )) as IlpBalance
+        expect(balance).toEqual(amount)
+      }
+      {
+        const error = await accounts.deposit({
+          accountId,
+          amount,
+          depositId
+        })
+        expect(error).toEqual(AccountError.DepositExists)
+        const { balance } = (await accounts.getAccountBalance(
+          accountId
+        )) as IlpBalance
+        expect(balance).toEqual(amount)
+      }
     })
   })
 
@@ -749,9 +906,15 @@ describe('Accounts Service', (): void => {
     test('Can withdraw from account', async (): Promise<void> => {
       const { accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(10)
-      await accounts.deposit(accountId, startingBalance)
+      await accounts.deposit({
+        accountId,
+        amount: startingBalance
+      })
       const amount = BigInt(5)
-      const error = await accounts.withdraw(accountId, amount)
+      const error = await accounts.withdraw({
+        accountId,
+        amount
+      })
       expect(error).toBeUndefined()
       const { balance } = (await accounts.getAccountBalance(
         accountId
@@ -762,23 +925,43 @@ describe('Accounts Service', (): void => {
         asset.scale
       )
       expect(settlementBalance).toEqual(-(startingBalance - amount))
+      {
+        const error = await accounts.withdraw({
+          accountId,
+          amount
+        })
+        expect(error).toBeUndefined()
+        const { balance } = (await accounts.getAccountBalance(
+          accountId
+        )) as IlpBalance
+        expect(balance).toEqual(startingBalance - amount - amount)
+      }
     })
 
     test("Can't withdraw from nonexistent account", async (): Promise<void> => {
-      const id = uuid()
-      await expect(accounts.withdraw(id, BigInt(5))).resolves.toEqual(
-        AccountError.UnknownAccount
-      )
+      const accountId = uuid()
+      await expect(
+        accounts.withdraw({
+          accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(AccountError.UnknownAccount)
     })
 
     test('Returns error for insufficient balance', async (): Promise<void> => {
       const { accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(5)
-      await accounts.deposit(accountId, startingBalance)
+      await accounts.deposit({
+        accountId,
+        amount: startingBalance
+      })
       const amount = BigInt(10)
-      await expect(accounts.withdraw(accountId, amount)).resolves.toEqual(
-        AccountError.InsufficientBalance
-      )
+      await expect(
+        accounts.withdraw({
+          accountId,
+          amount
+        })
+      ).resolves.toEqual(AccountError.InsufficientBalance)
       const { balance } = (await accounts.getAccountBalance(
         accountId
       )) as IlpBalance
@@ -788,6 +971,41 @@ describe('Accounts Service', (): void => {
         asset.scale
       )
       expect(settlementBalance).toEqual(-startingBalance)
+    })
+
+    test('Can withdraw with idempotency key', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      const startingBalance = BigInt(10)
+      await accounts.deposit({
+        accountId,
+        amount: startingBalance
+      })
+      const amount = BigInt(5)
+      const withdrawalId = randomId()
+      {
+        const error = await accounts.withdraw({
+          accountId,
+          amount,
+          withdrawalId
+        })
+        expect(error).toBeUndefined()
+        const { balance } = (await accounts.getAccountBalance(
+          accountId
+        )) as IlpBalance
+        expect(balance).toEqual(startingBalance - amount)
+      }
+      {
+        const error = await accounts.withdraw({
+          accountId,
+          amount,
+          withdrawalId
+        })
+        expect(error).toEqual(AccountError.WithdrawalExists)
+        const { balance } = (await accounts.getAccountBalance(
+          accountId
+        )) as IlpBalance
+        expect(balance).toEqual(startingBalance - amount)
+      }
     })
   })
 
@@ -973,17 +1191,20 @@ describe('Accounts Service', (): void => {
           asset: crossCurrency ? randomAsset() : sourceAsset
         })
         const startingSourceBalance = BigInt(10)
-        await accounts.deposit(sourceAccountId, startingSourceBalance)
+        await accounts.deposit({
+          accountId: sourceAccountId,
+          amount: startingSourceBalance
+        })
 
         const startingDestinationLiquidity = crossCurrency
           ? BigInt(100)
           : BigInt(0)
         if (crossCurrency) {
-          await accounts.depositLiquidity(
-            destinationAsset.code,
-            destinationAsset.scale,
-            startingDestinationLiquidity
-          )
+          await accounts.depositLiquidity({
+            assetCode: destinationAsset.code,
+            assetScale: destinationAsset.scale,
+            amount: startingDestinationLiquidity
+          })
         }
 
         const sourceAmount = BigInt(1)
@@ -1109,7 +1330,10 @@ describe('Accounts Service', (): void => {
         asset: destinationAsset
       } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
-      await accounts.deposit(sourceAccountId, startingSourceBalance)
+      await accounts.deposit({
+        accountId: sourceAccountId,
+        amount: startingSourceBalance
+      })
       {
         const { balance: sourceBalance } = (await accounts.getAccountBalance(
           sourceAccountId
@@ -1203,7 +1427,10 @@ describe('Accounts Service', (): void => {
         asset
       })
       const startingSourceBalance = BigInt(10)
-      await accounts.deposit(sourceAccountId, startingSourceBalance)
+      await accounts.deposit({
+        accountId: sourceAccountId,
+        amount: startingSourceBalance
+      })
 
       await expect(
         accounts.transferFunds({
@@ -1219,7 +1446,10 @@ describe('Accounts Service', (): void => {
       const { accountId: sourceAccountId } = await accountFactory.build()
       const { accountId: destinationAccountId } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
-      await accounts.deposit(sourceAccountId, startingSourceBalance)
+      await accounts.deposit({
+        accountId: sourceAccountId,
+        amount: startingSourceBalance
+      })
 
       await expect(
         accounts.transferFunds({

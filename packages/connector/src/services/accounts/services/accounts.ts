@@ -20,7 +20,8 @@ import {
   // InvalidAssetError,
   TransferError,
   UnknownBalanceError,
-  UnknownLiquidityAccountError
+  UnknownLiquidityAccountError,
+  UnknownSettlementAccountError
 } from '../errors'
 import { IlpAccount as IlpAccountModel, IlpHttpToken } from '../models'
 import {
@@ -86,6 +87,7 @@ interface BalanceOptions {
 }
 
 interface BalanceTransfer {
+  transferId?: bigint
   sourceBalanceId: bigint
   destinationBalanceId: bigint
   amount: bigint
@@ -403,41 +405,59 @@ export class AccountsService implements ConnectorAccountsService {
     )
   }
 
-  public async depositLiquidity(
-    assetCode: string,
-    assetScale: number,
+  public async depositLiquidity({
+    assetCode,
+    assetScale,
+    amount,
+    depositId
+  }: {
+    assetCode: string
+    assetScale: number
     amount: bigint
-  ): Promise<void | AccountError> {
+    depositId?: bigint
+  }): Promise<void | AccountError> {
     await this.createCurrencyBalances(assetCode, assetScale)
     const error = await this.createTransfer({
+      transferId: depositId,
       sourceBalanceId: toSettlementId(assetCode, assetScale),
       destinationBalanceId: toLiquidityId(assetCode, assetScale),
       amount
     })
     if (error) {
       switch (error) {
+        case CreateTransferError.exists:
+          return AccountError.DepositExists
         case CreateTransferError.debit_account_not_found:
-          return AccountError.UnknownSettlementAccount
+          throw new UnknownSettlementAccountError(assetCode, assetScale)
         case CreateTransferError.credit_account_not_found:
-          return AccountError.UnknownLiquidityAccount
+          throw new UnknownLiquidityAccountError(assetCode, assetScale)
         default:
           throw new TransferError(error)
       }
     }
   }
 
-  public async withdrawLiquidity(
-    assetCode: string,
-    assetScale: number,
+  public async withdrawLiquidity({
+    assetCode,
+    assetScale,
+    amount,
+    withdrawalId
+  }: {
+    assetCode: string
+    assetScale: number
     amount: bigint
-  ): Promise<void | AccountError> {
+    withdrawalId?: bigint
+  }): Promise<void | AccountError> {
     const error = await this.createTransfer({
+      transferId: withdrawalId,
       sourceBalanceId: toLiquidityId(assetCode, assetScale),
       destinationBalanceId: toSettlementId(assetCode, assetScale),
       amount
     })
     if (error) {
       switch (error) {
+        case CreateTransferError.exists:
+          return AccountError.WithdrawalExists
         case CreateTransferError.debit_account_not_found:
           return AccountError.UnknownLiquidityAccount
         case CreateTransferError.credit_account_not_found:
@@ -477,13 +497,14 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   private async createTransfer({
+    transferId,
     sourceBalanceId,
     destinationBalanceId,
     amount
   }: BalanceTransfer): Promise<void | CreateTransferError> {
     const res = await this.client.createTransfers([
       {
-        id: randomId(),
+        id: transferId || randomId(),
         debit_account_id: sourceBalanceId,
         credit_account_id: destinationBalanceId,
         amount,
@@ -496,14 +517,34 @@ export class AccountsService implements ConnectorAccountsService {
       }
     ])
     if (res.length) {
-      return res[0].code
+      switch (res[0].code) {
+        case CreateTransferError.exists:
+        case CreateTransferError.exists_with_different_debit_account_id:
+        case CreateTransferError.exists_with_different_credit_account_id:
+        case CreateTransferError.exists_with_different_user_data:
+        case CreateTransferError.exists_with_different_reserved_field:
+        case CreateTransferError.exists_with_different_code:
+        case CreateTransferError.exists_with_different_amount:
+        case CreateTransferError.exists_with_different_timeout:
+        case CreateTransferError.exists_with_different_flags:
+        case CreateTransferError.exists_and_already_committed_and_accepted:
+        case CreateTransferError.exists_and_already_committed_and_rejected:
+          return CreateTransferError.exists
+        default:
+          return res[0].code
+      }
     }
   }
 
-  public async deposit(
-    accountId: string,
+  public async deposit({
+    accountId,
+    amount,
+    depositId
+  }: {
+    accountId: string
     amount: bigint
-  ): Promise<void | AccountError> {
+    depositId?: bigint
+  }): Promise<void | AccountError> {
     const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
@@ -511,6 +552,7 @@ export class AccountsService implements ConnectorAccountsService {
       return AccountError.UnknownAccount
     }
     const error = await this.createTransfer({
+      transferId: depositId,
       sourceBalanceId: toSettlementId(account.assetCode, account.assetScale),
       destinationBalanceId: account.balanceId,
       amount
@@ -518,8 +560,13 @@ export class AccountsService implements ConnectorAccountsService {
 
     if (error) {
       switch (error) {
+        case CreateTransferError.exists:
+          return AccountError.DepositExists
         case CreateTransferError.debit_account_not_found:
-          return AccountError.UnknownSettlementAccount
+          throw new UnknownSettlementAccountError(
+            account.assetCode,
+            account.assetScale
+          )
         case CreateTransferError.credit_account_not_found:
           throw new UnknownBalanceError(accountId)
         default:
@@ -528,10 +575,15 @@ export class AccountsService implements ConnectorAccountsService {
     }
   }
 
-  public async withdraw(
-    accountId: string,
+  public async withdraw({
+    accountId,
+    amount,
+    withdrawalId
+  }: {
+    accountId: string
     amount: bigint
-  ): Promise<void | AccountError> {
+    withdrawalId?: bigint
+  }): Promise<void | AccountError> {
     const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
@@ -539,6 +591,7 @@ export class AccountsService implements ConnectorAccountsService {
       return AccountError.UnknownAccount
     }
     const error = await this.createTransfer({
+      transferId: withdrawalId,
       sourceBalanceId: account.balanceId,
       destinationBalanceId: toSettlementId(
         account.assetCode,
@@ -549,10 +602,15 @@ export class AccountsService implements ConnectorAccountsService {
 
     if (error) {
       switch (error) {
+        case CreateTransferError.exists:
+          return AccountError.WithdrawalExists
         case CreateTransferError.debit_account_not_found:
           throw new UnknownBalanceError(accountId)
         case CreateTransferError.credit_account_not_found:
-          return AccountError.UnknownSettlementAccount
+          throw new UnknownSettlementAccountError(
+            account.assetCode,
+            account.assetScale
+          )
         case CreateTransferError.exceeds_credits:
           return AccountError.InsufficientBalance
         case CreateTransferError.exceeds_debits:

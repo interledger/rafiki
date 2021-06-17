@@ -77,6 +77,7 @@ export interface IlpBalance {
 }
 
 export enum AccountError {
+  DepositExists = 'DepositExists',
   DuplicateAccountId = 'DuplicateAccountId',
   DuplicateIncomingToken = 'DuplicateIncomingToken',
   InsufficientBalance = 'InsufficientBalance',
@@ -87,7 +88,8 @@ export enum AccountError {
   UnknownSourceAccount = 'UnknownSourceAccount',
   UnknownDestinationAccount = 'UnknownDestinationAccount',
   UnknownLiquidityAccount = 'UnknownLiquidityAccount',
-  UnknownSettlementAccount = 'UnknownSettlementAccount'
+  UnknownSettlementAccount = 'UnknownSettlementAccount',
+  WithdrawalExists = 'WithdrawalExists'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

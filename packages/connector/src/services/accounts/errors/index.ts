@@ -25,3 +25,10 @@ export class UnknownLiquidityAccountError extends Error {
     this.name = 'UnknownLiquidityAccountError'
   }
 }
+
+export class UnknownSettlementAccountError extends Error {
+  constructor(code: string, scale: number) {
+    super('Unknown settlement account. code=' + code + ' scale=' + scale)
+    this.name = 'UnknownSettlementAccountError'
+  }
+}
