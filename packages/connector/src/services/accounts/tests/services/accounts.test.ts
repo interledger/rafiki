@@ -330,8 +330,16 @@ describe('Accounts Service', (): void => {
 
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          toLiquidityId(asset.code, asset.scale),
-          toSettlementId(asset.code, asset.scale)
+          toLiquidityId({
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            hmacSecret: config.hmacSecret
+          }),
+          toSettlementId({
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            hmacSecret: config.hmacSecret
+          })
           // toSettlementCreditId(asset.code, asset.scale),
           // toSettlementLoanId(asset.code, asset.scale)
         ])
@@ -341,8 +349,16 @@ describe('Accounts Service', (): void => {
       await accounts.createAccount(account)
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          toLiquidityId(asset.code, asset.scale),
-          toSettlementId(asset.code, asset.scale)
+          toLiquidityId({
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            hmacSecret: config.hmacSecret
+          }),
+          toSettlementId({
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            hmacSecret: config.hmacSecret
+          })
           // toSettlementCreditId(asset.code, asset.scale),
           // toSettlementLoanId(asset.code, asset.scale)
         ])
@@ -361,8 +377,16 @@ describe('Accounts Service', (): void => {
 
       {
         const balances = await appContainer.tigerbeetle.lookupAccounts([
-          toLiquidityId(asset.code, asset.scale),
-          toSettlementId(asset.code, asset.scale)
+          toLiquidityId({
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            hmacSecret: config.hmacSecret
+          }),
+          toSettlementId({
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            hmacSecret: config.hmacSecret
+          })
           // toSettlementCreditId(asset.code, asset.scale),
           // toSettlementLoanId(asset.code, asset.scale)
         ])

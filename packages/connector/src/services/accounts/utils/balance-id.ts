@@ -1,26 +1,61 @@
+import * as crypto from 'crypto'
 import { v4 as uuid } from 'uuid'
 
-const LIQUIDITY_ID_PREFIX = '6c69717569646974793a' // 'liquidity:'
-const SETTLEMENT_ID_PREFIX = '736574746c3a' // 'settl:'
+const LIQUIDITY_ID_PREFIX = 'liquidity:'
+const SETTLEMENT_ID_PREFIX = 'settlement:'
 
-const REAL_ID_CODE = '7265616c3a' // 'real:'
-// const CREDIT_ID_CODE = '637265643a' // 'cred:'
-// const LOAN_ID_CODE = '6c6f616e3a' // 'loan:'
+// const REAL_ID_CODE = 'real:'
+// const CREDIT_ID_CODE = 'credit:'
+// const LOAN_ID_CODE = 'loan:'
 
-export function toLiquidityId(assetCode: string, assetScale: number): bigint {
-  const assetCodeHex = Buffer.from(assetCode + ':').toString('hex')
-  return BigInt(
-    `0x${LIQUIDITY_ID_PREFIX}${assetCodeHex}${assetScale.toString(16)}`
-  )
+function toBalanceId({
+  prefix,
+  assetCode,
+  assetScale,
+  hmacSecret
+}: {
+  prefix: string
+  assetCode: string
+  assetScale: number
+  hmacSecret: string
+}): bigint {
+  const h = crypto.createHmac('sha256', hmacSecret)
+  h.update(`${prefix}${assetCode}:${assetScale}`)
+  return BigInt('0x' + h.digest('hex').slice(32))
 }
 
-export function toSettlementId(assetCode: string, assetScale: number): bigint {
-  const assetCodeHex = Buffer.from(assetCode + ':').toString('hex')
-  return BigInt(
-    `0x${SETTLEMENT_ID_PREFIX}${REAL_ID_CODE}${assetCodeHex}${assetScale.toString(
-      16
-    )}`
-  )
+export function toLiquidityId({
+  assetCode,
+  assetScale,
+  hmacSecret
+}: {
+  assetCode: string
+  assetScale: number
+  hmacSecret: string
+}): bigint {
+  return toBalanceId({
+    prefix: LIQUIDITY_ID_PREFIX,
+    assetCode,
+    assetScale,
+    hmacSecret
+  })
+}
+
+export function toSettlementId({
+  assetCode,
+  assetScale,
+  hmacSecret
+}: {
+  assetCode: string
+  assetScale: number
+  hmacSecret: string
+}): bigint {
+  return toBalanceId({
+    prefix: SETTLEMENT_ID_PREFIX,
+    assetCode,
+    assetScale,
+    hmacSecret
+  })
 }
 
 // export function toSettlementCreditId(

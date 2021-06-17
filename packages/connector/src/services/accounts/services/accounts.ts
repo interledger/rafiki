@@ -353,14 +353,22 @@ export class AccountsService implements ConnectorAccountsService {
     await this.createBalances(
       [
         {
-          id: toLiquidityId(assetCode, assetScale),
+          id: toLiquidityId({
+            assetCode,
+            assetScale,
+            hmacSecret: this.config.hmacSecret
+          }),
           flags:
             0 |
             AccountFlags.debits_must_not_exceed_credits |
             AccountFlags.linked
         },
         {
-          id: toSettlementId(assetCode, assetScale),
+          id: toSettlementId({
+            assetCode,
+            assetScale,
+            hmacSecret: this.config.hmacSecret
+          }),
           //   flags:
           //     0 |
           //     AccountFlags.credits_must_not_exceed_debits |
@@ -419,8 +427,16 @@ export class AccountsService implements ConnectorAccountsService {
     await this.createCurrencyBalances(assetCode, assetScale)
     const error = await this.createTransfer({
       transferId: depositId,
-      sourceBalanceId: toSettlementId(assetCode, assetScale),
-      destinationBalanceId: toLiquidityId(assetCode, assetScale),
+      sourceBalanceId: toSettlementId({
+        assetCode,
+        assetScale,
+        hmacSecret: this.config.hmacSecret
+      }),
+      destinationBalanceId: toLiquidityId({
+        assetCode,
+        assetScale,
+        hmacSecret: this.config.hmacSecret
+      }),
       amount
     })
     if (error) {
@@ -450,8 +466,16 @@ export class AccountsService implements ConnectorAccountsService {
   }): Promise<void | AccountError> {
     const error = await this.createTransfer({
       transferId: withdrawalId,
-      sourceBalanceId: toLiquidityId(assetCode, assetScale),
-      destinationBalanceId: toSettlementId(assetCode, assetScale),
+      sourceBalanceId: toLiquidityId({
+        assetCode,
+        assetScale,
+        hmacSecret: this.config.hmacSecret
+      }),
+      destinationBalanceId: toSettlementId({
+        assetCode,
+        assetScale,
+        hmacSecret: this.config.hmacSecret
+      }),
       amount
     })
     if (error) {
@@ -477,7 +501,11 @@ export class AccountsService implements ConnectorAccountsService {
     assetScale: number
   ): Promise<bigint | undefined> {
     const balances = await this.client.lookupAccounts([
-      toLiquidityId(assetCode, assetScale)
+      toLiquidityId({
+        assetCode,
+        assetScale,
+        hmacSecret: this.config.hmacSecret
+      })
     ])
     if (balances.length === 1) {
       return getNetBalance(balances[0])
@@ -489,7 +517,11 @@ export class AccountsService implements ConnectorAccountsService {
     assetScale: number
   ): Promise<bigint | undefined> {
     const balances = await this.client.lookupAccounts([
-      toSettlementId(assetCode, assetScale)
+      toSettlementId({
+        assetCode,
+        assetScale,
+        hmacSecret: this.config.hmacSecret
+      })
     ])
     if (balances.length === 1) {
       return getNetBalance(balances[0])
@@ -553,7 +585,11 @@ export class AccountsService implements ConnectorAccountsService {
     }
     const error = await this.createTransfer({
       transferId: depositId,
-      sourceBalanceId: toSettlementId(account.assetCode, account.assetScale),
+      sourceBalanceId: toSettlementId({
+        assetCode: account.assetCode,
+        assetScale: account.assetScale,
+        hmacSecret: this.config.hmacSecret
+      }),
       destinationBalanceId: account.balanceId,
       amount
     })
@@ -593,10 +629,11 @@ export class AccountsService implements ConnectorAccountsService {
     const error = await this.createTransfer({
       transferId: withdrawalId,
       sourceBalanceId: account.balanceId,
-      destinationBalanceId: toSettlementId(
-        account.assetCode,
-        account.assetScale
-      ),
+      destinationBalanceId: toSettlementId({
+        assetCode: account.assetCode,
+        assetScale: account.assetScale,
+        hmacSecret: this.config.hmacSecret
+      }),
       amount
     })
 
@@ -786,10 +823,11 @@ export class AccountsService implements ConnectorAccountsService {
         {
           id: randomId(),
           debit_account_id: sourceAccount.balanceId,
-          credit_account_id: toLiquidityId(
-            sourceAccount.assetCode,
-            sourceAccount.assetScale
-          ),
+          credit_account_id: toLiquidityId({
+            assetCode: sourceAccount.assetCode,
+            assetScale: sourceAccount.assetScale,
+            hmacSecret: this.config.hmacSecret
+          }),
           amount: sourceAmount,
           flags: flags | TransferFlags.linked,
           timeout,
@@ -800,10 +838,11 @@ export class AccountsService implements ConnectorAccountsService {
         },
         {
           id: randomId(),
-          debit_account_id: toLiquidityId(
-            destinationAccount.assetCode,
-            destinationAccount.assetScale
-          ),
+          debit_account_id: toLiquidityId({
+            assetCode: destinationAccount.assetCode,
+            assetScale: destinationAccount.assetScale,
+            hmacSecret: this.config.hmacSecret
+          }),
           credit_account_id: destinationAccount.balanceId,
           amount: destinationAmount,
           flags,

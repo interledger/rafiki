@@ -27,6 +27,7 @@ export const Config = {
     'postgresql://postgres:password@localhost:5432/development'
   ),
   env: envString('NODE_ENV', 'development'),
+  hmacSecret: envString('ACCOUNTS_HMAC_SECRET', 'test'),
   ilpAddress: process.env.ILP_ADDRESS,
   peerAddresses: process.env.PEER_ADDRESSES
     ? JSON.parse(process.env.PEER_ADDRESSES)
