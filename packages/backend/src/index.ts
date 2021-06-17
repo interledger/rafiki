@@ -60,7 +60,11 @@ export function initIocContainer(
       }
     })
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
-    knex.client.driver.types.setTypeParser(20, 'text', BigInt)
+    knex.client.driver.types.setTypeParser(
+      knex.client.driver.types.builtins.INT8,
+      'text',
+      BigInt
+    )
     return knex
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
