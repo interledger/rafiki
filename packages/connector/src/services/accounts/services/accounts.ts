@@ -10,6 +10,7 @@ import {
   AccountFlags,
   Client,
   CommitFlags,
+  CommitTransferError,
   CreateTransferError,
   Transfer as ClientTransfer,
   TransferFlags
@@ -18,7 +19,7 @@ import {
 import { Config } from '../config'
 import {
   // InvalidAssetError,
-  TransferError,
+  BalanceTransferError,
   UnknownBalanceError,
   UnknownLiquidityAccountError,
   UnknownSettlementAccountError
@@ -33,13 +34,14 @@ import {
   randomId
 } from '../utils'
 import {
-  AccountError,
   AccountsService as ConnectorAccountsService,
+  CreateAccountError,
   CreateOptions,
   IlpAccount,
   IlpBalance,
   Transaction,
-  Transfer
+  Transfer,
+  TransferError
 } from '../../core/services/accounts'
 
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
@@ -81,6 +83,31 @@ export type UpdateIlpAccountOptions = Omit<
   // 'asset' | 'parentAccountId'
   'asset'
 >
+
+export enum UpdateAccountError {
+  DuplicateIncomingToken = 'DuplicateIncomingToken',
+  UnknownAccount = 'UnknownAccount'
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isUpdateAccountError = (o: any): o is UpdateAccountError =>
+  Object.values(UpdateAccountError).includes(o)
+
+export enum DepositError {
+  DepositExists = 'DepositExists',
+  UnknownAccount = 'UnknownAccount'
+}
+
+export enum WithdrawError {
+  InsufficientBalance = 'InsufficientBalance',
+  InsufficientLiquidity = 'InsufficientLiquidity',
+  InsufficientSettlementBalance = 'InsufficientSettlementBalance',
+  UnknownAccount = 'UnknownAccount',
+  UnknownLiquidityAccount = 'UnknownLiquidityAccount',
+  UnknownSettlementAccount = 'UnknownSettlementAccount',
+  WithdrawalExists = 'WithdrawalExists'
+}
+
 interface BalanceOptions {
   id: bigint
   flags: number
@@ -112,7 +139,7 @@ export class AccountsService implements ConnectorAccountsService {
 
   public async createAccount(
     account: CreateOptions
-  ): Promise<IlpAccount | AccountError> {
+  ): Promise<IlpAccount | CreateAccountError> {
     try {
       return await transaction(
         IlpAccountModel,
@@ -226,9 +253,9 @@ export class AccountsService implements ConnectorAccountsService {
       if (err instanceof UniqueViolationError) {
         switch (err.constraint) {
           case 'ilpAccounts_pkey':
-            return AccountError.DuplicateAccountId
+            return CreateAccountError.DuplicateAccountId
           case 'ilphttptokens_token_unique':
-            return AccountError.DuplicateIncomingToken
+            return CreateAccountError.DuplicateIncomingToken
         }
       }
       throw err
@@ -237,7 +264,7 @@ export class AccountsService implements ConnectorAccountsService {
 
   public async updateAccount(
     accountOptions: UpdateIlpAccountOptions
-  ): Promise<IlpAccount | AccountError> {
+  ): Promise<IlpAccount | UpdateAccountError> {
     try {
       return await transaction(
         IlpAccountModel,
@@ -271,9 +298,9 @@ export class AccountsService implements ConnectorAccountsService {
       )
     } catch (err) {
       if (err instanceof UniqueViolationError) {
-        return AccountError.DuplicateIncomingToken
+        return UpdateAccountError.DuplicateIncomingToken
       } else if (err instanceof NotFoundError) {
-        return AccountError.UnknownAccount
+        return UpdateAccountError.UnknownAccount
       }
       throw err
     }
@@ -423,7 +450,7 @@ export class AccountsService implements ConnectorAccountsService {
     assetScale: number
     amount: bigint
     depositId?: bigint
-  }): Promise<void | AccountError> {
+  }): Promise<void | DepositError> {
     await this.createCurrencyBalances(assetCode, assetScale)
     const error = await this.createTransfer({
       transferId: depositId,
@@ -442,13 +469,13 @@ export class AccountsService implements ConnectorAccountsService {
     if (error) {
       switch (error) {
         case CreateTransferError.exists:
-          return AccountError.DepositExists
+          return DepositError.DepositExists
         case CreateTransferError.debit_account_not_found:
           throw new UnknownSettlementAccountError(assetCode, assetScale)
         case CreateTransferError.credit_account_not_found:
           throw new UnknownLiquidityAccountError(assetCode, assetScale)
         default:
-          throw new TransferError(error)
+          throw new BalanceTransferError(error)
       }
     }
   }
@@ -463,7 +490,7 @@ export class AccountsService implements ConnectorAccountsService {
     assetScale: number
     amount: bigint
     withdrawalId?: bigint
-  }): Promise<void | AccountError> {
+  }): Promise<void | WithdrawError> {
     const error = await this.createTransfer({
       transferId: withdrawalId,
       sourceBalanceId: toLiquidityId({
@@ -481,17 +508,17 @@ export class AccountsService implements ConnectorAccountsService {
     if (error) {
       switch (error) {
         case CreateTransferError.exists:
-          return AccountError.WithdrawalExists
+          return WithdrawError.WithdrawalExists
         case CreateTransferError.debit_account_not_found:
-          return AccountError.UnknownLiquidityAccount
+          return WithdrawError.UnknownLiquidityAccount
         case CreateTransferError.credit_account_not_found:
-          return AccountError.UnknownSettlementAccount
+          return WithdrawError.UnknownSettlementAccount
         case CreateTransferError.exceeds_credits:
-          return AccountError.InsufficientLiquidity
+          return WithdrawError.InsufficientLiquidity
         case CreateTransferError.exceeds_debits:
-          return AccountError.InsufficientSettlementBalance
+          return WithdrawError.InsufficientSettlementBalance
         default:
-          throw new TransferError(error)
+          throw new BalanceTransferError(error)
       }
     }
   }
@@ -576,12 +603,12 @@ export class AccountsService implements ConnectorAccountsService {
     accountId: string
     amount: bigint
     depositId?: bigint
-  }): Promise<void | AccountError> {
+  }): Promise<void | DepositError> {
     const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
     if (!account) {
-      return AccountError.UnknownAccount
+      return DepositError.UnknownAccount
     }
     const error = await this.createTransfer({
       transferId: depositId,
@@ -597,7 +624,7 @@ export class AccountsService implements ConnectorAccountsService {
     if (error) {
       switch (error) {
         case CreateTransferError.exists:
-          return AccountError.DepositExists
+          return DepositError.DepositExists
         case CreateTransferError.debit_account_not_found:
           throw new UnknownSettlementAccountError(
             account.assetCode,
@@ -606,7 +633,7 @@ export class AccountsService implements ConnectorAccountsService {
         case CreateTransferError.credit_account_not_found:
           throw new UnknownBalanceError(accountId)
         default:
-          throw new TransferError(error)
+          throw new BalanceTransferError(error)
       }
     }
   }
@@ -619,12 +646,12 @@ export class AccountsService implements ConnectorAccountsService {
     accountId: string
     amount: bigint
     withdrawalId?: bigint
-  }): Promise<void | AccountError> {
+  }): Promise<void | WithdrawError> {
     const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
     if (!account) {
-      return AccountError.UnknownAccount
+      return WithdrawError.UnknownAccount
     }
     const error = await this.createTransfer({
       transferId: withdrawalId,
@@ -640,7 +667,7 @@ export class AccountsService implements ConnectorAccountsService {
     if (error) {
       switch (error) {
         case CreateTransferError.exists:
-          return AccountError.WithdrawalExists
+          return WithdrawError.WithdrawalExists
         case CreateTransferError.debit_account_not_found:
           throw new UnknownBalanceError(accountId)
         case CreateTransferError.credit_account_not_found:
@@ -649,11 +676,11 @@ export class AccountsService implements ConnectorAccountsService {
             account.assetScale
           )
         case CreateTransferError.exceeds_credits:
-          return AccountError.InsufficientBalance
+          return WithdrawError.InsufficientBalance
         case CreateTransferError.exceeds_debits:
-          return AccountError.InsufficientSettlementBalance
+          return WithdrawError.InsufficientSettlementBalance
         default:
-          throw new TransferError(error)
+          throw new BalanceTransferError(error)
       }
     }
   }
@@ -778,7 +805,7 @@ export class AccountsService implements ConnectorAccountsService {
     destinationAccountId,
     sourceAmount,
     destinationAmount
-  }: Transfer): Promise<Transaction | AccountError> {
+  }: Transfer): Promise<Transaction | TransferError> {
     const [
       sourceAccount,
       destinationAccount
@@ -787,9 +814,9 @@ export class AccountsService implements ConnectorAccountsService {
       .select('assetCode', 'assetScale', 'balanceId', 'id')
     if (!destinationAccount) {
       if (!sourceAccount || sourceAccount.id !== sourceAccountId) {
-        return AccountError.UnknownSourceAccount
+        return TransferError.UnknownSourceAccount
       } else {
-        return AccountError.UnknownDestinationAccount
+        return TransferError.UnknownDestinationAccount
       }
     }
 
@@ -800,7 +827,7 @@ export class AccountsService implements ConnectorAccountsService {
 
     if (sourceAccount.assetCode === destinationAccount.assetCode) {
       if (destinationAmount && sourceAmount !== destinationAmount) {
-        return AccountError.InvalidDestinationAmount
+        return TransferError.InvalidDestinationAmount
       }
       transfers.push({
         id: randomId(),
@@ -816,7 +843,7 @@ export class AccountsService implements ConnectorAccountsService {
       })
     } else {
       if (!destinationAmount) {
-        return AccountError.InvalidDestinationAmount
+        return TransferError.InvalidDestinationAmount
       }
 
       transfers.push(
@@ -877,15 +904,16 @@ export class AccountsService implements ConnectorAccountsService {
           )
         case CreateTransferError.exceeds_credits:
           if (index === 1) {
-            return AccountError.InsufficientLiquidity
+            return TransferError.InsufficientLiquidity
           }
-          return AccountError.InsufficientBalance
+          return TransferError.InsufficientBalance
         default:
-          throw new TransferError(code)
+          throw new BalanceTransferError(code)
       }
     }
+
     const trx: Transaction = {
-      commit: async () => {
+      commit: async (): Promise<void | TransferError> => {
         const res = await this.client.commitTransfers(
           transfers.map((transfer) => {
             return {
@@ -900,11 +928,22 @@ export class AccountsService implements ConnectorAccountsService {
             }
           })
         )
-        if (res.length) {
-          // TODO throw
+        for (const { code } of res) {
+          switch (code) {
+            case CommitTransferError.linked_event_failed:
+              break
+            case CommitTransferError.transfer_expired:
+              return TransferError.TransferExpired
+            case CommitTransferError.already_committed:
+              return TransferError.TransferAlreadyCommitted
+            case CommitTransferError.already_committed_but_rejected:
+              return TransferError.TransferAlreadyRejected
+            default:
+              throw new BalanceTransferError(code)
+          }
         }
       },
-      rollback: async () => {
+      rollback: async (): Promise<void | TransferError> => {
         const res = await this.client.commitTransfers(
           transfers.map((transfer) => {
             const flags =
@@ -918,8 +957,19 @@ export class AccountsService implements ConnectorAccountsService {
             }
           })
         )
-        if (res.length) {
-          // TODO throw
+        for (const { code } of res) {
+          switch (code) {
+            case CommitTransferError.linked_event_failed:
+              break
+            case CommitTransferError.transfer_expired:
+              return TransferError.TransferExpired
+            case CommitTransferError.already_committed_but_accepted:
+              return TransferError.TransferAlreadyCommitted
+            case CommitTransferError.already_committed:
+              return TransferError.TransferAlreadyRejected
+            default:
+              throw new BalanceTransferError(code)
+          }
         }
       }
     }

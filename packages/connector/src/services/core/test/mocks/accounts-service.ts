@@ -1,11 +1,12 @@
 import {
-  AccountError,
   AccountsService,
+  CreateAccountError,
   CreateOptions,
   IlpAccount,
   IlpBalance,
   Transaction,
-  Transfer
+  Transfer,
+  TransferError
 } from '../../services'
 
 type MockIlpAccount = CreateOptions & {
@@ -54,22 +55,22 @@ export class MockAccountsService implements AccountsService {
 
   async createAccount(
     account: MockIlpAccount
-  ): Promise<IlpAccount | AccountError> {
+  ): Promise<IlpAccount | CreateAccountError> {
     this.accounts.set(account.accountId, account)
     return account
   }
 
-  async transferFunds(options: Transfer): Promise<Transaction | AccountError> {
+  async transferFunds(options: Transfer): Promise<Transaction | TransferError> {
     const src = this.accounts.get(options.sourceAccountId)
-    if (!src) return AccountError.UnknownSourceAccount
+    if (!src) return TransferError.UnknownSourceAccount
     const dst = this.accounts.get(options.destinationAccountId)
-    if (!dst) return AccountError.UnknownDestinationAccount
+    if (!dst) return TransferError.UnknownDestinationAccount
     if (src.asset.code !== dst.asset.code)
       throw new Error('asset code mismatch')
     if (src.asset.scale !== dst.asset.scale)
       throw new Error('asset scale mismatch')
     if (src.balance < options.sourceAmount) {
-      return AccountError.InsufficientBalance
+      return TransferError.InsufficientBalance
     }
     src.balance -= options.sourceAmount
     return {

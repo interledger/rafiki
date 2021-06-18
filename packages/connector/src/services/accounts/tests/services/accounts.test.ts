@@ -18,19 +18,25 @@ import {
   AccountsService,
   AppServices,
   Config,
+  DepositError,
   // InvalidAssetError,
-  UpdateIlpAccountOptions
+  isUpdateAccountError,
+  UpdateAccountError,
+  UpdateIlpAccountOptions,
+  WithdrawError
 } from '../..'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../../accounts'
 
 import {
-  AccountError,
+  CreateAccountError,
   CreateOptions,
   IlpAccount,
   IlpBalance,
-  isAccountError,
-  Transaction
+  isCreateAccountError,
+  isTransferError,
+  Transaction,
+  TransferError
 } from '../../../core/services/accounts'
 
 describe('Accounts Service', (): void => {
@@ -79,7 +85,7 @@ describe('Accounts Service', (): void => {
         asset: randomAsset()
       }
       const accountOrError = await accounts.createAccount(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
+      expect(isCreateAccountError(accountOrError)).toEqual(false)
       const expectedAccount = {
         ...account,
         disabled: false,
@@ -126,7 +132,7 @@ describe('Accounts Service', (): void => {
         }
       }
       const accountOrError = await accounts.createAccount(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
+      expect(isCreateAccountError(accountOrError)).toEqual(false)
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       delete account.http!.incoming
       expect(accountOrError).toEqual(account)
@@ -248,7 +254,7 @@ describe('Accounts Service', (): void => {
           accountId: account.accountId,
           asset: randomAsset()
         })
-      ).resolves.toEqual(AccountError.DuplicateAccountId)
+      ).resolves.toEqual(CreateAccountError.DuplicateAccountId)
       const retrievedAccount = await accounts.getAccount(account.accountId)
       expect(retrievedAccount).toEqual(account)
     })
@@ -271,7 +277,7 @@ describe('Accounts Service', (): void => {
       }
 
       await expect(accounts.createAccount(account)).resolves.toEqual(
-        AccountError.DuplicateIncomingToken
+        CreateAccountError.DuplicateIncomingToken
       )
 
       const retrievedAccount = await IlpAccountModel.query().findById(accountId)
@@ -312,7 +318,7 @@ describe('Accounts Service', (): void => {
           }
         }
         await expect(accounts.createAccount(account)).resolves.toEqual(
-          AccountError.DuplicateIncomingToken
+          CreateAccountError.DuplicateIncomingToken
         )
         const retrievedAccount = await IlpAccountModel.query().findById(
           accountId
@@ -443,7 +449,7 @@ describe('Accounts Service', (): void => {
         }
       }
       const accountOrError = await accounts.updateAccount(updateOptions)
-      expect(isAccountError(accountOrError)).toEqual(false)
+      expect(isUpdateAccountError(accountOrError)).toEqual(false)
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       delete updateOptions.http!.incoming
       const expectedAccount = {
@@ -462,7 +468,7 @@ describe('Accounts Service', (): void => {
       }
 
       await expect(accounts.updateAccount(updateOptions)).resolves.toEqual(
-        AccountError.UnknownAccount
+        UpdateAccountError.UnknownAccount
       )
     })
 
@@ -496,7 +502,7 @@ describe('Accounts Service', (): void => {
         }
       }
       await expect(accounts.updateAccount(updateOptions)).resolves.toEqual(
-        AccountError.DuplicateIncomingToken
+        UpdateAccountError.DuplicateIncomingToken
       )
       const retrievedAccount = await accounts.getAccount(account.accountId)
       expect(retrievedAccount).toEqual(account)
@@ -521,7 +527,7 @@ describe('Accounts Service', (): void => {
         }
       }
       await expect(accounts.updateAccount(updateOptions)).resolves.toEqual(
-        AccountError.DuplicateIncomingToken
+        UpdateAccountError.DuplicateIncomingToken
       )
       const retrievedAccount = await accounts.getAccount(account.accountId)
       expect(retrievedAccount).toEqual(account)
@@ -713,7 +719,7 @@ describe('Accounts Service', (): void => {
           amount,
           depositId
         })
-        expect(error).toEqual(AccountError.DepositExists)
+        expect(error).toEqual(DepositError.DepositExists)
         const balance = await accounts.getLiquidityBalance(
           asset.code,
           asset.scale
@@ -803,7 +809,7 @@ describe('Accounts Service', (): void => {
           amount,
           withdrawalId
         })
-        expect(error).toEqual(AccountError.WithdrawalExists)
+        expect(error).toEqual(WithdrawError.WithdrawalExists)
         const balance = await accounts.getLiquidityBalance(
           asset.code,
           asset.scale
@@ -827,7 +833,7 @@ describe('Accounts Service', (): void => {
           assetScale: asset.scale,
           amount
         })
-      ).resolves.toEqual(AccountError.InsufficientLiquidity)
+      ).resolves.toEqual(WithdrawError.InsufficientLiquidity)
 
       const balance = await accounts.getLiquidityBalance(
         asset.code,
@@ -850,7 +856,7 @@ describe('Accounts Service', (): void => {
           assetScale: asset.scale,
           amount
         })
-      ).resolves.toEqual(AccountError.UnknownLiquidityAccount)
+      ).resolves.toEqual(WithdrawError.UnknownLiquidityAccount)
     })
   })
 
@@ -892,7 +898,7 @@ describe('Accounts Service', (): void => {
         accountId,
         amount: BigInt(5)
       })
-      expect(error).toEqual(AccountError.UnknownAccount)
+      expect(error).toEqual(DepositError.UnknownAccount)
     })
 
     test('Can deposit with idempotency key', async (): Promise<void> => {
@@ -917,7 +923,7 @@ describe('Accounts Service', (): void => {
           amount,
           depositId
         })
-        expect(error).toEqual(AccountError.DepositExists)
+        expect(error).toEqual(DepositError.DepositExists)
         const { balance } = (await accounts.getAccountBalance(
           accountId
         )) as IlpBalance
@@ -969,7 +975,7 @@ describe('Accounts Service', (): void => {
           accountId,
           amount: BigInt(5)
         })
-      ).resolves.toEqual(AccountError.UnknownAccount)
+      ).resolves.toEqual(WithdrawError.UnknownAccount)
     })
 
     test('Returns error for insufficient balance', async (): Promise<void> => {
@@ -985,7 +991,7 @@ describe('Accounts Service', (): void => {
           accountId,
           amount
         })
-      ).resolves.toEqual(AccountError.InsufficientBalance)
+      ).resolves.toEqual(WithdrawError.InsufficientBalance)
       const { balance } = (await accounts.getAccountBalance(
         accountId
       )) as IlpBalance
@@ -1024,7 +1030,7 @@ describe('Accounts Service', (): void => {
           amount,
           withdrawalId
         })
-        expect(error).toEqual(AccountError.WithdrawalExists)
+        expect(error).toEqual(WithdrawError.WithdrawalExists)
         const { balance } = (await accounts.getAccountBalance(
           accountId
         )) as IlpBalance
@@ -1239,7 +1245,7 @@ describe('Accounts Service', (): void => {
           sourceAmount,
           destinationAmount
         })
-        expect(isAccountError(trxOrError)).toEqual(false)
+        expect(isTransferError(trxOrError)).toEqual(false)
 
         {
           const { balance: sourceBalance } = (await accounts.getAccountBalance(
@@ -1273,9 +1279,23 @@ describe('Accounts Service', (): void => {
         }
 
         if (accept) {
-          await (trxOrError as Transaction).commit()
+          const error = await (trxOrError as Transaction).commit()
+          expect(error).toBeUndefined()
+          await expect((trxOrError as Transaction).commit()).resolves.toEqual(
+            TransferError.TransferAlreadyCommitted
+          )
+          await expect((trxOrError as Transaction).rollback()).resolves.toEqual(
+            TransferError.TransferAlreadyCommitted
+          )
         } else {
-          await (trxOrError as Transaction).rollback()
+          const error = await (trxOrError as Transaction).rollback()
+          expect(error).toBeUndefined()
+          await expect((trxOrError as Transaction).commit()).resolves.toEqual(
+            TransferError.TransferAlreadyRejected
+          )
+          await expect((trxOrError as Transaction).rollback()).resolves.toEqual(
+            TransferError.TransferAlreadyRejected
+          )
         }
 
         {
@@ -1332,7 +1352,7 @@ describe('Accounts Service', (): void => {
         sourceAmount: BigInt(5)
       }
       await expect(accounts.transferFunds(transfer)).resolves.toEqual(
-        AccountError.InsufficientBalance
+        TransferError.InsufficientBalance
       )
       const { balance: sourceBalance } = (await accounts.getAccountBalance(
         sourceAccountId
@@ -1393,7 +1413,7 @@ describe('Accounts Service', (): void => {
       }
 
       await expect(accounts.transferFunds(transfer)).resolves.toEqual(
-        AccountError.InsufficientLiquidity
+        TransferError.InsufficientLiquidity
       )
 
       const { balance: sourceBalance } = (await accounts.getAccountBalance(
@@ -1423,7 +1443,7 @@ describe('Accounts Service', (): void => {
           destinationAccountId: uuid(),
           sourceAmount: BigInt(5)
         })
-      ).resolves.toEqual(AccountError.UnknownSourceAccount)
+      ).resolves.toEqual(TransferError.UnknownSourceAccount)
 
       const { accountId } = await accountFactory.build()
 
@@ -1434,7 +1454,7 @@ describe('Accounts Service', (): void => {
           destinationAccountId: unknownAccountId,
           sourceAmount: BigInt(5)
         })
-      ).resolves.toEqual(AccountError.UnknownDestinationAccount)
+      ).resolves.toEqual(TransferError.UnknownDestinationAccount)
 
       await expect(
         accounts.transferFunds({
@@ -1442,7 +1462,7 @@ describe('Accounts Service', (): void => {
           destinationAccountId: accountId,
           sourceAmount: BigInt(5)
         })
-      ).resolves.toEqual(AccountError.UnknownSourceAccount)
+      ).resolves.toEqual(TransferError.UnknownSourceAccount)
     })
 
     test('Returns error for invalid amount', async (): Promise<void> => {
@@ -1463,7 +1483,7 @@ describe('Accounts Service', (): void => {
           sourceAmount: BigInt(5),
           destinationAmount: BigInt(10)
         })
-      ).resolves.toEqual(AccountError.InvalidDestinationAmount)
+      ).resolves.toEqual(TransferError.InvalidDestinationAmount)
     })
 
     test('Returns error for missing destinationAmount amount', async (): Promise<void> => {
@@ -1481,7 +1501,9 @@ describe('Accounts Service', (): void => {
           destinationAccountId,
           sourceAmount: BigInt(5)
         })
-      ).resolves.toEqual(AccountError.InvalidDestinationAmount)
+      ).resolves.toEqual(TransferError.InvalidDestinationAmount)
     })
+
+    test.todo('Returns error timed out transfer')
   })
 })

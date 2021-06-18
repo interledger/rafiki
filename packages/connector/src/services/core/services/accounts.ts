@@ -7,8 +7,10 @@ export interface AccountsService {
   ): Promise<IlpAccount | undefined>
   getAccountByToken(token: string): Promise<IlpAccount | undefined>
   getAccountBalance(accountId: string): Promise<IlpBalance | undefined>
-  createAccount(account: CreateOptions): Promise<IlpAccount | AccountError>
-  transferFunds(args: Transfer): Promise<Transaction | AccountError>
+  createAccount(
+    account: CreateOptions
+  ): Promise<IlpAccount | CreateAccountError>
+  transferFunds(args: Transfer): Promise<Transaction | TransferError>
   getAddress(accountId: string): Promise<string | undefined>
 }
 
@@ -21,8 +23,8 @@ export type Transfer = {
 }
 
 export interface Transaction {
-  commit: () => Promise<void>
-  rollback: () => Promise<void>
+  commit: () => Promise<void | TransferError>
+  rollback: () => Promise<void | TransferError>
 }
 
 export interface IlpAccount {
@@ -76,22 +78,26 @@ export interface IlpBalance {
   // parent?: IlpBalanceParent
 }
 
-export enum AccountError {
-  DepositExists = 'DepositExists',
+export enum CreateAccountError {
   DuplicateAccountId = 'DuplicateAccountId',
-  DuplicateIncomingToken = 'DuplicateIncomingToken',
-  InsufficientBalance = 'InsufficientBalance',
-  InsufficientLiquidity = 'InsufficientLiquidity',
-  InsufficientSettlementBalance = 'InsufficientSettlementBalance',
-  InvalidDestinationAmount = 'InvalidDestinationAmount',
-  UnknownAccount = 'UnknownAccount',
-  UnknownSourceAccount = 'UnknownSourceAccount',
-  UnknownDestinationAccount = 'UnknownDestinationAccount',
-  UnknownLiquidityAccount = 'UnknownLiquidityAccount',
-  UnknownSettlementAccount = 'UnknownSettlementAccount',
-  WithdrawalExists = 'WithdrawalExists'
+  DuplicateIncomingToken = 'DuplicateIncomingToken'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isAccountError = (o: any): o is AccountError =>
-  Object.values(AccountError).includes(o)
+export const isCreateAccountError = (o: any): o is CreateAccountError =>
+  Object.values(CreateAccountError).includes(o)
+
+export enum TransferError {
+  InsufficientBalance = 'InsufficientBalance',
+  InsufficientLiquidity = 'InsufficientLiquidity',
+  InvalidDestinationAmount = 'InvalidDestinationAmount',
+  TransferAlreadyCommitted = 'TransferAlreadyCommitted',
+  TransferAlreadyRejected = 'TransferAlreadyRejected',
+  TransferExpired = 'TransferExpired',
+  UnknownSourceAccount = 'UnknownSourceAccount',
+  UnknownDestinationAccount = 'UnknownDestinationAccount'
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isTransferError = (o: any): o is TransferError =>
+  Object.values(TransferError).includes(o)

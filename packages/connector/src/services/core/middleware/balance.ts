@@ -1,5 +1,5 @@
 import { RafikiContext } from '../rafiki'
-import { isAccountError, Transaction } from '../services/accounts'
+import { isTransferError, Transaction } from '../services/accounts'
 
 export function createBalanceMiddleware() {
   return async (
@@ -23,7 +23,7 @@ export function createBalanceMiddleware() {
 
     await next()
 
-    if (!isAccountError(trxOrError)) {
+    if (!isTransferError(trxOrError)) {
       if (response.fulfill) {
         await (trxOrError as Transaction).commit()
       } else {

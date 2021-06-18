@@ -5,7 +5,7 @@ export class InvalidAssetError extends Error {
   }
 }
 
-export class TransferError extends Error {
+export class BalanceTransferError extends Error {
   constructor(public code: number) {
     super()
     this.name = 'TransferError'
