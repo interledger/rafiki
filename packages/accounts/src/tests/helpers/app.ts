@@ -4,7 +4,7 @@ import { IocContract } from '@adonisjs/fold'
 import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { start, gracefulShutdown } from '../../../../accounts'
+import { start, gracefulShutdown } from '../..'
 import { App, AppServices } from '../../app'
 
 const DATABASE_URL =

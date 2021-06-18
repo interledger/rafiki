@@ -3,6 +3,8 @@ import { Model } from 'objection'
 import { Account as Balance } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
+import { Config } from '../../config'
+import { IlpAccount as IlpAccountModel } from '../../models'
 import {
   randomId,
   toLiquidityId,
@@ -14,11 +16,10 @@ import { createTestApp, TestContainer } from '../helpers/app'
 import { randomAsset } from '../helpers/asset'
 import { AccountFactory } from '../factories'
 import {
-  IlpAccount as IlpAccountModel,
   AccountsService,
   AppServices,
-  Config,
   DepositError,
+  initIocContainer,
   // InvalidAssetError,
   isUpdateAccountError,
   UpdateAccountError,
@@ -26,7 +27,6 @@ import {
   WithdrawError
 } from '../..'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../../../../accounts'
 
 import {
   CreateAccountError,
@@ -36,7 +36,7 @@ import {
   isCreateAccountError,
   isTransferError,
   TransferError
-} from '../../../core/services/accounts'
+} from '../../../../connector/src/services/core/services/accounts'
 
 describe('Accounts Service', (): void => {
   let deps: IocContract<AppServices>

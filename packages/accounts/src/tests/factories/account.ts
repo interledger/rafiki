@@ -1,6 +1,9 @@
 import { v4 as uuid } from 'uuid'
 
-import { CreateOptions, IlpAccount } from '../../../core/services/accounts'
+import {
+  CreateOptions,
+  IlpAccount
+} from '../../../../connector/src/services/core/services/accounts'
 import { AccountsService } from '../../services'
 import { randomAsset } from '../helpers/asset'
 

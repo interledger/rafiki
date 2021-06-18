@@ -5,7 +5,8 @@ import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import { createClient } from 'tigerbeetle-node'
 
-import { App, AppServices, Config } from './services/accounts'
+import { App, AppServices } from './app'
+import { Config } from './config'
 
 const container = initIocContainer(Config)
 
@@ -151,3 +152,7 @@ if (!module.parent) {
     }
   )
 }
+
+export * from './app'
+export * from './errors'
+export * from './services'

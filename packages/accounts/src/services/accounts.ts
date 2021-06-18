@@ -43,7 +43,7 @@ import {
   Transaction,
   Transfer,
   TransferError
-} from '../../core/services/accounts'
+} from '../../../connector/src/services/core/services/accounts'
 
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   const account: IlpAccount = {
@@ -230,7 +230,7 @@ export class AccountsService implements ConnectorAccountsService {
           })
 
           const incomingTokens = account.http?.incoming?.authTokens.map(
-            (incomingToken) => {
+            (incomingToken: string) => {
               return {
                 accountId: account.accountId,
                 token: incomingToken
@@ -276,7 +276,7 @@ export class AccountsService implements ConnectorAccountsService {
               accountId: accountOptions.accountId
             })
             const incomingTokens = accountOptions.http.incoming.authTokens.map(
-              (incomingToken) => {
+              (incomingToken: string) => {
                 return {
                   accountId: accountOptions.accountId,
                   token: incomingToken

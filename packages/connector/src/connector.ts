@@ -163,6 +163,7 @@ export const start = async (accounts?: AccountsService): Promise<void> => {
   server = app.listen(PORT)
   logger.info(`Connector listening on ${PORT}`)
   adminApi.listen()
+  logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
 
 // If this script is run directly, start the server
