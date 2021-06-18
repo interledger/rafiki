@@ -1,10 +1,6 @@
 import { v4 as uuid } from 'uuid'
 
-import {
-  CreateOptions,
-  IlpAccount
-} from '../../../../connector/src/services/core/services/accounts'
-import { AccountsService } from '../../services'
+import { AccountsService, CreateOptions, IlpAccount } from '../../types'
 import { randomAsset } from '../helpers/asset'
 
 export class AccountFactory {

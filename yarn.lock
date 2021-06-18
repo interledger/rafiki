@@ -5181,6 +5181,7 @@ __metadata:
     "@types/node-fetch": ^2.5.10
     "@types/pino": ^6.3.8
     "@types/rosie": ^0.0.39
+    accounts: "workspace:packages/accounts"
     ajv: ^8.1.0
     axios: ^0.21.1
     debug: ^4.3.1

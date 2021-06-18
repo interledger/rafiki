@@ -6845,6 +6845,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/node-fetch", "npm:2.5.10"],
             ["@types/pino", "npm:6.3.8"],
             ["@types/rosie", "npm:0.0.39"],
+            ["accounts", "workspace:packages/accounts"],
             ["ajv", "npm:8.1.0"],
             ["axios", "npm:0.21.1"],
             ["debug", "virtual:901e1408cc8bfef5550e648cc3ee4f1ec6e307e3f5baab3ad60f0ba461a3df0a2fb4207ed57f6ec68edeacbb88063dcc84f3c35bb45638ba421a021eb350b42b#npm:4.3.2"],

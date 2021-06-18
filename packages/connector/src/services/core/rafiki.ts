@@ -10,8 +10,11 @@ import {
   RafikiPrepare
 } from './middleware/ilp-packet'
 import { createTokenAuthMiddleware } from './middleware/token-auth'
-import { AccountsService, IlpAccount } from './services/accounts'
 import { LoggingService } from './services/logger'
+import {
+  ConnectorAccountsService as AccountsService,
+  IlpAccount
+} from 'accounts'
 import { IncomingMessage, ServerResponse } from 'http'
 import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
 import { DebugLogger } from './services/logger/debug'

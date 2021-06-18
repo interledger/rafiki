@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto'
+import { Config, initIocContainer, start as startAccounts } from 'accounts'
 import IORedis from 'ioredis'
 import {
-  AccountsService,
   createApp,
   RafikiRouter,
   createBalanceMiddleware,
@@ -101,21 +101,23 @@ export const gracefulShutdown = async (): Promise<void> => {
     })
   }
 }
-export const start = async (accounts?: AccountsService): Promise<void> => {
+export const start = async (): Promise<void> => {
+  const container = initIocContainer(Config)
+  const accountsApp = await startAccounts(container)
   adminApi = new AdminApi(
     { host: ADMIN_API_HOST, port: ADMIN_API_PORT },
     {
       auth: (): boolean => {
         return true
       },
-      accounts
+      accounts: accountsApp.getAccounts()
       //router: router
     }
   )
   // TODO Add auth
   const app = createApp({
     //router: router,
-    accounts,
+    accounts: accountsApp.getAccounts(),
     redis,
     stream: {
       serverSecret: STREAM_SECRET,

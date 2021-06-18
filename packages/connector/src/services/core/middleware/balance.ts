@@ -1,5 +1,5 @@
 import { RafikiContext } from '../rafiki'
-import { isTransferError } from '../services/accounts'
+import { isTransferError } from 'accounts'
 
 export function createBalanceMiddleware() {
   return async (

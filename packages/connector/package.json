@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@interledger/stream-receiver": "^0.2.2",
+    "accounts": "workspace:packages/accounts",
     "ajv": "^8.1.0",
     "axios": "^0.21.1",
     "debug": "^4.3.1",

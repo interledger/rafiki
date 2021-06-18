@@ -2,12 +2,9 @@
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "declaration": true
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "**/*.test.ts",
-    "src/services/**/_*",
-    "src/services/tests/factories/*"
-  ]
+  "exclude": ["**/*.test.ts", "src/services/**/_*", "tests/factories/*"]
 }
