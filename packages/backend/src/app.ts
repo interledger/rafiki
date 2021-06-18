@@ -3,20 +3,27 @@ import { EventEmitter } from 'events'
 
 import { IocContract } from '@adonisjs/fold'
 import Knex from 'knex'
-import Koa, { Context, DefaultState } from 'koa'
+import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 
 import { Config as AppConfig } from './config/app'
-import { MessageProducer } from './infrastructure/messageProducer'
+import { MessageProducer } from './messaging/messageProducer'
+import { createAccountService } from './account/service'
+import { createUserService } from './user/service'
+import { createSPSPHandler } from './spsp/endpoint'
 import { WorkerUtils } from 'graphile-worker'
 
-export interface AppContext extends Context {
+export interface AppContextData {
   logger: Logger
   closeEmitter: EventEmitter
   container: AppContainer
+  // Set by @koa/router.
+  params: { [key: string]: string }
 }
+
+export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -76,7 +83,7 @@ export class App {
         }
       }
     )
-    this._setupRoutes()
+    await this._setupRoutes()
   }
 
   public listen(port: number | string): void {
@@ -105,11 +112,24 @@ export class App {
     return 0
   }
 
-  private _setupRoutes(): void {
+  private async _setupRoutes(): Promise<void> {
     this.publicRouter.use(bodyParser())
     this.publicRouter.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
+
+    const knex = await this.container.use('knex')
+    this.publicRouter.get(
+      '/pay/:id',
+      await createSPSPHandler({
+        config: this.config,
+        accountService: await createAccountService({
+          logger: this.logger,
+          knex
+        }),
+        userService: await createUserService({ logger: this.logger, knex })
+      })
+    )
 
     this.koa.use(this.publicRouter.middleware())
   }

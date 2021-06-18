@@ -4,3 +4,7 @@ export interface Message {
   payload: unknown
   formatPayload: () => unknown
 }
+
+export interface MessageProducer {
+  send(message: Message): Promise<unknown>
+}
