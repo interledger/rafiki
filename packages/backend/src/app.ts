@@ -1,3 +1,4 @@
+import { join } from 'path'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
 
@@ -7,15 +8,29 @@ import Koa, { Context, DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
+import { ApolloServer } from 'apollo-server-koa'
 
 import { Config as AppConfig } from './config/app'
 import { MessageProducer } from './messaging/messageProducer'
 import { WorkerUtils } from 'graphile-worker'
+import { UserToken } from './types/UserToken'
+import {
+  addResolversToSchema,
+  GraphQLFileLoader,
+  loadSchemaSync
+} from 'graphql-tools'
+import { resolvers } from './graphql/resolvers'
 
 export interface AppContext extends Context {
   logger: Logger
   closeEmitter: EventEmitter
   container: AppContainer
+}
+
+export interface ApolloContext {
+  user: UserToken | null
+  messageProducer: MessageProducer
+  container: IocContract<AppServices>
 }
 
 export interface AppServices {
@@ -32,7 +47,8 @@ export type AppContainer = IocContract<AppServices>
 export class App {
   private koa!: Koa<DefaultState, AppContext>
   private publicRouter!: Router<DefaultState, AppContext>
-  private server: Server | undefined
+  private server!: Server
+  public apolloServer!: ApolloServer
   public closeEmitter!: EventEmitter
   public isShuttingDown = false
   private logger!: Logger
@@ -77,6 +93,7 @@ export class App {
       }
     )
     this._setupRoutes()
+    this._setupGraphql()
   }
 
   public listen(port: number | string): void {
@@ -103,6 +120,35 @@ export class App {
       return address.port
     }
     return 0
+  }
+
+  private _setupGraphql(): void {
+    // Load schema from the file
+    const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
+      loaders: [new GraphQLFileLoader()]
+    })
+
+    // Add resolvers to the schema
+    const schemaWithResolvers = addResolversToSchema({
+      schema,
+      resolvers
+    })
+
+    // Setup Apollo on graphql endpoint
+    this.apolloServer = new ApolloServer({
+      schema: schemaWithResolvers,
+      context: async ({ ctx }): Promise<ApolloContext> => {
+        // TODO add user when auth is implemented.
+        const user = JSON.parse(ctx.headers.user) || null
+        return {
+          user: user,
+          messageProducer: this.messageProducer,
+          container: this.container
+        }
+      }
+    })
+
+    this.koa.use(this.apolloServer.getMiddleware())
   }
 
   private _setupRoutes(): void {
