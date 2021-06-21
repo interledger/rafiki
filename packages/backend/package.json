@@ -5,9 +5,14 @@
     "format": "yarn format:local",
     "format:check": "yarn format:check:local",
     "test": "yarn test:local",
-    "knex": "knex"
+    "knex": "knex",
+    "generate": "graphql-codegen --config codegen.yml"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "1.21.5",
+    "@graphql-codegen/introspection": "1.18.2",
+    "@graphql-codegen/typescript": "1.22.2",
+    "@graphql-codegen/typescript-resolvers": "1.19.3",
     "@types/ioredis": "^4.22.3",
     "@types/jest": "^26.0.22",
     "@types/koa": "^2.13.3",
