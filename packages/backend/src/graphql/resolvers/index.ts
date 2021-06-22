@@ -1,4 +1,4 @@
-import { Resolvers } from '../generated/graphql.gen'
+import { Resolvers } from '../generated/graphql'
 import { getUser } from './user'
 
 export const resolvers: Resolvers = {
