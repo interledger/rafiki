@@ -3,4 +3,3 @@ build
 /dist
 .env
 src/coverage
-src/graphql/generated
