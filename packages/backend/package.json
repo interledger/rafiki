@@ -25,14 +25,17 @@
     "@types/pino": "^6.3.7",
     "@types/uuid": "^8.3.0",
     "cross-fetch": "^3.1.4",
-    "nock": "^13.1.0"
+    "nock": "^13.1.0",
+    "node-mocks-http": "^1.10.1"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.0",
+    "@interledger/stream-receiver": "^0.2.2",
     "@koa/cors": "^3.1.0",
     "@koa/router": "^10.0.0",
     "add": "^2.0.6",
     "apollo-server-koa": "^2.25.1",
+    "base64url": "^3.0.1",
     "fishery": "^1.2.0",
     "got": "^11.8.2",
     "graphile-scheduler": "^0.8.0",
