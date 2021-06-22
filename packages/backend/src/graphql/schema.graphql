@@ -3,6 +3,7 @@ type Query {
 }
 
 type User {
+  id: ID!
   balance: Amount!
   accounts: [Account]!
   # in the future it should be possible to fetch a transaction list. for now we'll start with just a list of invoices
@@ -10,13 +11,13 @@ type User {
 }
 
 type Amount {
-  amount: String!
+  amount: Int!
   currency: String!
   scale: Int
 }
 
 type Account {
-  id: String!
+  id: ID!
   balance: Amount!
 }
 

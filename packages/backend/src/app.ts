@@ -143,7 +143,7 @@ export class App {
       schema: schemaWithResolvers,
       context: async ({ ctx }): Promise<ApolloContext> => {
         // TODO add user when auth is implemented.
-        const user = JSON.parse(ctx.headers.user) || null
+        const user = ctx.headers.user
         return {
           user: user,
           messageProducer: this.messageProducer,

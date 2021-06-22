@@ -4,7 +4,7 @@ import { BaseService } from '../shared/baseService'
 
 export interface UserService {
   get(id: string): Promise<User>
-  create(): Promise<User>
+  create(id?: string): Promise<User>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -26,7 +26,7 @@ export async function createUserService({
   }
   return {
     get: (id) => getUser(deps, id),
-    create: () => createUser(deps)
+    create: (id) => createUser(deps, id)
   }
 }
 
@@ -35,10 +35,14 @@ async function getUser(deps: ServiceDependencies, id: string): Promise<User> {
   return User.query(deps.knex).findById(id)
 }
 
-async function createUser(deps: ServiceDependencies): Promise<User> {
+async function createUser(
+  deps: ServiceDependencies,
+  id?: string
+): Promise<User> {
   deps.logger.info('Creates a user')
   const account = await deps.accountService.create(6, 'USD')
   return User.query(deps.knex).insertAndFetch({
+    id: id,
     accountId: account.id
   })
 }

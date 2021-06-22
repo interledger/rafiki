@@ -14,7 +14,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/client@npm:^3.2.5, @apollo/client@npm:~3.2.5 || ~3.3.0":
+"@apollo/client@npm:^3.2.5, @apollo/client@npm:^3.3.20, @apollo/client@npm:~3.2.5 || ~3.3.0":
   version: 3.3.20
   resolution: "@apollo/client@npm:3.3.20"
   dependencies:
@@ -2947,6 +2947,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/nock@npm:^11.1.0":
+  version: 11.1.0
+  resolution: "@types/nock@npm:11.1.0"
+  dependencies:
+    nock: "*"
+  checksum: 09eada0afdd6c59a91fc05ea886fe5b86f8dace2a337773ed4447b2e5423543a74951e0830fd5d89f963ea8758513343c9b2b27c94b82aa0c6923a39a9bef930
+  languageName: node
+  linkType: hard
+
 "@types/node-fetch@npm:^2.5.10":
   version: 2.5.10
   resolution: "@types/node-fetch@npm:2.5.10"
@@ -3059,6 +3068,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/prop-types@npm:*":
+  version: 15.7.3
+  resolution: "@types/prop-types@npm:15.7.3"
+  checksum: bd0eab69d5120ad3784d0c9985f902653d5924707a7f2b3702a330e762dfd61b6494954cb54ad0c52b918ffd6f1e7e27c9270e4442bc15250de348596f2f60cb
+  languageName: node
+  linkType: hard
+
 "@types/qs@npm:*":
   version: 6.9.6
   resolution: "@types/qs@npm:6.9.6"
@@ -3070,6 +3086,17 @@ __metadata:
   version: 1.2.3
   resolution: "@types/range-parser@npm:1.2.3"
   checksum: 092fabae0ecbd728d3e4debc938cd043e97cb9f210cfec1c56ff6065c6e91666f376eb586591825d6757a058fd1a1dc4831d34e04ecfbb0800f35b8d86d38635
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:*":
+  version: 17.0.11
+  resolution: "@types/react@npm:17.0.11"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: ed2b57e44e8da99b13a7b0cd7d9d9159e3113a5160e25c9deae4f577cfb87f05103b54bb0e9722f48a7db3ddb3a836ade12b971bbc338d397b719886fb81efff
   languageName: node
   linkType: hard
 
@@ -3086,6 +3113,13 @@ __metadata:
   version: 0.0.39
   resolution: "@types/rosie@npm:0.0.39"
   checksum: 89d010c5b78ea4cc5348f55a79429afdbaacaea8582321a9c088cd025457638b0bf4b3d28b8165674ba2f00bc15f2b55ecdeaf0013c6833b0911559fd824195e
+  languageName: node
+  linkType: hard
+
+"@types/scheduler@npm:*":
+  version: 0.16.1
+  resolution: "@types/scheduler@npm:0.16.1"
+  checksum: 0124c2e4dee5e9b8c8524fcd6b1b8ea0b807b132e593925db04cdcc92ca2779a0d27c79414e60454b4458361a4d8319fa2b59d20585054f21617d1e9acf46a6f
   languageName: node
   linkType: hard
 
@@ -4190,6 +4224,7 @@ __metadata:
   resolution: "backend@workspace:packages/backend"
   dependencies:
     "@adonisjs/fold": ^8.1.0
+    "@apollo/client": ^3.3.20
     "@graphql-codegen/cli": 1.21.5
     "@graphql-codegen/introspection": 1.18.2
     "@graphql-codegen/typescript": 1.22.2
@@ -4203,6 +4238,7 @@ __metadata:
     "@types/koa__cors": ^3.0.2
     "@types/koa__router": ^8.0.4
     "@types/luxon": ^1.26.4
+    "@types/nock": ^11.1.0
     "@types/pino": ^6.3.7
     "@types/uuid": ^8.3.0
     add: ^2.0.6
@@ -4219,6 +4255,7 @@ __metadata:
     knex: ^0.21.17
     koa: ^2.13.1
     koa-bodyparser: ^4.3.0
+    nock: ^13.1.0
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
     pg: ^8.6.0
@@ -5345,6 +5382,13 @@ __metadata:
   dependencies:
     cssom: ~0.3.6
   checksum: a778180d2f5eef44742b7083997a0ad6e59eee016724ceac4d6229e48842d3c5ebbb55dc02c555f793bdc486254f6eef8d2049c1815e8fc74514e3eb827d49ec
+  languageName: node
+  linkType: hard
+
+"csstype@npm:^3.0.2":
+  version: 3.0.8
+  resolution: "csstype@npm:3.0.8"
+  checksum: e15233592a2c580fd72c4346a5c921044b8f4f29bcb81628a81199c4d6a91eb8f8e4875f440ef9c990e85f179a3370f3b842fe55e4743119ad0ce712519e7123
   languageName: node
   linkType: hard
 
@@ -9087,7 +9131,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-stringify-safe@npm:~5.0.1":
+"json-stringify-safe@npm:^5.0.1, json-stringify-safe@npm:~5.0.1":
   version: 5.0.1
   resolution: "json-stringify-safe@npm:5.0.1"
   checksum: 261dfb8eb3e72c8b0dda11fd7c20c151ffc1d1b03e529245d51708c8dd8d8c6a225880464adf41a570dff6e5c805fd9d1f47fed948cfb526e4fbe5a67ce4e5f4
@@ -9673,6 +9717,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash.set@npm:^4.3.2":
+  version: 4.3.2
+  resolution: "lodash.set@npm:4.3.2"
+  checksum: 4dfedacae1c1cf86385a2b6e30ba538f06c90d703a0abd83a11432d80ec24b4016fe27359cdc0554a02a31a468789cbb282801dd755e54581cf0295477e2341d
+  languageName: node
+  linkType: hard
+
 "lodash.sortby@npm:^4.7.0":
   version: 4.7.0
   resolution: "lodash.sortby@npm:4.7.0"
@@ -9750,7 +9801,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"loose-envify@npm:^1.0.0, loose-envify@npm:^1.4.0":
+"loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0, loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
   dependencies:
@@ -10263,6 +10314,18 @@ __metadata:
     lower-case: ^2.0.2
     tslib: ^2.0.3
   checksum: 84db4909caec37504c6655f995a004067f8733be8cd8d849f1578661b60a1685e086325fa4e1a5e8ce94e7416c1d0f037e2a00f635a14457183de80ab4fc7612
+  languageName: node
+  linkType: hard
+
+"nock@npm:*, nock@npm:^13.1.0":
+  version: 13.1.0
+  resolution: "nock@npm:13.1.0"
+  dependencies:
+    debug: ^4.1.0
+    json-stringify-safe: ^5.0.1
+    lodash.set: ^4.3.2
+    propagate: ^2.0.0
+  checksum: a0191f0ed331361dc7ce65c92e6aa03599b29863f25b85b8485f5897a8e9a269adb8203097debe090be2ca01c3ca40aa68368e36b59659ed85a3e53bb6c32b16
   languageName: node
   linkType: hard
 
@@ -11348,6 +11411,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"propagate@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "propagate@npm:2.0.1"
+  checksum: dd67518106bb3f1ee230b7e246a18285467e010b89703844f120c38e1462b52d79bddd4be0f8db080377a3d55218209674eae9eb672c29a033bf6b44cfc42828
+  languageName: node
+  linkType: hard
+
 "psl@npm:^1.1.28, psl@npm:^1.1.33":
   version: 1.8.0
   resolution: "psl@npm:1.8.0"
@@ -11460,6 +11530,16 @@ __metadata:
   version: 17.0.2
   resolution: "react-is@npm:17.0.2"
   checksum: 3eff23f410d40ab9bc5177f147a92c7f42c356a21ecea340e0554566956d67e5e1ba56f26cc7fa22339ac3c7151744177bd6305eaa26d3cbf15f354358c9d9b6
+  languageName: node
+  linkType: hard
+
+"react@npm:*":
+  version: 17.0.2
+  resolution: "react@npm:17.0.2"
+  dependencies:
+    loose-envify: ^1.1.0
+    object-assign: ^4.1.1
+  checksum: 7d0dfebafe1d297503157abb2e9acdb49852185deb8700c16f4a6faad87642f84903ab18cfc16f40b9a0dfe97540f99834982ee953e6d48b39c41608dc3e4b29
   languageName: node
   linkType: hard
 
