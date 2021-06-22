@@ -1,7 +1,7 @@
 import { Transaction as KnexTransaction } from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 
-import { createUserService, UserService } from './service'
+import { UserService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { User } from './model'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -10,7 +10,6 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import createLogger from 'pino'
 
 describe('User Service', (): void => {
   let deps: IocContract<AppServices>
@@ -39,10 +38,7 @@ describe('User Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       trx = await appContainer.knex.transaction()
-      userService = await createUserService({
-        logger: createLogger(),
-        knex: trx
-      })
+      userService = await deps.use('userService')
     }
   )
 

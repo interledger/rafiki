@@ -1,5 +1,5 @@
 import { User } from './model'
-import { AccountService, createAccountService } from '../account/service'
+import { AccountService } from '../account/service'
 import { BaseService } from '../shared/baseService'
 
 export interface UserService {
@@ -13,16 +13,12 @@ interface ServiceDependencies extends BaseService {
 
 export async function createUserService({
   logger,
-  knex
-}: BaseService): Promise<UserService> {
+  knex,
+  accountService
+}: ServiceDependencies): Promise<UserService> {
   const log = logger.child({
     service: 'UserService'
   })
-  const accountService = await createAccountService({
-    logger: logger,
-    knex: knex
-  })
-
   const deps: ServiceDependencies = {
     logger: log,
     knex: knex,

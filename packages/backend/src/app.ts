@@ -20,6 +20,8 @@ import {
   loadSchemaSync
 } from 'graphql-tools'
 import { resolvers } from './graphql/resolvers'
+import { UserService } from './user/service'
+import { AccountService } from './account/service'
 
 export interface AppContext extends Context {
   logger: Logger
@@ -40,6 +42,8 @@ export interface AppServices {
   closeEmitter: Promise<EventEmitter>
   config: Promise<typeof AppConfig>
   workerUtils: Promise<WorkerUtils>
+  userService: Promise<UserService>
+  accountService: Promise<AccountService>
 }
 
 export type AppContainer = IocContract<AppServices>

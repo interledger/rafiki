@@ -9,6 +9,8 @@ import IORedis from 'ioredis'
 import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { GraphileProducer } from './messaging/graphileProducer'
+import { createUserService } from './user/service'
+import { createAccountService } from './account/service'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -67,6 +69,28 @@ export function initIocContainer(
   container.singleton('redis', async (deps) => {
     const config = await deps.use('config')
     return new IORedis(config.redisUrl)
+  })
+
+  /**
+   * Add services to the container.
+   */
+  container.singleton('userService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    const accountService = await deps.use('accountService')
+    return await createUserService({
+      logger: logger,
+      knex: knex,
+      accountService: accountService
+    })
+  })
+  container.singleton('accountService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    return await createAccountService({
+      logger: logger,
+      knex: knex
+    })
   })
 
   return container
