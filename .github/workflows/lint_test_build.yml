@@ -10,22 +10,8 @@ on:
 name: PR checks
 
 jobs:
-  checkout:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-      - uses: actions/cache@v2
-        id: cache-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
-
   backend:
     runs-on: ubuntu-latest
-    needs: checkout
     services:
       postgres:
         image: postgres
@@ -39,11 +25,10 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/cache@v2
-        id: restore-build
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
-          path: ./*
-          key: ${{ github.sha }}
+          node-version: '14'
       - run: yarn workspace backend lint
       - run: yarn workspace backend format:check
       - run: packages/backend/scripts/init.sh
@@ -54,7 +39,6 @@ jobs:
 
   connector:
     runs-on: ubuntu-latest
-    needs: checkout
     services:
       postgres:
         image: postgres
@@ -72,11 +56,10 @@ jobs:
         ports:
           - 6379:6379
     steps:
-      - uses: actions/cache@v2
-        id: restore-build
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
-          path: ./*
-          key: ${{ github.sha }}
+          node-version: '14'
       - run: yarn workspace connector lint
       - run: yarn workspace connector format:check
       - run: packages/connector/scripts/init.sh
@@ -89,11 +72,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
-      - uses: actions/cache@v2
-        id: restore-build
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
-          path: ./*
-          key: ${{ github.sha }}
+          node-version: '14'
       - run: yarn workspace frontend lint
       - run: yarn workspace frontend format:check
       - run: yarn workspace frontend test
@@ -105,9 +87,8 @@ jobs:
       - connector
       - frontend
     steps:
-      - uses: actions/cache@v2
-        id: restore-build
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
-          path: ./*
-          key: ${{ github.sha }}
+          node-version: '14'
       - run: yarn build
