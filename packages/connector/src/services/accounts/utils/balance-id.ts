@@ -21,7 +21,8 @@ function toBalanceId({
 }): bigint {
   const h = crypto.createHmac('sha256', hmacSecret)
   h.update(`${prefix}${assetCode}:${assetScale}`)
-  return BigInt('0x' + h.digest('hex').slice(32))
+  const buf = h.digest()
+  return buf.slice(8).readBigUInt64BE() + (buf.readBigUInt64BE() << 64n)
 }
 
 export function toLiquidityId({
