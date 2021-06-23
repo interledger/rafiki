@@ -10,11 +10,8 @@ import { Logger } from 'pino'
 import Router from '@koa/router'
 import { ApolloServer } from 'apollo-server-koa'
 
-import { Config as AppConfig } from './config/app'
+import { IAppConfig } from './config/app'
 import { MessageProducer } from './messaging/messageProducer'
-import { createAccountService } from './account/service'
-import { createUserService } from './user/service'
-import { createSPSPHandler } from './spsp/endpoint'
 import { WorkerUtils } from 'graphile-worker'
 import { UserToken } from './types/UserToken'
 import {
@@ -25,6 +22,7 @@ import {
 import { resolvers } from './graphql/resolvers'
 import { UserService } from './user/service'
 import { AccountService } from './account/service'
+import { SPSPService } from './spsp/service'
 
 export interface AppContextData {
   logger: Logger
@@ -46,10 +44,11 @@ export interface AppServices {
   messageProducer: Promise<MessageProducer>
   knex: Promise<Knex>
   closeEmitter: Promise<EventEmitter>
-  config: Promise<typeof AppConfig>
+  config: Promise<IAppConfig>
   workerUtils: Promise<WorkerUtils>
   userService: Promise<UserService>
   accountService: Promise<AccountService>
+  SPSPService: Promise<SPSPService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -63,7 +62,7 @@ export class App {
   public isShuttingDown = false
   private logger!: Logger
   private messageProducer!: MessageProducer
-  private config!: typeof AppConfig
+  private config!: IAppConfig
 
   public constructor(private container: IocContract<AppServices>) {}
 
@@ -167,18 +166,10 @@ export class App {
       ctx.status = 200
     })
 
-    const knex = await this.container.use('knex')
-    this.publicRouter.get(
-      '/pay/:id',
-      await createSPSPHandler({
-        config: this.config,
-        accountService: await createAccountService({
-          logger: this.logger,
-          knex
-        }),
-        userService: await createUserService({ logger: this.logger, knex })
-      })
-    )
+    const SPSPService = await this.container.use('SPSPService')
+    this.publicRouter.get('/pay/:id', (ctx: AppContext): void => {
+      SPSPService.GETPayEndpoint(ctx)
+    })
 
     this.koa.use(this.publicRouter.middleware())
   }
