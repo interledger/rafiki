@@ -20,7 +20,7 @@ module.exports = async () => {
   // node pg defaults to returning bigint as string. This ensures it parses to bigint
   knex.client.driver.types.setTypeParser(20, 'text', BigInt)
   await knex.migrate.latest({
-    directory: __dirname + '/migrations'
+    directory: './packages/backend/migrations'
   })
   global.__KNEX__ = knex
 }
