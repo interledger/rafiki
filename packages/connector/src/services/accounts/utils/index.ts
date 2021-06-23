@@ -1,2 +1,2 @@
 export * from './balance-id'
-export * from './net-balance'
+export * from './calculate-balance'

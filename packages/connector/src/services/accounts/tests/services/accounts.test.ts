@@ -639,7 +639,7 @@ describe('Accounts Service', (): void => {
           asset.code,
           asset.scale
         )
-        expect(balance).toEqual(-amount)
+        expect(balance).toEqual(amount)
       }
     })
 
@@ -671,7 +671,7 @@ describe('Accounts Service', (): void => {
           asset.code,
           asset.scale
         )
-        expect(settlementBalance).toEqual(-amount)
+        expect(settlementBalance).toEqual(amount)
       }
       const amount2 = BigInt(5)
       {
@@ -690,7 +690,7 @@ describe('Accounts Service', (): void => {
           asset.code,
           asset.scale
         )
-        expect(settlementBalance).toEqual(-(amount + amount2))
+        expect(settlementBalance).toEqual(amount + amount2)
       }
     })
 
@@ -755,7 +755,7 @@ describe('Accounts Service', (): void => {
           asset.code,
           asset.scale
         )
-        expect(settlementBalance).toEqual(-(startingBalance - amount))
+        expect(settlementBalance).toEqual(startingBalance - amount)
       }
       const amount2 = BigInt(5)
       {
@@ -774,7 +774,7 @@ describe('Accounts Service', (): void => {
           asset.code,
           asset.scale
         )
-        expect(settlementBalance).toEqual(-(startingBalance - amount - amount2))
+        expect(settlementBalance).toEqual(startingBalance - amount - amount2)
       }
     })
 
@@ -844,7 +844,7 @@ describe('Accounts Service', (): void => {
         asset.code,
         asset.scale
       )
-      expect(settlementBalance).toEqual(-startingBalance)
+      expect(settlementBalance).toEqual(startingBalance)
     })
 
     test('Returns error for unknown liquidity account', async (): Promise<void> => {
@@ -877,7 +877,7 @@ describe('Accounts Service', (): void => {
         asset.code,
         asset.scale
       )
-      expect(settlementBalance).toEqual(-amount)
+      expect(settlementBalance).toEqual(amount)
 
       {
         const error = await accounts.deposit({
@@ -954,7 +954,7 @@ describe('Accounts Service', (): void => {
         asset.code,
         asset.scale
       )
-      expect(settlementBalance).toEqual(-(startingBalance - amount))
+      expect(settlementBalance).toEqual(startingBalance - amount)
       {
         const error = await accounts.withdraw({
           accountId,
@@ -1000,7 +1000,7 @@ describe('Accounts Service', (): void => {
         asset.code,
         asset.scale
       )
-      expect(settlementBalance).toEqual(-startingBalance)
+      expect(settlementBalance).toEqual(startingBalance)
     })
 
     test('Can withdraw with idempotency key', async (): Promise<void> => {

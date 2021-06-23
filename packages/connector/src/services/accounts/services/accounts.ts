@@ -26,7 +26,8 @@ import {
 } from '../errors'
 import { IlpAccount as IlpAccountModel, IlpHttpToken } from '../models'
 import {
-  getNetBalance,
+  calculateCreditBalance,
+  calculateDebitBalance,
   toLiquidityId,
   toSettlementId,
   // toSettlementCreditId,
@@ -356,7 +357,7 @@ export class AccountsService implements ConnectorAccountsService {
 
     const accountBalance: IlpBalance = {
       id: accountId,
-      balance: getNetBalance(balance)
+      balance: calculateCreditBalance(balance)
       // parent: {
       //   availableCreditLine: getNetBalance(trustlineBalance),
       //   totalBorrowed: getNetBalance(debtBalance)
@@ -535,7 +536,7 @@ export class AccountsService implements ConnectorAccountsService {
       })
     ])
     if (balances.length === 1) {
-      return getNetBalance(balances[0])
+      return calculateCreditBalance(balances[0])
     }
   }
 
@@ -551,7 +552,7 @@ export class AccountsService implements ConnectorAccountsService {
       })
     ])
     if (balances.length === 1) {
-      return getNetBalance(balances[0])
+      return calculateDebitBalance(balances[0])
     }
   }
 
