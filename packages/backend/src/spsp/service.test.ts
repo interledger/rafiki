@@ -15,6 +15,7 @@ import { User } from '../user/model'
 import { IocContract } from '@adonisjs/fold'
 import { makeWorkerUtils, WorkerUtils } from 'graphile-worker'
 import { v4 } from 'uuid'
+import { StreamServer } from '@interledger/stream-receiver'
 
 describe('SPSP Service', (): void => {
   let deps: IocContract<AppServices>
@@ -23,6 +24,7 @@ describe('SPSP Service', (): void => {
   let workerUtils: WorkerUtils
   let userService: UserService
   let SPSPService: SPSPService
+  let streamServer: StreamServer
   const nonce = crypto.randomBytes(16).toString('base64')
   const secret = crypto.randomBytes(32).toString('base64')
   const messageProducer = new GraphileProducer()
@@ -48,6 +50,7 @@ describe('SPSP Service', (): void => {
       trx = await appContainer.knex.transaction()
       userService = await deps.use('userService')
       SPSPService = await deps.use('SPSPService')
+      streamServer = await deps.use('streamServer')
     }
   )
 
@@ -251,7 +254,6 @@ describe('SPSP Service', (): void => {
     async function decryptConnectionDetails(
       destination: string
     ): Promise<unknown> {
-      const streamServer = await SPSPService.streamServer()
       const token = streamServer['extractLocalAddressSegment'](destination)
       return streamServer['decryptToken'](Buffer.from(token, 'base64'))
     }

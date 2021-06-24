@@ -23,6 +23,7 @@ import { resolvers } from './graphql/resolvers'
 import { UserService } from './user/service'
 import { AccountService } from './account/service'
 import { SPSPService } from './spsp/service'
+import { StreamServer } from '@interledger/stream-receiver'
 
 export interface AppContextData {
   logger: Logger
@@ -49,6 +50,7 @@ export interface AppServices {
   userService: Promise<UserService>
   accountService: Promise<AccountService>
   SPSPService: Promise<SPSPService>
+  streamServer: Promise<StreamServer>
 }
 
 export type AppContainer = IocContract<AppServices>

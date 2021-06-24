@@ -10,7 +10,6 @@ const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
 export interface SPSPService {
   GETPayEndpoint(ctx: AppContext): Promise<void>
-  streamServer(): Promise<StreamServer>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -36,8 +35,7 @@ export async function createSPSPService({
     streamServer: streamServer
   }
   return {
-    GETPayEndpoint: (ctx) => getPay(deps, ctx),
-    streamServer: () => getStreamServer(deps)
+    GETPayEndpoint: (ctx) => getPay(deps, ctx)
   }
 }
 
@@ -102,10 +100,4 @@ async function getPay(
   } catch (err) {
     ctx.throw(400, err.message)
   }
-}
-
-async function getStreamServer(
-  deps: ServiceDependencies
-): Promise<StreamServer> {
-  return deps.streamServer
 }

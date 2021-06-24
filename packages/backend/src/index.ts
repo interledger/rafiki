@@ -72,6 +72,13 @@ export function initIocContainer(
     const config = await deps.use('config')
     return new IORedis(config.redisUrl)
   })
+  container.singleton('streamServer', async (deps) => {
+    const config = await deps.use('config')
+    return new StreamServer({
+      serverSecret: config.streamSecret,
+      serverAddress: config.ilpAddress
+    })
+  })
 
   /**
    * Add services to the container.
@@ -96,18 +103,14 @@ export function initIocContainer(
   })
   container.singleton('SPSPService', async (deps) => {
     const logger = await deps.use('logger')
-    const config = await deps.use('config')
-    const server = new StreamServer({
-      serverSecret: config.streamSecret,
-      serverAddress: config.ilpAddress
-    })
+    const streamServer = await deps.use('streamServer')
     const accountService = await deps.use('accountService')
     const userService = await deps.use('userService')
     return await createSPSPService({
       logger: logger,
       accountService: accountService,
       userService: userService,
-      streamServer: server
+      streamServer: streamServer
     })
   })
 
