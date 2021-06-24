@@ -1,10 +1,10 @@
 import { User } from './model'
-import { AccountService, createAccountService } from '../account/service'
+import { AccountService } from '../account/service'
 import { BaseService } from '../shared/baseService'
 
 export interface UserService {
   get(id: string): Promise<User>
-  create(): Promise<User>
+  create(id?: string): Promise<User>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -13,16 +13,12 @@ interface ServiceDependencies extends BaseService {
 
 export async function createUserService({
   logger,
-  knex
-}: BaseService): Promise<UserService> {
+  knex,
+  accountService
+}: ServiceDependencies): Promise<UserService> {
   const log = logger.child({
     service: 'UserService'
   })
-  const accountService = await createAccountService({
-    logger: logger,
-    knex: knex
-  })
-
   const deps: ServiceDependencies = {
     logger: log,
     knex: knex,
@@ -30,7 +26,7 @@ export async function createUserService({
   }
   return {
     get: (id) => getUser(deps, id),
-    create: () => createUser(deps)
+    create: (id) => createUser(deps, id)
   }
 }
 
@@ -39,10 +35,14 @@ async function getUser(deps: ServiceDependencies, id: string): Promise<User> {
   return User.query(deps.knex).findById(id)
 }
 
-async function createUser(deps: ServiceDependencies): Promise<User> {
+async function createUser(
+  deps: ServiceDependencies,
+  id?: string
+): Promise<User> {
   deps.logger.info('Creates a user')
   const account = await deps.accountService.create(6, 'USD')
   return User.query(deps.knex).insertAndFetch({
+    id: id,
     accountId: account.id
   })
 }

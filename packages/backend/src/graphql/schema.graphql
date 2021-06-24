@@ -1,0 +1,31 @@
+type Query {
+  user: User
+}
+
+type User {
+  id: ID!
+  balance: Amount!
+  account: Account!
+  # in the future it should be possible to fetch a transaction list. for now we'll start with just a list of invoices
+  invoices(count: Int, skip: Int): [Invoice]!
+}
+
+type Amount {
+  amount: Int!
+  currency: String!
+  scale: Int
+}
+
+type Account {
+  id: ID!
+  balance: Amount!
+}
+
+type Invoice {
+  receivedAmount: Amount!
+  maximumAmount: Amount
+  active: Boolean!
+  createdAt: String!
+  expiresAt: String
+  description: String
+}
