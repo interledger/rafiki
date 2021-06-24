@@ -1,11 +1,14 @@
 import { Resolvers } from '../generated/graphql'
-import { getUser } from './user'
+import { getUser, getAccount, getBalance } from './user'
 
 export const resolvers: Resolvers = {
   Query: {
     user: getUser
   },
-  User: {},
-  Account: {},
-  Invoice: {}
+  User: {
+    account: getAccount
+  },
+  Account: {
+    balance: getBalance
+  }
 }

@@ -5,7 +5,7 @@ type Query {
 type User {
   id: ID!
   balance: Amount!
-  accounts: [Account]!
+  account: Account!
   # in the future it should be possible to fetch a transaction list. for now we'll start with just a list of invoices
   invoices(count: Int, skip: Int): [Invoice]!
 }

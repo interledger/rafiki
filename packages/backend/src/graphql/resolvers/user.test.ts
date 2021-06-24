@@ -14,7 +14,6 @@ describe('User', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let userService: UserService
-  let user: UserModel
   let trx: Transaction
 
   beforeAll(
@@ -28,7 +27,6 @@ describe('User', (): void => {
     async (): Promise<void> => {
       trx = await appContainer.knex.transaction()
       userService = await deps.use('userService')
-      user = await userService.create('34ff06c3-f25b-4ab7-8525-eefa17204ede')
     }
   )
 
@@ -47,13 +45,29 @@ describe('User', (): void => {
   )
 
   describe('Query user', (): void => {
-    test('Can get a user', async (): Promise<void> => {
+    let user: UserModel
+
+    beforeEach(
+      async (): Promise<void> => {
+        user = await userService.create('34ff06c3-f25b-4ab7-8525-eefa17204ede')
+      }
+    )
+
+    test('Can get a user and account', async (): Promise<void> => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
             query User {
               user {
                 id
+                account {
+                  id
+                  balance {
+                    amount
+                    scale
+                    currency
+                  }
+                }
               }
             }
           `
@@ -68,6 +82,10 @@ describe('User', (): void => {
           }
         )
       expect(query.id).toEqual(user.id)
+      expect(query.account.id).toEqual(user.accountId)
+      expect(query.account.balance.amount).toEqual(300)
+      expect(query.account.balance.currency).toEqual('USD')
+      expect(query.account.balance.scale).toEqual(6)
     })
   })
 })

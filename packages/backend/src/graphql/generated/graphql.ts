@@ -45,7 +45,7 @@ export type User = {
   __typename?: 'User';
   id: Scalars['ID'];
   balance: Amount;
-  accounts: Array<Maybe<Account>>;
+  account: Account;
   invoices: Array<Maybe<Invoice>>;
 };
 
@@ -187,7 +187,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   balance?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
-  accounts?: Resolver<Array<Maybe<ResolversTypes['Account']>>, ParentType, ContextType>;
+  account?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
   invoices?: Resolver<Array<Maybe<ResolversTypes['Invoice']>>, ParentType, ContextType, RequireFields<UserInvoicesArgs, never>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

@@ -300,20 +300,16 @@
             "deprecationReason": null
           },
           {
-            "name": "accounts",
+            "name": "account",
             "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "LIST",
-                "name": null,
-                "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Account",
-                  "ofType": null
-                }
+                "kind": "OBJECT",
+                "name": "Account",
+                "ofType": null
               }
             },
             "isDeprecated": false,
