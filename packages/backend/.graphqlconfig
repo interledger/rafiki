@@ -1,0 +1,4 @@
+{
+  "name": "Rafiki GraphQL Schema",
+  "schemaPath": "/src/graphql/schema.graphql"
+}

@@ -24,7 +24,7 @@ module.exports = async () => {
     BigInt
   )
   await knex.migrate.latest({
-    directory: __dirname + '/migrations'
+    directory: './packages/backend/migrations'
   })
   global.__KNEX__ = knex
 }

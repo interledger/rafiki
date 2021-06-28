@@ -1,3 +1,4 @@
+import { join } from 'path'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
 
@@ -7,13 +8,22 @@ import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
+import { ApolloServer } from 'apollo-server-koa'
 
-import { Config as AppConfig } from './config/app'
+import { IAppConfig } from './config/app'
 import { MessageProducer } from './messaging/messageProducer'
-import { createAccountService } from './account/service'
-import { createUserService } from './user/service'
-import { createSPSPHandler } from './spsp/endpoint'
 import { WorkerUtils } from 'graphile-worker'
+import { UserToken } from './types/UserToken'
+import {
+  addResolversToSchema,
+  GraphQLFileLoader,
+  loadSchemaSync
+} from 'graphql-tools'
+import { resolvers } from './graphql/resolvers'
+import { UserService } from './user/service'
+import { AccountService } from './account/service'
+import { SPSPService } from './spsp/service'
+import { StreamServer } from '@interledger/stream-receiver'
 
 export interface AppContextData {
   logger: Logger
@@ -23,6 +33,11 @@ export interface AppContextData {
   params: { [key: string]: string }
 }
 
+export interface ApolloContext {
+  user: UserToken | null
+  messageProducer: MessageProducer
+  container: IocContract<AppServices>
+}
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
 export interface AppServices {
@@ -30,8 +45,12 @@ export interface AppServices {
   messageProducer: Promise<MessageProducer>
   knex: Promise<Knex>
   closeEmitter: Promise<EventEmitter>
-  config: Promise<typeof AppConfig>
+  config: Promise<IAppConfig>
   workerUtils: Promise<WorkerUtils>
+  userService: Promise<UserService>
+  accountService: Promise<AccountService>
+  SPSPService: Promise<SPSPService>
+  streamServer: Promise<StreamServer>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -39,12 +58,13 @@ export type AppContainer = IocContract<AppServices>
 export class App {
   private koa!: Koa<DefaultState, AppContext>
   private publicRouter!: Router<DefaultState, AppContext>
-  private server: Server | undefined
+  private server!: Server
+  public apolloServer!: ApolloServer
   public closeEmitter!: EventEmitter
   public isShuttingDown = false
   private logger!: Logger
   private messageProducer!: MessageProducer
-  private config!: typeof AppConfig
+  private config!: IAppConfig
 
   public constructor(private container: IocContract<AppServices>) {}
 
@@ -84,6 +104,7 @@ export class App {
       }
     )
     await this._setupRoutes()
+    this._setupGraphql()
   }
 
   public listen(port: number | string): void {
@@ -112,24 +133,45 @@ export class App {
     return 0
   }
 
+  private _setupGraphql(): void {
+    // Load schema from the file
+    const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
+      loaders: [new GraphQLFileLoader()]
+    })
+
+    // Add resolvers to the schema
+    const schemaWithResolvers = addResolversToSchema({
+      schema,
+      resolvers
+    })
+
+    // Setup Apollo on graphql endpoint
+    this.apolloServer = new ApolloServer({
+      schema: schemaWithResolvers,
+      context: async ({ ctx }): Promise<ApolloContext> => {
+        // TODO add user when auth is implemented.
+        const user = ctx.headers.user
+        return {
+          user: user,
+          messageProducer: this.messageProducer,
+          container: this.container
+        }
+      }
+    })
+
+    this.koa.use(this.apolloServer.getMiddleware())
+  }
+
   private async _setupRoutes(): Promise<void> {
     this.publicRouter.use(bodyParser())
     this.publicRouter.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
 
-    const knex = await this.container.use('knex')
-    this.publicRouter.get(
-      '/pay/:id',
-      await createSPSPHandler({
-        config: this.config,
-        accountService: await createAccountService({
-          logger: this.logger,
-          knex
-        }),
-        userService: await createUserService({ logger: this.logger, knex })
-      })
-    )
+    const SPSPService = await this.container.use('SPSPService')
+    this.publicRouter.get('/pay/:id', (ctx: AppContext): void => {
+      SPSPService.GETPayEndpoint(ctx)
+    })
 
     this.koa.use(this.publicRouter.middleware())
   }

@@ -15,6 +15,8 @@ function envInt(name: string, value: number): number {
 //   return envValue == null ? value : Boolean(envValue)
 // }
 
+export type IAppConfig = typeof Config
+
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   port: envInt('PORT', 3001),

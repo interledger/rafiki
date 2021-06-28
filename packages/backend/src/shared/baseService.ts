@@ -6,5 +6,5 @@ type Logger = typeof PinoLogger
 
 export interface BaseService {
   logger: Logger
-  knex: TransactionOrKnex
+  knex?: TransactionOrKnex
 }

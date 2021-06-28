@@ -9,6 +9,10 @@ import IORedis from 'ioredis'
 import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { GraphileProducer } from './messaging/graphileProducer'
+import { createUserService } from './user/service'
+import { createAccountService } from './account/service'
+import { createSPSPService } from './spsp/service'
+import { StreamServer } from '@interledger/stream-receiver'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -71,6 +75,47 @@ export function initIocContainer(
   container.singleton('redis', async (deps) => {
     const config = await deps.use('config')
     return new IORedis(config.redisUrl)
+  })
+  container.singleton('streamServer', async (deps) => {
+    const config = await deps.use('config')
+    return new StreamServer({
+      serverSecret: config.streamSecret,
+      serverAddress: config.ilpAddress
+    })
+  })
+
+  /**
+   * Add services to the container.
+   */
+  container.singleton('userService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    const accountService = await deps.use('accountService')
+    return await createUserService({
+      logger: logger,
+      knex: knex,
+      accountService: accountService
+    })
+  })
+  container.singleton('accountService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    return await createAccountService({
+      logger: logger,
+      knex: knex
+    })
+  })
+  container.singleton('SPSPService', async (deps) => {
+    const logger = await deps.use('logger')
+    const streamServer = await deps.use('streamServer')
+    const accountService = await deps.use('accountService')
+    const userService = await deps.use('userService')
+    return await createSPSPService({
+      logger: logger,
+      accountService: accountService,
+      userService: userService,
+      streamServer: streamServer
+    })
   })
 
   return container
@@ -145,9 +190,13 @@ export const start = async (
 
   // Do migrations
   const knex = await container.use('knex')
-  await knex.migrate.latest().catch((error): void => {
-    logger.error({ error: error.message }, 'error migrating database')
-  })
+  await knex.migrate
+    .latest({
+      directory: './packages/backend/migrations'
+    })
+    .catch((error): void => {
+      logger.error({ error: error.message }, 'error migrating database')
+    })
 
   Model.knex(knex)
 

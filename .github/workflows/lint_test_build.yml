@@ -22,6 +22,7 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      - run: yarn install --immutable --immutable-cache
 
   backend:
     runs-on: ubuntu-latest
