@@ -1,4 +1,4 @@
-import { Transaction as KnexTransaction } from 'knex'
+import { Transaction } from 'knex'
 import { Model } from 'objection'
 import { Account as Balance } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
@@ -35,7 +35,6 @@ import {
   IlpBalance,
   isCreateAccountError,
   isTransferError,
-  Transaction,
   TransferError
 } from '../../../core/services/accounts'
 
@@ -45,7 +44,7 @@ describe('Accounts Service', (): void => {
   let accounts: AccountsService
   let accountFactory: AccountFactory
   let config: typeof Config
-  let trx: KnexTransaction
+  let trx: Transaction
 
   beforeAll(
     async (): Promise<void> => {
@@ -1246,6 +1245,9 @@ describe('Accounts Service', (): void => {
           destinationAmount
         })
         expect(isTransferError(trxOrError)).toEqual(false)
+        if (isTransferError(trxOrError)) {
+          fail()
+        }
 
         {
           const { balance: sourceBalance } = (await accounts.getAccountBalance(
@@ -1279,21 +1281,21 @@ describe('Accounts Service', (): void => {
         }
 
         if (accept) {
-          const error = await (trxOrError as Transaction).commit()
+          const error = await trxOrError.commit()
           expect(error).toBeUndefined()
-          await expect((trxOrError as Transaction).commit()).resolves.toEqual(
+          await expect(trxOrError.commit()).resolves.toEqual(
             TransferError.TransferAlreadyCommitted
           )
-          await expect((trxOrError as Transaction).rollback()).resolves.toEqual(
+          await expect(trxOrError.rollback()).resolves.toEqual(
             TransferError.TransferAlreadyCommitted
           )
         } else {
-          const error = await (trxOrError as Transaction).rollback()
+          const error = await trxOrError.rollback()
           expect(error).toBeUndefined()
-          await expect((trxOrError as Transaction).commit()).resolves.toEqual(
+          await expect(trxOrError.commit()).resolves.toEqual(
             TransferError.TransferAlreadyRejected
           )
-          await expect((trxOrError as Transaction).rollback()).resolves.toEqual(
+          await expect(trxOrError.rollback()).resolves.toEqual(
             TransferError.TransferAlreadyRejected
           )
         }
