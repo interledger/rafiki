@@ -1467,7 +1467,47 @@ describe('Accounts Service', (): void => {
       ).resolves.toEqual(TransferError.UnknownSourceAccount)
     })
 
-    test('Returns error for invalid amount', async (): Promise<void> => {
+    test('Returns error for same accounts', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+
+      await expect(
+        accounts.transferFunds({
+          sourceAccountId: accountId,
+          destinationAccountId: accountId,
+          sourceAmount: BigInt(5)
+        })
+      ).resolves.toEqual(TransferError.SameAccounts)
+    })
+
+    test('Returns error for invalid source amount', async (): Promise<void> => {
+      const { accountId: sourceAccountId, asset } = await accountFactory.build()
+      const { accountId: destinationAccountId } = await accountFactory.build({
+        asset
+      })
+      const startingSourceBalance = BigInt(10)
+      await accounts.deposit({
+        accountId: sourceAccountId,
+        amount: startingSourceBalance
+      })
+
+      await expect(
+        accounts.transferFunds({
+          sourceAccountId,
+          destinationAccountId,
+          sourceAmount: BigInt(0)
+        })
+      ).resolves.toEqual(TransferError.InvalidSourceAmount)
+
+      await expect(
+        accounts.transferFunds({
+          sourceAccountId,
+          destinationAccountId,
+          sourceAmount: BigInt(-1)
+        })
+      ).resolves.toEqual(TransferError.InvalidSourceAmount)
+    })
+
+    test('Returns error for invalid destination amount', async (): Promise<void> => {
       const { accountId: sourceAccountId, asset } = await accountFactory.build()
       const { accountId: destinationAccountId } = await accountFactory.build({
         asset
@@ -1486,9 +1526,27 @@ describe('Accounts Service', (): void => {
           destinationAmount: BigInt(10)
         })
       ).resolves.toEqual(TransferError.InvalidDestinationAmount)
+
+      await expect(
+        accounts.transferFunds({
+          sourceAccountId,
+          destinationAccountId,
+          sourceAmount: BigInt(5),
+          destinationAmount: BigInt(0)
+        })
+      ).resolves.toEqual(TransferError.InvalidDestinationAmount)
+
+      await expect(
+        accounts.transferFunds({
+          sourceAccountId,
+          destinationAccountId,
+          sourceAmount: BigInt(5),
+          destinationAmount: BigInt(-1)
+        })
+      ).resolves.toEqual(TransferError.InvalidDestinationAmount)
     })
 
-    test('Returns error for missing destinationAmount amount', async (): Promise<void> => {
+    test('Returns error for missing destination amount', async (): Promise<void> => {
       const { accountId: sourceAccountId } = await accountFactory.build()
       const { accountId: destinationAccountId } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)

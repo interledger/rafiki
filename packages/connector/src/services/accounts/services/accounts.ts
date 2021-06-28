@@ -807,6 +807,15 @@ export class AccountsService implements ConnectorAccountsService {
     sourceAmount,
     destinationAmount
   }: Transfer): Promise<Transaction | TransferError> {
+    if (sourceAccountId === destinationAccountId) {
+      return TransferError.SameAccounts
+    }
+    if (sourceAmount <= BigInt(0)) {
+      return TransferError.InvalidSourceAmount
+    }
+    if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
+      return TransferError.InvalidDestinationAmount
+    }
     const [
       sourceAccount,
       destinationAccount

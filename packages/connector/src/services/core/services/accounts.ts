@@ -90,7 +90,9 @@ export const isCreateAccountError = (o: any): o is CreateAccountError =>
 export enum TransferError {
   InsufficientBalance = 'InsufficientBalance',
   InsufficientLiquidity = 'InsufficientLiquidity',
+  InvalidSourceAmount = 'InvalidSourceAmount',
   InvalidDestinationAmount = 'InvalidDestinationAmount',
+  SameAccounts = 'SameAccounts',
   TransferAlreadyCommitted = 'TransferAlreadyCommitted',
   TransferAlreadyRejected = 'TransferAlreadyRejected',
   TransferExpired = 'TransferExpired',
