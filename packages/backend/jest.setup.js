@@ -26,5 +26,5 @@ module.exports = async () => {
   await knex.migrate.latest({
     directory: './packages/backend/migrations'
   })
-  global.__KNEX__ = knex
+  global.__BACKEND_KNEX__ = knex
 }

@@ -9,7 +9,7 @@ import { App, AppServices } from '../../app'
 
 const DATABASE_URL =
   process.env.DATABASE_URL ||
-  'postgresql://postgres:password@localhost:5432/testing'
+  'postgresql://postgres:password@localhost:5433/testing'
 
 export interface TestContainer {
   port: number

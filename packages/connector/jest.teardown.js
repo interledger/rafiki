@@ -1,7 +1,7 @@
 module.exports = async () => {
-  await global.__KNEX__.migrate.rollback(
+  await global.__CONNECTOR_KNEX__.migrate.rollback(
     { directory: __dirname + '/migrations' },
     true
   )
-  await global.__KNEX__.destroy()
+  await global.__CONNECTOR_KNEX__.destroy()
 }

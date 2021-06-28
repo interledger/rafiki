@@ -7,7 +7,7 @@ services:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
       - ./scripts/init.sh:/docker-entrypoint-initdb.d/init.sh
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
@@ -16,7 +16,7 @@ services:
     image: "redis"
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
   tigerbeetle:
     image: "wilsonianbcoil/tigerbeetle:latest"
     restart: unless-stopped
