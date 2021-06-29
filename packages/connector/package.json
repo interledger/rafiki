@@ -45,6 +45,7 @@
     "@types/node-fetch": "^2.5.10",
     "@types/pino": "^6.3.8",
     "@types/rosie": "^0.0.39",
-    "ilp-protocol-stream": "^2.7.0"
+    "ilp-protocol-stream": "^2.7.0",
+    "testcontainers": "^7.11.1"
   }
 }

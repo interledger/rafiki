@@ -71,11 +71,6 @@ jobs:
   connector:
     runs-on: ubuntu-latest
     needs: checkout
-    services:
-      redis:
-        image: redis
-        ports:
-          - 6380:6379
     steps:
       - uses: actions/cache@v2
         id: restore-build
