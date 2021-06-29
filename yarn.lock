@@ -1160,6 +1160,9 @@ __metadata:
     ts-jest: ^26.5.5
     ts-node-dev: ^1.1.6
     typescript: ^4.2.4
+  dependenciesMeta:
+    tigerbeetle-node:
+      built: true
   languageName: unknown
   linkType: soft
 
@@ -5149,6 +5152,7 @@ __metadata:
     raw-body: ^2.4.1
     rosie: ^2.1.0
     rxjs: ^6.6.7
+    tigerbeetle-node: ^0.3.2
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft
@@ -13127,6 +13131,13 @@ resolve@^2.0.0-next.3:
   version: 2.3.8
   resolution: "through@npm:2.3.8"
   checksum: 918d9151680b5355990011eb8c4b02e8cb8cf6e9fb6ea3d3e5a1faa688343789e261634ae35de4ea9167ab029d1e7bac6af2fe61b843931768d405fdc3e8897c
+  languageName: node
+  linkType: hard
+
+"tigerbeetle-node@npm:^0.3.2":
+  version: 0.3.2
+  resolution: "tigerbeetle-node@npm:0.3.2"
+  checksum: 1f558aac5eaead05a13a4545e3bc27ad6b18322535645c2715712e6c049c758fe82ceba85e5b8d8266043ae2cc089ba493f00fbbfb0e781ed0c1311db2405bbb
   languageName: node
   linkType: hard
 

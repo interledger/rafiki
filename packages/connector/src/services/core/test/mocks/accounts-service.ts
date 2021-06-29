@@ -1,25 +1,32 @@
 import {
   AccountsService,
+  CreateAccountError,
+  CreateOptions,
   IlpAccount,
-  AdjustmentOptions,
-  IlpBalance
+  IlpBalance,
+  Transaction,
+  Transfer,
+  TransferError
 } from '../../services'
 
-type MockIlpAccount = IlpAccount & { balance: bigint }
+type MockIlpAccount = CreateOptions & {
+  disabled: boolean
+  balance: bigint
+}
 
 export class MockAccountsService implements AccountsService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
-  getAccount(accountId: string): Promise<IlpAccount> {
+  constructor(private serverIlpAddress: string) {}
+
+  getAccount(accountId: string): Promise<IlpAccount | undefined> {
     const account = this.accounts.get(accountId)
-    return account
-      ? Promise.resolve(account)
-      : Promise.reject(new Error('no account found'))
+    return Promise.resolve(account)
   }
 
   async getAccountByDestinationAddress(
     destinationAddress: string
-  ): Promise<IlpAccount> {
+  ): Promise<IlpAccount | undefined> {
     const account = this.find((account) => {
       const { routing } = account
       if (!routing) return false
@@ -27,57 +34,70 @@ export class MockAccountsService implements AccountsService {
       //routing.staticIlpAddress === destinationAddress ||
       //routing.prefixes.some((prefix) => destinationAddress.startsWith(prefix))
     })
-    if (account) {
-      return account
-    } else {
-      throw new Error('no account found')
-    }
+    return account
   }
 
-  async getAccountByToken(token: string): Promise<IlpAccount | null> {
+  async getAccountByToken(token: string): Promise<IlpAccount | undefined> {
     return this.find(
-      (account) => !!account.http?.incoming.authTokens.includes(token)
+      (account) => !!account.http?.incoming?.authTokens.includes(token)
     )
   }
 
-  async getAccountBalance(accountId: string): Promise<IlpBalance> {
+  async getAccountBalance(accountId: string): Promise<IlpBalance | undefined> {
     const account = this.accounts.get(accountId)
-    if (!account) throw new Error('account not found')
-    return {
-      balance: account.balance
+    if (account) {
+      return {
+        id: accountId,
+        balance: account.balance
+      }
     }
   }
 
-  async createAccount(account: MockIlpAccount): Promise<IlpAccount> {
+  async createAccount(
+    account: MockIlpAccount
+  ): Promise<IlpAccount | CreateAccountError> {
     this.accounts.set(account.accountId, account)
     return account
   }
 
-  async adjustBalances(options: AdjustmentOptions): Promise<void> {
+  async transferFunds(options: Transfer): Promise<Transaction | TransferError> {
     const src = this.accounts.get(options.sourceAccountId)
+    if (!src) return TransferError.UnknownSourceAccount
     const dst = this.accounts.get(options.destinationAccountId)
-    if (!src) throw new Error('src not found')
-    if (!dst) throw new Error('dst not found')
+    if (!dst) return TransferError.UnknownDestinationAccount
     if (src.asset.code !== dst.asset.code)
       throw new Error('asset code mismatch')
     if (src.asset.scale !== dst.asset.scale)
       throw new Error('asset scale mismatch')
-
+    if (src.balance < options.sourceAmount) {
+      return TransferError.InsufficientBalance
+    }
     src.balance -= options.sourceAmount
-    options.callback({
+    return {
       commit: async () => {
         dst.balance += options.sourceAmount
       },
       rollback: async () => {
         src.balance += options.sourceAmount
       }
-    })
+    }
   }
 
-  private find(predicate: (account: IlpAccount) => boolean): IlpAccount | null {
+  async getAddress(accountId: string): Promise<string | undefined> {
+    const account = this.accounts.get(accountId)
+    if (!account) return undefined
+    if (account.routing) {
+      return account.routing.staticIlpAddress
+    } else {
+      return this.serverIlpAddress + '.' + accountId
+    }
+  }
+
+  private find(
+    predicate: (account: MockIlpAccount) => boolean
+  ): IlpAccount | undefined {
     for (const [, account] of this.accounts) {
       if (predicate(account)) return account
     }
-    return null
   }
 }

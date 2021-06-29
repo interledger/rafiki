@@ -46,6 +46,13 @@ that are fairly easy to mitigate.
 
 > DO NOT use `npm install`, this will cause the project to spontaneously self-destruct.
 
+```shell
+git clone git@github.com:coilhq/rafiki.git
+
+# Build dependencies with install scripts
+yarn install --immutable --immutable-cache
+```
+
 ### Workspaces
 
 We use [yarn workspaces](https://yarnpkg.com/features/workspaces) to manage the monorepo.

@@ -11,7 +11,9 @@
     "format:local": "prettier --write $INIT_CWD",
     "format:check:local": "prettier --check $INIT_CWD",
     "test": "jest --passWithNoTests",
+    "test:skip-tigerbeetle": "jest --passWithNoTests --testPathIgnorePatterns='packages/connector/src/services/accounts'",
     "test:local": "jest $INIT_CWD --passWithNoTests",
+    "test:local:skip-tigerbeetle": "jest $INIT_CWD --passWithNoTests --testPathIgnorePatterns='packages/connector/src/services/accounts'",
     "build": "tsc --build",
     "postinstall": "husky install"
   },
@@ -36,5 +38,10 @@
     "ts-jest": "^26.5.5",
     "ts-node-dev": "^1.1.6",
     "typescript": "^4.2.4"
+  },
+  "dependenciesMeta": {
+    "tigerbeetle-node": {
+      "built": true
+    }
   }
 }

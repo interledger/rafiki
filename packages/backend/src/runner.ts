@@ -44,7 +44,11 @@ if (require.main === module) {
     }
   })
   // node pg defaults to returning bigint as string. This ensures it parses to bigint
-  knex.client.driver.types.setTypeParser(20, 'text', BigInt)
+  knex.client.driver.types.setTypeParser(
+    knex.client.driver.types.builtins.INT8,
+    'text',
+    BigInt
+  )
 
   Model.knex(knex)
   createWorker().catch((err): void => {

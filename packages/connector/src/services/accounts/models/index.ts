@@ -1,1 +1,2 @@
-export { IlpAccountSettings } from './ilpAccountSettings'
+export { IlpAccount } from './ilpAccount'
+export { IlpHttpToken } from './ilpHttpToken'

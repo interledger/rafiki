@@ -8,6 +8,11 @@ function envInt(name: string, value: number): number {
   return envValue == null ? value : parseInt(envValue)
 }
 
+function envBigInt(name: string, value: bigint): bigint {
+  const envValue = process.env[name]
+  return envValue ? BigInt(envValue) : value
+}
+
 // function envBool(name: string, value: boolean): boolean {
 //   const envValue = process.env[name]
 //   return envValue == null ? value : Boolean(envValue)
@@ -21,5 +26,17 @@ export const Config = {
     'DATABASE_URL',
     'postgresql://postgres:password@localhost:5432/development'
   ),
-  env: envString('NODE_ENV', 'development')
+  env: envString('NODE_ENV', 'development'),
+  hmacSecret: envString('ACCOUNTS_HMAC_SECRET', 'test'),
+  ilpAddress: process.env.ILP_ADDRESS,
+  peerAddresses: process.env.PEER_ADDRESSES
+    ? JSON.parse(process.env.PEER_ADDRESSES)
+    : [],
+  tigerbeetleClusterId: envBigInt(
+    'TIGERBEETLE_CLUSTER_ID',
+    0x0a5ca1ab1ebee11en
+  ),
+  tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
+    ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
+    : ['3001']
 }

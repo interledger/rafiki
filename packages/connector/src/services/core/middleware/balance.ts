@@ -1,5 +1,5 @@
 import { RafikiContext } from '../rafiki'
-import { Transaction } from '../services/accounts'
+import { isTransferError } from '../services/accounts'
 
 export function createBalanceMiddleware() {
   return async (
@@ -15,19 +15,20 @@ export function createBalanceMiddleware() {
     }
 
     // Update balances on prepare
-    await services.accounts.adjustBalances({
+    const trxOrError = await services.accounts.transferFunds({
       sourceAccountId: accounts.incoming.accountId,
       destinationAccountId: accounts.outgoing.accountId,
-      sourceAmount: BigInt(amount),
-      callback: async (trx: Transaction) => {
-        await next()
-
-        if (response.fulfill) {
-          await trx.commit()
-        } else {
-          await trx.rollback()
-        }
-      }
+      sourceAmount: BigInt(amount)
     })
+
+    await next()
+
+    if (!isTransferError(trxOrError)) {
+      if (response.fulfill) {
+        await trxOrError.commit()
+      } else {
+        await trxOrError.rollback()
+      }
+    }
   }
 }

@@ -3,7 +3,7 @@ import createLogger from 'pino'
 import Knex from 'knex'
 import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
-// import { createClient } from 'tigerbeetle-node'
+import { createClient } from 'tigerbeetle-node'
 
 import { App, AppServices, Config } from './services/accounts'
 
@@ -37,16 +37,23 @@ export function initIocContainer(
       }
     })
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
-    knex.client.driver.types.setTypeParser(20, 'text', BigInt)
+    knex.client.driver.types.setTypeParser(
+      knex.client.driver.types.builtins.INT8,
+      'text',
+      BigInt
+    )
     return knex
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
-  // container.singleton('tigerbeetle', async (deps: IocContract<AppServices>) => {
-  //   const logger = await deps.use('logger')
-  //   const config = await deps.use('config')
-  //   logger.info({ msg: 'creating tigerbeetle client' })
-  //   return createClient(config)
-  // })
+  container.singleton('tigerbeetle', async (deps: IocContract<AppServices>) => {
+    const logger = await deps.use('logger')
+    const config = await deps.use('config')
+    logger.info({ msg: 'creating tigerbeetle client' })
+    return createClient({
+      cluster_id: config.tigerbeetleClusterId,
+      replica_addresses: config.tigerbeetleReplicaAddresses
+    })
+  })
 
   return container
 }
@@ -60,8 +67,8 @@ export const gracefulShutdown = async (
   await app.shutdown()
   const knex = await container.use('knex')
   await knex.destroy()
-  // const tigerbeetle = await container.use('tigerbeetle')
-  // tigerbeetle.destroy()
+  const tigerbeetle = await container.use('tigerbeetle')
+  tigerbeetle.destroy()
 }
 
 export const start = async (
@@ -118,9 +125,13 @@ export const start = async (
 
   // Do migrations
   const knex = await container.use('knex')
-  await knex.migrate.latest().catch((error): void => {
-    logger.error({ error }, 'error migrating database')
-  })
+  await knex.migrate
+    .latest({
+      directory: './packages/connector/migrations'
+    })
+    .catch((error): void => {
+      logger.error({ error }, 'error migrating database')
+    })
 
   Model.knex(knex)
 
