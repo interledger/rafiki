@@ -63,16 +63,11 @@ type InvoiceEdge {
 
 type Invoice {
   id: ID!
-  items: [InvoiceItem]!
-  totalAmount: String!
-}
-
-type InvoiceItem {
-  id: ID!
   receivedAmount: Amount!
   maximumAmount: Amount
   active: Boolean!
   createdAt: String!
   expiresAt: String
   description: String
+  totalAmount: String!
 }

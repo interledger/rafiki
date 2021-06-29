@@ -2,8 +2,7 @@ import {
   ResolversTypes,
   InvoiceConnectionResolvers,
   UserResolvers,
-  InvoiceEdgeResolvers,
-  InvoiceResolvers
+  InvoiceEdgeResolvers
 } from '../generated/graphql'
 
 export const getUserInvoices: UserResolvers['invoices'] = async (
@@ -47,18 +46,6 @@ export const getInvoiceEdgeNode: InvoiceEdgeResolvers['node'] = async (
 ): ResolversTypes['Invoice'] => {
   const logger = ctx.container.use('logger')
   logger.info(args, 'getInvoiceEdgeNode args')
-  // TODO: return invoice id
-  // TODO: totalAmount: calculate total for invoice.
+  // TODO: return invoice
   return {}
-}
-
-export const getInvoiceItems: InvoiceResolvers['items'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['InvoiceItem'][]> => {
-  const logger = ctx.container.use('logger')
-  logger.info(args, 'getInvoiceItems args')
-  // TODO: return all invoice items for parent invoice
-  return []
 }

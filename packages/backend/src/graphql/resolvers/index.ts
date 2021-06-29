@@ -4,8 +4,7 @@ import {
   getUserInvoices,
   getInvoiceEdges,
   getPageInfo,
-  getInvoiceEdgeNode,
-  getInvoiceItems
+  getInvoiceEdgeNode
 } from './invoice'
 
 export const resolvers: Resolvers = {
@@ -25,8 +24,5 @@ export const resolvers: Resolvers = {
   },
   InvoiceEdge: {
     node: getInvoiceEdgeNode
-  },
-  Invoice: {
-    items: getInvoiceItems
   }
 }
