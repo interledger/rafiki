@@ -18,6 +18,7 @@ import {
 import { IncomingMessage, ServerResponse } from 'http'
 import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
 import { DebugLogger } from './services/logger/debug'
+import { RatesService } from './services/rates/service'
 import { createAccountMiddleware } from './middleware/account'
 import { createStreamAddressMiddleware } from './middleware/stream-address'
 
@@ -25,11 +26,13 @@ export interface RafikiServices {
   //router: Router
   accounts: AccountsService
   logger: LoggingService
+  rates: RatesService
   redis: Redis
   streamServer: StreamServer
 }
 
 export type RafikiConfig = Partial<RafikiServices> & {
+  rates: RatesService
   redis: Redis
   stream: {
     serverSecret: Buffer
@@ -100,6 +103,9 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
       //get router(): Router {
       //  return routerOrThrow()
       //},
+      get rates(): RatesService {
+        return config.rates
+      },
       get redis(): Redis {
         return redis
       },

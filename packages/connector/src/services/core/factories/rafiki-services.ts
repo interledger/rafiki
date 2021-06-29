@@ -21,6 +21,9 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
     return new MockAccountsService(ilpAddress)
   })
   .attr('logger', TestLoggerFactory.build())
+  .attr('rates', {
+    convert: async (opts) => opts.sourceAmount
+  })
   .attr(
     'redis',
     () =>

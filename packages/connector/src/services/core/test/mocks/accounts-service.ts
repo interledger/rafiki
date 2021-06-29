@@ -62,17 +62,13 @@ export class MockAccountsService implements AccountsService {
     if (!src) return TransferError.UnknownSourceAccount
     const dst = this.accounts.get(options.destinationAccountId)
     if (!dst) return TransferError.UnknownDestinationAccount
-    if (src.asset.code !== dst.asset.code)
-      throw new Error('asset code mismatch')
-    if (src.asset.scale !== dst.asset.scale)
-      throw new Error('asset scale mismatch')
     if (src.balance < options.sourceAmount) {
       return TransferError.InsufficientBalance
     }
     src.balance -= options.sourceAmount
     return {
       commit: async () => {
-        dst.balance += options.sourceAmount
+        dst.balance += options.destinationAmount ?? options.sourceAmount
       },
       rollback: async () => {
         src.balance += options.sourceAmount
