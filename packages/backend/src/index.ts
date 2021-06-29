@@ -12,6 +12,7 @@ import { GraphileProducer } from './messaging/graphileProducer'
 import { createUserService } from './user/service'
 import { createAccountService } from './account/service'
 import { createSPSPService } from './spsp/service'
+import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 
 const container = initIocContainer(Config)
@@ -111,6 +112,18 @@ export function initIocContainer(
       accountService: accountService,
       userService: userService,
       streamServer: streamServer
+    })
+  })
+  container.singleton('invoiceService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    const accountService = await deps.use('accountService')
+    const userService = await deps.use('userService')
+    return await createInvoiceService({
+      logger: logger,
+      knex: knex,
+      accountService: accountService,
+      userService: userService
     })
   })
 

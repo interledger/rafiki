@@ -23,6 +23,7 @@ import { resolvers } from './graphql/resolvers'
 import { UserService } from './user/service'
 import { AccountService } from './account/service'
 import { SPSPService } from './spsp/service'
+import { InvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 
 export interface AppContextData {
@@ -50,6 +51,7 @@ export interface AppServices {
   userService: Promise<UserService>
   accountService: Promise<AccountService>
   SPSPService: Promise<SPSPService>
+  invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
 }
 
