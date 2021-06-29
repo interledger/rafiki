@@ -46,11 +46,13 @@ async function getInvoice(
 
 async function createInvoice(deps: ServiceDependencies): Promise<Invoice> {
   deps.logger.info('Creates an invoice')
+  // TODO: should get user from context
   const user = await deps.userService.create()
+  const subAccount = await deps.accountService.createSubAccount(user.accountId)
   return Invoice.query(deps.knex).insertAndFetch({
     userId: user.id,
-    accountId: user.accountId,
-    active: false
+    accountId: subAccount.id,
+    active: true
   })
 }
 
