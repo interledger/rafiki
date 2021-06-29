@@ -7,4 +7,5 @@ export class Account extends BaseModel {
 
   public scale!: number
   public currency!: string
+  public parentAccountId!: string
 }

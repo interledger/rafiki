@@ -71,6 +71,28 @@ describe('Account Service', (): void => {
       expect(retrievedAccount.id).toEqual(account.id)
       expect(retrievedAccount.scale).toEqual(account.scale)
       expect(retrievedAccount.currency).toEqual(account.currency)
+      expect(retrievedAccount.parentAccountId).toBeNull()
+    })
+  })
+
+  describe('Sub Account', (): void => {
+    let account: Account
+
+    beforeEach(
+      async (): Promise<void> => {
+        account = await accountService.create(6, 'USD')
+      }
+    )
+
+    test('A sub account can be created and fetched', async (): Promise<void> => {
+      const subAccount = await accountService.createSubAccount(account.id)
+      const retrievedAccount = await accountService.get(subAccount.id)
+      expect(retrievedAccount.id).toEqual(subAccount.id)
+      expect(retrievedAccount.scale).toEqual(subAccount.scale)
+      expect(retrievedAccount.currency).toEqual(subAccount.currency)
+      expect(retrievedAccount.parentAccountId).toEqual(
+        subAccount.parentAccountId
+      )
     })
   })
 })
