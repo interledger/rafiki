@@ -35,7 +35,6 @@ jobs:
           key: ${{ github.sha }}
       - run: yarn workspace accounts lint
       - run: yarn workspace accounts format:check
-      - run: docker-compose -f packages/accounts/docker-compose.yml up -d
       - run: yarn install --immutable --immutable-cache
       - run: yarn workspace accounts test
 

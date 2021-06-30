@@ -4,4 +4,6 @@ module.exports = async () => {
     true
   )
   await global.__ACCOUNTS_KNEX__.destroy()
+  await global.__ACCOUNTS_POSTGRES__.stop()
+  await global.__TIGERBEETLE__.stop()
 }

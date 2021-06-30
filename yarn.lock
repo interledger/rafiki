@@ -3519,6 +3519,7 @@ __metadata:
     objection-db-errors: ^1.1.2
     pg: ^8.6.0
     pino: ^6.11.3
+    testcontainers: ^7.11.1
     tigerbeetle-node: ^0.3.2
     uuid: ^8.3.2
   languageName: unknown
