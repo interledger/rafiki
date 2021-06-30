@@ -41,18 +41,6 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     needs: checkout
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: password
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
     steps:
       - uses: actions/cache@v2
         id: restore-build
@@ -61,10 +49,6 @@ jobs:
           key: ${{ github.sha }}
       - run: yarn workspace backend lint
       - run: yarn workspace backend format:check
-      - run: packages/backend/scripts/init.sh
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_DB: postgresql://postgres:password@localhost:5432
       - run: yarn workspace backend test
 
   connector:

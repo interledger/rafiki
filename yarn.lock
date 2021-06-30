@@ -4428,6 +4428,7 @@ __metadata:
     pg: ^8.6.0
     pino: ^6.11.3
     pino-pretty: ^4.7.1
+    testcontainers: ^7.11.1
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft

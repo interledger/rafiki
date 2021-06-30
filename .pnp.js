@@ -6021,6 +6021,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["pg", "virtual:75ef94ee35fffa78cdcbd31dc15f08c559a00894439e92869b13d6646caf94e77557ab98adf1d2430b91f23e6862a9f4b7f723ee69d9f3f746b3fc8706802767#npm:8.6.0"],
             ["pino", "npm:6.11.3"],
             ["pino-pretty", "npm:4.7.1"],
+            ["testcontainers", "npm:7.11.1"],
             ["uuid", "npm:8.3.2"]
           ],
           "linkType": "SOFT",

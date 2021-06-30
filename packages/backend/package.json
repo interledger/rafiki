@@ -26,7 +26,8 @@
     "@types/uuid": "^8.3.0",
     "cross-fetch": "^3.1.4",
     "nock": "^13.1.0",
-    "node-mocks-http": "^1.10.1"
+    "node-mocks-http": "^1.10.1",
+    "testcontainers": "^7.11.1"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.0",

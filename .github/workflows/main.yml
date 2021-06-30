@@ -14,31 +14,11 @@ name: Sanity check
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: password
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-      redis:
-        image: redis
-        ports:
-          - 6379:6379
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - run: packages/backend/scripts/init.sh
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_DB: postgresql://postgres:password@localhost:5432
       # NB: --check-cache is an important security check, see https://yarnpkg.com/features/zero-installs#does-it-have-security-implications
       - run: yarn install --immutable --immutable-cache --check-cache
       - run: yarn lint
