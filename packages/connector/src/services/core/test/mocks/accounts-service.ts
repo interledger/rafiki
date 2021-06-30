@@ -1,15 +1,14 @@
 import {
-  AccountsService,
-  CreateAccountError,
+  ConnectorAccountsService as AccountsService,
   CreateOptions,
   IlpAccount,
   IlpBalance,
   Transaction,
   Transfer,
   TransferError
-} from '../../services'
+} from 'accounts'
 
-type MockIlpAccount = CreateOptions & {
+export type MockIlpAccount = CreateOptions & {
   disabled: boolean
   balance: bigint
 }
@@ -53,9 +52,7 @@ export class MockAccountsService implements AccountsService {
     }
   }
 
-  async createAccount(
-    account: MockIlpAccount
-  ): Promise<IlpAccount | CreateAccountError> {
+  async createAccount(account: MockIlpAccount): Promise<IlpAccount> {
     this.accounts.set(account.accountId, account)
     return account
   }

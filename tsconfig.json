@@ -1,6 +1,9 @@
 {
   "references": [
     {
+      "path": "packages/accounts"
+    },
+    {
       "path": "packages/backend"
     },
     {

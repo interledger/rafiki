@@ -35,15 +35,19 @@ import {
   randomId
 } from '../utils'
 import {
-  AccountsService as ConnectorAccountsService,
+  AccountsService as AccountsServiceInterface,
   CreateAccountError,
   CreateOptions,
+  DepositError,
   IlpAccount,
   IlpBalance,
   Transaction,
   Transfer,
-  TransferError
-} from '../../core/services/accounts'
+  TransferError,
+  UpdateAccountError,
+  UpdateOptions,
+  WithdrawError
+} from '../types'
 
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   const account: IlpAccount = {
@@ -79,36 +83,6 @@ function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   return account
 }
 
-export type UpdateIlpAccountOptions = Omit<
-  CreateOptions,
-  // 'asset' | 'parentAccountId'
-  'asset'
->
-
-export enum UpdateAccountError {
-  DuplicateIncomingToken = 'DuplicateIncomingToken',
-  UnknownAccount = 'UnknownAccount'
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isUpdateAccountError = (o: any): o is UpdateAccountError =>
-  Object.values(UpdateAccountError).includes(o)
-
-export enum DepositError {
-  DepositExists = 'DepositExists',
-  UnknownAccount = 'UnknownAccount'
-}
-
-export enum WithdrawError {
-  InsufficientBalance = 'InsufficientBalance',
-  InsufficientLiquidity = 'InsufficientLiquidity',
-  InsufficientSettlementBalance = 'InsufficientSettlementBalance',
-  UnknownAccount = 'UnknownAccount',
-  UnknownLiquidityAccount = 'UnknownLiquidityAccount',
-  UnknownSettlementAccount = 'UnknownSettlementAccount',
-  WithdrawalExists = 'WithdrawalExists'
-}
-
 interface BalanceOptions {
   id: bigint
   flags: number
@@ -131,7 +105,7 @@ const TRANSFER_RESERVED = Buffer.alloc(32)
 
 const UUID_LENGTH = 36
 
-export class AccountsService implements ConnectorAccountsService {
+export class AccountsService implements AccountsServiceInterface {
   constructor(
     private client: Client,
     private config: typeof Config,
@@ -230,7 +204,7 @@ export class AccountsService implements ConnectorAccountsService {
           })
 
           const incomingTokens = account.http?.incoming?.authTokens.map(
-            (incomingToken) => {
+            (incomingToken: string) => {
               return {
                 accountId: account.accountId,
                 token: incomingToken
@@ -264,7 +238,7 @@ export class AccountsService implements ConnectorAccountsService {
   }
 
   public async updateAccount(
-    accountOptions: UpdateIlpAccountOptions
+    accountOptions: UpdateOptions
   ): Promise<IlpAccount | UpdateAccountError> {
     try {
       return await transaction(
@@ -276,7 +250,7 @@ export class AccountsService implements ConnectorAccountsService {
               accountId: accountOptions.accountId
             })
             const incomingTokens = accountOptions.http.incoming.authTokens.map(
-              (incomingToken) => {
+              (incomingToken: string) => {
                 return {
                   accountId: accountOptions.accountId,
                   token: incomingToken

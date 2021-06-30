@@ -14,9 +14,10 @@
       5. [Language](#language)
       6. [CI](#ci)
 3. [Packages](#packages)
-   1. [Backend](#backend)
-   2. [Connector](#connector)
-   3. [Frontend](#frontend)
+   1. [Accounts](#accounts)
+   2. [Backend](#backend)
+   3. [Connector](#connector)
+   4. [Frontend](#frontend)
 4. [Owners](#owners)
 
 ---
@@ -173,6 +174,10 @@ The workflows can be found in `.github/workflows`
 ---
 
 ## Packages
+
+### Accounts
+
+TODO
 
 ### Backend
 

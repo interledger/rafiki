@@ -6,7 +6,13 @@ import { RafikiServices } from '../rafiki'
 import { MockAccountsService } from '../test/mocks/accounts-service'
 import { TestLoggerFactory } from './test-logger'
 
-export const RafikiServicesFactory = Factory.define<RafikiServices>('PeerInfo')
+interface MockRafikiServices extends RafikiServices {
+  accounts: MockAccountsService
+}
+
+export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
+  'PeerInfo'
+)
   //.attr('router', ['peers'], (peers: InMemoryPeers) => {
   //  return new InMemoryRouter(peers, { ilpAddress: 'test.rafiki' })
   //})

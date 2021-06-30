@@ -3,6 +3,8 @@ import { Model } from 'objection'
 import { Account as Balance } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
+import { Config } from '../../config'
+import { IlpAccount as IlpAccountModel } from '../../models'
 import {
   randomId,
   toLiquidityId,
@@ -14,29 +16,27 @@ import { createTestApp, TestContainer } from '../helpers/app'
 import { randomAsset } from '../helpers/asset'
 import { AccountFactory } from '../factories'
 import {
-  IlpAccount as IlpAccountModel,
   AccountsService,
   AppServices,
-  Config,
-  DepositError,
+  initIocContainer
   // InvalidAssetError,
-  isUpdateAccountError,
-  UpdateAccountError,
-  UpdateIlpAccountOptions,
-  WithdrawError
 } from '../..'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../../../../accounts'
 
 import {
   CreateAccountError,
   CreateOptions,
+  DepositError,
   IlpAccount,
   IlpBalance,
   isCreateAccountError,
   isTransferError,
-  TransferError
-} from '../../../core/services/accounts'
+  isUpdateAccountError,
+  TransferError,
+  UpdateAccountError,
+  UpdateOptions,
+  WithdrawError
+} from '../../types'
 
 describe('Accounts Service', (): void => {
   let deps: IocContract<AppServices>
@@ -430,7 +430,7 @@ describe('Accounts Service', (): void => {
           enabled: true
         }
       })
-      const updateOptions: UpdateIlpAccountOptions = {
+      const updateOptions: UpdateOptions = {
         accountId,
         disabled: true,
         maxPacketAmount: BigInt(200),
@@ -461,7 +461,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Cannot update nonexistent account', async (): Promise<void> => {
-      const updateOptions: UpdateIlpAccountOptions = {
+      const updateOptions: UpdateOptions = {
         accountId: uuid(),
         disabled: true
       }
@@ -486,7 +486,7 @@ describe('Accounts Service', (): void => {
       })
 
       const account = await accountFactory.build()
-      const updateOptions: UpdateIlpAccountOptions = {
+      const updateOptions: UpdateOptions = {
         accountId: account.accountId,
         disabled: true,
         maxPacketAmount: BigInt(200),
@@ -511,7 +511,7 @@ describe('Accounts Service', (): void => {
       const incomingToken = uuid()
 
       const account = await accountFactory.build()
-      const updateOptions: UpdateIlpAccountOptions = {
+      const updateOptions: UpdateOptions = {
         accountId: account.accountId,
         disabled: true,
         maxPacketAmount: BigInt(200),

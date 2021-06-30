@@ -1,8 +1,9 @@
+import { IlpAccount } from 'accounts'
 import Axios, { AxiosInstance } from 'axios'
 import { serializeIlpPrepare } from 'ilp-packet'
 import { Reader, Writer } from 'oer-utils'
 import { Errors } from 'ilp-packet'
-import { sendToPeer as sendToPeerDefault, IlpAccount } from '../services'
+import { sendToPeer as sendToPeerDefault } from '../services'
 import { RafikiContext, RafikiMiddleware } from '../rafiki'
 const { InvalidPacketError } = Errors
 

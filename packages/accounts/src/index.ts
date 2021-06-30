@@ -5,7 +5,8 @@ import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import { createClient } from 'tigerbeetle-node'
 
-import { App, AppServices, Config } from './services/accounts'
+import { App, AppServices } from './app'
+import { Config } from './config'
 
 const container = initIocContainer(Config)
 
@@ -127,7 +128,7 @@ export const start = async (
   const knex = await container.use('knex')
   await knex.migrate
     .latest({
-      directory: './packages/connector/migrations'
+      directory: './packages/accounts/migrations'
     })
     .catch((error): void => {
       logger.error({ error }, 'error migrating database')
@@ -151,3 +152,8 @@ if (!module.parent) {
     }
   )
 }
+
+export * from './app'
+export * from './config'
+export * from './errors'
+export * from './types'

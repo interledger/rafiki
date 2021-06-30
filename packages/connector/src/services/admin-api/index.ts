@@ -1,4 +1,5 @@
-import { RafikiMiddleware, AccountsService } from '../core'
+import { RafikiMiddleware } from '../core'
+import { ConnectorAccountsService as AccountsService } from 'accounts'
 import Koa, { Context } from 'koa'
 import createRouter from 'koa-joi-router'
 import bodyParser from 'koa-bodyparser'

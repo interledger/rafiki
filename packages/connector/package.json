@@ -4,19 +4,14 @@
     "lint": "yarn lint:local",
     "format": "yarn format:local",
     "format:check": "yarn format:check:local",
-    "accounts": "node dist/accounts.js",
-    "connector": "node dist/connector.js",
     "start": "node dist/index.js",
-    "test": "yarn test:local",
-    "test:skip-tigerbeetle": "yarn test:local:skip-tigerbeetle"
+    "test": "yarn test:local"
   },
   "dependencies": {
-    "@adonisjs/fold": "^8.1.0",
     "@interledger/stream-receiver": "^0.2.2",
-    "@koa/router": "^10.0.0",
+    "accounts": "workspace:packages/accounts",
     "ajv": "^8.1.0",
     "axios": "^0.21.1",
-    "change-case": "^4.1.2",
     "debug": "^4.3.1",
     "extensible-error": "^1.0.2",
     "faker": "^5.5.3",
@@ -24,22 +19,16 @@
     "ilp-protocol-ccp": "^1.2.2",
     "ilp-protocol-ildcp": "^2.2.2",
     "ioredis": "^4.27.3",
-    "knex": "^0.21.17",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
     "koa-compose": "^4.1.0",
     "koa-joi-router": "^7.0.0",
     "lodash": "^4.17.21",
-    "objection": "^2.2.15",
-    "objection-db-errors": "^1.1.2",
     "oer-utils": "^5.1.2",
-    "pg": "^8.6.0",
     "pino": "^6.11.3",
     "raw-body": "^2.4.1",
     "rosie": "^2.1.0",
-    "rxjs": "^6.6.7",
-    "tigerbeetle-node": "^0.3.2",
-    "uuid": "^8.3.2"
+    "rxjs": "^6.6.7"
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
@@ -56,7 +45,6 @@
     "@types/node-fetch": "^2.5.10",
     "@types/pino": "^6.3.8",
     "@types/rosie": "^0.0.39",
-    "@types/uuid": "^8.3.0",
     "ilp-protocol-stream": "^2.7.0"
   }
 }

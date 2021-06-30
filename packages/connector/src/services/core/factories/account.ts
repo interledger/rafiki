@@ -1,14 +1,10 @@
 import { Factory } from 'rosie'
 import Faker from 'faker'
-import { CreateOptions } from '../services'
+import { MockIlpAccount } from '../test/mocks/accounts-service'
 
 const assetCode = Faker.finance.currencyCode().toString().toUpperCase()
 const assetScale = Faker.datatype.number(6)
 
-type MockIlpAccount = CreateOptions & {
-  disabled: boolean
-  balance: bigint
-}
 export const AccountFactory = Factory.define<MockIlpAccount>(
   'AccountFactory'
 ).attrs({

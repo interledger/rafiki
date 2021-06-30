@@ -11,9 +11,7 @@
     "format:local": "prettier --write $INIT_CWD",
     "format:check:local": "prettier --check $INIT_CWD",
     "test": "jest --passWithNoTests",
-    "test:skip-tigerbeetle": "jest --passWithNoTests --testPathIgnorePatterns='packages/connector/src/services/accounts'",
     "test:local": "jest $INIT_CWD --passWithNoTests",
-    "test:local:skip-tigerbeetle": "jest $INIT_CWD --passWithNoTests --testPathIgnorePatterns='packages/connector/src/services/accounts'",
     "build": "tsc --build",
     "postinstall": "husky install"
   },

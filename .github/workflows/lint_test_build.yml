@@ -24,6 +24,21 @@ jobs:
           key: ${{ github.sha }}
       - run: yarn install --immutable --immutable-cache
 
+  accounts:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: yarn workspace accounts lint
+      - run: yarn workspace accounts format:check
+      - run: docker-compose -f packages/accounts/docker-compose.yml up -d
+      - run: yarn install --immutable --immutable-cache
+      - run: yarn workspace accounts test
+
   backend:
     runs-on: ubuntu-latest
     needs: checkout
@@ -56,6 +71,11 @@ jobs:
   connector:
     runs-on: ubuntu-latest
     needs: checkout
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6380:6379
     steps:
       - uses: actions/cache@v2
         id: restore-build
@@ -64,8 +84,8 @@ jobs:
           key: ${{ github.sha }}
       - run: yarn workspace connector lint
       - run: yarn workspace connector format:check
-      - run: docker-compose -f packages/connector/docker-compose.yml up -d
       - run: yarn install --immutable --immutable-cache
+      - run: yarn build
       - run: yarn workspace connector test
 
   frontend:
@@ -84,6 +104,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs:
+      - accounts
       - backend
       - connector
       - frontend

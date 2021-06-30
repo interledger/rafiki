@@ -1,7 +1,7 @@
 import { createContext } from '../../utils'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import { createBalanceMiddleware } from '../../middleware'
-import { IlpBalance } from '../../services'
+import { IlpBalance } from 'accounts'
 import {
   AccountFactory,
   IlpPrepareFactory,

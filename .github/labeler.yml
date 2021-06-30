@@ -1,5 +1,6 @@
 # This file configures automatic labelling of pr's
 # Adds the 'backend' label if any files change in the backend directory
+accounts: packages/accounts/**/*
 backend: packages/backend/**/*
 connector: packages/connector/**/*
 frontend: packages/frontend/**/*
