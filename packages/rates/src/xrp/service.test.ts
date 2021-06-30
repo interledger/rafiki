@@ -2,6 +2,11 @@ import nock from 'nock'
 import { createXRPService, CHARTS_API } from './service'
 
 describe('XRP Service', function () {
+  afterAll(() => {
+    nock.cleanAll()
+    nock.enableNetConnect()
+  })
+
   describe('fetchPrice', function () {
     const service = createXRPService()
 

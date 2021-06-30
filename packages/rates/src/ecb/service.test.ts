@@ -7,6 +7,11 @@ const FIXTURE_XML = fs
   .toString()
 
 describe('ECB Service', function () {
+  afterAll(() => {
+    nock.cleanAll()
+    nock.enableNetConnect()
+  })
+
   describe('fetchPrices', function () {
     const service = createECBService()
 
