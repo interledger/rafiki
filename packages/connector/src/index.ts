@@ -4,6 +4,7 @@ import IORedis from 'ioredis'
 import {
   createApp,
   RafikiRouter,
+  createRatesService,
   createBalanceMiddleware,
   createIncomingErrorHandlerMiddleware,
   createIldcpProtocolController,
@@ -45,6 +46,8 @@ const PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
 const STREAM_SECRET = process.env.STREAM_SECRET
   ? Buffer.from(process.env.STREAM_SECRET, 'base64')
   : randomBytes(32)
+const pricesUrl = process.env.PRICES_URL // optional
+const pricesLifetime = +(process.env.PRICES_LIFETIME || 15_000)
 
 if (!ILP_ADDRESS) {
   throw new Error('ILP_ADDRESS is required')
@@ -81,6 +84,7 @@ const outgoing = compose([
   createClientController()
 ])
 
+const ratesService = createRatesService({ pricesUrl, pricesLifetime, logger })
 const middleware = compose([incoming, createBalanceMiddleware(), outgoing])
 
 let adminApi: AdminApi
@@ -119,6 +123,7 @@ export const start = async (): Promise<void> => {
     //router: router,
     accounts: accountsApp.getAccounts(),
     redis,
+    rates: ratesService,
     stream: {
       serverSecret: STREAM_SECRET,
       serverAddress: ILP_ADDRESS

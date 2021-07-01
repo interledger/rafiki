@@ -37,6 +37,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
       {
         "name": "frontend",
         "reference": "workspace:packages/frontend"
+      },
+      {
+        "name": "rates",
+        "reference": "workspace:packages/rates"
       }
     ],
     "enableTopLevelFallback": true,
@@ -46,7 +50,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
       ["accounts", ["workspace:packages/accounts"]],
       ["backend", ["workspace:packages/backend"]],
       ["connector", ["workspace:packages/connector"]],
-      ["frontend", ["workspace:packages/frontend"]]
+      ["frontend", ["workspace:packages/frontend"]],
+      ["rates", ["workspace:packages/rates"]]
     ],
     "fallbackPool": [
     ],
@@ -4347,6 +4352,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-rosie-npm-0.0.39-df8bfc2f8c-89d010c5b7.zip/node_modules/@types/rosie/",
           "packageDependencies": [
             ["@types/rosie", "npm:0.0.39"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["@types/sax", [
+        ["npm:1.2.1", {
+          "packageLocation": "./.yarn/cache/@types-sax-npm-1.2.1-b77192f97a-99f2c89dd6.zip/node_modules/@types/sax/",
+          "packageDependencies": [
+            ["@types/sax", "npm:1.2.1"],
+            ["@types/node", "npm:14.14.39"]
           ],
           "linkType": "HARD",
         }]
@@ -14279,6 +14294,31 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["rates", [
+        ["workspace:packages/rates", {
+          "packageLocation": "./packages/rates/",
+          "packageDependencies": [
+            ["rates", "workspace:packages/rates"],
+            ["@adonisjs/fold", "npm:8.1.0"],
+            ["@koa/router", "npm:10.0.0"],
+            ["@types/jest", "npm:26.0.22"],
+            ["@types/koa", "npm:2.13.1"],
+            ["@types/koa__router", "npm:8.0.4"],
+            ["@types/nock", "npm:11.1.0"],
+            ["@types/pino", "npm:6.3.7"],
+            ["@types/sax", "npm:1.2.1"],
+            ["axios", "npm:0.21.1"],
+            ["got", "npm:11.8.2"],
+            ["koa", "npm:2.13.1"],
+            ["nock", "npm:13.1.0"],
+            ["node-mocks-http", "npm:1.10.1"],
+            ["pino", "npm:6.11.3"],
+            ["pino-pretty", "npm:4.7.1"],
+            ["sax", "npm:1.2.4"]
+          ],
+          "linkType": "SOFT",
+        }]
+      ]],
       ["raw-body", [
         ["npm:2.4.1", {
           "packageLocation": "./.yarn/cache/raw-body-npm-2.4.1-e6e30ccf94-dc56e010d2.zip/node_modules/raw-body/",
@@ -15020,6 +15060,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["micromatch", "npm:3.1.10"],
             ["minimist", "npm:1.2.5"],
             ["walker", "npm:1.0.7"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["sax", [
+        ["npm:1.2.4", {
+          "packageLocation": "./.yarn/cache/sax-npm-1.2.4-178f05f12f-9d7668d691.zip/node_modules/sax/",
+          "packageDependencies": [
+            ["sax", "npm:1.2.4"]
           ],
           "linkType": "HARD",
         }]
