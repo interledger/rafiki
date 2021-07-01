@@ -49,12 +49,10 @@ class RatesServiceImpl implements RatesService {
   async convert(
     opts: Omit<ConvertOptions, 'exchangeRate'>
   ): Promise<bigint | ConvertError> {
-    if (
-      opts.sourceAsset.code === opts.destinationAsset.code &&
-      opts.sourceAsset.scale === opts.destinationAsset.scale
-    ) {
-      return opts.sourceAmount
-    }
+    const sameCode = opts.sourceAsset.code === opts.destinationAsset.code
+    const sameScale = opts.sourceAsset.scale === opts.destinationAsset.scale
+    if (sameCode && sameScale) return opts.sourceAmount
+    if (sameCode) return convert({ exchangeRate: 1.0, ...opts })
 
     const prices = await this.sharedLoad()
     const sourcePrice = prices[opts.sourceAsset.code]

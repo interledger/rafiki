@@ -9,7 +9,6 @@ const FIXTURE_XML = fs
 describe('ECB Service', function () {
   afterAll(() => {
     nock.cleanAll()
-    nock.enableNetConnect()
   })
 
   describe('fetchPrices', function () {

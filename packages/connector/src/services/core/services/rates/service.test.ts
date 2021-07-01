@@ -62,10 +62,10 @@ describe('Rates service', function () {
           destinationAsset: { code: 'USD', scale: 9 }
         })
       ).resolves.toBe(123n)
-      expect(requestCount).toBe(1)
+      expect(requestCount).toBe(0)
     })
 
-    it('returns the converted amount when assets are dfiferent', async () => {
+    it('returns the converted amount when assets are different', async () => {
       await expect(
         service.convert({
           sourceAmount: 1234n,
