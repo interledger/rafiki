@@ -39,6 +39,7 @@ beforeEach(async () => {
 
 describe('Balance Middleware', function () {
   const middleware = createBalanceMiddleware()
+
   it('fulfill response increments the balanceReceivable for the incoming peer and balancePayable for the outgoing peer', async () => {
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()

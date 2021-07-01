@@ -1,3 +1,4 @@
+import { Errors } from 'ilp-packet'
 import { RafikiContext } from '../rafiki'
 import { isTransferError } from 'accounts'
 
@@ -14,11 +15,25 @@ export function createBalanceMiddleware() {
       return
     }
 
+    const sourceAmount = BigInt(amount)
+    const destinationAmountOrError = await services.rates.convert({
+      sourceAmount,
+      sourceAsset: accounts.incoming.asset,
+      destinationAsset: accounts.outgoing.asset
+    })
+    if (typeof destinationAmountOrError !== 'bigint') {
+      // ConvertError
+      throw new Errors.CannotReceiveError(
+        `Exchange rate error: ${destinationAmountOrError}`
+      )
+    }
+
     // Update balances on prepare
     const trxOrError = await services.accounts.transferFunds({
       sourceAccountId: accounts.incoming.accountId,
       destinationAccountId: accounts.outgoing.accountId,
-      sourceAmount: BigInt(amount)
+      sourceAmount,
+      destinationAmount: destinationAmountOrError
     })
 
     await next()

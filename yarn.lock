@@ -3153,6 +3153,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/sax@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@types/sax@npm:1.2.1"
+  dependencies:
+    "@types/node": "*"
+  checksum: 99f2c89dd69b53136d6ffdd4bc431ef2e1cdf29ac2b5c67bb3ec09c12814b5440e85fe3d31562774ad093d3631cf0660b6e5443c70f8654dd7d4ef3a797a0964
+  languageName: node
+  linkType: hard
+
 "@types/scheduler@npm:*":
   version: 0.16.1
   resolution: "@types/scheduler@npm:0.16.1"
@@ -11595,6 +11604,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rates@workspace:packages/rates":
+  version: 0.0.0-use.local
+  resolution: "rates@workspace:packages/rates"
+  dependencies:
+    "@adonisjs/fold": ^8.1.0
+    "@koa/router": ^10.0.0
+    "@types/jest": ^26.0.22
+    "@types/koa": ^2.13.1
+    "@types/koa__router": ^8.0.4
+    "@types/nock": ^11.1.0
+    "@types/pino": ^6.3.7
+    "@types/sax": ^1.2.1
+    axios: ^0.21.1
+    got: ^11.8.2
+    koa: ^2.13.1
+    nock: ^13.1.0
+    node-mocks-http: ^1.10.1
+    pino: ^6.11.3
+    pino-pretty: ^4.7.1
+    sax: ^1.2.4
+  languageName: unknown
+  linkType: soft
+
 "raw-body@npm:^2.3.3, raw-body@npm:^2.4.1":
   version: 2.4.1
   resolution: "raw-body@npm:2.4.1"
@@ -12259,6 +12291,13 @@ resolve@^2.0.0-next.3:
   bin:
     sane: ./src/cli.js
   checksum: e384e252021b1afef7459e994fe3ea79d114a0e7d23a03e660444abf15a2b4c50ce7eac2810b2c289e857c618d96fb35ee66356ebd4d6cb97cb11b54b2b29600
+  languageName: node
+  linkType: hard
+
+"sax@npm:^1.2.4":
+  version: 1.2.4
+  resolution: "sax@npm:1.2.4"
+  checksum: 9d7668d69105e89e2c1a4b2fdc12c72e1a2f78b825f7b4a8a2ea5cdfebf70920bd17715bed55264c3b3959616a0695f8ad2d098bf6944fbd0953ee9c695dceef
   languageName: node
   linkType: hard
 
