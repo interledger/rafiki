@@ -4,6 +4,10 @@ on:
   push:
     branches:
     - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
 
 name: Sanity check
 
@@ -40,5 +44,5 @@ jobs:
       - run: yarn lint
       - run: docker-compose -f packages/accounts/docker-compose.yml up -d
       - run: docker-compose -f packages/connector/docker-compose.yml up -d
-      - run: yarn test
       - run: yarn build
+      - run: yarn test
