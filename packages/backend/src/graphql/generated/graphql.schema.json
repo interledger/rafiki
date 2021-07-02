@@ -303,9 +303,13 @@
                 "kind": "LIST",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "InvoiceEdge",
-                  "ofType": null
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "InvoiceEdge",
+                    "ofType": null
+                  }
                 }
               }
             },
@@ -380,7 +384,7 @@
           },
           {
             "name": "hasNextPage",
-            "description": "Paginating forwards: Are the more pages?",
+            "description": "Paginating forwards: Are there more pages?",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -396,7 +400,7 @@
           },
           {
             "name": "hasPreviousPage",
-            "description": "Paginating backwards: Are the more pages?",
+            "description": "Paginating backwards: Are there more pages?",
             "args": [],
             "type": {
               "kind": "NON_NULL",

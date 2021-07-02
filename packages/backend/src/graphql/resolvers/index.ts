@@ -1,11 +1,6 @@
 import { Resolvers } from '../generated/graphql'
 import { getUser, getAccount, getBalance } from './user'
-import {
-  getUserInvoices,
-  getInvoiceEdges,
-  getPageInfo,
-  getInvoiceEdgeNode
-} from './invoice'
+import { getUserInvoices, getPageInfo } from './invoice'
 
 export const resolvers: Resolvers = {
   Query: {
@@ -19,10 +14,6 @@ export const resolvers: Resolvers = {
     balance: getBalance
   },
   InvoiceConnection: {
-    edges: getInvoiceEdges,
     pageInfo: getPageInfo
-  },
-  InvoiceEdge: {
-    node: getInvoiceEdgeNode
   }
 }

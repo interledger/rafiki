@@ -41,7 +41,7 @@ export type Invoice = {
 export type InvoiceConnection = {
   __typename?: 'InvoiceConnection';
   pageInfo: PageInfo;
-  edges: Array<Maybe<InvoiceEdge>>;
+  edges: Array<InvoiceEdge>;
 };
 
 export type InvoiceEdge = {
@@ -54,9 +54,9 @@ export type PageInfo = {
   __typename?: 'PageInfo';
   /** Paginating forwards: the cursor to continue. */
   endCursor?: Maybe<Scalars['String']>;
-  /** Paginating forwards: Are the more pages? */
+  /** Paginating forwards: Are there more pages? */
   hasNextPage: Scalars['Boolean'];
-  /** Paginating backwards: Are the more pages? */
+  /** Paginating backwards: Are there more pages? */
   hasPreviousPage: Scalars['Boolean'];
   /** Paginating backwards: the cursor to continue. */
   startCursor?: Maybe<Scalars['String']>;
@@ -225,7 +225,7 @@ export type InvoiceResolvers<ContextType = any, ParentType extends ResolversPare
 
 export type InvoiceConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['InvoiceConnection'] = ResolversParentTypes['InvoiceConnection']> = {
   pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  edges?: Resolver<Array<Maybe<ResolversTypes['InvoiceEdge']>>, ParentType, ContextType>;
+  edges?: Resolver<Array<ResolversTypes['InvoiceEdge']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

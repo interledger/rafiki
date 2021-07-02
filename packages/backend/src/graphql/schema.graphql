@@ -34,7 +34,7 @@ type Account {
 
 type InvoiceConnection {
   pageInfo: PageInfo!
-  edges: [InvoiceEdge]!
+  edges: [InvoiceEdge!]!
 }
 
 type PageInfo {
@@ -43,11 +43,11 @@ type PageInfo {
   """
   endCursor: String
   """
-  Paginating forwards: Are the more pages?
+  Paginating forwards: Are there more pages?
   """
   hasNextPage: Boolean!
   """
-  Paginating backwards: Are the more pages?
+  Paginating backwards: Are there more pages?
   """
   hasPreviousPage: Boolean!
   """
