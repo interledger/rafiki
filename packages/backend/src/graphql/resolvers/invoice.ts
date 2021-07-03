@@ -4,6 +4,7 @@ import {
   UserResolvers
 } from '../generated/graphql'
 import { Invoice } from '../../invoice/model'
+import { toCursor } from '../../invoice/service'
 
 export const getUserInvoices: UserResolvers['invoices'] = async (
   parent,
@@ -15,8 +16,8 @@ export const getUserInvoices: UserResolvers['invoices'] = async (
 
   return {
     edges: invoices.map((invoice: Invoice) => ({
-      cursor: invoice.id,
-      node: invoice
+      cursor: toCursor(invoice.createdAt, invoice.id),
+      node: invoice // May need to sanitise the db invoice.
     }))
   }
 }
