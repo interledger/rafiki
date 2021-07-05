@@ -68,6 +68,11 @@ interface Pagination {
   last?: number // Backward pagination: limit.
 }
 
+/** TODO: Base64 encode/decode the cursors
+ * Buffer.from("Hello World").toString('base64')
+ * Buffer.from("SGVsbG8gV29ybGQ=", 'base64').toString('ascii')
+ */
+
 /** getUserInvoicesPage
  * The pagination algorithm is based on the Relay connection specification.
  * Please read the spec before changing things:
@@ -93,12 +98,16 @@ async function getUserInvoicesPage(
    * Forward pagination
    */
   if (typeof pagination?.after === 'string') {
-    const { createdAt, id } = fromCursor(pagination.after)
     return Invoice.query(deps.knex)
       .where({
         userId: userId
       })
-      .andWhere(deps.knex.raw('(createdAt, id) > (?, ?)', createdAt, id))
+      .andWhere(
+        deps.knex.raw(
+          '(createdAt, id) > (select createdAt :: TIMESTAMP, id from invoices where id = ?)',
+          pagination.after
+        )
+      )
       .orderBy([
         { column: 'createdAt', order: 'asc' },
         { column: 'id', order: 'asc' }
@@ -110,12 +119,16 @@ async function getUserInvoicesPage(
    * Backward pagination
    */
   if (typeof pagination?.before === 'string') {
-    const { createdAt, id } = fromCursor(pagination.before)
     return Invoice.query(deps.knex)
       .where({
         userId: userId
       })
-      .andWhere(deps.knex.raw('(createdAt, id) < (?, ?)', createdAt, id))
+      .andWhere(
+        deps.knex.raw(
+          '(createdAt, id) < (select createdAt :: TIMESTAMP, id from invoices where id = ?)',
+          pagination.before
+        )
+      )
       .orderBy([
         { column: 'createdAt', order: 'desc' },
         { column: 'id', order: 'desc' }
@@ -135,28 +148,4 @@ async function getUserInvoicesPage(
       { column: 'id', order: 'asc' }
     ])
     .limit(first)
-}
-
-/**
- * Forms a cursor from the createdAt timestamp and the invoice id.
- * @param createdAt
- * @param id
- */
-export function toCursor(createdAt: string, id: string): string {
-  return Buffer.from(createdAt + '#' + id).toString('base64')
-}
-
-type DestructuredCursor = {
-  createdAt: string
-  id: string
-}
-
-function fromCursor(cursor: string): DestructuredCursor {
-  const cursorString = Buffer.from(cursor, 'base64').toString('ascii')
-  const cursorArray = cursorString.split('#')
-  // TODO: validate createdAt and id
-  return {
-    createdAt: cursorArray[0],
-    id: cursorArray[1]
-  }
 }
