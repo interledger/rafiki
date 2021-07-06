@@ -1,3 +1,5 @@
 module.exports = async () => {
-  await global.__CONNECTOR_REDIS__.stop()
+  if (global.__CONNECTOR_REDIS__) {
+    await global.__CONNECTOR_REDIS__.stop()
+  }
 }

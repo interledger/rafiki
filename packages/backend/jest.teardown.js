@@ -4,6 +4,10 @@ module.exports = async () => {
     true
   )
   await global.__BACKEND_KNEX__.destroy()
-  await global.__BACKEND_POSTGRES__.stop()
-  await global.__BACKEND_REDIS__.stop()
+  if (global.__BACKEND_POSTGRES__) {
+    await global.__BACKEND_POSTGRES__.stop()
+  }
+  if (global.__BACKEND_REDIS__) {
+    await global.__BACKEND_REDIS__.stop()
+  }
 }

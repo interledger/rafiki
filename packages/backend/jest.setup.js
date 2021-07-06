@@ -7,22 +7,26 @@ const POSTGRES_PORT = 5432
 const REDIS_PORT = 6379
 
 module.exports = async () => {
-  const postgresContainer = await new GenericContainer('postgres')
-    .withExposedPorts(POSTGRES_PORT)
-    .withBindMount(
-      __dirname + '/scripts/init.sh',
-      '/docker-entrypoint-initdb.d/init.sh'
-    )
-    .withEnv('POSTGRES_PASSWORD', 'password')
-    .start()
+  if (!process.env.DATABASE_URL) {
+    const postgresContainer = await new GenericContainer('postgres')
+      .withExposedPorts(POSTGRES_PORT)
+      .withBindMount(
+        __dirname + '/scripts/init.sh',
+        '/docker-entrypoint-initdb.d/init.sh'
+      )
+      .withEnv('POSTGRES_PASSWORD', 'password')
+      .start()
 
-  const DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
-    POSTGRES_PORT
-  )}/testing`
+    process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
+      POSTGRES_PORT
+    )}/testing`
+
+    global.__BACKEND_POSTGRES__ = postgresContainer
+  }
 
   const knex = Knex({
     client: 'postgresql',
-    connection: DATABASE_URL,
+    connection: process.env.DATABASE_URL,
     pool: {
       min: 2,
       max: 10
@@ -41,16 +45,16 @@ module.exports = async () => {
   await knex.migrate.latest({
     directory: './packages/backend/migrations'
   })
-  process.env.DATABASE_URL = DATABASE_URL
   global.__BACKEND_KNEX__ = knex
-  global.__BACKEND_POSTGRES__ = postgresContainer
 
-  const redisContainer = await new GenericContainer('redis')
-    .withExposedPorts(REDIS_PORT)
-    .start()
+  if (!process.env.REDIS_URL) {
+    const redisContainer = await new GenericContainer('redis')
+      .withExposedPorts(REDIS_PORT)
+      .start()
 
-  global.__BACKEND_REDIS__ = redisContainer
-  process.env.REDIS_URL = `redis://localhost:${redisContainer.getMappedPort(
-    REDIS_PORT
-  )}`
+    global.__BACKEND_REDIS__ = redisContainer
+    process.env.REDIS_URL = `redis://localhost:${redisContainer.getMappedPort(
+      REDIS_PORT
+    )}`
+  }
 }
