@@ -24,6 +24,21 @@ jobs:
           key: ${{ github.sha }}
       - run: yarn install --immutable --immutable-cache
 
+  accounts:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: yarn workspace accounts lint
+      - run: yarn workspace accounts format:check
+      - run: docker-compose -f packages/accounts/docker-compose.yml up -d
+      - run: yarn install --immutable --immutable-cache
+      - run: yarn workspace accounts test
+
   backend:
     runs-on: ubuntu-latest
     needs: checkout
@@ -57,21 +72,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: checkout
     services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: password
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
       redis:
         image: redis
         ports:
-          - 6379:6379
+          - 6380:6379
     steps:
       - uses: actions/cache@v2
         id: restore-build
@@ -80,10 +84,8 @@ jobs:
           key: ${{ github.sha }}
       - run: yarn workspace connector lint
       - run: yarn workspace connector format:check
-      - run: packages/connector/scripts/init.sh
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_DB: postgresql://postgres:password@localhost:5432
+      - run: yarn install --immutable --immutable-cache
+      - run: yarn build
       - run: yarn workspace connector test
 
   frontend:
@@ -99,16 +101,32 @@ jobs:
       - run: yarn workspace frontend format:check
       - run: yarn workspace frontend test
 
-  build:
+  rates:
     runs-on: ubuntu-latest
-    needs:
-      - backend
-      - connector
-      - frontend
+    needs: checkout
     steps:
       - uses: actions/cache@v2
         id: restore-build
         with:
           path: ./*
           key: ${{ github.sha }}
+      - run: yarn workspace rates lint
+      - run: yarn workspace rates format:check
+      - run: yarn workspace rates test
+
+  build:
+    runs-on: ubuntu-latest
+    needs:
+      - accounts
+      - backend
+      - connector
+      - frontend
+      - rates
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: yarn install --immutable --immutable-cache
       - run: yarn build

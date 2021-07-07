@@ -1,6 +1,7 @@
 import { createContext } from '../../utils'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import { createBalanceMiddleware } from '../../middleware'
+import { IlpBalance } from 'accounts'
 import {
   AccountFactory,
   IlpPrepareFactory,
@@ -29,7 +30,7 @@ beforeEach(async () => {
   ctx.response.fulfill = undefined
   ctx.response.reject = undefined
 
-  aliceAccount.balance = 0n
+  aliceAccount.balance = 100n
   bobAccount.balance = 0n
 
   await accounts.createAccount(aliceAccount)
@@ -38,6 +39,7 @@ beforeEach(async () => {
 
 describe('Balance Middleware', function () {
   const middleware = createBalanceMiddleware()
+
   it('fulfill response increments the balanceReceivable for the incoming peer and balancePayable for the outgoing peer', async () => {
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()
@@ -48,12 +50,15 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    expect(
-      (await accounts.getAccountBalance(aliceAccount.accountId)).balance
-    ).toEqual(BigInt(-100))
-    expect(
-      (await accounts.getAccountBalance(bobAccount.accountId)).balance
-    ).toEqual(BigInt(100))
+    const aliceBalance = await accounts.getAccountBalance(
+      aliceAccount.accountId
+    )
+    expect(aliceBalance).not.toBeNull()
+    expect((aliceBalance as IlpBalance).balance).toEqual(BigInt(0))
+
+    const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
+    expect(bobBalance).not.toBeNull()
+    expect((bobBalance as IlpBalance).balance).toEqual(BigInt(100))
   })
 
   test('reject response does not adjust the account balances', async () => {
@@ -66,16 +71,19 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    expect(
-      (await accounts.getAccountBalance(aliceAccount.accountId)).balance
-    ).toEqual(BigInt(0))
-    expect(
-      (await accounts.getAccountBalance(bobAccount.accountId)).balance
-    ).toEqual(BigInt(0))
+    const aliceBalance = await accounts.getAccountBalance(
+      aliceAccount.accountId
+    )
+    expect(aliceBalance).not.toBeNull()
+    expect((aliceBalance as IlpBalance).balance).toEqual(BigInt(100))
+
+    const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
+    expect(bobBalance).not.toBeNull()
+    expect((bobBalance as IlpBalance).balance).toEqual(BigInt(0))
   })
 
   test('ignores 0 amount packets', async () => {
-    const adjustBalancesSpy = jest.spyOn(accounts, 'adjustBalances')
+    const transferFundsSpy = jest.spyOn(accounts, 'transferFunds')
     const prepare = IlpPrepareFactory.build({ amount: '0' })
     const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -85,12 +93,37 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    expect(
-      (await accounts.getAccountBalance(aliceAccount.accountId)).balance
-    ).toEqual(BigInt(0))
-    expect(
-      (await accounts.getAccountBalance(bobAccount.accountId)).balance
-    ).toEqual(BigInt(0))
-    expect(adjustBalancesSpy).toHaveBeenCalledTimes(0)
+    const aliceBalance = await accounts.getAccountBalance(
+      aliceAccount.accountId
+    )
+    expect(aliceBalance).not.toBeNull()
+    expect((aliceBalance as IlpBalance).balance).toEqual(BigInt(100))
+
+    const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
+    expect(bobBalance).not.toBeNull()
+    expect((bobBalance as IlpBalance).balance).toEqual(BigInt(0))
+
+    expect(transferFundsSpy).toHaveBeenCalledTimes(0)
+  })
+
+  test('insufficient balance does not adjust the account balances', async () => {
+    const prepare = IlpPrepareFactory.build({ amount: '200' })
+    const reject = IlpRejectFactory.build()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    const next = jest.fn().mockImplementation(() => {
+      ctx.response.reject = reject
+    })
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    const aliceBalance = await accounts.getAccountBalance(
+      aliceAccount.accountId
+    )
+    expect(aliceBalance).not.toBeNull()
+    expect((aliceBalance as IlpBalance).balance).toEqual(BigInt(100))
+
+    const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
+    expect(bobBalance).not.toBeNull()
+    expect((bobBalance as IlpBalance).balance).toEqual(BigInt(0))
   })
 })

@@ -1,11 +1,10 @@
 import { Factory } from 'rosie'
 import Faker from 'faker'
-import { IlpAccount } from '../services'
+import { MockIlpAccount } from '../test/mocks/accounts-service'
 
 const assetCode = Faker.finance.currencyCode().toString().toUpperCase()
 const assetScale = Faker.datatype.number(6)
 
-type MockIlpAccount = IlpAccount & { balance: bigint }
 export const AccountFactory = Factory.define<MockIlpAccount>(
   'AccountFactory'
 ).attrs({
@@ -22,8 +21,7 @@ export const PeerAccountFactory = Factory.define<MockIlpAccount>(
   .attrs({
     http: () => ({
       incoming: {
-        authTokens: [Faker.datatype.string(32)],
-        endpoint: Faker.internet.url()
+        authTokens: [Faker.datatype.string(32)]
       },
       outgoing: {
         authToken: Faker.datatype.string(32),

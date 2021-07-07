@@ -1,5 +1,6 @@
+import { Errors } from 'ilp-packet'
 import { RafikiContext } from '../rafiki'
-import { Transaction } from '../services/accounts'
+import { isTransferError } from 'accounts'
 
 export function createBalanceMiddleware() {
   return async (
@@ -14,20 +15,35 @@ export function createBalanceMiddleware() {
       return
     }
 
+    const sourceAmount = BigInt(amount)
+    const destinationAmountOrError = await services.rates.convert({
+      sourceAmount,
+      sourceAsset: accounts.incoming.asset,
+      destinationAsset: accounts.outgoing.asset
+    })
+    if (typeof destinationAmountOrError !== 'bigint') {
+      // ConvertError
+      throw new Errors.CannotReceiveError(
+        `Exchange rate error: ${destinationAmountOrError}`
+      )
+    }
+
     // Update balances on prepare
-    await services.accounts.adjustBalances({
+    const trxOrError = await services.accounts.transferFunds({
       sourceAccountId: accounts.incoming.accountId,
       destinationAccountId: accounts.outgoing.accountId,
-      sourceAmount: BigInt(amount),
-      callback: async (trx: Transaction) => {
-        await next()
-
-        if (response.fulfill) {
-          await trx.commit()
-        } else {
-          await trx.rollback()
-        }
-      }
+      sourceAmount,
+      destinationAmount: destinationAmountOrError
     })
+
+    await next()
+
+    if (!isTransferError(trxOrError)) {
+      if (response.fulfill) {
+        await trxOrError.commit()
+      } else {
+        await trxOrError.rollback()
+      }
+    }
   }
 }

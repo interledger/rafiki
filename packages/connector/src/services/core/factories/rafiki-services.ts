@@ -6,18 +6,28 @@ import { RafikiServices } from '../rafiki'
 import { MockAccountsService } from '../test/mocks/accounts-service'
 import { TestLoggerFactory } from './test-logger'
 
-export const RafikiServicesFactory = Factory.define<RafikiServices>('PeerInfo')
+interface MockRafikiServices extends RafikiServices {
+  accounts: MockAccountsService
+}
+
+export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
+  'PeerInfo'
+)
   //.attr('router', ['peers'], (peers: InMemoryPeers) => {
   //  return new InMemoryRouter(peers, { ilpAddress: 'test.rafiki' })
   //})
-  .attr('accounts', () => {
-    return new MockAccountsService()
+  .option('ilpAddress', 'test.rafiki')
+  .attr('accounts', ['ilpAddress'], (ilpAddress: string) => {
+    return new MockAccountsService(ilpAddress)
   })
   .attr('logger', TestLoggerFactory.build())
+  .attr('rates', {
+    convert: async (opts) => opts.sourceAmount
+  })
   .attr(
     'redis',
     () =>
-      new IORedis('redis://127.0.0.1:6379', {
+      new IORedis(process.env.REDIS || 'redis://127.0.0.1:6380', {
         // lazyConnect so that tests that don't use Redis don't have to disconnect it when they're finished.
         lazyConnect: true,
         stringNumbers: true

@@ -2,6 +2,7 @@
 import Faker from 'faker'
 import { createContext } from '../../utils'
 import { createTokenAuthMiddleware } from '../../middleware'
+import { MockAccountsService } from '../mocks/accounts-service'
 import { RafikiContext } from '../../rafiki'
 import { PeerAccountFactory, RafikiServicesFactory } from '../../factories'
 
@@ -37,6 +38,7 @@ describe('Token Auth Middleware', function () {
     })
 
     test('succeeds for valid token and binds data to context', async () => {
+      const accounts = new MockAccountsService('test.rafiki')
       const ctx = createContext<unknown, RafikiContext>({
         req: {
           headers: {
@@ -44,14 +46,13 @@ describe('Token Auth Middleware', function () {
             authorization: 'Bearer asd123'
           }
         },
-        services: RafikiServicesFactory.build({})
+        services: RafikiServicesFactory.build({ accounts })
       })
       const account = PeerAccountFactory.build({
         accountId: 'alice',
         http: {
           incoming: {
-            authTokens: ['asd123'],
-            endpoint: Faker.internet.url()
+            authTokens: ['asd123']
           },
           outgoing: {
             authToken: Faker.datatype.string(32),
@@ -59,7 +60,7 @@ describe('Token Auth Middleware', function () {
           }
         }
       })
-      await ctx.services.accounts.createAccount(account)
+      await accounts.createAccount(account)
 
       await createTokenAuthMiddleware()(ctx, async () => {})
       expect(ctx.state.account).toBe(account)

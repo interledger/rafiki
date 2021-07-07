@@ -4,6 +4,10 @@ on:
   push:
     branches:
     - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
 
 name: Sanity check
 
@@ -38,5 +42,7 @@ jobs:
       # NB: --check-cache is an important security check, see https://yarnpkg.com/features/zero-installs#does-it-have-security-implications
       - run: yarn install --immutable --immutable-cache --check-cache
       - run: yarn lint
-      - run: yarn test
+      - run: docker-compose -f packages/accounts/docker-compose.yml up -d
+      - run: docker-compose -f packages/connector/docker-compose.yml up -d
       - run: yarn build
+      - run: yarn test

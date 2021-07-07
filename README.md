@@ -14,9 +14,10 @@
       5. [Language](#language)
       6. [CI](#ci)
 3. [Packages](#packages)
-   1. [Backend](#backend)
-   2. [Connector](#connector)
-   3. [Frontend](#frontend)
+   1. [Accounts](#accounts)
+   2. [Backend](#backend)
+   3. [Connector](#connector)
+   4. [Frontend](#frontend)
 4. [Owners](#owners)
 
 ---
@@ -45,6 +46,13 @@ This does have [security implications](https://yarnpkg.com/features/zero-install
 that are fairly easy to mitigate.
 
 > DO NOT use `npm install`, this will cause the project to spontaneously self-destruct.
+
+```shell
+git clone git@github.com:coilhq/rafiki.git
+
+# Build dependencies with install scripts
+yarn install --immutable --immutable-cache
+```
 
 ### Workspaces
 
@@ -166,6 +174,10 @@ The workflows can be found in `.github/workflows`
 ---
 
 ## Packages
+
+### Accounts
+
+TODO
 
 ### Backend
 

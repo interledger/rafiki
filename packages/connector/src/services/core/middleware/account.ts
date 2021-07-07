@@ -1,7 +1,8 @@
 import { Errors } from 'ilp-packet'
 import { RafikiContext, RafikiMiddleware } from '../rafiki'
 import { AuthState } from './auth'
-import { IlpAccount } from '../services'
+import { AccountNotFoundError } from '../errors'
+import { IlpAccount } from 'accounts'
 
 export function createAccountMiddleware(): RafikiMiddleware {
   return async function account(
@@ -21,6 +22,9 @@ export function createAccountMiddleware(): RafikiMiddleware {
       : await accounts.getAccountByDestinationAddress(
           ctx.request.prepare.destination
         )
+    if (!outgoingAccount) {
+      throw new AccountNotFoundError('')
+    }
     if (outgoingAccount.disabled) {
       throw new Errors.UnreachableError('destination account is disabled')
     }
@@ -31,7 +35,8 @@ export function createAccountMiddleware(): RafikiMiddleware {
         return incomingAccount!
       },
       get outgoing(): IlpAccount {
-        return outgoingAccount
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return outgoingAccount!
       }
     }
     await next()
