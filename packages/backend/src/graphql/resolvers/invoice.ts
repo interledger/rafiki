@@ -34,8 +34,6 @@ export const getPageInfo: InvoiceConnectionResolvers['pageInfo'] = async (
   const edges = parent.edges
   if (edges == null || typeof edges == 'undefined') return {}
 
-  console.log('edges', edges)
-
   const firstEdge = edges[0].cursor
   const lastEdge = edges[edges.length - 1].cursor
 
