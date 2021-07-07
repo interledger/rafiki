@@ -66,7 +66,7 @@ describe('Account Service', (): void => {
       expect(retrievedAccount.id).toEqual(account.id)
       expect(retrievedAccount.scale).toEqual(account.scale)
       expect(retrievedAccount.currency).toEqual(account.currency)
-      expect(retrievedAccount.parentAccountId).toBeNull()
+      expect(retrievedAccount.superAccountId).toBeNull()
     })
   })
 
@@ -85,9 +85,7 @@ describe('Account Service', (): void => {
       expect(retrievedAccount.id).toEqual(subAccount.id)
       expect(retrievedAccount.scale).toEqual(subAccount.scale)
       expect(retrievedAccount.currency).toEqual(subAccount.currency)
-      expect(retrievedAccount.parentAccountId).toEqual(
-        subAccount.parentAccountId
-      )
+      expect(retrievedAccount.superAccountId).toEqual(subAccount.superAccountId)
     })
   })
 })

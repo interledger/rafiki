@@ -4,7 +4,7 @@ import { BaseService } from '../shared/baseService'
 export interface AccountService {
   get(id: string): Promise<Account>
   create(scale: number, currency: string): Promise<Account>
-  createSubAccount(parentAccountId: string): Promise<Account>
+  createSubAccount(superAccountId: string): Promise<Account>
 }
 
 type ServiceDependencies = BaseService
@@ -23,8 +23,7 @@ export async function createAccountService({
   return {
     get: (id) => getAccount(deps, id),
     create: (scale, currency) => createAccount(deps, scale, currency),
-    createSubAccount: (parentAccountId) =>
-      createSubAccount(deps, parentAccountId)
+    createSubAccount: (superAccountId) => createSubAccount(deps, superAccountId)
   }
 }
 
@@ -51,14 +50,14 @@ async function createAccount(
 
 async function createSubAccount(
   deps: ServiceDependencies,
-  parentAccountId: string
+  superAccountId: string
 ): Promise<Account> {
   deps.logger.info('Creates an account')
   // TODO: Create account in connector here (when connector account setup).
-  const parentAccount = await getAccount(deps, parentAccountId)
+  const parentAccount = await getAccount(deps, superAccountId)
   return Account.query(deps.knex).insertAndFetch({
     scale: parentAccount.scale,
     currency: parentAccount.currency,
-    parentAccountId: parentAccountId
+    superAccountId: superAccountId
   })
 }

@@ -73,7 +73,7 @@ describe('Invoice Service', (): void => {
       const subAccount = await accountService.get(invoice.accountId)
 
       expect(user.accountId).not.toEqual(invoice.accountId)
-      expect(user.accountId).toEqual(subAccount.parentAccountId)
+      expect(user.accountId).toEqual(subAccount.superAccountId)
       expect(subAccount.id).toEqual(invoice.accountId)
     })
   })
