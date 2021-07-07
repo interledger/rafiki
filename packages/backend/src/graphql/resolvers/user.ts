@@ -10,9 +10,8 @@ export const getUser: QueryResolvers['user'] = async (
   args,
   ctx
 ): ResolversTypes['User'] => {
-  const id = ctx.user
   const userService = await ctx.container.use('userService')
-  const user = await userService.get(id)
+  const user = await userService.get(args.userId)
   return {
     id: user.id
   }
@@ -23,9 +22,8 @@ export const getAccount: UserResolvers['account'] = async (
   args,
   ctx
 ): ResolversTypes['Account'] => {
-  const id = ctx.user
   const userService = await ctx.container.use('userService')
-  const user = await userService.get(id)
+  const user = await userService.get(parent.id)
   return {
     id: user.accountId
   }
@@ -36,11 +34,9 @@ export const getBalance: AccountResolvers['balance'] = async (
   args,
   ctx
 ): ResolversTypes['Amount'] => {
-  const id = ctx.user
-  const userService = await ctx.container.use('userService')
   const accountService = await ctx.container.use('accountService')
-  const user = await userService.get(id)
-  const account = await accountService.get(user.accountId)
+  const account = await accountService.get(parent.id)
+  // TODO: implement amount when we figure out how amounts are stored.
   return {
     amount: 300,
     currency: account.currency,

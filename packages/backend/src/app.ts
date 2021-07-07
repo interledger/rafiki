@@ -13,7 +13,6 @@ import { ApolloServer } from 'apollo-server-koa'
 import { IAppConfig } from './config/app'
 import { MessageProducer } from './messaging/messageProducer'
 import { WorkerUtils } from 'graphile-worker'
-import { UserToken } from './types/UserToken'
 import {
   addResolversToSchema,
   GraphQLFileLoader,
@@ -35,7 +34,6 @@ export interface AppContextData {
 }
 
 export interface ApolloContext {
-  user: UserToken | null
   messageProducer: MessageProducer
   container: IocContract<AppServices>
 }
@@ -150,11 +148,8 @@ export class App {
     // Setup Apollo on graphql endpoint
     this.apolloServer = new ApolloServer({
       schema: schemaWithResolvers,
-      context: async ({ ctx }): Promise<ApolloContext> => {
-        // TODO add user when auth is implemented.
-        const user = ctx.headers.user
+      context: async (): Promise<ApolloContext> => {
         return {
-          user: user,
           messageProducer: this.messageProducer,
           container: this.container
         }

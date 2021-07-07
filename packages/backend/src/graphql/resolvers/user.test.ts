@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-koa'
-import { Transaction } from 'knex'
+import Knex from 'knex'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -9,31 +9,18 @@ import { Config } from '../../config/app'
 import { User } from '../generated/graphql'
 import { User as UserModel } from '../../user/model'
 import { UserService } from '../../user/service'
+import { truncateTables } from '../../tests/tableManager'
 
-describe('User', (): void => {
+describe('User Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let userService: UserService
-  let trx: Transaction
+  let knex: Knex
 
   beforeAll(
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
-    }
-  )
-
-  beforeEach(
-    async (): Promise<void> => {
-      trx = await appContainer.knex.transaction()
-      userService = await deps.use('userService')
-    }
-  )
-
-  afterEach(
-    async (): Promise<void> => {
-      await trx.rollback()
-      await trx.destroy()
+      knex = await deps.use('knex')
     }
   )
 
@@ -41,36 +28,34 @@ describe('User', (): void => {
     async (): Promise<void> => {
       await appContainer.apolloClient.stop()
       await appContainer.shutdown()
+      await truncateTables(knex)
     }
   )
 
-  describe('Query user', (): void => {
+  describe('User', (): void => {
+    let userService: UserService
     let user: UserModel
 
     beforeEach(
       async (): Promise<void> => {
-        user = await userService.create('34ff06c3-f25b-4ab7-8525-eefa17204ede')
+        userService = await deps.use('userService')
+        user = await userService.create()
       }
     )
 
-    test('Can get a user and account', async (): Promise<void> => {
+    test('Can get a user', async (): Promise<void> => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query User {
-              user {
+            query User($userId: String!) {
+              user(userId: $userId) {
                 id
-                account {
-                  id
-                  balance {
-                    amount
-                    scale
-                    currency
-                  }
-                }
               }
             }
-          `
+          `,
+          variables: {
+            userId: user.id
+          }
         })
         .then(
           (query): User => {
@@ -82,6 +67,38 @@ describe('User', (): void => {
           }
         )
       expect(query.id).toEqual(user.id)
+    })
+
+    test("Can get a user's account", async (): Promise<void> => {
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query User($userId: String!) {
+              user(userId: $userId) {
+                account {
+                  id
+                  balance {
+                    amount
+                    scale
+                    currency
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            userId: user.id
+          }
+        })
+        .then(
+          (query): User => {
+            if (query.data) {
+              return query.data.user
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
       expect(query.account.id).toEqual(user.accountId)
       expect(query.account.balance.amount).toEqual(300)
       expect(query.account.balance.currency).toEqual('USD')

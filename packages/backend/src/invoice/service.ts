@@ -6,7 +6,7 @@ import assert from 'assert'
 
 export interface InvoiceService {
   get(id: string): Promise<Invoice>
-  create(id?: string): Promise<Invoice>
+  create(userId: string): Promise<Invoice>
   getUserInvoicesPage(
     userId: string,
     pagination?: Pagination
@@ -35,7 +35,7 @@ export async function createInvoiceService({
   }
   return {
     get: (id) => getInvoice(deps, id),
-    create: () => createInvoice(deps),
+    create: (userId) => createInvoice(deps, userId),
     getUserInvoicesPage: (userId, pagination) =>
       getUserInvoicesPage(deps, userId, pagination)
   }
@@ -49,13 +49,15 @@ async function getInvoice(
   return Invoice.query(deps.knex).findById(id)
 }
 
-async function createInvoice(deps: ServiceDependencies): Promise<Invoice> {
+async function createInvoice(
+  deps: ServiceDependencies,
+  userId: string
+): Promise<Invoice> {
   deps.logger.info('Creates an invoice')
-  // TODO: should get user from context
-  const user = await deps.userService.create()
+  const user = await deps.userService.get(userId)
   const subAccount = await deps.accountService.createSubAccount(user.accountId)
   return Invoice.query(deps.knex).insertAndFetch({
-    userId: user.id,
+    userId: userId,
     accountId: subAccount.id,
     active: true
   })
@@ -90,10 +92,17 @@ async function getUserInvoicesPage(
   deps.logger.info('Fetches a single page of invoices for a userId')
   assert.ok(deps.knex, 'Knex undefined')
 
+  if (
+    typeof pagination?.before === 'undefined' &&
+    typeof pagination?.last === 'number'
+  )
+    throw new Error("Can't paginate backwards from the start.")
+
   const first = pagination?.first || 20
   if (first < 0 || first > 100) throw new Error('Pagination index error')
   const last = pagination?.last || 20
   if (last < 0 || last > 100) throw new Error('Pagination index error')
+
   /**
    * Forward pagination
    */
@@ -102,11 +111,9 @@ async function getUserInvoicesPage(
       .where({
         userId: userId
       })
-      .andWhere(
-        deps.knex.raw(
-          '(createdAt, id) > (select createdAt :: TIMESTAMP, id from invoices where id = ?)',
-          pagination.after
-        )
+      .andWhereRaw(
+        '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "invoices" where "id" = ?)',
+        [pagination.after]
       )
       .orderBy([
         { column: 'createdAt', order: 'asc' },
@@ -123,11 +130,9 @@ async function getUserInvoicesPage(
       .where({
         userId: userId
       })
-      .andWhere(
-        deps.knex.raw(
-          '(createdAt, id) < (select createdAt :: TIMESTAMP, id from invoices where id = ?)',
-          pagination.before
-        )
+      .andWhereRaw(
+        '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "invoices" where "id" = ?)',
+        [pagination.before]
       )
       .orderBy([
         { column: 'createdAt', order: 'desc' },

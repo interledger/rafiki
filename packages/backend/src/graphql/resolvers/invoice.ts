@@ -10,8 +10,8 @@ export const getUserInvoices: UserResolvers['invoices'] = async (
   args,
   ctx
 ): ResolversTypes['InvoiceConnection'] => {
-  const invoiceService = ctx.container.use('invoiceService')
-  const invoices = invoiceService.getUserInvoicesPage(ctx.userId, args)
+  const invoiceService = await ctx.container.use('invoiceService')
+  const invoices = await invoiceService.getUserInvoicesPage(parent.id, args)
 
   return {
     edges: invoices.map((invoice: Invoice) => ({
@@ -26,28 +26,45 @@ export const getPageInfo: InvoiceConnectionResolvers['pageInfo'] = async (
   args,
   ctx
 ): ResolversTypes['PageInfo'] => {
-  const logger = ctx.container.use('logger')
-  const invoiceService = ctx.container.use('invoiceService')
+  const logger = await ctx.container.use('logger')
+  const invoiceService = await ctx.container.use('invoiceService')
 
   logger.info(parent.edges, 'getPageInfo parent edges')
 
   const edges = parent.edges
-  if (edges == null && typeof edges == 'undefined') return {}
+  if (edges == null || typeof edges == 'undefined') return {}
+
+  console.log('edges', edges)
 
   const firstEdge = edges[0].cursor
   const lastEdge = edges[edges.length - 1].cursor
 
-  const hasNextPageInvoices = invoiceService.getUserInvoicesPage(ctx.userId, {
-    after: lastEdge,
-    first: 1
-  })
-  const hasPreviousPageInvoices = invoiceService.getUserInvoicesPage(
-    ctx.userId,
-    {
-      before: firstEdge,
-      last: 1
-    }
-  )
+  const firstInvoice = await invoiceService.get(edges[0].node.id)
+
+  let hasNextPageInvoices, hasPreviousPageInvoices
+  try {
+    hasNextPageInvoices = await invoiceService.getUserInvoicesPage(
+      firstInvoice.userId,
+      {
+        after: lastEdge,
+        first: 1
+      }
+    )
+  } catch (e) {
+    hasNextPageInvoices = []
+  }
+  try {
+    hasPreviousPageInvoices = await invoiceService.getUserInvoicesPage(
+      firstInvoice.userId,
+      {
+        before: firstEdge,
+        last: 1
+      }
+    )
+  } catch (e) {
+    hasPreviousPageInvoices = []
+  }
+
   return {
     endCursor: lastEdge,
     hasNextPage: hasNextPageInvoices.length == 1,

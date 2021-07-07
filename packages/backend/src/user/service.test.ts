@@ -1,4 +1,4 @@
-import { Transaction as KnexTransaction } from 'knex'
+import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 
 import { UserService } from './service'
@@ -10,13 +10,14 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
+import { truncateTables } from '../tests/tableManager'
 
 describe('User Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: KnexTransaction
   let workerUtils: WorkerUtils
   let userService: UserService
+  let knex: Knex
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -32,20 +33,13 @@ describe('User Service', (): void => {
       })
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
+      knex = await deps.use('knex')
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      trx = await appContainer.knex.transaction()
       userService = await deps.use('userService')
-    }
-  )
-
-  afterEach(
-    async (): Promise<void> => {
-      await trx.rollback()
-      await trx.destroy()
     }
   )
 
@@ -53,7 +47,8 @@ describe('User Service', (): void => {
     async (): Promise<void> => {
       await appContainer.shutdown()
       await workerUtils.release()
-      await resetGraphileDb(appContainer.knex)
+      await resetGraphileDb(knex)
+      await truncateTables(knex)
     }
   )
 
