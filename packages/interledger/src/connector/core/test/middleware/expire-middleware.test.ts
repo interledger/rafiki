@@ -16,7 +16,7 @@ describe('Expire Middleware', function () {
     const ctx = createContext<unknown, RafikiContext>()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     ctx.services = RafikiServicesFactory.build()
-    const next = jest.fn().mockImplementation(() => {
+    const next = jest.fn().mockImplementation(async () => {
       jest.advanceTimersByTime(11 * 1000)
     })
     const middleware = createOutgoingExpireMiddleware()
@@ -24,5 +24,20 @@ describe('Expire Middleware', function () {
     await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
       TransferTimedOutError
     )
+  })
+
+  it("doesn't throw if within expire window", async () => {
+    const prepare = IlpPrepareFactory.build({
+      expiresAt: new Date(Date.now() + 10 * 1000)
+    })
+    const ctx = createContext<unknown, RafikiContext>()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    ctx.services = RafikiServicesFactory.build()
+    const next = jest.fn().mockImplementation(async () => {
+      jest.advanceTimersByTime(9 * 1000)
+    })
+    const middleware = createOutgoingExpireMiddleware()
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
   })
 })
