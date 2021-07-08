@@ -173,17 +173,38 @@ describe('Invoice Service', (): void => {
 
     test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
       const pagination = {
-        last: 10,
+        last: 5,
         before: invoicesCreated[10].id
       }
       const invoices = await invoiceService.getUserInvoicesPage(
         user.id,
         pagination
       )
-      expect(invoices).toHaveLength(10)
-      expect(invoices[0].id).toEqual(invoicesCreated[0].id)
-      expect(invoices[9].id).toEqual(invoicesCreated[9].id)
-      expect(invoices[10]).toBeUndefined()
+      expect(invoices).toHaveLength(5)
+      expect(invoices[0].id).toEqual(invoicesCreated[5].id)
+      expect(invoices[4].id).toEqual(invoicesCreated[9].id)
+      expect(invoices[5]).toBeUndefined()
+    })
+
+    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
+      const paginationForwards = {
+        first: 10
+      }
+      const invoicesForwards = await invoiceService.getUserInvoicesPage(
+        user.id,
+        paginationForwards
+      )
+      const paginationBackwards = {
+        last: 10,
+        before: invoicesCreated[10].id
+      }
+      const invoicesBackwards = await invoiceService.getUserInvoicesPage(
+        user.id,
+        paginationBackwards
+      )
+      expect(invoicesForwards).toHaveLength(10)
+      expect(invoicesBackwards).toHaveLength(10)
+      expect(invoicesForwards).toEqual(invoicesBackwards)
     })
 
     test('Providing before and after results in forward pagination', async (): Promise<void> => {
