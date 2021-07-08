@@ -32,7 +32,11 @@ export const getPageInfo: InvoiceConnectionResolvers['pageInfo'] = async (
   logger.info(parent.edges, 'getPageInfo parent edges')
 
   const edges = parent.edges
-  if (edges == null || typeof edges == 'undefined') return {}
+  if (edges == null || typeof edges == 'undefined' || edges.length == 0)
+    return {
+      hasPreviousPage: false,
+      hasNextPage: false
+    }
 
   const firstEdge = edges[0].cursor
   const lastEdge = edges[edges.length - 1].cursor

@@ -89,6 +89,50 @@ describe('Invoice Resolver', (): void => {
       expect(query.invoices?.pageInfo.endCursor).toEqual(invoices[19].id)
     })
 
+    test('No invoices, but invoices requested', async (): Promise<void> => {
+      const tempUser = await userService.create()
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query User($userId: String!) {
+              user(userId: $userId) {
+                invoices {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            userId: tempUser.id
+          }
+        })
+        .then(
+          (query): User => {
+            if (query.data) {
+              return query.data.user
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.invoices?.edges).toHaveLength(0)
+      expect(query.invoices?.pageInfo.hasNextPage).toBeFalsy()
+      expect(query.invoices?.pageInfo.hasPreviousPage).toBeFalsy()
+      expect(query.invoices?.pageInfo.startCursor).toBeNull()
+      expect(query.invoices?.pageInfo.endCursor).toBeNull()
+    })
+
     test('pageInfo is correct on pagination from start', async (): Promise<void> => {
       const query = await appContainer.apolloClient
         .query({
