@@ -1,6 +1,7 @@
 export interface IlpAccount {
   accountId: string
-  parentAccountId?: string
+  superAccountId?: string
+  subAccountIds: string[]
   disabled: boolean // you can fetch config of disabled account but it will not process packets
 
   asset: {

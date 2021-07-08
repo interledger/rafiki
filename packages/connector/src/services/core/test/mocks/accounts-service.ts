@@ -11,6 +11,7 @@ import {
 export type MockIlpAccount = CreateOptions & {
   disabled: boolean
   balance: bigint
+  subAccountIds: string[]
 }
 
 export class MockAccountsService implements AccountsService {

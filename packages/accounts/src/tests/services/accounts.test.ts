@@ -15,12 +15,7 @@ import {
 import { createTestApp, TestContainer } from '../helpers/app'
 import { randomAsset } from '../helpers/asset'
 import { AccountFactory } from '../factories'
-import {
-  AccountsService,
-  AppServices,
-  initIocContainer
-  // InvalidAssetError,
-} from '../..'
+import { AccountsService, AppServices, initIocContainer } from '../..'
 import { IocContract } from '@adonisjs/fold'
 
 import {
@@ -88,6 +83,7 @@ describe('Accounts Service', (): void => {
       const expectedAccount = {
         ...account,
         disabled: false,
+        subAccountIds: [],
         stream: {
           enabled: false
         }
@@ -132,9 +128,17 @@ describe('Accounts Service', (): void => {
       }
       const accountOrError = await accounts.createAccount(account)
       expect(isCreateAccountError(accountOrError)).toEqual(false)
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      delete account.http!.incoming
-      expect(accountOrError).toEqual(account)
+      const expectedAccount: IlpAccount = {
+        ...account,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        disabled: account.disabled!,
+        http: {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          outgoing: account.http!.outgoing
+        },
+        subAccountIds: []
+      }
+      expect(accountOrError).toEqual(expectedAccount)
       const retrievedAccount = await IlpAccountModel.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
         retrievedAccount.balanceId
@@ -149,52 +153,43 @@ describe('Accounts Service', (): void => {
       })
     })
 
-    // test.skip('Cannot create an account with non-existent parent', async (): Promise<void> => {
-    //   const parentAccountId = uuid()
-    //   const asset = randomAsset()
-    //   const account = {
-    //     accountId: uuid(),
-    //     asset,
-    //     maxPacketAmount: BigInt(100),
-    //     parentAccountId
-    //   }
+    test('Cannot create an account with non-existent super-account', async (): Promise<void> => {
+      const superAccountId = uuid()
+      const asset = randomAsset()
+      const account = {
+        accountId: uuid(),
+        asset,
+        superAccountId
+      }
 
-    //   await expect(accounts.createAccount(account)).rejects.toThrow(
-    //     UnknownAccountError
-    //   )
+      await expect(accounts.createAccount(account)).resolves.toEqual(
+        CreateAccountError.UnknownSuperAccount
+      )
 
-    //   await accounts.createAccount({
-    //     accountId: parentAccountId,
-    //     disabled: false,
-    //     asset,
-    //     maxPacketAmount: BigInt(100)
-    //   })
+      await accountFactory.build({
+        accountId: superAccountId,
+        asset
+      })
 
-    //   await accounts.createAccount(account)
-    // })
+      const accountOrError = await accounts.createAccount(account)
+      expect(isCreateAccountError(accountOrError)).toEqual(false)
+    })
 
-    // test.skip('Cannot create an account with different asset than parent', async (): Promise<void> => {
-    //   const { accountId: parentAccountId } = await accounts.createAccount({
-    //     accountId: uuid(),
-    //     asset: randomAsset(),
-    //     maxPacketAmount: BigInt(100)
-    //   })
+    test('Cannot create an account with different asset than super-account', async (): Promise<void> => {
+      const { accountId: superAccountId } = await accountFactory.build()
 
-    //   const asset = randomAsset()
-    //   await expect(
-    //     accounts.createAccount({
-    //       accountId: uuid(),
-    //       disabled: false,
-    //       asset,
-    //       maxPacketAmount: BigInt(100),
-    //       parentAccountId
-    //     })
-    //   ).rejects.toThrowError(new InvalidAssetError(asset.code, asset.scale))
-    // })
+      await expect(
+        accounts.createAccount({
+          accountId: uuid(),
+          asset: randomAsset(),
+          superAccountId
+        })
+      ).resolves.toEqual(CreateAccountError.InvalidAsset)
+    })
 
     // test("Auto-creates parent account's credit and loan balances", async (): Promise<void> => {
     //   const {
-    //     accountId: parentAccountId,
+    //     accountId: superAccountId,
     //     asset
     //   } = await accounts.createAccount({
     //     accountId: uuid(),
@@ -207,7 +202,7 @@ describe('Accounts Service', (): void => {
     //       creditBalanceId,
     //       loanBalanceId
     //     } = await IlpAccountModel.query()
-    //       .findById(parentAccountId)
+    //       .findById(superAccountId)
     //       .select('creditBalanceId', 'loanBalanceId')
     //     expect(creditBalanceId).toBeNull()
     //     expect(loanBalanceId).toBeNull()
@@ -217,7 +212,7 @@ describe('Accounts Service', (): void => {
     //     accountId: uuid(),
     //     asset,
     //     maxPacketAmount: BigInt(100),
-    //     parentAccountId
+    //     superAccountId
     //   })
 
     //   {
@@ -225,7 +220,7 @@ describe('Accounts Service', (): void => {
     //       creditBalanceId,
     //       loanBalanceId
     //     } = await IlpAccountModel.query()
-    //       .findById(parentAccountId)
+    //       .findById(superAccountId)
     //       .select('creditBalanceId', 'loanBalanceId')
     //     expect(creditBalanceId).not.toBeNull()
     //     expect(loanBalanceId).not.toBeNull()
@@ -408,6 +403,20 @@ describe('Accounts Service', (): void => {
       expect(retrievedAccount).toEqual(account)
     })
 
+    test("Can get an account's sub-accounts", async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const subAccount = await accountFactory.build({
+        superAccountId: account.accountId,
+        asset: account.asset
+      })
+      const expectedAccount = {
+        ...account,
+        subAccountIds: [subAccount.accountId]
+      }
+      const retrievedAccount = await accounts.getAccount(account.accountId)
+      expect(retrievedAccount).toEqual(expectedAccount)
+    })
+
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(accounts.getAccount(uuid())).resolves.toBeUndefined()
     })
@@ -451,9 +460,12 @@ describe('Accounts Service', (): void => {
       expect(isUpdateAccountError(accountOrError)).toEqual(false)
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       delete updateOptions.http!.incoming
-      const expectedAccount = {
+      const expectedAccount: IlpAccount = {
         ...updateOptions,
-        asset
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        disabled: updateOptions.disabled!,
+        asset,
+        subAccountIds: []
       }
       expect(accountOrError as IlpAccount).toEqual(expectedAccount)
       const account = await accounts.getAccount(accountId)
@@ -553,7 +565,7 @@ describe('Accounts Service', (): void => {
       //   accountId: uuid(),
       //   asset,
       //   maxPacketAmount: BigInt(100),
-      //   parentAccountId: accountId
+      //   superAccountId: accountId
       // })
 
       // {

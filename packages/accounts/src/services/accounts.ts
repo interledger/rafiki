@@ -18,7 +18,6 @@ import {
 
 import { Config } from '../config'
 import {
-  // InvalidAssetError,
   BalanceTransferError,
   UnknownBalanceError,
   UnknownLiquidityAccountError,
@@ -57,6 +56,7 @@ function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
       code: accountRow.assetCode,
       scale: accountRow.assetScale
     },
+    subAccountIds: [],
     stream: {
       enabled: accountRow.streamEnabled
     }
@@ -64,9 +64,14 @@ function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   if (accountRow.maxPacketAmount) {
     account.maxPacketAmount = accountRow.maxPacketAmount
   }
-  // if (accountRow.parentAccountId) {
-  //   account.parentAccountId = accountRow.parentAccountId
-  // }
+  if (accountRow.superAccountId) {
+    account.superAccountId = accountRow.superAccountId
+  }
+  if (accountRow.subAccounts) {
+    account.subAccountIds = accountRow.subAccounts.map(
+      (subAccount) => subAccount.id
+    )
+  }
   if (accountRow.outgoingToken && accountRow.outgoingEndpoint) {
     account.http = {
       outgoing: {
@@ -120,46 +125,46 @@ export class AccountsService implements AccountsServiceInterface {
         IlpAccountModel,
         IlpHttpToken,
         async (IlpAccountModel, IlpHttpToken) => {
-          // if (account.parentAccountId) {
-          //   const parentAccount = await IlpAccountModel.query()
-          //     .findById(account.parentAccountId)
-          //     .throwIfNotFound()
-          //   if (
-          //     account.asset.code !== parentAccount.assetCode ||
-          //     account.asset.scale !== parentAccount.assetScale
-          //   ) {
-          //     throw new InvalidAssetError(account.asset.code, account.asset.scale)
-          //   }
-          //   if (!parentAccount.loanBalanceId || !parentAccount.creditBalanceId) {
-          //     const loanBalanceId = uuid.v4()
-          //     const creditBalanceId = uuid.v4()
+          if (account.superAccountId) {
+            const superAccount = await IlpAccountModel.query()
+              .findById(account.superAccountId)
+              .throwIfNotFound()
+            if (
+              account.asset.code !== superAccount.assetCode ||
+              account.asset.scale !== superAccount.assetScale
+            ) {
+              return CreateAccountError.InvalidAsset
+            }
+            // if (!superAccount.loanBalanceId || !superAccount.creditBalanceId) {
+            //   const loanBalanceId = uuid.v4()
+            //   const creditBalanceId = uuid.v4()
 
-          //     await this.createBalances(
-          //       [
-          //         {
-          //           id: uuidToBigInt(loanBalanceId),
-          //           flags:
-          //             0 |
-          //             AccountFlags.credits_must_not_exceed_debits |
-          //             AccountFlags.linked
-          //         },
-          //         {
-          //           id: uuidToBigInt(creditBalanceId),
-          //           flags: 0 | AccountFlags.credits_must_not_exceed_debits
-          //         }
-          //       ],
-          //       account.asset.scale
-          //     )
+            //   await this.createBalances(
+            //     [
+            //       {
+            //         id: uuidToBigInt(loanBalanceId),
+            //         flags:
+            //           0 |
+            //           AccountFlags.credits_must_not_exceed_debits |
+            //           AccountFlags.linked
+            //       },
+            //       {
+            //         id: uuidToBigInt(creditBalanceId),
+            //         flags: 0 | AccountFlags.credits_must_not_exceed_debits
+            //       }
+            //     ],
+            //     account.asset.scale
+            //   )
 
-          //     await IlpAccountModel.query()
-          //       .patch({
-          //         creditBalanceId,
-          //         loanBalanceId
-          //       })
-          //       .findById(parentAccount.id)
-          //       .throwIfNotFound()
-          //   }
-          // }
+            //   await IlpAccountModel.query()
+            //     .patch({
+            //       creditBalanceId,
+            //       loanBalanceId
+            //     })
+            //     .findById(superAccount.id)
+            //     .throwIfNotFound()
+            // }
+          }
 
           const balanceId = randomId()
           // const debtBalanceId = uuid.v4()
@@ -195,7 +200,7 @@ export class AccountsService implements AccountsServiceInterface {
             balanceId,
             // debtBalanceId,
             // trustlineBalanceId,
-            // parentAccountId: account.parentAccountId,
+            superAccountId: account.superAccountId,
             maxPacketAmount: account.maxPacketAmount,
             outgoingEndpoint: account.http?.outgoing.endpoint,
             outgoingToken: account.http?.outgoing.authToken,
@@ -215,12 +220,12 @@ export class AccountsService implements AccountsServiceInterface {
             await IlpHttpToken.query().insert(incomingTokens)
           }
 
-          // if (!account.parentAccountId) {
-          await this.createCurrencyBalances(
-            account.asset.code,
-            account.asset.scale
-          )
-          // }
+          if (!account.superAccountId) {
+            await this.createCurrencyBalances(
+              account.asset.code,
+              account.asset.scale
+            )
+          }
           return toIlpAccount(accountRow)
         }
       )
@@ -232,6 +237,8 @@ export class AccountsService implements AccountsServiceInterface {
           case 'ilphttptokens_token_unique':
             return CreateAccountError.DuplicateIncomingToken
         }
+      } else if (err instanceof NotFoundError) {
+        return CreateAccountError.UnknownSuperAccount
       }
       throw err
     }
@@ -282,7 +289,10 @@ export class AccountsService implements AccountsServiceInterface {
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount | undefined> {
-    const accountRow = await IlpAccountModel.query().findById(accountId)
+    const accountRow = await IlpAccountModel.query()
+      .withGraphJoined('subAccounts')
+      .findById(accountId)
+
     return accountRow ? toIlpAccount(accountRow) : undefined
   }
 

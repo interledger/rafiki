@@ -9,6 +9,14 @@ export class IlpAccount extends BaseModel {
   }
 
   static relationMappings = {
+    subAccounts: {
+      relation: Model.HasManyRelation,
+      modelClass: IlpAccount,
+      join: {
+        from: 'ilpAccounts.id',
+        to: 'ilpAccounts.superAccountId'
+      }
+    },
     incomingTokens: {
       relation: Model.HasManyRelation,
       modelClass: IlpHttpToken,
@@ -29,7 +37,8 @@ export class IlpAccount extends BaseModel {
   // public loanBalanceId?: string
   // public creditBalanceId?: string
 
-  // public parentAccountId?: string
+  public superAccountId?: string
+  public subAccounts?: IlpAccount[]
 
   public readonly maxPacketAmount!: bigint
 

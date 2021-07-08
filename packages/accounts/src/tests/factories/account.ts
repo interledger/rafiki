@@ -14,6 +14,9 @@ export class AccountFactory {
       disabled: options.disabled || false,
       asset: options.asset || randomAsset()
     }
+    if (options.superAccountId) {
+      accountOptions.superAccountId = options.superAccountId
+    }
     if (options.maxPacketAmount) {
       accountOptions.maxPacketAmount = options.maxPacketAmount
     }

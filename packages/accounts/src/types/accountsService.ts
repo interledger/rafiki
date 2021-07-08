@@ -42,7 +42,7 @@ export interface AccountsService extends ConnectorAccountsService {
   withdraw(withdrawal: AccountWithdrawal): Promise<void | WithdrawError>
 }
 
-export type CreateOptions = Omit<IlpAccount, 'disabled'> & {
+export type CreateOptions = Omit<IlpAccount, 'disabled' | 'subAccountIds'> & {
   disabled?: boolean
   http?: {
     incoming?: {
@@ -53,7 +53,9 @@ export type CreateOptions = Omit<IlpAccount, 'disabled'> & {
 
 export enum CreateAccountError {
   DuplicateAccountId = 'DuplicateAccountId',
-  DuplicateIncomingToken = 'DuplicateIncomingToken'
+  DuplicateIncomingToken = 'DuplicateIncomingToken',
+  InvalidAsset = 'InvalidAsset',
+  UnknownSuperAccount = 'UnknownSuperAccount'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -62,8 +64,7 @@ export const isCreateAccountError = (o: any): o is CreateAccountError =>
 
 export type UpdateOptions = Omit<
   CreateOptions,
-  // 'asset' | 'parentAccountId'
-  'asset'
+  'asset' | 'superAccountId' | 'subAccountIds'
 >
 
 export enum UpdateAccountError {

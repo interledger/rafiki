@@ -13,7 +13,8 @@ exports.up = function (knex) {
     // table.uuid('loanBalanceId').nullable()
     // table.uuid('creditBalanceId').nullable()
 
-    // table.uuid('parentAccountId').nullable()
+    table.uuid('superAccountId').nullable().index()
+    table.foreign('superAccountId').references('ilpAccounts.id')
 
     table.bigInteger('maxPacketAmount').nullable()
 
