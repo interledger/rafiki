@@ -31,7 +31,6 @@ async function getAccount(
   deps: ServiceDependencies,
   id: string
 ): Promise<Account> {
-  deps.logger.info('returns an account')
   return Account.query(deps.knex).findById(id)
 }
 
@@ -40,7 +39,6 @@ async function createAccount(
   scale: number,
   currency: string
 ): Promise<Account> {
-  deps.logger.info('Creates an account')
   // TODO: Create account in connector here (when connector account setup).
   return Account.query(deps.knex).insertAndFetch({
     scale: scale,
@@ -52,7 +50,6 @@ async function createSubAccount(
   deps: ServiceDependencies,
   superAccountId: string
 ): Promise<Account> {
-  deps.logger.info('Creates an account')
   // TODO: Create account in connector here (when connector account setup).
   const parentAccount = await getAccount(deps, superAccountId)
   return Account.query(deps.knex).insertAndFetch({

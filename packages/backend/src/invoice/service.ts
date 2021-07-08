@@ -45,7 +45,6 @@ async function getInvoice(
   deps: ServiceDependencies,
   id: string
 ): Promise<Invoice> {
-  deps.logger.info('returns a user')
   return Invoice.query(deps.knex).findById(id)
 }
 
@@ -53,7 +52,6 @@ async function createInvoice(
   deps: ServiceDependencies,
   userId: string
 ): Promise<Invoice> {
-  deps.logger.info('Creates an invoice')
   const user = await deps.userService.get(userId)
   const subAccount = await deps.accountService.createSubAccount(user.accountId)
   return Invoice.query(deps.knex).insertAndFetch({
@@ -89,7 +87,6 @@ async function getUserInvoicesPage(
   userId: string,
   pagination?: Pagination
 ): Promise<Invoice[]> {
-  deps.logger.info('Fetches a single page of invoices for a userId')
   assert.ok(deps.knex, 'Knex undefined')
 
   if (
