@@ -4,7 +4,7 @@
     "lint": "yarn lint:local",
     "format": "yarn format:local",
     "format:check": "yarn format:check:local",
-    "test": "yarn test:local",
+    "test": "yarn test:local --runInBand",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml"
   },

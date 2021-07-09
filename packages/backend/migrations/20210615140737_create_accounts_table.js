@@ -3,6 +3,7 @@ exports.up = function (knex) {
     table.uuid('id').notNullable().primary()
     table.integer('scale').notNullable()
     table.string('currency').notNullable()
+    table.uuid('superAccountId').nullable()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())

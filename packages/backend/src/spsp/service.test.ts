@@ -1,6 +1,6 @@
 import EventEmitter from 'events'
 import * as crypto from 'crypto'
-import { Transaction as KnexTransaction } from 'knex'
+import Knex from 'knex'
 import Koa from 'koa'
 import * as httpMocks from 'node-mocks-http'
 import { AppContext, AppContextData, AppServices } from '../app'
@@ -16,11 +16,12 @@ import { IocContract } from '@adonisjs/fold'
 import { makeWorkerUtils, WorkerUtils } from 'graphile-worker'
 import { v4 } from 'uuid'
 import { StreamServer } from '@interledger/stream-receiver'
+import { truncateTables } from '../tests/tableManager'
 
 describe('SPSP Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: KnexTransaction
+  let knex: Knex
   let workerUtils: WorkerUtils
   let userService: UserService
   let SPSPService: SPSPService
@@ -42,22 +43,15 @@ describe('SPSP Service', (): void => {
       })
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
+      knex = await deps.use('knex')
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      trx = await appContainer.knex.transaction()
       userService = await deps.use('userService')
       SPSPService = await deps.use('SPSPService')
       streamServer = await deps.use('streamServer')
-    }
-  )
-
-  afterEach(
-    async (): Promise<void> => {
-      await trx.rollback()
-      await trx.destroy()
     }
   )
 
@@ -65,7 +59,8 @@ describe('SPSP Service', (): void => {
     async (): Promise<void> => {
       await appContainer.shutdown()
       await workerUtils.release()
-      await resetGraphileDb(appContainer.knex)
+      await resetGraphileDb(knex)
+      await truncateTables(knex)
     }
   )
 

@@ -13,7 +13,6 @@ import { ApolloServer } from 'apollo-server-koa'
 import { IAppConfig } from './config/app'
 import { MessageProducer } from './messaging/messageProducer'
 import { WorkerUtils } from 'graphile-worker'
-import { UserToken } from './types/UserToken'
 import {
   addResolversToSchema,
   GraphQLFileLoader,
@@ -23,6 +22,7 @@ import { resolvers } from './graphql/resolvers'
 import { UserService } from './user/service'
 import { AccountService } from './account/service'
 import { SPSPService } from './spsp/service'
+import { InvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 
 export interface AppContextData {
@@ -34,7 +34,6 @@ export interface AppContextData {
 }
 
 export interface ApolloContext {
-  user: UserToken | null
   messageProducer: MessageProducer
   container: IocContract<AppServices>
 }
@@ -50,6 +49,7 @@ export interface AppServices {
   userService: Promise<UserService>
   accountService: Promise<AccountService>
   SPSPService: Promise<SPSPService>
+  invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
 }
 
@@ -148,11 +148,8 @@ export class App {
     // Setup Apollo on graphql endpoint
     this.apolloServer = new ApolloServer({
       schema: schemaWithResolvers,
-      context: async ({ ctx }): Promise<ApolloContext> => {
-        // TODO add user when auth is implemented.
-        const user = ctx.headers.user
+      context: async (): Promise<ApolloContext> => {
         return {
-          user: user,
           messageProducer: this.messageProducer,
           container: this.container
         }

@@ -28,12 +28,38 @@ export type Amount = {
 
 export type Invoice = {
   __typename?: 'Invoice';
+  id: Scalars['ID'];
   receivedAmount: Amount;
   maximumAmount?: Maybe<Amount>;
   active: Scalars['Boolean'];
   createdAt: Scalars['String'];
   expiresAt?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
+  totalAmount: Scalars['String'];
+};
+
+export type InvoiceConnection = {
+  __typename?: 'InvoiceConnection';
+  pageInfo: PageInfo;
+  edges: Array<InvoiceEdge>;
+};
+
+export type InvoiceEdge = {
+  __typename?: 'InvoiceEdge';
+  node: Invoice;
+  cursor: Scalars['String'];
+};
+
+export type PageInfo = {
+  __typename?: 'PageInfo';
+  /** Paginating forwards: the cursor to continue. */
+  endCursor?: Maybe<Scalars['String']>;
+  /** Paginating forwards: Are there more pages? */
+  hasNextPage: Scalars['Boolean'];
+  /** Paginating backwards: Are there more pages? */
+  hasPreviousPage: Scalars['Boolean'];
+  /** Paginating backwards: the cursor to continue. */
+  startCursor?: Maybe<Scalars['String']>;
 };
 
 export type Query = {
@@ -41,18 +67,32 @@ export type Query = {
   user?: Maybe<User>;
 };
 
+
+export type QueryUserArgs = {
+  userId: Scalars['String'];
+};
+
 export type User = {
   __typename?: 'User';
   id: Scalars['ID'];
   balance: Amount;
   account: Account;
-  invoices: Array<Maybe<Invoice>>;
+  /**
+   * invoices
+   * @param after Returns the elements in the list that come after the specified cursor.
+   * @param before Returns the elements in the list that come before the specified cursor.
+   * @param first Returns the first _n_ elements from the list.
+   * @param last Returns the last _n_ elements from the list.
+   */
+  invoices?: Maybe<InvoiceConnection>;
 };
 
 
 export type UserInvoicesArgs = {
-  count?: Maybe<Scalars['Int']>;
-  skip?: Maybe<Scalars['Int']>;
+  after?: Maybe<Scalars['String']>;
+  before?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  last?: Maybe<Scalars['Int']>;
 };
 
 
@@ -140,6 +180,9 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Invoice: ResolverTypeWrapper<Partial<Invoice>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
+  InvoiceConnection: ResolverTypeWrapper<Partial<InvoiceConnection>>;
+  InvoiceEdge: ResolverTypeWrapper<Partial<InvoiceEdge>>;
+  PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   Query: ResolverTypeWrapper<{}>;
   User: ResolverTypeWrapper<Partial<User>>;
 };
@@ -153,6 +196,9 @@ export type ResolversParentTypes = {
   String: Partial<Scalars['String']>;
   Invoice: Partial<Invoice>;
   Boolean: Partial<Scalars['Boolean']>;
+  InvoiceConnection: Partial<InvoiceConnection>;
+  InvoiceEdge: Partial<InvoiceEdge>;
+  PageInfo: Partial<PageInfo>;
   Query: {};
   User: Partial<User>;
 };
@@ -171,24 +217,46 @@ export type AmountResolvers<ContextType = any, ParentType extends ResolversParen
 };
 
 export type InvoiceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Invoice'] = ResolversParentTypes['Invoice']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   maximumAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
   active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  totalAmount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InvoiceConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['InvoiceConnection'] = ResolversParentTypes['InvoiceConnection']> = {
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  edges?: Resolver<Array<ResolversTypes['InvoiceEdge']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InvoiceEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['InvoiceEdge'] = ResolversParentTypes['InvoiceEdge']> = {
+  node?: Resolver<ResolversTypes['Invoice'], ParentType, ContextType>;
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PageInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['PageInfo'] = ResolversParentTypes['PageInfo']> = {
+  endCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  hasPreviousPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  startCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryUserArgs, 'userId'>>;
 };
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   balance?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   account?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
-  invoices?: Resolver<Array<Maybe<ResolversTypes['Invoice']>>, ParentType, ContextType, RequireFields<UserInvoicesArgs, never>>;
+  invoices?: Resolver<Maybe<ResolversTypes['InvoiceConnection']>, ParentType, ContextType, RequireFields<UserInvoicesArgs, never>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -196,6 +264,9 @@ export type Resolvers<ContextType = any> = {
   Account?: AccountResolvers<ContextType>;
   Amount?: AmountResolvers<ContextType>;
   Invoice?: InvoiceResolvers<ContextType>;
+  InvoiceConnection?: InvoiceConnectionResolvers<ContextType>;
+  InvoiceEdge?: InvoiceEdgeResolvers<ContextType>;
+  PageInfo?: PageInfoResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
 };
