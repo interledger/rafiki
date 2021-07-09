@@ -1,4 +1,4 @@
-import { Model } from 'objection'
+import { Model, ModelOptions, QueryContext } from 'objection'
 import { DbErrors } from 'objection-db-errors'
 import { v4 as uuid } from 'uuid'
 
@@ -17,7 +17,7 @@ export class BaseModel extends DbErrors(Model) {
     this.updatedAt = new Date().toISOString()
   }
 
-  public $beforeUpdate(): void {
+  public $beforeUpdate(_opts: ModelOptions, _queryContext: QueryContext): void {
     this.updatedAt = new Date().toISOString()
   }
 }

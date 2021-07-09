@@ -4,7 +4,11 @@ import { strictEqual } from 'assert'
 import {
   CreateIlpAccountMutationResponse,
   CreateIlpSubAccountMutationResponse,
-  IlpAccount
+  ExtendCreditInput,
+  ExtendCreditMutationResponse,
+  IlpAccount,
+  RevokeCreditInput,
+  RevokeCreditMutationResponse
 } from './generated/graphql'
 
 export interface ConnectorService {
@@ -13,6 +17,8 @@ export interface ConnectorService {
   createIlpSubAccount(
     superAccountId: string
   ): Promise<CreateIlpSubAccountMutationResponse>
+  extendCredit(input: ExtendCreditInput): Promise<ExtendCreditMutationResponse>
+  revokeCredit(input: RevokeCreditInput): Promise<RevokeCreditMutationResponse>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -34,7 +40,9 @@ export async function createConnectorService({
     getIlpAccount: (id) => getIlpAccount(deps, id),
     createIlpAccount: () => createIlpAccount(deps),
     createIlpSubAccount: (superAccountId) =>
-      createIlpSubAccount(deps, superAccountId)
+      createIlpSubAccount(deps, superAccountId),
+    extendCredit: (input) => extendCredit(deps, input),
+    revokeCredit: (input) => revokeCredit(deps, input)
   }
 }
 
@@ -50,6 +58,7 @@ async function getIlpAccount(
         query IlpAccount($id: String!) {
           ilpAccount(id: $id) {
             id
+            balance
           }
         }
       `,
@@ -138,4 +147,62 @@ async function createIlpSubAccount(
     )
 
   return response
+}
+
+function extendCredit(
+  deps: ServiceDependencies,
+  input: ExtendCreditInput
+): Promise<ExtendCreditMutationResponse> {
+  return deps.client
+    .mutate({
+      mutation: gql`
+        mutation ExtendCredit(input: ExtendCreditInput!) {
+          extendCredit(input: $input) {
+            code
+            success
+            message
+            error
+          }
+        }
+      `,
+      variables: { input }
+    })
+    .then(
+      (query): ExtendCreditMutationResponse => {
+        if (query.data) {
+          return query.data.extendCredit
+        } else {
+          throw new Error('Data was empty')
+        }
+      }
+    )
+}
+
+async function revokeCredit(
+  deps: ServiceDependencies,
+  input: RevokeCreditInput
+): Promise<RevokeCreditMutationResponse> {
+  return deps.client
+    .mutate({
+      mutation: gql`
+        mutation RevokeCredit(input: RevokeCreditInput!) {
+          revokeCredit(input: $input) {
+            code
+            success
+            message
+            error
+          }
+        }
+      `,
+      variables: { input }
+    })
+    .then(
+      (query): RevokeCreditMutationResponse => {
+        if (query.data) {
+          return query.data.revokeCredit
+        } else {
+          throw new Error('Data was empty')
+        }
+      }
+    )
 }

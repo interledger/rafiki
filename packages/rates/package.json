@@ -1,6 +1,7 @@
 {
   "name": "rates",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "lint": "yarn lint:local",
     "format": "yarn format:local",

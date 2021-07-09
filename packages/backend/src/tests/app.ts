@@ -31,6 +31,7 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
+  config.env = 'test'
   config.port = 0
   config.adminPort = 0
   const logger = createLogger({
@@ -147,6 +148,20 @@ export async function createMockConnectorService(): Promise<ConnectorService> {
       } as unknown) as IlpAccount
       return {
         ilpAccount: account,
+        code: '200',
+        message: 'OK',
+        success: true
+      }
+    },
+    extendCredit: async (_input) => {
+      return {
+        code: '200',
+        message: 'OK',
+        success: true
+      }
+    },
+    revokeCredit: async (_input) => {
+      return {
         code: '200',
         message: 'OK',
         success: true

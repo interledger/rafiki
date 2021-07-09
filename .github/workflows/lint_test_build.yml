@@ -35,6 +35,8 @@ jobs:
           key: ${{ github.sha }}
       - run: yarn workspace backend lint
       - run: yarn workspace backend format:check
+      - run: yarn install --immutable --immutable-cache
+      - run: yarn build
       - run: yarn workspace backend test
 
   interledger:

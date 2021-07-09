@@ -6,9 +6,13 @@ import { makeWorkerUtils } from 'graphile-worker'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import IORedis from 'ioredis'
 
+import { createRatesService } from 'rates'
 import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { GraphileProducer } from './messaging/graphileProducer'
+import { createPaymentProgressService } from './payment_progress/service'
+import { createOutgoingPaymentService } from './outgoing_payment/service'
+import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { createAccountService } from './account/service'
 import { createSPSPService } from './spsp/service'
 import { createInvoiceService } from './invoice/service'
@@ -143,6 +147,43 @@ export function initIocContainer(
     return await createConnectorService({
       logger: logger,
       client: client
+    })
+  })
+
+  container.singleton('paymentProgressService', async (deps) => {
+    return await createPaymentProgressService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
+    })
+  })
+
+  container.singleton('ratesService', async (deps) => {
+    const config = await deps.use('config')
+    return createRatesService({
+      logger: await deps.use('logger'),
+      pricesUrl: config.pricesUrl,
+      pricesLifetime: config.pricesLifetime
+    })
+  })
+
+  container.singleton('makeIlpPlugin', async (_deps) => {
+    return (sourceAccountId: string): IlpPlugin => {
+      return createIlpPlugin(config.ilpUrl, `Bearer ${sourceAccountId}`)
+    }
+  })
+
+  container.singleton('outgoingPaymentService', async (deps) => {
+    const config = await deps.use('config')
+    return await createOutgoingPaymentService({
+      slippage: config.slippage,
+      quoteLifespan: config.quoteLifespan,
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      accountService: await deps.use('accountService'),
+      connectorService: await deps.use('connectorService'),
+      paymentProgressService: await deps.use('paymentProgressService'),
+      makeIlpPlugin: await deps.use('makeIlpPlugin'),
+      ratesService: await deps.use('ratesService')
     })
   })
 

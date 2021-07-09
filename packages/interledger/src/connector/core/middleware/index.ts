@@ -9,7 +9,6 @@ export * from '../controllers/stream'
 export * from './stream-address'
 export * from './ilp-packet'
 //export * from './peer'
-export * from './token-auth'
 
 // export * from './heartbeat' //TODO: is this still being supported?
 export * from './liquidity-check'

@@ -4,6 +4,7 @@ import { convert, ConvertOptions, LoggingService } from './util'
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
 export interface RatesService {
+  prices(): Promise<Prices>
   convert(
     opts: Omit<ConvertOptions, 'exchangeRate'>
   ): Promise<bigint | ConvertError>
@@ -65,6 +66,10 @@ class RatesServiceImpl implements RatesService {
     // source asset → base currency → destination asset
     const exchangeRate = sourcePrice / destinationPrice
     return convert({ exchangeRate, ...opts })
+  }
+
+  async prices(): Promise<Prices> {
+    return this.sharedLoad()
   }
 
   private sharedLoad(): Promise<Prices> {

@@ -1,3 +1,4 @@
+import * as http from 'http'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Koa, { Middleware } from 'koa'
 import createRouter, { Router as KoaRouter } from 'koa-joi-router'
@@ -9,7 +10,10 @@ import {
   ilpAddressToPath,
   RafikiPrepare
 } from './middleware/ilp-packet'
-import { createTokenAuthMiddleware } from './middleware/token-auth'
+import {
+  createTokenAuthMiddleware,
+  createAdminAuthMiddleware
+} from './middleware'
 import { LoggingService } from './services/logger'
 import {
   ConnectorAccountsService as AccountsService,
@@ -74,14 +78,16 @@ export type RafikiContext<T = any> = Koa.ParameterizedContext<
 >
 export type RafikiMiddleware<T = any> = Middleware<T, RafikiContextMixin>
 
-export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
+export class Rafiki<T = any> {
   //private _router?: Router
   private _accounts?: AccountsService
   private streamServer: StreamServer
   private redis: Redis
-  constructor(config: RafikiConfig) {
-    super()
 
+  private publicServer: Koa<T, RafikiContextMixin> = new Koa()
+  private adminServer: Koa<T, RafikiContextMixin> = new Koa()
+
+  constructor(config: RafikiConfig) {
     //this._router = config && config.router ? config.router : undefined
     this.redis = config.redis
     this._accounts = config && config.accounts ? config.accounts : undefined
@@ -99,7 +105,7 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
     this.streamServer = new StreamServer(config.stream)
     const { redis, streamServer } = this
     // Set global context that exposes services
-    this.context.services = {
+    this.publicServer.context.services = this.adminServer.context.services = {
       //get router(): Router {
       //  return routerOrThrow()
       //},
@@ -117,6 +123,7 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
       },
       logger
     }
+    this._useIlp()
   }
 
   //public get router(): Router | undefined {
@@ -136,27 +143,37 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
   }
 
   public get logger(): LoggingService {
-    return this.context.services.logger
+    return this.publicServer.context.services.logger
   }
 
   public set logger(logger: LoggingService) {
-    this.context.services.logger = logger
+    this.publicServer.context.services.logger = this.adminServer.context.services.logger = logger
   }
 
-  public useIlp(): void {
+  public _useIlp(): void {
+    this.publicServer.use(createTokenAuthMiddleware())
+    this.adminServer.use(createAdminAuthMiddleware())
     this.use(createIlpPacketMiddleware())
     this.use(createStreamAddressMiddleware())
     this.use(createAccountMiddleware())
   }
+
+  public use(middleware: Koa.Middleware<T, RafikiContextMixin>): void {
+    this.adminServer.use(middleware)
+    this.publicServer.use(middleware)
+  }
+
+  public listenPublic(port: number): http.Server {
+    return this.publicServer.listen(port)
+  }
+
+  public listenAdmin(port: number): http.Server {
+    return this.adminServer.listen(port)
+  }
 }
 
 export function createApp(config: RafikiConfig): Rafiki {
-  const app = new Rafiki(config)
-
-  app.use(createTokenAuthMiddleware())
-  app.useIlp()
-
-  return app
+  return new Rafiki(config)
 }
 
 // TODO the joi-koa-middleware needs to be replaced by @koa/router. But the type defs are funky and require work

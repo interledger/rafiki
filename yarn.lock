@@ -2260,6 +2260,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@interledger/pay@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@interledger/pay@npm:0.3.0"
+  dependencies:
+    abort-controller: ^3.0.0
+    ilp-logger: ^1.4.2
+    ilp-packet: ^3.1.2
+    ilp-protocol-stream: ^2.6.4
+    long: ^4.0.0
+    node-fetch: 2.6.1
+  checksum: 4ed42264cd846b1c95e1222d82d9d9433b2710f9ff232484ab504690d06d28d77c2e2538479bc4b80ebbee4d4d0800acaeffa840555ade8acf50ddccf9b8dc3e
+  languageName: node
+  linkType: hard
+
 "@interledger/stream-receiver@npm:^0.2.2":
   version: 0.2.2
   resolution: "@interledger/stream-receiver@npm:0.2.2"
@@ -2975,6 +2989,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/debounce@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@types/debounce@npm:1.2.0"
+  checksum: c45dbc5fa369b9d29616f994a83ca6833a82ebdabbb455a92fed3c292d0f15482e6ba76c8fed7ea3c947df398fd89754880e38d6a247323dac467241f7ae5be0
+  languageName: node
+  linkType: hard
+
 "@types/debug@npm:^4.1.0, @types/debug@npm:^4.1.2, @types/debug@npm:^4.1.5":
   version: 4.1.5
   resolution: "@types/debug@npm:4.1.5"
@@ -3439,7 +3460,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^10.1.0":
+"@types/node@npm:^10.1.0, @types/node@npm:^10.17.24":
   version: 10.17.60
   resolution: "@types/node@npm:10.17.60"
   checksum: af7e0b300da2b917555563d9bf770d1d07d9aa1930ec639336d5ba0a32e801e04f0291a658d0d0d77ce9f5df377c3018bf9de6416cee956bddd59de0e1b93d0f
@@ -3893,7 +3914,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"abort-controller@npm:3.0.0":
+"abort-controller@npm:3.0.0, abort-controller@npm:^3.0.0":
   version: 3.0.0
   resolution: "abort-controller@npm:3.0.0"
   dependencies:
@@ -4926,9 +4947,11 @@ __metadata:
     "@graphql-tools/graphql-file-loader": ^7.0.6
     "@graphql-tools/load": ^7.1.9
     "@graphql-tools/schema": ^8.1.2
+    "@interledger/pay": ^0.3.0
     "@interledger/stream-receiver": ^0.2.2
     "@koa/cors": ^3.1.0
     "@koa/router": ^10.0.0
+    "@types/debounce": ^1.2.0
     "@types/ioredis": ^4.22.3
     "@types/jest": ^26.0.22
     "@types/koa": ^2.13.3
@@ -4943,6 +4966,7 @@ __metadata:
     apollo-server-koa: ^2.25.1
     base64url: ^3.0.1
     cross-fetch: ^3.1.4
+    debounce: ^1.2.1
     fishery: ^1.2.0
     got: ^11.8.2
     graphile-scheduler: ^0.8.0
@@ -4950,6 +4974,9 @@ __metadata:
     graphql: ^15.5.0
     graphql-scalars: ^1.10.0
     graphql-tools: ^7.0.5
+    ilp-packet: ^3.1.2
+    ilp-plugin-http: ^1.6.1
+    ilp-protocol-ildcp: ^2.2.2
     ioredis: ^4.26.0
     knex: ^0.21.17
     koa: ^2.13.1
@@ -4962,6 +4989,7 @@ __metadata:
     pg: ^8.6.0
     pino: ^6.11.3
     pino-pretty: ^4.7.1
+    rates: "workspace:packages/rates"
     testcontainers: ^7.20.4
     uuid: ^8.3.2
   languageName: unknown
@@ -6260,7 +6288,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debounce@npm:^1.2.0":
+"debounce@npm:^1.2.0, debounce@npm:^1.2.1":
   version: 1.2.1
   resolution: "debounce@npm:1.2.1"
   checksum: 04a00c6c45173ac6fb03ad3a7cf742fa4a86f6bf86b22f5b867085f739d0010ad98cbb92e80d60293faf6efb5452c637941092bd8d783cfeabe55c2000b1b07f
@@ -7342,13 +7370,6 @@ __metadata:
   version: 2.0.7
   resolution: "fast-safe-stringify@npm:2.0.7"
   checksum: 7bd22543263b707870d70c6f2336b6e8563e34d6807dc388cc0566895e31e0a8273af017a7eb1c9538d0ef54288284e1c0585b557bd856491295a847159fd929
-  languageName: node
-  linkType: hard
-
-"fast-safe-stringify@npm:^2.0.8":
-  version: 2.0.8
-  resolution: "fast-safe-stringify@npm:2.0.8"
-  checksum: 2198ef6c4917ac6ad7a3cff8b80abc2762c89a0c700548459288fce45598a2488c0ae393cd456b4212a8259fed9d1630303106efe4ae3b1c35dab2fb66526cdd
   languageName: node
   linkType: hard
 
@@ -8636,6 +8657,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ilp-plugin-http@npm:^1.6.1":
+  version: 1.6.1
+  resolution: "ilp-plugin-http@npm:1.6.1"
+  dependencies:
+    "@types/node": ^10.17.24
+    ilp-packet: ^3.0.9
+    ilp-protocol-ildcp: ^2.1.4
+    jsonwebtoken: ^8.4.0
+    koa: ^2.6.2
+    node-fetch: ^2.3.0
+    raw-body: ^2.3.3
+  checksum: 22ff8cae8abfd89db8aba421a8afd96a26006aca477fe8e34be2f16a02f474ad042899a22ee24a2d225b83c8a169176fad52527d3e58538d6c0a316ee8ed6902
+  languageName: node
+  linkType: hard
+
 "ilp-protocol-ccp@npm:^1.2.2":
   version: 1.2.2
   resolution: "ilp-protocol-ccp@npm:1.2.2"
@@ -8869,7 +8905,8 @@ __metadata:
     objection-db-errors: ^1.1.2
     oer-utils: ^5.1.2
     pg: ^8.6.0
-    pino: ^6.13.0
+    pino: ^6.11.3
+    rates: "workspace:packages/rates"
     raw-body: ^2.4.1
     rosie: ^2.1.0
     rxjs: ^6.6.7
@@ -10219,7 +10256,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:^8.5.1":
+"jsonwebtoken@npm:^8.4.0, jsonwebtoken@npm:^8.5.1":
   version: 8.5.1
   resolution: "jsonwebtoken@npm:8.5.1"
   dependencies:
@@ -10440,7 +10477,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"koa@npm:2.13.1, koa@npm:^2.13.1":
+"koa@npm:2.13.1, koa@npm:^2.13.1, koa@npm:^2.6.2":
   version: 2.13.1
   resolution: "koa@npm:2.13.1"
   dependencies:
@@ -11431,7 +11468,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:2.6.1, node-fetch@npm:^2.6.1":
+"node-fetch@npm:2.6.1, node-fetch@npm:^2.3.0, node-fetch@npm:^2.6.1":
   version: 2.6.1
   resolution: "node-fetch@npm:2.6.1"
   checksum: cbb171635e538162b977eac5dfe7a1e07a9a02e991924377a6435502291e2f823d306b95aabc455caebf4a118ccf836868462bc70ccc3095af02bb9da61fda37
@@ -12351,22 +12388,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pino@npm:^6.13.0":
-  version: 6.13.0
-  resolution: "pino@npm:6.13.0"
-  dependencies:
-    fast-redact: ^3.0.0
-    fast-safe-stringify: ^2.0.8
-    flatstr: ^1.0.12
-    pino-std-serializers: ^3.1.0
-    quick-format-unescaped: ^4.0.3
-    sonic-boom: ^1.0.2
-  bin:
-    pino: bin.js
-  checksum: 4fd045eeff8edffb8e5bd9677553f511155d1f56353d9a12a03880a7ca26a0eb29808705a2ace223dff9c77dc20c269b31e33591b73728c6f4f641cc968a1080
-  languageName: node
-  linkType: hard
-
 "pirates@npm:^4.0.1":
   version: 4.0.1
   resolution: "pirates@npm:4.0.1"
@@ -12681,12 +12702,10 @@ __metadata:
     "@types/pino": ^6.3.7
     "@types/sax": ^1.2.1
     axios: ^0.21.1
-    got: ^11.8.2
     koa: ^2.13.1
     nock: ^13.1.0
     node-mocks-http: ^1.10.1
     pino: ^6.11.3
-    pino-pretty: ^4.7.1
     sax: ^1.2.4
   languageName: unknown
   linkType: soft
