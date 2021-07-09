@@ -40,6 +40,8 @@
     "oer-utils": "^5.1.2",
     "pg": "^8.6.0",
     "pino": "^6.13.0",
+    "pino": "^6.11.3",
+    "rates": "workspace:packages/rates",
     "raw-body": "^2.4.1",
     "rosie": "^2.1.0",
     "rxjs": "^6.6.7",
