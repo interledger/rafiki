@@ -21,10 +21,13 @@ export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   port: envInt('PORT', 3001),
   adminPort: envInt('ADMIN_PORT', 3003),
-  databaseUrl: envString(
-    'DATABASE_URL',
-    'postgresql://postgres:password@localhost:5432/development'
-  ),
+  databaseUrl:
+    process.env.NODE_ENV === 'test'
+      ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
+      : envString(
+          'DATABASE_URL',
+          'postgresql://postgres:password@localhost:5432/development'
+        ),
   env: envString('NODE_ENV', 'development'),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   coilApiGrpcUrl: envString('COIL_API_GRPC_URL', 'localhost:6000'),
