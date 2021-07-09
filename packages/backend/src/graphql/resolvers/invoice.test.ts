@@ -21,14 +21,10 @@ describe('Invoice Resolver', (): void => {
   let knex: Knex
   let invoices: Invoice[]
   let user: UserModel
-  const overrideConfig = {
-    ...Config,
-    databaseUrl: `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
-  }
 
   beforeAll(
     async (): Promise<void> => {
-      deps = await initIocContainer(overrideConfig)
+      deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       invoiceService = await deps.use('invoiceService')

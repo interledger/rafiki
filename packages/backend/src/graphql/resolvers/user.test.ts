@@ -15,14 +15,10 @@ describe('User Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  const overrideConfig = {
-    ...Config,
-    databaseUrl: `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
-  }
 
   beforeAll(
     async (): Promise<void> => {
-      deps = await initIocContainer(overrideConfig)
+      deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
     }
