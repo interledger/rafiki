@@ -32,10 +32,14 @@ describe('SPSP Service', (): void => {
   const mockMessageProducer = {
     send: jest.fn()
   }
+  const overrideConfig = {
+    ...Config,
+    databaseUrl: `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
+  }
 
   beforeAll(
     async (): Promise<void> => {
-      deps = await initIocContainer(Config)
+      deps = await initIocContainer(overrideConfig)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
       workerUtils = await makeWorkerUtils({

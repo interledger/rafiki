@@ -7,6 +7,8 @@ const POSTGRES_PORT = 5432
 const REDIS_PORT = 6379
 
 module.exports = async () => {
+  const workers = parseInt(process.env.JEST_WORKERS || '1')
+
   if (!process.env.DATABASE_URL) {
     const postgresContainer = await new GenericContainer('postgres')
       .withExposedPorts(POSTGRES_PORT)
@@ -45,6 +47,14 @@ module.exports = async () => {
   await knex.migrate.latest({
     directory: './packages/backend/migrations'
   })
+
+  for (let i = 1; i <= workers; i++) {
+    const workerDatabaseName = `testing_${i}`
+
+    await knex.raw(`DROP DATABASE IF EXISTS ${workerDatabaseName}`)
+    await knex.raw(`CREATE DATABASE ${workerDatabaseName} TEMPLATE testing`)
+  }
+
   global.__BACKEND_KNEX__ = knex
 
   if (!process.env.REDIS_URL) {
