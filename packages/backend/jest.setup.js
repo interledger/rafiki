@@ -1,15 +1,13 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Knex = require('knex')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { cpus } = require('os')
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { GenericContainer } = require('testcontainers')
 
 const POSTGRES_PORT = 5432
 const REDIS_PORT = 6379
 
-module.exports = async () => {
-  const workers = cpus().length - 1
+module.exports = async (globalConfig) => {
+  const workers = globalConfig.maxWorkers
 
   if (!process.env.DATABASE_URL) {
     const postgresContainer = await new GenericContainer('postgres')
