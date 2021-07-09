@@ -31,7 +31,6 @@ export async function createUserService({
 }
 
 async function getUser(deps: ServiceDependencies, id: string): Promise<User> {
-  deps.logger.info('returns a user')
   return User.query(deps.knex).findById(id)
 }
 
@@ -39,7 +38,6 @@ async function createUser(
   deps: ServiceDependencies,
   id?: string
 ): Promise<User> {
-  deps.logger.info('Creates a user')
   const account = await deps.accountService.create(6, 'USD')
   return User.query(deps.knex).insertAndFetch({
     id: id,

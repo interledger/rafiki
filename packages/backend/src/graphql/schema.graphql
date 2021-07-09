@@ -1,13 +1,24 @@
 type Query {
-  user: User
+  user(userId: String!): User
 }
 
 type User {
   id: ID!
   balance: Amount!
   account: Account!
-  # in the future it should be possible to fetch a transaction list. for now we'll start with just a list of invoices
-  invoices(count: Int, skip: Int): [Invoice]!
+  """
+  invoices
+  @param after Returns the elements in the list that come after the specified cursor.
+  @param before Returns the elements in the list that come before the specified cursor.
+  @param first Returns the first _n_ elements from the list.
+  @param last Returns the last _n_ elements from the list.
+  """
+  invoices(
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): InvoiceConnection
 }
 
 type Amount {
@@ -21,11 +32,42 @@ type Account {
   balance: Amount!
 }
 
+type InvoiceConnection {
+  pageInfo: PageInfo!
+  edges: [InvoiceEdge!]!
+}
+
+type PageInfo {
+  """
+  Paginating forwards: the cursor to continue.
+  """
+  endCursor: String
+  """
+  Paginating forwards: Are there more pages?
+  """
+  hasNextPage: Boolean!
+  """
+  Paginating backwards: Are there more pages?
+  """
+  hasPreviousPage: Boolean!
+  """
+  Paginating backwards: the cursor to continue.
+  """
+  startCursor: String
+}
+
+type InvoiceEdge {
+  node: Invoice!
+  cursor: String!
+}
+
 type Invoice {
+  id: ID!
   receivedAmount: Amount!
   maximumAmount: Amount
   active: Boolean!
   createdAt: String!
   expiresAt: String
   description: String
+  totalAmount: String!
 }
