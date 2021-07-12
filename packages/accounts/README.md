@@ -2,16 +2,15 @@
 
 ## Local Development
 
+### Prerequisites
+
+- [Docker](https://docs.docker.com/engine/install/) configured to [run as non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
+- [Linux kernel v5.6+](https://github.com/coilhq/tigerbeetle#quickstart)
+
+### Testing
+
 From the monorepo root directory:
 
 ```shell
-# Run database
-docker-compose -f packages/accounts/docker-compose.yml up -d
-
-# Run tests
 yarn workspace accounts test
-
-# Clean up
-docker-compose -f packages/accounts/docker-compose.yml stop
-docker-compose -f packages/accounts/docker-compose.yml rm
 ```

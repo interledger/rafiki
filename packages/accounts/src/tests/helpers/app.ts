@@ -4,12 +4,8 @@ import { IocContract } from '@adonisjs/fold'
 import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { start, gracefulShutdown } from '../..'
+import { gracefulShutdown } from '../..'
 import { App, AppServices } from '../../app'
-
-const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  'postgresql://postgres:password@localhost:5433/testing'
 
 export interface TestContainer {
   port: number
@@ -24,7 +20,6 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
-  config.databaseUrl = DATABASE_URL
   config.port = 0
   // config.adminPort = 0
   config.ilpAddress = 'test.rafiki'
@@ -44,7 +39,7 @@ export const createTestApp = async (
   })
 
   container.bind('logger', async () => logger)
-  const app = await start(container)
+  const app = await App.createApp(container)
   const knex = await container.use('knex')
   const tigerbeetle = await container.use('tigerbeetle')
 
@@ -52,7 +47,7 @@ export const createTestApp = async (
     app,
     port: app.getPort(),
     knex,
-    connectionUrl: DATABASE_URL,
+    connectionUrl: config.postgresUrl,
     tigerbeetle,
     shutdown: async () => {
       await gracefulShutdown(container, app)

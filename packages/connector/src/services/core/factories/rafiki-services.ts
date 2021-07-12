@@ -27,7 +27,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   .attr(
     'redis',
     () =>
-      new IORedis(process.env.REDIS || 'redis://127.0.0.1:6380', {
+      new IORedis(`${process.env.REDIS}/${process.env.JEST_WORKER_ID}`, {
         // lazyConnect so that tests that don't use Redis don't have to disconnect it when they're finished.
         lazyConnect: true,
         stringNumbers: true

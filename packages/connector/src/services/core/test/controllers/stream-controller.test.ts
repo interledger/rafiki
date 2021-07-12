@@ -29,6 +29,7 @@ describe('Stream Controller', function () {
   const services = RafikiServicesFactory.build()
 
   afterAll(async () => {
+    await services.redis.flushdb()
     await services.redis.disconnect()
   })
 

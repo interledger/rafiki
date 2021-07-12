@@ -15,10 +15,6 @@ import { App, AppServices } from '../app'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  'postgresql://postgres:password@localhost:5432/testing'
-
 export interface TestContainer {
   port: number
   app: App
@@ -32,7 +28,6 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
-  config.databaseUrl = DATABASE_URL
   config.port = 0
   config.adminPort = 0
   const logger = createLogger({
@@ -99,7 +94,7 @@ export const createTestApp = async (
     port: app.getPort(),
     knex,
     apolloClient: client,
-    connectionUrl: DATABASE_URL,
+    connectionUrl: config.databaseUrl,
     shutdown: async () => {
       await gracefulShutdown(container, app)
     }

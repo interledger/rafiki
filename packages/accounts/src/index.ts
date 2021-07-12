@@ -27,7 +27,7 @@ export function initIocContainer(
     logger.info({ msg: 'creating knex' })
     const knex = Knex({
       client: 'postgresql',
-      connection: config.databaseUrl,
+      connection: config.postgresUrl,
       pool: {
         min: 2,
         max: 10

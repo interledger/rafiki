@@ -22,8 +22,8 @@ export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   port: envInt('PORT', 3002),
   // adminPort: envInt('ADMIN_PORT', 3002),
-  databaseUrl: envString(
-    'DATABASE_URL',
+  postgresUrl: envString(
+    'POSTGRES_URL',
     'postgresql://postgres:password@localhost:5432/development'
   ),
   env: envString('NODE_ENV', 'development'),
