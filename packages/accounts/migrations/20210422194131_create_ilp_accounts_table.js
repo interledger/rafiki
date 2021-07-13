@@ -8,10 +8,8 @@ exports.up = function (knex) {
     table.integer('assetScale').notNullable()
 
     table.uuid('balanceId').notNullable()
-    // table.uuid('debtBalanceId').notNullable()
-    // table.uuid('trustlineBalanceId').notNullable()
-    // table.uuid('loanBalanceId').nullable()
-    // table.uuid('creditBalanceId').nullable()
+    table.uuid('trustlineBalanceId').nullable()
+    table.uuid('creditExtendedBalanceId').nullable()
 
     table.uuid('superAccountId').nullable().index()
     table.foreign('superAccountId').references('ilpAccounts.id')

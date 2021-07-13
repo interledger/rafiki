@@ -43,10 +43,14 @@ import {
   Transaction,
   Transfer,
   TransferError,
+  TrustlineOptions,
+  TrustlineError,
   UpdateAccountError,
   UpdateOptions,
   WithdrawError
 } from '../types'
+
+const MAX_SUB_ACCOUNT_DEPTH = 64
 
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   const account: IlpAccount = {
@@ -135,58 +139,13 @@ export class AccountsService implements AccountsServiceInterface {
             ) {
               return CreateAccountError.InvalidAsset
             }
-            // if (!superAccount.loanBalanceId || !superAccount.creditBalanceId) {
-            //   const loanBalanceId = uuid.v4()
-            //   const creditBalanceId = uuid.v4()
-
-            //   await this.createBalances(
-            //     [
-            //       {
-            //         id: uuidToBigInt(loanBalanceId),
-            //         flags:
-            //           0 |
-            //           AccountFlags.credits_must_not_exceed_debits |
-            //           AccountFlags.linked
-            //       },
-            //       {
-            //         id: uuidToBigInt(creditBalanceId),
-            //         flags: 0 | AccountFlags.credits_must_not_exceed_debits
-            //       }
-            //     ],
-            //     account.asset.scale
-            //   )
-
-            //   await IlpAccountModel.query()
-            //     .patch({
-            //       creditBalanceId,
-            //       loanBalanceId
-            //     })
-            //     .findById(superAccount.id)
-            //     .throwIfNotFound()
-            // }
           }
 
           const balanceId = randomId()
-          // const debtBalanceId = uuid.v4()
-          // const trustlineBalanceId = uuid.v4()
           await this.createBalances(
             [
               {
                 id: balanceId,
-                //   flags:
-                //     0 |
-                //     AccountFlags.debits_must_not_exceed_credits |
-                //     AccountFlags.linked
-                // },
-                // {
-                //   id: uuidToBigInt(debtBalanceId),
-                //   flags:
-                //     0 |
-                //     AccountFlags.debits_must_not_exceed_credits |
-                //     AccountFlags.linked
-                // },
-                // {
-                //   id: uuidToBigInt(trustlineBalanceId),
                 flags: 0 | AccountFlags.debits_must_not_exceed_credits
               }
             ],
@@ -299,61 +258,58 @@ export class AccountsService implements AccountsServiceInterface {
   public async getAccountBalance(
     accountId: string
   ): Promise<IlpBalance | undefined> {
-    const account = await IlpAccountModel.query().findById(accountId).select(
-      'balanceId'
-      // 'debtBalanceId',
-      // 'trustlineBalanceId',
-      // 'loanBalanceId',
-      // 'creditBalanceId'
-    )
+    const account = await IlpAccountModel.query()
+      .findById(accountId)
+      .select(
+        'assetCode',
+        'assetScale',
+        'balanceId',
+        'trustlineBalanceId',
+        'creditExtendedBalanceId'
+      )
 
     if (!account) {
       return undefined
     }
 
-    const balanceIds = [
-      account.balanceId
-      // uuidToBigInt(account.debtBalanceId),
-      // uuidToBigInt(account.trustlineBalanceId)
-    ]
+    const balanceIds = [account.balanceId]
+    if (account.trustlineBalanceId) {
+      balanceIds.push(account.trustlineBalanceId)
+    }
+    if (account.creditExtendedBalanceId) {
+      balanceIds.push(account.creditExtendedBalanceId)
+    }
 
-    // if (account.loanBalanceId && account.creditBalanceId) {
-    //   balanceIds.push(
-    //     uuidToBigInt(account.loanBalanceId),
-    //     uuidToBigInt(account.creditBalanceId)
-    //   )
-    // }
+    const balances = await this.client.lookupAccounts(balanceIds)
 
-    const [
-      balance
-      // debtBalance,
-      // trustlineBalance,
-      // loanBalance,
-      // creditBalance
-    ] = await this.client.lookupAccounts(balanceIds)
-
-    // if (!trustlineBalance) {
-    //   throw new UnknownBalanceError()
-    // }
-    if (!balance) {
+    if (balances.length === 0) {
       throw new UnknownBalanceError(accountId)
     }
 
     const accountBalance: IlpBalance = {
       id: accountId,
-      balance: calculateCreditBalance(balance)
-      // parent: {
-      //   availableCreditLine: getNetBalance(trustlineBalance),
-      //   totalBorrowed: getNetBalance(debtBalance)
-      // }
+      asset: {
+        code: account.assetCode,
+        scale: account.assetScale
+      },
+      balance: BigInt(0),
+      availableCredit: BigInt(0),
+      creditExtended: BigInt(0)
     }
 
-    // if (loanBalance && creditBalance) {
-    //   accountBalance.children = {
-    //     availableCredit: getNetBalance(creditBalance),
-    //     totalLent: getNetBalance(loanBalance)
-    //   }
-    // }
+    balances.forEach((balance) => {
+      switch (balance.id) {
+        case account.balanceId:
+          accountBalance.balance = calculateCreditBalance(balance)
+          break
+        case account.trustlineBalanceId:
+          accountBalance.availableCredit = calculateCreditBalance(balance)
+          break
+        case account.creditExtendedBalanceId:
+          accountBalance.creditExtended = calculateDebitBalance(balance)
+          break
+      }
+    })
 
     return accountBalance
   }
@@ -968,5 +924,104 @@ export class AccountsService implements AccountsServiceInterface {
       }
     }
     return trx
+  }
+
+  public async extendTrustline({
+    accountId,
+    amount
+  }: TrustlineOptions): Promise<void | TrustlineError> {
+    return await transaction(IlpAccountModel, async (IlpAccountModel) => {
+      const accountWithSuperAccounts = await IlpAccountModel.query()
+        .withGraphJoined(`superAccount.^${MAX_SUB_ACCOUNT_DEPTH}`, {
+          minimize: true
+        })
+        .findById(accountId)
+      if (!accountWithSuperAccounts) {
+        return TrustlineError.UnknownAccount
+      } else if (
+        !accountWithSuperAccounts.superAccountId ||
+        !accountWithSuperAccounts.superAccount
+      ) {
+        return TrustlineError.UnknownSuperAccount
+      }
+
+      const newBalances = []
+      const balanceIds = {}
+      const transfers = []
+      for (
+        let account = accountWithSuperAccounts;
+        account.superAccount;
+        account = account.superAccount
+      ) {
+        let trustlineBalanceId = account.trustlineBalanceId
+        let creditExtendedBalanceId =
+          account.superAccount.creditExtendedBalanceId
+        if (!trustlineBalanceId) {
+          trustlineBalanceId = randomId()
+          newBalances.push({
+            id: trustlineBalanceId,
+            flags:
+              0 |
+              AccountFlags.debits_must_not_exceed_credits |
+              AccountFlags.linked
+          })
+          balanceIds[account.id] = {
+            ...balanceIds[account.id],
+            trustlineBalanceId
+          }
+          if (!creditExtendedBalanceId) {
+            creditExtendedBalanceId = randomId()
+            newBalances.push({
+              id: creditExtendedBalanceId,
+              flags:
+                0 |
+                AccountFlags.credits_must_not_exceed_debits |
+                AccountFlags.linked
+            })
+            balanceIds[account.superAccount.id] = {
+              creditExtendedBalanceId
+            }
+          }
+        } else if (!creditExtendedBalanceId) {
+          throw new UnknownBalanceError(account.superAccount.id)
+        }
+        transfers.push({
+          id: randomId(),
+          debit_account_id: creditExtendedBalanceId,
+          credit_account_id: trustlineBalanceId,
+          amount,
+          user_data: BigInt(0),
+          reserved: TRANSFER_RESERVED,
+          code: 0,
+          flags: 0 | TransferFlags.linked,
+          timeout: BigInt(0),
+          timestamp: BigInt(0)
+        })
+      }
+      if (newBalances.length) {
+        newBalances[newBalances.length - 1].flags &= ~AccountFlags.linked
+        await this.createBalances(
+          newBalances,
+          accountWithSuperAccounts.assetScale
+        )
+        for (const accountId in balanceIds) {
+          await IlpAccountModel.query()
+            .patch(balanceIds[accountId])
+            .findById(accountId)
+        }
+      }
+      transfers[transfers.length - 1].flags &= ~AccountFlags.linked
+      const res = await this.client.createTransfers(transfers)
+      if (res.length) {
+        switch (res[0].code) {
+          case CreateTransferError.linked_event_failed:
+            break
+          default:
+            // TODO: Throwing will rollback the IlpAccountModel patches
+            // orphaning new tigerbeetle accounts
+            throw new BalanceTransferError(res[0].code)
+        }
+      }
+    })
   }
 }

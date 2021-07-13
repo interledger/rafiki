@@ -1,7 +1,6 @@
 import { createContext } from '../../utils'
 import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
 import { createBalanceMiddleware } from '../../middleware'
-import { IlpBalance } from 'accounts'
 import {
   AccountFactory,
   IlpPrepareFactory,
@@ -53,12 +52,10 @@ describe('Balance Middleware', function () {
     const aliceBalance = await accounts.getAccountBalance(
       aliceAccount.accountId
     )
-    expect(aliceBalance).not.toBeNull()
-    expect((aliceBalance as IlpBalance).balance).toEqual(BigInt(0))
+    expect(aliceBalance).toEqual(BigInt(0))
 
     const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
-    expect(bobBalance).not.toBeNull()
-    expect((bobBalance as IlpBalance).balance).toEqual(BigInt(100))
+    expect(bobBalance).toEqual(BigInt(100))
   })
 
   test('reject response does not adjust the account balances', async () => {
@@ -74,12 +71,10 @@ describe('Balance Middleware', function () {
     const aliceBalance = await accounts.getAccountBalance(
       aliceAccount.accountId
     )
-    expect(aliceBalance).not.toBeNull()
-    expect((aliceBalance as IlpBalance).balance).toEqual(BigInt(100))
+    expect(aliceBalance).toEqual(BigInt(100))
 
     const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
-    expect(bobBalance).not.toBeNull()
-    expect((bobBalance as IlpBalance).balance).toEqual(BigInt(0))
+    expect(bobBalance).toEqual(BigInt(0))
   })
 
   test('ignores 0 amount packets', async () => {
@@ -96,12 +91,10 @@ describe('Balance Middleware', function () {
     const aliceBalance = await accounts.getAccountBalance(
       aliceAccount.accountId
     )
-    expect(aliceBalance).not.toBeNull()
-    expect((aliceBalance as IlpBalance).balance).toEqual(BigInt(100))
+    expect(aliceBalance).toEqual(BigInt(100))
 
     const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
-    expect(bobBalance).not.toBeNull()
-    expect((bobBalance as IlpBalance).balance).toEqual(BigInt(0))
+    expect(bobBalance).toEqual(BigInt(0))
 
     expect(transferFundsSpy).toHaveBeenCalledTimes(0)
   })
@@ -119,11 +112,9 @@ describe('Balance Middleware', function () {
     const aliceBalance = await accounts.getAccountBalance(
       aliceAccount.accountId
     )
-    expect(aliceBalance).not.toBeNull()
-    expect((aliceBalance as IlpBalance).balance).toEqual(BigInt(100))
+    expect(aliceBalance).toEqual(BigInt(100))
 
     const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
-    expect(bobBalance).not.toBeNull()
-    expect((bobBalance as IlpBalance).balance).toEqual(BigInt(0))
+    expect(bobBalance).toEqual(BigInt(0))
   })
 })

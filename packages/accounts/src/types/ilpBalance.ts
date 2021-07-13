@@ -1,16 +1,9 @@
-// interface IlpBalanceChildren {
-//   availableCredit: bigint
-//   totalLent: bigint
-// }
-
-// interface IlpBalanceParent {
-//   availableCreditLine: bigint
-//   totalBorrowed: bigint
-// }
+import { Asset } from './asset'
 
 export interface IlpBalance {
   id: string
+  asset: Asset
   balance: bigint
-  // children?: IlpBalanceChildren
-  // parent?: IlpBalanceParent
+  availableCredit: bigint
+  creditExtended: bigint
 }

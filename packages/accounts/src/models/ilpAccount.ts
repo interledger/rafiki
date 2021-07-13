@@ -1,7 +1,7 @@
 import { BaseModel } from './base'
 import { IlpHttpToken } from './ilpHttpToken'
-import { uuidToBigInt } from '../utils'
-import { Model, Pojo, raw } from 'objection'
+import { bigIntToUuid, uuidToBigInt } from '../utils'
+import { Model, Pojo } from 'objection'
 
 export class IlpAccount extends BaseModel {
   public static get tableName(): string {
@@ -15,6 +15,14 @@ export class IlpAccount extends BaseModel {
       join: {
         from: 'ilpAccounts.id',
         to: 'ilpAccounts.superAccountId'
+      }
+    },
+    superAccount: {
+      relation: Model.HasOneRelation,
+      modelClass: IlpAccount,
+      join: {
+        from: 'ilpAccounts.superAccountId',
+        to: 'ilpAccounts.id'
       }
     },
     incomingTokens: {
@@ -32,13 +40,12 @@ export class IlpAccount extends BaseModel {
   public readonly assetCode!: string
   public readonly assetScale!: number
   public readonly balanceId!: bigint
-  // public debtBalanceId!: string
-  // public trustlineBalanceId!: string
-  // public loanBalanceId?: string
-  // public creditBalanceId?: string
+  public readonly trustlineBalanceId?: bigint
+  public readonly creditExtendedBalanceId?: bigint
 
   public superAccountId?: string
   public subAccounts?: IlpAccount[]
+  public superAccount?: IlpAccount
 
   public readonly maxPacketAmount!: bigint
 
@@ -51,11 +58,14 @@ export class IlpAccount extends BaseModel {
   public readonly staticIlpAddress?: string
 
   $formatDatabaseJson(json: Pojo): Pojo {
-    const balanceId: bigint = json.balanceId
-    if (balanceId) {
-      json.balanceId = raw('?::uuid', [
-        balanceId.toString(16).padStart(32, '0')
-      ])
+    if (json.balanceId) {
+      json.balanceId = bigIntToUuid(json.balanceId)
+    }
+    if (json.trustlineBalanceId) {
+      json.trustlineBalanceId = bigIntToUuid(json.trustlineBalanceId)
+    }
+    if (json.creditExtendedBalanceId) {
+      json.creditExtendedBalanceId = bigIntToUuid(json.creditExtendedBalanceId)
     }
 
     return super.$formatDatabaseJson(json)
@@ -65,6 +75,14 @@ export class IlpAccount extends BaseModel {
     const formattedJson = super.$parseDatabaseJson(json)
     if (formattedJson.balanceId) {
       formattedJson.balanceId = uuidToBigInt(json.balanceId)
+    }
+    if (formattedJson.trustlineBalanceId) {
+      formattedJson.trustlineBalanceId = uuidToBigInt(json.trustlineBalanceId)
+    }
+    if (formattedJson.creditExtendedBalanceId) {
+      formattedJson.creditExtendedBalanceId = uuidToBigInt(
+        json.creditExtendedBalanceId
+      )
     }
 
     return formattedJson

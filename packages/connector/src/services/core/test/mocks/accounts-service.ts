@@ -2,7 +2,6 @@ import {
   ConnectorAccountsService as AccountsService,
   CreateOptions,
   IlpAccount,
-  IlpBalance,
   Transaction,
   Transfer,
   TransferError
@@ -43,13 +42,10 @@ export class MockAccountsService implements AccountsService {
     )
   }
 
-  async getAccountBalance(accountId: string): Promise<IlpBalance | undefined> {
+  async getAccountBalance(accountId: string): Promise<bigint | undefined> {
     const account = this.accounts.get(accountId)
     if (account) {
-      return {
-        id: accountId,
-        balance: account.balance
-      }
+      return account.balance
     }
   }
 

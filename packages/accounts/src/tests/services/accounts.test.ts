@@ -28,6 +28,7 @@ import {
   isTransferError,
   isUpdateAccountError,
   TransferError,
+  TrustlineError,
   UpdateAccountError,
   UpdateOptions,
   WithdrawError
@@ -92,10 +93,7 @@ describe('Accounts Service', (): void => {
       const retrievedAccount = await IlpAccountModel.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
         retrievedAccount.balanceId
-        // uuidToBigInt(retrievedAccount.debtBalanceId),
-        // uuidToBigInt(retrievedAccount.trustlineBalanceId)
       ])
-      // expect(balances.length).toBe(3)
       expect(balances.length).toBe(1)
       balances.forEach((balance: Balance) => {
         expect(balance.credits_reserved).toEqual(BigInt(0))
@@ -186,60 +184,6 @@ describe('Accounts Service', (): void => {
         })
       ).resolves.toEqual(CreateAccountError.InvalidAsset)
     })
-
-    // test("Auto-creates parent account's credit and loan balances", async (): Promise<void> => {
-    //   const {
-    //     accountId: superAccountId,
-    //     asset
-    //   } = await accounts.createAccount({
-    //     accountId: uuid(),
-    //     asset: randomAsset(),
-    //     maxPacketAmount: BigInt(100)
-    //   })
-
-    //   {
-    //     const {
-    //       creditBalanceId,
-    //       loanBalanceId
-    //     } = await IlpAccountModel.query()
-    //       .findById(superAccountId)
-    //       .select('creditBalanceId', 'loanBalanceId')
-    //     expect(creditBalanceId).toBeNull()
-    //     expect(loanBalanceId).toBeNull()
-    //   }
-
-    //   await accounts.createAccount({
-    //     accountId: uuid(),
-    //     asset,
-    //     maxPacketAmount: BigInt(100),
-    //     superAccountId
-    //   })
-
-    //   {
-    //     const {
-    //       creditBalanceId,
-    //       loanBalanceId
-    //     } = await IlpAccountModel.query()
-    //       .findById(superAccountId)
-    //       .select('creditBalanceId', 'loanBalanceId')
-    //     expect(creditBalanceId).not.toBeNull()
-    //     expect(loanBalanceId).not.toBeNull()
-
-    //     if (creditBalanceId && loanBalanceId) {
-    //       const balances = await appContainer.tigerbeetle.lookupAccounts([
-    //         uuidToBigInt(creditBalanceId),
-    //         uuidToBigInt(loanBalanceId)
-    //       ])
-    //       expect(balances.length).toBe(2)
-    //       balances.forEach((balance: Balance) => {
-    //         expect(balance.credits_reserved).toEqual(BigInt(0))
-    //         expect(balance.credits_accepted).toEqual(BigInt(0))
-    //       })
-    //     } else {
-    //       fail()
-    //     }
-    //   }
-    // })
 
     test('Cannot create an account with duplicate id', async (): Promise<void> => {
       const account = await accountFactory.build()
@@ -547,42 +491,18 @@ describe('Accounts Service', (): void => {
 
   describe('Get Account Balance', (): void => {
     test("Can retrieve an account's balance", async (): Promise<void> => {
-      const { accountId /*, asset*/ } = await accountFactory.build()
+      const { accountId, asset } = await accountFactory.build()
 
       {
         const balance = await accounts.getAccountBalance(accountId)
         expect(balance).toEqual({
           id: accountId,
-          balance: BigInt(0)
-          // parent: {
-          //   availableCreditLine: BigInt(0),
-          //   totalBorrowed: BigInt(0)
-          // }
+          asset,
+          balance: BigInt(0),
+          availableCredit: BigInt(0),
+          creditExtended: BigInt(0)
         })
       }
-
-      // await accounts.createAccount({
-      //   accountId: uuid(),
-      //   asset,
-      //   maxPacketAmount: BigInt(100),
-      //   superAccountId: accountId
-      // })
-
-      // {
-      //   const balance = await accounts.getAccountBalance(accountId)
-      //   expect(balance).toEqual({
-      //     id: accountId,
-      //     balance: BigInt(0),
-      //     children: {
-      //       availableCredit: BigInt(0),
-      //       totalLent: BigInt(0)
-      //     },
-      //     parent: {
-      //       availableCreditLine: BigInt(0),
-      //       totalBorrowed: BigInt(0)
-      //     }
-      //   })
-      // }
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
@@ -1577,5 +1497,125 @@ describe('Accounts Service', (): void => {
     })
 
     test.todo('Returns error timed out transfer')
+  })
+
+  describe('Extend Trustline', (): void => {
+    test('Can extend trustline to sub-account', async (): Promise<void> => {
+      const { accountId: superAccountId, asset } = await accountFactory.build()
+      const { accountId } = await accountFactory.build({
+        asset,
+        superAccountId: superAccountId
+      })
+      const { accountId: subAccountId } = await accountFactory.build({
+        asset,
+        superAccountId: accountId
+      })
+
+      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
+        {
+          id: superAccountId,
+          asset,
+          balance: BigInt(0),
+          availableCredit: BigInt(0),
+          creditExtended: BigInt(0)
+        }
+      )
+      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
+        id: accountId,
+        asset,
+        balance: BigInt(0),
+        availableCredit: BigInt(0),
+        creditExtended: BigInt(0)
+      })
+      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
+        id: subAccountId,
+        asset,
+        balance: BigInt(0),
+        availableCredit: BigInt(0),
+        creditExtended: BigInt(0)
+      })
+
+      const amount = BigInt(5)
+      await expect(
+        accounts.extendTrustline({
+          accountId,
+          amount
+        })
+      ).resolves.toBeUndefined()
+
+      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
+        {
+          id: superAccountId,
+          asset,
+          balance: BigInt(0),
+          availableCredit: BigInt(0),
+          creditExtended: amount
+        }
+      )
+      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
+        id: accountId,
+        asset,
+        balance: BigInt(0),
+        availableCredit: amount,
+        creditExtended: BigInt(0)
+      })
+      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
+        id: subAccountId,
+        asset,
+        balance: BigInt(0),
+        availableCredit: BigInt(0),
+        creditExtended: BigInt(0)
+      })
+
+      await expect(
+        accounts.extendTrustline({
+          accountId: subAccountId,
+          amount
+        })
+      ).resolves.toBeUndefined()
+
+      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
+        {
+          id: superAccountId,
+          asset,
+          balance: BigInt(0),
+          availableCredit: BigInt(0),
+          creditExtended: amount + amount
+        }
+      )
+      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
+        id: accountId,
+        asset,
+        balance: BigInt(0),
+        availableCredit: amount + amount,
+        creditExtended: amount
+      })
+      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
+        id: subAccountId,
+        asset,
+        balance: BigInt(0),
+        availableCredit: amount,
+        creditExtended: BigInt(0)
+      })
+    })
+
+    test('Returns error for nonexistent account', async (): Promise<void> => {
+      await expect(
+        accounts.extendTrustline({
+          accountId: uuid(),
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(TrustlineError.UnknownAccount)
+    })
+
+    test('Returns error for nonexistent super-account', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      await expect(
+        accounts.extendTrustline({
+          accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(TrustlineError.UnknownSuperAccount)
+    })
   })
 })
