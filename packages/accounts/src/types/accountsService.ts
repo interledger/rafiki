@@ -44,6 +44,9 @@ export interface AccountsService extends ConnectorAccountsService {
   extendTrustline(
     trustlineOptions: TrustlineOptions
   ): Promise<void | TrustlineError>
+  utilizeTrustline(
+    trustlineOptions: TrustlineOptions
+  ): Promise<void | TrustlineError>
 }
 
 export type CreateOptions = Omit<IlpAccount, 'disabled' | 'subAccountIds'> & {

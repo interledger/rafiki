@@ -10,6 +10,8 @@ exports.up = function (knex) {
     table.uuid('balanceId').notNullable()
     table.uuid('trustlineBalanceId').nullable()
     table.uuid('creditExtendedBalanceId').nullable()
+    table.uuid('borrowedBalanceId').nullable()
+    table.uuid('lentBalanceId').nullable()
 
     table.uuid('superAccountId').nullable().index()
     table.foreign('superAccountId').references('ilpAccounts.id')

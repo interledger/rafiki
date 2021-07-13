@@ -6,4 +6,6 @@ export interface IlpBalance {
   balance: bigint
   availableCredit: bigint
   creditExtended: bigint
+  totalBorrowed: bigint
+  totalLent: bigint
 }

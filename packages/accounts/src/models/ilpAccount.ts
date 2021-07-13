@@ -42,6 +42,8 @@ export class IlpAccount extends BaseModel {
   public readonly balanceId!: bigint
   public readonly trustlineBalanceId?: bigint
   public readonly creditExtendedBalanceId?: bigint
+  public readonly borrowedBalanceId?: bigint
+  public readonly lentBalanceId?: bigint
 
   public superAccountId?: string
   public subAccounts?: IlpAccount[]
@@ -67,6 +69,12 @@ export class IlpAccount extends BaseModel {
     if (json.creditExtendedBalanceId) {
       json.creditExtendedBalanceId = bigIntToUuid(json.creditExtendedBalanceId)
     }
+    if (json.borrowedBalanceId) {
+      json.borrowedBalanceId = bigIntToUuid(json.borrowedBalanceId)
+    }
+    if (json.lentBalanceId) {
+      json.lentBalanceId = bigIntToUuid(json.lentBalanceId)
+    }
 
     return super.$formatDatabaseJson(json)
   }
@@ -83,6 +91,12 @@ export class IlpAccount extends BaseModel {
       formattedJson.creditExtendedBalanceId = uuidToBigInt(
         json.creditExtendedBalanceId
       )
+    }
+    if (formattedJson.borrowedBalanceId) {
+      formattedJson.borrowedBalanceId = uuidToBigInt(json.borrowedBalanceId)
+    }
+    if (formattedJson.lentBalanceId) {
+      formattedJson.lentBalanceId = uuidToBigInt(json.lentBalanceId)
     }
 
     return formattedJson

@@ -4,6 +4,8 @@ export interface TrustlineOptions {
 }
 
 export enum TrustlineError {
+  InsufficientBalance = 'InsufficientBalance',
   UnknownAccount = 'UnknownAccount',
-  UnknownSuperAccount = 'UnknownSuperAccount'
+  UnknownSuperAccount = 'UnknownSuperAccount',
+  UnknownTrustline = 'UnknownTrustline'
 }
