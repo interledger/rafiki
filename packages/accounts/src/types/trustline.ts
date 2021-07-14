@@ -3,6 +3,10 @@ export interface TrustlineOptions {
   amount: bigint
 }
 
+export interface ExtendTrustlineOptions extends TrustlineOptions {
+  autoApply?: boolean
+}
+
 export enum TrustlineError {
   InsufficientBalance = 'InsufficientBalance',
   UnknownAccount = 'UnknownAccount',

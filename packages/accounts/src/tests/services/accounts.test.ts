@@ -1619,6 +1619,63 @@ describe('Accounts Service', (): void => {
       })
     })
 
+    test('Can automatically utilize extended credit', async (): Promise<void> => {
+      const { accountId: superAccountId, asset } = await accountFactory.build()
+      const { accountId } = await accountFactory.build({
+        asset,
+        superAccountId: superAccountId
+      })
+      const { accountId: subAccountId } = await accountFactory.build({
+        asset,
+        superAccountId: accountId
+      })
+
+      const amount = BigInt(5)
+      await expect(
+        accounts.deposit({
+          accountId: superAccountId,
+          amount
+        })
+      ).resolves.toBeUndefined()
+      await expect(
+        accounts.extendTrustline({
+          accountId: subAccountId,
+          amount,
+          autoApply: true
+        })
+      ).resolves.toBeUndefined()
+
+      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
+        {
+          id: superAccountId,
+          asset,
+          balance: BigInt(0),
+          availableCredit: BigInt(0),
+          creditExtended: BigInt(0),
+          totalBorrowed: BigInt(0),
+          totalLent: amount
+        }
+      )
+      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
+        id: accountId,
+        asset,
+        balance: BigInt(0),
+        availableCredit: BigInt(0),
+        creditExtended: BigInt(0),
+        totalBorrowed: amount,
+        totalLent: amount
+      })
+      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
+        id: subAccountId,
+        asset,
+        balance: amount,
+        availableCredit: BigInt(0),
+        creditExtended: BigInt(0),
+        totalBorrowed: amount,
+        totalLent: BigInt(0)
+      })
+    })
+
     test('Returns error for nonexistent account', async (): Promise<void> => {
       await expect(
         accounts.extendTrustline({
@@ -1636,6 +1693,43 @@ describe('Accounts Service', (): void => {
           amount: BigInt(5)
         })
       ).resolves.toEqual(TrustlineError.UnknownSuperAccount)
+    })
+
+    test('Returns error for insufficient super-account balance', async (): Promise<void> => {
+      const { accountId: superAccountId, asset } = await accountFactory.build()
+      const { accountId } = await accountFactory.build({
+        asset,
+        superAccountId: superAccountId
+      })
+
+      await expect(
+        accounts.extendTrustline({
+          accountId,
+          amount: BigInt(10),
+          autoApply: true
+        })
+      ).resolves.toEqual(TrustlineError.InsufficientBalance)
+
+      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
+        {
+          id: superAccountId,
+          asset,
+          balance: BigInt(0),
+          availableCredit: BigInt(0),
+          creditExtended: BigInt(0),
+          totalBorrowed: BigInt(0),
+          totalLent: BigInt(0)
+        }
+      )
+      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
+        id: accountId,
+        asset,
+        balance: BigInt(0),
+        availableCredit: BigInt(0),
+        creditExtended: BigInt(0),
+        totalBorrowed: BigInt(0),
+        totalLent: BigInt(0)
+      })
     })
   })
 

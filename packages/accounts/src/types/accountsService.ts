@@ -2,7 +2,7 @@ import { AccountDeposit, LiquidityDeposit, DepositError } from './deposit'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
 import { Transfer, Transaction, TransferError } from './transfer'
-import { TrustlineOptions, TrustlineError } from './trustline'
+import { ExtendTrustlineOptions, TrustlineOptions, TrustlineError } from './trustline'
 import {
   AccountWithdrawal,
   LiquidityWithdrawal,
@@ -42,7 +42,7 @@ export interface AccountsService extends ConnectorAccountsService {
   deposit(deposit: AccountDeposit): Promise<void | DepositError>
   withdraw(withdrawal: AccountWithdrawal): Promise<void | WithdrawError>
   extendTrustline(
-    trustlineOptions: TrustlineOptions
+    trustlineOptions: ExtendTrustlineOptions
   ): Promise<void | TrustlineError>
   utilizeTrustline(
     trustlineOptions: TrustlineOptions
