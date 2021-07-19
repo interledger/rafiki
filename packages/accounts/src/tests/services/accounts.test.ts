@@ -1502,179 +1502,109 @@ describe('Accounts Service', (): void => {
   })
 
   describe('Extend Trustline', (): void => {
-    test('Can extend trustline to sub-account', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
-        asset,
-        superAccountId: superAccountId
-      })
-      const { accountId: subAccountId } = await accountFactory.build({
-        asset,
-        superAccountId: accountId
-      })
-
-      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
-        {
-          id: superAccountId,
-          asset,
-          balance: BigInt(0),
-          availableCredit: BigInt(0),
-          creditExtended: BigInt(0),
-          totalBorrowed: BigInt(0),
-          totalLent: BigInt(0)
-        }
-      )
-      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
-        id: accountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: BigInt(0),
-        creditExtended: BigInt(0),
-        totalBorrowed: BigInt(0),
-        totalLent: BigInt(0)
-      })
-      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
-        id: subAccountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: BigInt(0),
-        creditExtended: BigInt(0),
-        totalBorrowed: BigInt(0),
-        totalLent: BigInt(0)
-      })
-
-      const amount = BigInt(5)
-      await expect(
-        accounts.extendTrustline({
-          accountId,
-          amount
-        })
-      ).resolves.toBeUndefined()
-
-      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
-        {
-          id: superAccountId,
-          asset,
-          balance: BigInt(0),
-          availableCredit: BigInt(0),
-          creditExtended: amount,
-          totalBorrowed: BigInt(0),
-          totalLent: BigInt(0)
-        }
-      )
-      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
-        id: accountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: amount,
-        creditExtended: BigInt(0),
-        totalBorrowed: BigInt(0),
-        totalLent: BigInt(0)
-      })
-      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
-        id: subAccountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: BigInt(0),
-        creditExtended: BigInt(0),
-        totalBorrowed: BigInt(0),
-        totalLent: BigInt(0)
-      })
-
-      await expect(
-        accounts.extendTrustline({
-          accountId: subAccountId,
-          amount
-        })
-      ).resolves.toBeUndefined()
-
-      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
-        {
-          id: superAccountId,
-          asset,
-          balance: BigInt(0),
-          availableCredit: BigInt(0),
-          creditExtended: amount + amount,
-          totalBorrowed: BigInt(0),
-          totalLent: BigInt(0)
-        }
-      )
-      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
-        id: accountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: amount + amount,
-        creditExtended: amount,
-        totalBorrowed: BigInt(0),
-        totalLent: BigInt(0)
-      })
-      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
-        id: subAccountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: amount,
-        creditExtended: BigInt(0),
-        totalBorrowed: BigInt(0),
-        totalLent: BigInt(0)
-      })
-    })
-
-    test('Can automatically utilize extended credit', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
-        asset,
-        superAccountId: superAccountId
-      })
-      const { accountId: subAccountId } = await accountFactory.build({
-        asset,
-        superAccountId: accountId
-      })
-
-      const amount = BigInt(5)
-      await expect(
-        accounts.deposit({
+    test.each`
+      autoApply
+      ${undefined}
+      ${false}
+      ${true}
+    `(
+      'Can extend trustline to sub-account { autoApply: $autoApply }',
+      async ({ autoApply }): Promise<void> => {
+        const {
           accountId: superAccountId,
-          amount
+          asset
+        } = await accountFactory.build()
+        const { accountId } = await accountFactory.build({
+          asset,
+          superAccountId: superAccountId
         })
-      ).resolves.toBeUndefined()
-      await expect(
-        accounts.extendTrustline({
-          accountId: subAccountId,
-          amount,
-          autoApply: true
+        const { accountId: subAccountId } = await accountFactory.build({
+          asset,
+          superAccountId: accountId
         })
-      ).resolves.toBeUndefined()
 
-      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
-        {
+        await expect(
+          accounts.getAccountBalance(superAccountId)
+        ).resolves.toEqual({
           id: superAccountId,
           asset,
           balance: BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
           totalBorrowed: BigInt(0),
-          totalLent: amount
+          totalLent: BigInt(0)
+        })
+        await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
+          id: accountId,
+          asset,
+          balance: BigInt(0),
+          availableCredit: BigInt(0),
+          creditExtended: BigInt(0),
+          totalBorrowed: BigInt(0),
+          totalLent: BigInt(0)
+        })
+        await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual(
+          {
+            id: subAccountId,
+            asset,
+            balance: BigInt(0),
+            availableCredit: BigInt(0),
+            creditExtended: BigInt(0),
+            totalBorrowed: BigInt(0),
+            totalLent: BigInt(0)
+          }
+        )
+
+        const amount = BigInt(5)
+        if (autoApply) {
+          await expect(
+            accounts.deposit({
+              accountId: superAccountId,
+              amount
+            })
+          ).resolves.toBeUndefined()
         }
-      )
-      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
-        id: accountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: BigInt(0),
-        creditExtended: BigInt(0),
-        totalBorrowed: amount,
-        totalLent: amount
-      })
-      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
-        id: subAccountId,
-        asset,
-        balance: amount,
-        availableCredit: BigInt(0),
-        creditExtended: BigInt(0),
-        totalBorrowed: amount,
-        totalLent: BigInt(0)
-      })
-    })
+        await expect(
+          accounts.extendTrustline({
+            accountId: subAccountId,
+            amount,
+            autoApply
+          })
+        ).resolves.toBeUndefined()
+
+        await expect(
+          accounts.getAccountBalance(superAccountId)
+        ).resolves.toEqual({
+          id: superAccountId,
+          asset,
+          balance: BigInt(0),
+          availableCredit: BigInt(0),
+          creditExtended: autoApply ? BigInt(0) : amount,
+          totalBorrowed: BigInt(0),
+          totalLent: autoApply ? amount : BigInt(0)
+        })
+        await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
+          id: accountId,
+          asset,
+          balance: BigInt(0),
+          availableCredit: autoApply ? BigInt(0) : amount,
+          creditExtended: autoApply ? BigInt(0) : amount,
+          totalBorrowed: autoApply ? amount : BigInt(0),
+          totalLent: autoApply ? amount : BigInt(0)
+        })
+        await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual(
+          {
+            id: subAccountId,
+            asset,
+            balance: autoApply ? amount : BigInt(0),
+            availableCredit: autoApply ? BigInt(0) : amount,
+            creditExtended: BigInt(0),
+            totalBorrowed: autoApply ? amount : BigInt(0),
+            totalLent: BigInt(0)
+          }
+        )
+      }
+    )
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
       await expect(
@@ -2111,34 +2041,45 @@ describe('Accounts Service', (): void => {
   })
 
   describe('Settle Trustline', (): void => {
-    test('Can settle trustline to sub-account', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
-        asset,
-        superAccountId: superAccountId
-      })
-      const { accountId: subAccountId } = await accountFactory.build({
-        asset,
-        superAccountId: accountId
-      })
-
-      const creditAmount = BigInt(10)
-      await expect(
-        accounts.deposit({
+    test.each`
+      revolve
+      ${undefined}
+      ${false}
+      ${true}
+    `(
+      'Can settle trustline to sub-account { revolve: $revolve }',
+      async ({ revolve }): Promise<void> => {
+        const {
           accountId: superAccountId,
-          amount: creditAmount
+          asset
+        } = await accountFactory.build()
+        const { accountId } = await accountFactory.build({
+          asset,
+          superAccountId: superAccountId
         })
-      ).resolves.toBeUndefined()
-      await expect(
-        accounts.extendTrustline({
-          accountId: subAccountId,
-          amount: creditAmount,
-          autoApply: true
+        const { accountId: subAccountId } = await accountFactory.build({
+          asset,
+          superAccountId: accountId
         })
-      ).resolves.toBeUndefined()
 
-      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
-        {
+        const creditAmount = BigInt(10)
+        await expect(
+          accounts.deposit({
+            accountId: superAccountId,
+            amount: creditAmount
+          })
+        ).resolves.toBeUndefined()
+        await expect(
+          accounts.extendTrustline({
+            accountId: subAccountId,
+            amount: creditAmount,
+            autoApply: true
+          })
+        ).resolves.toBeUndefined()
+
+        await expect(
+          accounts.getAccountBalance(superAccountId)
+        ).resolves.toEqual({
           id: superAccountId,
           asset,
           balance: BigInt(0),
@@ -2146,132 +2087,70 @@ describe('Accounts Service', (): void => {
           creditExtended: BigInt(0),
           totalBorrowed: BigInt(0),
           totalLent: creditAmount
-        }
-      )
-      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
-        id: accountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: BigInt(0),
-        creditExtended: BigInt(0),
-        totalBorrowed: creditAmount,
-        totalLent: creditAmount
-      })
-      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
-        id: subAccountId,
-        asset,
-        balance: creditAmount,
-        availableCredit: BigInt(0),
-        creditExtended: BigInt(0),
-        totalBorrowed: creditAmount,
-        totalLent: BigInt(0)
-      })
-
-      const amount = BigInt(1)
-      await expect(
-        accounts.settleTrustline({
-          accountId: subAccountId,
-          amount,
-          revolve: false
         })
-      ).resolves.toBeUndefined()
-
-      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
-        {
-          id: superAccountId,
+        await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
+          id: accountId,
           asset,
-          balance: amount,
+          balance: BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
-          totalBorrowed: BigInt(0),
-          totalLent: creditAmount - amount
-        }
-      )
-      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
-        id: accountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: BigInt(0),
-        creditExtended: BigInt(0),
-        totalBorrowed: creditAmount - amount,
-        totalLent: creditAmount - amount
-      })
-      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
-        id: subAccountId,
-        asset,
-        balance: creditAmount - amount,
-        availableCredit: BigInt(0),
-        creditExtended: BigInt(0),
-        totalBorrowed: creditAmount - amount,
-        totalLent: BigInt(0)
-      })
-    })
-
-    test('Can revolve settled amount to available credit', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
-        asset,
-        superAccountId: superAccountId
-      })
-      const { accountId: subAccountId } = await accountFactory.build({
-        asset,
-        superAccountId: accountId
-      })
-
-      const creditAmount = BigInt(10)
-      await expect(
-        accounts.deposit({
-          accountId: superAccountId,
-          amount: creditAmount
+          totalBorrowed: creditAmount,
+          totalLent: creditAmount
         })
-      ).resolves.toBeUndefined()
-      await expect(
-        accounts.extendTrustline({
-          accountId: subAccountId,
-          amount: creditAmount,
-          autoApply: true
-        })
-      ).resolves.toBeUndefined()
+        await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual(
+          {
+            id: subAccountId,
+            asset,
+            balance: creditAmount,
+            availableCredit: BigInt(0),
+            creditExtended: BigInt(0),
+            totalBorrowed: creditAmount,
+            totalLent: BigInt(0)
+          }
+        )
 
-      const amount = BigInt(1)
-      await expect(
-        accounts.settleTrustline({
-          accountId: subAccountId,
-          amount,
-          revolve: true
-        })
-      ).resolves.toBeUndefined()
+        const amount = BigInt(1)
+        await expect(
+          accounts.settleTrustline({
+            accountId: subAccountId,
+            amount,
+            revolve
+          })
+        ).resolves.toBeUndefined()
 
-      await expect(accounts.getAccountBalance(superAccountId)).resolves.toEqual(
-        {
+        await expect(
+          accounts.getAccountBalance(superAccountId)
+        ).resolves.toEqual({
           id: superAccountId,
           asset,
           balance: amount,
           availableCredit: BigInt(0),
-          creditExtended: amount,
+          creditExtended: revolve === false ? BigInt(0) : amount,
           totalBorrowed: BigInt(0),
           totalLent: creditAmount - amount
-        }
-      )
-      await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
-        id: accountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: amount,
-        creditExtended: amount,
-        totalBorrowed: creditAmount - amount,
-        totalLent: creditAmount - amount
-      })
-      await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual({
-        id: subAccountId,
-        asset,
-        balance: creditAmount - amount,
-        availableCredit: amount,
-        creditExtended: BigInt(0),
-        totalBorrowed: creditAmount - amount,
-        totalLent: BigInt(0)
-      })
-    })
+        })
+        await expect(accounts.getAccountBalance(accountId)).resolves.toEqual({
+          id: accountId,
+          asset,
+          balance: BigInt(0),
+          availableCredit: revolve === false ? BigInt(0) : amount,
+          creditExtended: revolve === false ? BigInt(0) : amount,
+          totalBorrowed: creditAmount - amount,
+          totalLent: creditAmount - amount
+        })
+        await expect(accounts.getAccountBalance(subAccountId)).resolves.toEqual(
+          {
+            id: subAccountId,
+            asset,
+            balance: creditAmount - amount,
+            availableCredit: revolve === false ? BigInt(0) : amount,
+            creditExtended: BigInt(0),
+            totalBorrowed: creditAmount - amount,
+            totalLent: BigInt(0)
+          }
+        )
+      }
+    )
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
       await expect(
