@@ -779,19 +779,20 @@ export class AccountsService implements AccountsServiceInterface {
     if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
       return TransferError.InvalidDestinationAmount
     }
-    const [
-      sourceAccount,
-      destinationAccount
-    ] = await IlpAccountModel.query()
+    const accounts = await IlpAccountModel.query()
       .findByIds([sourceAccountId, destinationAccountId])
       .select('assetCode', 'assetScale', 'balanceId', 'id')
-    if (!destinationAccount) {
-      if (!sourceAccount || sourceAccount.id !== sourceAccountId) {
+    if (accounts.length !== 2) {
+      if (accounts.length === 0 || accounts[0].id !== sourceAccountId) {
         return TransferError.UnknownSourceAccount
       } else {
         return TransferError.UnknownDestinationAccount
       }
     }
+    const sourceAccount =
+      accounts[0].id === sourceAccountId ? accounts[0] : accounts[1]
+    const destinationAccount =
+      accounts[0].id === destinationAccountId ? accounts[0] : accounts[1]
 
     const transfers: ClientTransfer[] = []
 
