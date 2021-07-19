@@ -2,7 +2,12 @@ import { AccountDeposit, LiquidityDeposit, DepositError } from './deposit'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
 import { Transfer, Transaction, TransferError } from './transfer'
-import { ExtendTrustlineOptions, TrustlineOptions, TrustlineError } from './trustline'
+import {
+  ExtendTrustlineOptions,
+  SettleTrustlineOptions,
+  TrustlineOptions,
+  TrustlineError
+} from './trustline'
 import {
   AccountWithdrawal,
   LiquidityWithdrawal,
@@ -47,7 +52,12 @@ export interface AccountsService extends ConnectorAccountsService {
   utilizeTrustline(
     trustlineOptions: TrustlineOptions
   ): Promise<void | TrustlineError>
-  revokeTrustline(trustlineOptions: TrustlineOptions): Promise<void | TrustlineError>
+  revokeTrustline(
+    trustlineOptions: TrustlineOptions
+  ): Promise<void | TrustlineError>
+  settleTrustline(
+    trustlineOptions: SettleTrustlineOptions
+  ): Promise<void | TrustlineError>
 }
 
 export type CreateOptions = Omit<IlpAccount, 'disabled' | 'subAccountIds'> & {

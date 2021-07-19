@@ -41,6 +41,7 @@ import {
   ExtendTrustlineOptions,
   IlpAccount,
   IlpBalance,
+  SettleTrustlineOptions,
   Transaction,
   Transfer,
   TransferError,
@@ -57,7 +58,9 @@ enum AdjustTrustlineMode {
   Extend = 1,
   AutoApply,
   Utilize,
-  Revoke
+  Revoke,
+  Settle,
+  Revolve
 }
 
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
@@ -982,6 +985,21 @@ export class AccountsService implements AccountsServiceInterface {
     })
   }
 
+  public async settleTrustline({
+    accountId,
+    amount,
+    revolve
+  }: SettleTrustlineOptions): Promise<void | TrustlineError> {
+    return this.adjustTrustline({
+      accountId,
+      amount,
+      mode:
+        revolve === false
+          ? AdjustTrustlineMode.Settle
+          : AdjustTrustlineMode.Revolve
+    })
+  }
+
   private async adjustTrustline({
     accountId,
     amount,
@@ -1012,6 +1030,13 @@ export class AccountsService implements AccountsServiceInterface {
           !accountWithSuperAccounts.trustlineBalanceId
         ) {
           return TrustlineError.UnknownTrustline
+        } else if (
+          [AdjustTrustlineMode.Settle, AdjustTrustlineMode.Revolve].includes(
+            mode
+          ) &&
+          !accountWithSuperAccounts.borrowedBalanceId
+        ) {
+          return TrustlineError.UnknownTrustline
         }
 
         const newBalances = []
@@ -1024,7 +1049,11 @@ export class AccountsService implements AccountsServiceInterface {
           account = account.superAccount
         ) {
           topLevelBalanceId = account.superAccount.balanceId
-          if (mode === AdjustTrustlineMode.Extend) {
+          if (
+            [AdjustTrustlineMode.Extend, AdjustTrustlineMode.Revolve].includes(
+              mode
+            )
+          ) {
             let trustlineBalanceId = account.trustlineBalanceId
             let creditExtendedBalanceId =
               account.superAccount.creditExtendedBalanceId
@@ -1142,6 +1171,28 @@ export class AccountsService implements AccountsServiceInterface {
               timeout: BigInt(0),
               timestamp: BigInt(0)
             })
+          } else if (
+            [AdjustTrustlineMode.Settle, AdjustTrustlineMode.Revolve].includes(
+              mode
+            )
+          ) {
+            if (!account.borrowedBalanceId) {
+              throw new UnknownBalanceError(account.id)
+            } else if (!account.superAccount.lentBalanceId) {
+              throw new UnknownBalanceError(account.superAccount.id)
+            }
+            transfers.push({
+              id: randomId(),
+              debit_account_id: account.borrowedBalanceId,
+              credit_account_id: account.superAccount.lentBalanceId,
+              amount,
+              user_data: BigInt(0),
+              reserved: TRANSFER_RESERVED,
+              code: 0,
+              flags: 0 | TransferFlags.linked,
+              timeout: BigInt(0),
+              timestamp: BigInt(0)
+            })
           }
         }
 
@@ -1157,21 +1208,39 @@ export class AccountsService implements AccountsServiceInterface {
               .findById(accountId)
           }
         }
-        if ([AdjustTrustlineMode.AutoApply, AdjustTrustlineMode.Utilize].includes(mode)) {
-          transfers.push({
-            id: randomId(),
-            debit_account_id: topLevelBalanceId,
-            credit_account_id: accountWithSuperAccounts.balanceId,
-            amount,
-            user_data: BigInt(0),
-            reserved: TRANSFER_RESERVED,
-            code: 0,
-            flags: 0,
-            timeout: BigInt(0),
-            timestamp: BigInt(0)
-          })
-        } else {
-          transfers[transfers.length - 1].flags &= ~TransferFlags.linked
+        switch (mode) {
+          case AdjustTrustlineMode.AutoApply:
+          case AdjustTrustlineMode.Utilize:
+            transfers.push({
+              id: randomId(),
+              debit_account_id: topLevelBalanceId,
+              credit_account_id: accountWithSuperAccounts.balanceId,
+              amount,
+              user_data: BigInt(0),
+              reserved: TRANSFER_RESERVED,
+              code: 0,
+              flags: 0,
+              timeout: BigInt(0),
+              timestamp: BigInt(0)
+            })
+            break
+          case AdjustTrustlineMode.Settle:
+          case AdjustTrustlineMode.Revolve:
+            transfers.push({
+              id: randomId(),
+              debit_account_id: accountWithSuperAccounts.balanceId,
+              credit_account_id: topLevelBalanceId,
+              amount,
+              user_data: BigInt(0),
+              reserved: TRANSFER_RESERVED,
+              code: 0,
+              flags: 0,
+              timeout: BigInt(0),
+              timestamp: BigInt(0)
+            })
+            break
+          default:
+            transfers[transfers.length - 1].flags &= ~TransferFlags.linked
         }
         const res = await this.client.createTransfers(transfers)
         for (const { code } of res) {

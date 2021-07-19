@@ -7,6 +7,10 @@ export interface ExtendTrustlineOptions extends TrustlineOptions {
   autoApply?: boolean
 }
 
+export interface SettleTrustlineOptions extends TrustlineOptions {
+  revolve?: boolean
+}
+
 export enum TrustlineError {
   InsufficientBalance = 'InsufficientBalance',
   UnknownAccount = 'UnknownAccount',
