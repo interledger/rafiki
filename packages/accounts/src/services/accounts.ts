@@ -1040,9 +1040,8 @@ export class AccountsService implements AccountsServiceInterface {
           return TrustlineError.UnknownTrustline
         }
 
-        const newBalances = []
-        const balanceIds = {}
-        const transfers = []
+        const newBalanceIds = {}
+        const transfers: BalanceTransfer[] = []
         let topLevelBalanceId = accountWithSuperAccounts.superAccount.balanceId
         for (
           let account = accountWithSuperAccounts;
@@ -1060,27 +1059,13 @@ export class AccountsService implements AccountsServiceInterface {
               account.superAccount.creditExtendedBalanceId
             if (!trustlineBalanceId) {
               trustlineBalanceId = randomId()
-              newBalances.push({
-                id: trustlineBalanceId,
-                flags:
-                  0 |
-                  AccountFlags.debits_must_not_exceed_credits |
-                  AccountFlags.linked
-              })
-              balanceIds[account.id] = {
-                ...balanceIds[account.id],
+              newBalanceIds[account.id] = {
+                ...newBalanceIds[account.id],
                 trustlineBalanceId
               }
               if (!creditExtendedBalanceId) {
                 creditExtendedBalanceId = randomId()
-                newBalances.push({
-                  id: creditExtendedBalanceId,
-                  flags:
-                    0 |
-                    AccountFlags.credits_must_not_exceed_debits |
-                    AccountFlags.linked
-                })
-                balanceIds[account.superAccount.id] = {
+                newBalanceIds[account.superAccount.id] = {
                   creditExtendedBalanceId
                 }
               }
@@ -1088,16 +1073,9 @@ export class AccountsService implements AccountsServiceInterface {
               throw new UnknownBalanceError(account.superAccount.id)
             }
             transfers.push({
-              id: randomId(),
-              debit_account_id: creditExtendedBalanceId,
-              credit_account_id: trustlineBalanceId,
-              amount,
-              user_data: BigInt(0),
-              reserved: TRANSFER_RESERVED,
-              code: 0,
-              flags: 0 | TransferFlags.linked,
-              timeout: BigInt(0),
-              timestamp: BigInt(0)
+              sourceBalanceId: creditExtendedBalanceId,
+              destinationBalanceId: trustlineBalanceId,
+              amount
             })
           }
           if (
@@ -1111,16 +1089,10 @@ export class AccountsService implements AccountsServiceInterface {
               throw new UnknownBalanceError(account.superAccount.id)
             }
             transfers.push({
-              id: randomId(),
-              debit_account_id: account.trustlineBalanceId,
-              credit_account_id: account.superAccount.creditExtendedBalanceId,
-              amount,
-              user_data: BigInt(0),
-              reserved: TRANSFER_RESERVED,
-              code: 0,
-              flags: 0 | TransferFlags.linked,
-              timeout: BigInt(0),
-              timestamp: BigInt(0)
+              sourceBalanceId: account.trustlineBalanceId,
+              destinationBalanceId:
+                account.superAccount.creditExtendedBalanceId,
+              amount
             })
           }
           if (
@@ -1133,27 +1105,13 @@ export class AccountsService implements AccountsServiceInterface {
             let lentBalanceId = account.superAccount.lentBalanceId
             if (!borrowedBalanceId) {
               borrowedBalanceId = randomId()
-              newBalances.push({
-                id: borrowedBalanceId,
-                flags:
-                  0 |
-                  AccountFlags.debits_must_not_exceed_credits |
-                  AccountFlags.linked
-              })
-              balanceIds[account.id] = {
-                ...balanceIds[account.id],
+              newBalanceIds[account.id] = {
+                ...newBalanceIds[account.id],
                 borrowedBalanceId
               }
               if (!lentBalanceId) {
                 lentBalanceId = randomId()
-                newBalances.push({
-                  id: lentBalanceId,
-                  flags:
-                    0 |
-                    AccountFlags.credits_must_not_exceed_debits |
-                    AccountFlags.linked
-                })
-                balanceIds[account.superAccount.id] = {
+                newBalanceIds[account.superAccount.id] = {
                   lentBalanceId
                 }
               }
@@ -1161,16 +1119,9 @@ export class AccountsService implements AccountsServiceInterface {
               throw new UnknownBalanceError(account.superAccount.id)
             }
             transfers.push({
-              id: randomId(),
-              debit_account_id: lentBalanceId,
-              credit_account_id: borrowedBalanceId,
-              amount,
-              user_data: BigInt(0),
-              reserved: TRANSFER_RESERVED,
-              code: 0,
-              flags: 0 | TransferFlags.linked,
-              timeout: BigInt(0),
-              timestamp: BigInt(0)
+              sourceBalanceId: lentBalanceId,
+              destinationBalanceId: borrowedBalanceId,
+              amount
             })
           } else if (
             [AdjustTrustlineMode.Settle, AdjustTrustlineMode.Revolve].includes(
@@ -1183,29 +1134,36 @@ export class AccountsService implements AccountsServiceInterface {
               throw new UnknownBalanceError(account.superAccount.id)
             }
             transfers.push({
-              id: randomId(),
-              debit_account_id: account.borrowedBalanceId,
-              credit_account_id: account.superAccount.lentBalanceId,
-              amount,
-              user_data: BigInt(0),
-              reserved: TRANSFER_RESERVED,
-              code: 0,
-              flags: 0 | TransferFlags.linked,
-              timeout: BigInt(0),
-              timestamp: BigInt(0)
+              sourceBalanceId: account.borrowedBalanceId,
+              destinationBalanceId: account.superAccount.lentBalanceId,
+              amount
             })
           }
         }
 
+        const newBalances: BalanceOptions[] = []
+        for (const account in newBalanceIds) {
+          for (const balance in newBalanceIds[account]) {
+            newBalances.push({
+              id: newBalanceIds[account][balance],
+              flags:
+                0 |
+                (['trustlineBalanceId', 'borrowedBalanceId'].includes(balance)
+                  ? AccountFlags.debits_must_not_exceed_credits
+                  : AccountFlags.credits_must_not_exceed_debits) |
+                AccountFlags.linked
+            })
+          }
+        }
         if (newBalances.length) {
           newBalances[newBalances.length - 1].flags &= ~AccountFlags.linked
           await this.createBalances(
             newBalances,
             accountWithSuperAccounts.assetScale
           )
-          for (const accountId in balanceIds) {
+          for (const accountId in newBalanceIds) {
             await IlpAccountModel.query()
-              .patch(balanceIds[accountId])
+              .patch(newBalanceIds[accountId])
               .findById(accountId)
           }
         }
@@ -1213,37 +1171,39 @@ export class AccountsService implements AccountsServiceInterface {
           case AdjustTrustlineMode.AutoApply:
           case AdjustTrustlineMode.Utilize:
             transfers.push({
-              id: randomId(),
-              debit_account_id: topLevelBalanceId,
-              credit_account_id: accountWithSuperAccounts.balanceId,
-              amount,
-              user_data: BigInt(0),
-              reserved: TRANSFER_RESERVED,
-              code: 0,
-              flags: 0,
-              timeout: BigInt(0),
-              timestamp: BigInt(0)
+              sourceBalanceId: topLevelBalanceId,
+              destinationBalanceId: accountWithSuperAccounts.balanceId,
+              amount
             })
             break
           case AdjustTrustlineMode.Settle:
           case AdjustTrustlineMode.Revolve:
             transfers.push({
-              id: randomId(),
-              debit_account_id: accountWithSuperAccounts.balanceId,
-              credit_account_id: topLevelBalanceId,
-              amount,
-              user_data: BigInt(0),
-              reserved: TRANSFER_RESERVED,
-              code: 0,
-              flags: 0,
-              timeout: BigInt(0),
-              timestamp: BigInt(0)
+              sourceBalanceId: accountWithSuperAccounts.balanceId,
+              destinationBalanceId: topLevelBalanceId,
+              amount
             })
             break
-          default:
-            transfers[transfers.length - 1].flags &= ~TransferFlags.linked
         }
-        const res = await this.client.createTransfers(transfers)
+        const res = await this.client.createTransfers(
+          transfers.map(
+            ({ sourceBalanceId, destinationBalanceId, amount }, idx) => {
+              return {
+                id: randomId(),
+                debit_account_id: sourceBalanceId,
+                credit_account_id: destinationBalanceId,
+                amount,
+                user_data: BigInt(0),
+                reserved: TRANSFER_RESERVED,
+                code: 0,
+                flags:
+                  idx < transfers.length - 1 ? 0 | TransferFlags.linked : 0,
+                timeout: BigInt(0),
+                timestamp: BigInt(0)
+              }
+            }
+          )
+        )
         for (const { code } of res) {
           switch (code) {
             case CreateTransferError.linked_event_failed:
