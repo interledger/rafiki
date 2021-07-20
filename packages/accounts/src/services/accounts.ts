@@ -1011,210 +1011,210 @@ export class AccountsService implements AccountsServiceInterface {
     mode: AdjustTrustlineMode
   }): Promise<void | TrustlineError> {
     try {
-      return await transaction(IlpAccountModel, async (IlpAccountModel) => {
-        const accountWithSuperAccounts = await IlpAccountModel.query()
-          .withGraphJoined(`superAccount.^${MAX_SUB_ACCOUNT_DEPTH}`, {
-            minimize: true
-          })
-          .findById(accountId)
-        if (!accountWithSuperAccounts) {
-          return TrustlineError.UnknownAccount
-        } else if (
-          !accountWithSuperAccounts.superAccountId ||
-          !accountWithSuperAccounts.superAccount
-        ) {
-          return TrustlineError.UnknownSuperAccount
-        } else if (
-          [AdjustTrustlineMode.Utilize, AdjustTrustlineMode.Revoke].includes(
-            mode
-          ) &&
-          !accountWithSuperAccounts.trustlineBalanceId
-        ) {
-          return TrustlineError.UnknownTrustline
-        } else if (
-          [AdjustTrustlineMode.Settle, AdjustTrustlineMode.Revolve].includes(
-            mode
-          ) &&
-          !accountWithSuperAccounts.borrowedBalanceId
-        ) {
-          return TrustlineError.UnknownTrustline
-        }
-
-        const newBalanceIds = {}
-        const transfers: BalanceTransfer[] = []
-        let topLevelBalanceId = accountWithSuperAccounts.superAccount.balanceId
-        for (
-          let account = accountWithSuperAccounts;
-          account.superAccount;
-          account = account.superAccount
-        ) {
-          topLevelBalanceId = account.superAccount.balanceId
-          if (
-            [AdjustTrustlineMode.Extend, AdjustTrustlineMode.Revolve].includes(
-              mode
-            )
-          ) {
-            let trustlineBalanceId = account.trustlineBalanceId
-            let creditExtendedBalanceId =
-              account.superAccount.creditExtendedBalanceId
-            if (!trustlineBalanceId) {
-              trustlineBalanceId = randomId()
-              newBalanceIds[account.id] = {
-                ...newBalanceIds[account.id],
-                trustlineBalanceId
-              }
-              if (!creditExtendedBalanceId) {
-                creditExtendedBalanceId = randomId()
-                newBalanceIds[account.superAccount.id] = {
-                  creditExtendedBalanceId
-                }
-              }
-            } else if (!creditExtendedBalanceId) {
-              throw new UnknownBalanceError(account.superAccount.id)
-            }
-            transfers.push({
-              sourceBalanceId: creditExtendedBalanceId,
-              destinationBalanceId: trustlineBalanceId,
-              amount
+      const transfers: BalanceTransfer[] = []
+      const err = await transaction(
+        IlpAccountModel,
+        async (IlpAccountModel) => {
+          const accountWithSuperAccounts = await IlpAccountModel.query()
+            .withGraphJoined(`superAccount.^${MAX_SUB_ACCOUNT_DEPTH}`, {
+              minimize: true
             })
-          }
-          if (
+            .findById(accountId)
+          if (!accountWithSuperAccounts) {
+            return TrustlineError.UnknownAccount
+          } else if (
+            !accountWithSuperAccounts.superAccountId ||
+            !accountWithSuperAccounts.superAccount
+          ) {
+            return TrustlineError.UnknownSuperAccount
+          } else if (
             [AdjustTrustlineMode.Utilize, AdjustTrustlineMode.Revoke].includes(
               mode
-            )
+            ) &&
+            !accountWithSuperAccounts.trustlineBalanceId
           ) {
-            if (!account.trustlineBalanceId) {
-              throw new UnknownBalanceError(account.id)
-            } else if (!account.superAccount.creditExtendedBalanceId) {
-              throw new UnknownBalanceError(account.superAccount.id)
-            }
-            transfers.push({
-              sourceBalanceId: account.trustlineBalanceId,
-              destinationBalanceId:
-                account.superAccount.creditExtendedBalanceId,
-              amount
-            })
-          }
-          if (
-            [
-              AdjustTrustlineMode.AutoApply,
-              AdjustTrustlineMode.Utilize
-            ].includes(mode)
-          ) {
-            let borrowedBalanceId = account.borrowedBalanceId
-            let lentBalanceId = account.superAccount.lentBalanceId
-            if (!borrowedBalanceId) {
-              borrowedBalanceId = randomId()
-              newBalanceIds[account.id] = {
-                ...newBalanceIds[account.id],
-                borrowedBalanceId
-              }
-              if (!lentBalanceId) {
-                lentBalanceId = randomId()
-                newBalanceIds[account.superAccount.id] = {
-                  lentBalanceId
-                }
-              }
-            } else if (!lentBalanceId) {
-              throw new UnknownBalanceError(account.superAccount.id)
-            }
-            transfers.push({
-              sourceBalanceId: lentBalanceId,
-              destinationBalanceId: borrowedBalanceId,
-              amount
-            })
+            return TrustlineError.UnknownTrustline
           } else if (
             [AdjustTrustlineMode.Settle, AdjustTrustlineMode.Revolve].includes(
               mode
-            )
+            ) &&
+            !accountWithSuperAccounts.borrowedBalanceId
           ) {
-            if (!account.borrowedBalanceId) {
-              throw new UnknownBalanceError(account.id)
-            } else if (!account.superAccount.lentBalanceId) {
-              throw new UnknownBalanceError(account.superAccount.id)
-            }
-            transfers.push({
-              sourceBalanceId: account.borrowedBalanceId,
-              destinationBalanceId: account.superAccount.lentBalanceId,
-              amount
-            })
+            return TrustlineError.UnknownTrustline
           }
-        }
 
-        const newBalances: BalanceOptions[] = []
-        for (const account in newBalanceIds) {
-          for (const balance in newBalanceIds[account]) {
-            newBalances.push({
-              id: newBalanceIds[account][balance],
-              flags:
-                0 |
-                (['trustlineBalanceId', 'borrowedBalanceId'].includes(balance)
-                  ? AccountFlags.debits_must_not_exceed_credits
-                  : AccountFlags.credits_must_not_exceed_debits) |
-                AccountFlags.linked
-            })
-          }
-        }
-        if (newBalances.length) {
-          newBalances[newBalances.length - 1].flags &= ~AccountFlags.linked
-          await this.createBalances(
-            newBalances,
-            accountWithSuperAccounts.assetScale
-          )
-          for (const accountId in newBalanceIds) {
-            await IlpAccountModel.query()
-              .patch(newBalanceIds[accountId])
-              .findById(accountId)
-          }
-        }
-        switch (mode) {
-          case AdjustTrustlineMode.AutoApply:
-          case AdjustTrustlineMode.Utilize:
-            transfers.push({
-              sourceBalanceId: topLevelBalanceId,
-              destinationBalanceId: accountWithSuperAccounts.balanceId,
-              amount
-            })
-            break
-          case AdjustTrustlineMode.Settle:
-          case AdjustTrustlineMode.Revolve:
-            transfers.push({
-              sourceBalanceId: accountWithSuperAccounts.balanceId,
-              destinationBalanceId: topLevelBalanceId,
-              amount
-            })
-            break
-        }
-        const res = await this.client.createTransfers(
-          transfers.map(
-            ({ sourceBalanceId, destinationBalanceId, amount }, idx) => {
-              return {
-                id: randomId(),
-                debit_account_id: sourceBalanceId,
-                credit_account_id: destinationBalanceId,
-                amount,
-                user_data: BigInt(0),
-                reserved: TRANSFER_RESERVED,
-                code: 0,
-                flags:
-                  idx < transfers.length - 1 ? 0 | TransferFlags.linked : 0,
-                timeout: BigInt(0),
-                timestamp: BigInt(0)
+          const newBalanceIds = {}
+          for (
+            let account = accountWithSuperAccounts;
+            account.superAccount;
+            account = account.superAccount
+          ) {
+            if (
+              [
+                AdjustTrustlineMode.Extend,
+                AdjustTrustlineMode.Revolve
+              ].includes(mode)
+            ) {
+              let trustlineBalanceId = account.trustlineBalanceId
+              let creditExtendedBalanceId =
+                account.superAccount.creditExtendedBalanceId
+              if (!trustlineBalanceId) {
+                trustlineBalanceId = randomId()
+                newBalanceIds[account.id] = {
+                  ...newBalanceIds[account.id],
+                  trustlineBalanceId
+                }
+                if (!creditExtendedBalanceId) {
+                  creditExtendedBalanceId = randomId()
+                  newBalanceIds[account.superAccount.id] = {
+                    creditExtendedBalanceId
+                  }
+                }
+              } else if (!creditExtendedBalanceId) {
+                throw new UnknownBalanceError(account.superAccount.id)
+              }
+              transfers.push({
+                sourceBalanceId: creditExtendedBalanceId,
+                destinationBalanceId: trustlineBalanceId,
+                amount
+              })
+            }
+            if (
+              [
+                AdjustTrustlineMode.Utilize,
+                AdjustTrustlineMode.Revoke
+              ].includes(mode)
+            ) {
+              if (!account.trustlineBalanceId) {
+                throw new UnknownBalanceError(account.id)
+              } else if (!account.superAccount.creditExtendedBalanceId) {
+                throw new UnknownBalanceError(account.superAccount.id)
+              }
+              transfers.push({
+                sourceBalanceId: account.trustlineBalanceId,
+                destinationBalanceId:
+                  account.superAccount.creditExtendedBalanceId,
+                amount
+              })
+            }
+            if (
+              [
+                AdjustTrustlineMode.AutoApply,
+                AdjustTrustlineMode.Utilize
+              ].includes(mode)
+            ) {
+              let borrowedBalanceId = account.borrowedBalanceId
+              let lentBalanceId = account.superAccount.lentBalanceId
+              if (!borrowedBalanceId) {
+                borrowedBalanceId = randomId()
+                newBalanceIds[account.id] = {
+                  ...newBalanceIds[account.id],
+                  borrowedBalanceId
+                }
+                if (!lentBalanceId) {
+                  lentBalanceId = randomId()
+                  newBalanceIds[account.superAccount.id] = {
+                    lentBalanceId
+                  }
+                }
+              } else if (!lentBalanceId) {
+                throw new UnknownBalanceError(account.superAccount.id)
+              }
+              transfers.push({
+                sourceBalanceId: lentBalanceId,
+                destinationBalanceId: borrowedBalanceId,
+                amount
+              })
+              if (!account.superAccount.superAccountId) {
+                transfers.push({
+                  sourceBalanceId: account.superAccount.balanceId,
+                  destinationBalanceId: accountWithSuperAccounts.balanceId,
+                  amount
+                })
+              }
+            } else if (
+              [
+                AdjustTrustlineMode.Settle,
+                AdjustTrustlineMode.Revolve
+              ].includes(mode)
+            ) {
+              if (!account.borrowedBalanceId) {
+                throw new UnknownBalanceError(account.id)
+              } else if (!account.superAccount.lentBalanceId) {
+                throw new UnknownBalanceError(account.superAccount.id)
+              }
+              transfers.push({
+                sourceBalanceId: account.borrowedBalanceId,
+                destinationBalanceId: account.superAccount.lentBalanceId,
+                amount
+              })
+              if (!account.superAccount.superAccountId) {
+                transfers.push({
+                  sourceBalanceId: accountWithSuperAccounts.balanceId,
+                  destinationBalanceId: account.superAccount.balanceId,
+                  amount
+                })
               }
             }
-          )
-        )
-        for (const { code } of res) {
-          switch (code) {
-            case CreateTransferError.linked_event_failed:
-              break
-            default:
-              // TODO: Throwing will rollback the IlpAccountModel patches
-              // orphaning new tigerbeetle accounts
-              throw new BalanceTransferError(code)
+          }
+
+          const newBalances: BalanceOptions[] = []
+          for (const account in newBalanceIds) {
+            for (const balance in newBalanceIds[account]) {
+              newBalances.push({
+                id: newBalanceIds[account][balance],
+                flags:
+                  0 |
+                  (['trustlineBalanceId', 'borrowedBalanceId'].includes(balance)
+                    ? AccountFlags.debits_must_not_exceed_credits
+                    : AccountFlags.credits_must_not_exceed_debits) |
+                  AccountFlags.linked
+              })
+            }
+          }
+          if (newBalances.length) {
+            newBalances[newBalances.length - 1].flags &= ~AccountFlags.linked
+            await this.createBalances(
+              newBalances,
+              accountWithSuperAccounts.assetScale
+            )
+            for (const accountId in newBalanceIds) {
+              await IlpAccountModel.query()
+                .patch(newBalanceIds[accountId])
+                .findById(accountId)
+            }
           }
         }
-      })
+      )
+      if (err) {
+        return err
+      }
+      const res = await this.client.createTransfers(
+        transfers.map(
+          ({ sourceBalanceId, destinationBalanceId, amount }, idx) => {
+            return {
+              id: randomId(),
+              debit_account_id: sourceBalanceId,
+              credit_account_id: destinationBalanceId,
+              amount,
+              user_data: BigInt(0),
+              reserved: TRANSFER_RESERVED,
+              code: 0,
+              flags: idx < transfers.length - 1 ? 0 | TransferFlags.linked : 0,
+              timeout: BigInt(0),
+              timestamp: BigInt(0)
+            }
+          }
+        )
+      )
+      for (const { code } of res) {
+        switch (code) {
+          case CreateTransferError.linked_event_failed:
+            break
+          default:
+            throw new BalanceTransferError(code)
+        }
+      }
     } catch (err) {
       if (
         err instanceof BalanceTransferError &&
