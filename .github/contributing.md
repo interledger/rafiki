@@ -24,11 +24,6 @@ Before you begin:
     - [Commit hooks](#commit-hooks)
     - [Language](#language)
     - [CI](#ci)
-  - [Packages](#packages)
-    - [Accounts](#accounts)
-    - [Backend](#backend)
-    - [Connector](#connector)
-    - [Frontend](#frontend)
 
 ## Types of contributions
 You can contribute to Rafiki in several ways. 
