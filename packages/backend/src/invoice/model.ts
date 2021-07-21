@@ -5,9 +5,9 @@ export class Invoice extends BaseModel {
     return 'invoices'
   }
 
-  public userId!: string
-  public accountId!: string
+  public accountId!: string // Refers to which account this invoice is for
+  public invoiceAccountId!: string // Refers to the subaccount created for this invoice
   public active!: boolean
   public description!: string
-  public expiresAt!: string
+  public expiresAt!: Date
 }

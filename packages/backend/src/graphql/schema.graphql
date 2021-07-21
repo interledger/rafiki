@@ -1,11 +1,16 @@
 type Query {
-  user(userId: String!): User
+  account(id: String!): Account
 }
 
-type User {
+type Amount {
+  amount: Int!
+  currency: String!
+  scale: Int
+}
+
+type Account {
   id: ID!
   balance: Amount!
-  account: Account!
   """
   invoices
   @param after Returns the elements in the list that come after the specified cursor.
@@ -19,17 +24,6 @@ type User {
     first: Int
     last: Int
   ): InvoiceConnection
-}
-
-type Amount {
-  amount: Int!
-  currency: String!
-  scale: Int
-}
-
-type Account {
-  id: ID!
-  balance: Amount!
 }
 
 type InvoiceConnection {

@@ -6,21 +6,21 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { User as UserModel } from '../../user/model'
-import { UserService } from '../../user/service'
+import { Account as AccountModel } from '../../account/model'
+import { AccountService } from '../../account/service'
 import { truncateTables } from '../../tests/tableManager'
 import { Invoice } from '../../invoice/model'
 import { InvoiceService } from '../../invoice/service'
-import { User } from '../generated/graphql'
+import { Account } from '../generated/graphql'
 
 describe('Invoice Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let invoiceService: InvoiceService
-  let userService: UserService
+  let accountService: AccountService
   let knex: Knex
   let invoices: Invoice[]
-  let user: UserModel
+  let account: AccountModel
 
   beforeAll(
     async (): Promise<void> => {
@@ -28,11 +28,11 @@ describe('Invoice Resolver', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       invoiceService = await deps.use('invoiceService')
-      userService = await deps.use('userService')
-      user = await userService.create()
+      accountService = await deps.use('accountService')
+      account = await accountService.create(6, 'USD')
       invoices = []
       for (let i = 0; i < 50; i++) {
-        invoices.push(await invoiceService.create(user.id))
+        invoices.push(await invoiceService.create(account.id, `Invoice ${i}`))
       }
     }
   )
@@ -45,13 +45,13 @@ describe('Invoice Resolver', (): void => {
     }
   )
 
-  describe("User's invoices", (): void => {
+  describe('Account invoices', (): void => {
     test('pageInfo is correct on default query without params', async (): Promise<void> => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query User($userId: String!) {
-              user(userId: $userId) {
+            query Account($id: String!) {
+              account(id: $id) {
                 invoices {
                   edges {
                     node {
@@ -70,13 +70,13 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            userId: user.id
+            id: account.id
           }
         })
         .then(
-          (query): User => {
+          (query): Account => {
             if (query.data) {
-              return query.data.user
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }
@@ -90,12 +90,12 @@ describe('Invoice Resolver', (): void => {
     })
 
     test('No invoices, but invoices requested', async (): Promise<void> => {
-      const tempUser = await userService.create()
+      const tempAccount = await accountService.create(6, 'USD')
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query User($userId: String!) {
-              user(userId: $userId) {
+            query Account($id: String!) {
+              account(id: $id) {
                 invoices {
                   edges {
                     node {
@@ -114,13 +114,13 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            userId: tempUser.id
+            id: tempAccount.id
           }
         })
         .then(
-          (query): User => {
+          (query): Account => {
             if (query.data) {
-              return query.data.user
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }
@@ -137,8 +137,8 @@ describe('Invoice Resolver', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query User($userId: String!) {
-              user(userId: $userId) {
+            query Account($id: String!) {
+              account(id: $id) {
                 invoices(first: 10) {
                   edges {
                     node {
@@ -157,13 +157,13 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            userId: user.id
+            id: account.id
           }
         })
         .then(
-          (query): User => {
+          (query): Account => {
             if (query.data) {
-              return query.data.user
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }
@@ -180,8 +180,8 @@ describe('Invoice Resolver', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query User($userId: String!, $after: String!) {
-              user(userId: $userId) {
+            query Account($id: String!, $after: String!) {
+              account(id: $id) {
                 invoices(after: $after) {
                   edges {
                     node {
@@ -200,14 +200,14 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            userId: user.id,
+            id: account.id,
             after: invoices[19].id
           }
         })
         .then(
-          (query): User => {
+          (query): Account => {
             if (query.data) {
-              return query.data.user
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }
@@ -224,8 +224,8 @@ describe('Invoice Resolver', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query User($userId: String!, $after: String!) {
-              user(userId: $userId) {
+            query Account($id: String!, $after: String!) {
+              account(id: $id) {
                 invoices(after: $after, first: 10) {
                   edges {
                     node {
@@ -244,14 +244,14 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            userId: user.id,
+            id: account.id,
             after: invoices[44].id
           }
         })
         .then(
-          (query): User => {
+          (query): Account => {
             if (query.data) {
-              return query.data.user
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }

@@ -4,26 +4,28 @@ import Knex from 'knex'
 import Koa from 'koa'
 import * as httpMocks from 'node-mocks-http'
 import { AppContext, AppContextData, AppServices } from '../app'
-import { UserService } from '../user/service'
+
 import { SPSPService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { initIocContainer } from '../'
 import { Config } from '../config/app'
 import { GraphileProducer } from '../messaging/graphileProducer'
 import { resetGraphileDb } from '../tests/graphileDb'
-import { User } from '../user/model'
+
 import { IocContract } from '@adonisjs/fold'
 import { makeWorkerUtils, WorkerUtils } from 'graphile-worker'
 import { v4 } from 'uuid'
 import { StreamServer } from '@interledger/stream-receiver'
 import { truncateTables } from '../tests/tableManager'
+import { AccountService } from '../account/service'
+import { Account } from '../account/model'
 
 describe('SPSP Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
   let workerUtils: WorkerUtils
-  let userService: UserService
+  let accountService: AccountService
   let SPSPService: SPSPService
   let streamServer: StreamServer
   const nonce = crypto.randomBytes(16).toString('base64')
@@ -49,7 +51,7 @@ describe('SPSP Service', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      userService = await deps.use('userService')
+      accountService = await deps.use('accountService')
       SPSPService = await deps.use('SPSPService')
       streamServer = await deps.use('streamServer')
     }
@@ -65,13 +67,11 @@ describe('SPSP Service', (): void => {
   )
 
   describe('GET /pay/:id handler', (): void => {
-    let user: User
-    let accountId: string
+    let account: Account
 
     beforeEach(
       async (): Promise<void> => {
-        user = await userService.create()
-        accountId = user.accountId
+        account = await accountService.create(6, 'USD')
       }
     )
 
@@ -88,7 +88,7 @@ describe('SPSP Service', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        user.id
+        account.id
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).rejects.toHaveProperty(
         'status',
@@ -101,7 +101,7 @@ describe('SPSP Service', (): void => {
         {
           headers: { 'Receipt-Nonce': nonce }
         },
-        user.id
+        account.id
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).rejects.toHaveProperty(
         'status',
@@ -114,7 +114,7 @@ describe('SPSP Service', (): void => {
         {
           headers: { 'Receipt-Secret': secret }
         },
-        user.id
+        account.id
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).rejects.toHaveProperty(
         'status',
@@ -130,7 +130,7 @@ describe('SPSP Service', (): void => {
             'Receipt-Secret': secret
           }
         },
-        user.id
+        account.id
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).rejects.toHaveProperty(
         'status',
@@ -168,7 +168,7 @@ describe('SPSP Service', (): void => {
   */
 
     test('receipts disabled', async () => {
-      const ctx = createContext({}, user.id)
+      const ctx = createContext({}, account.id)
       await expect(SPSPService.GETPayEndpoint(ctx)).resolves.toBeUndefined()
       expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
 
@@ -182,7 +182,7 @@ describe('SPSP Service', (): void => {
         res.destination_account
       )
       expect(connectionDetails).toEqual({
-        paymentTag: accountId,
+        paymentTag: account.id,
         asset: {
           code: 'USD',
           scale: 6
@@ -198,7 +198,7 @@ describe('SPSP Service', (): void => {
             'Receipt-Secret': secret
           }
         },
-        user.id
+        account.id
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).resolves.toBeUndefined()
       expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
@@ -214,7 +214,7 @@ describe('SPSP Service', (): void => {
         res.destination_account
       )
       expect(connectionDetails).toEqual({
-        paymentTag: accountId,
+        paymentTag: account.id,
         asset: {
           code: 'USD',
           scale: 6
@@ -231,7 +231,7 @@ describe('SPSP Service', (): void => {
      */
     function createContext(
       reqOpts: httpMocks.RequestOptions,
-      userId: string
+      accountId: string
     ): AppContext {
       reqOpts.headers = Object.assign(
         { accept: 'application/spsp4+json' },
@@ -241,7 +241,7 @@ describe('SPSP Service', (): void => {
       const res = httpMocks.createResponse()
       const koa = new Koa<unknown, AppContextData>()
       const ctx = koa.createContext(req, res)
-      ctx.params = { id: userId }
+      ctx.params = { id: accountId }
       ctx.closeEmitter = new EventEmitter()
       return ctx as AppContext
     }

@@ -1,7 +1,6 @@
 import { BaseService } from '../shared/baseService'
 import { AppContext } from '../app'
 import { AccountService } from '../account/service'
-import { UserService } from '../user/service'
 import { validate } from 'uuid'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -14,14 +13,12 @@ export interface SPSPService {
 
 interface ServiceDependencies extends BaseService {
   accountService: AccountService
-  userService: UserService
   streamServer: StreamServer
 }
 
 export async function createSPSPService({
   logger,
   accountService,
-  userService,
   streamServer
 }: ServiceDependencies): Promise<SPSPService> {
   const log = logger.child({
@@ -31,7 +28,6 @@ export async function createSPSPService({
   const deps: ServiceDependencies = {
     logger: log,
     accountService: accountService,
-    userService: userService,
     streamServer: streamServer
   }
   return {
@@ -63,8 +59,8 @@ async function getPay(
     )
   }
 
-  const user = await deps.userService.get(ctx.params.id)
-  const account = user && (await deps.accountService.get(user.accountId))
+  const accountId = ctx.params.id
+  const account = await deps.accountService.get(accountId)
   if (!account) {
     ctx.status = 404
     ctx.set('Content-Type', CONTENT_TYPE_V4)
@@ -77,7 +73,7 @@ async function getPay(
 
   try {
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-      paymentTag: user.accountId,
+      paymentTag: account.id,
       receiptSetup:
         nonce && secret
           ? {

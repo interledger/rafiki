@@ -1,28 +1,29 @@
 import { Invoice } from './model'
 import { AccountService } from '../account/service'
 import { BaseService } from '../shared/baseService'
-import { UserService } from '../user/service'
 import assert from 'assert'
 
 export interface InvoiceService {
   get(id: string): Promise<Invoice>
-  create(userId: string): Promise<Invoice>
-  getUserInvoicesPage(
-    userId: string,
+  create(
+    accountId: string,
+    description: string,
+    expiresAt?: Date
+  ): Promise<Invoice>
+  getAccountInvoicesPage(
+    accountId: string,
     pagination?: Pagination
   ): Promise<Invoice[]>
 }
 
 interface ServiceDependencies extends BaseService {
   accountService: AccountService
-  userService: UserService
 }
 
 export async function createInvoiceService({
   logger,
   knex,
-  accountService,
-  userService
+  accountService
 }: ServiceDependencies): Promise<InvoiceService> {
   const log = logger.child({
     service: 'InvoiceService'
@@ -30,14 +31,14 @@ export async function createInvoiceService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountService,
-    userService
+    accountService
   }
   return {
     get: (id) => getInvoice(deps, id),
-    create: (userId) => createInvoice(deps, userId),
-    getUserInvoicesPage: (userId, pagination) =>
-      getUserInvoicesPage(deps, userId, pagination)
+    create: (accountId, description, expiresAt) =>
+      createInvoice(deps, accountId, description, expiresAt),
+    getAccountInvoicesPage: (accountId, pagination) =>
+      getAccountInvoicesPage(deps, accountId, pagination)
   }
 }
 
@@ -50,13 +51,16 @@ async function getInvoice(
 
 async function createInvoice(
   deps: ServiceDependencies,
-  userId: string
+  accountId: string,
+  description: string,
+  expiresAt?: Date
 ): Promise<Invoice> {
-  const user = await deps.userService.get(userId)
-  const subAccount = await deps.accountService.createSubAccount(user.accountId)
+  const subAccount = await deps.accountService.createSubAccount(accountId)
   return Invoice.query(deps.knex).insertAndFetch({
-    userId: userId,
-    accountId: subAccount.id,
+    accountId: subAccount.superAccountId,
+    invoiceAccountId: subAccount.id,
+    description,
+    expiresAt: expiresAt,
     active: true
   })
 }
@@ -73,18 +77,18 @@ interface Pagination {
  * Buffer.from("SGVsbG8gV29ybGQ=", 'base64').toString('ascii')
  */
 
-/** getUserInvoicesPage
+/** getAccountInvoicesPage
  * The pagination algorithm is based on the Relay connection specification.
  * Please read the spec before changing things:
  * https://relay.dev/graphql/connections.htm
  * @param deps ServiceDependencies.
- * @param userId The userId of the user.
+ * @param accountId The userId of the user.
  * @param pagination Pagination - cursors and limits.
  * @returns Invoice[] An array of invoices that form a page.
  */
-async function getUserInvoicesPage(
+async function getAccountInvoicesPage(
   deps: ServiceDependencies,
-  userId: string,
+  accountId: string,
   pagination?: Pagination
 ): Promise<Invoice[]> {
   assert.ok(deps.knex, 'Knex undefined')
@@ -106,7 +110,7 @@ async function getUserInvoicesPage(
   if (typeof pagination?.after === 'string') {
     return Invoice.query(deps.knex)
       .where({
-        userId: userId
+        accountId: accountId
       })
       .andWhereRaw(
         '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "invoices" where "id" = ?)',
@@ -125,7 +129,7 @@ async function getUserInvoicesPage(
   if (typeof pagination?.before === 'string') {
     return Invoice.query(deps.knex)
       .where({
-        userId: userId
+        accountId: accountId
       })
       .andWhereRaw(
         '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "invoices" where "id" = ?)',
@@ -143,7 +147,7 @@ async function getUserInvoicesPage(
 
   return Invoice.query(deps.knex)
     .where({
-      userId: userId
+      accountId: accountId
     })
     .orderBy([
       { column: 'createdAt', order: 'asc' },
