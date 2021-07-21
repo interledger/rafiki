@@ -53,12 +53,12 @@ import {
 const MAX_SUB_ACCOUNT_DEPTH = 64
 
 enum AdjustTrustlineMode {
-  Extend = 1,
-  AutoApply,
-  Utilize,
-  Revoke,
-  Settle,
-  Revolve
+  Extend = 'Extend',
+  AutoApply = 'AutoApply',
+  Utilize = 'Utilize',
+  Revoke = 'Revoke',
+  Settle = 'Settle',
+  Revolve = 'Revolve'
 }
 
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
@@ -934,6 +934,14 @@ export class AccountsService implements AccountsServiceInterface {
     return trx
   }
 
+  /**
+   * Extends additional line of credit to sub-account from its super-account(s)
+   *
+   * @param {Object} options
+   * @param {string} options.accountId - Sub-account to which credit is extended
+   * @param {bigint} options.amount
+   * @param {boolean} [options.autoApply] - Utilize credit and apply to sub-account's balance (default: false)
+   */
   public async extendTrustline({
     accountId,
     amount,
@@ -948,6 +956,13 @@ export class AccountsService implements AccountsServiceInterface {
     })
   }
 
+  /**
+   * Utilizes line of credit to sub-account and applies to sub-account's balance
+   *
+   * @param {Object} options
+   * @param {string} options.accountId - Sub-account to which credit is extended
+   * @param {bigint} options.amount
+   */
   public async utilizeTrustline({
     accountId,
     amount
@@ -959,6 +974,13 @@ export class AccountsService implements AccountsServiceInterface {
     })
   }
 
+  /**
+   * Reduces an existing line of credit available to the sub-account
+   *
+   * @param {Object} options
+   * @param {string} options.accountId - Sub-account to which credit is extended
+   * @param {bigint} options.amount
+   */
   public async revokeTrustline({
     accountId,
     amount
@@ -970,6 +992,14 @@ export class AccountsService implements AccountsServiceInterface {
     })
   }
 
+  /**
+   * Pays back debt to super-account(s)
+   *
+   * @param {Object} options
+   * @param {string} options.accountId - Sub-account settling debt
+   * @param {bigint} options.amount
+   * @param {boolean} [options.revolve] - Replenish the sub-account's line of credit commensurate with the debt settled (default: true)
+   */
   public async settleTrustline({
     accountId,
     amount,
@@ -985,6 +1015,28 @@ export class AccountsService implements AccountsServiceInterface {
     })
   }
 
+  /**
+   * Modifies credit and/or debt balances of sub-account and its super-account(s)
+   *
+   * @param {Object} options
+   * @param {string} options.accountId - Sub-account whose own balance(s), as well as those of its super-account(s), are adjusted
+   * @param {bigint} options.amount
+   * @param {string} options.mode - Type of balance adjustment(s) to perform
+   *
+   * Trustline balance transfers correspond to modes as follows:
+   *
+   * superAccount.creditExtended -> subAccount.availableCredit (recursive): Extend, Revolve
+   * subAccount.availableCredit -> superAccount.creditExtended (recursive): Utilize, Revoke
+   * superAccount.totalLent -> subAccount.totalBorrowed (recursive): AutoApply, Utilize
+   * subAccount.totalBorrowed -> superAccount.totalLent (recursive): Settle, Revolve
+   *
+   * topLevelSuperAccount.balance -> subAccount.balance: AutoApply, Utilize
+   * subAccount.balance -> topLevelSuperAccount.balance: Settle, Revolve
+   *
+   * Recursive transfers take place between each sub-account/super-account pair,
+   * starting at accountId and continuing to the top-level super-account.
+   * Corresponding balances (TigerBeetle accounts) are created if they do not exist.
+   */
   private async adjustTrustline({
     accountId,
     amount,
@@ -1012,16 +1064,14 @@ export class AccountsService implements AccountsServiceInterface {
           ) {
             return TrustlineError.UnknownSuperAccount
           } else if (
-            [AdjustTrustlineMode.Utilize, AdjustTrustlineMode.Revoke].includes(
-              mode
-            ) &&
+            (mode === AdjustTrustlineMode.Utilize ||
+              mode === AdjustTrustlineMode.Revoke) &&
             !accountWithSuperAccounts.trustlineBalanceId
           ) {
             return TrustlineError.UnknownTrustline
           } else if (
-            [AdjustTrustlineMode.Settle, AdjustTrustlineMode.Revolve].includes(
-              mode
-            ) &&
+            (mode === AdjustTrustlineMode.Settle ||
+              mode === AdjustTrustlineMode.Revolve) &&
             !accountWithSuperAccounts.borrowedBalanceId
           ) {
             return TrustlineError.UnknownTrustline
@@ -1034,10 +1084,8 @@ export class AccountsService implements AccountsServiceInterface {
             account = account.superAccount
           ) {
             if (
-              [
-                AdjustTrustlineMode.Extend,
-                AdjustTrustlineMode.Revolve
-              ].includes(mode)
+              mode === AdjustTrustlineMode.Extend ||
+              mode === AdjustTrustlineMode.Revolve
             ) {
               let trustlineBalanceId = account.trustlineBalanceId
               let creditExtendedBalanceId =
@@ -1064,10 +1112,8 @@ export class AccountsService implements AccountsServiceInterface {
               })
             }
             if (
-              [
-                AdjustTrustlineMode.Utilize,
-                AdjustTrustlineMode.Revoke
-              ].includes(mode)
+              mode === AdjustTrustlineMode.Utilize ||
+              mode === AdjustTrustlineMode.Revoke
             ) {
               if (!account.trustlineBalanceId) {
                 throw new UnknownBalanceError(account.id)
@@ -1082,10 +1128,8 @@ export class AccountsService implements AccountsServiceInterface {
               })
             }
             if (
-              [
-                AdjustTrustlineMode.AutoApply,
-                AdjustTrustlineMode.Utilize
-              ].includes(mode)
+              mode === AdjustTrustlineMode.AutoApply ||
+              mode === AdjustTrustlineMode.Utilize
             ) {
               let borrowedBalanceId = account.borrowedBalanceId
               let lentBalanceId = account.superAccount.lentBalanceId
@@ -1117,10 +1161,8 @@ export class AccountsService implements AccountsServiceInterface {
                 })
               }
             } else if (
-              [
-                AdjustTrustlineMode.Settle,
-                AdjustTrustlineMode.Revolve
-              ].includes(mode)
+              mode === AdjustTrustlineMode.Settle ||
+              mode === AdjustTrustlineMode.Revolve
             ) {
               if (!account.borrowedBalanceId) {
                 throw new UnknownBalanceError(account.id)
