@@ -1,7 +1,11 @@
 import { BaseModel } from './base'
 import { IlpHttpToken } from './ilpHttpToken'
-import { bigIntToUuid, uuidToBigInt } from '../utils'
-import { Model, Pojo } from 'objection'
+import { uuidToBigInt } from '../utils'
+import { Model, Pojo, raw } from 'objection'
+
+function bigIntToUuid(id: bigint): Pojo {
+  return raw('?::uuid', [id.toString(16).padStart(32, '0')])
+}
 
 export class IlpAccount extends BaseModel {
   public static get tableName(): string {
