@@ -29,8 +29,6 @@ import {
   calculateDebitBalance,
   toLiquidityId,
   toSettlementId,
-  // toSettlementCreditId,
-  // toSettlementLoanId,
   randomId
 } from '../utils'
 import {
@@ -360,20 +358,6 @@ export class AccountsService implements AccountsServiceInterface {
             assetScale,
             hmacSecret: this.config.hmacSecret
           }),
-          //   flags:
-          //     0 |
-          //     AccountFlags.credits_must_not_exceed_debits |
-          //     AccountFlags.linked
-          // },
-          // {
-          //   id: toSettlementCreditId(assetCode, assetScale),
-          //   flags:
-          //     0 |
-          //     AccountFlags.credits_must_not_exceed_debits |
-          //     AccountFlags.linked
-          // },
-          // {
-          //   id: toSettlementLoanId(assetCode, assetScale),
           flags: 0 | AccountFlags.credits_must_not_exceed_debits
         }
       ],

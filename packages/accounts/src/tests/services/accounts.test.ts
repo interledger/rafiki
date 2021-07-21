@@ -5,13 +5,7 @@ import { v4 as uuid } from 'uuid'
 
 import { Config } from '../../config'
 import { IlpAccount as IlpAccountModel } from '../../models'
-import {
-  randomId,
-  toLiquidityId,
-  toSettlementId
-  // toSettlementCreditId,
-  // toSettlementLoanId,
-} from '../../utils'
+import { randomId, toLiquidityId, toSettlementId } from '../../utils'
 import { createTestApp, TestContainer } from '../helpers/app'
 import { randomAsset } from '../helpers/asset'
 import { AccountFactory } from '../factories'
@@ -140,10 +134,7 @@ describe('Accounts Service', (): void => {
       const retrievedAccount = await IlpAccountModel.query().findById(accountId)
       const balances = await appContainer.tigerbeetle.lookupAccounts([
         retrievedAccount.balanceId
-        // uuidToBigInt(retrievedAccount.debtBalanceId),
-        // uuidToBigInt(retrievedAccount.trustlineBalanceId)
       ])
-      // expect(balances.length).toBe(3)
       expect(balances.length).toBe(1)
       balances.forEach((balance: Balance) => {
         expect(balance.credits_reserved).toEqual(BigInt(0))
@@ -284,8 +275,6 @@ describe('Accounts Service', (): void => {
             assetScale: asset.scale,
             hmacSecret: config.hmacSecret
           })
-          // toSettlementCreditId(asset.code, asset.scale),
-          // toSettlementLoanId(asset.code, asset.scale)
         ])
         expect(balances.length).toBe(0)
       }
@@ -303,10 +292,7 @@ describe('Accounts Service', (): void => {
             assetScale: asset.scale,
             hmacSecret: config.hmacSecret
           })
-          // toSettlementCreditId(asset.code, asset.scale),
-          // toSettlementLoanId(asset.code, asset.scale)
         ])
-        // expect(balances.length).toBe(4)
         expect(balances.length).toBe(2)
         balances.forEach((balance: Balance) => {
           expect(balance.credits_reserved).toEqual(BigInt(0))
@@ -331,10 +317,7 @@ describe('Accounts Service', (): void => {
             assetScale: asset.scale,
             hmacSecret: config.hmacSecret
           })
-          // toSettlementCreditId(asset.code, asset.scale),
-          // toSettlementLoanId(asset.code, asset.scale)
         ])
-        // expect(balances.length).toBe(4)
         expect(balances.length).toBe(2)
       }
     })
