@@ -3,6 +3,14 @@ import { IlpHttpToken } from './ilpHttpToken'
 import { uuidToBigInt } from '../utils'
 import { Model, Pojo, raw } from 'objection'
 
+const BALANCE_IDS = [
+  'balanceId',
+  'trustlineBalanceId',
+  'creditExtendedBalanceId',
+  'borrowedBalanceId',
+  'lentBalanceId'
+]
+
 function bigIntToUuid(id: bigint): Pojo {
   return raw('?::uuid', [id.toString(16).padStart(32, '0')])
 }
@@ -69,45 +77,21 @@ export class IlpAccount extends BaseModel {
   public readonly staticIlpAddress?: string
 
   $formatDatabaseJson(json: Pojo): Pojo {
-    if (json.balanceId) {
-      json.balanceId = bigIntToUuid(json.balanceId)
-    }
-    if (json.trustlineBalanceId) {
-      json.trustlineBalanceId = bigIntToUuid(json.trustlineBalanceId)
-    }
-    if (json.creditExtendedBalanceId) {
-      json.creditExtendedBalanceId = bigIntToUuid(json.creditExtendedBalanceId)
-    }
-    if (json.borrowedBalanceId) {
-      json.borrowedBalanceId = bigIntToUuid(json.borrowedBalanceId)
-    }
-    if (json.lentBalanceId) {
-      json.lentBalanceId = bigIntToUuid(json.lentBalanceId)
-    }
-
+    BALANCE_IDS.forEach((balanceId) => {
+      if (json[balanceId]) {
+        json[balanceId] = bigIntToUuid(json[balanceId])
+      }
+    })
     return super.$formatDatabaseJson(json)
   }
 
   $parseDatabaseJson(json: Pojo): Pojo {
     const formattedJson = super.$parseDatabaseJson(json)
-    if (formattedJson.balanceId) {
-      formattedJson.balanceId = uuidToBigInt(json.balanceId)
-    }
-    if (formattedJson.trustlineBalanceId) {
-      formattedJson.trustlineBalanceId = uuidToBigInt(json.trustlineBalanceId)
-    }
-    if (formattedJson.creditExtendedBalanceId) {
-      formattedJson.creditExtendedBalanceId = uuidToBigInt(
-        json.creditExtendedBalanceId
-      )
-    }
-    if (formattedJson.borrowedBalanceId) {
-      formattedJson.borrowedBalanceId = uuidToBigInt(json.borrowedBalanceId)
-    }
-    if (formattedJson.lentBalanceId) {
-      formattedJson.lentBalanceId = uuidToBigInt(json.lentBalanceId)
-    }
-
+    BALANCE_IDS.forEach((balanceId) => {
+      if (formattedJson[balanceId]) {
+        formattedJson[balanceId] = uuidToBigInt(json[balanceId])
+      }
+    })
     return formattedJson
   }
 }
