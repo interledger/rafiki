@@ -39,10 +39,15 @@ export class IlpAccount extends BaseModel {
 
   public readonly assetCode!: string
   public readonly assetScale!: number
+  // TigerBeetle account id tracking Interledger balance
   public readonly balanceId!: bigint
+  // TigerBeetle account id tracking credit extended by super-account
   public readonly trustlineBalanceId?: bigint
+  // TigerBeetle account id tracking credit extended to sub-account(s)
   public readonly creditExtendedBalanceId?: bigint
+  // TigerBeetle account id tracking amount loaned from super-account
   public readonly borrowedBalanceId?: bigint
+  // TigerBeetle account id tracking amount(s) loaned to sub-account(s)
   public readonly lentBalanceId?: bigint
 
   public superAccountId?: string
