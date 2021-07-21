@@ -54,21 +54,21 @@ describe('WM Service', (): void => {
   )
 
   test('Creates a new WM invoice if none exists', async (): Promise<void> => {
-    let userInvoices = await deps.use('invoiceService').then(
+    let invoices = await deps.use('invoiceService').then(
       (service): Promise<Array<Invoice>> => {
         return service.getAccountInvoicesPage(account.id)
       }
     )
-    expect(userInvoices.length).toEqual(0)
+    expect(invoices.length).toEqual(0)
 
     const wmInvoice = await wmService.getCurrentInvoice(account.id)
 
-    userInvoices = await deps.use('invoiceService').then(
+    invoices = await deps.use('invoiceService').then(
       (service): Promise<Array<Invoice>> => {
         return service.getAccountInvoicesPage(account.id)
       }
     )
-    expect(userInvoices.length).toEqual(1)
+    expect(invoices.length).toEqual(1)
     expect(wmInvoice.accountId).toEqual(account.id)
   })
 

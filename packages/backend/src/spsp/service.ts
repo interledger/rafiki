@@ -22,7 +22,7 @@ export async function createSPSPService({
   streamServer
 }: ServiceDependencies): Promise<SPSPService> {
   const log = logger.child({
-    service: 'UserService'
+    service: 'SPSP Service'
   })
 
   const deps: ServiceDependencies = {
@@ -40,7 +40,7 @@ async function getPay(
   ctx: AppContext
 ): Promise<void> {
   if (!validate(ctx.params.id)) {
-    ctx.throw(400, 'Failed to generate credentials: invalid user id')
+    ctx.throw(400, 'Failed to generate credentials: invalid account id')
   }
 
   if (!ctx.get('accept').includes(CONTENT_TYPE_V4)) {

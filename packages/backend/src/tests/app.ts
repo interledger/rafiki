@@ -65,8 +65,7 @@ export const createTestApp = async (
   const authLink = setContext((_, { headers }) => {
     return {
       headers: {
-        ...headers,
-        user: '34ff06c3-f25b-4ab7-8525-eefa17204ede' // TODO: Remove hardcoded user id when auth is set up
+        ...headers
       }
     }
   })

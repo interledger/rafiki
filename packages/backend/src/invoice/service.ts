@@ -82,7 +82,7 @@ interface Pagination {
  * Please read the spec before changing things:
  * https://relay.dev/graphql/connections.htm
  * @param deps ServiceDependencies.
- * @param accountId The userId of the user.
+ * @param accountId The accountId of the invoices.
  * @param pagination Pagination - cursors and limits.
  * @returns Invoice[] An array of invoices that form a page.
  */
