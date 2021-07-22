@@ -78,7 +78,6 @@ describe('Accounts Service', (): void => {
       const expectedAccount = {
         ...account,
         disabled: false,
-        subAccountIds: [],
         stream: {
           enabled: false
         }
@@ -127,8 +126,7 @@ describe('Accounts Service', (): void => {
         http: {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           outgoing: account.http!.outgoing
-        },
-        subAccountIds: []
+        }
       }
       expect(accountOrError).toEqual(expectedAccount)
       const retrievedAccount = await IlpAccountModel.query().findById(accountId)
@@ -330,22 +328,30 @@ describe('Accounts Service', (): void => {
       expect(retrievedAccount).toEqual(account)
     })
 
-    test("Can get an account's sub-accounts", async (): Promise<void> => {
-      const account = await accountFactory.build()
-      const subAccount = await accountFactory.build({
-        superAccountId: account.accountId,
-        asset: account.asset
-      })
-      const expectedAccount = {
-        ...account,
-        subAccountIds: [subAccount.accountId]
-      }
-      const retrievedAccount = await accounts.getAccount(account.accountId)
-      expect(retrievedAccount).toEqual(expectedAccount)
-    })
-
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(accounts.getAccount(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Get Sub-Accounts', (): void => {
+    test("Can get an account's sub-accounts", async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const expectedSubAccounts = [
+        await accountFactory.build({
+          superAccountId: account.accountId,
+          asset: account.asset
+        }),
+        await accountFactory.build({
+          superAccountId: account.accountId,
+          asset: account.asset
+        })
+      ]
+      const subAccounts = await accounts.getSubAccounts(account.accountId)
+      expect(subAccounts).toEqual(expectedSubAccounts)
+    })
+
+    test('Returns empty array for nonexistent sub-accounts', async (): Promise<void> => {
+      await expect(accounts.getSubAccounts(uuid())).resolves.toEqual([])
     })
   })
 
@@ -391,8 +397,7 @@ describe('Accounts Service', (): void => {
         ...updateOptions,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         disabled: updateOptions.disabled!,
-        asset,
-        subAccountIds: []
+        asset
       }
       expect(accountOrError as IlpAccount).toEqual(expectedAccount)
       const account = await accounts.getAccount(accountId)

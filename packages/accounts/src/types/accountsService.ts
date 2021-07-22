@@ -31,6 +31,7 @@ export interface AccountsService extends ConnectorAccountsService {
   updateAccount(
     accountOptions: UpdateOptions
   ): Promise<IlpAccount | UpdateAccountError>
+  getSubAccounts(accountId: string): Promise<IlpAccount[]>
   getAccountBalance(accountId: string): Promise<IlpBalance | undefined>
   depositLiquidity(deposit: LiquidityDeposit): Promise<void | DepositError>
   withdrawLiquidity(
@@ -60,7 +61,7 @@ export interface AccountsService extends ConnectorAccountsService {
   ): Promise<void | TrustlineError>
 }
 
-export type CreateOptions = Omit<IlpAccount, 'disabled' | 'subAccountIds'> & {
+export type CreateOptions = Omit<IlpAccount, 'disabled'> & {
   disabled?: boolean
   http?: {
     incoming?: {
@@ -80,10 +81,7 @@ export enum CreateAccountError {
 export const isCreateAccountError = (o: any): o is CreateAccountError =>
   Object.values(CreateAccountError).includes(o)
 
-export type UpdateOptions = Omit<
-  CreateOptions,
-  'asset' | 'superAccountId' | 'subAccountIds'
->
+export type UpdateOptions = Omit<CreateOptions, 'asset' | 'superAccountId'>
 
 export enum UpdateAccountError {
   DuplicateIncomingToken = 'DuplicateIncomingToken',

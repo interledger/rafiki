@@ -69,7 +69,6 @@ function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
       code: accountRow.assetCode,
       scale: accountRow.assetScale
     },
-    subAccountIds: [],
     stream: {
       enabled: accountRow.streamEnabled
     }
@@ -79,11 +78,6 @@ function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   }
   if (accountRow.superAccountId) {
     account.superAccountId = accountRow.superAccountId
-  }
-  if (accountRow.subAccounts) {
-    account.subAccountIds = accountRow.subAccounts.map(
-      (subAccount) => subAccount.id
-    )
   }
   if (accountRow.outgoingToken && accountRow.outgoingEndpoint) {
     account.http = {
@@ -255,11 +249,20 @@ export class AccountsService implements AccountsServiceInterface {
   }
 
   public async getAccount(accountId: string): Promise<IlpAccount | undefined> {
+    const accountRow = await IlpAccountModel.query().findById(accountId)
+
+    return accountRow ? toIlpAccount(accountRow) : undefined
+  }
+
+  public async getSubAccounts(accountId: string): Promise<IlpAccount[]> {
     const accountRow = await IlpAccountModel.query()
       .withGraphJoined('subAccounts')
       .findById(accountId)
+      .select('subAccounts')
 
-    return accountRow ? toIlpAccount(accountRow) : undefined
+    return accountRow && accountRow.subAccounts
+      ? accountRow.subAccounts.map((subAccount) => toIlpAccount(subAccount))
+      : []
   }
 
   public async getAccountBalance(
