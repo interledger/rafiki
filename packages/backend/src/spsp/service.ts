@@ -1,9 +1,10 @@
 import { BaseService } from '../shared/baseService'
 import { AppContext } from '../app'
-import { AccountService } from '../account/service'
 import { validate } from 'uuid'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
+import { WebMonetizationService } from '../webmonetization/service'
+import { AccountService } from '../account/service'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
@@ -13,12 +14,14 @@ export interface SPSPService {
 
 interface ServiceDependencies extends BaseService {
   accountService: AccountService
+  wmService: WebMonetizationService
   streamServer: StreamServer
 }
 
 export async function createSPSPService({
   logger,
   accountService,
+  wmService,
   streamServer
 }: ServiceDependencies): Promise<SPSPService> {
   const log = logger.child({
@@ -27,8 +30,9 @@ export async function createSPSPService({
 
   const deps: ServiceDependencies = {
     logger: log,
-    accountService: accountService,
-    streamServer: streamServer
+    accountService,
+    wmService,
+    streamServer
   }
   return {
     GETPayEndpoint: (ctx) => getPay(deps, ctx)
@@ -60,8 +64,12 @@ async function getPay(
   }
 
   const accountId = ctx.params.id
-  const account = await deps.accountService.get(accountId)
-  if (!account) {
+  const invoice = await deps.wmService
+    .getCurrentInvoice(accountId)
+    .catch(() => {
+      return null
+    })
+  if (!invoice) {
     ctx.status = 404
     ctx.set('Content-Type', CONTENT_TYPE_V4)
     ctx.body = JSON.stringify({
@@ -72,6 +80,7 @@ async function getPay(
   }
 
   try {
+    const account = await deps.accountService.get(invoice.invoiceAccountId)
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
       paymentTag: account.id,
       receiptSetup:

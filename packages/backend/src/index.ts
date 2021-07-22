@@ -100,9 +100,11 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
     const accountService = await deps.use('accountService')
+    const wmService = await deps.use('wmService')
     return await createSPSPService({
       logger: logger,
       accountService: accountService,
+      wmService,
       streamServer: streamServer
     })
   })
