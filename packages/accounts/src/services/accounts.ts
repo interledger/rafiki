@@ -1052,10 +1052,11 @@ export class AccountsService implements AccountsServiceInterface {
         IlpAccountModel,
         async (IlpAccountModel) => {
           const accountWithSuperAccounts = await IlpAccountModel.query()
-            .withGraphJoined(`superAccount.^${MAX_SUB_ACCOUNT_DEPTH}`, {
+            .withGraphFetched(`superAccount.^${MAX_SUB_ACCOUNT_DEPTH}`, {
               minimize: true
             })
             .findById(accountId)
+            .forUpdate()
           if (!accountWithSuperAccounts) {
             return TrustlineError.UnknownAccount
           } else if (
