@@ -5,6 +5,7 @@ import { WebMonetization } from './model'
 import { ok } from 'assert'
 import { DateTime } from 'luxon'
 import { AccountService } from '../account/service'
+import { TransactionOrKnex } from 'objection'
 
 export interface WebMonetizationService {
   getCurrentInvoice(accountId: string): Promise<Invoice>
@@ -45,32 +46,37 @@ async function getCurrentInvoice(
   }
 
   const wm = await WebMonetization.query(deps.knex)
-    .findById(account.id)
-    .then((wm) => {
-      if (!wm) {
-        return WebMonetization.query(deps.knex).insertAndFetch({
-          accountId: account.id
-        })
-      }
-      return wm
+    .insertAndFetch({
+      accountId: account.id
     })
+    .onConflict('accountId')
+    .ignore()
 
-  ok(deps.knex)
-  const expectedExpiryAt = DateTime.utc().endOf('day') //Expire Every Day
-  // Create an invoice
-  if (!wm.currentInvoiceId) {
-    return WebMonetization.transaction(deps.knex, async (trx) => {
+  const createInvoice = async (
+    knex: TransactionOrKnex,
+    accountId: string,
+    expiry: DateTime
+  ): Promise<Invoice> => {
+    return WebMonetization.transaction(knex, async (trx) => {
       const description = 'Webmonetization earnings'
       const invoice = await deps.invoiceService.create(
-        account.id,
+        accountId,
         description,
-        expectedExpiryAt.toJSDate()
+        expiry.toJSDate(),
+        trx
       )
       await WebMonetization.query(trx).patchAndFetchById(wm.accountId, {
         currentInvoiceId: invoice.id
       })
       return invoice
     })
+  }
+
+  ok(deps.knex)
+  const expectedExpiryAt = DateTime.utc().endOf('day') //Expire Every Day
+  // Create an invoice
+  if (!wm.currentInvoiceId) {
+    return createInvoice(deps.knex, account.id, expectedExpiryAt)
   } else {
     const invoice = await deps.invoiceService.get(wm.currentInvoiceId)
     const currentInvoiceExpiry = DateTime.fromJSDate(invoice.expiresAt, {
@@ -79,18 +85,7 @@ async function getCurrentInvoice(
 
     // Check if currentInvoice has expired, if so create new invoice
     if (expectedExpiryAt.diff(currentInvoiceExpiry).toMillis() !== 0) {
-      return WebMonetization.transaction(deps.knex, async (trx) => {
-        const description = 'Webmonetization earnings'
-        const invoice = await deps.invoiceService.create(
-          account.id,
-          description,
-          expectedExpiryAt.toJSDate()
-        )
-        await WebMonetization.query(trx).patchAndFetchById(wm.accountId, {
-          currentInvoiceId: invoice.id
-        })
-        return invoice
-      })
+      return createInvoice(deps.knex, account.id, expectedExpiryAt)
     }
 
     return invoice

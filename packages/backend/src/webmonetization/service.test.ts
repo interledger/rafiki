@@ -89,5 +89,11 @@ describe('WM Service', (): void => {
     const wmInvoice = await wmService.getCurrentInvoice(account.id)
 
     expect(wmInvoice).not.toEqual(currentWmInvoice)
+    const invoices = await deps.use('invoiceService').then(
+      (service): Promise<Array<Invoice>> => {
+        return service.getAccountInvoicesPage(account.id)
+      }
+    )
+    expect(invoices.length).toEqual(2)
   })
 })

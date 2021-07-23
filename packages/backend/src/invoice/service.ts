@@ -2,13 +2,15 @@ import { Invoice } from './model'
 import { AccountService } from '../account/service'
 import { BaseService } from '../shared/baseService'
 import assert from 'assert'
+import { Transaction } from 'knex'
 
 export interface InvoiceService {
   get(id: string): Promise<Invoice>
   create(
     accountId: string,
     description: string,
-    expiresAt?: Date
+    expiresAt?: Date,
+    trx?: Transaction
   ): Promise<Invoice>
   getAccountInvoicesPage(
     accountId: string,
@@ -35,8 +37,8 @@ export async function createInvoiceService({
   }
   return {
     get: (id) => getInvoice(deps, id),
-    create: (accountId, description, expiresAt) =>
-      createInvoice(deps, accountId, description, expiresAt),
+    create: (accountId, description, expiresAt, trx) =>
+      createInvoice(deps, accountId, description, expiresAt, trx),
     getAccountInvoicesPage: (accountId, pagination) =>
       getAccountInvoicesPage(deps, accountId, pagination)
   }
@@ -53,11 +55,13 @@ async function createInvoice(
   deps: ServiceDependencies,
   accountId: string,
   description: string,
-  expiresAt?: Date
+  expiresAt?: Date,
+  trx?: Transaction
 ): Promise<Invoice> {
   const subAccount = await deps.accountService.createSubAccount(accountId)
-  return Invoice.query(deps.knex).insertAndFetch({
-    accountId: subAccount.superAccountId,
+
+  return Invoice.query(trx || deps.knex).insertAndFetch({
+    accountId,
     invoiceAccountId: subAccount.id,
     description,
     expiresAt: expiresAt,
