@@ -2933,15 +2933,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/koa-bodyparser@npm:^4.3.2":
-  version: 4.3.2
-  resolution: "@types/koa-bodyparser@npm:4.3.2"
-  dependencies:
-    "@types/koa": "*"
-  checksum: e5d0dea2f94599ff9a20b8782aa7ac34fd77b236f88f6a3c0d7ce792b19cbd820e1626f7b90ef19df6a3b3ade9f50fab4e068f245395623c8543e730eaf2cef1
-  languageName: node
-  linkType: hard
-
 "@types/koa-compose@npm:*, @types/koa-compose@npm:^3.2.2, @types/koa-compose@npm:^3.2.5":
   version: 3.2.5
   resolution: "@types/koa-compose@npm:3.2.5"
@@ -3004,22 +2995,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/koa@npm:^2.13.4":
-  version: 2.13.4
-  resolution: "@types/koa@npm:2.13.4"
-  dependencies:
-    "@types/accepts": "*"
-    "@types/content-disposition": "*"
-    "@types/cookies": "*"
-    "@types/http-assert": "*"
-    "@types/http-errors": "*"
-    "@types/keygrip": "*"
-    "@types/koa-compose": "*"
-    "@types/node": "*"
-  checksum: e63ff2f0f81c634fb75d1436f6102dda5fc5a332abb1d10af5780ea2d266f377fae79b50ced8a7ccc124feb36fe19011a9d4d402666bc7637a748f10bc31c24a
-  languageName: node
-  linkType: hard
-
 "@types/koa__cors@npm:^2.2.1":
   version: 2.2.3
   resolution: "@types/koa__cors@npm:2.2.3"
@@ -3044,15 +3019,6 @@ __metadata:
   dependencies:
     "@types/koa": "*"
   checksum: 87e2cd939d12a4576a098a0ac389dbcc84a73b361dd216ad11a452dc317715e46025518a4af37f6634e600afff15a721594890ba418b44520b0c348b3915b194
-  languageName: node
-  linkType: hard
-
-"@types/koa__router@npm:^8.0.7":
-  version: 8.0.7
-  resolution: "@types/koa__router@npm:8.0.7"
-  dependencies:
-    "@types/koa": "*"
-  checksum: dba646fcee4ed3a7648ceb9aa507f03cccaa41bcb90f307312f0c8b329c743c89854fee47d9519538f06b00828c61491bcf8ffb50b0517ef36cc55dd6edaa13e
   languageName: node
   linkType: hard
 
@@ -8186,11 +8152,11 @@ __metadata:
     "@types/ioredis": ^4.26.4
     "@types/jest": ^26.0.24
     "@types/jsonwebtoken": ^8.5.1
-    "@types/koa": ^2.13.4
-    "@types/koa-bodyparser": ^4.3.2
+    "@types/koa": ^2.13.1
+    "@types/koa-bodyparser": ^4.3.0
     "@types/koa-compose": ^3.2.5
     "@types/koa-joi-router": ^5.2.5
-    "@types/koa__router": ^8.0.7
+    "@types/koa__router": ^8.0.4
     "@types/lodash": ^4.14.168
     "@types/node": ^14.14.41
     "@types/node-fetch": ^2.5.10

@@ -4106,21 +4106,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/node", "npm:14.14.39"]
           ],
           "linkType": "HARD",
-        }],
-        ["npm:2.13.4", {
-          "packageLocation": "./.yarn/cache/@types-koa-npm-2.13.4-e10e6e7742-e63ff2f0f8.zip/node_modules/@types/koa/",
-          "packageDependencies": [
-            ["@types/koa", "npm:2.13.4"],
-            ["@types/accepts", "npm:1.3.5"],
-            ["@types/content-disposition", "npm:0.5.3"],
-            ["@types/cookies", "npm:0.7.6"],
-            ["@types/http-assert", "npm:1.5.1"],
-            ["@types/http-errors", "npm:1.8.0"],
-            ["@types/keygrip", "npm:1.0.2"],
-            ["@types/koa-compose", "npm:3.2.5"],
-            ["@types/node", "npm:14.14.39"]
-          ],
-          "linkType": "HARD",
         }]
       ]],
       ["@types/koa-bodyparser", [
@@ -4136,14 +4121,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa-bodyparser-npm-4.3.1-01f7ed0142-8dc26025d3.zip/node_modules/@types/koa-bodyparser/",
           "packageDependencies": [
             ["@types/koa-bodyparser", "npm:4.3.1"],
-            ["@types/koa", "npm:2.13.1"]
-          ],
-          "linkType": "HARD",
-        }],
-        ["npm:4.3.2", {
-          "packageLocation": "./.yarn/cache/@types-koa-bodyparser-npm-4.3.2-ad9a68a600-e5d0dea2f9.zip/node_modules/@types/koa-bodyparser/",
-          "packageDependencies": [
-            ["@types/koa-bodyparser", "npm:4.3.2"],
             ["@types/koa", "npm:2.13.1"]
           ],
           "linkType": "HARD",
@@ -4205,14 +4182,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__router-npm-8.0.4-47961c9f7c-87e2cd939d.zip/node_modules/@types/koa__router/",
           "packageDependencies": [
             ["@types/koa__router", "npm:8.0.4"],
-            ["@types/koa", "npm:2.13.1"]
-          ],
-          "linkType": "HARD",
-        }],
-        ["npm:8.0.7", {
-          "packageLocation": "./.yarn/cache/@types-koa__router-npm-8.0.7-27f830249b-dba646fcee.zip/node_modules/@types/koa__router/",
-          "packageDependencies": [
-            ["@types/koa__router", "npm:8.0.7"],
             ["@types/koa", "npm:2.13.1"]
           ],
           "linkType": "HARD",
@@ -10353,11 +10322,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/ioredis", "npm:4.26.4"],
             ["@types/jest", "npm:26.0.24"],
             ["@types/jsonwebtoken", "npm:8.5.1"],
-            ["@types/koa", "npm:2.13.4"],
-            ["@types/koa-bodyparser", "npm:4.3.2"],
+            ["@types/koa", "npm:2.13.1"],
+            ["@types/koa-bodyparser", "npm:4.3.1"],
             ["@types/koa-compose", "npm:3.2.5"],
             ["@types/koa-joi-router", "npm:5.2.5"],
-            ["@types/koa__router", "npm:8.0.7"],
+            ["@types/koa__router", "npm:8.0.4"],
             ["@types/lodash", "npm:4.14.168"],
             ["@types/node", "npm:14.14.43"],
             ["@types/node-fetch", "npm:2.5.10"],
