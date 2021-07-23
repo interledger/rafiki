@@ -39,7 +39,7 @@ export type Amount = {
   __typename?: 'Amount';
   amount: Scalars['Int'];
   currency: Scalars['String'];
-  scale?: Maybe<Scalars['Int']>;
+  scale: Scalars['Int'];
 };
 
 export type Invoice = {
@@ -204,7 +204,7 @@ export type AccountResolvers<ContextType = any, ParentType extends ResolversPare
 export type AmountResolvers<ContextType = any, ParentType extends ResolversParentTypes['Amount'] = ResolversParentTypes['Amount']> = {
   amount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   currency?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  scale?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  scale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

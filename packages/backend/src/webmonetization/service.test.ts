@@ -48,8 +48,8 @@ describe('WM Service', (): void => {
 
   afterAll(
     async (): Promise<void> => {
-      await appContainer.shutdown()
       await truncateTables(knex)
+      await appContainer.shutdown()
     }
   )
 

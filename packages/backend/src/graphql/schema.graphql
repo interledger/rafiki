@@ -5,7 +5,7 @@ type Query {
 type Amount {
   amount: Int!
   currency: String!
-  scale: Int
+  scale: Int!
 }
 
 type Account {

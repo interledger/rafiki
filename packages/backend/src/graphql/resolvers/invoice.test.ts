@@ -39,9 +39,9 @@ describe('Invoice Resolver', (): void => {
 
   afterAll(
     async (): Promise<void> => {
+      await truncateTables(knex)
       await appContainer.apolloClient.stop()
       await appContainer.shutdown()
-      await truncateTables(knex)
     }
   )
 
