@@ -69,7 +69,7 @@ describe('WM Service', (): void => {
       }
     )
     expect(invoices.length).toEqual(1)
-    expect(wmInvoice.accountId).toEqual(account.id)
+    expect(wmInvoice.id).toEqual(account.id)
   })
 
   test('Returns the current one if still valid', async (): Promise<void> => {

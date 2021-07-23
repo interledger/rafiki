@@ -47,9 +47,9 @@ async function getCurrentInvoice(
 
   const wm = await WebMonetization.query(deps.knex)
     .insertAndFetch({
-      accountId: account.id
+      id: account.id
     })
-    .onConflict('accountId')
+    .onConflict('id')
     .ignore()
 
   const createInvoice = async (
@@ -65,7 +65,7 @@ async function getCurrentInvoice(
         expiry.toJSDate(),
         trx
       )
-      await WebMonetization.query(trx).patchAndFetchById(wm.accountId, {
+      await WebMonetization.query(trx).patchAndFetchById(wm.id, {
         currentInvoiceId: invoice.id
       })
       return invoice
