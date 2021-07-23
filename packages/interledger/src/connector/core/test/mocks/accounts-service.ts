@@ -6,7 +6,7 @@ import {
   Transaction,
   Transfer,
   TransferError
-} from '../../../../accounts'
+} from '../../../../accounts/types'
 
 export type MockIlpAccount = CreateOptions & {
   disabled: boolean

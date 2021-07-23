@@ -13,7 +13,7 @@ import {
   // toSettlementLoanId,
 } from './utils'
 import { randomAsset, AccountFactory } from './testsHelpers'
-import { AccountsService } from './accounts'
+import { AccountsService } from './service'
 
 import {
   CreateAccountError,

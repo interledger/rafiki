@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto'
-import { initIocContainer, start as startAccounts } from './accounts'
+import { AccountsService } from './accounts/service'
 import { Config } from './config'
 import IORedis from 'ioredis'
 import {
@@ -27,6 +27,8 @@ import { Server } from 'http'
 
 import createLogger from 'pino'
 import compose = require('koa-compose')
+import { Logger } from './logger/service'
+import { createClient } from 'tigerbeetle-node'
 //config()
 const logger = createLogger()
 
@@ -107,22 +109,25 @@ export const gracefulShutdown = async (): Promise<void> => {
   }
 }
 export const start = async (): Promise<void> => {
-  const container = initIocContainer(Config)
-  const accountsApp = await startAccounts(container)
+  const tbClient = createClient({
+    cluster_id: Config.tigerbeetleClusterId,
+    replica_addresses: Config.tigerbeetleReplicaAddresses
+  })
+  const accountsService = new AccountsService(tbClient, Config, Logger)
   adminApi = new AdminApi(
     { host: ADMIN_API_HOST, port: ADMIN_API_PORT },
     {
       auth: (): boolean => {
         return true
       },
-      accounts: accountsApp.getAccounts()
+      accounts: accountsService
       //router: router
     }
   )
   // TODO Add auth
   const app = createApp({
     //router: router,
-    accounts: accountsApp.getAccounts(),
+    accounts: accountsService,
     redis,
     rates: ratesService,
     stream: {

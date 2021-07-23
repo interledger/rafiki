@@ -2,7 +2,7 @@ import { Errors } from 'ilp-packet'
 import { RafikiContext, RafikiMiddleware } from '../rafiki'
 import { AuthState } from './auth'
 import { AccountNotFoundError } from '../errors'
-import { IlpAccount } from '../../../accounts'
+import { IlpAccount } from '../../../accounts/types'
 
 export function createAccountMiddleware(): RafikiMiddleware {
   return async function account(

@@ -1,6 +1,6 @@
 import { AxiosInstance } from 'axios'
 import { Errors } from 'ilp-packet'
-import { IlpAccount } from '../../../accounts'
+import { IlpAccount } from '../../../accounts/types'
 
 export async function sendToPeer(
   client: AxiosInstance,

@@ -3,7 +3,7 @@ import { RafikiContext, RafikiMiddleware } from '../rafiki'
 import { modifySerializedIlpPrepare } from '../lib'
 //import { AxiosClient } from '../services/client/axios'
 import { sendToPeer as sendToPeerDefault } from '../services/client'
-import { IlpAccount } from '../../../accounts'
+import { IlpAccount } from '../../../accounts/types'
 
 export interface ClientControllerOptions {
   sendToPeer?: (
