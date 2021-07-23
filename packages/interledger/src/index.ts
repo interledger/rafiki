@@ -1,60 +1,14 @@
-import { randomBytes } from 'crypto'
-import { AccountsService } from './accounts/service'
-import { Config } from './config'
 import IORedis from 'ioredis'
-import {
-  createApp,
-  RafikiRouter,
-  createRatesService,
-  createBalanceMiddleware,
-  createIncomingErrorHandlerMiddleware,
-  createIldcpProtocolController,
-  createStreamController,
-  //createCcpProtocolController,
-  createOutgoingExpireMiddleware,
-  createClientController,
-  createIncomingMaxPacketAmountMiddleware,
-  createIncomingRateLimitMiddleware,
-  createIncomingThroughputMiddleware,
-  createOutgoingReduceExpiryMiddleware,
-  createOutgoingThroughputMiddleware,
-  createOutgoingValidateFulfillmentMiddleware
-} from './connector/core'
 import { AdminApi } from './admin-api'
 
-//import { config } from 'dotenv'
 import { Server } from 'http'
 
 import createLogger from 'pino'
-import compose = require('koa-compose')
-import { Logger } from './logger/service'
-import { createClient } from 'tigerbeetle-node'
-//config()
+import { createConnectorService } from './connector'
 const logger = createLogger()
 
-/**
- * Admin API Variables
- */
-const ADMIN_API_HOST = process.env.ADMIN_API_HOST || '127.0.0.1'
-const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
-// const ADMIN_API_AUTH_TOKEN = process.env.ADMIN_API_AUTH_TOKEN || '' // TODO
 const REDIS = process.env.REDIS || 'redis://127.0.0.1:6379'
-
-/**
- * Connector variables
- */
-//const PREFIX = process.env.PREFIX || 'test'
-const ILP_ADDRESS = process.env.ILP_ADDRESS || undefined
 const PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
-const STREAM_SECRET = process.env.STREAM_SECRET
-  ? Buffer.from(process.env.STREAM_SECRET, 'base64')
-  : randomBytes(32)
-const pricesUrl = process.env.PRICES_URL // optional
-const pricesLifetime = +(process.env.PRICES_LIFETIME || 15_000)
-
-if (!ILP_ADDRESS) {
-  throw new Error('ILP_ADDRESS is required')
-}
 
 /*
 const router = new InMemoryRouter(peerService, {
@@ -66,29 +20,6 @@ const redis = new IORedis(REDIS, {
   // This option messes up some types, but helps with (large) number accuracy.
   stringNumbers: true
 })
-
-const incoming = compose([
-  // Incoming Rules
-  createIncomingErrorHandlerMiddleware(ILP_ADDRESS),
-  createIncomingMaxPacketAmountMiddleware(),
-  createIncomingRateLimitMiddleware({}),
-  createIncomingThroughputMiddleware()
-])
-
-const outgoing = compose([
-  // Outgoing Rules
-  createStreamController(),
-  createOutgoingThroughputMiddleware(),
-  createOutgoingReduceExpiryMiddleware({}),
-  createOutgoingExpireMiddleware(),
-  createOutgoingValidateFulfillmentMiddleware(),
-
-  // Send outgoing packets
-  createClientController()
-])
-
-const ratesService = createRatesService({ pricesUrl, pricesLifetime, logger })
-const middleware = compose([incoming, createBalanceMiddleware(), outgoing])
 
 let adminApi: AdminApi
 let server: Server
@@ -109,42 +40,9 @@ export const gracefulShutdown = async (): Promise<void> => {
   }
 }
 export const start = async (): Promise<void> => {
-  const tbClient = createClient({
-    cluster_id: Config.tigerbeetleClusterId,
-    replica_addresses: Config.tigerbeetleReplicaAddresses
-  })
-  const accountsService = new AccountsService(tbClient, Config, Logger)
-  adminApi = new AdminApi(
-    { host: ADMIN_API_HOST, port: ADMIN_API_PORT },
-    {
-      auth: (): boolean => {
-        return true
-      },
-      accounts: accountsService
-      //router: router
-    }
-  )
-  // TODO Add auth
-  const app = createApp({
-    //router: router,
-    accounts: accountsService,
-    redis,
-    rates: ratesService,
-    stream: {
-      serverSecret: STREAM_SECRET,
-      serverAddress: ILP_ADDRESS
-    }
-  })
-
-  const appRouter = new RafikiRouter()
-
-  // Default ILP routes
-  // TODO Understand the priority and workings of the router... Seems to do funky stuff. Maybe worth just writing ILP one?
-  appRouter.ilpRoute('test.*', middleware)
-  appRouter.ilpRoute('peer.config', createIldcpProtocolController(ILP_ADDRESS))
-  //appRouter.ilpRoute('peer.route.*', createCcpProtocolController())
-  // TODO Handle echo
-  app.use(appRouter.routes())
+  const connectorService = await createConnectorService({ redis })
+  adminApi = connectorService.adminApi
+  const app = connectorService.app
 
   let shuttingDown = false
   process.on(
