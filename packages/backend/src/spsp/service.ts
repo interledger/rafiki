@@ -64,12 +64,8 @@ async function getPay(
   }
 
   const accountId = ctx.params.id
-  const invoice = await deps.wmService
-    .getCurrentInvoice(accountId)
-    .catch(() => {
-      return null
-    })
-  if (!invoice) {
+  const account = await deps.accountService.get(accountId)
+  if (!account) {
     ctx.status = 404
     ctx.set('Content-Type', CONTENT_TYPE_V4)
     ctx.body = JSON.stringify({
@@ -80,9 +76,9 @@ async function getPay(
   }
 
   try {
-    const account = await deps.accountService.get(invoice.invoiceAccountId)
+    const invoice = await deps.wmService.getCurrentInvoice(accountId)
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-      paymentTag: account.id,
+      paymentTag: invoice.invoiceAccountId,
       receiptSetup:
         nonce && secret
           ? {
