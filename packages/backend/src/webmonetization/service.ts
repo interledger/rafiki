@@ -45,15 +45,11 @@ async function getCurrentInvoice(
   }
 
   const wm = await WebMonetization.query(deps.knex)
-    .findById(account.id)
-    .then((wm) => {
-      if (!wm) {
-        return WebMonetization.query(deps.knex).insertAndFetch({
-          accountId: account.id
-        })
-      }
-      return wm
+    .insertAndFetch({
+      accountId: account.id
     })
+    .onConflict('accountId')
+    .ignore()
 
   ok(deps.knex)
   const expectedExpiryAt = DateTime.utc().endOf('day') //Expire Every Day
