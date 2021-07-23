@@ -7,7 +7,7 @@
       "path": "packages/backend"
     },
     {
-      "path": "packages/connector"
+      "path": "packages/interledger"
     },
     {
       "path": "packages/frontend"
