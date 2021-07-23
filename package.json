@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "format:local": "prettier --write $INIT_CWD",
     "format:check:local": "prettier --check $INIT_CWD",
-    "test": "jest --passWithNoTests --bail",
+    "test": "jest --passWithNoTests",
     "test:local": "jest $INIT_CWD --passWithNoTests",
     "build": "tsc --build",
     "postinstall": "husky install"

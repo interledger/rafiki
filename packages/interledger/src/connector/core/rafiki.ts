@@ -14,7 +14,7 @@ import { LoggingService } from './services/logger'
 import {
   ConnectorAccountsService as AccountsService,
   IlpAccount
-} from 'accounts'
+} from '../../accounts'
 import { IncomingMessage, ServerResponse } from 'http'
 import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
 import { DebugLogger } from './services/logger/debug'

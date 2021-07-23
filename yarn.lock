@@ -2850,6 +2850,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/jest@npm:^26.0.24":
+  version: 26.0.24
+  resolution: "@types/jest@npm:26.0.24"
+  dependencies:
+    jest-diff: ^26.0.0
+    pretty-format: ^26.0.0
+  checksum: e5d3651c1edf197011d19ee8f4bacd52667fa673d1b2ffbfbce624208d643fd4372ebb31fa8a1d89843a7705f142e38076e25e1e7b67f3aacafd6ae8bc77cbcf
+  languageName: node
+  linkType: hard
+
 "@types/js-yaml@npm:^4.0.0":
   version: 4.0.1
   resolution: "@types/js-yaml@npm:4.0.1"
@@ -8174,6 +8184,7 @@ __metadata:
     "@types/debug": ^4.1.5
     "@types/faker": ^5.5.3
     "@types/ioredis": ^4.26.4
+    "@types/jest": ^26.0.24
     "@types/jsonwebtoken": ^8.5.1
     "@types/koa": ^2.13.4
     "@types/koa-bodyparser": ^4.3.2

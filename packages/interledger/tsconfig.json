@@ -5,9 +5,5 @@
     "rootDir": "./src"
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "**/*.test.ts",
-    "src/services/**/_*",
-    "src/services/core/factories/*"
-  ]
+  "exclude": ["**/*.test.ts", "src/**/_*", "src/connector/core/factories/*"]
 }

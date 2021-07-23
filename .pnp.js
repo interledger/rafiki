@@ -4001,6 +4001,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["pretty-format", "npm:26.6.2"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:26.0.24", {
+          "packageLocation": "./.yarn/cache/@types-jest-npm-26.0.24-47c570294f-e5d3651c1e.zip/node_modules/@types/jest/",
+          "packageDependencies": [
+            ["@types/jest", "npm:26.0.24"],
+            ["jest-diff", "npm:26.6.2"],
+            ["pretty-format", "npm:26.6.2"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["@types/js-yaml", [
@@ -10342,6 +10351,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/debug", "npm:4.1.5"],
             ["@types/faker", "npm:5.5.3"],
             ["@types/ioredis", "npm:4.26.4"],
+            ["@types/jest", "npm:26.0.24"],
             ["@types/jsonwebtoken", "npm:8.5.1"],
             ["@types/koa", "npm:2.13.4"],
             ["@types/koa-bodyparser", "npm:4.3.2"],

@@ -2,7 +2,7 @@ import { IlpPrepare, serializeIlpPrepare } from 'ilp-packet'
 import { deserializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { createContext } from '../../utils'
 import { RafikiContext } from '../../rafiki'
-import { IlpAccount } from 'accounts'
+import { IlpAccount } from '../../../../accounts'
 import {
   AccountFactory,
   PeerAccountFactory,

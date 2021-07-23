@@ -74,9 +74,12 @@ describe('Accounts Service', (): void => {
     }
   )
 
-  afterAll((): void => {
-    // tbClient.destroy()
-  })
+  afterAll(
+    async (): Promise<void> => {
+      await knex.destroy()
+      tbClient.destroy()
+    }
+  )
 
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {

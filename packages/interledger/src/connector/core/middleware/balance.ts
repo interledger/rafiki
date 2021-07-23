@@ -1,6 +1,6 @@
 import { Errors } from 'ilp-packet'
 import { RafikiContext } from '../rafiki'
-import { isTransferError } from 'accounts'
+import { isTransferError } from '../../../accounts'
 
 export function createBalanceMiddleware() {
   return async (

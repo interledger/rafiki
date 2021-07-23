@@ -1,4 +1,4 @@
-import { IlpAccount } from 'accounts'
+import { IlpAccount } from '../../../accounts'
 import Axios, { AxiosInstance } from 'axios'
 import { serializeIlpPrepare } from 'ilp-packet'
 import { Reader, Writer } from 'oer-utils'

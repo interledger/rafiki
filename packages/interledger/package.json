@@ -43,6 +43,7 @@
     "@types/debug": "^4.1.5",
     "@types/faker": "^5.5.3",
     "@types/ioredis": "^4.26.4",
+    "@types/jest": "^26.0.24",
     "@types/jsonwebtoken": "^8.5.1",
     "@types/koa": "^2.13.4",
     "@types/koa-bodyparser": "^4.3.2",
