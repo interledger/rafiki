@@ -6,7 +6,8 @@
     "format:check": "yarn format:check:local",
     "start": "node dist/index.js",
     "knex": "knex",
-    "test": "yarn test:local"
+    "test": "yarn test:local",
+    "generate": "graphql-codegen --config codegen.yml"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.5",

@@ -1,19 +1,22 @@
 import IORedis from 'ioredis'
-import { AdminApi } from './admin-api'
-
 import { Server } from 'http'
+import { ApolloServer } from 'apollo-server'
+import { createClient } from 'tigerbeetle-node'
 
+import { createAdminApi } from './admin-api'
 import { createConnectorService } from './connector'
 import { createRatesService, Rafiki } from './connector/core'
 import { Config } from './config'
 import { AccountsService } from './accounts/service'
-import { createClient } from 'tigerbeetle-node'
 import { Logger } from './logger/service'
 
 const logger = Logger
 
 const REDIS = process.env.REDIS || 'redis://127.0.0.1:6379'
 const PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
+
+const ADMIN_API_HOST = process.env.ADMIN_API_HOST || '127.0.0.1'
+const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
 
 /*
 const router = new InMemoryRouter(peerService, {
@@ -26,15 +29,15 @@ const redis = new IORedis(REDIS, {
   stringNumbers: true
 })
 
-let adminApi: AdminApi
-let server: Server
+let adminApi: ApolloServer
+let connectorServer: Server
 
 export const gracefulShutdown = async (): Promise<void> => {
   logger.info('shutting down.')
-  adminApi.shutdown()
-  if (server) {
+  await adminApi.stop()
+  if (connectorServer) {
     return new Promise((resolve, reject): void => {
-      server.close((err?: Error) => {
+      connectorServer.close((err?: Error) => {
         if (err) return reject(err)
         redis
           .quit()
@@ -76,9 +79,9 @@ export const start = async (): Promise<void> => {
     }
   )
 
-  server = app.listen(PORT)
+  connectorServer = app.listen(PORT)
   logger.info(`Connector listening on ${PORT}`)
-  adminApi.listen()
+  await adminApi.listen({ host: ADMIN_API_HOST, port: ADMIN_API_PORT })
   logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
 
@@ -113,24 +116,12 @@ async function _setupConnector(): Promise<Rafiki> {
   })
 }
 
-async function _setupAdminApi(): Promise<AdminApi> {
+async function _setupAdminApi(): Promise<ApolloServer> {
   const tbClient = createClient({
     cluster_id: Config.tigerbeetleClusterId,
     replica_addresses: Config.tigerbeetleReplicaAddresses
   })
   const accountsService = new AccountsService(tbClient, Config, logger)
 
-  const ADMIN_API_HOST = process.env.ADMIN_API_HOST || '127.0.0.1'
-  const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
-
-  return new AdminApi(
-    { host: ADMIN_API_HOST, port: ADMIN_API_PORT },
-    {
-      auth: (): boolean => {
-        return true
-      },
-      accounts: accountsService
-      //router: router
-    }
-  )
+  return createAdminApi({ accountsService })
 }

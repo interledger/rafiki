@@ -1,0 +1,14 @@
+overwrite: true
+schema: "./src/admin-api/schema.graphql"
+documents: null
+generates:
+  src/admin-api/generated/graphql.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      defaultMapper: Partial<{T}>
+      resolverTypeWrapperSignature: Promise<T>
+  src/admin-api/generated/graphql.schema.json:
+    plugins:
+      - "introspection"
