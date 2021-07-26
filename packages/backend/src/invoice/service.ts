@@ -59,18 +59,30 @@ async function createInvoice(
   trx?: Transaction
 ): Promise<Invoice> {
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))
-  const subAccount = await deps.accountService.createSubAccount(
-    accountId,
-    invTrx
-  )
 
-  return Invoice.query(invTrx).insertAndFetch({
-    accountId,
-    invoiceAccountId: subAccount.id,
-    description,
-    expiresAt: expiresAt,
-    active: true
-  })
+  try {
+    const subAccount = await deps.accountService.createSubAccount(
+      accountId,
+      invTrx
+    )
+
+    const invoice = await Invoice.query(invTrx).insertAndFetch({
+      accountId,
+      invoiceAccountId: subAccount.id,
+      description,
+      expiresAt: expiresAt,
+      active: true
+    })
+    if (!trx) {
+      await invTrx.commit()
+    }
+    return invoice
+  } catch (err) {
+    if (!trx) {
+      await invTrx.rollback()
+    }
+    throw err
+  }
 }
 
 interface Pagination {
