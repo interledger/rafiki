@@ -58,9 +58,13 @@ async function createInvoice(
   expiresAt?: Date,
   trx?: Transaction
 ): Promise<Invoice> {
-  const subAccount = await deps.accountService.createSubAccount(accountId)
+  const invTrx = trx || (await Invoice.startTransaction(deps.knex))
+  const subAccount = await deps.accountService.createSubAccount(
+    accountId,
+    invTrx
+  )
 
-  return Invoice.query(trx || deps.knex).insertAndFetch({
+  return Invoice.query(invTrx).insertAndFetch({
     accountId,
     invoiceAccountId: subAccount.id,
     description,

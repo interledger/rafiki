@@ -1,11 +1,12 @@
 import { Account } from './model'
 import { BaseService } from '../shared/baseService'
 import { strictEqual } from 'assert'
+import { Transaction } from 'knex'
 
 export interface AccountService {
   get(id: string): Promise<Account>
   create(scale: number, currency: string): Promise<Account>
-  createSubAccount(superAccountId: string): Promise<Account>
+  createSubAccount(superAccountId: string, trx?: Transaction): Promise<Account>
 }
 
 type ServiceDependencies = BaseService
@@ -24,7 +25,8 @@ export async function createAccountService({
   return {
     get: (id) => getAccount(deps, id),
     create: (scale, currency) => createAccount(deps, scale, currency),
-    createSubAccount: (superAccountId) => createSubAccount(deps, superAccountId)
+    createSubAccount: (superAccountId, trx) =>
+      createSubAccount(deps, superAccountId, trx)
   }
 }
 
@@ -49,7 +51,8 @@ async function createAccount(
 
 async function createSubAccount(
   deps: ServiceDependencies,
-  superAccountId: string
+  superAccountId: string,
+  trx?: Transaction
 ): Promise<Account> {
   // TODO: Create account in connector here (when connector account setup).
   const parentAccount = await getAccount(deps, superAccountId)
@@ -60,7 +63,7 @@ async function createSubAccount(
     'parent account does not match what was requested'
   )
 
-  return Account.query(deps.knex).insertAndFetch({
+  return Account.query(trx || deps.knex).insertAndFetch({
     scale: parentAccount.scale,
     currency: parentAccount.currency,
     superAccountId: superAccountId
