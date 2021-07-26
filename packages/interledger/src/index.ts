@@ -13,10 +13,14 @@ import { Logger } from './logger/service'
 const logger = Logger
 
 const REDIS = process.env.REDIS || 'redis://127.0.0.1:6379'
-const PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
+// TODO: connector port and admin api port use the same env variable?
+const CONNECTOR_PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
 
 const ADMIN_API_HOST = process.env.ADMIN_API_HOST || '127.0.0.1'
 const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
+
+const pricesUrl = process.env.PRICES_URL // optional
+const pricesLifetime = +(process.env.PRICES_LIFETIME || 15_000)
 
 /*
 const router = new InMemoryRouter(peerService, {
@@ -28,8 +32,13 @@ const redis = new IORedis(REDIS, {
   // This option messes up some types, but helps with (large) number accuracy.
   stringNumbers: true
 })
+const tbClient = createClient({
+  cluster_id: Config.tigerbeetleClusterId,
+  replica_addresses: Config.tigerbeetleReplicaAddresses
+})
 
 let adminApi: ApolloServer
+let connectorApp: Rafiki
 let connectorServer: Server
 
 export const gracefulShutdown = async (): Promise<void> => {
@@ -49,8 +58,22 @@ export const gracefulShutdown = async (): Promise<void> => {
 }
 
 export const start = async (): Promise<void> => {
-  adminApi = await _setupAdminApi()
-  const app = await _setupConnector()
+  const accountsService = new AccountsService(tbClient, Config, logger)
+
+  const ratesService = createRatesService({
+    pricesUrl,
+    pricesLifetime,
+    logger: logger
+  })
+
+  adminApi = await createAdminApi({ accountsService })
+
+  connectorApp = await createConnectorService({
+    redis,
+    logger,
+    ratesService,
+    accountsService
+  })
 
   let shuttingDown = false
   process.on(
@@ -79,8 +102,8 @@ export const start = async (): Promise<void> => {
     }
   )
 
-  connectorServer = app.listen(PORT)
-  logger.info(`Connector listening on ${PORT}`)
+  connectorServer = connectorApp.listen(CONNECTOR_PORT)
+  logger.info(`Connector listening on ${CONNECTOR_PORT}`)
   await adminApi.listen({ host: ADMIN_API_HOST, port: ADMIN_API_PORT })
   logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
@@ -91,37 +114,4 @@ if (!module.parent) {
     const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
     logger.error(errInfo)
   })
-}
-
-async function _setupConnector(): Promise<Rafiki> {
-  const tbClient = createClient({
-    cluster_id: Config.tigerbeetleClusterId,
-    replica_addresses: Config.tigerbeetleReplicaAddresses
-  })
-  const accountsService = new AccountsService(tbClient, Config, logger)
-
-  const pricesUrl = process.env.PRICES_URL // optional
-  const pricesLifetime = +(process.env.PRICES_LIFETIME || 15_000)
-  const ratesService = createRatesService({
-    pricesUrl,
-    pricesLifetime,
-    logger: logger
-  })
-
-  return createConnectorService({
-    redis,
-    logger,
-    ratesService,
-    accountsService
-  })
-}
-
-async function _setupAdminApi(): Promise<ApolloServer> {
-  const tbClient = createClient({
-    cluster_id: Config.tigerbeetleClusterId,
-    replica_addresses: Config.tigerbeetleReplicaAddresses
-  })
-  const accountsService = new AccountsService(tbClient, Config, logger)
-
-  return createAdminApi({ accountsService })
 }
