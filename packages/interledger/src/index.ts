@@ -3,9 +3,14 @@ import { AdminApi } from './admin-api'
 
 import { Server } from 'http'
 
-import createLogger from 'pino'
 import { createConnectorService } from './connector'
-const logger = createLogger()
+import { createRatesService, Rafiki } from './connector/core'
+import { Config } from './config'
+import { AccountsService } from './accounts/service'
+import { createClient } from 'tigerbeetle-node'
+import { Logger } from './logger/service'
+
+const logger = Logger
 
 const REDIS = process.env.REDIS || 'redis://127.0.0.1:6379'
 const PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
@@ -39,10 +44,10 @@ export const gracefulShutdown = async (): Promise<void> => {
     })
   }
 }
+
 export const start = async (): Promise<void> => {
-  const connectorService = await createConnectorService({ redis })
-  adminApi = connectorService.adminApi
-  const app = connectorService.app
+  adminApi = await _setupAdminApi()
+  const app = await _setupConnector()
 
   let shuttingDown = false
   process.on(
@@ -83,4 +88,49 @@ if (!module.parent) {
     const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
     logger.error(errInfo)
   })
+}
+
+async function _setupConnector(): Promise<Rafiki> {
+  const tbClient = createClient({
+    cluster_id: Config.tigerbeetleClusterId,
+    replica_addresses: Config.tigerbeetleReplicaAddresses
+  })
+  const accountsService = new AccountsService(tbClient, Config, logger)
+
+  const pricesUrl = process.env.PRICES_URL // optional
+  const pricesLifetime = +(process.env.PRICES_LIFETIME || 15_000)
+  const ratesService = createRatesService({
+    pricesUrl,
+    pricesLifetime,
+    logger: logger
+  })
+
+  return createConnectorService({
+    redis,
+    logger,
+    ratesService,
+    accountsService
+  })
+}
+
+async function _setupAdminApi(): Promise<AdminApi> {
+  const tbClient = createClient({
+    cluster_id: Config.tigerbeetleClusterId,
+    replica_addresses: Config.tigerbeetleReplicaAddresses
+  })
+  const accountsService = new AccountsService(tbClient, Config, logger)
+
+  const ADMIN_API_HOST = process.env.ADMIN_API_HOST || '127.0.0.1'
+  const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
+
+  return new AdminApi(
+    { host: ADMIN_API_HOST, port: ADMIN_API_PORT },
+    {
+      auth: (): boolean => {
+        return true
+      },
+      accounts: accountsService
+      //router: router
+    }
+  )
 }
