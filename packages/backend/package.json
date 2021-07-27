@@ -48,6 +48,7 @@
     "knex": "^0.21.17",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
+    "luxon": "^2.0.1",
     "objection": "^2.2.15",
     "objection-db-errors": "^1.1.2",
     "pg": "^8.6.0",

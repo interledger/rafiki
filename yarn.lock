@@ -4805,6 +4805,7 @@ __metadata:
     knex: ^0.21.17
     koa: ^2.13.1
     koa-bodyparser: ^4.3.0
+    luxon: ^2.0.1
     nock: ^13.1.0
     node-mocks-http: ^1.10.1
     objection: ^2.2.15
@@ -10766,6 +10767,13 @@ __metadata:
   dependencies:
     yallist: ^4.0.0
   checksum: b8b78353d2391c0f135cdc245c4744ad41c2efb1a6d98f31bc57a2cf48ebf02de96e4876657c3026673576bf1f1f61fc3fdd77ab00ad1ead737537bf17d8019d
+  languageName: node
+  linkType: hard
+
+"luxon@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "luxon@npm:2.0.1"
+  checksum: 60c7bc66d33d38dcc80bfff6be1d33c1c1680da1ad7e3009df619aff482c17d59da465a7f9eb4ecc52e00798a9308312c6a1a12c3a167c9a0d24e302202b59c5
   languageName: node
   linkType: hard
 

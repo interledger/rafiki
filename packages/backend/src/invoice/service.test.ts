@@ -10,17 +10,17 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { User } from '../user/model'
-import { UserService } from '../user/service'
 import { truncateTable, truncateTables } from '../tests/tableManager'
+import { AccountService } from '../account/service'
+import { Account } from '../account/model'
 
 describe('Invoice Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let workerUtils: WorkerUtils
   let invoiceService: InvoiceService
-  let userService: UserService
-  let user: User
+  let accountService: AccountService
+  let account: Account
   let knex: Knex
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -44,37 +44,36 @@ describe('Invoice Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       invoiceService = await deps.use('invoiceService')
-      userService = await deps.use('userService')
-      user = await userService.create()
+      accountService = await deps.use('accountService')
+      account = await accountService.create(6, 'USD')
     }
   )
 
   afterAll(
     async (): Promise<void> => {
-      await appContainer.shutdown()
-      await workerUtils.release()
       await resetGraphileDb(knex)
       await truncateTables(knex)
+      await appContainer.shutdown()
+      await workerUtils.release()
     }
   )
 
   describe('Create/Get Invoice', (): void => {
     test('An invoice can be created and fetched', async (): Promise<void> => {
-      const invoice = await invoiceService.create(user.id)
+      const invoice = await invoiceService.create(account.id, 'Test invoice')
       const retrievedInvoice = await invoiceService.get(invoice.id)
       expect(retrievedInvoice.id).toEqual(invoice.id)
       expect(retrievedInvoice.accountId).toEqual(invoice.accountId)
-      expect(retrievedInvoice.userId).toEqual(invoice.userId)
     })
 
     test('Creating an invoice creates a sub account', async (): Promise<void> => {
       const accountService = await deps.use('accountService')
-      const invoice = await invoiceService.create(user.id)
-      const subAccount = await accountService.get(invoice.accountId)
+      const invoice = await invoiceService.create(account.id, 'Invoice')
+      const subAccount = await accountService.get(invoice.invoiceAccountId)
 
-      expect(user.accountId).not.toEqual(invoice.accountId)
-      expect(user.accountId).toEqual(subAccount.superAccountId)
-      expect(subAccount.id).toEqual(invoice.accountId)
+      expect(account.id).not.toEqual(invoice.invoiceAccountId)
+      expect(account.id).toEqual(subAccount.superAccountId)
+      expect(subAccount.id).toEqual(invoice.invoiceAccountId)
     })
   })
 
@@ -85,7 +84,9 @@ describe('Invoice Service', (): void => {
       async (): Promise<void> => {
         invoicesCreated = []
         for (let i = 0; i < 40; i++) {
-          invoicesCreated.push(await invoiceService.create(user.id))
+          invoicesCreated.push(
+            await invoiceService.create(account.id, `Invoice ${i}`)
+          )
         }
       }
     )
@@ -97,7 +98,7 @@ describe('Invoice Service', (): void => {
     )
 
     test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const invoices = await invoiceService.getUserInvoicesPage(user.id)
+      const invoices = await invoiceService.getAccountInvoicesPage(account.id)
       expect(invoices).toHaveLength(20)
       expect(invoices[0].id).toEqual(invoicesCreated[0].id)
       expect(invoices[19].id).toEqual(invoicesCreated[19].id)
@@ -108,8 +109,8 @@ describe('Invoice Service', (): void => {
       const pagination = {
         first: 10
       }
-      const invoices = await invoiceService.getUserInvoicesPage(
-        user.id,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        account.id,
         pagination
       )
       expect(invoices).toHaveLength(10)
@@ -122,8 +123,8 @@ describe('Invoice Service', (): void => {
       const pagination = {
         after: invoicesCreated[19].id
       }
-      const invoices = await invoiceService.getUserInvoicesPage(
-        user.id,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        account.id,
         pagination
       )
       expect(invoices).toHaveLength(20)
@@ -137,8 +138,8 @@ describe('Invoice Service', (): void => {
         first: 10,
         after: invoicesCreated[9].id
       }
-      const invoices = await invoiceService.getUserInvoicesPage(
-        user.id,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        account.id,
         pagination
       )
       expect(invoices).toHaveLength(10)
@@ -151,7 +152,10 @@ describe('Invoice Service', (): void => {
       const pagination = {
         last: 10
       }
-      const invoices = invoiceService.getUserInvoicesPage(user.id, pagination)
+      const invoices = invoiceService.getAccountInvoicesPage(
+        account.id,
+        pagination
+      )
       await expect(invoices).rejects.toThrow(
         "Can't paginate backwards from the start."
       )
@@ -161,8 +165,8 @@ describe('Invoice Service', (): void => {
       const pagination = {
         before: invoicesCreated[20].id
       }
-      const invoices = await invoiceService.getUserInvoicesPage(
-        user.id,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        account.id,
         pagination
       )
       expect(invoices).toHaveLength(20)
@@ -176,8 +180,8 @@ describe('Invoice Service', (): void => {
         last: 5,
         before: invoicesCreated[10].id
       }
-      const invoices = await invoiceService.getUserInvoicesPage(
-        user.id,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        account.id,
         pagination
       )
       expect(invoices).toHaveLength(5)
@@ -190,16 +194,16 @@ describe('Invoice Service', (): void => {
       const paginationForwards = {
         first: 10
       }
-      const invoicesForwards = await invoiceService.getUserInvoicesPage(
-        user.id,
+      const invoicesForwards = await invoiceService.getAccountInvoicesPage(
+        account.id,
         paginationForwards
       )
       const paginationBackwards = {
         last: 10,
         before: invoicesCreated[10].id
       }
-      const invoicesBackwards = await invoiceService.getUserInvoicesPage(
-        user.id,
+      const invoicesBackwards = await invoiceService.getAccountInvoicesPage(
+        account.id,
         paginationBackwards
       )
       expect(invoicesForwards).toHaveLength(10)
@@ -212,8 +216,8 @@ describe('Invoice Service', (): void => {
         after: invoicesCreated[19].id,
         before: invoicesCreated[19].id
       }
-      const invoices = await invoiceService.getUserInvoicesPage(
-        user.id,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        account.id,
         pagination
       )
       expect(invoices).toHaveLength(20)
@@ -226,7 +230,10 @@ describe('Invoice Service', (): void => {
       const pagination = {
         first: -1
       }
-      const invoices = invoiceService.getUserInvoicesPage(user.id, pagination)
+      const invoices = invoiceService.getAccountInvoicesPage(
+        account.id,
+        pagination
+      )
       await expect(invoices).rejects.toThrow('Pagination index error')
     })
 
@@ -234,7 +241,10 @@ describe('Invoice Service', (): void => {
       const pagination = {
         first: 101
       }
-      const invoices = invoiceService.getUserInvoicesPage(user.id, pagination)
+      const invoices = invoiceService.getAccountInvoicesPage(
+        account.id,
+        pagination
+      )
       await expect(invoices).rejects.toThrow('Pagination index error')
     })
   })

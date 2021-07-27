@@ -1,10 +1,10 @@
 import { BaseService } from '../shared/baseService'
 import { AppContext } from '../app'
-import { AccountService } from '../account/service'
-import { UserService } from '../user/service'
 import { validate } from 'uuid'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
+import { WebMonetizationService } from '../webmonetization/service'
+import { AccountService } from '../account/service'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
@@ -14,25 +14,25 @@ export interface SPSPService {
 
 interface ServiceDependencies extends BaseService {
   accountService: AccountService
-  userService: UserService
+  wmService: WebMonetizationService
   streamServer: StreamServer
 }
 
 export async function createSPSPService({
   logger,
   accountService,
-  userService,
+  wmService,
   streamServer
 }: ServiceDependencies): Promise<SPSPService> {
   const log = logger.child({
-    service: 'UserService'
+    service: 'SPSP Service'
   })
 
   const deps: ServiceDependencies = {
     logger: log,
-    accountService: accountService,
-    userService: userService,
-    streamServer: streamServer
+    accountService,
+    wmService,
+    streamServer
   }
   return {
     GETPayEndpoint: (ctx) => getPay(deps, ctx)
@@ -44,7 +44,7 @@ async function getPay(
   ctx: AppContext
 ): Promise<void> {
   if (!validate(ctx.params.id)) {
-    ctx.throw(400, 'Failed to generate credentials: invalid user id')
+    ctx.throw(400, 'Failed to generate credentials: invalid account id')
   }
 
   if (!ctx.get('accept').includes(CONTENT_TYPE_V4)) {
@@ -63,8 +63,8 @@ async function getPay(
     )
   }
 
-  const user = await deps.userService.get(ctx.params.id)
-  const account = user && (await deps.accountService.get(user.accountId))
+  const accountId = ctx.params.id
+  const account = await deps.accountService.get(accountId)
   if (!account) {
     ctx.status = 404
     ctx.set('Content-Type', CONTENT_TYPE_V4)
@@ -76,8 +76,9 @@ async function getPay(
   }
 
   try {
+    const invoice = await deps.wmService.getCurrentInvoice(accountId)
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-      paymentTag: user.accountId,
+      paymentTag: invoice.invoiceAccountId,
       receiptSetup:
         nonce && secret
           ? {
