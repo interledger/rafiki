@@ -1,31 +1,20 @@
 import {
   QueryResolvers,
   ResolversTypes,
-  AccountResolvers,
-  UserResolvers
+  AccountResolvers
 } from '../generated/graphql'
 
-export const getUser: QueryResolvers['user'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['User'] => {
-  const userService = await ctx.container.use('userService')
-  const user = await userService.get(args.userId)
-  return {
-    id: user.id
-  }
-}
-
-export const getAccount: UserResolvers['account'] = async (
+export const getAccount: QueryResolvers['account'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['Account'] => {
-  const userService = await ctx.container.use('userService')
-  const user = await userService.get(parent.id)
+  const accountService = await ctx.container.use('accountService')
+
+  const account = await accountService.get(args.id)
+
   return {
-    id: user.accountId
+    id: account.id
   }
 }
 

@@ -9,11 +9,11 @@ import IORedis from 'ioredis'
 import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { GraphileProducer } from './messaging/graphileProducer'
-import { createUserService } from './user/service'
 import { createAccountService } from './account/service'
 import { createSPSPService } from './spsp/service'
 import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
+import { createWebMonetizationService } from './webmonetization/service'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -88,16 +88,6 @@ export function initIocContainer(
   /**
    * Add services to the container.
    */
-  container.singleton('userService', async (deps) => {
-    const logger = await deps.use('logger')
-    const knex = await deps.use('knex')
-    const accountService = await deps.use('accountService')
-    return await createUserService({
-      logger: logger,
-      knex: knex,
-      accountService: accountService
-    })
-  })
   container.singleton('accountService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
@@ -110,11 +100,11 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
     const accountService = await deps.use('accountService')
-    const userService = await deps.use('userService')
+    const wmService = await deps.use('wmService')
     return await createSPSPService({
       logger: logger,
       accountService: accountService,
-      userService: userService,
+      wmService,
       streamServer: streamServer
     })
   })
@@ -122,12 +112,23 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const accountService = await deps.use('accountService')
-    const userService = await deps.use('userService')
     return await createInvoiceService({
       logger: logger,
       knex: knex,
-      accountService: accountService,
-      userService: userService
+      accountService: accountService
+    })
+  })
+
+  container.singleton('wmService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    const invoiceService = await deps.use('invoiceService')
+    const accountService = await deps.use('accountService')
+    return createWebMonetizationService({
+      logger: logger,
+      knex: knex,
+      invoiceService,
+      accountService
     })
   })
 

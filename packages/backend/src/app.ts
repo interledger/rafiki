@@ -19,11 +19,11 @@ import {
   loadSchemaSync
 } from 'graphql-tools'
 import { resolvers } from './graphql/resolvers'
-import { UserService } from './user/service'
 import { AccountService } from './account/service'
 import { SPSPService } from './spsp/service'
 import { InvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
+import { WebMonetizationService } from './webmonetization/service'
 
 export interface AppContextData {
   logger: Logger
@@ -46,11 +46,11 @@ export interface AppServices {
   closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
   workerUtils: Promise<WorkerUtils>
-  userService: Promise<UserService>
   accountService: Promise<AccountService>
   SPSPService: Promise<SPSPService>
   invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
+  wmService: Promise<WebMonetizationService>
 }
 
 export type AppContainer = IocContract<AppServices>
