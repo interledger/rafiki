@@ -17,13 +17,6 @@ export type Account = {
   __typename?: 'Account';
   id: Scalars['ID'];
   balance: Amount;
-  /**
-   * invoices
-   * @param after Returns the elements in the list that come after the specified cursor.
-   * @param before Returns the elements in the list that come before the specified cursor.
-   * @param first Returns the first _n_ elements from the list.
-   * @param last Returns the last _n_ elements from the list.
-   */
   invoices?: Maybe<InvoiceConnection>;
 };
 
