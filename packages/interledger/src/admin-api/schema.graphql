@@ -1,0 +1,22 @@
+type Query {
+  accounts: String
+}
+
+type PageInfo {
+  """
+  Paginating forwards: the cursor to continue.
+  """
+  endCursor: String
+  """
+  Paginating forwards: Are there more pages?
+  """
+  hasNextPage: Boolean!
+  """
+  Paginating backwards: Are there more pages?
+  """
+  hasPreviousPage: Boolean!
+  """
+  Paginating backwards: the cursor to continue.
+  """
+  startCursor: String
+}

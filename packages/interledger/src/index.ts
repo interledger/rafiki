@@ -1,14 +1,26 @@
 import IORedis from 'ioredis'
-import { AdminApi } from './admin-api'
-
 import { Server } from 'http'
+import { ApolloServer } from 'apollo-server'
+import { createClient } from 'tigerbeetle-node'
 
-import createLogger from 'pino'
+import { createAdminApi } from './admin-api'
 import { createConnectorService } from './connector'
-const logger = createLogger()
+import { createRatesService, Rafiki } from './connector/core'
+import { Config } from './config'
+import { AccountsService } from './accounts/service'
+import { Logger } from './logger/service'
+
+const logger = Logger
 
 const REDIS = process.env.REDIS || 'redis://127.0.0.1:6379'
-const PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
+// TODO: connector port and admin api port use the same env variable?
+const CONNECTOR_PORT = parseInt(process.env.ADMIN_API_PORT || '3000', 10)
+
+const ADMIN_API_HOST = process.env.ADMIN_API_HOST || '127.0.0.1'
+const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
+
+const pricesUrl = process.env.PRICES_URL // optional
+const pricesLifetime = +(process.env.PRICES_LIFETIME || 15_000)
 
 /*
 const router = new InMemoryRouter(peerService, {
@@ -20,16 +32,21 @@ const redis = new IORedis(REDIS, {
   // This option messes up some types, but helps with (large) number accuracy.
   stringNumbers: true
 })
+const tbClient = createClient({
+  cluster_id: Config.tigerbeetleClusterId,
+  replica_addresses: Config.tigerbeetleReplicaAddresses
+})
 
-let adminApi: AdminApi
-let server: Server
+let adminApi: ApolloServer
+let connectorApp: Rafiki
+let connectorServer: Server
 
 export const gracefulShutdown = async (): Promise<void> => {
   logger.info('shutting down.')
-  adminApi.shutdown()
-  if (server) {
+  await adminApi.stop()
+  if (connectorServer) {
     return new Promise((resolve, reject): void => {
-      server.close((err?: Error) => {
+      connectorServer.close((err?: Error) => {
         if (err) return reject(err)
         redis
           .quit()
@@ -39,10 +56,24 @@ export const gracefulShutdown = async (): Promise<void> => {
     })
   }
 }
+
 export const start = async (): Promise<void> => {
-  const connectorService = await createConnectorService({ redis })
-  adminApi = connectorService.adminApi
-  const app = connectorService.app
+  const accountsService = new AccountsService(tbClient, Config, logger)
+
+  const ratesService = createRatesService({
+    pricesUrl,
+    pricesLifetime,
+    logger: logger
+  })
+
+  adminApi = await createAdminApi({ accountsService })
+
+  connectorApp = await createConnectorService({
+    redis,
+    logger,
+    ratesService,
+    accountsService
+  })
 
   let shuttingDown = false
   process.on(
@@ -71,9 +102,9 @@ export const start = async (): Promise<void> => {
     }
   )
 
-  server = app.listen(PORT)
-  logger.info(`Connector listening on ${PORT}`)
-  adminApi.listen()
+  connectorServer = connectorApp.listen(CONNECTOR_PORT)
+  logger.info(`Connector listening on ${CONNECTOR_PORT}`)
+  await adminApi.listen({ host: ADMIN_API_HOST, port: ADMIN_API_PORT })
   logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
 
