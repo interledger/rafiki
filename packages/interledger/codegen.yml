@@ -1,6 +1,5 @@
 overwrite: true
 schema: "./src/admin-api/schema.graphql"
-documents: null
 generates:
   src/admin-api/generated/graphql.ts:
     plugins:
