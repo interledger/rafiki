@@ -1,7 +1,7 @@
 exports.up = function (knex) {
-  return knex.schema.createTable('users', function (table) {
+  return knex.schema.createTable('webMonetization', function (table) {
     table.uuid('id').notNullable().primary()
-    table.uuid('accountId').notNullable().unique()
+    table.uuid('currentInvoiceId').nullable()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
@@ -9,5 +9,5 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('users')
+  return knex.schema.dropTableIfExists('webMonetization')
 }

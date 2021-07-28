@@ -6,17 +6,22 @@
     "format:check": "yarn format:check:local",
     "start": "node dist/index.js",
     "knex": "knex",
-    "test": "yarn test:local"
+    "test": "yarn test:local",
+    "generate": "graphql-codegen --config codegen.yml"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.5",
     "@interledger/stream-receiver": "^0.2.2",
     "@koa/router": "^10.1.0",
     "ajv": "^8.1.0",
+    "apollo-server": "^3.0.2",
     "axios": "^0.21.1",
     "debug": "^4.3.1",
     "extensible-error": "^1.0.2",
     "faker": "^5.5.3",
+    "graphql": "^15.5.1",
+    "graphql-scalars": "^1.10.0",
+    "graphql-tools": "^7.0.5",
     "ilp-packet": "^3.1.2",
     "ilp-protocol-ccp": "^1.2.2",
     "ilp-protocol-ildcp": "^2.2.2",
@@ -40,6 +45,11 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@apollo/client": "^3.3.21",
+    "@graphql-codegen/cli": "^1.21.7",
+    "@graphql-codegen/introspection": "^1.18.2",
+    "@graphql-codegen/typescript": "^1.23.0",
+    "@graphql-codegen/typescript-resolvers": "^1.20.0",
     "@types/debug": "^4.1.5",
     "@types/faker": "^5.5.3",
     "@types/ioredis": "^4.26.4",
