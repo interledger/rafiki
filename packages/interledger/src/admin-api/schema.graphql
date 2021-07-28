@@ -1,22 +1,437 @@
 type Query {
-  accounts: String
+  "Fetch a page of Interledger accounts."
+  ilpAccounts(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): IlpAccountsConnection!
+
+  "Get an Interledger account by ID."
+  ilpAccount(id: ID!): IlpAccount!
+
+  "Get a trustline by ID."
+  trustline("The ID of the trustline to get." id: ID!): Trustline!
+
+  "Get a webhook by ID."
+  webhook("The ID of the webhook to get." id: ID!): Webhook!
+
+  "Get a deposit by ID."
+  deposit("The ID of the deposit to get." id: ID!): Deposit!
+
+  "Get a withdrawal by ID."
+  withdrawal("The ID of the withdrawal to get." id: ID!): Withdrawal!
+}
+
+type Mutation {
+  "Create Interledger account"
+  createIlpAccount: CreateIlpAccountMutationResponse!
+
+  "Update Interledger account"
+  updateIlpAccount: UpdateIlpAccountMutationResponse!
+
+  "Delete Interledger account"
+  deleteIlpAccount: DeleteIlpAccountMutationResponse!
+
+  "Create Interledger sub-account"
+  createIlpSubAccount(superAccountId: ID!): CreateIlpSubAccountMutationResponse!
+
+  "Transfer between Interledger accounts"
+  transfer(
+    originAmount: Int!
+    originAccountId: ID!
+    destinationAccountId: ID!
+    destinationAmount: Int
+    autoCommit: Boolean
+    idempotencyKey: ID!
+  ): TransferMutationResponse
+
+  "Provision trustline"
+  provisionTrustline: ProvisionTrustlineMutationResponse
+
+  "Extend Trustline"
+  extendTrustline(
+    "The id of the trustline to extend."
+    trustlineId: ID!
+    "Amount of additional line of credit."
+    amount: Int!
+    "Automatically utilized and applied to the account balance."
+    autoApply: Boolean! = false
+  ): ExtendTrustlineMutationResponse
+
+  "Revoke trustline"
+  revokeTrustline(
+    "The id of the trustline to extend."
+    trustlineId: ID!
+    "Amount of additional line of credit."
+    amount: Int!
+  ): RevokeTrustlineMutationResponse
+
+  "Utilize trustline"
+  utilizeTrustline(
+    "The id of the trustline to extend."
+    trustlineId: ID!
+    "Amount of additional line of credit."
+    amount: Int!
+  ): UtilizeTrustlineMutationResponse
+
+  "Settle trustline"
+  settleTrustline(
+    "The id of the trustline to extend."
+    trustlineId: ID!
+    "Amount of additional line of credit."
+    amount: Int!
+    "Replenish the account's line of credit commensurate with the debt settled."
+    autoApply: Boolean! = true
+  ): SettleTrustlineMutationResponse
+
+  "Create webhook"
+  createWebhook(
+    "The id of the account to create the webhook for."
+    ilpAccountId: ID!
+  ): CreateWebhookMutationResponse
+
+  "Update webhook"
+  updateWebhook(
+    "The id of the webhook to update."
+    webhookId: ID!
+  ): UpdateWebhookMutationResponse
+
+  "Delete webhook"
+  deleteWebhook(
+    "The id of the webhook to delete."
+    webhookId: ID!
+  ): DeleteWebhookMutationResponse
+
+  "Create deposit"
+  createDeposit(
+    "The id of the account to create the deposit for."
+    ilpAccountId: ID!
+    "Amount of deposit."
+    amount: Int!
+  ): CreateDepositMutationResponse
+
+  "Create withdrawal"
+  createWithdrawal(
+    "The id of the account to create the withdrawal for."
+    ilpAccountId: ID!
+    "Amount of deposit."
+    amount: Int!
+  ): CreateWithdrawalMutationResponse
+
+  "Finalize pending withdrawal"
+  finalizePendingWithdrawal(
+    "The id of the pending withdrawal to finalize."
+    withdrawalId: ID!
+  ): FinalizePendingWithdrawalMutationResponse
+
+  "Rollback pending withdrawal"
+  rollbackPendingWithdrawal(
+    "The id of the pending withdrawal to rollback."
+    withdrawalId: ID!
+  ): RollbackPendingWithdrawalMutationResponse
+}
+
+type IlpAccountsConnection {
+  pageInfo: PageInfo!
+  edges: [IlpAccountEdge!]!
+}
+
+type IlpAccountEdge {
+  node: IlpAccount!
+  cursor: String!
+}
+
+type IlpAccount {
+  id: ID!
+  enabled: Boolean!
+  superAccount: IlpAccount
+  subAccounts(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): IlpAccountsConnection!
+  liquidityAccountId: ID
+  maxPacketAmount: String!
+  http: Http!
+  asset: Asset!
+  stream: Stream!
+  routing: Routing!
+
+  balance: Balance!
+  webhooks(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): WebhooksConnection!
+  deposits(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): DepositsConnection!
+  withdrawals(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): WithdrawalsConnection!
+}
+
+type Http {
+  incoming: HttpIncoming!
+  outgoing: HttpOutgoing!
+}
+
+type HttpIncoming {
+  authTokens: [String!]!
+}
+type HttpOutgoing {
+  authTokens: String!
+  endpoint: String!
+}
+
+type Stream {
+  enabled: Boolean!
+}
+
+type Routing {
+  staticIlpAddress: String!
+  inheritFromRemote: Boolean!
+  dynamicIlpAddress: String
+}
+
+type Balance {
+  id: ID!
+  createdTime: String!
+  asset: Asset!
+  balance: Int!
+  netLiability: Int
+  netAssets: Int
+  creditExtended: Int!
+  totalLent: Int!
+  operator: Operator
+}
+
+type Operator {
+  trustlineId: ID!
+  availableCredit: Int!
+  totalBorrowed: Int!
+}
+
+type WebhooksConnection {
+  pageInfo: PageInfo!
+  edges: [WebhookEdge!]!
+}
+
+type WebhookEdge {
+  node: Webhook!
+  cursor: String!
+}
+
+type Webhook {
+  id: ID!
+}
+
+type DepositsConnection {
+  pageInfo: PageInfo!
+  edges: [DepositEdge!]!
+}
+
+type DepositEdge {
+  node: Deposit!
+  cursor: String!
+}
+
+type Deposit {
+  id: ID!
+  amount: Int!
+  createdTime: Int!
+}
+
+type WithdrawalsConnection {
+  pageInfo: PageInfo!
+  edges: [WithdrawalEdge!]!
+}
+
+type WithdrawalEdge {
+  node: Withdrawal!
+  cursor: String!
+}
+
+type Withdrawal {
+  id: ID!
+  amount: Int!
+  createdTime: Int!
+  finalizedTime: Int
+}
+
+type Trustline {
+  id: ID!
+  createdTime: Int!
+  creditorAccountId: ID
+  debtorAccountId: ID!
+  availableCredit: Int!
+  debtBalance: Int!
+}
+
+type CreateIlpAccountMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  ilpAccount: IlpAccount!
+}
+
+type UpdateIlpAccountMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  ilpAccount: IlpAccount!
+}
+
+type DeleteIlpAccountMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type CreateIlpSubAccountMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  ilpAccount: IlpAccount!
+}
+
+type TransferMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type ProvisionTrustlineMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  trustline: Trustline!
+}
+
+type ExtendTrustlineMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  trustline: Trustline!
+}
+
+type RevokeTrustlineMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type UtilizeTrustlineMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type SettleTrustlineMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type CreateWebhookMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  webhook: Webhook!
+}
+
+type UpdateWebhookMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  webhook: Webhook!
+}
+
+type DeleteWebhookMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type CreateDepositMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  deposit: Deposit!
+}
+
+type CreateWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  withdrawal: Withdrawal!
+}
+
+type FinalizePendingWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type Asset {
+  currency: String!
+  scale: Int!
+}
+
+type Amount {
+  amount: Int!
+  currency: String!
+  scale: Int!
 }
 
 type PageInfo {
-  """
-  Paginating forwards: the cursor to continue.
-  """
+  "Paginating forwards: the cursor to continue."
   endCursor: String
-  """
-  Paginating forwards: Are there more pages?
-  """
+  "Paginating forwards: Are there more pages?"
   hasNextPage: Boolean!
-  """
-  Paginating backwards: Are there more pages?
-  """
+  "Paginating backwards: Are there more pages?"
   hasPreviousPage: Boolean!
-  """
-  Paginating backwards: the cursor to continue.
-  """
+  "Paginating backwards: the cursor to continue."
   startCursor: String
+}
+
+interface MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
 }
