@@ -1,6 +1,28 @@
 # This file configures automatic labelling of pr's
-# Adds the 'backend' label if any files change in the backend directory
-backend: packages/backend/**/*
-connector: packages/interledger/**/*
-frontend: packages/frontend/**/*
-repo: ./*
+
+'pkg: backend': packages/backend/**/*
+'pkg: interledger': packages/interledger/**/*
+'pkg: frontend': packages/frontend/**/*
+'pkg: rates': packages/rates/**/*
+
+# Add 'type: documentation' label to any change to *.md files
+'type: ci':
+  - any:
+    - .github/*
+    - .github/**/*
+
+# Add 'type: documentation' label to any change to *.md files
+'type: documentation':
+  - ./**/*.md
+
+'type: source':
+  - any:
+    - packages/backend/src/**/*
+    - packages/interledger/src/**/*
+    - packages/frontend/src/**/*
+    - packages/rates/src/**/*
+
+# Add 'type: tests' label to any change to *.test.ts files
+'type: tests':
+  - ./**/*.test.ts
+
