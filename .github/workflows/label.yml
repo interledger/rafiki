@@ -7,10 +7,8 @@
 
 name: "Pull Request Labeler"
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 jobs:
   label:
