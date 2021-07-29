@@ -90,6 +90,19 @@ yarn lint # runs yarn lint:local
 yarn workspace backend lint # runs yarn lint:local in the packages/backend directory
 ```
 
+### Labels
+
+We use labels to communicate the intention of issues and prs.
+
+- `discussions:` prefix denotes issues that can be converted to discussions.
+- `good first issue` are great issues for newcomers to take on.
+- `pkg:` prefix denotes issues/prs related to a specific package.
+- `team:` prefix lets contributors know if the issue will be done by the core team or not.
+- `triage` issues that the core team needs to assign labels to.
+- `type:` prefix denotes a specific action/category to issues/prs.
+
+Some labels will be automatically assigned to prs.
+
 ### Code quality
 
 All the code quality tools used in the project are installed and configured at the root.
