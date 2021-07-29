@@ -35,30 +35,27 @@ type Mutation {
   updateIlpAccount: UpdateIlpAccountMutationResponse!
 
   "Delete Interledger account"
-  deleteIlpAccount: DeleteIlpAccountMutationResponse!
+  deleteIlpAccount(id: ID!): DeleteIlpAccountMutationResponse!
 
   "Create Interledger sub-account"
   createIlpSubAccount(superAccountId: ID!): CreateIlpSubAccountMutationResponse!
 
   "Transfer between Interledger accounts"
   transfer(
-    originAmount: Int!
-    originAccountId: ID!
+    sourceAmount: UInt64!
+    sourceAccountId: ID!
     destinationAccountId: ID!
-    destinationAmount: Int
+    destinationAmount: UInt64
     autoCommit: Boolean
     idempotencyKey: ID!
   ): TransferMutationResponse
-
-  "Provision trustline"
-  provisionTrustline: ProvisionTrustlineMutationResponse
 
   "Extend Trustline"
   extendTrustline(
     "The id of the trustline to extend."
     trustlineId: ID!
     "Amount of additional line of credit."
-    amount: Int!
+    amount: UInt64!
     "Automatically utilized and applied to the account balance."
     autoApply: Boolean! = false
   ): ExtendTrustlineMutationResponse
@@ -68,7 +65,7 @@ type Mutation {
     "The id of the trustline to extend."
     trustlineId: ID!
     "Amount of additional line of credit."
-    amount: Int!
+    amount: UInt64!
   ): RevokeTrustlineMutationResponse
 
   "Utilize trustline"
@@ -76,7 +73,7 @@ type Mutation {
     "The id of the trustline to extend."
     trustlineId: ID!
     "Amount of additional line of credit."
-    amount: Int!
+    amount: UInt64!
   ): UtilizeTrustlineMutationResponse
 
   "Settle trustline"
@@ -84,7 +81,7 @@ type Mutation {
     "The id of the trustline to extend."
     trustlineId: ID!
     "Amount of additional line of credit."
-    amount: Int!
+    amount: UInt64!
     "Replenish the account's line of credit commensurate with the debt settled."
     autoApply: Boolean! = true
   ): SettleTrustlineMutationResponse
@@ -112,7 +109,7 @@ type Mutation {
     "The id of the account to create the deposit for."
     ilpAccountId: ID!
     "Amount of deposit."
-    amount: Int!
+    amount: UInt64!
   ): CreateDepositMutationResponse
 
   "Create withdrawal"
@@ -120,7 +117,7 @@ type Mutation {
     "The id of the account to create the withdrawal for."
     ilpAccountId: ID!
     "Amount of deposit."
-    amount: Int!
+    amount: UInt64!
   ): CreateWithdrawalMutationResponse
 
   "Finalize pending withdrawal"
@@ -227,18 +224,18 @@ type Balance {
   id: ID!
   createdTime: String!
   asset: Asset!
-  balance: Int!
-  netLiability: Int
-  netAssets: Int
-  creditExtended: Int!
-  totalLent: Int!
+  balance: UInt64!
+  netLiability: UInt64
+  netAssets: UInt64
+  creditExtended: UInt64!
+  totalLent: UInt64!
   operator: Operator
 }
 
 type Operator {
   trustlineId: ID!
-  availableCredit: Int!
-  totalBorrowed: Int!
+  availableCredit: UInt64!
+  totalBorrowed: UInt64!
 }
 
 type WebhooksConnection {
@@ -267,7 +264,7 @@ type DepositEdge {
 
 type Deposit {
   id: ID!
-  amount: Int!
+  amount: UInt64!
   createdTime: Int!
 }
 
@@ -283,7 +280,7 @@ type WithdrawalEdge {
 
 type Withdrawal {
   id: ID!
-  amount: Int!
+  amount: UInt64!
   createdTime: Int!
   finalizedTime: Int
 }
@@ -293,8 +290,8 @@ type Trustline {
   createdTime: Int!
   creditorAccountId: ID
   debtorAccountId: ID!
-  availableCredit: Int!
-  debtBalance: Int!
+  availableCredit: UInt64!
+  debtBalance: UInt64!
 }
 
 type CreateIlpAccountMutationResponse implements MutationResponse {
@@ -414,7 +411,7 @@ type Asset {
 }
 
 type Amount {
-  amount: Int!
+  amount: UInt64!
   currency: String!
   scale: Int!
 }
@@ -435,3 +432,5 @@ interface MutationResponse {
   success: Boolean!
   message: String!
 }
+
+scalar UInt64

@@ -1,4 +1,4 @@
-import { GraphQLResolveInfo } from 'graphql';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -11,6 +11,7 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  UInt64: bigint;
 };
 
 export type Amount = {
@@ -218,8 +219,6 @@ export type Mutation = {
   createIlpSubAccount: CreateIlpSubAccountMutationResponse;
   /** Transfer between Interledger accounts */
   transfer?: Maybe<TransferMutationResponse>;
-  /** Provision trustline */
-  provisionTrustline?: Maybe<ProvisionTrustlineMutationResponse>;
   /** Extend Trustline */
   extendTrustline?: Maybe<ExtendTrustlineMutationResponse>;
   /** Revoke trustline */
@@ -245,14 +244,19 @@ export type Mutation = {
 };
 
 
+export type MutationDeleteIlpAccountArgs = {
+  id: Scalars['ID'];
+};
+
+
 export type MutationCreateIlpSubAccountArgs = {
   superAccountId: Scalars['ID'];
 };
 
 
 export type MutationTransferArgs = {
-  originAmount: Scalars['Int'];
-  originAccountId: Scalars['ID'];
+  sourceAmount: Scalars['Int'];
+  sourceAccountId: Scalars['ID'];
   destinationAccountId: Scalars['ID'];
   destinationAmount?: Maybe<Scalars['Int']>;
   autoCommit?: Maybe<Scalars['Boolean']>;
@@ -454,6 +458,7 @@ export type Trustline = {
   debtBalance: Scalars['Int'];
 };
 
+
 export type UpdateIlpAccountMutationResponse = MutationResponse & {
   __typename?: 'UpdateIlpAccountMutationResponse';
   code: Scalars['String'];
@@ -635,6 +640,7 @@ export type ResolversTypes = {
   Stream: ResolverTypeWrapper<Partial<Stream>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   Trustline: ResolverTypeWrapper<Partial<Trustline>>;
+  UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
   UpdateIlpAccountMutationResponse: ResolverTypeWrapper<Partial<UpdateIlpAccountMutationResponse>>;
   UpdateWebhookMutationResponse: ResolverTypeWrapper<Partial<UpdateWebhookMutationResponse>>;
   UtilizeTrustlineMutationResponse: ResolverTypeWrapper<Partial<UtilizeTrustlineMutationResponse>>;
@@ -686,6 +692,7 @@ export type ResolversParentTypes = {
   Stream: Partial<Stream>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
   Trustline: Partial<Trustline>;
+  UInt64: Partial<Scalars['UInt64']>;
   UpdateIlpAccountMutationResponse: Partial<UpdateIlpAccountMutationResponse>;
   UpdateWebhookMutationResponse: Partial<UpdateWebhookMutationResponse>;
   UtilizeTrustlineMutationResponse: Partial<UtilizeTrustlineMutationResponse>;
@@ -861,10 +868,9 @@ export type IlpAccountsConnectionResolvers<ContextType = any, ParentType extends
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createIlpAccount?: Resolver<ResolversTypes['CreateIlpAccountMutationResponse'], ParentType, ContextType>;
   updateIlpAccount?: Resolver<ResolversTypes['UpdateIlpAccountMutationResponse'], ParentType, ContextType>;
-  deleteIlpAccount?: Resolver<ResolversTypes['DeleteIlpAccountMutationResponse'], ParentType, ContextType>;
+  deleteIlpAccount?: Resolver<ResolversTypes['DeleteIlpAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationDeleteIlpAccountArgs, 'id'>>;
   createIlpSubAccount?: Resolver<ResolversTypes['CreateIlpSubAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateIlpSubAccountArgs, 'superAccountId'>>;
-  transfer?: Resolver<Maybe<ResolversTypes['TransferMutationResponse']>, ParentType, ContextType, RequireFields<MutationTransferArgs, 'originAmount' | 'originAccountId' | 'destinationAccountId' | 'idempotencyKey'>>;
-  provisionTrustline?: Resolver<Maybe<ResolversTypes['ProvisionTrustlineMutationResponse']>, ParentType, ContextType>;
+  transfer?: Resolver<Maybe<ResolversTypes['TransferMutationResponse']>, ParentType, ContextType, RequireFields<MutationTransferArgs, 'sourceAmount' | 'sourceAccountId' | 'destinationAccountId' | 'idempotencyKey'>>;
   extendTrustline?: Resolver<Maybe<ResolversTypes['ExtendTrustlineMutationResponse']>, ParentType, ContextType, RequireFields<MutationExtendTrustlineArgs, 'trustlineId' | 'amount' | 'autoApply'>>;
   revokeTrustline?: Resolver<Maybe<ResolversTypes['RevokeTrustlineMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeTrustlineArgs, 'trustlineId' | 'amount'>>;
   utilizeTrustline?: Resolver<Maybe<ResolversTypes['UtilizeTrustlineMutationResponse']>, ParentType, ContextType, RequireFields<MutationUtilizeTrustlineArgs, 'trustlineId' | 'amount'>>;
@@ -967,6 +973,10 @@ export type TrustlineResolvers<ContextType = any, ParentType extends ResolversPa
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export interface UInt64ScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UInt64'], any> {
+  name: 'UInt64';
+}
+
 export type UpdateIlpAccountMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateIlpAccountMutationResponse'] = ResolversParentTypes['UpdateIlpAccountMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -1062,6 +1072,7 @@ export type Resolvers<ContextType = any> = {
   Stream?: StreamResolvers<ContextType>;
   TransferMutationResponse?: TransferMutationResponseResolvers<ContextType>;
   Trustline?: TrustlineResolvers<ContextType>;
+  UInt64?: GraphQLScalarType;
   UpdateIlpAccountMutationResponse?: UpdateIlpAccountMutationResponseResolvers<ContextType>;
   UpdateWebhookMutationResponse?: UpdateWebhookMutationResponseResolvers<ContextType>;
   UtilizeTrustlineMutationResponse?: UtilizeTrustlineMutationResponseResolvers<ContextType>;
