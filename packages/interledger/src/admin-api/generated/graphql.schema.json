@@ -22,7 +22,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -69,8 +69,8 @@
       },
       {
         "kind": "SCALAR",
-        "name": "Int",
-        "description": "The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.",
+        "name": "String",
+        "description": "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -79,8 +79,8 @@
       },
       {
         "kind": "SCALAR",
-        "name": "String",
-        "description": "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
+        "name": "Int",
+        "description": "The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.",
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -192,7 +192,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -205,7 +205,7 @@
             "args": [],
             "type": {
               "kind": "SCALAR",
-              "name": "Int",
+              "name": "UInt64",
               "ofType": null
             },
             "isDeprecated": false,
@@ -217,7 +217,7 @@
             "args": [],
             "type": {
               "kind": "SCALAR",
-              "name": "Int",
+              "name": "UInt64",
               "ofType": null
             },
             "isDeprecated": false,
@@ -232,7 +232,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -248,7 +248,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -858,7 +858,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -1880,7 +1880,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "Int",
+                    "name": "UInt64",
                     "ofType": null
                   }
                 },
@@ -1925,7 +1925,7 @@
                 "description": null,
                 "type": {
                   "kind": "SCALAR",
-                  "name": "Int",
+                  "name": "UInt64",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -1997,7 +1997,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "Int",
+                    "name": "UInt64",
                     "ofType": null
                   }
                 },
@@ -2058,7 +2058,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "Int",
+                    "name": "UInt64",
                     "ofType": null
                   }
                 },
@@ -2103,7 +2103,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "Int",
+                    "name": "UInt64",
                     "ofType": null
                   }
                 },
@@ -2148,7 +2148,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "Int",
+                    "name": "UInt64",
                     "ofType": null
                   }
                 },
@@ -2296,7 +2296,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "Int",
+                    "name": "UInt64",
                     "ofType": null
                   }
                 },
@@ -2341,7 +2341,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "Int",
+                    "name": "UInt64",
                     "ofType": null
                   }
                 },
@@ -2597,7 +2597,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -2613,7 +2613,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -3431,7 +3431,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -3447,7 +3447,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -3848,7 +3848,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },

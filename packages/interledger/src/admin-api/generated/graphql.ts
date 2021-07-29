@@ -16,7 +16,7 @@ export type Scalars = {
 
 export type Amount = {
   __typename?: 'Amount';
-  amount: Scalars['Int'];
+  amount: Scalars['UInt64'];
   currency: Scalars['String'];
   scale: Scalars['Int'];
 };
@@ -32,11 +32,11 @@ export type Balance = {
   id: Scalars['ID'];
   createdTime: Scalars['String'];
   asset: Asset;
-  balance: Scalars['Int'];
-  netLiability?: Maybe<Scalars['Int']>;
-  netAssets?: Maybe<Scalars['Int']>;
-  creditExtended: Scalars['Int'];
-  totalLent: Scalars['Int'];
+  balance: Scalars['UInt64'];
+  netLiability?: Maybe<Scalars['UInt64']>;
+  netAssets?: Maybe<Scalars['UInt64']>;
+  creditExtended: Scalars['UInt64'];
+  totalLent: Scalars['UInt64'];
   operator?: Maybe<Operator>;
 };
 
@@ -97,7 +97,7 @@ export type DeleteWebhookMutationResponse = MutationResponse & {
 export type Deposit = {
   __typename?: 'Deposit';
   id: Scalars['ID'];
-  amount: Scalars['Int'];
+  amount: Scalars['UInt64'];
   createdTime: Scalars['Int'];
 };
 
@@ -255,10 +255,10 @@ export type MutationCreateIlpSubAccountArgs = {
 
 
 export type MutationTransferArgs = {
-  sourceAmount: Scalars['Int'];
+  sourceAmount: Scalars['UInt64'];
   sourceAccountId: Scalars['ID'];
   destinationAccountId: Scalars['ID'];
-  destinationAmount?: Maybe<Scalars['Int']>;
+  destinationAmount?: Maybe<Scalars['UInt64']>;
   autoCommit?: Maybe<Scalars['Boolean']>;
   idempotencyKey: Scalars['ID'];
 };
@@ -266,26 +266,26 @@ export type MutationTransferArgs = {
 
 export type MutationExtendTrustlineArgs = {
   trustlineId: Scalars['ID'];
-  amount: Scalars['Int'];
+  amount: Scalars['UInt64'];
   autoApply?: Scalars['Boolean'];
 };
 
 
 export type MutationRevokeTrustlineArgs = {
   trustlineId: Scalars['ID'];
-  amount: Scalars['Int'];
+  amount: Scalars['UInt64'];
 };
 
 
 export type MutationUtilizeTrustlineArgs = {
   trustlineId: Scalars['ID'];
-  amount: Scalars['Int'];
+  amount: Scalars['UInt64'];
 };
 
 
 export type MutationSettleTrustlineArgs = {
   trustlineId: Scalars['ID'];
-  amount: Scalars['Int'];
+  amount: Scalars['UInt64'];
   autoApply?: Scalars['Boolean'];
 };
 
@@ -307,13 +307,13 @@ export type MutationDeleteWebhookArgs = {
 
 export type MutationCreateDepositArgs = {
   ilpAccountId: Scalars['ID'];
-  amount: Scalars['Int'];
+  amount: Scalars['UInt64'];
 };
 
 
 export type MutationCreateWithdrawalArgs = {
   ilpAccountId: Scalars['ID'];
-  amount: Scalars['Int'];
+  amount: Scalars['UInt64'];
 };
 
 
@@ -335,8 +335,8 @@ export type MutationResponse = {
 export type Operator = {
   __typename?: 'Operator';
   trustlineId: Scalars['ID'];
-  availableCredit: Scalars['Int'];
-  totalBorrowed: Scalars['Int'];
+  availableCredit: Scalars['UInt64'];
+  totalBorrowed: Scalars['UInt64'];
 };
 
 export type PageInfo = {
@@ -454,8 +454,8 @@ export type Trustline = {
   createdTime: Scalars['Int'];
   creditorAccountId?: Maybe<Scalars['ID']>;
   debtorAccountId: Scalars['ID'];
-  availableCredit: Scalars['Int'];
-  debtBalance: Scalars['Int'];
+  availableCredit: Scalars['UInt64'];
+  debtBalance: Scalars['UInt64'];
 };
 
 
@@ -502,7 +502,7 @@ export type WebhooksConnection = {
 export type Withdrawal = {
   __typename?: 'Withdrawal';
   id: Scalars['ID'];
-  amount: Scalars['Int'];
+  amount: Scalars['UInt64'];
   createdTime: Scalars['Int'];
   finalizedTime?: Maybe<Scalars['Int']>;
 };
@@ -603,8 +603,8 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Amount: ResolverTypeWrapper<Partial<Amount>>;
-  Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
+  Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   Asset: ResolverTypeWrapper<Partial<Asset>>;
   Balance: ResolverTypeWrapper<Partial<Balance>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
@@ -655,8 +655,8 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Amount: Partial<Amount>;
-  Int: Partial<Scalars['Int']>;
   String: Partial<Scalars['String']>;
+  Int: Partial<Scalars['Int']>;
   Asset: Partial<Asset>;
   Balance: Partial<Balance>;
   ID: Partial<Scalars['ID']>;
@@ -705,7 +705,7 @@ export type ResolversParentTypes = {
 };
 
 export type AmountResolvers<ContextType = any, ParentType extends ResolversParentTypes['Amount'] = ResolversParentTypes['Amount']> = {
-  amount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  amount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   currency?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -721,11 +721,11 @@ export type BalanceResolvers<ContextType = any, ParentType extends ResolversPare
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   createdTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
-  balance?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  netLiability?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  netAssets?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  creditExtended?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  totalLent?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  balance?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  netLiability?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  netAssets?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  creditExtended?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  totalLent?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   operator?: Resolver<Maybe<ResolversTypes['Operator']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -786,7 +786,7 @@ export type DeleteWebhookMutationResponseResolvers<ContextType = any, ParentType
 
 export type DepositResolvers<ContextType = any, ParentType extends ResolversParentTypes['Deposit'] = ResolversParentTypes['Deposit']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  amount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  amount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   createdTime?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -893,8 +893,8 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
 
 export type OperatorResolvers<ContextType = any, ParentType extends ResolversParentTypes['Operator'] = ResolversParentTypes['Operator']> = {
   trustlineId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  availableCredit?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  totalBorrowed?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  availableCredit?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  totalBorrowed?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -968,8 +968,8 @@ export type TrustlineResolvers<ContextType = any, ParentType extends ResolversPa
   createdTime?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   creditorAccountId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   debtorAccountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  availableCredit?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  debtBalance?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  availableCredit?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  debtBalance?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1019,7 +1019,7 @@ export type WebhooksConnectionResolvers<ContextType = any, ParentType extends Re
 
 export type WithdrawalResolvers<ContextType = any, ParentType extends ResolversParentTypes['Withdrawal'] = ResolversParentTypes['Withdrawal']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  amount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  amount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   createdTime?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   finalizedTime?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

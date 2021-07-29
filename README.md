@@ -20,6 +20,7 @@ account.
 
 Never heard of interledger before, or you would like to learn more? Here are some good places to start:
 
+- [Good first issues](https://github.com/coilhq/rafiki/contribute)
 - [Interledger](https://interledger.org/)
 - [Payment pointers](https://paymentpointers.org/)
 - [Web monetization](https://webmonetization.org/)
