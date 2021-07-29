@@ -12,7 +12,11 @@
     - .github/**/*
 
 # Add 'type: documentation' label to any change to *.md files
-'type: documentation': /**/*.md
+'type: documentation':
+  - any:
+    - .github/*.md
+    - ./*.md
+    - packages/**/*.md
 
 'type: source':
   - any:
@@ -22,5 +26,5 @@
     - packages/rates/src/**/*
 
 # Add 'type: tests' label to any change to *.test.ts files
-'type: tests': /**/*.test.ts
+'type: tests': packages/**/*.test.ts
 
