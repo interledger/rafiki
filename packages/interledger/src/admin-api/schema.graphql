@@ -327,13 +327,6 @@ type TransferMutationResponse implements MutationResponse {
   message: String!
 }
 
-type ProvisionTrustlineMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  trustline: Trustline!
-}
-
 type ExtendTrustlineMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!

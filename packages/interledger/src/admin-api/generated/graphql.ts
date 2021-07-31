@@ -351,14 +351,6 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars['String']>;
 };
 
-export type ProvisionTrustlineMutationResponse = MutationResponse & {
-  __typename?: 'ProvisionTrustlineMutationResponse';
-  code: Scalars['String'];
-  success: Scalars['Boolean'];
-  message: Scalars['String'];
-  trustline: Trustline;
-};
-
 export type Query = {
   __typename?: 'Query';
   /** Fetch a page of Interledger accounts. */
@@ -628,10 +620,9 @@ export type ResolversTypes = {
   IlpAccountEdge: ResolverTypeWrapper<Partial<IlpAccountEdge>>;
   IlpAccountsConnection: ResolverTypeWrapper<Partial<IlpAccountsConnection>>;
   Mutation: ResolverTypeWrapper<{}>;
-  MutationResponse: ResolversTypes['CreateDepositMutationResponse'] | ResolversTypes['CreateIlpAccountMutationResponse'] | ResolversTypes['CreateIlpSubAccountMutationResponse'] | ResolversTypes['CreateWebhookMutationResponse'] | ResolversTypes['CreateWithdrawalMutationResponse'] | ResolversTypes['DeleteIlpAccountMutationResponse'] | ResolversTypes['DeleteWebhookMutationResponse'] | ResolversTypes['ExtendTrustlineMutationResponse'] | ResolversTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversTypes['ProvisionTrustlineMutationResponse'] | ResolversTypes['RevokeTrustlineMutationResponse'] | ResolversTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversTypes['SettleTrustlineMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdateIlpAccountMutationResponse'] | ResolversTypes['UpdateWebhookMutationResponse'] | ResolversTypes['UtilizeTrustlineMutationResponse'];
+  MutationResponse: ResolversTypes['CreateDepositMutationResponse'] | ResolversTypes['CreateIlpAccountMutationResponse'] | ResolversTypes['CreateIlpSubAccountMutationResponse'] | ResolversTypes['CreateWebhookMutationResponse'] | ResolversTypes['CreateWithdrawalMutationResponse'] | ResolversTypes['DeleteIlpAccountMutationResponse'] | ResolversTypes['DeleteWebhookMutationResponse'] | ResolversTypes['ExtendTrustlineMutationResponse'] | ResolversTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversTypes['RevokeTrustlineMutationResponse'] | ResolversTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversTypes['SettleTrustlineMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdateIlpAccountMutationResponse'] | ResolversTypes['UpdateWebhookMutationResponse'] | ResolversTypes['UtilizeTrustlineMutationResponse'];
   Operator: ResolverTypeWrapper<Partial<Operator>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
-  ProvisionTrustlineMutationResponse: ResolverTypeWrapper<Partial<ProvisionTrustlineMutationResponse>>;
   Query: ResolverTypeWrapper<{}>;
   RevokeTrustlineMutationResponse: ResolverTypeWrapper<Partial<RevokeTrustlineMutationResponse>>;
   RollbackPendingWithdrawalMutationResponse: ResolverTypeWrapper<Partial<RollbackPendingWithdrawalMutationResponse>>;
@@ -680,10 +671,9 @@ export type ResolversParentTypes = {
   IlpAccountEdge: Partial<IlpAccountEdge>;
   IlpAccountsConnection: Partial<IlpAccountsConnection>;
   Mutation: {};
-  MutationResponse: ResolversParentTypes['CreateDepositMutationResponse'] | ResolversParentTypes['CreateIlpAccountMutationResponse'] | ResolversParentTypes['CreateIlpSubAccountMutationResponse'] | ResolversParentTypes['CreateWebhookMutationResponse'] | ResolversParentTypes['CreateWithdrawalMutationResponse'] | ResolversParentTypes['DeleteIlpAccountMutationResponse'] | ResolversParentTypes['DeleteWebhookMutationResponse'] | ResolversParentTypes['ExtendTrustlineMutationResponse'] | ResolversParentTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversParentTypes['ProvisionTrustlineMutationResponse'] | ResolversParentTypes['RevokeTrustlineMutationResponse'] | ResolversParentTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversParentTypes['SettleTrustlineMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdateIlpAccountMutationResponse'] | ResolversParentTypes['UpdateWebhookMutationResponse'] | ResolversParentTypes['UtilizeTrustlineMutationResponse'];
+  MutationResponse: ResolversParentTypes['CreateDepositMutationResponse'] | ResolversParentTypes['CreateIlpAccountMutationResponse'] | ResolversParentTypes['CreateIlpSubAccountMutationResponse'] | ResolversParentTypes['CreateWebhookMutationResponse'] | ResolversParentTypes['CreateWithdrawalMutationResponse'] | ResolversParentTypes['DeleteIlpAccountMutationResponse'] | ResolversParentTypes['DeleteWebhookMutationResponse'] | ResolversParentTypes['ExtendTrustlineMutationResponse'] | ResolversParentTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversParentTypes['RevokeTrustlineMutationResponse'] | ResolversParentTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversParentTypes['SettleTrustlineMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdateIlpAccountMutationResponse'] | ResolversParentTypes['UpdateWebhookMutationResponse'] | ResolversParentTypes['UtilizeTrustlineMutationResponse'];
   Operator: Partial<Operator>;
   PageInfo: Partial<PageInfo>;
-  ProvisionTrustlineMutationResponse: Partial<ProvisionTrustlineMutationResponse>;
   Query: {};
   RevokeTrustlineMutationResponse: Partial<RevokeTrustlineMutationResponse>;
   RollbackPendingWithdrawalMutationResponse: Partial<RollbackPendingWithdrawalMutationResponse>;
@@ -885,7 +875,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {
-  __resolveType: TypeResolveFn<'CreateDepositMutationResponse' | 'CreateIlpAccountMutationResponse' | 'CreateIlpSubAccountMutationResponse' | 'CreateWebhookMutationResponse' | 'CreateWithdrawalMutationResponse' | 'DeleteIlpAccountMutationResponse' | 'DeleteWebhookMutationResponse' | 'ExtendTrustlineMutationResponse' | 'FinalizePendingWithdrawalMutationResponse' | 'ProvisionTrustlineMutationResponse' | 'RevokeTrustlineMutationResponse' | 'RollbackPendingWithdrawalMutationResponse' | 'SettleTrustlineMutationResponse' | 'TransferMutationResponse' | 'UpdateIlpAccountMutationResponse' | 'UpdateWebhookMutationResponse' | 'UtilizeTrustlineMutationResponse', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'CreateDepositMutationResponse' | 'CreateIlpAccountMutationResponse' | 'CreateIlpSubAccountMutationResponse' | 'CreateWebhookMutationResponse' | 'CreateWithdrawalMutationResponse' | 'DeleteIlpAccountMutationResponse' | 'DeleteWebhookMutationResponse' | 'ExtendTrustlineMutationResponse' | 'FinalizePendingWithdrawalMutationResponse' | 'RevokeTrustlineMutationResponse' | 'RollbackPendingWithdrawalMutationResponse' | 'SettleTrustlineMutationResponse' | 'TransferMutationResponse' | 'UpdateIlpAccountMutationResponse' | 'UpdateWebhookMutationResponse' | 'UtilizeTrustlineMutationResponse', ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -903,14 +893,6 @@ export type PageInfoResolvers<ContextType = any, ParentType extends ResolversPar
   hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   hasPreviousPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   startCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ProvisionTrustlineMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['ProvisionTrustlineMutationResponse'] = ResolversParentTypes['ProvisionTrustlineMutationResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  trustline?: Resolver<ResolversTypes['Trustline'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1063,7 +1045,6 @@ export type Resolvers<ContextType = any> = {
   MutationResponse?: MutationResponseResolvers<ContextType>;
   Operator?: OperatorResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
-  ProvisionTrustlineMutationResponse?: ProvisionTrustlineMutationResponseResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RevokeTrustlineMutationResponse?: RevokeTrustlineMutationResponseResolvers<ContextType>;
   RollbackPendingWithdrawalMutationResponse?: RollbackPendingWithdrawalMutationResponseResolvers<ContextType>;
