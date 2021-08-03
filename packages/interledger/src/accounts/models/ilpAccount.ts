@@ -62,9 +62,9 @@ export class IlpAccount extends BaseModel {
   // TigerBeetle account id tracking amount(s) loaned to sub-account(s)
   public readonly lentBalanceId?: bigint
 
-  public superAccountId?: string
-  public subAccounts?: IlpAccount[]
-  public superAccount?: IlpAccount
+  public readonly superAccountId?: string
+  public readonly subAccounts?: IlpAccount[]
+  public readonly superAccount?: IlpAccount
 
   public readonly maxPacketAmount!: bigint
 
@@ -94,4 +94,26 @@ export class IlpAccount extends BaseModel {
     })
     return formattedJson
   }
+
+  public hasSuperAccount(): this is IlpAccountWithSuperAccount {
+    return !!this.superAccount
+  }
+
+  public forEachNestedAccount(
+    callback: (account: IlpAccountWithSuperAccount) => void
+  ): void {
+    for (
+      let account = this as IlpAccount;
+      account.hasSuperAccount();
+      account = account.superAccount
+    ) {
+      callback(account)
+    }
+  }
+}
+
+export interface IlpAccountWithSuperAccount extends IlpAccount {
+  superAccount: IlpAccount
+  trustlineBalanceId: bigint
+  borrowedBalanceId: bigint
 }

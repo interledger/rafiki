@@ -13,7 +13,7 @@ import {
   CommitFlags,
   CommitTransferError,
   CreateTransferError,
-  Transfer as ClientTransfer,
+  CreateTransfersError,
   TransferFlags
 } from 'tigerbeetle-node'
 
@@ -24,7 +24,11 @@ import {
   UnknownLiquidityAccountError,
   UnknownSettlementAccountError
 } from './errors'
-import { IlpAccount as IlpAccountModel, IlpHttpToken } from './models'
+import {
+  IlpAccount as IlpAccountModel,
+  IlpAccountWithSuperAccount,
+  IlpHttpToken
+} from './models'
 import {
   calculateCreditBalance,
   calculateDebitBalance,
@@ -87,24 +91,22 @@ function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   return account
 }
 
-interface IlpAccountWithSuperAccount extends IlpAccountModel {
-  superAccount: IlpAccountModel
-}
-
-export const hasSuperAccount = (
-  account: IlpAccountModel
-): account is IlpAccountWithSuperAccount => !!account.superAccount
-
 interface BalanceOptions {
   id: bigint
   flags: number
 }
 
 interface BalanceTransfer {
-  transferId?: bigint
+  id?: bigint
   sourceBalanceId: bigint
   destinationBalanceId: bigint
   amount: bigint
+  twoPhaseCommit?: boolean
+}
+
+interface TwoPhaseTransfer extends BalanceTransfer {
+  id: bigint
+  twoPhaseCommit: boolean
 }
 
 interface Peer {
@@ -456,22 +458,24 @@ export class AccountsService implements AccountsServiceInterface {
     depositId?: bigint
   }): Promise<void | DepositError> {
     await this.createCurrencyBalances(assetCode, assetScale)
-    const error = await this.createTransfer({
-      transferId: depositId,
-      sourceBalanceId: toSettlementId({
-        assetCode,
-        assetScale,
-        hmacSecret: this.config.hmacSecret
-      }),
-      destinationBalanceId: toLiquidityId({
-        assetCode,
-        assetScale,
-        hmacSecret: this.config.hmacSecret
-      }),
-      amount
-    })
+    const error = await this.createTransfers([
+      {
+        id: depositId,
+        sourceBalanceId: toSettlementId({
+          assetCode,
+          assetScale,
+          hmacSecret: this.config.hmacSecret
+        }),
+        destinationBalanceId: toLiquidityId({
+          assetCode,
+          assetScale,
+          hmacSecret: this.config.hmacSecret
+        }),
+        amount
+      }
+    ])
     if (error) {
-      switch (error) {
+      switch (error.code) {
         case CreateTransferError.exists:
           return DepositError.DepositExists
         case CreateTransferError.debit_account_not_found:
@@ -479,7 +483,7 @@ export class AccountsService implements AccountsServiceInterface {
         case CreateTransferError.credit_account_not_found:
           throw new UnknownLiquidityAccountError(assetCode, assetScale)
         default:
-          throw new BalanceTransferError(error)
+          throw new BalanceTransferError(error.code)
       }
     }
   }
@@ -495,22 +499,24 @@ export class AccountsService implements AccountsServiceInterface {
     amount: bigint
     withdrawalId?: bigint
   }): Promise<void | WithdrawError> {
-    const error = await this.createTransfer({
-      transferId: withdrawalId,
-      sourceBalanceId: toLiquidityId({
-        assetCode,
-        assetScale,
-        hmacSecret: this.config.hmacSecret
-      }),
-      destinationBalanceId: toSettlementId({
-        assetCode,
-        assetScale,
-        hmacSecret: this.config.hmacSecret
-      }),
-      amount
-    })
+    const error = await this.createTransfers([
+      {
+        id: withdrawalId,
+        sourceBalanceId: toLiquidityId({
+          assetCode,
+          assetScale,
+          hmacSecret: this.config.hmacSecret
+        }),
+        destinationBalanceId: toSettlementId({
+          assetCode,
+          assetScale,
+          hmacSecret: this.config.hmacSecret
+        }),
+        amount
+      }
+    ])
     if (error) {
-      switch (error) {
+      switch (error.code) {
         case CreateTransferError.exists:
           return WithdrawError.WithdrawalExists
         case CreateTransferError.debit_account_not_found:
@@ -522,7 +528,7 @@ export class AccountsService implements AccountsServiceInterface {
         case CreateTransferError.exceeds_debits:
           return WithdrawError.InsufficientSettlementBalance
         default:
-          throw new BalanceTransferError(error)
+          throw new BalanceTransferError(error.code)
       }
     }
   }
@@ -559,28 +565,36 @@ export class AccountsService implements AccountsServiceInterface {
     }
   }
 
-  private async createTransfer({
-    transferId,
-    sourceBalanceId,
-    destinationBalanceId,
-    amount
-  }: BalanceTransfer): Promise<void | CreateTransferError> {
-    const res = await this.client.createTransfers([
-      {
-        id: transferId || randomId(),
-        debit_account_id: sourceBalanceId,
-        credit_account_id: destinationBalanceId,
-        amount,
-        user_data: BigInt(0),
-        reserved: TRANSFER_RESERVED,
-        code: 0,
-        flags: 0,
-        timeout: BigInt(0),
-        timestamp: BigInt(0)
-      }
-    ])
-    if (res.length) {
-      switch (res[0].code) {
+  private async createTransfers(
+    transfers: BalanceTransfer[]
+  ): Promise<void | CreateTransfersError> {
+    const res = await this.client.createTransfers(
+      transfers.map((transfer, idx) => {
+        let flags = 0
+        if (transfer.twoPhaseCommit) {
+          flags |= TransferFlags.two_phase_commit
+        }
+        if (idx < transfers.length - 1) {
+          flags |= TransferFlags.linked
+        }
+        return {
+          id: transfer.id || randomId(),
+          debit_account_id: transfer.sourceBalanceId,
+          credit_account_id: transfer.destinationBalanceId,
+          amount: transfer.amount,
+          user_data: BigInt(0),
+          reserved: TRANSFER_RESERVED,
+          code: 0,
+          flags,
+          timeout: transfer.twoPhaseCommit ? BigInt(1e9) : BigInt(0),
+          timestamp: BigInt(0)
+        }
+      })
+    )
+    for (const { index, code } of res) {
+      switch (code) {
+        case CreateTransferError.linked_event_failed:
+          break
         case CreateTransferError.exists:
         case CreateTransferError.exists_with_different_debit_account_id:
         case CreateTransferError.exists_with_different_credit_account_id:
@@ -592,9 +606,9 @@ export class AccountsService implements AccountsServiceInterface {
         case CreateTransferError.exists_with_different_flags:
         case CreateTransferError.exists_and_already_committed_and_accepted:
         case CreateTransferError.exists_and_already_committed_and_rejected:
-          return CreateTransferError.exists
+          return { index, code: CreateTransferError.exists }
         default:
-          return res[0].code
+          return { index, code }
       }
     }
   }
@@ -614,19 +628,21 @@ export class AccountsService implements AccountsServiceInterface {
     if (!account) {
       return DepositError.UnknownAccount
     }
-    const error = await this.createTransfer({
-      transferId: depositId,
-      sourceBalanceId: toSettlementId({
-        assetCode: account.assetCode,
-        assetScale: account.assetScale,
-        hmacSecret: this.config.hmacSecret
-      }),
-      destinationBalanceId: account.balanceId,
-      amount
-    })
+    const error = await this.createTransfers([
+      {
+        id: depositId,
+        sourceBalanceId: toSettlementId({
+          assetCode: account.assetCode,
+          assetScale: account.assetScale,
+          hmacSecret: this.config.hmacSecret
+        }),
+        destinationBalanceId: account.balanceId,
+        amount
+      }
+    ])
 
     if (error) {
-      switch (error) {
+      switch (error.code) {
         case CreateTransferError.exists:
           return DepositError.DepositExists
         case CreateTransferError.debit_account_not_found:
@@ -637,7 +653,7 @@ export class AccountsService implements AccountsServiceInterface {
         case CreateTransferError.credit_account_not_found:
           throw new UnknownBalanceError(accountId)
         default:
-          throw new BalanceTransferError(error)
+          throw new BalanceTransferError(error.code)
       }
     }
   }
@@ -657,19 +673,21 @@ export class AccountsService implements AccountsServiceInterface {
     if (!account) {
       return WithdrawError.UnknownAccount
     }
-    const error = await this.createTransfer({
-      transferId: withdrawalId,
-      sourceBalanceId: account.balanceId,
-      destinationBalanceId: toSettlementId({
-        assetCode: account.assetCode,
-        assetScale: account.assetScale,
-        hmacSecret: this.config.hmacSecret
-      }),
-      amount
-    })
+    const error = await this.createTransfers([
+      {
+        id: withdrawalId,
+        sourceBalanceId: account.balanceId,
+        destinationBalanceId: toSettlementId({
+          assetCode: account.assetCode,
+          assetScale: account.assetScale,
+          hmacSecret: this.config.hmacSecret
+        }),
+        amount
+      }
+    ])
 
     if (error) {
-      switch (error) {
+      switch (error.code) {
         case CreateTransferError.exists:
           return WithdrawError.WithdrawalExists
         case CreateTransferError.debit_account_not_found:
@@ -684,7 +702,7 @@ export class AccountsService implements AccountsServiceInterface {
         case CreateTransferError.exceeds_debits:
           return WithdrawError.InsufficientSettlementBalance
         default:
-          throw new BalanceTransferError(error)
+          throw new BalanceTransferError(error.code)
       }
     }
   }
@@ -834,10 +852,7 @@ export class AccountsService implements AccountsServiceInterface {
     const destinationAccount =
       accounts[0].id === destinationAccountId ? accounts[0] : accounts[1]
 
-    const transfers: ClientTransfer[] = []
-
-    const flags = 0 | TransferFlags.two_phase_commit
-    const timeout = BigInt(1e9)
+    const transfers: TwoPhaseTransfer[] = []
 
     if (sourceAccount.assetCode === destinationAccount.assetCode) {
       if (destinationAmount && sourceAmount !== destinationAmount) {
@@ -845,63 +860,47 @@ export class AccountsService implements AccountsServiceInterface {
       }
       transfers.push({
         id: randomId(),
-        debit_account_id: sourceAccount.balanceId,
-        credit_account_id: destinationAccount.balanceId,
+        sourceBalanceId: sourceAccount.balanceId,
+        destinationBalanceId: destinationAccount.balanceId,
         amount: sourceAmount,
-        flags,
-        timeout,
-        reserved: TRANSFER_RESERVED,
-        code: 0,
-        user_data: BigInt(0),
-        timestamp: BigInt(0)
+        twoPhaseCommit: true
       })
     } else {
       if (!destinationAmount) {
         return TransferError.InvalidDestinationAmount
       }
-
       transfers.push(
         {
           id: randomId(),
-          debit_account_id: sourceAccount.balanceId,
-          credit_account_id: toLiquidityId({
+          sourceBalanceId: sourceAccount.balanceId,
+          destinationBalanceId: toLiquidityId({
             assetCode: sourceAccount.assetCode,
             assetScale: sourceAccount.assetScale,
             hmacSecret: this.config.hmacSecret
           }),
           amount: sourceAmount,
-          flags: flags | TransferFlags.linked,
-          timeout,
-          reserved: TRANSFER_RESERVED,
-          code: 0,
-          user_data: BigInt(0),
-          timestamp: BigInt(0)
+          twoPhaseCommit: true
         },
         {
           id: randomId(),
-          debit_account_id: toLiquidityId({
+          sourceBalanceId: toLiquidityId({
             assetCode: destinationAccount.assetCode,
             assetScale: destinationAccount.assetScale,
             hmacSecret: this.config.hmacSecret
           }),
-          credit_account_id: destinationAccount.balanceId,
+          destinationBalanceId: destinationAccount.balanceId,
           amount: destinationAmount,
-          flags,
-          timeout,
-          reserved: TRANSFER_RESERVED,
-          code: 0,
-          user_data: BigInt(0),
-          timestamp: BigInt(0)
+          twoPhaseCommit: true
         }
       )
     }
-    const res = await this.client.createTransfers(transfers)
-    for (const { index, code } of res) {
-      switch (code) {
+    const error = await this.createTransfers(transfers)
+    if (error) {
+      switch (error.code) {
         case CreateTransferError.linked_event_failed:
           break
         case CreateTransferError.debit_account_not_found:
-          if (index === 1) {
+          if (error.index === 1) {
             throw new UnknownLiquidityAccountError(
               destinationAccount.assetCode,
               destinationAccount.assetScale
@@ -909,7 +908,7 @@ export class AccountsService implements AccountsServiceInterface {
           }
           throw new UnknownBalanceError(sourceAccountId)
         case CreateTransferError.credit_account_not_found:
-          if (index === 1) {
+          if (error.index === 1) {
             throw new UnknownBalanceError(destinationAccountId)
           }
           throw new UnknownLiquidityAccountError(
@@ -917,25 +916,22 @@ export class AccountsService implements AccountsServiceInterface {
             sourceAccount.assetScale
           )
         case CreateTransferError.exceeds_credits:
-          if (index === 1) {
+          if (error.index === 1) {
             return TransferError.InsufficientLiquidity
           }
           return TransferError.InsufficientBalance
         default:
-          throw new BalanceTransferError(code)
+          throw new BalanceTransferError(error.code)
       }
     }
 
     const trx: Transaction = {
       commit: async (): Promise<void | TransferError> => {
         const res = await this.client.commitTransfers(
-          transfers.map((transfer) => {
+          transfers.map((transfer, idx) => {
             return {
               id: transfer.id,
-              flags:
-                transfer.flags & TransferFlags.linked
-                  ? 0 | CommitFlags.linked
-                  : 0,
+              flags: idx < transfers.length - 1 ? 0 | CommitFlags.linked : 0,
               reserved: TRANSFER_RESERVED,
               code: 0,
               timestamp: BigInt(0)
@@ -959,9 +955,9 @@ export class AccountsService implements AccountsServiceInterface {
       },
       rollback: async (): Promise<void | TransferError> => {
         const res = await this.client.commitTransfers(
-          transfers.map((transfer) => {
+          transfers.map((transfer, idx) => {
             const flags =
-              transfer.flags & TransferFlags.linked ? 0 | CommitFlags.linked : 0
+              idx < transfers.length - 1 ? 0 | CommitFlags.linked : 0
             return {
               id: transfer.id,
               flags: flags | CommitFlags.reject,
@@ -997,24 +993,44 @@ export class AccountsService implements AccountsServiceInterface {
    * @param {string} options.accountId - Sub-account to which credit is extended
    * @param {bigint} options.amount
    * @param {boolean} [options.autoApply] - Utilize credit and apply to sub-account's balance (default: false)
+   *
+   * Recursive transfers take place between each sub-account/super-account pair,
+   * starting at accountId and continuing to the top-level super-account.
    */
   public async extendTrustline({
     accountId,
     amount,
     autoApply
   }: ExtendTrustlineOptions): Promise<void | TrustlineError> {
-    return this.adjustTrustline({
-      accountId,
-      trustlineTransfers: ({ account, startingSubAccount }) => {
-        return autoApply
-          ? AccountsService.increaseDebt({
-              account,
-              amount,
-              debtorAccount: startingSubAccount
-            })
-          : [AccountsService.increaseCredit({ account, amount })]
+    const account = await this.getAccountWithSuperAccounts(accountId)
+    if (!account) {
+      return TrustlineError.UnknownAccount
+    } else if (!account.hasSuperAccount()) {
+      return TrustlineError.UnknownSuperAccount
+    }
+    const transfers: BalanceTransfer[] = []
+    account.forEachNestedAccount((acct) => {
+      if (autoApply) {
+        transfers.push(
+          ...AccountsService.increaseDebt({
+            account: acct,
+            amount,
+            debtorAccount: account
+          })
+        )
+      } else {
+        transfers.push(
+          AccountsService.increaseCredit({ account: acct, amount })
+        )
       }
     })
+    const err = await this.createTransfers(transfers)
+    if (err) {
+      if (err.code === CreateTransferError.exceeds_credits) {
+        return TrustlineError.InsufficientBalance
+      }
+      throw new BalanceTransferError(err.code)
+    }
   }
 
   /**
@@ -1023,23 +1039,38 @@ export class AccountsService implements AccountsServiceInterface {
    * @param {Object} options
    * @param {string} options.accountId - Sub-account to which credit is extended
    * @param {bigint} options.amount
+   *
+   * Recursive transfers take place between each sub-account/super-account pair,
+   * starting at accountId and continuing to the top-level super-account.
    */
   public async utilizeTrustline({
     accountId,
     amount
   }: TrustlineOptions): Promise<void | TrustlineError> {
-    return this.adjustTrustline({
-      accountId,
-      trustlineTransfers: ({ account, startingSubAccount }) => {
-        const transfers = AccountsService.increaseDebt({
-          account,
+    const account = await this.getAccountWithSuperAccounts(accountId)
+    if (!account) {
+      return TrustlineError.UnknownAccount
+    } else if (!account.hasSuperAccount()) {
+      return TrustlineError.UnknownSuperAccount
+    }
+    const transfers: BalanceTransfer[] = []
+    account.forEachNestedAccount((acct) => {
+      transfers.push(AccountsService.decreaseCredit({ account: acct, amount }))
+      transfers.push(
+        ...AccountsService.increaseDebt({
+          account: acct,
           amount,
-          debtorAccount: startingSubAccount
+          debtorAccount: account
         })
-        transfers.push(AccountsService.decreaseCredit({ account, amount }))
-        return transfers
-      }
+      )
     })
+    const err = await this.createTransfers(transfers)
+    if (err) {
+      if (err.code === CreateTransferError.exceeds_credits) {
+        return TrustlineError.InsufficientBalance
+      }
+      throw new BalanceTransferError(err.code)
+    }
   }
 
   /**
@@ -1048,17 +1079,31 @@ export class AccountsService implements AccountsServiceInterface {
    * @param {Object} options
    * @param {string} options.accountId - Sub-account to which credit is extended
    * @param {bigint} options.amount
+   *
+   * Recursive transfers take place between each sub-account/super-account pair,
+   * starting at accountId and continuing to the top-level super-account.
    */
   public async revokeTrustline({
     accountId,
     amount
   }: TrustlineOptions): Promise<void | TrustlineError> {
-    return this.adjustTrustline({
-      accountId,
-      trustlineTransfers: ({ account }) => {
-        return [AccountsService.decreaseCredit({ account, amount })]
-      }
+    const account = await this.getAccountWithSuperAccounts(accountId)
+    if (!account) {
+      return TrustlineError.UnknownAccount
+    } else if (!account.hasSuperAccount()) {
+      return TrustlineError.UnknownSuperAccount
+    }
+    const transfers: BalanceTransfer[] = []
+    account.forEachNestedAccount((account) => {
+      transfers.push(AccountsService.decreaseCredit({ account, amount }))
     })
+    const err = await this.createTransfers(transfers)
+    if (err) {
+      if (err.code === CreateTransferError.exceeds_credits) {
+        return TrustlineError.InsufficientBalance
+      }
+      throw new BalanceTransferError(err.code)
+    }
   }
 
   /**
@@ -1068,26 +1113,59 @@ export class AccountsService implements AccountsServiceInterface {
    * @param {string} options.accountId - Sub-account settling debt
    * @param {bigint} options.amount
    * @param {boolean} [options.revolve] - Replenish the sub-account's line of credit commensurate with the debt settled (default: true)
+   *
+   * Recursive transfers take place between each sub-account/super-account pair,
+   * starting at accountId and continuing to the top-level super-account.
    */
   public async settleTrustline({
     accountId,
     amount,
     revolve
   }: SettleTrustlineOptions): Promise<void | TrustlineError> {
-    return this.adjustTrustline({
-      accountId,
-      trustlineTransfers: ({ account, startingSubAccount }) => {
-        const transfers = AccountsService.decreaseDebt({
-          account,
+    const account = await this.getAccountWithSuperAccounts(accountId)
+    if (!account) {
+      return TrustlineError.UnknownAccount
+    } else if (!account.hasSuperAccount()) {
+      return TrustlineError.UnknownSuperAccount
+    }
+    const transfers: BalanceTransfer[] = []
+    account.forEachNestedAccount((acct) => {
+      transfers.push(
+        ...AccountsService.decreaseDebt({
+          account: acct,
           amount,
-          debtorAccount: startingSubAccount
+          debtorAccount: account
         })
-        if (revolve !== false) {
-          transfers.push(AccountsService.increaseCredit({ account, amount }))
-        }
-        return transfers
+      )
+      if (revolve !== false) {
+        transfers.push(
+          AccountsService.increaseCredit({ account: acct, amount })
+        )
       }
     })
+    const err = await this.createTransfers(transfers)
+    if (err) {
+      if (err.code === CreateTransferError.exceeds_credits) {
+        return TrustlineError.InsufficientBalance
+      }
+      throw new BalanceTransferError(err.code)
+    }
+  }
+
+  private static forEachNestedAccount({
+    account: accountWithSuperAccounts,
+    callback
+  }: {
+    account: IlpAccountModel
+    callback: (account: IlpAccountWithSuperAccount) => void
+  }) {
+    for (
+      let account = accountWithSuperAccounts;
+      account.hasSuperAccount();
+      account = account.superAccount
+    ) {
+      callback(account)
+    }
   }
 
   private static increaseCredit({
@@ -1190,106 +1268,14 @@ export class AccountsService implements AccountsServiceInterface {
     return transfers
   }
 
-  /**
-   * Modifies credit and/or debt balances of sub-account and its super-account(s)
-   *
-   * @param {Object} options
-   * @param {string} options.accountId - Sub-account whose own balance(s), as well as those of its super-account(s), are adjusted
-   * @param {transfersCallback} options.trustlineTransfers - Balance adjustment(s) to perform
-   *
-   * Recursive transfers take place between each sub-account/super-account pair,
-   * starting at accountId and continuing to the top-level super-account.
-   */
-  private async adjustTrustline({
-    accountId,
-    trustlineTransfers
-  }: {
+  private async getAccountWithSuperAccounts(
     accountId: string
-    trustlineTransfers: ({
-      account,
-      startingSubAccount
-    }: {
-      account: IlpAccountWithSuperAccount
-      startingSubAccount: IlpAccountModel
-    }) => BalanceTransfer[]
-  }): Promise<void | TrustlineError> {
-    try {
-      const transfers: BalanceTransfer[] = []
-      const err = await transaction(
-        IlpAccountModel,
-        async (IlpAccountModel) => {
-          const accountWithSuperAccounts = await IlpAccountModel.query()
-            .withGraphFetched(`superAccount.^${MAX_SUB_ACCOUNT_DEPTH}`, {
-              minimize: true
-            })
-            .findById(accountId)
-            .forUpdate()
-          if (!accountWithSuperAccounts) {
-            return TrustlineError.UnknownAccount
-          } else if (
-            !accountWithSuperAccounts.superAccountId ||
-            !accountWithSuperAccounts.superAccount
-          ) {
-            return TrustlineError.UnknownSuperAccount
-          }
-
-          for (
-            let account = accountWithSuperAccounts;
-            hasSuperAccount(account);
-            account = account.superAccount
-          ) {
-            transfers.push(
-              ...trustlineTransfers({
-                account,
-                startingSubAccount: accountWithSuperAccounts
-              })
-            )
-          }
-        }
-      )
-      if (err) {
-        return err
-      }
-      const res = await this.client.createTransfers(
-        transfers.map(
-          ({ sourceBalanceId, destinationBalanceId, amount }, idx) => {
-            return {
-              id: randomId(),
-              debit_account_id: sourceBalanceId,
-              credit_account_id: destinationBalanceId,
-              amount,
-              user_data: BigInt(0),
-              reserved: TRANSFER_RESERVED,
-              code: 0,
-              flags: idx < transfers.length - 1 ? 0 | TransferFlags.linked : 0,
-              timeout: BigInt(0),
-              timestamp: BigInt(0)
-            }
-          }
-        )
-      )
-      for (const { code } of res) {
-        switch (code) {
-          case CreateTransferError.linked_event_failed:
-            break
-          default:
-            throw new BalanceTransferError(code)
-        }
-      }
-    } catch (err) {
-      if (
-        err instanceof BalanceTransferError &&
-        err.code === CreateTransferError.exceeds_credits
-      ) {
-        return TrustlineError.InsufficientBalance
-      }
-      throw err
-    }
+  ): Promise<IlpAccountModel | undefined> {
+    const account = await IlpAccountModel.query()
+      .withGraphFetched(`superAccount.^${MAX_SUB_ACCOUNT_DEPTH}`, {
+        minimize: true
+      })
+      .findById(accountId)
+    return account || undefined
   }
-
-  /**
-   * @callback transfersCallback
-   * @param {Object} account
-   * @param {Object} startingSubAccount
-   */
 }
