@@ -1817,21 +1817,6 @@ describe('Accounts Service', (): void => {
       ).resolves.toEqual(TrustlineError.UnknownSuperAccount)
     })
 
-    test('Returns error for nonexistent trustline', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
-        asset,
-        superAccountId: superAccountId
-      })
-
-      await expect(
-        accountsService.utilizeTrustline({
-          accountId,
-          amount: BigInt(5)
-        })
-      ).resolves.toEqual(TrustlineError.UnknownTrustline)
-    })
-
     test('Returns error for insufficient trustline balance', async (): Promise<void> => {
       const { accountId: superAccountId, asset } = await accountFactory.build()
       const { accountId } = await accountFactory.build({
@@ -2030,21 +2015,6 @@ describe('Accounts Service', (): void => {
       ).resolves.toEqual(TrustlineError.UnknownSuperAccount)
     })
 
-    test('Returns error for nonexistent trustline', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
-        asset,
-        superAccountId: superAccountId
-      })
-
-      await expect(
-        accountsService.revokeTrustline({
-          accountId,
-          amount: BigInt(5)
-        })
-      ).resolves.toEqual(TrustlineError.UnknownTrustline)
-    })
-
     test('Returns error for insufficient trustline balance', async (): Promise<void> => {
       const { accountId: superAccountId, asset } = await accountFactory.build()
       const { accountId } = await accountFactory.build({
@@ -2225,44 +2195,6 @@ describe('Accounts Service', (): void => {
           amount: BigInt(5)
         })
       ).resolves.toEqual(TrustlineError.UnknownSuperAccount)
-    })
-
-    test('Returns error for nonexistent trustline', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
-        asset,
-        superAccountId: superAccountId
-      })
-
-      await expect(
-        accountsService.settleTrustline({
-          accountId,
-          amount: BigInt(5)
-        })
-      ).resolves.toEqual(TrustlineError.UnknownTrustline)
-    })
-
-    test('Returns error for nonexistent borrowed balance', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
-        asset,
-        superAccountId: superAccountId
-      })
-
-      const creditAmount = BigInt(5)
-      await expect(
-        accountsService.extendTrustline({
-          accountId,
-          amount: creditAmount
-        })
-      ).resolves.toBeUndefined()
-
-      await expect(
-        accountsService.settleTrustline({
-          accountId,
-          amount: BigInt(5)
-        })
-      ).resolves.toEqual(TrustlineError.UnknownTrustline)
     })
 
     test('Returns error for insufficient trustline balance', async (): Promise<void> => {

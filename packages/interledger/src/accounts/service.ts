@@ -1,5 +1,6 @@
 import {
   NotFoundError,
+  PartialModelObject,
   raw,
   transaction,
   UniqueViolationError
@@ -132,9 +133,24 @@ export class AccountsService implements AccountsServiceInterface {
         IlpAccountModel,
         IlpHttpToken,
         async (IlpAccountModel, IlpHttpToken) => {
+          const newAccount: PartialModelObject<IlpAccountModel> = {
+            id: account.accountId,
+            disabled: account.disabled,
+            assetCode: account.asset.code,
+            assetScale: account.asset.scale,
+            superAccountId: account.superAccountId,
+            maxPacketAmount: account.maxPacketAmount,
+            outgoingEndpoint: account.http?.outgoing.endpoint,
+            outgoingToken: account.http?.outgoing.authToken,
+            streamEnabled: account.stream?.enabled,
+            staticIlpAddress: account.routing?.staticIlpAddress
+          }
+          const newBalances: BalanceOptions[] = []
+          const superAccountPatch: PartialModelObject<IlpAccountModel> = {}
           if (account.superAccountId) {
             const superAccount = await IlpAccountModel.query()
               .findById(account.superAccountId)
+              .forUpdate()
               .throwIfNotFound()
             if (
               account.asset.code !== superAccount.assetCode ||
@@ -142,31 +158,69 @@ export class AccountsService implements AccountsServiceInterface {
             ) {
               return CreateAccountError.InvalidAsset
             }
+            newAccount.trustlineBalanceId = randomId()
+            newAccount.borrowedBalanceId = randomId()
+            newBalances.push(
+              {
+                id: newAccount.trustlineBalanceId,
+                flags:
+                  0 |
+                  AccountFlags.debits_must_not_exceed_credits |
+                  AccountFlags.linked
+              },
+              {
+                id: newAccount.borrowedBalanceId,
+                flags:
+                  0 |
+                  AccountFlags.debits_must_not_exceed_credits |
+                  AccountFlags.linked
+              }
+            )
+            if (
+              !superAccount.creditExtendedBalanceId !==
+              !superAccount.lentBalanceId
+            ) {
+              this.logger.warn(superAccount, 'missing super-account balance')
+            }
+            if (!superAccount.creditExtendedBalanceId) {
+              superAccountPatch.creditExtendedBalanceId = randomId()
+              newBalances.push({
+                id: superAccountPatch.creditExtendedBalanceId,
+                flags:
+                  0 |
+                  AccountFlags.credits_must_not_exceed_debits |
+                  AccountFlags.linked
+              })
+            }
+            if (!superAccount.lentBalanceId) {
+              superAccountPatch.lentBalanceId = randomId()
+              newBalances.push({
+                id: superAccountPatch.lentBalanceId,
+                flags:
+                  0 |
+                  AccountFlags.credits_must_not_exceed_debits |
+                  AccountFlags.linked
+              })
+            }
           }
 
-          const balanceId = randomId()
-          await this.createBalances(
-            [
-              {
-                id: balanceId,
-                flags: 0 | AccountFlags.debits_must_not_exceed_credits
-              }
-            ],
-            account.asset.scale
-          )
-          const accountRow = await IlpAccountModel.query().insertAndFetch({
-            id: account.accountId,
-            disabled: account.disabled,
-            assetCode: account.asset.code,
-            assetScale: account.asset.scale,
-            balanceId,
-            superAccountId: account.superAccountId,
-            maxPacketAmount: account.maxPacketAmount,
-            outgoingEndpoint: account.http?.outgoing.endpoint,
-            outgoingToken: account.http?.outgoing.authToken,
-            streamEnabled: account.stream?.enabled,
-            staticIlpAddress: account.routing?.staticIlpAddress
+          newAccount.balanceId = randomId()
+          newBalances.push({
+            id: newAccount.balanceId,
+            flags: 0 | AccountFlags.debits_must_not_exceed_credits
           })
+
+          await this.createBalances(newBalances, account.asset.scale)
+
+          if (account.superAccountId) {
+            await IlpAccountModel.query()
+              .patch(superAccountPatch)
+              .findById(account.superAccountId)
+              .throwIfNotFound()
+          }
+          const accountRow = await IlpAccountModel.query().insertAndFetch(
+            newAccount
+          )
 
           const incomingTokens = account.http?.incoming?.authTokens.map(
             (incomingToken: string) => {
@@ -1038,7 +1092,6 @@ export class AccountsService implements AccountsServiceInterface {
    *
    * Recursive transfers take place between each sub-account/super-account pair,
    * starting at accountId and continuing to the top-level super-account.
-   * Corresponding balances (TigerBeetle accounts) are created if they do not exist.
    */
   private async adjustTrustline({
     accountId,
@@ -1067,21 +1120,8 @@ export class AccountsService implements AccountsServiceInterface {
             !accountWithSuperAccounts.superAccount
           ) {
             return TrustlineError.UnknownSuperAccount
-          } else if (
-            (mode === AdjustTrustlineMode.Utilize ||
-              mode === AdjustTrustlineMode.Revoke) &&
-            !accountWithSuperAccounts.trustlineBalanceId
-          ) {
-            return TrustlineError.UnknownTrustline
-          } else if (
-            (mode === AdjustTrustlineMode.Settle ||
-              mode === AdjustTrustlineMode.Revolve) &&
-            !accountWithSuperAccounts.borrowedBalanceId
-          ) {
-            return TrustlineError.UnknownTrustline
           }
 
-          const newBalanceIds = {}
           for (
             let account = accountWithSuperAccounts;
             account.superAccount;
@@ -1091,27 +1131,14 @@ export class AccountsService implements AccountsServiceInterface {
               mode === AdjustTrustlineMode.Extend ||
               mode === AdjustTrustlineMode.Revolve
             ) {
-              let trustlineBalanceId = account.trustlineBalanceId
-              let creditExtendedBalanceId =
-                account.superAccount.creditExtendedBalanceId
-              if (!trustlineBalanceId) {
-                trustlineBalanceId = randomId()
-                newBalanceIds[account.id] = {
-                  ...newBalanceIds[account.id],
-                  trustlineBalanceId
-                }
-                if (!creditExtendedBalanceId) {
-                  creditExtendedBalanceId = randomId()
-                  newBalanceIds[account.superAccount.id] = {
-                    creditExtendedBalanceId
-                  }
-                }
-              } else if (!creditExtendedBalanceId) {
+              if (!account.trustlineBalanceId) {
+                throw new UnknownBalanceError(account.id)
+              } else if (!account.superAccount.creditExtendedBalanceId) {
                 throw new UnknownBalanceError(account.superAccount.id)
               }
               transfers.push({
-                sourceBalanceId: creditExtendedBalanceId,
-                destinationBalanceId: trustlineBalanceId,
+                sourceBalanceId: account.superAccount.creditExtendedBalanceId,
+                destinationBalanceId: account.trustlineBalanceId,
                 amount
               })
             }
@@ -1135,26 +1162,14 @@ export class AccountsService implements AccountsServiceInterface {
               mode === AdjustTrustlineMode.AutoApply ||
               mode === AdjustTrustlineMode.Utilize
             ) {
-              let borrowedBalanceId = account.borrowedBalanceId
-              let lentBalanceId = account.superAccount.lentBalanceId
-              if (!borrowedBalanceId) {
-                borrowedBalanceId = randomId()
-                newBalanceIds[account.id] = {
-                  ...newBalanceIds[account.id],
-                  borrowedBalanceId
-                }
-                if (!lentBalanceId) {
-                  lentBalanceId = randomId()
-                  newBalanceIds[account.superAccount.id] = {
-                    lentBalanceId
-                  }
-                }
-              } else if (!lentBalanceId) {
+              if (!account.borrowedBalanceId) {
+                throw new UnknownBalanceError(account.id)
+              } else if (!account.superAccount.lentBalanceId) {
                 throw new UnknownBalanceError(account.superAccount.id)
               }
               transfers.push({
-                sourceBalanceId: lentBalanceId,
-                destinationBalanceId: borrowedBalanceId,
+                sourceBalanceId: account.superAccount.lentBalanceId,
+                destinationBalanceId: account.borrowedBalanceId,
                 amount
               })
               if (!account.superAccount.superAccountId) {
@@ -1185,33 +1200,6 @@ export class AccountsService implements AccountsServiceInterface {
                   amount
                 })
               }
-            }
-          }
-
-          const newBalances: BalanceOptions[] = []
-          for (const account in newBalanceIds) {
-            for (const balance in newBalanceIds[account]) {
-              newBalances.push({
-                id: newBalanceIds[account][balance],
-                flags:
-                  0 |
-                  (['trustlineBalanceId', 'borrowedBalanceId'].includes(balance)
-                    ? AccountFlags.debits_must_not_exceed_credits
-                    : AccountFlags.credits_must_not_exceed_debits) |
-                  AccountFlags.linked
-              })
-            }
-          }
-          if (newBalances.length) {
-            newBalances[newBalances.length - 1].flags &= ~AccountFlags.linked
-            await this.createBalances(
-              newBalances,
-              accountWithSuperAccounts.assetScale
-            )
-            for (const accountId in newBalanceIds) {
-              await IlpAccountModel.query()
-                .patch(newBalanceIds[accountId])
-                .findById(accountId)
             }
           }
         }
