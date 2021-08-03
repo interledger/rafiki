@@ -53,15 +53,6 @@ import {
 
 const MAX_SUB_ACCOUNT_DEPTH = 64
 
-enum AdjustTrustlineMode {
-  Extend = 'Extend',
-  AutoApply = 'AutoApply',
-  Utilize = 'Utilize',
-  Revoke = 'Revoke',
-  Settle = 'Settle',
-  Revolve = 'Revolve'
-}
-
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   const account: IlpAccount = {
     accountId: accountRow.id,
@@ -95,6 +86,14 @@ function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   }
   return account
 }
+
+interface IlpAccountWithSuperAccount extends IlpAccountModel {
+  superAccount: IlpAccountModel
+}
+
+export const hasSuperAccount = (
+  account: IlpAccountModel
+): account is IlpAccountWithSuperAccount => !!account.superAccount
 
 interface BalanceOptions {
   id: bigint
@@ -1006,10 +1005,15 @@ export class AccountsService implements AccountsServiceInterface {
   }: ExtendTrustlineOptions): Promise<void | TrustlineError> {
     return this.adjustTrustline({
       accountId,
-      amount,
-      mode: autoApply
-        ? AdjustTrustlineMode.AutoApply
-        : AdjustTrustlineMode.Extend
+      trustlineTransfers: ({ account, startingSubAccount }) => {
+        return autoApply
+          ? AccountsService.increaseDebt({
+              account,
+              amount,
+              debtorAccount: startingSubAccount
+            })
+          : [AccountsService.increaseCredit({ account, amount })]
+      }
     })
   }
 
@@ -1026,8 +1030,15 @@ export class AccountsService implements AccountsServiceInterface {
   }: TrustlineOptions): Promise<void | TrustlineError> {
     return this.adjustTrustline({
       accountId,
-      amount,
-      mode: AdjustTrustlineMode.Utilize
+      trustlineTransfers: ({ account, startingSubAccount }) => {
+        const transfers = AccountsService.increaseDebt({
+          account,
+          amount,
+          debtorAccount: startingSubAccount
+        })
+        transfers.push(AccountsService.decreaseCredit({ account, amount }))
+        return transfers
+      }
     })
   }
 
@@ -1044,8 +1055,9 @@ export class AccountsService implements AccountsServiceInterface {
   }: TrustlineOptions): Promise<void | TrustlineError> {
     return this.adjustTrustline({
       accountId,
-      amount,
-      mode: AdjustTrustlineMode.Revoke
+      trustlineTransfers: ({ account }) => {
+        return [AccountsService.decreaseCredit({ account, amount })]
+      }
     })
   }
 
@@ -1064,12 +1076,118 @@ export class AccountsService implements AccountsServiceInterface {
   }: SettleTrustlineOptions): Promise<void | TrustlineError> {
     return this.adjustTrustline({
       accountId,
-      amount,
-      mode:
-        revolve === false
-          ? AdjustTrustlineMode.Settle
-          : AdjustTrustlineMode.Revolve
+      trustlineTransfers: ({ account, startingSubAccount }) => {
+        const transfers = AccountsService.decreaseDebt({
+          account,
+          amount,
+          debtorAccount: startingSubAccount
+        })
+        if (revolve !== false) {
+          transfers.push(AccountsService.increaseCredit({ account, amount }))
+        }
+        return transfers
+      }
     })
+  }
+
+  private static increaseCredit({
+    account,
+    amount
+  }: {
+    account: IlpAccountWithSuperAccount
+    amount: bigint
+  }): BalanceTransfer {
+    if (!account.trustlineBalanceId) {
+      throw new UnknownBalanceError(account.id)
+    } else if (!account.superAccount.creditExtendedBalanceId) {
+      throw new UnknownBalanceError(account.superAccount.id)
+    }
+    return {
+      sourceBalanceId: account.superAccount.creditExtendedBalanceId,
+      destinationBalanceId: account.trustlineBalanceId,
+      amount
+    }
+  }
+
+  private static decreaseCredit({
+    account,
+    amount
+  }: {
+    account: IlpAccountWithSuperAccount
+    amount: bigint
+  }): BalanceTransfer {
+    if (!account.trustlineBalanceId) {
+      throw new UnknownBalanceError(account.id)
+    } else if (!account.superAccount.creditExtendedBalanceId) {
+      throw new UnknownBalanceError(account.superAccount.id)
+    }
+    return {
+      sourceBalanceId: account.trustlineBalanceId,
+      destinationBalanceId: account.superAccount.creditExtendedBalanceId,
+      amount
+    }
+  }
+
+  private static increaseDebt({
+    account,
+    amount,
+    debtorAccount
+  }: {
+    account: IlpAccountWithSuperAccount
+    amount: bigint
+    debtorAccount: IlpAccountModel
+  }): BalanceTransfer[] {
+    if (!account.borrowedBalanceId) {
+      throw new UnknownBalanceError(account.id)
+    } else if (!account.superAccount.lentBalanceId) {
+      throw new UnknownBalanceError(account.superAccount.id)
+    }
+    const transfers: BalanceTransfer[] = [
+      {
+        sourceBalanceId: account.superAccount.lentBalanceId,
+        destinationBalanceId: account.borrowedBalanceId,
+        amount
+      }
+    ]
+    if (!account.superAccount.superAccountId) {
+      transfers.push({
+        sourceBalanceId: account.superAccount.balanceId,
+        destinationBalanceId: debtorAccount.balanceId,
+        amount
+      })
+    }
+    return transfers
+  }
+
+  private static decreaseDebt({
+    account,
+    amount,
+    debtorAccount
+  }: {
+    account: IlpAccountWithSuperAccount
+    amount: bigint
+    debtorAccount: IlpAccountModel
+  }): BalanceTransfer[] {
+    if (!account.borrowedBalanceId) {
+      throw new UnknownBalanceError(account.id)
+    } else if (!account.superAccount.lentBalanceId) {
+      throw new UnknownBalanceError(account.superAccount.id)
+    }
+    const transfers: BalanceTransfer[] = [
+      {
+        sourceBalanceId: account.borrowedBalanceId,
+        destinationBalanceId: account.superAccount.lentBalanceId,
+        amount
+      }
+    ]
+    if (!account.superAccount.superAccountId) {
+      transfers.push({
+        sourceBalanceId: debtorAccount.balanceId,
+        destinationBalanceId: account.superAccount.balanceId,
+        amount
+      })
+    }
+    return transfers
   }
 
   /**
@@ -1077,30 +1195,23 @@ export class AccountsService implements AccountsServiceInterface {
    *
    * @param {Object} options
    * @param {string} options.accountId - Sub-account whose own balance(s), as well as those of its super-account(s), are adjusted
-   * @param {bigint} options.amount
-   * @param {string} options.mode - Type of balance adjustment(s) to perform
-   *
-   * Trustline balance transfers correspond to modes as follows:
-   *
-   * superAccount.creditExtended -> subAccount.availableCredit (recursive): Extend, Revolve
-   * subAccount.availableCredit -> superAccount.creditExtended (recursive): Utilize, Revoke
-   * superAccount.totalLent -> subAccount.totalBorrowed (recursive): AutoApply, Utilize
-   * subAccount.totalBorrowed -> superAccount.totalLent (recursive): Settle, Revolve
-   *
-   * topLevelSuperAccount.balance -> subAccount.balance: AutoApply, Utilize
-   * subAccount.balance -> topLevelSuperAccount.balance: Settle, Revolve
+   * @param {transfersCallback} options.trustlineTransfers - Balance adjustment(s) to perform
    *
    * Recursive transfers take place between each sub-account/super-account pair,
    * starting at accountId and continuing to the top-level super-account.
    */
   private async adjustTrustline({
     accountId,
-    amount,
-    mode
+    trustlineTransfers
   }: {
     accountId: string
-    amount: bigint
-    mode: AdjustTrustlineMode
+    trustlineTransfers: ({
+      account,
+      startingSubAccount
+    }: {
+      account: IlpAccountWithSuperAccount
+      startingSubAccount: IlpAccountModel
+    }) => BalanceTransfer[]
   }): Promise<void | TrustlineError> {
     try {
       const transfers: BalanceTransfer[] = []
@@ -1124,83 +1235,15 @@ export class AccountsService implements AccountsServiceInterface {
 
           for (
             let account = accountWithSuperAccounts;
-            account.superAccount;
+            hasSuperAccount(account);
             account = account.superAccount
           ) {
-            if (
-              mode === AdjustTrustlineMode.Extend ||
-              mode === AdjustTrustlineMode.Revolve
-            ) {
-              if (!account.trustlineBalanceId) {
-                throw new UnknownBalanceError(account.id)
-              } else if (!account.superAccount.creditExtendedBalanceId) {
-                throw new UnknownBalanceError(account.superAccount.id)
-              }
-              transfers.push({
-                sourceBalanceId: account.superAccount.creditExtendedBalanceId,
-                destinationBalanceId: account.trustlineBalanceId,
-                amount
+            transfers.push(
+              ...trustlineTransfers({
+                account,
+                startingSubAccount: accountWithSuperAccounts
               })
-            }
-            if (
-              mode === AdjustTrustlineMode.Utilize ||
-              mode === AdjustTrustlineMode.Revoke
-            ) {
-              if (!account.trustlineBalanceId) {
-                throw new UnknownBalanceError(account.id)
-              } else if (!account.superAccount.creditExtendedBalanceId) {
-                throw new UnknownBalanceError(account.superAccount.id)
-              }
-              transfers.push({
-                sourceBalanceId: account.trustlineBalanceId,
-                destinationBalanceId:
-                  account.superAccount.creditExtendedBalanceId,
-                amount
-              })
-            }
-            if (
-              mode === AdjustTrustlineMode.AutoApply ||
-              mode === AdjustTrustlineMode.Utilize
-            ) {
-              if (!account.borrowedBalanceId) {
-                throw new UnknownBalanceError(account.id)
-              } else if (!account.superAccount.lentBalanceId) {
-                throw new UnknownBalanceError(account.superAccount.id)
-              }
-              transfers.push({
-                sourceBalanceId: account.superAccount.lentBalanceId,
-                destinationBalanceId: account.borrowedBalanceId,
-                amount
-              })
-              if (!account.superAccount.superAccountId) {
-                transfers.push({
-                  sourceBalanceId: account.superAccount.balanceId,
-                  destinationBalanceId: accountWithSuperAccounts.balanceId,
-                  amount
-                })
-              }
-            } else if (
-              mode === AdjustTrustlineMode.Settle ||
-              mode === AdjustTrustlineMode.Revolve
-            ) {
-              if (!account.borrowedBalanceId) {
-                throw new UnknownBalanceError(account.id)
-              } else if (!account.superAccount.lentBalanceId) {
-                throw new UnknownBalanceError(account.superAccount.id)
-              }
-              transfers.push({
-                sourceBalanceId: account.borrowedBalanceId,
-                destinationBalanceId: account.superAccount.lentBalanceId,
-                amount
-              })
-              if (!account.superAccount.superAccountId) {
-                transfers.push({
-                  sourceBalanceId: accountWithSuperAccounts.balanceId,
-                  destinationBalanceId: account.superAccount.balanceId,
-                  amount
-                })
-              }
-            }
+            )
           }
         }
       )
@@ -1243,4 +1286,10 @@ export class AccountsService implements AccountsServiceInterface {
       throw err
     }
   }
+
+  /**
+   * @callback transfersCallback
+   * @param {Object} account
+   * @param {Object} startingSubAccount
+   */
 }
