@@ -1974,22 +1974,6 @@
             "description": "Extend Trustline",
             "args": [
               {
-                "name": "trustlineId",
-                "description": "The id of the trustline to extend.",
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "ID",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
                 "name": "amount",
                 "description": "Amount of additional line of credit.",
                 "type": {
@@ -2035,22 +2019,6 @@
             "description": "Revoke trustline",
             "args": [
               {
-                "name": "trustlineId",
-                "description": "The id of the trustline to extend.",
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "ID",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
                 "name": "amount",
                 "description": "Amount of additional line of credit.",
                 "type": {
@@ -2080,22 +2048,6 @@
             "description": "Utilize trustline",
             "args": [
               {
-                "name": "trustlineId",
-                "description": "The id of the trustline to extend.",
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "ID",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
                 "name": "amount",
                 "description": "Amount of additional line of credit.",
                 "type": {
@@ -2124,22 +2076,6 @@
             "name": "settleTrustline",
             "description": "Settle trustline",
             "args": [
-              {
-                "name": "trustlineId",
-                "description": "The id of the trustline to extend.",
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "ID",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
               {
                 "name": "amount",
                 "description": "Amount of additional line of credit.",
@@ -2567,22 +2503,6 @@
         "name": "Operator",
         "description": null,
         "fields": [
-          {
-            "name": "trustlineId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
           {
             "name": "availableCredit",
             "description": null,

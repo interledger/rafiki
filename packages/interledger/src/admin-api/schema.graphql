@@ -52,8 +52,6 @@ type Mutation {
 
   "Extend Trustline"
   extendTrustline(
-    "The id of the trustline to extend."
-    trustlineId: ID!
     "Amount of additional line of credit."
     amount: UInt64!
     "Automatically utilized and applied to the account balance."
@@ -62,24 +60,18 @@ type Mutation {
 
   "Revoke trustline"
   revokeTrustline(
-    "The id of the trustline to extend."
-    trustlineId: ID!
     "Amount of additional line of credit."
     amount: UInt64!
   ): RevokeTrustlineMutationResponse
 
   "Utilize trustline"
   utilizeTrustline(
-    "The id of the trustline to extend."
-    trustlineId: ID!
     "Amount of additional line of credit."
     amount: UInt64!
   ): UtilizeTrustlineMutationResponse
 
   "Settle trustline"
   settleTrustline(
-    "The id of the trustline to extend."
-    trustlineId: ID!
     "Amount of additional line of credit."
     amount: UInt64!
     "Replenish the account's line of credit commensurate with the debt settled."
@@ -233,7 +225,6 @@ type Balance {
 }
 
 type Operator {
-  trustlineId: ID!
   availableCredit: UInt64!
   totalBorrowed: UInt64!
 }
