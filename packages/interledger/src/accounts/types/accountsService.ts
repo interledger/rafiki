@@ -1,13 +1,13 @@
 import { AccountDeposit, LiquidityDeposit, DepositError } from './deposit'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
-import { Transfer, Transaction, TransferError } from './transfer'
 import {
-  ExtendTrustlineOptions,
-  SettleTrustlineOptions,
-  TrustlineOptions,
-  TrustlineError
-} from './trustline'
+  CreditOptions,
+  ExtendCreditOptions,
+  SettleDebtOptions,
+  CreditError
+} from './credit'
+import { Transfer, Transaction, TransferError } from './transfer'
 import {
   AccountWithdrawal,
   LiquidityWithdrawal,
@@ -47,18 +47,10 @@ export interface AccountsService extends ConnectorAccountsService {
   ): Promise<bigint | undefined>
   deposit(deposit: AccountDeposit): Promise<void | DepositError>
   withdraw(withdrawal: AccountWithdrawal): Promise<void | WithdrawError>
-  extendTrustline(
-    trustlineOptions: ExtendTrustlineOptions
-  ): Promise<void | TrustlineError>
-  utilizeTrustline(
-    trustlineOptions: TrustlineOptions
-  ): Promise<void | TrustlineError>
-  revokeTrustline(
-    trustlineOptions: TrustlineOptions
-  ): Promise<void | TrustlineError>
-  settleTrustline(
-    trustlineOptions: SettleTrustlineOptions
-  ): Promise<void | TrustlineError>
+  extendCredit(extendOptions: ExtendCreditOptions): Promise<void | CreditError>
+  utilizeCredit(utilizeOptions: CreditOptions): Promise<void | CreditError>
+  revokeCredit(revokeOptions: CreditOptions): Promise<void | CreditError>
+  settleDebt(settleOptions: SettleDebtOptions): Promise<void | CreditError>
 }
 
 export type CreateOptions = Omit<IlpAccount, 'disabled'> & {

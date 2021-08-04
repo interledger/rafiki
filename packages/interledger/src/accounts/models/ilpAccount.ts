@@ -5,9 +5,9 @@ import { Model, Pojo, raw } from 'objection'
 
 const BALANCE_IDS = [
   'balanceId',
-  'trustlineBalanceId',
+  'creditBalanceId',
   'creditExtendedBalanceId',
-  'borrowedBalanceId',
+  'debtBalanceId',
   'lentBalanceId'
 ]
 
@@ -54,11 +54,11 @@ export class IlpAccount extends BaseModel {
   // TigerBeetle account id tracking Interledger balance
   public readonly balanceId!: bigint
   // TigerBeetle account id tracking credit extended by super-account
-  public readonly trustlineBalanceId?: bigint
+  public readonly creditBalanceId?: bigint
   // TigerBeetle account id tracking credit extended to sub-account(s)
   public readonly creditExtendedBalanceId?: bigint
   // TigerBeetle account id tracking amount loaned from super-account
-  public readonly borrowedBalanceId?: bigint
+  public readonly debtBalanceId?: bigint
   // TigerBeetle account id tracking amount(s) loaned to sub-account(s)
   public readonly lentBalanceId?: bigint
 
@@ -114,6 +114,6 @@ export class IlpAccount extends BaseModel {
 
 export interface IlpAccountWithSuperAccount extends IlpAccount {
   superAccount: IlpAccount
-  trustlineBalanceId: bigint
-  borrowedBalanceId: bigint
+  creditBalanceId: bigint
+  debtBalanceId: bigint
 }
