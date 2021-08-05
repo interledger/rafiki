@@ -1583,18 +1583,27 @@ describe('Accounts Service', (): void => {
           totalLent: BigInt(0)
         })
 
-        const amount = BigInt(5)
+        const depositAmount = BigInt(20)
         if (autoApply) {
           await expect(
             accountsService.deposit({
               accountId: superAccountId,
-              amount
+              amount: depositAmount
+            })
+          ).resolves.toBeUndefined()
+          await expect(
+            accountsService.deposit({
+              accountId,
+              amount: depositAmount
             })
           ).resolves.toBeUndefined()
         }
+
+        const amount = BigInt(5)
         await expect(
           accountsService.extendCredit({
-            accountId: subAccountId,
+            accountId: superAccountId,
+            subAccountId,
             amount,
             autoApply
           })
@@ -1605,7 +1614,7 @@ describe('Accounts Service', (): void => {
         ).resolves.toEqual({
           id: superAccountId,
           asset,
-          balance: BigInt(0),
+          balance: autoApply ? depositAmount - amount : BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: autoApply ? BigInt(0) : amount,
           totalBorrowed: BigInt(0),
@@ -1616,15 +1625,16 @@ describe('Accounts Service', (): void => {
         ).resolves.toEqual({
           id: accountId,
           asset,
-          balance: BigInt(0),
+          balance: autoApply ? depositAmount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount,
           creditExtended: autoApply ? BigInt(0) : amount,
           totalBorrowed: autoApply ? amount : BigInt(0),
           totalLent: autoApply ? amount : BigInt(0)
         })
-        await expect(
-          accountsService.getAccountBalance(subAccountId)
-        ).resolves.toEqual({
+        const subAccountBalance = await accountsService.getAccountBalance(
+          subAccountId
+        )
+        expect(subAccountBalance).toEqual({
           id: subAccountId,
           asset,
           balance: autoApply ? amount : BigInt(0),
@@ -1633,47 +1643,160 @@ describe('Accounts Service', (): void => {
           totalBorrowed: autoApply ? amount : BigInt(0),
           totalLent: BigInt(0)
         })
+
+        await expect(
+          accountsService.extendCredit({
+            accountId: superAccountId,
+            subAccountId: accountId,
+            amount,
+            autoApply
+          })
+        ).resolves.toBeUndefined()
+
+        const superAccountBalance = await accountsService.getAccountBalance(
+          superAccountId
+        )
+        await expect(superAccountBalance).toEqual({
+          id: superAccountId,
+          asset,
+          balance: autoApply ? depositAmount - amount * 2n : BigInt(0),
+          availableCredit: BigInt(0),
+          creditExtended: autoApply ? BigInt(0) : amount * 2n,
+          totalBorrowed: BigInt(0),
+          totalLent: autoApply ? amount * 2n : BigInt(0)
+        })
+        await expect(
+          accountsService.getAccountBalance(accountId)
+        ).resolves.toEqual({
+          id: accountId,
+          asset,
+          balance: autoApply ? depositAmount + amount : BigInt(0),
+          availableCredit: autoApply ? BigInt(0) : amount * 2n,
+          creditExtended: autoApply ? BigInt(0) : amount,
+          totalBorrowed: autoApply ? amount * 2n : BigInt(0),
+          totalLent: autoApply ? amount : BigInt(0)
+        })
+        await expect(
+          accountsService.getAccountBalance(subAccountId)
+        ).resolves.toEqual(subAccountBalance)
+
+        await expect(
+          accountsService.extendCredit({
+            accountId,
+            subAccountId,
+            amount,
+            autoApply
+          })
+        ).resolves.toBeUndefined()
+
+        await expect(
+          accountsService.getAccountBalance(superAccountId)
+        ).resolves.toEqual(superAccountBalance)
+        await expect(
+          accountsService.getAccountBalance(accountId)
+        ).resolves.toEqual({
+          id: accountId,
+          asset,
+          balance: autoApply ? depositAmount : BigInt(0),
+          availableCredit: autoApply ? BigInt(0) : amount * 2n,
+          creditExtended: autoApply ? BigInt(0) : amount * 2n,
+          totalBorrowed: autoApply ? amount * 2n : BigInt(0),
+          totalLent: autoApply ? amount * 2n : BigInt(0)
+        })
+        await expect(
+          accountsService.getAccountBalance(subAccountId)
+        ).resolves.toEqual({
+          id: subAccountId,
+          asset,
+          balance: autoApply ? amount * 2n : BigInt(0),
+          availableCredit: autoApply ? BigInt(0) : amount * 2n,
+          creditExtended: BigInt(0),
+          totalBorrowed: autoApply ? amount * 2n : BigInt(0),
+          totalLent: BigInt(0)
+        })
       }
     )
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
+      const { accountId: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId: uuid(),
+          subAccountId,
           amount: BigInt(5)
         })
       ).resolves.toEqual(CreditError.UnknownAccount)
     })
 
-    test('Returns error for nonexistent super-account', async (): Promise<void> => {
+    test('Returns error for nonexistent sub-account', async (): Promise<void> => {
       const { accountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId,
+          subAccountId: uuid(),
           amount: BigInt(5)
         })
-      ).resolves.toEqual(CreditError.UnknownSuperAccount)
+      ).resolves.toEqual(CreditError.UnknownSubAccount)
     })
 
-    test('Returns error for insufficient super-account balance', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+    test('Returns error for unrelated sub-account', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build()
+      await expect(
+        accountsService.extendCredit({
+          accountId,
+          subAccountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.UnrelatedSubAccount)
+    })
+
+    test('Returns error for super sub-account', async (): Promise<void> => {
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
         asset,
-        superAccountId: superAccountId
+        superAccountId: accountId
+      })
+      await expect(
+        accountsService.extendCredit({
+          accountId: subAccountId,
+          subAccountId: accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.UnrelatedSubAccount)
+    })
+
+    test('Returns error for same accounts', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      await expect(
+        accountsService.extendCredit({
+          accountId,
+          subAccountId: accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.SameAccounts)
+    })
+
+    test('Returns error for insufficient account balance', async (): Promise<void> => {
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
+        asset,
+        superAccountId: accountId
       })
 
       await expect(
         accountsService.extendCredit({
           accountId,
+          subAccountId,
           amount: BigInt(10),
           autoApply: true
         })
       ).resolves.toEqual(CreditError.InsufficientBalance)
 
       await expect(
-        accountsService.getAccountBalance(superAccountId)
+        accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: superAccountId,
+        id: accountId,
         asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
@@ -1682,9 +1805,9 @@ describe('Accounts Service', (): void => {
         totalLent: BigInt(0)
       })
       await expect(
-        accountsService.getAccountBalance(accountId)
+        accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: accountId,
+        id: subAccountId,
         asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
@@ -1710,7 +1833,8 @@ describe('Accounts Service', (): void => {
       const creditAmount = BigInt(10)
       await expect(
         accountsService.extendCredit({
-          accountId: subAccountId,
+          accountId: superAccountId,
+          subAccountId,
           amount: creditAmount
         })
       ).resolves.toBeUndefined()
@@ -1758,7 +1882,8 @@ describe('Accounts Service', (): void => {
       const amount = BigInt(5)
       await expect(
         accountsService.utilizeCredit({
-          accountId: subAccountId,
+          accountId: superAccountId,
+          subAccountId,
           amount
         })
       ).resolves.toBeUndefined()
@@ -1799,35 +1924,77 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
+      const { accountId: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId: uuid(),
+          subAccountId,
           amount: BigInt(5)
         })
       ).resolves.toEqual(CreditError.UnknownAccount)
     })
 
-    test('Returns error for nonexistent super-account', async (): Promise<void> => {
+    test('Returns error for nonexistent sub-account', async (): Promise<void> => {
       const { accountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId,
+          subAccountId: uuid(),
           amount: BigInt(5)
         })
-      ).resolves.toEqual(CreditError.UnknownSuperAccount)
+      ).resolves.toEqual(CreditError.UnknownSubAccount)
+    })
+
+    test('Returns error for unrelated sub-account', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build()
+      await expect(
+        accountsService.utilizeCredit({
+          accountId,
+          subAccountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.UnrelatedSubAccount)
+    })
+
+    test('Returns error for super sub-account', async (): Promise<void> => {
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
+        asset,
+        superAccountId: accountId
+      })
+      await expect(
+        accountsService.utilizeCredit({
+          accountId: subAccountId,
+          subAccountId: accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.UnrelatedSubAccount)
+    })
+
+    test('Returns error for same accounts', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      await expect(
+        accountsService.utilizeCredit({
+          accountId,
+          subAccountId: accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.SameAccounts)
     })
 
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
         asset,
-        superAccountId: superAccountId
+        superAccountId: accountId
       })
 
       const creditAmount = BigInt(5)
       await expect(
         accountsService.extendCredit({
           accountId,
+          subAccountId,
           amount: creditAmount
         })
       ).resolves.toBeUndefined()
@@ -1835,14 +2002,15 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.utilizeCredit({
           accountId,
+          subAccountId,
           amount: BigInt(10)
         })
       ).resolves.toEqual(CreditError.InsufficientCredit)
 
       await expect(
-        accountsService.getAccountBalance(superAccountId)
+        accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: superAccountId,
+        id: accountId,
         asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
@@ -1851,9 +2019,9 @@ describe('Accounts Service', (): void => {
         totalLent: BigInt(0)
       })
       await expect(
-        accountsService.getAccountBalance(accountId)
+        accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: accountId,
+        id: subAccountId,
         asset,
         balance: BigInt(0),
         availableCredit: creditAmount,
@@ -1863,25 +2031,25 @@ describe('Accounts Service', (): void => {
       })
     })
 
-    test('Returns error for insufficient super-account balance', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+    test('Returns error for insufficient account balance', async (): Promise<void> => {
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
         asset,
-        superAccountId: superAccountId
+        superAccountId: accountId
       })
 
       const creditAmount = BigInt(10)
       await expect(
         accountsService.extendCredit({
           accountId,
+          subAccountId,
           amount: creditAmount
         })
       ).resolves.toBeUndefined()
 
-      await expect(
-        accountsService.getAccountBalance(superAccountId)
-      ).resolves.toEqual({
-        id: superAccountId,
+      const accountBalance = await accountsService.getAccountBalance(accountId)
+      expect(accountBalance).toEqual({
+        id: accountId,
         asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
@@ -1889,10 +2057,11 @@ describe('Accounts Service', (): void => {
         totalBorrowed: BigInt(0),
         totalLent: BigInt(0)
       })
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
-        id: accountId,
+      const subAccountBalance = await accountsService.getAccountBalance(
+        subAccountId
+      )
+      expect(subAccountBalance).toEqual({
+        id: subAccountId,
         asset,
         balance: BigInt(0),
         availableCredit: creditAmount,
@@ -1904,32 +2073,17 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.utilizeCredit({
           accountId,
+          subAccountId,
           amount: creditAmount
         })
       ).resolves.toEqual(CreditError.InsufficientBalance)
 
       await expect(
-        accountsService.getAccountBalance(superAccountId)
-      ).resolves.toEqual({
-        id: superAccountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: BigInt(0),
-        creditExtended: creditAmount,
-        totalBorrowed: BigInt(0),
-        totalLent: BigInt(0)
-      })
-      await expect(
         accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
-        id: accountId,
-        asset,
-        balance: BigInt(0),
-        availableCredit: creditAmount,
-        creditExtended: BigInt(0),
-        totalBorrowed: BigInt(0),
-        totalLent: BigInt(0)
-      })
+      ).resolves.toEqual(accountBalance)
+      await expect(
+        accountsService.getAccountBalance(subAccountId)
+      ).resolves.toEqual(subAccountBalance)
     })
   })
 
@@ -1948,7 +2102,8 @@ describe('Accounts Service', (): void => {
       const creditAmount = BigInt(10)
       await expect(
         accountsService.extendCredit({
-          accountId: subAccountId,
+          accountId: superAccountId,
+          subAccountId,
           amount: creditAmount
         })
       ).resolves.toBeUndefined()
@@ -1956,7 +2111,8 @@ describe('Accounts Service', (): void => {
       const amount = BigInt(5)
       await expect(
         accountsService.revokeCredit({
-          accountId: subAccountId,
+          accountId: superAccountId,
+          subAccountId,
           amount
         })
       ).resolves.toBeUndefined()
@@ -1997,35 +2153,77 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
+      const { accountId: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId: uuid(),
+          subAccountId,
           amount: BigInt(5)
         })
       ).resolves.toEqual(CreditError.UnknownAccount)
     })
 
-    test('Returns error for nonexistent super-account', async (): Promise<void> => {
+    test('Returns error for nonexistent sub-account', async (): Promise<void> => {
       const { accountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId,
+          subAccountId: uuid(),
           amount: BigInt(5)
         })
-      ).resolves.toEqual(CreditError.UnknownSuperAccount)
+      ).resolves.toEqual(CreditError.UnknownSubAccount)
+    })
+
+    test('Returns error for unrelated sub-account', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build()
+      await expect(
+        accountsService.revokeCredit({
+          accountId,
+          subAccountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.UnrelatedSubAccount)
+    })
+
+    test('Returns error for super sub-account', async (): Promise<void> => {
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
+        asset,
+        superAccountId: accountId
+      })
+      await expect(
+        accountsService.revokeCredit({
+          accountId: subAccountId,
+          subAccountId: accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.UnrelatedSubAccount)
+    })
+
+    test('Returns error for same accounts', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      await expect(
+        accountsService.revokeCredit({
+          accountId,
+          subAccountId: accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.SameAccounts)
     })
 
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
         asset,
-        superAccountId: superAccountId
+        superAccountId: accountId
       })
 
       const creditAmount = BigInt(5)
       await expect(
         accountsService.extendCredit({
           accountId,
+          subAccountId,
           amount: creditAmount
         })
       ).resolves.toBeUndefined()
@@ -2033,14 +2231,15 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.revokeCredit({
           accountId,
+          subAccountId,
           amount: BigInt(10)
         })
       ).resolves.toEqual(CreditError.InsufficientCredit)
 
       await expect(
-        accountsService.getAccountBalance(superAccountId)
+        accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: superAccountId,
+        id: accountId,
         asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
@@ -2049,9 +2248,9 @@ describe('Accounts Service', (): void => {
         totalLent: BigInt(0)
       })
       await expect(
-        accountsService.getAccountBalance(accountId)
+        accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: accountId,
+        id: subAccountId,
         asset,
         balance: BigInt(0),
         availableCredit: creditAmount,
@@ -2093,50 +2292,18 @@ describe('Accounts Service', (): void => {
         ).resolves.toBeUndefined()
         await expect(
           accountsService.extendCredit({
-            accountId: subAccountId,
+            accountId: superAccountId,
+            subAccountId,
             amount: creditAmount,
             autoApply: true
           })
         ).resolves.toBeUndefined()
 
-        await expect(
-          accountsService.getAccountBalance(superAccountId)
-        ).resolves.toEqual({
-          id: superAccountId,
-          asset,
-          balance: BigInt(0),
-          availableCredit: BigInt(0),
-          creditExtended: BigInt(0),
-          totalBorrowed: BigInt(0),
-          totalLent: creditAmount
-        })
-        await expect(
-          accountsService.getAccountBalance(accountId)
-        ).resolves.toEqual({
-          id: accountId,
-          asset,
-          balance: BigInt(0),
-          availableCredit: BigInt(0),
-          creditExtended: BigInt(0),
-          totalBorrowed: creditAmount,
-          totalLent: creditAmount
-        })
-        await expect(
-          accountsService.getAccountBalance(subAccountId)
-        ).resolves.toEqual({
-          id: subAccountId,
-          asset,
-          balance: creditAmount,
-          availableCredit: BigInt(0),
-          creditExtended: BigInt(0),
-          totalBorrowed: creditAmount,
-          totalLent: BigInt(0)
-        })
-
         const amount = BigInt(1)
         await expect(
           accountsService.settleDebt({
-            accountId: subAccountId,
+            accountId: superAccountId,
+            subAccountId,
             amount,
             revolve
           })
@@ -2179,41 +2346,83 @@ describe('Accounts Service', (): void => {
     )
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
+      const { accountId: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId: uuid(),
+          subAccountId,
           amount: BigInt(5)
         })
       ).resolves.toEqual(CreditError.UnknownAccount)
     })
 
-    test('Returns error for nonexistent super-account', async (): Promise<void> => {
+    test('Returns error for nonexistent sub-account', async (): Promise<void> => {
       const { accountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId,
+          subAccountId: uuid(),
           amount: BigInt(5)
         })
-      ).resolves.toEqual(CreditError.UnknownSuperAccount)
+      ).resolves.toEqual(CreditError.UnknownSubAccount)
+    })
+
+    test('Returns error for unrelated sub-account', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build()
+      await expect(
+        accountsService.settleDebt({
+          accountId,
+          subAccountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.UnrelatedSubAccount)
+    })
+
+    test('Returns error for super sub-account', async (): Promise<void> => {
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
+        asset,
+        superAccountId: accountId
+      })
+      await expect(
+        accountsService.settleDebt({
+          accountId: subAccountId,
+          subAccountId: accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.UnrelatedSubAccount)
+    })
+
+    test('Returns error for same accounts', async (): Promise<void> => {
+      const { accountId } = await accountFactory.build()
+      await expect(
+        accountsService.settleDebt({
+          accountId,
+          subAccountId: accountId,
+          amount: BigInt(5)
+        })
+      ).resolves.toEqual(CreditError.SameAccounts)
     })
 
     test('Returns error if amount exceeds debt', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
         asset,
-        superAccountId: superAccountId
+        superAccountId: accountId
       })
 
       const lentAmount = BigInt(5)
       await expect(
         accountsService.deposit({
-          accountId: superAccountId,
+          accountId,
           amount: lentAmount
         })
       ).resolves.toBeUndefined()
       await expect(
         accountsService.extendCredit({
           accountId,
+          subAccountId,
           amount: lentAmount,
           autoApply: true
         })
@@ -2222,7 +2431,7 @@ describe('Accounts Service', (): void => {
       const depositAmount = BigInt(5)
       await expect(
         accountsService.deposit({
-          accountId: accountId,
+          accountId: subAccountId,
           amount: depositAmount
         })
       ).resolves.toBeUndefined()
@@ -2230,14 +2439,15 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.settleDebt({
           accountId,
-          amount: BigInt(10)
+          subAccountId,
+          amount: depositAmount + lentAmount
         })
       ).resolves.toEqual(CreditError.InsufficientDebt)
 
       await expect(
-        accountsService.getAccountBalance(superAccountId)
+        accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: superAccountId,
+        id: accountId,
         asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
@@ -2246,9 +2456,9 @@ describe('Accounts Service', (): void => {
         totalLent: lentAmount
       })
       await expect(
-        accountsService.getAccountBalance(accountId)
+        accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: accountId,
+        id: subAccountId,
         asset,
         balance: depositAmount + lentAmount,
         availableCredit: BigInt(0),
@@ -2259,22 +2469,23 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient sub-account balance', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+      const { accountId, asset } = await accountFactory.build()
+      const { accountId: subAccountId } = await accountFactory.build({
         asset,
-        superAccountId: superAccountId
+        superAccountId: accountId
       })
 
       const lentAmount = BigInt(5)
       await expect(
         accountsService.deposit({
-          accountId: superAccountId,
+          accountId,
           amount: lentAmount
         })
       ).resolves.toBeUndefined()
       await expect(
         accountsService.extendCredit({
           accountId,
+          subAccountId,
           amount: lentAmount,
           autoApply: true
         })
@@ -2283,7 +2494,7 @@ describe('Accounts Service', (): void => {
       const withdrawAmount = BigInt(1)
       await expect(
         accountsService.withdraw({
-          accountId,
+          accountId: subAccountId,
           amount: withdrawAmount
         })
       ).resolves.toBeUndefined()
@@ -2291,14 +2502,15 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.settleDebt({
           accountId,
+          subAccountId,
           amount: lentAmount
         })
       ).resolves.toEqual(CreditError.InsufficientBalance)
 
       await expect(
-        accountsService.getAccountBalance(superAccountId)
+        accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: superAccountId,
+        id: accountId,
         asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
@@ -2307,9 +2519,9 @@ describe('Accounts Service', (): void => {
         totalLent: lentAmount
       })
       await expect(
-        accountsService.getAccountBalance(accountId)
+        accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: accountId,
+        id: subAccountId,
         asset,
         balance: lentAmount - withdrawAmount,
         availableCredit: BigInt(0),

@@ -95,25 +95,24 @@ export class IlpAccount extends BaseModel {
     return formattedJson
   }
 
-  public hasSuperAccount(): this is IlpAccountWithSuperAccount {
+  public isSubAccount(): this is SubAccount {
     return !!this.superAccount
   }
 
-  public forEachNestedAccount(
-    callback: (account: IlpAccountWithSuperAccount) => void
-  ): void {
+  public hasSuperAccount(id: string): this is SubAccount {
     for (
       let account = this as IlpAccount;
-      account.hasSuperAccount();
+      account.isSubAccount();
       account = account.superAccount
     ) {
-      callback(account)
+      if (account.superAccount.id === id) {
+        return true
+      }
     }
+    return false
   }
 }
 
-export interface IlpAccountWithSuperAccount extends IlpAccount {
+export interface SubAccount extends IlpAccount {
   superAccount: IlpAccount
-  creditBalanceId: bigint
-  debtBalanceId: bigint
 }
