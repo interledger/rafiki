@@ -1018,9 +1018,9 @@ export class AccountsService implements AccountsServiceInterface {
       account = account.superAccount
     ) {
       if (autoApply) {
-        transfers.push(AccountsService.increaseDebt({ account, amount }))
+        transfers.push(increaseDebt({ account, amount }))
       } else {
-        transfers.push(AccountsService.increaseCredit({ account, amount }))
+        transfers.push(increaseCredit({ account, amount }))
       }
     }
     if (autoApply) {
@@ -1074,8 +1074,8 @@ export class AccountsService implements AccountsServiceInterface {
       account.isSubAccount() && account.id !== accountId;
       account = account.superAccount
     ) {
-      transfers.push(AccountsService.decreaseCredit({ account, amount }))
-      transfers.push(AccountsService.increaseDebt({ account, amount }))
+      transfers.push(decreaseCredit({ account, amount }))
+      transfers.push(increaseDebt({ account, amount }))
     }
     transfers.push({
       sourceBalanceId: account.balanceId,
@@ -1126,7 +1126,7 @@ export class AccountsService implements AccountsServiceInterface {
       account.isSubAccount() && account.id !== accountId;
       account = account.superAccount
     ) {
-      transfers.push(AccountsService.decreaseCredit({ account, amount }))
+      transfers.push(decreaseCredit({ account, amount }))
     }
     const err = await this.createTransfers(transfers)
     if (err) {
@@ -1170,9 +1170,9 @@ export class AccountsService implements AccountsServiceInterface {
       account.isSubAccount() && account.id !== accountId;
       account = account.superAccount
     ) {
-      transfers.push(AccountsService.decreaseDebt({ account, amount }))
+      transfers.push(decreaseDebt({ account, amount }))
       if (revolve !== false) {
-        transfers.push(AccountsService.increaseCredit({ account, amount }))
+        transfers.push(increaseCredit({ account, amount }))
       }
     }
     transfers.push({
@@ -1193,82 +1193,6 @@ export class AccountsService implements AccountsServiceInterface {
     }
   }
 
-  private static increaseCredit({
-    account,
-    amount
-  }: {
-    account: SubAccount
-    amount: bigint
-  }): BalanceTransfer {
-    if (!account.creditBalanceId) {
-      throw new UnknownBalanceError(account.id)
-    } else if (!account.superAccount.creditExtendedBalanceId) {
-      throw new UnknownBalanceError(account.superAccount.id)
-    }
-    return {
-      sourceBalanceId: account.superAccount.creditExtendedBalanceId,
-      destinationBalanceId: account.creditBalanceId,
-      amount
-    }
-  }
-
-  private static decreaseCredit({
-    account,
-    amount
-  }: {
-    account: SubAccount
-    amount: bigint
-  }): BalanceTransfer {
-    if (!account.creditBalanceId) {
-      throw new UnknownBalanceError(account.id)
-    } else if (!account.superAccount.creditExtendedBalanceId) {
-      throw new UnknownBalanceError(account.superAccount.id)
-    }
-    return {
-      sourceBalanceId: account.creditBalanceId,
-      destinationBalanceId: account.superAccount.creditExtendedBalanceId,
-      amount
-    }
-  }
-
-  private static increaseDebt({
-    account,
-    amount
-  }: {
-    account: SubAccount
-    amount: bigint
-  }): BalanceTransfer {
-    if (!account.debtBalanceId) {
-      throw new UnknownBalanceError(account.id)
-    } else if (!account.superAccount.lentBalanceId) {
-      throw new UnknownBalanceError(account.superAccount.id)
-    }
-    return {
-      sourceBalanceId: account.superAccount.lentBalanceId,
-      destinationBalanceId: account.debtBalanceId,
-      amount
-    }
-  }
-
-  private static decreaseDebt({
-    account,
-    amount
-  }: {
-    account: SubAccount
-    amount: bigint
-  }): BalanceTransfer {
-    if (!account.debtBalanceId) {
-      throw new UnknownBalanceError(account.id)
-    } else if (!account.superAccount.lentBalanceId) {
-      throw new UnknownBalanceError(account.superAccount.id)
-    }
-    return {
-      sourceBalanceId: account.debtBalanceId,
-      destinationBalanceId: account.superAccount.lentBalanceId,
-      amount
-    }
-  }
-
   private async getAccountWithSuperAccounts(
     accountId: string
   ): Promise<IlpAccountModel | undefined> {
@@ -1278,5 +1202,81 @@ export class AccountsService implements AccountsServiceInterface {
       })
       .findById(accountId)
     return account || undefined
+  }
+}
+
+function increaseCredit({
+  account,
+  amount
+}: {
+  account: SubAccount
+  amount: bigint
+}): BalanceTransfer {
+  if (!account.creditBalanceId) {
+    throw new UnknownBalanceError(account.id)
+  } else if (!account.superAccount.creditExtendedBalanceId) {
+    throw new UnknownBalanceError(account.superAccount.id)
+  }
+  return {
+    sourceBalanceId: account.superAccount.creditExtendedBalanceId,
+    destinationBalanceId: account.creditBalanceId,
+    amount
+  }
+}
+
+function decreaseCredit({
+  account,
+  amount
+}: {
+  account: SubAccount
+  amount: bigint
+}): BalanceTransfer {
+  if (!account.creditBalanceId) {
+    throw new UnknownBalanceError(account.id)
+  } else if (!account.superAccount.creditExtendedBalanceId) {
+    throw new UnknownBalanceError(account.superAccount.id)
+  }
+  return {
+    sourceBalanceId: account.creditBalanceId,
+    destinationBalanceId: account.superAccount.creditExtendedBalanceId,
+    amount
+  }
+}
+
+function increaseDebt({
+  account,
+  amount
+}: {
+  account: SubAccount
+  amount: bigint
+}): BalanceTransfer {
+  if (!account.debtBalanceId) {
+    throw new UnknownBalanceError(account.id)
+  } else if (!account.superAccount.lentBalanceId) {
+    throw new UnknownBalanceError(account.superAccount.id)
+  }
+  return {
+    sourceBalanceId: account.superAccount.lentBalanceId,
+    destinationBalanceId: account.debtBalanceId,
+    amount
+  }
+}
+
+function decreaseDebt({
+  account,
+  amount
+}: {
+  account: SubAccount
+  amount: bigint
+}): BalanceTransfer {
+  if (!account.debtBalanceId) {
+    throw new UnknownBalanceError(account.id)
+  } else if (!account.superAccount.lentBalanceId) {
+    throw new UnknownBalanceError(account.superAccount.id)
+  }
+  return {
+    sourceBalanceId: account.debtBalanceId,
+    destinationBalanceId: account.superAccount.lentBalanceId,
+    amount
   }
 }
