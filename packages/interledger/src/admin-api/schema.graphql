@@ -49,6 +49,10 @@ type Mutation {
 
   "Extend Credit"
   extendCredit(
+    "Account extending credit."
+    accountId: ID!
+    "Sub-account to which credit is extended."
+    subAccountId: ID!
     "Amount of additional line of credit."
     amount: UInt64!
     "Automatically utilized and applied to the account balance."
@@ -57,22 +61,34 @@ type Mutation {
 
   "Revoke Credit"
   revokeCredit(
-    "Amount of additional line of credit."
+    "Account revoking credit."
+    accountId: ID!
+    "Sub-account to which credit is revoked."
+    subAccountId: ID!
+    "Amount of revoked line of credit."
     amount: UInt64!
   ): RevokeCreditMutationResponse
 
   "Utilize Credit"
   utilizeCredit(
-    "Amount of additional line of credit."
+    "Account extending credit."
+    accountId: ID!
+    "Sub-account to which credit is extended."
+    subAccountId: ID!
+    "Amount of utilized line of credit."
     amount: UInt64!
   ): UtilizeCreditMutationResponse
 
-  "Settle Credit"
+  "Settle Debt"
   settleDebt(
-    "Amount of additional line of debt."
+    "Account collecting debt."
+    accountId: ID!
+    "Sub-account settling debt."
+    subAccountId: ID!
+    "Amount of debt."
     amount: UInt64!
     "Replenish the account's line of credit commensurate with the debt settled."
-    autoApply: Boolean! = true
+    revolve: Boolean! = true
   ): SettleDebtMutationResponse
 
   "Create webhook"

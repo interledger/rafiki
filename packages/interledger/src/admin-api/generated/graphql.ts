@@ -224,7 +224,7 @@ export type Mutation = {
   revokeCredit?: Maybe<RevokeCreditMutationResponse>;
   /** Utilize Credit */
   utilizeCredit?: Maybe<UtilizeCreditMutationResponse>;
-  /** Settle Credit */
+  /** Settle Debt */
   settleDebt?: Maybe<SettleDebtMutationResponse>;
   /** Create webhook */
   createWebhook?: Maybe<CreateWebhookMutationResponse>;
@@ -264,24 +264,32 @@ export type MutationTransferArgs = {
 
 
 export type MutationExtendCreditArgs = {
+  accountId: Scalars['ID'];
+  subAccountId: Scalars['ID'];
   amount: Scalars['UInt64'];
   autoApply?: Scalars['Boolean'];
 };
 
 
 export type MutationRevokeCreditArgs = {
+  accountId: Scalars['ID'];
+  subAccountId: Scalars['ID'];
   amount: Scalars['UInt64'];
 };
 
 
 export type MutationUtilizeCreditArgs = {
+  accountId: Scalars['ID'];
+  subAccountId: Scalars['ID'];
   amount: Scalars['UInt64'];
 };
 
 
 export type MutationSettleDebtArgs = {
+  accountId: Scalars['ID'];
+  subAccountId: Scalars['ID'];
   amount: Scalars['UInt64'];
-  autoApply?: Scalars['Boolean'];
+  revolve?: Scalars['Boolean'];
 };
 
 
@@ -835,10 +843,10 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   deleteIlpAccount?: Resolver<ResolversTypes['DeleteIlpAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationDeleteIlpAccountArgs, 'id'>>;
   createIlpSubAccount?: Resolver<ResolversTypes['CreateIlpSubAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateIlpSubAccountArgs, 'superAccountId'>>;
   transfer?: Resolver<Maybe<ResolversTypes['TransferMutationResponse']>, ParentType, ContextType, RequireFields<MutationTransferArgs, 'sourceAmount' | 'sourceAccountId' | 'destinationAccountId' | 'idempotencyKey'>>;
-  extendCredit?: Resolver<Maybe<ResolversTypes['ExtendCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationExtendCreditArgs, 'amount' | 'autoApply'>>;
-  revokeCredit?: Resolver<Maybe<ResolversTypes['RevokeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeCreditArgs, 'amount'>>;
-  utilizeCredit?: Resolver<Maybe<ResolversTypes['UtilizeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationUtilizeCreditArgs, 'amount'>>;
-  settleDebt?: Resolver<Maybe<ResolversTypes['SettleDebtMutationResponse']>, ParentType, ContextType, RequireFields<MutationSettleDebtArgs, 'amount' | 'autoApply'>>;
+  extendCredit?: Resolver<Maybe<ResolversTypes['ExtendCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationExtendCreditArgs, 'accountId' | 'subAccountId' | 'amount' | 'autoApply'>>;
+  revokeCredit?: Resolver<Maybe<ResolversTypes['RevokeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeCreditArgs, 'accountId' | 'subAccountId' | 'amount'>>;
+  utilizeCredit?: Resolver<Maybe<ResolversTypes['UtilizeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationUtilizeCreditArgs, 'accountId' | 'subAccountId' | 'amount'>>;
+  settleDebt?: Resolver<Maybe<ResolversTypes['SettleDebtMutationResponse']>, ParentType, ContextType, RequireFields<MutationSettleDebtArgs, 'accountId' | 'subAccountId' | 'amount' | 'revolve'>>;
   createWebhook?: Resolver<Maybe<ResolversTypes['CreateWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateWebhookArgs, 'ilpAccountId'>>;
   updateWebhook?: Resolver<Maybe<ResolversTypes['UpdateWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationUpdateWebhookArgs, 'webhookId'>>;
   deleteWebhook?: Resolver<Maybe<ResolversTypes['DeleteWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationDeleteWebhookArgs, 'webhookId'>>;
