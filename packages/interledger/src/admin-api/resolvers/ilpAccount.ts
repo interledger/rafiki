@@ -5,7 +5,11 @@ import {
   MutationResolvers,
   IlpAccountsConnectionResolvers
 } from '../generated/graphql'
-import { IlpAccount } from '../../accounts/types'
+import {
+  CreateAccountError,
+  IlpAccount,
+  isCreateAccountError
+} from '../../accounts/types'
 
 export const getIlpAccounts: QueryResolvers['ilpAccounts'] = async (
   parent,
@@ -34,9 +38,39 @@ export const createIlpAccount: MutationResolvers['createIlpAccount'] = async (
   args,
   ctx
 ): ResolversTypes['CreateIlpAccountMutationResponse'] => {
-  // TODO:
-  console.log(ctx) // temporary to pass linting
-  return {}
+  try {
+    const accountOrError = await ctx.accountsService.createAccount(args.input)
+    if (isCreateAccountError(accountOrError)) {
+      switch (accountOrError) {
+        case CreateAccountError.DuplicateAccountId:
+          return {
+            code: '409',
+            message: 'Account already exists',
+            success: false
+          }
+        case CreateAccountError.DuplicateIncomingToken:
+          return {
+            code: '409',
+            message: 'Incoming token already exists',
+            success: false
+          }
+        default:
+          throw new Error(`CreateAccountError: ${accountOrError}`)
+      }
+    }
+    return {
+      code: '200',
+      success: true,
+      message: 'Created ILP Account',
+      ilpAccount: accountOrError
+    }
+  } catch (err) {
+    return {
+      code: '400',
+      message: 'Error trying to create account',
+      success: false
+    }
+  }
 }
 
 export const updateIlpAccount: MutationResolvers['updateIlpAccount'] = async (

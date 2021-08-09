@@ -26,7 +26,9 @@ type Query {
 
 type Mutation {
   "Create Interledger account"
-  createIlpAccount: CreateIlpAccountMutationResponse!
+  createIlpAccount(
+    input: CreateIlpAccountInput!
+  ): CreateIlpAccountMutationResponse!
 
   "Update Interledger account"
   updateIlpAccount: UpdateIlpAccountMutationResponse!
@@ -115,6 +117,8 @@ type Mutation {
     ilpAccountId: ID!
     "Amount of deposit."
     amount: UInt64!
+    "The id of the deposit."
+    id: ID
   ): CreateDepositMutationResponse
 
   "Create withdrawal"
@@ -123,6 +127,8 @@ type Mutation {
     ilpAccountId: ID!
     "Amount of deposit."
     amount: UInt64!
+    "The id of the withdrawal."
+    id: ID
   ): CreateWithdrawalMutationResponse
 
   "Finalize pending withdrawal"
@@ -146,6 +152,43 @@ type IlpAccountsConnection {
 type IlpAccountEdge {
   node: IlpAccount!
   cursor: String!
+}
+
+input CreateIlpAccountInput {
+  id: ID
+  disabled: Boolean
+  maxPacketAmount: UInt64
+  http: HttpInput
+  asset: AssetInput!
+  stream: StreamInput
+  routing: RoutingInput
+}
+
+input HttpInput {
+  incoming: HttpIncomingInput!
+  outgoing: HttpOutgoingInput!
+}
+
+input HttpIncomingInput {
+  authTokens: [String!]!
+}
+
+input HttpOutgoingInput {
+  authToken: String!
+  endpoint: String!
+}
+
+input AssetInput {
+  code: String!
+  scale: Int!
+}
+
+input StreamInput {
+  enabled: Boolean!
+}
+
+input RoutingInput {
+  staticIlpAddress: String!
 }
 
 type IlpAccount {
@@ -289,7 +332,7 @@ type CreateIlpAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  ilpAccount: IlpAccount!
+  ilpAccount: IlpAccount
 }
 
 type UpdateIlpAccountMutationResponse implements MutationResponse {

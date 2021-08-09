@@ -20,6 +20,11 @@ export type Asset = {
   scale: Scalars['Int'];
 };
 
+export type AssetInput = {
+  code: Scalars['String'];
+  scale: Scalars['Int'];
+};
+
 export type Balance = {
   __typename?: 'Balance';
   id: Scalars['ID'];
@@ -41,12 +46,22 @@ export type CreateDepositMutationResponse = MutationResponse & {
   deposit: Deposit;
 };
 
+export type CreateIlpAccountInput = {
+  id?: Maybe<Scalars['ID']>;
+  disabled?: Maybe<Scalars['Boolean']>;
+  maxPacketAmount?: Maybe<Scalars['UInt64']>;
+  http?: Maybe<HttpInput>;
+  asset: AssetInput;
+  stream?: Maybe<StreamInput>;
+  routing?: Maybe<RoutingInput>;
+};
+
 export type CreateIlpAccountMutationResponse = MutationResponse & {
   __typename?: 'CreateIlpAccountMutationResponse';
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
-  ilpAccount: IlpAccount;
+  ilpAccount?: Maybe<IlpAccount>;
 };
 
 export type CreateIlpSubAccountMutationResponse = MutationResponse & {
@@ -125,8 +140,22 @@ export type Http = {
   outgoing: HttpOutgoing;
 };
 
+export type HttpIncomingInput = {
+  authTokens: Array<Scalars['String']>;
+};
+
+export type HttpInput = {
+  incoming: HttpIncomingInput;
+  outgoing: HttpOutgoingInput;
+};
+
 export type HttpOutgoing = {
   __typename?: 'HttpOutgoing';
+  authToken: Scalars['String'];
+  endpoint: Scalars['String'];
+};
+
+export type HttpOutgoingInput = {
   authToken: Scalars['String'];
   endpoint: Scalars['String'];
 };
@@ -230,6 +259,11 @@ export type Mutation = {
 };
 
 
+export type MutationCreateIlpAccountArgs = {
+  input: CreateIlpAccountInput;
+};
+
+
 export type MutationDeleteIlpAccountArgs = {
   id: Scalars['ID'];
 };
@@ -298,12 +332,14 @@ export type MutationDeleteWebhookArgs = {
 export type MutationCreateDepositArgs = {
   ilpAccountId: Scalars['ID'];
   amount: Scalars['UInt64'];
+  id?: Maybe<Scalars['ID']>;
 };
 
 
 export type MutationCreateWithdrawalArgs = {
   ilpAccountId: Scalars['ID'];
   amount: Scalars['UInt64'];
+  id?: Maybe<Scalars['ID']>;
 };
 
 
@@ -403,6 +439,10 @@ export type Routing = {
   dynamicIlpAddress?: Maybe<Scalars['String']>;
 };
 
+export type RoutingInput = {
+  staticIlpAddress: Scalars['String'];
+};
+
 export type SettleDebtMutationResponse = MutationResponse & {
   __typename?: 'SettleDebtMutationResponse';
   code: Scalars['String'];
@@ -412,6 +452,10 @@ export type SettleDebtMutationResponse = MutationResponse & {
 
 export type Stream = {
   __typename?: 'Stream';
+  enabled: Scalars['Boolean'];
+};
+
+export type StreamInput = {
   enabled: Scalars['Boolean'];
 };
 
@@ -569,10 +613,12 @@ export type ResolversTypes = {
   Asset: ResolverTypeWrapper<Partial<Asset>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
+  AssetInput: ResolverTypeWrapper<Partial<AssetInput>>;
   Balance: ResolverTypeWrapper<Partial<Balance>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   CreateDepositMutationResponse: ResolverTypeWrapper<Partial<CreateDepositMutationResponse>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
+  CreateIlpAccountInput: ResolverTypeWrapper<Partial<CreateIlpAccountInput>>;
   CreateIlpAccountMutationResponse: ResolverTypeWrapper<Partial<CreateIlpAccountMutationResponse>>;
   CreateIlpSubAccountMutationResponse: ResolverTypeWrapper<Partial<CreateIlpSubAccountMutationResponse>>;
   CreateWebhookMutationResponse: ResolverTypeWrapper<Partial<CreateWebhookMutationResponse>>;
@@ -585,7 +631,10 @@ export type ResolversTypes = {
   ExtendCreditMutationResponse: ResolverTypeWrapper<Partial<ExtendCreditMutationResponse>>;
   FinalizePendingWithdrawalMutationResponse: ResolverTypeWrapper<Partial<FinalizePendingWithdrawalMutationResponse>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
+  HttpIncomingInput: ResolverTypeWrapper<Partial<HttpIncomingInput>>;
+  HttpInput: ResolverTypeWrapper<Partial<HttpInput>>;
   HttpOutgoing: ResolverTypeWrapper<Partial<HttpOutgoing>>;
+  HttpOutgoingInput: ResolverTypeWrapper<Partial<HttpOutgoingInput>>;
   IlpAccount: ResolverTypeWrapper<Partial<IlpAccount>>;
   IlpAccountEdge: ResolverTypeWrapper<Partial<IlpAccountEdge>>;
   IlpAccountsConnection: ResolverTypeWrapper<Partial<IlpAccountsConnection>>;
@@ -597,8 +646,10 @@ export type ResolversTypes = {
   RevokeCreditMutationResponse: ResolverTypeWrapper<Partial<RevokeCreditMutationResponse>>;
   RollbackPendingWithdrawalMutationResponse: ResolverTypeWrapper<Partial<RollbackPendingWithdrawalMutationResponse>>;
   Routing: ResolverTypeWrapper<Partial<Routing>>;
+  RoutingInput: ResolverTypeWrapper<Partial<RoutingInput>>;
   SettleDebtMutationResponse: ResolverTypeWrapper<Partial<SettleDebtMutationResponse>>;
   Stream: ResolverTypeWrapper<Partial<Stream>>;
+  StreamInput: ResolverTypeWrapper<Partial<StreamInput>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
   UpdateIlpAccountMutationResponse: ResolverTypeWrapper<Partial<UpdateIlpAccountMutationResponse>>;
@@ -617,10 +668,12 @@ export type ResolversParentTypes = {
   Asset: Partial<Asset>;
   String: Partial<Scalars['String']>;
   Int: Partial<Scalars['Int']>;
+  AssetInput: Partial<AssetInput>;
   Balance: Partial<Balance>;
   ID: Partial<Scalars['ID']>;
   CreateDepositMutationResponse: Partial<CreateDepositMutationResponse>;
   Boolean: Partial<Scalars['Boolean']>;
+  CreateIlpAccountInput: Partial<CreateIlpAccountInput>;
   CreateIlpAccountMutationResponse: Partial<CreateIlpAccountMutationResponse>;
   CreateIlpSubAccountMutationResponse: Partial<CreateIlpSubAccountMutationResponse>;
   CreateWebhookMutationResponse: Partial<CreateWebhookMutationResponse>;
@@ -633,7 +686,10 @@ export type ResolversParentTypes = {
   ExtendCreditMutationResponse: Partial<ExtendCreditMutationResponse>;
   FinalizePendingWithdrawalMutationResponse: Partial<FinalizePendingWithdrawalMutationResponse>;
   Http: Partial<Http>;
+  HttpIncomingInput: Partial<HttpIncomingInput>;
+  HttpInput: Partial<HttpInput>;
   HttpOutgoing: Partial<HttpOutgoing>;
+  HttpOutgoingInput: Partial<HttpOutgoingInput>;
   IlpAccount: Partial<IlpAccount>;
   IlpAccountEdge: Partial<IlpAccountEdge>;
   IlpAccountsConnection: Partial<IlpAccountsConnection>;
@@ -645,8 +701,10 @@ export type ResolversParentTypes = {
   RevokeCreditMutationResponse: Partial<RevokeCreditMutationResponse>;
   RollbackPendingWithdrawalMutationResponse: Partial<RollbackPendingWithdrawalMutationResponse>;
   Routing: Partial<Routing>;
+  RoutingInput: Partial<RoutingInput>;
   SettleDebtMutationResponse: Partial<SettleDebtMutationResponse>;
   Stream: Partial<Stream>;
+  StreamInput: Partial<StreamInput>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
   UInt64: Partial<Scalars['UInt64']>;
   UpdateIlpAccountMutationResponse: Partial<UpdateIlpAccountMutationResponse>;
@@ -691,7 +749,7 @@ export type CreateIlpAccountMutationResponseResolvers<ContextType = any, ParentT
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  ilpAccount?: Resolver<ResolversTypes['IlpAccount'], ParentType, ContextType>;
+  ilpAccount?: Resolver<Maybe<ResolversTypes['IlpAccount']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -808,7 +866,7 @@ export type IlpAccountsConnectionResolvers<ContextType = any, ParentType extends
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  createIlpAccount?: Resolver<ResolversTypes['CreateIlpAccountMutationResponse'], ParentType, ContextType>;
+  createIlpAccount?: Resolver<ResolversTypes['CreateIlpAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateIlpAccountArgs, 'input'>>;
   updateIlpAccount?: Resolver<ResolversTypes['UpdateIlpAccountMutationResponse'], ParentType, ContextType>;
   deleteIlpAccount?: Resolver<ResolversTypes['DeleteIlpAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationDeleteIlpAccountArgs, 'id'>>;
   createIlpSubAccount?: Resolver<ResolversTypes['CreateIlpSubAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateIlpSubAccountArgs, 'superAccountId'>>;
