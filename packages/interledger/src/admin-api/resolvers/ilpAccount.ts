@@ -130,9 +130,35 @@ export const createIlpSubAccount: MutationResolvers['createIlpSubAccount'] = asy
   args,
   ctx
 ): ResolversTypes['CreateIlpSubAccountMutationResponse'] => {
-  // TODO:
-  console.log(ctx) // temporary to pass linting
-  return {}
+  try {
+    const accountOrError = await ctx.accountsService.createAccount({
+      superAccountId: args.superAccountId
+    })
+    if (isCreateAccountError(accountOrError)) {
+      switch (accountOrError) {
+        case CreateAccountError.UnknownSuperAccount:
+          return {
+            code: '404',
+            message: 'Unknown super-account',
+            success: false
+          }
+        default:
+          throw new Error(`CreateAccountError: ${accountOrError}`)
+      }
+    }
+    return {
+      code: '200',
+      success: true,
+      message: 'Created ILP Sub-Account',
+      ilpAccount: accountOrError
+    }
+  } catch (err) {
+    return {
+      code: '400',
+      message: 'Error trying to create sub-account',
+      success: false
+    }
+  }
 }
 
 export const getSuperAccount: IlpAccountResolvers['superAccount'] = async (

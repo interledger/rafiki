@@ -205,6 +205,7 @@ input RoutingInput {
 type IlpAccount {
   id: ID!
   disabled: Boolean!
+  superAccountId: ID
   superAccount: IlpAccount
   subAccounts(
     "Paginating forwards: the cursor before the the requested page."
@@ -363,7 +364,7 @@ type CreateIlpSubAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  ilpAccount: IlpAccount!
+  ilpAccount: IlpAccount
 }
 
 type TransferMutationResponse implements MutationResponse {

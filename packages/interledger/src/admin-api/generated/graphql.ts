@@ -69,7 +69,7 @@ export type CreateIlpSubAccountMutationResponse = MutationResponse & {
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
-  ilpAccount: IlpAccount;
+  ilpAccount?: Maybe<IlpAccount>;
 };
 
 export type CreateWebhookMutationResponse = MutationResponse & {
@@ -164,6 +164,7 @@ export type IlpAccount = {
   __typename?: 'IlpAccount';
   id: Scalars['ID'];
   disabled: Scalars['Boolean'];
+  superAccountId?: Maybe<Scalars['ID']>;
   superAccount?: Maybe<IlpAccount>;
   subAccounts: IlpAccountsConnection;
   liquidityAccountId?: Maybe<Scalars['ID']>;
@@ -773,7 +774,7 @@ export type CreateIlpSubAccountMutationResponseResolvers<ContextType = any, Pare
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  ilpAccount?: Resolver<ResolversTypes['IlpAccount'], ParentType, ContextType>;
+  ilpAccount?: Resolver<Maybe<ResolversTypes['IlpAccount']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -854,6 +855,7 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 export type IlpAccountResolvers<ContextType = any, ParentType extends ResolversParentTypes['IlpAccount'] = ResolversParentTypes['IlpAccount']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   disabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  superAccountId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   superAccount?: Resolver<Maybe<ResolversTypes['IlpAccount']>, ParentType, ContextType>;
   subAccounts?: Resolver<ResolversTypes['IlpAccountsConnection'], ParentType, ContextType, RequireFields<IlpAccountSubAccountsArgs, never>>;
   liquidityAccountId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
