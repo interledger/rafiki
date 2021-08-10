@@ -16,9 +16,9 @@ const { InsufficientLiquidityError } = Errors
 describe('Incoming Throughput Middleware', function () {
   const services = RafikiServicesFactory.build()
   const alice = PeerAccountFactory.build({
-    accountId: 'alice'
+    id: 'alice'
   })
-  const bob = PeerAccountFactory.build({ accountId: 'bob' })
+  const bob = PeerAccountFactory.build({ id: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.accounts = {
@@ -100,9 +100,9 @@ describe('Incoming Throughput Middleware', function () {
 
 describe('Outgoing Throughput Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerAccountFactory.build({ accountId: 'alice' })
+  const alice = PeerAccountFactory.build({ id: 'alice' })
   const bob = PeerAccountFactory.build({
-    accountId: 'bob'
+    id: 'bob'
   })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services

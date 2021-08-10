@@ -62,10 +62,11 @@ export interface Pagination {
   last?: number // Backward pagination: limit.
 }
 
-export type UpdateOptions = Omit<
+export type Options = Omit<
   IlpAccount,
-  'disabled' | 'asset' | 'superAccountId'
+  'id' | 'disabled' | 'asset' | 'superAccountId'
 > & {
+  id?: string
   disabled?: boolean
   http?: {
     incoming?: {
@@ -74,12 +75,12 @@ export type UpdateOptions = Omit<
   }
 }
 
-export type CreateAccountOptions = UpdateOptions & {
+export type CreateAccountOptions = Options & {
   asset: Asset
   superAccountId?: never
 }
 
-export type CreateSubAccountOptions = UpdateOptions & {
+export type CreateSubAccountOptions = Options & {
   asset?: never
   superAccountId: string
 }
@@ -101,6 +102,10 @@ export enum CreateAccountError {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isCreateAccountError = (o: any): o is CreateAccountError =>
   Object.values(CreateAccountError).includes(o)
+
+export type UpdateOptions = Options & {
+  id: string
+}
 
 export enum UpdateAccountError {
   DuplicateIncomingToken = 'DuplicateIncomingToken',

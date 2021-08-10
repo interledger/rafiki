@@ -16,12 +16,10 @@ export function createIldcpProtocolController(serverAddress: string) {
       ctx.throw('Invalid address in ILDCP request')
     }
 
-    const clientAddress = await ctx.services.accounts.getAddress(
-      incoming.accountId
-    )
+    const clientAddress = await ctx.services.accounts.getAddress(incoming.id)
     if (!clientAddress) {
       logger.warn('received ILDCP request for peer without an address', {
-        peerId: incoming.accountId
+        peerId: incoming.id
       })
       ctx.throw('ILDCP request from peer without configured address')
     }
@@ -31,7 +29,7 @@ export function createIldcpProtocolController(serverAddress: string) {
     //const clientAddress = router.getAddresses(id)[0]
 
     logger.info('responding to ILDCP request from child', {
-      peerId: incoming.accountId,
+      peerId: incoming.id,
       address: clientAddress
     })
 

@@ -23,13 +23,13 @@ export class AccountFactory {
     let accountOptions: CreateOptions
     if (isSubAccount(options)) {
       accountOptions = {
-        accountId: options.accountId || uuid(),
+        id: options.id || uuid(),
         disabled: options.disabled || false,
         superAccountId: options.superAccountId
       }
     } else {
       accountOptions = {
-        accountId: options.accountId || uuid(),
+        id: options.id || uuid(),
         disabled: options.disabled || false,
         asset: options.asset || randomAsset()
       }

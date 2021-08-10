@@ -33,18 +33,18 @@ export function createIncomingRateLimitMiddleware(
     }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    let bucket = buckets.get(incoming.accountId)
+    let bucket = buckets.get(incoming.id)
     if (!bucket) {
       // TODO: When we add the ability to update middleware, our state will get
       //   reset every update, which may not be desired.
       bucket = new TokenBucket({ refillPeriod, refillCount, capacity })
-      buckets.set(incoming.accountId, bucket)
+      buckets.set(incoming.id, bucket)
     }
     if (!bucket.take()) {
       logger.warn('rate limited a packet', {
         bucket,
         prepare,
-        accountId: incoming.accountId
+        accountId: incoming.id
       })
       throw new RateLimitedError('too many requests, throttling.')
     }

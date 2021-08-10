@@ -86,7 +86,7 @@ describe('Account Resolvers', (): void => {
             }
           `,
           variables: {
-            accountId: account.accountId
+            accountId: account.id
           }
         })
         .then(
@@ -99,7 +99,7 @@ describe('Account Resolvers', (): void => {
           }
         )
 
-      expect(query.id).toEqual(account.accountId)
+      expect(query.id).toEqual(account.id)
     })
 
     test('pageInfo is correct on default query without params', async (): Promise<void> => {
@@ -139,8 +139,8 @@ describe('Account Resolvers', (): void => {
       expect(query.edges).toHaveLength(20)
       expect(query.pageInfo.hasNextPage).toBeTruthy()
       expect(query.pageInfo.hasPreviousPage).toBeFalsy()
-      expect(query.pageInfo.startCursor).toEqual(accounts[0].accountId)
-      expect(query.pageInfo.endCursor).toEqual(accounts[19].accountId)
+      expect(query.pageInfo.startCursor).toEqual(accounts[0].id)
+      expect(query.pageInfo.endCursor).toEqual(accounts[19].id)
     }, 10_000)
 
     test('No accounts, but accounts requested', async (): Promise<void> => {
@@ -218,8 +218,8 @@ describe('Account Resolvers', (): void => {
       expect(query.edges).toHaveLength(10)
       expect(query.pageInfo.hasNextPage).toBeTruthy()
       expect(query.pageInfo.hasPreviousPage).toBeFalsy()
-      expect(query.pageInfo.startCursor).toEqual(accounts[0].accountId)
-      expect(query.pageInfo.endCursor).toEqual(accounts[9].accountId)
+      expect(query.pageInfo.startCursor).toEqual(accounts[0].id)
+      expect(query.pageInfo.endCursor).toEqual(accounts[9].id)
     }, 10_000)
 
     test('pageInfo is correct on pagination from middle', async (): Promise<void> => {
@@ -247,7 +247,7 @@ describe('Account Resolvers', (): void => {
             }
           `,
           variables: {
-            after: accounts[19].accountId
+            after: accounts[19].id
           }
         })
         .then(
@@ -262,8 +262,8 @@ describe('Account Resolvers', (): void => {
       expect(query.edges).toHaveLength(20)
       expect(query.pageInfo.hasNextPage).toBeTruthy()
       expect(query.pageInfo.hasPreviousPage).toBeTruthy()
-      expect(query.pageInfo.startCursor).toEqual(accounts[20].accountId)
-      expect(query.pageInfo.endCursor).toEqual(accounts[39].accountId)
+      expect(query.pageInfo.startCursor).toEqual(accounts[20].id)
+      expect(query.pageInfo.endCursor).toEqual(accounts[39].id)
     }, 10_000)
 
     test('pageInfo is correct on pagination near end', async (): Promise<void> => {
@@ -291,7 +291,7 @@ describe('Account Resolvers', (): void => {
             }
           `,
           variables: {
-            after: accounts[44].accountId
+            after: accounts[44].id
           }
         })
         .then(
@@ -306,8 +306,8 @@ describe('Account Resolvers', (): void => {
       expect(query.edges).toHaveLength(5)
       expect(query.pageInfo.hasNextPage).toBeFalsy()
       expect(query.pageInfo.hasPreviousPage).toBeTruthy()
-      expect(query.pageInfo.startCursor).toEqual(accounts[45].accountId)
-      expect(query.pageInfo.endCursor).toEqual(accounts[49].accountId)
+      expect(query.pageInfo.startCursor).toEqual(accounts[45].id)
+      expect(query.pageInfo.endCursor).toEqual(accounts[49].id)
     }, 10_000)
   })
 })

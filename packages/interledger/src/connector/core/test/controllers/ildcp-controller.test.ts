@@ -13,8 +13,8 @@ import { createIldcpProtocolController } from '../../controllers/ildcp-protocol'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 
 describe('ILDCP Controller', function () {
-  const alice = PeerAccountFactory.build({ accountId: 'alice' })
-  const self = PeerAccountFactory.build({ accountId: 'self' })
+  const alice = PeerAccountFactory.build({ id: 'alice' })
+  const self = PeerAccountFactory.build({ id: 'self' })
   const services = RafikiServicesFactory.build({})
   const middleware = createIldcpProtocolController('test.rafiki')
 
@@ -64,7 +64,7 @@ describe('ILDCP Controller', function () {
 
   test.skip('returns an ildcp response if incoming account is not a peer', async () => {
     const bob = await services.accounts.createAccount(
-      AccountFactory.build({ accountId: 'bob' })
+      AccountFactory.build({ id: 'bob' })
     )
     const ctx = makeContext(
       IlpPrepareFactory.build({ destination: 'peer.config' })

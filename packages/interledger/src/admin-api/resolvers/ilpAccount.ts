@@ -16,9 +16,9 @@ export const getIlpAccounts: QueryResolvers['ilpAccounts'] = async (
   const accounts = await ctx.accountsService.getAccountsPage(args)
   return {
     edges: accounts.map((account: IlpAccount) => ({
-      cursor: account.accountId,
+      cursor: account.id,
       node: {
-        id: account.accountId
+        id: account.id
       }
     }))
   }
@@ -32,7 +32,7 @@ export const getIlpAccount: QueryResolvers['ilpAccount'] = async (
   // TODO: get account all information from accounts service
   const account = await ctx.accountsService.getAccount(args.id)
   return {
-    id: account.accountId
+    id: account.id
   }
 }
 

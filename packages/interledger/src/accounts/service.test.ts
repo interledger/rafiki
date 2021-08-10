@@ -78,22 +78,26 @@ describe('Accounts Service', (): void => {
 
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {
-      const accountId = uuid()
-      const account = {
-        accountId,
+      const account: CreateOptions = {
         asset: randomAsset()
       }
       const accountOrError = await accountsService.createAccount(account)
       expect(isCreateAccountError(accountOrError)).toEqual(false)
+      if (isCreateAccountError(accountOrError)) {
+        fail()
+      }
       const expectedAccount = {
         ...account,
+        id: accountOrError.id,
         disabled: false,
         stream: {
           enabled: false
         }
       }
       expect(accountOrError).toEqual(expectedAccount)
-      const retrievedAccount = await IlpAccountModel.query().findById(accountId)
+      const retrievedAccount = await IlpAccountModel.query().findById(
+        accountOrError.id
+      )
       const balances = await tbClient.lookupAccounts([
         retrievedAccount.balanceId
       ])
@@ -105,9 +109,9 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can create an account with all settings', async (): Promise<void> => {
-      const accountId = uuid()
+      const id = uuid()
       const account: CreateOptions = {
-        accountId,
+        id,
         disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100),
@@ -124,13 +128,15 @@ describe('Accounts Service', (): void => {
           enabled: true
         },
         routing: {
-          staticIlpAddress: 'g.rafiki.' + accountId
+          staticIlpAddress: 'g.rafiki.' + id
         }
       }
       const accountOrError = await accountsService.createAccount(account)
       expect(isCreateAccountError(accountOrError)).toEqual(false)
       const expectedAccount: IlpAccount = {
         ...account,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        id: account.id!,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         disabled: account.disabled!,
         http: {
@@ -139,7 +145,7 @@ describe('Accounts Service', (): void => {
         }
       }
       expect(accountOrError).toEqual(expectedAccount)
-      const retrievedAccount = await IlpAccountModel.query().findById(accountId)
+      const retrievedAccount = await IlpAccountModel.query().findById(id)
       const balances = await tbClient.lookupAccounts([
         retrievedAccount.balanceId
       ])
@@ -152,8 +158,7 @@ describe('Accounts Service', (): void => {
 
     test('Cannot create an account with non-existent super-account', async (): Promise<void> => {
       const superAccountId = uuid()
-      const account: CreateOptions = {
-        accountId: uuid(),
+      const account = {
         superAccountId
       }
 
@@ -162,7 +167,7 @@ describe('Accounts Service', (): void => {
       )
 
       await accountFactory.build({
-        accountId: superAccountId,
+        id: superAccountId,
         asset: randomAsset()
       })
 
@@ -174,21 +179,19 @@ describe('Accounts Service', (): void => {
       const account = await accountFactory.build()
       await expect(
         accountsService.createAccount({
-          accountId: account.accountId,
+          id: account.id,
           asset: randomAsset()
         })
       ).resolves.toEqual(CreateAccountError.DuplicateAccountId)
-      const retrievedAccount = await accountsService.getAccount(
-        account.accountId
-      )
+      const retrievedAccount = await accountsService.getAccount(account.id)
       expect(retrievedAccount).toEqual(account)
     })
 
     test('Cannot create an account with duplicate incoming tokens', async (): Promise<void> => {
-      const accountId = uuid()
+      const id = uuid()
       const incomingToken = uuid()
       const account = {
-        accountId,
+        id,
         asset: randomAsset(),
         http: {
           incoming: {
@@ -205,8 +208,9 @@ describe('Accounts Service', (): void => {
         CreateAccountError.DuplicateIncomingToken
       )
 
-      const retrievedAccount = await IlpAccountModel.query().findById(accountId)
-      expect(retrievedAccount).toBeUndefined()
+      await expect(
+        IlpAccountModel.query().findById(id)
+      ).resolves.toBeUndefined()
     })
 
     test('Cannot create an account with duplicate incoming token', async (): Promise<void> => {
@@ -228,9 +232,9 @@ describe('Accounts Service', (): void => {
         await accountsService.createAccount(account)
       }
       {
-        const accountId = uuid()
+        const id = uuid()
         const account = {
-          accountId,
+          id,
           asset: randomAsset(),
           http: {
             incoming: {
@@ -245,17 +249,15 @@ describe('Accounts Service', (): void => {
         await expect(accountsService.createAccount(account)).resolves.toEqual(
           CreateAccountError.DuplicateIncomingToken
         )
-        const retrievedAccount = await IlpAccountModel.query().findById(
-          accountId
-        )
-        expect(retrievedAccount).toBeUndefined()
+        await expect(
+          IlpAccountModel.query().findById(id)
+        ).resolves.toBeUndefined()
       }
     })
 
     test('Auto-creates corresponding liquidity and settlement accounts', async (): Promise<void> => {
       const asset = randomAsset()
-      const account = {
-        accountId: uuid(),
+      const account: CreateOptions = {
         asset
       }
 
@@ -296,10 +298,7 @@ describe('Accounts Service', (): void => {
         })
       }
 
-      await accountsService.createAccount({
-        ...account,
-        accountId: uuid()
-      })
+      await accountsService.createAccount(account)
 
       {
         const balances = await tbClient.lookupAccounts([
@@ -322,10 +321,9 @@ describe('Accounts Service', (): void => {
   describe('Get Account', (): void => {
     test('Can get an account', async (): Promise<void> => {
       const account = await accountFactory.build()
-      const retrievedAccount = await accountsService.getAccount(
-        account.accountId
+      await expect(accountsService.getAccount(account.id)).resolves.toEqual(
+        account
       )
-      expect(retrievedAccount).toEqual(account)
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
@@ -338,15 +336,13 @@ describe('Accounts Service', (): void => {
       const account = await accountFactory.build()
       const expectedSubAccounts = [
         await accountFactory.build({
-          superAccountId: account.accountId
+          superAccountId: account.id
         }),
         await accountFactory.build({
-          superAccountId: account.accountId
+          superAccountId: account.id
         })
       ]
-      const subAccounts = await accountsService.getSubAccounts(
-        account.accountId
-      )
+      const subAccounts = await accountsService.getSubAccounts(account.id)
       expect(subAccounts).toEqual(expectedSubAccounts)
     })
 
@@ -357,7 +353,7 @@ describe('Accounts Service', (): void => {
 
   describe('Update Account', (): void => {
     test('Can update an account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build({
+      const { id, asset } = await accountFactory.build({
         disabled: false,
         http: {
           incoming: {
@@ -373,7 +369,7 @@ describe('Accounts Service', (): void => {
         }
       })
       const updateOptions: UpdateOptions = {
-        accountId,
+        id,
         disabled: true,
         maxPacketAmount: BigInt(200),
         http: {
@@ -400,13 +396,13 @@ describe('Accounts Service', (): void => {
         asset
       }
       expect(accountOrError as IlpAccount).toEqual(expectedAccount)
-      const account = await accountsService.getAccount(accountId)
+      const account = await accountsService.getAccount(id)
       expect(account).toEqual(expectedAccount)
     })
 
     test('Cannot update nonexistent account', async (): Promise<void> => {
       const updateOptions: UpdateOptions = {
-        accountId: uuid(),
+        id: uuid(),
         disabled: true
       }
 
@@ -431,7 +427,7 @@ describe('Accounts Service', (): void => {
 
       const account = await accountFactory.build()
       const updateOptions: UpdateOptions = {
-        accountId: account.accountId,
+        id: account.id,
         disabled: true,
         maxPacketAmount: BigInt(200),
         http: {
@@ -447,10 +443,9 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.updateAccount(updateOptions)
       ).resolves.toEqual(UpdateAccountError.DuplicateIncomingToken)
-      const retrievedAccount = await accountsService.getAccount(
-        account.accountId
+      await expect(accountsService.getAccount(account.id)).resolves.toEqual(
+        account
       )
-      expect(retrievedAccount).toEqual(account)
     })
 
     test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
@@ -458,7 +453,7 @@ describe('Accounts Service', (): void => {
 
       const account = await accountFactory.build()
       const updateOptions: UpdateOptions = {
-        accountId: account.accountId,
+        id: account.id,
         disabled: true,
         maxPacketAmount: BigInt(200),
         http: {
@@ -474,21 +469,20 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.updateAccount(updateOptions)
       ).resolves.toEqual(UpdateAccountError.DuplicateIncomingToken)
-      const retrievedAccount = await accountsService.getAccount(
-        account.accountId
+      await expect(accountsService.getAccount(account.id)).resolves.toEqual(
+        account
       )
-      expect(retrievedAccount).toEqual(account)
     })
   })
 
   describe('Get Account Balance', (): void => {
     test("Can retrieve an account's balance", async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { id, asset } = await accountFactory.build()
 
       {
-        const balance = await accountsService.getAccountBalance(accountId)
+        const balance = await accountsService.getAccountBalance(id)
         expect(balance).toEqual({
-          id: accountId,
+          id,
           asset,
           balance: BigInt(0),
           availableCredit: BigInt(0),
@@ -789,7 +783,7 @@ describe('Accounts Service', (): void => {
 
   describe('Account Deposit', (): void => {
     test('Can deposit to account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { id: accountId, asset } = await accountFactory.build()
       const amount = BigInt(10)
       const error = await accountsService.deposit({
         accountId,
@@ -829,7 +823,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can deposit with idempotency key', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(10)
       const depositId = randomId()
       {
@@ -861,7 +855,7 @@ describe('Accounts Service', (): void => {
 
   describe('Account Withdraw', (): void => {
     test('Can withdraw from account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { id: accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(10)
       await accountsService.deposit({
         accountId,
@@ -906,7 +900,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { id: accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(5)
       await accountsService.deposit({
         accountId,
@@ -931,7 +925,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can withdraw with idempotency key', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       const startingBalance = BigInt(10)
       await accountsService.deposit({
         accountId,
@@ -969,7 +963,7 @@ describe('Accounts Service', (): void => {
   describe('Account Tokens', (): void => {
     test('Can retrieve account by incoming token', async (): Promise<void> => {
       const incomingToken = uuid()
-      const { accountId } = await accountFactory.build({
+      const { id } = await accountFactory.build({
         http: {
           incoming: {
             authTokens: [incomingToken, uuid()]
@@ -981,9 +975,7 @@ describe('Accounts Service', (): void => {
         }
       })
       const account = await accountsService.getAccountByToken(incomingToken)
-      expect(account).not.toBeUndefined()
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      expect(account!.accountId).toEqual(accountId)
+      expect(account?.id).toEqual(id)
     })
 
     test('Returns undefined if no account exists with token', async (): Promise<void> => {
@@ -995,7 +987,7 @@ describe('Accounts Service', (): void => {
   describe('Get Account By ILP Address', (): void => {
     test('Can retrieve account by ILP address', async (): Promise<void> => {
       const ilpAddress = 'test.rafiki'
-      const { accountId } = await accountFactory.build({
+      const { id } = await accountFactory.build({
         routing: {
           staticIlpAddress: ilpAddress
         }
@@ -1004,17 +996,13 @@ describe('Accounts Service', (): void => {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress + '.suffix'
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
@@ -1025,25 +1013,21 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can retrieve account by configured peer ILP address', async (): Promise<void> => {
-      const { ilpAddress, accountId } = config.peerAddresses[0]
+      const { ilpAddress, accountId: id } = config.peerAddresses[0]
       await accountFactory.build({
-        accountId
+        id
       })
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress + '.suffix'
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
@@ -1054,23 +1038,19 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can retrieve account by server ILP address', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const ilpAddress = config.ilpAddress + '.' + accountId
+      const { id } = await accountFactory.build()
+      const ilpAddress = config.ilpAddress + '.' + id
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress + '.suffix'
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
@@ -1096,31 +1076,31 @@ describe('Accounts Service', (): void => {
   describe('Get Account Address', (): void => {
     test("Can get account's ILP address", async (): Promise<void> => {
       const ilpAddress = 'test.rafiki'
-      const { accountId } = await accountFactory.build({
+      const { id } = await accountFactory.build({
         routing: {
           staticIlpAddress: ilpAddress
         }
       })
       {
-        const staticIlpAddress = await accountsService.getAddress(accountId)
+        const staticIlpAddress = await accountsService.getAddress(id)
         expect(staticIlpAddress).toEqual(ilpAddress)
       }
     })
 
     test("Can get account's configured peer ILP address", async (): Promise<void> => {
-      const { ilpAddress, accountId } = config.peerAddresses[0]
-      await accountFactory.build({ accountId })
+      const { ilpAddress, accountId: id } = config.peerAddresses[0]
+      await accountFactory.build({ id })
       {
-        const peerAddress = await accountsService.getAddress(accountId)
+        const peerAddress = await accountsService.getAddress(id)
         expect(peerAddress).toEqual(ilpAddress)
       }
     })
 
     test("Can get account's address by server ILP address", async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id } = await accountFactory.build()
       {
-        const ilpAddress = await accountsService.getAddress(accountId)
-        expect(ilpAddress).toEqual(config.ilpAddress + '.' + accountId)
+        const ilpAddress = await accountsService.getAddress(id)
+        expect(ilpAddress).toEqual(config.ilpAddress + '.' + id)
       }
     })
 
@@ -1140,11 +1120,11 @@ describe('Accounts Service', (): void => {
       'Can transfer funds with two-phase commit { cross-currency: $crossCurrency, accepted: $accept }',
       async ({ crossCurrency, accept }): Promise<void> => {
         const {
-          accountId: sourceAccountId,
+          id: sourceAccountId,
           asset: sourceAsset
         } = await accountFactory.build()
         const {
-          accountId: destinationAccountId,
+          id: destinationAccountId,
           asset: destinationAsset
         } = await accountFactory.build({
           asset: crossCurrency ? randomAsset() : sourceAsset
@@ -1278,8 +1258,8 @@ describe('Accounts Service', (): void => {
     )
 
     test('Returns error for insufficient source balance', async (): Promise<void> => {
-      const { accountId: sourceAccountId, asset } = await accountFactory.build()
-      const { accountId: destinationAccountId } = await accountFactory.build({
+      const { id: sourceAccountId, asset } = await accountFactory.build()
+      const { id: destinationAccountId } = await accountFactory.build({
         asset
       })
       const transfer = {
@@ -1306,11 +1286,11 @@ describe('Accounts Service', (): void => {
 
     test('Returns error for insufficient destination liquidity balance', async (): Promise<void> => {
       const {
-        accountId: sourceAccountId,
+        id: sourceAccountId,
         asset: sourceAsset
       } = await accountFactory.build()
       const {
-        accountId: destinationAccountId,
+        id: destinationAccountId,
         asset: destinationAsset
       } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
@@ -1391,12 +1371,12 @@ describe('Accounts Service', (): void => {
         })
       ).resolves.toEqual(TransferError.UnknownSourceAccount)
 
-      const { accountId } = await accountFactory.build()
+      const { id } = await accountFactory.build()
 
       const unknownAccountId = uuid()
       await expect(
         accountsService.transferFunds({
-          sourceAccountId: accountId,
+          sourceAccountId: id,
           destinationAccountId: unknownAccountId,
           sourceAmount: BigInt(5)
         })
@@ -1405,27 +1385,27 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.transferFunds({
           sourceAccountId: unknownAccountId,
-          destinationAccountId: accountId,
+          destinationAccountId: id,
           sourceAmount: BigInt(5)
         })
       ).resolves.toEqual(TransferError.UnknownSourceAccount)
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id } = await accountFactory.build()
 
       await expect(
         accountsService.transferFunds({
-          sourceAccountId: accountId,
-          destinationAccountId: accountId,
+          sourceAccountId: id,
+          destinationAccountId: id,
           sourceAmount: BigInt(5)
         })
       ).resolves.toEqual(TransferError.SameAccounts)
     })
 
     test('Returns error for invalid source amount', async (): Promise<void> => {
-      const { accountId: sourceAccountId, asset } = await accountFactory.build()
-      const { accountId: destinationAccountId } = await accountFactory.build({
+      const { id: sourceAccountId, asset } = await accountFactory.build()
+      const { id: destinationAccountId } = await accountFactory.build({
         asset
       })
       const startingSourceBalance = BigInt(10)
@@ -1452,8 +1432,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for invalid destination amount', async (): Promise<void> => {
-      const { accountId: sourceAccountId, asset } = await accountFactory.build()
-      const { accountId: destinationAccountId } = await accountFactory.build({
+      const { id: sourceAccountId, asset } = await accountFactory.build()
+      const { id: destinationAccountId } = await accountFactory.build({
         asset
       })
       const startingSourceBalance = BigInt(10)
@@ -1491,8 +1471,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for missing destination amount', async (): Promise<void> => {
-      const { accountId: sourceAccountId } = await accountFactory.build()
-      const { accountId: destinationAccountId } = await accountFactory.build()
+      const { id: sourceAccountId } = await accountFactory.build()
+      const { id: destinationAccountId } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
       await accountsService.deposit({
         accountId: sourceAccountId,
@@ -1520,14 +1500,11 @@ describe('Accounts Service', (): void => {
     `(
       'Can extend credit to sub-account { autoApply: $autoApply }',
       async ({ autoApply }): Promise<void> => {
-        const {
-          accountId: superAccountId,
-          asset
-        } = await accountFactory.build()
-        const { accountId } = await accountFactory.build({
+        const { id: superAccountId, asset } = await accountFactory.build()
+        const { id: accountId } = await accountFactory.build({
           superAccountId: superAccountId
         })
-        const { accountId: subAccountId } = await accountFactory.build({
+        const { id: subAccountId } = await accountFactory.build({
           superAccountId: accountId
         })
 
@@ -1700,7 +1677,7 @@ describe('Accounts Service', (): void => {
     )
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId: uuid(),
@@ -1711,7 +1688,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId,
@@ -1722,8 +1699,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId,
@@ -1734,8 +1711,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
       await expect(
@@ -1748,7 +1725,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId,
@@ -1759,8 +1736,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient account balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId, asset } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -1800,11 +1777,11 @@ describe('Accounts Service', (): void => {
 
   describe('Utilize Credit', (): void => {
     test('Can utilize credit to sub-account', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+      const { id: superAccountId, asset } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build({
         superAccountId: superAccountId
       })
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -1902,7 +1879,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId: uuid(),
@@ -1913,7 +1890,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId,
@@ -1924,8 +1901,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId,
@@ -1936,8 +1913,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
       await expect(
@@ -1950,7 +1927,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId,
@@ -1961,8 +1938,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId, asset } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -2008,8 +1985,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient account balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId, asset } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -2064,11 +2041,11 @@ describe('Accounts Service', (): void => {
 
   describe('Revoke Credit', (): void => {
     test('Can revoke credit to sub-account', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+      const { id: superAccountId, asset } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build({
         superAccountId: superAccountId
       })
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -2126,7 +2103,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId: uuid(),
@@ -2137,7 +2114,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId,
@@ -2148,8 +2125,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId,
@@ -2160,8 +2137,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
       await expect(
@@ -2174,7 +2151,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId,
@@ -2185,8 +2162,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId, asset } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -2241,14 +2218,11 @@ describe('Accounts Service', (): void => {
     `(
       'Can settle sub-account debt { revolve: $revolve }',
       async ({ revolve }): Promise<void> => {
-        const {
-          accountId: superAccountId,
-          asset
-        } = await accountFactory.build()
-        const { accountId } = await accountFactory.build({
+        const { id: superAccountId, asset } = await accountFactory.build()
+        const { id: accountId } = await accountFactory.build({
           superAccountId: superAccountId
         })
-        const { accountId: subAccountId } = await accountFactory.build({
+        const { id: subAccountId } = await accountFactory.build({
           superAccountId: accountId
         })
 
@@ -2315,7 +2289,7 @@ describe('Accounts Service', (): void => {
     )
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId: uuid(),
@@ -2326,7 +2300,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId,
@@ -2337,8 +2311,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId,
@@ -2349,8 +2323,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
       await expect(
@@ -2363,7 +2337,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId,
@@ -2374,8 +2348,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error if amount exceeds debt', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId, asset } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -2436,8 +2410,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient sub-account balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId, asset } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 

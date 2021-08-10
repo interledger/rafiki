@@ -8,7 +8,7 @@ const assetScale = Faker.datatype.number(6)
 export const AccountFactory = Factory.define<MockIlpAccount>(
   'AccountFactory'
 ).attrs({
-  accountId: Faker.datatype.uuid,
+  id: Faker.datatype.uuid,
   disabled: false,
   asset: { code: assetCode, scale: assetScale },
   balance: 0n
@@ -29,7 +29,7 @@ export const PeerAccountFactory = Factory.define<MockIlpAccount>(
       }
     })
   })
-  .attr('routing', ['accountId'], (id: string) => {
+  .attr('routing', ['id'], (id: string) => {
     return {
       staticIlpAddress: `test.${id}`
     }

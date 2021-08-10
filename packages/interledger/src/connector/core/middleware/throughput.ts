@@ -35,10 +35,10 @@ export function createOutgoingThroughputMiddleware(
     }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    let outgoingBucket = _buckets.get(outgoing.accountId)
+    let outgoingBucket = _buckets.get(outgoing.id)
     if (!outgoingBucket) {
       outgoingBucket = createThroughputLimitBucket(options)
-      if (outgoingBucket) _buckets.set(outgoing.accountId, outgoingBucket)
+      if (outgoingBucket) _buckets.set(outgoing.id, outgoingBucket)
     }
     if (outgoingBucket) {
       if (!outgoingBucket.take(BigInt(prepare.amount))) {
@@ -71,10 +71,10 @@ export function createIncomingThroughputMiddleware(
     }: RafikiContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    let incomingBucket = _buckets.get(incoming.accountId)
+    let incomingBucket = _buckets.get(incoming.id)
     if (!incomingBucket) {
       incomingBucket = createThroughputLimitBucket(options)
-      if (incomingBucket) _buckets.set(incoming.accountId, incomingBucket)
+      if (incomingBucket) _buckets.set(incoming.id, incomingBucket)
     }
     if (incomingBucket) {
       if (!incomingBucket.take(BigInt(prepare.amount))) {

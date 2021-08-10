@@ -15,8 +15,8 @@ Date.now = jest.fn(() => 1434412800000) // June 16, 2015 00:00:00 GMT
 describe('Outgoing Reduce Expiry Middleware', function () {
   const now = Date.now()
   const services = RafikiServicesFactory.build()
-  const alice = PeerAccountFactory.build({ accountId: 'alice' })
-  const bob = PeerAccountFactory.build({ accountId: 'bob' })
+  const alice = PeerAccountFactory.build({ id: 'alice' })
+  const bob = PeerAccountFactory.build({ id: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.accounts = {
@@ -88,7 +88,7 @@ describe('Outgoing Reduce Expiry Middleware', function () {
     })
     const next = jest.fn()
     const fred = PeerAccountFactory.build({
-      accountId: 'fred'
+      id: 'fred'
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     ctx.accounts = {

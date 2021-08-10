@@ -13,8 +13,8 @@ import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 describe('Client Controller', function () {
   const fulfill = serializeIlpFulfill(IlpFulfillFactory.build())
   const sendToPeer = jest.fn().mockResolvedValue(fulfill)
-  const alice = PeerAccountFactory.build({ accountId: 'alice' })
-  const bob = PeerAccountFactory.build({ accountId: 'bob' })
+  const alice = PeerAccountFactory.build({ id: 'alice' })
+  const bob = PeerAccountFactory.build({ id: 'bob' })
   const services = RafikiServicesFactory.build()
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services

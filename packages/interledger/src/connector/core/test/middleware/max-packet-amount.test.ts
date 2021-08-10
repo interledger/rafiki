@@ -13,10 +13,10 @@ const { AmountTooLargeError } = Errors
 describe('Max Packet Amount Middleware', function () {
   const services = RafikiServicesFactory.build()
   const alice = PeerAccountFactory.build({
-    accountId: 'alice',
+    id: 'alice',
     maxPacketAmount: BigInt(50)
   })
-  const bob = PeerAccountFactory.build({ accountId: 'bob' })
+  const bob = PeerAccountFactory.build({ id: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.accounts = {

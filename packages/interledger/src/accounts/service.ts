@@ -59,7 +59,7 @@ import {
 
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   const account: IlpAccount = {
-    accountId: accountRow.id,
+    id: accountRow.id,
     disabled: accountRow.disabled,
     asset: {
       code: accountRow.assetCode,
@@ -135,7 +135,7 @@ export class AccountsService implements AccountsServiceInterface {
         IlpHttpToken,
         async (IlpAccountModel, IlpHttpToken) => {
           const newAccount: PartialModelObject<IlpAccountModel> = {
-            id: account.accountId,
+            id: account.id,
             disabled: account.disabled,
             maxPacketAmount: account.maxPacketAmount,
             outgoingEndpoint: account.http?.outgoing.endpoint,
@@ -228,7 +228,7 @@ export class AccountsService implements AccountsServiceInterface {
           const incomingTokens = account.http?.incoming?.authTokens.map(
             (incomingToken: string) => {
               return {
-                accountId: account.accountId,
+                accountId: accountRow.id,
                 token: incomingToken
               }
             }
@@ -265,12 +265,12 @@ export class AccountsService implements AccountsServiceInterface {
         async (IlpAccountModel, IlpHttpToken) => {
           if (accountOptions.http?.incoming?.authTokens) {
             await IlpHttpToken.query().delete().where({
-              accountId: accountOptions.accountId
+              accountId: accountOptions.id
             })
             const incomingTokens = accountOptions.http.incoming.authTokens.map(
               (incomingToken: string) => {
                 return {
-                  accountId: accountOptions.accountId,
+                  accountId: accountOptions.id,
                   token: incomingToken
                 }
               }
@@ -278,7 +278,7 @@ export class AccountsService implements AccountsServiceInterface {
             await IlpHttpToken.query().insert(incomingTokens)
           }
           const account = await IlpAccountModel.query()
-            .patchAndFetchById(accountOptions.accountId, {
+            .patchAndFetchById(accountOptions.id, {
               disabled: accountOptions.disabled,
               maxPacketAmount: accountOptions.maxPacketAmount,
               outgoingEndpoint: accountOptions.http?.outgoing.endpoint,

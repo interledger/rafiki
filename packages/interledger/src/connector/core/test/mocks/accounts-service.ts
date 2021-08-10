@@ -8,6 +8,7 @@ import {
 } from '../../../../accounts/types'
 
 export type MockIlpAccount = CreateAccountOptions & {
+  id: string
   disabled: boolean
   balance: bigint
 }
@@ -49,7 +50,7 @@ export class MockAccountsService implements AccountsService {
   }
 
   async createAccount(account: MockIlpAccount): Promise<IlpAccount> {
-    this.accounts.set(account.accountId, account)
+    this.accounts.set(account.id, account)
     return account
   }
 
