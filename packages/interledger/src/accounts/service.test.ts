@@ -152,10 +152,8 @@ describe('Accounts Service', (): void => {
 
     test('Cannot create an account with non-existent super-account', async (): Promise<void> => {
       const superAccountId = uuid()
-      const asset = randomAsset()
-      const account = {
+      const account: CreateOptions = {
         accountId: uuid(),
-        asset,
         superAccountId
       }
 
@@ -165,23 +163,11 @@ describe('Accounts Service', (): void => {
 
       await accountFactory.build({
         accountId: superAccountId,
-        asset
+        asset: randomAsset()
       })
 
       const accountOrError = await accountsService.createAccount(account)
       expect(isCreateAccountError(accountOrError)).toEqual(false)
-    })
-
-    test('Cannot create an account with different asset than super-account', async (): Promise<void> => {
-      const { accountId: superAccountId } = await accountFactory.build()
-
-      await expect(
-        accountsService.createAccount({
-          accountId: uuid(),
-          asset: randomAsset(),
-          superAccountId
-        })
-      ).resolves.toEqual(CreateAccountError.InvalidAsset)
     })
 
     test('Cannot create an account with duplicate id', async (): Promise<void> => {
@@ -352,12 +338,10 @@ describe('Accounts Service', (): void => {
       const account = await accountFactory.build()
       const expectedSubAccounts = [
         await accountFactory.build({
-          superAccountId: account.accountId,
-          asset: account.asset
+          superAccountId: account.accountId
         }),
         await accountFactory.build({
-          superAccountId: account.accountId,
-          asset: account.asset
+          superAccountId: account.accountId
         })
       ]
       const subAccounts = await accountsService.getSubAccounts(
@@ -1541,11 +1525,9 @@ describe('Accounts Service', (): void => {
           asset
         } = await accountFactory.build()
         const { accountId } = await accountFactory.build({
-          asset,
           superAccountId: superAccountId
         })
         const { accountId: subAccountId } = await accountFactory.build({
-          asset,
           superAccountId: accountId
         })
 
@@ -1752,9 +1734,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { accountId } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
       await expect(
@@ -1780,7 +1761,6 @@ describe('Accounts Service', (): void => {
     test('Returns error for insufficient account balance', async (): Promise<void> => {
       const { accountId, asset } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
 
@@ -1822,11 +1802,9 @@ describe('Accounts Service', (): void => {
     test('Can utilize credit to sub-account', async (): Promise<void> => {
       const { accountId: superAccountId, asset } = await accountFactory.build()
       const { accountId } = await accountFactory.build({
-        asset,
         superAccountId: superAccountId
       })
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
 
@@ -1958,9 +1936,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { accountId } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
       await expect(
@@ -1986,7 +1963,6 @@ describe('Accounts Service', (): void => {
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
       const { accountId, asset } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
 
@@ -2034,7 +2010,6 @@ describe('Accounts Service', (): void => {
     test('Returns error for insufficient account balance', async (): Promise<void> => {
       const { accountId, asset } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
 
@@ -2091,11 +2066,9 @@ describe('Accounts Service', (): void => {
     test('Can revoke credit to sub-account', async (): Promise<void> => {
       const { accountId: superAccountId, asset } = await accountFactory.build()
       const { accountId } = await accountFactory.build({
-        asset,
         superAccountId: superAccountId
       })
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
 
@@ -2187,9 +2160,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { accountId } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
       await expect(
@@ -2215,7 +2187,6 @@ describe('Accounts Service', (): void => {
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
       const { accountId, asset } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
 
@@ -2275,11 +2246,9 @@ describe('Accounts Service', (): void => {
           asset
         } = await accountFactory.build()
         const { accountId } = await accountFactory.build({
-          asset,
           superAccountId: superAccountId
         })
         const { accountId: subAccountId } = await accountFactory.build({
-          asset,
           superAccountId: accountId
         })
 
@@ -2380,9 +2349,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { accountId } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
       await expect(
@@ -2408,7 +2376,6 @@ describe('Accounts Service', (): void => {
     test('Returns error if amount exceeds debt', async (): Promise<void> => {
       const { accountId, asset } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
 
@@ -2471,7 +2438,6 @@ describe('Accounts Service', (): void => {
     test('Returns error for insufficient sub-account balance', async (): Promise<void> => {
       const { accountId, asset } = await accountFactory.build()
       const { accountId: subAccountId } = await accountFactory.build({
-        asset,
         superAccountId: accountId
       })
 

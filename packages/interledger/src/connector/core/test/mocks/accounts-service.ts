@@ -1,13 +1,13 @@
 import {
   ConnectorAccountsService as AccountsService,
-  CreateOptions,
+  CreateAccountOptions,
   IlpAccount,
   Transaction,
   Transfer,
   TransferError
 } from '../../../../accounts/types'
 
-export type MockIlpAccount = CreateOptions & {
+export type MockIlpAccount = CreateAccountOptions & {
   disabled: boolean
   balance: bigint
 }

@@ -44,6 +44,7 @@ import {
   ExtendCreditOptions,
   IlpAccount,
   IlpBalance,
+  isSubAccount,
   SettleDebtOptions,
   Transaction,
   Transfer,
@@ -135,9 +136,6 @@ export class AccountsService implements AccountsServiceInterface {
           const newAccount: PartialModelObject<IlpAccountModel> = {
             id: account.accountId,
             disabled: account.disabled,
-            assetCode: account.asset.code,
-            assetScale: account.asset.scale,
-            superAccountId: account.superAccountId,
             maxPacketAmount: account.maxPacketAmount,
             outgoingEndpoint: account.http?.outgoing.endpoint,
             outgoingToken: account.http?.outgoing.authToken,
@@ -146,17 +144,14 @@ export class AccountsService implements AccountsServiceInterface {
           }
           const newBalances: BalanceOptions[] = []
           const superAccountPatch: PartialModelObject<IlpAccountModel> = {}
-          if (account.superAccountId) {
+          if (isSubAccount(account)) {
+            newAccount.superAccountId = account.superAccountId
             const superAccount = await IlpAccountModel.query()
               .findById(account.superAccountId)
               .forUpdate()
               .throwIfNotFound()
-            if (
-              account.asset.code !== superAccount.assetCode ||
-              account.asset.scale !== superAccount.assetScale
-            ) {
-              return CreateAccountError.InvalidAsset
-            }
+            newAccount.assetCode = superAccount.assetCode
+            newAccount.assetScale = superAccount.assetScale
             newAccount.creditBalanceId = randomId()
             newAccount.debtBalanceId = randomId()
             newBalances.push(
@@ -201,6 +196,9 @@ export class AccountsService implements AccountsServiceInterface {
                   AccountFlags.linked
               })
             }
+          } else {
+            newAccount.assetCode = account.asset.code
+            newAccount.assetScale = account.asset.scale
           }
 
           newAccount.balanceId = randomId()
@@ -209,13 +207,18 @@ export class AccountsService implements AccountsServiceInterface {
             flags: 0 | AccountFlags.debits_must_not_exceed_credits
           })
 
-          await this.createBalances(newBalances, account.asset.scale)
+          await this.createBalances(newBalances, newAccount.assetScale)
 
-          if (account.superAccountId) {
+          if (isSubAccount(account)) {
             await IlpAccountModel.query()
               .patch(superAccountPatch)
               .findById(account.superAccountId)
               .throwIfNotFound()
+          } else {
+            await this.createCurrencyBalances(
+              newAccount.assetCode,
+              newAccount.assetScale
+            )
           }
           const accountRow = await IlpAccountModel.query().insertAndFetch(
             newAccount
@@ -233,12 +236,6 @@ export class AccountsService implements AccountsServiceInterface {
             await IlpHttpToken.query().insert(incomingTokens)
           }
 
-          if (!account.superAccountId) {
-            await this.createCurrencyBalances(
-              account.asset.code,
-              account.asset.scale
-            )
-          }
           return toIlpAccount(accountRow)
         }
       )

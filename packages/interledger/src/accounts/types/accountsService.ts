@@ -1,3 +1,4 @@
+import { Asset } from './asset'
 import { AccountDeposit, LiquidityDeposit, DepositError } from './deposit'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
@@ -53,7 +54,10 @@ export interface AccountsService extends ConnectorAccountsService {
   settleDebt(settleOptions: SettleDebtOptions): Promise<void | CreditError>
 }
 
-export type CreateOptions = Omit<IlpAccount, 'disabled'> & {
+export type UpdateOptions = Omit<
+  IlpAccount,
+  'disabled' | 'asset' | 'superAccountId'
+> & {
   disabled?: boolean
   http?: {
     incoming?: {
@@ -62,18 +66,33 @@ export type CreateOptions = Omit<IlpAccount, 'disabled'> & {
   }
 }
 
+export type CreateAccountOptions = UpdateOptions & {
+  asset: Asset
+  superAccountId?: never
+}
+
+export type CreateSubAccountOptions = UpdateOptions & {
+  asset?: never
+  superAccountId: string
+}
+
+export type CreateOptions = CreateAccountOptions | CreateSubAccountOptions
+
+export function isSubAccount(
+  account: CreateOptions
+): account is CreateSubAccountOptions {
+  return (account as CreateSubAccountOptions).superAccountId !== undefined
+}
+
 export enum CreateAccountError {
   DuplicateAccountId = 'DuplicateAccountId',
   DuplicateIncomingToken = 'DuplicateIncomingToken',
-  InvalidAsset = 'InvalidAsset',
   UnknownSuperAccount = 'UnknownSuperAccount'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isCreateAccountError = (o: any): o is CreateAccountError =>
   Object.values(CreateAccountError).includes(o)
-
-export type UpdateOptions = Omit<CreateOptions, 'asset' | 'superAccountId'>
 
 export enum UpdateAccountError {
   DuplicateIncomingToken = 'DuplicateIncomingToken',
