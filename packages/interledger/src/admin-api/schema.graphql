@@ -31,7 +31,9 @@ type Mutation {
   ): CreateIlpAccountMutationResponse!
 
   "Update Interledger account"
-  updateIlpAccount: UpdateIlpAccountMutationResponse!
+  updateIlpAccount(
+    input: UpdateIlpAccountInput!
+  ): UpdateIlpAccountMutationResponse!
 
   "Delete Interledger account"
   deleteIlpAccount(id: ID!): DeleteIlpAccountMutationResponse!
@@ -160,6 +162,15 @@ input CreateIlpAccountInput {
   maxPacketAmount: UInt64
   http: HttpInput
   asset: AssetInput!
+  stream: StreamInput
+  routing: RoutingInput
+}
+
+input UpdateIlpAccountInput {
+  id: ID
+  disabled: Boolean
+  maxPacketAmount: UInt64
+  http: HttpInput
   stream: StreamInput
   routing: RoutingInput
 }
@@ -339,7 +350,7 @@ type UpdateIlpAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  ilpAccount: IlpAccount!
+  ilpAccount: IlpAccount
 }
 
 type DeleteIlpAccountMutationResponse implements MutationResponse {

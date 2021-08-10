@@ -17,7 +17,9 @@ import { createAdminApi } from '../index'
 import {
   CreateIlpAccountInput,
   CreateIlpAccountMutationResponse,
-  IlpAccountsConnection
+  IlpAccountsConnection,
+  UpdateIlpAccountInput,
+  UpdateIlpAccountMutationResponse
 } from '../generated/graphql'
 
 const ADMIN_API_HOST = process.env.ADMIN_API_HOST || '127.0.0.1'
@@ -714,5 +716,216 @@ describe('Account Resolvers', (): void => {
       expect(query.pageInfo.startCursor).toEqual(accounts[45].id)
       expect(query.pageInfo.endCursor).toEqual(accounts[49].id)
     }, 10_000)
+  })
+
+  describe('Update IlpAccount', (): void => {
+    test('Can update an ilp account', async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const updateOptions = {
+        id: account.id,
+        disabled: true,
+        maxPacketAmount: '100',
+        http: {
+          incoming: {
+            authTokens: [uuid()]
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoingEndpoint'
+          }
+        },
+        stream: {
+          enabled: false
+        },
+        routing: {
+          staticIlpAddress: 'g.rafiki.' + account.id
+        }
+      }
+      const response = await apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UpdateIlpAccount($input: UpdateIlpAccountInput!) {
+              updateIlpAccount(input: $input) {
+                code
+                success
+                message
+                ilpAccount {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: updateOptions
+          }
+        })
+        .then(
+          (query): UpdateIlpAccountMutationResponse => {
+            if (query.data) {
+              return query.data.updateIlpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+      expect(response.ilpAccount?.id).not.toBeNull()
+      await expect(accountsService.getAccount(account.id)).resolves.toEqual({
+        ...updateOptions,
+        asset: account.asset,
+        http: {
+          outgoing: updateOptions.http?.outgoing
+        },
+        maxPacketAmount: BigInt(updateOptions.maxPacketAmount)
+      })
+    })
+
+    test('Can update subset of fields', async (): Promise<void> => {
+      const account = await accountFactory.build({
+        maxPacketAmount: BigInt(100),
+        http: {
+          incoming: {
+            authTokens: [uuid()]
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoingEndpoint'
+          }
+        },
+        stream: {
+          enabled: false
+        },
+        routing: {
+          staticIlpAddress: 'g.rafiki.' + uuid()
+        }
+      })
+      const updateOptions: UpdateIlpAccountInput = {
+        id: account.id,
+        disabled: true
+      }
+      const response = await apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UpdateIlpAccount($input: UpdateIlpAccountInput!) {
+              updateIlpAccount(input: $input) {
+                code
+                success
+                message
+                ilpAccount {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: updateOptions
+          }
+        })
+        .then(
+          (query): UpdateIlpAccountMutationResponse => {
+            if (query.data) {
+              return query.data.updateIlpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+      expect(response.ilpAccount?.id).not.toBeNull()
+      await expect(accountsService.getAccount(account.id)).resolves.toEqual({
+        ...account,
+        disabled: updateOptions.disabled
+      })
+    })
+
+    test('Returns error for unknown account', async (): Promise<void> => {
+      const updateOptions: UpdateIlpAccountInput = {
+        id: uuid()
+      }
+      const response = await apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UpdateIlpAccount($input: UpdateIlpAccountInput!) {
+              updateIlpAccount(input: $input) {
+                code
+                success
+                message
+                ilpAccount {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: updateOptions
+          }
+        })
+        .then(
+          (query): UpdateIlpAccountMutationResponse => {
+            if (query.data) {
+              return query.data.updateIlpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('404')
+      expect(response.message).toEqual('Unknown ILP account')
+    })
+
+    test('Returns error for duplicate incoming token', async (): Promise<void> => {
+      const http = {
+        incoming: {
+          authTokens: [uuid()]
+        },
+        outgoing: {
+          authToken: uuid(),
+          endpoint: '/outgoingEndpoint'
+        }
+      }
+      await accountFactory.build({ http })
+      const { id } = await accountFactory.build()
+      const updateOptions: UpdateIlpAccountInput = {
+        id,
+        http
+      }
+      const response = await apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UpdateIlpAccount($input: UpdateIlpAccountInput!) {
+              updateIlpAccount(input: $input) {
+                code
+                success
+                message
+                ilpAccount {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: updateOptions
+          }
+        })
+        .then(
+          (query): UpdateIlpAccountMutationResponse => {
+            if (query.data) {
+              return query.data.updateIlpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('409')
+      expect(response.message).toEqual('Incoming token already exists')
+    })
   })
 })

@@ -283,7 +283,8 @@ export class AccountsService implements AccountsServiceInterface {
               maxPacketAmount: accountOptions.maxPacketAmount,
               outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
               outgoingToken: accountOptions.http?.outgoing.authToken,
-              streamEnabled: accountOptions.stream?.enabled
+              streamEnabled: accountOptions.stream?.enabled,
+              staticIlpAddress: accountOptions.routing?.staticIlpAddress
             })
             .throwIfNotFound()
           return toIlpAccount(account)

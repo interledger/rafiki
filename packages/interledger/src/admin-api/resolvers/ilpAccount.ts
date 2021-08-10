@@ -8,7 +8,9 @@ import {
 import {
   CreateAccountError,
   IlpAccount,
-  isCreateAccountError
+  isCreateAccountError,
+  isUpdateAccountError,
+  UpdateAccountError
 } from '../../accounts/types'
 
 export const getIlpAccounts: QueryResolvers['ilpAccounts'] = async (
@@ -78,9 +80,39 @@ export const updateIlpAccount: MutationResolvers['updateIlpAccount'] = async (
   args,
   ctx
 ): ResolversTypes['UpdateIlpAccountMutationResponse'] => {
-  // TODO:
-  console.log(ctx) // temporary to pass linting
-  return {}
+  try {
+    const accountOrError = await ctx.accountsService.updateAccount(args.input)
+    if (isUpdateAccountError(accountOrError)) {
+      switch (accountOrError) {
+        case UpdateAccountError.UnknownAccount:
+          return {
+            code: '404',
+            message: 'Unknown ILP account',
+            success: false
+          }
+        case UpdateAccountError.DuplicateIncomingToken:
+          return {
+            code: '409',
+            message: 'Incoming token already exists',
+            success: false
+          }
+        default:
+          throw new Error(`UpdateAccountError: ${accountOrError}`)
+      }
+    }
+    return {
+      code: '200',
+      success: true,
+      message: 'Updated ILP Account',
+      ilpAccount: accountOrError
+    }
+  } catch (err) {
+    return {
+      code: '400',
+      message: 'Error trying to update account',
+      success: false
+    }
+  }
 }
 
 export const deleteIlpAccount: MutationResolvers['deleteIlpAccount'] = async (

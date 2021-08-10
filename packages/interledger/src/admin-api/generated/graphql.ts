@@ -264,6 +264,11 @@ export type MutationCreateIlpAccountArgs = {
 };
 
 
+export type MutationUpdateIlpAccountArgs = {
+  input: UpdateIlpAccountInput;
+};
+
+
 export type MutationDeleteIlpAccountArgs = {
   id: Scalars['ID'];
 };
@@ -467,12 +472,21 @@ export type TransferMutationResponse = MutationResponse & {
 };
 
 
+export type UpdateIlpAccountInput = {
+  id?: Maybe<Scalars['ID']>;
+  disabled?: Maybe<Scalars['Boolean']>;
+  maxPacketAmount?: Maybe<Scalars['UInt64']>;
+  http?: Maybe<HttpInput>;
+  stream?: Maybe<StreamInput>;
+  routing?: Maybe<RoutingInput>;
+};
+
 export type UpdateIlpAccountMutationResponse = MutationResponse & {
   __typename?: 'UpdateIlpAccountMutationResponse';
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
-  ilpAccount: IlpAccount;
+  ilpAccount?: Maybe<IlpAccount>;
 };
 
 export type UpdateWebhookMutationResponse = MutationResponse & {
@@ -652,6 +666,7 @@ export type ResolversTypes = {
   StreamInput: ResolverTypeWrapper<Partial<StreamInput>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
+  UpdateIlpAccountInput: ResolverTypeWrapper<Partial<UpdateIlpAccountInput>>;
   UpdateIlpAccountMutationResponse: ResolverTypeWrapper<Partial<UpdateIlpAccountMutationResponse>>;
   UpdateWebhookMutationResponse: ResolverTypeWrapper<Partial<UpdateWebhookMutationResponse>>;
   UtilizeCreditMutationResponse: ResolverTypeWrapper<Partial<UtilizeCreditMutationResponse>>;
@@ -707,6 +722,7 @@ export type ResolversParentTypes = {
   StreamInput: Partial<StreamInput>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
   UInt64: Partial<Scalars['UInt64']>;
+  UpdateIlpAccountInput: Partial<UpdateIlpAccountInput>;
   UpdateIlpAccountMutationResponse: Partial<UpdateIlpAccountMutationResponse>;
   UpdateWebhookMutationResponse: Partial<UpdateWebhookMutationResponse>;
   UtilizeCreditMutationResponse: Partial<UtilizeCreditMutationResponse>;
@@ -867,7 +883,7 @@ export type IlpAccountsConnectionResolvers<ContextType = any, ParentType extends
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createIlpAccount?: Resolver<ResolversTypes['CreateIlpAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateIlpAccountArgs, 'input'>>;
-  updateIlpAccount?: Resolver<ResolversTypes['UpdateIlpAccountMutationResponse'], ParentType, ContextType>;
+  updateIlpAccount?: Resolver<ResolversTypes['UpdateIlpAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateIlpAccountArgs, 'input'>>;
   deleteIlpAccount?: Resolver<ResolversTypes['DeleteIlpAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationDeleteIlpAccountArgs, 'id'>>;
   createIlpSubAccount?: Resolver<ResolversTypes['CreateIlpSubAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateIlpSubAccountArgs, 'superAccountId'>>;
   transfer?: Resolver<Maybe<ResolversTypes['TransferMutationResponse']>, ParentType, ContextType, RequireFields<MutationTransferArgs, 'sourceAmount' | 'sourceAccountId' | 'destinationAccountId' | 'idempotencyKey'>>;
@@ -961,7 +977,7 @@ export type UpdateIlpAccountMutationResponseResolvers<ContextType = any, ParentT
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  ilpAccount?: Resolver<ResolversTypes['IlpAccount'], ParentType, ContextType>;
+  ilpAccount?: Resolver<Maybe<ResolversTypes['IlpAccount']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

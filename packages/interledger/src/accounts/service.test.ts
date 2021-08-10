@@ -521,6 +521,9 @@ describe('Accounts Service', (): void => {
         },
         stream: {
           enabled: false
+        },
+        routing: {
+          staticIlpAddress: 'g.rafiki.' + id
         }
       }
       const accountOrError = await accountsService.updateAccount(updateOptions)
