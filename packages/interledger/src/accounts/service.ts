@@ -892,8 +892,6 @@ export class AccountsService implements AccountsServiceInterface {
     const error = await this.createTransfers(transfers)
     if (error) {
       switch (error.code) {
-        case CreateTransferError.linked_event_failed:
-          break
         case CreateTransferError.debit_account_not_found:
           if (error.index === 1) {
             throw new UnknownLiquidityAccountError(
