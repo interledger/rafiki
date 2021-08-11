@@ -377,7 +377,7 @@ type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
 }
 
 type Asset {
-  currency: String!
+  code: String!
   scale: Int!
 }
 
