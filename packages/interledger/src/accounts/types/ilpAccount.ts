@@ -1,12 +1,11 @@
+import { Asset } from './asset'
+
 export interface IlpAccount {
   accountId: string
-  parentAccountId?: string
+  superAccountId?: string
   disabled: boolean // you can fetch config of disabled account but it will not process packets
 
-  asset: {
-    code: string
-    scale: number
-  }
+  asset: Asset
   http?: {
     outgoing: {
       authToken: string

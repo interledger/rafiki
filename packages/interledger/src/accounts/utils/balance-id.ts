@@ -4,10 +4,6 @@ import { v4 as uuid } from 'uuid'
 const LIQUIDITY_ID_PREFIX = 'liquidity:'
 const SETTLEMENT_ID_PREFIX = 'settlement:'
 
-// const REAL_ID_CODE = 'real:'
-// const CREDIT_ID_CODE = 'credit:'
-// const LOAN_ID_CODE = 'loan:'
-
 function toBalanceId({
   prefix,
   assetCode,
@@ -58,30 +54,6 @@ export function toSettlementId({
     hmacSecret
   })
 }
-
-// export function toSettlementCreditId(
-//   assetCode: string,
-//   assetScale: number
-// ): bigint {
-//   const assetCodeHex = Buffer.from(assetCode).toString('hex')
-//   return BigInt(
-//     `0x${SETTLEMENT_ID_PREFIX}${CREDIT_ID_CODE}${assetCodeHex}${assetScale.toString(
-//       16
-//     )}`
-//   )
-// }
-
-// export function toSettlementLoanId(
-//   assetCode: string,
-//   assetScale: number
-// ): bigint {
-//   const assetCodeHex = Buffer.from(assetCode).toString('hex')
-//   return BigInt(
-//     `0x${SETTLEMENT_ID_PREFIX}${LOAN_ID_CODE}${assetCodeHex}${assetScale.toString(
-//       16
-//     )}`
-//   )
-// }
 
 export function uuidToBigInt(id: string): bigint {
   return BigInt(`0x${id.replace(/-/g, '')}`)
