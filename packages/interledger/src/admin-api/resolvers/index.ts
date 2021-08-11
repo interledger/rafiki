@@ -18,7 +18,6 @@ export const resolvers: Resolvers = {
   Query: {
     ilpAccounts: getIlpAccounts,
     ilpAccount: getIlpAccount
-    // trustline: getCredit,
     // webhook: getWebhook,
     // deposit: getDeposit,
     // withdrawal: getWithdrawal
