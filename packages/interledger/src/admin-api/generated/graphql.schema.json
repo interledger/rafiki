@@ -1958,6 +1958,38 @@
             "description": "Extend Credit",
             "args": [
               {
+                "name": "accountId",
+                "description": "Account extending credit.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "subAccountId",
+                "description": "Sub-account to which credit is extended.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "amount",
                 "description": "Amount of additional line of credit.",
                 "type": {
@@ -2003,8 +2035,40 @@
             "description": "Revoke Credit",
             "args": [
               {
+                "name": "accountId",
+                "description": "Account revoking credit.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "subAccountId",
+                "description": "Sub-account to which credit is revoked.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "amount",
-                "description": "Amount of additional line of credit.",
+                "description": "Amount of revoked line of credit.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -2032,8 +2096,40 @@
             "description": "Utilize Credit",
             "args": [
               {
+                "name": "accountId",
+                "description": "Account extending credit.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "subAccountId",
+                "description": "Sub-account to which credit is extended.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "amount",
-                "description": "Amount of additional line of credit.",
+                "description": "Amount of utilized line of credit.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -2058,11 +2154,43 @@
           },
           {
             "name": "settleDebt",
-            "description": "Settle Credit",
+            "description": "Settle Debt",
             "args": [
               {
+                "name": "accountId",
+                "description": "Account collecting debt.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "subAccountId",
+                "description": "Sub-account settling debt.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "amount",
-                "description": "Amount of additional line of debt.",
+                "description": "Amount of debt.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -2077,7 +2205,7 @@
                 "deprecationReason": null
               },
               {
-                "name": "autoApply",
+                "name": "revolve",
                 "description": "Replenish the account's line of credit commensurate with the debt settled.",
                 "type": {
                   "kind": "NON_NULL",
