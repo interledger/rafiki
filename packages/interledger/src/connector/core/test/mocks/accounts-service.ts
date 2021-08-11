@@ -1,14 +1,13 @@
 import {
   ConnectorAccountsService as AccountsService,
-  CreateOptions,
+  CreateAccountOptions,
   IlpAccount,
-  IlpBalance,
   Transaction,
   Transfer,
   TransferError
 } from '../../../../accounts/types'
 
-export type MockIlpAccount = CreateOptions & {
+export type MockIlpAccount = CreateAccountOptions & {
   disabled: boolean
   balance: bigint
 }
@@ -42,13 +41,10 @@ export class MockAccountsService implements AccountsService {
     )
   }
 
-  async getAccountBalance(accountId: string): Promise<IlpBalance | undefined> {
+  async getAccountBalance(accountId: string): Promise<bigint | undefined> {
     const account = this.accounts.get(accountId)
     if (account) {
-      return {
-        id: accountId,
-        balance: account.balance
-      }
+      return account.balance
     }
   }
 

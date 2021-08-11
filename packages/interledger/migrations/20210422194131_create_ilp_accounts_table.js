@@ -7,13 +7,19 @@ exports.up = function (knex) {
     table.string('assetCode').notNullable()
     table.integer('assetScale').notNullable()
 
+    // TigerBeetle account id tracking Interledger balance
     table.uuid('balanceId').notNullable()
-    // table.uuid('debtBalanceId').notNullable()
-    // table.uuid('trustlineBalanceId').notNullable()
-    // table.uuid('loanBalanceId').nullable()
-    // table.uuid('creditBalanceId').nullable()
+    // TigerBeetle account id tracking credit extended by super-account
+    table.uuid('creditBalanceId').nullable()
+    // TigerBeetle account id tracking credit extended to sub-account(s)
+    table.uuid('creditExtendedBalanceId').nullable()
+    // TigerBeetle account id tracking amount loaned from super-account
+    table.uuid('debtBalanceId').nullable()
+    // TigerBeetle account id tracking amount(s) loaned to sub-account(s)
+    table.uuid('lentBalanceId').nullable()
 
-    // table.uuid('parentAccountId').nullable()
+    table.uuid('superAccountId').nullable().index()
+    table.foreign('superAccountId').references('ilpAccounts.id')
 
     table.bigInteger('maxPacketAmount').nullable()
 

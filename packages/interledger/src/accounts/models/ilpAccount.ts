@@ -3,12 +3,40 @@ import { IlpHttpToken } from './ilpHttpToken'
 import { uuidToBigInt } from '../utils'
 import { Model, Pojo, raw } from 'objection'
 
+const BALANCE_IDS = [
+  'balanceId',
+  'creditBalanceId',
+  'creditExtendedBalanceId',
+  'debtBalanceId',
+  'lentBalanceId'
+]
+
+function bigIntToUuid(id: bigint): Pojo {
+  return raw('?::uuid', [id.toString(16).padStart(32, '0')])
+}
+
 export class IlpAccount extends BaseModel {
   public static get tableName(): string {
     return 'ilpAccounts'
   }
 
   static relationMappings = {
+    subAccounts: {
+      relation: Model.HasManyRelation,
+      modelClass: IlpAccount,
+      join: {
+        from: 'ilpAccounts.id',
+        to: 'ilpAccounts.superAccountId'
+      }
+    },
+    superAccount: {
+      relation: Model.HasOneRelation,
+      modelClass: IlpAccount,
+      join: {
+        from: 'ilpAccounts.superAccountId',
+        to: 'ilpAccounts.id'
+      }
+    },
     incomingTokens: {
       relation: Model.HasManyRelation,
       modelClass: IlpHttpToken,
@@ -23,13 +51,20 @@ export class IlpAccount extends BaseModel {
 
   public readonly assetCode!: string
   public readonly assetScale!: number
+  // TigerBeetle account id tracking Interledger balance
   public readonly balanceId!: bigint
-  // public debtBalanceId!: string
-  // public trustlineBalanceId!: string
-  // public loanBalanceId?: string
-  // public creditBalanceId?: string
+  // TigerBeetle account id tracking credit extended by super-account
+  public readonly creditBalanceId?: bigint
+  // TigerBeetle account id tracking credit extended to sub-account(s)
+  public readonly creditExtendedBalanceId?: bigint
+  // TigerBeetle account id tracking amount loaned from super-account
+  public readonly debtBalanceId?: bigint
+  // TigerBeetle account id tracking amount(s) loaned to sub-account(s)
+  public readonly lentBalanceId?: bigint
 
-  // public parentAccountId?: string
+  public readonly superAccountId?: string
+  public readonly subAccounts?: IlpAccount[]
+  public readonly superAccount?: IlpAccount
 
   public readonly maxPacketAmount!: bigint
 
@@ -42,22 +77,42 @@ export class IlpAccount extends BaseModel {
   public readonly staticIlpAddress?: string
 
   $formatDatabaseJson(json: Pojo): Pojo {
-    const balanceId: bigint = json.balanceId
-    if (balanceId) {
-      json.balanceId = raw('?::uuid', [
-        balanceId.toString(16).padStart(32, '0')
-      ])
-    }
-
+    BALANCE_IDS.forEach((balanceId) => {
+      if (json[balanceId]) {
+        json[balanceId] = bigIntToUuid(json[balanceId])
+      }
+    })
     return super.$formatDatabaseJson(json)
   }
 
   $parseDatabaseJson(json: Pojo): Pojo {
     const formattedJson = super.$parseDatabaseJson(json)
-    if (formattedJson.balanceId) {
-      formattedJson.balanceId = uuidToBigInt(json.balanceId)
-    }
-
+    BALANCE_IDS.forEach((balanceId) => {
+      if (formattedJson[balanceId]) {
+        formattedJson[balanceId] = uuidToBigInt(json[balanceId])
+      }
+    })
     return formattedJson
   }
+
+  public isSubAccount(): this is SubAccount {
+    return !!this.superAccount
+  }
+
+  public hasSuperAccount(id: string): this is SubAccount {
+    for (
+      let account = this as IlpAccount;
+      account.isSubAccount();
+      account = account.superAccount
+    ) {
+      if (account.superAccount.id === id) {
+        return true
+      }
+    }
+    return false
+  }
+}
+
+export interface SubAccount extends IlpAccount {
+  superAccount: IlpAccount
 }
