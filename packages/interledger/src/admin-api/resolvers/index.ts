@@ -44,20 +44,20 @@ export const resolvers: Resolvers = {
     superAccount: getSuperAccount,
     subAccounts: getSubAccounts
     // webhooks: getWebhooks,
-    // deposits: getWebhooks,
-    // withdrawals: getWebhooks,
+    // deposits: getDeposits,
+    // withdrawals: getWithdrawals,
   },
   IlpAccountsConnection: {
     pageInfo: getIlpAccountsConnectionPageInfo
   },
   WebhooksConnection: {
-    // pageInfo: getIlpAccountsConnectionPageInfo
+    // pageInfo: getWebhooksConnectionPageInfo
   },
   DepositsConnection: {
-    // pageInfo: getIlpAccountsConnectionPageInfo
+    // pageInfo: getDepositsConnectionPageInfo
   },
   WithdrawalsConnection: {
-    // pageInfo: getIlpAccountsConnectionPageInfo
+    // pageInfo: getWithdrawalsConnectionPageInfo
   },
   UInt64: bigintScalar
 }
