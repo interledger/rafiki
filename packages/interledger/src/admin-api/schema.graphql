@@ -14,9 +14,6 @@ type Query {
   "Get an Interledger account by ID."
   ilpAccount(id: ID!): IlpAccount!
 
-  "Get a trustline by ID."
-  trustline("The ID of the trustline to get." id: ID!): Trustline!
-
   "Get a webhook by ID."
   webhook("The ID of the webhook to get." id: ID!): Webhook!
 
@@ -50,33 +47,33 @@ type Mutation {
     idempotencyKey: ID!
   ): TransferMutationResponse
 
-  "Extend Trustline"
-  extendTrustline(
+  "Extend Credit"
+  extendCredit(
     "Amount of additional line of credit."
     amount: UInt64!
     "Automatically utilized and applied to the account balance."
     autoApply: Boolean! = false
-  ): ExtendTrustlineMutationResponse
+  ): ExtendCreditMutationResponse
 
-  "Revoke trustline"
-  revokeTrustline(
+  "Revoke Credit"
+  revokeCredit(
     "Amount of additional line of credit."
     amount: UInt64!
-  ): RevokeTrustlineMutationResponse
+  ): RevokeCreditMutationResponse
 
-  "Utilize trustline"
-  utilizeTrustline(
+  "Utilize Credit"
+  utilizeCredit(
     "Amount of additional line of credit."
     amount: UInt64!
-  ): UtilizeTrustlineMutationResponse
+  ): UtilizeCreditMutationResponse
 
-  "Settle trustline"
-  settleTrustline(
-    "Amount of additional line of credit."
+  "Settle Credit"
+  settleDebt(
+    "Amount of additional line of debt."
     amount: UInt64!
     "Replenish the account's line of credit commensurate with the debt settled."
     autoApply: Boolean! = true
-  ): SettleTrustlineMutationResponse
+  ): SettleDebtMutationResponse
 
   "Create webhook"
   createWebhook(
@@ -276,15 +273,6 @@ type Withdrawal {
   finalizedTime: Int
 }
 
-type Trustline {
-  id: ID!
-  createdTime: Int!
-  creditorAccountId: ID
-  debtorAccountId: ID!
-  availableCredit: UInt64!
-  debtBalance: UInt64!
-}
-
 type CreateIlpAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -318,26 +306,25 @@ type TransferMutationResponse implements MutationResponse {
   message: String!
 }
 
-type ExtendTrustlineMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  trustline: Trustline!
-}
-
-type RevokeTrustlineMutationResponse implements MutationResponse {
+type ExtendCreditMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
 }
 
-type UtilizeTrustlineMutationResponse implements MutationResponse {
+type RevokeCreditMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
 }
 
-type SettleTrustlineMutationResponse implements MutationResponse {
+type UtilizeCreditMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type SettleDebtMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!

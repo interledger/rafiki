@@ -18,7 +18,7 @@ export const resolvers: Resolvers = {
   Query: {
     ilpAccounts: getIlpAccounts,
     ilpAccount: getIlpAccount
-    // trustline: getTrustline,
+    // trustline: getCredit,
     // webhook: getWebhook,
     // deposit: getDeposit,
     // withdrawal: getWithdrawal
@@ -29,10 +29,10 @@ export const resolvers: Resolvers = {
     deleteIlpAccount: deleteIlpAccount,
     createIlpSubAccount: createIlpSubAccount
     // transfer: createTransfer,
-    // extendTrustline: extendTrustline,
-    // revokeTrustline: revokeTrustline,
-    // utilizeTrustline: utilizeTrustline,
-    // settleTrustline: settleTrustline,
+    // extendCredit: extendCredit,
+    // revokeCredit: revokeCredit,
+    // utilizeCredit: utilizeCredit,
+    // settleDebt: settleDebt,
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,

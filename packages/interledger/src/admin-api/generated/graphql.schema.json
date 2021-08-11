@@ -983,7 +983,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "ExtendTrustlineMutationResponse",
+        "name": "ExtendCreditMutationResponse",
         "description": null,
         "fields": [
           {
@@ -1028,22 +1028,6 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "trustline",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Trustline",
                 "ofType": null
               }
             },
@@ -1970,8 +1954,8 @@
             "deprecationReason": null
           },
           {
-            "name": "extendTrustline",
-            "description": "Extend Trustline",
+            "name": "extendCredit",
+            "description": "Extend Credit",
             "args": [
               {
                 "name": "amount",
@@ -2008,15 +1992,15 @@
             ],
             "type": {
               "kind": "OBJECT",
-              "name": "ExtendTrustlineMutationResponse",
+              "name": "ExtendCreditMutationResponse",
               "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "revokeTrustline",
-            "description": "Revoke trustline",
+            "name": "revokeCredit",
+            "description": "Revoke Credit",
             "args": [
               {
                 "name": "amount",
@@ -2037,15 +2021,15 @@
             ],
             "type": {
               "kind": "OBJECT",
-              "name": "RevokeTrustlineMutationResponse",
+              "name": "RevokeCreditMutationResponse",
               "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "utilizeTrustline",
-            "description": "Utilize trustline",
+            "name": "utilizeCredit",
+            "description": "Utilize Credit",
             "args": [
               {
                 "name": "amount",
@@ -2066,19 +2050,19 @@
             ],
             "type": {
               "kind": "OBJECT",
-              "name": "UtilizeTrustlineMutationResponse",
+              "name": "UtilizeCreditMutationResponse",
               "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "settleTrustline",
-            "description": "Settle trustline",
+            "name": "settleDebt",
+            "description": "Settle Credit",
             "args": [
               {
                 "name": "amount",
-                "description": "Amount of additional line of credit.",
+                "description": "Amount of additional line of debt.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -2111,7 +2095,7 @@
             ],
             "type": {
               "kind": "OBJECT",
-              "name": "SettleTrustlineMutationResponse",
+              "name": "SettleDebtMutationResponse",
               "ofType": null
             },
             "isDeprecated": false,
@@ -2453,7 +2437,7 @@
           },
           {
             "kind": "OBJECT",
-            "name": "ExtendTrustlineMutationResponse",
+            "name": "ExtendCreditMutationResponse",
             "ofType": null
           },
           {
@@ -2463,7 +2447,7 @@
           },
           {
             "kind": "OBJECT",
-            "name": "RevokeTrustlineMutationResponse",
+            "name": "RevokeCreditMutationResponse",
             "ofType": null
           },
           {
@@ -2473,7 +2457,7 @@
           },
           {
             "kind": "OBJECT",
-            "name": "SettleTrustlineMutationResponse",
+            "name": "SettleDebtMutationResponse",
             "ofType": null
           },
           {
@@ -2493,7 +2477,7 @@
           },
           {
             "kind": "OBJECT",
-            "name": "UtilizeTrustlineMutationResponse",
+            "name": "UtilizeCreditMutationResponse",
             "ofType": null
           }
         ]
@@ -2712,39 +2696,6 @@
             "deprecationReason": null
           },
           {
-            "name": "trustline",
-            "description": "Get a trustline by ID.",
-            "args": [
-              {
-                "name": "id",
-                "description": "The ID of the trustline to get.",
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "ID",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              }
-            ],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Trustline",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "webhook",
             "description": "Get a webhook by ID.",
             "args": [
@@ -2851,7 +2802,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "RevokeTrustlineMutationResponse",
+        "name": "RevokeCreditMutationResponse",
         "description": null,
         "fields": [
           {
@@ -3036,7 +2987,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "SettleTrustlineMutationResponse",
+        "name": "SettleDebtMutationResponse",
         "description": null,
         "fields": [
           {
@@ -3188,109 +3139,6 @@
             "ofType": null
           }
         ],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
-        "name": "Trustline",
-        "description": null,
-        "fields": [
-          {
-            "name": "id",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "createdTime",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "creditorAccountId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "ID",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "debtorAccountId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "availableCredit",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "debtBalance",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -3468,7 +3316,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "UtilizeTrustlineMutationResponse",
+        "name": "UtilizeCreditMutationResponse",
         "description": null,
         "fields": [
           {
