@@ -93,7 +93,7 @@
         "description": null,
         "fields": [
           {
-            "name": "currency",
+            "name": "code",
             "description": null,
             "args": [],
             "type": {
