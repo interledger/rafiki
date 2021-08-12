@@ -18,6 +18,7 @@ import {
   isCreateAccountError,
   isTransferError,
   isUpdateAccountError,
+  Pagination,
   TransferError,
   CreditError,
   UpdateAccountError,
@@ -328,6 +329,141 @@ describe('Accounts Service', (): void => {
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(accountsService.getAccount(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Account pagination', (): void => {
+    let accountsCreated: IlpAccount[]
+
+    beforeEach(
+      async (): Promise<void> => {
+        accountsCreated = []
+        for (let i = 0; i < 40; i++) {
+          accountsCreated.push(await accountFactory.build())
+        }
+      }
+    )
+
+    test('Defaults to fetching first 20 items', async (): Promise<void> => {
+      const accounts = await accountsService.getAccountsPage()
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(accountsCreated[0].id)
+      expect(accounts[19].id).toEqual(accountsCreated[19].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test('Can change forward pagination limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 10
+      }
+      const accounts = await accountsService.getAccountsPage(pagination)
+      expect(accounts).toHaveLength(10)
+      expect(accounts[0].id).toEqual(accountsCreated[0].id)
+      expect(accounts[9].id).toEqual(accountsCreated[9].id)
+      expect(accounts[10]).toBeUndefined()
+    })
+
+    test('Can paginate forwards from a cursor', async (): Promise<void> => {
+      const pagination: Pagination = {
+        after: accountsCreated[19].id
+      }
+      const accounts = await accountsService.getAccountsPage(pagination)
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(accountsCreated[20].id)
+      expect(accounts[19].id).toEqual(accountsCreated[39].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 10,
+        after: accountsCreated[9].id
+      }
+      const accounts = await accountsService.getAccountsPage(pagination)
+      expect(accounts).toHaveLength(10)
+      expect(accounts[0].id).toEqual(accountsCreated[10].id)
+      expect(accounts[9].id).toEqual(accountsCreated[19].id)
+      expect(accounts[10]).toBeUndefined()
+    })
+
+    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
+      const pagination: Pagination = {
+        last: 10
+      }
+      const accounts = accountsService.getAccountsPage(pagination)
+      await expect(accounts).rejects.toThrow(
+        "Can't paginate backwards from the start."
+      )
+    })
+
+    test('Can paginate backwards from a cursor', async (): Promise<void> => {
+      const pagination: Pagination = {
+        before: accountsCreated[20].id
+      }
+      const accounts = await accountsService.getAccountsPage(pagination)
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(accountsCreated[0].id)
+      expect(accounts[19].id).toEqual(accountsCreated[19].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        last: 5,
+        before: accountsCreated[10].id
+      }
+      const accounts = await accountsService.getAccountsPage(pagination)
+      expect(accounts).toHaveLength(5)
+      expect(accounts[0].id).toEqual(accountsCreated[5].id)
+      expect(accounts[4].id).toEqual(accountsCreated[9].id)
+      expect(accounts[5]).toBeUndefined()
+    })
+
+    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
+      const paginationForwards = {
+        first: 10
+      }
+      const accountsForwards = await accountsService.getAccountsPage(
+        paginationForwards
+      )
+      const paginationBackwards = {
+        last: 10,
+        before: accountsCreated[10].id
+      }
+      const accountsBackwards = await accountsService.getAccountsPage(
+        paginationBackwards
+      )
+      expect(accountsForwards).toHaveLength(10)
+      expect(accountsBackwards).toHaveLength(10)
+      expect(accountsForwards).toEqual(accountsBackwards)
+    })
+
+    test('Providing before and after results in forward pagination', async (): Promise<void> => {
+      const pagination: Pagination = {
+        after: accountsCreated[19].id,
+        before: accountsCreated[19].id
+      }
+      const accounts = await accountsService.getAccountsPage(pagination)
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(accountsCreated[20].id)
+      expect(accounts[19].id).toEqual(accountsCreated[39].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test("Can't request less than 0 accounts", async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: -1
+      }
+      const accounts = accountsService.getAccountsPage(pagination)
+      await expect(accounts).rejects.toThrow('Pagination index error')
+    })
+
+    test("Can't request more than 100 accounts", async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 101
+      }
+      const accounts = accountsService.getAccountsPage(pagination)
+      await expect(accounts).rejects.toThrow('Pagination index error')
     })
   })
 
