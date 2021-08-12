@@ -1,5 +1,5 @@
 import { Resolvers } from '../generated/graphql'
-import { bigintScalar } from './scalars'
+import { BigIntResolver } from 'graphql-scalars'
 import {
   getIlpAccounts,
   getIlpAccount,
@@ -15,6 +15,7 @@ import {
 //TODO: Implement functions for resolvers when there are the relevant services available.
 
 export const resolvers: Resolvers = {
+  UInt64: BigIntResolver,
   Query: {
     ilpAccounts: getIlpAccounts,
     ilpAccount: getIlpAccount
@@ -58,6 +59,5 @@ export const resolvers: Resolvers = {
   },
   WithdrawalsConnection: {
     // pageInfo: getWithdrawalsConnectionPageInfo
-  },
-  UInt64: bigintScalar
+  }
 }
