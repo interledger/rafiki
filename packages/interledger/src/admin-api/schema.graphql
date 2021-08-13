@@ -114,14 +114,7 @@ type Mutation {
   ): DeleteWebhookMutationResponse
 
   "Create deposit"
-  createDeposit(
-    "The id of the account to create the deposit for."
-    ilpAccountId: ID!
-    "Amount of deposit."
-    amount: UInt64!
-    "The id of the deposit."
-    id: ID
-  ): CreateDepositMutationResponse
+  createDeposit(input: CreateDepositInput!): CreateDepositMutationResponse
 
   "Create withdrawal"
   createWithdrawal(
@@ -200,6 +193,15 @@ input StreamInput {
 
 input RoutingInput {
   staticIlpAddress: String!
+}
+
+input CreateDepositInput {
+  "The id of the account to create the deposit for."
+  ilpAccountId: ID!
+  "Amount of deposit."
+  amount: String!
+  "The id of the deposit."
+  id: ID
 }
 
 type IlpAccount {
@@ -320,7 +322,8 @@ type DepositEdge {
 type Deposit {
   id: ID!
   amount: UInt64!
-  createdTime: Int!
+  ilpAccountId: ID!
+  # createdTime: Int!
 }
 
 type WithdrawalsConnection {
@@ -421,7 +424,7 @@ type CreateDepositMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  deposit: Deposit!
+  deposit: Deposit
 }
 
 type CreateWithdrawalMutationResponse implements MutationResponse {

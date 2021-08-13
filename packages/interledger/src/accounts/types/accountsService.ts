@@ -1,5 +1,10 @@
 import { Asset } from './asset'
-import { AccountDeposit, LiquidityDeposit, DepositError } from './deposit'
+import {
+  AccountDeposit,
+  LiquidityDeposit,
+  Deposit,
+  DepositError
+} from './deposit'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
 import {
@@ -46,7 +51,7 @@ export interface AccountsService extends ConnectorAccountsService {
     assetCode: string,
     assetScale: number
   ): Promise<bigint | undefined>
-  deposit(deposit: AccountDeposit): Promise<void | DepositError>
+  deposit(deposit: AccountDeposit): Promise<Deposit | DepositError>
   withdraw(withdrawal: AccountWithdrawal): Promise<void | WithdrawError>
   extendCredit(extendOptions: ExtendCreditOptions): Promise<void | CreditError>
   utilizeCredit(utilizeOptions: CreditOptions): Promise<void | CreditError>

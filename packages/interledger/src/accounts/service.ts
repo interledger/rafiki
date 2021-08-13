@@ -34,12 +34,15 @@ import {
   calculateDebitBalance,
   toLiquidityId,
   toSettlementId,
-  randomId
+  randomId,
+  uuidToBigInt
 } from './utils'
 import {
   AccountsService as AccountsServiceInterface,
   CreateAccountError,
   CreateOptions,
+  AccountDeposit,
+  Deposit,
   DepositError,
   ExtendCreditOptions,
   IlpAccount,
@@ -611,23 +614,20 @@ export class AccountsService implements AccountsServiceInterface {
   }
 
   public async deposit({
+    id,
     accountId,
-    amount,
-    depositId
-  }: {
-    accountId: string
-    amount: bigint
-    depositId?: bigint
-  }): Promise<void | DepositError> {
+    amount
+  }: AccountDeposit): Promise<Deposit | DepositError> {
     const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
     if (!account) {
       return DepositError.UnknownAccount
     }
+    const depositId = id || uuid.v4()
     const error = await this.createTransfers([
       {
-        id: depositId,
+        id: uuidToBigInt(depositId),
         sourceBalanceId: toSettlementId({
           assetCode: account.assetCode,
           assetScale: account.assetScale,
@@ -652,6 +652,13 @@ export class AccountsService implements AccountsServiceInterface {
         default:
           throw new BalanceTransferError(error.code)
       }
+    }
+    return {
+      id: depositId,
+      accountId,
+      amount
+      // TODO: Get tigerbeetle transfer timestamp
+      // createdTime
     }
   }
 

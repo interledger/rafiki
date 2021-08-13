@@ -13,6 +13,7 @@ import {
   CreateAccountError,
   CreateOptions,
   DepositError,
+  isDepositError,
   IlpAccount,
   IlpBalance,
   isCreateAccountError,
@@ -928,11 +929,19 @@ describe('Accounts Service', (): void => {
     test('Can deposit to account', async (): Promise<void> => {
       const { id: accountId, asset } = await accountFactory.build()
       const amount = BigInt(10)
-      const error = await accountsService.deposit({
+      const deposit = {
         accountId,
         amount
+      }
+      const depositOrError = await accountsService.deposit(deposit)
+      expect(isDepositError(depositOrError)).toEqual(false)
+      if (isDepositError(depositOrError)) {
+        fail()
+      }
+      expect(depositOrError).toEqual({
+        ...deposit,
+        id: depositOrError.id
       })
-      expect(error).toBeUndefined()
       const { balance } = (await accountsService.getAccountBalance(
         accountId
       )) as IlpBalance
@@ -944,11 +953,15 @@ describe('Accounts Service', (): void => {
       expect(settlementBalance).toEqual(amount)
 
       {
-        const error = await accountsService.deposit({
-          accountId,
-          amount
+        const depositOrError = await accountsService.deposit(deposit)
+        expect(isDepositError(depositOrError)).toEqual(false)
+        if (isDepositError(depositOrError)) {
+          fail()
+        }
+        expect(depositOrError).toEqual({
+          ...deposit,
+          id: depositOrError.id
         })
-        expect(error).toBeUndefined()
         const { balance } = (await accountsService.getAccountBalance(
           accountId
         )) as IlpBalance
@@ -962,31 +975,30 @@ describe('Accounts Service', (): void => {
         accountId,
         amount: BigInt(5)
       })
+      expect(isDepositError(error)).toEqual(true)
       expect(error).toEqual(DepositError.UnknownAccount)
     })
 
     test('Can deposit with idempotency key', async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(10)
-      const depositId = randomId()
+      const deposit = {
+        id: uuid(),
+        accountId,
+        amount
+      }
       {
-        const error = await accountsService.deposit({
-          accountId,
-          amount,
-          depositId
-        })
-        expect(error).toBeUndefined()
+        const depositOrError = await accountsService.deposit(deposit)
+        expect(isDepositError(depositOrError)).toEqual(false)
+        expect(depositOrError).toEqual(deposit)
         const { balance } = (await accountsService.getAccountBalance(
           accountId
         )) as IlpBalance
         expect(balance).toEqual(amount)
       }
       {
-        const error = await accountsService.deposit({
-          accountId,
-          amount,
-          depositId
-        })
+        const error = await accountsService.deposit(deposit)
+        expect(isDepositError(error)).toEqual(true)
         expect(error).toEqual(DepositError.DepositExists)
         const { balance } = (await accountsService.getAccountBalance(
           accountId
@@ -1687,18 +1699,14 @@ describe('Accounts Service', (): void => {
 
         const depositAmount = BigInt(20)
         if (autoApply) {
-          await expect(
-            accountsService.deposit({
-              accountId: superAccountId,
-              amount: depositAmount
-            })
-          ).resolves.toBeUndefined()
-          await expect(
-            accountsService.deposit({
-              accountId,
-              amount: depositAmount
-            })
-          ).resolves.toBeUndefined()
+          await accountsService.deposit({
+            accountId: superAccountId,
+            amount: depositAmount
+          })
+          await accountsService.deposit({
+            accountId,
+            amount: depositAmount
+          })
         }
 
         const amount = BigInt(5)
@@ -1936,12 +1944,10 @@ describe('Accounts Service', (): void => {
           amount: creditAmount
         })
       ).resolves.toBeUndefined()
-      await expect(
-        accountsService.deposit({
-          accountId: superAccountId,
-          amount: creditAmount
-        })
-      ).resolves.toBeUndefined()
+      await accountsService.deposit({
+        accountId: superAccountId,
+        amount: creditAmount
+      })
 
       await expect(
         accountsService.getAccountBalance(superAccountId)
@@ -2370,12 +2376,10 @@ describe('Accounts Service', (): void => {
         })
 
         const creditAmount = BigInt(10)
-        await expect(
-          accountsService.deposit({
-            accountId: superAccountId,
-            amount: creditAmount
-          })
-        ).resolves.toBeUndefined()
+        await accountsService.deposit({
+          accountId: superAccountId,
+          amount: creditAmount
+        })
         await expect(
           accountsService.extendCredit({
             accountId: superAccountId,
@@ -2497,12 +2501,10 @@ describe('Accounts Service', (): void => {
       })
 
       const lentAmount = BigInt(5)
-      await expect(
-        accountsService.deposit({
-          accountId,
-          amount: lentAmount
-        })
-      ).resolves.toBeUndefined()
+      await accountsService.deposit({
+        accountId,
+        amount: lentAmount
+      })
       await expect(
         accountsService.extendCredit({
           accountId,
@@ -2513,12 +2515,10 @@ describe('Accounts Service', (): void => {
       ).resolves.toBeUndefined()
 
       const depositAmount = BigInt(5)
-      await expect(
-        accountsService.deposit({
-          accountId: subAccountId,
-          amount: depositAmount
-        })
-      ).resolves.toBeUndefined()
+      await accountsService.deposit({
+        accountId: subAccountId,
+        amount: depositAmount
+      })
 
       await expect(
         accountsService.settleDebt({
@@ -2559,12 +2559,10 @@ describe('Accounts Service', (): void => {
       })
 
       const lentAmount = BigInt(5)
-      await expect(
-        accountsService.deposit({
-          accountId,
-          amount: lentAmount
-        })
-      ).resolves.toBeUndefined()
+      await accountsService.deposit({
+        accountId,
+        amount: lentAmount
+      })
       await expect(
         accountsService.extendCredit({
           accountId,
