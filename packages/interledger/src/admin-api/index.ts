@@ -4,7 +4,6 @@ import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { ApolloServer } from 'apollo-server'
 
 import { resolvers } from './resolvers'
-// import { AccountsService } from '../accounts/service'
 import { AccountsService as AccountsServiceInterface } from '../accounts/types'
 import { addResolversToSchema } from '@graphql-tools/schema'
 
