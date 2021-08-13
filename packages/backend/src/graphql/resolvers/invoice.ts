@@ -1,17 +1,17 @@
 import {
   ResolversTypes,
   InvoiceConnectionResolvers,
-  UserResolvers
+  AccountResolvers
 } from '../generated/graphql'
 import { Invoice } from '../../invoice/model'
 
-export const getUserInvoices: UserResolvers['invoices'] = async (
+export const getAccountInvoices: AccountResolvers['invoices'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['InvoiceConnection'] => {
   const invoiceService = await ctx.container.use('invoiceService')
-  const invoices = await invoiceService.getUserInvoicesPage(parent.id, args)
+  const invoices = await invoiceService.getAccountInvoicesPage(parent.id, args)
 
   return {
     edges: invoices.map((invoice: Invoice) => ({
@@ -45,8 +45,8 @@ export const getPageInfo: InvoiceConnectionResolvers['pageInfo'] = async (
 
   let hasNextPageInvoices, hasPreviousPageInvoices
   try {
-    hasNextPageInvoices = await invoiceService.getUserInvoicesPage(
-      firstInvoice.userId,
+    hasNextPageInvoices = await invoiceService.getAccountInvoicesPage(
+      firstInvoice.accountId,
       {
         after: lastEdge,
         first: 1
@@ -56,8 +56,8 @@ export const getPageInfo: InvoiceConnectionResolvers['pageInfo'] = async (
     hasNextPageInvoices = []
   }
   try {
-    hasPreviousPageInvoices = await invoiceService.getUserInvoicesPage(
-      firstInvoice.userId,
+    hasPreviousPageInvoices = await invoiceService.getAccountInvoicesPage(
+      firstInvoice.accountId,
       {
         before: firstEdge,
         last: 1

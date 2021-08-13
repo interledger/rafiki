@@ -45,10 +45,10 @@ describe('Account Service', (): void => {
 
   afterAll(
     async (): Promise<void> => {
-      await appContainer.shutdown()
-      await workerUtils.release()
       await resetGraphileDb(knex)
       await truncateTables(knex)
+      await appContainer.shutdown()
+      await workerUtils.release()
     }
   )
 

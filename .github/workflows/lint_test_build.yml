@@ -24,20 +24,6 @@ jobs:
           key: ${{ github.sha }}
       - run: yarn install --immutable --immutable-cache
 
-  accounts:
-    runs-on: ubuntu-latest
-    needs: checkout
-    steps:
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
-      - run: yarn workspace accounts lint
-      - run: yarn workspace accounts format:check
-      - run: yarn install --immutable --immutable-cache
-      - run: yarn workspace accounts test
-
   backend:
     runs-on: ubuntu-latest
     needs: checkout
@@ -51,7 +37,7 @@ jobs:
       - run: yarn workspace backend format:check
       - run: yarn workspace backend test
 
-  connector:
+  interledger:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
@@ -60,11 +46,11 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
-      - run: yarn workspace connector lint
-      - run: yarn workspace connector format:check
+      - run: yarn workspace interledger lint
+      - run: yarn workspace interledger format:check
       - run: yarn install --immutable --immutable-cache
       - run: yarn build
-      - run: yarn workspace connector test
+      - run: yarn workspace interledger test
 
   frontend:
     runs-on: ubuntu-latest
@@ -95,9 +81,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs:
-      - accounts
       - backend
-      - connector
+      - interledger
       - frontend
       - rates
     steps:
