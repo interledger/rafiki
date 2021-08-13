@@ -1,19 +1,12 @@
 import { Model } from 'objection'
-import Knex, { Transaction } from 'knex'
-import { createClient, Client } from 'tigerbeetle-node'
+import { Transaction } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { randomAsset, AccountFactory } from '../../accounts/testsHelpers'
-import { AccountsService } from '../../accounts/service'
 import { IlpAccount } from '../../accounts/types'
-import { Logger } from '../../logger/service'
-import { createKnex } from '../../Knex/service'
-import { ApolloServer, gql } from 'apollo-server'
+import { gql } from 'apollo-server'
 
-import { Config } from '../../config'
-import { apolloClient as apolloClientTest } from '../testsHelpers/apolloClient'
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
-import { createAdminApi } from '../index'
+import { createTestApp, TestContainer } from '../testsHelpers/app'
 import {
   CreateIlpAccountInput,
   CreateIlpAccountMutationResponse,
@@ -23,45 +16,21 @@ import {
   UpdateIlpAccountMutationResponse
 } from '../generated/graphql'
 
-const ADMIN_API_HOST = process.env.ADMIN_API_HOST || '127.0.0.1'
-const ADMIN_API_PORT = parseInt(process.env.ADMIN_API_PORT || '3001', 10)
-
 describe('Account Resolvers', (): void => {
-  let accountsService: AccountsService
   let accountFactory: AccountFactory
-  let config: typeof Config
-  let tbClient: Client
-  let adminApi: ApolloServer
-  let apolloClient: ApolloClient<NormalizedCacheObject>
-  let knex: Knex
+  let appContainer: TestContainer
   let trx: Transaction
 
   beforeAll(
     async (): Promise<void> => {
-      config = Config
-      config.ilpAddress = 'test.rafiki'
-      config.peerAddresses = [
-        {
-          accountId: uuid(),
-          ilpAddress: 'test.alice'
-        }
-      ]
-      tbClient = createClient({
-        cluster_id: config.tigerbeetleClusterId,
-        replica_addresses: config.tigerbeetleReplicaAddresses
-      })
-      knex = await createKnex(config.postgresUrl)
-      accountsService = new AccountsService(tbClient, config, Logger)
-      accountFactory = new AccountFactory(accountsService)
-      apolloClient = apolloClientTest
-      adminApi = await createAdminApi({ accountsService })
-      await adminApi.listen({ host: ADMIN_API_HOST, port: ADMIN_API_PORT })
+      appContainer = await createTestApp()
+      accountFactory = new AccountFactory(appContainer.accountsService)
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      trx = await knex.transaction()
+      trx = await appContainer.knex.transaction()
       Model.knex(trx)
     }
   )
@@ -75,9 +44,7 @@ describe('Account Resolvers', (): void => {
 
   afterAll(
     async (): Promise<void> => {
-      await adminApi.stop()
-      await knex.destroy()
-      tbClient.destroy()
+      await appContainer.shutdown()
     }
   )
 
@@ -86,7 +53,7 @@ describe('Account Resolvers', (): void => {
       const account: CreateIlpAccountInput = {
         asset: randomAsset()
       }
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateIlpAccount($input: CreateIlpAccountInput!) {
@@ -127,7 +94,7 @@ describe('Account Resolvers', (): void => {
           }
         }
         await expect(
-          accountsService.getAccount(response.ilpAccount.id)
+          appContainer.accountsService.getAccount(response.ilpAccount.id)
         ).resolves.toEqual(expectedAccount)
       } else {
         fail()
@@ -157,7 +124,7 @@ describe('Account Resolvers', (): void => {
           staticIlpAddress: 'g.rafiki.' + id
         }
       }
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateIlpAccount($input: CreateIlpAccountInput!) {
@@ -188,7 +155,9 @@ describe('Account Resolvers', (): void => {
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
       expect(response.ilpAccount?.id).toEqual(id)
-      await expect(accountsService.getAccount(id)).resolves.toEqual({
+      await expect(
+        appContainer.accountsService.getAccount(id)
+      ).resolves.toEqual({
         ...account,
         http: {
           outgoing: account.http?.outgoing
@@ -203,7 +172,7 @@ describe('Account Resolvers', (): void => {
         id,
         asset: randomAsset()
       }
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateIlpAccount($input: CreateIlpAccountInput!) {
@@ -251,7 +220,7 @@ describe('Account Resolvers', (): void => {
         asset: randomAsset(),
         http
       }
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateIlpAccount($input: CreateIlpAccountInput!) {
@@ -288,7 +257,7 @@ describe('Account Resolvers', (): void => {
   describe('IlpAccount Queries', (): void => {
     test('Can get an ilp account', async (): Promise<void> => {
       const account = await accountFactory.build()
-      const query = await apolloClient
+      const query = await appContainer.apolloClient
         .query({
           query: gql`
             query IlpAccount($accountId: ID!) {
@@ -338,7 +307,7 @@ describe('Account Resolvers', (): void => {
           staticIlpAddress: 'g.rafiki.test'
         }
       })
-      const query = await apolloClient
+      const query = await appContainer.apolloClient
         .query({
           query: gql`
             query IlpAccount($accountId: ID!) {
@@ -394,7 +363,7 @@ describe('Account Resolvers', (): void => {
       const accounts = await Promise.all(
         Array.from({ length: 2 }, async () => await accountFactory.build())
       )
-      const query = await apolloClient
+      const query = await appContainer.apolloClient
         .query({
           query: gql`
             query IlpAccounts {
@@ -457,7 +426,7 @@ describe('Account Resolvers', (): void => {
         )
       )
 
-      const query = await apolloClient
+      const query = await appContainer.apolloClient
         .query({
           query: gql`
             query IlpAccounts {
@@ -514,7 +483,7 @@ describe('Account Resolvers', (): void => {
       const accounts = await Promise.all(
         Array.from({ length: 50 }, async () => await accountFactory.build())
       )
-      const query = await apolloClient
+      const query = await appContainer.apolloClient
         .query({
           query: gql`
             query IlpAccounts {
@@ -552,7 +521,7 @@ describe('Account Resolvers', (): void => {
     }, 10_000)
 
     test('No accounts, but accounts requested', async (): Promise<void> => {
-      const query = await apolloClient
+      const query = await appContainer.apolloClient
         .query({
           query: gql`
             query IlpAccounts {
@@ -593,7 +562,7 @@ describe('Account Resolvers', (): void => {
       const accounts = await Promise.all(
         Array.from({ length: 50 }, async () => await accountFactory.build())
       )
-      const query = await apolloClient
+      const query = await appContainer.apolloClient
         .query({
           query: gql`
             query IlpAccounts {
@@ -634,7 +603,7 @@ describe('Account Resolvers', (): void => {
       const accounts = await Promise.all(
         Array.from({ length: 50 }, async () => await accountFactory.build())
       )
-      const query = await apolloClient
+      const query = await appContainer.apolloClient
         .query({
           query: gql`
             query IlpAccounts($after: String!) {
@@ -678,7 +647,7 @@ describe('Account Resolvers', (): void => {
       const accounts = await Promise.all(
         Array.from({ length: 50 }, async () => await accountFactory.build())
       )
-      const query = await apolloClient
+      const query = await appContainer.apolloClient
         .query({
           query: gql`
             query IlpAccounts($after: String!) {
@@ -742,7 +711,7 @@ describe('Account Resolvers', (): void => {
           staticIlpAddress: 'g.rafiki.' + account.id
         }
       }
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation UpdateIlpAccount($input: UpdateIlpAccountInput!) {
@@ -773,7 +742,9 @@ describe('Account Resolvers', (): void => {
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
       expect(response.ilpAccount?.id).not.toBeNull()
-      await expect(accountsService.getAccount(account.id)).resolves.toEqual({
+      await expect(
+        appContainer.accountsService.getAccount(account.id)
+      ).resolves.toEqual({
         ...updateOptions,
         asset: account.asset,
         http: {
@@ -806,7 +777,7 @@ describe('Account Resolvers', (): void => {
         id: account.id,
         disabled: true
       }
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation UpdateIlpAccount($input: UpdateIlpAccountInput!) {
@@ -837,7 +808,9 @@ describe('Account Resolvers', (): void => {
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
       expect(response.ilpAccount?.id).not.toBeNull()
-      await expect(accountsService.getAccount(account.id)).resolves.toEqual({
+      await expect(
+        appContainer.accountsService.getAccount(account.id)
+      ).resolves.toEqual({
         ...account,
         disabled: updateOptions.disabled
       })
@@ -847,7 +820,7 @@ describe('Account Resolvers', (): void => {
       const updateOptions: UpdateIlpAccountInput = {
         id: uuid()
       }
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation UpdateIlpAccount($input: UpdateIlpAccountInput!) {
@@ -896,7 +869,7 @@ describe('Account Resolvers', (): void => {
         id,
         http
       }
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation UpdateIlpAccount($input: UpdateIlpAccountInput!) {
@@ -933,7 +906,7 @@ describe('Account Resolvers', (): void => {
   describe('Create Ilp Sub-Account', (): void => {
     test('Can create an ilp sub-account', async (): Promise<void> => {
       const superAccount = await accountFactory.build()
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateIlpSubAccount($superAccountId: ID!) {
@@ -977,7 +950,7 @@ describe('Account Resolvers', (): void => {
           }
         }
         await expect(
-          accountsService.getAccount(response.ilpAccount.id)
+          appContainer.accountsService.getAccount(response.ilpAccount.id)
         ).resolves.toEqual(expectedAccount)
       } else {
         fail()
@@ -985,7 +958,7 @@ describe('Account Resolvers', (): void => {
     })
 
     test('Returns error for unknown super-account', async (): Promise<void> => {
-      const response = await apolloClient
+      const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateIlpSubAccount($superAccountId: ID!) {
