@@ -122,33 +122,27 @@ export type FinalizePendingWithdrawalMutationResponse = MutationResponse & {
 
 export type Http = {
   __typename?: 'Http';
-  incoming: HttpIncoming;
   outgoing: HttpOutgoing;
-};
-
-export type HttpIncoming = {
-  __typename?: 'HttpIncoming';
-  authTokens: Array<Scalars['String']>;
 };
 
 export type HttpOutgoing = {
   __typename?: 'HttpOutgoing';
-  authTokens: Scalars['String'];
+  authToken: Scalars['String'];
   endpoint: Scalars['String'];
 };
 
 export type IlpAccount = {
   __typename?: 'IlpAccount';
   id: Scalars['ID'];
-  enabled: Scalars['Boolean'];
+  disabled: Scalars['Boolean'];
   superAccount?: Maybe<IlpAccount>;
   subAccounts: IlpAccountsConnection;
   liquidityAccountId?: Maybe<Scalars['ID']>;
-  maxPacketAmount: Scalars['String'];
-  http: Http;
+  maxPacketAmount?: Maybe<Scalars['UInt64']>;
+  http?: Maybe<Http>;
   asset: Asset;
   stream: Stream;
-  routing: Routing;
+  routing?: Maybe<Routing>;
   balance: Balance;
   webhooks: WebhooksConnection;
   deposits: DepositsConnection;
@@ -405,7 +399,7 @@ export type RollbackPendingWithdrawalMutationResponse = MutationResponse & {
 export type Routing = {
   __typename?: 'Routing';
   staticIlpAddress: Scalars['String'];
-  inheritFromRemote: Scalars['Boolean'];
+  inheritFromRemote?: Maybe<Scalars['Boolean']>;
   dynamicIlpAddress?: Maybe<Scalars['String']>;
 };
 
@@ -591,7 +585,6 @@ export type ResolversTypes = {
   ExtendCreditMutationResponse: ResolverTypeWrapper<Partial<ExtendCreditMutationResponse>>;
   FinalizePendingWithdrawalMutationResponse: ResolverTypeWrapper<Partial<FinalizePendingWithdrawalMutationResponse>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
-  HttpIncoming: ResolverTypeWrapper<Partial<HttpIncoming>>;
   HttpOutgoing: ResolverTypeWrapper<Partial<HttpOutgoing>>;
   IlpAccount: ResolverTypeWrapper<Partial<IlpAccount>>;
   IlpAccountEdge: ResolverTypeWrapper<Partial<IlpAccountEdge>>;
@@ -640,7 +633,6 @@ export type ResolversParentTypes = {
   ExtendCreditMutationResponse: Partial<ExtendCreditMutationResponse>;
   FinalizePendingWithdrawalMutationResponse: Partial<FinalizePendingWithdrawalMutationResponse>;
   Http: Partial<Http>;
-  HttpIncoming: Partial<HttpIncoming>;
   HttpOutgoing: Partial<HttpOutgoing>;
   IlpAccount: Partial<IlpAccount>;
   IlpAccountEdge: Partial<IlpAccountEdge>;
@@ -775,33 +767,27 @@ export type FinalizePendingWithdrawalMutationResponseResolvers<ContextType = any
 };
 
 export type HttpResolvers<ContextType = any, ParentType extends ResolversParentTypes['Http'] = ResolversParentTypes['Http']> = {
-  incoming?: Resolver<ResolversTypes['HttpIncoming'], ParentType, ContextType>;
   outgoing?: Resolver<ResolversTypes['HttpOutgoing'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type HttpIncomingResolvers<ContextType = any, ParentType extends ResolversParentTypes['HttpIncoming'] = ResolversParentTypes['HttpIncoming']> = {
-  authTokens?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type HttpOutgoingResolvers<ContextType = any, ParentType extends ResolversParentTypes['HttpOutgoing'] = ResolversParentTypes['HttpOutgoing']> = {
-  authTokens?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  authToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   endpoint?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type IlpAccountResolvers<ContextType = any, ParentType extends ResolversParentTypes['IlpAccount'] = ResolversParentTypes['IlpAccount']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  disabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   superAccount?: Resolver<Maybe<ResolversTypes['IlpAccount']>, ParentType, ContextType>;
   subAccounts?: Resolver<ResolversTypes['IlpAccountsConnection'], ParentType, ContextType, RequireFields<IlpAccountSubAccountsArgs, never>>;
   liquidityAccountId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
-  maxPacketAmount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
+  maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  http?: Resolver<Maybe<ResolversTypes['Http']>, ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   stream?: Resolver<ResolversTypes['Stream'], ParentType, ContextType>;
-  routing?: Resolver<ResolversTypes['Routing'], ParentType, ContextType>;
+  routing?: Resolver<Maybe<ResolversTypes['Routing']>, ParentType, ContextType>;
   balance?: Resolver<ResolversTypes['Balance'], ParentType, ContextType>;
   webhooks?: Resolver<ResolversTypes['WebhooksConnection'], ParentType, ContextType, RequireFields<IlpAccountWebhooksArgs, never>>;
   deposits?: Resolver<ResolversTypes['DepositsConnection'], ParentType, ContextType, RequireFields<IlpAccountDepositsArgs, never>>;
@@ -885,7 +871,7 @@ export type RollbackPendingWithdrawalMutationResponseResolvers<ContextType = any
 
 export type RoutingResolvers<ContextType = any, ParentType extends ResolversParentTypes['Routing'] = ResolversParentTypes['Routing']> = {
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  inheritFromRemote?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  inheritFromRemote?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   dynamicIlpAddress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -989,7 +975,6 @@ export type Resolvers<ContextType = any> = {
   ExtendCreditMutationResponse?: ExtendCreditMutationResponseResolvers<ContextType>;
   FinalizePendingWithdrawalMutationResponse?: FinalizePendingWithdrawalMutationResponseResolvers<ContextType>;
   Http?: HttpResolvers<ContextType>;
-  HttpIncoming?: HttpIncomingResolvers<ContextType>;
   HttpOutgoing?: HttpOutgoingResolvers<ContextType>;
   IlpAccount?: IlpAccountResolvers<ContextType>;
   IlpAccountEdge?: IlpAccountEdgeResolvers<ContextType>;

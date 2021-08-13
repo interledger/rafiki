@@ -12,7 +12,7 @@ export interface IlpAccount {
       endpoint: string
     }
   }
-  stream?: {
+  stream: {
     enabled: boolean
   }
   routing?: {

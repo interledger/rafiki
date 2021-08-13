@@ -11,6 +11,9 @@ export type MockIlpAccount = CreateAccountOptions & {
   id: string
   disabled: boolean
   balance: bigint
+  stream: {
+    enabled: boolean
+  }
 }
 
 export class MockAccountsService implements AccountsService {

@@ -140,6 +140,8 @@ describe('Accounts Service', (): void => {
         id: account.id!,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         disabled: account.disabled!,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        stream: account.stream!,
         http: {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           outgoing: account.http!.outgoing
@@ -529,7 +531,9 @@ describe('Accounts Service', (): void => {
         ...updateOptions,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         disabled: updateOptions.disabled!,
-        asset
+        asset,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        stream: updateOptions.stream!
       }
       expect(accountOrError as IlpAccount).toEqual(expectedAccount)
       const account = await accountsService.getAccount(id)

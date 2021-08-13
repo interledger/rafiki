@@ -12,14 +12,11 @@ export const getIlpAccounts: QueryResolvers['ilpAccounts'] = async (
   args,
   ctx
 ): ResolversTypes['IlpAccountsConnection'] => {
-  // TODO: get all account information from accounts service
   const accounts = await ctx.accountsService.getAccountsPage(args)
   return {
     edges: accounts.map((account: IlpAccount) => ({
       cursor: account.id,
-      node: {
-        id: account.id
-      }
+      node: account
     }))
   }
 }
@@ -29,11 +26,7 @@ export const getIlpAccount: QueryResolvers['ilpAccount'] = async (
   args,
   ctx
 ): ResolversTypes['IlpAccount'] => {
-  // TODO: get account all information from accounts service
-  const account = await ctx.accountsService.getAccount(args.id)
-  return {
-    id: account.id
-  }
+  return await ctx.accountsService.getAccount(args.id)
 }
 
 export const createIlpAccount: MutationResolvers['createIlpAccount'] = async (

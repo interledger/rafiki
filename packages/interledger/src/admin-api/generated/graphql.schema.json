@@ -1058,22 +1058,6 @@
         "description": null,
         "fields": [
           {
-            "name": "incoming",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "HttpIncoming",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "outgoing",
             "description": null,
             "args": [],
@@ -1097,46 +1081,11 @@
       },
       {
         "kind": "OBJECT",
-        "name": "HttpIncoming",
-        "description": null,
-        "fields": [
-          {
-            "name": "authTokens",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "LIST",
-                "name": null,
-                "ofType": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  }
-                }
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
         "name": "HttpOutgoing",
         "description": null,
         "fields": [
           {
-            "name": "authTokens",
+            "name": "authToken",
             "description": null,
             "args": [],
             "type": {
@@ -1195,7 +1144,7 @@
             "deprecationReason": null
           },
           {
-            "name": "enabled",
+            "name": "disabled",
             "description": null,
             "args": [],
             "type": {
@@ -1304,13 +1253,9 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -1320,13 +1265,9 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Http",
-                "ofType": null
-              }
+              "kind": "OBJECT",
+              "name": "Http",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -1368,13 +1309,9 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Routing",
-                "ofType": null
-              }
+              "kind": "OBJECT",
+              "name": "Routing",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -3025,13 +2962,9 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Boolean",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

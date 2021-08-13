@@ -64,10 +64,13 @@ export interface Pagination {
 
 export type Options = Omit<
   IlpAccount,
-  'id' | 'disabled' | 'asset' | 'superAccountId'
+  'id' | 'disabled' | 'asset' | 'superAccountId' | 'stream'
 > & {
   id?: string
   disabled?: boolean
+  stream?: {
+    enabled: boolean
+  }
   http?: {
     incoming?: {
       authTokens: string[]

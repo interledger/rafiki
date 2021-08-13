@@ -150,7 +150,7 @@ type IlpAccountEdge {
 
 type IlpAccount {
   id: ID!
-  enabled: Boolean!
+  disabled: Boolean!
   superAccount: IlpAccount
   subAccounts(
     "Paginating forwards: the cursor before the the requested page."
@@ -163,11 +163,11 @@ type IlpAccount {
     last: Int
   ): IlpAccountsConnection!
   liquidityAccountId: ID
-  maxPacketAmount: String!
-  http: Http!
+  maxPacketAmount: UInt64
+  http: Http
   asset: Asset!
   stream: Stream!
-  routing: Routing!
+  routing: Routing
 
   balance: Balance!
   webhooks(
@@ -203,15 +203,11 @@ type IlpAccount {
 }
 
 type Http {
-  incoming: HttpIncoming!
   outgoing: HttpOutgoing!
 }
 
-type HttpIncoming {
-  authTokens: [String!]!
-}
 type HttpOutgoing {
-  authTokens: String!
+  authToken: String!
   endpoint: String!
 }
 
@@ -221,7 +217,7 @@ type Stream {
 
 type Routing {
   staticIlpAddress: String!
-  inheritFromRemote: Boolean!
+  inheritFromRemote: Boolean
   dynamicIlpAddress: String
 }
 

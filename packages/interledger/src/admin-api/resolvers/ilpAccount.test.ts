@@ -82,6 +82,14 @@ describe('Account Resolvers', (): void => {
             query IlpAccount($accountId: ID!) {
               ilpAccount(id: $accountId) {
                 id
+                asset {
+                  code
+                  scale
+                }
+                disabled
+                stream {
+                  enabled
+                }
               }
             }
           `,
@@ -99,7 +107,195 @@ describe('Account Resolvers', (): void => {
           }
         )
 
-      expect(query.id).toEqual(account.id)
+      expect(query).toMatchObject(account)
+    })
+
+    test('Can get all ilp account fields', async (): Promise<void> => {
+      const account = await accountFactory.build({
+        maxPacketAmount: BigInt(100),
+        http: {
+          incoming: {
+            authTokens: [uuid()]
+          },
+          outgoing: {
+            authToken: uuid(),
+            endpoint: '/outgoingEndpoint'
+          }
+        },
+        routing: {
+          staticIlpAddress: 'g.rafiki.test'
+        }
+      })
+      const query = await apolloClient
+        .query({
+          query: gql`
+            query IlpAccount($accountId: ID!) {
+              ilpAccount(id: $accountId) {
+                id
+                asset {
+                  code
+                  scale
+                }
+                disabled
+                maxPacketAmount
+                http {
+                  outgoing {
+                    authToken
+                    endpoint
+                  }
+                }
+                stream {
+                  enabled
+                }
+                routing {
+                  staticIlpAddress
+                }
+              }
+            }
+          `,
+          variables: {
+            accountId: account.id
+          }
+        })
+        .then(
+          (query): Account => {
+            if (query.data) {
+              return query.data.ilpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(query).toMatchObject({
+        ...account,
+        http: {
+          outgoing: account.http?.outgoing
+        },
+        maxPacketAmount: account.maxPacketAmount?.toString()
+      })
+    })
+  })
+
+  describe('IlpAccounts Queries', (): void => {
+    test('Can get ilp accounts', async (): Promise<void> => {
+      const accounts = await Promise.all(
+        Array.from({ length: 2 }, async () => await accountFactory.build())
+      )
+      const query = await apolloClient
+        .query({
+          query: gql`
+            query IlpAccounts {
+              ilpAccounts {
+                edges {
+                  node {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                    disabled
+                    stream {
+                      enabled
+                    }
+                  }
+                  cursor
+                }
+              }
+            }
+          `
+        })
+        .then(
+          (query): IlpAccountsConnection => {
+            if (query.data) {
+              return query.data.ilpAccounts
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(query.edges).toHaveLength(2)
+      query.edges.forEach((edge, idx) => {
+        expect(edge.cursor).toEqual(accounts[idx].id)
+        expect(edge.node).toMatchObject(accounts[idx])
+      })
+    })
+
+    test('Can get all ilp accounts fields', async (): Promise<void> => {
+      const accounts = await Promise.all(
+        Array.from(
+          { length: 2 },
+          async () =>
+            await accountFactory.build({
+              maxPacketAmount: BigInt(100),
+              http: {
+                incoming: {
+                  authTokens: [uuid()]
+                },
+                outgoing: {
+                  authToken: uuid(),
+                  endpoint: '/outgoingEndpoint'
+                }
+              },
+              routing: {
+                staticIlpAddress: 'g.rafiki.test'
+              }
+            })
+        )
+      )
+
+      const query = await apolloClient
+        .query({
+          query: gql`
+            query IlpAccounts {
+              ilpAccounts {
+                edges {
+                  node {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                    disabled
+                    maxPacketAmount
+                    http {
+                      outgoing {
+                        authToken
+                        endpoint
+                      }
+                    }
+                    stream {
+                      enabled
+                    }
+                    routing {
+                      staticIlpAddress
+                    }
+                  }
+                  cursor
+                }
+              }
+            }
+          `
+        })
+        .then(
+          (query): IlpAccountsConnection => {
+            if (query.data) {
+              return query.data.ilpAccounts
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(query.edges).toHaveLength(2)
+      query.edges.forEach((edge, idx) => {
+        expect(edge.cursor).toEqual(accounts[idx].id)
+        expect(edge.node).toMatchObject({
+          ...accounts[idx],
+          maxPacketAmount: accounts[idx].maxPacketAmount?.toString()
+        })
+      })
     })
 
     test('pageInfo is correct on default query without params', async (): Promise<void> => {
