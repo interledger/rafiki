@@ -1,5 +1,4 @@
 import { Resolvers } from '../generated/graphql'
-import { BigIntResolver } from 'graphql-scalars'
 import {
   getIlpAccounts,
   getIlpAccount,
@@ -11,11 +10,12 @@ import {
   createIlpSubAccount,
   getSubAccounts
 } from './ilpAccount'
+import { GraphQLBigInt } from '../scalars'
 
 //TODO: Implement functions for resolvers when there are the relevant services available.
 
 export const resolvers: Resolvers = {
-  UInt64: BigIntResolver,
+  UInt64: GraphQLBigInt,
   Query: {
     ilpAccounts: getIlpAccounts,
     ilpAccount: getIlpAccount

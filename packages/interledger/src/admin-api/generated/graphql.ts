@@ -14,13 +14,6 @@ export type Scalars = {
   UInt64: bigint;
 };
 
-export type Amount = {
-  __typename?: 'Amount';
-  amount: Scalars['UInt64'];
-  currency: Scalars['String'];
-  scale: Scalars['Int'];
-};
-
 export type Asset = {
   __typename?: 'Asset';
   code: Scalars['String'];
@@ -579,10 +572,9 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
-  Amount: ResolverTypeWrapper<Partial<Amount>>;
+  Asset: ResolverTypeWrapper<Partial<Asset>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
-  Asset: ResolverTypeWrapper<Partial<Asset>>;
   Balance: ResolverTypeWrapper<Partial<Balance>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   CreateDepositMutationResponse: ResolverTypeWrapper<Partial<CreateDepositMutationResponse>>;
@@ -629,10 +621,9 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
-  Amount: Partial<Amount>;
+  Asset: Partial<Asset>;
   String: Partial<Scalars['String']>;
   Int: Partial<Scalars['Int']>;
-  Asset: Partial<Asset>;
   Balance: Partial<Balance>;
   ID: Partial<Scalars['ID']>;
   CreateDepositMutationResponse: Partial<CreateDepositMutationResponse>;
@@ -675,13 +666,6 @@ export type ResolversParentTypes = {
   Withdrawal: Partial<Withdrawal>;
   WithdrawalEdge: Partial<WithdrawalEdge>;
   WithdrawalsConnection: Partial<WithdrawalsConnection>;
-};
-
-export type AmountResolvers<ContextType = any, ParentType extends ResolversParentTypes['Amount'] = ResolversParentTypes['Amount']> = {
-  amount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
-  currency?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  scale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type AssetResolvers<ContextType = any, ParentType extends ResolversParentTypes['Asset'] = ResolversParentTypes['Asset']> = {
@@ -990,7 +974,6 @@ export type WithdrawalsConnectionResolvers<ContextType = any, ParentType extends
 };
 
 export type Resolvers<ContextType = any> = {
-  Amount?: AmountResolvers<ContextType>;
   Asset?: AssetResolvers<ContextType>;
   Balance?: BalanceResolvers<ContextType>;
   CreateDepositMutationResponse?: CreateDepositMutationResponseResolvers<ContextType>;
