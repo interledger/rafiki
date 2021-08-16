@@ -397,12 +397,6 @@ type Asset {
   scale: Int!
 }
 
-type Amount {
-  amount: UInt64!
-  currency: String!
-  scale: Int!
-}
-
 type PageInfo {
   "Paginating forwards: the cursor to continue."
   endCursor: String
