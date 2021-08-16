@@ -68,12 +68,15 @@ describe('BigInt', () => {
         c: inc(num: 2147483647)
         d: inc(num: 2147483648)
         e: inc(num: 439857257821345)
-        f: inc(num: 9007199254740992)
+        f: inc(num: 9007199254740991)
+      }`
+
+  const invalidQuery = `{
+        a: inc(num: -1)
       }`
 
   const invalidQuery2 = `{
         k: typeErr
-        a: inc(num: -1)
       }`
 
   const validMutation = `mutation test(
@@ -92,13 +95,23 @@ describe('BigInt', () => {
     input4: { num: '1' }
   }
 
-  it('2', async () => {
+  it('2.1', async () => {
+    const { data, errors } = await graphql(schema, invalidQuery)
+
+    expect(errors).toHaveLength(1)
+    expect(errors).toBeDefined()
+    const message = typeof errors !== 'undefined' ? errors[0]?.message : ''
+    expect(message).toContain('Input must be unsigned')
+    expect(data).toBeUndefined()
+  })
+  it('2.2', async () => {
     const { data, errors } = await graphql(schema, invalidQuery2)
 
-    expect(errors).toHaveLength(2)
-    expect(errors[0].message).toContain('is not an integer')
-    expect(errors[1].message).toContain('Input must be unsigned')
-    expect(data).toEqual(null)
+    expect(errors).toHaveLength(1)
+    expect(errors).toBeDefined()
+    const message = typeof errors !== 'undefined' ? errors[0]?.message : ''
+    expect(message).toContain('is not an integer')
+    expect(data).toBeNull()
   })
   it('3', async () => {
     const { data, errors } = await graphql(schema, validQuery)
@@ -109,7 +122,7 @@ describe('BigInt', () => {
       c: BigInt(2147483648),
       d: BigInt(2147483649),
       e: BigInt(439857257821346),
-      f: BigInt(9007199254740993)
+      f: BigInt(9007199254740992)
     })
   })
   it('4', async () => {
