@@ -1,6 +1,7 @@
 import { Model } from 'objection'
 import { Transaction } from 'knex'
 import { v4 as uuid } from 'uuid'
+import { ApolloError } from '@apollo/client'
 
 import { randomAsset, AccountFactory } from '../../accounts/testsHelpers'
 import { IlpAccount } from '../../accounts/types'
@@ -331,6 +332,13 @@ describe('Account Resolvers', (): void => {
                 routing {
                   staticIlpAddress
                 }
+                balance {
+                  balance
+                  availableCredit
+                  creditExtended
+                  totalBorrowed
+                  totalLent
+                }
               }
             }
           `,
@@ -353,8 +361,50 @@ describe('Account Resolvers', (): void => {
         http: {
           outgoing: account.http?.outgoing
         },
-        maxPacketAmount: account.maxPacketAmount?.toString()
+        maxPacketAmount: account.maxPacketAmount?.toString(),
+        balance: {
+          balance: '0',
+          availableCredit: '0',
+          creditExtended: '0',
+          totalBorrowed: '0',
+          totalLent: '0'
+        }
       })
+    })
+
+    test('Returns error for unknown ilp account', async (): Promise<void> => {
+      const gqlQuery = appContainer.apolloClient
+        .query({
+          query: gql`
+            query IlpAccount($accountId: ID!) {
+              ilpAccount(id: $accountId) {
+                id
+                asset {
+                  code
+                  scale
+                }
+                disabled
+                stream {
+                  enabled
+                }
+              }
+            }
+          `,
+          variables: {
+            accountId: uuid()
+          }
+        })
+        .then(
+          (query): Account => {
+            if (query.data) {
+              return query.data.ilpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 

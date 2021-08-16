@@ -32,7 +32,11 @@ export const getIlpAccount: QueryResolvers['ilpAccount'] = async (
   args,
   ctx
 ): ResolversTypes['IlpAccount'] => {
-  return await ctx.accountsService.getAccount(args.id)
+  const account = await ctx.accountsService.getAccount(args.id)
+  if (!account) {
+    throw new Error('No account')
+  }
+  return account
 }
 
 export const createIlpAccount: MutationResolvers['createIlpAccount'] = async (
@@ -159,6 +163,18 @@ export const createIlpSubAccount: MutationResolvers['createIlpSubAccount'] = asy
       success: false
     }
   }
+}
+
+export const getBalance: IlpAccountResolvers['balance'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['Balance'] => {
+  const balance = await ctx.accountsService.getAccountBalance(parent.id)
+  if (!balance) {
+    throw new Error('No account')
+  }
+  return balance
 }
 
 export const getSuperAccount: IlpAccountResolvers['superAccount'] = async (

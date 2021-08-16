@@ -219,7 +219,6 @@ type IlpAccount {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): IlpAccountsConnection!
-  liquidityAccountId: ID
   maxPacketAmount: UInt64
   http: Http
   asset: Asset!
@@ -279,18 +278,11 @@ type Routing {
 }
 
 type Balance {
-  id: ID!
-  createdTime: String!
-  asset: Asset!
   balance: UInt64!
   netLiability: UInt64
   netAssets: UInt64
   creditExtended: UInt64!
   totalLent: UInt64!
-  operator: Operator
-}
-
-type Operator {
   availableCredit: UInt64!
   totalBorrowed: UInt64!
 }

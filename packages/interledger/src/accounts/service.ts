@@ -358,11 +358,6 @@ export class AccountsService implements AccountsServiceInterface {
     }
 
     const accountBalance: IlpBalance = {
-      id: accountId,
-      asset: {
-        code: account.assetCode,
-        scale: account.assetScale
-      },
       balance: BigInt(0),
       availableCredit: BigInt(0),
       creditExtended: BigInt(0),

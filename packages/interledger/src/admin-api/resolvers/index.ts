@@ -4,6 +4,7 @@ import {
   getIlpAccounts,
   getIlpAccount,
   getIlpAccountsConnectionPageInfo,
+  getBalance,
   getSuperAccount,
   createIlpAccount,
   updateIlpAccount,
@@ -43,6 +44,7 @@ export const resolvers: Resolvers = {
     // rollbackPendingWithdrawal: rollbackPendingWithdrawal
   },
   IlpAccount: {
+    balance: getBalance,
     superAccount: getSuperAccount,
     subAccounts: getSubAccounts
     // webhooks: getWebhooks,
