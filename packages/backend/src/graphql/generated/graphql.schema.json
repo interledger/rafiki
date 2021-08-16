@@ -45,11 +45,11 @@
           },
           {
             "name": "invoices",
-            "description": "invoices\n@param after Returns the elements in the list that come after the specified cursor.\n@param before Returns the elements in the list that come before the specified cursor.\n@param first Returns the first _n_ elements from the list.\n@param last Returns the last _n_ elements from the list.",
+            "description": null,
             "args": [
               {
                 "name": "after",
-                "description": null,
+                "description": "Paginating forwards: the cursor before the the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -61,7 +61,7 @@
               },
               {
                 "name": "before",
-                "description": null,
+                "description": "Paginating backwards: the cursor after the the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -73,7 +73,7 @@
               },
               {
                 "name": "first",
-                "description": null,
+                "description": "Paginating forwards: The first **n** elements from the page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -85,7 +85,7 @@
               },
               {
                 "name": "last",
-                "description": null,
+                "description": "Paginating backwards: The last **n** elements from the page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",

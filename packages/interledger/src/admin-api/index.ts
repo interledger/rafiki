@@ -1,20 +1,18 @@
 import { join } from 'path'
-import {
-  addResolversToSchema,
-  GraphQLFileLoader,
-  loadSchemaSync
-} from 'graphql-tools'
+import { loadSchemaSync } from '@graphql-tools/load'
+import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { ApolloServer } from 'apollo-server'
 
 import { resolvers } from './resolvers'
-import { AccountsService } from '../accounts/service'
+import { AccountsService as AccountsServiceInterface } from '../accounts/types'
+import { addResolversToSchema } from '@graphql-tools/schema'
 
 export interface ApolloContext {
-  accountsService: AccountsService
+  accountsService: AccountsServiceInterface
 }
 
 interface ServiceDependencies {
-  accountsService: AccountsService
+  accountsService: AccountsServiceInterface
 }
 
 export async function createAdminApi({
