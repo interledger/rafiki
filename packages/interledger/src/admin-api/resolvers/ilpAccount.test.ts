@@ -12,6 +12,7 @@ import {
   CreateIlpAccountInput,
   CreateIlpAccountMutationResponse,
   CreateIlpSubAccountMutationResponse,
+  IlpAccount as IlpAccountResponse,
   IlpAccountsConnection,
   UpdateIlpAccountInput,
   UpdateIlpAccountMutationResponse
@@ -280,7 +281,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): Account => {
+          (query): IlpAccountResponse => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -310,6 +311,9 @@ describe('Account Resolvers', (): void => {
           staticIlpAddress: 'g.rafiki.test'
         }
       })
+      const subAccount = await accountFactory.build({
+        superAccountId: account.id
+      })
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -331,6 +335,23 @@ describe('Account Resolvers', (): void => {
                   disabled
                   stream {
                     enabled
+                  }
+                }
+                subAccounts {
+                  edges {
+                    node {
+                      id
+                      asset {
+                        code
+                        scale
+                      }
+                      disabled
+                      superAccountId
+                      stream {
+                        enabled
+                      }
+                    }
+                    cursor
                   }
                 }
                 maxPacketAmount
@@ -361,7 +382,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): Account => {
+          (query): IlpAccountResponse => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -377,6 +398,14 @@ describe('Account Resolvers', (): void => {
         },
         superAccountId: superAccount.id,
         superAccount,
+        subAccounts: {
+          edges: [
+            {
+              cursor: subAccount.id,
+              node: subAccount
+            }
+          ]
+        },
         maxPacketAmount: account.maxPacketAmount?.toString(),
         balance: {
           balance: '0',
@@ -411,7 +440,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): Account => {
+          (query): IlpAccountResponse => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -441,7 +470,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): Account => {
+          (query): IlpAccountResponse => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -781,6 +810,267 @@ describe('Account Resolvers', (): void => {
       expect(query.pageInfo.hasPreviousPage).toBeTruthy()
       expect(query.pageInfo.startCursor).toEqual(accounts[45].id)
       expect(query.pageInfo.endCursor).toEqual(accounts[49].id)
+    }, 10_000)
+  })
+
+  describe('SubAccounts Queries', (): void => {
+    test('pageInfo is correct on default query without params', async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const subAccounts = await Promise.all(
+        Array.from(
+          { length: 50 },
+          async () =>
+            await accountFactory.build({
+              superAccountId: account.id
+            })
+        )
+      )
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query IlpAccount($accountId: ID!) {
+              ilpAccount(id: $accountId) {
+                subAccounts {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            accountId: account.id
+          }
+        })
+        .then(
+          (query): IlpAccountResponse => {
+            if (query.data) {
+              return query.data.ilpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(query.subAccounts.edges).toHaveLength(20)
+      expect(query.subAccounts.pageInfo.hasNextPage).toBeTruthy()
+      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeFalsy()
+      expect(query.subAccounts.pageInfo.startCursor).toEqual(subAccounts[0].id)
+      expect(query.subAccounts.pageInfo.endCursor).toEqual(subAccounts[19].id)
+    }, 10_000)
+
+    test('No sub-accounts, but sub-accounts requested', async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query IlpAccount($accountId: ID!) {
+              ilpAccount(id: $accountId) {
+                subAccounts {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            accountId: account.id
+          }
+        })
+        .then(
+          (query): IlpAccountResponse => {
+            if (query.data) {
+              return query.data.ilpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.subAccounts.edges).toHaveLength(0)
+      expect(query.subAccounts.pageInfo.hasNextPage).toBeFalsy()
+      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeFalsy()
+      expect(query.subAccounts.pageInfo.startCursor).toBeNull()
+      expect(query.subAccounts.pageInfo.endCursor).toBeNull()
+    })
+
+    test('pageInfo is correct on pagination from start', async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const subAccounts = await Promise.all(
+        Array.from(
+          { length: 50 },
+          async () =>
+            await accountFactory.build({
+              superAccountId: account.id
+            })
+        )
+      )
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query IlpAccount($accountId: ID!) {
+              ilpAccount(id: $accountId) {
+                subAccounts(first: 10) {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            accountId: account.id
+          }
+        })
+        .then(
+          (query): IlpAccountResponse => {
+            if (query.data) {
+              return query.data.ilpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.subAccounts.edges).toHaveLength(10)
+      expect(query.subAccounts.pageInfo.hasNextPage).toBeTruthy()
+      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeFalsy()
+      expect(query.subAccounts.pageInfo.startCursor).toEqual(subAccounts[0].id)
+      expect(query.subAccounts.pageInfo.endCursor).toEqual(subAccounts[9].id)
+    }, 10_000)
+
+    test('pageInfo is correct on pagination from middle', async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const subAccounts = await Promise.all(
+        Array.from(
+          { length: 50 },
+          async () =>
+            await accountFactory.build({
+              superAccountId: account.id
+            })
+        )
+      )
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query IlpAccount($accountId: ID!, $after: String!) {
+              ilpAccount(id: $accountId) {
+                subAccounts(after: $after) {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            accountId: account.id,
+            after: subAccounts[19].id
+          }
+        })
+        .then(
+          (query): IlpAccountResponse => {
+            if (query.data) {
+              return query.data.ilpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.subAccounts.edges).toHaveLength(20)
+      expect(query.subAccounts.pageInfo.hasNextPage).toBeTruthy()
+      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeTruthy()
+      expect(query.subAccounts.pageInfo.startCursor).toEqual(subAccounts[20].id)
+      expect(query.subAccounts.pageInfo.endCursor).toEqual(subAccounts[39].id)
+    }, 10_000)
+
+    test('pageInfo is correct on pagination near end', async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const subAccounts = await Promise.all(
+        Array.from(
+          { length: 50 },
+          async () =>
+            await accountFactory.build({
+              superAccountId: account.id
+            })
+        )
+      )
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query IlpAccount($accountId: ID!, $after: String!) {
+              ilpAccount(id: $accountId) {
+                subAccounts(after: $after, first: 10) {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            accountId: account.id,
+            after: subAccounts[44].id
+          }
+        })
+        .then(
+          (query): IlpAccountResponse => {
+            if (query.data) {
+              return query.data.ilpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.subAccounts.edges).toHaveLength(5)
+      expect(query.subAccounts.pageInfo.hasNextPage).toBeFalsy()
+      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeTruthy()
+      expect(query.subAccounts.pageInfo.startCursor).toEqual(subAccounts[45].id)
+      expect(query.subAccounts.pageInfo.endCursor).toEqual(subAccounts[49].id)
     }, 10_000)
   })
 

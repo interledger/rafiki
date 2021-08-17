@@ -57,7 +57,10 @@ export interface AccountsService extends ConnectorAccountsService {
   utilizeCredit(utilizeOptions: CreditOptions): Promise<void | CreditError>
   revokeCredit(revokeOptions: CreditOptions): Promise<void | CreditError>
   settleDebt(settleOptions: SettleDebtOptions): Promise<void | CreditError>
-  getAccountsPage(pagination?: Pagination): Promise<IlpAccount[]>
+  getAccountsPage(options: {
+    pagination?: Pagination
+    superAccountId?: string
+  }): Promise<IlpAccount[]>
 }
 
 export interface Pagination {

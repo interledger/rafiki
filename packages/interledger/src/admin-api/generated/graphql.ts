@@ -173,7 +173,7 @@ export type IlpAccount = {
   disabled: Scalars['Boolean'];
   superAccountId?: Maybe<Scalars['ID']>;
   superAccount?: Maybe<IlpAccount>;
-  subAccounts: IlpAccountsConnection;
+  subAccounts: SubAccountsConnection;
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http?: Maybe<Http>;
   asset: Asset;
@@ -463,6 +463,12 @@ export type StreamInput = {
   enabled: Scalars['Boolean'];
 };
 
+export type SubAccountsConnection = {
+  __typename?: 'SubAccountsConnection';
+  pageInfo: PageInfo;
+  edges: Array<IlpAccountEdge>;
+};
+
 export type TransferMutationResponse = MutationResponse & {
   __typename?: 'TransferMutationResponse';
   code: Scalars['String'];
@@ -663,6 +669,7 @@ export type ResolversTypes = {
   SettleDebtMutationResponse: ResolverTypeWrapper<Partial<SettleDebtMutationResponse>>;
   Stream: ResolverTypeWrapper<Partial<Stream>>;
   StreamInput: ResolverTypeWrapper<Partial<StreamInput>>;
+  SubAccountsConnection: ResolverTypeWrapper<Partial<SubAccountsConnection>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
   UpdateIlpAccountInput: ResolverTypeWrapper<Partial<UpdateIlpAccountInput>>;
@@ -719,6 +726,7 @@ export type ResolversParentTypes = {
   SettleDebtMutationResponse: Partial<SettleDebtMutationResponse>;
   Stream: Partial<Stream>;
   StreamInput: Partial<StreamInput>;
+  SubAccountsConnection: Partial<SubAccountsConnection>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
   UInt64: Partial<Scalars['UInt64']>;
   UpdateIlpAccountInput: Partial<UpdateIlpAccountInput>;
@@ -853,7 +861,7 @@ export type IlpAccountResolvers<ContextType = any, ParentType extends ResolversP
   disabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   superAccountId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   superAccount?: Resolver<Maybe<ResolversTypes['IlpAccount']>, ParentType, ContextType>;
-  subAccounts?: Resolver<ResolversTypes['IlpAccountsConnection'], ParentType, ContextType, RequireFields<IlpAccountSubAccountsArgs, never>>;
+  subAccounts?: Resolver<ResolversTypes['SubAccountsConnection'], ParentType, ContextType, RequireFields<IlpAccountSubAccountsArgs, never>>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   http?: Resolver<Maybe<ResolversTypes['Http']>, ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
@@ -950,6 +958,12 @@ export type SettleDebtMutationResponseResolvers<ContextType = any, ParentType ex
 
 export type StreamResolvers<ContextType = any, ParentType extends ResolversParentTypes['Stream'] = ResolversParentTypes['Stream']> = {
   enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SubAccountsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['SubAccountsConnection'] = ResolversParentTypes['SubAccountsConnection']> = {
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  edges?: Resolver<Array<ResolversTypes['IlpAccountEdge']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1053,6 +1067,7 @@ export type Resolvers<ContextType = any> = {
   Routing?: RoutingResolvers<ContextType>;
   SettleDebtMutationResponse?: SettleDebtMutationResponseResolvers<ContextType>;
   Stream?: StreamResolvers<ContextType>;
+  SubAccountsConnection?: SubAccountsConnectionResolvers<ContextType>;
   TransferMutationResponse?: TransferMutationResponseResolvers<ContextType>;
   UInt64?: GraphQLScalarType;
   UpdateIlpAccountMutationResponse?: UpdateIlpAccountMutationResponseResolvers<ContextType>;

@@ -144,6 +144,11 @@ type IlpAccountsConnection {
   edges: [IlpAccountEdge!]!
 }
 
+type SubAccountsConnection {
+  pageInfo: PageInfo!
+  edges: [IlpAccountEdge!]!
+}
+
 type IlpAccountEdge {
   node: IlpAccount!
   cursor: String!
@@ -218,7 +223,7 @@ type IlpAccount {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
-  ): IlpAccountsConnection!
+  ): SubAccountsConnection!
   maxPacketAmount: UInt64
   http: Http
   asset: Asset!

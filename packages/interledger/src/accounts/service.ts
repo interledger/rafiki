@@ -1212,10 +1212,18 @@ export class AccountsService implements AccountsServiceInterface {
    * The pagination algorithm is based on the Relay connection specification.
    * Please read the spec before changing things:
    * https://relay.dev/graphql/connections.htm
-   * @param pagination Pagination - cursors and limits.
+   * @param options
+   * @param options.pagination Pagination - cursors and limits.
+   * @param options.superAccountId String - id of account to get sub-accounts of.
    * @returns IlpAccount[] An array of accounts that form a page.
    */
-  async getAccountsPage(pagination?: Pagination): Promise<IlpAccount[]> {
+  async getAccountsPage({
+    pagination,
+    superAccountId
+  }: {
+    pagination?: Pagination
+    superAccountId?: string
+  }): Promise<IlpAccount[]> {
     if (
       typeof pagination?.before === 'undefined' &&
       typeof pagination?.last === 'number'
@@ -1232,6 +1240,13 @@ export class AccountsService implements AccountsServiceInterface {
      */
     if (typeof pagination?.after === 'string') {
       const accounts = await IlpAccountModel.query()
+        .where(
+          superAccountId
+            ? {
+                superAccountId
+              }
+            : {}
+        )
         .whereRaw(
           '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "ilpAccounts" where "id" = ?)',
           [pagination.after]
@@ -1249,6 +1264,13 @@ export class AccountsService implements AccountsServiceInterface {
      */
     if (typeof pagination?.before === 'string') {
       const accounts = await IlpAccountModel.query()
+        .where(
+          superAccountId
+            ? {
+                superAccountId
+              }
+            : {}
+        )
         .whereRaw(
           '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "ilpAccounts" where "id" = ?)',
           [pagination.before]
@@ -1265,6 +1287,13 @@ export class AccountsService implements AccountsServiceInterface {
     }
 
     const accounts = await IlpAccountModel.query()
+      .where(
+        superAccountId
+          ? {
+              superAccountId
+            }
+          : {}
+      )
       .orderBy([
         { column: 'createdAt', order: 'asc' },
         { column: 'id', order: 'asc' }

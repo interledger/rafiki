@@ -4,6 +4,7 @@ import {
   getIlpAccounts,
   getIlpAccount,
   getIlpAccountsConnectionPageInfo,
+  getSubAccountsConnectionPageInfo,
   getBalance,
   getSuperAccount,
   createIlpAccount,
@@ -53,6 +54,9 @@ export const resolvers: Resolvers = {
   },
   IlpAccountsConnection: {
     pageInfo: getIlpAccountsConnectionPageInfo
+  },
+  SubAccountsConnection: {
+    pageInfo: getSubAccountsConnectionPageInfo
   },
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo

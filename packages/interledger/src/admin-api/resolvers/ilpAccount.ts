@@ -1,11 +1,14 @@
 import {
   QueryResolvers,
   ResolversTypes,
+  IlpAccountEdge,
   IlpAccountResolvers,
   MutationResolvers,
-  IlpAccountsConnectionResolvers
+  IlpAccountsConnectionResolvers,
+  SubAccountsConnectionResolvers
 } from '../generated/graphql'
 import {
+  AccountsService,
   CreateAccountError,
   IlpAccount,
   isCreateAccountError,
@@ -18,7 +21,9 @@ export const getIlpAccounts: QueryResolvers['ilpAccounts'] = async (
   args,
   ctx
 ): ResolversTypes['IlpAccountsConnection'] => {
-  const accounts = await ctx.accountsService.getAccountsPage(args)
+  const accounts = await ctx.accountsService.getAccountsPage({
+    pagination: args
+  })
   return {
     edges: accounts.map((account: IlpAccount) => ({
       cursor: account.id,
@@ -198,10 +203,17 @@ export const getSubAccounts: IlpAccountResolvers['subAccounts'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['IlpAccountsConnection'] => {
-  // TODO:
-  console.log(ctx) // temporary to pass linting
-  return {}
+): ResolversTypes['SubAccountsConnection'] => {
+  const subAccounts = await ctx.accountsService.getAccountsPage({
+    pagination: args,
+    superAccountId: parent.id
+  })
+  return {
+    edges: subAccounts.map((subAccount: IlpAccount) => ({
+      cursor: subAccount.id,
+      node: subAccount
+    }))
+  }
 }
 
 export const getIlpAccountsConnectionPageInfo: IlpAccountsConnectionResolvers['pageInfo'] = async (
@@ -215,23 +227,67 @@ export const getIlpAccountsConnectionPageInfo: IlpAccountsConnectionResolvers['p
       hasPreviousPage: false,
       hasNextPage: false
     }
+  return getPageInfo({
+    accountsService: ctx.accountsService,
+    edges
+  })
+}
 
+export const getSubAccountsConnectionPageInfo: SubAccountsConnectionResolvers['pageInfo'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['PageInfo'] => {
+  const edges = parent.edges
+  if (edges == null || typeof edges == 'undefined' || edges.length == 0)
+    return {
+      hasPreviousPage: false,
+      hasNextPage: false
+    }
+
+  const firstSubAccount = await ctx.accountsService.getAccount(edges[0].node.id)
+
+  if (!firstSubAccount.superAccountId) {
+    throw new Error('No super-account')
+  }
+  return getPageInfo({
+    accountsService: ctx.accountsService,
+    edges,
+    superAccountId: firstSubAccount.superAccountId
+  })
+}
+
+const getPageInfo = async ({
+  accountsService,
+  edges,
+  superAccountId
+}: {
+  accountsService: AccountsService
+  edges: IlpAccountEdge[]
+  superAccountId?: string
+}): ResolversTypes['PageInfo'] => {
   const firstEdge = edges[0].cursor
   const lastEdge = edges[edges.length - 1].cursor
 
   let hasNextPageAccounts, hasPreviousPageAccounts
   try {
-    hasNextPageAccounts = await ctx.accountsService.getAccountsPage({
-      after: lastEdge,
-      first: 1
+    hasNextPageAccounts = await accountsService.getAccountsPage({
+      pagination: {
+        after: lastEdge,
+        first: 1
+      },
+      superAccountId
     })
   } catch (e) {
     hasNextPageAccounts = []
   }
   try {
-    hasPreviousPageAccounts = await ctx.accountsService.getAccountsPage({
-      before: firstEdge,
-      last: 1
+    hasPreviousPageAccounts = await accountsService.getAccountsPage({
+      pagination: {
+        before: firstEdge,
+        last: 1
+      },
+      superAccountId
     })
   } catch (e) {
     hasPreviousPageAccounts = []
