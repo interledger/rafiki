@@ -293,7 +293,9 @@ describe('Account Resolvers', (): void => {
     })
 
     test('Can get all ilp account fields', async (): Promise<void> => {
+      const superAccount = await accountFactory.build()
       const account = await accountFactory.build({
+        superAccountId: superAccount.id,
         maxPacketAmount: BigInt(100),
         http: {
           incoming: {
@@ -319,6 +321,18 @@ describe('Account Resolvers', (): void => {
                   scale
                 }
                 disabled
+                superAccountId
+                superAccount {
+                  id
+                  asset {
+                    code
+                    scale
+                  }
+                  disabled
+                  stream {
+                    enabled
+                  }
+                }
                 maxPacketAmount
                 http {
                   outgoing {
@@ -361,6 +375,8 @@ describe('Account Resolvers', (): void => {
         http: {
           outgoing: account.http?.outgoing
         },
+        superAccountId: superAccount.id,
+        superAccount,
         maxPacketAmount: account.maxPacketAmount?.toString(),
         balance: {
           balance: '0',
@@ -392,6 +408,36 @@ describe('Account Resolvers', (): void => {
           `,
           variables: {
             accountId: uuid()
+          }
+        })
+        .then(
+          (query): Account => {
+            if (query.data) {
+              return query.data.ilpAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+    })
+
+    test('Returns error for unknown super-account', async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const gqlQuery = appContainer.apolloClient
+        .query({
+          query: gql`
+            query IlpAccount($accountId: ID!) {
+              ilpAccount(id: $accountId) {
+                superAccount {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            accountId: account.id
           }
         })
         .then(

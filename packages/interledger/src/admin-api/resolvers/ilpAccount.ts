@@ -182,9 +182,16 @@ export const getSuperAccount: IlpAccountResolvers['superAccount'] = async (
   args,
   ctx
 ): ResolversTypes['IlpAccount'] => {
-  // TODO:
-  console.log(ctx) // temporary to pass linting
-  return {}
+  if (!parent.superAccountId) {
+    throw new Error('No super-account')
+  }
+  const superAccount = await ctx.accountsService.getAccount(
+    parent.superAccountId
+  )
+  if (!superAccount) {
+    throw new Error('No super-account')
+  }
+  return superAccount
 }
 
 export const getSubAccounts: IlpAccountResolvers['subAccounts'] = async (
