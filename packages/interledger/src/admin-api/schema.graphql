@@ -55,14 +55,7 @@ type Mutation {
   extendCredit(input: ExtendCreditInput!): ExtendCreditMutationResponse
 
   "Revoke Credit"
-  revokeCredit(
-    "Account revoking credit."
-    accountId: ID!
-    "Sub-account to which credit is revoked."
-    subAccountId: ID!
-    "Amount of revoked line of credit."
-    amount: UInt64!
-  ): RevokeCreditMutationResponse
+  revokeCredit(input: RevokeCreditInput!): RevokeCreditMutationResponse
 
   "Utilize Credit"
   utilizeCredit(
@@ -209,6 +202,15 @@ input ExtendCreditInput {
   amount: UInt64!
   "Automatically utilized and applied to the account balance."
   autoApply: Boolean! = false
+}
+
+input RevokeCreditInput {
+  "Account revoking credit."
+  accountId: ID!
+  "Sub-account to which credit is revoked."
+  subAccountId: ID!
+  "Amount of revoked line of credit."
+  amount: UInt64!
 }
 
 type IlpAccount {
