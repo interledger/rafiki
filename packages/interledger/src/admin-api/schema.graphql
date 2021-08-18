@@ -61,16 +61,7 @@ type Mutation {
   utilizeCredit(input: UtilizeCreditInput!): UtilizeCreditMutationResponse
 
   "Settle Debt"
-  settleDebt(
-    "Account collecting debt."
-    accountId: ID!
-    "Sub-account settling debt."
-    subAccountId: ID!
-    "Amount of debt."
-    amount: UInt64!
-    "Replenish the account's line of credit commensurate with the debt settled."
-    revolve: Boolean! = true
-  ): SettleDebtMutationResponse
+  settleDebt(input: SettleDebtInput): SettleDebtMutationResponse
 
   "Create webhook"
   createWebhook(
@@ -213,6 +204,17 @@ input UtilizeCreditInput {
   subAccountId: ID!
   "Amount of utilized line of credit."
   amount: UInt64!
+}
+
+input SettleDebtInput {
+  "Account collecting debt."
+  accountId: ID!
+  "Sub-account settling debt."
+  subAccountId: ID!
+  "Amount of debt."
+  amount: UInt64!
+  "Replenish the account's line of credit commensurate with the debt settled."
+  revolve: Boolean! = true
 }
 
 type IlpAccount {

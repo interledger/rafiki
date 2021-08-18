@@ -323,10 +323,7 @@ export type MutationUtilizeCreditArgs = {
 
 
 export type MutationSettleDebtArgs = {
-  accountId: Scalars['ID'];
-  subAccountId: Scalars['ID'];
-  amount: Scalars['UInt64'];
-  revolve?: Scalars['Boolean'];
+  input?: Maybe<SettleDebtInput>;
 };
 
 
@@ -458,6 +455,17 @@ export type Routing = {
 
 export type RoutingInput = {
   staticIlpAddress: Scalars['String'];
+};
+
+export type SettleDebtInput = {
+  /** Account collecting debt. */
+  accountId: Scalars['ID'];
+  /** Sub-account settling debt. */
+  subAccountId: Scalars['ID'];
+  /** Amount of debt. */
+  amount: Scalars['UInt64'];
+  /** Replenish the account's line of credit commensurate with the debt settled. */
+  revolve?: Scalars['Boolean'];
 };
 
 export type SettleDebtMutationResponse = MutationResponse & {
@@ -690,6 +698,7 @@ export type ResolversTypes = {
   RollbackPendingWithdrawalMutationResponse: ResolverTypeWrapper<Partial<RollbackPendingWithdrawalMutationResponse>>;
   Routing: ResolverTypeWrapper<Partial<Routing>>;
   RoutingInput: ResolverTypeWrapper<Partial<RoutingInput>>;
+  SettleDebtInput: ResolverTypeWrapper<Partial<SettleDebtInput>>;
   SettleDebtMutationResponse: ResolverTypeWrapper<Partial<SettleDebtMutationResponse>>;
   Stream: ResolverTypeWrapper<Partial<Stream>>;
   StreamInput: ResolverTypeWrapper<Partial<StreamInput>>;
@@ -750,6 +759,7 @@ export type ResolversParentTypes = {
   RollbackPendingWithdrawalMutationResponse: Partial<RollbackPendingWithdrawalMutationResponse>;
   Routing: Partial<Routing>;
   RoutingInput: Partial<RoutingInput>;
+  SettleDebtInput: Partial<SettleDebtInput>;
   SettleDebtMutationResponse: Partial<SettleDebtMutationResponse>;
   Stream: Partial<Stream>;
   StreamInput: Partial<StreamInput>;
@@ -923,7 +933,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   extendCredit?: Resolver<Maybe<ResolversTypes['ExtendCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationExtendCreditArgs, 'input'>>;
   revokeCredit?: Resolver<Maybe<ResolversTypes['RevokeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeCreditArgs, 'input'>>;
   utilizeCredit?: Resolver<Maybe<ResolversTypes['UtilizeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationUtilizeCreditArgs, 'input'>>;
-  settleDebt?: Resolver<Maybe<ResolversTypes['SettleDebtMutationResponse']>, ParentType, ContextType, RequireFields<MutationSettleDebtArgs, 'accountId' | 'subAccountId' | 'amount' | 'revolve'>>;
+  settleDebt?: Resolver<Maybe<ResolversTypes['SettleDebtMutationResponse']>, ParentType, ContextType, RequireFields<MutationSettleDebtArgs, never>>;
   createWebhook?: Resolver<Maybe<ResolversTypes['CreateWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateWebhookArgs, 'ilpAccountId'>>;
   updateWebhook?: Resolver<Maybe<ResolversTypes['UpdateWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationUpdateWebhookArgs, 'webhookId'>>;
   deleteWebhook?: Resolver<Maybe<ResolversTypes['DeleteWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationDeleteWebhookArgs, 'webhookId'>>;

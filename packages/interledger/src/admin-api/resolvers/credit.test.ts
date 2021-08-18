@@ -6,7 +6,8 @@ import { AccountFactory } from '../../accounts/testsHelpers'
 import {
   ExtendCreditMutationResponse,
   RevokeCreditMutationResponse,
-  UtilizeCreditMutationResponse
+  UtilizeCreditMutationResponse,
+  SettleDebtMutationResponse
 } from '../generated/graphql'
 import { gql } from 'apollo-server'
 
@@ -983,6 +984,381 @@ describe('Credit Resolvers', (): void => {
           (query): UtilizeCreditMutationResponse => {
             if (query.data) {
               return query.data.utilizeCredit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('403')
+      expect(response.message).toEqual('Insufficient balance')
+    })
+  })
+
+  describe('Settle Debt', (): void => {
+    test.each`
+      revolve
+      ${undefined}
+      ${false}
+      ${true}
+    `(
+      'Can settle sub-account debt { revolve: $revolve }',
+      async ({ revolve }): Promise<void> => {
+        const { id: accountId } = await accountFactory.build()
+        const { id: subAccountId } = await accountFactory.build({
+          superAccountId: accountId
+        })
+
+        const creditAmount = BigInt(10)
+        await appContainer.accountsService.deposit({
+          accountId,
+          amount: creditAmount
+        })
+        await expect(
+          appContainer.accountsService.extendCredit({
+            accountId,
+            subAccountId,
+            amount: creditAmount,
+            autoApply: true
+          })
+        ).resolves.toBeUndefined()
+
+        const amount = BigInt(1)
+        const response = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation SettleDebt($input: SettleDebtInput!) {
+                settleDebt(input: $input) {
+                  code
+                  success
+                  message
+                }
+              }
+            `,
+            variables: {
+              input: {
+                accountId,
+                subAccountId,
+                amount: amount.toString(),
+                revolve
+              }
+            }
+          })
+          .then(
+            (query): SettleDebtMutationResponse => {
+              if (query.data) {
+                return query.data.settleDebt
+              } else {
+                throw new Error('Data was empty')
+              }
+            }
+          )
+
+        expect(response.success).toBe(true)
+        expect(response.code).toEqual('200')
+
+        await expect(
+          appContainer.accountsService.getAccountBalance(accountId)
+        ).resolves.toEqual({
+          balance: amount,
+          availableCredit: BigInt(0),
+          creditExtended: revolve === false ? BigInt(0) : amount,
+          totalBorrowed: BigInt(0),
+          totalLent: creditAmount - amount
+        })
+        await expect(
+          appContainer.accountsService.getAccountBalance(subAccountId)
+        ).resolves.toEqual({
+          balance: creditAmount - amount,
+          availableCredit: revolve === false ? BigInt(0) : amount,
+          creditExtended: BigInt(0),
+          totalBorrowed: creditAmount - amount,
+          totalLent: BigInt(0)
+        })
+      }
+    )
+
+    test('Returns error for nonexistent account', async (): Promise<void> => {
+      const { id: subAccountId } = await accountFactory.build()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation SettleDebt($input: SettleDebtInput!) {
+              settleDebt(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId: uuid(),
+              subAccountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): SettleDebtMutationResponse => {
+            if (query.data) {
+              return query.data.settleDebt
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('404')
+      expect(response.message).toEqual('Unknown account')
+    })
+
+    test('Returns error for nonexistent sub-account', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation SettleDebt($input: SettleDebtInput!) {
+              settleDebt(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId: uuid(),
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): SettleDebtMutationResponse => {
+            if (query.data) {
+              return query.data.settleDebt
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('404')
+      expect(response.message).toEqual('Unknown sub-account')
+    })
+
+    test('Returns error for unrelated sub-account', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const { id: unrelatedAccountId } = await accountFactory.build()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation SettleDebt($input: SettleDebtInput!) {
+              settleDebt(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId: unrelatedAccountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): SettleDebtMutationResponse => {
+            if (query.data) {
+              return query.data.settleDebt
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Unrelated sub-account')
+    })
+
+    test('Returns error for super sub-account', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
+        superAccountId: accountId
+      })
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation SettleDebt($input: SettleDebtInput!) {
+              settleDebt(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId: subAccountId,
+              subAccountId: accountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): SettleDebtMutationResponse => {
+            if (query.data) {
+              return query.data.settleDebt
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Unrelated sub-account')
+    })
+
+    test('Returns error for same accounts', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation SettleDebt($input: SettleDebtInput!) {
+              settleDebt(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId: accountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): SettleDebtMutationResponse => {
+            if (query.data) {
+              return query.data.settleDebt
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Same accounts')
+    })
+
+    test('Returns error if amount exceeds debt', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
+        superAccountId: accountId
+      })
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation SettleDebt($input: SettleDebtInput!) {
+              settleDebt(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): SettleDebtMutationResponse => {
+            if (query.data) {
+              return query.data.settleDebt
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('403')
+      expect(response.message).toEqual('Insufficient debt')
+    })
+
+    test('Returns error for insufficient sub-account balance', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
+        superAccountId: accountId
+      })
+
+      const lentAmount = BigInt(5)
+      await appContainer.accountsService.deposit({
+        accountId,
+        amount: lentAmount
+      })
+      await expect(
+        appContainer.accountsService.extendCredit({
+          accountId,
+          subAccountId,
+          amount: lentAmount,
+          autoApply: true
+        })
+      ).resolves.toBeUndefined()
+
+      const withdrawAmount = BigInt(1)
+      await expect(
+        appContainer.accountsService.withdraw({
+          accountId: subAccountId,
+          amount: withdrawAmount
+        })
+      ).resolves.toBeUndefined()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation SettleDebt($input: SettleDebtInput!) {
+              settleDebt(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId,
+              amount: lentAmount.toString()
+            }
+          }
+        })
+        .then(
+          (query): SettleDebtMutationResponse => {
+            if (query.data) {
+              return query.data.settleDebt
             } else {
               throw new Error('Data was empty')
             }
