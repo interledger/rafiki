@@ -52,16 +52,7 @@ type Mutation {
   ): TransferMutationResponse
 
   "Extend Credit"
-  extendCredit(
-    "Account extending credit."
-    accountId: ID!
-    "Sub-account to which credit is extended."
-    subAccountId: ID!
-    "Amount of additional line of credit."
-    amount: UInt64!
-    "Automatically utilized and applied to the account balance."
-    autoApply: Boolean! = false
-  ): ExtendCreditMutationResponse
+  extendCredit(input: ExtendCreditInput!): ExtendCreditMutationResponse
 
   "Revoke Credit"
   revokeCredit(
@@ -207,6 +198,17 @@ input CreateDepositInput {
   amount: UInt64!
   "The id of the deposit."
   id: ID
+}
+
+input ExtendCreditInput {
+  "Account extending credit."
+  accountId: ID!
+  "Sub-account to which credit is extended."
+  subAccountId: ID!
+  "Amount of additional line of credit."
+  amount: UInt64!
+  "Automatically utilized and applied to the account balance."
+  autoApply: Boolean! = false
 }
 
 type IlpAccount {

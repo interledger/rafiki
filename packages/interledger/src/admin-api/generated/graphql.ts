@@ -128,6 +128,17 @@ export type DepositsConnection = {
   edges: Array<DepositEdge>;
 };
 
+export type ExtendCreditInput = {
+  /** Account extending credit. */
+  accountId: Scalars['ID'];
+  /** Sub-account to which credit is extended. */
+  subAccountId: Scalars['ID'];
+  /** Amount of additional line of credit. */
+  amount: Scalars['UInt64'];
+  /** Automatically utilized and applied to the account balance. */
+  autoApply?: Scalars['Boolean'];
+};
+
 export type ExtendCreditMutationResponse = MutationResponse & {
   __typename?: 'ExtendCreditMutationResponse';
   code: Scalars['String'];
@@ -297,10 +308,7 @@ export type MutationTransferArgs = {
 
 
 export type MutationExtendCreditArgs = {
-  accountId: Scalars['ID'];
-  subAccountId: Scalars['ID'];
-  amount: Scalars['UInt64'];
-  autoApply?: Scalars['Boolean'];
+  input: ExtendCreditInput;
 };
 
 
@@ -648,6 +656,7 @@ export type ResolversTypes = {
   Deposit: ResolverTypeWrapper<Partial<Deposit>>;
   DepositEdge: ResolverTypeWrapper<Partial<DepositEdge>>;
   DepositsConnection: ResolverTypeWrapper<Partial<DepositsConnection>>;
+  ExtendCreditInput: ResolverTypeWrapper<Partial<ExtendCreditInput>>;
   ExtendCreditMutationResponse: ResolverTypeWrapper<Partial<ExtendCreditMutationResponse>>;
   FinalizePendingWithdrawalMutationResponse: ResolverTypeWrapper<Partial<FinalizePendingWithdrawalMutationResponse>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
@@ -705,6 +714,7 @@ export type ResolversParentTypes = {
   Deposit: Partial<Deposit>;
   DepositEdge: Partial<DepositEdge>;
   DepositsConnection: Partial<DepositsConnection>;
+  ExtendCreditInput: Partial<ExtendCreditInput>;
   ExtendCreditMutationResponse: Partial<ExtendCreditMutationResponse>;
   FinalizePendingWithdrawalMutationResponse: Partial<FinalizePendingWithdrawalMutationResponse>;
   Http: Partial<Http>;
@@ -892,7 +902,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   deleteIlpAccount?: Resolver<ResolversTypes['DeleteIlpAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationDeleteIlpAccountArgs, 'id'>>;
   createIlpSubAccount?: Resolver<ResolversTypes['CreateIlpSubAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateIlpSubAccountArgs, 'superAccountId'>>;
   transfer?: Resolver<Maybe<ResolversTypes['TransferMutationResponse']>, ParentType, ContextType, RequireFields<MutationTransferArgs, 'sourceAmount' | 'sourceAccountId' | 'destinationAccountId' | 'idempotencyKey'>>;
-  extendCredit?: Resolver<Maybe<ResolversTypes['ExtendCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationExtendCreditArgs, 'accountId' | 'subAccountId' | 'amount' | 'autoApply'>>;
+  extendCredit?: Resolver<Maybe<ResolversTypes['ExtendCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationExtendCreditArgs, 'input'>>;
   revokeCredit?: Resolver<Maybe<ResolversTypes['RevokeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeCreditArgs, 'accountId' | 'subAccountId' | 'amount'>>;
   utilizeCredit?: Resolver<Maybe<ResolversTypes['UtilizeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationUtilizeCreditArgs, 'accountId' | 'subAccountId' | 'amount'>>;
   settleDebt?: Resolver<Maybe<ResolversTypes['SettleDebtMutationResponse']>, ParentType, ContextType, RequireFields<MutationSettleDebtArgs, 'accountId' | 'subAccountId' | 'amount' | 'revolve'>>;
