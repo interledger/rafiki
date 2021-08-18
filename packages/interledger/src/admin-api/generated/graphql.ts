@@ -40,7 +40,7 @@ export type CreateDepositInput = {
   /** The id of the account to create the deposit for. */
   ilpAccountId: Scalars['ID'];
   /** Amount of deposit. */
-  amount: Scalars['String'];
+  amount: Scalars['UInt64'];
   /** The id of the deposit. */
   id?: Maybe<Scalars['ID']>;
 };

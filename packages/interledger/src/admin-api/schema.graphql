@@ -204,7 +204,7 @@ input CreateDepositInput {
   "The id of the account to create the deposit for."
   ilpAccountId: ID!
   "Amount of deposit."
-  amount: String!
+  amount: UInt64!
   "The id of the deposit."
   id: ID
 }

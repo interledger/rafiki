@@ -259,7 +259,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "UInt64",
                 "ofType": null
               }
             },

@@ -4,7 +4,7 @@ import {
   MutationResolvers,
   DepositsConnectionResolvers
 } from '../generated/graphql'
-import { isDepositError } from '../../accounts/types'
+import { DepositError, isDepositError } from '../../accounts/types'
 
 export const getDeposit: QueryResolvers['deposit'] = async (
   parent,
@@ -24,13 +24,24 @@ export const createDeposit: MutationResolvers['createDeposit'] = async (
   const depositOrError = await ctx.accountsService.deposit({
     id: args.input.id,
     accountId: args.input.ilpAccountId,
-    amount: BigInt(args.input.amount)
+    amount: args.input.amount
   })
   if (isDepositError(depositOrError)) {
-    return {
-      code: '400',
-      message: 'Failed to create deposit',
-      success: false
+    switch (depositOrError) {
+      case DepositError.DepositExists:
+        return {
+          code: '409',
+          message: 'Deposit exists',
+          success: false
+        }
+      case DepositError.UnknownAccount:
+        return {
+          code: '404',
+          message: 'Unknown ILP account',
+          success: false
+        }
+      default:
+        throw new Error(`DepositError: ${depositOrError}`)
     }
   }
   return {
