@@ -318,9 +318,7 @@ export type MutationRevokeCreditArgs = {
 
 
 export type MutationUtilizeCreditArgs = {
-  accountId: Scalars['ID'];
-  subAccountId: Scalars['ID'];
-  amount: Scalars['UInt64'];
+  input: UtilizeCreditInput;
 };
 
 
@@ -517,6 +515,15 @@ export type UpdateWebhookMutationResponse = MutationResponse & {
   webhook: Webhook;
 };
 
+export type UtilizeCreditInput = {
+  /** Account extending credit. */
+  accountId: Scalars['ID'];
+  /** Sub-account to which credit is extended. */
+  subAccountId: Scalars['ID'];
+  /** Amount of utilized line of credit. */
+  amount: Scalars['UInt64'];
+};
+
 export type UtilizeCreditMutationResponse = MutationResponse & {
   __typename?: 'UtilizeCreditMutationResponse';
   code: Scalars['String'];
@@ -692,6 +699,7 @@ export type ResolversTypes = {
   UpdateIlpAccountInput: ResolverTypeWrapper<Partial<UpdateIlpAccountInput>>;
   UpdateIlpAccountMutationResponse: ResolverTypeWrapper<Partial<UpdateIlpAccountMutationResponse>>;
   UpdateWebhookMutationResponse: ResolverTypeWrapper<Partial<UpdateWebhookMutationResponse>>;
+  UtilizeCreditInput: ResolverTypeWrapper<Partial<UtilizeCreditInput>>;
   UtilizeCreditMutationResponse: ResolverTypeWrapper<Partial<UtilizeCreditMutationResponse>>;
   Webhook: ResolverTypeWrapper<Partial<Webhook>>;
   WebhookEdge: ResolverTypeWrapper<Partial<WebhookEdge>>;
@@ -751,6 +759,7 @@ export type ResolversParentTypes = {
   UpdateIlpAccountInput: Partial<UpdateIlpAccountInput>;
   UpdateIlpAccountMutationResponse: Partial<UpdateIlpAccountMutationResponse>;
   UpdateWebhookMutationResponse: Partial<UpdateWebhookMutationResponse>;
+  UtilizeCreditInput: Partial<UtilizeCreditInput>;
   UtilizeCreditMutationResponse: Partial<UtilizeCreditMutationResponse>;
   Webhook: Partial<Webhook>;
   WebhookEdge: Partial<WebhookEdge>;
@@ -913,7 +922,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   transfer?: Resolver<Maybe<ResolversTypes['TransferMutationResponse']>, ParentType, ContextType, RequireFields<MutationTransferArgs, 'sourceAmount' | 'sourceAccountId' | 'destinationAccountId' | 'idempotencyKey'>>;
   extendCredit?: Resolver<Maybe<ResolversTypes['ExtendCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationExtendCreditArgs, 'input'>>;
   revokeCredit?: Resolver<Maybe<ResolversTypes['RevokeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeCreditArgs, 'input'>>;
-  utilizeCredit?: Resolver<Maybe<ResolversTypes['UtilizeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationUtilizeCreditArgs, 'accountId' | 'subAccountId' | 'amount'>>;
+  utilizeCredit?: Resolver<Maybe<ResolversTypes['UtilizeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationUtilizeCreditArgs, 'input'>>;
   settleDebt?: Resolver<Maybe<ResolversTypes['SettleDebtMutationResponse']>, ParentType, ContextType, RequireFields<MutationSettleDebtArgs, 'accountId' | 'subAccountId' | 'amount' | 'revolve'>>;
   createWebhook?: Resolver<Maybe<ResolversTypes['CreateWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateWebhookArgs, 'ilpAccountId'>>;
   updateWebhook?: Resolver<Maybe<ResolversTypes['UpdateWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationUpdateWebhookArgs, 'webhookId'>>;

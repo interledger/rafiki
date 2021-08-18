@@ -58,14 +58,7 @@ type Mutation {
   revokeCredit(input: RevokeCreditInput!): RevokeCreditMutationResponse
 
   "Utilize Credit"
-  utilizeCredit(
-    "Account extending credit."
-    accountId: ID!
-    "Sub-account to which credit is extended."
-    subAccountId: ID!
-    "Amount of utilized line of credit."
-    amount: UInt64!
-  ): UtilizeCreditMutationResponse
+  utilizeCredit(input: UtilizeCreditInput!): UtilizeCreditMutationResponse
 
   "Settle Debt"
   settleDebt(
@@ -210,6 +203,15 @@ input RevokeCreditInput {
   "Sub-account to which credit is revoked."
   subAccountId: ID!
   "Amount of revoked line of credit."
+  amount: UInt64!
+}
+
+input UtilizeCreditInput {
+  "Account extending credit."
+  accountId: ID!
+  "Sub-account to which credit is extended."
+  subAccountId: ID!
+  "Amount of utilized line of credit."
   amount: UInt64!
 }
 

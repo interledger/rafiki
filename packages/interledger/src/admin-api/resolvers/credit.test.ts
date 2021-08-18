@@ -5,7 +5,8 @@ import { v4 as uuid } from 'uuid'
 import { AccountFactory } from '../../accounts/testsHelpers'
 import {
   ExtendCreditMutationResponse,
-  RevokeCreditMutationResponse
+  RevokeCreditMutationResponse,
+  UtilizeCreditMutationResponse
 } from '../generated/graphql'
 import { gql } from 'apollo-server'
 
@@ -638,6 +639,359 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('403')
       expect(response.message).toEqual('Insufficient credit')
+    })
+  })
+
+  describe('Utilize Credit', (): void => {
+    test('Can utilize credit to sub-account', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
+        superAccountId: accountId
+      })
+
+      const creditAmount = BigInt(10)
+      await expect(
+        appContainer.accountsService.extendCredit({
+          accountId,
+          subAccountId,
+          amount: creditAmount
+        })
+      ).resolves.toBeUndefined()
+
+      await appContainer.accountsService.deposit({
+        accountId,
+        amount: creditAmount
+      })
+
+      const amount = BigInt(5)
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UtilizeCredit($input: UtilizeCreditInput!) {
+              utilizeCredit(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId,
+              amount: amount.toString()
+            }
+          }
+        })
+        .then(
+          (query): UtilizeCreditMutationResponse => {
+            if (query.data) {
+              return query.data.utilizeCredit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+
+      await expect(
+        appContainer.accountsService.getAccountBalance(accountId)
+      ).resolves.toEqual({
+        balance: creditAmount - amount,
+        availableCredit: BigInt(0),
+        creditExtended: creditAmount - amount,
+        totalBorrowed: BigInt(0),
+        totalLent: amount
+      })
+      await expect(
+        appContainer.accountsService.getAccountBalance(subAccountId)
+      ).resolves.toEqual({
+        balance: amount,
+        availableCredit: creditAmount - amount,
+        creditExtended: BigInt(0),
+        totalBorrowed: amount,
+        totalLent: BigInt(0)
+      })
+    })
+
+    test('Returns error for nonexistent account', async (): Promise<void> => {
+      const { id: subAccountId } = await accountFactory.build()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UtilizeCredit($input: UtilizeCreditInput!) {
+              utilizeCredit(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId: uuid(),
+              subAccountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): UtilizeCreditMutationResponse => {
+            if (query.data) {
+              return query.data.utilizeCredit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('404')
+      expect(response.message).toEqual('Unknown account')
+    })
+
+    test('Returns error for nonexistent sub-account', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UtilizeCredit($input: UtilizeCreditInput!) {
+              utilizeCredit(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId: uuid(),
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): UtilizeCreditMutationResponse => {
+            if (query.data) {
+              return query.data.utilizeCredit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('404')
+      expect(response.message).toEqual('Unknown sub-account')
+    })
+
+    test('Returns error for unrelated sub-account', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const { id: unrelatedAccountId } = await accountFactory.build()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UtilizeCredit($input: UtilizeCreditInput!) {
+              utilizeCredit(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId: unrelatedAccountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): UtilizeCreditMutationResponse => {
+            if (query.data) {
+              return query.data.utilizeCredit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Unrelated sub-account')
+    })
+
+    test('Returns error for super sub-account', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
+        superAccountId: accountId
+      })
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UtilizeCredit($input: UtilizeCreditInput!) {
+              utilizeCredit(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId: subAccountId,
+              subAccountId: accountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): UtilizeCreditMutationResponse => {
+            if (query.data) {
+              return query.data.utilizeCredit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Unrelated sub-account')
+    })
+
+    test('Returns error for same accounts', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UtilizeCredit($input: UtilizeCreditInput!) {
+              utilizeCredit(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId: accountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): UtilizeCreditMutationResponse => {
+            if (query.data) {
+              return query.data.utilizeCredit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Same accounts')
+    })
+
+    test('Returns error for insufficient credit balance', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
+        superAccountId: accountId
+      })
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UtilizeCredit($input: UtilizeCreditInput!) {
+              utilizeCredit(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId,
+              amount: '5'
+            }
+          }
+        })
+        .then(
+          (query): UtilizeCreditMutationResponse => {
+            if (query.data) {
+              return query.data.utilizeCredit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('403')
+      expect(response.message).toEqual('Insufficient credit')
+    })
+
+    test('Returns error for insufficient account balance', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
+        superAccountId: accountId
+      })
+
+      const amount = BigInt(10)
+      await expect(
+        appContainer.accountsService.extendCredit({
+          accountId,
+          subAccountId,
+          amount
+        })
+      ).resolves.toBeUndefined()
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UtilizeCredit($input: UtilizeCreditInput!) {
+              utilizeCredit(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              accountId,
+              subAccountId,
+              amount: amount.toString()
+            }
+          }
+        })
+        .then(
+          (query): UtilizeCreditMutationResponse => {
+            if (query.data) {
+              return query.data.utilizeCredit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('403')
+      expect(response.message).toEqual('Insufficient balance')
     })
   })
 })
