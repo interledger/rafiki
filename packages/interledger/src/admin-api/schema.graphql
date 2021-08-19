@@ -86,12 +86,7 @@ type Mutation {
 
   "Create withdrawal"
   createWithdrawal(
-    "The id of the account to create the withdrawal for."
-    ilpAccountId: ID!
-    "Amount of deposit."
-    amount: UInt64!
-    "The id of the withdrawal."
-    id: ID
+    input: CreateWithdrawalInput!
   ): CreateWithdrawalMutationResponse
 
   "Finalize pending withdrawal"
@@ -174,6 +169,15 @@ input CreateDepositInput {
   "Amount of deposit."
   amount: UInt64!
   "The id of the deposit."
+  id: ID
+}
+
+input CreateWithdrawalInput {
+  "The id of the account to create the withdrawal for."
+  ilpAccountId: ID!
+  "Amount of deposit."
+  amount: UInt64!
+  "The id of the withdrawal."
   id: ID
 }
 
@@ -354,8 +358,9 @@ type WithdrawalEdge {
 type Withdrawal {
   id: ID!
   amount: UInt64!
-  createdTime: Int!
-  finalizedTime: Int
+  ilpAccountId: ID!
+  # createdTime: Int!
+  # finalizedTime: Int
 }
 
 type CreateIlpAccountMutationResponse implements MutationResponse {
@@ -450,7 +455,7 @@ type CreateWithdrawalMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  withdrawal: Withdrawal!
+  withdrawal: Withdrawal
 }
 
 type FinalizePendingWithdrawalMutationResponse implements MutationResponse {

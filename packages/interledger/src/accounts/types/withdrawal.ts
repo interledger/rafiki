@@ -14,6 +14,7 @@ export interface LiquidityWithdrawal extends WithdrawalOptions {
 
 export type Withdrawal = Required<AccountWithdrawal> & {
   // createdTime: bigint
+  // finalizedTime: bigint
   // status: WithdrawalStatus
 }
 
