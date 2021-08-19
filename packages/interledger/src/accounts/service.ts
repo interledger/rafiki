@@ -61,6 +61,7 @@ import {
   UpdateOptions,
   AccountWithdrawal,
   LiquidityWithdrawal,
+  Withdrawal,
   WithdrawError
 } from './types'
 
@@ -111,10 +112,7 @@ interface BalanceTransfer {
   twoPhaseCommit?: boolean
 }
 
-interface TwoPhaseTransfer extends BalanceTransfer {
-  id: bigint
-  twoPhaseCommit: boolean
-}
+type TwoPhaseTransfer = Required<BalanceTransfer>
 
 interface Peer {
   accountId: string
@@ -661,11 +659,11 @@ export class AccountsService implements AccountsServiceInterface {
     }
   }
 
-  public async withdraw({
+  public async createWithdrawal({
     id,
     accountId,
     amount
-  }: AccountWithdrawal): Promise<void | WithdrawError> {
+  }: AccountWithdrawal): Promise<Withdrawal | WithdrawError> {
     if (id && !validateId(id)) {
       return WithdrawError.InvalidId
     }
@@ -675,21 +673,24 @@ export class AccountsService implements AccountsServiceInterface {
     if (!account) {
       return WithdrawError.UnknownAccount
     }
+    const withdrawalId = id || uuid.v4()
     const error = await this.createTransfers([
       {
-        id: id ? uuidToBigInt(id) : randomId(),
+        id: uuidToBigInt(withdrawalId),
         sourceBalanceId: account.balanceId,
         destinationBalanceId: toSettlementId({
           assetCode: account.assetCode,
           assetScale: account.assetScale,
           hmacSecret: this.config.hmacSecret
         }),
-        amount
+        amount,
+        twoPhaseCommit: true
       }
     ])
 
     if (error) {
       switch (error.code) {
+        // TODO: query existing transfer to check if it's a withdrawal
         case CreateTransferError.exists:
           return WithdrawError.WithdrawalExists
         case CreateTransferError.debit_account_not_found:
@@ -705,6 +706,75 @@ export class AccountsService implements AccountsServiceInterface {
           return WithdrawError.InsufficientSettlementBalance
         default:
           throw new BalanceTransferError(error.code)
+      }
+    }
+    return {
+      id: withdrawalId,
+      accountId,
+      amount
+      // TODO: Get tigerbeetle transfer timestamp
+      // createdTime
+    }
+  }
+
+  public async finalizeWithdrawal(id: string): Promise<void | WithdrawError> {
+    if (id && !validateId(id)) {
+      return WithdrawError.InvalidId
+    }
+    // TODO: query transfer to verify it's a withdrawal
+    const res = await this.client.commitTransfers([
+      {
+        id: uuidToBigInt(id),
+        flags: 0,
+        reserved: TRANSFER_RESERVED,
+        code: 0,
+        timestamp: BigInt(0)
+      }
+    ])
+
+    for (const { code } of res) {
+      switch (code) {
+        case CommitTransferError.linked_event_failed:
+          break
+        case CommitTransferError.transfer_not_found:
+          return WithdrawError.UnknownWithdrawal
+        case CommitTransferError.already_committed:
+          return WithdrawError.AlreadyFinalized
+        case CommitTransferError.already_committed_but_rejected:
+          return WithdrawError.AlreadyRolledBack
+        default:
+          throw new BalanceTransferError(code)
+      }
+    }
+  }
+
+  public async rollbackWithdrawal(id: string): Promise<void | WithdrawError> {
+    if (id && !validateId(id)) {
+      return WithdrawError.InvalidId
+    }
+    // TODO: query transfer to verify it's a withdrawal
+    const res = await this.client.commitTransfers([
+      {
+        id: uuidToBigInt(id),
+        flags: 0 | CommitFlags.reject,
+        reserved: TRANSFER_RESERVED,
+        code: 0,
+        timestamp: BigInt(0)
+      }
+    ])
+
+    for (const { code } of res) {
+      switch (code) {
+        case CommitTransferError.linked_event_failed:
+          break
+        case CommitTransferError.transfer_not_found:
+          return WithdrawError.UnknownWithdrawal
+        case CommitTransferError.already_committed_but_accepted:
+          return WithdrawError.AlreadyFinalized
+        case CommitTransferError.already_committed:
+          return WithdrawError.AlreadyRolledBack
+        default:
+          throw new BalanceTransferError(code)
       }
     }
   }

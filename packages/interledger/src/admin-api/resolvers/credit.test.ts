@@ -1388,12 +1388,10 @@ describe('Credit Resolvers', (): void => {
       ).resolves.toBeUndefined()
 
       const withdrawAmount = BigInt(1)
-      await expect(
-        appContainer.accountsService.withdraw({
-          accountId: subAccountId,
-          amount: withdrawAmount
-        })
-      ).resolves.toBeUndefined()
+      await appContainer.accountsService.createWithdrawal({
+        accountId: subAccountId,
+        amount: withdrawAmount
+      })
 
       const response = await appContainer.apolloClient
         .mutate({
