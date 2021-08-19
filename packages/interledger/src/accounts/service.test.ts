@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 
 import { Config } from '../config'
 import { IlpAccount as IlpAccountModel } from './models'
-import { randomId, toLiquidityId, toSettlementId } from './utils'
+import { toLiquidityId, toSettlementId } from './utils'
 import { randomAsset, AccountFactory } from './testsHelpers'
 import { AccountsService } from './service'
 
@@ -927,16 +927,27 @@ describe('Accounts Service', (): void => {
       }
     })
 
+    test('Returns error for invalid id', async (): Promise<void> => {
+      const { code: assetCode, scale: assetScale } = randomAsset()
+      const error = await accountsService.depositLiquidity({
+        id: 'not a uuid v4',
+        assetCode,
+        assetScale,
+        amount: BigInt(5)
+      })
+      expect(error).toEqual(DepositError.InvalidId)
+    })
+
     test('Can deposit liquidity with idempotency key', async (): Promise<void> => {
       const asset = randomAsset()
       const amount = BigInt(10)
-      const depositId = randomId()
+      const id = uuid()
       {
         const error = await accountsService.depositLiquidity({
           assetCode: asset.code,
           assetScale: asset.scale,
           amount,
-          depositId
+          id
         })
         expect(error).toBeUndefined()
         const balance = await accountsService.getLiquidityBalance(
@@ -950,7 +961,7 @@ describe('Accounts Service', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale,
           amount,
-          depositId
+          id
         })
         expect(error).toEqual(DepositError.DepositExists)
         const balance = await accountsService.getLiquidityBalance(
@@ -1011,6 +1022,17 @@ describe('Accounts Service', (): void => {
       }
     })
 
+    test('Returns error for invalid id', async (): Promise<void> => {
+      const { code: assetCode, scale: assetScale } = randomAsset()
+      const error = await accountsService.withdrawLiquidity({
+        id: 'not a uuid v4',
+        assetCode,
+        assetScale,
+        amount: BigInt(5)
+      })
+      expect(error).toEqual(WithdrawError.InvalidId)
+    })
+
     test('Can withdraw liquidity with idempotency key', async (): Promise<void> => {
       const asset = randomAsset()
       const startingBalance = BigInt(10)
@@ -1020,13 +1042,13 @@ describe('Accounts Service', (): void => {
         amount: startingBalance
       })
       const amount = BigInt(5)
-      const withdrawalId = randomId()
+      const id = uuid()
       {
         const error = await accountsService.withdrawLiquidity({
           assetCode: asset.code,
           assetScale: asset.scale,
           amount,
-          withdrawalId
+          id
         })
         expect(error).toBeUndefined()
         const balance = await accountsService.getLiquidityBalance(
@@ -1040,7 +1062,7 @@ describe('Accounts Service', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale,
           amount,
-          withdrawalId
+          id
         })
         expect(error).toEqual(WithdrawError.WithdrawalExists)
         const balance = await accountsService.getLiquidityBalance(
@@ -1222,6 +1244,16 @@ describe('Accounts Service', (): void => {
       }
     })
 
+    test('Returns error for invalid id', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const error = await accountsService.withdraw({
+        id: 'not a uuid v4',
+        accountId,
+        amount: BigInt(5)
+      })
+      expect(error).toEqual(WithdrawError.InvalidId)
+    })
+
     test("Can't withdraw from nonexistent account", async (): Promise<void> => {
       const accountId = uuid()
       await expect(
@@ -1265,12 +1297,12 @@ describe('Accounts Service', (): void => {
         amount: startingBalance
       })
       const amount = BigInt(5)
-      const withdrawalId = randomId()
+      const id = uuid()
       {
         const error = await accountsService.withdraw({
           accountId,
           amount,
-          withdrawalId
+          id
         })
         expect(error).toBeUndefined()
         const { balance } = (await accountsService.getAccountBalance(
@@ -1282,7 +1314,7 @@ describe('Accounts Service', (): void => {
         const error = await accountsService.withdraw({
           accountId,
           amount,
-          withdrawalId
+          id
         })
         expect(error).toEqual(WithdrawError.WithdrawalExists)
         const { balance } = (await accountsService.getAccountBalance(

@@ -1,5 +1,5 @@
 interface Withdrawal {
-  withdrawalId?: bigint
+  id?: string
   amount: bigint
 }
 
@@ -16,6 +16,7 @@ export enum WithdrawError {
   InsufficientBalance = 'InsufficientBalance',
   InsufficientLiquidity = 'InsufficientLiquidity',
   InsufficientSettlementBalance = 'InsufficientSettlementBalance',
+  InvalidId = 'InvalidId',
   UnknownAccount = 'UnknownAccount',
   UnknownLiquidityAccount = 'UnknownLiquidityAccount',
   UnknownSettlementAccount = 'UnknownSettlementAccount',
