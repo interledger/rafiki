@@ -35,7 +35,8 @@ import {
   toLiquidityId,
   toSettlementId,
   randomId,
-  uuidToBigInt
+  uuidToBigInt,
+  validateId
 } from './utils'
 import {
   AccountsService as AccountsServiceInterface,
@@ -613,6 +614,9 @@ export class AccountsService implements AccountsServiceInterface {
     accountId,
     amount
   }: AccountDeposit): Promise<Deposit | DepositError> {
+    if (id && !validateId(id)) {
+      return DepositError.InvalidId
+    }
     const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
@@ -635,6 +639,7 @@ export class AccountsService implements AccountsServiceInterface {
 
     if (error) {
       switch (error.code) {
+        // TODO: query transfer to check if it's a deposit
         case CreateTransferError.exists:
           return DepositError.DepositExists
         case CreateTransferError.debit_account_not_found:

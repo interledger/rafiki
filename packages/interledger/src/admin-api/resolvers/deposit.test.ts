@@ -86,6 +86,46 @@ describe('Deposit Resolvers', (): void => {
       expect(response.deposit?.amount).toEqual(amount)
     })
 
+    test('Returns an error for invalid id', async (): Promise<void> => {
+      const { id: ilpAccountId } = await accountFactory.build()
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateDeposit($input: CreateDepositInput!) {
+              createDeposit(input: $input) {
+                code
+                success
+                message
+                deposit {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: 'not a uuid v4',
+              ilpAccountId,
+              amount: '100'
+            }
+          }
+        })
+        .then(
+          (query): CreateDepositMutationResponse => {
+            if (query.data) {
+              return query.data.createDeposit
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Invalid id')
+      expect(response.deposit).toBeNull()
+    })
+
     test('Returns an error for unknown account', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({

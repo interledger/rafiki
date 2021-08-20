@@ -1137,6 +1137,17 @@ describe('Accounts Service', (): void => {
       }
     })
 
+    test('Returns error for invalid id', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const error = await accountsService.deposit({
+        id: 'not a uuid v4',
+        accountId,
+        amount: BigInt(5)
+      })
+      expect(isDepositError(error)).toEqual(true)
+      expect(error).toEqual(DepositError.InvalidId)
+    })
+
     test("Can't deposit to nonexistent account", async (): Promise<void> => {
       const accountId = uuid()
       const error = await accountsService.deposit({
@@ -1147,7 +1158,7 @@ describe('Accounts Service', (): void => {
       expect(error).toEqual(DepositError.UnknownAccount)
     })
 
-    test('Can deposit with idempotency key', async (): Promise<void> => {
+    test("Can't deposit with duplicate id", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(10)
       const deposit = {
@@ -1155,24 +1166,23 @@ describe('Accounts Service', (): void => {
         accountId,
         amount
       }
-      {
-        const depositOrError = await accountsService.deposit(deposit)
-        expect(isDepositError(depositOrError)).toEqual(false)
-        expect(depositOrError).toEqual(deposit)
-        const { balance } = (await accountsService.getAccountBalance(
-          accountId
-        )) as IlpBalance
-        expect(balance).toEqual(amount)
-      }
-      {
-        const error = await accountsService.deposit(deposit)
-        expect(isDepositError(error)).toEqual(true)
-        expect(error).toEqual(DepositError.DepositExists)
-        const { balance } = (await accountsService.getAccountBalance(
-          accountId
-        )) as IlpBalance
-        expect(balance).toEqual(amount)
-      }
+      await expect(accountsService.deposit(deposit)).resolves.toEqual(deposit)
+      await expect(accountsService.deposit(deposit)).resolves.toEqual(
+        DepositError.DepositExists
+      )
+      await expect(
+        accountsService.deposit({
+          ...deposit,
+          amount: BigInt(1)
+        })
+      ).resolves.toEqual(DepositError.DepositExists)
+      const { id: diffAccountId } = await accountFactory.build()
+      await expect(
+        accountsService.deposit({
+          ...deposit,
+          accountId: diffAccountId
+        })
+      ).resolves.toEqual(DepositError.DepositExists)
     })
   })
 

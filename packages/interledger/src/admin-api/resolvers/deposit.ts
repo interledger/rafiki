@@ -34,6 +34,12 @@ export const createDeposit: MutationResolvers['createDeposit'] = async (
           message: 'Deposit exists',
           success: false
         }
+      case DepositError.InvalidId:
+        return {
+          code: '400',
+          message: 'Invalid id',
+          success: false
+        }
       case DepositError.UnknownAccount:
         return {
           code: '404',

@@ -18,6 +18,7 @@ export type Deposit = Required<AccountDeposit> & {
 
 export enum DepositError {
   DepositExists = 'DepositExists',
+  InvalidId = 'InvalidId',
   UnknownAccount = 'UnknownAccount'
 }
 
