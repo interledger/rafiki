@@ -112,6 +112,49 @@ export const finalizePendingWithdrawal: MutationResolvers['finalizePendingWithdr
   }
 }
 
+export const rollbackPendingWithdrawal: MutationResolvers['rollbackPendingWithdrawal'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['RollbackPendingWithdrawalMutationResponse'] => {
+  const error = await ctx.accountsService.rollbackWithdrawal(args.withdrawalId)
+  if (error) {
+    switch (error) {
+      case WithdrawError.AlreadyFinalized:
+        return {
+          code: '409',
+          message: 'Withdrawal already finalized',
+          success: false
+        }
+      case WithdrawError.AlreadyRolledBack:
+        return {
+          code: '409',
+          message: 'Withdrawal already rolled back',
+          success: false
+        }
+      case WithdrawError.InvalidId:
+        return {
+          code: '400',
+          message: 'Invalid id',
+          success: false
+        }
+      case WithdrawError.UnknownWithdrawal:
+        return {
+          code: '404',
+          message: 'Unknown withdrawal',
+          success: false
+        }
+      default:
+        throw new Error(`WithdrawError: ${error}`)
+    }
+  }
+  return {
+    code: '200',
+    success: true,
+    message: 'Rolled Back Withdrawal'
+  }
+}
+
 export const getWithdrawalsConnectionPageInfo: WithdrawalsConnectionResolvers['pageInfo'] = async (
   parent,
   args,

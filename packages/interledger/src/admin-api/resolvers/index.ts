@@ -14,7 +14,11 @@ import {
   createIlpSubAccount,
   getSubAccounts
 } from './ilpAccount'
-import { createWithdrawal, finalizePendingWithdrawal } from './withdrawal'
+import {
+  createWithdrawal,
+  finalizePendingWithdrawal,
+  rollbackPendingWithdrawal
+} from './withdrawal'
 import { GraphQLBigInt } from '../scalars'
 
 //TODO: Implement functions for resolvers when there are the relevant services available.
@@ -43,8 +47,8 @@ export const resolvers: Resolvers = {
     // deleteWebhook: deleteWebhook,
     createDeposit: createDeposit,
     createWithdrawal: createWithdrawal,
-    finalizePendingWithdrawal: finalizePendingWithdrawal
-    // rollbackPendingWithdrawal: rollbackPendingWithdrawal
+    finalizePendingWithdrawal: finalizePendingWithdrawal,
+    rollbackPendingWithdrawal: rollbackPendingWithdrawal
   },
   IlpAccount: {
     balance: getBalance,
