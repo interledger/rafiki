@@ -12,7 +12,7 @@ export const extendCredit: MutationResolvers['extendCredit'] = async (
 ): ResolversTypes['ExtendCreditMutationResponse'] => {
   const error = await ctx.accountsService.extendCredit(args.input)
   if (error) {
-    return errorToResponse(error)
+    return errorToResponse[error]
   }
   return {
     code: '200',
@@ -28,7 +28,7 @@ export const revokeCredit: MutationResolvers['revokeCredit'] = async (
 ): ResolversTypes['RevokeCreditMutationResponse'] => {
   const error = await ctx.accountsService.revokeCredit(args.input)
   if (error) {
-    return errorToResponse(error)
+    return errorToResponse[error]
   }
   return {
     code: '200',
@@ -44,7 +44,7 @@ export const utilizeCredit: MutationResolvers['utilizeCredit'] = async (
 ): ResolversTypes['UtilizeCreditMutationResponse'] => {
   const error = await ctx.accountsService.utilizeCredit(args.input)
   if (error) {
-    return errorToResponse(error)
+    return errorToResponse[error]
   }
   return {
     code: '200',
@@ -60,7 +60,7 @@ export const settleDebt: MutationResolvers['settleDebt'] = async (
 ): ResolversTypes['SettleDebtMutationResponse'] => {
   const error = await ctx.accountsService.settleDebt(args.input)
   if (error) {
-    return errorToResponse(error)
+    return errorToResponse[error]
   }
   return {
     code: '200',
@@ -69,65 +69,54 @@ export const settleDebt: MutationResolvers['settleDebt'] = async (
   }
 }
 
-const errorToResponse = (
-  error: CreditError
-): {
-  code: string
-  message: string
-  success: boolean
-  error: CreditErrorResp
-} => {
-  switch (error) {
-    case CreditError.InsufficientBalance:
-      return {
-        code: '403',
-        message: 'Insufficient balance',
-        success: false,
-        error: CreditErrorResp.InsufficientBalance
-      }
-    case CreditError.InsufficientCredit:
-      return {
-        code: '403',
-        message: 'Insufficient credit',
-        success: false,
-        error: CreditErrorResp.InsufficientCredit
-      }
-    case CreditError.InsufficientDebt:
-      return {
-        code: '403',
-        message: 'Insufficient debt',
-        success: false,
-        error: CreditErrorResp.InsufficientDebt
-      }
-    case CreditError.SameAccounts:
-      return {
-        code: '400',
-        message: 'Same accounts',
-        success: false,
-        error: CreditErrorResp.SameAccounts
-      }
-    case CreditError.UnknownAccount:
-      return {
-        code: '404',
-        message: 'Unknown account',
-        success: false,
-        error: CreditErrorResp.UnknownAccount
-      }
-    case CreditError.UnknownSubAccount:
-      return {
-        code: '404',
-        message: 'Unknown sub-account',
-        success: false,
-        error: CreditErrorResp.UnknownSubAccount
-      }
-    case CreditError.UnrelatedSubAccount:
-      return {
-        code: '400',
-        message: 'Unrelated sub-account',
-        success: false,
-        error: CreditErrorResp.UnrelatedSubAccount
-      }
-    default:
-      throw new Error(`CreditError: ${error}`)
+const errorToResponse: {
+  [key in CreditError]: {
+    code: string
+    message: string
+    success: boolean
+    error: CreditErrorResp
+  }
+} = {
+  [CreditError.InsufficientBalance]: {
+    code: '403',
+    message: 'Insufficient balance',
+    success: false,
+    error: CreditErrorResp.InsufficientBalance
+  },
+  [CreditError.InsufficientCredit]: {
+    code: '403',
+    message: 'Insufficient credit',
+    success: false,
+    error: CreditErrorResp.InsufficientCredit
+  },
+  [CreditError.InsufficientDebt]: {
+    code: '403',
+    message: 'Insufficient debt',
+    success: false,
+    error: CreditErrorResp.InsufficientDebt
+  },
+  [CreditError.SameAccounts]: {
+    code: '400',
+    message: 'Same accounts',
+    success: false,
+    error: CreditErrorResp.SameAccounts
+  },
+  [CreditError.UnknownAccount]: {
+    code: '404',
+    message: 'Unknown account',
+    success: false,
+    error: CreditErrorResp.UnknownAccount
+  },
+  [CreditError.UnknownSubAccount]: {
+    code: '404',
+    message: 'Unknown sub-account',
+    success: false,
+    error: CreditErrorResp.UnknownSubAccount
+  },
+  [CreditError.UnrelatedSubAccount]: {
+    code: '400',
+    message: 'Unrelated sub-account',
+    success: false,
+    error: CreditErrorResp.UnrelatedSubAccount
   }
 }
