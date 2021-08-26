@@ -9,7 +9,6 @@
     "generate": "graphql-codegen --config codegen.yml"
   },
   "devDependencies": {
-    "@apollo/client": "^3.3.20",
     "@graphql-codegen/cli": "1.21.5",
     "@graphql-codegen/introspection": "1.18.2",
     "@graphql-codegen/typescript": "1.22.2",
@@ -31,6 +30,10 @@
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.0",
+    "@apollo/client": "^3.3.20",
+    "@graphql-tools/graphql-file-loader": "^7.0.6",
+    "@graphql-tools/load": "^7.1.9",
+    "@graphql-tools/schema": "^8.1.2",
     "@interledger/stream-receiver": "^0.2.2",
     "@koa/cors": "^3.1.0",
     "@koa/router": "^10.0.0",

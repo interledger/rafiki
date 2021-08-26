@@ -10,6 +10,15 @@ generates:
       resolverTypeWrapperSignature: Promise<T>
       scalars:
         UInt64: bigint
+  ../backend/src/connector/generated/graphql.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      defaultMapper: Partial<{T}>
+      resolverTypeWrapperSignature: Promise<T>
+      scalars:
+        UInt64: bigint
   src/admin-api/generated/graphql.schema.json:
     plugins:
       - "introspection"

@@ -9,11 +9,11 @@ import {
   createHttpLink,
   ApolloLink
 } from '@apollo/client'
+import { onError } from '@apollo/client/link/error'
+import { setContext } from '@apollo/client/link/context'
 
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
-import { onError } from '@apollo/client/link/error'
-import { setContext } from '@apollo/client/link/context'
 
 export interface TestContainer {
   port: number
@@ -30,6 +30,7 @@ export const createTestApp = async (
   const config = await container.use('config')
   config.port = 0
   config.adminPort = 0
+  config.connectorPort = 0
   const logger = createLogger({
     prettyPrint: {
       translateTime: true,
@@ -40,6 +41,12 @@ export const createTestApp = async (
   })
 
   container.bind('logger', async () => logger)
+
+  // container.bind('connectorService', async () => {
+  // TODO: Bind mock creator service for testing of other services.
+  //   return await createTestConnectorService()
+  // })
+
   const app = new App(container)
   await start(container, app)
   const knex = await container.use('knex')

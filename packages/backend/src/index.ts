@@ -14,6 +14,8 @@ import { createSPSPService } from './spsp/service'
 import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebMonetizationService } from './webmonetization/service'
+import { createConnectorService } from './connector/service'
+import { connectorClient } from './connector/client'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -129,6 +131,16 @@ export function initIocContainer(
       knex: knex,
       invoiceService,
       accountService
+    })
+  })
+
+  container.singleton('connectorService', async (deps) => {
+    const logger = await deps.use('logger')
+    const config = await deps.use('config')
+    const client = connectorClient(logger, config.connectorPort)
+    return await createConnectorService({
+      logger: logger,
+      client: client
     })
   })
 
