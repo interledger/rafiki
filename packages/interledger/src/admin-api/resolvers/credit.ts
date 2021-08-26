@@ -1,4 +1,8 @@
-import { ResolversTypes, MutationResolvers } from '../generated/graphql'
+import {
+  CreditError as CreditErrorResp,
+  ResolversTypes,
+  MutationResolvers
+} from '../generated/graphql'
 import { CreditError } from '../../accounts/types'
 
 export const extendCredit: MutationResolvers['extendCredit'] = async (
@@ -71,49 +75,57 @@ const errorToResponse = (
   code: string
   message: string
   success: boolean
+  error: CreditErrorResp
 } => {
   switch (error) {
     case CreditError.InsufficientBalance:
       return {
         code: '403',
         message: 'Insufficient balance',
-        success: false
+        success: false,
+        error: CreditErrorResp.InsufficientBalance
       }
     case CreditError.InsufficientCredit:
       return {
         code: '403',
         message: 'Insufficient credit',
-        success: false
+        success: false,
+        error: CreditErrorResp.InsufficientCredit
       }
     case CreditError.InsufficientDebt:
       return {
         code: '403',
         message: 'Insufficient debt',
-        success: false
+        success: false,
+        error: CreditErrorResp.InsufficientDebt
       }
     case CreditError.SameAccounts:
       return {
         code: '400',
         message: 'Same accounts',
-        success: false
+        success: false,
+        error: CreditErrorResp.SameAccounts
       }
     case CreditError.UnknownAccount:
       return {
         code: '404',
         message: 'Unknown account',
-        success: false
+        success: false,
+        error: CreditErrorResp.UnknownAccount
       }
     case CreditError.UnknownSubAccount:
       return {
         code: '404',
         message: 'Unknown sub-account',
-        success: false
+        success: false,
+        error: CreditErrorResp.UnknownSubAccount
       }
     case CreditError.UnrelatedSubAccount:
       return {
         code: '400',
         message: 'Unrelated sub-account',
-        success: false
+        success: false,
+        error: CreditErrorResp.UnrelatedSubAccount
       }
     default:
       throw new Error(`CreditError: ${error}`)

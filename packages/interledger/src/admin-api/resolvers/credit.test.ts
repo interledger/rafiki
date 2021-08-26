@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid'
 
 import { AccountFactory } from '../../accounts/testsHelpers'
 import {
+  CreditError,
   ExtendCreditMutationResponse,
   RevokeCreditMutationResponse,
   UtilizeCreditMutationResponse,
@@ -77,6 +78,7 @@ describe('Credit Resolvers', (): void => {
                   code
                   success
                   message
+                  error
                 }
               }
             `,
@@ -101,6 +103,7 @@ describe('Credit Resolvers', (): void => {
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
+        expect(response.error).toBeNull()
 
         await expect(
           appContainer.accountsService.getAccountBalance(accountId)
@@ -133,6 +136,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -157,6 +161,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown account')
+      expect(response.error).toEqual(CreditError.UnknownAccount)
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
@@ -169,6 +174,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -193,6 +199,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown sub-account')
+      expect(response.error).toEqual(CreditError.UnknownSubAccount)
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
@@ -206,6 +213,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -230,6 +238,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Unrelated sub-account')
+      expect(response.error).toEqual(CreditError.UnrelatedSubAccount)
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
@@ -245,6 +254,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -269,6 +279,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Unrelated sub-account')
+      expect(response.error).toEqual(CreditError.UnrelatedSubAccount)
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
@@ -281,6 +292,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -305,6 +317,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Same accounts')
+      expect(response.error).toEqual(CreditError.SameAccounts)
     })
 
     test('Returns error for insufficient account balance', async (): Promise<void> => {
@@ -321,6 +334,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -346,6 +360,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('403')
       expect(response.message).toEqual('Insufficient balance')
+      expect(response.error).toEqual(CreditError.InsufficientBalance)
     })
   })
 
@@ -374,6 +389,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -397,6 +413,7 @@ describe('Credit Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
+      expect(response.error).toBeNull()
 
       await expect(
         appContainer.accountsService.getAccountBalance(accountId)
@@ -428,6 +445,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -452,6 +470,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown account')
+      expect(response.error).toEqual(CreditError.UnknownAccount)
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
@@ -464,6 +483,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -488,6 +508,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown sub-account')
+      expect(response.error).toEqual(CreditError.UnknownSubAccount)
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
@@ -501,6 +522,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -525,6 +547,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Unrelated sub-account')
+      expect(response.error).toEqual(CreditError.UnrelatedSubAccount)
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
@@ -540,6 +563,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -564,6 +588,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Unrelated sub-account')
+      expect(response.error).toEqual(CreditError.UnrelatedSubAccount)
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
@@ -576,6 +601,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -600,6 +626,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Same accounts')
+      expect(response.error).toEqual(CreditError.SameAccounts)
     })
 
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
@@ -616,6 +643,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -640,6 +668,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('403')
       expect(response.message).toEqual('Insufficient credit')
+      expect(response.error).toEqual(CreditError.InsufficientCredit)
     })
   })
 
@@ -673,6 +702,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -696,6 +726,7 @@ describe('Credit Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
+      expect(response.error).toBeNull()
 
       await expect(
         appContainer.accountsService.getAccountBalance(accountId)
@@ -728,6 +759,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -752,6 +784,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown account')
+      expect(response.error).toEqual(CreditError.UnknownAccount)
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
@@ -765,6 +798,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -789,6 +823,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown sub-account')
+      expect(response.error).toEqual(CreditError.UnknownSubAccount)
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
@@ -803,6 +838,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -827,6 +863,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Unrelated sub-account')
+      expect(response.error).toEqual(CreditError.UnrelatedSubAccount)
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
@@ -843,6 +880,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -867,6 +905,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Unrelated sub-account')
+      expect(response.error).toEqual(CreditError.UnrelatedSubAccount)
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
@@ -880,6 +919,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -904,6 +944,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Same accounts')
+      expect(response.error).toEqual(CreditError.SameAccounts)
     })
 
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
@@ -920,6 +961,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -944,6 +986,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('403')
       expect(response.message).toEqual('Insufficient credit')
+      expect(response.error).toEqual(CreditError.InsufficientCredit)
     })
 
     test('Returns error for insufficient account balance', async (): Promise<void> => {
@@ -969,6 +1012,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -993,6 +1037,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('403')
       expect(response.message).toEqual('Insufficient balance')
+      expect(response.error).toEqual(CreditError.InsufficientBalance)
     })
   })
 
@@ -1033,6 +1078,7 @@ describe('Credit Resolvers', (): void => {
                   code
                   success
                   message
+                  error
                 }
               }
             `,
@@ -1057,6 +1103,7 @@ describe('Credit Resolvers', (): void => {
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
+        expect(response.error).toBeNull()
 
         await expect(
           appContainer.accountsService.getAccountBalance(accountId)
@@ -1090,6 +1137,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -1114,6 +1162,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown account')
+      expect(response.error).toEqual(CreditError.UnknownAccount)
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
@@ -1127,6 +1176,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -1151,6 +1201,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown sub-account')
+      expect(response.error).toEqual(CreditError.UnknownSubAccount)
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
@@ -1165,6 +1216,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -1189,6 +1241,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Unrelated sub-account')
+      expect(response.error).toEqual(CreditError.UnrelatedSubAccount)
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
@@ -1205,6 +1258,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -1229,6 +1283,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Unrelated sub-account')
+      expect(response.error).toEqual(CreditError.UnrelatedSubAccount)
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
@@ -1242,6 +1297,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -1266,6 +1322,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Same accounts')
+      expect(response.error).toEqual(CreditError.SameAccounts)
     })
 
     test('Returns error if amount exceeds debt', async (): Promise<void> => {
@@ -1282,6 +1339,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -1306,6 +1364,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('403')
       expect(response.message).toEqual('Insufficient debt')
+      expect(response.error).toEqual(CreditError.InsufficientDebt)
     })
 
     test('Returns error for insufficient sub-account balance', async (): Promise<void> => {
@@ -1344,6 +1403,7 @@ describe('Credit Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -1368,6 +1428,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('403')
       expect(response.message).toEqual('Insufficient balance')
+      expect(response.error).toEqual(CreditError.InsufficientBalance)
     })
   })
 })

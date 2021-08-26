@@ -95,6 +95,16 @@ export type CreateWithdrawalMutationResponse = MutationResponse & {
   withdrawal: Withdrawal;
 };
 
+export enum CreditError {
+  SameAccounts = 'SameAccounts',
+  UnknownAccount = 'UnknownAccount',
+  UnrelatedSubAccount = 'UnrelatedSubAccount',
+  UnknownSubAccount = 'UnknownSubAccount',
+  InsufficientBalance = 'InsufficientBalance',
+  InsufficientCredit = 'InsufficientCredit',
+  InsufficientDebt = 'InsufficientDebt'
+}
+
 export type DeleteIlpAccountMutationResponse = MutationResponse & {
   __typename?: 'DeleteIlpAccountMutationResponse';
   code: Scalars['String'];
@@ -144,6 +154,7 @@ export type ExtendCreditMutationResponse = MutationResponse & {
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
+  error?: Maybe<CreditError>;
 };
 
 export type FinalizePendingWithdrawalMutationResponse = MutationResponse & {
@@ -437,6 +448,7 @@ export type RevokeCreditMutationResponse = MutationResponse & {
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
+  error?: Maybe<CreditError>;
 };
 
 export type RollbackPendingWithdrawalMutationResponse = MutationResponse & {
@@ -473,6 +485,7 @@ export type SettleDebtMutationResponse = MutationResponse & {
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
+  error?: Maybe<CreditError>;
 };
 
 export type Stream = {
@@ -537,6 +550,7 @@ export type UtilizeCreditMutationResponse = MutationResponse & {
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
+  error?: Maybe<CreditError>;
 };
 
 export type Webhook = {
@@ -673,6 +687,7 @@ export type ResolversTypes = {
   CreateIlpSubAccountMutationResponse: ResolverTypeWrapper<Partial<CreateIlpSubAccountMutationResponse>>;
   CreateWebhookMutationResponse: ResolverTypeWrapper<Partial<CreateWebhookMutationResponse>>;
   CreateWithdrawalMutationResponse: ResolverTypeWrapper<Partial<CreateWithdrawalMutationResponse>>;
+  CreditError: ResolverTypeWrapper<Partial<CreditError>>;
   DeleteIlpAccountMutationResponse: ResolverTypeWrapper<Partial<DeleteIlpAccountMutationResponse>>;
   DeleteWebhookMutationResponse: ResolverTypeWrapper<Partial<DeleteWebhookMutationResponse>>;
   Deposit: ResolverTypeWrapper<Partial<Deposit>>;
@@ -873,6 +888,7 @@ export type ExtendCreditMutationResponseResolvers<ContextType = any, ParentType 
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes['CreditError']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -970,6 +986,7 @@ export type RevokeCreditMutationResponseResolvers<ContextType = any, ParentType 
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes['CreditError']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -991,6 +1008,7 @@ export type SettleDebtMutationResponseResolvers<ContextType = any, ParentType ex
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes['CreditError']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1036,6 +1054,7 @@ export type UtilizeCreditMutationResponseResolvers<ContextType = any, ParentType
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes['CreditError']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

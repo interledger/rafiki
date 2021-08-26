@@ -217,6 +217,16 @@ input SettleDebtInput {
   revolve: Boolean! = true
 }
 
+enum CreditError {
+  SameAccounts
+  UnknownAccount
+  UnrelatedSubAccount
+  UnknownSubAccount
+  InsufficientBalance
+  InsufficientCredit
+  InsufficientDebt
+}
+
 type IlpAccount {
   id: ID!
   disabled: Boolean!
@@ -385,24 +395,28 @@ type ExtendCreditMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
+  error: CreditError
 }
 
 type RevokeCreditMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
+  error: CreditError
 }
 
 type UtilizeCreditMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
+  error: CreditError
 }
 
 type SettleDebtMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
+  error: CreditError
 }
 
 type CreateWebhookMutationResponse implements MutationResponse {
