@@ -43,7 +43,7 @@
     "raw-body": "^2.4.1",
     "rosie": "^2.1.0",
     "rxjs": "^6.6.7",
-    "tigerbeetle-node": "^0.3.2",
+    "tigerbeetle-node": "^0.3.3",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
