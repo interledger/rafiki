@@ -6,26 +6,14 @@ export const extendCredit: MutationResolvers['extendCredit'] = async (
   args,
   ctx
 ): ResolversTypes['ExtendCreditMutationResponse'] => {
-  try {
-    const error = await ctx.accountsService.extendCredit(args.input)
-    if (error) {
-      return errorToResponse(error)
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Extended credit'
-    }
-  } catch (error) {
-    ctx.logger('Error extending credit', {
-      options: args.input,
-      error
-    })
-    return {
-      code: '400',
-      message: 'Error trying to extend credit',
-      success: false
-    }
+  const error = await ctx.accountsService.extendCredit(args.input)
+  if (error) {
+    return errorToResponse(error)
+  }
+  return {
+    code: '200',
+    success: true,
+    message: 'Extended credit'
   }
 }
 
@@ -34,26 +22,14 @@ export const revokeCredit: MutationResolvers['revokeCredit'] = async (
   args,
   ctx
 ): ResolversTypes['RevokeCreditMutationResponse'] => {
-  try {
-    const error = await ctx.accountsService.revokeCredit(args.input)
-    if (error) {
-      return errorToResponse(error)
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Revoked credit'
-    }
-  } catch (error) {
-    ctx.logger('Error revoking credit', {
-      options: args.input,
-      error
-    })
-    return {
-      code: '400',
-      message: 'Error trying to revoke credit',
-      success: false
-    }
+  const error = await ctx.accountsService.revokeCredit(args.input)
+  if (error) {
+    return errorToResponse(error)
+  }
+  return {
+    code: '200',
+    success: true,
+    message: 'Revoked credit'
   }
 }
 
@@ -62,26 +38,14 @@ export const utilizeCredit: MutationResolvers['utilizeCredit'] = async (
   args,
   ctx
 ): ResolversTypes['UtilizeCreditMutationResponse'] => {
-  try {
-    const error = await ctx.accountsService.utilizeCredit(args.input)
-    if (error) {
-      return errorToResponse(error)
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Utilized credit'
-    }
-  } catch (error) {
-    ctx.logger('Error utilizing credit', {
-      options: args.input,
-      error
-    })
-    return {
-      code: '400',
-      message: 'Error trying to utilize credit',
-      success: false
-    }
+  const error = await ctx.accountsService.utilizeCredit(args.input)
+  if (error) {
+    return errorToResponse(error)
+  }
+  return {
+    code: '200',
+    success: true,
+    message: 'Utilized credit'
   }
 }
 
@@ -90,26 +54,14 @@ export const settleDebt: MutationResolvers['settleDebt'] = async (
   args,
   ctx
 ): ResolversTypes['SettleDebtMutationResponse'] => {
-  try {
-    const error = await ctx.accountsService.settleDebt(args.input)
-    if (error) {
-      return errorToResponse(error)
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Settled debt'
-    }
-  } catch (error) {
-    ctx.logger('Error settling debt', {
-      options: args.input,
-      error
-    })
-    return {
-      code: '400',
-      message: 'Error trying to settle debt',
-      success: false
-    }
+  const error = await ctx.accountsService.settleDebt(args.input)
+  if (error) {
+    return errorToResponse(error)
+  }
+  return {
+    code: '200',
+    success: true,
+    message: 'Settled debt'
   }
 }
 
