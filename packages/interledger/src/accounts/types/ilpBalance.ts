@@ -1,8 +1,4 @@
-import { Asset } from './asset'
-
 export interface IlpBalance {
-  id: string
-  asset: Asset
   balance: bigint
   // Remaining credit line available from the super-account
   availableCredit: bigint

@@ -34,12 +34,16 @@ import {
   calculateDebitBalance,
   toLiquidityId,
   toSettlementId,
-  randomId
+  randomId,
+  uuidToBigInt,
+  validateId
 } from './utils'
 import {
   AccountsService as AccountsServiceInterface,
   CreateAccountError,
   CreateOptions,
+  AccountDeposit,
+  Deposit,
   DepositError,
   ExtendCreditOptions,
   IlpAccount,
@@ -59,7 +63,7 @@ import {
 
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   const account: IlpAccount = {
-    accountId: accountRow.id,
+    id: accountRow.id,
     disabled: accountRow.disabled,
     asset: {
       code: accountRow.assetCode,
@@ -135,7 +139,7 @@ export class AccountsService implements AccountsServiceInterface {
         IlpHttpToken,
         async (IlpAccountModel, IlpHttpToken) => {
           const newAccount: PartialModelObject<IlpAccountModel> = {
-            id: account.accountId,
+            id: account.id,
             disabled: account.disabled,
             maxPacketAmount: account.maxPacketAmount,
             outgoingEndpoint: account.http?.outgoing.endpoint,
@@ -228,7 +232,7 @@ export class AccountsService implements AccountsServiceInterface {
           const incomingTokens = account.http?.incoming?.authTokens.map(
             (incomingToken: string) => {
               return {
-                accountId: account.accountId,
+                accountId: accountRow.id,
                 token: incomingToken
               }
             }
@@ -265,12 +269,12 @@ export class AccountsService implements AccountsServiceInterface {
         async (IlpAccountModel, IlpHttpToken) => {
           if (accountOptions.http?.incoming?.authTokens) {
             await IlpHttpToken.query().delete().where({
-              accountId: accountOptions.accountId
+              accountId: accountOptions.id
             })
             const incomingTokens = accountOptions.http.incoming.authTokens.map(
               (incomingToken: string) => {
                 return {
-                  accountId: accountOptions.accountId,
+                  accountId: accountOptions.id,
                   token: incomingToken
                 }
               }
@@ -278,12 +282,13 @@ export class AccountsService implements AccountsServiceInterface {
             await IlpHttpToken.query().insert(incomingTokens)
           }
           const account = await IlpAccountModel.query()
-            .patchAndFetchById(accountOptions.accountId, {
+            .patchAndFetchById(accountOptions.id, {
               disabled: accountOptions.disabled,
               maxPacketAmount: accountOptions.maxPacketAmount,
               outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
               outgoingToken: accountOptions.http?.outgoing.authToken,
-              streamEnabled: accountOptions.stream?.enabled
+              streamEnabled: accountOptions.stream?.enabled,
+              staticIlpAddress: accountOptions.routing?.staticIlpAddress
             })
             .throwIfNotFound()
           return toIlpAccount(account)
@@ -354,11 +359,6 @@ export class AccountsService implements AccountsServiceInterface {
     }
 
     const accountBalance: IlpBalance = {
-      id: accountId,
-      asset: {
-        code: account.assetCode,
-        scale: account.assetScale
-      },
       balance: BigInt(0),
       availableCredit: BigInt(0),
       creditExtended: BigInt(0),
@@ -610,23 +610,23 @@ export class AccountsService implements AccountsServiceInterface {
   }
 
   public async deposit({
+    id,
     accountId,
-    amount,
-    depositId
-  }: {
-    accountId: string
-    amount: bigint
-    depositId?: bigint
-  }): Promise<void | DepositError> {
+    amount
+  }: AccountDeposit): Promise<Deposit | DepositError> {
+    if (id && !validateId(id)) {
+      return DepositError.InvalidId
+    }
     const account = await IlpAccountModel.query()
       .findById(accountId)
       .select('assetCode', 'assetScale', 'balanceId')
     if (!account) {
       return DepositError.UnknownAccount
     }
+    const depositId = id || uuid.v4()
     const error = await this.createTransfers([
       {
-        id: depositId,
+        id: uuidToBigInt(depositId),
         sourceBalanceId: toSettlementId({
           assetCode: account.assetCode,
           assetScale: account.assetScale,
@@ -639,6 +639,7 @@ export class AccountsService implements AccountsServiceInterface {
 
     if (error) {
       switch (error.code) {
+        // TODO: query transfer to check if it's a deposit
         case CreateTransferError.exists:
           return DepositError.DepositExists
         case CreateTransferError.debit_account_not_found:
@@ -651,6 +652,13 @@ export class AccountsService implements AccountsServiceInterface {
         default:
           throw new BalanceTransferError(error.code)
       }
+    }
+    return {
+      id: depositId,
+      accountId,
+      amount
+      // TODO: Get tigerbeetle transfer timestamp
+      // createdTime
     }
   }
 
@@ -1209,10 +1217,18 @@ export class AccountsService implements AccountsServiceInterface {
    * The pagination algorithm is based on the Relay connection specification.
    * Please read the spec before changing things:
    * https://relay.dev/graphql/connections.htm
-   * @param pagination Pagination - cursors and limits.
+   * @param options
+   * @param options.pagination Pagination - cursors and limits.
+   * @param options.superAccountId String - id of account to get sub-accounts of.
    * @returns IlpAccount[] An array of accounts that form a page.
    */
-  async getAccountsPage(pagination?: Pagination): Promise<IlpAccount[]> {
+  async getAccountsPage({
+    pagination,
+    superAccountId
+  }: {
+    pagination?: Pagination
+    superAccountId?: string
+  }): Promise<IlpAccount[]> {
     if (
       typeof pagination?.before === 'undefined' &&
       typeof pagination?.last === 'number'
@@ -1229,6 +1245,13 @@ export class AccountsService implements AccountsServiceInterface {
      */
     if (typeof pagination?.after === 'string') {
       const accounts = await IlpAccountModel.query()
+        .where(
+          superAccountId
+            ? {
+                superAccountId
+              }
+            : {}
+        )
         .whereRaw(
           '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "ilpAccounts" where "id" = ?)',
           [pagination.after]
@@ -1246,6 +1269,13 @@ export class AccountsService implements AccountsServiceInterface {
      */
     if (typeof pagination?.before === 'string') {
       const accounts = await IlpAccountModel.query()
+        .where(
+          superAccountId
+            ? {
+                superAccountId
+              }
+            : {}
+        )
         .whereRaw(
           '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "ilpAccounts" where "id" = ?)',
           [pagination.before]
@@ -1262,6 +1292,13 @@ export class AccountsService implements AccountsServiceInterface {
     }
 
     const accounts = await IlpAccountModel.query()
+      .where(
+        superAccountId
+          ? {
+              superAccountId
+            }
+          : {}
+      )
       .orderBy([
         { column: 'createdAt', order: 'asc' },
         { column: 'id', order: 'asc' }

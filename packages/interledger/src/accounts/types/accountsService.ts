@@ -1,5 +1,10 @@
 import { Asset } from './asset'
-import { AccountDeposit, LiquidityDeposit, DepositError } from './deposit'
+import {
+  AccountDeposit,
+  LiquidityDeposit,
+  Deposit,
+  DepositError
+} from './deposit'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
 import {
@@ -46,13 +51,16 @@ export interface AccountsService extends ConnectorAccountsService {
     assetCode: string,
     assetScale: number
   ): Promise<bigint | undefined>
-  deposit(deposit: AccountDeposit): Promise<void | DepositError>
+  deposit(deposit: AccountDeposit): Promise<Deposit | DepositError>
   withdraw(withdrawal: AccountWithdrawal): Promise<void | WithdrawError>
   extendCredit(extendOptions: ExtendCreditOptions): Promise<void | CreditError>
   utilizeCredit(utilizeOptions: CreditOptions): Promise<void | CreditError>
   revokeCredit(revokeOptions: CreditOptions): Promise<void | CreditError>
   settleDebt(settleOptions: SettleDebtOptions): Promise<void | CreditError>
-  getAccountsPage(pagination?: Pagination): Promise<IlpAccount[]>
+  getAccountsPage(options: {
+    pagination?: Pagination
+    superAccountId?: string
+  }): Promise<IlpAccount[]>
 }
 
 export interface Pagination {
@@ -62,11 +70,15 @@ export interface Pagination {
   last?: number // Backward pagination: limit.
 }
 
-export type UpdateOptions = Omit<
+export type Options = Omit<
   IlpAccount,
-  'disabled' | 'asset' | 'superAccountId'
+  'id' | 'disabled' | 'asset' | 'superAccountId' | 'stream'
 > & {
+  id?: string
   disabled?: boolean
+  stream?: {
+    enabled: boolean
+  }
   http?: {
     incoming?: {
       authTokens: string[]
@@ -74,12 +86,12 @@ export type UpdateOptions = Omit<
   }
 }
 
-export type CreateAccountOptions = UpdateOptions & {
+export type CreateAccountOptions = Options & {
   asset: Asset
   superAccountId?: never
 }
 
-export type CreateSubAccountOptions = UpdateOptions & {
+export type CreateSubAccountOptions = Options & {
   asset?: never
   superAccountId: string
 }
@@ -101,6 +113,10 @@ export enum CreateAccountError {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isCreateAccountError = (o: any): o is CreateAccountError =>
   Object.values(CreateAccountError).includes(o)
+
+export type UpdateOptions = Options & {
+  id: string
+}
 
 export enum UpdateAccountError {
   DuplicateIncomingToken = 'DuplicateIncomingToken',

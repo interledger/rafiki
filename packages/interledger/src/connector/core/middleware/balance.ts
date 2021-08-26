@@ -30,8 +30,8 @@ export function createBalanceMiddleware() {
 
     // Update balances on prepare
     const trxOrError = await services.accounts.transferFunds({
-      sourceAccountId: accounts.incoming.accountId,
-      destinationAccountId: accounts.outgoing.accountId,
+      sourceAccountId: accounts.incoming.id,
+      destinationAccountId: accounts.outgoing.id,
       sourceAmount,
       destinationAmount: destinationAmountOrError
     })

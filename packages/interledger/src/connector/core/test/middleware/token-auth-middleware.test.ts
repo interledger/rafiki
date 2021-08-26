@@ -49,7 +49,10 @@ describe('Token Auth Middleware', function () {
         services: RafikiServicesFactory.build({ accounts })
       })
       const account = PeerAccountFactory.build({
-        accountId: 'alice',
+        id: 'alice',
+        stream: {
+          enabled: true
+        },
         http: {
           incoming: {
             authTokens: ['asd123']

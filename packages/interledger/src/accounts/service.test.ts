@@ -13,11 +13,13 @@ import {
   CreateAccountError,
   CreateOptions,
   DepositError,
+  isDepositError,
   IlpAccount,
   IlpBalance,
   isCreateAccountError,
   isTransferError,
   isUpdateAccountError,
+  Pagination,
   TransferError,
   CreditError,
   UpdateAccountError,
@@ -78,22 +80,26 @@ describe('Accounts Service', (): void => {
 
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {
-      const accountId = uuid()
-      const account = {
-        accountId,
+      const account: CreateOptions = {
         asset: randomAsset()
       }
       const accountOrError = await accountsService.createAccount(account)
       expect(isCreateAccountError(accountOrError)).toEqual(false)
+      if (isCreateAccountError(accountOrError)) {
+        fail()
+      }
       const expectedAccount = {
         ...account,
+        id: accountOrError.id,
         disabled: false,
         stream: {
           enabled: false
         }
       }
       expect(accountOrError).toEqual(expectedAccount)
-      const retrievedAccount = await IlpAccountModel.query().findById(accountId)
+      const retrievedAccount = await IlpAccountModel.query().findById(
+        accountOrError.id
+      )
       const balances = await tbClient.lookupAccounts([
         retrievedAccount.balanceId
       ])
@@ -105,9 +111,9 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can create an account with all settings', async (): Promise<void> => {
-      const accountId = uuid()
+      const id = uuid()
       const account: CreateOptions = {
-        accountId,
+        id,
         disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100),
@@ -124,7 +130,7 @@ describe('Accounts Service', (): void => {
           enabled: true
         },
         routing: {
-          staticIlpAddress: 'g.rafiki.' + accountId
+          staticIlpAddress: 'g.rafiki.' + id
         }
       }
       const accountOrError = await accountsService.createAccount(account)
@@ -132,14 +138,18 @@ describe('Accounts Service', (): void => {
       const expectedAccount: IlpAccount = {
         ...account,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        id: account.id!,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         disabled: account.disabled!,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        stream: account.stream!,
         http: {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           outgoing: account.http!.outgoing
         }
       }
       expect(accountOrError).toEqual(expectedAccount)
-      const retrievedAccount = await IlpAccountModel.query().findById(accountId)
+      const retrievedAccount = await IlpAccountModel.query().findById(id)
       const balances = await tbClient.lookupAccounts([
         retrievedAccount.balanceId
       ])
@@ -152,8 +162,7 @@ describe('Accounts Service', (): void => {
 
     test('Cannot create an account with non-existent super-account', async (): Promise<void> => {
       const superAccountId = uuid()
-      const account: CreateOptions = {
-        accountId: uuid(),
+      const account = {
         superAccountId
       }
 
@@ -162,7 +171,7 @@ describe('Accounts Service', (): void => {
       )
 
       await accountFactory.build({
-        accountId: superAccountId,
+        id: superAccountId,
         asset: randomAsset()
       })
 
@@ -174,21 +183,19 @@ describe('Accounts Service', (): void => {
       const account = await accountFactory.build()
       await expect(
         accountsService.createAccount({
-          accountId: account.accountId,
+          id: account.id,
           asset: randomAsset()
         })
       ).resolves.toEqual(CreateAccountError.DuplicateAccountId)
-      const retrievedAccount = await accountsService.getAccount(
-        account.accountId
-      )
+      const retrievedAccount = await accountsService.getAccount(account.id)
       expect(retrievedAccount).toEqual(account)
     })
 
     test('Cannot create an account with duplicate incoming tokens', async (): Promise<void> => {
-      const accountId = uuid()
+      const id = uuid()
       const incomingToken = uuid()
       const account = {
-        accountId,
+        id,
         asset: randomAsset(),
         http: {
           incoming: {
@@ -205,8 +212,9 @@ describe('Accounts Service', (): void => {
         CreateAccountError.DuplicateIncomingToken
       )
 
-      const retrievedAccount = await IlpAccountModel.query().findById(accountId)
-      expect(retrievedAccount).toBeUndefined()
+      await expect(
+        IlpAccountModel.query().findById(id)
+      ).resolves.toBeUndefined()
     })
 
     test('Cannot create an account with duplicate incoming token', async (): Promise<void> => {
@@ -228,9 +236,9 @@ describe('Accounts Service', (): void => {
         await accountsService.createAccount(account)
       }
       {
-        const accountId = uuid()
+        const id = uuid()
         const account = {
-          accountId,
+          id,
           asset: randomAsset(),
           http: {
             incoming: {
@@ -245,17 +253,15 @@ describe('Accounts Service', (): void => {
         await expect(accountsService.createAccount(account)).resolves.toEqual(
           CreateAccountError.DuplicateIncomingToken
         )
-        const retrievedAccount = await IlpAccountModel.query().findById(
-          accountId
-        )
-        expect(retrievedAccount).toBeUndefined()
+        await expect(
+          IlpAccountModel.query().findById(id)
+        ).resolves.toBeUndefined()
       }
     })
 
     test('Auto-creates corresponding liquidity and settlement accounts', async (): Promise<void> => {
       const asset = randomAsset()
-      const account = {
-        accountId: uuid(),
+      const account: CreateOptions = {
         asset
       }
 
@@ -296,10 +302,7 @@ describe('Accounts Service', (): void => {
         })
       }
 
-      await accountsService.createAccount({
-        ...account,
-        accountId: uuid()
-      })
+      await accountsService.createAccount(account)
 
       {
         const balances = await tbClient.lookupAccounts([
@@ -322,14 +325,148 @@ describe('Accounts Service', (): void => {
   describe('Get Account', (): void => {
     test('Can get an account', async (): Promise<void> => {
       const account = await accountFactory.build()
-      const retrievedAccount = await accountsService.getAccount(
-        account.accountId
+      await expect(accountsService.getAccount(account.id)).resolves.toEqual(
+        account
       )
-      expect(retrievedAccount).toEqual(account)
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(accountsService.getAccount(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Account pagination', (): void => {
+    let accountsCreated: IlpAccount[]
+
+    beforeEach(
+      async (): Promise<void> => {
+        accountsCreated = []
+        for (let i = 0; i < 40; i++) {
+          accountsCreated.push(await accountFactory.build())
+        }
+      }
+    )
+
+    test('Defaults to fetching first 20 items', async (): Promise<void> => {
+      const accounts = await accountsService.getAccountsPage({})
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(accountsCreated[0].id)
+      expect(accounts[19].id).toEqual(accountsCreated[19].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test('Can change forward pagination limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 10
+      }
+      const accounts = await accountsService.getAccountsPage({ pagination })
+      expect(accounts).toHaveLength(10)
+      expect(accounts[0].id).toEqual(accountsCreated[0].id)
+      expect(accounts[9].id).toEqual(accountsCreated[9].id)
+      expect(accounts[10]).toBeUndefined()
+    })
+
+    test('Can paginate forwards from a cursor', async (): Promise<void> => {
+      const pagination: Pagination = {
+        after: accountsCreated[19].id
+      }
+      const accounts = await accountsService.getAccountsPage({ pagination })
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(accountsCreated[20].id)
+      expect(accounts[19].id).toEqual(accountsCreated[39].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 10,
+        after: accountsCreated[9].id
+      }
+      const accounts = await accountsService.getAccountsPage({ pagination })
+      expect(accounts).toHaveLength(10)
+      expect(accounts[0].id).toEqual(accountsCreated[10].id)
+      expect(accounts[9].id).toEqual(accountsCreated[19].id)
+      expect(accounts[10]).toBeUndefined()
+    })
+
+    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
+      const pagination: Pagination = {
+        last: 10
+      }
+      const accounts = accountsService.getAccountsPage({ pagination })
+      await expect(accounts).rejects.toThrow(
+        "Can't paginate backwards from the start."
+      )
+    })
+
+    test('Can paginate backwards from a cursor', async (): Promise<void> => {
+      const pagination: Pagination = {
+        before: accountsCreated[20].id
+      }
+      const accounts = await accountsService.getAccountsPage({ pagination })
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(accountsCreated[0].id)
+      expect(accounts[19].id).toEqual(accountsCreated[19].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        last: 5,
+        before: accountsCreated[10].id
+      }
+      const accounts = await accountsService.getAccountsPage({ pagination })
+      expect(accounts).toHaveLength(5)
+      expect(accounts[0].id).toEqual(accountsCreated[5].id)
+      expect(accounts[4].id).toEqual(accountsCreated[9].id)
+      expect(accounts[5]).toBeUndefined()
+    })
+
+    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
+      const paginationForwards = {
+        first: 10
+      }
+      const accountsForwards = await accountsService.getAccountsPage({
+        pagination: paginationForwards
+      })
+      const paginationBackwards = {
+        last: 10,
+        before: accountsCreated[10].id
+      }
+      const accountsBackwards = await accountsService.getAccountsPage({
+        pagination: paginationBackwards
+      })
+      expect(accountsForwards).toHaveLength(10)
+      expect(accountsBackwards).toHaveLength(10)
+      expect(accountsForwards).toEqual(accountsBackwards)
+    })
+
+    test('Providing before and after results in forward pagination', async (): Promise<void> => {
+      const pagination: Pagination = {
+        after: accountsCreated[19].id,
+        before: accountsCreated[19].id
+      }
+      const accounts = await accountsService.getAccountsPage({ pagination })
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(accountsCreated[20].id)
+      expect(accounts[19].id).toEqual(accountsCreated[39].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test("Can't request less than 0 accounts", async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: -1
+      }
+      const accounts = accountsService.getAccountsPage({ pagination })
+      await expect(accounts).rejects.toThrow('Pagination index error')
+    })
+
+    test("Can't request more than 100 accounts", async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 101
+      }
+      const accounts = accountsService.getAccountsPage({ pagination })
+      await expect(accounts).rejects.toThrow('Pagination index error')
     })
   })
 
@@ -338,15 +475,13 @@ describe('Accounts Service', (): void => {
       const account = await accountFactory.build()
       const expectedSubAccounts = [
         await accountFactory.build({
-          superAccountId: account.accountId
+          superAccountId: account.id
         }),
         await accountFactory.build({
-          superAccountId: account.accountId
+          superAccountId: account.id
         })
       ]
-      const subAccounts = await accountsService.getSubAccounts(
-        account.accountId
-      )
+      const subAccounts = await accountsService.getSubAccounts(account.id)
       expect(subAccounts).toEqual(expectedSubAccounts)
     })
 
@@ -355,9 +490,179 @@ describe('Accounts Service', (): void => {
     })
   })
 
+  describe('Sub-Account pagination', (): void => {
+    let superAccountId: string
+    let subAccounts: IlpAccount[]
+
+    beforeEach(
+      async (): Promise<void> => {
+        ;({ id: superAccountId } = await accountFactory.build())
+        subAccounts = []
+        for (let i = 0; i < 40; i++) {
+          subAccounts.push(
+            await accountFactory.build({
+              superAccountId
+            })
+          )
+        }
+      }
+    )
+
+    test('Defaults to fetching first 20 items', async (): Promise<void> => {
+      const accounts = await accountsService.getAccountsPage({ superAccountId })
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(subAccounts[0].id)
+      expect(accounts[19].id).toEqual(subAccounts[19].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test('Can change forward pagination limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 10
+      }
+      const accounts = await accountsService.getAccountsPage({
+        pagination,
+        superAccountId
+      })
+      expect(accounts).toHaveLength(10)
+      expect(accounts[0].id).toEqual(subAccounts[0].id)
+      expect(accounts[9].id).toEqual(subAccounts[9].id)
+      expect(accounts[10]).toBeUndefined()
+    })
+
+    test('Can paginate forwards from a cursor', async (): Promise<void> => {
+      const pagination: Pagination = {
+        after: subAccounts[19].id
+      }
+      const accounts = await accountsService.getAccountsPage({
+        pagination,
+        superAccountId
+      })
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(subAccounts[20].id)
+      expect(accounts[19].id).toEqual(subAccounts[39].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 10,
+        after: subAccounts[9].id
+      }
+      const accounts = await accountsService.getAccountsPage({
+        pagination,
+        superAccountId
+      })
+      expect(accounts).toHaveLength(10)
+      expect(accounts[0].id).toEqual(subAccounts[10].id)
+      expect(accounts[9].id).toEqual(subAccounts[19].id)
+      expect(accounts[10]).toBeUndefined()
+    })
+
+    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
+      const pagination: Pagination = {
+        last: 10
+      }
+      const accounts = accountsService.getAccountsPage({
+        pagination,
+        superAccountId
+      })
+      await expect(accounts).rejects.toThrow(
+        "Can't paginate backwards from the start."
+      )
+    })
+
+    test('Can paginate backwards from a cursor', async (): Promise<void> => {
+      const pagination: Pagination = {
+        before: subAccounts[20].id
+      }
+      const accounts = await accountsService.getAccountsPage({
+        pagination,
+        superAccountId
+      })
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(subAccounts[0].id)
+      expect(accounts[19].id).toEqual(subAccounts[19].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        last: 5,
+        before: subAccounts[10].id
+      }
+      const accounts = await accountsService.getAccountsPage({
+        pagination,
+        superAccountId
+      })
+      expect(accounts).toHaveLength(5)
+      expect(accounts[0].id).toEqual(subAccounts[5].id)
+      expect(accounts[4].id).toEqual(subAccounts[9].id)
+      expect(accounts[5]).toBeUndefined()
+    })
+
+    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
+      const paginationForwards = {
+        first: 10
+      }
+      const accountsForwards = await accountsService.getAccountsPage({
+        pagination: paginationForwards,
+        superAccountId
+      })
+      const paginationBackwards = {
+        last: 10,
+        before: subAccounts[10].id
+      }
+      const accountsBackwards = await accountsService.getAccountsPage({
+        pagination: paginationBackwards,
+        superAccountId
+      })
+      expect(accountsForwards).toHaveLength(10)
+      expect(accountsBackwards).toHaveLength(10)
+      expect(accountsForwards).toEqual(accountsBackwards)
+    })
+
+    test('Providing before and after results in forward pagination', async (): Promise<void> => {
+      const pagination: Pagination = {
+        after: subAccounts[19].id,
+        before: subAccounts[19].id
+      }
+      const accounts = await accountsService.getAccountsPage({
+        pagination,
+        superAccountId
+      })
+      expect(accounts).toHaveLength(20)
+      expect(accounts[0].id).toEqual(subAccounts[20].id)
+      expect(accounts[19].id).toEqual(subAccounts[39].id)
+      expect(accounts[20]).toBeUndefined()
+    })
+
+    test("Can't request less than 0 accounts", async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: -1
+      }
+      const accounts = accountsService.getAccountsPage({
+        pagination,
+        superAccountId
+      })
+      await expect(accounts).rejects.toThrow('Pagination index error')
+    })
+
+    test("Can't request more than 100 accounts", async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 101
+      }
+      const accounts = accountsService.getAccountsPage({
+        pagination,
+        superAccountId
+      })
+      await expect(accounts).rejects.toThrow('Pagination index error')
+    })
+  })
+
   describe('Update Account', (): void => {
     test('Can update an account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build({
+      const { id, asset } = await accountFactory.build({
         disabled: false,
         http: {
           incoming: {
@@ -373,7 +678,7 @@ describe('Accounts Service', (): void => {
         }
       })
       const updateOptions: UpdateOptions = {
-        accountId,
+        id,
         disabled: true,
         maxPacketAmount: BigInt(200),
         http: {
@@ -387,6 +692,9 @@ describe('Accounts Service', (): void => {
         },
         stream: {
           enabled: false
+        },
+        routing: {
+          staticIlpAddress: 'g.rafiki.' + id
         }
       }
       const accountOrError = await accountsService.updateAccount(updateOptions)
@@ -397,16 +705,18 @@ describe('Accounts Service', (): void => {
         ...updateOptions,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         disabled: updateOptions.disabled!,
-        asset
+        asset,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        stream: updateOptions.stream!
       }
       expect(accountOrError as IlpAccount).toEqual(expectedAccount)
-      const account = await accountsService.getAccount(accountId)
+      const account = await accountsService.getAccount(id)
       expect(account).toEqual(expectedAccount)
     })
 
     test('Cannot update nonexistent account', async (): Promise<void> => {
       const updateOptions: UpdateOptions = {
-        accountId: uuid(),
+        id: uuid(),
         disabled: true
       }
 
@@ -431,7 +741,7 @@ describe('Accounts Service', (): void => {
 
       const account = await accountFactory.build()
       const updateOptions: UpdateOptions = {
-        accountId: account.accountId,
+        id: account.id,
         disabled: true,
         maxPacketAmount: BigInt(200),
         http: {
@@ -447,10 +757,9 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.updateAccount(updateOptions)
       ).resolves.toEqual(UpdateAccountError.DuplicateIncomingToken)
-      const retrievedAccount = await accountsService.getAccount(
-        account.accountId
+      await expect(accountsService.getAccount(account.id)).resolves.toEqual(
+        account
       )
-      expect(retrievedAccount).toEqual(account)
     })
 
     test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
@@ -458,7 +767,7 @@ describe('Accounts Service', (): void => {
 
       const account = await accountFactory.build()
       const updateOptions: UpdateOptions = {
-        accountId: account.accountId,
+        id: account.id,
         disabled: true,
         maxPacketAmount: BigInt(200),
         http: {
@@ -474,22 +783,19 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.updateAccount(updateOptions)
       ).resolves.toEqual(UpdateAccountError.DuplicateIncomingToken)
-      const retrievedAccount = await accountsService.getAccount(
-        account.accountId
+      await expect(accountsService.getAccount(account.id)).resolves.toEqual(
+        account
       )
-      expect(retrievedAccount).toEqual(account)
     })
   })
 
   describe('Get Account Balance', (): void => {
     test("Can retrieve an account's balance", async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { id } = await accountFactory.build()
 
       {
-        const balance = await accountsService.getAccountBalance(accountId)
+        const balance = await accountsService.getAccountBalance(id)
         expect(balance).toEqual({
-          id: accountId,
-          asset,
           balance: BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
@@ -789,13 +1095,21 @@ describe('Accounts Service', (): void => {
 
   describe('Account Deposit', (): void => {
     test('Can deposit to account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { id: accountId, asset } = await accountFactory.build()
       const amount = BigInt(10)
-      const error = await accountsService.deposit({
+      const deposit = {
         accountId,
         amount
+      }
+      const depositOrError = await accountsService.deposit(deposit)
+      expect(isDepositError(depositOrError)).toEqual(false)
+      if (isDepositError(depositOrError)) {
+        fail()
+      }
+      expect(depositOrError).toEqual({
+        ...deposit,
+        id: depositOrError.id
       })
-      expect(error).toBeUndefined()
       const { balance } = (await accountsService.getAccountBalance(
         accountId
       )) as IlpBalance
@@ -807,16 +1121,31 @@ describe('Accounts Service', (): void => {
       expect(settlementBalance).toEqual(amount)
 
       {
-        const error = await accountsService.deposit({
-          accountId,
-          amount
+        const depositOrError = await accountsService.deposit(deposit)
+        expect(isDepositError(depositOrError)).toEqual(false)
+        if (isDepositError(depositOrError)) {
+          fail()
+        }
+        expect(depositOrError).toEqual({
+          ...deposit,
+          id: depositOrError.id
         })
-        expect(error).toBeUndefined()
         const { balance } = (await accountsService.getAccountBalance(
           accountId
         )) as IlpBalance
         expect(balance).toEqual(amount + amount)
       }
+    })
+
+    test('Returns error for invalid id', async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const error = await accountsService.deposit({
+        id: 'not a uuid v4',
+        accountId,
+        amount: BigInt(5)
+      })
+      expect(isDepositError(error)).toEqual(true)
+      expect(error).toEqual(DepositError.InvalidId)
     })
 
     test("Can't deposit to nonexistent account", async (): Promise<void> => {
@@ -825,43 +1154,41 @@ describe('Accounts Service', (): void => {
         accountId,
         amount: BigInt(5)
       })
+      expect(isDepositError(error)).toEqual(true)
       expect(error).toEqual(DepositError.UnknownAccount)
     })
 
-    test('Can deposit with idempotency key', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+    test("Can't deposit with duplicate id", async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(10)
-      const depositId = randomId()
-      {
-        const error = await accountsService.deposit({
-          accountId,
-          amount,
-          depositId
-        })
-        expect(error).toBeUndefined()
-        const { balance } = (await accountsService.getAccountBalance(
-          accountId
-        )) as IlpBalance
-        expect(balance).toEqual(amount)
+      const deposit = {
+        id: uuid(),
+        accountId,
+        amount
       }
-      {
-        const error = await accountsService.deposit({
-          accountId,
-          amount,
-          depositId
+      await expect(accountsService.deposit(deposit)).resolves.toEqual(deposit)
+      await expect(accountsService.deposit(deposit)).resolves.toEqual(
+        DepositError.DepositExists
+      )
+      await expect(
+        accountsService.deposit({
+          ...deposit,
+          amount: BigInt(1)
         })
-        expect(error).toEqual(DepositError.DepositExists)
-        const { balance } = (await accountsService.getAccountBalance(
-          accountId
-        )) as IlpBalance
-        expect(balance).toEqual(amount)
-      }
+      ).resolves.toEqual(DepositError.DepositExists)
+      const { id: diffAccountId } = await accountFactory.build()
+      await expect(
+        accountsService.deposit({
+          ...deposit,
+          accountId: diffAccountId
+        })
+      ).resolves.toEqual(DepositError.DepositExists)
     })
   })
 
   describe('Account Withdraw', (): void => {
     test('Can withdraw from account', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { id: accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(10)
       await accountsService.deposit({
         accountId,
@@ -906,7 +1233,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
+      const { id: accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(5)
       await accountsService.deposit({
         accountId,
@@ -931,7 +1258,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can withdraw with idempotency key', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       const startingBalance = BigInt(10)
       await accountsService.deposit({
         accountId,
@@ -969,7 +1296,7 @@ describe('Accounts Service', (): void => {
   describe('Account Tokens', (): void => {
     test('Can retrieve account by incoming token', async (): Promise<void> => {
       const incomingToken = uuid()
-      const { accountId } = await accountFactory.build({
+      const { id } = await accountFactory.build({
         http: {
           incoming: {
             authTokens: [incomingToken, uuid()]
@@ -981,9 +1308,7 @@ describe('Accounts Service', (): void => {
         }
       })
       const account = await accountsService.getAccountByToken(incomingToken)
-      expect(account).not.toBeUndefined()
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      expect(account!.accountId).toEqual(accountId)
+      expect(account?.id).toEqual(id)
     })
 
     test('Returns undefined if no account exists with token', async (): Promise<void> => {
@@ -995,7 +1320,7 @@ describe('Accounts Service', (): void => {
   describe('Get Account By ILP Address', (): void => {
     test('Can retrieve account by ILP address', async (): Promise<void> => {
       const ilpAddress = 'test.rafiki'
-      const { accountId } = await accountFactory.build({
+      const { id } = await accountFactory.build({
         routing: {
           staticIlpAddress: ilpAddress
         }
@@ -1004,17 +1329,13 @@ describe('Accounts Service', (): void => {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress + '.suffix'
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
@@ -1025,25 +1346,21 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can retrieve account by configured peer ILP address', async (): Promise<void> => {
-      const { ilpAddress, accountId } = config.peerAddresses[0]
+      const { ilpAddress, accountId: id } = config.peerAddresses[0]
       await accountFactory.build({
-        accountId
+        id
       })
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress + '.suffix'
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
@@ -1054,23 +1371,19 @@ describe('Accounts Service', (): void => {
     })
 
     test('Can retrieve account by server ILP address', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const ilpAddress = config.ilpAddress + '.' + accountId
+      const { id } = await accountFactory.build()
+      const ilpAddress = config.ilpAddress + '.' + id
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
           ilpAddress + '.suffix'
         )
-        expect(account).not.toBeUndefined()
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        expect(account!.accountId).toEqual(accountId)
+        expect(account?.id).toEqual(id)
       }
       {
         const account = await accountsService.getAccountByDestinationAddress(
@@ -1096,31 +1409,31 @@ describe('Accounts Service', (): void => {
   describe('Get Account Address', (): void => {
     test("Can get account's ILP address", async (): Promise<void> => {
       const ilpAddress = 'test.rafiki'
-      const { accountId } = await accountFactory.build({
+      const { id } = await accountFactory.build({
         routing: {
           staticIlpAddress: ilpAddress
         }
       })
       {
-        const staticIlpAddress = await accountsService.getAddress(accountId)
+        const staticIlpAddress = await accountsService.getAddress(id)
         expect(staticIlpAddress).toEqual(ilpAddress)
       }
     })
 
     test("Can get account's configured peer ILP address", async (): Promise<void> => {
-      const { ilpAddress, accountId } = config.peerAddresses[0]
-      await accountFactory.build({ accountId })
+      const { ilpAddress, accountId: id } = config.peerAddresses[0]
+      await accountFactory.build({ id })
       {
-        const peerAddress = await accountsService.getAddress(accountId)
+        const peerAddress = await accountsService.getAddress(id)
         expect(peerAddress).toEqual(ilpAddress)
       }
     })
 
     test("Can get account's address by server ILP address", async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id } = await accountFactory.build()
       {
-        const ilpAddress = await accountsService.getAddress(accountId)
-        expect(ilpAddress).toEqual(config.ilpAddress + '.' + accountId)
+        const ilpAddress = await accountsService.getAddress(id)
+        expect(ilpAddress).toEqual(config.ilpAddress + '.' + id)
       }
     })
 
@@ -1140,11 +1453,11 @@ describe('Accounts Service', (): void => {
       'Can transfer funds with two-phase commit { cross-currency: $crossCurrency, accepted: $accept }',
       async ({ crossCurrency, accept }): Promise<void> => {
         const {
-          accountId: sourceAccountId,
+          id: sourceAccountId,
           asset: sourceAsset
         } = await accountFactory.build()
         const {
-          accountId: destinationAccountId,
+          id: destinationAccountId,
           asset: destinationAsset
         } = await accountFactory.build({
           asset: crossCurrency ? randomAsset() : sourceAsset
@@ -1278,8 +1591,8 @@ describe('Accounts Service', (): void => {
     )
 
     test('Returns error for insufficient source balance', async (): Promise<void> => {
-      const { accountId: sourceAccountId, asset } = await accountFactory.build()
-      const { accountId: destinationAccountId } = await accountFactory.build({
+      const { id: sourceAccountId, asset } = await accountFactory.build()
+      const { id: destinationAccountId } = await accountFactory.build({
         asset
       })
       const transfer = {
@@ -1306,11 +1619,11 @@ describe('Accounts Service', (): void => {
 
     test('Returns error for insufficient destination liquidity balance', async (): Promise<void> => {
       const {
-        accountId: sourceAccountId,
+        id: sourceAccountId,
         asset: sourceAsset
       } = await accountFactory.build()
       const {
-        accountId: destinationAccountId,
+        id: destinationAccountId,
         asset: destinationAsset
       } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
@@ -1391,12 +1704,12 @@ describe('Accounts Service', (): void => {
         })
       ).resolves.toEqual(TransferError.UnknownSourceAccount)
 
-      const { accountId } = await accountFactory.build()
+      const { id } = await accountFactory.build()
 
       const unknownAccountId = uuid()
       await expect(
         accountsService.transferFunds({
-          sourceAccountId: accountId,
+          sourceAccountId: id,
           destinationAccountId: unknownAccountId,
           sourceAmount: BigInt(5)
         })
@@ -1405,27 +1718,27 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.transferFunds({
           sourceAccountId: unknownAccountId,
-          destinationAccountId: accountId,
+          destinationAccountId: id,
           sourceAmount: BigInt(5)
         })
       ).resolves.toEqual(TransferError.UnknownSourceAccount)
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id } = await accountFactory.build()
 
       await expect(
         accountsService.transferFunds({
-          sourceAccountId: accountId,
-          destinationAccountId: accountId,
+          sourceAccountId: id,
+          destinationAccountId: id,
           sourceAmount: BigInt(5)
         })
       ).resolves.toEqual(TransferError.SameAccounts)
     })
 
     test('Returns error for invalid source amount', async (): Promise<void> => {
-      const { accountId: sourceAccountId, asset } = await accountFactory.build()
-      const { accountId: destinationAccountId } = await accountFactory.build({
+      const { id: sourceAccountId, asset } = await accountFactory.build()
+      const { id: destinationAccountId } = await accountFactory.build({
         asset
       })
       const startingSourceBalance = BigInt(10)
@@ -1452,8 +1765,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for invalid destination amount', async (): Promise<void> => {
-      const { accountId: sourceAccountId, asset } = await accountFactory.build()
-      const { accountId: destinationAccountId } = await accountFactory.build({
+      const { id: sourceAccountId, asset } = await accountFactory.build()
+      const { id: destinationAccountId } = await accountFactory.build({
         asset
       })
       const startingSourceBalance = BigInt(10)
@@ -1491,8 +1804,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for missing destination amount', async (): Promise<void> => {
-      const { accountId: sourceAccountId } = await accountFactory.build()
-      const { accountId: destinationAccountId } = await accountFactory.build()
+      const { id: sourceAccountId } = await accountFactory.build()
+      const { id: destinationAccountId } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
       await accountsService.deposit({
         accountId: sourceAccountId,
@@ -1520,22 +1833,17 @@ describe('Accounts Service', (): void => {
     `(
       'Can extend credit to sub-account { autoApply: $autoApply }',
       async ({ autoApply }): Promise<void> => {
-        const {
-          accountId: superAccountId,
-          asset
-        } = await accountFactory.build()
-        const { accountId } = await accountFactory.build({
+        const { id: superAccountId } = await accountFactory.build()
+        const { id: accountId } = await accountFactory.build({
           superAccountId: superAccountId
         })
-        const { accountId: subAccountId } = await accountFactory.build({
+        const { id: subAccountId } = await accountFactory.build({
           superAccountId: accountId
         })
 
         await expect(
           accountsService.getAccountBalance(superAccountId)
         ).resolves.toEqual({
-          id: superAccountId,
-          asset,
           balance: BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
@@ -1545,8 +1853,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(accountId)
         ).resolves.toEqual({
-          id: accountId,
-          asset,
           balance: BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
@@ -1556,8 +1862,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(subAccountId)
         ).resolves.toEqual({
-          id: subAccountId,
-          asset,
           balance: BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
@@ -1567,18 +1871,14 @@ describe('Accounts Service', (): void => {
 
         const depositAmount = BigInt(20)
         if (autoApply) {
-          await expect(
-            accountsService.deposit({
-              accountId: superAccountId,
-              amount: depositAmount
-            })
-          ).resolves.toBeUndefined()
-          await expect(
-            accountsService.deposit({
-              accountId,
-              amount: depositAmount
-            })
-          ).resolves.toBeUndefined()
+          await accountsService.deposit({
+            accountId: superAccountId,
+            amount: depositAmount
+          })
+          await accountsService.deposit({
+            accountId,
+            amount: depositAmount
+          })
         }
 
         const amount = BigInt(5)
@@ -1594,8 +1894,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(superAccountId)
         ).resolves.toEqual({
-          id: superAccountId,
-          asset,
           balance: autoApply ? depositAmount - amount : BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: autoApply ? BigInt(0) : amount,
@@ -1605,8 +1903,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(accountId)
         ).resolves.toEqual({
-          id: accountId,
-          asset,
           balance: autoApply ? depositAmount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount,
           creditExtended: autoApply ? BigInt(0) : amount,
@@ -1617,8 +1913,6 @@ describe('Accounts Service', (): void => {
           subAccountId
         )
         expect(subAccountBalance).toEqual({
-          id: subAccountId,
-          asset,
           balance: autoApply ? amount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount,
           creditExtended: BigInt(0),
@@ -1639,8 +1933,6 @@ describe('Accounts Service', (): void => {
           superAccountId
         )
         await expect(superAccountBalance).toEqual({
-          id: superAccountId,
-          asset,
           balance: autoApply ? depositAmount - amount * 2n : BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: autoApply ? BigInt(0) : amount * 2n,
@@ -1650,8 +1942,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(accountId)
         ).resolves.toEqual({
-          id: accountId,
-          asset,
           balance: autoApply ? depositAmount + amount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount * 2n,
           creditExtended: autoApply ? BigInt(0) : amount,
@@ -1677,8 +1967,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(accountId)
         ).resolves.toEqual({
-          id: accountId,
-          asset,
           balance: autoApply ? depositAmount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount * 2n,
           creditExtended: autoApply ? BigInt(0) : amount * 2n,
@@ -1688,8 +1976,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(subAccountId)
         ).resolves.toEqual({
-          id: subAccountId,
-          asset,
           balance: autoApply ? amount * 2n : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount * 2n,
           creditExtended: BigInt(0),
@@ -1700,7 +1986,7 @@ describe('Accounts Service', (): void => {
     )
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId: uuid(),
@@ -1711,7 +1997,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId,
@@ -1722,8 +2008,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId,
@@ -1734,8 +2020,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
       await expect(
@@ -1748,7 +2034,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.extendCredit({
           accountId,
@@ -1759,8 +2045,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient account balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -1776,8 +2062,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: accountId,
-        asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
@@ -1787,8 +2071,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: subAccountId,
-        asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
@@ -1800,11 +2082,11 @@ describe('Accounts Service', (): void => {
 
   describe('Utilize Credit', (): void => {
     test('Can utilize credit to sub-account', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+      const { id: superAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build({
         superAccountId: superAccountId
       })
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -1816,18 +2098,14 @@ describe('Accounts Service', (): void => {
           amount: creditAmount
         })
       ).resolves.toBeUndefined()
-      await expect(
-        accountsService.deposit({
-          accountId: superAccountId,
-          amount: creditAmount
-        })
-      ).resolves.toBeUndefined()
+      await accountsService.deposit({
+        accountId: superAccountId,
+        amount: creditAmount
+      })
 
       await expect(
         accountsService.getAccountBalance(superAccountId)
       ).resolves.toEqual({
-        id: superAccountId,
-        asset,
         balance: creditAmount,
         availableCredit: BigInt(0),
         creditExtended: creditAmount,
@@ -1837,8 +2115,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: accountId,
-        asset,
         balance: BigInt(0),
         availableCredit: creditAmount,
         creditExtended: creditAmount,
@@ -1848,8 +2124,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: subAccountId,
-        asset,
         balance: BigInt(0),
         availableCredit: creditAmount,
         creditExtended: BigInt(0),
@@ -1869,8 +2143,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(superAccountId)
       ).resolves.toEqual({
-        id: superAccountId,
-        asset,
         balance: creditAmount - amount,
         availableCredit: BigInt(0),
         creditExtended: creditAmount - amount,
@@ -1880,8 +2152,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: accountId,
-        asset,
         balance: BigInt(0),
         availableCredit: creditAmount - amount,
         creditExtended: creditAmount - amount,
@@ -1891,8 +2161,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: subAccountId,
-        asset,
         balance: amount,
         availableCredit: creditAmount - amount,
         creditExtended: BigInt(0),
@@ -1902,7 +2170,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId: uuid(),
@@ -1913,7 +2181,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId,
@@ -1924,8 +2192,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId,
@@ -1936,8 +2204,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
       await expect(
@@ -1950,7 +2218,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.utilizeCredit({
           accountId,
@@ -1961,8 +2229,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -1986,8 +2254,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: accountId,
-        asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: creditAmount,
@@ -1997,8 +2263,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: subAccountId,
-        asset,
         balance: BigInt(0),
         availableCredit: creditAmount,
         creditExtended: BigInt(0),
@@ -2008,8 +2272,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient account balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -2024,8 +2288,6 @@ describe('Accounts Service', (): void => {
 
       const accountBalance = await accountsService.getAccountBalance(accountId)
       expect(accountBalance).toEqual({
-        id: accountId,
-        asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: creditAmount,
@@ -2036,8 +2298,6 @@ describe('Accounts Service', (): void => {
         subAccountId
       )
       expect(subAccountBalance).toEqual({
-        id: subAccountId,
-        asset,
         balance: BigInt(0),
         availableCredit: creditAmount,
         creditExtended: BigInt(0),
@@ -2064,11 +2324,11 @@ describe('Accounts Service', (): void => {
 
   describe('Revoke Credit', (): void => {
     test('Can revoke credit to sub-account', async (): Promise<void> => {
-      const { accountId: superAccountId, asset } = await accountFactory.build()
-      const { accountId } = await accountFactory.build({
+      const { id: superAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build({
         superAccountId: superAccountId
       })
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -2093,8 +2353,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(superAccountId)
       ).resolves.toEqual({
-        id: superAccountId,
-        asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: creditAmount - amount,
@@ -2104,8 +2362,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: accountId,
-        asset,
         balance: BigInt(0),
         availableCredit: creditAmount - amount,
         creditExtended: creditAmount - amount,
@@ -2115,8 +2371,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: subAccountId,
-        asset,
         balance: BigInt(0),
         availableCredit: creditAmount - amount,
         creditExtended: BigInt(0),
@@ -2126,7 +2380,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId: uuid(),
@@ -2137,7 +2391,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId,
@@ -2148,8 +2402,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId,
@@ -2160,8 +2414,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
       await expect(
@@ -2174,7 +2428,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.revokeCredit({
           accountId,
@@ -2185,8 +2439,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient credit balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
@@ -2210,8 +2464,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: accountId,
-        asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: creditAmount,
@@ -2221,8 +2473,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: subAccountId,
-        asset,
         balance: BigInt(0),
         availableCredit: creditAmount,
         creditExtended: BigInt(0),
@@ -2241,24 +2491,19 @@ describe('Accounts Service', (): void => {
     `(
       'Can settle sub-account debt { revolve: $revolve }',
       async ({ revolve }): Promise<void> => {
-        const {
-          accountId: superAccountId,
-          asset
-        } = await accountFactory.build()
-        const { accountId } = await accountFactory.build({
+        const { id: superAccountId } = await accountFactory.build()
+        const { id: accountId } = await accountFactory.build({
           superAccountId: superAccountId
         })
-        const { accountId: subAccountId } = await accountFactory.build({
+        const { id: subAccountId } = await accountFactory.build({
           superAccountId: accountId
         })
 
         const creditAmount = BigInt(10)
-        await expect(
-          accountsService.deposit({
-            accountId: superAccountId,
-            amount: creditAmount
-          })
-        ).resolves.toBeUndefined()
+        await accountsService.deposit({
+          accountId: superAccountId,
+          amount: creditAmount
+        })
         await expect(
           accountsService.extendCredit({
             accountId: superAccountId,
@@ -2281,8 +2526,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(superAccountId)
         ).resolves.toEqual({
-          id: superAccountId,
-          asset,
           balance: amount,
           availableCredit: BigInt(0),
           creditExtended: revolve === false ? BigInt(0) : amount,
@@ -2292,8 +2535,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(accountId)
         ).resolves.toEqual({
-          id: accountId,
-          asset,
           balance: BigInt(0),
           availableCredit: revolve === false ? BigInt(0) : amount,
           creditExtended: revolve === false ? BigInt(0) : amount,
@@ -2303,8 +2544,6 @@ describe('Accounts Service', (): void => {
         await expect(
           accountsService.getAccountBalance(subAccountId)
         ).resolves.toEqual({
-          id: subAccountId,
-          asset,
           balance: creditAmount - amount,
           availableCredit: revolve === false ? BigInt(0) : amount,
           creditExtended: BigInt(0),
@@ -2315,7 +2554,7 @@ describe('Accounts Service', (): void => {
     )
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId: uuid(),
@@ -2326,7 +2565,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for nonexistent sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId,
@@ -2337,8 +2576,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for unrelated sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId,
@@ -2349,8 +2588,8 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for super sub-account', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
       await expect(
@@ -2363,7 +2602,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for same accounts', async (): Promise<void> => {
-      const { accountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       await expect(
         accountsService.settleDebt({
           accountId,
@@ -2374,18 +2613,16 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error if amount exceeds debt', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
       const lentAmount = BigInt(5)
-      await expect(
-        accountsService.deposit({
-          accountId,
-          amount: lentAmount
-        })
-      ).resolves.toBeUndefined()
+      await accountsService.deposit({
+        accountId,
+        amount: lentAmount
+      })
       await expect(
         accountsService.extendCredit({
           accountId,
@@ -2396,12 +2633,10 @@ describe('Accounts Service', (): void => {
       ).resolves.toBeUndefined()
 
       const depositAmount = BigInt(5)
-      await expect(
-        accountsService.deposit({
-          accountId: subAccountId,
-          amount: depositAmount
-        })
-      ).resolves.toBeUndefined()
+      await accountsService.deposit({
+        accountId: subAccountId,
+        amount: depositAmount
+      })
 
       await expect(
         accountsService.settleDebt({
@@ -2414,8 +2649,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: accountId,
-        asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
@@ -2425,8 +2658,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: subAccountId,
-        asset,
         balance: depositAmount + lentAmount,
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
@@ -2436,18 +2667,16 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for insufficient sub-account balance', async (): Promise<void> => {
-      const { accountId, asset } = await accountFactory.build()
-      const { accountId: subAccountId } = await accountFactory.build({
+      const { id: accountId } = await accountFactory.build()
+      const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
       const lentAmount = BigInt(5)
-      await expect(
-        accountsService.deposit({
-          accountId,
-          amount: lentAmount
-        })
-      ).resolves.toBeUndefined()
+      await accountsService.deposit({
+        accountId,
+        amount: lentAmount
+      })
       await expect(
         accountsService.extendCredit({
           accountId,
@@ -2476,8 +2705,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toEqual({
-        id: accountId,
-        asset,
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
@@ -2487,8 +2714,6 @@ describe('Accounts Service', (): void => {
       await expect(
         accountsService.getAccountBalance(subAccountId)
       ).resolves.toEqual({
-        id: subAccountId,
-        asset,
         balance: lentAmount - withdrawAmount,
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),

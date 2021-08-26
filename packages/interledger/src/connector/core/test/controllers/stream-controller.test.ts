@@ -114,24 +114,6 @@ describe('Stream Controller', function () {
     expect(next).toHaveBeenCalledTimes(1)
   })
 
-  test('skips when "stream" is not set', async () => {
-    const bob = AccountFactory.build()
-    const ctx = createContext<unknown, RafikiContext>()
-    ctx.services = services
-    ctx.accounts = {
-      get incoming() {
-        return alice
-      },
-      get outgoing() {
-        return bob
-      }
-    }
-    const next = jest.fn()
-    await expect(controller(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.response.reply).toBeUndefined()
-    expect(next).toHaveBeenCalledTimes(1)
-  })
-
   test('skips when "stream.enabled" is false', async () => {
     const bob = AccountFactory.build({ stream: { enabled: false } })
     const ctx = createContext<unknown, RafikiContext>()
