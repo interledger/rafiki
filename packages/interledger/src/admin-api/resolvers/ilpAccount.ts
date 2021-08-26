@@ -75,7 +75,11 @@ export const createIlpAccount: MutationResolvers['createIlpAccount'] = async (
       message: 'Created ILP Account',
       ilpAccount: accountOrError
     }
-  } catch (err) {
+  } catch (error) {
+    ctx.logger.error('error creating account', {
+      options: args.input,
+      error
+    })
     return {
       code: '400',
       message: 'Error trying to create account',
@@ -115,7 +119,11 @@ export const updateIlpAccount: MutationResolvers['updateIlpAccount'] = async (
       message: 'Updated ILP Account',
       ilpAccount: accountOrError
     }
-  } catch (err) {
+  } catch (error) {
+    ctx.logger.error('error updating account', {
+      options: args.input,
+      error
+    })
     return {
       code: '400',
       message: 'Error trying to update account',
@@ -161,7 +169,11 @@ export const createIlpSubAccount: MutationResolvers['createIlpSubAccount'] = asy
       message: 'Created ILP Sub-Account',
       ilpAccount: accountOrError
     }
-  } catch (err) {
+  } catch (error) {
+    ctx.logger.error('error creating sub-account', {
+      superAccountId: args.superAccountId,
+      error
+    })
     return {
       code: '400',
       message: 'Error trying to create sub-account',

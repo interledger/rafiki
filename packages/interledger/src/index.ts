@@ -63,10 +63,10 @@ export const start = async (): Promise<void> => {
   const ratesService = createRatesService({
     pricesUrl,
     pricesLifetime,
-    logger: logger
+    logger
   })
 
-  adminApi = await createAdminApi({ accountsService })
+  adminApi = await createAdminApi({ accountsService, logger })
 
   connectorApp = await createConnectorService({
     redis,

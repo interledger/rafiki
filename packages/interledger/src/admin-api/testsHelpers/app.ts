@@ -43,7 +43,7 @@ export const createTestApp = async (): Promise<TestContainer> => {
   })
   const knex = await createKnex(config.postgresUrl)
   const accountsService = new AccountsService(tbClient, config, Logger)
-  const adminApi = await createAdminApi({ accountsService })
+  const adminApi = await createAdminApi({ accountsService, logger: Logger })
   const { port } = await adminApi.listen(0)
 
   const logger = createLogger({
