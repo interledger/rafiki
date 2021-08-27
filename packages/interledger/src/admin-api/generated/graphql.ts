@@ -102,6 +102,7 @@ export type CreateWithdrawalMutationResponse = MutationResponse & {
   success: Scalars['Boolean'];
   message: Scalars['String'];
   withdrawal?: Maybe<Withdrawal>;
+  error?: Maybe<WithdrawError>;
 };
 
 export enum CreditError {
@@ -171,6 +172,7 @@ export type FinalizePendingWithdrawalMutationResponse = MutationResponse & {
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
+  error?: Maybe<WithdrawError>;
 };
 
 export type Http = {
@@ -463,6 +465,7 @@ export type RollbackPendingWithdrawalMutationResponse = MutationResponse & {
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
+  error?: Maybe<WithdrawError>;
 };
 
 export type Routing = {
@@ -576,6 +579,20 @@ export type WebhooksConnection = {
   pageInfo: PageInfo;
   edges: Array<WebhookEdge>;
 };
+
+export enum WithdrawError {
+  AlreadyFinalized = 'AlreadyFinalized',
+  AlreadyRolledBack = 'AlreadyRolledBack',
+  InsufficientBalance = 'InsufficientBalance',
+  InsufficientLiquidity = 'InsufficientLiquidity',
+  InsufficientSettlementBalance = 'InsufficientSettlementBalance',
+  InvalidId = 'InvalidId',
+  UnknownAccount = 'UnknownAccount',
+  UnknownLiquidityAccount = 'UnknownLiquidityAccount',
+  UnknownSettlementAccount = 'UnknownSettlementAccount',
+  UnknownWithdrawal = 'UnknownWithdrawal',
+  WithdrawalExists = 'WithdrawalExists'
+}
 
 export type Withdrawal = {
   __typename?: 'Withdrawal';
@@ -735,6 +752,7 @@ export type ResolversTypes = {
   Webhook: ResolverTypeWrapper<Partial<Webhook>>;
   WebhookEdge: ResolverTypeWrapper<Partial<WebhookEdge>>;
   WebhooksConnection: ResolverTypeWrapper<Partial<WebhooksConnection>>;
+  WithdrawError: ResolverTypeWrapper<Partial<WithdrawError>>;
   Withdrawal: ResolverTypeWrapper<Partial<Withdrawal>>;
   WithdrawalEdge: ResolverTypeWrapper<Partial<WithdrawalEdge>>;
   WithdrawalsConnection: ResolverTypeWrapper<Partial<WithdrawalsConnection>>;
@@ -856,6 +874,7 @@ export type CreateWithdrawalMutationResponseResolvers<ContextType = any, ParentT
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   withdrawal?: Resolver<Maybe<ResolversTypes['Withdrawal']>, ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes['WithdrawError']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -904,6 +923,7 @@ export type FinalizePendingWithdrawalMutationResponseResolvers<ContextType = any
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes['WithdrawError']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1002,6 +1022,7 @@ export type RollbackPendingWithdrawalMutationResponseResolvers<ContextType = any
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes['WithdrawError']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

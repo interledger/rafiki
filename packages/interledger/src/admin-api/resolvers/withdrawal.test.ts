@@ -6,7 +6,8 @@ import { AccountFactory } from '../../accounts/testsHelpers'
 import {
   CreateWithdrawalMutationResponse,
   FinalizePendingWithdrawalMutationResponse,
-  RollbackPendingWithdrawalMutationResponse
+  RollbackPendingWithdrawalMutationResponse,
+  WithdrawError
 } from '../generated/graphql'
 import { gql } from 'apollo-server'
 
@@ -69,6 +70,7 @@ describe('Withdrawal Resolvers', (): void => {
                   ilpAccountId
                   amount
                 }
+                error
               }
             }
           `,
@@ -88,6 +90,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
+      expect(response.error).toBeNull()
       expect(response.withdrawal?.id).not.toBeNull()
       expect(response.withdrawal?.ilpAccountId).toEqual(ilpAccountId)
       expect(response.withdrawal?.amount).toEqual(amount.toString())
@@ -105,6 +108,7 @@ describe('Withdrawal Resolvers', (): void => {
                 withdrawal {
                   id
                 }
+                error
               }
             }
           `,
@@ -128,6 +132,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown ILP account')
+      expect(response.error).toEqual(WithdrawError.UnknownAccount)
       expect(response.withdrawal).toBeNull()
     })
 
@@ -144,6 +149,7 @@ describe('Withdrawal Resolvers', (): void => {
                 withdrawal {
                   id
                 }
+                error
               }
             }
           `,
@@ -168,6 +174,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Invalid id')
+      expect(response.error).toEqual(WithdrawError.InvalidId)
       expect(response.withdrawal).toBeNull()
     })
 
@@ -200,6 +207,7 @@ describe('Withdrawal Resolvers', (): void => {
                 withdrawal {
                   id
                 }
+                error
               }
             }
           `,
@@ -219,6 +227,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal exists')
+      expect(response.error).toEqual(WithdrawError.WithdrawalExists)
       expect(response.withdrawal).toBeNull()
     })
 
@@ -239,6 +248,7 @@ describe('Withdrawal Resolvers', (): void => {
                 withdrawal {
                   id
                 }
+                error
               }
             }
           `,
@@ -259,6 +269,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('403')
       expect(response.message).toEqual('Insufficient balance')
+      expect(response.error).toEqual(WithdrawError.InsufficientBalance)
       expect(response.withdrawal).toBeNull()
     })
   })
@@ -285,6 +296,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -304,6 +316,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
+      expect(response.error).toBeNull()
     })
 
     test("Can't finalize non-existent withdrawal", async (): Promise<void> => {
@@ -315,6 +328,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -335,6 +349,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown withdrawal')
+      expect(response.error).toEqual(WithdrawError.UnknownWithdrawal)
     })
 
     test("Can't finalize invalid withdrawal id", async (): Promise<void> => {
@@ -346,6 +361,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -366,6 +382,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Invalid id')
+      expect(response.error).toEqual(WithdrawError.InvalidId)
     })
 
     test("Can't finalize finalized withdrawal", async (): Promise<void> => {
@@ -390,6 +407,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -410,6 +428,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal already finalized')
+      expect(response.error).toEqual(WithdrawError.AlreadyFinalized)
     })
 
     test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
@@ -434,6 +453,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -454,6 +474,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal already rolled back')
+      expect(response.error).toEqual(WithdrawError.AlreadyRolledBack)
     })
   })
 
@@ -479,6 +500,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -498,6 +520,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
+      expect(response.error).toBeNull()
     })
 
     test("Can't rollback non-existent withdrawal", async (): Promise<void> => {
@@ -509,6 +532,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -529,6 +553,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown withdrawal')
+      expect(response.error).toEqual(WithdrawError.UnknownWithdrawal)
     })
 
     test("Can't rollback invalid withdrawal id", async (): Promise<void> => {
@@ -540,6 +565,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -560,6 +586,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Invalid id')
+      expect(response.error).toEqual(WithdrawError.InvalidId)
     })
 
     test("Can't rollback finalized withdrawal", async (): Promise<void> => {
@@ -584,6 +611,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -604,6 +632,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal already finalized')
+      expect(response.error).toEqual(WithdrawError.AlreadyFinalized)
     })
 
     test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
@@ -628,6 +657,7 @@ describe('Withdrawal Resolvers', (): void => {
                 code
                 success
                 message
+                error
               }
             }
           `,
@@ -648,6 +678,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal already rolled back')
+      expect(response.error).toEqual(WithdrawError.AlreadyRolledBack)
     })
   })
 })
