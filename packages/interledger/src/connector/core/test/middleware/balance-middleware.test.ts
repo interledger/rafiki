@@ -10,8 +10,8 @@ import {
 } from '../../factories'
 
 // TODO: make one peer to many account relationship
-const aliceAccount = AccountFactory.build({ accountId: 'alice' })
-const bobAccount = AccountFactory.build({ accountId: 'bob' })
+const aliceAccount = AccountFactory.build({ id: 'alice' })
+const bobAccount = AccountFactory.build({ id: 'bob' })
 const services = RafikiServicesFactory.build({})
 const ctx = createContext<unknown, RafikiContext>()
 ctx.accounts = {
@@ -49,12 +49,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getAccountBalance(
-      aliceAccount.accountId
-    )
+    const aliceBalance = await accounts.getAccountBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(0))
 
-    const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
+    const bobBalance = await accounts.getAccountBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(100))
   })
 
@@ -68,12 +66,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getAccountBalance(
-      aliceAccount.accountId
-    )
+    const aliceBalance = await accounts.getAccountBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
+    const bobBalance = await accounts.getAccountBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 
@@ -88,12 +84,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getAccountBalance(
-      aliceAccount.accountId
-    )
+    const aliceBalance = await accounts.getAccountBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
+    const bobBalance = await accounts.getAccountBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
 
     expect(transferFundsSpy).toHaveBeenCalledTimes(0)
@@ -109,12 +103,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getAccountBalance(
-      aliceAccount.accountId
-    )
+    const aliceBalance = await accounts.getAccountBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getAccountBalance(bobAccount.accountId)
+    const bobBalance = await accounts.getAccountBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 })

@@ -27,7 +27,7 @@ function coerceBigIntValue(value: bigint | number | string): bigint | number {
   if (isBigIntAvailable()) {
     patchBigInt()
     const uInt64 = BigInt(value)
-    if (uInt64 <= BigInt(0)) throw new TypeError('Input must be unsigned.')
+    if (uInt64 < BigInt(0)) throw new TypeError('Input must be unsigned.')
     return uInt64
   } else {
     return Number(value)

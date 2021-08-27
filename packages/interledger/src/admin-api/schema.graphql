@@ -26,10 +26,14 @@ type Query {
 
 type Mutation {
   "Create Interledger account"
-  createIlpAccount: CreateIlpAccountMutationResponse!
+  createIlpAccount(
+    input: CreateIlpAccountInput!
+  ): CreateIlpAccountMutationResponse!
 
   "Update Interledger account"
-  updateIlpAccount: UpdateIlpAccountMutationResponse!
+  updateIlpAccount(
+    input: UpdateIlpAccountInput!
+  ): UpdateIlpAccountMutationResponse!
 
   "Delete Interledger account"
   deleteIlpAccount(id: ID!): DeleteIlpAccountMutationResponse!
@@ -110,12 +114,7 @@ type Mutation {
   ): DeleteWebhookMutationResponse
 
   "Create deposit"
-  createDeposit(
-    "The id of the account to create the deposit for."
-    ilpAccountId: ID!
-    "Amount of deposit."
-    amount: UInt64!
-  ): CreateDepositMutationResponse
+  createDeposit(input: CreateDepositInput!): CreateDepositMutationResponse
 
   "Create withdrawal"
   createWithdrawal(
@@ -123,6 +122,8 @@ type Mutation {
     ilpAccountId: ID!
     "Amount of deposit."
     amount: UInt64!
+    "The id of the withdrawal."
+    id: ID
   ): CreateWithdrawalMutationResponse
 
   "Finalize pending withdrawal"
@@ -143,14 +144,75 @@ type IlpAccountsConnection {
   edges: [IlpAccountEdge!]!
 }
 
+type SubAccountsConnection {
+  pageInfo: PageInfo!
+  edges: [IlpAccountEdge!]!
+}
+
 type IlpAccountEdge {
   node: IlpAccount!
   cursor: String!
 }
 
+input CreateIlpAccountInput {
+  id: ID
+  disabled: Boolean
+  maxPacketAmount: UInt64
+  http: HttpInput
+  asset: AssetInput!
+  stream: StreamInput
+  routing: RoutingInput
+}
+
+input UpdateIlpAccountInput {
+  id: ID
+  disabled: Boolean
+  maxPacketAmount: UInt64
+  http: HttpInput
+  stream: StreamInput
+  routing: RoutingInput
+}
+
+input HttpInput {
+  incoming: HttpIncomingInput!
+  outgoing: HttpOutgoingInput!
+}
+
+input HttpIncomingInput {
+  authTokens: [String!]!
+}
+
+input HttpOutgoingInput {
+  authToken: String!
+  endpoint: String!
+}
+
+input AssetInput {
+  code: String!
+  scale: Int!
+}
+
+input StreamInput {
+  enabled: Boolean!
+}
+
+input RoutingInput {
+  staticIlpAddress: String!
+}
+
+input CreateDepositInput {
+  "The id of the account to create the deposit for."
+  ilpAccountId: ID!
+  "Amount of deposit."
+  amount: UInt64!
+  "The id of the deposit."
+  id: ID
+}
+
 type IlpAccount {
   id: ID!
-  enabled: Boolean!
+  disabled: Boolean!
+  superAccountId: ID
   superAccount: IlpAccount
   subAccounts(
     "Paginating forwards: the cursor before the the requested page."
@@ -161,13 +223,12 @@ type IlpAccount {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
-  ): IlpAccountsConnection!
-  liquidityAccountId: ID
-  maxPacketAmount: String!
-  http: Http!
+  ): SubAccountsConnection!
+  maxPacketAmount: UInt64
+  http: Http
   asset: Asset!
   stream: Stream!
-  routing: Routing!
+  routing: Routing
 
   balance: Balance!
   webhooks(
@@ -203,15 +264,11 @@ type IlpAccount {
 }
 
 type Http {
-  incoming: HttpIncoming!
   outgoing: HttpOutgoing!
 }
 
-type HttpIncoming {
-  authTokens: [String!]!
-}
 type HttpOutgoing {
-  authTokens: String!
+  authToken: String!
   endpoint: String!
 }
 
@@ -221,23 +278,16 @@ type Stream {
 
 type Routing {
   staticIlpAddress: String!
-  inheritFromRemote: Boolean!
+  inheritFromRemote: Boolean
   dynamicIlpAddress: String
 }
 
 type Balance {
-  id: ID!
-  createdTime: String!
-  asset: Asset!
   balance: UInt64!
   netLiability: UInt64
   netAssets: UInt64
   creditExtended: UInt64!
   totalLent: UInt64!
-  operator: Operator
-}
-
-type Operator {
   availableCredit: UInt64!
   totalBorrowed: UInt64!
 }
@@ -269,7 +319,8 @@ type DepositEdge {
 type Deposit {
   id: ID!
   amount: UInt64!
-  createdTime: Int!
+  ilpAccountId: ID!
+  # createdTime: Int!
 }
 
 type WithdrawalsConnection {
@@ -293,14 +344,14 @@ type CreateIlpAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  ilpAccount: IlpAccount!
+  ilpAccount: IlpAccount
 }
 
 type UpdateIlpAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  ilpAccount: IlpAccount!
+  ilpAccount: IlpAccount
 }
 
 type DeleteIlpAccountMutationResponse implements MutationResponse {
@@ -313,7 +364,7 @@ type CreateIlpSubAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  ilpAccount: IlpAccount!
+  ilpAccount: IlpAccount
 }
 
 type TransferMutationResponse implements MutationResponse {
@@ -370,7 +421,7 @@ type CreateDepositMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  deposit: Deposit!
+  deposit: Deposit
 }
 
 type CreateWithdrawalMutationResponse implements MutationResponse {

@@ -1,7 +1,7 @@
 import { Asset } from './asset'
 
 export interface IlpAccount {
-  accountId: string
+  id: string
   superAccountId?: string
   disabled: boolean // you can fetch config of disabled account but it will not process packets
 
@@ -12,7 +12,7 @@ export interface IlpAccount {
       endpoint: string
     }
   }
-  stream?: {
+  stream: {
     enabled: boolean
   }
   routing?: {

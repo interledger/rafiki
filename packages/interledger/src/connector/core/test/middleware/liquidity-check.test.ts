@@ -12,8 +12,8 @@ const { T04_INSUFFICIENT_LIQUIDITY } = Errors.codes
 
 describe('Liquidity Check Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerAccountFactory.build({ accountId: 'alice' })
-  const bob = PeerAccountFactory.build({ accountId: 'bob' })
+  const alice = PeerAccountFactory.build({ id: 'alice' })
+  const bob = PeerAccountFactory.build({ id: 'bob' })
   const ctx = createContext<unknown, RafikiContext>()
   ctx.services = services
   ctx.accounts = {

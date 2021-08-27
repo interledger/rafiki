@@ -23,22 +23,25 @@ export class AccountFactory {
     let accountOptions: CreateOptions
     if (isSubAccount(options)) {
       accountOptions = {
-        accountId: options.accountId || uuid(),
+        id: options.id || uuid(),
         disabled: options.disabled || false,
-        superAccountId: options.superAccountId
+        superAccountId: options.superAccountId,
+        stream: {
+          enabled: options.stream?.enabled || false
+        }
       }
     } else {
       accountOptions = {
-        accountId: options.accountId || uuid(),
+        id: options.id || uuid(),
         disabled: options.disabled || false,
-        asset: options.asset || randomAsset()
+        asset: options.asset || randomAsset(),
+        stream: {
+          enabled: options.stream?.enabled || false
+        }
       }
     }
     if (options.maxPacketAmount) {
       accountOptions.maxPacketAmount = options.maxPacketAmount
-    }
-    if (options.stream) {
-      accountOptions.stream = options.stream
     }
     if (options.http) {
       accountOptions.http = options.http

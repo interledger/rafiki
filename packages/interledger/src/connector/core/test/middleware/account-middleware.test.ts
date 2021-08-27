@@ -10,10 +10,10 @@ import { ZeroCopyIlpPrepare } from '../..'
 
 describe('Account Middleware', () => {
   const incomingAccount = PeerAccountFactory.build({
-    accountId: 'incomingPeer'
+    id: 'incomingPeer'
   })
   const outgoingAccount = PeerAccountFactory.build({
-    accountId: 'outgoingPeer'
+    id: 'outgoingPeer'
   })
   const rafikiServices = RafikiServicesFactory.build({})
 
@@ -43,7 +43,7 @@ describe('Account Middleware', () => {
     const ctx = createContext<unknown, RafikiContext>()
     ctx.state = {
       account: incomingAccount,
-      streamDestination: outgoingAccount.accountId
+      streamDestination: outgoingAccount.id
     }
     ctx.services = rafikiServices
     ctx.request.prepare = new ZeroCopyIlpPrepare(

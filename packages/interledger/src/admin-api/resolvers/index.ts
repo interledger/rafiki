@@ -1,8 +1,11 @@
 import { Resolvers } from '../generated/graphql'
+import { createDeposit } from './deposit'
 import {
   getIlpAccounts,
   getIlpAccount,
   getIlpAccountsConnectionPageInfo,
+  getSubAccountsConnectionPageInfo,
+  getBalance,
   getSuperAccount,
   createIlpAccount,
   updateIlpAccount,
@@ -27,7 +30,7 @@ export const resolvers: Resolvers = {
     createIlpAccount: createIlpAccount,
     updateIlpAccount: updateIlpAccount,
     deleteIlpAccount: deleteIlpAccount,
-    createIlpSubAccount: createIlpSubAccount
+    createIlpSubAccount: createIlpSubAccount,
     // transfer: createTransfer,
     // extendCredit: extendCredit,
     // revokeCredit: revokeCredit,
@@ -36,12 +39,13 @@ export const resolvers: Resolvers = {
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,
-    // createDeposit: createDeposit,
+    createDeposit: createDeposit
     // createWithdrawal: createWithdrawal,
     // finalizePendingWithdrawal: finalizePendingWithdrawal,
     // rollbackPendingWithdrawal: rollbackPendingWithdrawal
   },
   IlpAccount: {
+    balance: getBalance,
     superAccount: getSuperAccount,
     subAccounts: getSubAccounts
     // webhooks: getWebhooks,
@@ -50,6 +54,9 @@ export const resolvers: Resolvers = {
   },
   IlpAccountsConnection: {
     pageInfo: getIlpAccountsConnectionPageInfo
+  },
+  SubAccountsConnection: {
+    pageInfo: getSubAccountsConnectionPageInfo
   },
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo
