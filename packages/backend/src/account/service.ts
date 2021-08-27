@@ -2,6 +2,7 @@ import { Account } from './model'
 import { BaseService } from '../shared/baseService'
 import { strictEqual } from 'assert'
 import { Transaction } from 'knex'
+import { ConnectorService } from '../connector/service'
 
 export interface AccountService {
   get(id: string): Promise<Account>
@@ -9,18 +10,22 @@ export interface AccountService {
   createSubAccount(superAccountId: string, trx?: Transaction): Promise<Account>
 }
 
-type ServiceDependencies = BaseService
+interface ServiceDependencies extends BaseService {
+  connectorService: ConnectorService
+}
 
 export async function createAccountService({
   logger,
-  knex
-}: BaseService): Promise<AccountService> {
+  knex,
+  connectorService
+}: ServiceDependencies): Promise<AccountService> {
   const log = logger.child({
     service: 'AccountService'
   })
   const deps: ServiceDependencies = {
     logger: log,
-    knex: knex
+    knex: knex,
+    connectorService: connectorService
   }
   return {
     get: (id) => getAccount(deps, id),
@@ -34,7 +39,9 @@ async function getAccount(
   deps: ServiceDependencies,
   id: string
 ): Promise<Account> {
-  return Account.query(deps.knex).findById(id)
+  const ilpAccount = await deps.connectorService.getIlpAccount(id)
+  if (ilpAccount.id != id) throw new Error('account not found')
+  return Account.query(deps.knex).findById(ilpAccount.id)
 }
 
 async function createAccount(
@@ -42,8 +49,12 @@ async function createAccount(
   scale: number,
   currency: string
 ): Promise<Account> {
-  // TODO: Create account in connector here (when connector account setup).
+  const ilpAccountResponse = await deps.connectorService.createIlpAccount()
+  if (!ilpAccountResponse.success || ilpAccountResponse.ilpAccount == null)
+    throw new Error('account not created')
+
   return Account.query(deps.knex).insertAndFetch({
+    id: ilpAccountResponse.ilpAccount.id,
     scale: scale,
     currency: currency
   })
@@ -54,7 +65,12 @@ async function createSubAccount(
   superAccountId: string,
   trx?: Transaction
 ): Promise<Account> {
-  // TODO: Create account in connector here (when connector account setup).
+  const ilpAccountResponse = await deps.connectorService.createIlpSubAccount(
+    superAccountId
+  )
+  if (!ilpAccountResponse.success || ilpAccountResponse.ilpAccount == null)
+    throw new Error('account not created')
+
   const parentAccount = await getAccount(deps, superAccountId)
 
   strictEqual(
@@ -63,7 +79,14 @@ async function createSubAccount(
     'parent account does not match what was requested'
   )
 
+  strictEqual(
+    ilpAccountResponse.ilpAccount.superAccountId,
+    superAccountId,
+    'parent ilpAccount does not match what was requested'
+  )
+
   return Account.query(trx || deps.knex).insertAndFetch({
+    id: ilpAccountResponse.ilpAccount.id,
     scale: parentAccount.scale,
     currency: parentAccount.currency,
     superAccountId: superAccountId

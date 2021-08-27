@@ -93,9 +93,11 @@ export function initIocContainer(
   container.singleton('accountService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
+    const connectorService = await deps.use('connectorService')
     return await createAccountService({
       logger: logger,
-      knex: knex
+      knex: knex,
+      connectorService: connectorService
     })
   })
   container.singleton('SPSPService', async (deps) => {
