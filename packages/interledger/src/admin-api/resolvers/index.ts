@@ -1,4 +1,5 @@
 import { Resolvers } from '../generated/graphql'
+import { extendCredit, revokeCredit, utilizeCredit, settleDebt } from './credit'
 import { createDeposit } from './deposit'
 import {
   getIlpAccounts,
@@ -32,10 +33,10 @@ export const resolvers: Resolvers = {
     deleteIlpAccount: deleteIlpAccount,
     createIlpSubAccount: createIlpSubAccount,
     // transfer: createTransfer,
-    // extendCredit: extendCredit,
-    // revokeCredit: revokeCredit,
-    // utilizeCredit: utilizeCredit,
-    // settleDebt: settleDebt,
+    extendCredit: extendCredit,
+    revokeCredit: revokeCredit,
+    utilizeCredit: utilizeCredit,
+    settleDebt: settleDebt,
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,
