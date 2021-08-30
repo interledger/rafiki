@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 
 import { Config } from '../config'
 import { IlpAccount as IlpAccountModel } from './models'
-import { randomId, toLiquidityId, toSettlementId } from './utils'
+import { toLiquidityId, toSettlementId } from './utils'
 import { randomAsset, AccountFactory } from './testsHelpers'
 import { AccountsService } from './service'
 
@@ -24,7 +24,8 @@ import {
   CreditError,
   UpdateAccountError,
   UpdateOptions,
-  WithdrawError
+  WithdrawError,
+  isWithdrawError
 } from './types'
 import { Logger } from '../logger/service'
 import { createKnex } from '../Knex/service'
@@ -927,16 +928,27 @@ describe('Accounts Service', (): void => {
       }
     })
 
+    test('Returns error for invalid id', async (): Promise<void> => {
+      const { code: assetCode, scale: assetScale } = randomAsset()
+      const error = await accountsService.depositLiquidity({
+        id: 'not a uuid v4',
+        assetCode,
+        assetScale,
+        amount: BigInt(5)
+      })
+      expect(error).toEqual(DepositError.InvalidId)
+    })
+
     test('Can deposit liquidity with idempotency key', async (): Promise<void> => {
       const asset = randomAsset()
       const amount = BigInt(10)
-      const depositId = randomId()
+      const id = uuid()
       {
         const error = await accountsService.depositLiquidity({
           assetCode: asset.code,
           assetScale: asset.scale,
           amount,
-          depositId
+          id
         })
         expect(error).toBeUndefined()
         const balance = await accountsService.getLiquidityBalance(
@@ -950,7 +962,7 @@ describe('Accounts Service', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale,
           amount,
-          depositId
+          id
         })
         expect(error).toEqual(DepositError.DepositExists)
         const balance = await accountsService.getLiquidityBalance(
@@ -1011,6 +1023,17 @@ describe('Accounts Service', (): void => {
       }
     })
 
+    test('Returns error for invalid id', async (): Promise<void> => {
+      const { code: assetCode, scale: assetScale } = randomAsset()
+      const error = await accountsService.withdrawLiquidity({
+        id: 'not a uuid v4',
+        assetCode,
+        assetScale,
+        amount: BigInt(5)
+      })
+      expect(error).toEqual(WithdrawError.InvalidId)
+    })
+
     test('Can withdraw liquidity with idempotency key', async (): Promise<void> => {
       const asset = randomAsset()
       const startingBalance = BigInt(10)
@@ -1020,13 +1043,13 @@ describe('Accounts Service', (): void => {
         amount: startingBalance
       })
       const amount = BigInt(5)
-      const withdrawalId = randomId()
+      const id = uuid()
       {
         const error = await accountsService.withdrawLiquidity({
           assetCode: asset.code,
           assetScale: asset.scale,
           amount,
-          withdrawalId
+          id
         })
         expect(error).toBeUndefined()
         const balance = await accountsService.getLiquidityBalance(
@@ -1040,7 +1063,7 @@ describe('Accounts Service', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale,
           amount,
-          withdrawalId
+          id
         })
         expect(error).toEqual(WithdrawError.WithdrawalExists)
         const balance = await accountsService.getLiquidityBalance(
@@ -1195,37 +1218,58 @@ describe('Accounts Service', (): void => {
         amount: startingBalance
       })
       const amount = BigInt(5)
-      const error = await accountsService.withdraw({
+      const withdrawal = {
         accountId,
         amount
+      }
+      const withdrawalOrError = await accountsService.createWithdrawal(
+        withdrawal
+      )
+      expect(isWithdrawError(withdrawalOrError)).toEqual(false)
+      if (isWithdrawError(withdrawalOrError)) {
+        fail()
+      }
+      expect(withdrawalOrError).toEqual({
+        ...withdrawal,
+        id: withdrawalOrError.id
       })
-      expect(error).toBeUndefined()
       const { balance } = (await accountsService.getAccountBalance(
         accountId
       )) as IlpBalance
       expect(balance).toEqual(startingBalance - amount)
-      const settlementBalance = await accountsService.getSettlementBalance(
-        asset.code,
-        asset.scale
+      await expect(
+        accountsService.getSettlementBalance(asset.code, asset.scale)
+      ).resolves.toEqual(startingBalance)
+
+      const error = await accountsService.finalizeWithdrawal(
+        withdrawalOrError.id
       )
-      expect(settlementBalance).toEqual(startingBalance - amount)
-      {
-        const error = await accountsService.withdraw({
-          accountId,
-          amount
-        })
-        expect(error).toBeUndefined()
-        const { balance } = (await accountsService.getAccountBalance(
-          accountId
-        )) as IlpBalance
-        expect(balance).toEqual(startingBalance - amount - amount)
-      }
+      expect(error).toBeUndefined()
+      await expect(
+        accountsService.getAccountBalance(accountId)
+      ).resolves.toMatchObject({
+        balance: startingBalance - amount
+      })
+      await expect(
+        accountsService.getSettlementBalance(asset.code, asset.scale)
+      ).resolves.toEqual(startingBalance - amount)
+    })
+
+    test("Can't create withdrawal with invalid id", async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const error = await accountsService.createWithdrawal({
+        id: 'not a uuid v4',
+        accountId,
+        amount: BigInt(5)
+      })
+      expect(isWithdrawError(error)).toEqual(true)
+      expect(error).toEqual(WithdrawError.InvalidId)
     })
 
     test("Can't withdraw from nonexistent account", async (): Promise<void> => {
       const accountId = uuid()
       await expect(
-        accountsService.withdraw({
+        accountsService.createWithdrawal({
           accountId,
           amount: BigInt(5)
         })
@@ -1241,7 +1285,7 @@ describe('Accounts Service', (): void => {
       })
       const amount = BigInt(10)
       await expect(
-        accountsService.withdraw({
+        accountsService.createWithdrawal({
           accountId,
           amount
         })
@@ -1257,7 +1301,47 @@ describe('Accounts Service', (): void => {
       expect(settlementBalance).toEqual(startingBalance)
     })
 
-    test('Can withdraw with idempotency key', async (): Promise<void> => {
+    test("Can't create withdrawal with duplicate id", async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      await accountsService.deposit({
+        accountId,
+        amount: BigInt(10)
+      })
+      const amount = BigInt(5)
+      const withdrawal = {
+        id: uuid(),
+        accountId,
+        amount
+      }
+      await expect(
+        accountsService.createWithdrawal(withdrawal)
+      ).resolves.toEqual(withdrawal)
+
+      await expect(
+        accountsService.createWithdrawal(withdrawal)
+      ).resolves.toEqual(WithdrawError.WithdrawalExists)
+
+      await expect(
+        accountsService.createWithdrawal({
+          ...withdrawal,
+          amount: BigInt(1)
+        })
+      ).resolves.toEqual(WithdrawError.WithdrawalExists)
+
+      const { id: diffAccountId } = await accountFactory.build()
+      await accountsService.deposit({
+        accountId: diffAccountId,
+        amount
+      })
+      await expect(
+        accountsService.createWithdrawal({
+          ...withdrawal,
+          accountId: diffAccountId
+        })
+      ).resolves.toEqual(WithdrawError.WithdrawalExists)
+    })
+
+    test('Can rollback withdrawal', async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const startingBalance = BigInt(10)
       await accountsService.deposit({
@@ -1265,31 +1349,139 @@ describe('Accounts Service', (): void => {
         amount: startingBalance
       })
       const amount = BigInt(5)
-      const withdrawalId = randomId()
-      {
-        const error = await accountsService.withdraw({
-          accountId,
-          amount,
-          withdrawalId
-        })
-        expect(error).toBeUndefined()
-        const { balance } = (await accountsService.getAccountBalance(
-          accountId
-        )) as IlpBalance
-        expect(balance).toEqual(startingBalance - amount)
+      const withdrawal = {
+        id: uuid(),
+        accountId,
+        amount
       }
-      {
-        const error = await accountsService.withdraw({
-          accountId,
-          amount,
-          withdrawalId
-        })
-        expect(error).toEqual(WithdrawError.WithdrawalExists)
-        const { balance } = (await accountsService.getAccountBalance(
-          accountId
-        )) as IlpBalance
-        expect(balance).toEqual(startingBalance - amount)
+      const withdrawalOrError = await accountsService.createWithdrawal(
+        withdrawal
+      )
+      expect(isWithdrawError(withdrawalOrError)).toEqual(false)
+      const error = await accountsService.rollbackWithdrawal(withdrawal.id)
+      expect(error).toBeUndefined()
+      const { balance } = (await accountsService.getAccountBalance(
+        accountId
+      )) as IlpBalance
+      expect(balance).toEqual(startingBalance)
+    })
+
+    test("Can't finalize non-existent withdrawal", async (): Promise<void> => {
+      const error = await accountsService.finalizeWithdrawal(uuid())
+      expect(isWithdrawError(error)).toEqual(true)
+      expect(error).toEqual(WithdrawError.UnknownWithdrawal)
+    })
+
+    test("Can't finalize invalid withdrawal id", async (): Promise<void> => {
+      const id = 'not a uuid v4'
+      const error = await accountsService.finalizeWithdrawal(id)
+      expect(isWithdrawError(error)).toEqual(true)
+      expect(error).toEqual(WithdrawError.InvalidId)
+    })
+
+    test("Can't finalize finalized withdrawal", async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const amount = BigInt(5)
+      await accountsService.deposit({
+        accountId,
+        amount
+      })
+      const withdrawal = {
+        id: uuid(),
+        accountId,
+        amount
       }
+      await expect(
+        accountsService.createWithdrawal(withdrawal)
+      ).resolves.toEqual(withdrawal)
+      await expect(
+        accountsService.finalizeWithdrawal(withdrawal.id)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountsService.finalizeWithdrawal(withdrawal.id)
+      ).resolves.toEqual(WithdrawError.AlreadyFinalized)
+    })
+
+    test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const amount = BigInt(5)
+      await accountsService.deposit({
+        accountId,
+        amount
+      })
+      const withdrawal = {
+        id: uuid(),
+        accountId,
+        amount
+      }
+      await expect(
+        accountsService.createWithdrawal(withdrawal)
+      ).resolves.toEqual(withdrawal)
+      await expect(
+        accountsService.rollbackWithdrawal(withdrawal.id)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountsService.finalizeWithdrawal(withdrawal.id)
+      ).resolves.toEqual(WithdrawError.AlreadyRolledBack)
+    })
+
+    test("Can't rollback non-existent withdrawal", async (): Promise<void> => {
+      const error = await accountsService.rollbackWithdrawal(uuid())
+      expect(isWithdrawError(error)).toEqual(true)
+      expect(error).toEqual(WithdrawError.UnknownWithdrawal)
+    })
+
+    test("Can't rollback invalid withdrawal id", async (): Promise<void> => {
+      const id = 'not a uuid v4'
+      const error = await accountsService.rollbackWithdrawal(id)
+      expect(isWithdrawError(error)).toEqual(true)
+      expect(error).toEqual(WithdrawError.InvalidId)
+    })
+
+    test("Can't rollback finalized withdrawal", async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const amount = BigInt(5)
+      await accountsService.deposit({
+        accountId,
+        amount
+      })
+      const withdrawal = {
+        id: uuid(),
+        accountId,
+        amount
+      }
+      await expect(
+        accountsService.createWithdrawal(withdrawal)
+      ).resolves.toEqual(withdrawal)
+      await expect(
+        accountsService.finalizeWithdrawal(withdrawal.id)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountsService.rollbackWithdrawal(withdrawal.id)
+      ).resolves.toEqual(WithdrawError.AlreadyFinalized)
+    })
+
+    test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
+      const { id: accountId } = await accountFactory.build()
+      const amount = BigInt(5)
+      await accountsService.deposit({
+        accountId,
+        amount
+      })
+      const withdrawal = {
+        id: uuid(),
+        accountId,
+        amount
+      }
+      await expect(
+        accountsService.createWithdrawal(withdrawal)
+      ).resolves.toEqual(withdrawal)
+      await expect(
+        accountsService.rollbackWithdrawal(withdrawal.id)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountsService.rollbackWithdrawal(withdrawal.id)
+      ).resolves.toEqual(WithdrawError.AlreadyRolledBack)
     })
   })
 
@@ -2687,12 +2879,10 @@ describe('Accounts Service', (): void => {
       ).resolves.toBeUndefined()
 
       const withdrawAmount = BigInt(1)
-      await expect(
-        accountsService.withdraw({
-          accountId: subAccountId,
-          amount: withdrawAmount
-        })
-      ).resolves.toBeUndefined()
+      await accountsService.createWithdrawal({
+        accountId: subAccountId,
+        amount: withdrawAmount
+      })
 
       await expect(
         accountsService.settleDebt({

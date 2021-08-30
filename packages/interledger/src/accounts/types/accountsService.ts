@@ -17,6 +17,7 @@ import { Transfer, Transaction, TransferError } from './transfer'
 import {
   AccountWithdrawal,
   LiquidityWithdrawal,
+  Withdrawal,
   WithdrawError
 } from './withdrawal'
 
@@ -52,7 +53,11 @@ export interface AccountsService extends ConnectorAccountsService {
     assetScale: number
   ): Promise<bigint | undefined>
   deposit(deposit: AccountDeposit): Promise<Deposit | DepositError>
-  withdraw(withdrawal: AccountWithdrawal): Promise<void | WithdrawError>
+  createWithdrawal(
+    withdrawal: AccountWithdrawal
+  ): Promise<Withdrawal | WithdrawError>
+  finalizeWithdrawal(id: string): Promise<void | WithdrawError>
+  rollbackWithdrawal(id: string): Promise<void | WithdrawError>
   extendCredit(extendOptions: ExtendCreditOptions): Promise<void | CreditError>
   utilizeCredit(utilizeOptions: CreditOptions): Promise<void | CreditError>
   revokeCredit(revokeOptions: CreditOptions): Promise<void | CreditError>
