@@ -13,11 +13,10 @@ type Logger = typeof PinoLogger
 
 export function connectorClient(
   logger: Logger,
-  port: number
+  host: string
 ): ApolloClient<NormalizedCacheObject> {
   const httpLink = createHttpLink({
-    // TODO: Update host?
-    uri: `http://localhost:${port}/graphql`,
+    uri: `http://${host}/graphql`,
     fetch
   })
   const errorLink = onError(({ graphQLErrors }) => {
