@@ -24,6 +24,7 @@ import { SPSPService } from './spsp/service'
 import { InvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebMonetizationService } from './webmonetization/service'
+import { ConnectorService } from './connector/service'
 
 export interface AppContextData {
   logger: Logger
@@ -51,6 +52,7 @@ export interface AppServices {
   invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
   wmService: Promise<WebMonetizationService>
+  connectorService: Promise<ConnectorService>
 }
 
 export type AppContainer = IocContract<AppServices>

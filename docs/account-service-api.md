@@ -10,24 +10,24 @@
   - [Server behavior](#server-behavior)
 - [Errors](#errors)
 - [Interledger accounts](#interledger-accounts)
-    - [Permissioning](#permissioning)
-      - [InterledgerAccount resource](#interledgeraccount-resource)
-    - [Fetch all Interledger accounts](#fetch-all-interledger-accounts)
-    - [Get Interledger account](#get-interledger-account)
-    - [Fetch Interledger super-account hierarchy](#fetch-interledger-super-account-hierarchy)
-    - [Create Interledger account](#create-interledger-account)
-    - [Create Interledger sub-account](#create-interledger-sub-account)
-    - [Update Interledger account](#update-interledger-account)
-    - [Delete Interledger account](#delete-interledger-account)
-    - [Transfer between Interledger accounts](#transfer-between-interledger-accounts)
-      - [Parameters](#parameters)
-    - [Process ILP-over-HTTP requests](#process-ilp-over-http-requests)
+  - [Permissioning](#permissioning)
+    - [InterledgerAccount resource](#interledgeraccount-resource)
+  - [Fetch all Interledger accounts](#fetch-all-interledger-accounts)
+  - [Get Interledger account](#get-interledger-account)
+  - [Fetch Interledger super-account hierarchy](#fetch-interledger-super-account-hierarchy)
+  - [Create Interledger account](#create-interledger-account)
+  - [Create Interledger sub-account](#create-interledger-sub-account)
+  - [Update Interledger account](#update-interledger-account)
+  - [Delete Interledger account](#delete-interledger-account)
+  - [Transfer between Interledger accounts](#transfer-between-interledger-accounts)
+    - [Parameters](#parameters)
+  - [Process ILP-over-HTTP requests](#process-ilp-over-http-requests)
   - [Interledger balances](#interledger-balances)
   - [Settlement models](#settlement-models)
   - [Nesting](#nesting)
   - [Transacting with sub-accounts](#transacting-with-sub-accounts)
   - [Trustlines](#trustlines)
-      - [InterledgerBalance resource](#interledgerbalance-resource)
+    - [InterledgerBalance resource](#interledgerbalance-resource)
     - [Get Interledger balance](#get-interledger-balance)
   - [Trustline operations](#trustline-operations)
     - [Extend credit](#extend-credit)
@@ -45,13 +45,13 @@
     - [Update webhook](#update-webhook)
     - [Delete webhook](#delete-webhook)
 - [Liquidity accounts](#liquidity-accounts)
-    - [Create liquidity account](#create-liquidity-account)
-    - [Fetch liquidity accounts](#fetch-liquidity-accounts)
-    - [Lookup liquidity account](#lookup-liquidity-account)
-    - [Interledger accounts](#interledger-accounts-1)
+  - [Create liquidity account](#create-liquidity-account)
+  - [Fetch liquidity accounts](#fetch-liquidity-accounts)
+  - [Lookup liquidity account](#lookup-liquidity-account)
+  - [Interledger accounts](#interledger-accounts-1)
   - [~~Liability accounts~~](#liability-accounts)
   - [Deposits](#deposits)
-      - [Deposit resource](#deposit-resource)
+    - [Deposit resource](#deposit-resource)
     - [Execute deposit](#execute-deposit)
       - [Parameters](#parameters-5)
     - [Lookup deposit](#lookup-deposit)
@@ -60,7 +60,7 @@
       - [Withdrawal resource](#withdrawal-resource)
     - [Request withdrawal](#request-withdrawal)
   - [`POST /liquidity-accounts/{accountId}/withdrawals`](#post-liquidity-accountsaccountidwithdrawals)
-      - [Parameters](#parameters-6)
+    - [Parameters](#parameters-6)
     - [Finalize pending withdrawal](#finalize-pending-withdrawal)
     - [Rollback pending withdrawal](#rollback-pending-withdrawal)
     - [Lookup withdrawal](#lookup-withdrawal)
@@ -69,24 +69,24 @@
 
 ## **Permissioning**
 
-*First party* — exposed or accessible only to the provider, the operator of the Rafiki instance
+_First party_ — exposed or accessible only to the provider, the operator of the Rafiki instance
 
 - May implement custom server-side functionality interacting with those APIs, to enable them for their users
 - Executing push-payments: quoting, streaming updates...
 - Transaction history
 
-*Second party* — bilateral APIs with a privileged/authentic counterparty
+_Second party_ — bilateral APIs with a privileged/authentic counterparty
 
 - e.g. ILP-over-HTTP, BTP ...
 - What if the bilateral connection is provisioned via a third party API?
 
-*Third party* — exposed or accessible to any entity
+_Third party_ — exposed or accessible to any entity
 
 - SPSP server
 - Open Payments APIs
 - Authorization endpoints for future delegated, direct access
 
-*Standardized* specification, likely in an RFC
+_Standardized_ specification, likely in an RFC
 
 # Encoding
 
@@ -98,7 +98,7 @@ TODO
 
 # Idempotence
 
-*Adapted from [IL-RFC 38: Settlement Engines](https://github.com/interledger/rfcs/blob/master/0038-settlement-engines/0038-settlement-engines.md).*
+_Adapted from [IL-RFC 38: Settlement Engines](https://github.com/interledger/rfcs/blob/master/0038-settlement-engines/0038-settlement-engines.md)._
 
 Idempotent requests ensure servers apply a side effect only once, even if clients invoke the same request multiple times.
 
@@ -139,33 +139,34 @@ TODO — explanation ...
 
 ### Permissioning
 
-TODO — everything here is first-party (*with the exception of ILP-over-HTTP). However, the API service may wrap things to expose nicer 3rd party APIs).
+TODO — everything here is first-party (\*with the exception of ILP-over-HTTP). However, the API service may wrap things to expose nicer 3rd party APIs).
 
 #### InterledgerAccount resource
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|id|No|String|V4 UUID|Unique ID for this account, randomly generated by Rafiki.|
-|enabled|No|Boolean||Enables outgoing ILP packets to debit this account and incoming ILP packets to credit this account. If false, returns an F02 Unreachable error in response to all ILP packets. Pending ILP requests will still be applied.|
-|superAccountId|Yes|String|V4 UUID|What is this referred to in banking terminology? Delegate?|
-|subAccountIds|No|Array|||
-|subAccountIds[i]|No|String|V4 UUID||
-|liquidityAccountId|Yes|String|V4 UUID|TODO|
-|maxPacketAmount|No|String|UInt64||
-|http|No|Object|||
-|http.incoming|No|Object|||
-|http.incoming.authTokens|No|Array||TODO: specify auth method? JWTs? Bearer tokens?|
-|http.incoming.authTokens[i]|No|String|||
-|http.outgoing|No|Object|||
-|http.outgoing.authToken|No|String|||
-|http.outgoing.endpoint|No|String|||
-|asset|No|Object|||
-|asset.scale|No|Number|UInt8|Precision of the asset denomination: number of decimal places of the ordinary unit.|
-|asset.code|No|String||Asset code or symbol identifying the currency of the account.|
-|stream|No|Object||STREAM receiver preferences|
-|stream.enabled|No|Boolean||Enables ILP packets destined for this account's STREAM receiver to be fulfilled. If disabled, packets may not be destined to this local account, but may be forwarded through this account.|
-|routing|No|Object|||
-|routing.staticIlpAddress|No|String|ILP address|Statically configured ILP address (overrides dynamic address).
+| ﻿Name                       | Optional | JSON type | Type        | Description                                                                                                                                                                                                                |
+| :-------------------------- | :------- | :-------- | :---------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id                          | No       | String    | V4 UUID     | Unique ID for this account, randomly generated by Rafiki.                                                                                                                                                                  |
+| enabled                     | No       | Boolean   |             | Enables outgoing ILP packets to debit this account and incoming ILP packets to credit this account. If false, returns an F02 Unreachable error in response to all ILP packets. Pending ILP requests will still be applied. |
+| superAccountId              | Yes      | String    | V4 UUID     | What is this referred to in banking terminology? Delegate?                                                                                                                                                                 |
+| subAccountIds               | No       | Array     |             |                                                                                                                                                                                                                            |
+| subAccountIds[i]            | No       | String    | V4 UUID     |                                                                                                                                                                                                                            |
+| liquidityAccountId          | Yes      | String    | V4 UUID     | TODO                                                                                                                                                                                                                       |
+| maxPacketAmount             | No       | String    | UInt64      |                                                                                                                                                                                                                            |
+| http                        | No       | Object    |             |                                                                                                                                                                                                                            |
+| http.incoming               | No       | Object    |             |                                                                                                                                                                                                                            |
+| http.incoming.authTokens    | No       | Array     |             | TODO: specify auth method? JWTs? Bearer tokens?                                                                                                                                                                            |
+| http.incoming.authTokens[i] | No       | String    |             |                                                                                                                                                                                                                            |
+| http.outgoing               | No       | Object    |             |                                                                                                                                                                                                                            |
+| http.outgoing.authToken     | No       | String    |             |                                                                                                                                                                                                                            |
+| http.outgoing.endpoint      | No       | String    |             |                                                                                                                                                                                                                            |
+| asset                       | No       | Object    |             |                                                                                                                                                                                                                            |
+| asset.scale                 | No       | Number    | UInt8       | Precision of the asset denomination: number of decimal places of the ordinary unit.                                                                                                                                        |
+| asset.code                  | No       | String    |             | Asset code or symbol identifying the currency of the account.                                                                                                                                                              |
+| stream                      | No       | Object    |             | STREAM receiver preferences                                                                                                                                                                                                |
+| stream.enabled              | No       | Boolean   |             | Enables ILP packets destined for this account's STREAM receiver to be fulfilled. If disabled, packets may not be destined to this local account, but may be forwarded through this account.                                |
+| routing                     | No       | Object    |             |                                                                                                                                                                                                                            |
+| routing.staticIlpAddress    | No       | String    | ILP address | Statically configured ILP address (overrides dynamic address).                                                                                                                                                             |
+
 TODO: dynamicIlpAddress should override this?
 
 Defaults the node's ILP address with a segment appended for this account's ID.|
@@ -260,7 +261,7 @@ Add note: can also be used to transfer between sub-accounts!
 
 Note: only transacts against liquidity accounts if destination amount is different from origin amount? Otherwise just a simple account → account transfer?
 
-TODO: should if transferring from one account *to* a sub-account, should that the invoice thing where it credits the top-level account and extends a line of credit to the sub-account?
+TODO: should if transferring from one account _to_ a sub-account, should that the invoice thing where it credits the top-level account and extends a line of credit to the sub-account?
 
 TODO: Then, does this also need an API to apply the Fulfill?
 
@@ -270,12 +271,12 @@ TODO: Then, does this also need an API to apply the Fulfill?
 
 #### Parameters
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|originAmount|No|String|UInt64|TODO|
-|destinationAccountId|No|String|V4 UUID||
-|destinationAmount|Yes|String|UInt64|If omitted, defaults to the origin amount (but requires both accounts to be the same asset & denomination, or else fails).|
-|autoCommit|Yes|Boolean||Defaults to two-phase commit? If true, transfer is irrevocable|
+| ﻿Name                | Optional | JSON type | Type    | Description                                                                                                                |
+| :------------------- | :------- | :-------- | :------ | :------------------------------------------------------------------------------------------------------------------------- |
+| originAmount         | No       | String    | UInt64  | TODO                                                                                                                       |
+| destinationAccountId | No       | String    | V4 UUID |                                                                                                                            |
+| destinationAmount    | Yes      | String    | UInt64  | If omitted, defaults to the origin amount (but requires both accounts to be the same asset & denomination, or else fails). |
+| autoCommit           | Yes      | Boolean   |         | Defaults to two-phase commit? If true, transfer is irrevocable                                                             |
 
 **Response**
 
@@ -285,7 +286,7 @@ TODO
 
 ### Process ILP-over-HTTP requests
 
-TODO — explain how the accounting works here, particularly with receiving packets into sub-accounts (but where should the behavior for *routed* requests be explained?)
+TODO — explain how the accounting works here, particularly with receiving packets into sub-accounts (but where should the behavior for _routed_ requests be explained?)
 
 TODO — In the ILP-over-HTTP, we should have the accountId in the path so the operator can specify which account to send a packet from while still using their own auth token
 
@@ -316,7 +317,7 @@ ILP Prepare packets submitted by a counterparty draw from their Interledger bala
 
 If an operator extends its counterparty a line of credit, the counterparty may owe debt to the operator. Even if its Interledger balance in isolation offers the counterparty funds available to spend, if the counterparty's outstanding debt exceeds its Interledger balance, the counterparty maintains a liability, on net, to the operator. Thus, an Interledger account's **net liability** is its Interledger balance minus outstanding debts, which is positive if the operator owes its counterparty, or negative if the counterparty owes the operator. If both parties wanted to finalize their financial relationship, one party issues a final settlement commensurate with its net liability.
 
-~~From the perspective of the counterparty, these roles are reversed: *it* is the operator of its own node, and the operator is its counterparty. [counterparty does its own bookkeeping]~~
+~~From the perspective of the counterparty, these roles are reversed: _it_ is the operator of its own node, and the operator is its counterparty. [counterparty does its own bookkeeping]~~
 
 Counterparties may accrue an Interledger balance in three ways:
 
@@ -324,7 +325,7 @@ Counterparties may accrue an Interledger balance in three ways:
 2. The counterparty performs a settlement to the provider, depositing into their Interledger account.
 3. The counterparty, or its hosted account, fulfills ILP packets submitted by the operator.
 
-    ## Settlement models
+   ## Settlement models
 
 For two Interledger counterparties to transact, at least one must extend some trust to the other, dictating how and when the parties settle with one another.
 
@@ -343,25 +344,25 @@ TODO: If two counterparties are transacting over Interledger (not custodial acco
 Most settlement arrangements can be categorized in two ways:
 
 1. **Asymmetric trust.** One party extends no trust to the other, and post-pays all Interledger obligations. The other party extends some trust, either as a pre-payment to hold a balance on its provider, or via extending them a line of credit to accept post-payments.
-    - For example, many end users who send or receive payments — TODO
-    - For example, some users or counterparties custody funds at their provider ...
-    - Examples: fully custodied with *no balance tracking* by user/counterparty ~~user will never have a net liability — delinquent? — to its provider~~
-        - e.g. Merchant with hosted account that receives many incoming payments, and periodically withdraws funds to another financial institution
-        - Provider servicing another provider, possibly ... (?)
+   - For example, many end users who send or receive payments — TODO
+   - For example, some users or counterparties custody funds at their provider ...
+   - Examples: fully custodied with _no balance tracking_ by user/counterparty ~~user will never have a net liability — delinquent? — to its provider~~
+     - e.g. Merchant with hosted account that receives many incoming payments, and periodically withdraws funds to another financial institution
+     - Provider servicing another provider, possibly ... (?)
 2. **Mutual trust.** Both parties extend some trust to the other, typically as limited lines of credit. Depending upon Interledger packet flows, either party may post-pay the other after sufficient obligations accrue. One or both could prepay the other, but this locks up capital without mitigating risk, this both parties already extend some trust.
-    - Examples — tier 1 providers, ...
+   - Examples — tier 1 providers, ...
 
 ## Nesting
 
 Novel use cases such as mandates and invoices involve granting limited access to an existing Interledger account balance to some third party.
 
-To accomplish this, an Interledger account may delegate access to spend from or credit funds into its balance to another, subordinate Interledger account, or *sub-account*. Any Interledger account can act as a *super-account* which hosts one or more nested sub-accounts, comprising an arbitrarily nested hierarchy. (To disambiguate Interledger routing relations, nested accounts are referenced with "sub" and "super" instead of "parent" and "child.")
+To accomplish this, an Interledger account may delegate access to spend from or credit funds into its balance to another, subordinate Interledger account, or _sub-account_. Any Interledger account can act as a _super-account_ which hosts one or more nested sub-accounts, comprising an arbitrarily nested hierarchy. (To disambiguate Interledger routing relations, nested accounts are referenced with "sub" and "super" instead of "parent" and "child.")
 
-Conventionally, Interledger accounts are *top-level*, that is, they're provisioned directly by the operator or its system, and not subordinate to any other Interledger account. Interledger sub-accounts expose all the same configuration and properties as top-level Interledger accounts, but differ in how they're permissioned and funded.
+Conventionally, Interledger accounts are _top-level_, that is, they're provisioned directly by the operator or its system, and not subordinate to any other Interledger account. Interledger sub-accounts expose all the same configuration and properties as top-level Interledger accounts, but differ in how they're permissioned and funded.
 
 ## Transacting with sub-accounts
 
-Each Interledger sub-account is nested one or more levels below some root, top-level Interledger account. This top-level Interledger account in any nested hierarchy functions as the *funding account* for all its sub-accounts.
+Each Interledger sub-account is nested one or more levels below some root, top-level Interledger account. This top-level Interledger account in any nested hierarchy functions as the _funding account_ for all its sub-accounts.
 
 The owner of the funding account owns the funds across all its sub-accounts: third parties holding sub-accounts may initiate payments via their account balance, but do not own the funds, nor have any obligation to the holder of the funding account. For this reason, third parties cannot fund their accounts via an external settlement system.
 
@@ -392,15 +393,15 @@ Since these are lines of credit, the funds don't need to be immediately availabl
 
 #### InterledgerBalance resource
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|id|No|String|V4 UUID|ID of the InterledgerAccount.|
-|createdTime|No|String|UInt64|UNIX nanosecond timestamp when the primary Interledger balance is created, assigned by TigerBeetle as a sequence number.|
-|asset|No|Object|||
-|asset.code|No|String||TODO|
-|asset.scale|No|Number||TODO|
-|balance|No|String|UInt64|Interledger balance available for the counterparty to spend by submitting ILP Prepares, or to withdraw to an external system.|
-|netLiability|Yes|String|UInt64|Net liability of the operator to the counterparty: Interledger balance(s) minus outstanding debt to operator. If the counterparty owes the operator, 0. (For sub-accounts, loans from super-accounts is not applicable).
+| ﻿Name        | Optional | JSON type | Type    | Description                                                                                                                                                                                                              |
+| :----------- | :------- | :-------- | :------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id           | No       | String    | V4 UUID | ID of the InterledgerAccount.                                                                                                                                                                                            |
+| createdTime  | No       | String    | UInt64  | UNIX nanosecond timestamp when the primary Interledger balance is created, assigned by TigerBeetle as a sequence number.                                                                                                 |
+| asset        | No       | Object    |         |                                                                                                                                                                                                                          |
+| asset.code   | No       | String    |         | TODO                                                                                                                                                                                                                     |
+| asset.scale  | No       | Number    |         | TODO                                                                                                                                                                                                                     |
+| balance      | No       | String    | UInt64  | Interledger balance available for the counterparty to spend by submitting ILP Prepares, or to withdraw to an external system.                                                                                            |
+| netLiability | Yes      | String    | UInt64  | Net liability of the operator to the counterparty: Interledger balance(s) minus outstanding debt to operator. If the counterparty owes the operator, 0. (For sub-accounts, loans from super-accounts is not applicable). |
 
 Sum balance & balances of all nested sub-accounts? Or should those be excluded?
 
@@ -465,11 +466,11 @@ Beginning with the top-level funding account, and ending with the pertinent sub-
 
 #### Parameters
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|amount|No|String|UInt64|Amount to increase the ...|
-|subAccountId|No|String||Sub-account to which credit is extended|
-|autoApply|No|Boolean||Defaults to false. If true, then the trustline is also automatically utilized and applied to the account balance (see Utilize Trustline for a full explanation).|
+| ﻿Name        | Optional | JSON type | Type   | Description                                                                                                                                                      |
+| :----------- | :------- | :-------- | :----- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| amount       | No       | String    | UInt64 | Amount to increase the ...                                                                                                                                       |
+| subAccountId | No       | String    |        | Sub-account to which credit is extended                                                                                                                          |
+| autoApply    | No       | Boolean   |        | Defaults to false. If true, then the trustline is also automatically utilized and applied to the account balance (see Utilize Trustline for a full explanation). |
 
 **Response**
 
@@ -489,9 +490,9 @@ The given amount must not be greater than remaining trustline available, per the
 
 #### Parameters
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|amount|No|String|UInt64|TODO|
+| ﻿Name  | Optional | JSON type | Type   | Description |
+| :----- | :------- | :-------- | :----- | :---------- |
+| amount | No       | String    | UInt64 | TODO        |
 
 **Response**
 
@@ -517,9 +518,9 @@ TODO: simplification of this: single transfer from funding → sub-account; then
 
 #### Parameters
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|amount|No|String|UInt64|TODO|
+| ﻿Name  | Optional | JSON type | Type   | Description |
+| :----- | :------- | :-------- | :----- | :---------- |
+| amount | No       | String    | UInt64 | TODO        |
 
 **Response**
 
@@ -543,11 +544,11 @@ Beginning with the pertinent sub-account, and ending with the top-level funding 
 
 #### Parameters
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|amount|No|String|UInt64|TODO|
-|subAccountId|No|String|||
-|revolve|Yes|Boolean||Defaults to true. If false, does not replenish the account's line of credit commensurate with the debt settled.|
+| ﻿Name        | Optional | JSON type | Type   | Description                                                                                                     |
+| :----------- | :------- | :-------- | :----- | :-------------------------------------------------------------------------------------------------------------- |
+| amount       | No       | String    | UInt64 | TODO                                                                                                            |
+| subAccountId | No       | String    |        |                                                                                                                 |
+| revolve      | Yes      | Boolean   |        | Defaults to true. If false, does not replenish the account's line of credit commensurate with the debt settled. |
 
 **Response**
 
@@ -693,11 +694,11 @@ To safely integrate this functionality:
 
 #### Deposit resource
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|id|No|String|V4 UUID|Unique ID for this deposit, randomly generated by Rafiki.|
-|amount|No|String|UInt64|Amount credited to the corresponding account.|
-|createdTime|No|String|UInt64|UNIX nanosecond timestamp of the transfer, assigned by TigerBeetle as a sequence number.|
+| ﻿Name       | Optional | JSON type | Type    | Description                                                                              |
+| :---------- | :------- | :-------- | :------ | :--------------------------------------------------------------------------------------- |
+| id          | No       | String    | V4 UUID | Unique ID for this deposit, randomly generated by Rafiki.                                |
+| amount      | No       | String    | UInt64  | Amount credited to the corresponding account.                                            |
+| createdTime | No       | String    | UInt64  | UNIX nanosecond timestamp of the transfer, assigned by TigerBeetle as a sequence number. |
 
 ### Execute deposit
 
@@ -711,9 +712,9 @@ Credit the provided amount to an Interledger account as funds available to send 
 
 #### Parameters
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|amount|No|String|UInt64|Amount to immediately credit to the account.|
+| ﻿Name  | Optional | JSON type | Type   | Description                                  |
+| :----- | :------- | :-------- | :----- | :------------------------------------------- |
+| amount | No       | String    | UInt64 | Amount to immediately credit to the account. |
 
 **Response**
 
@@ -739,9 +740,9 @@ To safely integrate withdrawals:
 
 1. Provider initiates a withdrawal in its own system, on behalf of their user.
 2. Provider requests a withdrawal from Rafiki, which reduces the balance and places a hold on the funds, or fails if there's insufficient funds.
-    - If the account has insufficient funds, the provider cancels the withdrawal within their system.
+   - If the account has insufficient funds, the provider cancels the withdrawal within their system.
 3. Provider credits the balance in their external system or performs a (potentially irrevocable) settlement.
-    - If this fails, the provider may rollback the withdrawal with Rafiki.
+   - If this fails, the provider may rollback the withdrawal with Rafiki.
 4. After the settlement is applied, the provider finalizes the withdrawal within Rafiki, commiting the balance reduction.
 5. Provider finalizes the withdrawal in its system.
 
@@ -751,20 +752,20 @@ If the provider's withdrawal system crashes between steps 1 and 3, it may not kn
 
 1. **Retry.** Safely retry initiating the withdrawal in Rafiki. Since this is an idempotent request, it will only debit funds if they have not already been reserved for that withdrawal.
 2. **Rollback.** Safely rollback the withdrawal within Rafiki. Since this is also an idempotent request, this only lifts the hold on funds if the same withdrawal was already initiated.
-    - If the provider encounters a technical issue preventing them from settling or crediting the balance within their own system, they may decide to rollback the withdrawal.
-    - Rollbacks are not performed automatically, and only the provider's system initiates rollbacks. For example, if the provider's system credited the withdrawal within its own system, then crashed, Rafiki might rollback the withdrawal before the operator's system recovered. This dangerous behavior might overdraw users, or enable them to steal money from the operator.
-    - Operators may implement their own functionality to rollback withdrawals after a period of time.
+   - If the provider encounters a technical issue preventing them from settling or crediting the balance within their own system, they may decide to rollback the withdrawal.
+   - Rollbacks are not performed automatically, and only the provider's system initiates rollbacks. For example, if the provider's system credited the withdrawal within its own system, then crashed, Rafiki might rollback the withdrawal before the operator's system recovered. This dangerous behavior might overdraw users, or enable them to steal money from the operator.
+   - Operators may implement their own functionality to rollback withdrawals after a period of time.
 
 If the provider's withdrawal system crashes between steps 3 and 5, the system knows Rafiki reserved the withdrawal amount, but it may not have finalized the withdrawal. So, the provider may safely retry finalizing the withdrawal within Rafiki as an idempotent request after they perform the settlement.
 
 #### Withdrawal resource
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|id|No|String|V4 UUID|Unique ID for this withdrawal, randomly generated by Rafiki.|
-|amount|No|String|UInt64|Amount debited from the corresponding account, or amount on hold if the withdrawal is not yet finalized.|
-|createdTime|No|String|UInt64|UNIX nanosecond timestamp when the withdrawal is initiated and funds were reserved, assigned by TigerBeetle as a sequence number.|
-|finalizedTime|Yes|String|UInt64|UNIX nanosecond timestamp of the finalized transfer, assigned by TigerBeetle as a sequence number. Excluded until the provider finalizes the withdrawal.|
+| ﻿Name         | Optional | JSON type | Type    | Description                                                                                                                                              |
+| :------------ | :------- | :-------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id            | No       | String    | V4 UUID | Unique ID for this withdrawal, randomly generated by Rafiki.                                                                                             |
+| amount        | No       | String    | UInt64  | Amount debited from the corresponding account, or amount on hold if the withdrawal is not yet finalized.                                                 |
+| createdTime   | No       | String    | UInt64  | UNIX nanosecond timestamp when the withdrawal is initiated and funds were reserved, assigned by TigerBeetle as a sequence number.                        |
+| finalizedTime | Yes      | String    | UInt64  | UNIX nanosecond timestamp of the finalized transfer, assigned by TigerBeetle as a sequence number. Excluded until the provider finalizes the withdrawal. |
 
 ### Request withdrawal
 
@@ -774,13 +775,13 @@ A successful response indicates the provider may safely and irrevocably credit t
 
 - Implementing a safe state machine within Rafiki
 
-    [Implementing Stripe-like Idempotency Keys in Postgres](https://brandur.org/idempotency-keys)
+  [Implementing Stripe-like Idempotency Keys in Postgres](https://brandur.org/idempotency-keys)
 
-    1. Create and lock a resource for the request's idempotency key in the relational DB. If the record already exists with a recovery point, begin executing from the existing phase.
-    2. Create a withdrawal in the relational DB within an initial state and random TigerBeetle transfer ID. Atomically update a recovery point for the idempotency key record.
-    3. Send an idempotent transfer to TigerBeetle to reserve the funds.
-    4. If the transfer succeeds, update the withdrawal in the relational store to a reserved state and atomically update the recovery point. Then, successfully resolve the request.
-    5. If the transfer fails, delete the withdrawal in the relational store and atomically update the recovery point. Then, return an insufficient funds error.
+  1. Create and lock a resource for the request's idempotency key in the relational DB. If the record already exists with a recovery point, begin executing from the existing phase.
+  2. Create a withdrawal in the relational DB within an initial state and random TigerBeetle transfer ID. Atomically update a recovery point for the idempotency key record.
+  3. Send an idempotent transfer to TigerBeetle to reserve the funds.
+  4. If the transfer succeeds, update the withdrawal in the relational store to a reserved state and atomically update the recovery point. Then, successfully resolve the request.
+  5. If the transfer fails, delete the withdrawal in the relational store and atomically update the recovery point. Then, return an insufficient funds error.
 
 **Request**
 
@@ -790,9 +791,9 @@ A successful response indicates the provider may safely and irrevocably credit t
 
 #### Parameters
 
-|﻿Name|Optional|JSON type|Type|Description|
-|:--|:--|:--|:--|:--|
-|amount|No|String|UInt64|Amount to debit from the corresponding account, if available, as a hold until the withdrawal is finalized.|
+| ﻿Name  | Optional | JSON type | Type   | Description                                                                                                |
+| :----- | :------- | :-------- | :----- | :--------------------------------------------------------------------------------------------------------- |
+| amount | No       | String    | UInt64 | Amount to debit from the corresponding account, if available, as a hold until the withdrawal is finalized. |
 
 **Response**
 

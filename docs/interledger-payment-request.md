@@ -2,73 +2,72 @@
 
 - [Interledger Payment Request (IPR)](#interledger-payment-request-ipr)
 - [Overview](#overview)
-  * [Glossary](#glossary)
-  * [Flow](#flow)
+  - [Glossary](#glossary)
+  - [Flow](#flow)
 - [Interledger payment request](#interledger-payment-request)
-  * [Motivation](#motivation)
-  * [Encodings](#encodings)
-  * [Query string encoding](#query-string-encoding)
-  * [Payment parameters](#payment-parameters)
-      - [Fields](#fields)
-    + [JavaScript object serialization](#javascript-object-serialization)
-  * [Executing payments](#executing-payments)
-    + [Open Payments invoice](#open-payments-invoice)
-    + [Payment pointer](#payment-pointer)
-    + [Fixed-delivery payments](#fixed-delivery-payments)
-    + [Discretionary payments](#discretionary-payments)
-    + [Recurring, discretionary payments](#recurring-discretionary-payments)
-    + [Recurring, fixed-delivery payments](#recurring-fixed-delivery-payments)
-- [Interledger payment outcome](#interledger-payment-outcome)
-      - [Fields](#fields-1)
-  * [JavaScript object serialization](#javascript-object-serialization-1)
+  - [Motivation](#motivation)
+  - [Encodings](#encodings)
+  - [Query string encoding](#query-string-encoding)
+  - [Payment parameters](#payment-parameters)
+    - [Fields](#fields)
+    * [JavaScript object serialization](#javascript-object-serialization)
+  - [Executing payments](#executing-payments)
+    - [Open Payments invoice](#open-payments-invoice)
+    - [Payment pointer](#payment-pointer)
+    - [Fixed-delivery payments](#fixed-delivery-payments)
+    - [Discretionary payments](#discretionary-payments)
+    - [Recurring, discretionary payments](#recurring-discretionary-payments)
+    - [Recurring, fixed-delivery payments](#recurring-fixed-delivery-payments)
+- [Interledger payment outcome](#interledger-payment-outcome) - [Fields](#fields-1)
+  - [JavaScript object serialization](#javascript-object-serialization-1)
 - [Web-based discovery](#web-based-discovery)
-    + [Mediator overview](#mediator-overview)
+  - [Mediator overview](#mediator-overview)
 - [Initiator client spec](#initiator-client-spec)
-  * [Choosing the flow](#choosing-the-flow)
-  * [Hosting a payment app](#hosting-a-payment-app)
-  * [Mediated flow](#mediated-flow)
-    + [Mediator explanation](#mediator-explanation)
-    + [Guide](#guide)
-  * [`PaymentRequest` flow](#paymentrequest-flow)
-    + [Payment handler overview](#payment-handler-overview)
-    + [Payment app aggregators](#payment-app-aggregators)
-    + [Payment method manifest](#payment-method-manifest)
+  - [Choosing the flow](#choosing-the-flow)
+  - [Hosting a payment app](#hosting-a-payment-app)
+  - [Mediated flow](#mediated-flow)
+    - [Mediator explanation](#mediator-explanation)
+    - [Guide](#guide)
+  - [`PaymentRequest` flow](#paymentrequest-flow)
+    - [Payment handler overview](#payment-handler-overview)
+    - [Payment app aggregators](#payment-app-aggregators)
+    - [Payment method manifest](#payment-method-manifest)
 - [Authorization portal spec](#authorization-portal-spec)
-  * [Payment instrument service worker](#payment-instrument-service-worker)
-  * [Payment app manifest](#payment-app-manifest)
-      - [Custom Fields](#custom-fields)
-  * [Authorization portal](#authorization-portal)
-    + [Authentication](#authentication)
-    + [Registration with mediator](#registration-with-mediator)
-  * [Security model](#security-model)
-    + [Payment pointers and accounts](#payment-pointers-and-accounts)
-    + [Client-side vulnerabilities](#client-side-vulnerabilities)
-    + [Hijacked mediator](#hijacked-mediator)
-    + [Replay attacks](#replay-attacks)
-  * [Privacy model](#privacy-model)
-    + [Linking recipients to public identities](#linking-recipients-to-public-identities)
-    + [Hiding payment details from mediator](#hiding-payment-details-from-mediator)
-    + [Wallet privacy](#wallet-privacy)
-  * [Threat model](#threat-model)
-    + [Legitimate origin initiates request, mutated by scripts](#legitimate-origin-initiates-request-mutated-by-scripts)
-    + [Hijacked mediator](#hijacked-mediator-1)
-    + [User interaction required to open authorization portal](#user-interaction-required-to-open-authorization-portal)
-    + [Mediator privacy](#mediator-privacy)
-    + [Why is identity simpler here?](#why-is-identity-simpler-here)
-  * [Mediator notes](#mediator-notes)
-    + [Mediator verification of origin](#mediator-verification-of-origin)
-  * [Mediator](#mediator)
-    + [Alternatives](#alternatives)
+  - [Payment instrument service worker](#payment-instrument-service-worker)
+  - [Payment app manifest](#payment-app-manifest)
+    - [Custom Fields](#custom-fields)
+  - [Authorization portal](#authorization-portal)
+    - [Authentication](#authentication)
+    - [Registration with mediator](#registration-with-mediator)
+  - [Security model](#security-model)
+    - [Payment pointers and accounts](#payment-pointers-and-accounts)
+    - [Client-side vulnerabilities](#client-side-vulnerabilities)
+    - [Hijacked mediator](#hijacked-mediator)
+    - [Replay attacks](#replay-attacks)
+  - [Privacy model](#privacy-model)
+    - [Linking recipients to public identities](#linking-recipients-to-public-identities)
+    - [Hiding payment details from mediator](#hiding-payment-details-from-mediator)
+    - [Wallet privacy](#wallet-privacy)
+  - [Threat model](#threat-model)
+    - [Legitimate origin initiates request, mutated by scripts](#legitimate-origin-initiates-request-mutated-by-scripts)
+    - [Hijacked mediator](#hijacked-mediator-1)
+    - [User interaction required to open authorization portal](#user-interaction-required-to-open-authorization-portal)
+    - [Mediator privacy](#mediator-privacy)
+    - [Why is identity simpler here?](#why-is-identity-simpler-here)
+  - [Mediator notes](#mediator-notes)
+    - [Mediator verification of origin](#mediator-verification-of-origin)
+  - [Mediator](#mediator)
+    - [Alternatives](#alternatives)
 - [Authorizing payments](#authorizing-payments)
-  * [Motivation](#motivation-1)
-  * [Improving recipient identification](#improving-recipient-identification)
-    + [Prevent accidental repeat payments](#prevent-accidental-repeat-payments)
-    + [Repeat recipients](#repeat-recipients)
-    + [Trusted recipient providers](#trusted-recipient-providers)
-    + [Intra-provider](#intra-provider)
-    + [Extension: Twitter](#extension-twitter)
+  - [Motivation](#motivation-1)
+  - [Improving recipient identification](#improving-recipient-identification)
+    - [Prevent accidental repeat payments](#prevent-accidental-repeat-payments)
+    - [Repeat recipients](#repeat-recipients)
+    - [Trusted recipient providers](#trusted-recipient-providers)
+    - [Intra-provider](#intra-provider)
+    - [Extension: Twitter](#extension-twitter)
       - [Twitter Extension Fields](#twitter-extension-fields)
-    + [Extension: GitHub](#extension-github)
+    - [Extension: GitHub](#extension-github)
 - [Payment outcome](#payment-outcome)
 - [Misc. drafts](#misc-drafts)
 
@@ -92,22 +91,22 @@ Motivated by these constraints, this document specifies software-based solutions
 
 **Receiving side**
 
-1. *recipient* — person, party, or merchant who requests payment and whose account the funds are credited to.
-2. *initiating context* — generic term for the context by which the recipient and prospective payer connect. For example: the recipient's website, their mobile application, or a payment terminal at their physical storefront.
-3. *initiator site* — website or page, administered by the recipient, which requests payment from the prospective payer visiting it.
-4. *initiator client* — client-side scripts on a webpage, administered by the recipient, which initiate and orchestrate the payment flow.
-5. *reception software* — trusted software or back-end, administered by the recipient, to setup the payment and/or verify payment completion. ~~For example, a server-side backend to check if funds are received.~~ In most cases, this is distinct from Interledger infrastructure, since the recipient doesn't need to operate that themselves.
+1. _recipient_ — person, party, or merchant who requests payment and whose account the funds are credited to.
+2. _initiating context_ — generic term for the context by which the recipient and prospective payer connect. For example: the recipient's website, their mobile application, or a payment terminal at their physical storefront.
+3. _initiator site_ — website or page, administered by the recipient, which requests payment from the prospective payer visiting it.
+4. _initiator client_ — client-side scripts on a webpage, administered by the recipient, which initiate and orchestrate the payment flow.
+5. _reception software_ — trusted software or back-end, administered by the recipient, to setup the payment and/or verify payment completion. ~~For example, a server-side backend to check if funds are received.~~ In most cases, this is distinct from Interledger infrastructure, since the recipient doesn't need to operate that themselves.
 
-    TODO — maybe have a more generic word for backend? Payment *host* backend? How to explain the allowlist
+   TODO — maybe have a more generic word for backend? Payment _host_ backend? How to explain the allowlist
 
-6. *recipient's provider* — Interledger provider which services and credits funds to the account of the recipient.
+6. _recipient's provider_ — Interledger provider which services and credits funds to the account of the recipient.
 
 **Sending side**
 
-1. *user*, *payer* — user who authorizes the payment and whose account the funds are drawn from.
-2. *wallet*, *payment app*, *authorization portal* — trusted software interface enabling the payer to authorize and perform payments. Depending on the context, this may refer to only web-based applications, or also include native applications. Typically, this is software hosted by the user's Interledger provider. However, a distinct term is used to also encompass third party wallet software and differentiate this component from ILP infrastructure executing the payment.
-3. *user's provider*, *payer's provider* — Interledger provider which services and debits funds from the account of the payer. Often, but not necessarily, the payer's provider hosts a wallet and authorization portal.
-4. *sending agent* — system which sends and executes the ILP payment using STREAM, SPSP, and/or Open Payments. This system does not necessarily transmit money, if no liability is accrued between it and the next ILP hop.
+1. _user_, _payer_ — user who authorizes the payment and whose account the funds are drawn from.
+2. _wallet_, _payment app_, _authorization portal_ — trusted software interface enabling the payer to authorize and perform payments. Depending on the context, this may refer to only web-based applications, or also include native applications. Typically, this is software hosted by the user's Interledger provider. However, a distinct term is used to also encompass third party wallet software and differentiate this component from ILP infrastructure executing the payment.
+3. _user's provider_, _payer's provider_ — Interledger provider which services and debits funds from the account of the payer. Often, but not necessarily, the payer's provider hosts a wallet and authorization portal.
+4. _sending agent_ — system which sends and executes the ILP payment using STREAM, SPSP, and/or Open Payments. This system does not necessarily transmit money, if no liability is accrued between it and the next ILP hop.
 
 ## Flow
 
@@ -154,18 +153,18 @@ TODO: Should this include a callback URL for the outcome?
 
 #### Fields
 
-|﻿Name|Description|Query string encoding|JavaScript object encoding|
-|:--|:--|:--|:--|
-|interledgerPaymentRequest|Required. Always "true". REMOVE?|||
-|version|Required. Version of the IPR spec, which is "3". REMOVE?|||
-|paymentPointer|Payment pointer resolving to a URL for an SPSP endpoint or Open Payments account endpoint.||string|
-|invoiceUrl|URL of an Open Payments invoice, representing an amount payable to the recipient in their destination units. HTTPS is required.||string|
+| ﻿Name                     | Description                                                                                                                     | Query string encoding | JavaScript object encoding |
+| :------------------------ | :------------------------------------------------------------------------------------------------------------------------------ | :-------------------- | :------------------------- |
+| interledgerPaymentRequest | Required. Always "true". REMOVE?                                                                                                |                       |                            |
+| version                   | Required. Version of the IPR spec, which is "3". REMOVE?                                                                        |                       |                            |
+| paymentPointer            | Payment pointer resolving to a URL for an SPSP endpoint or Open Payments account endpoint.                                      |                       | string                     |
+| invoiceUrl                | URL of an Open Payments invoice, representing an amount payable to the recipient in their destination units. HTTPS is required. |                       | string                     |
 
 ### JavaScript object serialization
 
 TODO — should this be what's used within `PaymentRequest` if we support that?
 
-Interesting idea with `PaymentRequest` is if we *know* the browser supports payment instrument registration, then no registration with the mediator is required !
+Interesting idea with `PaymentRequest` is if we _know_ the browser supports payment instrument registration, then no registration with the mediator is required !
 
 Rename this to `PaymentRequestData` so it applies to PaymentRequest API and the mediated flow?
 
@@ -174,11 +173,11 @@ interface PaymentRequestMessage {
   type: 'PaymentRequestMessage' /* TODO will this conflict with the payment type if it's used later? */
   // TODO Change to `messageType`?
 
-    /** TODO explain */
+  /** TODO explain */
   paymentPointer?: string
-  
-    /** TODO explain */
-    invoiceUrl?: string
+
+  /** TODO explain */
+  invoiceUrl?: string
 }
 ```
 
@@ -236,16 +235,17 @@ Should this be called something else? Do the query parameters need to be version
 
 Does this need type and version information!? Or not? → OAuth probably does, right?
 
-TODO — how should this be differentiated with the payment request URI? Does it need to be, or can it be inferred from the *context*?
+TODO — how should this be differentiated with the payment request URI? Does it need to be, or can it be inferred from the _context_?
 
 TODO: Update these fields
 
 #### Fields
 
-|﻿Name|Description|Query string encoding|JavaScript object encoding|
-|:--|:--|:--|:--|
-|streamReceipt|STREAM receipt attesting to the greatest delivered amount|Base64 encoded with URL-safe alphabet|UInt8Array|
-|status|Complete — Payment successfully completed
+| ﻿Name         | Description                                               | Query string encoding                 | JavaScript object encoding |
+| :------------ | :-------------------------------------------------------- | :------------------------------------ | :------------------------- |
+| streamReceipt | STREAM receipt attesting to the greatest delivered amount | Base64 encoded with URL-safe alphabet | UInt8Array                 |
+| status        | Complete — Payment successfully completed                 |
+
 WalletAbort — Wallet cancelled the payment
 UserAbort — User cancelled the payment
 ExecutionFailure — Interledger payment failed to fully complete
@@ -257,17 +257,18 @@ For use via `[postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Wind
 
 ```tsx
 interface PaymentOutcomeMessage {
-    /** Uniquely identities this message from other types of messages sent from the same window */
+  /** Uniquely identities this message from other types of messages sent from the same window */
   type: 'PaymentOutcome'
 
-    /** TODO */
+  /** TODO */
   streamReceipt: UInt8Array
 
-    // Should this info be trusted or not? It _is_ important to interpretation of STREAM receipts
-    // TODO Destination asset details?
+  // Should this info be trusted or not? It _is_ important to interpretation of STREAM receipts
+  // TODO Destination asset details?
   // TODO Delivered amount?
 
-    status: 'Complete'
+  status:
+    | 'Complete'
     | 'WalletAbort'
     | 'UserAbort'
     | 'ExecutionFailure'
@@ -289,7 +290,7 @@ This flow is designed within constraints of tracking protections such as limited
 
 ### Mediator overview
 
-The mediator is a web service hosted and operated by the Interledger Foundation [TODO: link]. 
+The mediator is a web service hosted and operated by the Interledger Foundation [TODO: link].
 
 [Explain how the mediator works]
 
@@ -311,7 +312,7 @@ The recipient embeds an **initiator client** into their webpages, which is clien
 Two flows are supported to discover the payer's wallet and connect it with this client:
 
 1. **Mediated flow.** TODO using a neutral mediator website to cache a user's registered providers. This approach has broad compatibility among modern browsers, but has more friction in onboarding.
-2. `**PaymentRequest` flow.** TODO using the browser to mediate and discover common providers. This approach offers a superior user experience in supported browsers, with an in-context payment app window, and automatic registration of the payment app. But, it's only supported by some Chromium variants, including Google Chrome, Microsoft Edge, and Brave Browser.
+2. `**PaymentRequest` flow.\*\* TODO using the browser to mediate and discover common providers. This approach offers a superior user experience in supported browsers, with an in-context payment app window, and automatic registration of the payment app. But, it's only supported by some Chromium variants, including Google Chrome, Microsoft Edge, and Brave Browser.
 
 Since the mediated flow is in part modeled after payment handlers, sometimes the two share similar terminology, but contextually refer to different concepts.
 
@@ -331,13 +332,12 @@ const request = new PaymentRequest({
 })
 
 if (request.hasEnrolledInstrument) {
-    // TODO handle return value true/false
-    await request.canMakePayment()
+  // TODO handle return value true/false
+  await request.canMakePayment()
 } else {
-    // No custom payment instruments are available ?
-    return
+  // No custom payment instruments are available ?
+  return
 }
-
 ```
 
 ## Hosting a payment app
@@ -354,87 +354,87 @@ TODO
 
 1. **Open mediator window**
 
-    The initiator client may initiate the payment flow following a user interaction such as a click or tap. (Browser pop-up blockers may also enforce so the pop-up window is not opened arbitrarily).
+   The initiator client may initiate the payment flow following a user interaction such as a click or tap. (Browser pop-up blockers may also enforce so the pop-up window is not opened arbitrarily).
 
-    First, the initiation scripts must discover the user's preferred wallet from the mediator's selection page. The user may select among multiple registered wallets, or their only registered wallet will automatically be chosen. In case no wallets are registered, the initiation scripts MUST provide default, recommended wallet(s) to the mediator.
+   First, the initiation scripts must discover the user's preferred wallet from the mediator's selection page. The user may select among multiple registered wallets, or their only registered wallet will automatically be chosen. In case no wallets are registered, the initiation scripts MUST provide default, recommended wallet(s) to the mediator.
 
-    To create the URL of the mediator selection page:
+   To create the URL of the mediator selection page:
 
-    1. Begin with `MEDIATOR_SELECTION_URL` as the base URL with hostname and path components.
-    2. Append first part of query string, `?recommendedWallets=`, to the URL.
-    3. Create comma-separated string of the origins of each recommended wallet.
-    4. Safely encode the URI component, then append it to the URL to complete the query string.
+   1. Begin with `MEDIATOR_SELECTION_URL` as the base URL with hostname and path components.
+   2. Append first part of query string, `?recommendedWallets=`, to the URL.
+   3. Create comma-separated string of the origins of each recommended wallet.
+   4. Safely encode the URI component, then append it to the URL to complete the query string.
 
-    For example: `[https://interledger.org/mediator/select?recommendedWallets=wallet1.example%2Cwallet2.example](https://interledger.org/mediator/select?recommendedWallets=wallet1.example%2Cwallet2.example)`, given a `MEDIATOR_SELECTION_URL` of `https://interledger.org/mediator/select` and two recommended wallets hosted on `wallet1.example` and `wallet2.example`.
+   For example: `[https://interledger.org/mediator/select?recommendedWallets=wallet1.example%2Cwallet2.example](https://interledger.org/mediator/select?recommendedWallets=wallet1.example%2Cwallet2.example)`, given a `MEDIATOR_SELECTION_URL` of `https://interledger.org/mediator/select` and two recommended wallets hosted on `wallet1.example` and `wallet2.example`.
 
-    Add note about displaying other UI while payment is in progress? Check `window.closed` at interval?
+   Add note about displaying other UI while payment is in progress? Check `window.closed` at interval?
 
-    Link to window.open API on MDN
+   Link to window.open API on MDN
 
-    ```tsx
-    window.open(mediatorSelectionUrl, windowName, windowFeatures)
-    ```
+   ```tsx
+   window.open(mediatorSelectionUrl, windowName, windowFeatures)
+   ```
 
-    - **Why `window.open` instead of redirect to mediator?**
+   - **Why `window.open` instead of redirect to mediator?**
 
-        TODO — copy from section way below
+     TODO — copy from section way below
 
-    Explain why window.open vs redirect
+   Explain why window.open vs redirect
 
-    ```jsx
-    const win = window.open() // Window has null origin
-    win.opener = null // Overwrite reference to prevent mediator maliciously redirecting opener page
-    win.location.replace(MEDIATOR_SELECTION_URL) // Navigate pop-up window to mediator
-    ```
+   ```jsx
+   const win = window.open() // Window has null origin
+   win.opener = null // Overwrite reference to prevent mediator maliciously redirecting opener page
+   win.location.replace(MEDIATOR_SELECTION_URL) // Navigate pop-up window to mediator
+   ```
 
-    Link to window.opener page discussing security issues
+   Link to window.opener page discussing security issues
 
-    Explain what happens in the interim? User selects their wallet?
+   Explain what happens in the interim? User selects their wallet?
 
 2. **Listen for selection message**
 
-    Listen for `message` events on the opened window. Identify the wallet the user selected by listening for an event with a `[data` payload](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage#the_dispatched_event):
+   Listen for `message` events on the opened window. Identify the wallet the user selected by listening for an event with a `[data` payload](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage#the_dispatched_event):
 
-    ```tsx
-    interface WalletSelectionMessage {
-        type: 'WalletSelection'
-        authorizationUrl: string
-    }
-    ```
+   ```tsx
+   interface WalletSelectionMessage {
+     type: 'WalletSelection'
+     authorizationUrl: string
+   }
+   ```
 
-    `authorizationUrl` is the HTTPS base URL of the authorization portal of the selected wallet, with protocol, hostname, and path components, but no query parameters or fragment.
+   `authorizationUrl` is the HTTPS base URL of the authorization portal of the selected wallet, with protocol, hostname, and path components, but no query parameters or fragment.
 
-    If no wallets were registered, the `authorizationUrl` will correspond to one of the wallets recommended by initiation scripts.
+   If no wallets were registered, the `authorizationUrl` will correspond to one of the wallets recommended by initiation scripts.
 
-    If the given hostnames had no payment app manifest → no selection message, abort instead?
+   If the given hostnames had no payment app manifest → no selection message, abort instead?
 
-    ```tsx
-    interface SessionAbortMessage {
-      type: 'SessionAbort'
-    }
-    ```
+   ```tsx
+   interface SessionAbortMessage {
+     type: 'SessionAbort'
+   }
+   ```
 
 3. **Construct payment request URI**
 
-    The client should build its own payment request query string based on the desired parameters of the payment.
+   The client should build its own payment request query string based on the desired parameters of the payment.
 
-    Then, it should append the query string to the HTTPS authorization URL.
+   Then, it should append the query string to the HTTPS authorization URL.
 
-    Alternatively, should these be sent via postMessage to the window? e.g., what if interaction is needed for nonce protection etc.?
+   Alternatively, should these be sent via postMessage to the window? e.g., what if interaction is needed for nonce protection etc.?
 
 4. **Redirect payment session to selected authorization portal**
 
-    Redirect the window to the authorization portal by setting `window.location` to the constructed authorization URL.
+   Redirect the window to the authorization portal by setting `window.location` to the constructed authorization URL.
 
-    TODO
+   TODO
 
 5. **Listen for payment outcome**
 
-    TODO — or should it be redirected automatically to some page based on the referrer...? Should it use `postMessage` API instead?
+   TODO — or should it be redirected automatically to some page based on the referrer...? Should it use `postMessage` API instead?
 
-    TODO — client scripts may implement their own custom post-payment behavior
+   TODO — client scripts may implement their own custom post-payment behavior
 
-    Then, the authorization portal should close itself, transitioning the user back to the original window. (This enables the provider to implement additional functionality after the payment is complete, rather than the initiating window automatically closing the authorization portal).
+   Then, the authorization portal should close itself, transitioning the user back to the original window. (This enables the provider to implement additional functionality after the payment is complete, rather than the initiating window automatically closing the authorization portal).
 
 ## `PaymentRequest` flow
 
@@ -508,26 +508,28 @@ Wallets must host a [web app manifest](https://developer.mozilla.org/en-US/docs/
 
 #### Custom Fields
 
-|﻿Member|Type|Description|Parent|Children|
-|:--|:--|:--|:--|:--|
-|interledger|Dictionary|||Custom%20Fields%203c241d488e234d31bf6dae7ff073ecd5/authorization_url%20267490e996be4c9fb4b0396c792955eb.md|
-|authorization_url|String|HTTPS URL with host and path components corresponding to the wallet's authorization page, but no fragment or query components.|Custom%20Fields%203c241d488e234d31bf6dae7ff073ecd5/interledger%200b495a8ba99b4242a63e2133e2bd5f8c.md||
+| ﻿Member           | Type       | Description                                                                                                                    | Parent                                                                                               | Children                                                                                                   |
+| :---------------- | :--------- | :----------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| interledger       | Dictionary |                                                                                                                                |                                                                                                      | Custom%20Fields%203c241d488e234d31bf6dae7ff073ecd5/authorization_url%20267490e996be4c9fb4b0396c792955eb.md |
+| authorization_url | String     | HTTPS URL with host and path components corresponding to the wallet's authorization page, but no fragment or query components. | Custom%20Fields%203c241d488e234d31bf6dae7ff073ecd5/interledger%200b495a8ba99b4242a63e2133e2bd5f8c.md |                                                                                                            |
 
 Here's a non-normative example:
 
 ```json
 {
-    // Standard Web app manifest metadata
-    "name": "BobPay",
-    "description": "Send micropayments with Interledger",
-    "icons": [{
-        // ...
-    }],
-    
-    // Interledger metadata
-  "interledger": {
-        "authorization_url": "https://bobpay.example/pay/authorize"
+  // Standard Web app manifest metadata
+  "name": "BobPay",
+  "description": "Send micropayments with Interledger",
+  "icons": [
+    {
+      // ...
     }
+  ],
+
+  // Interledger metadata
+  "interledger": {
+    "authorization_url": "https://bobpay.example/pay/authorize"
+  }
 }
 ```
 
@@ -537,12 +539,12 @@ In the future, more manifest keys may be added, for instance, to specify which f
 
 TODO — accepts incoming messages? Or reads query parameter?
 
-Explain what the authorization portal *does —*
+Explain what the authorization portal _does —_
 
 1. Authenticate user
 2. Query and determine parameters of payment
-    - Quote or amount
-    - TODO
+   - Quote or amount
+   - TODO
 3. TODO
 
 ### Authentication
@@ -569,7 +571,7 @@ Providers, services, or software enabling users to authorize and send payments ~
 
 Transition to other attack vectors / other parts of the model —
 
-~~Therefore, for *any* payment presented to the user for authorization, authorization portals must present sufficient identity information to a user so that they can reasonably distinguish an intended payment recipient from a fraudulent payment recipient.~~ (this is good, but move somewhere else)
+~~Therefore, for _any_ payment presented to the user for authorization, authorization portals must present sufficient identity information to a user so that they can reasonably distinguish an intended payment recipient from a fraudulent payment recipient.~~ (this is good, but move somewhere else)
 
 ### Payment pointers and accounts
 
@@ -587,7 +589,7 @@ Together, attestations and account sub-resources, leveraging this chain of owner
 
 Any website requesting payment should implement their own measures to prevent client-side vulnerabilities such as cross-site scripting (XSS) or compromised third-party scripts. However, payment processors must assume some undiscovered vulnerabilities exist and design systems with [defense in depth](https://www.cisecurity.org/spotlight/cybersecurity-spotlight-defense-in-depth-did/) to secure against them.
 
-TODO — enforce and limiting recipients who can be paid, vs enforcing invariants about the parameters for that *payment session —* type of payment, amount, etc. Different challenges...
+TODO — enforce and limiting recipients who can be paid, vs enforcing invariants about the parameters for that _payment session —_ type of payment, amount, etc. Different challenges...
 
 Different scenarios warrant different mitigation measures:
 
@@ -609,9 +611,9 @@ TODO — explain this
 
 Platforms are already highly motivated to prevent cross-site scripting vulnerabilities, since they may enable the mass (?) exfiltration of user access tokens or performing arbitrary account activity. For this reason, many platforms may already lock down their third party scripts and frames using a Content Security Policy, and rigorously sanitize all user-generated content.
 
-Adding functionality for users to initiate payments only heightens this existing risk. For platforms, enforcing that the correct recipient is paid is more challenging, *since the attacker can simply register as another recipient on the platform*.
+Adding functionality for users to initiate payments only heightens this existing risk. For platforms, enforcing that the correct recipient is paid is more challenging, _since the attacker can simply register as another recipient on the platform_.
 
-Therefore, platforms need an additional server-side component to match payment requests for a given page to the correct recipient for that page. (Note that platforms *already* must implement their own server-side functionality to render the correct payment recipient in the correct page).
+Therefore, platforms need an additional server-side component to match payment requests for a given page to the correct recipient for that page. (Note that platforms _already_ must implement their own server-side functionality to render the correct payment recipient in the correct page).
 
 If platforms want to minimize the risk of a cross-site scripting attack mutating a payment recipient or user-generated content inserting arbitrary payment buttons, they can isolate their payment initiation code within an `<iframe>` on a subdomain. As a future extension, a challenge-response or Diffie-Hellman key exchange between the recipient's backend and the authorization portal could also prevent this attack vector.
 
@@ -619,7 +621,7 @@ TODO — link to separate section with these mitigations
 
 **Non-mitigations**
 
-Measures which rely on the *user* to cancel the payment based on other identifying information, such as the initiating domain, payment pointer, or social identity, generally will not mitigate XSS vulnerabilities:
+Measures which rely on the _user_ to cancel the payment based on other identifying information, such as the initiating domain, payment pointer, or social identity, generally will not mitigate XSS vulnerabilities:
 
 1. **Payer doesn't know identity of the recipient.** If transacting on a platform, a user may pay for a digital good or donate for content without knowing the name or identity of the recipient, but merely tacitly understanding who the recipient is. For example, users should not be expected to match the author of a blog post to the username of a payment pointer within their authorization portal.
 2. **Attackers can change the rendered recipient.** Since this XSS vulnerability assumes complete control of the client, the attacker can simply change the rendered recipient to another registered identity they control. For example, if the user is reading a blog post on a platform but is not familiar with the publication, they should not be expected to identify an incorrect author.
@@ -634,118 +636,119 @@ These mechanisms secure against this class of vulnerability:
 
 1. **Allowed recipient list**
 
-    Recipient sites MUST statically host a list of allowed recipients, or payment pointers allowed to be paid, for any payments initiated by that domain.
+   Recipient sites MUST statically host a list of allowed recipients, or payment pointers allowed to be paid, for any payments initiated by that domain.
 
-    TODO: Add note that some sites may allow many allowed payment pointers?
+   TODO: Add note that some sites may allow many allowed payment pointers?
 
-    Recipient sites can specify these payable accounts using any of the following methods:
+   Recipient sites can specify these payable accounts using any of the following methods:
 
-    1. Include a static [monetization `<meta>` tag](https://webmonetization.org/docs/getting-started) in the root `index.html` file (not dynamically inserted by scripts)
+   1. Include a static [monetization `<meta>` tag](https://webmonetization.org/docs/getting-started) in the root `index.html` file (not dynamically inserted by scripts)
 
-        Recommend for simple, existing web monetized sites.
+      Recommend for simple, existing web monetized sites.
 
-    2. Add a key to their [web app manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) with allowed payment pointers (TODO: spec)
+   2. Add a key to their [web app manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) with allowed payment pointers (TODO: spec)
 
-        Recommend for sites with multiple or a dynamic set of recipients.
+      Recommend for sites with multiple or a dynamic set of recipients.
 
-    3. Host the site from the same domain as the payment pointer (e.g. vanity payment pointers) — doesn't prevent XSS directly, however ...
+   3. Host the site from the same domain as the payment pointer (e.g. vanity payment pointers) — doesn't prevent XSS directly, however ...
 
-        Doesn't require a list of allowed PPs for large platforms, so much simpler — **but doesn't solve the case where the attacker has a PP on the platform itself
+      Doesn't require a list of allowed PPs for large platforms, so much simpler — \*\*but doesn't solve the case where the attacker has a PP on the platform itself
 
-        Is this any better than just saying "allow all" and "deny all" with the subdomain?
+      Is this any better than just saying "allow all" and "deny all" with the subdomain?
 
-        If no subdomain iframe, has the *slight* benefit that it gates recipient PPs to registered users instead of any PP, but if any user can still register, it's still not great
+      If no subdomain iframe, has the _slight_ benefit that it gates recipient PPs to registered users instead of any PP, but if any user can still register, it's still not great
 
-        → Just simpler since you don't need a massive publicly hosted list!
+      → Just simpler since you don't need a massive publicly hosted list!
 
-    To enforce this, the authorization portal MUST:
+   To enforce this, the authorization portal MUST:
 
-    1. Determine the origin that initiated the payment using the `Referer` header. The authorization portal MUST block requests with no referrer.
-    2. Determine allowed payable accounts for that origin using all methods outlined above.
-    3. Proceed only if the recipient account meets any of the allowed payable accounts, or else MUST block the payment.
+   1. Determine the origin that initiated the payment using the `Referer` header. The authorization portal MUST block requests with no referrer.
+   2. Determine allowed payable accounts for that origin using all methods outlined above.
+   3. Proceed only if the recipient account meets any of the allowed payable accounts, or else MUST block the payment.
 
-    TODO: explain how this prevents changing amounts of invoices, etc. too for fixed-delivery payments
+   TODO: explain how this prevents changing amounts of invoices, etc. too for fixed-delivery payments
 
-    TODO: move this elsewhere
-    The initiating page always opens a new window to the mediator. After the wallet is selected, the initiating page redirects the child window to that domain via setting `window.location`, so the referrer of the request to the authorization portal is the domain of the top-level page or `<iframe>` that initiated the payment.
+   TODO: move this elsewhere
+   The initiating page always opens a new window to the mediator. After the wallet is selected, the initiating page redirects the child window to that domain via setting `window.location`, so the referrer of the request to the authorization portal is the domain of the top-level page or `<iframe>` that initiated the payment.
 
-    - A flow with top-level redirects (without opening a new window) is not supported. For the authorization portal to identify the correct origin that kicked off the flow, the mediator would first need to redirect back to the initiating site, which would then redirect to the authorization portal, requiring server-side code. Also, for privacy, payment details should not be passed through the mediator.
+   - A flow with top-level redirects (without opening a new window) is not supported. For the authorization portal to identify the correct origin that kicked off the flow, the mediator would first need to redirect back to the initiating site, which would then redirect to the authorization portal, requiring server-side code. Also, for privacy, payment details should not be passed through the mediator.
 
-    Add note — does not solve XSS if the attacker also has an allowed payment pointer for that domain (consider a platform with many users). In this case, some server-side code is required per subsequent protection mechanisms
+   Add note — does not solve XSS if the attacker also has an allowed payment pointer for that domain (consider a platform with many users). In this case, some server-side code is required per subsequent protection mechanisms
 
 2. **Initiate payment from isolated <iframe&gt;**
 
-    For additional security, the recipient site can optionally host the payment initiation UI within an `<iframe>` on a subdomain. Since the `<iframe>` would be protected by same-origin policy, top-level scripts would not be able to mutate payment parameters in scripts loaded into the `<iframe>`.
+   For additional security, the recipient site can optionally host the payment initiation UI within an `<iframe>` on a subdomain. Since the `<iframe>` would be protected by same-origin policy, top-level scripts would not be able to mutate payment parameters in scripts loaded into the `<iframe>`.
 
-    For example, suppose a content platform allows any creator to register with their payment pointer. If that platform wanted a server-side component to secure against XSS in which Alice's content is mutated to pay Bob, they might implement this approach. On load of the `<iframe>`, the server can check the referrer to determine the correct recipient for that top-level page. Even through most browsers ([including Chrome](https://developers.google.com/web/updates/2020/07/referrer-policy-new-chrome-default)) strip the path from cross-origin referrers, the request to load the `<iframe>` document should have access to the full referrer since they share the same eTLD+1.
+   For example, suppose a content platform allows any creator to register with their payment pointer. If that platform wanted a server-side component to secure against XSS in which Alice's content is mutated to pay Bob, they might implement this approach. On load of the `<iframe>`, the server can check the referrer to determine the correct recipient for that top-level page. Even through most browsers ([including Chrome](https://developers.google.com/web/updates/2020/07/referrer-policy-new-chrome-default)) strip the path from cross-origin referrers, the request to load the `<iframe>` document should have access to the full referrer since they share the same eTLD+1.
 
-    <Add note about payment providers, with high focus on security, implementing this approach → but they won't have access to the full referrer for privacy ? &gt;
+   <Add note about payment providers, with high focus on security, implementing this approach → but they won't have access to the full referrer for privacy ? &gt;
 
-    To access full referrer... alternatively, site could host a redirect that includes full referrer and passes it on as query param (request could be passed on to the payment provider?)? But that might be even *more* complicated for them to integrate with!
+   To access full referrer... alternatively, site could host a redirect that includes full referrer and passes it on as query param (request could be passed on to the payment provider?)? But that might be even _more_ complicated for them to integrate with!
 
 3. **Phishing via XSS**
 
-    If an XSS attack inserted an `<iframe>` with UI initiating the payment flow from an attacker-controlled origin (which would allow paying itself), this effectively becomes a phishing attack, with additional protections discussed later.
+   If an XSS attack inserted an `<iframe>` with UI initiating the payment flow from an attacker-controlled origin (which would allow paying itself), this effectively becomes a phishing attack, with additional protections discussed later.
 
-    Sites should also consider deploying a strict [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-src) to limit the allowed origins of embedded `<iframe>`s.
+   Sites should also consider deploying a strict [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-src) to limit the allowed origins of embedded `<iframe>`s.
 
 ### Hijacked mediator
 
 The mediator, enabling the initiating site to discover that user's authorization portal, [bad things can happen]
 
 1. Mediator op-sec is very important → don't get comp-ed
-2. ~~⭐ Interesting idea... host window could say, "you have to send me a `postMessage` back—attesting to your domain, essentially—every 500ms or else I will close you" → prevents mediator redirecting its page ... but does it prevent mediator from opening a new window...? ... *Wallet should prevent embedded iframes~~
-    - ~~Mediator won't have ability to embed iframe of wallet — wallet disallows that~~
-    - ~~Mediator *could* render a phishing wallet in an iframe → relies on user to identify~~
-    - ~~Mediator can't redirect *its* window without the host closing it within 500ms/interval (?)~~
-    - ~~Mediator can't redirect or close the host window since we overwrite `window.opener`~~
-    - ~~Mediator needs user interaction to open a new window (which wouldn't be known to original window) (?)~~
-    - ~~Consider other vectors here ... (?)~~
-    - ~~→ Are there UX risks with this, e.g., if the user exist the browser and it's in a power-saving mode?~~
+2. ~~⭐ Interesting idea... host window could say, "you have to send me a `postMessage` back—attesting to your domain, essentially—every 500ms or else I will close you" → prevents mediator redirecting its page ... but does it prevent mediator from opening a new window...? ... \*Wallet should prevent embedded iframes~~
 
-1. **Compromised mediator can man-in-the-middle all payments (security)**
-    - Higher minimum identity attestation requirements address might deter/reduce effectiveness
-    - Displaying initiating domain via referrer might deter/reduce effectiveness
-    - In lieu of mediator, use `PaymentRequest` where available, or native app with custom URI scheme → obviates need for mediator
-        - Would a compromised mediator be able to cause mayhem with the payment request, e.g., changing default payment application with just-in-time installation, etc.?
-    - Note: possibly worse than single wallet compromised (compromises all wallets), possibly harder to detect, possibly easier to perform (swap out payment pointer)
-2. **Compromised mediator can log all payment details (privacy)**
-    - If the site is already attesting to their payment pointer publicly (website, Twitter profile), can this be solved?
-        - e.g., mediator may know because a particular site initiated the request, more publicly available information about the user is available (unless they specifically use `noreferrer`? But that implies `noopener`, which would prevent any cross-frame messaging)
-        - Should other payment details (invoice, amount, other metadata) be subject to additional protections?
-        - Is it important that the mediator displays the domain that initiated the payment request?
-    - Hosted list of allowed authorization portals, each authorization portal hosts a public key. Initiation software encrypts the payment details using one of those public keys (when? how? is this necessary?)
-        - It'd probably be much simpler to only perform the redirect if the selected portal is in a cached version of the list, and then redirect with the raw payment details, since it's going directly to the intended wallet anyways (?)
-        - 🚨 But... this requires a more complex server-side component — need a simpler/easier to integrate approach
-        - How does the sending wallet ascertain the domain that initiated the payment request to display to the user? Referrer requires redirect, kinda complicated...separate window idea might be simpler since it can be programmatically called
-        - Would this work with static sites?
-        - Does the `postMessage` approach potentially preserve privacy? e.g., instead of redirect, initiation software (client side scripts) check that the selected wallet is within the list
-        - ~~Then, `postMessage` can be used to ascertain the origin of the initiating frame (?)~~
-            - ~~Would this be problematic if~~
-        - In my tests, when the original page redirects a window it opened, the correct referrer *is* available in that request
-            - Verify this in Safari
-        - Simpler, since it's all part of the URI instead of requiring a `postMessage`-based API, potentially
-            - Should the mediator also take a callback URL?
-            - Even in Safari, this seems to work
-        - Ah: there's another "hack." Client page can open window, then set `window.opener` to `null`, then set `window.location`. I think we're getting there...
-            - Chrome, Safari, Firefox all treat the origin of the window as `null` which seems to put some good cross-origin protections
-            - Good since this secures against the mediator redirecting the origin page 👍
-            - Then, the window object is also available so it may listen to redirects versus `noopener` (!?)
-                - Is checking `window.location` for cross-origin allowed... would that require polling, etc.
-                - Could `postMessage` be remapped on that window instance?
-                - What if the origin site sends a `postMessage` to the new window? Will it be received? And *then* will it get access to the origin window? Or is it not possible for it to receive a `postMessage` at all?
-            - Could the `window` object be further restricted so child windows can't be opened from the mediator window?
-                - However, I'm not sure this is the best route to go — give up on this mechanism (?)
-3. **Phishing page requests payment (security)**
-    - Sending wallet can block requests from known phishing pages
-    - Prominently displays initiating domain to user... (brilliant) ...to deter/reduce effectiveness of phishing
-    - Higher minimum identity attestation requirements, using public-facing identities, to deter/reduce effectiveness of phishing
-4. **Require user-interaction**
-    - Is it problematic that any page can open the payment authorization page with no interstitial page or user interaction required? (For instance, opening a new window and using `postMessage` might necessarily require that user interaction with another web page kicks off the payment flow before the wallet is opened)
-        - Alternatively, is it problematic if user interaction is *required*?
-        - So, this requires (2) steps to do the payment: once in a recipient-trusted web context, and once in a payer-trusted web context
-5. **Privacy** — add note that any registered wallet domain(s) are essentially publicly available (?), e.g., if automatic registration
-    - And as with WM, the payment pointer of a domain is probably publicly-accessible information
+   - ~~Mediator won't have ability to embed iframe of wallet — wallet disallows that~~
+   - ~~Mediator _could_ render a phishing wallet in an iframe → relies on user to identify~~
+   - ~~Mediator can't redirect _its_ window without the host closing it within 500ms/interval (?)~~
+   - ~~Mediator can't redirect or close the host window since we overwrite `window.opener`~~
+   - ~~Mediator needs user interaction to open a new window (which wouldn't be known to original window) (?)~~
+   - ~~Consider other vectors here ... (?)~~
+   - ~~→ Are there UX risks with this, e.g., if the user exist the browser and it's in a power-saving mode?~~
+
+3. **Compromised mediator can man-in-the-middle all payments (security)**
+   - Higher minimum identity attestation requirements address might deter/reduce effectiveness
+   - Displaying initiating domain via referrer might deter/reduce effectiveness
+   - In lieu of mediator, use `PaymentRequest` where available, or native app with custom URI scheme → obviates need for mediator
+     - Would a compromised mediator be able to cause mayhem with the payment request, e.g., changing default payment application with just-in-time installation, etc.?
+   - Note: possibly worse than single wallet compromised (compromises all wallets), possibly harder to detect, possibly easier to perform (swap out payment pointer)
+4. **Compromised mediator can log all payment details (privacy)**
+   - If the site is already attesting to their payment pointer publicly (website, Twitter profile), can this be solved?
+     - e.g., mediator may know because a particular site initiated the request, more publicly available information about the user is available (unless they specifically use `noreferrer`? But that implies `noopener`, which would prevent any cross-frame messaging)
+     - Should other payment details (invoice, amount, other metadata) be subject to additional protections?
+     - Is it important that the mediator displays the domain that initiated the payment request?
+   - Hosted list of allowed authorization portals, each authorization portal hosts a public key. Initiation software encrypts the payment details using one of those public keys (when? how? is this necessary?)
+     - It'd probably be much simpler to only perform the redirect if the selected portal is in a cached version of the list, and then redirect with the raw payment details, since it's going directly to the intended wallet anyways (?)
+     - 🚨 But... this requires a more complex server-side component — need a simpler/easier to integrate approach
+     - How does the sending wallet ascertain the domain that initiated the payment request to display to the user? Referrer requires redirect, kinda complicated...separate window idea might be simpler since it can be programmatically called
+     - Would this work with static sites?
+     - Does the `postMessage` approach potentially preserve privacy? e.g., instead of redirect, initiation software (client side scripts) check that the selected wallet is within the list
+     - ~~Then, `postMessage` can be used to ascertain the origin of the initiating frame (?)~~
+       - ~~Would this be problematic if~~
+     - In my tests, when the original page redirects a window it opened, the correct referrer _is_ available in that request
+       - Verify this in Safari
+     - Simpler, since it's all part of the URI instead of requiring a `postMessage`-based API, potentially
+       - Should the mediator also take a callback URL?
+       - Even in Safari, this seems to work
+     - Ah: there's another "hack." Client page can open window, then set `window.opener` to `null`, then set `window.location`. I think we're getting there...
+       - Chrome, Safari, Firefox all treat the origin of the window as `null` which seems to put some good cross-origin protections
+       - Good since this secures against the mediator redirecting the origin page 👍
+       - Then, the window object is also available so it may listen to redirects versus `noopener` (!?)
+         - Is checking `window.location` for cross-origin allowed... would that require polling, etc.
+         - Could `postMessage` be remapped on that window instance?
+         - What if the origin site sends a `postMessage` to the new window? Will it be received? And _then_ will it get access to the origin window? Or is it not possible for it to receive a `postMessage` at all?
+       - Could the `window` object be further restricted so child windows can't be opened from the mediator window?
+         - However, I'm not sure this is the best route to go — give up on this mechanism (?)
+5. **Phishing page requests payment (security)**
+   - Sending wallet can block requests from known phishing pages
+   - Prominently displays initiating domain to user... (brilliant) ...to deter/reduce effectiveness of phishing
+   - Higher minimum identity attestation requirements, using public-facing identities, to deter/reduce effectiveness of phishing
+6. **Require user-interaction**
+   - Is it problematic that any page can open the payment authorization page with no interstitial page or user interaction required? (For instance, opening a new window and using `postMessage` might necessarily require that user interaction with another web page kicks off the payment flow before the wallet is opened)
+     - Alternatively, is it problematic if user interaction is _required_?
+     - So, this requires (2) steps to do the payment: once in a recipient-trusted web context, and once in a payer-trusted web context
+7. **Privacy** — add note that any registered wallet domain(s) are essentially publicly available (?), e.g., if automatic registration
+   - And as with WM, the payment pointer of a domain is probably publicly-accessible information
 
 ### Replay attacks
 
@@ -776,9 +779,9 @@ TODO
 
 ### Legitimate origin initiates request, mutated by scripts
 
-Solution 3 — "content security policy" for payment pointers — whitelisted payment pointers hosted by origin AND sending wallet ascertains origin (*but doesn't solve for mutation of amount or other parameters, if that's important — but maybe it isn't?)
+Solution 3 — "content security policy" for payment pointers — whitelisted payment pointers hosted by origin AND sending wallet ascertains origin (\*but doesn't solve for mutation of amount or other parameters, if that's important — but maybe it isn't?)
 
-Basically, a trusted server-side component (which *cannot be compromised by XSS*) transmits the payment parameters to the sending wallet, or proves they initiated a request with those parameters — so static hosted file or HTTP header
+Basically, a trusted server-side component (which _cannot be compromised by XSS_) transmits the payment parameters to the sending wallet, or proves they initiated a request with those parameters — so static hosted file or HTTP header
 
 "Replaying" payments are also problematic here, e.g., if the site changed accounts or something
 
@@ -790,23 +793,23 @@ Example: attacker compromises employee with access to mediator infrastructure an
 
 1. Opening a new window necessitates user interaction, otherwise the browser will block the call. This prevents users from following a link (via email, messaging, or native app) and their web-based wallet automatically opening without seeing the page initiating the payment or any explanation for why the payment is requested.
 2. The authorization portal MUST enforce that payment details were only transmitted to it by (a) the original window that opened it, and (b) the window that opened it is a top-level context.
-    - Since the mediator is opened as a child window, it necessarily cannot send this message to the authorization portal, since it is not a top-level context.
-    - The mediator could try to open a new top-level window using `noopener`. However, opening the authorization portal as a child window would require another user interaction. TODO (?)
-    - If the mediator redirected the opener page, the user might notice, and would it lose access to that window handle? No...the pop-up still has access, so it could postMessage, then parent would have event.source or whatever —
-    - Mediator CAN still redirect to a phishing page for the wallet → seems...non-ideal
-    - If the mediator pop-up were to maliciously redirect the opener page, hopefully the user would notice.
-    - If a window is opened with `noopener`, it effectively becomes a new top-level context. However, this also means the original window loses access to that window context, and therefore no payment details are sent ...
+   - Since the mediator is opened as a child window, it necessarily cannot send this message to the authorization portal, since it is not a top-level context.
+   - The mediator could try to open a new top-level window using `noopener`. However, opening the authorization portal as a child window would require another user interaction. TODO (?)
+   - If the mediator redirected the opener page, the user might notice, and would it lose access to that window handle? No...the pop-up still has access, so it could postMessage, then parent would have event.source or whatever —
+   - Mediator CAN still redirect to a phishing page for the wallet → seems...non-ideal
+   - If the mediator pop-up were to maliciously redirect the opener page, hopefully the user would notice.
+   - If a window is opened with `noopener`, it effectively becomes a new top-level context. However, this also means the original window loses access to that window context, and therefore no payment details are sent ...
 3. Privacy of payment request from mediator — if they intercept, payment fails
 
-*** `window.opener.opener` → not opened by a top-level window? Interestingly, this seems to persist even across script-initiated redirects? Test more thoroughly
+\*\*\* `window.opener.opener` → not opened by a top-level window? Interestingly, this seems to persist even across script-initiated redirects? Test more thoroughly
 
 But, mediator could call `window.opener.close()`, then it's `window.opener` becomes `null`, so if it opens a new window, that `window.opener.opener` would appears `null`
 
-*** Should wallets require a `Referrer` from mediator with a secret key included in the cookie? What would that protect against, in terms of, another site opening that wallet directly without sending the user to the mediator?
+\*\*\* Should wallets require a `Referrer` from mediator with a secret key included in the cookie? What would that protect against, in terms of, another site opening that wallet directly without sending the user to the mediator?
 
 → what if that secret key was sent back to the merchant first? Or, MAC(encryptedPaymentDetails, secretWalletKey)
 
-*** When would the payment details get encrypted? e.g., mediator redirects back to merchant with selected wallet, merchant encrypts payment details (it'd identify which payment maybe via some token passed through), then redirects with encrypted payment details
+\*\*\* When would the payment details get encrypted? e.g., mediator redirects back to merchant with selected wallet, merchant encrypts payment details (it'd identify which payment maybe via some token passed through), then redirects with encrypted payment details
 
 **Why no redirect-based flow?**
 
@@ -820,7 +823,7 @@ TODO: What if mediator opens another popup window and posts messages to it (on c
 
 - Would the user recognize this?
 - Can the authorization portal identify if it's window.opener is a top-level context, or if a message came from a top-level context?
-    - Should it reject any messages from the mediator's origin? But the mediator could trivially redirect to another page, which then opens a new popup and posts a message.
+  - Should it reject any messages from the mediator's origin? But the mediator could trivially redirect to another page, which then opens a new popup and posts a message.
 
 ~~The authorization portal MUST ensure it was opened with a top-level context using this check: `window.opener.top === window.opener.self`. (For reference: a cross-origin popup can read the hierarchy of all frames in the opener window, but simply cannot access or set any properties, other than `window.location`.)~~
 
@@ -829,9 +832,9 @@ TODO: What if mediator opens another popup window and posts messages to it (on c
 1. ~~A compromised mediator from opening another popup window to the authorization portal and using `postMessage` to transmit the payment details.~~
 2. ~~A XSS attack that injects an `<iframe>` into the initiating website with a new payment button, hosted from a different domain. Then, the authorization portal would not know the true top-level origin that initiated the payment request. If the initiating website hosted a static list of allowed payment pointers, that would be rendered moot since the authorization portal would fetch this list from an attacker-controlled origin. However, if the initiating origin is displayed to the user, they might be able to recognize the payment was compromised.~~
 
-*Also, the authorization portal should serve headers such as `X-Frame-Options: DENY` to prevent it from embedded within an `<iframe>`, for example, if the merchant site was compromised.
+\*Also, the authorization portal should serve headers such as `X-Frame-Options: DENY` to prevent it from embedded within an `<iframe>`, for example, if the merchant site was compromised.
 
-*It should probably also use Chrome's new `Sec-Fetch-` headers to enforce this
+\*It should probably also use Chrome's new `Sec-Fetch-` headers to enforce this
 
 ### User interaction required to open authorization portal
 
@@ -850,20 +853,20 @@ So — I think we can make the payment fail if they exfiltrate the payment detai
 (Legitimate means intended by user, illegitimate means unintended)
 
 1. Payment request initiated from legitimate origin, but recipient/amount is mutated.
-    1. Mediator is secure.
-        - So, if we go with the "mediator claims it originated from X," then in this case, the sending wallet knows the legitimate origin the request originated from.
-        - Would a sandboxed <iframe&gt; prevent against this? (*however, this wouldn't prevent against other buttons on that page)
-            - There is an `allow-popups-to-escape-sandbox` property (?)
-            - Would this complicate other approaches?
-    2. Mediator is compromised; initiating page is secure (what if both are compromised?).
-        - TODO
-        - Is it possible this still protects against mediator compromise?
-        - Consider if the mediator redirects to the legitimate sending wallet. Then, the sending wallet waits for a postMessage. it must be sent from the parent window, since that's the only one that'd have a handle to it.
-        - But wait! The mediator has the ability to redirect the parent window via `window.opener.location`. Then, it could redirect the parent to an origin it controls, and send a postMessage with arbitrary payment data, compromising this scheme.
-        - Is there a way to prevent this malicious redirect while still allowing postMessage?
-            - If not, then using postMessage will not secure payment information against a compromised mediator.
+   1. Mediator is secure.
+      - So, if we go with the "mediator claims it originated from X," then in this case, the sending wallet knows the legitimate origin the request originated from.
+      - Would a sandboxed <iframe&gt; prevent against this? (\*however, this wouldn't prevent against other buttons on that page)
+        - There is an `allow-popups-to-escape-sandbox` property (?)
+        - Would this complicate other approaches?
+   2. Mediator is compromised; initiating page is secure (what if both are compromised?).
+      - TODO
+      - Is it possible this still protects against mediator compromise?
+      - Consider if the mediator redirects to the legitimate sending wallet. Then, the sending wallet waits for a postMessage. it must be sent from the parent window, since that's the only one that'd have a handle to it.
+      - But wait! The mediator has the ability to redirect the parent window via `window.opener.location`. Then, it could redirect the parent to an origin it controls, and send a postMessage with arbitrary payment data, compromising this scheme.
+      - Is there a way to prevent this malicious redirect while still allowing postMessage?
+        - If not, then using postMessage will not secure payment information against a compromised mediator.
 2. Payment request initiated from illegitimate origin, with arbitrary recipient/amount.
-    - TODO
+   - TODO
 
 ### Why is identity simpler here?
 
@@ -871,26 +874,26 @@ Attestations simplify the identity problem because of the incentive structure: a
 
 I believe this is unique to the payment use case — simplifies this
 
-We don't need prove you're actually paying the third party identity we present, only that that identity would not be incentivized to have you pay any other account 
+We don't need prove you're actually paying the third party identity we present, only that that identity would not be incentivized to have you pay any other account
 
 ## Mediator notes
 
 - Validate `Sec-Fetch-Mode` request header, if available, to ensure it's `navigate`?
-    - `navigate` indicates a top-level navigation request
-    - Sent by Chrome, Edge, Firefox, so not always available
-    - [More info here](https://web.dev/fetch-metadata/)
-    - [Here's a good example of how this should be implemented server-side](https://web.dev/fetch-metadata/#step-5:-reject-all-other-requests-that-are-cross-site-and-not-navigational)
+  - `navigate` indicates a top-level navigation request
+  - Sent by Chrome, Edge, Firefox, so not always available
+  - [More info here](https://web.dev/fetch-metadata/)
+  - [Here's a good example of how this should be implemented server-side](https://web.dev/fetch-metadata/#step-5:-reject-all-other-requests-that-are-cross-site-and-not-navigational)
 - Use [HSTS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security) to tell browsers it only works over HTTPS:
 
-    ```
-    Strict-Transport-Security: max-age=1000; includeSubDomains; preload
-    ```
+  ```
+  Strict-Transport-Security: max-age=1000; includeSubDomains; preload
+  ```
 
 - Should it have a strict CSP ruleset?
-- `X-Frame-Options` to prevent mediator page from embedded within an `<iframe>` (*hopefully this excludes the payment handler window). → prevents click-jacking
-    - Also use this more modern header, `Content-Security-Policy: frame-ancestors <source>`: [https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors)
+- `X-Frame-Options` to prevent mediator page from embedded within an `<iframe>` (\*hopefully this excludes the payment handler window). → prevents click-jacking
+  - Also use this more modern header, `Content-Security-Policy: frame-ancestors <source>`: [https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors)
 - `[Cross-Origin-Opener-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy)` to ensure the new window isn't shared with other cross-origin documents: e.g. if opened in a popup, `window.opener` will be `null`, and the opening document also won't have a reference to the popup.
-    - Note: only supported in Chrome/Edge, Firefox; not Safari
+  - Note: only supported in Chrome/Edge, Firefox; not Safari
 - Cross-origin AJAX requests to this page should be prevented, right? So, disable cross-origin requests/resource sharing
 
 ### Mediator verification of origin
@@ -902,11 +905,11 @@ TL;DR, for payment providers in a cross-origin flow:
 1. You can use `Referer` as a naive check to ensure where the redirect came from.
 2. The problem is, the embedding site might set the HTTP `[Referrer-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy)` header a `no-referrer` policy, or the agent could strip referrers (does Brave do this? Does Safari only downgrade?). So, what do you do when there's no referrer?
 
-    &gt; One reliable verification method is to let the requester hash the request parameters together with a unique key. As a payment provider, you can then calculate the same hash on your side and only accept the request if it matches your calculation.
+   &gt; One reliable verification method is to let the requester hash the request parameters together with a unique key. As a payment provider, you can then calculate the same hash on your side and only accept the request if it matches your calculation.
 
-    → So, requester and payment provider have a shared key.
+   → So, requester and payment provider have a shared key.
 
-    → Where is the hashing of the request parameters performed? Is that server-side? But then the key would need to be exchanged with the merchant in advance?
+   → Where is the hashing of the request parameters performed? Is that server-side? But then the key would need to be exchanged with the merchant in advance?
 
 ## Mediator
 
@@ -934,7 +937,7 @@ TODO — explain mediator? explain why it's necessary?
 ### Alternatives
 
 - Use interledger `PaymentRequest` API with list of known Interledger provider URLs? But then how should onboarding work? In that case, should the client code default to a particular provider?
-    - Maybe it's fine for the Interledger foundation to publish a payment manifest with a list of providers if Coil needs the functionality to automatically register itself, even with the mediated flow?
+  - Maybe it's fine for the Interledger foundation to publish a payment manifest with a list of providers if Coil needs the functionality to automatically register itself, even with the mediated flow?
 
 # Authorizing payments
 
@@ -946,30 +949,30 @@ To motivate the design of this specification, some information is insufficient t
 
 1. **Profile photos, display names, etc.** As long as the information is prescribed by the recipient without any independent verification, the recipient can trivially impersonate a different entity.
 2. **Domain of the initiating website.** For payments initiated from the web, one option is for the authorization portal to display the domain that the payment was requested from, so the user could ascertain whether they actually came from and want to pay that site. However, there are a number of problems with this:
-    - Phishing: most users cannot identify phishing attempts, and don't understand the security model of URLs (add links). Browsers also have very complex protection against lookalike internalized domain names and misspellings, which might need to be reimplemented to achieve similar levels of protection.
-    - Not applicable to native apps: if native apps initiate a payment request to another native app, there's no initiating domain to display to the user. It may be possible to display the app that requested the payment, but ...
-    - TODO — is there a trusted way for the sending wallet to know which site initiated the request? e.g. or should it check/ensure the request came from interledger.org?
-    - Complexity: this flow might require the initiating site to manage private keys and sign each payment request, requiring non-trivial server-side code.
-        - Alternatively, leveraging web APIs such as `postMessage` to ascertain the origin that requested the payment may be used, although this requires multiple browser windows, which may not always be possible: e.g., if the provider uses a mobile app, or an in-app browser which might need a redirect-based flow — explain this better
-            - In the redirect case, would Referer checks help at all? Or is that still super insecure?
-    - Limited context: this only works if the payment is requested from a website, but does not address other contexts, such as payments initiated from a mobile application or from scanning a QR code.
+   - Phishing: most users cannot identify phishing attempts, and don't understand the security model of URLs (add links). Browsers also have very complex protection against lookalike internalized domain names and misspellings, which might need to be reimplemented to achieve similar levels of protection.
+   - Not applicable to native apps: if native apps initiate a payment request to another native app, there's no initiating domain to display to the user. It may be possible to display the app that requested the payment, but ...
+   - TODO — is there a trusted way for the sending wallet to know which site initiated the request? e.g. or should it check/ensure the request came from interledger.org?
+   - Complexity: this flow might require the initiating site to manage private keys and sign each payment request, requiring non-trivial server-side code.
+     - Alternatively, leveraging web APIs such as `postMessage` to ascertain the origin that requested the payment may be used, although this requires multiple browser windows, which may not always be possible: e.g., if the provider uses a mobile app, or an in-app browser which might need a redirect-based flow — explain this better
+       - In the redirect case, would Referer checks help at all? Or is that still super insecure?
+   - Limited context: this only works if the payment is requested from a website, but does not address other contexts, such as payments initiated from a mobile application or from scanning a QR code.
 3. **Domain of the payment pointer.** Presenting the domain of the payment pointer succumbs to some of the same pitfalls as the domain that initiated the context, with additional caveats. Since many recipients will use the same wallet provider instead of hosting vanity payment pointers from their own domain, the payment pointer is almost useless in discerning an intended payment recipient from a fraudulent one.
 
 Consider these potential attacks:
 
 - **Attack idea #1**
 
-    A malicious attacker accesses the tranche of leaked Coil user email addresses.
+  A malicious attacker accesses the tranche of leaked Coil user email addresses.
 
-    Then, the attacker sends a phishing email to every Coil user saying their subscription payment was declined, with a link to retry the payment. If the user clicks the link, it navigates (either directly or through the mediator) to the Coil payment authorization page, which to the user may appear legitimate since it's on the [coil.com](http://coil.com) domain.
+  Then, the attacker sends a phishing email to every Coil user saying their subscription payment was declined, with a link to retry the payment. If the user clicks the link, it navigates (either directly or through the mediator) to the Coil payment authorization page, which to the user may appear legitimate since it's on the [coil.com](http://coil.com) domain.
 
-    The attacker requests a payment to an account they control. However, if they can set the name and photo of the recipient of the payment, they could abuse this to masquerade as if the user is paying their Coil subscription.
+  The attacker requests a payment to an account they control. However, if they can set the name and photo of the recipient of the payment, they could abuse this to masquerade as if the user is paying their Coil subscription.
 
 - **Attack idea #2**
 
-    An attacker phishes and compromises an Interledger Foundation employee to gain credentials to the mediator hosting infrastructure. Then, they deploy a malicious version which "man-in-the-middles" payments to redirect some or all payments to their own account.
+  An attacker phishes and compromises an Interledger Foundation employee to gain credentials to the mediator hosting infrastructure. Then, they deploy a malicious version which "man-in-the-middles" payments to redirect some or all payments to their own account.
 
-    Without authenticated identity information to present, neither the user nor sending wallet might know the payment was MiTM-ed, since other metadata could be spoofed by the attacker.
+  Without authenticated identity information to present, neither the user nor sending wallet might know the payment was MiTM-ed, since other metadata could be spoofed by the attacker.
 
 ## Improving recipient identification
 
@@ -1016,10 +1019,10 @@ TODO
 
 #### Twitter Extension Fields
 
-|﻿Name|Description|Example|
-|:--|:--|:--|
-|twitterUsername|Username of the Twitter account attesting ownership of the provided account URL (with no "@" symbol included).||
-|tweetUrl|TODO||
+| ﻿Name           | Description                                                                                                    | Example |
+| :-------------- | :------------------------------------------------------------------------------------------------------------- | :------ |
+| twitterUsername | Username of the Twitter account attesting ownership of the provided account URL (with no "@" symbol included). |         |
+| tweetUrl        | TODO                                                                                                           |         |
 
 ### Extension: GitHub
 
@@ -1045,17 +1048,17 @@ Should it the sender attest whether payment succeeded or failed?
 
 **~~Limited payment API support —** Safari on iOS and Mac, Firefox, and some mobile Chromium variants → no payment handlers ...~~
 
-**~~Mediator does not recommend nor federate wallets** —~~ 
+**~~Mediator does not recommend nor federate wallets** —~~
 
 **~~Registration Flow~~**
 
 1. ~~Wallet displays UI asking the user to save it as a payment method~~
-    - (This might include some introduction to "Interledger/Open Payments" as a brand)
+   - (This might include some introduction to "Interledger/Open Payments" as a brand)
 2. ~~Wallet redirects the user to `https://interledger.org/web/register?wallet_host=<host>&callback_url=<url>`~~
 3. ~~Mediator (e.g. interledger.org) renders prompt asking if the user wants to save the wallet~~
-    - Mediator fetches web app manifest for that host, and displays its URL, name, icon & description
-    - User approves or denies if they want to save that wallet
-    - Wallet host is saved in an HTTP cookie with the mediator
+   - Mediator fetches web app manifest for that host, and displays its URL, name, icon & description
+   - User approves or denies if they want to save that wallet
+   - Wallet host is saved in an HTTP cookie with the mediator
 4. ~~Mediator redirects to the callback URL (likely back the wallet that initiated the redirect): `<callback_url>?registered=true`~~
 
 **Protecting against abusive wallets**
@@ -1097,7 +1100,7 @@ Can there be any kind of fallback mechanism to this?
 **Cookies in Brave**
 
 &gt; "Cookies are given a maximum lifetime of 7 days for cookies set through Javascript and 6 months for cookies set through HTTP"
-Source: [Brave wiki](https://github.com/brave/brave-browser/wiki/Deviations-from-Chromium-(features-we-disable-or-remove)#modified-features-and-functionality)
+Source: [Brave wiki](<https://github.com/brave/brave-browser/wiki/Deviations-from-Chromium-(features-we-disable-or-remove)#modified-features-and-functionality>)
 
 **Mediator cookies are cleared/unavailable**
 
@@ -1140,7 +1143,7 @@ Safari and other browsers want to further protect against redirect-based bounce 
 
 - Can the content security policy of the website be resolved from the payment pointer itself? No, because if the PP is mutated by XSS then the attacker could change the CSP/which payment pointers are allowed! So, CSP needs to be separate from PP itself. But, it can't be sent in the payment request either? It needs to be statically hosted, right?
 
-*Should this functionality be offloaded to the SPSP/Open Payments server?*
+_Should this functionality be offloaded to the SPSP/Open Payments server?_
 
 You could imagine, just a payment pointer is exchanged between the two parties (or invoice URL?). Using that payment pointer, all the relevant information is resolved: asset details, amount to deliver (if invoice), identity information
 
