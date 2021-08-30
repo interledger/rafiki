@@ -139,7 +139,7 @@ export function initIocContainer(
   container.singleton('connectorService', async (deps) => {
     const logger = await deps.use('logger')
     const config = await deps.use('config')
-    const client = connectorClient(logger, config.connectorPort)
+    const client = connectorClient(logger, config.connectorGraphQLHost)
     return await createConnectorService({
       logger: logger,
       client: client
