@@ -77,14 +77,14 @@ async function createIlpAccount(
   const response = await client
     .mutate({
       mutation: gql`
-          mutation CreateIlpAccount() {
-              createIlpAccount {
+        mutation CreateIlpAccount {
+          createIlpAccount {
             code
-                  success
-                  message
-                  ilpAccount {
-                      id
-                  }
+            success
+            message
+            ilpAccount {
+              id
+            }
           }
         }
       `
