@@ -1,4 +1,5 @@
 import { Resolvers } from '../generated/graphql'
+import { extendCredit, revokeCredit, utilizeCredit, settleDebt } from './credit'
 import { createDeposit } from './deposit'
 import {
   getIlpAccounts,
@@ -13,6 +14,11 @@ import {
   createIlpSubAccount,
   getSubAccounts
 } from './ilpAccount'
+import {
+  createWithdrawal,
+  finalizePendingWithdrawal,
+  rollbackPendingWithdrawal
+} from './withdrawal'
 import { GraphQLBigInt } from '../scalars'
 
 //TODO: Implement functions for resolvers when there are the relevant services available.
@@ -32,17 +38,17 @@ export const resolvers: Resolvers = {
     deleteIlpAccount: deleteIlpAccount,
     createIlpSubAccount: createIlpSubAccount,
     // transfer: createTransfer,
-    // extendCredit: extendCredit,
-    // revokeCredit: revokeCredit,
-    // utilizeCredit: utilizeCredit,
-    // settleDebt: settleDebt,
+    extendCredit: extendCredit,
+    revokeCredit: revokeCredit,
+    utilizeCredit: utilizeCredit,
+    settleDebt: settleDebt,
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,
-    createDeposit: createDeposit
-    // createWithdrawal: createWithdrawal,
-    // finalizePendingWithdrawal: finalizePendingWithdrawal,
-    // rollbackPendingWithdrawal: rollbackPendingWithdrawal
+    createDeposit: createDeposit,
+    createWithdrawal: createWithdrawal,
+    finalizePendingWithdrawal: finalizePendingWithdrawal,
+    rollbackPendingWithdrawal: rollbackPendingWithdrawal
   },
   IlpAccount: {
     balance: getBalance,
