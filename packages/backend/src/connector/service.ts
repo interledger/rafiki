@@ -1,5 +1,6 @@
 import { BaseService } from '../shared/baseService'
 import { ApolloClient, gql, NormalizedCacheObject } from '@apollo/client'
+import { strictEqual } from 'assert'
 import {
   CreateIlpAccountMutationResponse,
   CreateIlpSubAccountMutationResponse,
@@ -65,7 +66,7 @@ async function getIlpAccount(
         }
       }
     )
-
+  strictEqual(account.id, id, 'account not found')
   return account
 }
 

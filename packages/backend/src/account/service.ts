@@ -40,7 +40,6 @@ async function getAccount(
   id: string
 ): Promise<Account> {
   const ilpAccount = await deps.connectorService.getIlpAccount(id)
-  if (ilpAccount.id != id) throw new Error('account not found')
   return Account.query(deps.knex).findById(ilpAccount.id)
 }
 
