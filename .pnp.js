@@ -11797,7 +11797,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["rosie", "npm:2.1.0"],
             ["rxjs", "npm:6.6.7"],
             ["testcontainers", "npm:7.14.0"],
-            ["tigerbeetle-node", "npm:0.3.3"],
+            ["tigerbeetle-node", "npm:0.4.1"],
+            ["tmp", "npm:0.2.1"],
             ["uuid", "npm:8.3.2"]
           ],
           "linkType": "SOFT",
@@ -18188,10 +18189,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["tigerbeetle-node", [
-        ["npm:0.3.3", {
-          "packageLocation": "./.yarn/unplugged/tigerbeetle-node-npm-0.3.3-0a2feab400/node_modules/tigerbeetle-node/",
+        ["npm:0.4.1", {
+          "packageLocation": "./.yarn/unplugged/tigerbeetle-node-npm-0.4.1-16106fd9d1/node_modules/tigerbeetle-node/",
           "packageDependencies": [
-            ["tigerbeetle-node", "npm:0.3.3"]
+            ["tigerbeetle-node", "npm:0.4.1"]
           ],
           "linkType": "HARD",
         }]
@@ -18221,6 +18222,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["tmp", "npm:0.0.33"],
             ["os-tmpdir", "npm:1.0.2"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:0.2.1", {
+          "packageLocation": "./.yarn/cache/tmp-npm-0.2.1-a9c8d9c0ca-13973825ff.zip/node_modules/tmp/",
+          "packageDependencies": [
+            ["tmp", "npm:0.2.1"],
+            ["rimraf", "npm:3.0.2"]
           ],
           "linkType": "HARD",
         }]

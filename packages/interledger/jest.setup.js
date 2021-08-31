@@ -2,9 +2,16 @@
 const Knex = require('knex')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { GenericContainer, Wait } = require('testcontainers')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const tmp = require('tmp')
+
+tmp.setGracefulCleanup()
 
 const POSTGRES_PORT = 5432
+
+const TIGERBEETLE_CLUSTER_ID = 1
 const TIGERBEETLE_PORT = 3001
+const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
 
 const REDIS_PORT = 6379
 
@@ -50,18 +57,36 @@ module.exports = async () => {
   global.__ACCOUNTS_KNEX__ = knex
 
   if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
+    const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
+
+    await new GenericContainer('wilsonianbcoil/tigerbeetle:beta')
+      .withExposedPorts(TIGERBEETLE_PORT)
+      .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+      .withCmd([
+        'init',
+        '--cluster=' + TIGERBEETLE_CLUSTER_ID,
+        '--replica=0',
+        '--directory=' + TIGERBEETLE_DIR
+      ])
+      .withWaitStrategy(Wait.forLogMessage(/initialized data file/))
+      .start()
+
     const tigerbeetleContainer = await new GenericContainer(
-      'wilsonianbcoil/tigerbeetle'
+      'wilsonianbcoil/tigerbeetle:beta'
     )
       .withExposedPorts(TIGERBEETLE_PORT)
+      .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
       .withCmd([
-        '--cluster-id=0a5ca1ab1ebee11e',
-        '--replica-index=0',
-        '--replica-addresses=0.0.0.0:' + TIGERBEETLE_PORT
+        'start',
+        '--cluster=' + TIGERBEETLE_CLUSTER_ID,
+        '--replica=0',
+        '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
+        '--directory=' + TIGERBEETLE_DIR
       ])
       .withWaitStrategy(Wait.forLogMessage(/listening on/))
       .start()
 
+    process.env.TIGERBEETLE_CLUSTER_ID = TIGERBEETLE_CLUSTER_ID
     process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${tigerbeetleContainer.getMappedPort(
       TIGERBEETLE_PORT
     )}]`
