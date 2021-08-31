@@ -8871,7 +8871,8 @@ __metadata:
     rosie: ^2.1.0
     rxjs: ^6.6.7
     testcontainers: ^7.14.0
-    tigerbeetle-node: ^0.3.3
+    tigerbeetle-node: ^0.4.1
+    tmp: ^0.2.1
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft
@@ -14475,10 +14476,10 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"tigerbeetle-node@npm:^0.3.3":
-  version: 0.3.3
-  resolution: "tigerbeetle-node@npm:0.3.3"
-  checksum: 6f72689f1be41d5753cd7b4e39dd288f1bad464a6c0adfd13612874f2e6923cf216bb79ab09170f48fec487b0119af99d3f709370e9eae530166d987a429b8fb
+"tigerbeetle-node@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "tigerbeetle-node@npm:0.4.1"
+  checksum: 5a852655427ef9743701460b750e2bf280b10475ff2a06f58f16873b523d44624a232c33c62bccc40b0c137dbcf260c240e1b23b144ea1fce8e223277a5714f2
   languageName: node
   linkType: hard
 
@@ -14504,6 +14505,15 @@ resolve@^2.0.0-next.3:
   dependencies:
     os-tmpdir: ~1.0.2
   checksum: 77666ca424a78fcfcc27a6576f24f01aa1300b10d22e4f1808809e560777672dd2d4a112604ab2ad86ec7cafd24472b9ccc41373c2b5b83797f27e6aff06cbe5
+  languageName: node
+  linkType: hard
+
+"tmp@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "tmp@npm:0.2.1"
+  dependencies:
+    rimraf: ^3.0.0
+  checksum: 13973825ff1c7aed3359bba97c146c860ebb5b1cbdca88387a2ff8bae704d2478b701cc3adc29b1461be292fed1e4ae56b378b6a0386bbab471ef32860e0a711
   languageName: node
   linkType: hard
 
