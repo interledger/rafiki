@@ -4,8 +4,7 @@ import { Account as Balance, createClient, Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import { Config } from '../config'
-import { IlpAccount as IlpAccountModel } from './models'
-import { toLiquidityId, toSettlementId } from './utils'
+import { IlpAccount as IlpAccountModel, Asset } from './models'
 import { randomAsset, AccountFactory } from './testsHelpers'
 import { AccountsService } from './service'
 
@@ -260,66 +259,40 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test('Auto-creates corresponding liquidity and settlement accounts', async (): Promise<void> => {
+    test('Auto-creates corresponding asset with liquidity and settlement accounts', async (): Promise<void> => {
       const asset = randomAsset()
       const account: CreateOptions = {
         asset
       }
 
-      {
-        const balances = await tbClient.lookupAccounts([
-          toLiquidityId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          }),
-          toSettlementId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          })
-        ])
-        expect(balances.length).toBe(0)
-      }
-
-      await accountsService.createAccount(account)
-      {
-        const balances = await tbClient.lookupAccounts([
-          toLiquidityId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          }),
-          toSettlementId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          })
-        ])
-        expect(balances.length).toBe(2)
-        balances.forEach((balance: Balance) => {
-          expect(balance.credits_reserved).toEqual(BigInt(0))
-          expect(balance.credits_accepted).toEqual(BigInt(0))
-        })
-      }
+      await expect(Asset.query().where(asset).first()).resolves.toBeUndefined()
+      await expect(
+        accountsService.getLiquidityBalance(asset.code, asset.scale)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountsService.getSettlementBalance(asset.code, asset.scale)
+      ).resolves.toBeUndefined()
 
       await accountsService.createAccount(account)
 
-      {
-        const balances = await tbClient.lookupAccounts([
-          toLiquidityId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          }),
-          toSettlementId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          })
-        ])
-        expect(balances.length).toBe(2)
-      }
+      const newAsset = await Asset.query().where(asset).first()
+      expect(newAsset).toBeDefined()
+      const balances = await tbClient.lookupAccounts([
+        newAsset.liquidityBalanceId,
+        newAsset.settlementBalanceId
+      ])
+      expect(balances.length).toBe(2)
+      balances.forEach((balance: Balance) => {
+        expect(balance.credits_reserved).toEqual(BigInt(0))
+        expect(balance.credits_accepted).toEqual(BigInt(0))
+      })
+
+      await expect(
+        accountsService.getLiquidityBalance(asset.code, asset.scale)
+      ).resolves.toEqual(BigInt(0))
+      await expect(
+        accountsService.getSettlementBalance(asset.code, asset.scale)
+      ).resolves.toEqual(BigInt(0))
     })
   })
 
@@ -1103,7 +1076,7 @@ describe('Accounts Service', (): void => {
       expect(settlementBalance).toEqual(startingBalance)
     })
 
-    test('Returns error for unknown liquidity account', async (): Promise<void> => {
+    test('Returns error for unknown asset', async (): Promise<void> => {
       const asset = randomAsset()
       const amount = BigInt(10)
       await expect(
@@ -1112,7 +1085,7 @@ describe('Accounts Service', (): void => {
           assetScale: asset.scale,
           amount
         })
-      ).resolves.toEqual(WithdrawError.UnknownLiquidityAccount)
+      ).resolves.toEqual(WithdrawError.UnknownAsset)
     })
   })
 

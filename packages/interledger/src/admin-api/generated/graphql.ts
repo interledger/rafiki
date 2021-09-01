@@ -588,8 +588,7 @@ export enum WithdrawError {
   InsufficientSettlementBalance = 'InsufficientSettlementBalance',
   InvalidId = 'InvalidId',
   UnknownAccount = 'UnknownAccount',
-  UnknownLiquidityAccount = 'UnknownLiquidityAccount',
-  UnknownSettlementAccount = 'UnknownSettlementAccount',
+  UnknownAsset = 'UnknownAsset',
   UnknownWithdrawal = 'UnknownWithdrawal',
   WithdrawalExists = 'WithdrawalExists'
 }

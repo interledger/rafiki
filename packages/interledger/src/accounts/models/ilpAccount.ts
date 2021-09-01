@@ -1,8 +1,8 @@
 import { BaseModel } from '../../shared/baseModel'
 import { Asset } from './asset'
 import { IlpHttpToken } from './ilpHttpToken'
-import { uuidToBigInt } from '../utils'
-import { Model, Pojo, raw } from 'objection'
+import { bigIntToDbUuid, uuidToBigInt } from '../utils'
+import { Model, Pojo } from 'objection'
 
 const BALANCE_IDS = [
   'balanceId',
@@ -11,10 +11,6 @@ const BALANCE_IDS = [
   'debtBalanceId',
   'lentBalanceId'
 ]
-
-function bigIntToUuid(id: bigint): Pojo {
-  return raw('?::uuid', [id.toString(16).padStart(32, '0')])
-}
 
 export class IlpAccount extends BaseModel {
   public static get tableName(): string {
@@ -88,7 +84,7 @@ export class IlpAccount extends BaseModel {
   $formatDatabaseJson(json: Pojo): Pojo {
     BALANCE_IDS.forEach((balanceId) => {
       if (json[balanceId]) {
-        json[balanceId] = bigIntToUuid(json[balanceId])
+        json[balanceId] = bigIntToDbUuid(json[balanceId])
       }
     })
     return super.$formatDatabaseJson(json)

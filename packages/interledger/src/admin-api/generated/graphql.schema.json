@@ -4266,13 +4266,7 @@
             "deprecationReason": null
           },
           {
-            "name": "UnknownLiquidityAccount",
-            "description": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "UnknownSettlementAccount",
+            "name": "UnknownAsset",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
