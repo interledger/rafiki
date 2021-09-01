@@ -365,7 +365,7 @@ describe('Accounts Service', (): void => {
       expect(accounts[0].id).toEqual(accountsCreated[0].id)
       expect(accounts[9].id).toEqual(accountsCreated[9].id)
       expect(accounts[10]).toBeUndefined()
-    })
+    }, 10_000)
 
     test('Can paginate forwards from a cursor', async (): Promise<void> => {
       const pagination: Pagination = {

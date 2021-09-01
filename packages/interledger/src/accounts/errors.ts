@@ -5,6 +5,13 @@ export class BalanceTransferError extends Error {
   }
 }
 
+export class CreateBalanceError extends Error {
+  constructor(public code: number) {
+    super()
+    this.name = 'CreateBalanceError'
+  }
+}
+
 export class UnknownBalanceError extends Error {
   constructor(accountId: string) {
     super('Balance not found. accountId=' + accountId)

@@ -1,4 +1,5 @@
 import { BaseModel } from '../../shared/baseModel'
+import { Asset } from './asset'
 import { IlpHttpToken } from './ilpHttpToken'
 import { uuidToBigInt } from '../utils'
 import { Model, Pojo, raw } from 'objection'
@@ -21,6 +22,14 @@ export class IlpAccount extends BaseModel {
   }
 
   static relationMappings = {
+    asset: {
+      relation: Model.HasOneRelation,
+      modelClass: Asset,
+      join: {
+        from: 'ilpAccounts.assetId',
+        to: 'assets.id'
+      }
+    },
     subAccounts: {
       relation: Model.HasManyRelation,
       modelClass: IlpAccount,
@@ -49,8 +58,8 @@ export class IlpAccount extends BaseModel {
 
   public readonly disabled!: boolean
 
-  public readonly assetCode!: string
-  public readonly assetScale!: number
+  public readonly assetId!: string
+  public asset!: Asset
   // TigerBeetle account id tracking Interledger balance
   public readonly balanceId!: bigint
   // TigerBeetle account id tracking credit extended by super-account

@@ -4,8 +4,8 @@ exports.up = function (knex) {
 
     table.boolean('disabled').notNullable().defaultTo(false)
 
-    table.string('assetCode').notNullable()
-    table.integer('assetScale').notNullable()
+    table.uuid('assetId').notNullable()
+    table.foreign('assetId').references('assets.id')
 
     // TigerBeetle account id tracking Interledger balance
     table.uuid('balanceId').notNullable()
