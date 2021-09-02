@@ -932,7 +932,10 @@ export class AccountsService implements AccountsServiceInterface {
 
     const transfers: TwoPhaseTransfer[] = []
 
-    if (sourceAccount.asset.code === destinationAccount.asset.code) {
+    if (
+      sourceAccount.asset.code === destinationAccount.asset.code &&
+      sourceAccount.asset.scale === destinationAccount.asset.scale
+    ) {
       if (destinationAmount && sourceAmount !== destinationAmount) {
         return TransferError.InvalidDestinationAmount
       }
