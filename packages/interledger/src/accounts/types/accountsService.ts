@@ -44,14 +44,8 @@ export interface AccountsService extends ConnectorAccountsService {
   withdrawLiquidity(
     withdrawal: LiquidityWithdrawal
   ): Promise<void | WithdrawError>
-  getLiquidityBalance(
-    assetCode: string,
-    assetScale: number
-  ): Promise<bigint | undefined>
-  getSettlementBalance(
-    assetCode: string,
-    assetScale: number
-  ): Promise<bigint | undefined>
+  getLiquidityBalance(asset: Asset): Promise<bigint | undefined>
+  getSettlementBalance(asset: Asset): Promise<bigint | undefined>
   deposit(deposit: AccountDeposit): Promise<Deposit | DepositError>
   createWithdrawal(
     withdrawal: AccountWithdrawal

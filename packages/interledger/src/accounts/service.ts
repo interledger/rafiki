@@ -462,8 +462,7 @@ export class AccountsService implements AccountsServiceInterface {
   }
 
   public async depositLiquidity({
-    assetCode,
-    assetScale,
+    asset: { code, scale },
     amount,
     id
   }: LiquidityDeposit): Promise<void | DepositError> {
@@ -471,13 +470,7 @@ export class AccountsService implements AccountsServiceInterface {
       return DepositError.InvalidId
     }
     const trx = await AssetModel.startTransaction()
-    const asset = await this.getOrCreateAsset(
-      {
-        code: assetCode,
-        scale: assetScale
-      },
-      trx
-    )
+    const asset = await this.getOrCreateAsset({ code, scale }, trx)
     const error = await this.createTransfers([
       {
         id: id ? uuidToBigInt(id) : randomId(),
@@ -492,9 +485,9 @@ export class AccountsService implements AccountsServiceInterface {
         case CreateTransferError.exists:
           return DepositError.DepositExists
         case CreateTransferError.debit_account_not_found:
-          throw new UnknownSettlementAccountError(assetCode, assetScale)
+          throw new UnknownSettlementAccountError(asset)
         case CreateTransferError.credit_account_not_found:
-          throw new UnknownLiquidityAccountError(assetCode, assetScale)
+          throw new UnknownLiquidityAccountError(asset)
         default:
           throw new BalanceTransferError(error.code)
       }
@@ -503,8 +496,7 @@ export class AccountsService implements AccountsServiceInterface {
   }
 
   public async withdrawLiquidity({
-    assetCode,
-    assetScale,
+    asset: { code, scale },
     amount,
     id
   }: LiquidityWithdrawal): Promise<void | WithdrawError> {
@@ -512,10 +504,7 @@ export class AccountsService implements AccountsServiceInterface {
       return WithdrawError.InvalidId
     }
     const asset = await AssetModel.query()
-      .where({
-        code: assetCode,
-        scale: assetScale
-      })
+      .where({ code, scale })
       .first()
       .select('liquidityBalanceId', 'settlementBalanceId')
     if (!asset) {
@@ -534,9 +523,9 @@ export class AccountsService implements AccountsServiceInterface {
         case CreateTransferError.exists:
           return WithdrawError.WithdrawalExists
         case CreateTransferError.debit_account_not_found:
-          throw new UnknownLiquidityAccountError(assetCode, assetScale)
+          throw new UnknownLiquidityAccountError(asset)
         case CreateTransferError.credit_account_not_found:
-          throw new UnknownSettlementAccountError(assetCode, assetScale)
+          throw new UnknownSettlementAccountError(asset)
         case CreateTransferError.exceeds_credits:
           return WithdrawError.InsufficientLiquidity
         case CreateTransferError.exceeds_debits:
@@ -547,15 +536,12 @@ export class AccountsService implements AccountsServiceInterface {
     }
   }
 
-  public async getLiquidityBalance(
-    assetCode: string,
-    assetScale: number
-  ): Promise<bigint | undefined> {
+  public async getLiquidityBalance({
+    code,
+    scale
+  }: Asset): Promise<bigint | undefined> {
     const asset = await AssetModel.query()
-      .where({
-        code: assetCode,
-        scale: assetScale
-      })
+      .where({ code, scale })
       .first()
       .select('liquidityBalanceId')
     if (asset) {
@@ -568,15 +554,12 @@ export class AccountsService implements AccountsServiceInterface {
     }
   }
 
-  public async getSettlementBalance(
-    assetCode: string,
-    assetScale: number
-  ): Promise<bigint | undefined> {
+  public async getSettlementBalance({
+    code,
+    scale
+  }: Asset): Promise<bigint | undefined> {
     const asset = await AssetModel.query()
-      .where({
-        code: assetCode,
-        scale: assetScale
-      })
+      .where({ code, scale })
       .first()
       .select('settlementBalanceId')
     if (asset) {
@@ -668,10 +651,7 @@ export class AccountsService implements AccountsServiceInterface {
         case CreateTransferError.exists:
           return DepositError.DepositExists
         case CreateTransferError.debit_account_not_found:
-          throw new UnknownSettlementAccountError(
-            account.asset.code,
-            account.asset.scale
-          )
+          throw new UnknownSettlementAccountError(account.asset)
         case CreateTransferError.credit_account_not_found:
           throw new UnknownBalanceError(accountId)
         default:
@@ -721,10 +701,7 @@ export class AccountsService implements AccountsServiceInterface {
         case CreateTransferError.debit_account_not_found:
           throw new UnknownBalanceError(accountId)
         case CreateTransferError.credit_account_not_found:
-          throw new UnknownSettlementAccountError(
-            account.asset.code,
-            account.asset.scale
-          )
+          throw new UnknownSettlementAccountError(account.asset)
         case CreateTransferError.exceeds_credits:
           return WithdrawError.InsufficientBalance
         case CreateTransferError.exceeds_debits:
@@ -992,20 +969,14 @@ export class AccountsService implements AccountsServiceInterface {
       switch (error.code) {
         case CreateTransferError.debit_account_not_found:
           if (error.index === 1) {
-            throw new UnknownLiquidityAccountError(
-              destinationAccount.asset.code,
-              destinationAccount.asset.scale
-            )
+            throw new UnknownLiquidityAccountError(destinationAccount.asset)
           }
           throw new UnknownBalanceError(sourceAccountId)
         case CreateTransferError.credit_account_not_found:
           if (error.index === 1) {
             throw new UnknownBalanceError(destinationAccountId)
           }
-          throw new UnknownLiquidityAccountError(
-            sourceAccount.asset.code,
-            sourceAccount.asset.scale
-          )
+          throw new UnknownLiquidityAccountError(sourceAccount.asset)
         case CreateTransferError.exceeds_credits:
           if (error.index === 1) {
             return TransferError.InsufficientLiquidity

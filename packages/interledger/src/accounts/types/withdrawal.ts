@@ -1,3 +1,5 @@
+import { Asset } from './asset'
+
 interface WithdrawalOptions {
   id?: string
   amount: bigint
@@ -8,8 +10,7 @@ export interface AccountWithdrawal extends WithdrawalOptions {
 }
 
 export interface LiquidityWithdrawal extends WithdrawalOptions {
-  assetCode: string
-  assetScale: number
+  asset: Asset
 }
 
 export type Withdrawal = Required<AccountWithdrawal> & {

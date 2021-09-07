@@ -1,3 +1,5 @@
+import { Asset } from './types'
+
 export class BalanceTransferError extends Error {
   constructor(public code: number) {
     super()
@@ -20,15 +22,19 @@ export class UnknownBalanceError extends Error {
 }
 
 export class UnknownLiquidityAccountError extends Error {
-  constructor(code: string, scale: number) {
-    super('Unknown liquidity account. code=' + code + ' scale=' + scale)
+  constructor(asset: Asset) {
+    super(
+      'Unknown liquidity account. code=' + asset.code + ' scale=' + asset.scale
+    )
     this.name = 'UnknownLiquidityAccountError'
   }
 }
 
 export class UnknownSettlementAccountError extends Error {
-  constructor(code: string, scale: number) {
-    super('Unknown settlement account. code=' + code + ' scale=' + scale)
+  constructor(asset: Asset) {
+    super(
+      'Unknown settlement account. code=' + asset.code + ' scale=' + asset.scale
+    )
     this.name = 'UnknownSettlementAccountError'
   }
 }
