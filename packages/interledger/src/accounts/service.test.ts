@@ -1544,42 +1544,150 @@ describe('Accounts Service', (): void => {
 
   describe('Transfer Funds', (): void => {
     test.each`
-      crossCurrency | accept
-      ${true}       | ${true}
-      ${true}       | ${false}
-      ${false}      | ${true}
-      ${false}      | ${false}
+      srcAmt | destAmt      | accept
+      ${1}   | ${1}         | ${true}
+      ${1}   | ${1}         | ${false}
+      ${1}   | ${undefined} | ${true}
+      ${1}   | ${undefined} | ${false}
+      ${1}   | ${2}         | ${true}
+      ${1}   | ${2}         | ${false}
+      ${2}   | ${1}         | ${true}
+      ${2}   | ${1}         | ${false}
     `(
-      'Can transfer funds with two-phase commit { cross-currency: $crossCurrency, accepted: $accept }',
-      async ({ crossCurrency, accept }): Promise<void> => {
-        const {
-          id: sourceAccountId,
-          asset: sourceAsset
-        } = await accountFactory.build()
-        const {
-          id: destinationAccountId,
-          asset: destinationAsset
-        } = await accountFactory.build({
-          asset: crossCurrency ? randomAsset() : sourceAsset
+      'Can transfer asset with two-phase commit { srcAmt: $srcAmt, destAmt: $destAmt, accepted: $accept }',
+      async ({ srcAmt, destAmt, accept }): Promise<void> => {
+        const { id: sourceAccountId, asset } = await accountFactory.build()
+        const { id: destinationAccountId } = await accountFactory.build({
+          asset
         })
+
         const startingSourceBalance = BigInt(10)
         await accountsService.deposit({
           accountId: sourceAccountId,
           amount: startingSourceBalance
         })
 
-        const startingDestinationLiquidity = crossCurrency
-          ? BigInt(100)
-          : BigInt(0)
-        if (crossCurrency) {
-          await accountsService.depositLiquidity({
-            asset: destinationAsset,
-            amount: startingDestinationLiquidity
-          })
+        const startingLiquidity = BigInt(100)
+        await accountsService.depositLiquidity({
+          asset,
+          amount: startingLiquidity
+        })
+
+        const sourceAmount = BigInt(srcAmt)
+        const trxOrError = await accountsService.transferFunds({
+          sourceAccountId,
+          destinationAccountId,
+          sourceAmount,
+          destinationAmount: destAmt ? BigInt(destAmt) : undefined
+        })
+        expect(isTransferError(trxOrError)).toEqual(false)
+        if (isTransferError(trxOrError)) {
+          fail()
+        }
+        const destinationAmount = destAmt ? BigInt(destAmt) : sourceAmount
+        const amountDiff = destinationAmount - sourceAmount
+
+        await expect(
+          accountsService.getAccountBalance(sourceAccountId)
+        ).resolves.toMatchObject({
+          balance: startingSourceBalance - sourceAmount
+        })
+
+        await expect(
+          accountsService.getLiquidityBalance(asset)
+        ).resolves.toEqual(
+          sourceAmount < destinationAmount
+            ? startingLiquidity - amountDiff
+            : startingLiquidity
+        )
+
+        await expect(
+          accountsService.getAccountBalance(destinationAccountId)
+        ).resolves.toMatchObject({
+          balance: BigInt(0)
+        })
+
+        if (accept) {
+          await expect(trxOrError.commit()).resolves.toBeUndefined()
+        } else {
+          await expect(trxOrError.rollback()).resolves.toBeUndefined()
         }
 
+        await expect(
+          accountsService.getAccountBalance(sourceAccountId)
+        ).resolves.toMatchObject({
+          balance: accept
+            ? startingSourceBalance - sourceAmount
+            : startingSourceBalance
+        })
+
+        await expect(
+          accountsService.getLiquidityBalance(asset)
+        ).resolves.toEqual(
+          accept ? startingLiquidity - amountDiff : startingLiquidity
+        )
+
+        await expect(
+          accountsService.getAccountBalance(destinationAccountId)
+        ).resolves.toMatchObject({
+          balance: accept ? destinationAmount : BigInt(0)
+        })
+
+        await expect(trxOrError.commit()).resolves.toEqual(
+          accept
+            ? TransferError.TransferAlreadyCommitted
+            : TransferError.TransferAlreadyRejected
+        )
+        await expect(trxOrError.rollback()).resolves.toEqual(
+          accept
+            ? TransferError.TransferAlreadyCommitted
+            : TransferError.TransferAlreadyRejected
+        )
+      }
+    )
+
+    test.each`
+      sameCode | accept
+      ${true}  | ${true}
+      ${true}  | ${false}
+      ${false} | ${true}
+      ${false} | ${false}
+    `(
+      'Can transfer funds cross-currrency with two-phase commit { sameAssetCode: $sameCode, accepted: $accept }',
+      async ({ sameCode, accept }): Promise<void> => {
+        const {
+          id: sourceAccountId,
+          asset: sourceAsset
+        } = await accountFactory.build({
+          asset: {
+            code: randomAsset().code,
+            scale: 10
+          }
+        })
+        const {
+          id: destinationAccountId,
+          asset: destinationAsset
+        } = await accountFactory.build({
+          asset: {
+            code: sameCode ? sourceAsset.code : randomAsset().code,
+            scale: sourceAsset.scale + 2
+          }
+        })
+
+        const startingSourceBalance = BigInt(10)
+        await accountsService.deposit({
+          accountId: sourceAccountId,
+          amount: startingSourceBalance
+        })
+
+        const startingDestinationLiquidity = BigInt(100)
+        await accountsService.depositLiquidity({
+          asset: destinationAsset,
+          amount: startingDestinationLiquidity
+        })
+
         const sourceAmount = BigInt(1)
-        const destinationAmount = crossCurrency ? BigInt(2) : undefined
+        const destinationAmount = BigInt(2)
         const trxOrError = await accountsService.transferFunds({
           sourceAccountId,
           destinationAccountId,
@@ -1591,97 +1699,68 @@ describe('Accounts Service', (): void => {
           fail()
         }
 
-        {
-          const {
-            balance: sourceBalance
-          } = (await accountsService.getAccountBalance(
-            sourceAccountId
-          )) as IlpBalance
-          expect(sourceBalance).toEqual(startingSourceBalance - sourceAmount)
+        await expect(
+          accountsService.getAccountBalance(sourceAccountId)
+        ).resolves.toMatchObject({
+          balance: startingSourceBalance - sourceAmount
+        })
 
-          const sourceLiquidityBalance = await accountsService.getLiquidityBalance(
-            sourceAsset
-          )
-          expect(sourceLiquidityBalance).toEqual(BigInt(0))
+        await expect(
+          accountsService.getLiquidityBalance(sourceAsset)
+        ).resolves.toEqual(BigInt(0))
 
-          const destinationLiquidityBalance = await accountsService.getLiquidityBalance(
-            destinationAsset
-          )
-          expect(destinationLiquidityBalance).toEqual(
-            crossCurrency
-              ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                startingDestinationLiquidity - destinationAmount!
-              : startingDestinationLiquidity
-          )
+        await expect(
+          accountsService.getLiquidityBalance(destinationAsset)
+        ).resolves.toEqual(startingDestinationLiquidity - destinationAmount)
 
-          const {
-            balance: destinationBalance
-          } = (await accountsService.getAccountBalance(
-            destinationAccountId
-          )) as IlpBalance
-          expect(destinationBalance).toEqual(BigInt(0))
-        }
+        await expect(
+          accountsService.getAccountBalance(destinationAccountId)
+        ).resolves.toMatchObject({
+          balance: BigInt(0)
+        })
 
         if (accept) {
-          const error = await trxOrError.commit()
-          expect(error).toBeUndefined()
-          await expect(trxOrError.commit()).resolves.toEqual(
-            TransferError.TransferAlreadyCommitted
-          )
-          await expect(trxOrError.rollback()).resolves.toEqual(
-            TransferError.TransferAlreadyCommitted
-          )
+          await expect(trxOrError.commit()).resolves.toBeUndefined()
         } else {
-          const error = await trxOrError.rollback()
-          expect(error).toBeUndefined()
-          await expect(trxOrError.commit()).resolves.toEqual(
-            TransferError.TransferAlreadyRejected
-          )
-          await expect(trxOrError.rollback()).resolves.toEqual(
-            TransferError.TransferAlreadyRejected
-          )
+          await expect(trxOrError.rollback()).resolves.toBeUndefined()
         }
 
-        {
-          const {
-            balance: sourceBalance
-          } = (await accountsService.getAccountBalance(
-            sourceAccountId
-          )) as IlpBalance
-          const expectedSourceBalance = accept
+        await expect(
+          accountsService.getAccountBalance(sourceAccountId)
+        ).resolves.toMatchObject({
+          balance: accept
             ? startingSourceBalance - sourceAmount
             : startingSourceBalance
-          expect(sourceBalance).toEqual(expectedSourceBalance)
+        })
 
-          const sourceLiquidityBalance = await accountsService.getLiquidityBalance(
-            sourceAsset
-          )
-          expect(sourceLiquidityBalance).toEqual(
-            crossCurrency && accept ? sourceAmount : BigInt(0)
-          )
+        await expect(
+          accountsService.getLiquidityBalance(sourceAsset)
+        ).resolves.toEqual(accept ? sourceAmount : BigInt(0))
 
-          const destinationLiquidityBalance = await accountsService.getLiquidityBalance(
-            destinationAsset
-          )
-          expect(destinationLiquidityBalance).toEqual(
-            crossCurrency && accept
-              ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                startingDestinationLiquidity - destinationAmount!
-              : startingDestinationLiquidity
-          )
+        await expect(
+          accountsService.getLiquidityBalance(destinationAsset)
+        ).resolves.toEqual(
+          accept
+            ? startingDestinationLiquidity - destinationAmount
+            : startingDestinationLiquidity
+        )
 
-          const {
-            balance: destinationBalance
-          } = (await accountsService.getAccountBalance(
-            destinationAccountId
-          )) as IlpBalance
-          const expectedDestinationBalance = accept
-            ? crossCurrency
-              ? destinationAmount
-              : sourceAmount
-            : BigInt(0)
-          expect(destinationBalance).toEqual(expectedDestinationBalance)
-        }
+        await expect(
+          accountsService.getAccountBalance(destinationAccountId)
+        ).resolves.toMatchObject({
+          balance: accept ? destinationAmount : BigInt(0)
+        })
+
+        await expect(trxOrError.commit()).resolves.toEqual(
+          accept
+            ? TransferError.TransferAlreadyCommitted
+            : TransferError.TransferAlreadyRejected
+        )
+        await expect(trxOrError.rollback()).resolves.toEqual(
+          accept
+            ? TransferError.TransferAlreadyCommitted
+            : TransferError.TransferAlreadyRejected
+        )
       }
     )
 
@@ -1712,79 +1791,62 @@ describe('Accounts Service', (): void => {
       expect(destinationBalance).toEqual(BigInt(0))
     })
 
-    test('Returns error for insufficient destination liquidity balance', async (): Promise<void> => {
-      const {
-        id: sourceAccountId,
-        asset: sourceAsset
-      } = await accountFactory.build()
-      const {
-        id: destinationAccountId,
-        asset: destinationAsset
-      } = await accountFactory.build()
-      const startingSourceBalance = BigInt(10)
-      await accountsService.deposit({
-        accountId: sourceAccountId,
-        amount: startingSourceBalance
-      })
-      {
+    test.each`
+      sameAsset
+      ${true}
+      ${false}
+    `(
+      'Returns error for insufficient destination liquidity balance { sameAsset: $sameAsset }',
+      async ({ sameAsset }): Promise<void> => {
         const {
-          balance: sourceBalance
-        } = (await accountsService.getAccountBalance(
-          sourceAccountId
-        )) as IlpBalance
-        expect(sourceBalance).toEqual(startingSourceBalance)
-
-        const sourceLiquidityBalance = await accountsService.getLiquidityBalance(
-          sourceAsset
-        )
-        expect(sourceLiquidityBalance).toEqual(BigInt(0))
-
-        const destinationLiquidityBalance = await accountsService.getLiquidityBalance(
-          destinationAsset
-        )
-        expect(destinationLiquidityBalance).toEqual(BigInt(0))
-
+          id: sourceAccountId,
+          asset: sourceAsset
+        } = await accountFactory.build()
         const {
-          balance: destinationBalance
-        } = (await accountsService.getAccountBalance(
-          destinationAccountId
-        )) as IlpBalance
-        expect(destinationBalance).toEqual(BigInt(0))
-      }
-      const sourceAmount = BigInt(5)
-      const destinationAmount = BigInt(10)
-      const transfer = {
-        sourceAccountId,
-        destinationAccountId,
-        sourceAmount,
-        destinationAmount
-      }
+          id: destinationAccountId,
+          asset: destinationAsset
+        } = await accountFactory.build({
+          asset: sameAsset ? sourceAsset : randomAsset()
+        })
+        const startingSourceBalance = BigInt(10)
+        await accountsService.deposit({
+          accountId: sourceAccountId,
+          amount: startingSourceBalance
+        })
+        const sourceAmount = BigInt(5)
+        const destinationAmount = BigInt(10)
+        const transfer = {
+          sourceAccountId,
+          destinationAccountId,
+          sourceAmount,
+          destinationAmount
+        }
 
-      await expect(accountsService.transferFunds(transfer)).resolves.toEqual(
-        TransferError.InsufficientLiquidity
-      )
+        await expect(accountsService.transferFunds(transfer)).resolves.toEqual(
+          TransferError.InsufficientLiquidity
+        )
 
-      const {
-        balance: sourceBalance
-      } = (await accountsService.getAccountBalance(
-        sourceAccountId
-      )) as IlpBalance
-      expect(sourceBalance).toEqual(startingSourceBalance)
-      const sourceLiquidityBalance = await accountsService.getLiquidityBalance(
-        sourceAsset
-      )
-      expect(sourceLiquidityBalance).toEqual(BigInt(0))
-      const {
-        balance: destinationBalance
-      } = (await accountsService.getAccountBalance(
-        destinationAccountId
-      )) as IlpBalance
-      expect(destinationBalance).toEqual(BigInt(0))
-      const destinationLiquidityBalance = await accountsService.getLiquidityBalance(
-        destinationAsset
-      )
-      expect(destinationLiquidityBalance).toEqual(BigInt(0))
-    })
+        await expect(
+          accountsService.getAccountBalance(sourceAccountId)
+        ).resolves.toMatchObject({
+          balance: startingSourceBalance
+        })
+
+        await expect(
+          accountsService.getLiquidityBalance(sourceAsset)
+        ).resolves.toEqual(BigInt(0))
+
+        await expect(
+          accountsService.getLiquidityBalance(destinationAsset)
+        ).resolves.toEqual(BigInt(0))
+
+        await expect(
+          accountsService.getAccountBalance(destinationAccountId)
+        ).resolves.toMatchObject({
+          balance: BigInt(0)
+        })
+      }
+    )
 
     test('Returns error for nonexistent account', async (): Promise<void> => {
       await expect(
@@ -1856,24 +1918,13 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for invalid destination amount', async (): Promise<void> => {
-      const { id: sourceAccountId, asset } = await accountFactory.build()
-      const { id: destinationAccountId } = await accountFactory.build({
-        asset
-      })
+      const { id: sourceAccountId } = await accountFactory.build()
+      const { id: destinationAccountId } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
       await accountsService.deposit({
         accountId: sourceAccountId,
         amount: startingSourceBalance
       })
-
-      await expect(
-        accountsService.transferFunds({
-          sourceAccountId,
-          destinationAccountId,
-          sourceAmount: BigInt(5),
-          destinationAmount: BigInt(10)
-        })
-      ).resolves.toEqual(TransferError.InvalidDestinationAmount)
 
       await expect(
         accountsService.transferFunds({
@@ -1895,21 +1946,47 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns error for missing destination amount', async (): Promise<void> => {
-      const { id: sourceAccountId } = await accountFactory.build()
-      const { id: destinationAccountId } = await accountFactory.build()
+      const {
+        id: sourceAccountId,
+        asset: sourceAsset
+      } = await accountFactory.build({
+        asset: {
+          code: randomAsset().code,
+          scale: 10
+        }
+      })
       const startingSourceBalance = BigInt(10)
       await accountsService.deposit({
         accountId: sourceAccountId,
         amount: startingSourceBalance
       })
 
-      await expect(
-        accountsService.transferFunds({
-          sourceAccountId,
-          destinationAccountId,
-          sourceAmount: BigInt(5)
+      {
+        const { id: destinationAccountId } = await accountFactory.build({
+          asset: {
+            code: sourceAsset.code,
+            scale: sourceAsset.scale + 1
+          }
         })
-      ).resolves.toEqual(TransferError.InvalidDestinationAmount)
+        await expect(
+          accountsService.transferFunds({
+            sourceAccountId,
+            destinationAccountId,
+            sourceAmount: BigInt(5)
+          })
+        ).resolves.toEqual(TransferError.InvalidDestinationAmount)
+      }
+
+      {
+        const { id: destinationAccountId } = await accountFactory.build()
+        await expect(
+          accountsService.transferFunds({
+            sourceAccountId,
+            destinationAccountId,
+            sourceAmount: BigInt(5)
+          })
+        ).resolves.toEqual(TransferError.InvalidDestinationAmount)
+      }
     })
 
     test.todo('Returns error timed out transfer')

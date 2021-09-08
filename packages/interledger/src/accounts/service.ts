@@ -932,17 +932,39 @@ export class AccountsService implements AccountsServiceInterface {
 
     const transfers: TwoPhaseTransfer[] = []
 
-    if (sourceAccount.asset.code === destinationAccount.asset.code) {
-      if (destinationAmount && sourceAmount !== destinationAmount) {
-        return TransferError.InvalidDestinationAmount
-      }
+    if (
+      sourceAccount.asset.code === destinationAccount.asset.code &&
+      sourceAccount.asset.scale === destinationAccount.asset.scale
+    ) {
       transfers.push({
         id: randomId(),
         sourceBalanceId: sourceAccount.balanceId,
         destinationBalanceId: destinationAccount.balanceId,
-        amount: sourceAmount,
+        amount:
+          destinationAmount && destinationAmount < sourceAmount
+            ? destinationAmount
+            : sourceAmount,
         twoPhaseCommit: true
       })
+      if (destinationAmount && sourceAmount !== destinationAmount) {
+        if (destinationAmount < sourceAmount) {
+          transfers.push({
+            id: randomId(),
+            sourceBalanceId: sourceAccount.balanceId,
+            destinationBalanceId: sourceAccount.asset.liquidityBalanceId,
+            amount: sourceAmount - destinationAmount,
+            twoPhaseCommit: true
+          })
+        } else {
+          transfers.push({
+            id: randomId(),
+            sourceBalanceId: destinationAccount.asset.liquidityBalanceId,
+            destinationBalanceId: destinationAccount.balanceId,
+            amount: destinationAmount - sourceAmount,
+            twoPhaseCommit: true
+          })
+        }
+      }
     } else {
       if (!destinationAmount) {
         return TransferError.InvalidDestinationAmount
