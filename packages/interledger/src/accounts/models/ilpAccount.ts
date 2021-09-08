@@ -1,7 +1,8 @@
 import { BaseModel } from '../../shared/baseModel'
+import { Asset } from './asset'
 import { IlpHttpToken } from './ilpHttpToken'
-import { uuidToBigInt } from '../utils'
-import { Model, Pojo, raw } from 'objection'
+import { bigIntToDbUuid, uuidToBigInt } from '../utils'
+import { Model, Pojo } from 'objection'
 
 const BALANCE_IDS = [
   'balanceId',
@@ -11,16 +12,20 @@ const BALANCE_IDS = [
   'lentBalanceId'
 ]
 
-function bigIntToUuid(id: bigint): Pojo {
-  return raw('?::uuid', [id.toString(16).padStart(32, '0')])
-}
-
 export class IlpAccount extends BaseModel {
   public static get tableName(): string {
     return 'ilpAccounts'
   }
 
   static relationMappings = {
+    asset: {
+      relation: Model.HasOneRelation,
+      modelClass: Asset,
+      join: {
+        from: 'ilpAccounts.assetId',
+        to: 'assets.id'
+      }
+    },
     subAccounts: {
       relation: Model.HasManyRelation,
       modelClass: IlpAccount,
@@ -49,8 +54,8 @@ export class IlpAccount extends BaseModel {
 
   public readonly disabled!: boolean
 
-  public readonly assetCode!: string
-  public readonly assetScale!: number
+  public readonly assetId!: string
+  public asset!: Asset
   // TigerBeetle account id tracking Interledger balance
   public readonly balanceId!: bigint
   // TigerBeetle account id tracking credit extended by super-account
@@ -79,7 +84,7 @@ export class IlpAccount extends BaseModel {
   $formatDatabaseJson(json: Pojo): Pojo {
     BALANCE_IDS.forEach((balanceId) => {
       if (json[balanceId]) {
-        json[balanceId] = bigIntToUuid(json[balanceId])
+        json[balanceId] = bigIntToDbUuid(json[balanceId])
       }
     })
     return super.$formatDatabaseJson(json)

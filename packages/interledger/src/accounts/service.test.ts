@@ -4,8 +4,7 @@ import { Account as Balance, createClient, Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import { Config } from '../config'
-import { IlpAccount as IlpAccountModel } from './models'
-import { toLiquidityId, toSettlementId } from './utils'
+import { IlpAccount as IlpAccountModel, Asset } from './models'
 import { randomAsset, AccountFactory } from './testsHelpers'
 import { AccountsService } from './service'
 
@@ -260,66 +259,40 @@ describe('Accounts Service', (): void => {
       }
     })
 
-    test('Auto-creates corresponding liquidity and settlement accounts', async (): Promise<void> => {
+    test('Auto-creates corresponding asset with liquidity and settlement accounts', async (): Promise<void> => {
       const asset = randomAsset()
       const account: CreateOptions = {
         asset
       }
 
-      {
-        const balances = await tbClient.lookupAccounts([
-          toLiquidityId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          }),
-          toSettlementId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          })
-        ])
-        expect(balances.length).toBe(0)
-      }
-
-      await accountsService.createAccount(account)
-      {
-        const balances = await tbClient.lookupAccounts([
-          toLiquidityId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          }),
-          toSettlementId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          })
-        ])
-        expect(balances.length).toBe(2)
-        balances.forEach((balance: Balance) => {
-          expect(balance.credits_reserved).toEqual(BigInt(0))
-          expect(balance.credits_accepted).toEqual(BigInt(0))
-        })
-      }
+      await expect(Asset.query().where(asset).first()).resolves.toBeUndefined()
+      await expect(
+        accountsService.getLiquidityBalance(asset)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountsService.getSettlementBalance(asset)
+      ).resolves.toBeUndefined()
 
       await accountsService.createAccount(account)
 
-      {
-        const balances = await tbClient.lookupAccounts([
-          toLiquidityId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          }),
-          toSettlementId({
-            assetCode: asset.code,
-            assetScale: asset.scale,
-            hmacSecret: config.hmacSecret
-          })
-        ])
-        expect(balances.length).toBe(2)
-      }
+      const newAsset = await Asset.query().where(asset).first()
+      expect(newAsset).toBeDefined()
+      const balances = await tbClient.lookupAccounts([
+        newAsset.liquidityBalanceId,
+        newAsset.settlementBalanceId
+      ])
+      expect(balances.length).toBe(2)
+      balances.forEach((balance: Balance) => {
+        expect(balance.credits_reserved).toEqual(BigInt(0))
+        expect(balance.credits_accepted).toEqual(BigInt(0))
+      })
+
+      await expect(accountsService.getLiquidityBalance(asset)).resolves.toEqual(
+        BigInt(0)
+      )
+      await expect(
+        accountsService.getSettlementBalance(asset)
+      ).resolves.toEqual(BigInt(0))
     })
   })
 
@@ -365,7 +338,7 @@ describe('Accounts Service', (): void => {
       expect(accounts[0].id).toEqual(accountsCreated[0].id)
       expect(accounts[9].id).toEqual(accountsCreated[9].id)
       expect(accounts[10]).toBeUndefined()
-    })
+    }, 10_000)
 
     test('Can paginate forwards from a cursor', async (): Promise<void> => {
       const pagination: Pagination = {
@@ -818,25 +791,18 @@ describe('Accounts Service', (): void => {
       const { asset } = await accountFactory.build()
 
       {
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(BigInt(0))
       }
 
       const amount = BigInt(10)
       await accountsService.depositLiquidity({
-        assetCode: asset.code,
-        assetScale: asset.scale,
+        asset,
         amount
       })
 
       {
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(amount)
       }
     })
@@ -844,7 +810,7 @@ describe('Accounts Service', (): void => {
     test('Returns undefined for nonexistent liquidity account', async (): Promise<void> => {
       const asset = randomAsset()
       await expect(
-        accountsService.getLiquidityBalance(asset.code, asset.scale)
+        accountsService.getLiquidityBalance(asset)
       ).resolves.toBeUndefined()
     })
   })
@@ -854,25 +820,18 @@ describe('Accounts Service', (): void => {
       const { asset } = await accountFactory.build()
 
       {
-        const balance = await accountsService.getSettlementBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getSettlementBalance(asset)
         expect(balance).toEqual(BigInt(0))
       }
 
       const amount = BigInt(10)
       await accountsService.depositLiquidity({
-        assetCode: asset.code,
-        assetScale: asset.scale,
+        asset,
         amount
       })
 
       {
-        const balance = await accountsService.getSettlementBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getSettlementBalance(asset)
         expect(balance).toEqual(amount)
       }
     })
@@ -880,7 +839,7 @@ describe('Accounts Service', (): void => {
     test('Returns undefined for nonexistent settlement account', async (): Promise<void> => {
       const asset = randomAsset()
       await expect(
-        accountsService.getSettlementBalance(asset.code, asset.scale)
+        accountsService.getSettlementBalance(asset)
       ).resolves.toBeUndefined()
     })
   })
@@ -891,49 +850,37 @@ describe('Accounts Service', (): void => {
       const amount = BigInt(10)
       {
         const error = await accountsService.depositLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(amount)
         const settlementBalance = await accountsService.getSettlementBalance(
-          asset.code,
-          asset.scale
+          asset
         )
         expect(settlementBalance).toEqual(amount)
       }
       const amount2 = BigInt(5)
       {
         const error = await accountsService.depositLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount: amount2
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(amount + amount2)
         const settlementBalance = await accountsService.getSettlementBalance(
-          asset.code,
-          asset.scale
+          asset
         )
         expect(settlementBalance).toEqual(amount + amount2)
       }
     })
 
     test('Returns error for invalid id', async (): Promise<void> => {
-      const { code: assetCode, scale: assetScale } = randomAsset()
       const error = await accountsService.depositLiquidity({
         id: 'not a uuid v4',
-        assetCode,
-        assetScale,
+        asset: randomAsset(),
         amount: BigInt(5)
       })
       expect(error).toEqual(DepositError.InvalidId)
@@ -945,30 +892,22 @@ describe('Accounts Service', (): void => {
       const id = uuid()
       {
         const error = await accountsService.depositLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount,
           id
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(amount)
       }
       {
         const error = await accountsService.depositLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount,
           id
         })
         expect(error).toEqual(DepositError.DepositExists)
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(amount)
       }
     })
@@ -979,56 +918,43 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       const startingBalance = BigInt(10)
       await accountsService.depositLiquidity({
-        assetCode: asset.code,
-        assetScale: asset.scale,
+        asset,
         amount: startingBalance
       })
       const amount = BigInt(5)
       {
         const error = await accountsService.withdrawLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(startingBalance - amount)
         const settlementBalance = await accountsService.getSettlementBalance(
-          asset.code,
-          asset.scale
+          asset
         )
         expect(settlementBalance).toEqual(startingBalance - amount)
       }
       const amount2 = BigInt(5)
       {
         const error = await accountsService.withdrawLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount: amount2
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(startingBalance - amount - amount2)
         const settlementBalance = await accountsService.getSettlementBalance(
-          asset.code,
-          asset.scale
+          asset
         )
         expect(settlementBalance).toEqual(startingBalance - amount - amount2)
       }
     })
 
     test('Returns error for invalid id', async (): Promise<void> => {
-      const { code: assetCode, scale: assetScale } = randomAsset()
       const error = await accountsService.withdrawLiquidity({
         id: 'not a uuid v4',
-        assetCode,
-        assetScale,
+        asset: randomAsset(),
         amount: BigInt(5)
       })
       expect(error).toEqual(WithdrawError.InvalidId)
@@ -1038,38 +964,29 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       const startingBalance = BigInt(10)
       await accountsService.depositLiquidity({
-        assetCode: asset.code,
-        assetScale: asset.scale,
+        asset,
         amount: startingBalance
       })
       const amount = BigInt(5)
       const id = uuid()
       {
         const error = await accountsService.withdrawLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount,
           id
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(startingBalance - amount)
       }
       {
         const error = await accountsService.withdrawLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount,
           id
         })
         expect(error).toEqual(WithdrawError.WithdrawalExists)
-        const balance = await accountsService.getLiquidityBalance(
-          asset.code,
-          asset.scale
-        )
+        const balance = await accountsService.getLiquidityBalance(asset)
         expect(balance).toEqual(startingBalance - amount)
       }
     })
@@ -1078,41 +995,34 @@ describe('Accounts Service', (): void => {
       const asset = randomAsset()
       const startingBalance = BigInt(5)
       await accountsService.depositLiquidity({
-        assetCode: asset.code,
-        assetScale: asset.scale,
+        asset,
         amount: startingBalance
       })
       const amount = BigInt(10)
       await expect(
         accountsService.withdrawLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount
         })
       ).resolves.toEqual(WithdrawError.InsufficientLiquidity)
 
-      const balance = await accountsService.getLiquidityBalance(
-        asset.code,
-        asset.scale
-      )
+      const balance = await accountsService.getLiquidityBalance(asset)
       expect(balance).toEqual(startingBalance)
       const settlementBalance = await accountsService.getSettlementBalance(
-        asset.code,
-        asset.scale
+        asset
       )
       expect(settlementBalance).toEqual(startingBalance)
     })
 
-    test('Returns error for unknown liquidity account', async (): Promise<void> => {
+    test('Returns error for unknown asset', async (): Promise<void> => {
       const asset = randomAsset()
       const amount = BigInt(10)
       await expect(
         accountsService.withdrawLiquidity({
-          assetCode: asset.code,
-          assetScale: asset.scale,
+          asset,
           amount
         })
-      ).resolves.toEqual(WithdrawError.UnknownLiquidityAccount)
+      ).resolves.toEqual(WithdrawError.UnknownAsset)
     })
   })
 
@@ -1138,8 +1048,7 @@ describe('Accounts Service', (): void => {
       )) as IlpBalance
       expect(balance).toEqual(amount)
       const settlementBalance = await accountsService.getSettlementBalance(
-        asset.code,
-        asset.scale
+        asset
       )
       expect(settlementBalance).toEqual(amount)
 
@@ -1238,7 +1147,7 @@ describe('Accounts Service', (): void => {
       )) as IlpBalance
       expect(balance).toEqual(startingBalance - amount)
       await expect(
-        accountsService.getSettlementBalance(asset.code, asset.scale)
+        accountsService.getSettlementBalance(asset)
       ).resolves.toEqual(startingBalance)
 
       const error = await accountsService.finalizeWithdrawal(
@@ -1251,7 +1160,7 @@ describe('Accounts Service', (): void => {
         balance: startingBalance - amount
       })
       await expect(
-        accountsService.getSettlementBalance(asset.code, asset.scale)
+        accountsService.getSettlementBalance(asset)
       ).resolves.toEqual(startingBalance - amount)
     })
 
@@ -1295,8 +1204,7 @@ describe('Accounts Service', (): void => {
       )) as IlpBalance
       expect(balance).toEqual(startingBalance)
       const settlementBalance = await accountsService.getSettlementBalance(
-        asset.code,
-        asset.scale
+        asset
       )
       expect(settlementBalance).toEqual(startingBalance)
     })
@@ -1665,8 +1573,7 @@ describe('Accounts Service', (): void => {
           : BigInt(0)
         if (crossCurrency) {
           await accountsService.depositLiquidity({
-            assetCode: destinationAsset.code,
-            assetScale: destinationAsset.scale,
+            asset: destinationAsset,
             amount: startingDestinationLiquidity
           })
         }
@@ -1693,14 +1600,12 @@ describe('Accounts Service', (): void => {
           expect(sourceBalance).toEqual(startingSourceBalance - sourceAmount)
 
           const sourceLiquidityBalance = await accountsService.getLiquidityBalance(
-            sourceAsset.code,
-            sourceAsset.scale
+            sourceAsset
           )
           expect(sourceLiquidityBalance).toEqual(BigInt(0))
 
           const destinationLiquidityBalance = await accountsService.getLiquidityBalance(
-            destinationAsset.code,
-            destinationAsset.scale
+            destinationAsset
           )
           expect(destinationLiquidityBalance).toEqual(
             crossCurrency
@@ -1749,16 +1654,14 @@ describe('Accounts Service', (): void => {
           expect(sourceBalance).toEqual(expectedSourceBalance)
 
           const sourceLiquidityBalance = await accountsService.getLiquidityBalance(
-            sourceAsset.code,
-            sourceAsset.scale
+            sourceAsset
           )
           expect(sourceLiquidityBalance).toEqual(
             crossCurrency && accept ? sourceAmount : BigInt(0)
           )
 
           const destinationLiquidityBalance = await accountsService.getLiquidityBalance(
-            destinationAsset.code,
-            destinationAsset.scale
+            destinationAsset
           )
           expect(destinationLiquidityBalance).toEqual(
             crossCurrency && accept
@@ -1832,14 +1735,12 @@ describe('Accounts Service', (): void => {
         expect(sourceBalance).toEqual(startingSourceBalance)
 
         const sourceLiquidityBalance = await accountsService.getLiquidityBalance(
-          sourceAsset.code,
-          sourceAsset.scale
+          sourceAsset
         )
         expect(sourceLiquidityBalance).toEqual(BigInt(0))
 
         const destinationLiquidityBalance = await accountsService.getLiquidityBalance(
-          destinationAsset.code,
-          destinationAsset.scale
+          destinationAsset
         )
         expect(destinationLiquidityBalance).toEqual(BigInt(0))
 
@@ -1870,8 +1771,7 @@ describe('Accounts Service', (): void => {
       )) as IlpBalance
       expect(sourceBalance).toEqual(startingSourceBalance)
       const sourceLiquidityBalance = await accountsService.getLiquidityBalance(
-        sourceAsset.code,
-        sourceAsset.scale
+        sourceAsset
       )
       expect(sourceLiquidityBalance).toEqual(BigInt(0))
       const {
@@ -1881,8 +1781,7 @@ describe('Accounts Service', (): void => {
       )) as IlpBalance
       expect(destinationBalance).toEqual(BigInt(0))
       const destinationLiquidityBalance = await accountsService.getLiquidityBalance(
-        destinationAsset.code,
-        destinationAsset.scale
+        destinationAsset
       )
       expect(destinationLiquidityBalance).toEqual(BigInt(0))
     })

@@ -1,3 +1,5 @@
+import { Asset } from './asset'
+
 interface DepositOptions {
   id?: string
   amount: bigint
@@ -8,8 +10,7 @@ export interface AccountDeposit extends DepositOptions {
 }
 
 export interface LiquidityDeposit extends DepositOptions {
-  assetCode: string
-  assetScale: number
+  asset: Asset
 }
 
 export type Deposit = Required<AccountDeposit> & {

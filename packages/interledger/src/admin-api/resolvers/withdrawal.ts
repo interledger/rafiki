@@ -135,17 +135,11 @@ const errorToResponse: {
     success: false,
     error: WithdrawErrorResp.UnknownAccount
   },
-  [WithdrawError.UnknownLiquidityAccount]: {
+  [WithdrawError.UnknownAsset]: {
     code: '404',
-    message: 'Unknown liquidity account',
+    message: 'Unknown asset',
     success: false,
-    error: WithdrawErrorResp.UnknownLiquidityAccount
-  },
-  [WithdrawError.UnknownSettlementAccount]: {
-    code: '404',
-    message: 'Unknown settlement account',
-    success: false,
-    error: WithdrawErrorResp.UnknownSettlementAccount
+    error: WithdrawErrorResp.UnknownAsset
   },
   [WithdrawError.UnknownWithdrawal]: {
     code: '404',
