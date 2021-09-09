@@ -8,21 +8,18 @@ import {
 } from 'objection'
 import { Logger } from 'pino'
 import * as uuid from 'uuid'
-import {
-  AccountFlags,
-  Client,
-  CommitFlags,
-  CommitTransferError,
-  CreateAccountError as CreateBalanceErr,
-  CreateTransferError,
-  CreateTransfersError,
-  TransferFlags
-} from 'tigerbeetle-node'
 
+import {
+  BalanceOptions,
+  BalanceService,
+  BalanceTransfer,
+  CommitTransferError,
+  CreateTransferError,
+  TwoPhaseTransfer
+} from '../balance/service'
 import { Config } from '../config'
 import {
   BalanceTransferError,
-  CreateBalanceError,
   UnknownBalanceError,
   UnknownLiquidityAccountError,
   UnknownSettlementAccountError
@@ -102,35 +99,16 @@ function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
   return account
 }
 
-interface BalanceOptions {
-  id: bigint
-  flags: number
-  unit: number
-}
-
-interface BalanceTransfer {
-  id?: bigint
-  sourceBalanceId: bigint
-  destinationBalanceId: bigint
-  amount: bigint
-  twoPhaseCommit?: boolean
-}
-
-type TwoPhaseTransfer = Required<BalanceTransfer>
-
 interface Peer {
   accountId: string
   ilpAddress: string
 }
 
-const ACCOUNT_RESERVED = Buffer.alloc(48)
-const TRANSFER_RESERVED = Buffer.alloc(32)
-
 const UUID_LENGTH = 36
 
 export class AccountsService implements AccountsServiceInterface {
   constructor(
-    private client: Client,
+    private balanceService: BalanceService,
     private config: typeof Config,
     private logger: Logger
   ) {}
@@ -168,18 +146,10 @@ export class AccountsService implements AccountsServiceInterface {
             newBalances.push(
               {
                 id: newAccount.creditBalanceId,
-                flags:
-                  0 |
-                  AccountFlags.debits_must_not_exceed_credits |
-                  AccountFlags.linked,
                 unit: superAccount.asset.unit
               },
               {
                 id: newAccount.debtBalanceId,
-                flags:
-                  0 |
-                  AccountFlags.debits_must_not_exceed_credits |
-                  AccountFlags.linked,
                 unit: superAccount.asset.unit
               }
             )
@@ -193,10 +163,7 @@ export class AccountsService implements AccountsServiceInterface {
               superAccountPatch.creditExtendedBalanceId = randomId()
               newBalances.push({
                 id: superAccountPatch.creditExtendedBalanceId,
-                flags:
-                  0 |
-                  AccountFlags.credits_must_not_exceed_debits |
-                  AccountFlags.linked,
+                debitBalance: true,
                 unit: superAccount.asset.unit
               })
             }
@@ -204,10 +171,7 @@ export class AccountsService implements AccountsServiceInterface {
               superAccountPatch.lentBalanceId = randomId()
               newBalances.push({
                 id: superAccountPatch.lentBalanceId,
-                flags:
-                  0 |
-                  AccountFlags.credits_must_not_exceed_debits |
-                  AccountFlags.linked,
+                debitBalance: true,
                 unit: superAccount.asset.unit
               })
             }
@@ -223,11 +187,10 @@ export class AccountsService implements AccountsServiceInterface {
           newAccount.balanceId = randomId()
           newBalances.push({
             id: newAccount.balanceId,
-            flags: 0 | AccountFlags.debits_must_not_exceed_credits,
             unit: newAccount.asset.unit
           })
 
-          await this.createBalances(newBalances)
+          await this.balanceService.create(newBalances)
 
           if (isSubAccount(account)) {
             await IlpAccountModel.query()
@@ -366,7 +329,7 @@ export class AccountsService implements AccountsServiceInterface {
         balanceIds.push(account[balanceId])
       }
     })
-    const balances = await this.client.lookupAccounts(balanceIds)
+    const balances = await this.balanceService.get(balanceIds)
 
     if (balances.length === 0) {
       throw new UnknownBalanceError(accountId)
@@ -415,49 +378,19 @@ export class AccountsService implements AccountsServiceInterface {
         settlementBalanceId,
         liquidityBalanceId
       })
-      await this.createBalances([
+      await this.balanceService.create([
         {
           id: liquidityBalanceId,
-          flags:
-            0 |
-            AccountFlags.debits_must_not_exceed_credits |
-            AccountFlags.linked,
           unit: assetRow.unit
         },
         {
           id: settlementBalanceId,
-          flags: 0 | AccountFlags.credits_must_not_exceed_debits,
+          debitBalance: true,
           unit: assetRow.unit
         }
       ])
 
       return assetRow
-    }
-  }
-
-  private async createBalances(balances: BalanceOptions[]): Promise<void> {
-    const res = await this.client.createAccounts(
-      balances.map(({ id, flags, unit }) => {
-        return {
-          id,
-          user_data: BigInt(0),
-          reserved: ACCOUNT_RESERVED,
-          unit,
-          code: 0,
-          flags,
-          debits_accepted: BigInt(0),
-          debits_reserved: BigInt(0),
-          credits_accepted: BigInt(0),
-          credits_reserved: BigInt(0),
-          timestamp: 0n
-        }
-      })
-    )
-    for (const { code } of res) {
-      if (code === CreateBalanceErr.linked_event_failed) {
-        continue
-      }
-      throw new CreateBalanceError(code)
     }
   }
 
@@ -471,7 +404,7 @@ export class AccountsService implements AccountsServiceInterface {
     }
     const trx = await AssetModel.startTransaction()
     const asset = await this.getOrCreateAsset({ code, scale }, trx)
-    const error = await this.createTransfers([
+    const error = await this.balanceService.createTransfers([
       {
         id: id ? uuidToBigInt(id) : randomId(),
         sourceBalanceId: asset.settlementBalanceId,
@@ -510,7 +443,7 @@ export class AccountsService implements AccountsServiceInterface {
     if (!asset) {
       return WithdrawError.UnknownAsset
     }
-    const error = await this.createTransfers([
+    const error = await this.balanceService.createTransfers([
       {
         id: id ? uuidToBigInt(id) : randomId(),
         sourceBalanceId: asset.liquidityBalanceId,
@@ -545,9 +478,7 @@ export class AccountsService implements AccountsServiceInterface {
       .first()
       .select('liquidityBalanceId')
     if (asset) {
-      const balances = await this.client.lookupAccounts([
-        asset.liquidityBalanceId
-      ])
+      const balances = await this.balanceService.get([asset.liquidityBalanceId])
       if (balances.length === 1) {
         return calculateCreditBalance(balances[0])
       }
@@ -563,59 +494,11 @@ export class AccountsService implements AccountsServiceInterface {
       .first()
       .select('settlementBalanceId')
     if (asset) {
-      const balances = await this.client.lookupAccounts([
+      const balances = await this.balanceService.get([
         asset.settlementBalanceId
       ])
       if (balances.length === 1) {
         return calculateDebitBalance(balances[0])
-      }
-    }
-  }
-
-  private async createTransfers(
-    transfers: BalanceTransfer[]
-  ): Promise<void | CreateTransfersError> {
-    const res = await this.client.createTransfers(
-      transfers.map((transfer, idx) => {
-        let flags = 0
-        if (transfer.twoPhaseCommit) {
-          flags |= TransferFlags.two_phase_commit
-        }
-        if (idx < transfers.length - 1) {
-          flags |= TransferFlags.linked
-        }
-        return {
-          id: transfer.id || randomId(),
-          debit_account_id: transfer.sourceBalanceId,
-          credit_account_id: transfer.destinationBalanceId,
-          amount: transfer.amount,
-          user_data: BigInt(0),
-          reserved: TRANSFER_RESERVED,
-          code: 0,
-          flags,
-          timeout: transfer.twoPhaseCommit ? BigInt(1e9) : BigInt(0),
-          timestamp: BigInt(0)
-        }
-      })
-    )
-    for (const { index, code } of res) {
-      switch (code) {
-        case CreateTransferError.linked_event_failed:
-          break
-        case CreateTransferError.exists:
-        case CreateTransferError.exists_with_different_debit_account_id:
-        case CreateTransferError.exists_with_different_credit_account_id:
-        case CreateTransferError.exists_with_different_user_data:
-        case CreateTransferError.exists_with_different_reserved_field:
-        case CreateTransferError.exists_with_different_code:
-        case CreateTransferError.exists_with_different_amount:
-        case CreateTransferError.exists_with_different_timeout:
-        case CreateTransferError.exists_with_different_flags:
-        case CreateTransferError.exists_and_already_committed_and_accepted:
-        case CreateTransferError.exists_and_already_committed_and_rejected:
-          return { index, code: CreateTransferError.exists }
-        default:
-          return { index, code }
       }
     }
   }
@@ -636,7 +519,7 @@ export class AccountsService implements AccountsServiceInterface {
       return DepositError.UnknownAccount
     }
     const depositId = id || uuid.v4()
-    const error = await this.createTransfers([
+    const error = await this.balanceService.createTransfers([
       {
         id: uuidToBigInt(depositId),
         sourceBalanceId: account.asset.settlementBalanceId,
@@ -683,7 +566,7 @@ export class AccountsService implements AccountsServiceInterface {
       return WithdrawError.UnknownAccount
     }
     const withdrawalId = id || uuid.v4()
-    const error = await this.createTransfers([
+    const error = await this.balanceService.createTransfers([
       {
         id: uuidToBigInt(withdrawalId),
         sourceBalanceId: account.balanceId,
@@ -724,15 +607,7 @@ export class AccountsService implements AccountsServiceInterface {
       return WithdrawError.InvalidId
     }
     // TODO: query transfer to verify it's a withdrawal
-    const res = await this.client.commitTransfers([
-      {
-        id: uuidToBigInt(id),
-        flags: 0,
-        reserved: TRANSFER_RESERVED,
-        code: 0,
-        timestamp: BigInt(0)
-      }
-    ])
+    const res = await this.balanceService.commitTransfers([uuidToBigInt(id)])
 
     for (const { code } of res) {
       switch (code) {
@@ -755,15 +630,7 @@ export class AccountsService implements AccountsServiceInterface {
       return WithdrawError.InvalidId
     }
     // TODO: query transfer to verify it's a withdrawal
-    const res = await this.client.commitTransfers([
-      {
-        id: uuidToBigInt(id),
-        flags: 0 | CommitFlags.reject,
-        reserved: TRANSFER_RESERVED,
-        code: 0,
-        timestamp: BigInt(0)
-      }
-    ])
+    const res = await this.balanceService.rollbackTransfers([uuidToBigInt(id)])
 
     for (const { code } of res) {
       switch (code) {
@@ -986,7 +853,7 @@ export class AccountsService implements AccountsServiceInterface {
         }
       )
     }
-    const error = await this.createTransfers(transfers)
+    const error = await this.balanceService.createTransfers(transfers)
     if (error) {
       switch (error.code) {
         case CreateTransferError.debit_account_not_found:
@@ -1011,16 +878,8 @@ export class AccountsService implements AccountsServiceInterface {
 
     const trx: Transaction = {
       commit: async (): Promise<void | TransferError> => {
-        const res = await this.client.commitTransfers(
-          transfers.map((transfer, idx) => {
-            return {
-              id: transfer.id,
-              flags: idx < transfers.length - 1 ? 0 | CommitFlags.linked : 0,
-              reserved: TRANSFER_RESERVED,
-              code: 0,
-              timestamp: BigInt(0)
-            }
-          })
+        const res = await this.balanceService.commitTransfers(
+          transfers.map((transfer) => transfer.id)
         )
         for (const { code } of res) {
           switch (code) {
@@ -1038,18 +897,8 @@ export class AccountsService implements AccountsServiceInterface {
         }
       },
       rollback: async (): Promise<void | TransferError> => {
-        const res = await this.client.commitTransfers(
-          transfers.map((transfer, idx) => {
-            const flags =
-              idx < transfers.length - 1 ? 0 | CommitFlags.linked : 0
-            return {
-              id: transfer.id,
-              flags: flags | CommitFlags.reject,
-              reserved: TRANSFER_RESERVED,
-              code: 0,
-              timestamp: BigInt(0)
-            }
-          })
+        const res = await this.balanceService.rollbackTransfers(
+          transfers.map((transfer) => transfer.id)
         )
         for (const { code } of res) {
           switch (code) {
@@ -1116,7 +965,7 @@ export class AccountsService implements AccountsServiceInterface {
         amount
       })
     }
-    const err = await this.createTransfers(transfers)
+    const err = await this.balanceService.createTransfers(transfers)
     if (err) {
       if (
         autoApply &&
@@ -1168,7 +1017,7 @@ export class AccountsService implements AccountsServiceInterface {
       destinationBalanceId: subAccount.balanceId,
       amount
     })
-    const err = await this.createTransfers(transfers)
+    const err = await this.balanceService.createTransfers(transfers)
     if (err) {
       if (err.code === CreateTransferError.exceeds_credits) {
         if (err.index === transfers.length - 1) {
@@ -1214,7 +1063,7 @@ export class AccountsService implements AccountsServiceInterface {
     ) {
       transfers.push(decreaseCredit({ account, amount }))
     }
-    const err = await this.createTransfers(transfers)
+    const err = await this.balanceService.createTransfers(transfers)
     if (err) {
       if (err.code === CreateTransferError.exceeds_credits) {
         return CreditError.InsufficientCredit
@@ -1266,7 +1115,7 @@ export class AccountsService implements AccountsServiceInterface {
       destinationBalanceId: account.balanceId,
       amount
     })
-    const err = await this.createTransfers(transfers)
+    const err = await this.balanceService.createTransfers(transfers)
     if (err) {
       if (err.code === CreateTransferError.exceeds_credits) {
         if (err.index === transfers.length - 1) {
