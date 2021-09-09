@@ -14,6 +14,7 @@ import { v4 as uuid } from 'uuid'
 
 import { createAdminApi } from '..'
 import { AccountsService } from '../../accounts/service'
+import { createBalanceService } from '../../balance/service'
 import { Config } from '../../config'
 import { Logger } from '../../logger/service'
 import { createKnex } from '../../Knex/service'
@@ -42,7 +43,8 @@ export const createTestApp = async (): Promise<TestContainer> => {
     replica_addresses: config.tigerbeetleReplicaAddresses
   })
   const knex = await createKnex(config.postgresUrl)
-  const accountsService = new AccountsService(tbClient, config, Logger)
+  const balanceService = createBalanceService({ tbClient, logger: Logger })
+  const accountsService = new AccountsService(balanceService, config, Logger)
   const adminApi = await createAdminApi({ accountsService, logger: Logger })
   const { port } = await adminApi.listen(0)
 

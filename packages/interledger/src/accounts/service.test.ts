@@ -7,6 +7,7 @@ import { Config } from '../config'
 import { IlpAccount as IlpAccountModel, Asset } from './models'
 import { randomAsset, AccountFactory } from './testsHelpers'
 import { AccountsService } from './service'
+import { createBalanceService } from '../balance/service'
 
 import {
   CreateAccountError,
@@ -52,7 +53,8 @@ describe('Accounts Service', (): void => {
         replica_addresses: config.tigerbeetleReplicaAddresses
       })
       knex = await createKnex(config.postgresUrl)
-      accountsService = new AccountsService(tbClient, config, Logger)
+      const balanceService = createBalanceService({ tbClient, logger: Logger })
+      accountsService = new AccountsService(balanceService, config, Logger)
       accountFactory = new AccountFactory(accountsService)
     }
   )

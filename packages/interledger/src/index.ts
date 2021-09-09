@@ -8,6 +8,7 @@ import { createConnectorService } from './connector'
 import { createRatesService, Rafiki } from './connector/core'
 import { Config } from './config'
 import { AccountsService } from './accounts/service'
+import { createBalanceService } from './balance/service'
 import { Logger } from './logger/service'
 
 const logger = Logger
@@ -58,7 +59,12 @@ export const gracefulShutdown = async (): Promise<void> => {
 }
 
 export const start = async (): Promise<void> => {
-  const accountsService = new AccountsService(tbClient, Config, logger)
+  const balanceService = createBalanceService({
+    logger,
+    tbClient
+  })
+
+  const accountsService = new AccountsService(balanceService, Config, logger)
 
   const ratesService = createRatesService({
     pricesUrl,
