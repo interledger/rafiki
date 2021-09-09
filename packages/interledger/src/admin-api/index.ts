@@ -6,20 +6,24 @@ import { Logger } from 'pino'
 
 import { resolvers } from './resolvers'
 import { AccountsService as AccountsServiceInterface } from '../accounts/types'
+import { CreditService } from '../credit/service'
 import { addResolversToSchema } from '@graphql-tools/schema'
 
 export interface ApolloContext {
   accountsService: AccountsServiceInterface
+  creditService: CreditService
   logger: Logger
 }
 
 interface ServiceDependencies {
   accountsService: AccountsServiceInterface
+  creditService: CreditService
   logger: Logger
 }
 
 export async function createAdminApi({
   accountsService,
+  creditService,
   logger
 }: ServiceDependencies): Promise<ApolloServer> {
   // Load schema from the file
@@ -38,6 +42,7 @@ export async function createAdminApi({
     context: async (): Promise<ApolloContext> => {
       return {
         accountsService,
+        creditService,
         logger
       }
     }

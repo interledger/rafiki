@@ -15,6 +15,7 @@ import { v4 as uuid } from 'uuid'
 import { createAdminApi } from '..'
 import { AccountsService } from '../../accounts/service'
 import { createBalanceService } from '../../balance/service'
+import { createCreditService, CreditService } from '../../credit/service'
 import { Config } from '../../config'
 import { Logger } from '../../logger/service'
 import { createKnex } from '../../Knex/service'
@@ -23,6 +24,7 @@ import { setContext } from '@apollo/client/link/context'
 
 export interface TestContainer {
   accountsService: AccountsService
+  creditService: CreditService
   adminApi: ApolloServer
   knex: Knex
   apolloClient: ApolloClient<NormalizedCacheObject>
@@ -45,7 +47,12 @@ export const createTestApp = async (): Promise<TestContainer> => {
   const knex = await createKnex(config.postgresUrl)
   const balanceService = createBalanceService({ tbClient, logger: Logger })
   const accountsService = new AccountsService(balanceService, config, Logger)
-  const adminApi = await createAdminApi({ accountsService, logger: Logger })
+  const creditService = createCreditService({ balanceService, logger: Logger })
+  const adminApi = await createAdminApi({
+    accountsService,
+    creditService,
+    logger: Logger
+  })
   const { port } = await adminApi.listen(0)
 
   const logger = createLogger({
@@ -103,6 +110,7 @@ export const createTestApp = async (): Promise<TestContainer> => {
   })
   return {
     accountsService,
+    creditService,
     adminApi,
     knex,
     apolloClient,

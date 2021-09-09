@@ -7,12 +7,6 @@ import {
 } from './deposit'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
-import {
-  CreditOptions,
-  ExtendCreditOptions,
-  SettleDebtOptions,
-  CreditError
-} from './credit'
 import { Transfer, Transaction, TransferError } from './transfer'
 import {
   AccountWithdrawal,
@@ -52,10 +46,6 @@ export interface AccountsService extends ConnectorAccountsService {
   ): Promise<Withdrawal | WithdrawError>
   finalizeWithdrawal(id: string): Promise<void | WithdrawError>
   rollbackWithdrawal(id: string): Promise<void | WithdrawError>
-  extendCredit(extendOptions: ExtendCreditOptions): Promise<void | CreditError>
-  utilizeCredit(utilizeOptions: CreditOptions): Promise<void | CreditError>
-  revokeCredit(revokeOptions: CreditOptions): Promise<void | CreditError>
-  settleDebt(settleOptions: SettleDebtOptions): Promise<void | CreditError>
   getAccountsPage(options: {
     pagination?: Pagination
     superAccountId?: string
