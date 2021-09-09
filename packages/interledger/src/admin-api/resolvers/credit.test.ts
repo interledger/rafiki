@@ -373,7 +373,7 @@ describe('Credit Resolvers', (): void => {
 
       const creditAmount = BigInt(10)
       await expect(
-        appContainer.accountsService.extendCredit({
+        appContainer.creditService.extend({
           accountId,
           subAccountId,
           amount: creditAmount
@@ -681,7 +681,7 @@ describe('Credit Resolvers', (): void => {
 
       const creditAmount = BigInt(10)
       await expect(
-        appContainer.accountsService.extendCredit({
+        appContainer.creditService.extend({
           accountId,
           subAccountId,
           amount: creditAmount
@@ -997,7 +997,7 @@ describe('Credit Resolvers', (): void => {
 
       const amount = BigInt(10)
       await expect(
-        appContainer.accountsService.extendCredit({
+        appContainer.creditService.extend({
           accountId,
           subAccountId,
           amount
@@ -1061,7 +1061,7 @@ describe('Credit Resolvers', (): void => {
           amount: creditAmount
         })
         await expect(
-          appContainer.accountsService.extendCredit({
+          appContainer.creditService.extend({
             accountId,
             subAccountId,
             amount: creditAmount,
@@ -1379,7 +1379,7 @@ describe('Credit Resolvers', (): void => {
         amount: lentAmount
       })
       await expect(
-        appContainer.accountsService.extendCredit({
+        appContainer.creditService.extend({
           accountId,
           subAccountId,
           amount: lentAmount,

@@ -3,14 +3,14 @@ import {
   ResolversTypes,
   MutationResolvers
 } from '../generated/graphql'
-import { CreditError } from '../../accounts/types'
+import { CreditError } from '../../credit/service'
 
 export const extendCredit: MutationResolvers['extendCredit'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['ExtendCreditMutationResponse'] => {
-  const error = await ctx.accountsService.extendCredit(args.input)
+  const error = await ctx.creditService.extend(args.input)
   if (error) {
     return errorToResponse[error]
   }
@@ -26,7 +26,7 @@ export const revokeCredit: MutationResolvers['revokeCredit'] = async (
   args,
   ctx
 ): ResolversTypes['RevokeCreditMutationResponse'] => {
-  const error = await ctx.accountsService.revokeCredit(args.input)
+  const error = await ctx.creditService.revoke(args.input)
   if (error) {
     return errorToResponse[error]
   }
@@ -42,7 +42,7 @@ export const utilizeCredit: MutationResolvers['utilizeCredit'] = async (
   args,
   ctx
 ): ResolversTypes['UtilizeCreditMutationResponse'] => {
-  const error = await ctx.accountsService.utilizeCredit(args.input)
+  const error = await ctx.creditService.utilize(args.input)
   if (error) {
     return errorToResponse[error]
   }
@@ -58,7 +58,7 @@ export const settleDebt: MutationResolvers['settleDebt'] = async (
   args,
   ctx
 ): ResolversTypes['SettleDebtMutationResponse'] => {
-  const error = await ctx.accountsService.settleDebt(args.input)
+  const error = await ctx.creditService.settleDebt(args.input)
   if (error) {
     return errorToResponse[error]
   }

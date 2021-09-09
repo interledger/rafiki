@@ -12,22 +12,19 @@ import * as uuid from 'uuid'
 import {
   BalanceOptions,
   BalanceService,
-  BalanceTransfer,
   CommitTransferError,
   CreateTransferError,
   TwoPhaseTransfer
 } from '../balance/service'
+import { BalanceTransferError, UnknownBalanceError } from '../shared/errors'
 import { Config } from '../config'
 import {
-  BalanceTransferError,
-  UnknownBalanceError,
   UnknownLiquidityAccountError,
   UnknownSettlementAccountError
 } from './errors'
 import {
   Asset as AssetModel,
   IlpAccount as IlpAccountModel,
-  SubAccount,
   IlpHttpToken
 } from './models'
 import {
@@ -46,17 +43,13 @@ import {
   LiquidityDeposit,
   Deposit,
   DepositError,
-  ExtendCreditOptions,
   IlpAccount,
   IlpBalance,
   isSubAccount,
   Pagination,
-  SettleDebtOptions,
   Transaction,
   Transfer,
   TransferError,
-  CreditOptions,
-  CreditError,
   UpdateAccountError,
   UpdateOptions,
   AccountWithdrawal,
@@ -919,226 +912,6 @@ export class AccountsService implements AccountsServiceInterface {
     return trx
   }
 
-  /**
-   * Extends additional line of credit to sub-account from its super-account(s)
-   *
-   * @param {Object} options
-   * @param {string} options.accountId - Account extending credit
-   * @param {string} options.subAccountId - Sub-account to which credit is extended
-   * @param {bigint} options.amount
-   * @param {boolean} [options.autoApply] - Utilize credit and apply to sub-account's balance (default: false)
-   */
-  public async extendCredit({
-    accountId,
-    subAccountId,
-    amount,
-    autoApply
-  }: ExtendCreditOptions): Promise<void | CreditError> {
-    const subAccount = await this.getAccountWithSuperAccounts(subAccountId)
-    if (!subAccount) {
-      return CreditError.UnknownSubAccount
-    } else if (!subAccount.hasSuperAccount(accountId)) {
-      if (accountId === subAccountId) {
-        return CreditError.SameAccounts
-      } else if (await IlpAccountModel.query().findById(accountId)) {
-        return CreditError.UnrelatedSubAccount
-      }
-      return CreditError.UnknownAccount
-    }
-    const transfers: BalanceTransfer[] = []
-    let account = subAccount as IlpAccountModel
-    for (
-      ;
-      account.isSubAccount() && account.id !== accountId;
-      account = account.superAccount
-    ) {
-      if (autoApply) {
-        transfers.push(increaseDebt({ account, amount }))
-      } else {
-        transfers.push(increaseCredit({ account, amount }))
-      }
-    }
-    if (autoApply) {
-      transfers.push({
-        sourceBalanceId: account.balanceId,
-        destinationBalanceId: subAccount.balanceId,
-        amount
-      })
-    }
-    const err = await this.balanceService.createTransfers(transfers)
-    if (err) {
-      if (
-        autoApply &&
-        err.index === transfers.length - 1 &&
-        err.code === CreateTransferError.exceeds_credits
-      ) {
-        return CreditError.InsufficientBalance
-      }
-      throw new BalanceTransferError(err.code)
-    }
-  }
-
-  /**
-   * Utilizes line of credit to sub-account and applies to sub-account's balance
-   *
-   * @param {Object} options
-   * @param {string} options.accountId - Account extending credit
-   * @param {string} options.subAccountId - Sub-account to which credit is extended
-   * @param {bigint} options.amount
-   */
-  public async utilizeCredit({
-    accountId,
-    subAccountId,
-    amount
-  }: CreditOptions): Promise<void | CreditError> {
-    const subAccount = await this.getAccountWithSuperAccounts(subAccountId)
-    if (!subAccount) {
-      return CreditError.UnknownSubAccount
-    } else if (!subAccount.hasSuperAccount(accountId)) {
-      if (accountId === subAccountId) {
-        return CreditError.SameAccounts
-      } else if (await IlpAccountModel.query().findById(accountId)) {
-        return CreditError.UnrelatedSubAccount
-      }
-      return CreditError.UnknownAccount
-    }
-    const transfers: BalanceTransfer[] = []
-    let account = subAccount as IlpAccountModel
-    for (
-      ;
-      account.isSubAccount() && account.id !== accountId;
-      account = account.superAccount
-    ) {
-      transfers.push(decreaseCredit({ account, amount }))
-      transfers.push(increaseDebt({ account, amount }))
-    }
-    transfers.push({
-      sourceBalanceId: account.balanceId,
-      destinationBalanceId: subAccount.balanceId,
-      amount
-    })
-    const err = await this.balanceService.createTransfers(transfers)
-    if (err) {
-      if (err.code === CreateTransferError.exceeds_credits) {
-        if (err.index === transfers.length - 1) {
-          return CreditError.InsufficientBalance
-        } else {
-          return CreditError.InsufficientCredit
-        }
-      }
-      throw new BalanceTransferError(err.code)
-    }
-  }
-
-  /**
-   * Reduces an existing line of credit available to the sub-account
-   *
-   * @param {Object} options
-   * @param {string} options.accountId - Account revoking credit
-   * @param {string} options.subAccountId - Sub-account to which credit is revoked
-   * @param {bigint} options.amount
-   */
-  public async revokeCredit({
-    accountId,
-    subAccountId,
-    amount
-  }: CreditOptions): Promise<void | CreditError> {
-    const subAccount = await this.getAccountWithSuperAccounts(subAccountId)
-    if (!subAccount) {
-      return CreditError.UnknownSubAccount
-    } else if (!subAccount.hasSuperAccount(accountId)) {
-      if (accountId === subAccountId) {
-        return CreditError.SameAccounts
-      } else if (await IlpAccountModel.query().findById(accountId)) {
-        return CreditError.UnrelatedSubAccount
-      }
-      return CreditError.UnknownAccount
-    }
-    const transfers: BalanceTransfer[] = []
-    let account = subAccount as IlpAccountModel
-    for (
-      ;
-      account.isSubAccount() && account.id !== accountId;
-      account = account.superAccount
-    ) {
-      transfers.push(decreaseCredit({ account, amount }))
-    }
-    const err = await this.balanceService.createTransfers(transfers)
-    if (err) {
-      if (err.code === CreateTransferError.exceeds_credits) {
-        return CreditError.InsufficientCredit
-      }
-      throw new BalanceTransferError(err.code)
-    }
-  }
-
-  /**
-   * Collects debt from sub-account
-   *
-   * @param {Object} options
-   * @param {string} options.accountId - Account collecting debt
-   * @param {string} options.subAccountId - Sub-account settling debt
-   * @param {bigint} options.amount
-   * @param {boolean} [options.revolve] - Replenish the sub-account's line of credit commensurate with the debt settled (default: true)
-   */
-  public async settleDebt({
-    accountId,
-    subAccountId,
-    amount,
-    revolve
-  }: SettleDebtOptions): Promise<void | CreditError> {
-    const subAccount = await this.getAccountWithSuperAccounts(subAccountId)
-    if (!subAccount) {
-      return CreditError.UnknownSubAccount
-    } else if (!subAccount.hasSuperAccount(accountId)) {
-      if (accountId === subAccountId) {
-        return CreditError.SameAccounts
-      } else if (await IlpAccountModel.query().findById(accountId)) {
-        return CreditError.UnrelatedSubAccount
-      }
-      return CreditError.UnknownAccount
-    }
-    const transfers: BalanceTransfer[] = []
-    let account = subAccount as IlpAccountModel
-    for (
-      ;
-      account.isSubAccount() && account.id !== accountId;
-      account = account.superAccount
-    ) {
-      transfers.push(decreaseDebt({ account, amount }))
-      if (revolve !== false) {
-        transfers.push(increaseCredit({ account, amount }))
-      }
-    }
-    transfers.push({
-      sourceBalanceId: subAccount.balanceId,
-      destinationBalanceId: account.balanceId,
-      amount
-    })
-    const err = await this.balanceService.createTransfers(transfers)
-    if (err) {
-      if (err.code === CreateTransferError.exceeds_credits) {
-        if (err.index === transfers.length - 1) {
-          return CreditError.InsufficientBalance
-        } else {
-          return CreditError.InsufficientDebt
-        }
-      }
-      throw new BalanceTransferError(err.code)
-    }
-  }
-
-  private async getAccountWithSuperAccounts(
-    accountId: string
-  ): Promise<IlpAccountModel | undefined> {
-    const account = await IlpAccountModel.query()
-      .withGraphFetched(`superAccount.^`, {
-        minimize: true
-      })
-      .findById(accountId)
-    return account || undefined
-  }
-
   /** TODO: Base64 encode/decode the cursors
    * Buffer.from("Hello World").toString('base64')
    * Buffer.from("SGVsbG8gV29ybGQ=", 'base64').toString('ascii')
@@ -1239,81 +1012,5 @@ export class AccountsService implements AccountsServiceInterface {
       ])
       .limit(first)
     return accounts.map((account) => toIlpAccount(account))
-  }
-}
-
-function increaseCredit({
-  account,
-  amount
-}: {
-  account: SubAccount
-  amount: bigint
-}): BalanceTransfer {
-  if (!account.creditBalanceId) {
-    throw new UnknownBalanceError(account.id)
-  } else if (!account.superAccount.creditExtendedBalanceId) {
-    throw new UnknownBalanceError(account.superAccount.id)
-  }
-  return {
-    sourceBalanceId: account.superAccount.creditExtendedBalanceId,
-    destinationBalanceId: account.creditBalanceId,
-    amount
-  }
-}
-
-function decreaseCredit({
-  account,
-  amount
-}: {
-  account: SubAccount
-  amount: bigint
-}): BalanceTransfer {
-  if (!account.creditBalanceId) {
-    throw new UnknownBalanceError(account.id)
-  } else if (!account.superAccount.creditExtendedBalanceId) {
-    throw new UnknownBalanceError(account.superAccount.id)
-  }
-  return {
-    sourceBalanceId: account.creditBalanceId,
-    destinationBalanceId: account.superAccount.creditExtendedBalanceId,
-    amount
-  }
-}
-
-function increaseDebt({
-  account,
-  amount
-}: {
-  account: SubAccount
-  amount: bigint
-}): BalanceTransfer {
-  if (!account.debtBalanceId) {
-    throw new UnknownBalanceError(account.id)
-  } else if (!account.superAccount.lentBalanceId) {
-    throw new UnknownBalanceError(account.superAccount.id)
-  }
-  return {
-    sourceBalanceId: account.superAccount.lentBalanceId,
-    destinationBalanceId: account.debtBalanceId,
-    amount
-  }
-}
-
-function decreaseDebt({
-  account,
-  amount
-}: {
-  account: SubAccount
-  amount: bigint
-}): BalanceTransfer {
-  if (!account.debtBalanceId) {
-    throw new UnknownBalanceError(account.id)
-  } else if (!account.superAccount.lentBalanceId) {
-    throw new UnknownBalanceError(account.superAccount.id)
-  }
-  return {
-    sourceBalanceId: account.debtBalanceId,
-    destinationBalanceId: account.superAccount.lentBalanceId,
-    amount
   }
 }
