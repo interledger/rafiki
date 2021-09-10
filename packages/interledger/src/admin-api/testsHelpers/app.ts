@@ -14,6 +14,7 @@ import { v4 as uuid } from 'uuid'
 
 import { createAdminApi } from '..'
 import { AccountsService } from '../../accounts/service'
+import { createAssetService } from '../../asset/service'
 import { createBalanceService } from '../../balance/service'
 import { createCreditService, CreditService } from '../../credit/service'
 import { Config } from '../../config'
@@ -46,7 +47,13 @@ export const createTestApp = async (): Promise<TestContainer> => {
   })
   const knex = await createKnex(config.postgresUrl)
   const balanceService = createBalanceService({ tbClient, logger: Logger })
-  const accountsService = new AccountsService(balanceService, config, Logger)
+  const assetService = createAssetService({ balanceService, logger: Logger })
+  const accountsService = new AccountsService(
+    assetService,
+    balanceService,
+    config,
+    Logger
+  )
   const creditService = createCreditService({ balanceService, logger: Logger })
   const adminApi = await createAdminApi({
     accountsService,

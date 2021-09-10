@@ -4,9 +4,11 @@ import { Account as Balance, createClient, Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import { Config } from '../config'
-import { IlpAccount as IlpAccountModel, Asset } from './models'
+import { IlpAccount as IlpAccountModel } from './models'
 import { randomAsset, AccountFactory } from './testsHelpers'
 import { AccountsService } from './service'
+import { Asset } from '../asset/model'
+import { createAssetService } from '../asset/service'
 import { createBalanceService } from '../balance/service'
 
 import {
@@ -53,7 +55,16 @@ describe('Accounts Service', (): void => {
       })
       knex = await createKnex(config.postgresUrl)
       const balanceService = createBalanceService({ tbClient, logger: Logger })
-      accountsService = new AccountsService(balanceService, config, Logger)
+      const assetService = createAssetService({
+        balanceService,
+        logger: Logger
+      })
+      accountsService = new AccountsService(
+        assetService,
+        balanceService,
+        config,
+        Logger
+      )
       accountFactory = new AccountFactory(accountsService)
     }
   )

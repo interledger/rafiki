@@ -12,7 +12,7 @@ import {
 } from 'tigerbeetle-node'
 import { BaseService } from '../shared/baseService'
 import { CreateBalanceError } from './errors'
-import { randomId } from '../accounts/utils'
+import { randomId } from '../shared/utils'
 
 export {
   Balance,
