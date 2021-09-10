@@ -107,6 +107,7 @@ function requotePayment(
 ): Promise<OutgoingPayment> {
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
+    if (!payment) throw new Error('payment does not exist')
     if (payment.state !== PaymentState.Cancelled) {
       throw new Error(`Cannot quote; payment is in state=${payment.state}`)
     }
@@ -121,6 +122,7 @@ async function approvePayment(
 ): Promise<OutgoingPayment> {
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
+    if (!payment) throw new Error('payment does not exist')
     if (payment.state !== PaymentState.Ready) {
       throw new Error(`Cannot approve; payment is in state=${payment.state}`)
     }
@@ -135,6 +137,7 @@ async function cancelPayment(
 ): Promise<OutgoingPayment> {
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
+    if (!payment) throw new Error('payment does not exist')
     if (payment.state !== PaymentState.Ready) {
       throw new Error(`Cannot cancel; payment is in state=${payment.state}`)
     }

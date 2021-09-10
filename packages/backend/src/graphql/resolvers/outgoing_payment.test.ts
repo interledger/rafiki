@@ -126,7 +126,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                 id
                 state
                 error
-                attempts
+                stateAttempts
                 intent {
                   paymentPointer
                   invoiceUrl
@@ -144,7 +144,9 @@ describe('OutgoingPayment Resolvers', (): void => {
                   lowExchangeRateEstimate
                   highExchangeRateEstimate
                 }
+                superAccountId
                 sourceAccount {
+                  id
                   scale
                   code
                 }
@@ -170,7 +172,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.id).toEqual(payment.id)
       expect(query.state).toEqual(SchemaPaymentState.Inactive)
       expect(query.error).toBeNull()
-      expect(query.attempts).toBe(0)
+      expect(query.stateAttempts).toBe(0)
       expect(query.intent).toEqual({
         paymentPointer: 'http://wallet2.example/paymentpointer/bob',
         amountToSend: '123',
@@ -190,7 +192,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         highExchangeRateEstimate: 2.3,
         __typename: 'PaymentQuote'
       })
+      expect(query.superAccountId).toBe(payment.superAccountId)
       expect(query.sourceAccount).toEqual({
+        id: payment.sourceAccount.id,
         scale: 9,
         code: 'USD',
         __typename: 'PaymentSourceAccount'
@@ -231,7 +235,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   describe('Mutation.createOutgoingPayment', (): void => {
     const input = {
-      superAccountId: uuid(),
+      accountId: uuid(),
       paymentPointer: 'http://wallet2.example/paymentpointer/bob',
       amountToSend: '123',
       autoApprove: false
@@ -241,7 +245,10 @@ describe('OutgoingPayment Resolvers', (): void => {
       jest
         .spyOn(outgoingPaymentService, 'create')
         .mockImplementation(async (args) => {
-          expect(args).toEqual(input)
+          expect(args).toEqual({
+            superAccountId: input.accountId,
+            ...input
+          })
           return payment
         })
 
@@ -445,6 +452,39 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.message).toBeNull()
       expect(query.payment?.id).toBe(payment.id)
     })
+
+    test('500', async (): Promise<void> => {
+      const spy = jest
+        .spyOn(outgoingPaymentService, 'approve')
+        .mockImplementation(async (id: string) => {
+          expect(id).toBe(payment.id)
+          throw new Error('fail')
+        })
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation ApproveOutgoingPayment($paymentId: String!) {
+              approveOutgoingPayment(paymentId: $paymentId) {
+                code
+                success
+                message
+                payment {
+                  id
+                }
+              }
+            }
+          `,
+          variables: { paymentId: payment.id }
+        })
+        .then(
+          (query): OutgoingPaymentResponse => query.data?.approveOutgoingPayment
+        )
+      expect(spy).toHaveBeenCalledTimes(1)
+      expect(query.code).toBe('500')
+      expect(query.success).toBe(false)
+      expect(query.message).toBe('fail')
+      expect(query.payment).toBeNull()
+    })
   })
 
   describe(`Mutation.cancelOutgoingPayment`, (): void => {
@@ -479,6 +519,39 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.success).toBe(true)
       expect(query.message).toBeNull()
       expect(query.payment?.id).toBe(payment.id)
+    })
+
+    test('500', async (): Promise<void> => {
+      const spy = jest
+        .spyOn(outgoingPaymentService, 'cancel')
+        .mockImplementation(async (id: string) => {
+          expect(id).toBe(payment.id)
+          throw new Error('fail')
+        })
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CancelOutgoingPayment($paymentId: String!) {
+              cancelOutgoingPayment(paymentId: $paymentId) {
+                code
+                success
+                message
+                payment {
+                  id
+                }
+              }
+            }
+          `,
+          variables: { paymentId: payment.id }
+        })
+        .then(
+          (query): OutgoingPaymentResponse => query.data?.cancelOutgoingPayment
+        )
+      expect(spy).toHaveBeenCalledTimes(1)
+      expect(query.code).toBe('500')
+      expect(query.success).toBe(false)
+      expect(query.message).toBe('fail')
+      expect(query.payment).toBeNull()
     })
   })
 })

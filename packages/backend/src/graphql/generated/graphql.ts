@@ -36,7 +36,7 @@ export type Amount = {
 };
 
 export type CreateOutgoingPaymentInput = {
-  superAccountId: Scalars['String'];
+  accountId: Scalars['String'];
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['String']>;
   invoiceUrl?: Maybe<Scalars['String']>;
@@ -103,9 +103,10 @@ export type OutgoingPayment = {
   id: Scalars['ID'];
   state: PaymentState;
   error?: Maybe<Scalars['String']>;
-  attempts: Scalars['Int'];
+  stateAttempts: Scalars['Int'];
   intent?: Maybe<PaymentIntent>;
   quote?: Maybe<PaymentQuote>;
+  superAccountId: Scalars['String'];
   sourceAccount: PaymentSourceAccount;
   destinationAccount: PaymentDestinationAccount;
   outcome: PaymentProgress;
@@ -168,6 +169,7 @@ export type PaymentQuote = {
 
 export type PaymentSourceAccount = {
   __typename?: 'PaymentSourceAccount';
+  id: Scalars['String'];
   scale: Scalars['Int'];
   code: Scalars['String'];
 };
@@ -387,9 +389,10 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['PaymentState'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  attempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
+  superAccountId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   sourceAccount?: Resolver<ResolversTypes['PaymentSourceAccount'], ParentType, ContextType>;
   destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
   outcome?: Resolver<ResolversTypes['PaymentProgress'], ParentType, ContextType>;
@@ -448,6 +451,7 @@ export type PaymentQuoteResolvers<ContextType = any, ParentType extends Resolver
 };
 
 export type PaymentSourceAccountResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentSourceAccount'] = ResolversParentTypes['PaymentSourceAccount']> = {
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

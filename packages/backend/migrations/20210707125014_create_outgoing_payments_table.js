@@ -4,7 +4,7 @@ exports.up = function (knex) {
 
     table.string('state').notNullable().index() // PaymentState
     table.string('error').nullable()
-    table.integer('attempts').notNullable().defaultTo(0)
+    table.integer('stateAttempts').notNullable().defaultTo(0)
 
     table.string('intentPaymentPointer').nullable()
     table.string('intentInvoiceUrl').nullable()
@@ -20,7 +20,6 @@ exports.up = function (knex) {
     table.float('quoteMinExchangeRate').nullable()
     table.float('quoteLowExchangeRateEstimate').nullable()
     table.float('quoteHighExchangeRateEstimate').nullable()
-    //table.integer('quoteEstimatedDuration').nullable() // milliseconds
 
     table.string('superAccountId').notNullable()
     table.string('sourceAccountId').notNullable()

@@ -79,7 +79,6 @@ export class MockPlugin implements IlpPlugin {
 
       this.totalReceived += BigInt(prepare.amount)
 
-      //moneyOrReject.setTotalReceived(prepare.amount)
       return serializeIlpFulfill(moneyOrReject.accept())
     }
   }

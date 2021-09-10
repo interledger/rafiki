@@ -7,8 +7,8 @@ import {
   ExtendCreditInput,
   ExtendCreditMutationResponse,
   IlpAccount,
-  RevokeCreditInput,
-  RevokeCreditMutationResponse
+  SettleDebtInput,
+  SettleDebtMutationResponse
 } from './generated/graphql'
 
 export interface ConnectorService {
@@ -18,7 +18,7 @@ export interface ConnectorService {
     superAccountId: string
   ): Promise<CreateIlpSubAccountMutationResponse>
   extendCredit(input: ExtendCreditInput): Promise<ExtendCreditMutationResponse>
-  revokeCredit(input: RevokeCreditInput): Promise<RevokeCreditMutationResponse>
+  settleDebt(input: SettleDebtInput): Promise<SettleDebtMutationResponse>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -42,7 +42,7 @@ export async function createConnectorService({
     createIlpSubAccount: (superAccountId) =>
       createIlpSubAccount(deps, superAccountId),
     extendCredit: (input) => extendCredit(deps, input),
-    revokeCredit: (input) => revokeCredit(deps, input)
+    settleDebt: (input) => settleDebt(deps, input)
   }
 }
 
@@ -156,7 +156,7 @@ function extendCredit(
   return deps.client
     .mutate({
       mutation: gql`
-        mutation ExtendCredit(input: ExtendCreditInput!) {
+        mutation ExtendCredit($input: ExtendCreditInput!) {
           extendCredit(input: $input) {
             code
             success
@@ -178,15 +178,15 @@ function extendCredit(
     )
 }
 
-async function revokeCredit(
+async function settleDebt(
   deps: ServiceDependencies,
-  input: RevokeCreditInput
-): Promise<RevokeCreditMutationResponse> {
+  input: SettleDebtInput
+): Promise<SettleDebtMutationResponse> {
   return deps.client
     .mutate({
       mutation: gql`
-        mutation RevokeCredit(input: RevokeCreditInput!) {
-          revokeCredit(input: $input) {
+        mutation SettleDebt($input: SettleDebtInput!) {
+          settleDebt(input: $input) {
             code
             success
             message
@@ -197,9 +197,9 @@ async function revokeCredit(
       variables: { input }
     })
     .then(
-      (query): RevokeCreditMutationResponse => {
+      (query): SettleDebtMutationResponse => {
         if (query.data) {
-          return query.data.revokeCredit
+          return query.data.settleDebt
         } else {
           throw new Error('Data was empty')
         }

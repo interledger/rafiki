@@ -7,8 +7,8 @@ import {
   CreateIlpSubAccountMutationResponse,
   ExtendCreditInput,
   ExtendCreditMutationResponse,
-  RevokeCreditInput,
-  RevokeCreditMutationResponse,
+  SettleDebtInput,
+  SettleDebtMutationResponse,
   CreditError
 } from '../connector/generated/graphql'
 
@@ -95,9 +95,9 @@ export class MockConnectorService implements ConnectorService {
     return { success: true, code: '200', message: 'ok' }
   }
 
-  async revokeCredit(
-    input: RevokeCreditInput
-  ): Promise<RevokeCreditMutationResponse> {
+  async settleDebt(
+    input: SettleDebtInput
+  ): Promise<SettleDebtMutationResponse> {
     const account = this._get(input.subAccountId)
     if (!account.superAccountId) {
       return {

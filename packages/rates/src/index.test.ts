@@ -1,5 +1,6 @@
 import Koa from 'koa'
 import { createRatesService, RatesService, ConvertError } from '.'
+import { logger } from './mocks'
 
 jest.useFakeTimers('modern')
 describe('Rates service', function () {
@@ -25,14 +26,7 @@ describe('Rates service', function () {
     service = createRatesService({
       pricesUrl: 'http://127.0.0.1:3210/',
       pricesLifetime,
-      logger: {
-        debug: () => jest.fn(),
-        fatal: () => jest.fn(),
-        error: () => jest.fn(),
-        warn: () => jest.fn(),
-        info: () => jest.fn(),
-        trace: () => jest.fn()
-      }
+      logger
     })
     requestCount = 0
   })

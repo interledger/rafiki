@@ -160,7 +160,7 @@ export async function createMockConnectorService(): Promise<ConnectorService> {
         success: true
       }
     },
-    revokeCredit: async (_input) => {
+    settleDebt: async (_input) => {
       return {
         code: '200',
         message: 'OK',

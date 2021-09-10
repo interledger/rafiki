@@ -72,9 +72,10 @@ type OutgoingPayment {
   id: ID!
   state: PaymentState!
   error: String
-  attempts: Int!
+  stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
+  superAccountId: String!
   sourceAccount: PaymentSourceAccount!
   destinationAccount: PaymentDestinationAccount!
   outcome: PaymentProgress!
@@ -122,6 +123,7 @@ type PaymentQuote {
 }
 
 type PaymentSourceAccount {
+  id: String!
   scale: Int!
   code: String!
 }
@@ -140,7 +142,7 @@ type PaymentProgress {
 }
 
 input CreateOutgoingPaymentInput {
-  superAccountId: String!
+  accountId: String!
   paymentPointer: String
   amountToSend: String #UInt64
   invoiceUrl: String

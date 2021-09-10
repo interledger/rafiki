@@ -1,4 +1,4 @@
-import { PaymentError } from '@interledger/pay'
+import { isPaymentError, PaymentError } from '@interledger/pay'
 import {
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
@@ -59,14 +59,17 @@ export const createOutgoingPayment: MutationResolvers['createOutgoingPayment'] =
     'outgoingPaymentService'
   )
   return outgoingPaymentService
-    .create(args.input)
+    .create({
+      superAccountId: args.input.accountId,
+      ...args.input
+    })
     .then((payment: OutgoingPayment) => ({
       code: '200',
       success: true,
       payment: paymentToGraphql(payment)
     }))
     .catch((err: Error | PaymentError) => ({
-      code: typeof err === 'string' && clientErrors[err] ? '400' : '500',
+      code: isPaymentError(err) && clientErrors[err] ? '400' : '500',
       success: false,
       message: typeof err === 'string' ? err : err.message
     }))
@@ -143,7 +146,7 @@ function paymentToGraphql(payment: OutgoingPayment): SchemaOutgoingPayment {
     id: payment.id,
     state: SchemaPaymentState[payment.state],
     error: payment.error,
-    attempts: payment.attempts,
+    stateAttempts: payment.stateAttempts,
     intent: {
       ...payment.intent,
       amountToSend: payment.intent.amountToSend?.toString()
@@ -157,7 +160,9 @@ function paymentToGraphql(payment: OutgoingPayment): SchemaOutgoingPayment {
       maxSourceAmount: payment.quote.maxSourceAmount.toString(),
       maxPacketAmount: payment.quote.maxPacketAmount.toString()
     },
+    superAccountId: payment.superAccountId,
     sourceAccount: {
+      id: payment.sourceAccount.id,
       scale: payment.sourceAccount.scale,
       code: payment.sourceAccount.code
     },

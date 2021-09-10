@@ -69,10 +69,12 @@ describe('OutgoingPaymentService', (): void => {
       })
   }
 
-  function fastForwardToAttempt(attempts: number): void {
+  function fastForwardToAttempt(stateAttempts: number): void {
     jest
       .spyOn(Date, 'now')
-      .mockReturnValue(Date.now() + attempts * RETRY_BACKOFF_SECONDS * 1000)
+      .mockReturnValue(
+        Date.now() + stateAttempts * RETRY_BACKOFF_SECONDS * 1000
+      )
   }
 
   beforeAll(
@@ -276,7 +278,7 @@ describe('OutgoingPaymentService', (): void => {
           })
         ).id
         const payment = await processNext(paymentId, PaymentState.Inactive)
-        expect(payment.attempts).toBe(1)
+        expect(payment.stateAttempts).toBe(1)
         expect(payment.error).toBeNull()
         expect(payment.quote).toBeUndefined()
       })
@@ -502,14 +504,17 @@ describe('OutgoingPaymentService', (): void => {
           const payment = await processNext(paymentId, PaymentState.Sending)
           expect(payment.state).toBe(PaymentState.Sending)
           expect(payment.error).toBeNull()
-          expect(payment.attempts).toBe(i + 1)
+          expect(payment.stateAttempts).toBe(i + 1)
           // Skip through the backoff timer.
-          fastForwardToAttempt(payment.attempts)
+          fastForwardToAttempt(payment.stateAttempts)
         }
         // Last attempt fails, but no more retries.
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe('ClosedByReceiver')
-        expect(payment.attempts).toBe(0)
+        expect(payment.stateAttempts).toBe(0)
+        // "mockPay" allows a small amount of money to be paid every attempt.
+        expect(payment.outcome?.amountSent).toBe(BigInt(10 * 5))
+        expect(payment.outcome?.amountDelivered).toBe(BigInt(5 * 5))
       })
 
       it('Cancelling (non-retryable Pay error)', async (): Promise<void> => {
@@ -570,7 +575,7 @@ describe('OutgoingPaymentService', (): void => {
           amountToSend: BigInt(123)
         })
         const payment = await processNext(paymentId, PaymentState.Sending)
-        expect(payment.attempts).toBe(1)
+        expect(payment.stateAttempts).toBe(1)
       })
     })
 
@@ -613,26 +618,26 @@ describe('OutgoingPaymentService', (): void => {
 
       it('Cancelling (endlessly cancel when refund fails after non-retryable send error)', async (): Promise<void> => {
         jest
-          .spyOn(connectorService, 'revokeCredit')
+          .spyOn(connectorService, 'settleDebt')
           .mockImplementation(() =>
             Promise.reject(new Error('account service error'))
           )
         // Even after many retries, if Cancelling fails it keeps retrying.
         for (let i = 0; i < 10; i++) {
           const payment = await processNext(paymentId, PaymentState.Cancelling)
-          expect(payment.attempts).toBe(i + 1)
-          fastForwardToAttempt(payment.attempts)
+          expect(payment.stateAttempts).toBe(i + 1)
+          fastForwardToAttempt(payment.stateAttempts)
         }
 
         const payment = await OutgoingPayment.query(knex).findById(paymentId)
         expect(payment.state).toBe(PaymentState.Cancelling)
         expect(payment.error).toBe('InvoiceAlreadyPaid')
-        expect(payment.attempts).toBe(10)
+        expect(payment.stateAttempts).toBe(10)
       })
 
       it('Cancelling (not enough time between attempts)', async (): Promise<void> => {
         jest
-          .spyOn(connectorService, 'revokeCredit')
+          .spyOn(connectorService, 'settleDebt')
           .mockImplementation(() =>
             Promise.reject(new Error('account service error'))
           )
@@ -645,7 +650,7 @@ describe('OutgoingPaymentService', (): void => {
 
         const payment = await OutgoingPayment.query(knex).findById(paymentId)
         expect(payment.state).toBe(PaymentState.Cancelling)
-        expect(payment.attempts).toBe(1)
+        expect(payment.stateAttempts).toBe(1)
       })
     })
   })
@@ -662,6 +667,12 @@ describe('OutgoingPaymentService', (): void => {
         })
       }
     )
+
+    it('fails when no payment exists', async (): Promise<void> => {
+      await expect(outgoingPaymentService.requote(uuid())).rejects.toThrow(
+        'payment does not exist'
+      )
+    })
 
     it('requotes a Cancelled payment', async (): Promise<void> => {
       await payment.$query().patch({
@@ -680,18 +691,21 @@ describe('OutgoingPaymentService', (): void => {
       expect(after.error).toBeNull()
     })
 
-    it('does not requote a Cancelling payment', async (): Promise<void> => {
-      await payment.$query().patch({
-        state: PaymentState.Cancelling,
-        error: 'Fail'
-      })
-      await expect(outgoingPaymentService.requote(payment.id)).rejects.toThrow(
-        `Cannot quote; payment is in state=Cancelling`
-      )
+    Object.values(PaymentState).forEach((startState) => {
+      if (startState === PaymentState.Cancelled) return
+      it(`does not requote a ${startState} payment`, async (): Promise<void> => {
+        await payment.$query().patch({
+          state: startState,
+          error: 'Fail'
+        })
+        await expect(
+          outgoingPaymentService.requote(payment.id)
+        ).rejects.toThrow(`Cannot quote; payment is in state=${startState}`)
 
-      const after = await OutgoingPayment.query(knex).findById(payment.id)
-      expect(after.state).toBe(PaymentState.Cancelling)
-      expect(after.error).toBe('Fail')
+        const after = await OutgoingPayment.query(knex).findById(payment.id)
+        expect(after.state).toBe(startState)
+        expect(after.error).toBe('Fail')
+      })
     })
   })
 
@@ -709,6 +723,12 @@ describe('OutgoingPaymentService', (): void => {
       }
     )
 
+    it('fails when no payment exists', async (): Promise<void> => {
+      await expect(outgoingPaymentService.approve(uuid())).rejects.toThrow(
+        'payment does not exist'
+      )
+    })
+
     it('activates a Ready payment', async (): Promise<void> => {
       await expect(
         outgoingPaymentService.approve(payment.id)
@@ -721,14 +741,17 @@ describe('OutgoingPaymentService', (): void => {
       expect(after.state).toBe(PaymentState.Activated)
     })
 
-    it('does not activate an Inactive payment', async (): Promise<void> => {
-      await payment.$query().patch({ state: PaymentState.Inactive })
-      await expect(outgoingPaymentService.approve(payment.id)).rejects.toThrow(
-        `Cannot approve; payment is in state=Inactive`
-      )
+    Object.values(PaymentState).forEach((startState) => {
+      if (startState === PaymentState.Ready) return
+      it(`does not activate a ${startState} payment`, async (): Promise<void> => {
+        await payment.$query().patch({ state: startState })
+        await expect(
+          outgoingPaymentService.approve(payment.id)
+        ).rejects.toThrow(`Cannot approve; payment is in state=${startState}`)
 
-      const after = await OutgoingPayment.query(knex).findById(payment.id)
-      expect(after.state).toBe(PaymentState.Inactive)
+        const after = await OutgoingPayment.query(knex).findById(payment.id)
+        expect(after.state).toBe(startState)
+      })
     })
   })
 
@@ -745,6 +768,12 @@ describe('OutgoingPaymentService', (): void => {
       }
     )
 
+    it('fails when no payment exists', async (): Promise<void> => {
+      await expect(outgoingPaymentService.cancel(uuid())).rejects.toThrow(
+        'payment does not exist'
+      )
+    })
+
     it('cancels a Ready payment', async (): Promise<void> => {
       await payment.$query().patch({ state: PaymentState.Ready })
       await expect(
@@ -759,13 +788,17 @@ describe('OutgoingPaymentService', (): void => {
       expect(after.error).toBe('CancelledByAPI')
     })
 
-    it('does not cancel an Inactive payment', async (): Promise<void> => {
-      await expect(outgoingPaymentService.cancel(payment.id)).rejects.toThrow(
-        `Cannot cancel; payment is in state=Inactive`
-      )
+    Object.values(PaymentState).forEach((startState) => {
+      if (startState === PaymentState.Ready) return
+      it(`does not cancel a ${startState} payment`, async (): Promise<void> => {
+        await payment.$query().patch({ state: startState })
+        await expect(outgoingPaymentService.cancel(payment.id)).rejects.toThrow(
+          `Cannot cancel; payment is in state=${startState}`
+        )
 
-      const after = await OutgoingPayment.query(knex).findById(payment.id)
-      expect(after.state).toBe(PaymentState.Inactive)
+        const after = await OutgoingPayment.query(knex).findById(payment.id)
+        expect(after.state).toBe(startState)
+      })
     })
   })
 })

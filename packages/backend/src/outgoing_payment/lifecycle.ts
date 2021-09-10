@@ -60,7 +60,7 @@ export async function handleQuoting(
       code: payment.sourceAccount.code
     },
     // This is always the full payment amount, even when part of that amount has already successfully been delivered.
-    // The quote's amounts are adjusted `handleSending` to reflect the actual payment state.
+    // The quote's amounts are adjusted in `handleSending` to reflect the actual payment state.
     amountToSend: payment.intent.amountToSend,
     slippage: deps.slippage,
     prices
@@ -100,13 +100,23 @@ export async function handleReady(
   payment: OutgoingPayment
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
-  if (payment.quote.activationDeadline < new Date()) {
+  const now = new Date()
+  if (payment.quote.activationDeadline < now) {
     throw LifecycleError.QuoteExpired
   }
   if (payment.intent.autoApprove) {
     await payment.$query(deps.knex).patch({ state: PaymentState.Activated })
     deps.logger.debug('auto-approve')
+    return
   }
+  deps.logger.error(
+    {
+      activationDeadline: payment.quote.activationDeadline.getTime(),
+      now: now.getTime(),
+      autoApprove: payment.intent.autoApprove
+    },
+    "handleReady for payment that isn't ready"
+  )
 }
 
 export async function handleActivation(
@@ -305,17 +315,18 @@ async function refundLeftoverBalance(
   )
   if (balance.balance === BigInt(0)) return
 
-  const revokeRes = await deps.connectorService.revokeCredit({
+  const settleRes = await deps.connectorService.settleDebt({
     accountId: payment.superAccountId,
     subAccountId: payment.sourceAccount.id,
-    amount: balance.balance
+    amount: balance.balance,
+    revolve: false
   })
-  if (!revokeRes.success) {
+  if (!settleRes.success) {
     deps.logger.warn(
       {
-        code: revokeRes.code,
-        message: revokeRes.message,
-        error: revokeRes.error
+        code: settleRes.code,
+        message: settleRes.message,
+        error: settleRes.error
       },
       'revoke credit error'
     )

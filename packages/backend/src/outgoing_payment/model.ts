@@ -35,7 +35,7 @@ export class OutgoingPayment extends BaseModel {
   public state!: PaymentState
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
-  public attempts!: number
+  public stateAttempts!: number
 
   public intent!: PaymentIntent
 
@@ -49,7 +49,6 @@ export class OutgoingPayment extends BaseModel {
     minExchangeRate: number
     lowExchangeRateEstimate: number
     highExchangeRateEstimate: number
-    //estimatedDuration: number // milliseconds
   }
   public superAccountId!: string
   public sourceAccount!: {
@@ -79,7 +78,7 @@ export class OutgoingPayment extends BaseModel {
       this.error = null
     }
     if (opts.old && this.state && opts.old['state'] !== this.state) {
-      this.attempts = 0
+      this.stateAttempts = 0
     }
   }
 
