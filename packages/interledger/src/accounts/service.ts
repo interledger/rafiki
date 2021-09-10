@@ -3,12 +3,12 @@ import {
   PartialModelObject,
   raw,
   transaction,
-  Transaction as Trx,
   UniqueViolationError
 } from 'objection'
 import { Logger } from 'pino'
 import * as uuid from 'uuid'
 
+import { Asset, AssetService } from '../asset/service'
 import {
   BalanceOptions,
   BalanceService,
@@ -17,26 +17,21 @@ import {
   TwoPhaseTransfer
 } from '../balance/service'
 import { BalanceTransferError, UnknownBalanceError } from '../shared/errors'
+import { randomId, uuidToBigInt } from '../shared/utils'
 import { Config } from '../config'
 import {
+  UnknownAssetError,
   UnknownLiquidityAccountError,
   UnknownSettlementAccountError
 } from './errors'
-import {
-  Asset as AssetModel,
-  IlpAccount as IlpAccountModel,
-  IlpHttpToken
-} from './models'
+import { IlpAccount as IlpAccountModel, IlpHttpToken } from './models'
 import {
   calculateCreditBalance,
   calculateDebitBalance,
-  randomId,
-  uuidToBigInt,
   validateId
 } from './utils'
 import {
   AccountsService as AccountsServiceInterface,
-  Asset,
   CreateAccountError,
   CreateOptions,
   AccountDeposit,
@@ -101,6 +96,7 @@ const UUID_LENGTH = 36
 
 export class AccountsService implements AccountsServiceInterface {
   constructor(
+    private assetService: AssetService,
     private balanceService: BalanceService,
     private config: typeof Config,
     private logger: Logger
@@ -110,19 +106,35 @@ export class AccountsService implements AccountsServiceInterface {
     account: CreateOptions
   ): Promise<IlpAccount | CreateAccountError> {
     try {
+      const newAccount: PartialModelObject<IlpAccountModel> = {
+        id: account.id,
+        disabled: account.disabled,
+        maxPacketAmount: account.maxPacketAmount,
+        outgoingEndpoint: account.http?.outgoing.endpoint,
+        outgoingToken: account.http?.outgoing.authToken,
+        streamEnabled: account.stream?.enabled,
+        staticIlpAddress: account.routing?.staticIlpAddress
+      }
+      // Don't rollback creating a new asset if account creation fails.
+      // Asset rows include a smallserial column that would have sequence gaps
+      // if a transaction is rolled back.
+      // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
+      if (isSubAccount(account)) {
+        newAccount.superAccountId = account.superAccountId
+        const superAccount = await IlpAccountModel.query()
+          .findById(account.superAccountId)
+          .withGraphFetched('asset(withUnit)')
+          .throwIfNotFound()
+        newAccount.assetId = superAccount.assetId
+        newAccount.asset = superAccount.asset
+      } else {
+        newAccount.asset = await this.assetService.getOrCreate(account.asset)
+        newAccount.assetId = newAccount.asset.id
+      }
       return await transaction(
         IlpAccountModel,
         IlpHttpToken,
-        async (IlpAccountModel, IlpHttpToken, trx) => {
-          const newAccount: PartialModelObject<IlpAccountModel> = {
-            id: account.id,
-            disabled: account.disabled,
-            maxPacketAmount: account.maxPacketAmount,
-            outgoingEndpoint: account.http?.outgoing.endpoint,
-            outgoingToken: account.http?.outgoing.authToken,
-            streamEnabled: account.stream?.enabled,
-            staticIlpAddress: account.routing?.staticIlpAddress
-          }
+        async (IlpAccountModel, IlpHttpToken) => {
           const newBalances: BalanceOptions[] = []
           const superAccountPatch: PartialModelObject<IlpAccountModel> = {}
           if (isSubAccount(account)) {
@@ -132,8 +144,6 @@ export class AccountsService implements AccountsServiceInterface {
               .withGraphFetched('asset(withUnit)')
               .forUpdate()
               .throwIfNotFound()
-            newAccount.assetId = superAccount.assetId
-            newAccount.asset = superAccount.asset
             newAccount.creditBalanceId = randomId()
             newAccount.debtBalanceId = randomId()
             newBalances.push(
@@ -168,19 +178,13 @@ export class AccountsService implements AccountsServiceInterface {
                 unit: superAccount.asset.unit
               })
             }
-          } else {
-            newAccount.asset = await this.getOrCreateAsset(
-              account.asset,
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              trx!
-            )
-            newAccount.assetId = newAccount.asset.id
           }
 
           newAccount.balanceId = randomId()
           newBalances.push({
             id: newAccount.balanceId,
-            unit: newAccount.asset.unit
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            unit: newAccount.asset!.unit
           })
 
           await this.balanceService.create(newBalances)
@@ -258,9 +262,11 @@ export class AccountsService implements AccountsServiceInterface {
               staticIlpAddress: accountOptions.routing?.staticIlpAddress
             })
             .throwIfNotFound()
-          account.asset = await AssetModel.query()
-            .findById(account.assetId)
-            .modify('codeAndScale')
+          const asset = await this.assetService.getById(account.assetId)
+          if (!asset) {
+            throw new UnknownAssetError(account.id)
+          }
+          account.asset = asset
           return toIlpAccount(account)
         }
       )
@@ -359,34 +365,6 @@ export class AccountsService implements AccountsServiceInterface {
     return accountBalance
   }
 
-  private async getOrCreateAsset(asset: Asset, trx: Trx): Promise<AssetModel> {
-    const assetRow = await AssetModel.query().where(asset).first()
-    if (assetRow) {
-      return assetRow
-    } else {
-      const liquidityBalanceId = randomId()
-      const settlementBalanceId = randomId()
-      const assetRow = await AssetModel.query(trx).insertAndFetch({
-        ...asset,
-        settlementBalanceId,
-        liquidityBalanceId
-      })
-      await this.balanceService.create([
-        {
-          id: liquidityBalanceId,
-          unit: assetRow.unit
-        },
-        {
-          id: settlementBalanceId,
-          debitBalance: true,
-          unit: assetRow.unit
-        }
-      ])
-
-      return assetRow
-    }
-  }
-
   public async depositLiquidity({
     asset: { code, scale },
     amount,
@@ -395,8 +373,7 @@ export class AccountsService implements AccountsServiceInterface {
     if (id && !validateId(id)) {
       return DepositError.InvalidId
     }
-    const trx = await AssetModel.startTransaction()
-    const asset = await this.getOrCreateAsset({ code, scale }, trx)
+    const asset = await this.assetService.getOrCreate({ code, scale })
     const error = await this.balanceService.createTransfers([
       {
         id: id ? uuidToBigInt(id) : randomId(),
@@ -406,7 +383,6 @@ export class AccountsService implements AccountsServiceInterface {
       }
     ])
     if (error) {
-      await trx.rollback()
       switch (error.code) {
         case CreateTransferError.exists:
           return DepositError.DepositExists
@@ -418,7 +394,6 @@ export class AccountsService implements AccountsServiceInterface {
           throw new BalanceTransferError(error.code)
       }
     }
-    await trx.commit()
   }
 
   public async withdrawLiquidity({
@@ -429,10 +404,7 @@ export class AccountsService implements AccountsServiceInterface {
     if (id && !validateId(id)) {
       return WithdrawError.InvalidId
     }
-    const asset = await AssetModel.query()
-      .where({ code, scale })
-      .first()
-      .select('liquidityBalanceId', 'settlementBalanceId')
+    const asset = await this.assetService.get({ code, scale })
     if (!asset) {
       return WithdrawError.UnknownAsset
     }
@@ -466,10 +438,7 @@ export class AccountsService implements AccountsServiceInterface {
     code,
     scale
   }: Asset): Promise<bigint | undefined> {
-    const asset = await AssetModel.query()
-      .where({ code, scale })
-      .first()
-      .select('liquidityBalanceId')
+    const asset = await this.assetService.get({ code, scale })
     if (asset) {
       const balances = await this.balanceService.get([asset.liquidityBalanceId])
       if (balances.length === 1) {
@@ -482,10 +451,7 @@ export class AccountsService implements AccountsServiceInterface {
     code,
     scale
   }: Asset): Promise<bigint | undefined> {
-    const asset = await AssetModel.query()
-      .where({ code, scale })
-      .first()
-      .select('settlementBalanceId')
+    const asset = await this.assetService.get({ code, scale })
     if (asset) {
       const balances = await this.balanceService.get([
         asset.settlementBalanceId

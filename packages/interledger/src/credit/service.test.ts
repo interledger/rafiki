@@ -6,6 +6,7 @@ import { v4 as uuid } from 'uuid'
 import { Config } from '../config'
 import { AccountFactory } from '../accounts/testsHelpers'
 import { CreditService, createCreditService, CreditError } from './service'
+import { createAssetService } from '../asset/service'
 import { createBalanceService } from '../balance/service'
 import { AccountsService } from '../accounts/service'
 
@@ -33,11 +34,20 @@ describe('Credit Service', (): void => {
         tbClient,
         logger: Logger
       })
+      const assetService = createAssetService({
+        balanceService,
+        logger: Logger
+      })
       creditService = createCreditService({
         balanceService,
         logger: Logger
       })
-      accountsService = new AccountsService(balanceService, config, Logger)
+      accountsService = new AccountsService(
+        assetService,
+        balanceService,
+        config,
+        Logger
+      )
       accountFactory = new AccountFactory(accountsService)
     }
   )

@@ -1,6 +1,6 @@
-import { BaseModel } from '../../shared/baseModel'
+import { BaseModel } from '../shared/baseModel'
 import { AnyQueryBuilder, Pojo } from 'objection'
-import { bigIntToDbUuid, uuidToBigInt } from '../utils'
+import { bigIntToDbUuid, uuidToBigInt } from '../shared/utils'
 
 export class Asset extends BaseModel {
   public static get tableName(): string {

@@ -1,7 +1,7 @@
 import { BaseModel } from '../../shared/baseModel'
-import { Asset } from './asset'
+import { Asset } from '../../asset/model'
 import { IlpHttpToken } from './ilpHttpToken'
-import { bigIntToDbUuid, uuidToBigInt } from '../utils'
+import { bigIntToDbUuid, uuidToBigInt } from '../../shared/utils'
 import { Model, Pojo } from 'objection'
 
 const BALANCE_IDS = [
