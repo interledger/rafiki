@@ -49,7 +49,7 @@ describe('Withdrawal Resolvers', (): void => {
     test('Can create an ilp account withdrawal', async (): Promise<void> => {
       const { id: ilpAccountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId: ilpAccountId,
         amount
       })
@@ -181,7 +181,7 @@ describe('Withdrawal Resolvers', (): void => {
     test('Returns an error for existing withdrawal', async (): Promise<void> => {
       const { id: ilpAccountId } = await accountFactory.build()
       const amount = BigInt(10)
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId: ilpAccountId,
         amount: BigInt(100)
       })
@@ -278,7 +278,7 @@ describe('Withdrawal Resolvers', (): void => {
     test('Can finalize an ilp account withdrawal', async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId,
         amount
       })
@@ -388,7 +388,7 @@ describe('Withdrawal Resolvers', (): void => {
     test("Can't finalize finalized withdrawal", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId,
         amount
       })
@@ -434,7 +434,7 @@ describe('Withdrawal Resolvers', (): void => {
     test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId,
         amount
       })
@@ -482,7 +482,7 @@ describe('Withdrawal Resolvers', (): void => {
     test('Can rollback an ilp account withdrawal', async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId,
         amount
       })
@@ -592,7 +592,7 @@ describe('Withdrawal Resolvers', (): void => {
     test("Can't rollback finalized withdrawal", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId,
         amount
       })
@@ -638,7 +638,7 @@ describe('Withdrawal Resolvers', (): void => {
     test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId,
         amount
       })

@@ -62,7 +62,7 @@ describe('Credit Resolvers', (): void => {
 
         const depositAmount = BigInt(20)
         if (autoApply) {
-          await appContainer.accountsService.deposit({
+          await appContainer.depositService.create({
             accountId,
             amount: depositAmount
           })
@@ -688,7 +688,7 @@ describe('Credit Resolvers', (): void => {
         })
       ).resolves.toBeUndefined()
 
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId,
         amount: creditAmount
       })
@@ -1056,7 +1056,7 @@ describe('Credit Resolvers', (): void => {
         })
 
         const creditAmount = BigInt(10)
-        await appContainer.accountsService.deposit({
+        await appContainer.depositService.create({
           accountId,
           amount: creditAmount
         })
@@ -1374,7 +1374,7 @@ describe('Credit Resolvers', (): void => {
       })
 
       const lentAmount = BigInt(5)
-      await appContainer.accountsService.deposit({
+      await appContainer.depositService.create({
         accountId,
         amount: lentAmount
       })

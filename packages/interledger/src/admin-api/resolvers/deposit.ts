@@ -4,7 +4,7 @@ import {
   MutationResolvers,
   DepositsConnectionResolvers
 } from '../generated/graphql'
-import { DepositError, isDepositError } from '../../accounts/types'
+import { DepositError, isDepositError } from '../../deposit/service'
 
 export const getDeposit: QueryResolvers['deposit'] = async (
   parent,
@@ -22,7 +22,7 @@ export const createDeposit: MutationResolvers['createDeposit'] = async (
   ctx
 ): ResolversTypes['CreateDepositMutationResponse'] => {
   try {
-    const depositOrError = await ctx.accountsService.deposit({
+    const depositOrError = await ctx.depositService.create({
       id: args.input.id,
       accountId: args.input.ilpAccountId,
       amount: args.input.amount

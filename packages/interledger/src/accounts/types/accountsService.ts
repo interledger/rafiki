@@ -1,10 +1,4 @@
 import { Asset } from './asset'
-import {
-  AccountDeposit,
-  LiquidityDeposit,
-  Deposit,
-  DepositError
-} from './deposit'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
 import { Transfer, Transaction, TransferError } from './transfer'
@@ -34,13 +28,11 @@ export interface AccountsService extends ConnectorAccountsService {
   ): Promise<IlpAccount | UpdateAccountError>
   getSubAccounts(accountId: string): Promise<IlpAccount[]>
   getAccountBalance(accountId: string): Promise<IlpBalance | undefined>
-  depositLiquidity(deposit: LiquidityDeposit): Promise<void | DepositError>
   withdrawLiquidity(
     withdrawal: LiquidityWithdrawal
   ): Promise<void | WithdrawError>
   getLiquidityBalance(asset: Asset): Promise<bigint | undefined>
   getSettlementBalance(asset: Asset): Promise<bigint | undefined>
-  deposit(deposit: AccountDeposit): Promise<Deposit | DepositError>
   createWithdrawal(
     withdrawal: AccountWithdrawal
   ): Promise<Withdrawal | WithdrawError>

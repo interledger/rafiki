@@ -8,6 +8,7 @@ import { AccountFactory } from '../accounts/testsHelpers'
 import { CreditService, createCreditService, CreditError } from './service'
 import { createAssetService } from '../asset/service'
 import { createBalanceService } from '../balance/service'
+import { createDepositService, DepositService } from '../deposit/service'
 import { AccountsService } from '../accounts/service'
 
 import { Logger } from '../logger/service'
@@ -18,6 +19,7 @@ describe('Credit Service', (): void => {
   let accountsService: AccountsService
   let accountFactory: AccountFactory
   let config: typeof Config
+  let depositService: DepositService
   let tbClient: Client
   let knex: Knex
   let trx: Transaction
@@ -39,6 +41,11 @@ describe('Credit Service', (): void => {
         logger: Logger
       })
       creditService = createCreditService({
+        balanceService,
+        logger: Logger
+      })
+      depositService = createDepositService({
+        assetService,
         balanceService,
         logger: Logger
       })
@@ -120,11 +127,11 @@ describe('Credit Service', (): void => {
 
         const depositAmount = BigInt(20)
         if (autoApply) {
-          await accountsService.deposit({
+          await depositService.create({
             accountId: superAccountId,
             amount: depositAmount
           })
-          await accountsService.deposit({
+          await depositService.create({
             accountId,
             amount: depositAmount
           })
@@ -347,7 +354,7 @@ describe('Credit Service', (): void => {
           amount: creditAmount
         })
       ).resolves.toBeUndefined()
-      await accountsService.deposit({
+      await depositService.create({
         accountId: superAccountId,
         amount: creditAmount
       })
@@ -749,7 +756,7 @@ describe('Credit Service', (): void => {
         })
 
         const creditAmount = BigInt(10)
-        await accountsService.deposit({
+        await depositService.create({
           accountId: superAccountId,
           amount: creditAmount
         })
@@ -868,7 +875,7 @@ describe('Credit Service', (): void => {
       })
 
       const lentAmount = BigInt(5)
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount: lentAmount
       })
@@ -882,7 +889,7 @@ describe('Credit Service', (): void => {
       ).resolves.toBeUndefined()
 
       const depositAmount = BigInt(5)
-      await accountsService.deposit({
+      await depositService.create({
         accountId: subAccountId,
         amount: depositAmount
       })
@@ -922,7 +929,7 @@ describe('Credit Service', (): void => {
       })
 
       const lentAmount = BigInt(5)
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount: lentAmount
       })
