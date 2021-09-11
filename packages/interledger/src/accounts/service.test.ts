@@ -10,12 +10,11 @@ import { AccountsService } from './service'
 import { Asset } from '../asset/model'
 import { createAssetService } from '../asset/service'
 import { createBalanceService } from '../balance/service'
+import { createDepositService, DepositService } from '../deposit/service'
 
 import {
   CreateAccountError,
   CreateOptions,
-  DepositError,
-  isDepositError,
   IlpAccount,
   IlpBalance,
   isCreateAccountError,
@@ -35,6 +34,7 @@ describe('Accounts Service', (): void => {
   let accountsService: AccountsService
   let accountFactory: AccountFactory
   let config: typeof Config
+  let depositService: DepositService
   let tbClient: Client
   let knex: Knex
   let trx: Transaction
@@ -56,6 +56,11 @@ describe('Accounts Service', (): void => {
       knex = await createKnex(config.postgresUrl)
       const balanceService = createBalanceService({ tbClient, logger: Logger })
       const assetService = createAssetService({
+        balanceService,
+        logger: Logger
+      })
+      depositService = createDepositService({
+        assetService,
         balanceService,
         logger: Logger
       })
@@ -808,7 +813,7 @@ describe('Accounts Service', (): void => {
       }
 
       const amount = BigInt(10)
-      await accountsService.depositLiquidity({
+      await depositService.createLiquidity({
         asset,
         amount
       })
@@ -837,7 +842,7 @@ describe('Accounts Service', (): void => {
       }
 
       const amount = BigInt(10)
-      await accountsService.depositLiquidity({
+      await depositService.createLiquidity({
         asset,
         amount
       })
@@ -856,80 +861,11 @@ describe('Accounts Service', (): void => {
     })
   })
 
-  describe('Deposit liquidity', (): void => {
-    test('Can deposit to liquidity account', async (): Promise<void> => {
-      const asset = randomAsset()
-      const amount = BigInt(10)
-      {
-        const error = await accountsService.depositLiquidity({
-          asset,
-          amount
-        })
-        expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(asset)
-        expect(balance).toEqual(amount)
-        const settlementBalance = await accountsService.getSettlementBalance(
-          asset
-        )
-        expect(settlementBalance).toEqual(amount)
-      }
-      const amount2 = BigInt(5)
-      {
-        const error = await accountsService.depositLiquidity({
-          asset,
-          amount: amount2
-        })
-        expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(asset)
-        expect(balance).toEqual(amount + amount2)
-        const settlementBalance = await accountsService.getSettlementBalance(
-          asset
-        )
-        expect(settlementBalance).toEqual(amount + amount2)
-      }
-    })
-
-    test('Returns error for invalid id', async (): Promise<void> => {
-      const error = await accountsService.depositLiquidity({
-        id: 'not a uuid v4',
-        asset: randomAsset(),
-        amount: BigInt(5)
-      })
-      expect(error).toEqual(DepositError.InvalidId)
-    })
-
-    test('Can deposit liquidity with idempotency key', async (): Promise<void> => {
-      const asset = randomAsset()
-      const amount = BigInt(10)
-      const id = uuid()
-      {
-        const error = await accountsService.depositLiquidity({
-          asset,
-          amount,
-          id
-        })
-        expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(asset)
-        expect(balance).toEqual(amount)
-      }
-      {
-        const error = await accountsService.depositLiquidity({
-          asset,
-          amount,
-          id
-        })
-        expect(error).toEqual(DepositError.DepositExists)
-        const balance = await accountsService.getLiquidityBalance(asset)
-        expect(balance).toEqual(amount)
-      }
-    })
-  })
-
   describe('Withdraw liquidity', (): void => {
     test('Can withdraw liquidity account', async (): Promise<void> => {
       const asset = randomAsset()
       const startingBalance = BigInt(10)
-      await accountsService.depositLiquidity({
+      await depositService.createLiquidity({
         asset,
         amount: startingBalance
       })
@@ -975,7 +911,7 @@ describe('Accounts Service', (): void => {
     test('Can withdraw liquidity with idempotency key', async (): Promise<void> => {
       const asset = randomAsset()
       const startingBalance = BigInt(10)
-      await accountsService.depositLiquidity({
+      await depositService.createLiquidity({
         asset,
         amount: startingBalance
       })
@@ -1006,7 +942,7 @@ describe('Accounts Service', (): void => {
     test('Returns error for insufficient balance', async (): Promise<void> => {
       const asset = randomAsset()
       const startingBalance = BigInt(5)
-      await accountsService.depositLiquidity({
+      await depositService.createLiquidity({
         asset,
         amount: startingBalance
       })
@@ -1038,103 +974,11 @@ describe('Accounts Service', (): void => {
     })
   })
 
-  describe('Account Deposit', (): void => {
-    test('Can deposit to account', async (): Promise<void> => {
-      const { id: accountId, asset } = await accountFactory.build()
-      const amount = BigInt(10)
-      const deposit = {
-        accountId,
-        amount
-      }
-      const depositOrError = await accountsService.deposit(deposit)
-      expect(isDepositError(depositOrError)).toEqual(false)
-      if (isDepositError(depositOrError)) {
-        fail()
-      }
-      expect(depositOrError).toEqual({
-        ...deposit,
-        id: depositOrError.id
-      })
-      const { balance } = (await accountsService.getAccountBalance(
-        accountId
-      )) as IlpBalance
-      expect(balance).toEqual(amount)
-      const settlementBalance = await accountsService.getSettlementBalance(
-        asset
-      )
-      expect(settlementBalance).toEqual(amount)
-
-      {
-        const depositOrError = await accountsService.deposit(deposit)
-        expect(isDepositError(depositOrError)).toEqual(false)
-        if (isDepositError(depositOrError)) {
-          fail()
-        }
-        expect(depositOrError).toEqual({
-          ...deposit,
-          id: depositOrError.id
-        })
-        const { balance } = (await accountsService.getAccountBalance(
-          accountId
-        )) as IlpBalance
-        expect(balance).toEqual(amount + amount)
-      }
-    })
-
-    test('Returns error for invalid id', async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
-      const error = await accountsService.deposit({
-        id: 'not a uuid v4',
-        accountId,
-        amount: BigInt(5)
-      })
-      expect(isDepositError(error)).toEqual(true)
-      expect(error).toEqual(DepositError.InvalidId)
-    })
-
-    test("Can't deposit to nonexistent account", async (): Promise<void> => {
-      const accountId = uuid()
-      const error = await accountsService.deposit({
-        accountId,
-        amount: BigInt(5)
-      })
-      expect(isDepositError(error)).toEqual(true)
-      expect(error).toEqual(DepositError.UnknownAccount)
-    })
-
-    test("Can't deposit with duplicate id", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
-      const amount = BigInt(10)
-      const deposit = {
-        id: uuid(),
-        accountId,
-        amount
-      }
-      await expect(accountsService.deposit(deposit)).resolves.toEqual(deposit)
-      await expect(accountsService.deposit(deposit)).resolves.toEqual(
-        DepositError.DepositExists
-      )
-      await expect(
-        accountsService.deposit({
-          ...deposit,
-          amount: BigInt(1)
-        })
-      ).resolves.toEqual(DepositError.DepositExists)
-      const { id: diffAccountId } = await accountFactory.build()
-      await expect(
-        accountsService.deposit({
-          ...deposit,
-          accountId: diffAccountId
-        })
-      ).resolves.toEqual(DepositError.DepositExists)
-    })
-  })
-
   describe('Account Withdraw', (): void => {
     test('Can withdraw from account', async (): Promise<void> => {
       const { id: accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(10)
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount: startingBalance
       })
@@ -1200,7 +1044,7 @@ describe('Accounts Service', (): void => {
     test('Returns error for insufficient balance', async (): Promise<void> => {
       const { id: accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(5)
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount: startingBalance
       })
@@ -1223,7 +1067,7 @@ describe('Accounts Service', (): void => {
 
     test("Can't create withdrawal with duplicate id", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount: BigInt(10)
       })
@@ -1249,7 +1093,7 @@ describe('Accounts Service', (): void => {
       ).resolves.toEqual(WithdrawError.WithdrawalExists)
 
       const { id: diffAccountId } = await accountFactory.build()
-      await accountsService.deposit({
+      await depositService.create({
         accountId: diffAccountId,
         amount
       })
@@ -1264,7 +1108,7 @@ describe('Accounts Service', (): void => {
     test('Can rollback withdrawal', async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const startingBalance = BigInt(10)
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount: startingBalance
       })
@@ -1302,7 +1146,7 @@ describe('Accounts Service', (): void => {
     test("Can't finalize finalized withdrawal", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(5)
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount
       })
@@ -1325,7 +1169,7 @@ describe('Accounts Service', (): void => {
     test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(5)
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount
       })
@@ -1361,7 +1205,7 @@ describe('Accounts Service', (): void => {
     test("Can't rollback finalized withdrawal", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(5)
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount
       })
@@ -1384,7 +1228,7 @@ describe('Accounts Service', (): void => {
     test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
       const amount = BigInt(5)
-      await accountsService.deposit({
+      await depositService.create({
         accountId,
         amount
       })
@@ -1574,13 +1418,13 @@ describe('Accounts Service', (): void => {
         })
 
         const startingSourceBalance = BigInt(10)
-        await accountsService.deposit({
+        await depositService.create({
           accountId: sourceAccountId,
           amount: startingSourceBalance
         })
 
         const startingLiquidity = BigInt(100)
-        await accountsService.depositLiquidity({
+        await depositService.createLiquidity({
           asset,
           amount: startingLiquidity
         })
@@ -1687,13 +1531,13 @@ describe('Accounts Service', (): void => {
         })
 
         const startingSourceBalance = BigInt(10)
-        await accountsService.deposit({
+        await depositService.create({
           accountId: sourceAccountId,
           amount: startingSourceBalance
         })
 
         const startingDestinationLiquidity = BigInt(100)
-        await accountsService.depositLiquidity({
+        await depositService.createLiquidity({
           asset: destinationAsset,
           amount: startingDestinationLiquidity
         })
@@ -1821,7 +1665,7 @@ describe('Accounts Service', (): void => {
           asset: sameAsset ? sourceAsset : randomAsset()
         })
         const startingSourceBalance = BigInt(10)
-        await accountsService.deposit({
+        await depositService.create({
           accountId: sourceAccountId,
           amount: startingSourceBalance
         })
@@ -1907,7 +1751,7 @@ describe('Accounts Service', (): void => {
         asset
       })
       const startingSourceBalance = BigInt(10)
-      await accountsService.deposit({
+      await depositService.create({
         accountId: sourceAccountId,
         amount: startingSourceBalance
       })
@@ -1933,7 +1777,7 @@ describe('Accounts Service', (): void => {
       const { id: sourceAccountId } = await accountFactory.build()
       const { id: destinationAccountId } = await accountFactory.build()
       const startingSourceBalance = BigInt(10)
-      await accountsService.deposit({
+      await depositService.create({
         accountId: sourceAccountId,
         amount: startingSourceBalance
       })
@@ -1968,7 +1812,7 @@ describe('Accounts Service', (): void => {
         }
       })
       const startingSourceBalance = BigInt(10)
-      await accountsService.deposit({
+      await depositService.create({
         accountId: sourceAccountId,
         amount: startingSourceBalance
       })

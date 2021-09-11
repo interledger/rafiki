@@ -1,6 +1,5 @@
 export * from './accountsService'
 export * from './asset'
-export * from './deposit'
 export * from './ilpAccount'
 export * from './ilpBalance'
 export * from './transfer'

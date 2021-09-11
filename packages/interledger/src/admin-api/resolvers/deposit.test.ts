@@ -3,7 +3,7 @@ import { Transaction } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { AccountFactory } from '../../accounts/testsHelpers'
-import { isDepositError } from '../../accounts/types'
+import { isDepositError } from '../../deposit/service'
 import { CreateDepositMutationResponse } from '../generated/graphql'
 import { gql } from 'apollo-server'
 
@@ -166,7 +166,7 @@ describe('Deposit Resolvers', (): void => {
 
     test('Returns an error for existing deposit', async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
-      const depositOrError = await appContainer.accountsService.deposit({
+      const depositOrError = await appContainer.depositService.create({
         accountId,
         amount: BigInt(100)
       })

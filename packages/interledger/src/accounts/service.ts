@@ -16,28 +16,21 @@ import {
   CreateTransferError,
   TwoPhaseTransfer
 } from '../balance/service'
-import { BalanceTransferError, UnknownBalanceError } from '../shared/errors'
-import { randomId, uuidToBigInt } from '../shared/utils'
-import { Config } from '../config'
 import {
-  UnknownAssetError,
+  BalanceTransferError,
+  UnknownBalanceError,
   UnknownLiquidityAccountError,
   UnknownSettlementAccountError
-} from './errors'
+} from '../shared/errors'
+import { randomId, uuidToBigInt, validateId } from '../shared/utils'
+import { Config } from '../config'
+import { UnknownAssetError } from './errors'
 import { IlpAccount as IlpAccountModel, IlpHttpToken } from './models'
-import {
-  calculateCreditBalance,
-  calculateDebitBalance,
-  validateId
-} from './utils'
+import { calculateCreditBalance, calculateDebitBalance } from './utils'
 import {
   AccountsService as AccountsServiceInterface,
   CreateAccountError,
   CreateOptions,
-  AccountDeposit,
-  LiquidityDeposit,
-  Deposit,
-  DepositError,
   IlpAccount,
   IlpBalance,
   isSubAccount,
@@ -365,37 +358,6 @@ export class AccountsService implements AccountsServiceInterface {
     return accountBalance
   }
 
-  public async depositLiquidity({
-    asset: { code, scale },
-    amount,
-    id
-  }: LiquidityDeposit): Promise<void | DepositError> {
-    if (id && !validateId(id)) {
-      return DepositError.InvalidId
-    }
-    const asset = await this.assetService.getOrCreate({ code, scale })
-    const error = await this.balanceService.createTransfers([
-      {
-        id: id ? uuidToBigInt(id) : randomId(),
-        sourceBalanceId: asset.settlementBalanceId,
-        destinationBalanceId: asset.liquidityBalanceId,
-        amount
-      }
-    ])
-    if (error) {
-      switch (error.code) {
-        case CreateTransferError.exists:
-          return DepositError.DepositExists
-        case CreateTransferError.debit_account_not_found:
-          throw new UnknownSettlementAccountError(asset)
-        case CreateTransferError.credit_account_not_found:
-          throw new UnknownLiquidityAccountError(asset)
-        default:
-          throw new BalanceTransferError(error.code)
-      }
-    }
-  }
-
   public async withdrawLiquidity({
     asset: { code, scale },
     amount,
@@ -459,53 +421,6 @@ export class AccountsService implements AccountsServiceInterface {
       if (balances.length === 1) {
         return calculateDebitBalance(balances[0])
       }
-    }
-  }
-
-  public async deposit({
-    id,
-    accountId,
-    amount
-  }: AccountDeposit): Promise<Deposit | DepositError> {
-    if (id && !validateId(id)) {
-      return DepositError.InvalidId
-    }
-    const account = await IlpAccountModel.query()
-      .findById(accountId)
-      .withGraphJoined('asset(withSettleId)')
-      .select('asset', 'balanceId')
-    if (!account) {
-      return DepositError.UnknownAccount
-    }
-    const depositId = id || uuid.v4()
-    const error = await this.balanceService.createTransfers([
-      {
-        id: uuidToBigInt(depositId),
-        sourceBalanceId: account.asset.settlementBalanceId,
-        destinationBalanceId: account.balanceId,
-        amount
-      }
-    ])
-
-    if (error) {
-      switch (error.code) {
-        // TODO: query transfer to check if it's a deposit
-        case CreateTransferError.exists:
-          return DepositError.DepositExists
-        case CreateTransferError.debit_account_not_found:
-          throw new UnknownSettlementAccountError(account.asset)
-        case CreateTransferError.credit_account_not_found:
-          throw new UnknownBalanceError(accountId)
-        default:
-          throw new BalanceTransferError(error.code)
-      }
-    }
-    return {
-      id: depositId,
-      accountId,
-      amount
-      // TODO: Get tigerbeetle transfer timestamp
-      // createdTime
     }
   }
 
