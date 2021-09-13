@@ -12,6 +12,7 @@ import { createAssetService } from './asset/service'
 import { createBalanceService } from './balance/service'
 import { createCreditService } from './credit/service'
 import { createDepositService } from './deposit/service'
+import { createTransferService } from './transfer/service'
 import { createWithdrawalService } from './withdrawal/service'
 import { Logger } from './logger/service'
 
@@ -91,6 +92,11 @@ export const start = async (): Promise<void> => {
     balanceService
   })
 
+  const transferService = createTransferService({
+    logger,
+    balanceService
+  })
+
   const withdrawalService = createWithdrawalService({
     logger,
     assetService,
@@ -107,6 +113,7 @@ export const start = async (): Promise<void> => {
     accountsService,
     creditService,
     depositService,
+    transferService,
     withdrawalService,
     logger
   })
@@ -115,7 +122,8 @@ export const start = async (): Promise<void> => {
     redis,
     logger,
     ratesService,
-    accountsService
+    accountsService,
+    transferService
   })
 
   let shuttingDown = false

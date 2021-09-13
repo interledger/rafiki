@@ -18,6 +18,7 @@ import { createAssetService } from '../../asset/service'
 import { createBalanceService } from '../../balance/service'
 import { createCreditService, CreditService } from '../../credit/service'
 import { createDepositService, DepositService } from '../../deposit/service'
+import { createTransferService, TransferService } from '../../transfer/service'
 import {
   createWithdrawalService,
   WithdrawalService
@@ -32,6 +33,7 @@ export interface TestContainer {
   accountsService: AccountsService
   creditService: CreditService
   depositService: DepositService
+  transferService: TransferService
   withdrawalService: WithdrawalService
   adminApi: ApolloServer
   knex: Knex
@@ -67,6 +69,10 @@ export const createTestApp = async (): Promise<TestContainer> => {
     balanceService,
     logger: Logger
   })
+  const transferService = createTransferService({
+    balanceService,
+    logger: Logger
+  })
   const withdrawalService = createWithdrawalService({
     assetService,
     balanceService,
@@ -76,6 +82,7 @@ export const createTestApp = async (): Promise<TestContainer> => {
     accountsService,
     creditService,
     depositService,
+    transferService,
     withdrawalService,
     logger: Logger
   })
@@ -138,6 +145,7 @@ export const createTestApp = async (): Promise<TestContainer> => {
     accountsService,
     creditService,
     depositService,
+    transferService,
     withdrawalService,
     adminApi,
     knex,

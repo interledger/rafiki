@@ -15,6 +15,7 @@ import {
   ConnectorAccountsService as AccountsService,
   IlpAccount
 } from '../../accounts/types'
+import { TransferService } from '../../transfer/service'
 import { IncomingMessage, ServerResponse } from 'http'
 import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
 import { DebugLogger } from './services/logger/debug'
@@ -29,6 +30,7 @@ export interface RafikiServices {
   rates: RatesService
   redis: Redis
   streamServer: StreamServer
+  transferService: TransferService
 }
 
 export type RafikiConfig = Partial<RafikiServices> & {
@@ -38,6 +40,7 @@ export type RafikiConfig = Partial<RafikiServices> & {
     serverSecret: Buffer
     serverAddress: string
   }
+  transferService: TransferService
 }
 
 export type RafikiRequestMixin = {
@@ -114,6 +117,9 @@ export class Rafiki<T = any> extends Koa<T, RafikiContextMixin> {
       },
       get accounts(): AccountsService {
         return accountsOrThrow()
+      },
+      get transferService(): TransferService {
+        return config.transferService
       },
       logger
     }
