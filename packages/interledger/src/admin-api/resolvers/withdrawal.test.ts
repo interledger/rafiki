@@ -7,7 +7,7 @@ import {
   CreateWithdrawalMutationResponse,
   FinalizePendingWithdrawalMutationResponse,
   RollbackPendingWithdrawalMutationResponse,
-  WithdrawError
+  WithdrawalError
 } from '../generated/graphql'
 import { gql } from 'apollo-server'
 
@@ -132,7 +132,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown ILP account')
-      expect(response.error).toEqual(WithdrawError.UnknownAccount)
+      expect(response.error).toEqual(WithdrawalError.UnknownAccount)
       expect(response.withdrawal).toBeNull()
     })
 
@@ -174,7 +174,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Invalid id')
-      expect(response.error).toEqual(WithdrawError.InvalidId)
+      expect(response.error).toEqual(WithdrawalError.InvalidId)
       expect(response.withdrawal).toBeNull()
     })
 
@@ -186,7 +186,7 @@ describe('Withdrawal Resolvers', (): void => {
         amount: BigInt(100)
       })
       const id = uuid()
-      await appContainer.accountsService.createWithdrawal({
+      await appContainer.withdrawalService.create({
         id,
         accountId: ilpAccountId,
         amount
@@ -227,7 +227,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal exists')
-      expect(response.error).toEqual(WithdrawError.WithdrawalExists)
+      expect(response.error).toEqual(WithdrawalError.WithdrawalExists)
       expect(response.withdrawal).toBeNull()
     })
 
@@ -269,7 +269,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('403')
       expect(response.message).toEqual('Insufficient balance')
-      expect(response.error).toEqual(WithdrawError.InsufficientBalance)
+      expect(response.error).toEqual(WithdrawalError.InsufficientBalance)
       expect(response.withdrawal).toBeNull()
     })
   })
@@ -283,7 +283,7 @@ describe('Withdrawal Resolvers', (): void => {
         amount
       })
       const id = uuid()
-      await appContainer.accountsService.createWithdrawal({
+      await appContainer.withdrawalService.create({
         id,
         accountId,
         amount
@@ -349,7 +349,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown withdrawal')
-      expect(response.error).toEqual(WithdrawError.UnknownWithdrawal)
+      expect(response.error).toEqual(WithdrawalError.UnknownWithdrawal)
     })
 
     test("Can't finalize invalid withdrawal id", async (): Promise<void> => {
@@ -382,7 +382,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Invalid id')
-      expect(response.error).toEqual(WithdrawError.InvalidId)
+      expect(response.error).toEqual(WithdrawalError.InvalidId)
     })
 
     test("Can't finalize finalized withdrawal", async (): Promise<void> => {
@@ -393,12 +393,12 @@ describe('Withdrawal Resolvers', (): void => {
         amount
       })
       const id = uuid()
-      await appContainer.accountsService.createWithdrawal({
+      await appContainer.withdrawalService.create({
         id,
         accountId,
         amount
       })
-      await appContainer.accountsService.finalizeWithdrawal(id)
+      await appContainer.withdrawalService.finalize(id)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -428,7 +428,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal already finalized')
-      expect(response.error).toEqual(WithdrawError.AlreadyFinalized)
+      expect(response.error).toEqual(WithdrawalError.AlreadyFinalized)
     })
 
     test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
@@ -439,12 +439,12 @@ describe('Withdrawal Resolvers', (): void => {
         amount
       })
       const id = uuid()
-      await appContainer.accountsService.createWithdrawal({
+      await appContainer.withdrawalService.create({
         id,
         accountId,
         amount
       })
-      await appContainer.accountsService.rollbackWithdrawal(id)
+      await appContainer.withdrawalService.rollback(id)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -474,7 +474,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal already rolled back')
-      expect(response.error).toEqual(WithdrawError.AlreadyRolledBack)
+      expect(response.error).toEqual(WithdrawalError.AlreadyRolledBack)
     })
   })
 
@@ -487,7 +487,7 @@ describe('Withdrawal Resolvers', (): void => {
         amount
       })
       const id = uuid()
-      await appContainer.accountsService.createWithdrawal({
+      await appContainer.withdrawalService.create({
         id,
         accountId,
         amount
@@ -553,7 +553,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown withdrawal')
-      expect(response.error).toEqual(WithdrawError.UnknownWithdrawal)
+      expect(response.error).toEqual(WithdrawalError.UnknownWithdrawal)
     })
 
     test("Can't rollback invalid withdrawal id", async (): Promise<void> => {
@@ -586,7 +586,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Invalid id')
-      expect(response.error).toEqual(WithdrawError.InvalidId)
+      expect(response.error).toEqual(WithdrawalError.InvalidId)
     })
 
     test("Can't rollback finalized withdrawal", async (): Promise<void> => {
@@ -597,12 +597,12 @@ describe('Withdrawal Resolvers', (): void => {
         amount
       })
       const id = uuid()
-      await appContainer.accountsService.createWithdrawal({
+      await appContainer.withdrawalService.create({
         id,
         accountId,
         amount
       })
-      await appContainer.accountsService.finalizeWithdrawal(id)
+      await appContainer.withdrawalService.finalize(id)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -632,7 +632,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal already finalized')
-      expect(response.error).toEqual(WithdrawError.AlreadyFinalized)
+      expect(response.error).toEqual(WithdrawalError.AlreadyFinalized)
     })
 
     test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
@@ -643,12 +643,12 @@ describe('Withdrawal Resolvers', (): void => {
         amount
       })
       const id = uuid()
-      await appContainer.accountsService.createWithdrawal({
+      await appContainer.withdrawalService.create({
         id,
         accountId,
         amount
       })
-      await appContainer.accountsService.rollbackWithdrawal(id)
+      await appContainer.withdrawalService.rollback(id)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -678,7 +678,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Withdrawal already rolled back')
-      expect(response.error).toEqual(WithdrawError.AlreadyRolledBack)
+      expect(response.error).toEqual(WithdrawalError.AlreadyRolledBack)
     })
   })
 })

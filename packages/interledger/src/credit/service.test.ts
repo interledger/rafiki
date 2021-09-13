@@ -9,6 +9,10 @@ import { CreditService, createCreditService, CreditError } from './service'
 import { createAssetService } from '../asset/service'
 import { createBalanceService } from '../balance/service'
 import { createDepositService, DepositService } from '../deposit/service'
+import {
+  createWithdrawalService,
+  WithdrawalService
+} from '../withdrawal/service'
 import { AccountsService } from '../accounts/service'
 
 import { Logger } from '../logger/service'
@@ -20,6 +24,7 @@ describe('Credit Service', (): void => {
   let accountFactory: AccountFactory
   let config: typeof Config
   let depositService: DepositService
+  let withdrawalService: WithdrawalService
   let tbClient: Client
   let knex: Knex
   let trx: Transaction
@@ -45,6 +50,11 @@ describe('Credit Service', (): void => {
         logger: Logger
       })
       depositService = createDepositService({
+        assetService,
+        balanceService,
+        logger: Logger
+      })
+      withdrawalService = createWithdrawalService({
         assetService,
         balanceService,
         logger: Logger
@@ -943,7 +953,7 @@ describe('Credit Service', (): void => {
       ).resolves.toBeUndefined()
 
       const withdrawAmount = BigInt(1)
-      await accountsService.createWithdrawal({
+      await withdrawalService.create({
         accountId: subAccountId,
         amount: withdrawAmount
       })

@@ -13,6 +13,7 @@ import { createAssetService } from './asset/service'
 import { createBalanceService } from './balance/service'
 import { createCreditService } from './credit/service'
 import { createDepositService } from './deposit/service'
+import { createWithdrawalService } from './withdrawal/service'
 import { Logger } from './logger/service'
 
 const logger = Logger
@@ -99,6 +100,12 @@ export const start = async (): Promise<void> => {
     balanceService
   })
 
+  const withdrawalService = createWithdrawalService({
+    logger,
+    assetService,
+    balanceService
+  })
+
   const ratesService = createRatesService({
     pricesUrl,
     pricesLifetime,
@@ -109,6 +116,7 @@ export const start = async (): Promise<void> => {
     accountsService,
     creditService,
     depositService,
+    withdrawalService,
     logger
   })
 

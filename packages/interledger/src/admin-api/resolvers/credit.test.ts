@@ -1388,7 +1388,7 @@ describe('Credit Resolvers', (): void => {
       ).resolves.toBeUndefined()
 
       const withdrawAmount = BigInt(1)
-      await appContainer.accountsService.createWithdrawal({
+      await appContainer.withdrawalService.create({
         accountId: subAccountId,
         amount: withdrawAmount
       })

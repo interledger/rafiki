@@ -18,6 +18,10 @@ import { createAssetService } from '../../asset/service'
 import { createBalanceService } from '../../balance/service'
 import { createCreditService, CreditService } from '../../credit/service'
 import { createDepositService, DepositService } from '../../deposit/service'
+import {
+  createWithdrawalService,
+  WithdrawalService
+} from '../../withdrawal/service'
 import { Config } from '../../config'
 import { Logger } from '../../logger/service'
 import { createKnex } from '../../Knex/service'
@@ -28,6 +32,7 @@ export interface TestContainer {
   accountsService: AccountsService
   creditService: CreditService
   depositService: DepositService
+  withdrawalService: WithdrawalService
   adminApi: ApolloServer
   knex: Knex
   apolloClient: ApolloClient<NormalizedCacheObject>
@@ -62,10 +67,16 @@ export const createTestApp = async (): Promise<TestContainer> => {
     balanceService,
     logger: Logger
   })
+  const withdrawalService = createWithdrawalService({
+    assetService,
+    balanceService,
+    logger: Logger
+  })
   const adminApi = await createAdminApi({
     accountsService,
     creditService,
     depositService,
+    withdrawalService,
     logger: Logger
   })
   const { port } = await adminApi.listen(0)
@@ -127,6 +138,7 @@ export const createTestApp = async (): Promise<TestContainer> => {
     accountsService,
     creditService,
     depositService,
+    withdrawalService,
     adminApi,
     knex,
     apolloClient,

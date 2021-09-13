@@ -8,12 +8,14 @@ import { resolvers } from './resolvers'
 import { AccountsService as AccountsServiceInterface } from '../accounts/types'
 import { CreditService } from '../credit/service'
 import { DepositService } from '../deposit/service'
+import { WithdrawalService } from '../withdrawal/service'
 import { addResolversToSchema } from '@graphql-tools/schema'
 
 export interface ApolloContext {
   accountsService: AccountsServiceInterface
   creditService: CreditService
   depositService: DepositService
+  withdrawalService: WithdrawalService
   logger: Logger
 }
 
@@ -21,6 +23,7 @@ interface ServiceDependencies {
   accountsService: AccountsServiceInterface
   creditService: CreditService
   depositService: DepositService
+  withdrawalService: WithdrawalService
   logger: Logger
 }
 
@@ -28,6 +31,7 @@ export async function createAdminApi({
   accountsService,
   creditService,
   depositService,
+  withdrawalService,
   logger
 }: ServiceDependencies): Promise<ApolloServer> {
   // Load schema from the file
@@ -48,6 +52,7 @@ export async function createAdminApi({
         accountsService,
         creditService,
         depositService,
+        withdrawalService,
         logger
       }
     }
