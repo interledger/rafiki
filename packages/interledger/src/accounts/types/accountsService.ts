@@ -1,7 +1,6 @@
 import { Asset } from './asset'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
-import { Transfer, Transaction, TransferError } from './transfer'
 
 export interface ConnectorAccountsService {
   getAccount(accountId: string): Promise<IlpAccount | undefined>
@@ -9,7 +8,6 @@ export interface ConnectorAccountsService {
     destinationAddress: string
   ): Promise<IlpAccount | undefined>
   getAccountByToken(token: string): Promise<IlpAccount | undefined>
-  transferFunds(args: Transfer): Promise<Transaction | TransferError>
   getAddress(accountId: string): Promise<string | undefined>
 }
 

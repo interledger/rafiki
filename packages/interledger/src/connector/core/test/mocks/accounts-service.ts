@@ -1,11 +1,14 @@
 import {
   ConnectorAccountsService as AccountsService,
   CreateAccountOptions,
-  IlpAccount,
+  IlpAccount
+} from '../../../../accounts/types'
+
+import {
   Transaction,
   Transfer,
   TransferError
-} from '../../../../accounts/types'
+} from '../../../../transfer/service'
 
 export type MockIlpAccount = CreateAccountOptions & {
   id: string
