@@ -19,10 +19,9 @@ import {
 import {
   BalanceTransferError,
   UnknownBalanceError,
-  UnknownLiquidityAccountError,
-  UnknownSettlementAccountError
+  UnknownLiquidityAccountError
 } from '../shared/errors'
-import { randomId, uuidToBigInt, validateId } from '../shared/utils'
+import { randomId } from '../shared/utils'
 import { Config } from '../config'
 import { UnknownAssetError } from './errors'
 import { IlpAccount as IlpAccountModel, IlpHttpToken } from './models'
@@ -39,11 +38,7 @@ import {
   Transfer,
   TransferError,
   UpdateAccountError,
-  UpdateOptions,
-  AccountWithdrawal,
-  LiquidityWithdrawal,
-  Withdrawal,
-  WithdrawError
+  UpdateOptions
 } from './types'
 
 function toIlpAccount(accountRow: IlpAccountModel): IlpAccount {
@@ -358,44 +353,6 @@ export class AccountsService implements AccountsServiceInterface {
     return accountBalance
   }
 
-  public async withdrawLiquidity({
-    asset: { code, scale },
-    amount,
-    id
-  }: LiquidityWithdrawal): Promise<void | WithdrawError> {
-    if (id && !validateId(id)) {
-      return WithdrawError.InvalidId
-    }
-    const asset = await this.assetService.get({ code, scale })
-    if (!asset) {
-      return WithdrawError.UnknownAsset
-    }
-    const error = await this.balanceService.createTransfers([
-      {
-        id: id ? uuidToBigInt(id) : randomId(),
-        sourceBalanceId: asset.liquidityBalanceId,
-        destinationBalanceId: asset.settlementBalanceId,
-        amount
-      }
-    ])
-    if (error) {
-      switch (error.code) {
-        case CreateTransferError.exists:
-          return WithdrawError.WithdrawalExists
-        case CreateTransferError.debit_account_not_found:
-          throw new UnknownLiquidityAccountError(asset)
-        case CreateTransferError.credit_account_not_found:
-          throw new UnknownSettlementAccountError(asset)
-        case CreateTransferError.exceeds_credits:
-          return WithdrawError.InsufficientLiquidity
-        case CreateTransferError.exceeds_debits:
-          return WithdrawError.InsufficientSettlementBalance
-        default:
-          throw new BalanceTransferError(error.code)
-      }
-    }
-  }
-
   public async getLiquidityBalance({
     code,
     scale
@@ -420,104 +377,6 @@ export class AccountsService implements AccountsServiceInterface {
       ])
       if (balances.length === 1) {
         return calculateDebitBalance(balances[0])
-      }
-    }
-  }
-
-  public async createWithdrawal({
-    id,
-    accountId,
-    amount
-  }: AccountWithdrawal): Promise<Withdrawal | WithdrawError> {
-    if (id && !validateId(id)) {
-      return WithdrawError.InvalidId
-    }
-    const account = await IlpAccountModel.query()
-      .findById(accountId)
-      .withGraphJoined('asset(withSettleId)')
-      .select('asset', 'balanceId')
-    if (!account) {
-      return WithdrawError.UnknownAccount
-    }
-    const withdrawalId = id || uuid.v4()
-    const error = await this.balanceService.createTransfers([
-      {
-        id: uuidToBigInt(withdrawalId),
-        sourceBalanceId: account.balanceId,
-        destinationBalanceId: account.asset.settlementBalanceId,
-        amount,
-        twoPhaseCommit: true
-      }
-    ])
-
-    if (error) {
-      switch (error.code) {
-        // TODO: query existing transfer to check if it's a withdrawal
-        case CreateTransferError.exists:
-          return WithdrawError.WithdrawalExists
-        case CreateTransferError.debit_account_not_found:
-          throw new UnknownBalanceError(accountId)
-        case CreateTransferError.credit_account_not_found:
-          throw new UnknownSettlementAccountError(account.asset)
-        case CreateTransferError.exceeds_credits:
-          return WithdrawError.InsufficientBalance
-        case CreateTransferError.exceeds_debits:
-          return WithdrawError.InsufficientSettlementBalance
-        default:
-          throw new BalanceTransferError(error.code)
-      }
-    }
-    return {
-      id: withdrawalId,
-      accountId,
-      amount
-      // TODO: Get tigerbeetle transfer timestamp
-      // createdTime
-    }
-  }
-
-  public async finalizeWithdrawal(id: string): Promise<void | WithdrawError> {
-    if (id && !validateId(id)) {
-      return WithdrawError.InvalidId
-    }
-    // TODO: query transfer to verify it's a withdrawal
-    const res = await this.balanceService.commitTransfers([uuidToBigInt(id)])
-
-    for (const { code } of res) {
-      switch (code) {
-        case CommitTransferError.linked_event_failed:
-          break
-        case CommitTransferError.transfer_not_found:
-          return WithdrawError.UnknownWithdrawal
-        case CommitTransferError.already_committed:
-          return WithdrawError.AlreadyFinalized
-        case CommitTransferError.already_committed_but_rejected:
-          return WithdrawError.AlreadyRolledBack
-        default:
-          throw new BalanceTransferError(code)
-      }
-    }
-  }
-
-  public async rollbackWithdrawal(id: string): Promise<void | WithdrawError> {
-    if (id && !validateId(id)) {
-      return WithdrawError.InvalidId
-    }
-    // TODO: query transfer to verify it's a withdrawal
-    const res = await this.balanceService.rollbackTransfers([uuidToBigInt(id)])
-
-    for (const { code } of res) {
-      switch (code) {
-        case CommitTransferError.linked_event_failed:
-          break
-        case CommitTransferError.transfer_not_found:
-          return WithdrawError.UnknownWithdrawal
-        case CommitTransferError.already_committed_but_accepted:
-          return WithdrawError.AlreadyFinalized
-        case CommitTransferError.already_committed:
-          return WithdrawError.AlreadyRolledBack
-        default:
-          throw new BalanceTransferError(code)
       }
     }
   }

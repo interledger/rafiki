@@ -3,9 +3,9 @@ import {
   ResolversTypes,
   MutationResolvers,
   WithdrawalsConnectionResolvers,
-  WithdrawError as WithdrawErrorResp
+  WithdrawalError as WithdrawErrorResp
 } from '../generated/graphql'
-import { WithdrawError, isWithdrawError } from '../../accounts/types'
+import { WithdrawalError, isWithdrawalError } from '../../withdrawal/service'
 
 export const getWithdrawal: QueryResolvers['withdrawal'] = async (
   parent,
@@ -22,12 +22,12 @@ export const createWithdrawal: MutationResolvers['createWithdrawal'] = async (
   args,
   ctx
 ): ResolversTypes['CreateWithdrawalMutationResponse'] => {
-  const withdrawalOrError = await ctx.accountsService.createWithdrawal({
+  const withdrawalOrError = await ctx.withdrawalService.create({
     id: args.input.id,
     accountId: args.input.ilpAccountId,
     amount: args.input.amount
   })
-  if (isWithdrawError(withdrawalOrError)) {
+  if (isWithdrawalError(withdrawalOrError)) {
     return errorToResponse[withdrawalOrError]
   }
   return {
@@ -48,7 +48,7 @@ export const finalizePendingWithdrawal: MutationResolvers['finalizePendingWithdr
   args,
   ctx
 ): ResolversTypes['FinalizePendingWithdrawalMutationResponse'] => {
-  const error = await ctx.accountsService.finalizeWithdrawal(args.withdrawalId)
+  const error = await ctx.withdrawalService.finalize(args.withdrawalId)
   if (error) {
     return errorToResponse[error]
   }
@@ -64,7 +64,7 @@ export const rollbackPendingWithdrawal: MutationResolvers['rollbackPendingWithdr
   args,
   ctx
 ): ResolversTypes['RollbackPendingWithdrawalMutationResponse'] => {
-  const error = await ctx.accountsService.rollbackWithdrawal(args.withdrawalId)
+  const error = await ctx.withdrawalService.rollback(args.withdrawalId)
   if (error) {
     return errorToResponse[error]
   }
@@ -86,68 +86,68 @@ export const getWithdrawalsConnectionPageInfo: WithdrawalsConnectionResolvers['p
 }
 
 const errorToResponse: {
-  [key in WithdrawError]: {
+  [key in WithdrawalError]: {
     code: string
     message: string
     success: boolean
     error: WithdrawErrorResp
   }
 } = {
-  [WithdrawError.AlreadyFinalized]: {
+  [WithdrawalError.AlreadyFinalized]: {
     code: '409',
     message: 'Withdrawal already finalized',
     success: false,
     error: WithdrawErrorResp.AlreadyFinalized
   },
-  [WithdrawError.AlreadyRolledBack]: {
+  [WithdrawalError.AlreadyRolledBack]: {
     code: '409',
     message: 'Withdrawal already rolled back',
     success: false,
     error: WithdrawErrorResp.AlreadyRolledBack
   },
-  [WithdrawError.InsufficientBalance]: {
+  [WithdrawalError.InsufficientBalance]: {
     code: '403',
     message: 'Insufficient balance',
     success: false,
     error: WithdrawErrorResp.InsufficientBalance
   },
-  [WithdrawError.InsufficientLiquidity]: {
+  [WithdrawalError.InsufficientLiquidity]: {
     code: '403',
     message: 'Insufficient liquidity',
     success: false,
     error: WithdrawErrorResp.InsufficientLiquidity
   },
-  [WithdrawError.InsufficientSettlementBalance]: {
+  [WithdrawalError.InsufficientSettlementBalance]: {
     code: '403',
     message: 'Insufficient settlement balance',
     success: false,
     error: WithdrawErrorResp.InsufficientSettlementBalance
   },
-  [WithdrawError.InvalidId]: {
+  [WithdrawalError.InvalidId]: {
     code: '400',
     message: 'Invalid id',
     success: false,
     error: WithdrawErrorResp.InvalidId
   },
-  [WithdrawError.UnknownAccount]: {
+  [WithdrawalError.UnknownAccount]: {
     code: '404',
     message: 'Unknown ILP account',
     success: false,
     error: WithdrawErrorResp.UnknownAccount
   },
-  [WithdrawError.UnknownAsset]: {
+  [WithdrawalError.UnknownAsset]: {
     code: '404',
     message: 'Unknown asset',
     success: false,
     error: WithdrawErrorResp.UnknownAsset
   },
-  [WithdrawError.UnknownWithdrawal]: {
+  [WithdrawalError.UnknownWithdrawal]: {
     code: '404',
     message: 'Unknown withdrawal',
     success: false,
     error: WithdrawErrorResp.UnknownWithdrawal
   },
-  [WithdrawError.WithdrawalExists]: {
+  [WithdrawalError.WithdrawalExists]: {
     code: '409',
     message: 'Withdrawal exists',
     success: false,

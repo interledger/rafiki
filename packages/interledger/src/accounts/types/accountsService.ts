@@ -2,12 +2,6 @@ import { Asset } from './asset'
 import { IlpAccount } from './ilpAccount'
 import { IlpBalance } from './ilpBalance'
 import { Transfer, Transaction, TransferError } from './transfer'
-import {
-  AccountWithdrawal,
-  LiquidityWithdrawal,
-  Withdrawal,
-  WithdrawError
-} from './withdrawal'
 
 export interface ConnectorAccountsService {
   getAccount(accountId: string): Promise<IlpAccount | undefined>
@@ -28,16 +22,8 @@ export interface AccountsService extends ConnectorAccountsService {
   ): Promise<IlpAccount | UpdateAccountError>
   getSubAccounts(accountId: string): Promise<IlpAccount[]>
   getAccountBalance(accountId: string): Promise<IlpBalance | undefined>
-  withdrawLiquidity(
-    withdrawal: LiquidityWithdrawal
-  ): Promise<void | WithdrawError>
   getLiquidityBalance(asset: Asset): Promise<bigint | undefined>
   getSettlementBalance(asset: Asset): Promise<bigint | undefined>
-  createWithdrawal(
-    withdrawal: AccountWithdrawal
-  ): Promise<Withdrawal | WithdrawError>
-  finalizeWithdrawal(id: string): Promise<void | WithdrawError>
-  rollbackWithdrawal(id: string): Promise<void | WithdrawError>
   getAccountsPage(options: {
     pagination?: Pagination
     superAccountId?: string

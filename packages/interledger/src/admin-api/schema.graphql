@@ -231,7 +231,7 @@ enum CreditError {
   InsufficientDebt
 }
 
-enum WithdrawError {
+enum WithdrawalError {
   AlreadyFinalized
   AlreadyRolledBack
   InsufficientBalance
@@ -469,21 +469,21 @@ type CreateWithdrawalMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   withdrawal: Withdrawal
-  error: WithdrawError
+  error: WithdrawalError
 }
 
 type FinalizePendingWithdrawalMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  error: WithdrawError
+  error: WithdrawalError
 }
 
 type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  error: WithdrawError
+  error: WithdrawalError
 }
 
 type Asset {
