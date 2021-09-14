@@ -16,6 +16,7 @@ type FakeAccount = {
   id: string
   superAccountId?: string
   balance: bigint
+  totalBorrowed: bigint
 }
 
 export class MockConnectorService implements ConnectorService {
@@ -26,24 +27,25 @@ export class MockConnectorService implements ConnectorService {
     return ({
       id: account.id,
       superAccountId: account.superAccountId,
-      balance: { balance: account.balance }
+      balance: {
+        balance: account.balance,
+        totalBorrowed: account.totalBorrowed
+      }
     } as unknown) as IlpAccount
   }
 
   async createIlpAccount(): Promise<CreateIlpAccountMutationResponse> {
     const account = {
       id: uuid(),
-      balance: BigInt(0)
+      balance: BigInt(0),
+      totalBorrowed: BigInt(0)
     }
     this.data[account.id] = account
     return {
       success: true,
       code: '200',
       message: 'ok',
-      ilpAccount: ({
-        id: account.id,
-        balance: { balance: account.balance }
-      } as unknown) as IlpAccount
+      ilpAccount: await this.getIlpAccount(account.id)
     }
   }
 
@@ -53,18 +55,15 @@ export class MockConnectorService implements ConnectorService {
     const account = {
       id: uuid(),
       superAccountId,
-      balance: BigInt(0)
+      balance: BigInt(0),
+      totalBorrowed: BigInt(0)
     }
     this.data[account.id] = account
     return {
       success: true,
       code: '200',
       message: 'ok',
-      ilpAccount: ({
-        id: account.id,
-        superAccountId: account.superAccountId,
-        balance: { balance: account.balance }
-      } as unknown) as IlpAccount
+      ilpAccount: await this.getIlpAccount(account.id)
     }
   }
 
@@ -92,6 +91,7 @@ export class MockConnectorService implements ConnectorService {
     }
     parent.balance -= input.amount
     account.balance += input.amount
+    account.totalBorrowed += input.amount
     return { success: true, code: '200', message: 'ok' }
   }
 
@@ -119,19 +119,27 @@ export class MockConnectorService implements ConnectorService {
     }
     parent.balance += input.amount
     account.balance -= input.amount
+    account.totalBorrowed -= input.amount
     return { success: true, code: '200', message: 'ok' }
   }
 
   // For testing:
 
+  // TODO just return a bigint,no promise
   async getAccountBalance(accountId: string): Promise<{ balance: bigint }> {
     return { balance: this._get(accountId).balance }
+  }
+
+  // TODO call this in tests.. maybe an expectOutcome() helper?
+  getTotalBorrowed(accountId: string): bigint {
+    return this._get(accountId).totalBorrowed
   }
 
   setAccountBalance(accountId: string, balance: bigint): void {
     this._get(accountId).balance = balance
   }
 
+  // Modify balance, but not totalBorrowed.
   modifyAccountBalance(accountId: string, diff: bigint): boolean {
     const account = this._get(accountId)
     const newBalance = account.balance + diff

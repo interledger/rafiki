@@ -17,7 +17,6 @@ import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { MockPlugin } from './mock_plugin'
 import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
-import { PaymentProgressService } from '../payment_progress/service'
 import { CreditError } from '../connector/generated/graphql'
 import { createAccountService } from '../account/service'
 
@@ -25,12 +24,12 @@ describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let outgoingPaymentService: OutgoingPaymentService
-  let paymentProgressService: PaymentProgressService
   let ratesService: RatesService
   let connectorService: MockConnectorService
   let knex: Knex
   let superAccountId: string
   let credentials: StreamCredentials
+  let invoice: Pay.Invoice
   let plugins: { [sourceAccount: string]: MockPlugin } = {}
 
   const streamServer = new StreamServer({
@@ -69,6 +68,7 @@ describe('OutgoingPaymentService', (): void => {
       })
   }
 
+  // Mock the time to fast-forward to the time that the specified (absolute, not relative) attempt is scheduled.
   function fastForwardToAttempt(stateAttempts: number): void {
     jest
       .spyOn(Date, 'now')
@@ -98,7 +98,8 @@ describe('OutgoingPaymentService', (): void => {
             streamServer,
             exchangeRate: 0.5,
             sourceAccount,
-            connectorService
+            connectorService,
+            invoice
           }))
       )
       deps.bind('connectorService', async (_deps) => connectorService)
@@ -124,9 +125,17 @@ describe('OutgoingPaymentService', (): void => {
       })
       const accountService = await deps.use('accountService')
       outgoingPaymentService = await deps.use('outgoingPaymentService')
-      paymentProgressService = await deps.use('paymentProgressService')
       superAccountId = (await accountService.create(9, 'USD')).id
       connectorService.setAccountBalance(superAccountId, BigInt(200))
+      invoice = {
+        invoiceUrl: 'http://wallet.example/bob/invoices/1',
+        accountUrl: 'http://wallet.example/bob',
+        amountToDeliver: BigInt(56),
+        amountDelivered: BigInt(0),
+        asset: { code: 'XRP', scale: 9 },
+        description: 'description!',
+        expiresAt: Date.now() + 60 * 1000
+      }
 
       nock('http://wallet.example')
         .get('/paymentpointer/bob')
@@ -136,18 +145,18 @@ describe('OutgoingPaymentService', (): void => {
         })
         .persist()
         .get('/bob/invoices/1')
-        .reply(200, {
-          id: 'http://wallet.example/bob/invoices/1',
-          account: 'http://wallet.example/bob',
-          amount: 56,
-          assetCode: 'XRP',
-          assetScale: 9,
-          description: 'description!',
-          received: 0,
-          expiresAt: new Date(Date.now() + 60 * 1000).toISOString(),
+        .reply(200, () => ({
+          id: invoice.invoiceUrl,
+          account: invoice.accountUrl,
+          amount: invoice.amountToDeliver.toString(),
+          received: invoice.amountDelivered.toString(),
+          assetCode: invoice.asset.code,
+          assetScale: invoice.asset.scale,
+          expiresAt: new Date(invoice.expiresAt).toISOString(),
+          description: invoice.description,
           ilpAddress: credentials.ilpAddress,
           sharedSecret: credentials.sharedSecret.toString('base64')
-        })
+        }))
         .persist()
       await knex.raw('TRUNCATE TABLE "outgoingPayments" RESTART IDENTITY')
     }
@@ -405,19 +414,21 @@ describe('OutgoingPaymentService', (): void => {
         })
         const payment = await processNext(paymentId, PaymentState.Completed)
 
-        if (!payment.outcome) throw 'no outcome'
-        expect(payment.outcome.amountSent).toBe(payment.quote?.maxSourceAmount)
-        expect(payment.outcome.amountDelivered).toBe(
-          payment.quote?.minDeliveryAmount
-        )
+        console.log('OUT', payment)
+        //if (!payment.outcome) throw 'no outcome'
+        //expect(payment.outcome.amountSent).toBe(payment.quote?.maxSourceAmount)
+        //expect(payment.outcome.amountDelivered).toBe(
+        //  payment.quote?.minDeliveryAmount
+        //)
         expect(plugins[payment.sourceAccount.id].totalReceived).toBe(
-          payment.outcome.amountDelivered
+          //payment.outcome.amountDelivered
+          BigInt(Math.floor(123 / 2))
         )
 
-        const progress = await paymentProgressService.get(paymentId)
-        if (!progress) throw 'no payment progress'
-        expect(progress.amountSent).toBe(payment.outcome.amountSent)
-        expect(progress.amountDelivered).toBe(payment.outcome.amountDelivered)
+        //const progress = await paymentProgressService.get(paymentId)
+        //if (!progress) throw 'no payment progress'
+        //expect(progress.amountSent).toBe(payment.outcome.amountSent)
+        //expect(progress.amountDelivered).toBe(payment.outcome.amountDelivered)
 
         await expect(
           connectorService.getAccountBalance(payment.sourceAccount.id)
@@ -425,7 +436,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           connectorService.getAccountBalance(superAccountId)
         ).resolves.toEqual({
-          balance: BigInt(200) - payment.outcome.amountSent
+          balance: BigInt(200 - 123)
         })
       })
 
@@ -436,21 +447,21 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await processNext(paymentId, PaymentState.Completed)
 
         if (!payment.quote) throw 'no quote'
-        if (!payment.outcome) throw 'no outcome'
-        expect(payment.outcome.amountSent).toBe(
-          payment.quote.minDeliveryAmount * BigInt(2)
-        )
-        expect(payment.outcome.amountDelivered).toBe(
-          payment.quote.minDeliveryAmount
-        )
+        //if (!payment.outcome) throw 'no outcome'
+        //expect(payment.outcome.amountSent).toBe(
+        //  payment.quote.minDeliveryAmount * BigInt(2)
+        //)
+        //expect(payment.outcome.amountDelivered).toBe(
+        //  payment.quote.minDeliveryAmount
+        //)
         expect(plugins[payment.sourceAccount.id].totalReceived).toBe(
-          payment.outcome.amountDelivered
+          invoice.amountToDeliver
         )
 
-        const progress = await paymentProgressService.get(paymentId)
-        if (!progress) throw 'no payment progress'
-        expect(progress.amountSent).toBe(payment.outcome.amountSent)
-        expect(progress.amountDelivered).toBe(payment.outcome.amountDelivered)
+        //const progress = await paymentProgressService.get(paymentId)
+        //if (!progress) throw 'no payment progress'
+        //expect(progress.amountSent).toBe(payment.outcome.amountSent)
+        //expect(progress.amountDelivered).toBe(payment.outcome.amountDelivered)
 
         // The leftover money (56*2*slippage USD) has been refunded to the parent account.
         await expect(
@@ -459,8 +470,61 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           connectorService.getAccountBalance(superAccountId)
         ).resolves.toEqual({
-          balance: BigInt(200) - payment.outcome.amountSent
+          balance: BigInt(200) - invoice.amountToDeliver * BigInt(2)
         })
+      })
+
+      it('Completed (FixedDelivery, with invoice initially partially paid)', async (): Promise<void> => {
+        const amountAlreadyDelivered = BigInt(34)
+        invoice.amountDelivered = amountAlreadyDelivered
+        /*
+        nock('http://wallet.example')
+          .get('/bob/invoices/1')
+          .reply(200, {
+            id: 'http://wallet.example/bob/invoices/1',
+            account: 'http://wallet.example/bob',
+            amount: 56,
+            assetCode: 'XRP',
+            assetScale: 9,
+            description: 'description!',
+            received: 34, // <-- the important field!
+            expiresAt: new Date(Date.now() + 60 * 1000).toISOString(),
+            ilpAddress: credentials.ilpAddress,
+            sharedSecret: credentials.sharedSecret.toString('base64')
+          })
+          .persist()
+        */
+
+        const paymentId = await setup({
+          invoiceUrl: 'http://wallet.example/bob/invoices/1'
+        })
+        const payment = await processNext(paymentId, PaymentState.Completed)
+
+        if (!payment.quote) throw 'no quote'
+        //if (!payment.outcome) throw 'no outcome'
+        //expect(payment.outcome.amountSent).toBe(
+        //  payment.quote.minDeliveryAmount * BigInt(2)
+        //)
+        //expect(payment.outcome.amountDelivered).toBe(
+        //  payment.quote.minDeliveryAmount
+        //)
+        expect(plugins[payment.sourceAccount.id].totalReceived).toBe(
+          //payment.outcome.amountDelivered
+          invoice.amountToDeliver - amountAlreadyDelivered
+        )
+        expect(invoice.amountDelivered).toBe(invoice.amountToDeliver)
+
+        await expect(
+          connectorService.getAccountBalance(superAccountId)
+        ).resolves.toEqual({
+          balance:
+            BigInt(200) -
+            (invoice.amountToDeliver - amountAlreadyDelivered) * BigInt(2)
+        })
+        //const progress = await paymentProgressService.get(paymentId)
+        //if (!progress) throw 'no payment progress'
+        //expect(progress.amountSent).toBe(payment.outcome.amountDelivered * BigInt(2))
+        //expect(progress.amountDelivered).toBe(payment.outcome.amountDelivered - BigInt(34))
       })
 
       it('Completed (resume from full payment with failed commit)', async (): Promise<void> => {
@@ -476,14 +540,19 @@ describe('OutgoingPaymentService', (): void => {
           .patch({ state: PaymentState.Sending })
         const payment = await processNext(paymentId, PaymentState.Completed)
 
-        expect(payment.outcome?.amountSent).toBe(payment.quote?.maxSourceAmount)
-        expect(payment.outcome?.amountDelivered).toBe(
-          payment.quote?.minDeliveryAmount
-        )
+        //expect(payment.outcome?.amountSent).toBe(payment.quote?.maxSourceAmount)
+        //expect(payment.outcome?.amountDelivered).toBe(
+        //  payment.quote?.minDeliveryAmount
+        //)
         // The retry doesn't pay anything (this is the retry's plugin).
         expect(plugins[payment.sourceAccount.id].totalReceived).toBe(
           payment.quote?.minDeliveryAmount
         )
+        await expect(
+          connectorService.getAccountBalance(superAccountId)
+        ).resolves.toEqual({
+          balance: BigInt(200 - 123)
+        })
       })
 
       it('Sending (partial payment then retryable Pay error)', async (): Promise<void> => {
@@ -512,9 +581,15 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe('ClosedByReceiver')
         expect(payment.stateAttempts).toBe(0)
+        await expect(
+          connectorService.getAccountBalance(payment.sourceAccount.id)
+        ).resolves.toEqual({ balance: BigInt(123 - 10 * 5) })
+        expect(plugins[payment.sourceAccount.id].totalReceived).toBe(
+          BigInt(5 * 5)
+        )
         // "mockPay" allows a small amount of money to be paid every attempt.
-        expect(payment.outcome?.amountSent).toBe(BigInt(10 * 5))
-        expect(payment.outcome?.amountDelivered).toBe(BigInt(5 * 5))
+        //expect(payment.outcome?.amountSent).toBe(BigInt(10 * 5))
+        //expect(payment.outcome?.amountDelivered).toBe(BigInt(5 * 5))
       })
 
       it('Cancelling (non-retryable Pay error)', async (): Promise<void> => {
@@ -532,8 +607,12 @@ describe('OutgoingPaymentService', (): void => {
 
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe('ReceiverProtocolViolation')
-        expect(payment.outcome?.amountSent).toBe(BigInt(10))
-        expect(payment.outcome?.amountDelivered).toBe(BigInt(5))
+        await expect(
+          connectorService.getAccountBalance(payment.sourceAccount.id)
+        ).resolves.toEqual({ balance: BigInt(123 - 10) })
+        expect(plugins[payment.sourceAccount.id].totalReceived).toBe(BigInt(5))
+        //expect(payment.outcome?.amountSent).toBe(BigInt(10))
+        //expect(payment.outcome?.amountDelivered).toBe(BigInt(5))
       })
 
       it('→Sending→Completed (partial payment, resume, complete)', async (): Promise<void> => {
@@ -555,28 +634,53 @@ describe('OutgoingPaymentService', (): void => {
         fastForwardToAttempt(1)
         // The next attempt is without the mock, so it succeeds.
         const payment = await processNext(paymentId, PaymentState.Completed)
-
-        expect(payment.outcome?.amountSent).toBe(amountToSend)
-        expect(payment.outcome?.amountDelivered).toBe(amountToSend / BigInt(2))
+        //expect(payment.outcome?.amountSent).toBe(amountToSend)
+        //expect(payment.outcome?.amountDelivered).toBe(amountToSend / BigInt(2))
 
         await expect(
           connectorService.getAccountBalance(superAccountId)
         ).resolves.toEqual({
           balance: BigInt(200) - amountToSend
         })
+        expect(
+          connectorService.getTotalBorrowed(payment.sourceAccount.id)
+        ).toBe(amountToSend)
+        expect(plugins[payment.sourceAccount.id].totalReceived).toBe(
+          amountToSend / BigInt(2)
+        )
       })
 
-      it('Sending (progress update fails)', async (): Promise<void> => {
-        jest
-          .spyOn(paymentProgressService, 'increase')
-          .mockImplementation(() => Promise.reject(new Error('sql error')))
+      /*
+      // TODO test this with fixed-source and destination
+      it('Sending (progress update fails, resume, complete but double-pay)', async (): Promise<void> => {
+        //const mockIncrease = jest
+        //  .spyOn(paymentProgressService, 'increase')
+        //  .mockImplementation(() => Promise.reject(new Error('sql error')))
+        const amountToSend = BigInt(123)
         const paymentId = await setup({
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
-          amountToSend: BigInt(123)
+          amountToSend
+        })
+        //expect(payment.outcome?.amountSent).toBe(BigInt(0))
+        //expect(payment.outcome?.amountDelivered).toBe(BigInt(0))
+
+        // The next attempt is allowed to succeed.
+        //mockIncrease.mockRestore()
+        fastForwardToAttempt(1)
+        const payment2 = await processNext(paymentId, PaymentState.Completed)
+        expect(payment2.stateAttempts).toBe(0)
+        expect(payment2.outcome?.amountSent).toBe(amountToSend)
+        expect(payment2.outcome?.amountDelivered).toBe(amountToSend / BigInt(2))
+
+        await expect(
+          connectorService.getAccountBalance(superAccountId)
+        ).resolves.toEqual({
+          balance: BigInt(200) - amountToSend
         })
         const payment = await processNext(paymentId, PaymentState.Sending)
         expect(payment.stateAttempts).toBe(1)
       })
+      */
     })
 
     describe('Cancelling→', (): void => {
@@ -608,12 +712,16 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await processNext(paymentId, PaymentState.Cancelled)
 
         expect(payment.error).toBe('InvoiceAlreadyPaid')
-        expect(payment.outcome?.amountSent).toBe(BigInt(0))
-        expect(payment.outcome?.amountDelivered).toBe(BigInt(0))
+        //expect(payment.outcome?.amountSent).toBe(BigInt(0))
+        //expect(payment.outcome?.amountDelivered).toBe(BigInt(0))
         // All reserved money was refunded.
         await expect(
           connectorService.getAccountBalance(superAccountId)
         ).resolves.toEqual({ balance: BigInt(200) })
+        await expect(
+          connectorService.getAccountBalance(payment.sourceAccount.id)
+        ).resolves.toEqual({ balance: BigInt(0) })
+        expect(plugins[payment.sourceAccount.id].totalReceived).toBe(BigInt(0))
       })
 
       it('Cancelling (endlessly cancel when refund fails after non-retryable send error)', async (): Promise<void> => {

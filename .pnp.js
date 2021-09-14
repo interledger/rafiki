@@ -4714,15 +4714,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
-      ["@types/debounce", [
-        ["npm:1.2.0", {
-          "packageLocation": "./.yarn/cache/@types-debounce-npm-1.2.0-f4ca327af9-c45dbc5fa3.zip/node_modules/@types/debounce/",
-          "packageDependencies": [
-            ["@types/debounce", "npm:1.2.0"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
       ["@types/debug", [
         ["npm:4.1.5", {
           "packageLocation": "./.yarn/cache/@types-debug-npm-4.1.5-3464d6c971-416ad24bc5.zip/node_modules/@types/debug/",
@@ -7208,7 +7199,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@interledger/stream-receiver", "npm:0.2.2"],
             ["@koa/cors", "npm:3.1.0"],
             ["@koa/router", "npm:10.0.0"],
-            ["@types/debounce", "npm:1.2.0"],
             ["@types/ioredis", "npm:4.22.3"],
             ["@types/jest", "npm:26.0.22"],
             ["@types/koa", "npm:2.13.3"],
@@ -7223,7 +7213,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["apollo-server-koa", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.25.1"],
             ["base64url", "npm:3.0.1"],
             ["cross-fetch", "npm:3.1.4"],
-            ["debounce", "npm:1.2.1"],
             ["fishery", "npm:1.2.0"],
             ["got", "npm:11.8.2"],
             ["graphile-scheduler", "npm:0.8.0"],

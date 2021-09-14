@@ -6,6 +6,7 @@ import {
 } from 'ilp-packet'
 import { serializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { StreamServer } from '@interledger/stream-receiver'
+import { Invoice } from '@interledger/pay'
 import { IlpPlugin } from './ilp_plugin'
 import { MockConnectorService } from '../tests/mockConnectorService'
 
@@ -16,22 +17,26 @@ export class MockPlugin implements IlpPlugin {
   private sourceAccount: string
   private connectorService: MockConnectorService
   private connected = true
+  private invoice: Invoice
 
   constructor({
     streamServer,
     exchangeRate,
     sourceAccount,
-    connectorService
+    connectorService,
+    invoice
   }: {
     streamServer: StreamServer
     exchangeRate: number
     sourceAccount: string
     connectorService: MockConnectorService
+    invoice: Invoice
   }) {
     this.streamServer = streamServer
     this.exchangeRate = exchangeRate
     this.sourceAccount = sourceAccount
     this.connectorService = connectorService
+    this.invoice = invoice // TODO test this
   }
 
   connect(): Promise<void> {
@@ -78,6 +83,7 @@ export class MockPlugin implements IlpPlugin {
       }
 
       this.totalReceived += BigInt(prepare.amount)
+      this.invoice.amountDelivered += BigInt(prepare.amount)
 
       return serializeIlpFulfill(moneyOrReject.accept())
     }

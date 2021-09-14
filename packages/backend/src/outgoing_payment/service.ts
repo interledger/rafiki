@@ -63,6 +63,17 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment> {
+  if (
+    options.invoiceUrl &&
+    (options.paymentPointer || options.amountToSend !== undefined)
+  ) {
+    // TODO test this
+    deps.logger.warn({ options }, 'createOutgoingPayment invalid parameters')
+    throw new Error(
+      'invoiceUrl and (paymentPointer,amountToSend) are mutually exclusive'
+    )
+  }
+
   const plugin = deps.makeIlpPlugin(options.superAccountId)
   const destination = await Pay.setupPayment({
     plugin,
@@ -77,6 +88,7 @@ async function createOutgoingPayment(
   const sourceAccount = await deps.accountService.createSubAccount(
     options.superAccountId
   )
+  console.log('DESTINATION', destination)
 
   return await OutgoingPayment.query(deps.knex).insertAndFetch({
     state: PaymentState.Inactive,
@@ -84,6 +96,8 @@ async function createOutgoingPayment(
       paymentPointer: options.paymentPointer,
       invoiceUrl: options.invoiceUrl,
       amountToSend: options.amountToSend,
+      //invoiceAmountToDeliver: destination.invoice?.amountToDeliver,
+      //amountToDeliver: destination.amountToDeliver,
       autoApprove: options.autoApprove
     },
     superAccountId: options.superAccountId,
