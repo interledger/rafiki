@@ -59,7 +59,7 @@ module.exports = async () => {
   if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
     const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
 
-    await new GenericContainer('wilsonianbcoil/tigerbeetle:beta')
+    await new GenericContainer('ghcr.io/wilsonianb/tigerbeetle:clients-max')
       .withExposedPorts(TIGERBEETLE_PORT)
       .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
       .withCmd([
@@ -72,7 +72,7 @@ module.exports = async () => {
       .start()
 
     const tigerbeetleContainer = await new GenericContainer(
-      'wilsonianbcoil/tigerbeetle:beta'
+      'ghcr.io/wilsonianb/tigerbeetle:clients-max'
     )
       .withExposedPorts(TIGERBEETLE_PORT)
       .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)

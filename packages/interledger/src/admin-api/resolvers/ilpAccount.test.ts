@@ -3,7 +3,7 @@ import { Transaction } from 'knex'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
 
-import { randomAsset, AccountFactory } from '../../accounts/testsHelpers'
+import { randomAsset, AccountFactory } from '../../testsHelpers'
 import { IlpAccount } from '../../accounts/types'
 import { gql } from 'apollo-server'
 

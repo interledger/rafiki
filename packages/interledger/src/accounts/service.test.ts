@@ -1,16 +1,20 @@
 import { Model } from 'objection'
-import Knex, { Transaction } from 'knex'
-import { Account as Balance, createClient, Client } from 'tigerbeetle-node'
+import { Transaction } from 'knex'
+import { Account as Balance } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import { Config } from '../config'
 import { IlpAccount as IlpAccountModel } from './models'
-import { randomAsset, AccountFactory } from './testsHelpers'
 import { AccountsService } from './service'
 import { Asset } from '../asset/model'
-import { createAssetService } from '../asset/service'
-import { createBalanceService } from '../balance/service'
-import { createDepositService, DepositService } from '../deposit/service'
+import { BalanceService } from '../balance/service'
+import { DepositService } from '../deposit/service'
+import {
+  AccountFactory,
+  createTestServices,
+  TestServices,
+  randomAsset
+} from '../testsHelpers'
 
 import {
   CreateAccountError,
@@ -22,56 +26,27 @@ import {
   UpdateAccountError,
   UpdateOptions
 } from './types'
-import { Logger } from '../logger/service'
-import { createKnex } from '../Knex/service'
 
 describe('Accounts Service', (): void => {
   let accountsService: AccountsService
   let accountFactory: AccountFactory
+  let balanceService: BalanceService
   let config: typeof Config
   let depositService: DepositService
-  let tbClient: Client
-  let knex: Knex
+  let services: TestServices
   let trx: Transaction
 
   beforeAll(
     async (): Promise<void> => {
-      config = Config
-      config.ilpAddress = 'test.rafiki'
-      config.peerAddresses = [
-        {
-          accountId: uuid(),
-          ilpAddress: 'test.alice'
-        }
-      ]
-      tbClient = createClient({
-        cluster_id: config.tigerbeetleClusterId,
-        replica_addresses: config.tigerbeetleReplicaAddresses
-      })
-      knex = await createKnex(config.postgresUrl)
-      const balanceService = createBalanceService({ tbClient, logger: Logger })
-      const assetService = createAssetService({
-        balanceService,
-        logger: Logger
-      })
-      depositService = createDepositService({
-        assetService,
-        balanceService,
-        logger: Logger
-      })
-      accountsService = new AccountsService(
-        assetService,
-        balanceService,
-        config,
-        Logger
-      )
+      services = await createTestServices()
+      ;({ accountsService, balanceService, config, depositService } = services)
       accountFactory = new AccountFactory(accountsService)
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      trx = await knex.transaction()
+      trx = await services.knex.transaction()
       Model.knex(trx)
     }
   )
@@ -85,8 +60,7 @@ describe('Accounts Service', (): void => {
 
   afterAll(
     async (): Promise<void> => {
-      await knex.destroy()
-      tbClient.destroy()
+      await services.shutdown()
     }
   )
 
@@ -112,9 +86,7 @@ describe('Accounts Service', (): void => {
       const retrievedAccount = await IlpAccountModel.query().findById(
         accountOrError.id
       )
-      const balances = await tbClient.lookupAccounts([
-        retrievedAccount.balanceId
-      ])
+      const balances = await balanceService.get([retrievedAccount.balanceId])
       expect(balances.length).toBe(1)
       balances.forEach((balance: Balance) => {
         expect(balance.credits_reserved).toEqual(BigInt(0))
@@ -162,9 +134,7 @@ describe('Accounts Service', (): void => {
       }
       expect(accountOrError).toEqual(expectedAccount)
       const retrievedAccount = await IlpAccountModel.query().findById(id)
-      const balances = await tbClient.lookupAccounts([
-        retrievedAccount.balanceId
-      ])
+      const balances = await balanceService.get([retrievedAccount.balanceId])
       expect(balances.length).toBe(1)
       balances.forEach((balance: Balance) => {
         expect(balance.credits_reserved).toEqual(BigInt(0))
@@ -289,7 +259,7 @@ describe('Accounts Service', (): void => {
 
       const newAsset = await Asset.query().where(asset).first()
       expect(newAsset).toBeDefined()
-      const balances = await tbClient.lookupAccounts([
+      const balances = await balanceService.get([
         newAsset.liquidityBalanceId,
         newAsset.settlementBalanceId
       ])

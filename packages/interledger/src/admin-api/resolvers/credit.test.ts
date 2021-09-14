@@ -2,7 +2,7 @@ import { Model } from 'objection'
 import { Transaction } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { AccountFactory } from '../../accounts/testsHelpers'
+import { AccountFactory } from '../../testsHelpers'
 import {
   CreditError,
   ExtendCreditMutationResponse,
