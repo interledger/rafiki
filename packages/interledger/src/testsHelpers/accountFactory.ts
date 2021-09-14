@@ -5,7 +5,7 @@ import {
   CreateOptions,
   CreateSubAccountOptions,
   IlpAccount
-} from '../types'
+} from '../accounts/types'
 import { randomAsset } from './asset'
 
 export function isSubAccount(

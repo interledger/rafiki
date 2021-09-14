@@ -9,23 +9,15 @@ import {
   ApolloLink
 } from '@apollo/client'
 import { ApolloServer } from 'apollo-server'
-import { createClient } from 'tigerbeetle-node'
-import { v4 as uuid } from 'uuid'
 
 import { createAdminApi } from '..'
 import { AccountsService } from '../../accounts/service'
-import { createAssetService } from '../../asset/service'
-import { createBalanceService } from '../../balance/service'
-import { createCreditService, CreditService } from '../../credit/service'
-import { createDepositService, DepositService } from '../../deposit/service'
-import { createTransferService, TransferService } from '../../transfer/service'
-import {
-  createWithdrawalService,
-  WithdrawalService
-} from '../../withdrawal/service'
-import { Config } from '../../config'
+import { CreditService } from '../../credit/service'
+import { DepositService } from '../../deposit/service'
+import { TransferService } from '../../transfer/service'
+import { WithdrawalService } from '../../withdrawal/service'
+import { createTestServices } from '../../testsHelpers/services'
 import { Logger } from '../../logger/service'
-import { createKnex } from '../../Knex/service'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 
@@ -42,48 +34,9 @@ export interface TestContainer {
 }
 
 export const createTestApp = async (): Promise<TestContainer> => {
-  const config = Config
-  config.ilpAddress = 'test.rafiki'
-  config.peerAddresses = [
-    {
-      accountId: uuid(),
-      ilpAddress: 'test.alice'
-    }
-  ]
-  const tbClient = createClient({
-    cluster_id: config.tigerbeetleClusterId,
-    replica_addresses: config.tigerbeetleReplicaAddresses
-  })
-  const knex = await createKnex(config.postgresUrl)
-  const balanceService = createBalanceService({ tbClient, logger: Logger })
-  const assetService = createAssetService({ balanceService, logger: Logger })
-  const accountsService = new AccountsService(
-    assetService,
-    balanceService,
-    config,
-    Logger
-  )
-  const creditService = createCreditService({ balanceService, logger: Logger })
-  const depositService = createDepositService({
-    assetService,
-    balanceService,
-    logger: Logger
-  })
-  const transferService = createTransferService({
-    balanceService,
-    logger: Logger
-  })
-  const withdrawalService = createWithdrawalService({
-    assetService,
-    balanceService,
-    logger: Logger
-  })
+  const services = await createTestServices()
   const adminApi = await createAdminApi({
-    accountsService,
-    creditService,
-    depositService,
-    transferService,
-    withdrawalService,
+    ...services,
     logger: Logger
   })
   const { port } = await adminApi.listen(0)
@@ -142,18 +95,12 @@ export const createTestApp = async (): Promise<TestContainer> => {
     }
   })
   return {
-    accountsService,
-    creditService,
-    depositService,
-    transferService,
-    withdrawalService,
+    ...services,
     adminApi,
-    knex,
     apolloClient,
     shutdown: async () => {
       await adminApi.stop()
-      await knex.destroy()
-      tbClient.destroy()
+      await services.shutdown()
     }
   }
 }

@@ -1,72 +1,36 @@
 import { Model } from 'objection'
-import Knex, { Transaction } from 'knex'
-import { createClient, Client } from 'tigerbeetle-node'
+import { Transaction } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { Config } from '../config'
-import { AccountFactory, randomAsset } from '../accounts/testsHelpers'
-import {
-  TransferService,
-  createTransferService,
-  isTransferError,
-  TransferError
-} from './service'
-import { createAssetService } from '../asset/service'
-import { createBalanceService } from '../balance/service'
-import { DepositService, createDepositService } from '../deposit/service'
+import { TransferService, isTransferError, TransferError } from './service'
+import { DepositService } from '../deposit/service'
 import { AccountsService } from '../accounts/service'
-
-import { Logger } from '../logger/service'
-import { createKnex } from '../Knex/service'
+import {
+  AccountFactory,
+  createTestServices,
+  TestServices,
+  randomAsset
+} from '../testsHelpers'
 
 describe('Transfer Service', (): void => {
   let transferService: TransferService
   let accountsService: AccountsService
   let accountFactory: AccountFactory
   let depositService: DepositService
-  let config: typeof Config
-  let tbClient: Client
-  let knex: Knex
+  let services: TestServices
   let trx: Transaction
 
   beforeAll(
     async (): Promise<void> => {
-      config = Config
-      tbClient = createClient({
-        cluster_id: config.tigerbeetleClusterId,
-        replica_addresses: config.tigerbeetleReplicaAddresses
-      })
-      knex = await createKnex(config.postgresUrl)
-      const balanceService = createBalanceService({
-        tbClient,
-        logger: Logger
-      })
-      transferService = createTransferService({
-        balanceService,
-        logger: Logger
-      })
-      const assetService = createAssetService({
-        balanceService,
-        logger: Logger
-      })
-      depositService = createDepositService({
-        assetService,
-        balanceService,
-        logger: Logger
-      })
-      accountsService = new AccountsService(
-        assetService,
-        balanceService,
-        config,
-        Logger
-      )
+      services = await createTestServices()
+      ;({ transferService, accountsService, depositService } = services)
       accountFactory = new AccountFactory(accountsService)
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      trx = await knex.transaction()
+      trx = await services.knex.transaction()
       Model.knex(trx)
     }
   )
@@ -80,8 +44,7 @@ describe('Transfer Service', (): void => {
 
   afterAll(
     async (): Promise<void> => {
-      await knex.destroy()
-      tbClient.destroy()
+      await services.shutdown()
     }
   )
 
