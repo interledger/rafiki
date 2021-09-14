@@ -1,4 +1,4 @@
-import { BaseModel } from '../../shared/baseModel'
+import { BaseModel } from '../shared/baseModel'
 
 export class IlpHttpToken extends BaseModel {
   public static get tableName(): string {

@@ -7,6 +7,7 @@ import { createAssetService } from '../asset/service'
 import { BalanceService, createBalanceService } from '../balance/service'
 import { createCreditService, CreditService } from '../credit/service'
 import { createDepositService, DepositService } from '../deposit/service'
+import { createTokenService } from '../token/service'
 import { createTransferService, TransferService } from '../transfer/service'
 import {
   createWithdrawalService,
@@ -46,9 +47,11 @@ export const createTestServices = async (): Promise<TestServices> => {
   const knex = await createKnex(config.postgresUrl)
   const balanceService = createBalanceService({ tbClient, logger: Logger })
   const assetService = createAssetService({ balanceService, logger: Logger })
+  const tokenService = createTokenService({ logger: Logger })
   const accountsService = new AccountsService(
     assetService,
     balanceService,
+    tokenService,
     config,
     Logger
   )

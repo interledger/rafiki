@@ -12,6 +12,7 @@ import { createAssetService } from './asset/service'
 import { createBalanceService } from './balance/service'
 import { createCreditService } from './credit/service'
 import { createDepositService } from './deposit/service'
+import { createTokenService } from './token/service'
 import { createTransferService } from './transfer/service'
 import { createWithdrawalService } from './withdrawal/service'
 import { Logger } from './logger/service'
@@ -74,9 +75,14 @@ export const start = async (): Promise<void> => {
     balanceService
   })
 
+  const tokenService = createTokenService({
+    logger
+  })
+
   const accountsService = new AccountsService(
     assetService,
     balanceService,
+    tokenService,
     Config,
     logger
   )

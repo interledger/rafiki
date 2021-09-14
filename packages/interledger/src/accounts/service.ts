@@ -2,7 +2,6 @@ import {
   NotFoundError,
   PartialModelObject,
   raw,
-  transaction,
   UniqueViolationError
 } from 'objection'
 import { Logger } from 'pino'
@@ -10,11 +9,12 @@ import * as uuid from 'uuid'
 
 import { Asset, AssetService } from '../asset/service'
 import { BalanceOptions, BalanceService } from '../balance/service'
+import { Token, TokenError, TokenService } from '../token/service'
 import { UnknownBalanceError } from '../shared/errors'
 import { randomId } from '../shared/utils'
 import { Config } from '../config'
 import { UnknownAssetError } from './errors'
-import { IlpAccount as IlpAccountModel, IlpHttpToken } from './models'
+import { IlpAccount as IlpAccountModel } from './models'
 import { calculateCreditBalance, calculateDebitBalance } from './utils'
 import {
   AccountsService as AccountsServiceInterface,
@@ -73,6 +73,7 @@ export class AccountsService implements AccountsServiceInterface {
   constructor(
     private assetService: AssetService,
     private balanceService: BalanceService,
+    private tokenService: TokenService,
     private config: typeof Config,
     private logger: Logger
   ) {}
@@ -80,124 +81,126 @@ export class AccountsService implements AccountsServiceInterface {
   public async createAccount(
     account: CreateOptions
   ): Promise<IlpAccount | CreateAccountError> {
-    try {
-      const newAccount: PartialModelObject<IlpAccountModel> = {
-        id: account.id,
-        disabled: account.disabled,
-        maxPacketAmount: account.maxPacketAmount,
-        outgoingEndpoint: account.http?.outgoing.endpoint,
-        outgoingToken: account.http?.outgoing.authToken,
-        streamEnabled: account.stream?.enabled,
-        staticIlpAddress: account.routing?.staticIlpAddress
+    const newAccount: PartialModelObject<IlpAccountModel> = {
+      id: account.id,
+      disabled: account.disabled,
+      maxPacketAmount: account.maxPacketAmount,
+      outgoingEndpoint: account.http?.outgoing.endpoint,
+      outgoingToken: account.http?.outgoing.authToken,
+      streamEnabled: account.stream?.enabled,
+      staticIlpAddress: account.routing?.staticIlpAddress
+    }
+    // Don't rollback creating a new asset if account creation fails.
+    // Asset rows include a smallserial column that would have sequence gaps
+    // if a transaction is rolled back.
+    // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
+    if (isSubAccount(account)) {
+      newAccount.superAccountId = account.superAccountId
+      const superAccount = await IlpAccountModel.query()
+        .findById(account.superAccountId)
+        .withGraphFetched('asset(withUnit)')
+      if (!superAccount) {
+        return CreateAccountError.UnknownSuperAccount
       }
-      // Don't rollback creating a new asset if account creation fails.
-      // Asset rows include a smallserial column that would have sequence gaps
-      // if a transaction is rolled back.
-      // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
+      newAccount.assetId = superAccount.assetId
+      newAccount.asset = superAccount.asset
+    } else {
+      newAccount.asset = await this.assetService.getOrCreate(account.asset)
+      newAccount.assetId = newAccount.asset.id
+    }
+    const trx = await IlpAccountModel.startTransaction()
+    try {
+      const newBalances: BalanceOptions[] = []
+      const superAccountPatch: PartialModelObject<IlpAccountModel> = {}
       if (isSubAccount(account)) {
         newAccount.superAccountId = account.superAccountId
-        const superAccount = await IlpAccountModel.query()
+        const superAccount = await IlpAccountModel.query(trx)
           .findById(account.superAccountId)
           .withGraphFetched('asset(withUnit)')
+          .forUpdate()
           .throwIfNotFound()
-        newAccount.assetId = superAccount.assetId
-        newAccount.asset = superAccount.asset
-      } else {
-        newAccount.asset = await this.assetService.getOrCreate(account.asset)
-        newAccount.assetId = newAccount.asset.id
-      }
-      return await transaction(
-        IlpAccountModel,
-        IlpHttpToken,
-        async (IlpAccountModel, IlpHttpToken) => {
-          const newBalances: BalanceOptions[] = []
-          const superAccountPatch: PartialModelObject<IlpAccountModel> = {}
-          if (isSubAccount(account)) {
-            newAccount.superAccountId = account.superAccountId
-            const superAccount = await IlpAccountModel.query()
-              .findById(account.superAccountId)
-              .withGraphFetched('asset(withUnit)')
-              .forUpdate()
-              .throwIfNotFound()
-            newAccount.creditBalanceId = randomId()
-            newAccount.debtBalanceId = randomId()
-            newBalances.push(
-              {
-                id: newAccount.creditBalanceId,
-                unit: superAccount.asset.unit
-              },
-              {
-                id: newAccount.debtBalanceId,
-                unit: superAccount.asset.unit
-              }
-            )
-            if (
-              !superAccount.creditExtendedBalanceId !==
-              !superAccount.lentBalanceId
-            ) {
-              this.logger.warn(superAccount, 'missing super-account balance')
-            }
-            if (!superAccount.creditExtendedBalanceId) {
-              superAccountPatch.creditExtendedBalanceId = randomId()
-              newBalances.push({
-                id: superAccountPatch.creditExtendedBalanceId,
-                debitBalance: true,
-                unit: superAccount.asset.unit
-              })
-            }
-            if (!superAccount.lentBalanceId) {
-              superAccountPatch.lentBalanceId = randomId()
-              newBalances.push({
-                id: superAccountPatch.lentBalanceId,
-                debitBalance: true,
-                unit: superAccount.asset.unit
-              })
-            }
+        newAccount.creditBalanceId = randomId()
+        newAccount.debtBalanceId = randomId()
+        newBalances.push(
+          {
+            id: newAccount.creditBalanceId,
+            unit: superAccount.asset.unit
+          },
+          {
+            id: newAccount.debtBalanceId,
+            unit: superAccount.asset.unit
           }
-
-          newAccount.balanceId = randomId()
+        )
+        if (
+          !superAccount.creditExtendedBalanceId !== !superAccount.lentBalanceId
+        ) {
+          this.logger.warn(superAccount, 'missing super-account balance')
+        }
+        if (!superAccount.creditExtendedBalanceId) {
+          superAccountPatch.creditExtendedBalanceId = randomId()
           newBalances.push({
-            id: newAccount.balanceId,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            unit: newAccount.asset!.unit
+            id: superAccountPatch.creditExtendedBalanceId,
+            debitBalance: true,
+            unit: superAccount.asset.unit
           })
+        }
+        if (!superAccount.lentBalanceId) {
+          superAccountPatch.lentBalanceId = randomId()
+          newBalances.push({
+            id: superAccountPatch.lentBalanceId,
+            debitBalance: true,
+            unit: superAccount.asset.unit
+          })
+        }
+      }
 
-          await this.balanceService.create(newBalances)
+      newAccount.balanceId = randomId()
+      newBalances.push({
+        id: newAccount.balanceId,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        unit: newAccount.asset!.unit
+      })
 
-          if (isSubAccount(account)) {
-            await IlpAccountModel.query()
-              .patch(superAccountPatch)
-              .findById(account.superAccountId)
-              .throwIfNotFound()
+      await this.balanceService.create(newBalances)
+
+      if (isSubAccount(account)) {
+        await IlpAccountModel.query(trx)
+          .patch(superAccountPatch)
+          .findById(account.superAccountId)
+          .throwIfNotFound()
+      }
+
+      const accountRow = await IlpAccountModel.query(trx).insertAndFetch(
+        newAccount
+      )
+
+      const incomingTokens = account.http?.incoming?.authTokens.map(
+        (incomingToken: string): Token => {
+          return {
+            accountId: accountRow.id,
+            token: incomingToken
           }
-
-          const accountRow = await IlpAccountModel.query().insertAndFetch(
-            newAccount
-          )
-
-          const incomingTokens = account.http?.incoming?.authTokens.map(
-            (incomingToken: string) => {
-              return {
-                accountId: accountRow.id,
-                token: incomingToken
-              }
-            }
-          )
-          if (incomingTokens) {
-            await IlpHttpToken.query().insert(incomingTokens)
-          }
-
-          return toIlpAccount(accountRow)
         }
       )
-    } catch (err) {
-      if (err instanceof UniqueViolationError) {
-        switch (err.constraint) {
-          case 'ilpAccounts_pkey':
-            return CreateAccountError.DuplicateAccountId
-          case 'ilphttptokens_token_unique':
+      if (incomingTokens) {
+        const err = await this.tokenService.create(incomingTokens, trx)
+        if (err) {
+          if (err === TokenError.DuplicateToken) {
+            trx.rollback()
             return CreateAccountError.DuplicateIncomingToken
+          }
+          throw new Error(err)
         }
+      }
+      trx.commit()
+      return toIlpAccount(accountRow)
+    } catch (err) {
+      trx.rollback()
+      if (
+        err instanceof UniqueViolationError &&
+        err.constraint === 'ilpAccounts_pkey'
+      ) {
+        return CreateAccountError.DuplicateAccountId
       } else if (err instanceof NotFoundError) {
         return CreateAccountError.UnknownSuperAccount
       }
@@ -208,47 +211,47 @@ export class AccountsService implements AccountsServiceInterface {
   public async updateAccount(
     accountOptions: UpdateOptions
   ): Promise<IlpAccount | UpdateAccountError> {
+    const trx = await IlpAccountModel.startTransaction()
     try {
-      return await transaction(
-        IlpAccountModel,
-        IlpHttpToken,
-        async (IlpAccountModel, IlpHttpToken) => {
-          if (accountOptions.http?.incoming?.authTokens) {
-            await IlpHttpToken.query().delete().where({
-              accountId: accountOptions.id
-            })
-            const incomingTokens = accountOptions.http.incoming.authTokens.map(
-              (incomingToken: string) => {
-                return {
-                  accountId: accountOptions.id,
-                  token: incomingToken
-                }
-              }
-            )
-            await IlpHttpToken.query().insert(incomingTokens)
+      if (accountOptions.http?.incoming?.authTokens) {
+        await this.tokenService.delete(accountOptions.id, trx)
+        const incomingTokens = accountOptions.http.incoming.authTokens.map(
+          (incomingToken: string): Token => {
+            return {
+              accountId: accountOptions.id,
+              token: incomingToken
+            }
           }
-          const account = await IlpAccountModel.query()
-            .patchAndFetchById(accountOptions.id, {
-              disabled: accountOptions.disabled,
-              maxPacketAmount: accountOptions.maxPacketAmount,
-              outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
-              outgoingToken: accountOptions.http?.outgoing.authToken,
-              streamEnabled: accountOptions.stream?.enabled,
-              staticIlpAddress: accountOptions.routing?.staticIlpAddress
-            })
-            .throwIfNotFound()
-          const asset = await this.assetService.getById(account.assetId)
-          if (!asset) {
-            throw new UnknownAssetError(account.id)
+        )
+        const err = await this.tokenService.create(incomingTokens, trx)
+        if (err) {
+          if (err === TokenError.DuplicateToken) {
+            trx.rollback()
+            return UpdateAccountError.DuplicateIncomingToken
           }
-          account.asset = asset
-          return toIlpAccount(account)
+          throw new Error(err)
         }
-      )
+      }
+      const account = await IlpAccountModel.query()
+        .patchAndFetchById(accountOptions.id, {
+          disabled: accountOptions.disabled,
+          maxPacketAmount: accountOptions.maxPacketAmount,
+          outgoingEndpoint: accountOptions.http?.outgoing.endpoint,
+          outgoingToken: accountOptions.http?.outgoing.authToken,
+          streamEnabled: accountOptions.stream?.enabled,
+          staticIlpAddress: accountOptions.routing?.staticIlpAddress
+        })
+        .throwIfNotFound()
+      const asset = await this.assetService.getById(account.assetId)
+      if (!asset) {
+        throw new UnknownAssetError(account.id)
+      }
+      account.asset = asset
+      trx.commit()
+      return toIlpAccount(account)
     } catch (err) {
-      if (err instanceof UniqueViolationError) {
-        return UpdateAccountError.DuplicateIncomingToken
-      } else if (err instanceof NotFoundError) {
+      trx.rollback()
+      if (err instanceof NotFoundError) {
         return UpdateAccountError.UnknownAccount
       }
       throw err
