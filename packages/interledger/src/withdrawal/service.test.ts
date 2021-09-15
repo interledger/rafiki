@@ -8,6 +8,7 @@ import {
   WithdrawalError
 } from './service'
 import { AccountsService } from '../accounts/service'
+import { AssetService } from '../asset/service'
 import { DepositService } from '../deposit/service'
 import {
   AccountFactory,
@@ -19,6 +20,7 @@ import {
 describe('Withdrawal Service', (): void => {
   let accountsService: AccountsService
   let accountFactory: AccountFactory
+  let assetService: AssetService
   let depositService: DepositService
   let withdrawalService: WithdrawalService
   let services: TestServices
@@ -27,7 +29,12 @@ describe('Withdrawal Service', (): void => {
   beforeAll(
     async (): Promise<void> => {
       services = await createTestServices()
-      ;({ withdrawalService, accountsService, depositService } = services)
+      ;({
+        withdrawalService,
+        accountsService,
+        assetService,
+        depositService
+      } = services)
       accountFactory = new AccountFactory(accountsService)
     }
   )
@@ -77,9 +84,9 @@ describe('Withdrawal Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toMatchObject({ balance: startingBalance - amount })
-      await expect(
-        accountsService.getSettlementBalance(asset)
-      ).resolves.toEqual(startingBalance)
+      await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
+        startingBalance
+      )
 
       const error = await withdrawalService.finalize(withdrawalOrError.id)
       expect(error).toBeUndefined()
@@ -88,9 +95,9 @@ describe('Withdrawal Service', (): void => {
       ).resolves.toMatchObject({
         balance: startingBalance - amount
       })
-      await expect(
-        accountsService.getSettlementBalance(asset)
-      ).resolves.toEqual(startingBalance - amount)
+      await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
+        startingBalance - amount
+      )
     })
 
     test("Can't create withdrawal with invalid id", async (): Promise<void> => {
@@ -131,9 +138,7 @@ describe('Withdrawal Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toMatchObject({ balance: startingBalance })
-      const settlementBalance = await accountsService.getSettlementBalance(
-        asset
-      )
+      const settlementBalance = await assetService.getSettlementBalance(asset)
       expect(settlementBalance).toEqual(startingBalance)
     })
 
@@ -333,11 +338,9 @@ describe('Withdrawal Service', (): void => {
           amount
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(asset)
+        const balance = await assetService.getLiquidityBalance(asset)
         expect(balance).toEqual(startingBalance - amount)
-        const settlementBalance = await accountsService.getSettlementBalance(
-          asset
-        )
+        const settlementBalance = await assetService.getSettlementBalance(asset)
         expect(settlementBalance).toEqual(startingBalance - amount)
       }
       const amount2 = BigInt(5)
@@ -347,11 +350,9 @@ describe('Withdrawal Service', (): void => {
           amount: amount2
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(asset)
+        const balance = await assetService.getLiquidityBalance(asset)
         expect(balance).toEqual(startingBalance - amount - amount2)
-        const settlementBalance = await accountsService.getSettlementBalance(
-          asset
-        )
+        const settlementBalance = await assetService.getSettlementBalance(asset)
         expect(settlementBalance).toEqual(startingBalance - amount - amount2)
       }
     })
@@ -381,7 +382,7 @@ describe('Withdrawal Service', (): void => {
           id
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(asset)
+        const balance = await assetService.getLiquidityBalance(asset)
         expect(balance).toEqual(startingBalance - amount)
       }
       {
@@ -391,7 +392,7 @@ describe('Withdrawal Service', (): void => {
           id
         })
         expect(error).toEqual(WithdrawalError.WithdrawalExists)
-        const balance = await accountsService.getLiquidityBalance(asset)
+        const balance = await assetService.getLiquidityBalance(asset)
         expect(balance).toEqual(startingBalance - amount)
       }
     })
@@ -411,11 +412,9 @@ describe('Withdrawal Service', (): void => {
         })
       ).resolves.toEqual(WithdrawalError.InsufficientLiquidity)
 
-      const balance = await accountsService.getLiquidityBalance(asset)
+      const balance = await assetService.getLiquidityBalance(asset)
       expect(balance).toEqual(startingBalance)
-      const settlementBalance = await accountsService.getSettlementBalance(
-        asset
-      )
+      const settlementBalance = await assetService.getSettlementBalance(asset)
       expect(settlementBalance).toEqual(startingBalance)
     })
 

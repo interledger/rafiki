@@ -20,8 +20,6 @@ export interface AccountsService extends ConnectorAccountsService {
   ): Promise<IlpAccount | UpdateAccountError>
   getSubAccounts(accountId: string): Promise<IlpAccount[]>
   getAccountBalance(accountId: string): Promise<IlpBalance | undefined>
-  getLiquidityBalance(asset: Asset): Promise<bigint | undefined>
-  getSettlementBalance(asset: Asset): Promise<bigint | undefined>
   getAccountsPage(options: {
     pagination?: Pagination
     superAccountId?: string
