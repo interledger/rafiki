@@ -8,7 +8,7 @@ import { createAdminApi } from './admin-api'
 import { createConnectorService } from './connector'
 import { Rafiki } from './connector/core'
 import { Config } from './config'
-import { AccountsService } from './accounts/service'
+import { createAccountService } from './account/service'
 import { createAssetService } from './asset/service'
 import { createBalanceService } from './balance/service'
 import { createCreditService } from './credit/service'
@@ -88,32 +88,36 @@ export const start = async (): Promise<void> => {
     logger
   })
 
-  const accountsService = new AccountsService(
+  const accountService = createAccountService({
     assetService,
     balanceService,
     tokenService,
-    Config,
+    ...Config,
     logger
-  )
+  })
 
   const creditService = createCreditService({
     logger,
+    accountService,
     balanceService
   })
 
   const depositService = createDepositService({
     logger,
+    accountService,
     assetService,
     balanceService
   })
 
   const transferService = createTransferService({
     logger,
+    accountService,
     balanceService
   })
 
   const withdrawalService = createWithdrawalService({
     logger,
+    accountService,
     assetService,
     balanceService
   })
@@ -125,7 +129,7 @@ export const start = async (): Promise<void> => {
   })
 
   adminApi = await createAdminApi({
-    accountsService,
+    accountService,
     creditService,
     depositService,
     transferService,
@@ -137,7 +141,7 @@ export const start = async (): Promise<void> => {
     redis,
     logger,
     ratesService,
-    accountsService,
+    accountService,
     transferService
   })
 

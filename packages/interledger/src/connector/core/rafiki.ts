@@ -15,10 +15,6 @@ import {
   createAdminAuthMiddleware
 } from './middleware'
 import { LoggingService } from './services/logger'
-import {
-  ConnectorAccountsService as AccountsService,
-  IlpAccount
-} from '../../accounts/types'
 import { TransferService } from '../../transfer/service'
 import { IncomingMessage, ServerResponse } from 'http'
 import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
@@ -27,9 +23,40 @@ import { RatesService } from 'rates'
 import { createAccountMiddleware } from './middleware/account'
 import { createStreamAddressMiddleware } from './middleware/stream-address'
 
+export interface RafikiAccount {
+  id: string
+  disabled: boolean
+  asset: {
+    code: string
+    scale: number
+  }
+  http?: {
+    outgoing: {
+      authToken: string
+      endpoint: string
+    }
+  }
+  stream: {
+    enabled: boolean
+  }
+  routing?: {
+    staticIlpAddress: string
+  }
+  maxPacketAmount?: bigint
+}
+
+export interface AccountService {
+  get(id: string): Promise<RafikiAccount | undefined>
+  getByDestinationAddress(
+    destinationAddress: string
+  ): Promise<RafikiAccount | undefined>
+  getByToken(token: string): Promise<RafikiAccount | undefined>
+  getAddress(id: string): Promise<string | undefined>
+}
+
 export interface RafikiServices {
   //router: Router
-  accounts: AccountsService
+  accounts: AccountService
   logger: LoggingService
   rates: RatesService
   redis: Redis
@@ -66,8 +93,8 @@ export type RafikiResponse = Koa.Response & RafikiResponseMixin
 export type RafikiContextMixin = {
   services: RafikiServices
   accounts: {
-    readonly incoming: IlpAccount
-    readonly outgoing: IlpAccount
+    readonly incoming: RafikiAccount
+    readonly outgoing: RafikiAccount
   }
   request: RafikiRequest
   response: RafikiResponse
@@ -83,7 +110,7 @@ export type RafikiMiddleware<T = any> = Middleware<T, RafikiContextMixin>
 
 export class Rafiki<T = any> {
   //private _router?: Router
-  private _accounts?: AccountsService
+  private _accounts?: AccountService
   private streamServer: StreamServer
   private redis: Redis
 
@@ -96,7 +123,7 @@ export class Rafiki<T = any> {
     this._accounts = config && config.accounts ? config.accounts : undefined
     const logger =
       config && config.logger ? config.logger : new DebugLogger('rafiki')
-    const accountsOrThrow = (): AccountsService => {
+    const accountsOrThrow = (): AccountService => {
       if (this._accounts) return this._accounts
       throw new Error('No accounts service provided to the app')
     }
@@ -121,7 +148,7 @@ export class Rafiki<T = any> {
       get streamServer(): StreamServer {
         return streamServer
       },
-      get accounts(): AccountsService {
+      get accounts(): AccountService {
         return accountsOrThrow()
       },
       get transferService(): TransferService {
@@ -140,11 +167,11 @@ export class Rafiki<T = any> {
   //  this._router = router
   //}
 
-  public get accounts(): AccountsService | undefined {
+  public get accounts(): AccountService | undefined {
     return this._accounts
   }
 
-  public set accounts(accounts: AccountsService | undefined) {
+  public set accounts(accounts: AccountService | undefined) {
     this._accounts = accounts
   }
 

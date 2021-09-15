@@ -1,8 +1,7 @@
 import { IlpPrepare, serializeIlpPrepare } from 'ilp-packet'
 import { deserializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { createContext } from '../../utils'
-import { RafikiContext } from '../../rafiki'
-import { IlpAccount } from '../../../../accounts/types'
+import { RafikiAccount, RafikiContext } from '../../rafiki'
 import {
   AccountFactory,
   PeerAccountFactory,
@@ -35,8 +34,8 @@ describe('ILDCP Controller', function () {
   }
 
   beforeAll(async () => {
-    await services.accounts.createAccount(self)
-    await services.accounts.createAccount(alice)
+    await services.accounts.create(self)
+    await services.accounts.create(alice)
   })
 
   test('returns an ildcp response on success', async () => {
@@ -63,7 +62,7 @@ describe('ILDCP Controller', function () {
   })
 
   test.skip('returns an ildcp response if incoming account is not a peer', async () => {
-    const bob = await services.accounts.createAccount(
+    const bob = await services.accounts.create(
       AccountFactory.build({ id: 'bob' })
     )
     const ctx = makeContext(
@@ -71,7 +70,7 @@ describe('ILDCP Controller', function () {
     )
     ctx.accounts = {
       get incoming() {
-        return bob as IlpAccount
+        return bob as RafikiAccount
       },
       get outgoing() {
         return self

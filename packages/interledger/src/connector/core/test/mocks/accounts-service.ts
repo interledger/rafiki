@@ -1,8 +1,4 @@
-import {
-  ConnectorAccountsService as AccountsService,
-  CreateAccountOptions,
-  IlpAccount
-} from '../../../../accounts/types'
+import { RafikiAccount } from '../../rafiki'
 
 import {
   Transaction,
@@ -10,28 +6,28 @@ import {
   TransferError
 } from '../../../../transfer/service'
 
-export type MockIlpAccount = CreateAccountOptions & {
-  id: string
-  disabled: boolean
+export type MockIlpAccount = RafikiAccount & {
   balance: bigint
-  stream: {
-    enabled: boolean
+  http?: {
+    incoming?: {
+      authTokens: string[]
+    }
   }
 }
 
-export class MockAccountsService implements AccountsService {
+export class MockAccountsService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
   constructor(private serverIlpAddress: string) {}
 
-  getAccount(accountId: string): Promise<IlpAccount | undefined> {
+  get(accountId: string): Promise<RafikiAccount | undefined> {
     const account = this.accounts.get(accountId)
     return Promise.resolve(account)
   }
 
-  async getAccountByDestinationAddress(
+  async getByDestinationAddress(
     destinationAddress: string
-  ): Promise<IlpAccount | undefined> {
+  ): Promise<RafikiAccount | undefined> {
     const account = this.find((account) => {
       const { routing } = account
       if (!routing) return false
@@ -42,20 +38,20 @@ export class MockAccountsService implements AccountsService {
     return account
   }
 
-  async getAccountByToken(token: string): Promise<IlpAccount | undefined> {
+  async getByToken(token: string): Promise<RafikiAccount | undefined> {
     return this.find(
       (account) => !!account.http?.incoming?.authTokens.includes(token)
     )
   }
 
-  async getAccountBalance(accountId: string): Promise<bigint | undefined> {
+  async getBalance(accountId: string): Promise<bigint | undefined> {
     const account = this.accounts.get(accountId)
     if (account) {
       return account.balance
     }
   }
 
-  async createAccount(account: MockIlpAccount): Promise<IlpAccount> {
+  async create(account: MockIlpAccount): Promise<RafikiAccount> {
     this.accounts.set(account.id, account)
     return account
   }
@@ -91,7 +87,7 @@ export class MockAccountsService implements AccountsService {
 
   private find(
     predicate: (account: MockIlpAccount) => boolean
-  ): IlpAccount | undefined {
+  ): RafikiAccount | undefined {
     for (const [, account] of this.accounts) {
       if (predicate(account)) return account
     }

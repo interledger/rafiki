@@ -3,7 +3,7 @@ import { Transaction } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { DepositService, DepositError, isDepositError } from './service'
-import { AccountsService } from '../accounts/service'
+import { AccountService } from '../account/service'
 import { AssetService } from '../asset/service'
 import {
   AccountFactory,
@@ -14,7 +14,7 @@ import {
 
 describe('Deposit Service', (): void => {
   let depositService: DepositService
-  let accountsService: AccountsService
+  let accountService: AccountService
   let accountFactory: AccountFactory
   let assetService: AssetService
   let services: TestServices
@@ -23,8 +23,8 @@ describe('Deposit Service', (): void => {
   beforeAll(
     async (): Promise<void> => {
       services = await createTestServices()
-      ;({ depositService, accountsService, assetService } = services)
-      accountFactory = new AccountFactory(accountsService)
+      ;({ depositService, accountService, assetService } = services)
+      accountFactory = new AccountFactory(accountService)
     }
   )
 
@@ -66,7 +66,7 @@ describe('Deposit Service', (): void => {
         id: depositOrError.id
       })
       await expect(
-        accountsService.getAccountBalance(accountId)
+        accountService.getBalance(accountId)
       ).resolves.toMatchObject({ balance: amount })
       const settlementBalance = await assetService.getSettlementBalance(asset)
       expect(settlementBalance).toEqual(amount)
@@ -82,7 +82,7 @@ describe('Deposit Service', (): void => {
           id: depositOrError.id
         })
         await expect(
-          accountsService.getAccountBalance(accountId)
+          accountService.getBalance(accountId)
         ).resolves.toMatchObject({ balance: amount + amount })
       }
     })

@@ -4,8 +4,15 @@ import { Account as Balance } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import { Config } from '../config'
-import { IlpAccount as IlpAccountModel } from './models'
-import { AccountsService } from './service'
+import {
+  AccountService,
+  AccountError,
+  CreateOptions,
+  IlpAccount,
+  isAccountError,
+  Pagination,
+  UpdateOptions
+} from './service'
 import { Asset } from '../asset/model'
 import { AssetService } from '../asset/service'
 import { BalanceService } from '../balance/service'
@@ -16,19 +23,8 @@ import {
   randomAsset
 } from '../testsHelpers'
 
-import {
-  CreateAccountError,
-  CreateOptions,
-  IlpAccount,
-  isCreateAccountError,
-  isUpdateAccountError,
-  Pagination,
-  UpdateAccountError,
-  UpdateOptions
-} from './types'
-
 describe('Accounts Service', (): void => {
-  let accountsService: AccountsService
+  let accountService: AccountService
   let accountFactory: AccountFactory
   let assetService: AssetService
   let balanceService: BalanceService
@@ -39,8 +35,8 @@ describe('Accounts Service', (): void => {
   beforeAll(
     async (): Promise<void> => {
       services = await createTestServices()
-      ;({ accountsService, assetService, balanceService, config } = services)
-      accountFactory = new AccountFactory(accountsService)
+      ;({ accountService, assetService, balanceService, config } = services)
+      accountFactory = new AccountFactory(accountService)
     }
   )
 
@@ -69,9 +65,9 @@ describe('Accounts Service', (): void => {
       const account: CreateOptions = {
         asset: randomAsset()
       }
-      const accountOrError = await accountsService.createAccount(account)
-      expect(isCreateAccountError(accountOrError)).toEqual(false)
-      if (isCreateAccountError(accountOrError)) {
+      const accountOrError = await accountService.create(account)
+      expect(isAccountError(accountOrError)).toEqual(false)
+      if (isAccountError(accountOrError)) {
         fail()
       }
       const expectedAccount = {
@@ -82,11 +78,11 @@ describe('Accounts Service', (): void => {
           enabled: false
         }
       }
-      expect(accountOrError).toEqual(expectedAccount)
-      const retrievedAccount = await IlpAccountModel.query().findById(
-        accountOrError.id
+      expect(accountOrError).toMatchObject(expectedAccount)
+      await expect(accountService.get(accountOrError.id)).resolves.toEqual(
+        accountOrError
       )
-      const balances = await balanceService.get([retrievedAccount.balanceId])
+      const balances = await balanceService.get([accountOrError.balanceId])
       expect(balances.length).toBe(1)
       balances.forEach((balance: Balance) => {
         expect(balance.credits_reserved).toEqual(BigInt(0))
@@ -117,24 +113,20 @@ describe('Accounts Service', (): void => {
           staticIlpAddress: 'g.rafiki.' + id
         }
       }
-      const accountOrError = await accountsService.createAccount(account)
-      expect(isCreateAccountError(accountOrError)).toEqual(false)
-      const expectedAccount: IlpAccount = {
+      const accountOrError = await accountService.create(account)
+      expect(isAccountError(accountOrError)).toEqual(false)
+      if (isAccountError(accountOrError)) {
+        fail()
+      }
+      expect(accountOrError).toMatchObject({
         ...account,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        id: account.id!,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        disabled: account.disabled!,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        stream: account.stream!,
         http: {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           outgoing: account.http!.outgoing
         }
-      }
-      expect(accountOrError).toEqual(expectedAccount)
-      const retrievedAccount = await IlpAccountModel.query().findById(id)
-      const balances = await balanceService.get([retrievedAccount.balanceId])
+      })
+      await expect(accountService.get(id)).resolves.toEqual(accountOrError)
+      const balances = await balanceService.get([accountOrError.balanceId])
       expect(balances.length).toBe(1)
       balances.forEach((balance: Balance) => {
         expect(balance.credits_reserved).toEqual(BigInt(0))
@@ -148,8 +140,8 @@ describe('Accounts Service', (): void => {
         superAccountId
       }
 
-      await expect(accountsService.createAccount(account)).resolves.toEqual(
-        CreateAccountError.UnknownSuperAccount
+      await expect(accountService.create(account)).resolves.toEqual(
+        AccountError.UnknownSuperAccount
       )
 
       await accountFactory.build({
@@ -157,19 +149,19 @@ describe('Accounts Service', (): void => {
         asset: randomAsset()
       })
 
-      const accountOrError = await accountsService.createAccount(account)
-      expect(isCreateAccountError(accountOrError)).toEqual(false)
+      const accountOrError = await accountService.create(account)
+      expect(isAccountError(accountOrError)).toEqual(false)
     })
 
     test('Cannot create an account with duplicate id', async (): Promise<void> => {
       const account = await accountFactory.build()
       await expect(
-        accountsService.createAccount({
+        accountService.create({
           id: account.id,
           asset: randomAsset()
         })
-      ).resolves.toEqual(CreateAccountError.DuplicateAccountId)
-      const retrievedAccount = await accountsService.getAccount(account.id)
+      ).resolves.toEqual(AccountError.DuplicateAccountId)
+      const retrievedAccount = await accountService.get(account.id)
       expect(retrievedAccount).toEqual(account)
     })
 
@@ -190,20 +182,18 @@ describe('Accounts Service', (): void => {
         }
       }
 
-      await expect(accountsService.createAccount(account)).resolves.toEqual(
-        CreateAccountError.DuplicateIncomingToken
+      await expect(accountService.create(account)).resolves.toEqual(
+        AccountError.DuplicateIncomingToken
       )
 
-      await expect(
-        IlpAccountModel.query().findById(id)
-      ).resolves.toBeUndefined()
+      await expect(accountService.get(id)).resolves.toBeUndefined()
     })
 
     test('Cannot create an account with duplicate incoming token', async (): Promise<void> => {
       const incomingToken = uuid()
       {
         const account = {
-          accountId: uuid(),
+          id: uuid(),
           asset: randomAsset(),
           http: {
             incoming: {
@@ -215,7 +205,7 @@ describe('Accounts Service', (): void => {
             }
           }
         }
-        await accountsService.createAccount(account)
+        await accountService.create(account)
       }
       {
         const id = uuid()
@@ -232,12 +222,10 @@ describe('Accounts Service', (): void => {
             }
           }
         }
-        await expect(accountsService.createAccount(account)).resolves.toEqual(
-          CreateAccountError.DuplicateIncomingToken
+        await expect(accountService.create(account)).resolves.toEqual(
+          AccountError.DuplicateIncomingToken
         )
-        await expect(
-          IlpAccountModel.query().findById(id)
-        ).resolves.toBeUndefined()
+        await expect(accountService.get(id)).resolves.toBeUndefined()
       }
     })
 
@@ -255,7 +243,7 @@ describe('Accounts Service', (): void => {
         assetService.getSettlementBalance(asset)
       ).resolves.toBeUndefined()
 
-      await accountsService.createAccount(account)
+      await accountService.create(account)
 
       const newAsset = await Asset.query().where(asset).first()
       expect(newAsset).toBeDefined()
@@ -281,13 +269,11 @@ describe('Accounts Service', (): void => {
   describe('Get Account', (): void => {
     test('Can get an account', async (): Promise<void> => {
       const account = await accountFactory.build()
-      await expect(accountsService.getAccount(account.id)).resolves.toEqual(
-        account
-      )
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
-      await expect(accountsService.getAccount(uuid())).resolves.toBeUndefined()
+      await expect(accountService.get(uuid())).resolves.toBeUndefined()
     })
   })
 
@@ -304,7 +290,7 @@ describe('Accounts Service', (): void => {
     )
 
     test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const accounts = await accountsService.getAccountsPage({})
+      const accounts = await accountService.getPage({})
       expect(accounts).toHaveLength(20)
       expect(accounts[0].id).toEqual(accountsCreated[0].id)
       expect(accounts[19].id).toEqual(accountsCreated[19].id)
@@ -315,7 +301,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         first: 10
       }
-      const accounts = await accountsService.getAccountsPage({ pagination })
+      const accounts = await accountService.getPage({ pagination })
       expect(accounts).toHaveLength(10)
       expect(accounts[0].id).toEqual(accountsCreated[0].id)
       expect(accounts[9].id).toEqual(accountsCreated[9].id)
@@ -326,7 +312,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         after: accountsCreated[19].id
       }
-      const accounts = await accountsService.getAccountsPage({ pagination })
+      const accounts = await accountService.getPage({ pagination })
       expect(accounts).toHaveLength(20)
       expect(accounts[0].id).toEqual(accountsCreated[20].id)
       expect(accounts[19].id).toEqual(accountsCreated[39].id)
@@ -338,7 +324,7 @@ describe('Accounts Service', (): void => {
         first: 10,
         after: accountsCreated[9].id
       }
-      const accounts = await accountsService.getAccountsPage({ pagination })
+      const accounts = await accountService.getPage({ pagination })
       expect(accounts).toHaveLength(10)
       expect(accounts[0].id).toEqual(accountsCreated[10].id)
       expect(accounts[9].id).toEqual(accountsCreated[19].id)
@@ -349,7 +335,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         last: 10
       }
-      const accounts = accountsService.getAccountsPage({ pagination })
+      const accounts = accountService.getPage({ pagination })
       await expect(accounts).rejects.toThrow(
         "Can't paginate backwards from the start."
       )
@@ -359,7 +345,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         before: accountsCreated[20].id
       }
-      const accounts = await accountsService.getAccountsPage({ pagination })
+      const accounts = await accountService.getPage({ pagination })
       expect(accounts).toHaveLength(20)
       expect(accounts[0].id).toEqual(accountsCreated[0].id)
       expect(accounts[19].id).toEqual(accountsCreated[19].id)
@@ -371,7 +357,7 @@ describe('Accounts Service', (): void => {
         last: 5,
         before: accountsCreated[10].id
       }
-      const accounts = await accountsService.getAccountsPage({ pagination })
+      const accounts = await accountService.getPage({ pagination })
       expect(accounts).toHaveLength(5)
       expect(accounts[0].id).toEqual(accountsCreated[5].id)
       expect(accounts[4].id).toEqual(accountsCreated[9].id)
@@ -382,14 +368,14 @@ describe('Accounts Service', (): void => {
       const paginationForwards = {
         first: 10
       }
-      const accountsForwards = await accountsService.getAccountsPage({
+      const accountsForwards = await accountService.getPage({
         pagination: paginationForwards
       })
       const paginationBackwards = {
         last: 10,
         before: accountsCreated[10].id
       }
-      const accountsBackwards = await accountsService.getAccountsPage({
+      const accountsBackwards = await accountService.getPage({
         pagination: paginationBackwards
       })
       expect(accountsForwards).toHaveLength(10)
@@ -402,7 +388,7 @@ describe('Accounts Service', (): void => {
         after: accountsCreated[19].id,
         before: accountsCreated[19].id
       }
-      const accounts = await accountsService.getAccountsPage({ pagination })
+      const accounts = await accountService.getPage({ pagination })
       expect(accounts).toHaveLength(20)
       expect(accounts[0].id).toEqual(accountsCreated[20].id)
       expect(accounts[19].id).toEqual(accountsCreated[39].id)
@@ -413,7 +399,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         first: -1
       }
-      const accounts = accountsService.getAccountsPage({ pagination })
+      const accounts = accountService.getPage({ pagination })
       await expect(accounts).rejects.toThrow('Pagination index error')
     })
 
@@ -421,7 +407,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         first: 101
       }
-      const accounts = accountsService.getAccountsPage({ pagination })
+      const accounts = accountService.getPage({ pagination })
       await expect(accounts).rejects.toThrow('Pagination index error')
     })
   })
@@ -437,12 +423,12 @@ describe('Accounts Service', (): void => {
           superAccountId: account.id
         })
       ]
-      const subAccounts = await accountsService.getSubAccounts(account.id)
+      const subAccounts = await accountService.getSubAccounts(account.id)
       expect(subAccounts).toEqual(expectedSubAccounts)
     })
 
     test('Returns empty array for nonexistent sub-accounts', async (): Promise<void> => {
-      await expect(accountsService.getSubAccounts(uuid())).resolves.toEqual([])
+      await expect(accountService.getSubAccounts(uuid())).resolves.toEqual([])
     })
   })
 
@@ -465,7 +451,7 @@ describe('Accounts Service', (): void => {
     )
 
     test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const accounts = await accountsService.getAccountsPage({ superAccountId })
+      const accounts = await accountService.getPage({ superAccountId })
       expect(accounts).toHaveLength(20)
       expect(accounts[0].id).toEqual(subAccounts[0].id)
       expect(accounts[19].id).toEqual(subAccounts[19].id)
@@ -476,7 +462,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         first: 10
       }
-      const accounts = await accountsService.getAccountsPage({
+      const accounts = await accountService.getPage({
         pagination,
         superAccountId
       })
@@ -490,7 +476,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         after: subAccounts[19].id
       }
-      const accounts = await accountsService.getAccountsPage({
+      const accounts = await accountService.getPage({
         pagination,
         superAccountId
       })
@@ -505,7 +491,7 @@ describe('Accounts Service', (): void => {
         first: 10,
         after: subAccounts[9].id
       }
-      const accounts = await accountsService.getAccountsPage({
+      const accounts = await accountService.getPage({
         pagination,
         superAccountId
       })
@@ -519,7 +505,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         last: 10
       }
-      const accounts = accountsService.getAccountsPage({
+      const accounts = accountService.getPage({
         pagination,
         superAccountId
       })
@@ -532,7 +518,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         before: subAccounts[20].id
       }
-      const accounts = await accountsService.getAccountsPage({
+      const accounts = await accountService.getPage({
         pagination,
         superAccountId
       })
@@ -547,7 +533,7 @@ describe('Accounts Service', (): void => {
         last: 5,
         before: subAccounts[10].id
       }
-      const accounts = await accountsService.getAccountsPage({
+      const accounts = await accountService.getPage({
         pagination,
         superAccountId
       })
@@ -561,7 +547,7 @@ describe('Accounts Service', (): void => {
       const paginationForwards = {
         first: 10
       }
-      const accountsForwards = await accountsService.getAccountsPage({
+      const accountsForwards = await accountService.getPage({
         pagination: paginationForwards,
         superAccountId
       })
@@ -569,7 +555,7 @@ describe('Accounts Service', (): void => {
         last: 10,
         before: subAccounts[10].id
       }
-      const accountsBackwards = await accountsService.getAccountsPage({
+      const accountsBackwards = await accountService.getPage({
         pagination: paginationBackwards,
         superAccountId
       })
@@ -583,7 +569,7 @@ describe('Accounts Service', (): void => {
         after: subAccounts[19].id,
         before: subAccounts[19].id
       }
-      const accounts = await accountsService.getAccountsPage({
+      const accounts = await accountService.getPage({
         pagination,
         superAccountId
       })
@@ -597,7 +583,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         first: -1
       }
-      const accounts = accountsService.getAccountsPage({
+      const accounts = accountService.getPage({
         pagination,
         superAccountId
       })
@@ -608,7 +594,7 @@ describe('Accounts Service', (): void => {
       const pagination: Pagination = {
         first: 101
       }
-      const accounts = accountsService.getAccountsPage({
+      const accounts = accountService.getPage({
         pagination,
         superAccountId
       })
@@ -653,21 +639,16 @@ describe('Accounts Service', (): void => {
           staticIlpAddress: 'g.rafiki.' + id
         }
       }
-      const accountOrError = await accountsService.updateAccount(updateOptions)
-      expect(isUpdateAccountError(accountOrError)).toEqual(false)
+      const accountOrError = await accountService.update(updateOptions)
+      expect(isAccountError(accountOrError)).toEqual(false)
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       delete updateOptions.http!.incoming
-      const expectedAccount: IlpAccount = {
+      const expectedAccount = {
         ...updateOptions,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        disabled: updateOptions.disabled!,
-        asset,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        stream: updateOptions.stream!
+        asset
       }
-      expect(accountOrError as IlpAccount).toEqual(expectedAccount)
-      const account = await accountsService.getAccount(id)
-      expect(account).toEqual(expectedAccount)
+      expect(accountOrError as IlpAccount).toMatchObject(expectedAccount)
+      await expect(accountService.get(id)).resolves.toEqual(accountOrError)
     })
 
     test('Cannot update nonexistent account', async (): Promise<void> => {
@@ -676,9 +657,9 @@ describe('Accounts Service', (): void => {
         disabled: true
       }
 
-      await expect(
-        accountsService.updateAccount(updateOptions)
-      ).resolves.toEqual(UpdateAccountError.UnknownAccount)
+      await expect(accountService.update(updateOptions)).resolves.toEqual(
+        AccountError.UnknownAccount
+      )
     })
 
     test('Returns error for duplicate incoming token', async (): Promise<void> => {
@@ -710,12 +691,10 @@ describe('Accounts Service', (): void => {
           }
         }
       }
-      await expect(
-        accountsService.updateAccount(updateOptions)
-      ).resolves.toEqual(UpdateAccountError.DuplicateIncomingToken)
-      await expect(accountsService.getAccount(account.id)).resolves.toEqual(
-        account
+      await expect(accountService.update(updateOptions)).resolves.toEqual(
+        AccountError.DuplicateIncomingToken
       )
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
 
     test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
@@ -736,12 +715,10 @@ describe('Accounts Service', (): void => {
           }
         }
       }
-      await expect(
-        accountsService.updateAccount(updateOptions)
-      ).resolves.toEqual(UpdateAccountError.DuplicateIncomingToken)
-      await expect(accountsService.getAccount(account.id)).resolves.toEqual(
-        account
+      await expect(accountService.update(updateOptions)).resolves.toEqual(
+        AccountError.DuplicateIncomingToken
       )
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
   })
 
@@ -750,7 +727,7 @@ describe('Accounts Service', (): void => {
       const { id } = await accountFactory.build()
 
       {
-        const balance = await accountsService.getAccountBalance(id)
+        const balance = await accountService.getBalance(id)
         expect(balance).toEqual({
           balance: BigInt(0),
           availableCredit: BigInt(0),
@@ -762,9 +739,7 @@ describe('Accounts Service', (): void => {
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
-      await expect(
-        accountsService.getAccountBalance(uuid())
-      ).resolves.toBeUndefined()
+      await expect(accountService.getBalance(uuid())).resolves.toBeUndefined()
     })
   })
 
@@ -782,12 +757,12 @@ describe('Accounts Service', (): void => {
           }
         }
       })
-      const account = await accountsService.getAccountByToken(incomingToken)
+      const account = await accountService.getByToken(incomingToken)
       expect(account?.id).toEqual(id)
     })
 
     test('Returns undefined if no account exists with token', async (): Promise<void> => {
-      const account = await accountsService.getAccountByToken(uuid())
+      const account = await accountService.getByToken(uuid())
       expect(account).toBeUndefined()
     })
   })
@@ -801,19 +776,17 @@ describe('Accounts Service', (): void => {
         }
       })
       {
-        const account = await accountsService.getAccountByDestinationAddress(
-          ilpAddress
-        )
+        const account = await accountService.getByDestinationAddress(ilpAddress)
         expect(account?.id).toEqual(id)
       }
       {
-        const account = await accountsService.getAccountByDestinationAddress(
+        const account = await accountService.getByDestinationAddress(
           ilpAddress + '.suffix'
         )
         expect(account?.id).toEqual(id)
       }
       {
-        const account = await accountsService.getAccountByDestinationAddress(
+        const account = await accountService.getByDestinationAddress(
           ilpAddress + 'suffix'
         )
         expect(account).toBeUndefined()
@@ -826,19 +799,17 @@ describe('Accounts Service', (): void => {
         id
       })
       {
-        const account = await accountsService.getAccountByDestinationAddress(
-          ilpAddress
-        )
+        const account = await accountService.getByDestinationAddress(ilpAddress)
         expect(account?.id).toEqual(id)
       }
       {
-        const account = await accountsService.getAccountByDestinationAddress(
+        const account = await accountService.getByDestinationAddress(
           ilpAddress + '.suffix'
         )
         expect(account?.id).toEqual(id)
       }
       {
-        const account = await accountsService.getAccountByDestinationAddress(
+        const account = await accountService.getByDestinationAddress(
           ilpAddress + 'suffix'
         )
         expect(account).toBeUndefined()
@@ -849,19 +820,17 @@ describe('Accounts Service', (): void => {
       const { id } = await accountFactory.build()
       const ilpAddress = config.ilpAddress + '.' + id
       {
-        const account = await accountsService.getAccountByDestinationAddress(
-          ilpAddress
-        )
+        const account = await accountService.getByDestinationAddress(ilpAddress)
         expect(account?.id).toEqual(id)
       }
       {
-        const account = await accountsService.getAccountByDestinationAddress(
+        const account = await accountService.getByDestinationAddress(
           ilpAddress + '.suffix'
         )
         expect(account?.id).toEqual(id)
       }
       {
-        const account = await accountsService.getAccountByDestinationAddress(
+        const account = await accountService.getByDestinationAddress(
           ilpAddress + 'suffix'
         )
         expect(account).toBeUndefined()
@@ -874,9 +843,7 @@ describe('Accounts Service', (): void => {
           staticIlpAddress: 'test.rafiki'
         }
       })
-      const account = await accountsService.getAccountByDestinationAddress(
-        'test.nope'
-      )
+      const account = await accountService.getByDestinationAddress('test.nope')
       expect(account).toBeUndefined()
     })
   })
@@ -890,7 +857,7 @@ describe('Accounts Service', (): void => {
         }
       })
       {
-        const staticIlpAddress = await accountsService.getAddress(id)
+        const staticIlpAddress = await accountService.getAddress(id)
         expect(staticIlpAddress).toEqual(ilpAddress)
       }
     })
@@ -899,7 +866,7 @@ describe('Accounts Service', (): void => {
       const { ilpAddress, accountId: id } = config.peerAddresses[0]
       await accountFactory.build({ id })
       {
-        const peerAddress = await accountsService.getAddress(id)
+        const peerAddress = await accountService.getAddress(id)
         expect(peerAddress).toEqual(ilpAddress)
       }
     })
@@ -907,13 +874,13 @@ describe('Accounts Service', (): void => {
     test("Can get account's address by server ILP address", async (): Promise<void> => {
       const { id } = await accountFactory.build()
       {
-        const ilpAddress = await accountsService.getAddress(id)
+        const ilpAddress = await accountService.getAddress(id)
         expect(ilpAddress).toEqual(config.ilpAddress + '.' + id)
       }
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
-      await expect(accountsService.getAddress(uuid())).resolves.toBeUndefined()
+      await expect(accountService.getAddress(uuid())).resolves.toBeUndefined()
     })
   })
 })

@@ -4,7 +4,7 @@ import {
   CreateTransferError,
   TwoPhaseTransfer
 } from '../balance/service'
-import { IlpAccount as IlpAccountModel } from '../accounts/models'
+import { AccountService } from '../account/service'
 import { BaseService } from '../shared/baseService'
 import {
   BalanceTransferError,
@@ -49,11 +49,13 @@ export interface TransferService {
 }
 
 interface ServiceDependencies extends BaseService {
+  accountService: AccountService
   balanceService: BalanceService
 }
 
 export function createTransferService({
   logger,
+  accountService,
   balanceService
 }: ServiceDependencies): TransferService {
   const log = logger.child({
@@ -61,6 +63,7 @@ export function createTransferService({
   })
   const deps: ServiceDependencies = {
     logger: log,
+    accountService,
     balanceService
   }
   return {
@@ -87,10 +90,10 @@ async function createTransfer(
   if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
     return TransferError.InvalidDestinationAmount
   }
-  const accounts = await IlpAccountModel.query()
-    .findByIds([sourceAccountId, destinationAccountId])
-    .withGraphJoined('asset')
-    .select('asset', 'balanceId', 'ilpAccounts.id')
+  const accounts = await deps.accountService.getAccounts([
+    sourceAccountId,
+    destinationAccountId
+  ])
   if (accounts.length !== 2) {
     if (accounts.length === 0 || accounts[0].id !== sourceAccountId) {
       return TransferError.UnknownSourceAccount

@@ -1,9 +1,9 @@
 import * as Koa from 'koa'
 import { RafikiMiddleware } from '../rafiki'
-import { IlpAccount } from '../../../accounts/types'
+import { RafikiAccount } from '../rafiki'
 
 export interface AuthState {
-  account?: IlpAccount
+  account?: RafikiAccount
 }
 
 // TODO incomingTokens
@@ -41,9 +41,7 @@ export function createTokenAuthMiddleware(): RafikiMiddleware {
       'Bearer token required in Authorization header'
     )
 
-    ctx.state.account = await ctx.services.accounts.getAccountByToken(
-      ctx.state.token
-    )
+    ctx.state.account = await ctx.services.accounts.getByToken(ctx.state.token)
     ctx.assert(ctx.state.account, 401, 'Access Denied - Invalid Token')
 
     await next()
@@ -61,7 +59,7 @@ export function createAdminAuthMiddleware(): RafikiMiddleware {
   ): Promise<void> {
     const accountId = getBearerToken(ctx)
     ctx.assert(accountId, 401, 'Bearer token required in Authorization header')
-    ctx.state.account = await ctx.services.accounts.getAccount(accountId)
+    ctx.state.account = await ctx.services.accounts.get(accountId)
     ctx.assert(ctx.state.account, 401, 'Access Denied - Invalid Token')
     await next()
   }

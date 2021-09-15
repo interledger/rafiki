@@ -21,7 +21,7 @@ describe('Asset Service', (): void => {
     async (): Promise<void> => {
       services = await createTestServices()
       ;({ assetService, depositService } = services)
-      accountFactory = new AccountFactory(services.accountsService)
+      accountFactory = new AccountFactory(services.accountService)
     }
   )
 

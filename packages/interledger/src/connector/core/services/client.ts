@@ -1,10 +1,10 @@
 import { AxiosInstance } from 'axios'
 import { Errors } from 'ilp-packet'
-import { IlpAccount } from '../../../accounts/types'
+import { RafikiAccount } from '../rafiki'
 
 export async function sendToPeer(
   client: AxiosInstance,
-  account: IlpAccount,
+  account: RafikiAccount,
   prepare: Buffer
 ): Promise<Buffer> {
   const { http } = account

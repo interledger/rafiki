@@ -7,7 +7,7 @@ import {
   isWithdrawalError,
   WithdrawalError
 } from './service'
-import { AccountsService } from '../accounts/service'
+import { AccountService } from '../account/service'
 import { AssetService } from '../asset/service'
 import { DepositService } from '../deposit/service'
 import {
@@ -18,7 +18,7 @@ import {
 } from '../testsHelpers'
 
 describe('Withdrawal Service', (): void => {
-  let accountsService: AccountsService
+  let accountService: AccountService
   let accountFactory: AccountFactory
   let assetService: AssetService
   let depositService: DepositService
@@ -31,11 +31,11 @@ describe('Withdrawal Service', (): void => {
       services = await createTestServices()
       ;({
         withdrawalService,
-        accountsService,
+        accountService,
         assetService,
         depositService
       } = services)
-      accountFactory = new AccountFactory(accountsService)
+      accountFactory = new AccountFactory(accountService)
     }
   )
 
@@ -82,7 +82,7 @@ describe('Withdrawal Service', (): void => {
         id: withdrawalOrError.id
       })
       await expect(
-        accountsService.getAccountBalance(accountId)
+        accountService.getBalance(accountId)
       ).resolves.toMatchObject({ balance: startingBalance - amount })
       await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
         startingBalance
@@ -90,11 +90,11 @@ describe('Withdrawal Service', (): void => {
 
       const error = await withdrawalService.finalize(withdrawalOrError.id)
       expect(error).toBeUndefined()
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toMatchObject({
-        balance: startingBalance - amount
-      })
+      await expect(accountService.getBalance(accountId)).resolves.toMatchObject(
+        {
+          balance: startingBalance - amount
+        }
+      )
       await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
         startingBalance - amount
       )
@@ -136,7 +136,7 @@ describe('Withdrawal Service', (): void => {
         })
       ).resolves.toEqual(WithdrawalError.InsufficientBalance)
       await expect(
-        accountsService.getAccountBalance(accountId)
+        accountService.getBalance(accountId)
       ).resolves.toMatchObject({ balance: startingBalance })
       const settlementBalance = await assetService.getSettlementBalance(asset)
       expect(settlementBalance).toEqual(startingBalance)
@@ -200,7 +200,7 @@ describe('Withdrawal Service', (): void => {
       const error = await withdrawalService.rollback(withdrawal.id)
       expect(error).toBeUndefined()
       await expect(
-        accountsService.getAccountBalance(accountId)
+        accountService.getBalance(accountId)
       ).resolves.toMatchObject({ balance: startingBalance })
     })
 

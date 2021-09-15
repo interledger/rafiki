@@ -4,7 +4,6 @@ import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
 
 import { randomAsset, AccountFactory } from '../../testsHelpers'
-import { IlpAccount } from '../../accounts/types'
 import { gql } from 'apollo-server'
 
 import { createTestApp, TestContainer } from '../testsHelpers/app'
@@ -12,7 +11,7 @@ import {
   CreateIlpAccountInput,
   CreateIlpAccountMutationResponse,
   CreateIlpSubAccountMutationResponse,
-  IlpAccount as IlpAccountResponse,
+  IlpAccount,
   IlpAccountsConnection,
   UpdateIlpAccountInput,
   UpdateIlpAccountMutationResponse
@@ -26,7 +25,7 @@ describe('Account Resolvers', (): void => {
   beforeAll(
     async (): Promise<void> => {
       appContainer = await createTestApp()
-      accountFactory = new AccountFactory(appContainer.accountsService)
+      accountFactory = new AccountFactory(appContainer.accountService)
     }
   )
 
@@ -87,17 +86,16 @@ describe('Account Resolvers', (): void => {
       expect(response.code).toEqual('200')
       expect(response.ilpAccount?.id).not.toBeNull()
       if (response.ilpAccount) {
-        const expectedAccount: IlpAccount = {
+        await expect(
+          appContainer.accountService.get(response.ilpAccount.id)
+        ).resolves.toMatchObject({
           id: response.ilpAccount.id,
           asset: account.asset,
           disabled: false,
           stream: {
             enabled: false
           }
-        }
-        await expect(
-          appContainer.accountsService.getAccount(response.ilpAccount.id)
-        ).resolves.toEqual(expectedAccount)
+        })
       } else {
         fail()
       }
@@ -157,12 +155,11 @@ describe('Account Resolvers', (): void => {
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
       expect(response.ilpAccount?.id).toEqual(id)
-      await expect(
-        appContainer.accountsService.getAccount(id)
-      ).resolves.toEqual({
+      await expect(appContainer.accountService.get(id)).resolves.toMatchObject({
         ...account,
         http: {
-          outgoing: account.http?.outgoing
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          outgoing: account.http!.outgoing
         },
         maxPacketAmount: BigInt(account.maxPacketAmount)
       })
@@ -281,7 +278,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): IlpAccountResponse => {
+          (query): IlpAccount => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -290,7 +287,20 @@ describe('Account Resolvers', (): void => {
           }
         )
 
-      expect(query).toMatchObject(account)
+      expect(query).toEqual({
+        __typename: 'IlpAccount',
+        id: account.id,
+        asset: {
+          __typename: 'Asset',
+          code: account.asset.code,
+          scale: account.asset.scale
+        },
+        disabled: account.disabled,
+        stream: {
+          __typename: 'Stream',
+          enabled: account.stream.enabled
+        }
+      })
     })
 
     test('Can get all ilp account fields', async (): Promise<void> => {
@@ -382,7 +392,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): IlpAccountResponse => {
+          (query): IlpAccount => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -391,23 +401,75 @@ describe('Account Resolvers', (): void => {
           }
         )
 
-      expect(query).toMatchObject({
-        ...account,
+      expect(query).toEqual({
+        __typename: 'IlpAccount',
+        id: account.id,
+        asset: {
+          __typename: 'Asset',
+          code: account.asset.code,
+          scale: account.asset.scale
+        },
+        disabled: account.disabled,
+        stream: {
+          __typename: 'Stream',
+          enabled: account.stream.enabled
+        },
         http: {
-          outgoing: account.http?.outgoing
+          __typename: 'Http',
+          outgoing: {
+            __typename: 'HttpOutgoing',
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            ...account.http!.outgoing
+          }
+        },
+        routing: {
+          __typename: 'Routing',
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          staticIlpAddress: account.routing!.staticIlpAddress
         },
         superAccountId: superAccount.id,
-        superAccount,
+        superAccount: {
+          __typename: 'IlpAccount',
+          id: superAccount.id,
+          asset: {
+            __typename: 'Asset',
+            code: superAccount.asset.code,
+            scale: superAccount.asset.scale
+          },
+          disabled: superAccount.disabled,
+          stream: {
+            __typename: 'Stream',
+            enabled: superAccount.stream.enabled
+          }
+        },
         subAccounts: {
+          __typename: 'SubAccountsConnection',
           edges: [
             {
+              __typename: 'IlpAccountEdge',
               cursor: subAccount.id,
-              node: subAccount
+              node: {
+                __typename: 'IlpAccount',
+                id: subAccount.id,
+                asset: {
+                  __typename: 'Asset',
+                  code: subAccount.asset.code,
+                  scale: subAccount.asset.scale
+                },
+                disabled: subAccount.disabled,
+                superAccountId: account.id,
+                stream: {
+                  __typename: 'Stream',
+                  enabled: subAccount.stream.enabled
+                }
+              }
             }
           ]
         },
-        maxPacketAmount: account.maxPacketAmount?.toString(),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        maxPacketAmount: account.maxPacketAmount!.toString(),
         balance: {
+          __typename: 'Balance',
           balance: '0',
           availableCredit: '0',
           creditExtended: '0',
@@ -440,7 +502,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): IlpAccountResponse => {
+          (query): IlpAccount => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -470,7 +532,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): IlpAccountResponse => {
+          (query): IlpAccount => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -523,8 +585,22 @@ describe('Account Resolvers', (): void => {
 
       expect(query.edges).toHaveLength(2)
       query.edges.forEach((edge, idx) => {
-        expect(edge.cursor).toEqual(accounts[idx].id)
-        expect(edge.node).toMatchObject(accounts[idx])
+        const account = accounts[idx]
+        expect(edge.cursor).toEqual(account.id)
+        expect(edge.node).toEqual({
+          __typename: 'IlpAccount',
+          id: account.id,
+          asset: {
+            __typename: 'Asset',
+            code: account.asset.code,
+            scale: account.asset.scale
+          },
+          disabled: account.disabled,
+          stream: {
+            __typename: 'Stream',
+            enabled: account.stream.enabled
+          }
+        })
       })
     })
 
@@ -596,10 +672,36 @@ describe('Account Resolvers', (): void => {
 
       expect(query.edges).toHaveLength(2)
       query.edges.forEach((edge, idx) => {
-        expect(edge.cursor).toEqual(accounts[idx].id)
-        expect(edge.node).toMatchObject({
-          ...accounts[idx],
-          maxPacketAmount: accounts[idx].maxPacketAmount?.toString()
+        const account = accounts[idx]
+        expect(edge.cursor).toEqual(account.id)
+        expect(edge.node).toEqual({
+          __typename: 'IlpAccount',
+          id: account.id,
+          asset: {
+            __typename: 'Asset',
+            code: account.asset.code,
+            scale: account.asset.scale
+          },
+          disabled: account.disabled,
+          stream: {
+            __typename: 'Stream',
+            enabled: account.stream.enabled
+          },
+          http: {
+            __typename: 'Http',
+            outgoing: {
+              __typename: 'HttpOutgoing',
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              ...account.http!.outgoing
+            }
+          },
+          routing: {
+            __typename: 'Routing',
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            staticIlpAddress: account.routing!.staticIlpAddress
+          },
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          maxPacketAmount: account.maxPacketAmount!.toString()
         })
       })
     })
@@ -852,7 +954,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): IlpAccountResponse => {
+          (query): IlpAccount => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -897,7 +999,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): IlpAccountResponse => {
+          (query): IlpAccount => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -950,7 +1052,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): IlpAccountResponse => {
+          (query): IlpAccount => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -1004,7 +1106,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): IlpAccountResponse => {
+          (query): IlpAccount => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -1058,7 +1160,7 @@ describe('Account Resolvers', (): void => {
           }
         })
         .then(
-          (query): IlpAccountResponse => {
+          (query): IlpAccount => {
             if (query.data) {
               return query.data.ilpAccount
             } else {
@@ -1107,6 +1209,20 @@ describe('Account Resolvers', (): void => {
                 message
                 ilpAccount {
                   id
+                  disabled
+                  maxPacketAmount
+                  http {
+                    outgoing {
+                      authToken
+                      endpoint
+                    }
+                  }
+                  stream {
+                    enabled
+                  }
+                  routing {
+                    staticIlpAddress
+                  }
                 }
               }
             }
@@ -1127,14 +1243,34 @@ describe('Account Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
-      expect(response.ilpAccount?.id).not.toBeNull()
+      expect(response.ilpAccount).toEqual({
+        __typename: 'IlpAccount',
+        ...updateOptions,
+        http: {
+          __typename: 'Http',
+          outgoing: {
+            __typename: 'HttpOutgoing',
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            ...updateOptions.http!.outgoing
+          }
+        },
+        routing: {
+          __typename: 'Routing',
+          staticIlpAddress: updateOptions.routing.staticIlpAddress
+        },
+        stream: {
+          __typename: 'Stream',
+          enabled: updateOptions.stream.enabled
+        }
+      })
       await expect(
-        appContainer.accountsService.getAccount(account.id)
-      ).resolves.toEqual({
+        appContainer.accountService.get(account.id)
+      ).resolves.toMatchObject({
         ...updateOptions,
         asset: account.asset,
         http: {
-          outgoing: updateOptions.http?.outgoing
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          outgoing: updateOptions.http!.outgoing
         },
         maxPacketAmount: BigInt(updateOptions.maxPacketAmount)
       })
@@ -1173,6 +1309,20 @@ describe('Account Resolvers', (): void => {
                 message
                 ilpAccount {
                   id
+                  disabled
+                  maxPacketAmount
+                  http {
+                    outgoing {
+                      authToken
+                      endpoint
+                    }
+                  }
+                  stream {
+                    enabled
+                  }
+                  routing {
+                    staticIlpAddress
+                  }
                 }
               }
             }
@@ -1193,11 +1343,34 @@ describe('Account Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
-      expect(response.ilpAccount?.id).not.toBeNull()
-      await expect(
-        appContainer.accountsService.getAccount(account.id)
-      ).resolves.toEqual({
+      expect(response.ilpAccount).toEqual({
+        __typename: 'IlpAccount',
+        id: account.id,
+        disabled: updateOptions.disabled,
+        maxPacketAmount: account.maxPacketAmount.toString(),
+        http: {
+          __typename: 'Http',
+          outgoing: {
+            __typename: 'HttpOutgoing',
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            ...account.http!.outgoing
+          }
+        },
+        routing: {
+          __typename: 'Routing',
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          staticIlpAddress: account.routing!.staticIlpAddress
+        },
+        stream: {
+          __typename: 'Stream',
+          enabled: account.stream.enabled
+        }
+      })
+      const updatedAccount = await appContainer.accountService.get(account.id)
+      await expect(updatedAccount).toMatchObject({
         ...account,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        updatedAt: updatedAccount!.updatedAt,
         disabled: updateOptions.disabled
       })
     })
@@ -1326,7 +1499,9 @@ describe('Account Resolvers', (): void => {
       expect(response.ilpAccount?.id).not.toBeNull()
       expect(response.ilpAccount?.superAccountId).toEqual(superAccount.id)
       if (response.ilpAccount) {
-        const expectedAccount: IlpAccount = {
+        await expect(
+          appContainer.accountService.get(response.ilpAccount.id)
+        ).resolves.toMatchObject({
           id: response.ilpAccount.id,
           asset: superAccount.asset,
           superAccountId: superAccount.id,
@@ -1334,10 +1509,7 @@ describe('Account Resolvers', (): void => {
           stream: {
             enabled: false
           }
-        }
-        await expect(
-          appContainer.accountsService.getAccount(response.ilpAccount.id)
-        ).resolves.toEqual(expectedAccount)
+        })
       } else {
         fail()
       }

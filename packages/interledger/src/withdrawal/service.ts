@@ -1,12 +1,12 @@
 import { v4 as uuid } from 'uuid'
 
+import { AccountService } from '../account/service'
 import { Asset, AssetService } from '../asset/service'
 import {
   BalanceService,
   CommitTransferError,
   CreateTransferError
 } from '../balance/service'
-import { IlpAccount as IlpAccountModel } from '../accounts/models'
 import { BaseService } from '../shared/baseService'
 import {
   BalanceTransferError,
@@ -63,12 +63,14 @@ export interface WithdrawalService {
 }
 
 interface ServiceDependencies extends BaseService {
+  accountService: AccountService
   assetService: AssetService
   balanceService: BalanceService
 }
 
 export function createWithdrawalService({
   logger,
+  accountService,
   assetService,
   balanceService
 }: ServiceDependencies): WithdrawalService {
@@ -77,6 +79,7 @@ export function createWithdrawalService({
   })
   const deps: ServiceDependencies = {
     logger: log,
+    accountService,
     assetService,
     balanceService
   }
@@ -96,10 +99,7 @@ async function createWithdrawal(
   if (id && !validateId(id)) {
     return WithdrawalError.InvalidId
   }
-  const account = await IlpAccountModel.query()
-    .findById(accountId)
-    .withGraphJoined('asset(withSettleId)')
-    .select('asset', 'balanceId')
+  const account = await deps.accountService.get(accountId)
   if (!account) {
     return WithdrawalError.UnknownAccount
   }
