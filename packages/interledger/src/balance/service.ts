@@ -40,6 +40,18 @@ export interface BalanceTransfer {
 
 export type TwoPhaseTransfer = Required<BalanceTransfer>
 
+export function calculateCreditBalance(balance: Balance): bigint {
+  return (
+    balance.credits_accepted - balance.debits_accepted - balance.debits_reserved
+  )
+}
+
+export function calculateDebitBalance(balance: Balance): bigint {
+  return (
+    balance.debits_accepted - balance.credits_accepted + balance.debits_reserved
+  )
+}
+
 export interface BalanceService {
   create(balances: BalanceOptions[]): Promise<void>
   get(ids: bigint[]): Promise<Balance[]>

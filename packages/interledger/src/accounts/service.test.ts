@@ -7,8 +7,8 @@ import { Config } from '../config'
 import { IlpAccount as IlpAccountModel } from './models'
 import { AccountsService } from './service'
 import { Asset } from '../asset/model'
+import { AssetService } from '../asset/service'
 import { BalanceService } from '../balance/service'
-import { DepositService } from '../deposit/service'
 import {
   AccountFactory,
   createTestServices,
@@ -30,16 +30,16 @@ import {
 describe('Accounts Service', (): void => {
   let accountsService: AccountsService
   let accountFactory: AccountFactory
+  let assetService: AssetService
   let balanceService: BalanceService
   let config: typeof Config
-  let depositService: DepositService
   let services: TestServices
   let trx: Transaction
 
   beforeAll(
     async (): Promise<void> => {
       services = await createTestServices()
-      ;({ accountsService, balanceService, config, depositService } = services)
+      ;({ accountsService, assetService, balanceService, config } = services)
       accountFactory = new AccountFactory(accountsService)
     }
   )
@@ -249,10 +249,10 @@ describe('Accounts Service', (): void => {
 
       await expect(Asset.query().where(asset).first()).resolves.toBeUndefined()
       await expect(
-        accountsService.getLiquidityBalance(asset)
+        assetService.getLiquidityBalance(asset)
       ).resolves.toBeUndefined()
       await expect(
-        accountsService.getSettlementBalance(asset)
+        assetService.getSettlementBalance(asset)
       ).resolves.toBeUndefined()
 
       await accountsService.createAccount(account)
@@ -269,12 +269,12 @@ describe('Accounts Service', (): void => {
         expect(balance.credits_accepted).toEqual(BigInt(0))
       })
 
-      await expect(accountsService.getLiquidityBalance(asset)).resolves.toEqual(
+      await expect(assetService.getLiquidityBalance(asset)).resolves.toEqual(
         BigInt(0)
       )
-      await expect(
-        accountsService.getSettlementBalance(asset)
-      ).resolves.toEqual(BigInt(0))
+      await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
+        BigInt(0)
+      )
     })
   })
 
@@ -764,64 +764,6 @@ describe('Accounts Service', (): void => {
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
         accountsService.getAccountBalance(uuid())
-      ).resolves.toBeUndefined()
-    })
-  })
-
-  describe('Get Liquidity Balance', (): void => {
-    test('Can retrieve liquidity account balance', async (): Promise<void> => {
-      const { asset } = await accountFactory.build()
-
-      {
-        const balance = await accountsService.getLiquidityBalance(asset)
-        expect(balance).toEqual(BigInt(0))
-      }
-
-      const amount = BigInt(10)
-      await depositService.createLiquidity({
-        asset,
-        amount
-      })
-
-      {
-        const balance = await accountsService.getLiquidityBalance(asset)
-        expect(balance).toEqual(amount)
-      }
-    })
-
-    test('Returns undefined for nonexistent liquidity account', async (): Promise<void> => {
-      const asset = randomAsset()
-      await expect(
-        accountsService.getLiquidityBalance(asset)
-      ).resolves.toBeUndefined()
-    })
-  })
-
-  describe('Get Settlement Balance', (): void => {
-    test('Can retrieve settlement account balance', async (): Promise<void> => {
-      const { asset } = await accountFactory.build()
-
-      {
-        const balance = await accountsService.getSettlementBalance(asset)
-        expect(balance).toEqual(BigInt(0))
-      }
-
-      const amount = BigInt(10)
-      await depositService.createLiquidity({
-        asset,
-        amount
-      })
-
-      {
-        const balance = await accountsService.getSettlementBalance(asset)
-        expect(balance).toEqual(amount)
-      }
-    })
-
-    test('Returns undefined for nonexistent settlement account', async (): Promise<void> => {
-      const asset = randomAsset()
-      await expect(
-        accountsService.getSettlementBalance(asset)
       ).resolves.toBeUndefined()
     })
   })

@@ -3,7 +3,7 @@ import { createClient } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import { AccountsService } from '../accounts/service'
-import { createAssetService } from '../asset/service'
+import { AssetService, createAssetService } from '../asset/service'
 import { BalanceService, createBalanceService } from '../balance/service'
 import { createCreditService, CreditService } from '../credit/service'
 import { createDepositService, DepositService } from '../deposit/service'
@@ -19,6 +19,7 @@ import { createKnex } from '../Knex/service'
 
 export interface TestServices {
   accountsService: AccountsService
+  assetService: AssetService
   balanceService: BalanceService
   creditService: CreditService
   depositService: DepositService
@@ -73,6 +74,7 @@ export const createTestServices = async (): Promise<TestServices> => {
 
   return {
     accountsService,
+    assetService,
     balanceService,
     creditService,
     depositService,

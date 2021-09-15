@@ -1,4 +1,8 @@
-import { BalanceService } from '../balance/service'
+import {
+  BalanceService,
+  calculateCreditBalance,
+  calculateDebitBalance
+} from '../balance/service'
 import { BaseService } from '../shared/baseService'
 import { Asset as AssetModel } from './model'
 import { randomId } from '../shared/utils'
@@ -12,6 +16,8 @@ export interface AssetService {
   get(asset: Asset): Promise<void | AssetModel>
   getOrCreate(asset: Asset): Promise<AssetModel>
   getById(id: string): Promise<void | AssetModel>
+  getLiquidityBalance(asset: Asset): Promise<bigint | undefined>
+  getSettlementBalance(asset: Asset): Promise<bigint | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -32,7 +38,9 @@ export function createAssetService({
   return {
     get: (asset) => getAsset(deps, asset),
     getOrCreate: (asset) => getOrCreateAsset(deps, asset),
-    getById: (id) => getAssetById(deps, id)
+    getById: (id) => getAssetById(deps, id),
+    getLiquidityBalance: (asset) => getLiquidityBalance(deps, asset),
+    getSettlementBalance: (asset) => getSettlementBalance(deps, asset)
   }
 }
 
@@ -94,4 +102,36 @@ async function getAssetById(
   id: string
 ): Promise<void | AssetModel> {
   return await AssetModel.query().findById(id)
+}
+
+async function getLiquidityBalance(
+  deps: ServiceDependencies,
+  { code, scale }: Asset
+): Promise<bigint | undefined> {
+  const asset = await AssetModel.query()
+    .where({ code, scale })
+    .first()
+    .select('liquidityBalanceId')
+  if (asset) {
+    const balances = await deps.balanceService.get([asset.liquidityBalanceId])
+    if (balances.length === 1) {
+      return calculateCreditBalance(balances[0])
+    }
+  }
+}
+
+async function getSettlementBalance(
+  deps: ServiceDependencies,
+  { code, scale }: Asset
+): Promise<bigint | undefined> {
+  const asset = await AssetModel.query()
+    .where({ code, scale })
+    .first()
+    .select('settlementBalanceId')
+  if (asset) {
+    const balances = await deps.balanceService.get([asset.settlementBalanceId])
+    if (balances.length === 1) {
+      return calculateDebitBalance(balances[0])
+    }
+  }
 }

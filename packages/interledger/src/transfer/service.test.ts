@@ -3,6 +3,7 @@ import { Transaction } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { TransferService, isTransferError, TransferError } from './service'
+import { AssetService } from '../asset/service'
 import { DepositService } from '../deposit/service'
 import { AccountsService } from '../accounts/service'
 import {
@@ -16,6 +17,7 @@ describe('Transfer Service', (): void => {
   let transferService: TransferService
   let accountsService: AccountsService
   let accountFactory: AccountFactory
+  let assetService: AssetService
   let depositService: DepositService
   let services: TestServices
   let trx: Transaction
@@ -23,7 +25,12 @@ describe('Transfer Service', (): void => {
   beforeAll(
     async (): Promise<void> => {
       services = await createTestServices()
-      ;({ transferService, accountsService, depositService } = services)
+      ;({
+        transferService,
+        accountsService,
+        assetService,
+        depositService
+      } = services)
       accountFactory = new AccountFactory(accountsService)
     }
   )
@@ -99,9 +106,7 @@ describe('Transfer Service', (): void => {
           balance: startingSourceBalance - sourceAmount
         })
 
-        await expect(
-          accountsService.getLiquidityBalance(asset)
-        ).resolves.toEqual(
+        await expect(assetService.getLiquidityBalance(asset)).resolves.toEqual(
           sourceAmount < destinationAmount
             ? startingLiquidity - amountDiff
             : startingLiquidity
@@ -127,9 +132,7 @@ describe('Transfer Service', (): void => {
             : startingSourceBalance
         })
 
-        await expect(
-          accountsService.getLiquidityBalance(asset)
-        ).resolves.toEqual(
+        await expect(assetService.getLiquidityBalance(asset)).resolves.toEqual(
           accept ? startingLiquidity - amountDiff : startingLiquidity
         )
 
@@ -212,11 +215,11 @@ describe('Transfer Service', (): void => {
         })
 
         await expect(
-          accountsService.getLiquidityBalance(sourceAsset)
+          assetService.getLiquidityBalance(sourceAsset)
         ).resolves.toEqual(BigInt(0))
 
         await expect(
-          accountsService.getLiquidityBalance(destinationAsset)
+          assetService.getLiquidityBalance(destinationAsset)
         ).resolves.toEqual(startingDestinationLiquidity - destinationAmount)
 
         await expect(
@@ -240,11 +243,11 @@ describe('Transfer Service', (): void => {
         })
 
         await expect(
-          accountsService.getLiquidityBalance(sourceAsset)
+          assetService.getLiquidityBalance(sourceAsset)
         ).resolves.toEqual(accept ? sourceAmount : BigInt(0))
 
         await expect(
-          accountsService.getLiquidityBalance(destinationAsset)
+          assetService.getLiquidityBalance(destinationAsset)
         ).resolves.toEqual(
           accept
             ? startingDestinationLiquidity - destinationAmount
@@ -333,11 +336,11 @@ describe('Transfer Service', (): void => {
         })
 
         await expect(
-          accountsService.getLiquidityBalance(sourceAsset)
+          assetService.getLiquidityBalance(sourceAsset)
         ).resolves.toEqual(BigInt(0))
 
         await expect(
-          accountsService.getLiquidityBalance(destinationAsset)
+          assetService.getLiquidityBalance(destinationAsset)
         ).resolves.toEqual(BigInt(0))
 
         await expect(

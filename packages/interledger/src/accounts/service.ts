@@ -7,15 +7,19 @@ import {
 import { Logger } from 'pino'
 import * as uuid from 'uuid'
 
-import { Asset, AssetService } from '../asset/service'
-import { BalanceOptions, BalanceService } from '../balance/service'
+import { AssetService } from '../asset/service'
+import {
+  BalanceOptions,
+  BalanceService,
+  calculateCreditBalance,
+  calculateDebitBalance
+} from '../balance/service'
 import { Token, TokenError, TokenService } from '../token/service'
 import { UnknownBalanceError } from '../shared/errors'
 import { randomId } from '../shared/utils'
 import { Config } from '../config'
 import { UnknownAssetError } from './errors'
 import { IlpAccount as IlpAccountModel } from './models'
-import { calculateCreditBalance, calculateDebitBalance } from './utils'
 import {
   AccountsService as AccountsServiceInterface,
   CreateAccountError,
@@ -341,34 +345,6 @@ export class AccountsService implements AccountsServiceInterface {
     })
 
     return accountBalance
-  }
-
-  public async getLiquidityBalance({
-    code,
-    scale
-  }: Asset): Promise<bigint | undefined> {
-    const asset = await this.assetService.get({ code, scale })
-    if (asset) {
-      const balances = await this.balanceService.get([asset.liquidityBalanceId])
-      if (balances.length === 1) {
-        return calculateCreditBalance(balances[0])
-      }
-    }
-  }
-
-  public async getSettlementBalance({
-    code,
-    scale
-  }: Asset): Promise<bigint | undefined> {
-    const asset = await this.assetService.get({ code, scale })
-    if (asset) {
-      const balances = await this.balanceService.get([
-        asset.settlementBalanceId
-      ])
-      if (balances.length === 1) {
-        return calculateDebitBalance(balances[0])
-      }
-    }
   }
 
   public async getAccountByToken(

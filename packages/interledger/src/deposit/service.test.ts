@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid'
 
 import { DepositService, DepositError, isDepositError } from './service'
 import { AccountsService } from '../accounts/service'
+import { AssetService } from '../asset/service'
 import {
   AccountFactory,
   createTestServices,
@@ -15,13 +16,14 @@ describe('Deposit Service', (): void => {
   let depositService: DepositService
   let accountsService: AccountsService
   let accountFactory: AccountFactory
+  let assetService: AssetService
   let services: TestServices
   let trx: Transaction
 
   beforeAll(
     async (): Promise<void> => {
       services = await createTestServices()
-      ;({ depositService, accountsService } = services)
+      ;({ depositService, accountsService, assetService } = services)
       accountFactory = new AccountFactory(accountsService)
     }
   )
@@ -66,9 +68,7 @@ describe('Deposit Service', (): void => {
       await expect(
         accountsService.getAccountBalance(accountId)
       ).resolves.toMatchObject({ balance: amount })
-      const settlementBalance = await accountsService.getSettlementBalance(
-        asset
-      )
+      const settlementBalance = await assetService.getSettlementBalance(asset)
       expect(settlementBalance).toEqual(amount)
 
       {
@@ -146,11 +146,9 @@ describe('Deposit Service', (): void => {
           amount
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(asset)
+        const balance = await assetService.getLiquidityBalance(asset)
         expect(balance).toEqual(amount)
-        const settlementBalance = await accountsService.getSettlementBalance(
-          asset
-        )
+        const settlementBalance = await assetService.getSettlementBalance(asset)
         expect(settlementBalance).toEqual(amount)
       }
       const amount2 = BigInt(5)
@@ -160,11 +158,9 @@ describe('Deposit Service', (): void => {
           amount: amount2
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(asset)
+        const balance = await assetService.getLiquidityBalance(asset)
         expect(balance).toEqual(amount + amount2)
-        const settlementBalance = await accountsService.getSettlementBalance(
-          asset
-        )
+        const settlementBalance = await assetService.getSettlementBalance(asset)
         expect(settlementBalance).toEqual(amount + amount2)
       }
     })
@@ -189,7 +185,7 @@ describe('Deposit Service', (): void => {
           id
         })
         expect(error).toBeUndefined()
-        const balance = await accountsService.getLiquidityBalance(asset)
+        const balance = await assetService.getLiquidityBalance(asset)
         expect(balance).toEqual(amount)
       }
       {
@@ -199,7 +195,7 @@ describe('Deposit Service', (): void => {
           id
         })
         expect(error).toEqual(DepositError.DepositExists)
-        const balance = await accountsService.getLiquidityBalance(asset)
+        const balance = await assetService.getLiquidityBalance(asset)
         expect(balance).toEqual(amount)
       }
     })
