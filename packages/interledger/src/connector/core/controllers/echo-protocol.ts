@@ -1,10 +1,9 @@
-import { IlpAccount } from '../../../accounts/types'
 import Axios, { AxiosInstance } from 'axios'
 import { serializeIlpPrepare } from 'ilp-packet'
 import { Reader, Writer } from 'oer-utils'
 import { Errors } from 'ilp-packet'
 import { sendToPeer as sendToPeerDefault } from '../services'
-import { RafikiContext, RafikiMiddleware } from '../rafiki'
+import { RafikiAccount, RafikiContext, RafikiMiddleware } from '../rafiki'
 const { InvalidPacketError } = Errors
 
 const MINIMUM_ECHO_PACKET_DATA_LENGTH = 16 + 1
@@ -14,7 +13,7 @@ export interface EchoProtocolControllerOptions {
   minMessageWindow: number
   sendToPeer?: (
     client: AxiosInstance,
-    account: IlpAccount,
+    account: RafikiAccount,
     prepare: Buffer
   ) => Promise<Buffer>
 }

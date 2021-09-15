@@ -22,7 +22,7 @@ describe('Credit Resolvers', (): void => {
   beforeAll(
     async (): Promise<void> => {
       appContainer = await createTestApp()
-      accountFactory = new AccountFactory(appContainer.accountsService)
+      accountFactory = new AccountFactory(appContainer.accountService)
     }
   )
 
@@ -106,7 +106,7 @@ describe('Credit Resolvers', (): void => {
         expect(response.error).toBeNull()
 
         await expect(
-          appContainer.accountsService.getAccountBalance(accountId)
+          appContainer.accountService.getBalance(accountId)
         ).resolves.toEqual({
           balance: autoApply ? depositAmount - amount : BigInt(0),
           availableCredit: BigInt(0),
@@ -115,7 +115,7 @@ describe('Credit Resolvers', (): void => {
           totalLent: autoApply ? amount : BigInt(0)
         })
         await expect(
-          appContainer.accountsService.getAccountBalance(subAccountId)
+          appContainer.accountService.getBalance(subAccountId)
         ).resolves.toEqual({
           balance: autoApply ? amount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount,
@@ -416,7 +416,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.error).toBeNull()
 
       await expect(
-        appContainer.accountsService.getAccountBalance(accountId)
+        appContainer.accountService.getBalance(accountId)
       ).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: BigInt(0),
@@ -425,7 +425,7 @@ describe('Credit Resolvers', (): void => {
         totalLent: BigInt(0)
       })
       await expect(
-        appContainer.accountsService.getAccountBalance(subAccountId)
+        appContainer.accountService.getBalance(subAccountId)
       ).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: creditAmount - amount,
@@ -729,7 +729,7 @@ describe('Credit Resolvers', (): void => {
       expect(response.error).toBeNull()
 
       await expect(
-        appContainer.accountsService.getAccountBalance(accountId)
+        appContainer.accountService.getBalance(accountId)
       ).resolves.toEqual({
         balance: creditAmount - amount,
         availableCredit: BigInt(0),
@@ -738,7 +738,7 @@ describe('Credit Resolvers', (): void => {
         totalLent: amount
       })
       await expect(
-        appContainer.accountsService.getAccountBalance(subAccountId)
+        appContainer.accountService.getBalance(subAccountId)
       ).resolves.toEqual({
         balance: amount,
         availableCredit: creditAmount - amount,
@@ -1106,7 +1106,7 @@ describe('Credit Resolvers', (): void => {
         expect(response.error).toBeNull()
 
         await expect(
-          appContainer.accountsService.getAccountBalance(accountId)
+          appContainer.accountService.getBalance(accountId)
         ).resolves.toEqual({
           balance: amount,
           availableCredit: BigInt(0),
@@ -1115,7 +1115,7 @@ describe('Credit Resolvers', (): void => {
           totalLent: creditAmount - amount
         })
         await expect(
-          appContainer.accountsService.getAccountBalance(subAccountId)
+          appContainer.accountService.getBalance(subAccountId)
         ).resolves.toEqual({
           balance: creditAmount - amount,
           availableCredit: revolve === false ? BigInt(0) : amount,

@@ -21,7 +21,7 @@ import {
   RatesService
 } from './core'
 import { Logger } from '../logger/service'
-import { AccountsService } from '../accounts/service'
+import { AccountService } from '../account/service'
 import { TransferService } from '../transfer/service'
 
 const ILP_ADDRESS = process.env.ILP_ADDRESS || undefined
@@ -33,14 +33,14 @@ interface ServiceDependencies {
   redis: IORedis.Redis
   logger?: typeof Logger
   ratesService: RatesService
-  accountsService: AccountsService
+  accountService: AccountService
   transferService: TransferService
 }
 
 export async function createConnectorService({
   redis,
   ratesService,
-  accountsService,
+  accountService,
   transferService
 }: ServiceDependencies): Promise<Rafiki> {
   if (!ILP_ADDRESS) {
@@ -72,7 +72,7 @@ export async function createConnectorService({
   // TODO Add auth
   const app = createApp({
     //router: router,
-    accounts: accountsService,
+    accounts: accountService,
     redis,
     rates: ratesService,
     transferService,

@@ -8,20 +8,18 @@ import {
   SubAccountsConnectionResolvers
 } from '../generated/graphql'
 import {
-  AccountsService,
-  CreateAccountError,
-  IlpAccount,
-  isCreateAccountError,
-  isUpdateAccountError,
-  UpdateAccountError
-} from '../../accounts/types'
+  AccountService,
+  AccountError,
+  isAccountError,
+  IlpAccount
+} from '../../account/service'
 
 export const getIlpAccounts: QueryResolvers['ilpAccounts'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['IlpAccountsConnection'] => {
-  const accounts = await ctx.accountsService.getAccountsPage({
+  const accounts = await ctx.accountService.getPage({
     pagination: args
   })
   return {
@@ -37,7 +35,7 @@ export const getIlpAccount: QueryResolvers['ilpAccount'] = async (
   args,
   ctx
 ): ResolversTypes['IlpAccount'] => {
-  const account = await ctx.accountsService.getAccount(args.id)
+  const account = await ctx.accountService.get(args.id)
   if (!account) {
     throw new Error('No account')
   }
@@ -50,23 +48,23 @@ export const createIlpAccount: MutationResolvers['createIlpAccount'] = async (
   ctx
 ): ResolversTypes['CreateIlpAccountMutationResponse'] => {
   try {
-    const accountOrError = await ctx.accountsService.createAccount(args.input)
-    if (isCreateAccountError(accountOrError)) {
+    const accountOrError = await ctx.accountService.create(args.input)
+    if (isAccountError(accountOrError)) {
       switch (accountOrError) {
-        case CreateAccountError.DuplicateAccountId:
+        case AccountError.DuplicateAccountId:
           return {
             code: '409',
             message: 'Account already exists',
             success: false
           }
-        case CreateAccountError.DuplicateIncomingToken:
+        case AccountError.DuplicateIncomingToken:
           return {
             code: '409',
             message: 'Incoming token already exists',
             success: false
           }
         default:
-          throw new Error(`CreateAccountError: ${accountOrError}`)
+          throw new Error(`AccountError: ${accountOrError}`)
       }
     }
     return {
@@ -94,23 +92,23 @@ export const updateIlpAccount: MutationResolvers['updateIlpAccount'] = async (
   ctx
 ): ResolversTypes['UpdateIlpAccountMutationResponse'] => {
   try {
-    const accountOrError = await ctx.accountsService.updateAccount(args.input)
-    if (isUpdateAccountError(accountOrError)) {
+    const accountOrError = await ctx.accountService.update(args.input)
+    if (isAccountError(accountOrError)) {
       switch (accountOrError) {
-        case UpdateAccountError.UnknownAccount:
+        case AccountError.UnknownAccount:
           return {
             code: '404',
             message: 'Unknown ILP account',
             success: false
           }
-        case UpdateAccountError.DuplicateIncomingToken:
+        case AccountError.DuplicateIncomingToken:
           return {
             code: '409',
             message: 'Incoming token already exists',
             success: false
           }
         default:
-          throw new Error(`UpdateAccountError: ${accountOrError}`)
+          throw new Error(`AccountError: ${accountOrError}`)
       }
     }
     return {
@@ -148,19 +146,19 @@ export const createIlpSubAccount: MutationResolvers['createIlpSubAccount'] = asy
   ctx
 ): ResolversTypes['CreateIlpSubAccountMutationResponse'] => {
   try {
-    const accountOrError = await ctx.accountsService.createAccount({
+    const accountOrError = await ctx.accountService.create({
       superAccountId: args.superAccountId
     })
-    if (isCreateAccountError(accountOrError)) {
+    if (isAccountError(accountOrError)) {
       switch (accountOrError) {
-        case CreateAccountError.UnknownSuperAccount:
+        case AccountError.UnknownSuperAccount:
           return {
             code: '404',
             message: 'Unknown super-account',
             success: false
           }
         default:
-          throw new Error(`CreateAccountError: ${accountOrError}`)
+          throw new Error(`AccountError: ${accountOrError}`)
       }
     }
     return {
@@ -187,7 +185,7 @@ export const getBalance: IlpAccountResolvers['balance'] = async (
   args,
   ctx
 ): ResolversTypes['Balance'] => {
-  const balance = await ctx.accountsService.getAccountBalance(parent.id)
+  const balance = await ctx.accountService.getBalance(parent.id)
   if (!balance) {
     throw new Error('No account')
   }
@@ -202,9 +200,7 @@ export const getSuperAccount: IlpAccountResolvers['superAccount'] = async (
   if (!parent.superAccountId) {
     throw new Error('No super-account')
   }
-  const superAccount = await ctx.accountsService.getAccount(
-    parent.superAccountId
-  )
+  const superAccount = await ctx.accountService.get(parent.superAccountId)
   if (!superAccount) {
     throw new Error('No super-account')
   }
@@ -216,7 +212,7 @@ export const getSubAccounts: IlpAccountResolvers['subAccounts'] = async (
   args,
   ctx
 ): ResolversTypes['SubAccountsConnection'] => {
-  const subAccounts = await ctx.accountsService.getAccountsPage({
+  const subAccounts = await ctx.accountService.getPage({
     pagination: args,
     superAccountId: parent.id
   })
@@ -240,7 +236,7 @@ export const getIlpAccountsConnectionPageInfo: IlpAccountsConnectionResolvers['p
       hasNextPage: false
     }
   return getPageInfo({
-    accountsService: ctx.accountsService,
+    accountService: ctx.accountService,
     edges
   })
 }
@@ -257,24 +253,24 @@ export const getSubAccountsConnectionPageInfo: SubAccountsConnectionResolvers['p
       hasNextPage: false
     }
 
-  const firstSubAccount = await ctx.accountsService.getAccount(edges[0].node.id)
+  const firstSubAccount = await ctx.accountService.get(edges[0].node.id)
 
   if (!firstSubAccount.superAccountId) {
     throw new Error('No super-account')
   }
   return getPageInfo({
-    accountsService: ctx.accountsService,
+    accountService: ctx.accountService,
     edges,
     superAccountId: firstSubAccount.superAccountId
   })
 }
 
 const getPageInfo = async ({
-  accountsService,
+  accountService,
   edges,
   superAccountId
 }: {
-  accountsService: AccountsService
+  accountService: AccountService
   edges: IlpAccountEdge[]
   superAccountId?: string
 }): ResolversTypes['PageInfo'] => {
@@ -283,7 +279,7 @@ const getPageInfo = async ({
 
   let hasNextPageAccounts, hasPreviousPageAccounts
   try {
-    hasNextPageAccounts = await accountsService.getAccountsPage({
+    hasNextPageAccounts = await accountService.getPage({
       pagination: {
         after: lastEdge,
         first: 1
@@ -294,7 +290,7 @@ const getPageInfo = async ({
     hasNextPageAccounts = []
   }
   try {
-    hasPreviousPageAccounts = await accountsService.getAccountsPage({
+    hasPreviousPageAccounts = await accountService.getPage({
       pagination: {
         before: firstEdge,
         last: 1

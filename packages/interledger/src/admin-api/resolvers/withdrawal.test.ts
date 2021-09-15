@@ -21,7 +21,7 @@ describe('Withdrawal Resolvers', (): void => {
   beforeAll(
     async (): Promise<void> => {
       appContainer = await createTestApp()
-      accountFactory = new AccountFactory(appContainer.accountsService)
+      accountFactory = new AccountFactory(appContainer.accountService)
     }
   )
 

@@ -2,7 +2,7 @@ import Knex from 'knex'
 import { createClient } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { AccountsService } from '../accounts/service'
+import { AccountService, createAccountService } from '../account/service'
 import { AssetService, createAssetService } from '../asset/service'
 import { BalanceService, createBalanceService } from '../balance/service'
 import { createCreditService, CreditService } from '../credit/service'
@@ -18,7 +18,7 @@ import { Logger } from '../logger/service'
 import { createKnex } from '../Knex/service'
 
 export interface TestServices {
-  accountsService: AccountsService
+  accountService: AccountService
   assetService: AssetService
   balanceService: BalanceService
   creditService: CreditService
@@ -49,31 +49,38 @@ export const createTestServices = async (): Promise<TestServices> => {
   const balanceService = createBalanceService({ tbClient, logger: Logger })
   const assetService = createAssetService({ balanceService, logger: Logger })
   const tokenService = createTokenService({ logger: Logger })
-  const accountsService = new AccountsService(
+  const accountService = createAccountService({
     assetService,
     balanceService,
     tokenService,
-    config,
-    Logger
-  )
-  const creditService = createCreditService({ balanceService, logger: Logger })
+    logger: Logger,
+    ...config
+  })
+  const creditService = createCreditService({
+    accountService,
+    balanceService,
+    logger: Logger
+  })
   const depositService = createDepositService({
+    accountService,
     assetService,
     balanceService,
     logger: Logger
   })
   const transferService = createTransferService({
+    accountService,
     balanceService,
     logger: Logger
   })
   const withdrawalService = createWithdrawalService({
+    accountService,
     assetService,
     balanceService,
     logger: Logger
   })
 
   return {
-    accountsService,
+    accountService,
     assetService,
     balanceService,
     creditService,

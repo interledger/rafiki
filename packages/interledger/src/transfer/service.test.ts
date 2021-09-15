@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 import { TransferService, isTransferError, TransferError } from './service'
 import { AssetService } from '../asset/service'
 import { DepositService } from '../deposit/service'
-import { AccountsService } from '../accounts/service'
+import { AccountService } from '../account/service'
 import {
   AccountFactory,
   createTestServices,
@@ -15,7 +15,7 @@ import {
 
 describe('Transfer Service', (): void => {
   let transferService: TransferService
-  let accountsService: AccountsService
+  let accountService: AccountService
   let accountFactory: AccountFactory
   let assetService: AssetService
   let depositService: DepositService
@@ -27,11 +27,11 @@ describe('Transfer Service', (): void => {
       services = await createTestServices()
       ;({
         transferService,
-        accountsService,
+        accountService,
         assetService,
         depositService
       } = services)
-      accountFactory = new AccountFactory(accountsService)
+      accountFactory = new AccountFactory(accountService)
     }
   )
 
@@ -101,7 +101,7 @@ describe('Transfer Service', (): void => {
         const amountDiff = destinationAmount - sourceAmount
 
         await expect(
-          accountsService.getAccountBalance(sourceAccountId)
+          accountService.getBalance(sourceAccountId)
         ).resolves.toMatchObject({
           balance: startingSourceBalance - sourceAmount
         })
@@ -113,7 +113,7 @@ describe('Transfer Service', (): void => {
         )
 
         await expect(
-          accountsService.getAccountBalance(destinationAccountId)
+          accountService.getBalance(destinationAccountId)
         ).resolves.toMatchObject({
           balance: BigInt(0)
         })
@@ -125,7 +125,7 @@ describe('Transfer Service', (): void => {
         }
 
         await expect(
-          accountsService.getAccountBalance(sourceAccountId)
+          accountService.getBalance(sourceAccountId)
         ).resolves.toMatchObject({
           balance: accept
             ? startingSourceBalance - sourceAmount
@@ -137,7 +137,7 @@ describe('Transfer Service', (): void => {
         )
 
         await expect(
-          accountsService.getAccountBalance(destinationAccountId)
+          accountService.getBalance(destinationAccountId)
         ).resolves.toMatchObject({
           balance: accept ? destinationAmount : BigInt(0)
         })
@@ -209,7 +209,7 @@ describe('Transfer Service', (): void => {
         }
 
         await expect(
-          accountsService.getAccountBalance(sourceAccountId)
+          accountService.getBalance(sourceAccountId)
         ).resolves.toMatchObject({
           balance: startingSourceBalance - sourceAmount
         })
@@ -223,7 +223,7 @@ describe('Transfer Service', (): void => {
         ).resolves.toEqual(startingDestinationLiquidity - destinationAmount)
 
         await expect(
-          accountsService.getAccountBalance(destinationAccountId)
+          accountService.getBalance(destinationAccountId)
         ).resolves.toMatchObject({
           balance: BigInt(0)
         })
@@ -235,7 +235,7 @@ describe('Transfer Service', (): void => {
         }
 
         await expect(
-          accountsService.getAccountBalance(sourceAccountId)
+          accountService.getBalance(sourceAccountId)
         ).resolves.toMatchObject({
           balance: accept
             ? startingSourceBalance - sourceAmount
@@ -255,7 +255,7 @@ describe('Transfer Service', (): void => {
         )
 
         await expect(
-          accountsService.getAccountBalance(destinationAccountId)
+          accountService.getBalance(destinationAccountId)
         ).resolves.toMatchObject({
           balance: accept ? destinationAmount : BigInt(0)
         })
@@ -287,10 +287,10 @@ describe('Transfer Service', (): void => {
         TransferError.InsufficientBalance
       )
       await expect(
-        accountsService.getAccountBalance(sourceAccountId)
+        accountService.getBalance(sourceAccountId)
       ).resolves.toMatchObject({ balance: BigInt(0) })
       await expect(
-        accountsService.getAccountBalance(destinationAccountId)
+        accountService.getBalance(destinationAccountId)
       ).resolves.toMatchObject({ balance: BigInt(0) })
     })
 
@@ -330,7 +330,7 @@ describe('Transfer Service', (): void => {
         )
 
         await expect(
-          accountsService.getAccountBalance(sourceAccountId)
+          accountService.getBalance(sourceAccountId)
         ).resolves.toMatchObject({
           balance: startingSourceBalance
         })
@@ -344,7 +344,7 @@ describe('Transfer Service', (): void => {
         ).resolves.toEqual(BigInt(0))
 
         await expect(
-          accountsService.getAccountBalance(destinationAccountId)
+          accountService.getBalance(destinationAccountId)
         ).resolves.toMatchObject({
           balance: BigInt(0)
         })

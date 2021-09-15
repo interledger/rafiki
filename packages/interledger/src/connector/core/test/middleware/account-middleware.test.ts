@@ -18,8 +18,8 @@ describe('Account Middleware', () => {
   const rafikiServices = RafikiServicesFactory.build({})
 
   beforeAll(async () => {
-    await rafikiServices.accounts.createAccount(incomingAccount)
-    await rafikiServices.accounts.createAccount(outgoingAccount)
+    await rafikiServices.accounts.create(incomingAccount)
+    await rafikiServices.accounts.create(outgoingAccount)
   })
 
   test('set the accounts according to state and destination', async () => {

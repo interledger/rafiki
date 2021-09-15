@@ -63,7 +63,7 @@ describe('Token Auth Middleware', function () {
           }
         }
       })
-      await accounts.createAccount(account)
+      await accounts.create(account)
 
       await createTokenAuthMiddleware()(ctx, async () => {})
       expect(ctx.state.account).toBe(account)

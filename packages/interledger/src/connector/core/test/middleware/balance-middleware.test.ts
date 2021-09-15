@@ -32,8 +32,8 @@ beforeEach(async () => {
   aliceAccount.balance = 100n
   bobAccount.balance = 0n
 
-  await accounts.createAccount(aliceAccount)
-  await accounts.createAccount(bobAccount)
+  await accounts.create(aliceAccount)
+  await accounts.create(bobAccount)
 })
 
 describe('Balance Middleware', function () {
@@ -49,10 +49,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getAccountBalance(aliceAccount.id)
+    const aliceBalance = await accounts.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(0))
 
-    const bobBalance = await accounts.getAccountBalance(bobAccount.id)
+    const bobBalance = await accounts.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(100))
   })
 
@@ -66,15 +66,15 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getAccountBalance(aliceAccount.id)
+    const aliceBalance = await accounts.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getAccountBalance(bobAccount.id)
+    const bobBalance = await accounts.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 
   test('ignores 0 amount packets', async () => {
-    const transferFundsSpy = jest.spyOn(accounts, 'transferFunds')
+    const transferFundsSpy = jest.spyOn(services.transferService, 'create')
     const prepare = IlpPrepareFactory.build({ amount: '0' })
     const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -84,10 +84,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getAccountBalance(aliceAccount.id)
+    const aliceBalance = await accounts.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getAccountBalance(bobAccount.id)
+    const bobBalance = await accounts.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
 
     expect(transferFundsSpy).toHaveBeenCalledTimes(0)
@@ -103,10 +103,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getAccountBalance(aliceAccount.id)
+    const aliceBalance = await accounts.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getAccountBalance(bobAccount.id)
+    const bobBalance = await accounts.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 })

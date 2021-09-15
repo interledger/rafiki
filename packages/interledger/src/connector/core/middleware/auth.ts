@@ -1,5 +1,5 @@
-import { IlpAccount } from '../../../accounts/types'
+import { RafikiAccount } from '../rafiki'
 
 export interface AuthState {
-  account?: IlpAccount
+  account?: RafikiAccount
 }

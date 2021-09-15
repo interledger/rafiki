@@ -11,7 +11,7 @@ import {
 import { ApolloServer } from 'apollo-server'
 
 import { createAdminApi } from '..'
-import { AccountsService } from '../../accounts/service'
+import { AccountService } from '../../account/service'
 import { CreditService } from '../../credit/service'
 import { DepositService } from '../../deposit/service'
 import { TransferService } from '../../transfer/service'
@@ -22,7 +22,7 @@ import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 
 export interface TestContainer {
-  accountsService: AccountsService
+  accountService: AccountService
   creditService: CreditService
   depositService: DepositService
   transferService: TransferService

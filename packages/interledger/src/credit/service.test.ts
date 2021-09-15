@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 import { CreditService, CreditError } from './service'
 import { DepositService } from '../deposit/service'
 import { WithdrawalService } from '../withdrawal/service'
-import { AccountsService } from '../accounts/service'
+import { AccountService } from '../account/service'
 import {
   AccountFactory,
   createTestServices,
@@ -14,7 +14,7 @@ import {
 
 describe('Credit Service', (): void => {
   let creditService: CreditService
-  let accountsService: AccountsService
+  let accountService: AccountService
   let accountFactory: AccountFactory
   let depositService: DepositService
   let withdrawalService: WithdrawalService
@@ -26,11 +26,11 @@ describe('Credit Service', (): void => {
       services = await createTestServices()
       ;({
         creditService,
-        accountsService,
+        accountService,
         depositService,
         withdrawalService
       } = services)
-      accountFactory = new AccountFactory(accountsService)
+      accountFactory = new AccountFactory(accountService)
     }
   )
 
@@ -72,7 +72,7 @@ describe('Credit Service', (): void => {
         })
 
         await expect(
-          accountsService.getAccountBalance(superAccountId)
+          accountService.getBalance(superAccountId)
         ).resolves.toEqual({
           balance: BigInt(0),
           availableCredit: BigInt(0),
@@ -80,18 +80,14 @@ describe('Credit Service', (): void => {
           totalBorrowed: BigInt(0),
           totalLent: BigInt(0)
         })
-        await expect(
-          accountsService.getAccountBalance(accountId)
-        ).resolves.toEqual({
+        await expect(accountService.getBalance(accountId)).resolves.toEqual({
           balance: BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
           totalBorrowed: BigInt(0),
           totalLent: BigInt(0)
         })
-        await expect(
-          accountsService.getAccountBalance(subAccountId)
-        ).resolves.toEqual({
+        await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
           balance: BigInt(0),
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
@@ -122,7 +118,7 @@ describe('Credit Service', (): void => {
         ).resolves.toBeUndefined()
 
         await expect(
-          accountsService.getAccountBalance(superAccountId)
+          accountService.getBalance(superAccountId)
         ).resolves.toEqual({
           balance: autoApply ? depositAmount - amount : BigInt(0),
           availableCredit: BigInt(0),
@@ -130,18 +126,14 @@ describe('Credit Service', (): void => {
           totalBorrowed: BigInt(0),
           totalLent: autoApply ? amount : BigInt(0)
         })
-        await expect(
-          accountsService.getAccountBalance(accountId)
-        ).resolves.toEqual({
+        await expect(accountService.getBalance(accountId)).resolves.toEqual({
           balance: autoApply ? depositAmount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount,
           creditExtended: autoApply ? BigInt(0) : amount,
           totalBorrowed: autoApply ? amount : BigInt(0),
           totalLent: autoApply ? amount : BigInt(0)
         })
-        const subAccountBalance = await accountsService.getAccountBalance(
-          subAccountId
-        )
+        const subAccountBalance = await accountService.getBalance(subAccountId)
         expect(subAccountBalance).toEqual({
           balance: autoApply ? amount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount,
@@ -159,7 +151,7 @@ describe('Credit Service', (): void => {
           })
         ).resolves.toBeUndefined()
 
-        const superAccountBalance = await accountsService.getAccountBalance(
+        const superAccountBalance = await accountService.getBalance(
           superAccountId
         )
         await expect(superAccountBalance).toEqual({
@@ -169,18 +161,16 @@ describe('Credit Service', (): void => {
           totalBorrowed: BigInt(0),
           totalLent: autoApply ? amount * 2n : BigInt(0)
         })
-        await expect(
-          accountsService.getAccountBalance(accountId)
-        ).resolves.toEqual({
+        await expect(accountService.getBalance(accountId)).resolves.toEqual({
           balance: autoApply ? depositAmount + amount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount * 2n,
           creditExtended: autoApply ? BigInt(0) : amount,
           totalBorrowed: autoApply ? amount * 2n : BigInt(0),
           totalLent: autoApply ? amount : BigInt(0)
         })
-        await expect(
-          accountsService.getAccountBalance(subAccountId)
-        ).resolves.toEqual(subAccountBalance)
+        await expect(accountService.getBalance(subAccountId)).resolves.toEqual(
+          subAccountBalance
+        )
 
         await expect(
           creditService.extend({
@@ -192,20 +182,16 @@ describe('Credit Service', (): void => {
         ).resolves.toBeUndefined()
 
         await expect(
-          accountsService.getAccountBalance(superAccountId)
+          accountService.getBalance(superAccountId)
         ).resolves.toEqual(superAccountBalance)
-        await expect(
-          accountsService.getAccountBalance(accountId)
-        ).resolves.toEqual({
+        await expect(accountService.getBalance(accountId)).resolves.toEqual({
           balance: autoApply ? depositAmount : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount * 2n,
           creditExtended: autoApply ? BigInt(0) : amount * 2n,
           totalBorrowed: autoApply ? amount * 2n : BigInt(0),
           totalLent: autoApply ? amount * 2n : BigInt(0)
         })
-        await expect(
-          accountsService.getAccountBalance(subAccountId)
-        ).resolves.toEqual({
+        await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
           balance: autoApply ? amount * 2n : BigInt(0),
           availableCredit: autoApply ? BigInt(0) : amount * 2n,
           creditExtended: BigInt(0),
@@ -289,18 +275,14 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toEqual(CreditError.InsufficientBalance)
 
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(accountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
         totalBorrowed: BigInt(0),
         totalLent: BigInt(0)
       })
-      await expect(
-        accountsService.getAccountBalance(subAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
@@ -333,27 +315,21 @@ describe('Credit Service', (): void => {
         amount: creditAmount
       })
 
-      await expect(
-        accountsService.getAccountBalance(superAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(superAccountId)).resolves.toEqual({
         balance: creditAmount,
         availableCredit: BigInt(0),
         creditExtended: creditAmount,
         totalBorrowed: BigInt(0),
         totalLent: BigInt(0)
       })
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(accountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: creditAmount,
         creditExtended: creditAmount,
         totalBorrowed: BigInt(0),
         totalLent: BigInt(0)
       })
-      await expect(
-        accountsService.getAccountBalance(subAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: creditAmount,
         creditExtended: BigInt(0),
@@ -370,27 +346,21 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toBeUndefined()
 
-      await expect(
-        accountsService.getAccountBalance(superAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(superAccountId)).resolves.toEqual({
         balance: creditAmount - amount,
         availableCredit: BigInt(0),
         creditExtended: creditAmount - amount,
         totalBorrowed: BigInt(0),
         totalLent: amount
       })
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(accountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: creditAmount - amount,
         creditExtended: creditAmount - amount,
         totalBorrowed: amount,
         totalLent: amount
       })
-      await expect(
-        accountsService.getAccountBalance(subAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
         balance: amount,
         availableCredit: creditAmount - amount,
         creditExtended: BigInt(0),
@@ -481,18 +451,14 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toEqual(CreditError.InsufficientCredit)
 
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(accountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: creditAmount,
         totalBorrowed: BigInt(0),
         totalLent: BigInt(0)
       })
-      await expect(
-        accountsService.getAccountBalance(subAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: creditAmount,
         creditExtended: BigInt(0),
@@ -516,7 +482,7 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toBeUndefined()
 
-      const accountBalance = await accountsService.getAccountBalance(accountId)
+      const accountBalance = await accountService.getBalance(accountId)
       expect(accountBalance).toEqual({
         balance: BigInt(0),
         availableCredit: BigInt(0),
@@ -524,9 +490,7 @@ describe('Credit Service', (): void => {
         totalBorrowed: BigInt(0),
         totalLent: BigInt(0)
       })
-      const subAccountBalance = await accountsService.getAccountBalance(
-        subAccountId
-      )
+      const subAccountBalance = await accountService.getBalance(subAccountId)
       expect(subAccountBalance).toEqual({
         balance: BigInt(0),
         availableCredit: creditAmount,
@@ -543,12 +507,12 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toEqual(CreditError.InsufficientBalance)
 
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual(accountBalance)
-      await expect(
-        accountsService.getAccountBalance(subAccountId)
-      ).resolves.toEqual(subAccountBalance)
+      await expect(accountService.getBalance(accountId)).resolves.toEqual(
+        accountBalance
+      )
+      await expect(accountService.getBalance(subAccountId)).resolves.toEqual(
+        subAccountBalance
+      )
     })
   })
 
@@ -580,27 +544,21 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toBeUndefined()
 
-      await expect(
-        accountsService.getAccountBalance(superAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(superAccountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: creditAmount - amount,
         totalBorrowed: BigInt(0),
         totalLent: BigInt(0)
       })
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(accountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: creditAmount - amount,
         creditExtended: creditAmount - amount,
         totalBorrowed: BigInt(0),
         totalLent: BigInt(0)
       })
-      await expect(
-        accountsService.getAccountBalance(subAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: creditAmount - amount,
         creditExtended: BigInt(0),
@@ -691,18 +649,14 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toEqual(CreditError.InsufficientCredit)
 
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(accountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: creditAmount,
         totalBorrowed: BigInt(0),
         totalLent: BigInt(0)
       })
-      await expect(
-        accountsService.getAccountBalance(subAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: creditAmount,
         creditExtended: BigInt(0),
@@ -754,7 +708,7 @@ describe('Credit Service', (): void => {
         ).resolves.toBeUndefined()
 
         await expect(
-          accountsService.getAccountBalance(superAccountId)
+          accountService.getBalance(superAccountId)
         ).resolves.toEqual({
           balance: amount,
           availableCredit: BigInt(0),
@@ -762,18 +716,14 @@ describe('Credit Service', (): void => {
           totalBorrowed: BigInt(0),
           totalLent: creditAmount - amount
         })
-        await expect(
-          accountsService.getAccountBalance(accountId)
-        ).resolves.toEqual({
+        await expect(accountService.getBalance(accountId)).resolves.toEqual({
           balance: BigInt(0),
           availableCredit: revolve === false ? BigInt(0) : amount,
           creditExtended: revolve === false ? BigInt(0) : amount,
           totalBorrowed: creditAmount - amount,
           totalLent: creditAmount - amount
         })
-        await expect(
-          accountsService.getAccountBalance(subAccountId)
-        ).resolves.toEqual({
+        await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
           balance: creditAmount - amount,
           availableCredit: revolve === false ? BigInt(0) : amount,
           creditExtended: BigInt(0),
@@ -876,18 +826,14 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toEqual(CreditError.InsufficientDebt)
 
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(accountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
         totalBorrowed: BigInt(0),
         totalLent: lentAmount
       })
-      await expect(
-        accountsService.getAccountBalance(subAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
         balance: depositAmount + lentAmount,
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
@@ -930,18 +876,14 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toEqual(CreditError.InsufficientBalance)
 
-      await expect(
-        accountsService.getAccountBalance(accountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(accountId)).resolves.toEqual({
         balance: BigInt(0),
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
         totalBorrowed: BigInt(0),
         totalLent: lentAmount
       })
-      await expect(
-        accountsService.getAccountBalance(subAccountId)
-      ).resolves.toEqual({
+      await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
         balance: lentAmount - withdrawAmount,
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),

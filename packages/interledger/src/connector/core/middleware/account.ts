@@ -1,8 +1,7 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext, RafikiMiddleware } from '../rafiki'
+import { RafikiAccount, RafikiContext, RafikiMiddleware } from '../rafiki'
 import { AuthState } from './auth'
 import { AccountNotFoundError } from '../errors'
-import { IlpAccount } from '../../../accounts/types'
 
 export function createAccountMiddleware(): RafikiMiddleware {
   return async function account(
@@ -18,10 +17,8 @@ export function createAccountMiddleware(): RafikiMiddleware {
     }
 
     const outgoingAccount = ctx.state.streamDestination
-      ? await accounts.getAccount(ctx.state.streamDestination)
-      : await accounts.getAccountByDestinationAddress(
-          ctx.request.prepare.destination
-        )
+      ? await accounts.get(ctx.state.streamDestination)
+      : await accounts.getByDestinationAddress(ctx.request.prepare.destination)
     if (!outgoingAccount) {
       throw new AccountNotFoundError('')
     }
@@ -30,11 +27,11 @@ export function createAccountMiddleware(): RafikiMiddleware {
     }
 
     ctx.accounts = {
-      get incoming(): IlpAccount {
+      get incoming(): RafikiAccount {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return incomingAccount!
       },
-      get outgoing(): IlpAccount {
+      get outgoing(): RafikiAccount {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return outgoingAccount!
       }

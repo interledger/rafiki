@@ -1,9 +1,9 @@
+import { AccountService, IlpAccount, SubAccount } from '../account/service'
 import {
   BalanceService,
   BalanceTransfer,
   CreateTransferError
 } from '../balance/service'
-import { IlpAccount as IlpAccountModel, SubAccount } from '../accounts/models'
 import { BaseService } from '../shared/baseService'
 import { BalanceTransferError, UnknownBalanceError } from '../shared/errors'
 
@@ -39,11 +39,13 @@ export interface CreditService {
 }
 
 interface ServiceDependencies extends BaseService {
+  accountService: AccountService
   balanceService: BalanceService
 }
 
 export function createCreditService({
   logger,
+  accountService,
   balanceService
 }: ServiceDependencies): CreditService {
   const log = logger.child({
@@ -51,6 +53,7 @@ export function createCreditService({
   })
   const deps: ServiceDependencies = {
     logger: log,
+    accountService,
     balanceService
   }
   return {
@@ -74,19 +77,21 @@ async function extendCredit(
   deps: ServiceDependencies,
   { accountId, subAccountId, amount, autoApply }: ExtendCreditOptions
 ): Promise<void | CreditError> {
-  const subAccount = await getAccountWithSuperAccounts(subAccountId)
+  const subAccount = await deps.accountService.getWithSuperAccounts(
+    subAccountId
+  )
   if (!subAccount) {
     return CreditError.UnknownSubAccount
   } else if (!subAccount.hasSuperAccount(accountId)) {
     if (accountId === subAccountId) {
       return CreditError.SameAccounts
-    } else if (await IlpAccountModel.query().findById(accountId)) {
+    } else if (await deps.accountService.get(accountId)) {
       return CreditError.UnrelatedSubAccount
     }
     return CreditError.UnknownAccount
   }
   const transfers: BalanceTransfer[] = []
-  let account = subAccount as IlpAccountModel
+  let account = subAccount as IlpAccount
   for (
     ;
     account.isSubAccount() && account.id !== accountId;
@@ -130,19 +135,21 @@ async function utilizeCredit(
   deps: ServiceDependencies,
   { accountId, subAccountId, amount }: CreditOptions
 ): Promise<void | CreditError> {
-  const subAccount = await getAccountWithSuperAccounts(subAccountId)
+  const subAccount = await deps.accountService.getWithSuperAccounts(
+    subAccountId
+  )
   if (!subAccount) {
     return CreditError.UnknownSubAccount
   } else if (!subAccount.hasSuperAccount(accountId)) {
     if (accountId === subAccountId) {
       return CreditError.SameAccounts
-    } else if (await IlpAccountModel.query().findById(accountId)) {
+    } else if (await deps.accountService.get(accountId)) {
       return CreditError.UnrelatedSubAccount
     }
     return CreditError.UnknownAccount
   }
   const transfers: BalanceTransfer[] = []
-  let account = subAccount as IlpAccountModel
+  let account = subAccount as IlpAccount
   for (
     ;
     account.isSubAccount() && account.id !== accountId;
@@ -181,19 +188,21 @@ async function revokeCredit(
   deps: ServiceDependencies,
   { accountId, subAccountId, amount }: CreditOptions
 ): Promise<void | CreditError> {
-  const subAccount = await getAccountWithSuperAccounts(subAccountId)
+  const subAccount = await deps.accountService.getWithSuperAccounts(
+    subAccountId
+  )
   if (!subAccount) {
     return CreditError.UnknownSubAccount
   } else if (!subAccount.hasSuperAccount(accountId)) {
     if (accountId === subAccountId) {
       return CreditError.SameAccounts
-    } else if (await IlpAccountModel.query().findById(accountId)) {
+    } else if (await deps.accountService.get(accountId)) {
       return CreditError.UnrelatedSubAccount
     }
     return CreditError.UnknownAccount
   }
   const transfers: BalanceTransfer[] = []
-  let account = subAccount as IlpAccountModel
+  let account = subAccount as IlpAccount
   for (
     ;
     account.isSubAccount() && account.id !== accountId;
@@ -223,19 +232,21 @@ async function settleDebt(
   deps: ServiceDependencies,
   { accountId, subAccountId, amount, revolve }: SettleDebtOptions
 ): Promise<void | CreditError> {
-  const subAccount = await getAccountWithSuperAccounts(subAccountId)
+  const subAccount = await deps.accountService.getWithSuperAccounts(
+    subAccountId
+  )
   if (!subAccount) {
     return CreditError.UnknownSubAccount
   } else if (!subAccount.hasSuperAccount(accountId)) {
     if (accountId === subAccountId) {
       return CreditError.SameAccounts
-    } else if (await IlpAccountModel.query().findById(accountId)) {
+    } else if (await deps.accountService.get(accountId)) {
       return CreditError.UnrelatedSubAccount
     }
     return CreditError.UnknownAccount
   }
   const transfers: BalanceTransfer[] = []
-  let account = subAccount as IlpAccountModel
+  let account = subAccount as IlpAccount
   for (
     ;
     account.isSubAccount() && account.id !== accountId;
@@ -262,17 +273,6 @@ async function settleDebt(
     }
     throw new BalanceTransferError(err.code)
   }
-}
-
-async function getAccountWithSuperAccounts(
-  accountId: string
-): Promise<IlpAccountModel | undefined> {
-  const account = await IlpAccountModel.query()
-    .withGraphFetched(`superAccount.^`, {
-      minimize: true
-    })
-    .findById(accountId)
-  return account || undefined
 }
 
 function increaseCredit({

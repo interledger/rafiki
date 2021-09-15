@@ -1,7 +1,7 @@
-import { BaseModel } from '../../shared/baseModel'
-import { Asset } from '../../asset/model'
-import { IlpHttpToken } from '../../token/model'
-import { bigIntToDbUuid, uuidToBigInt } from '../../shared/utils'
+import { BaseModel } from '../shared/baseModel'
+import { Asset } from '../asset/model'
+import { IlpHttpToken } from '../token/model'
+import { bigIntToDbUuid, uuidToBigInt } from '../shared/utils'
 import { Model, Pojo } from 'objection'
 
 const BALANCE_IDS = [
@@ -74,12 +74,20 @@ export class IlpAccount extends BaseModel {
   public readonly maxPacketAmount!: bigint
 
   public readonly incomingTokens?: IlpHttpToken[]
-  public readonly outgoingToken?: string
-  public readonly outgoingEndpoint?: string
+  public readonly http?: {
+    outgoing: {
+      authToken: string
+      endpoint: string
+    }
+  }
 
-  public readonly streamEnabled!: boolean
+  public readonly stream!: {
+    enabled: boolean
+  }
 
-  public readonly staticIlpAddress?: string
+  public readonly routing?: {
+    staticIlpAddress: string
+  }
 
   $formatDatabaseJson(json: Pojo): Pojo {
     BALANCE_IDS.forEach((balanceId) => {
@@ -87,6 +95,19 @@ export class IlpAccount extends BaseModel {
         json[balanceId] = bigIntToDbUuid(json[balanceId])
       }
     })
+    if (json.stream) {
+      json.streamEnabled = json.stream.enabled
+      delete json.stream
+    }
+    if (json.http?.outgoing) {
+      json.outgoingToken = json.http.outgoing.authToken
+      json.outgoingEndpoint = json.http.outgoing.endpoint
+      delete json.http
+    }
+    if (json.routing) {
+      json.staticIlpAddress = json.routing.staticIlpAddress
+      delete json.routing
+    }
     return super.$formatDatabaseJson(json)
   }
 
@@ -97,6 +118,28 @@ export class IlpAccount extends BaseModel {
         formattedJson[balanceId] = uuidToBigInt(json[balanceId])
       }
     })
+    if (formattedJson.streamEnabled !== null) {
+      formattedJson.stream = {
+        enabled: formattedJson.streamEnabled
+      }
+      delete formattedJson.streamEnabled
+    }
+    if (formattedJson.outgoingToken) {
+      formattedJson.http = {
+        outgoing: {
+          authToken: formattedJson.outgoingToken,
+          endpoint: formattedJson.outgoingEndpoint
+        }
+      }
+      delete formattedJson.outgoingToken
+      delete formattedJson.outgoingEndpoint
+    }
+    if (formattedJson.staticIlpAddress) {
+      formattedJson.routing = {
+        staticIlpAddress: formattedJson.staticIlpAddress
+      }
+      delete formattedJson.staticIlpAddress
+    }
     return formattedJson
   }
 

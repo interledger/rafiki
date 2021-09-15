@@ -1,11 +1,11 @@
 import { v4 as uuid } from 'uuid'
 
 import {
-  AccountsService,
+  AccountService,
   CreateOptions,
   CreateSubAccountOptions,
   IlpAccount
-} from '../accounts/types'
+} from '../account/service'
 import { randomAsset } from './asset'
 
 export function isSubAccount(
@@ -15,7 +15,7 @@ export function isSubAccount(
 }
 
 export class AccountFactory {
-  public constructor(public accounts: AccountsService) {}
+  public constructor(public accounts: AccountService) {}
 
   public async build(
     options: Partial<CreateOptions> = {}
@@ -49,7 +49,7 @@ export class AccountFactory {
     if (options.routing) {
       accountOptions.routing = options.routing
     }
-    const account = await this.accounts.createAccount(accountOptions)
+    const account = await this.accounts.create(accountOptions)
     return account as IlpAccount
   }
 }
