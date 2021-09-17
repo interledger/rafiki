@@ -14,7 +14,7 @@ const BALANCE_IDS = [
 
 export class IlpAccount extends BaseModel {
   public static get tableName(): string {
-    return 'ilpAccounts'
+    return 'accounts'
   }
 
   static relationMappings = {
@@ -22,7 +22,7 @@ export class IlpAccount extends BaseModel {
       relation: Model.HasOneRelation,
       modelClass: Asset,
       join: {
-        from: 'ilpAccounts.assetId',
+        from: 'accounts.assetId',
         to: 'assets.id'
       }
     },
@@ -30,23 +30,23 @@ export class IlpAccount extends BaseModel {
       relation: Model.HasManyRelation,
       modelClass: IlpAccount,
       join: {
-        from: 'ilpAccounts.id',
-        to: 'ilpAccounts.superAccountId'
+        from: 'accounts.id',
+        to: 'accounts.superAccountId'
       }
     },
     superAccount: {
       relation: Model.HasOneRelation,
       modelClass: IlpAccount,
       join: {
-        from: 'ilpAccounts.superAccountId',
-        to: 'ilpAccounts.id'
+        from: 'accounts.superAccountId',
+        to: 'accounts.id'
       }
     },
     incomingTokens: {
       relation: Model.HasManyRelation,
       modelClass: IlpHttpToken,
       join: {
-        from: 'ilpAccounts.id',
+        from: 'accounts.id',
         to: 'ilpHttpTokens.accountId'
       }
     }

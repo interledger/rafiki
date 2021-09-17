@@ -258,7 +258,7 @@ export class AccountsService implements AccountsServiceInterface {
     } catch (err) {
       if (err instanceof UniqueViolationError) {
         switch (err.constraint) {
-          case 'ilpAccounts_pkey':
+          case 'accounts_pkey':
             return CreateAccountError.DuplicateAccountId
           case 'ilphttptokens_token_unique':
             return CreateAccountError.DuplicateIncomingToken
@@ -917,7 +917,7 @@ export class AccountsService implements AccountsServiceInterface {
     const accounts = await IlpAccountModel.query()
       .findByIds([sourceAccountId, destinationAccountId])
       .withGraphJoined('asset')
-      .select('asset', 'balanceId', 'ilpAccounts.id')
+      .select('asset', 'balanceId', 'accounts.id')
     if (accounts.length !== 2) {
       if (accounts.length === 0 || accounts[0].id !== sourceAccountId) {
         return TransferError.UnknownSourceAccount
@@ -1336,7 +1336,7 @@ export class AccountsService implements AccountsServiceInterface {
             : {}
         )
         .whereRaw(
-          '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "ilpAccounts" where "id" = ?)',
+          '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "accounts" where "id" = ?)',
           [pagination.after]
         )
         .orderBy([
@@ -1361,7 +1361,7 @@ export class AccountsService implements AccountsServiceInterface {
             : {}
         )
         .whereRaw(
-          '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "ilpAccounts" where "id" = ?)',
+          '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "accounts" where "id" = ?)',
           [pagination.before]
         )
         .orderBy([

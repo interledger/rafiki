@@ -1,6 +1,7 @@
 exports.up = function (knex) {
-  return knex.schema.createTable('ilpAccounts', function (table) {
-    table.uuid('id').notNullable().primary()
+  return knex.schema.alterTable('accounts', function (table) {
+    table.dropColumn('scale')
+    table.dropColumn('currency')
 
     table.boolean('disabled').notNullable().defaultTo(false)
 
@@ -18,8 +19,8 @@ exports.up = function (knex) {
     // TigerBeetle account id tracking amount(s) loaned to sub-account(s)
     table.uuid('lentBalanceId').nullable()
 
-    table.uuid('superAccountId').nullable().index()
-    table.foreign('superAccountId').references('ilpAccounts.id')
+    table.index('superAccountId')
+    table.foreign('superAccountId').references('accounts.id')
 
     table.bigInteger('maxPacketAmount').nullable()
 
@@ -29,12 +30,26 @@ exports.up = function (knex) {
     table.boolean('streamEnabled').notNullable().defaultTo(false)
 
     table.string('staticIlpAddress').nullable()
-
-    table.timestamp('createdAt').defaultTo(knex.fn.now())
-    table.timestamp('updatedAt').defaultTo(knex.fn.now())
   })
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('ilpAccounts')
+  return knex.schema.alterTable('accounts', function (table) {
+    table.integer('scale').notNullable()
+    table.string('currency').notNullable()
+
+    table.dropColumn('disabled')
+    table.dropColumn('assetId')
+    table.dropColumn('balanceId')
+    table.dropColumn('creditBalanceId')
+    table.dropColumn('creditExtendedBalanceId')
+    table.dropColumn('debtBalanceId')
+    table.dropColumn('lentBalanceId')
+    table.dropIndex('superAccountId')
+    table.dropColumn('maxPacketAmount')
+    table.dropColumn('outgoingToken')
+    table.dropColumn('outgoingEndpoint')
+    table.dropColumn('streamEnabled')
+    table.dropColumn('staticIlpAddress')
+  })
 }
