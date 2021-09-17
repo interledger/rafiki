@@ -1,6 +1,6 @@
 import { BaseModel } from '../../shared/baseModel'
 import { Asset } from './asset'
-import { IlpHttpToken } from './ilpHttpToken'
+import { HttpToken } from '../httpTokenModel'
 import { bigIntToDbUuid, uuidToBigInt } from '../utils'
 import { Model, Pojo } from 'objection'
 
@@ -44,10 +44,10 @@ export class IlpAccount extends BaseModel {
     },
     incomingTokens: {
       relation: Model.HasManyRelation,
-      modelClass: IlpHttpToken,
+      modelClass: HttpToken,
       join: {
         from: 'accounts.id',
-        to: 'ilpHttpTokens.accountId'
+        to: 'httpTokens.accountId'
       }
     }
   }
@@ -73,7 +73,7 @@ export class IlpAccount extends BaseModel {
 
   public readonly maxPacketAmount!: bigint
 
-  public readonly incomingTokens?: IlpHttpToken[]
+  public readonly incomingTokens?: HttpToken[]
   public readonly outgoingToken?: string
   public readonly outgoingEndpoint?: string
 

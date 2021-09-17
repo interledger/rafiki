@@ -30,9 +30,9 @@ import {
 import {
   Asset as AssetModel,
   IlpAccount as IlpAccountModel,
-  SubAccount,
-  IlpHttpToken
+  SubAccount
 } from './models'
+import { HttpToken } from './httpTokenModel'
 import {
   calculateCreditBalance,
   calculateDebitBalance,
@@ -141,8 +141,8 @@ export class AccountsService implements AccountsServiceInterface {
     try {
       return await transaction(
         IlpAccountModel,
-        IlpHttpToken,
-        async (IlpAccountModel, IlpHttpToken, trx) => {
+        HttpToken,
+        async (IlpAccountModel, HttpToken, trx) => {
           const newAccount: PartialModelObject<IlpAccountModel> = {
             id: account.id,
             disabled: account.disabled,
@@ -249,7 +249,9 @@ export class AccountsService implements AccountsServiceInterface {
             }
           )
           if (incomingTokens) {
-            await IlpHttpToken.query().insert(incomingTokens)
+            // TODO
+            // await httpTokenService.create(incomingTokens)
+            await HttpToken.query().insert(incomingTokens)
           }
 
           return toIlpAccount(accountRow)
@@ -260,7 +262,7 @@ export class AccountsService implements AccountsServiceInterface {
         switch (err.constraint) {
           case 'accounts_pkey':
             return CreateAccountError.DuplicateAccountId
-          case 'ilphttptokens_token_unique':
+          case 'httptokens_token_unique':
             return CreateAccountError.DuplicateIncomingToken
         }
       } else if (err instanceof NotFoundError) {
@@ -276,10 +278,12 @@ export class AccountsService implements AccountsServiceInterface {
     try {
       return await transaction(
         IlpAccountModel,
-        IlpHttpToken,
-        async (IlpAccountModel, IlpHttpToken) => {
+        HttpToken,
+        async (IlpAccountModel, HttpToken) => {
           if (accountOptions.http?.incoming?.authTokens) {
-            await IlpHttpToken.query().delete().where({
+            // TODO
+            // await httpTokenService.deleteByAccount(accountOptions.id)
+            await HttpToken.query().delete().where({
               accountId: accountOptions.id
             })
             const incomingTokens = accountOptions.http.incoming.authTokens.map(
@@ -290,7 +294,9 @@ export class AccountsService implements AccountsServiceInterface {
                 }
               }
             )
-            await IlpHttpToken.query().insert(incomingTokens)
+            // TODO
+            // await httpTokenService.create(incomingTokens)
+            await HttpToken.query().insert(incomingTokens)
           }
           const account = await IlpAccountModel.query()
             .patchAndFetchById(accountOptions.id, {
