@@ -12,6 +12,7 @@ import { Config } from './config/app'
 import { GraphileProducer } from './messaging/graphileProducer'
 import { createOutgoingPaymentService } from './outgoing_payment/service'
 import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
+import { createHttpTokenService } from './httpToken/service'
 import { createAccountService } from './account/service'
 import { createSPSPService } from './spsp/service'
 import { createInvoiceService } from './invoice/service'
@@ -93,6 +94,14 @@ export function initIocContainer(
   /**
    * Add services to the container.
    */
+  container.singleton('httpTokenService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    return await createHttpTokenService({
+      logger: logger,
+      knex: knex
+    })
+  })
   container.singleton('accountService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')

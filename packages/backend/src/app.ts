@@ -20,6 +20,7 @@ import {
   loadSchemaSync
 } from 'graphql-tools'
 import { resolvers } from './graphql/resolvers'
+import { HttpTokenService } from './httpToken/service'
 import { AccountService } from './account/service'
 import { SPSPService } from './spsp/service'
 import { InvoiceService } from './invoice/service'
@@ -50,6 +51,7 @@ export interface AppServices {
   closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
   workerUtils: Promise<WorkerUtils>
+  httpTokenService: Promise<HttpTokenService>
   accountService: Promise<AccountService>
   SPSPService: Promise<SPSPService>
   invoiceService: Promise<InvoiceService>
