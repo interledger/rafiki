@@ -36,7 +36,7 @@ export class MockPlugin implements IlpPlugin {
     this.exchangeRate = exchangeRate
     this.sourceAccount = sourceAccount
     this.connectorService = connectorService
-    this.invoice = invoice // TODO test this
+    this.invoice = invoice
   }
 
   connect(): Promise<void> {

@@ -6,7 +6,8 @@ import {
   createOutgoingPayment,
   approveOutgoingPayment,
   requoteOutgoingPayment,
-  cancelOutgoingPayment
+  cancelOutgoingPayment,
+  getOutcome
 } from './outgoing_payment'
 
 export const resolvers: Resolvers = {
@@ -26,5 +27,8 @@ export const resolvers: Resolvers = {
   },
   InvoiceConnection: {
     pageInfo: getPageInfo
+  },
+  OutgoingPayment: {
+    outcome: getOutcome
   }
 }

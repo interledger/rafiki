@@ -78,7 +78,7 @@ type OutgoingPayment {
   superAccountId: String!
   sourceAccount: PaymentSourceAccount!
   destinationAccount: PaymentDestinationAccount!
-  outcome: PaymentProgress!
+  outcome: OutgoingPaymentOutcome!
 }
 
 type PaymentIntent {
@@ -135,10 +135,8 @@ type PaymentDestinationAccount {
   paymentPointer: String
 }
 
-type PaymentProgress {
-  # TODO should these amounts use the Amount type?
-  amountSent: String! #UInt64!
-  amountDelivered: String! #UInt64!
+type OutgoingPaymentOutcome {
+  amountSent: String!
 }
 
 input CreateOutgoingPaymentInput {

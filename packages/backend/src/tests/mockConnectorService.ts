@@ -125,12 +125,10 @@ export class MockConnectorService implements ConnectorService {
 
   // For testing:
 
-  // TODO just return a bigint,no promise
-  async getAccountBalance(accountId: string): Promise<{ balance: bigint }> {
-    return { balance: this._get(accountId).balance }
+  getBalance(accountId: string): bigint {
+    return this._get(accountId).balance
   }
 
-  // TODO call this in tests.. maybe an expectOutcome() helper?
   getTotalBorrowed(accountId: string): bigint {
     return this._get(accountId).totalBorrowed
   }

@@ -5,7 +5,6 @@ import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { AccountService } from '../account/service'
 import { ConnectorService } from '../connector/service'
-import { PaymentProgressService } from '../payment_progress/service'
 import { IlpPlugin } from './ilp_plugin'
 import * as lifecycle from './lifecycle'
 import * as worker from './worker'
@@ -27,7 +26,6 @@ export interface ServiceDependencies extends BaseService {
   connectorService: ConnectorService
   ratesService: RatesService
   makeIlpPlugin: (sourceAccountId: string) => IlpPlugin
-  paymentProgressService: PaymentProgressService
 }
 
 export async function createOutgoingPaymentService(
@@ -52,9 +50,7 @@ async function getOutgoingPayment(
   deps: ServiceDependencies,
   id: string
 ): Promise<OutgoingPayment | undefined> {
-  return OutgoingPayment.query(deps.knex)
-    .findById(id)
-    .withGraphJoined('outcome')
+  return OutgoingPayment.query(deps.knex).findById(id)
 }
 
 type CreateOutgoingPaymentOptions = PaymentIntent & { superAccountId: string }
@@ -67,8 +63,13 @@ async function createOutgoingPayment(
     options.invoiceUrl &&
     (options.paymentPointer || options.amountToSend !== undefined)
   ) {
-    // TODO test this
-    deps.logger.warn({ options }, 'createOutgoingPayment invalid parameters')
+    deps.logger.warn(
+      {
+        ...options,
+        amountToSend: options.amountToSend?.toString() // JSON can't stringify bigints
+      },
+      'createOutgoingPayment invalid parameters'
+    )
     throw new Error(
       'invoiceUrl and (paymentPointer,amountToSend) are mutually exclusive'
     )
@@ -88,7 +89,6 @@ async function createOutgoingPayment(
   const sourceAccount = await deps.accountService.createSubAccount(
     options.superAccountId
   )
-  console.log('DESTINATION', destination)
 
   return await OutgoingPayment.query(deps.knex).insertAndFetch({
     state: PaymentState.Inactive,
@@ -96,8 +96,6 @@ async function createOutgoingPayment(
       paymentPointer: options.paymentPointer,
       invoiceUrl: options.invoiceUrl,
       amountToSend: options.amountToSend,
-      //invoiceAmountToDeliver: destination.invoice?.amountToDeliver,
-      //amountToDeliver: destination.amountToDeliver,
       autoApprove: options.autoApprove
     },
     superAccountId: options.superAccountId,

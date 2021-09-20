@@ -27,7 +27,6 @@ import { StreamServer } from '@interledger/stream-receiver'
 import { WebMonetizationService } from './webmonetization/service'
 import { ConnectorService } from './connector/service'
 import { OutgoingPaymentService } from './outgoing_payment/service'
-import { PaymentProgressService } from './payment_progress/service'
 import { IlpPlugin } from './outgoing_payment/ilp_plugin'
 
 export interface AppContextData {
@@ -58,7 +57,6 @@ export interface AppServices {
   wmService: Promise<WebMonetizationService>
   connectorService: Promise<ConnectorService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
-  paymentProgressService: Promise<PaymentProgressService>
   makeIlpPlugin: Promise<(sourceAccount: string) => IlpPlugin>
   ratesService: Promise<RatesService>
 }

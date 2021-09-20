@@ -6,8 +6,6 @@ import { IlpPlugin } from './ilp_plugin'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
-// XXX remove payment progres model,service,migration
-
 export type PaymentError = LifecycleError | Pay.PaymentError
 export enum LifecycleError {
   QuoteExpired = 'QuoteExpired',
@@ -61,36 +59,23 @@ export async function handleQuoting(
     const { balance } = await deps.connectorService.getIlpAccount(
       payment.sourceAccount.id
     )
-    console.log('GOT', balance)
     const amountSent = balance.totalBorrowed - balance.balance
-    //const amountSent = await getAmountSent(deps, payment)
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
-      // TODO test
       // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.
       // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the Completed state.
       deps.logger.error(
         {
-          amountToSend,
-          intentAmountToSend: payment.intent.amountToSend,
-          amountSent
+          amountToSend: amountToSend.toString(),
+          intentAmountToSend: payment.intent.amountToSend.toString(),
+          amountSent: amountSent.toString()
         },
         'quote amountToSend bounds error'
       )
       await paymentCompleted(deps, payment)
-      //await refundLeftoverBalance(deps, payment)
-      //await payment.$query(deps.knex).patch({ state: PaymentState.Completed })
       return
     }
   }
-
-  // XXX
-  // For both FixedSend and FixedDelivery, the quote is generated as if the payment is entirely unpaid. handleSending then amends the quote's amounts to account for the already-paid portion.
-  // This is simpler because it allows consistent handling of both Activated→Sending retries and Sending→Sending retries.
-  //if (destination.invoice) {
-  //  // Pretend that no money has been sent yet, even if this is a retry.
-  //  destination.invoice.amountDelivered = BigInt(0)
-  //}
 
   const quote = await Pay.startQuote({
     plugin,
@@ -101,21 +86,31 @@ export async function handleQuoting(
     },
     // This is always the full payment amount, even when part of that amount has already successfully been delivered.
     // The quote's amounts are adjusted in `handleSending` to reflect the actual payment state.
-    amountToSend, //: payment.intent.amountToSend,
+    amountToSend,
     slippage: deps.slippage,
     prices
-  }).finally(() => {
-    return Pay.closeConnection(plugin, destination).catch((err) => {
-      deps.logger.warn(
-        {
-          destination: destination.destinationAddress,
-          error: err.message
-        },
-        'close quote connection failed'
-      )
-    })
   })
-  // TODO test what happens if the invoice was fully paid immediately before the startQuote (e.g. should there be a [minDeliveryAmount≤0]→Completed handler here?
+    .finally(() => {
+      return Pay.closeConnection(plugin, destination).catch((err) => {
+        deps.logger.warn(
+          {
+            destination: destination.destinationAddress,
+            error: err.message
+          },
+          'close quote connection failed'
+        )
+      })
+    })
+    .catch(async (err) => {
+      if (err === Pay.PaymentError.InvoiceAlreadyPaid) return null
+      throw err
+    })
+  // InvoiceAlreadyPaid: the invoice was already paid, either by this payment (which retried due to a failed Sending→Completed transition commit) or another payment entirely.
+  if (quote === null) {
+    deps.logger.warn('quote invoice already paid')
+    await paymentCompleted(deps, payment)
+    return
+  }
 
   await payment.$query(deps.knex).patch({
     state: PaymentState.Ready,
@@ -131,7 +126,6 @@ export async function handleQuoting(
       minExchangeRate: quote.minExchangeRate.valueOf(),
       lowExchangeRateEstimate: quote.lowEstimatedExchangeRate.valueOf(),
       highExchangeRateEstimate: quote.highEstimatedExchangeRate.valueOf()
-      //estimatedDuration: quote.estimatedDuration,
     }
   })
 }
@@ -211,7 +205,6 @@ export async function handleSending(
 
   const amountSentSinceQuote = payment.quote.maxSourceAmount - balance.balance
   const newMaxSourceAmount = balance.balance
-  //const amountDeliveredSinceQuote = payment.quote.minDeliveryAmount -
 
   let newMinDeliveryAmount
   switch (payment.quote.targetType) {
@@ -238,17 +231,20 @@ export async function handleSending(
     (payment.quote.targetType === Pay.PaymentType.FixedSend &&
       newMaxSourceAmount <= BigInt(0)) ||
     (payment.quote.targetType === Pay.PaymentType.FixedDelivery &&
-      newMinDeliveryAmount < BigInt(0))
+      newMinDeliveryAmount <= BigInt(0))
   ) {
-    // TODO test both condition branches
     // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the invoice could have been paid by a totally different payment in the time since the quote.
     deps.logger.warn(
       {
-        newMaxSourceAmount,
-        newMinDeliveryAmount,
+        newMaxSourceAmount: newMaxSourceAmount.toString(),
+        newMinDeliveryAmount: newMinDeliveryAmount.toString(),
         paymentType: payment.quote.targetType,
-        amountSentSinceQuote,
-        invoice: destination.invoice
+        amountSentSinceQuote: amountSentSinceQuote.toString(),
+        invoice: {
+          ...destination.invoice,
+          amountToDeliver: destination.invoice?.amountToDeliver.toString(),
+          amountDelivered: destination.invoice?.amountDelivered.toString()
+        }
       },
       'handleSending payment was already paid'
     )
@@ -256,134 +252,20 @@ export async function handleSending(
     return
   } else if (
     newMaxSourceAmount <= BigInt(0) ||
-    newMinDeliveryAmount < BigInt(0)
+    newMinDeliveryAmount <= BigInt(0)
   ) {
-    // TODO test both conditions
     // Similar to the above, but not recoverable (at least not without a re-quote).
-    deps.logger.warn(
+    // I'm not sure whether this case is actually reachable, but handling it here is clearer than passing ilp-pay bad parameters.
+    deps.logger.error(
       {
-        newMaxSourceAmount,
-        newMinDeliveryAmount,
+        newMaxSourceAmount: newMaxSourceAmount.toString(),
+        newMinDeliveryAmount: newMinDeliveryAmount.toString(),
         paymentType: payment.quote.targetType
       },
       'handleSending bad retry state'
     )
     throw LifecycleError.BadState
   }
-
-  ////const minDeliveryAmount = payment.quote.minDeliveryAmount - amountDeliveredSinceQuote
-  //if (minDeliveryAmount <= BigInt(0)) {
-  //  // Payment is already done, somehow. Maybe the invoice was paid by someone else.
-  //  deps.logger.warn(
-  //    { maxSourceAmount, minDeliveryAmount },
-  //    'handleSending nonpositive minDeliveryAmount'
-  //  )
-  //  // TODO completed?
-  //  return
-  //}
-  //if (maxSourceAmount <= BigInt(0)) {
-  //  // TODO Test
-  //  //
-  //  deps.logger.error(
-  //    { maxSourceAmount, minDeliveryAmount },
-  //    'handleSending maxSourceAmount error'
-  //  )
-  //  throw LifecycleError.InvalidMaxSourceAmount
-  //  //await payment.$query(deps.knex).patch({ state: PaymentState.Completed })
-  //  //return
-  //}
-  /*
-  //const baseBalance = await deps.connectorService.getIlpBalance(payment.sourceAccount.id)
-  // The "baseAmountSent" can always be determined accurately—it is tracked by Tigerbeetle.
-  // The "baseAmountDelivered" is not so simple. There are two cases, for FixedSend and FixedDelivery.
-  const baseAmountSent = await getAmountSent(deps, payment)
-  let baseAmountDelivered
-  switch (payment.quote.paymentType) {
-  case PaymentType.FixedSend:
-    // FixedSend: Tracking a FixedSend payment's amount delivered locally is unreliable (since saving it to postgres can fail), so don't bother.
-    // This is only an approximation of the true amount delivered.
-    baseAmountDelivered = baseAmountSent * payment.quote.minExchangeRate
-    if (payment.intent.amountToSend <= baseAmountSent) {
-      // TODO test
-      // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.
-      // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the Completed state.
-      deps.logger.error(
-        { intentAmountToSend: payment.intent.amountToSend, baseAmountSent },
-        'handleSending amountToSend bounds error'
-      )
-      await refundLeftoverBalance(deps, payment)
-      await payment.$query(deps.knex).patch({ state: PaymentState.Completed })
-      return
-    }
-    break
-  case PaymentType.FixedDelivery:
-    // FixedDelivery: The remote invoice accurately tracks the total amount delivered.
-    baseAmountDelivered = destination.invoice.amountDelivered
-    break
-  }
-
-  const maxSourceAmount = payment.quote.maxSourceAmount - baseAmountSent
-  const minDeliveryAmount = payment.quote.minDeliveryAmount - baseAmountDelivered
-  if (minDeliveryAmount <= BigInt(0)) {
-    // Payment is already done, somehow. Maybe the invoice was paid by someone else.
-    deps.logger.warn(
-      { maxSourceAmount, minDeliveryAmount },
-      'handleSending nonpositive minDeliveryAmount'
-    )
-  }
-  if (maxSourceAmount <= BigInt(0)) {
-    // TODO Test
-    // 
-    deps.logger.error(
-      { maxSourceAmount, minDeliveryAmount },
-      'handleSending maxSourceAmount error'
-    )
-    throw LifecycleError.InvalidMaxSourceAmount
-    //await payment.$query(deps.knex).patch({ state: PaymentState.Completed })
-    //return
-  }
-*/
-
-  //const progress =
-  //  (await deps.paymentProgressService.get(payment.id)) ||
-  //  (await deps.paymentProgressService.create(payment.id))
-  //const baseAmountSent = progress.amountSent
-  //const baseAmountDelivered = progress.amountDelivered
-
-  //const updateProgress = (receipt: Pay.PaymentProgress): Promise<void> =>
-  //  deps.paymentProgressService.increase(payment.id, {
-  //    amountSent: baseAmountSent + receipt.amountSent,
-  //    amountDelivered: baseAmountDelivered + receipt.amountDelivered
-  //  })
-
-  /*
-  const lastAmountSent = baseAmountSent
-  const lastAmountDelivered = baseAmountDelivered
-  // Debounce progress updates so that a tiny max-packet-amount doesn't trigger a flood of updates.
-  const progressHandler = debounce((receipt: Pay.PaymentProgress): void => {
-    if (
-      lastAmountSent === receipt.amountSent &&
-      lastAmountDelivered === receipt.amountDelivered
-    ) {
-      // The only changes are the receipt's in-flight amounts, so don't update the payment progress.
-      return
-    }
-    // These updates occur in a separate transaction from the OutgoingPayment, so they commit immediately.
-    // They are still implicitly protected from race conditions via the OutgoingPayment's SELECT FOR UPDATE.
-    updates = updates.finally(() =>
-      updateProgress(receipt).catch((err) => {
-        deps.logger.warn(
-          {
-            amountSent: baseAmountSent + receipt.amountSent,
-            amountDelivered: baseAmountDelivered + receipt.amountDelivered,
-            error: err.message
-          },
-          'error updating progress'
-        )
-      })
-    )
-  }, PROGRESS_UPDATE_INTERVAL)
-  */
 
   const lowEstimatedExchangeRate = Pay.Ratio.from(
     payment.quote.lowExchangeRateEstimate
@@ -420,59 +302,34 @@ export async function handleSending(
     minExchangeRate
   }
 
-  //let updates = Promise.resolve()
   // The "maxSourceAmount" is 0 when the payment is already fully paid, but the last attempt's transaction just didn't commit.
-  const receipt =
-    quote.maxSourceAmount === BigInt(0) // XXX this check isn't needed anymore
-      ? {
-          amountSent: BigInt(0),
-          amountDelivered: BigInt(0),
-          sourceAmountInFlight: BigInt(0),
-          destinationAmountInFlight: BigInt(0)
-        }
-      : await Pay.pay({
-          plugin,
-          destination,
-          quote
-          //progressHandler
-        })
-          //.finally(async () => {
-          //  progressHandler.flush()
-          //  // Wait for updates to finish to avoid a race where it could update
-          //  // outside the protection of the locked payment.
-          //  await updates
-          //})
-          .finally(() => {
-            return Pay.closeConnection(plugin, destination).catch((err) => {
-              // Ignore connection close failures, all of the money was delivered.
-              deps.logger.warn(
-                {
-                  destination: destination.destinationAddress,
-                  error: err.message
-                },
-                'close pay connection failed'
-              )
-            })
-          })
-  // The other updates are allowed to fail (since there will be more).
-  // This last update *must* succeed before the payment state is updated.
-  //await updateProgress(receipt)
+  const receipt = await Pay.pay({ plugin, destination, quote }).finally(() => {
+    return Pay.closeConnection(plugin, destination).catch((err) => {
+      // Ignore connection close failures, all of the money was delivered.
+      deps.logger.warn(
+        {
+          destination: destination.destinationAddress,
+          error: err.message
+        },
+        'close pay connection failed'
+      )
+    })
+  })
 
   deps.logger.debug(
     {
       destination: destination.destinationAddress,
       error: receipt.error,
       paymentType: payment.quote.targetType,
-      newMaxSourceAmount,
-      newMinDeliveryAmount,
-      receiptAmountSent: receipt.amountSent,
-      receiptAmountDelivered: receipt.amountDelivered
+      newMaxSourceAmount: newMaxSourceAmount.toString(),
+      newMinDeliveryAmount: newMinDeliveryAmount.toString(),
+      receiptAmountSent: receipt.amountSent.toString(),
+      receiptAmountDelivered: receipt.amountDelivered.toString()
     },
     'payed'
   )
 
   if (receipt.error) throw receipt.error
-
   await paymentCompleted(deps, payment)
 }
 
@@ -521,11 +378,6 @@ async function refundLeftoverBalance(
     throw LifecycleError.AccountServiceError
   }
 }
-
-//async function getAmountSent(deps: ServiceDependencies, payment: OutgoingPayment): Promise<BigInt> {
-//  const balance = await deps.connectorService.getIlpBalance(payment.sourceAccount.id)
-//  return baseBalance.totalBorrowed - baseBalance.balance
-//}
 
 const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
   // Lifecycle errors

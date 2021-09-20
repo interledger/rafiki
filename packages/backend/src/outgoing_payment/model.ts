@@ -1,7 +1,6 @@
-import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
+import { Pojo, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
 import { BaseModel } from '../shared/baseModel'
-import { PaymentProgress } from '../payment_progress/model'
 
 const fieldPrefixes = [
   'intent',
@@ -20,17 +19,6 @@ export type PaymentIntent = {
 
 export class OutgoingPayment extends BaseModel {
   public static readonly tableName = 'outgoingPayments'
-
-  static relationMappings = {
-    outcome: {
-      relation: Model.HasOneRelation,
-      modelClass: PaymentProgress,
-      join: {
-        from: 'outgoingPayments.id',
-        to: 'paymentProgress.id'
-      }
-    }
-  }
 
   public state!: PaymentState
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
@@ -64,7 +52,6 @@ export class OutgoingPayment extends BaseModel {
     // Payment pointer, prefixed with "$", corresponding to the recipient Open Payments/SPSP account. Each payment pointer and its corresponding account URL identifies a unique payment recipient.
     paymentPointer?: string
   }
-  public readonly outcome?: PaymentProgress
 
   $beforeUpdate(opts: ModelOptions, queryContext: QueryContext): void {
     super.$beforeUpdate(opts, queryContext)

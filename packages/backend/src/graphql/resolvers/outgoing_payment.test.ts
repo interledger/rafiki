@@ -22,6 +22,7 @@ import {
   PaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType
 } from '../generated/graphql'
+import { IlpAccount } from '../../connector/generated/graphql'
 import { MockConnectorService } from '../../tests/mockConnectorService'
 
 describe('OutgoingPayment Resolvers', (): void => {
@@ -40,10 +41,10 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   beforeAll(
     async (): Promise<void> => {
-      connectorService = new MockConnectorService()
       deps = await initIocContainer(Config)
-      deps.bind('connectorService', async (_deps) => connectorService)
       appContainer = await createTestApp(deps)
+      connectorService = new MockConnectorService()
+      deps.bind('connectorService', async (_deps) => connectorService)
       knex = await deps.use('knex')
 
       const credentials = streamServer.generateCredentials({
@@ -112,11 +113,24 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
   )
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   describe('Query.outgoingPayment', (): void => {
     test('200', async (): Promise<void> => {
       jest
         .spyOn(outgoingPaymentService, 'get')
         .mockImplementation(async () => payment)
+      jest.spyOn(connectorService, 'getIlpAccount').mockImplementation(
+        async () =>
+          (({
+            balance: {
+              totalBorrowed: BigInt(123),
+              balance: BigInt(45)
+            }
+          } as unknown) as IlpAccount)
+      )
 
       const query = await appContainer.apolloClient
         .query({
@@ -158,7 +172,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                 }
                 outcome {
                   amountSent
-                  amountDelivered
                 }
               }
             }
@@ -207,9 +220,8 @@ describe('OutgoingPayment Resolvers', (): void => {
         __typename: 'PaymentDestinationAccount'
       })
       expect(query.outcome).toEqual({
-        amountSent: '0',
-        amountDelivered: '0',
-        __typename: 'PaymentProgress'
+        amountSent: (123 - 45).toString(),
+        __typename: 'OutgoingPaymentOutcome'
       })
     })
 

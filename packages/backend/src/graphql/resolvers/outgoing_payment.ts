@@ -2,6 +2,7 @@ import { isPaymentError, PaymentError } from '@interledger/pay'
 import {
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
+  OutgoingPaymentResolvers,
   PaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType,
   QueryResolvers,
@@ -20,6 +21,24 @@ export const getOutgoingPayment: QueryResolvers['outgoingPayment'] = async (
   const payment = await outgoingPaymentService.get(args.id)
   if (!payment) throw new Error('payment does not exist')
   return paymentToGraphql(payment)
+}
+
+export const getOutcome: OutgoingPaymentResolvers['outcome'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['OutgoingPaymentOutcome'] => {
+  const outgoingPaymentService = await ctx.container.use(
+    'outgoingPaymentService'
+  )
+  const connectorService = await ctx.container.use('connectorService')
+  const sourceAccountId =
+    parent.sourceAccount?.id ||
+    (await outgoingPaymentService.get(parent.id)).sourceAccount.id
+  const { balance } = await connectorService.getIlpAccount(sourceAccountId)
+  return {
+    amountSent: (balance.totalBorrowed - balance.balance).toString()
+  }
 }
 
 const clientErrors: { [key in PaymentError]: boolean } = {
@@ -141,7 +160,9 @@ export const cancelOutgoingPayment: MutationResolvers['cancelOutgoingPayment'] =
     }))
 }
 
-function paymentToGraphql(payment: OutgoingPayment): SchemaOutgoingPayment {
+function paymentToGraphql(
+  payment: OutgoingPayment
+): Omit<SchemaOutgoingPayment, 'outcome'> {
   return {
     id: payment.id,
     state: SchemaPaymentState[payment.state],
@@ -166,15 +187,6 @@ function paymentToGraphql(payment: OutgoingPayment): SchemaOutgoingPayment {
       scale: payment.sourceAccount.scale,
       code: payment.sourceAccount.code
     },
-    destinationAccount: payment.destinationAccount,
-    outcome: payment.outcome
-      ? {
-          amountSent: payment.outcome.amountSent.toString(),
-          amountDelivered: payment.outcome.amountDelivered.toString()
-        }
-      : {
-          amountSent: '0',
-          amountDelivered: '0'
-        }
+    destinationAccount: payment.destinationAccount
   }
 }

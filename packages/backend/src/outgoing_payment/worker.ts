@@ -89,7 +89,6 @@ export async function handlePaymentLifecycle(
   ): Promise<void> => {
     const error = typeof err === 'string' ? err : err.message
     const stateAttempts = payment.stateAttempts + 1
-    console.log('ERROR', err, error)
 
     if (
       payment.state === PaymentState.Cancelling ||
