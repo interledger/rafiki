@@ -5,6 +5,7 @@ import { Model } from 'objection'
 import { makeWorkerUtils } from 'graphile-worker'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import IORedis from 'ioredis'
+import { createClient } from 'tigerbeetle-node'
 
 import { createRatesService } from 'rates'
 import { App, AppServices } from './app'
@@ -13,6 +14,7 @@ import { GraphileProducer } from './messaging/graphileProducer'
 import { createOutgoingPaymentService } from './outgoing_payment/service'
 import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
+import { createBalanceService } from './balance/service'
 import { createAccountService } from './account/service'
 import { createSPSPService } from './spsp/service'
 import { createInvoiceService } from './invoice/service'
@@ -90,6 +92,13 @@ export function initIocContainer(
       serverAddress: config.ilpAddress
     })
   })
+  container.singleton('tigerbeetle', async (deps) => {
+    const config = await deps.use('config')
+    return createClient({
+      cluster_id: config.tigerbeetleClusterId,
+      replica_addresses: config.tigerbeetleReplicaAddresses
+    })
+  })
 
   /**
    * Add services to the container.
@@ -100,6 +109,14 @@ export function initIocContainer(
     return await createHttpTokenService({
       logger: logger,
       knex: knex
+    })
+  })
+  container.singleton('balanceService', async (deps) => {
+    const logger = await deps.use('logger')
+    const tigerbeetle = await deps.use('tigerbeetle')
+    return await createBalanceService({
+      logger: logger,
+      tigerbeetle: tigerbeetle
     })
   })
   container.singleton('accountService', async (deps) => {
@@ -202,6 +219,8 @@ export const gracefulShutdown = async (
   await knex.destroy()
   const workerUtils = await container.use('workerUtils')
   await workerUtils.release()
+  const tigerbeetle = await container.use('tigerbeetle')
+  await tigerbeetle.destroy()
   const redis = await container.use('redis')
   await redis.disconnect()
 }

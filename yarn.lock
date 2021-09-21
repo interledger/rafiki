@@ -4982,6 +4982,8 @@ __metadata:
     pino-pretty: ^4.7.1
     rates: "workspace:packages/rates"
     testcontainers: ^7.20.4
+    tigerbeetle-node: ^0.4.1
+    tmp: ^0.2.1
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft

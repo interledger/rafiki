@@ -43,6 +43,10 @@ export const Config = {
   streamSecret: process.env.STREAM_SECRET
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
     : crypto.randomBytes(32),
+  tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 1),
+  tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
+    ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
+    : ['3001'],
 
   // This endpoint is unauthenticated -- the Bearer token sent is just the account id to impersonate.
   ilpUrl: envString('ADMIN_ILP_URL', 'http://127.0.0.1:3009/ilp'),

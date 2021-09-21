@@ -21,6 +21,7 @@ import {
 } from 'graphql-tools'
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
+import { BalanceService } from './balance/service'
 import { AccountService } from './account/service'
 import { SPSPService } from './spsp/service'
 import { InvoiceService } from './invoice/service'
@@ -52,6 +53,7 @@ export interface AppServices {
   config: Promise<IAppConfig>
   workerUtils: Promise<WorkerUtils>
   httpTokenService: Promise<HttpTokenService>
+  balanceService: Promise<BalanceService>
   accountService: Promise<AccountService>
   SPSPService: Promise<SPSPService>
   invoiceService: Promise<InvoiceService>

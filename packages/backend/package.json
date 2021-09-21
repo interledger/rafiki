@@ -28,7 +28,8 @@
     "ilp-protocol-ildcp": "^2.2.2",
     "nock": "^13.1.0",
     "node-mocks-http": "^1.10.1",
-    "testcontainers": "^7.20.4"
+    "testcontainers": "^7.20.4",
+    "tmp": "^0.2.1"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.0",
@@ -62,6 +63,7 @@
     "pino": "^6.11.3",
     "pino-pretty": "^4.7.1",
     "rates": "workspace:packages/rates",
+    "tigerbeetle-node": "^0.4.1",
     "uuid": "^8.3.2"
   }
 }
