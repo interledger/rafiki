@@ -1,6 +1,7 @@
 import { Invoice } from './model'
-import { AccountService } from '../account/service'
+import { AccountService, isAccountError } from '../account/service'
 import { BaseService } from '../shared/baseService'
+import { Pagination } from '../shared/pagination'
 import assert from 'assert'
 import { Transaction } from 'knex'
 
@@ -61,10 +62,15 @@ async function createInvoice(
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))
 
   try {
-    const subAccount = await deps.accountService.createSubAccount(
-      accountId,
+    const subAccount = await deps.accountService.create(
+      {
+        superAccountId: accountId
+      },
       invTrx
     )
+    if (isAccountError(subAccount)) {
+      throw new Error('unable to create account, err=' + subAccount)
+    }
 
     const invoice = await Invoice.query(invTrx).insertAndFetch({
       accountId,
@@ -83,13 +89,6 @@ async function createInvoice(
     }
     throw err
   }
-}
-
-interface Pagination {
-  after?: string // Forward pagination: cursor.
-  before?: string // Backward pagination: cursor.
-  first?: number // Forward pagination: limit.
-  last?: number // Backward pagination: limit.
 }
 
 /** TODO: Base64 encode/decode the cursors

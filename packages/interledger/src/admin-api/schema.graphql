@@ -1,22 +1,4 @@
 type Query {
-  "Fetch a page of Interledger accounts."
-  ilpAccounts(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): IlpAccountsConnection!
-
-  "Get an Interledger account by ID."
-  ilpAccount(id: ID!): IlpAccount!
-
-  "Get a webhook by ID."
-  webhook("The ID of the webhook to get." id: ID!): Webhook!
-
   "Get a deposit by ID."
   deposit("The ID of the deposit to get." id: ID!): Deposit!
 
@@ -25,22 +7,6 @@ type Query {
 }
 
 type Mutation {
-  "Create Interledger account"
-  createIlpAccount(
-    input: CreateIlpAccountInput!
-  ): CreateIlpAccountMutationResponse!
-
-  "Update Interledger account"
-  updateIlpAccount(
-    input: UpdateIlpAccountInput!
-  ): UpdateIlpAccountMutationResponse!
-
-  "Delete Interledger account"
-  deleteIlpAccount(id: ID!): DeleteIlpAccountMutationResponse!
-
-  "Create Interledger sub-account"
-  createIlpSubAccount(superAccountId: ID!): CreateIlpSubAccountMutationResponse!
-
   "Transfer between Interledger accounts"
   transfer(
     sourceAmount: UInt64!
@@ -63,24 +29,6 @@ type Mutation {
   "Settle Debt"
   settleDebt(input: SettleDebtInput): SettleDebtMutationResponse
 
-  "Create webhook"
-  createWebhook(
-    "The id of the account to create the webhook for."
-    ilpAccountId: ID!
-  ): CreateWebhookMutationResponse
-
-  "Update webhook"
-  updateWebhook(
-    "The id of the webhook to update."
-    webhookId: ID!
-  ): UpdateWebhookMutationResponse
-
-  "Delete webhook"
-  deleteWebhook(
-    "The id of the webhook to delete."
-    webhookId: ID!
-  ): DeleteWebhookMutationResponse
-
   "Create deposit"
   createDeposit(input: CreateDepositInput!): CreateDepositMutationResponse
 
@@ -100,67 +48,6 @@ type Mutation {
     "The id of the pending withdrawal to rollback."
     withdrawalId: ID!
   ): RollbackPendingWithdrawalMutationResponse
-}
-
-type IlpAccountsConnection {
-  pageInfo: PageInfo!
-  edges: [IlpAccountEdge!]!
-}
-
-type SubAccountsConnection {
-  pageInfo: PageInfo!
-  edges: [IlpAccountEdge!]!
-}
-
-type IlpAccountEdge {
-  node: IlpAccount!
-  cursor: String!
-}
-
-input CreateIlpAccountInput {
-  id: ID
-  disabled: Boolean
-  maxPacketAmount: UInt64
-  http: HttpInput
-  asset: AssetInput!
-  stream: StreamInput
-  routing: RoutingInput
-}
-
-input UpdateIlpAccountInput {
-  id: ID
-  disabled: Boolean
-  maxPacketAmount: UInt64
-  http: HttpInput
-  stream: StreamInput
-  routing: RoutingInput
-}
-
-input HttpInput {
-  incoming: HttpIncomingInput!
-  outgoing: HttpOutgoingInput!
-}
-
-input HttpIncomingInput {
-  authTokens: [String!]!
-}
-
-input HttpOutgoingInput {
-  authToken: String!
-  endpoint: String!
-}
-
-input AssetInput {
-  code: String!
-  scale: Int!
-}
-
-input StreamInput {
-  enabled: Boolean!
-}
-
-input RoutingInput {
-  staticIlpAddress: String!
 }
 
 input CreateDepositInput {
@@ -245,37 +132,6 @@ enum WithdrawalError {
 }
 
 type IlpAccount {
-  id: ID!
-  disabled: Boolean!
-  superAccountId: ID
-  superAccount: IlpAccount
-  subAccounts(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): SubAccountsConnection!
-  maxPacketAmount: UInt64
-  http: Http
-  asset: Asset!
-  stream: Stream!
-  routing: Routing
-
-  balance: Balance!
-  webhooks(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): WebhooksConnection!
   deposits(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -296,49 +152,6 @@ type IlpAccount {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): WithdrawalsConnection!
-}
-
-type Http {
-  outgoing: HttpOutgoing!
-}
-
-type HttpOutgoing {
-  authToken: String!
-  endpoint: String!
-}
-
-type Stream {
-  enabled: Boolean!
-}
-
-type Routing {
-  staticIlpAddress: String!
-  inheritFromRemote: Boolean
-  dynamicIlpAddress: String
-}
-
-type Balance {
-  balance: UInt64!
-  netLiability: UInt64
-  netAssets: UInt64
-  creditExtended: UInt64!
-  totalLent: UInt64!
-  availableCredit: UInt64!
-  totalBorrowed: UInt64!
-}
-
-type WebhooksConnection {
-  pageInfo: PageInfo!
-  edges: [WebhookEdge!]!
-}
-
-type WebhookEdge {
-  node: Webhook!
-  cursor: String!
-}
-
-type Webhook {
-  id: ID!
 }
 
 type DepositsConnection {
@@ -376,33 +189,6 @@ type Withdrawal {
   # finalizedTime: Int
 }
 
-type CreateIlpAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  ilpAccount: IlpAccount
-}
-
-type UpdateIlpAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  ilpAccount: IlpAccount
-}
-
-type DeleteIlpAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-}
-
-type CreateIlpSubAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  ilpAccount: IlpAccount
-}
-
 type TransferMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -437,26 +223,6 @@ type SettleDebtMutationResponse implements MutationResponse {
   error: CreditError
 }
 
-type CreateWebhookMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  webhook: Webhook!
-}
-
-type UpdateWebhookMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  webhook: Webhook!
-}
-
-type DeleteWebhookMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-}
-
 type CreateDepositMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -486,11 +252,6 @@ type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
   error: WithdrawalError
 }
 
-type Asset {
-  code: String!
-  scale: Int!
-}
-
 type PageInfo {
   "Paginating forwards: the cursor to continue."
   endCursor: String
@@ -501,11 +262,3 @@ type PageInfo {
   "Paginating backwards: the cursor to continue."
   startCursor: String
 }
-
-interface MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-}
-
-scalar UInt64

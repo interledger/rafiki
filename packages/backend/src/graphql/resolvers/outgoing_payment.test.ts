@@ -10,26 +10,26 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
+import { AccountFactory } from '../../tests/accountFactory'
 import { truncateTables } from '../../tests/tableManager'
 import { OutgoingPaymentService } from '../../outgoing_payment/service'
 import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
 } from '../../outgoing_payment/model'
+import { AccountBalance, AccountService } from '../../account/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
   PaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType
 } from '../generated/graphql'
-import { IlpAccount } from '../../connector/generated/graphql'
-import { MockConnectorService } from '../../tests/mockConnectorService'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let connectorService: MockConnectorService
   let knex: Knex
+  let accountService: AccountService
 
   const streamServer = new StreamServer({
     serverSecret: Buffer.from(
@@ -43,8 +43,6 @@ describe('OutgoingPayment Resolvers', (): void => {
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
-      connectorService = new MockConnectorService()
-      deps.bind('connectorService', async (_deps) => connectorService)
       knex = await deps.use('knex')
 
       const credentials = streamServer.generateCredentials({
@@ -75,10 +73,10 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
-      const superAccountId = (await accountService.create(9, 'USD')).id
-      const accountId = (await accountService.createSubAccount(superAccountId))
-        .id
+      accountService = await deps.use('accountService')
+      const accountFactory = new AccountFactory(accountService)
+      const superAccountId = (await accountFactory.build()).id
+      const accountId = (await accountFactory.build({ superAccountId })).id
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
@@ -122,14 +120,12 @@ describe('OutgoingPayment Resolvers', (): void => {
       jest
         .spyOn(outgoingPaymentService, 'get')
         .mockImplementation(async () => payment)
-      jest.spyOn(connectorService, 'getIlpAccount').mockImplementation(
+      jest.spyOn(accountService, 'getBalance').mockImplementation(
         async () =>
           (({
-            balance: {
-              totalBorrowed: BigInt(123),
-              balance: BigInt(45)
-            }
-          } as unknown) as IlpAccount)
+            totalBorrowed: BigInt(123),
+            balance: BigInt(45)
+          } as unknown) as AccountBalance)
       )
 
       const query = await appContainer.apolloClient

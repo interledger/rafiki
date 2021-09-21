@@ -1,11 +1,13 @@
 import { v4 as uuid } from 'uuid'
 
 import {
+  Account,
   AccountService,
   CreateOptions,
   CreateSubAccountOptions,
-  IlpAccount
+  isAccountError
 } from '../account/service'
+import { TransferService } from '../transfer/service'
 import { randomAsset } from './asset'
 
 export function isSubAccount(
@@ -14,12 +16,17 @@ export function isSubAccount(
   return (account as CreateSubAccountOptions).superAccountId !== undefined
 }
 
-export class AccountFactory {
-  public constructor(public accounts: AccountService) {}
+type BuildOptions = Partial<CreateOptions> & {
+  balance?: bigint
+}
 
-  public async build(
-    options: Partial<CreateOptions> = {}
-  ): Promise<IlpAccount> {
+export class AccountFactory {
+  public constructor(
+    private accounts: AccountService,
+    private transfers?: TransferService
+  ) {}
+
+  public async build(options: BuildOptions = {}): Promise<Account> {
     let accountOptions: CreateOptions
     if (isSubAccount(options)) {
       accountOptions = {
@@ -50,6 +57,24 @@ export class AccountFactory {
       accountOptions.routing = options.routing
     }
     const account = await this.accounts.create(accountOptions)
-    return account as IlpAccount
+
+    if (isAccountError(account)) {
+      throw new Error('unable to create account, err=' + account)
+    }
+    if (options.balance) {
+      if (!this.transfers) {
+        throw new Error('initial balance requires TransferService')
+      }
+      await this.transfers.create([
+        {
+          id: uuid(),
+          sourceBalanceId: account.asset.settlementBalanceId,
+          destinationBalanceId: account.balanceId,
+          amount: options.balance
+        }
+      ])
+    }
+
+    return account
   }
 }

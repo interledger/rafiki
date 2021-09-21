@@ -10,6 +10,7 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
+import { AccountFactory } from '../tests/accountFactory'
 import { truncateTable, truncateTables } from '../tests/tableManager'
 import { AccountService } from '../account/service'
 import { Account } from '../account/model'
@@ -20,6 +21,7 @@ describe('Invoice Service', (): void => {
   let workerUtils: WorkerUtils
   let invoiceService: InvoiceService
   let accountService: AccountService
+  let accountFactory: AccountFactory
   let account: Account
   let knex: Knex
   const messageProducer = new GraphileProducer()
@@ -45,7 +47,8 @@ describe('Invoice Service', (): void => {
     async (): Promise<void> => {
       invoiceService = await deps.use('invoiceService')
       accountService = await deps.use('accountService')
-      account = await accountService.create(6, 'USD')
+      accountFactory = new AccountFactory(accountService)
+      account = await accountFactory.build()
     }
   )
 
@@ -72,8 +75,8 @@ describe('Invoice Service', (): void => {
       const subAccount = await accountService.get(invoice.invoiceAccountId)
 
       expect(account.id).not.toEqual(invoice.invoiceAccountId)
-      expect(account.id).toEqual(subAccount.superAccountId)
-      expect(subAccount.id).toEqual(invoice.invoiceAccountId)
+      expect(account.id).toEqual(subAccount?.superAccountId)
+      expect(subAccount?.id).toEqual(invoice.invoiceAccountId)
     })
   })
 

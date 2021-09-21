@@ -7,7 +7,7 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { Account as AccountModel } from '../../account/model'
-import { AccountService } from '../../account/service'
+import { AccountFactory } from '../../tests/accountFactory'
 import { truncateTables } from '../../tests/tableManager'
 import { Invoice } from '../../invoice/model'
 import { InvoiceService } from '../../invoice/service'
@@ -17,8 +17,8 @@ describe('Invoice Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let invoiceService: InvoiceService
-  let accountService: AccountService
   let knex: Knex
+  let accountFactory: AccountFactory
   let invoices: Invoice[]
   let account: AccountModel
 
@@ -28,8 +28,9 @@ describe('Invoice Resolver', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       invoiceService = await deps.use('invoiceService')
-      accountService = await deps.use('accountService')
-      account = await accountService.create(6, 'USD')
+      const accountService = await deps.use('accountService')
+      accountFactory = new AccountFactory(accountService)
+      account = await accountFactory.build()
       invoices = []
       for (let i = 0; i < 50; i++) {
         invoices.push(await invoiceService.create(account.id, `Invoice ${i}`))
@@ -90,7 +91,7 @@ describe('Invoice Resolver', (): void => {
     })
 
     test('No invoices, but invoices requested', async (): Promise<void> => {
-      const tempAccount = await accountService.create(6, 'USD')
+      const tempAccount = await accountFactory.build()
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -139,7 +140,7 @@ describe('Invoice Resolver', (): void => {
           query: gql`
             query Account($id: String!) {
               account(id: $id) {
-                invoices(first: 10) {
+                invoices(input: { first: 10 }) {
                   edges {
                     node {
                       id
@@ -182,7 +183,7 @@ describe('Invoice Resolver', (): void => {
           query: gql`
             query Account($id: String!, $after: String!) {
               account(id: $id) {
-                invoices(after: $after) {
+                invoices(input: { after: $after }) {
                   edges {
                     node {
                       id
@@ -226,7 +227,7 @@ describe('Invoice Resolver', (): void => {
           query: gql`
             query Account($id: String!, $after: String!) {
               account(id: $id) {
-                invoices(after: $after, first: 10) {
+                invoices(input: { after: $after, first: 10 }) {
                   edges {
                     node {
                       id

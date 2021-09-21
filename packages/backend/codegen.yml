@@ -8,6 +8,8 @@ generates:
     config:
       defaultMapper: Partial<{T}>
       resolverTypeWrapperSignature: Promise<T>
+      scalars:
+        UInt64: bigint
   src/graphql/generated/graphql.schema.json:
     plugins:
       - "introspection"

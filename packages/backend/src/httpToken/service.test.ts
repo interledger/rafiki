@@ -12,6 +12,7 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
+import { AccountFactory } from '../tests/accountFactory'
 import { AccountService } from '../account/service'
 import { Account } from '../account/model'
 
@@ -21,6 +22,7 @@ describe('HTTP Token Service', (): void => {
   let workerUtils: WorkerUtils
   let httpTokenService: HttpTokenService
   let accountService: AccountService
+  let accountFactory: AccountFactory
   let account: Account
   let knex: Knex
   const messageProducer = new GraphileProducer()
@@ -41,12 +43,13 @@ describe('HTTP Token Service', (): void => {
       knex = await deps.use('knex')
       httpTokenService = await deps.use('httpTokenService')
       accountService = await deps.use('accountService')
+      accountFactory = new AccountFactory(accountService)
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      account = await accountService.create(6, 'USD')
+      account = await accountFactory.build()
     }
   )
 
@@ -147,7 +150,7 @@ describe('HTTP Token Service', (): void => {
       await expect(
         httpTokenService.create([
           {
-            accountId: (await accountService.create(6, 'USD')).id,
+            accountId: (await accountFactory.build()).id,
             token
           }
         ])

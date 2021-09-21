@@ -31,11 +31,12 @@ export const getOutcome: OutgoingPaymentResolvers['outcome'] = async (
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
-  const connectorService = await ctx.container.use('connectorService')
+  const accountService = await ctx.container.use('accountService')
   const sourceAccountId =
     parent.sourceAccount?.id ||
     (await outgoingPaymentService.get(parent.id)).sourceAccount.id
-  const { balance } = await connectorService.getIlpAccount(sourceAccountId)
+  const balance = await accountService.getBalance(sourceAccountId)
+  if (!balance) throw new Error('source account does not exist')
   return {
     amountSent: (balance.totalBorrowed - balance.balance).toString()
   }

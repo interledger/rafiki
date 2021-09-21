@@ -6,6 +6,7 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
+import { AccountFactory } from '../tests/accountFactory'
 import { truncateTables } from '../tests/tableManager'
 import { Account } from '../account/model'
 import { Invoice } from '../invoice/model'
@@ -33,9 +34,10 @@ describe('WM Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       wmService = await deps.use('wmService')
-      account = await deps.use('accountService').then((as) => {
-        return as.create(6, 'USD')
-      })
+      const accountFactory = new AccountFactory(
+        await deps.use('accountService')
+      )
+      account = await accountFactory.build()
     }
   )
 

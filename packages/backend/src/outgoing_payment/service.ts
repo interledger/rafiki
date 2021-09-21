@@ -3,8 +3,7 @@ import * as Pay from '@interledger/pay'
 import { RatesService } from 'rates'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import { AccountService } from '../account/service'
-import { ConnectorService } from '../connector/service'
+import { AccountService, isAccountError } from '../account/service'
 import { IlpPlugin } from './ilp_plugin'
 import * as lifecycle from './lifecycle'
 import * as worker from './worker'
@@ -23,7 +22,6 @@ export interface ServiceDependencies extends BaseService {
   slippage: number
   quoteLifespan: number // milliseconds
   accountService: AccountService
-  connectorService: ConnectorService
   ratesService: RatesService
   makeIlpPlugin: (sourceAccountId: string) => IlpPlugin
 }
@@ -88,9 +86,12 @@ async function createOutgoingPayment(
     })
   })
 
-  const sourceAccount = await deps.accountService.createSubAccount(
-    options.superAccountId
-  )
+  const sourceAccount = await deps.accountService.create({
+    superAccountId: options.superAccountId
+  })
+  if (isAccountError(sourceAccount)) {
+    throw new Error('unable to create source account, err=' + sourceAccount)
+  }
 
   return await OutgoingPayment.query(deps.knex).insertAndFetch({
     state: PaymentState.Inactive,
@@ -103,8 +104,8 @@ async function createOutgoingPayment(
     superAccountId: options.superAccountId,
     sourceAccount: {
       id: sourceAccount.id,
-      code: sourceAccount.currency,
-      scale: sourceAccount.scale
+      code: sourceAccount.asset.code,
+      scale: sourceAccount.asset.scale
     },
     destinationAccount: {
       scale: destination.destinationAsset.scale,

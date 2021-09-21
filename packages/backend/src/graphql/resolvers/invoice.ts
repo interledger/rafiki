@@ -11,7 +11,10 @@ export const getAccountInvoices: AccountResolvers['invoices'] = async (
   ctx
 ): ResolversTypes['InvoiceConnection'] => {
   const invoiceService = await ctx.container.use('invoiceService')
-  const invoices = await invoiceService.getAccountInvoicesPage(parent.id, args)
+  const invoices = await invoiceService.getAccountInvoicesPage(
+    parent.id,
+    args.input
+  )
 
   return {
     edges: invoices.map((invoice: Invoice) => ({

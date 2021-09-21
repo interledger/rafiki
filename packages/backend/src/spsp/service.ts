@@ -87,8 +87,8 @@ async function getPay(
             }
           : undefined,
       asset: {
-        code: account.currency,
-        scale: account.scale
+        code: account.asset.code,
+        scale: account.asset.scale
       }
     })
 
