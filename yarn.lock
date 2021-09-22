@@ -2834,15 +2834,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/archiver@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "@types/archiver@npm:5.1.0"
-  dependencies:
-    "@types/glob": "*"
-  checksum: a19ed13f86c3a3b6bcb2a1aa68f14bc568e46ac1d68946ed1fd4d3c24404a664d3b613da714a42c67d81fed92a49996d116d27ad140c94e88d5780839f131f9d
-  languageName: node
-  linkType: hard
-
 "@types/archiver@npm:^5.1.1":
   version: 5.3.0
   resolution: "@types/archiver@npm:5.3.0"
@@ -2991,12 +2982,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/dockerode@npm:^3.2.1":
-  version: 3.2.3
-  resolution: "@types/dockerode@npm:3.2.3"
+"@types/docker-modem@npm:*":
+  version: 3.0.1
+  resolution: "@types/docker-modem@npm:3.0.1"
   dependencies:
     "@types/node": "*"
-  checksum: b5181adfcfc0a24046fff0705fe144a4465b71d7bb3731d77876e6d96fe7b19a9aabc80e240fccd5458238a40e54d0d33c1ed953b81e0a67f5db96c5bf793e10
+    "@types/ssh2": "*"
+  checksum: cf735e22b730dd36fe55b451df91b1e745c12e2fec402bc066367510e18bbf499a1c8d5d010bc78c5597f9c9f2a5579be26e614e4ed62d22d349494925b05610
+  languageName: node
+  linkType: hard
+
+"@types/dockerode@npm:^3.2.5":
+  version: 3.2.7
+  resolution: "@types/dockerode@npm:3.2.7"
+  dependencies:
+    "@types/docker-modem": "*"
+    "@types/node": "*"
+  checksum: 714b98a804170ba31e8e4c060bfe38203864788f4adb77d608f4bac291c425d9b03ea42d50fddc7e594c0ffec8eca4c18621e6c7f0f3a93fa2c7a8d0c2473e2b
   languageName: node
   linkType: hard
 
@@ -3621,6 +3623,16 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 32adc38f70e525225571525959fa3ac7920400fe53032003af021281424f61dd43a727a2f4ee54d3c395656ed814dcac7e09cdc11edf8878d7acb13934ce3914
+  languageName: node
+  linkType: hard
+
+"@types/ssh2@npm:*":
+  version: 0.5.48
+  resolution: "@types/ssh2@npm:0.5.48"
+  dependencies:
+    "@types/node": "*"
+    "@types/ssh2-streams": "*"
+  checksum: bff6da0bda0d64b72ddf0867d23988aac61d83f5362b15bc8ef02152955b8ac66b628118103efe0023b28703a81469f4ac1a0a131967dd7690c352438ccb0fa7
   languageName: node
   linkType: hard
 
@@ -4950,7 +4962,7 @@ __metadata:
     pg: ^8.6.0
     pino: ^6.11.3
     pino-pretty: ^4.7.1
-    testcontainers: ^7.11.1
+    testcontainers: ^7.20.4
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft
@@ -6566,15 +6578,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"docker-compose@npm:^0.23.10":
-  version: 0.23.12
-  resolution: "docker-compose@npm:0.23.12"
-  dependencies:
-    yaml: ^1.10.2
-  checksum: 8695f60536c57fa1dd51dc19bd376fcfbc0b8a53c8c5746581bb2916bfe0ef3963d8032dc9297aff18b3bf98d09dbf6f64d8d1d7321c613ee884993cc3180def
-  languageName: node
-  linkType: hard
-
 "docker-compose@npm:^0.23.12":
   version: 0.23.13
   resolution: "docker-compose@npm:0.23.13"
@@ -6596,7 +6599,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dockerode@npm:^3.2.1, dockerode@npm:^3.3.0":
+"dockerode@npm:^3.3.0":
   version: 3.3.0
   resolution: "dockerode@npm:3.3.0"
   dependencies:
@@ -8870,7 +8873,7 @@ __metadata:
     raw-body: ^2.4.1
     rosie: ^2.1.0
     rxjs: ^6.6.7
-    testcontainers: ^7.14.0
+    testcontainers: ^7.20.4
     tigerbeetle-node: ^0.4.1
     tmp: ^0.2.1
     uuid: ^8.3.2
@@ -13978,15 +13981,6 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"stream-to-array@npm:^2.3.0":
-  version: 2.3.0
-  resolution: "stream-to-array@npm:2.3.0"
-  dependencies:
-    any-promise: ^1.1.0
-  checksum: b313d7dfa5230674ffd3442ae985d64b9f95ad7d122aa7d3fd9ebe21bf7129548afda51dda2af781e2cd31c84911253bbf549061e96a63941a45686329ccba3f
-  languageName: node
-  linkType: hard
-
 "streamsearch@npm:0.1.2, streamsearch@npm:~0.1.2":
   version: 0.1.2
   resolution: "streamsearch@npm:0.1.2"
@@ -14398,33 +14392,12 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"testcontainers@npm:^7.11.1":
-  version: 7.11.1
-  resolution: "testcontainers@npm:7.11.1"
-  dependencies:
-    "@types/archiver": ^5.1.0
-    "@types/dockerode": ^3.2.1
-    archiver: ^5.3.0
-    byline: ^5.0.0
-    debug: ^4.3.1
-    docker-compose: ^0.23.10
-    dockerode: ^3.2.1
-    get-port: ^5.1.1
-    glob: ^7.1.7
-    slash: ^3.0.0
-    ssh-remote-port-forward: ^1.0.3
-    stream-to-array: ^2.3.0
-    tar-fs: ^2.1.1
-  checksum: f4abc15e018bc3a37938248be9559c7806f50ce64bf12efe05f981c6d6614084e32cad8224fc5fd57fefe980f363754efb11a8ff4b6c03acdc25e7797291b5a0
-  languageName: node
-  linkType: hard
-
-"testcontainers@npm:^7.14.0":
-  version: 7.14.0
-  resolution: "testcontainers@npm:7.14.0"
+"testcontainers@npm:^7.20.4":
+  version: 7.20.4
+  resolution: "testcontainers@npm:7.20.4"
   dependencies:
     "@types/archiver": ^5.1.1
-    "@types/dockerode": ^3.2.1
+    "@types/dockerode": ^3.2.5
     archiver: ^5.3.0
     byline: ^5.0.0
     debug: ^4.3.2
@@ -14435,7 +14408,7 @@ resolve@^2.0.0-next.3:
     slash: ^3.0.0
     ssh-remote-port-forward: ^1.0.3
     tar-fs: ^2.1.1
-  checksum: 28e9d68904fa80c57e971ca373afee785ea0d28685aa48fde8b5661b2f7efa0aefdf28bdb9802ddba8595a375ace9578bf3442efb74217ba6342e8e68a99468e
+  checksum: 32ad207f5b56d522c5f7fd0172a932f97a482979f14b8af928f1cb580bc7a093c49a4d168419e53d1af4401ecbb48d3a8b27e7e42907205a27c6f7cf5f01bba9
   languageName: node
   linkType: hard
 
