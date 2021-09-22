@@ -153,6 +153,13 @@ function extendCredit(
   deps: ServiceDependencies,
   input: ExtendCreditInput
 ): Promise<ExtendCreditMutationResponse> {
+  deps.logger.trace(
+    {
+      ...input,
+      amount: input.amount.toString()
+    },
+    'connectorService.extendCredit'
+  )
   return deps.client
     .mutate({
       mutation: gql`
@@ -182,6 +189,13 @@ async function settleDebt(
   deps: ServiceDependencies,
   input: SettleDebtInput
 ): Promise<SettleDebtMutationResponse> {
+  deps.logger.trace(
+    {
+      ...input,
+      amount: input.amount.toString()
+    },
+    'connectorService.settleDebt'
+  )
   return deps.client
     .mutate({
       mutation: gql`

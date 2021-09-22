@@ -142,7 +142,6 @@ export type PaymentDestinationAccount = {
   scale: Scalars['Int'];
   code: Scalars['String'];
   url?: Maybe<Scalars['String']>;
-  paymentPointer?: Maybe<Scalars['String']>;
 };
 
 export type PaymentIntent = {
@@ -423,7 +422,6 @@ export type PaymentDestinationAccountResolvers<ContextType = any, ParentType ext
   scale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  paymentPointer?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

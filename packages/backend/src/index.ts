@@ -159,8 +159,9 @@ export function initIocContainer(
   })
 
   container.singleton('makeIlpPlugin', async (_deps) => {
+    const { ilpUrl } = await _deps.use('config')
     return (sourceAccountId: string): IlpPlugin => {
-      return createIlpPlugin(config.ilpUrl, `Bearer ${sourceAccountId}`)
+      return createIlpPlugin(ilpUrl, `Bearer ${sourceAccountId}`)
     }
   })
 

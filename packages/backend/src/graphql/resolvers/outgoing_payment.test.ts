@@ -168,7 +168,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                   scale
                   code
                   url
-                  paymentPointer
                 }
                 outcome {
                   amountSent
@@ -216,7 +215,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         scale: 9,
         code: 'XRP',
         url: 'http://wallet2.example/paymentpointer/bob',
-        paymentPointer: null,
         __typename: 'PaymentDestinationAccount'
       })
       expect(query.outcome).toEqual({

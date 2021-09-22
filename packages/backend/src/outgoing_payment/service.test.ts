@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid'
 
 import { OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
-import { Config } from '../config/app'
+import { IAppConfig, Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -31,6 +31,7 @@ describe('OutgoingPaymentService', (): void => {
   let credentials: StreamCredentials
   let invoice: Pay.Invoice
   let plugins: { [sourceAccount: string]: MockPlugin } = {}
+  let config: IAppConfig
 
   const streamServer = new StreamServer({
     serverSecret: Buffer.from(
@@ -147,6 +148,7 @@ describe('OutgoingPaymentService', (): void => {
       deps.bind('connectorService', async (_deps) => connectorService)
       deps.bind('ratesService', async (_deps) => ratesService)
       knex = await deps.use('knex')
+      config = await deps.use('config')
       deps.bind('accountService', async (deps) =>
         createAccountService({
           logger: await deps.use('logger'),
@@ -298,6 +300,7 @@ describe('OutgoingPaymentService', (): void => {
         ).id
         const payment = await processNext(paymentId, PaymentState.Ready)
         if (!payment.quote) throw 'no quote'
+
         expect(payment.quote.timestamp).toBeInstanceOf(Date)
         expect(
           payment.quote.activationDeadline.getTime() - Date.now()
@@ -311,7 +314,7 @@ describe('OutgoingPaymentService', (): void => {
           BigInt('9223372036854775807')
         )
         expect(payment.quote.minExchangeRate.valueOf()).toBe(
-          0.5 * (1 - Config.slippage)
+          0.5 * (1 - config.slippage)
         )
         expect(payment.quote.lowExchangeRateEstimate.valueOf()).toBe(0.5)
         expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(0.5)
@@ -327,13 +330,14 @@ describe('OutgoingPaymentService', (): void => {
         ).id
         const payment = await processNext(paymentId, PaymentState.Ready)
         if (!payment.quote) throw 'no quote'
+
         expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedDelivery)
         expect(payment.quote.minDeliveryAmount).toBe(BigInt(56))
         expect(payment.quote.maxSourceAmount).toBe(
-          BigInt(Math.ceil(56 * 2 * (1 + Config.slippage)))
+          BigInt(Math.ceil(56 * 2 * (1 + config.slippage)))
         )
         expect(payment.quote.minExchangeRate.valueOf()).toBe(
-          0.5 * (1 - Config.slippage)
+          0.5 * (1 - config.slippage)
         )
         expect(payment.quote.lowExchangeRateEstimate.valueOf()).toBe(0.5)
         expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(0.5)
@@ -343,7 +347,6 @@ describe('OutgoingPaymentService', (): void => {
         jest
           .spyOn(ratesService, 'prices')
           .mockImplementation(() => Promise.reject(new Error('fail')))
-
         const paymentId = (
           await outgoingPaymentService.create({
             superAccountId,
@@ -353,6 +356,7 @@ describe('OutgoingPaymentService', (): void => {
           })
         ).id
         const payment = await processNext(paymentId, PaymentState.Inactive)
+
         expect(payment.stateAttempts).toBe(1)
         expect(payment.error).toBeNull()
         expect(payment.quote).toBeUndefined()
@@ -415,7 +419,7 @@ describe('OutgoingPaymentService', (): void => {
       it('Cancelling (quote expired; autoApprove=false)', async (): Promise<void> => {
         const paymentId = await setup({ autoApprove: false })
         jest.useFakeTimers('modern')
-        jest.advanceTimersByTime(Config.quoteLifespan + 1)
+        jest.advanceTimersByTime(config.quoteLifespan + 1)
 
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe(LifecycleError.QuoteExpired)
@@ -455,13 +459,15 @@ describe('OutgoingPaymentService', (): void => {
 
       it('Cancelling (quote expired)', async (): Promise<void> => {
         jest.useFakeTimers('modern')
-        jest.advanceTimersByTime(Config.quoteLifespan + 1)
+        jest.advanceTimersByTime(config.quoteLifespan + 1)
+
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe(LifecycleError.QuoteExpired)
       })
 
       it('Cancelling (insufficient balance)', async (): Promise<void> => {
         connectorService.setAccountBalance(superAccountId, BigInt(100))
+
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe(LifecycleError.InsufficientBalance)
       })
@@ -475,6 +481,7 @@ describe('OutgoingPaymentService', (): void => {
             message: 'fail',
             error: CreditError.SameAccounts
           }))
+
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe(LifecycleError.AccountServiceError)
       })
@@ -514,6 +521,7 @@ describe('OutgoingPaymentService', (): void => {
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123)
         })
+
         const payment = await processNext(paymentId, PaymentState.Completed)
         expectOutcome(payment, {
           superAccountBalance: BigInt(200 - 123),
@@ -527,6 +535,7 @@ describe('OutgoingPaymentService', (): void => {
         const paymentId = await setup({
           invoiceUrl: 'http://wallet.example/bob/invoices/1'
         })
+
         const payment = await processNext(paymentId, PaymentState.Completed)
         expectOutcome(payment, {
           superAccountBalance:
@@ -541,10 +550,10 @@ describe('OutgoingPaymentService', (): void => {
       it('Completed (FixedDelivery, with invoice initially partially paid)', async (): Promise<void> => {
         const amountAlreadyDelivered = BigInt(34)
         invoice.amountDelivered = amountAlreadyDelivered
-
         const paymentId = await setup({
           invoiceUrl: 'http://wallet.example/bob/invoices/1'
         })
+
         const payment = await processNext(paymentId, PaymentState.Completed)
         expectOutcome(payment, {
           superAccountBalance:
@@ -628,12 +637,12 @@ describe('OutgoingPaymentService', (): void => {
           },
           Pay.PaymentError.ClosedByReceiver
         )
-
         const amountToSend = BigInt(123)
         const paymentId = await setup({
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend
         })
+
         const payment = await processNext(paymentId, PaymentState.Sending)
         mockFn.mockRestore()
         fastForwardToAttempt(1)
@@ -660,6 +669,7 @@ describe('OutgoingPaymentService', (): void => {
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123)
         })
+
         await processNext(paymentId, PaymentState.Completed)
         // Pretend that the transaction didn't commit.
         await OutgoingPayment.query(knex)
@@ -681,6 +691,7 @@ describe('OutgoingPaymentService', (): void => {
         })
         // The quote thinks there's a full amount to pay, but actually sending will find the invoice has been paid (e.g. by another payment).
         invoice.amountDelivered = invoice.amountToDeliver
+
         const payment = await processNext(paymentId, PaymentState.Completed)
         expectOutcome(payment, {
           superAccountBalance: BigInt(200),
@@ -735,6 +746,7 @@ describe('OutgoingPaymentService', (): void => {
           .mockImplementation(() =>
             Promise.reject(new Error('account service error'))
           )
+
         // Even after many retries, if Cancelling fails it keeps retrying.
         for (let i = 0; i < 10; i++) {
           const payment = await processNext(paymentId, PaymentState.Cancelling)
@@ -742,7 +754,8 @@ describe('OutgoingPaymentService', (): void => {
           fastForwardToAttempt(payment.stateAttempts)
         }
 
-        const payment = await OutgoingPayment.query(knex).findById(paymentId)
+        const payment = await outgoingPaymentService.get(paymentId)
+        if (!payment) throw 'unreachable'
         expect(payment.state).toBe(PaymentState.Cancelling)
         expect(payment.error).toBe('InvoiceAlreadyPaid')
         expect(payment.stateAttempts).toBe(10)
@@ -760,6 +773,7 @@ describe('OutgoingPaymentService', (): void => {
           .mockImplementation(() =>
             Promise.reject(new Error('account service error'))
           )
+
         await processNext(paymentId, PaymentState.Cancelling)
         fastForwardToAttempt(0.9)
         // Not enough time has passed before the attempt.
@@ -767,7 +781,8 @@ describe('OutgoingPaymentService', (): void => {
           outgoingPaymentService.processNext()
         ).resolves.toBeUndefined()
 
-        const payment = await OutgoingPayment.query(knex).findById(paymentId)
+        const payment = await outgoingPaymentService.get(paymentId)
+        if (!payment) throw 'unreachable'
         expect(payment.state).toBe(PaymentState.Cancelling)
         expect(payment.stateAttempts).toBe(1)
         expectOutcome(payment, {
@@ -811,9 +826,9 @@ describe('OutgoingPaymentService', (): void => {
         state: PaymentState.Inactive
       })
 
-      const after = await OutgoingPayment.query(knex).findById(payment.id)
-      expect(after.state).toBe(PaymentState.Inactive)
-      expect(after.error).toBeNull()
+      const after = await outgoingPaymentService.get(payment.id)
+      expect(after?.state).toBe(PaymentState.Inactive)
+      expect(after?.error).toBeNull()
     })
 
     Object.values(PaymentState).forEach((startState) => {
@@ -827,9 +842,9 @@ describe('OutgoingPaymentService', (): void => {
           outgoingPaymentService.requote(payment.id)
         ).rejects.toThrow(`Cannot quote; payment is in state=${startState}`)
 
-        const after = await OutgoingPayment.query(knex).findById(payment.id)
-        expect(after.state).toBe(startState)
-        expect(after.error).toBe('Fail')
+        const after = await outgoingPaymentService.get(payment.id)
+        expect(after?.state).toBe(startState)
+        expect(after?.error).toBe('Fail')
       })
     })
   })
@@ -862,8 +877,8 @@ describe('OutgoingPaymentService', (): void => {
         state: PaymentState.Activated
       })
 
-      const after = await OutgoingPayment.query(knex).findById(payment.id)
-      expect(after.state).toBe(PaymentState.Activated)
+      const after = await outgoingPaymentService.get(payment.id)
+      expect(after?.state).toBe(PaymentState.Activated)
     })
 
     Object.values(PaymentState).forEach((startState) => {
@@ -874,8 +889,8 @@ describe('OutgoingPaymentService', (): void => {
           outgoingPaymentService.approve(payment.id)
         ).rejects.toThrow(`Cannot approve; payment is in state=${startState}`)
 
-        const after = await OutgoingPayment.query(knex).findById(payment.id)
-        expect(after.state).toBe(startState)
+        const after = await outgoingPaymentService.get(payment.id)
+        expect(after?.state).toBe(startState)
       })
     })
   })
@@ -908,9 +923,9 @@ describe('OutgoingPaymentService', (): void => {
         state: PaymentState.Cancelling
       })
 
-      const after = await OutgoingPayment.query(knex).findById(payment.id)
-      expect(after.state).toBe(PaymentState.Cancelling)
-      expect(after.error).toBe('CancelledByAPI')
+      const after = await outgoingPaymentService.get(payment.id)
+      expect(after?.state).toBe(PaymentState.Cancelling)
+      expect(after?.error).toBe('CancelledByAPI')
     })
 
     Object.values(PaymentState).forEach((startState) => {
@@ -921,8 +936,8 @@ describe('OutgoingPaymentService', (): void => {
           `Cannot cancel; payment is in state=${startState}`
         )
 
-        const after = await OutgoingPayment.query(knex).findById(payment.id)
-        expect(after.state).toBe(startState)
+        const after = await outgoingPaymentService.get(payment.id)
+        expect(after?.state).toBe(startState)
       })
     })
   })

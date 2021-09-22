@@ -55,6 +55,7 @@ async function getOutgoingPayment(
 
 type CreateOutgoingPaymentOptions = PaymentIntent & { superAccountId: string }
 
+// TODO ensure this is idempotent/safe for autoApprove:true payments
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
@@ -107,8 +108,7 @@ async function createOutgoingPayment(
     destinationAccount: {
       scale: destination.destinationAsset.scale,
       code: destination.destinationAsset.code,
-      url: destination.accountUrl,
-      paymentPointer: destination.paymentPointer
+      url: destination.accountUrl
     }
   })
 }

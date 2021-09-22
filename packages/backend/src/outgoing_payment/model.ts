@@ -48,9 +48,6 @@ export class OutgoingPayment extends BaseModel {
     scale: number
     code: string
     url?: string
-    // TODO: why even store this in addition to url? it doesn't always exist (url does); from spec:
-    // Payment pointer, prefixed with "$", corresponding to the recipient Open Payments/SPSP account. Each payment pointer and its corresponding account URL identifies a unique payment recipient.
-    paymentPointer?: string
   }
 
   $beforeUpdate(opts: ModelOptions, queryContext: QueryContext): void {
