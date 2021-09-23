@@ -31,7 +31,6 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
-  config.env = 'test'
   config.port = 0
   config.adminPort = 0
   const logger = createLogger({

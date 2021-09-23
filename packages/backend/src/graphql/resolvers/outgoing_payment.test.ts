@@ -186,35 +186,28 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.error).toBeNull()
       expect(query.stateAttempts).toBe(0)
       expect(query.intent).toEqual({
-        paymentPointer: 'http://wallet2.example/paymentpointer/bob',
-        amountToSend: '123',
+        ...payment.intent,
+        amountToSend: payment.intent?.amountToSend?.toString(),
         invoiceUrl: null,
-        autoApprove: false,
         __typename: 'PaymentIntent'
       })
       expect(query.quote).toEqual({
+        ...payment.quote,
         timestamp: payment.quote?.timestamp.toISOString(),
         activationDeadline: payment.quote?.activationDeadline.toISOString(),
         targetType: SchemaPaymentType.FixedSend,
-        minDeliveryAmount: '123',
-        maxSourceAmount: '456',
-        maxPacketAmount: '789',
-        minExchangeRate: 1.23,
-        lowExchangeRateEstimate: 1.2,
-        highExchangeRateEstimate: 2.3,
+        minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
+        maxSourceAmount: payment.quote?.maxSourceAmount.toString(),
+        maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
         __typename: 'PaymentQuote'
       })
       expect(query.superAccountId).toBe(payment.superAccountId)
       expect(query.sourceAccount).toEqual({
-        id: payment.sourceAccount.id,
-        scale: 9,
-        code: 'USD',
+        ...payment.sourceAccount,
         __typename: 'PaymentSourceAccount'
       })
       expect(query.destinationAccount).toEqual({
-        scale: 9,
-        code: 'XRP',
-        url: 'http://wallet2.example/paymentpointer/bob',
+        ...payment.destinationAccount,
         __typename: 'PaymentDestinationAccount'
       })
       expect(query.outcome).toEqual({

@@ -362,6 +362,29 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment.quote).toBeUndefined()
       })
 
+      // This mocks Inactive→Ready, but for it to trigger for real, it would go from Sending→Inactive(retry)→Ready (when the sending partially failed).
+      it('Ready (FixedSend, 0<intent.amountToSend<amountSent)', async (): Promise<void> => {
+        const payment = await outgoingPaymentService.create({
+          superAccountId,
+          paymentPointer: 'http://wallet.example/paymentpointer/bob',
+          amountToSend: BigInt(123),
+          autoApprove: false
+        })
+        jest
+          .spyOn(connectorService, 'getIlpAccount')
+          .mockImplementation(async (id: string) => {
+            expect(id).toBe(payment.sourceAccount.id)
+            return ({
+              balance: {
+                balance: BigInt(0),
+                totalBorrowed: BigInt(89)
+              }
+            } as unknown) as IlpAccount
+          })
+        const payment2 = await processNext(payment.id, PaymentState.Ready)
+        expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123 - 89))
+      })
+
       // This mocks Inactive→Completed, but for it to trigger for real, it would go from Sending→Inactive(retry)→Completed (when the Sending→Completed transition failed to commit).
       it('Completed (FixedSend, intent.amountToSend===amountSent)', async (): Promise<void> => {
         const payment = await outgoingPaymentService.create({

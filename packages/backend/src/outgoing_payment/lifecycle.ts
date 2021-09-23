@@ -84,8 +84,6 @@ export async function handleQuoting(
       scale: payment.sourceAccount.scale,
       code: payment.sourceAccount.code
     },
-    // This is always the full payment amount, even when part of that amount has already successfully been delivered.
-    // The quote's amounts are adjusted in `handleSending` to reflect the actual payment state.
     amountToSend,
     slippage: deps.slippage,
     prices
@@ -203,13 +201,14 @@ export async function handleSending(
     payment.sourceAccount.id
   )
 
+  // Due to Sending→Sending retries, the the quote's amount parameters may need adjusting.
   const amountSentSinceQuote = payment.quote.maxSourceAmount - balance.balance
   const newMaxSourceAmount = balance.balance
 
   let newMinDeliveryAmount
   switch (payment.quote.targetType) {
     case Pay.PaymentType.FixedSend:
-      // This is only an approximation of the true amount delivered. The true amount
+      // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
       // eslint-disable-next-line no-case-declarations
       const amountDeliveredSinceQuote = BigInt(
         Math.ceil(
@@ -302,7 +301,6 @@ export async function handleSending(
     minExchangeRate
   }
 
-  // The "maxSourceAmount" is 0 when the payment is already fully paid, but the last attempt's transaction just didn't commit.
   const receipt = await Pay.pay({ plugin, destination, quote }).finally(() => {
     return Pay.closeConnection(plugin, destination).catch((err) => {
       // Ignore connection close failures, all of the money was delivered.

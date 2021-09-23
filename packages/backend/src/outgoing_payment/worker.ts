@@ -22,7 +22,7 @@ export async function processPendingPayment(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
   return deps_.knex.transaction(async (trx) => {
-    const payment = await getPendingPayment({ ...deps_, knex: trx })
+    const payment = await getPendingPayment(trx)
     if (!payment) return
 
     await handlePaymentLifecycle(
@@ -43,10 +43,10 @@ export async function processPendingPayment(
 // Fetch (and lock) a payment for work.
 // Exported for testing.
 export async function getPendingPayment(
-  deps: ServiceDependencies
+  trx: knex.Transaction
 ): Promise<OutgoingPayment | undefined> {
   const now = new Date(Date.now()).toISOString()
-  const payments = await OutgoingPayment.query(deps.knex)
+  const payments = await OutgoingPayment.query(trx)
     .limit(1)
     // Ensure the payment cannot be processed concurrently by multiple workers.
     .forUpdate()
