@@ -40,6 +40,7 @@ export class MockPlugin implements IlpPlugin {
   }
 
   connect(): Promise<void> {
+    this.connected = true
     return Promise.resolve()
   }
 

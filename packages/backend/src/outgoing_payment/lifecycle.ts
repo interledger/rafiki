@@ -201,7 +201,7 @@ export async function handleSending(
     payment.sourceAccount.id
   )
 
-  // Due to Sending→Sending retries, the the quote's amount parameters may need adjusting.
+  // Due to Sending→Sending retries, the quote's amount parameters may need adjusting.
   const amountSentSinceQuote = payment.quote.maxSourceAmount - balance.balance
   const newMaxSourceAmount = balance.balance
 

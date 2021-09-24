@@ -305,6 +305,9 @@ describe('OutgoingPaymentService', (): void => {
         expect(
           payment.quote.activationDeadline.getTime() - Date.now()
         ).toBeGreaterThan(0)
+        expect(
+          payment.quote.activationDeadline.getTime() - Date.now()
+        ).toBeLessThanOrEqual(config.quoteLifespan)
         expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedSend)
         expect(payment.quote.minDeliveryAmount).toBe(
           BigInt(Math.ceil(123 * payment.quote.minExchangeRate.valueOf()))
@@ -344,7 +347,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       it('Inactive (rate service error)', async (): Promise<void> => {
-        jest
+        const mockFn = jest
           .spyOn(ratesService, 'prices')
           .mockImplementation(() => Promise.reject(new Error('fail')))
         const paymentId = (
@@ -360,6 +363,16 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment.stateAttempts).toBe(1)
         expect(payment.error).toBeNull()
         expect(payment.quote).toBeUndefined()
+
+        mockFn.mockRestore()
+        // Fast forward to next attempt.
+        // Only mock the time once (for getPendingPayment) since otherwise ilp/pay's startQuote will get confused.
+        jest
+          .spyOn(Date, 'now')
+          .mockReturnValueOnce(Date.now() + 1 * RETRY_BACKOFF_SECONDS * 1000)
+
+        const payment2 = await processNext(paymentId, PaymentState.Ready)
+        expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123))
       })
 
       // This mocks Inactive→Ready, but for it to trigger for real, it would go from Sending→Inactive(retry)→Ready (when the sending partially failed).

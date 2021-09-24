@@ -77,6 +77,7 @@ async function createOutgoingPayment(
   }
 
   const plugin = deps.makeIlpPlugin(options.superAccountId)
+  await plugin.connect()
   const destination = await Pay.setupPayment({
     plugin,
     paymentPointer: options.paymentPointer,

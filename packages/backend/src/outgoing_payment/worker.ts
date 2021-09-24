@@ -117,11 +117,12 @@ export async function handlePaymentLifecycle(
   switch (payment.state) {
     case PaymentState.Inactive:
       plugin = deps.makeIlpPlugin(payment.sourceAccount.id)
-      return lifecycle
-        .handleQuoting(deps, payment, plugin)
+      return plugin
+        .connect()
+        .then(() => lifecycle.handleQuoting(deps, payment, plugin))
         .catch(onError)
         .finally(() => {
-          plugin.disconnect().catch((err: Error) => {
+          return plugin.disconnect().catch((err: Error) => {
             deps.logger.warn(
               { error: err.message },
               'error disconnecting plugin'
@@ -134,11 +135,12 @@ export async function handlePaymentLifecycle(
       return lifecycle.handleActivation(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin(payment.sourceAccount.id)
-      return lifecycle
-        .handleSending(deps, payment, plugin)
+      return plugin
+        .connect()
+        .then(() => lifecycle.handleSending(deps, payment, plugin))
         .catch(onError)
         .finally(() => {
-          plugin.disconnect().catch((err: Error) => {
+          return plugin.disconnect().catch((err: Error) => {
             deps.logger.warn(
               { error: err.message },
               'error disconnecting plugin'
