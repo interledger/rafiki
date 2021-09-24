@@ -7,9 +7,6 @@
       "path": "packages/backend"
     },
     {
-      "path": "packages/interledger"
-    },
-    {
       "path": "packages/frontend"
     }
   ],

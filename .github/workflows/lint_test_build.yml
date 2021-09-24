@@ -39,21 +39,6 @@ jobs:
       - run: yarn build
       - run: yarn workspace backend test
 
-  interledger:
-    runs-on: ubuntu-latest
-    needs: checkout
-    steps:
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
-      - run: yarn workspace interledger lint
-      - run: yarn workspace interledger format:check
-      - run: yarn install --immutable --immutable-cache
-      - run: yarn build
-      - run: yarn workspace interledger test
-
   frontend:
     runs-on: ubuntu-latest
     needs: checkout
@@ -84,7 +69,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - backend
-      - interledger
       - frontend
       - rates
     steps:
