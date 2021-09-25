@@ -3,6 +3,7 @@ import * as Pay from '@interledger/pay'
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
+import { CreditError } from '../credit/service'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -169,26 +170,24 @@ export async function handleActivation(
   }
 
   await refundLeftoverBalance(deps, payment)
-  // const extendRes = await deps.creditService.extend({
-  //   accountId: payment.superAccountId,
-  //   subAccountId: payment.sourceAccount.id,
-  //   amount: payment.quote.maxSourceAmount,
-  //   autoApply: true
-  // })
-  // if (extendRes.error === 'InsufficientBalance') {
-  //   throw LifecycleError.InsufficientBalance
-  // } else if (!extendRes.success) {
-  //   // Unexpected account service errors: the money was not reserved.
-  //   deps.logger.warn(
-  //     {
-  //       code: extendRes.code,
-  //       message: extendRes.message,
-  //       error: extendRes.error
-  //     },
-  //     'extend credit error'
-  //   )
-  //   throw LifecycleError.AccountServiceError
-  // }
+  const error = await deps.creditService.extend({
+    accountId: payment.superAccountId,
+    subAccountId: payment.sourceAccount.id,
+    amount: payment.quote.maxSourceAmount,
+    autoApply: true
+  })
+  if (error === CreditError.InsufficientBalance) {
+    throw LifecycleError.InsufficientBalance
+  } else if (error) {
+    // Unexpected account service errors: the money was not reserved.
+    deps.logger.warn(
+      {
+        error
+      },
+      'extend credit error'
+    )
+    throw LifecycleError.AccountServiceError
+  }
   await payment.$query(deps.knex).patch({ state: PaymentState.Sending })
 }
 
@@ -369,23 +368,21 @@ async function refundLeftoverBalance(
   }
   if (balance.balance === BigInt(0)) return
 
-  // const settleRes = await deps.creditService.settleDebt({
-  //   accountId: payment.superAccountId,
-  //   subAccountId: payment.sourceAccount.id,
-  //   amount: balance.balance,
-  //   revolve: false
-  // })
-  // if (!settleRes.success) {
-  //   deps.logger.warn(
-  //     {
-  //       code: settleRes.code,
-  //       message: settleRes.message,
-  //       error: settleRes.error
-  //     },
-  //     'settle debt error'
-  //   )
-  //   throw LifecycleError.AccountServiceError
-  // }
+  const error = await deps.creditService.settleDebt({
+    accountId: payment.superAccountId,
+    subAccountId: payment.sourceAccount.id,
+    amount: balance.balance,
+    revolve: false
+  })
+  if (error) {
+    deps.logger.warn(
+      {
+        error
+      },
+      'settle debt error'
+    )
+    throw LifecycleError.AccountServiceError
+  }
 }
 
 const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {

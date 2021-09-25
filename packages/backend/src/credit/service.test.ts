@@ -1,56 +1,64 @@
-import { Model } from 'objection'
-import { Transaction } from 'knex'
+import Knex from 'knex'
+import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { CreditService, CreditError } from './service'
-import { DepositService } from '../deposit/service'
-import { WithdrawalService } from '../withdrawal/service'
 import { AccountService } from '../account/service'
-import {
-  AccountFactory,
-  createTestServices,
-  TestServices
-} from '../testsHelpers'
+import { WithdrawalService } from '../withdrawal/service'
+import { createTestApp, TestContainer } from '../tests/app'
+import { resetGraphileDb } from '../tests/graphileDb'
+import { GraphileProducer } from '../messaging/graphileProducer'
+import { Config } from '../config/app'
+import { IocContract } from '@adonisjs/fold'
+import { initIocContainer } from '../'
+import { AppServices } from '../app'
+import { AccountFactory } from '../tests/accountFactory'
+import { truncateTables } from '../tests/tableManager'
 
 describe('Credit Service', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+  let knex: Knex
+  let workerUtils: WorkerUtils
   let creditService: CreditService
   let accountService: AccountService
   let accountFactory: AccountFactory
-  let depositService: DepositService
   let withdrawalService: WithdrawalService
-  let services: TestServices
-  let trx: Transaction
+  const messageProducer = new GraphileProducer()
+  const mockMessageProducer = {
+    send: jest.fn()
+  }
 
   beforeAll(
     async (): Promise<void> => {
-      services = await createTestServices()
-      ;({
-        creditService,
-        accountService,
-        depositService,
-        withdrawalService
-      } = services)
-      accountFactory = new AccountFactory(accountService)
-    }
-  )
-
-  beforeEach(
-    async (): Promise<void> => {
-      trx = await services.knex.transaction()
-      Model.knex(trx)
+      deps = await initIocContainer(Config)
+      deps.bind('messageProducer', async () => mockMessageProducer)
+      appContainer = await createTestApp(deps)
+      workerUtils = await makeWorkerUtils({
+        connectionString: appContainer.connectionUrl
+      })
+      await workerUtils.migrate()
+      messageProducer.setUtils(workerUtils)
+      knex = await deps.use('knex')
+      creditService = await deps.use('creditService')
+      accountService = await deps.use('accountService')
+      const transferService = await deps.use('transferService')
+      accountFactory = new AccountFactory(accountService, transferService)
+      withdrawalService = await deps.use('withdrawalService')
     }
   )
 
   afterEach(
     async (): Promise<void> => {
-      await trx.rollback()
-      await trx.destroy()
+      await truncateTables(knex)
     }
   )
 
   afterAll(
     async (): Promise<void> => {
-      await services.shutdown()
+      await resetGraphileDb(knex)
+      await appContainer.shutdown()
+      await workerUtils.release()
     }
   )
 
@@ -63,9 +71,13 @@ describe('Credit Service', (): void => {
     `(
       'Can extend credit to sub-account { autoApply: $autoApply }',
       async ({ autoApply }): Promise<void> => {
-        const { id: superAccountId } = await accountFactory.build()
+        const startingBalance = BigInt(20)
+        const { id: superAccountId } = await accountFactory.build({
+          balance: startingBalance
+        })
         const { id: accountId } = await accountFactory.build({
-          superAccountId: superAccountId
+          superAccountId: superAccountId,
+          balance: startingBalance
         })
         const { id: subAccountId } = await accountFactory.build({
           superAccountId: accountId
@@ -74,14 +86,14 @@ describe('Credit Service', (): void => {
         await expect(
           accountService.getBalance(superAccountId)
         ).resolves.toEqual({
-          balance: BigInt(0),
+          balance: startingBalance,
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
           totalBorrowed: BigInt(0),
           totalLent: BigInt(0)
         })
         await expect(accountService.getBalance(accountId)).resolves.toEqual({
-          balance: BigInt(0),
+          balance: startingBalance,
           availableCredit: BigInt(0),
           creditExtended: BigInt(0),
           totalBorrowed: BigInt(0),
@@ -94,18 +106,6 @@ describe('Credit Service', (): void => {
           totalBorrowed: BigInt(0),
           totalLent: BigInt(0)
         })
-
-        const depositAmount = BigInt(20)
-        if (autoApply) {
-          await depositService.create({
-            accountId: superAccountId,
-            amount: depositAmount
-          })
-          await depositService.create({
-            accountId,
-            amount: depositAmount
-          })
-        }
 
         const amount = BigInt(5)
         await expect(
@@ -120,14 +120,14 @@ describe('Credit Service', (): void => {
         await expect(
           accountService.getBalance(superAccountId)
         ).resolves.toEqual({
-          balance: autoApply ? depositAmount - amount : BigInt(0),
+          balance: autoApply ? startingBalance - amount : startingBalance,
           availableCredit: BigInt(0),
           creditExtended: autoApply ? BigInt(0) : amount,
           totalBorrowed: BigInt(0),
           totalLent: autoApply ? amount : BigInt(0)
         })
         await expect(accountService.getBalance(accountId)).resolves.toEqual({
-          balance: autoApply ? depositAmount : BigInt(0),
+          balance: startingBalance,
           availableCredit: autoApply ? BigInt(0) : amount,
           creditExtended: autoApply ? BigInt(0) : amount,
           totalBorrowed: autoApply ? amount : BigInt(0),
@@ -155,14 +155,14 @@ describe('Credit Service', (): void => {
           superAccountId
         )
         await expect(superAccountBalance).toEqual({
-          balance: autoApply ? depositAmount - amount * 2n : BigInt(0),
+          balance: autoApply ? startingBalance - amount * 2n : startingBalance,
           availableCredit: BigInt(0),
           creditExtended: autoApply ? BigInt(0) : amount * 2n,
           totalBorrowed: BigInt(0),
           totalLent: autoApply ? amount * 2n : BigInt(0)
         })
         await expect(accountService.getBalance(accountId)).resolves.toEqual({
-          balance: autoApply ? depositAmount + amount : BigInt(0),
+          balance: autoApply ? startingBalance + amount : startingBalance,
           availableCredit: autoApply ? BigInt(0) : amount * 2n,
           creditExtended: autoApply ? BigInt(0) : amount,
           totalBorrowed: autoApply ? amount * 2n : BigInt(0),
@@ -185,7 +185,7 @@ describe('Credit Service', (): void => {
           accountService.getBalance(superAccountId)
         ).resolves.toEqual(superAccountBalance)
         await expect(accountService.getBalance(accountId)).resolves.toEqual({
-          balance: autoApply ? depositAmount : BigInt(0),
+          balance: startingBalance,
           availableCredit: autoApply ? BigInt(0) : amount * 2n,
           creditExtended: autoApply ? BigInt(0) : amount * 2n,
           totalBorrowed: autoApply ? amount * 2n : BigInt(0),
@@ -294,7 +294,10 @@ describe('Credit Service', (): void => {
 
   describe('Utilize Credit', (): void => {
     test('Can utilize credit to sub-account', async (): Promise<void> => {
-      const { id: superAccountId } = await accountFactory.build()
+      const creditAmount = BigInt(10)
+      const { id: superAccountId } = await accountFactory.build({
+        balance: creditAmount
+      })
       const { id: accountId } = await accountFactory.build({
         superAccountId: superAccountId
       })
@@ -302,7 +305,6 @@ describe('Credit Service', (): void => {
         superAccountId: accountId
       })
 
-      const creditAmount = BigInt(10)
       await expect(
         creditService.extend({
           accountId: superAccountId,
@@ -310,10 +312,6 @@ describe('Credit Service', (): void => {
           amount: creditAmount
         })
       ).resolves.toBeUndefined()
-      await depositService.create({
-        accountId: superAccountId,
-        amount: creditAmount
-      })
 
       await expect(accountService.getBalance(superAccountId)).resolves.toEqual({
         balance: creditAmount,
@@ -675,7 +673,10 @@ describe('Credit Service', (): void => {
     `(
       'Can settle sub-account debt { revolve: $revolve }',
       async ({ revolve }): Promise<void> => {
-        const { id: superAccountId } = await accountFactory.build()
+        const creditAmount = BigInt(10)
+        const { id: superAccountId } = await accountFactory.build({
+          balance: creditAmount
+        })
         const { id: accountId } = await accountFactory.build({
           superAccountId: superAccountId
         })
@@ -683,11 +684,6 @@ describe('Credit Service', (): void => {
           superAccountId: accountId
         })
 
-        const creditAmount = BigInt(10)
-        await depositService.create({
-          accountId: superAccountId,
-          amount: creditAmount
-        })
         await expect(
           creditService.extend({
             accountId: superAccountId,
@@ -793,16 +789,16 @@ describe('Credit Service', (): void => {
     })
 
     test('Returns error if amount exceeds debt', async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
+      const startingBalance = BigInt(5)
+      const { id: accountId } = await accountFactory.build({
+        balance: startingBalance
+      })
       const { id: subAccountId } = await accountFactory.build({
-        superAccountId: accountId
+        superAccountId: accountId,
+        balance: startingBalance
       })
 
       const lentAmount = BigInt(5)
-      await depositService.create({
-        accountId,
-        amount: lentAmount
-      })
       await expect(
         creditService.extend({
           accountId,
@@ -812,17 +808,11 @@ describe('Credit Service', (): void => {
         })
       ).resolves.toBeUndefined()
 
-      const depositAmount = BigInt(5)
-      await depositService.create({
-        accountId: subAccountId,
-        amount: depositAmount
-      })
-
       await expect(
         creditService.settleDebt({
           accountId,
           subAccountId,
-          amount: depositAmount + lentAmount
+          amount: startingBalance + lentAmount
         })
       ).resolves.toEqual(CreditError.InsufficientDebt)
 
@@ -834,7 +824,7 @@ describe('Credit Service', (): void => {
         totalLent: lentAmount
       })
       await expect(accountService.getBalance(subAccountId)).resolves.toEqual({
-        balance: depositAmount + lentAmount,
+        balance: startingBalance + lentAmount,
         availableCredit: BigInt(0),
         creditExtended: BigInt(0),
         totalBorrowed: lentAmount,
@@ -843,16 +833,14 @@ describe('Credit Service', (): void => {
     })
 
     test('Returns error for insufficient sub-account balance', async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
+      const lentAmount = BigInt(5)
+      const { id: accountId } = await accountFactory.build({
+        balance: lentAmount
+      })
       const { id: subAccountId } = await accountFactory.build({
         superAccountId: accountId
       })
 
-      const lentAmount = BigInt(5)
-      await depositService.create({
-        accountId,
-        amount: lentAmount
-      })
       await expect(
         creditService.extend({
           accountId,

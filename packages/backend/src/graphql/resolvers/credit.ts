@@ -10,7 +10,8 @@ export const extendCredit: MutationResolvers['extendCredit'] = async (
   args,
   ctx
 ): ResolversTypes['ExtendCreditMutationResponse'] => {
-  const error = await ctx.creditService.extend(args.input)
+  const creditService = await ctx.container.use('creditService')
+  const error = await creditService.extend(args.input)
   if (error) {
     return errorToResponse[error]
   }
@@ -26,7 +27,8 @@ export const revokeCredit: MutationResolvers['revokeCredit'] = async (
   args,
   ctx
 ): ResolversTypes['RevokeCreditMutationResponse'] => {
-  const error = await ctx.creditService.revoke(args.input)
+  const creditService = await ctx.container.use('creditService')
+  const error = await creditService.revoke(args.input)
   if (error) {
     return errorToResponse[error]
   }
@@ -42,7 +44,8 @@ export const utilizeCredit: MutationResolvers['utilizeCredit'] = async (
   args,
   ctx
 ): ResolversTypes['UtilizeCreditMutationResponse'] => {
-  const error = await ctx.creditService.utilize(args.input)
+  const creditService = await ctx.container.use('creditService')
+  const error = await creditService.utilize(args.input)
   if (error) {
     return errorToResponse[error]
   }
@@ -58,7 +61,8 @@ export const settleDebt: MutationResolvers['settleDebt'] = async (
   args,
   ctx
 ): ResolversTypes['SettleDebtMutationResponse'] => {
-  const error = await ctx.creditService.settleDebt(args.input)
+  const creditService = await ctx.container.use('creditService')
+  const error = await creditService.settleDebt(args.input)
   if (error) {
     return errorToResponse[error]
   }

@@ -18,8 +18,8 @@ import { MockPlugin } from './mock_plugin'
 import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { AccountBalance, AccountService } from '../account/service'
-// import { CreditError } from '../credit/service'
-import { TransferService } from '../transfer/service'
+import { CreditError, CreditService } from '../credit/service'
+import { WithdrawalService, isWithdrawalError } from '../withdrawal/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -27,7 +27,8 @@ describe('OutgoingPaymentService', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let ratesService: RatesService
   let accountService: AccountService
-  let transferService: TransferService
+  let creditService: CreditService
+  let withdrawalService: WithdrawalService
   let knex: Knex
   let superAccountId: string
   let credentials: StreamCredentials
@@ -141,8 +142,7 @@ describe('OutgoingPaymentService', (): void => {
       }
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
-      accountService = await deps.use('accountService')
-      transferService = await deps.use('transferService')
+      withdrawalService = await deps.use('withdrawalService')
       deps.bind('makeIlpPlugin', async (_deps) => (sourceAccount: string) =>
         (plugins[sourceAccount] =
           plugins[sourceAccount] ||
@@ -150,8 +150,7 @@ describe('OutgoingPaymentService', (): void => {
             streamServer,
             exchangeRate: 0.5,
             sourceAccount,
-            accountService,
-            transferService,
+            withdrawalService,
             invoice
           }))
       )
@@ -170,7 +169,10 @@ describe('OutgoingPaymentService', (): void => {
         }
       })
       outgoingPaymentService = await deps.use('outgoingPaymentService')
-      const accountFactory = new AccountFactory(accountService)
+      accountService = await deps.use('accountService')
+      creditService = await deps.use('creditService')
+      const transferService = await deps.use('transferService')
+      const accountFactory = new AccountFactory(accountService, transferService)
       superAccountId = (
         await accountFactory.build({
           asset: {
@@ -507,29 +509,20 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       it('Cancelling (insufficient balance)', async (): Promise<void> => {
-        const superAccount = await accountService.get(superAccountId)
-        if (!superAccount) {
-          fail()
-        }
-        await expect(
-          transferService.create([
-            {
-              id: uuid(),
-              sourceBalanceId: superAccount.balanceId,
-              destinationBalanceId: superAccount.asset.settlementBalanceId,
-              amount: BigInt(100)
-            }
-          ])
-        ).resolves.toBeUndefined()
+        const withdrawalOrError = await withdrawalService.create({
+          accountId: superAccountId,
+          amount: BigInt(100)
+        })
+        expect(isWithdrawalError(withdrawalOrError)).toEqual(false)
 
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe(LifecycleError.InsufficientBalance)
       })
 
-      it.skip('Cancelling (account service error)', async (): Promise<void> => {
-        // jest
-        //   .spyOn(creditService, 'extend')
-        //   .mockImplementation(async () => CreditError.SameAccounts)
+      it('Cancelling (account service error)', async (): Promise<void> => {
+        jest
+          .spyOn(creditService, 'extend')
+          .mockImplementation(async () => CreditError.SameAccounts)
 
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe(LifecycleError.AccountServiceError)
@@ -789,12 +782,10 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it.skip('Cancelling (endlessly cancel when refund fails after non-retryable send error)', async (): Promise<void> => {
-        // jest
-        //   .spyOn(creditService, 'settleDebt')
-        //   .mockImplementation(() =>
-        //     Promise.reject(new Error('account service error'))
-        //   )
+      it('Cancelling (endlessly cancel when refund fails after non-retryable send error)', async (): Promise<void> => {
+        jest
+          .spyOn(creditService, 'settleDebt')
+          .mockImplementation(async () => CreditError.InsufficientDebt)
 
         // Even after many retries, if Cancelling fails it keeps retrying.
         for (let i = 0; i < 10; i++) {
@@ -816,10 +807,10 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it.skip('Cancelling (not enough time between attempts)', async (): Promise<void> => {
-        // jest
-        //   .spyOn(creditService, 'settleDebt')
-        //   .mockImplementation(() => CreditError.InsufficientDebt)
+      it('Cancelling (not enough time between attempts)', async (): Promise<void> => {
+        jest
+          .spyOn(creditService, 'settleDebt')
+          .mockImplementation(async () => CreditError.InsufficientDebt)
 
         await processNext(paymentId, PaymentState.Cancelling)
         fastForwardToAttempt(0.9)

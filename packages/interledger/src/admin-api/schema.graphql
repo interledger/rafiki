@@ -8,102 +8,13 @@ type Mutation {
     autoCommit: Boolean
     idempotencyKey: ID!
   ): TransferMutationResponse
-
-  "Extend Credit"
-  extendCredit(input: ExtendCreditInput!): ExtendCreditMutationResponse
-
-  "Revoke Credit"
-  revokeCredit(input: RevokeCreditInput!): RevokeCreditMutationResponse
-
-  "Utilize Credit"
-  utilizeCredit(input: UtilizeCreditInput!): UtilizeCreditMutationResponse
-
-  "Settle Debt"
-  settleDebt(input: SettleDebtInput): SettleDebtMutationResponse
 }
 
-input ExtendCreditInput {
-  "Account extending credit."
-  accountId: ID!
-  "Sub-account to which credit is extended."
-  subAccountId: ID!
-  "Amount of additional line of credit."
-  amount: UInt64!
-  "Automatically utilized and applied to the account balance."
-  autoApply: Boolean! = false
-}
-
-input RevokeCreditInput {
-  "Account revoking credit."
-  accountId: ID!
-  "Sub-account to which credit is revoked."
-  subAccountId: ID!
-  "Amount of revoked line of credit."
-  amount: UInt64!
-}
-
-input UtilizeCreditInput {
-  "Account extending credit."
-  accountId: ID!
-  "Sub-account to which credit is extended."
-  subAccountId: ID!
-  "Amount of utilized line of credit."
-  amount: UInt64!
-}
-
-input SettleDebtInput {
-  "Account collecting debt."
-  accountId: ID!
-  "Sub-account settling debt."
-  subAccountId: ID!
-  "Amount of debt."
-  amount: UInt64!
-  "Replenish the account's line of credit commensurate with the debt settled."
-  revolve: Boolean! = true
-}
-
-enum CreditError {
-  SameAccounts
-  UnknownAccount
-  UnrelatedSubAccount
-  UnknownSubAccount
-  InsufficientBalance
-  InsufficientCredit
-  InsufficientDebt
-}
 
 type TransferMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-}
-
-type ExtendCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type RevokeCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type UtilizeCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type SettleDebtMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
 }
 
 type PageInfo {

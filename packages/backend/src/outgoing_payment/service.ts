@@ -4,6 +4,7 @@ import { RatesService } from 'rates'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { AccountService, isAccountError } from '../account/service'
+import { CreditService } from '../credit/service'
 import { IlpPlugin } from './ilp_plugin'
 import * as lifecycle from './lifecycle'
 import * as worker from './worker'
@@ -22,6 +23,7 @@ export interface ServiceDependencies extends BaseService {
   slippage: number
   quoteLifespan: number // milliseconds
   accountService: AccountService
+  creditService: CreditService
   ratesService: RatesService
   makeIlpPlugin: (sourceAccountId: string) => IlpPlugin
 }

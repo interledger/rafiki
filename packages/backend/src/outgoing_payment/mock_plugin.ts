@@ -4,21 +4,18 @@ import {
   serializeIlpReply,
   serializeIlpFulfill
 } from 'ilp-packet'
-import { v4 as uuid } from 'uuid'
 import { serializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { StreamServer } from '@interledger/stream-receiver'
 import { Invoice } from '@interledger/pay'
 import { IlpPlugin } from './ilp_plugin'
-import { AccountService } from '../account/service'
-import { TransferService } from '../transfer/service'
+import { WithdrawalService, isWithdrawalError } from '../withdrawal/service'
 
 export class MockPlugin implements IlpPlugin {
   public totalReceived = BigInt(0)
   private streamServer: StreamServer
   public exchangeRate: number
   private sourceAccount: string
-  private accountService: AccountService
-  private transferService: TransferService
+  private withdrawalService: WithdrawalService
   private connected = true
   private invoice: Invoice
 
@@ -26,22 +23,19 @@ export class MockPlugin implements IlpPlugin {
     streamServer,
     exchangeRate,
     sourceAccount,
-    accountService,
-    transferService,
+    withdrawalService,
     invoice
   }: {
     streamServer: StreamServer
     exchangeRate: number
     sourceAccount: string
-    accountService: AccountService
-    transferService: TransferService
+    withdrawalService: WithdrawalService
     invoice: Invoice
   }) {
     this.streamServer = streamServer
     this.exchangeRate = exchangeRate
     this.sourceAccount = sourceAccount
-    this.accountService = accountService
-    this.transferService = transferService
+    this.withdrawalService = withdrawalService
     this.invoice = invoice
   }
 
@@ -76,28 +70,15 @@ export class MockPlugin implements IlpPlugin {
         return serializeIlpReply(moneyOrReject)
       }
 
-      const account = await this.accountService.get(this.sourceAccount)
-      if (!account) {
+      const withdrawalOrError = await this.withdrawalService.create({
+        accountId: this.sourceAccount,
+        amount: BigInt(sourceAmount)
+      })
+      if (isWithdrawalError(withdrawalOrError)) {
         return serializeIlpReply({
           code: 'F00',
           triggeredBy: '',
-          message: 'missing account',
-          data: Buffer.alloc(0)
-        })
-      }
-      const error = await this.transferService.create([
-        {
-          id: uuid(),
-          sourceBalanceId: account.balanceId,
-          destinationBalanceId: account.asset.settlementBalanceId,
-          amount: BigInt(sourceAmount)
-        }
-      ])
-      if (error) {
-        return serializeIlpReply({
-          code: 'F00',
-          triggeredBy: '',
-          message: 'insufficient balance',
+          message: withdrawalOrError,
           data: Buffer.alloc(0)
         })
       }
