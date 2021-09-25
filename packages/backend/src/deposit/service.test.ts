@@ -1,50 +1,64 @@
-import { Model } from 'objection'
-import { Transaction } from 'knex'
+import Knex from 'knex'
+import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { DepositService, DepositError, isDepositError } from './service'
 import { AccountService } from '../account/service'
 import { AssetService } from '../asset/service'
-import {
-  AccountFactory,
-  createTestServices,
-  TestServices,
-  randomAsset
-} from '../testsHelpers'
+import { createTestApp, TestContainer } from '../tests/app'
+import { resetGraphileDb } from '../tests/graphileDb'
+import { truncateTables } from '../tests/tableManager'
+import { GraphileProducer } from '../messaging/graphileProducer'
+import { Config } from '../config/app'
+import { IocContract } from '@adonisjs/fold'
+import { initIocContainer } from '../'
+import { AppServices } from '../app'
+import { AccountFactory } from '../tests/accountFactory'
+import { randomAsset } from '../tests/asset'
 
 describe('Deposit Service', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+  let workerUtils: WorkerUtils
   let depositService: DepositService
   let accountService: AccountService
   let accountFactory: AccountFactory
   let assetService: AssetService
-  let services: TestServices
-  let trx: Transaction
+  let knex: Knex
+  const messageProducer = new GraphileProducer()
+  const mockMessageProducer = {
+    send: jest.fn()
+  }
 
   beforeAll(
     async (): Promise<void> => {
-      services = await createTestServices()
-      ;({ depositService, accountService, assetService } = services)
+      deps = await initIocContainer(Config)
+      deps.bind('messageProducer', async () => mockMessageProducer)
+      appContainer = await createTestApp(deps)
+      workerUtils = await makeWorkerUtils({
+        connectionString: appContainer.connectionUrl
+      })
+      await workerUtils.migrate()
+      messageProducer.setUtils(workerUtils)
+      knex = await deps.use('knex')
+      depositService = await deps.use('depositService')
+      accountService = await deps.use('accountService')
+      assetService = await deps.use('assetService')
       accountFactory = new AccountFactory(accountService)
-    }
-  )
-
-  beforeEach(
-    async (): Promise<void> => {
-      trx = await services.knex.transaction()
-      Model.knex(trx)
     }
   )
 
   afterEach(
     async (): Promise<void> => {
-      await trx.rollback()
-      await trx.destroy()
+      await truncateTables(knex)
     }
   )
 
   afterAll(
     async (): Promise<void> => {
-      await services.shutdown()
+      await resetGraphileDb(knex)
+      await appContainer.shutdown()
+      await workerUtils.release()
     }
   )
 

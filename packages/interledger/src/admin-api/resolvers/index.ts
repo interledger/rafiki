@@ -1,6 +1,5 @@
 import { Resolvers } from '../generated/graphql'
 import { extendCredit, revokeCredit, utilizeCredit, settleDebt } from './credit'
-import { createDeposit } from './deposit'
 import {
   createWithdrawal,
   finalizePendingWithdrawal,
@@ -11,7 +10,6 @@ import {
 
 export const resolvers: Resolvers = {
   Query: {
-    // deposit: getDeposit,
     // withdrawal: getWithdrawal
   },
   Mutation: {
@@ -20,17 +18,12 @@ export const resolvers: Resolvers = {
     revokeCredit: revokeCredit,
     utilizeCredit: utilizeCredit,
     settleDebt: settleDebt,
-    createDeposit: createDeposit,
     createWithdrawal: createWithdrawal,
     finalizePendingWithdrawal: finalizePendingWithdrawal,
     rollbackPendingWithdrawal: rollbackPendingWithdrawal
   },
   IlpAccount: {
-    // deposits: getDeposits,
     // withdrawals: getWithdrawals,
-  },
-  DepositsConnection: {
-    // pageInfo: getDepositsConnectionPageInfo
   },
   WithdrawalsConnection: {
     // pageInfo: getWithdrawalsConnectionPageInfo

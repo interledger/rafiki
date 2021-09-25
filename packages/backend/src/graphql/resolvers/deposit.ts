@@ -22,10 +22,9 @@ export const createDeposit: MutationResolvers['createDeposit'] = async (
   ctx
 ): ResolversTypes['CreateDepositMutationResponse'] => {
   try {
-    const depositOrError = await ctx.depositService.create({
-      id: args.input.id,
-      accountId: args.input.ilpAccountId,
-      amount: args.input.amount
+    const depositService = await ctx.container.use('depositService')
+    const depositOrError = await depositService.create({
+      ...args.input
     })
     if (isDepositError(depositOrError)) {
       switch (depositOrError) {
@@ -55,12 +54,7 @@ export const createDeposit: MutationResolvers['createDeposit'] = async (
       code: '200',
       success: true,
       message: 'Created Deposit',
-      deposit: {
-        id: depositOrError.id,
-        ilpAccountId: depositOrError.accountId,
-        amount: depositOrError.amount
-        // createdTime: depositOrError.createdTime
-      }
+      deposit: depositOrError
     }
   } catch (error) {
     ctx.logger.error('error creating deposit', {

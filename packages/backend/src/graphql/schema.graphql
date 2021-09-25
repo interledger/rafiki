@@ -8,6 +8,9 @@ type Query {
 
   "Get a webhook by ID."
   webhook("The ID of the webhook to get." id: String!): Webhook!
+
+  "Get a deposit by ID."
+  deposit("The ID of the deposit to get." id: String!): Deposit!
 }
 
 type Mutation {
@@ -50,6 +53,9 @@ type Mutation {
     "The id of the webhook to delete."
     webhookId: ID!
   ): DeleteWebhookMutationResponse
+
+  "Create deposit"
+  createDeposit(input: CreateDepositInput!): CreateDepositMutationResponse
 }
 
 input PaginationInput {
@@ -135,6 +141,15 @@ input RoutingInput {
   staticIlpAddress: String!
 }
 
+input CreateDepositInput {
+  "The id of the account to create the deposit for."
+  accountId: String!
+  "Amount of deposit."
+  amount: UInt64!
+  "The id of the deposit."
+  id: String
+}
+
 type Asset {
   code: String!
   scale: Int!
@@ -153,6 +168,7 @@ type Account {
   routing: Routing
 
   balance: Balance!
+  deposits(input: PaginationInput): DepositsConnection!
   invoices(input: PaginationInput): InvoiceConnection
   webhooks(input: PaginationInput): WebhooksConnection!
 }
@@ -307,6 +323,23 @@ type Webhook {
   id: ID!
 }
 
+type DepositsConnection {
+  pageInfo: PageInfo!
+  edges: [DepositEdge!]!
+}
+
+type DepositEdge {
+  node: Deposit!
+  cursor: String!
+}
+
+type Deposit {
+  id: ID!
+  amount: UInt64!
+  accountId: ID!
+  # createdTime: Int!
+}
+
 type CreateAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -352,6 +385,13 @@ type DeleteWebhookMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
+}
+
+type CreateDepositMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  deposit: Deposit
 }
 
 interface MutationResponse {

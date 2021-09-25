@@ -1,52 +1,54 @@
-import { Model } from 'objection'
-import { Transaction } from 'knex'
+import { gql } from 'apollo-server-koa'
+import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { AccountFactory } from '../../testsHelpers'
-import { isDepositError } from '../../deposit/service'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { IocContract } from '@adonisjs/fold'
+import { AppServices } from '../../app'
+import { initIocContainer } from '../..'
+import { Config } from '../../config/app'
+import { isDepositError, DepositService } from '../../deposit/service'
+import { AccountFactory } from '../../tests/accountFactory'
+import { truncateTables } from '../../tests/tableManager'
 import { CreateDepositMutationResponse } from '../generated/graphql'
-import { gql } from 'apollo-server'
-
-import { createTestApp, TestContainer } from '../testsHelpers/app'
 
 describe('Deposit Resolvers', (): void => {
-  let accountFactory: AccountFactory
+  let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Transaction
+  let depositService: DepositService
+  let accountFactory: AccountFactory
+  let knex: Knex
 
   beforeAll(
     async (): Promise<void> => {
-      appContainer = await createTestApp()
-      accountFactory = new AccountFactory(appContainer.accountService)
-    }
-  )
-
-  beforeEach(
-    async (): Promise<void> => {
-      trx = await appContainer.knex.transaction()
-      Model.knex(trx)
+      deps = await initIocContainer(Config)
+      appContainer = await createTestApp(deps)
+      knex = await deps.use('knex')
+      depositService = await deps.use('depositService')
+      const accountService = await deps.use('accountService')
+      accountFactory = new AccountFactory(accountService)
     }
   )
 
   afterEach(
     async (): Promise<void> => {
-      await trx.rollback()
-      await trx.destroy()
+      await truncateTables(knex)
     }
   )
 
   afterAll(
     async (): Promise<void> => {
+      await appContainer.apolloClient.stop()
       await appContainer.shutdown()
     }
   )
 
   describe('Create Deposit', (): void => {
     test('Can create an ilp account deposit', async (): Promise<void> => {
-      const { id: ilpAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       const amount = '100'
       const deposit = {
-        ilpAccountId,
+        accountId,
         amount
       }
       const response = await appContainer.apolloClient
@@ -59,7 +61,7 @@ describe('Deposit Resolvers', (): void => {
                 message
                 deposit {
                   id
-                  ilpAccountId
+                  accountId
                   amount
                 }
               }
@@ -82,12 +84,12 @@ describe('Deposit Resolvers', (): void => {
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
       expect(response.deposit?.id).not.toBeNull()
-      expect(response.deposit?.ilpAccountId).toEqual(ilpAccountId)
+      expect(response.deposit?.accountId).toEqual(accountId)
       expect(response.deposit?.amount).toEqual(amount)
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
-      const { id: ilpAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -105,7 +107,7 @@ describe('Deposit Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid v4',
-              ilpAccountId,
+              accountId,
               amount: '100'
             }
           }
@@ -143,7 +145,7 @@ describe('Deposit Resolvers', (): void => {
           `,
           variables: {
             input: {
-              ilpAccountId: uuid(),
+              accountId: uuid(),
               amount: '100'
             }
           }
@@ -166,7 +168,7 @@ describe('Deposit Resolvers', (): void => {
 
     test('Returns an error for existing deposit', async (): Promise<void> => {
       const { id: accountId } = await accountFactory.build()
-      const depositOrError = await appContainer.depositService.create({
+      const depositOrError = await depositService.create({
         accountId,
         amount: BigInt(100)
       })
@@ -190,7 +192,7 @@ describe('Deposit Resolvers', (): void => {
           variables: {
             input: {
               id: depositOrError.id,
-              ilpAccountId: accountId,
+              accountId: accountId,
               amount: '100'
             }
           }

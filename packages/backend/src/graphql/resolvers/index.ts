@@ -12,6 +12,7 @@ import {
   createSubAccount,
   getSubAccounts
 } from './account'
+import { createDeposit } from './deposit'
 import { getAccountInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
@@ -29,6 +30,7 @@ export const resolvers: Resolvers = {
     account: getAccount,
     accounts: getAccounts,
     outgoingPayment: getOutgoingPayment
+    // deposit: getDeposit,
     // webhook: getWebhook
   },
   Account: {
@@ -36,10 +38,14 @@ export const resolvers: Resolvers = {
     invoices: getAccountInvoices,
     superAccount: getSuperAccount,
     subAccounts: getSubAccounts
+    // deposits: getDeposits,
     // webhooks: getWebhooks,
   },
   AccountsConnection: {
     pageInfo: getAccountsConnectionPageInfo
+  },
+  DepositsConnection: {
+    // pageInfo: getDepositsConnectionPageInfo
   },
   InvoiceConnection: {
     pageInfo: getPageInfo
@@ -61,9 +67,10 @@ export const resolvers: Resolvers = {
     createOutgoingPayment,
     approveOutgoingPayment,
     requoteOutgoingPayment,
-    cancelOutgoingPayment
+    cancelOutgoingPayment,
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,
+    createDeposit: createDeposit
   }
 }
