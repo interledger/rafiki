@@ -22,10 +22,9 @@ export const createWithdrawal: MutationResolvers['createWithdrawal'] = async (
   args,
   ctx
 ): ResolversTypes['CreateWithdrawalMutationResponse'] => {
-  const withdrawalOrError = await ctx.withdrawalService.create({
-    id: args.input.id,
-    accountId: args.input.ilpAccountId,
-    amount: args.input.amount
+  const withdrawalService = await ctx.container.use('withdrawalService')
+  const withdrawalOrError = await withdrawalService.create({
+    ...args.input
   })
   if (isWithdrawalError(withdrawalOrError)) {
     return errorToResponse[withdrawalOrError]
@@ -34,12 +33,7 @@ export const createWithdrawal: MutationResolvers['createWithdrawal'] = async (
     code: '200',
     success: true,
     message: 'Created Withdrawal',
-    withdrawal: {
-      id: withdrawalOrError.id,
-      ilpAccountId: withdrawalOrError.accountId,
-      amount: withdrawalOrError.amount
-      // createdTime: withdrawalOrError.createdTime
-    }
+    withdrawal: withdrawalOrError
   }
 }
 
@@ -48,7 +42,8 @@ export const finalizePendingWithdrawal: MutationResolvers['finalizePendingWithdr
   args,
   ctx
 ): ResolversTypes['FinalizePendingWithdrawalMutationResponse'] => {
-  const error = await ctx.withdrawalService.finalize(args.withdrawalId)
+  const withdrawalService = await ctx.container.use('withdrawalService')
+  const error = await withdrawalService.finalize(args.withdrawalId)
   if (error) {
     return errorToResponse[error]
   }
@@ -64,7 +59,8 @@ export const rollbackPendingWithdrawal: MutationResolvers['rollbackPendingWithdr
   args,
   ctx
 ): ResolversTypes['RollbackPendingWithdrawalMutationResponse'] => {
-  const error = await ctx.withdrawalService.rollback(args.withdrawalId)
+  const withdrawalService = await ctx.container.use('withdrawalService')
+  const error = await withdrawalService.rollback(args.withdrawalId)
   if (error) {
     return errorToResponse[error]
   }

@@ -11,6 +11,9 @@ type Query {
 
   "Get a deposit by ID."
   deposit("The ID of the deposit to get." id: String!): Deposit!
+
+  "Get a withdrawal by ID."
+  withdrawal("The ID of the withdrawal to get." id: String!): Withdrawal!
 }
 
 type Mutation {
@@ -56,6 +59,23 @@ type Mutation {
 
   "Create deposit"
   createDeposit(input: CreateDepositInput!): CreateDepositMutationResponse
+
+  "Create withdrawal"
+  createWithdrawal(
+    input: CreateWithdrawalInput!
+  ): CreateWithdrawalMutationResponse
+
+  "Finalize pending withdrawal"
+  finalizePendingWithdrawal(
+    "The id of the pending withdrawal to finalize."
+    withdrawalId: String!
+  ): FinalizePendingWithdrawalMutationResponse
+
+  "Rollback pending withdrawal"
+  rollbackPendingWithdrawal(
+    "The id of the pending withdrawal to rollback."
+    withdrawalId: String!
+  ): RollbackPendingWithdrawalMutationResponse
 }
 
 input PaginationInput {
@@ -150,9 +170,31 @@ input CreateDepositInput {
   id: String
 }
 
+input CreateWithdrawalInput {
+  "The id of the account to create the withdrawal for."
+  accountId: String!
+  "Amount of withdrawal."
+  amount: UInt64!
+  "The id of the withdrawal."
+  id: String
+}
+
 type Asset {
   code: String!
   scale: Int!
+}
+
+enum WithdrawalError {
+  AlreadyFinalized
+  AlreadyRolledBack
+  InsufficientBalance
+  InsufficientLiquidity
+  InsufficientSettlementBalance
+  InvalidId
+  UnknownAccount
+  UnknownAsset
+  UnknownWithdrawal
+  WithdrawalExists
 }
 
 type Account {
@@ -340,6 +382,24 @@ type Deposit {
   # createdTime: Int!
 }
 
+type WithdrawalsConnection {
+  pageInfo: PageInfo!
+  edges: [WithdrawalEdge!]!
+}
+
+type WithdrawalEdge {
+  node: Withdrawal!
+  cursor: String!
+}
+
+type Withdrawal {
+  id: ID!
+  amount: UInt64!
+  accountId: ID!
+  # createdTime: Int!
+  # finalizedTime: Int
+}
+
 type CreateAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -392,6 +452,28 @@ type CreateDepositMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   deposit: Deposit
+}
+
+type CreateWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  withdrawal: Withdrawal
+  error: WithdrawalError
+}
+
+type FinalizePendingWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: WithdrawalError
+}
+
+type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: WithdrawalError
 }
 
 interface MutationResponse {

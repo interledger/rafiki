@@ -1,8 +1,3 @@
-type Query {
-  "Get a withdrawal by ID."
-  withdrawal("The ID of the withdrawal to get." id: ID!): Withdrawal!
-}
-
 type Mutation {
   "Transfer between Interledger accounts"
   transfer(
@@ -25,32 +20,6 @@ type Mutation {
 
   "Settle Debt"
   settleDebt(input: SettleDebtInput): SettleDebtMutationResponse
-
-  "Create withdrawal"
-  createWithdrawal(
-    input: CreateWithdrawalInput!
-  ): CreateWithdrawalMutationResponse
-
-  "Finalize pending withdrawal"
-  finalizePendingWithdrawal(
-    "The id of the pending withdrawal to finalize."
-    withdrawalId: ID!
-  ): FinalizePendingWithdrawalMutationResponse
-
-  "Rollback pending withdrawal"
-  rollbackPendingWithdrawal(
-    "The id of the pending withdrawal to rollback."
-    withdrawalId: ID!
-  ): RollbackPendingWithdrawalMutationResponse
-}
-
-input CreateWithdrawalInput {
-  "The id of the account to create the withdrawal for."
-  ilpAccountId: ID!
-  "Amount of withdrawal."
-  amount: UInt64!
-  "The id of the withdrawal."
-  id: ID
 }
 
 input ExtendCreditInput {
@@ -103,50 +72,6 @@ enum CreditError {
   InsufficientDebt
 }
 
-enum WithdrawalError {
-  AlreadyFinalized
-  AlreadyRolledBack
-  InsufficientBalance
-  InsufficientLiquidity
-  InsufficientSettlementBalance
-  InvalidId
-  UnknownAccount
-  UnknownAsset
-  UnknownWithdrawal
-  WithdrawalExists
-}
-
-type IlpAccount {
-  withdrawals(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): WithdrawalsConnection!
-}
-
-type WithdrawalsConnection {
-  pageInfo: PageInfo!
-  edges: [WithdrawalEdge!]!
-}
-
-type WithdrawalEdge {
-  node: Withdrawal!
-  cursor: String!
-}
-
-type Withdrawal {
-  id: ID!
-  amount: UInt64!
-  ilpAccountId: ID!
-  # createdTime: Int!
-  # finalizedTime: Int
-}
-
 type TransferMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -179,28 +104,6 @@ type SettleDebtMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   error: CreditError
-}
-
-type CreateWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  withdrawal: Withdrawal
-  error: WithdrawalError
-}
-
-type FinalizePendingWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: WithdrawalError
-}
-
-type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: WithdrawalError
 }
 
 type PageInfo {

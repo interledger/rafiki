@@ -1,60 +1,60 @@
-import { Model } from 'objection'
-import { Transaction } from 'knex'
+import { gql } from 'apollo-server-koa'
+import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { AccountFactory } from '../../testsHelpers'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { IocContract } from '@adonisjs/fold'
+import { AppServices } from '../../app'
+import { initIocContainer } from '../..'
+import { Config } from '../../config/app'
+import { WithdrawalService } from '../../withdrawal/service'
+import { AccountFactory } from '../../tests/accountFactory'
+import { truncateTables } from '../../tests/tableManager'
 import {
   CreateWithdrawalMutationResponse,
   FinalizePendingWithdrawalMutationResponse,
   RollbackPendingWithdrawalMutationResponse,
   WithdrawalError
 } from '../generated/graphql'
-import { gql } from 'apollo-server'
-
-import { createTestApp, TestContainer } from '../testsHelpers/app'
 
 describe('Withdrawal Resolvers', (): void => {
-  let accountFactory: AccountFactory
+  let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Transaction
+  let withdrawalService: WithdrawalService
+  let accountFactory: AccountFactory
+  let knex: Knex
 
   beforeAll(
     async (): Promise<void> => {
-      appContainer = await createTestApp()
-      accountFactory = new AccountFactory(appContainer.accountService)
-    }
-  )
-
-  beforeEach(
-    async (): Promise<void> => {
-      trx = await appContainer.knex.transaction()
-      Model.knex(trx)
+      deps = await initIocContainer(Config)
+      appContainer = await createTestApp(deps)
+      knex = await deps.use('knex')
+      withdrawalService = await deps.use('withdrawalService')
+      const accountService = await deps.use('accountService')
+      const transferService = await deps.use('transferService')
+      accountFactory = new AccountFactory(accountService, transferService)
     }
   )
 
   afterEach(
     async (): Promise<void> => {
-      await trx.rollback()
-      await trx.destroy()
+      await truncateTables(knex)
     }
   )
 
   afterAll(
     async (): Promise<void> => {
+      await appContainer.apolloClient.stop()
       await appContainer.shutdown()
     }
   )
 
   describe('Create Withdrawal', (): void => {
     test('Can create an ilp account withdrawal', async (): Promise<void> => {
-      const { id: ilpAccountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.depositService.create({
-        accountId: ilpAccountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const withdrawal = {
-        ilpAccountId,
+        accountId,
         amount: amount.toString()
       }
       const response = await appContainer.apolloClient
@@ -67,7 +67,7 @@ describe('Withdrawal Resolvers', (): void => {
                 message
                 withdrawal {
                   id
-                  ilpAccountId
+                  accountId
                   amount
                 }
                 error
@@ -92,7 +92,7 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.code).toEqual('200')
       expect(response.error).toBeNull()
       expect(response.withdrawal?.id).not.toBeNull()
-      expect(response.withdrawal?.ilpAccountId).toEqual(ilpAccountId)
+      expect(response.withdrawal?.accountId).toEqual(accountId)
       expect(response.withdrawal?.amount).toEqual(amount.toString())
     })
 
@@ -114,7 +114,7 @@ describe('Withdrawal Resolvers', (): void => {
           `,
           variables: {
             input: {
-              ilpAccountId: uuid(),
+              accountId: uuid(),
               amount: '100'
             }
           }
@@ -137,7 +137,7 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
-      const { id: ilpAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -156,7 +156,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid v4',
-              ilpAccountId,
+              accountId,
               amount: '100'
             }
           }
@@ -179,21 +179,19 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test('Returns an error for existing withdrawal', async (): Promise<void> => {
-      const { id: ilpAccountId } = await accountFactory.build()
-      const amount = BigInt(10)
-      await appContainer.depositService.create({
-        accountId: ilpAccountId,
-        amount: BigInt(100)
+      const { id: accountId } = await accountFactory.build({
+        balance: BigInt(100)
       })
+      const amount = BigInt(10)
       const id = uuid()
-      await appContainer.withdrawalService.create({
+      await withdrawalService.create({
         id,
-        accountId: ilpAccountId,
+        accountId,
         amount
       })
       const withdrawal = {
         id,
-        ilpAccountId,
+        accountId,
         amount: amount.toString()
       }
       const response = await appContainer.apolloClient
@@ -232,9 +230,9 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test('Returns error for insufficient balance', async (): Promise<void> => {
-      const { id: ilpAccountId } = await accountFactory.build()
+      const { id: accountId } = await accountFactory.build()
       const withdrawal = {
-        ilpAccountId,
+        accountId,
         amount: '100'
       }
       const response = await appContainer.apolloClient
@@ -276,14 +274,10 @@ describe('Withdrawal Resolvers', (): void => {
 
   describe('Create Withdrawal', (): void => {
     test('Can finalize an ilp account withdrawal', async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const id = uuid()
-      await appContainer.withdrawalService.create({
+      await withdrawalService.create({
         id,
         accountId,
         amount
@@ -291,7 +285,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation FinalizePendingWithdrawal($withdrawalId: ID!) {
+            mutation FinalizePendingWithdrawal($withdrawalId: String!) {
               finalizePendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success
@@ -323,7 +317,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation FinalizePendingWithdrawal($withdrawalId: ID!) {
+            mutation FinalizePendingWithdrawal($withdrawalId: String!) {
               finalizePendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success
@@ -356,7 +350,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation FinalizePendingWithdrawal($withdrawalId: ID!) {
+            mutation FinalizePendingWithdrawal($withdrawalId: String!) {
               finalizePendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success
@@ -386,23 +380,19 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test("Can't finalize finalized withdrawal", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const id = uuid()
-      await appContainer.withdrawalService.create({
+      await withdrawalService.create({
         id,
         accountId,
         amount
       })
-      await appContainer.withdrawalService.finalize(id)
+      await withdrawalService.finalize(id)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation FinalizePendingWithdrawal($withdrawalId: ID!) {
+            mutation FinalizePendingWithdrawal($withdrawalId: String!) {
               finalizePendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success
@@ -432,23 +422,19 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const id = uuid()
-      await appContainer.withdrawalService.create({
+      await withdrawalService.create({
         id,
         accountId,
         amount
       })
-      await appContainer.withdrawalService.rollback(id)
+      await withdrawalService.rollback(id)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation FinalizePendingWithdrawal($withdrawalId: ID!) {
+            mutation FinalizePendingWithdrawal($withdrawalId: String!) {
               finalizePendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success
@@ -480,14 +466,10 @@ describe('Withdrawal Resolvers', (): void => {
 
   describe('Rollback Withdrawal', (): void => {
     test('Can rollback an ilp account withdrawal', async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const id = uuid()
-      await appContainer.withdrawalService.create({
+      await withdrawalService.create({
         id,
         accountId,
         amount
@@ -495,7 +477,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation RollbackPendingWithdrawal($withdrawalId: ID!) {
+            mutation RollbackPendingWithdrawal($withdrawalId: String!) {
               rollbackPendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success
@@ -527,7 +509,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation RollbackPendingWithdrawal($withdrawalId: ID!) {
+            mutation RollbackPendingWithdrawal($withdrawalId: String!) {
               rollbackPendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success
@@ -560,7 +542,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation RollbackPendingWithdrawal($withdrawalId: ID!) {
+            mutation RollbackPendingWithdrawal($withdrawalId: String!) {
               rollbackPendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success
@@ -590,23 +572,19 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test("Can't rollback finalized withdrawal", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const id = uuid()
-      await appContainer.withdrawalService.create({
+      await withdrawalService.create({
         id,
         accountId,
         amount
       })
-      await appContainer.withdrawalService.finalize(id)
+      await withdrawalService.finalize(id)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation RollbackPendingWithdrawal($withdrawalId: ID!) {
+            mutation RollbackPendingWithdrawal($withdrawalId: String!) {
               rollbackPendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success
@@ -636,23 +614,19 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(100)
-      await appContainer.depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const id = uuid()
-      await appContainer.withdrawalService.create({
+      await withdrawalService.create({
         id,
         accountId,
         amount
       })
-      await appContainer.withdrawalService.rollback(id)
+      await withdrawalService.rollback(id)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation RollbackPendingWithdrawal($withdrawalId: ID!) {
+            mutation RollbackPendingWithdrawal($withdrawalId: String!) {
               rollbackPendingWithdrawal(withdrawalId: $withdrawalId) {
                 code
                 success

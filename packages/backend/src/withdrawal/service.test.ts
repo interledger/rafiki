@@ -1,5 +1,5 @@
-import { Model } from 'objection'
-import { Transaction } from 'knex'
+import Knex from 'knex'
+import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import {
@@ -10,62 +10,71 @@ import {
 import { AccountService } from '../account/service'
 import { AssetService } from '../asset/service'
 import { DepositService } from '../deposit/service'
-import {
-  AccountFactory,
-  createTestServices,
-  TestServices,
-  randomAsset
-} from '../testsHelpers'
+import { createTestApp, TestContainer } from '../tests/app'
+import { resetGraphileDb } from '../tests/graphileDb'
+import { GraphileProducer } from '../messaging/graphileProducer'
+import { Config } from '../config/app'
+import { IocContract } from '@adonisjs/fold'
+import { initIocContainer } from '../'
+import { AppServices } from '../app'
+import { AccountFactory } from '../tests/accountFactory'
+import { randomAsset } from '../tests/asset'
+import { truncateTables } from '../tests/tableManager'
 
 describe('Withdrawal Service', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+  let knex: Knex
+  let workerUtils: WorkerUtils
+  let withdrawalService: WithdrawalService
   let accountService: AccountService
   let accountFactory: AccountFactory
   let assetService: AssetService
   let depositService: DepositService
-  let withdrawalService: WithdrawalService
-  let services: TestServices
-  let trx: Transaction
+  const messageProducer = new GraphileProducer()
+  const mockMessageProducer = {
+    send: jest.fn()
+  }
 
   beforeAll(
     async (): Promise<void> => {
-      services = await createTestServices()
-      ;({
-        withdrawalService,
-        accountService,
-        assetService,
-        depositService
-      } = services)
-      accountFactory = new AccountFactory(accountService)
-    }
-  )
-
-  beforeEach(
-    async (): Promise<void> => {
-      trx = await services.knex.transaction()
-      Model.knex(trx)
+      deps = await initIocContainer(Config)
+      deps.bind('messageProducer', async () => mockMessageProducer)
+      appContainer = await createTestApp(deps)
+      workerUtils = await makeWorkerUtils({
+        connectionString: appContainer.connectionUrl
+      })
+      await workerUtils.migrate()
+      messageProducer.setUtils(workerUtils)
+      knex = await deps.use('knex')
+      withdrawalService = await deps.use('withdrawalService')
+      accountService = await deps.use('accountService')
+      assetService = await deps.use('assetService')
+      depositService = await deps.use('depositService')
+      const transferService = await deps.use('transferService')
+      accountFactory = new AccountFactory(accountService, transferService)
     }
   )
 
   afterEach(
     async (): Promise<void> => {
-      await trx.rollback()
-      await trx.destroy()
+      await truncateTables(knex)
     }
   )
 
   afterAll(
     async (): Promise<void> => {
-      await services.shutdown()
+      await resetGraphileDb(knex)
+      await appContainer.shutdown()
+      await workerUtils.release()
     }
   )
 
   describe('Account Withdraw', (): void => {
     test('Can withdraw from account', async (): Promise<void> => {
-      const { id: accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(10)
-      await depositService.create({
-        accountId,
-        amount: startingBalance
+      const { id: accountId, asset } = await accountFactory.build({
+        balance: startingBalance
       })
       const amount = BigInt(5)
       const withdrawal = {
@@ -122,11 +131,9 @@ describe('Withdrawal Service', (): void => {
     })
 
     test('Returns error for insufficient balance', async (): Promise<void> => {
-      const { id: accountId, asset } = await accountFactory.build()
       const startingBalance = BigInt(5)
-      await depositService.create({
-        accountId,
-        amount: startingBalance
+      const { id: accountId, asset } = await accountFactory.build({
+        balance: startingBalance
       })
       const amount = BigInt(10)
       await expect(
@@ -143,10 +150,8 @@ describe('Withdrawal Service', (): void => {
     })
 
     test("Can't create withdrawal with duplicate id", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
-      await depositService.create({
-        accountId,
-        amount: BigInt(10)
+      const { id: accountId } = await accountFactory.build({
+        balance: BigInt(10)
       })
       const amount = BigInt(5)
       const withdrawal = {
@@ -169,10 +174,8 @@ describe('Withdrawal Service', (): void => {
         })
       ).resolves.toEqual(WithdrawalError.WithdrawalExists)
 
-      const { id: diffAccountId } = await accountFactory.build()
-      await depositService.create({
-        accountId: diffAccountId,
-        amount
+      const { id: diffAccountId } = await accountFactory.build({
+        balance: amount
       })
       await expect(
         withdrawalService.create({
@@ -183,11 +186,9 @@ describe('Withdrawal Service', (): void => {
     })
 
     test('Can rollback withdrawal', async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const startingBalance = BigInt(10)
-      await depositService.create({
-        accountId,
-        amount: startingBalance
+      const { id: accountId } = await accountFactory.build({
+        balance: startingBalance
       })
       const amount = BigInt(5)
       const withdrawal = {
@@ -218,12 +219,8 @@ describe('Withdrawal Service', (): void => {
     })
 
     test("Can't finalize finalized withdrawal", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(5)
-      await depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const withdrawal = {
         id: uuid(),
         accountId,
@@ -241,12 +238,8 @@ describe('Withdrawal Service', (): void => {
     })
 
     test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(5)
-      await depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const withdrawal = {
         id: uuid(),
         accountId,
@@ -277,12 +270,8 @@ describe('Withdrawal Service', (): void => {
     })
 
     test("Can't rollback finalized withdrawal", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(5)
-      await depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const withdrawal = {
         id: uuid(),
         accountId,
@@ -300,12 +289,8 @@ describe('Withdrawal Service', (): void => {
     })
 
     test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
       const amount = BigInt(5)
-      await depositService.create({
-        accountId,
-        amount
-      })
+      const { id: accountId } = await accountFactory.build({ balance: amount })
       const withdrawal = {
         id: uuid(),
         accountId,

@@ -22,6 +22,11 @@ import {
   cancelOutgoingPayment,
   getOutcome
 } from './outgoing_payment'
+import {
+  createWithdrawal,
+  finalizePendingWithdrawal,
+  rollbackPendingWithdrawal
+} from './withdrawal'
 import { GraphQLBigInt } from '../scalars'
 
 export const resolvers: Resolvers = {
@@ -32,6 +37,7 @@ export const resolvers: Resolvers = {
     outgoingPayment: getOutgoingPayment
     // deposit: getDeposit,
     // webhook: getWebhook
+    // withdrawal: getWithdrawal
   },
   Account: {
     balance: getBalance,
@@ -40,6 +46,7 @@ export const resolvers: Resolvers = {
     subAccounts: getSubAccounts
     // deposits: getDeposits,
     // webhooks: getWebhooks,
+    // withdrawals: getWithdrawals,
   },
   AccountsConnection: {
     pageInfo: getAccountsConnectionPageInfo
@@ -59,6 +66,9 @@ export const resolvers: Resolvers = {
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo
   },
+  WithdrawalsConnection: {
+    // pageInfo: getWithdrawalsConnectionPageInfo
+  },
   Mutation: {
     createAccount: createAccount,
     updateAccount: updateAccount,
@@ -71,6 +81,9 @@ export const resolvers: Resolvers = {
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,
-    createDeposit: createDeposit
+    createDeposit: createDeposit,
+    createWithdrawal: createWithdrawal,
+    finalizePendingWithdrawal: finalizePendingWithdrawal,
+    rollbackPendingWithdrawal: rollbackPendingWithdrawal
   }
 }
