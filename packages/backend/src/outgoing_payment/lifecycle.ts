@@ -27,6 +27,7 @@ export enum LifecycleError {
 }
 
 // Acquire a quote for the user to approve.
+// "payment" is locked by the "deps.knex" transaction.
 export async function handleQuoting(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
@@ -128,6 +129,7 @@ export async function handleQuoting(
   })
 }
 
+// "payment" is locked by the "deps.knex" transaction.
 export async function handleReady(
   deps: ServiceDependencies,
   payment: OutgoingPayment
@@ -152,6 +154,7 @@ export async function handleReady(
   )
 }
 
+// "payment" is locked by the "deps.knex" transaction.
 export async function handleActivation(
   deps: ServiceDependencies,
   payment: OutgoingPayment
@@ -185,6 +188,7 @@ export async function handleActivation(
   await payment.$query(deps.knex).patch({ state: PaymentState.Sending })
 }
 
+// "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
@@ -331,6 +335,7 @@ export async function handleSending(
   await paymentCompleted(deps, payment)
 }
 
+// "payment" is locked by the "deps.knex" transaction.
 export async function handleCancelling(
   deps: ServiceDependencies,
   payment: OutgoingPayment
