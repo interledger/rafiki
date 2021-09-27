@@ -32,7 +32,6 @@ import { SPSPService } from './spsp/service'
 import { InvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebMonetizationService } from './webmonetization/service'
-import { ConnectorService } from './connector/service'
 import { OutgoingPaymentService } from './outgoing_payment/service'
 import { IlpPlugin } from './outgoing_payment/ilp_plugin'
 
@@ -69,7 +68,6 @@ export interface AppServices {
   invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
   wmService: Promise<WebMonetizationService>
-  connectorService: Promise<ConnectorService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
   makeIlpPlugin: Promise<(sourceAccount: string) => IlpPlugin>
   ratesService: Promise<RatesService>

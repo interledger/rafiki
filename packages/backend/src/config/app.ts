@@ -26,7 +26,6 @@ export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   port: envInt('PORT', 3001),
   adminPort: envInt('ADMIN_PORT', 3003),
-  connectorGraphQLHost: envString('CONNECTOR_GRAPHQL_HOST', '127.0.0.1:3004'),
   databaseUrl:
     process.env.NODE_ENV === 'test'
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`

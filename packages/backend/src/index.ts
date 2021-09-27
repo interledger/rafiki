@@ -25,8 +25,6 @@ import { createTransferService } from './transfer/service'
 import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebMonetizationService } from './webmonetization/service'
-import { createConnectorService } from './connector/service'
-import { connectorClient } from './connector/client'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -231,16 +229,6 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('connectorService', async (deps) => {
-    const logger = await deps.use('logger')
-    const config = await deps.use('config')
-    const client = connectorClient(logger, config.connectorGraphQLHost)
-    return await createConnectorService({
-      logger: logger,
-      client: client
-    })
-  })
-
   container.singleton('ratesService', async (deps) => {
     const config = await deps.use('config')
     return createRatesService({
@@ -270,7 +258,6 @@ export function initIocContainer(
       ratesService: await deps.use('ratesService')
     })
   })
-
   return container
 }
 
