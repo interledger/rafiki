@@ -22,7 +22,6 @@ import {
 } from './core'
 import { Logger } from '../logger/service'
 import { AccountService } from '../account/service'
-import { TransferService } from '../transfer/service'
 
 const ILP_ADDRESS = process.env.ILP_ADDRESS || undefined
 const STREAM_SECRET = process.env.STREAM_SECRET
@@ -34,14 +33,12 @@ interface ServiceDependencies {
   logger?: typeof Logger
   ratesService: RatesService
   accountService: AccountService
-  transferService: TransferService
 }
 
 export async function createConnectorService({
   redis,
   ratesService,
-  accountService,
-  transferService
+  accountService
 }: ServiceDependencies): Promise<Rafiki> {
   if (!ILP_ADDRESS) {
     throw new Error('ILP_ADDRESS is required')
@@ -75,7 +72,6 @@ export async function createConnectorService({
     accounts: accountService,
     redis,
     rates: ratesService,
-    transferService,
     stream: {
       serverSecret: STREAM_SECRET,
       serverAddress: ILP_ADDRESS

@@ -15,13 +15,13 @@ import {
   createAdminAuthMiddleware
 } from './middleware'
 import { LoggingService } from './services/logger'
-import { TransferService } from '../../transfer/service'
 import { IncomingMessage, ServerResponse } from 'http'
 import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
 import { DebugLogger } from './services/logger/debug'
 import { RatesService } from 'rates'
 import { createAccountMiddleware } from './middleware/account'
 import { createStreamAddressMiddleware } from './middleware/stream-address'
+import { Transfer, TransferError } from '../../account/service'
 
 export interface RafikiAccount {
   id: string
@@ -45,6 +45,14 @@ export interface RafikiAccount {
   maxPacketAmount?: bigint
 }
 
+export interface TransferOptions {
+  sourceAccount: RafikiAccount
+  destinationAccount: RafikiAccount
+
+  sourceAmount: bigint
+  destinationAmount?: bigint
+}
+
 export interface AccountService {
   get(id: string): Promise<RafikiAccount | undefined>
   getByDestinationAddress(
@@ -52,6 +60,7 @@ export interface AccountService {
   ): Promise<RafikiAccount | undefined>
   getByToken(token: string): Promise<RafikiAccount | undefined>
   getAddress(id: string): Promise<string | undefined>
+  transferFunds(options: TransferOptions): Promise<Transfer | TransferError>
 }
 
 export interface RafikiServices {
@@ -61,7 +70,6 @@ export interface RafikiServices {
   rates: RatesService
   redis: Redis
   streamServer: StreamServer
-  transferService: TransferService
 }
 
 export type RafikiConfig = Partial<RafikiServices> & {
@@ -71,7 +79,6 @@ export type RafikiConfig = Partial<RafikiServices> & {
     serverSecret: Buffer
     serverAddress: string
   }
-  transferService: TransferService
 }
 
 export type RafikiRequestMixin = {
@@ -150,9 +157,6 @@ export class Rafiki<T = any> {
       },
       get accounts(): AccountService {
         return accountsOrThrow()
-      },
-      get transferService(): TransferService {
-        return config.transferService
       },
       logger
     }

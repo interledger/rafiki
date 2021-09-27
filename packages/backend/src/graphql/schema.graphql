@@ -39,6 +39,16 @@ type Mutation {
   "Cancel a Ready payment."
   cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
 
+  "Transfer between accounts"
+  transfer(
+    sourceAmount: UInt64!
+    sourceAccountId: ID!
+    destinationAccountId: ID!
+    destinationAmount: UInt64
+    autoCommit: Boolean
+    idempotencyKey: ID!
+  ): TransferMutationResponse
+
   "Create webhook"
   createWebhook(
     "The id of the account to create the webhook for."
@@ -487,6 +497,12 @@ type CreateSubAccountMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   account: Account
+}
+
+type TransferMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
 }
 
 type CreateWebhookMutationResponse implements MutationResponse {

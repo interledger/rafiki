@@ -1,6 +1,6 @@
 import { Errors } from 'ilp-packet'
 import { RafikiContext } from '../rafiki'
-import { isTransferError } from '../../../transfer/service'
+import { isTransferError } from '../../../account/service'
 
 export function createBalanceMiddleware() {
   return async (
@@ -29,9 +29,9 @@ export function createBalanceMiddleware() {
     }
 
     // Update balances on prepare
-    const trxOrError = await services.transferService.create({
-      sourceAccountId: accounts.incoming.id,
-      destinationAccountId: accounts.outgoing.id,
+    const trxOrError = await services.accounts.transferFunds({
+      sourceAccount: accounts.incoming,
+      destinationAccount: accounts.outgoing,
       sourceAmount,
       destinationAmount: destinationAmountOrError
     })

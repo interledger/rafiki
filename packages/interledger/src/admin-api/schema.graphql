@@ -1,20 +1,5 @@
 type Mutation {
-  "Transfer between Interledger accounts"
-  transfer(
-    sourceAmount: UInt64!
-    sourceAccountId: ID!
-    destinationAccountId: ID!
-    destinationAmount: UInt64
-    autoCommit: Boolean
-    idempotencyKey: ID!
-  ): TransferMutationResponse
-}
 
-
-type TransferMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
 }
 
 type PageInfo {

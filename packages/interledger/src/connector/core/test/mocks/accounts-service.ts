@@ -1,10 +1,9 @@
-import { RafikiAccount } from '../../rafiki'
+import { AccountService, RafikiAccount } from '../../rafiki'
 
 import {
-  Transaction,
   Transfer,
   TransferError
-} from '../../../../transfer/service'
+} from '../../../../account/service'
 
 export type MockIlpAccount = RafikiAccount & {
   balance: bigint
@@ -15,7 +14,7 @@ export type MockIlpAccount = RafikiAccount & {
   }
 }
 
-export class MockAccountsService {
+export class MockAccountsService implements AccountService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
   constructor(private serverIlpAddress: string) {}
@@ -56,21 +55,22 @@ export class MockAccountsService {
     return account
   }
 
-  async transferFunds(options: Transfer): Promise<Transaction | TransferError> {
-    const src = this.accounts.get(options.sourceAccountId)
-    if (!src) return TransferError.UnknownSourceAccount
-    const dst = this.accounts.get(options.destinationAccountId)
-    if (!dst) return TransferError.UnknownDestinationAccount
-    if (src.balance < options.sourceAmount) {
+  async transferFunds(options: {
+    sourceAccount: MockIlpAccount,
+    destinationAccount: MockIlpAccount,
+    sourceAmount: bigint,
+    destinationAmount: bigint
+  }): Promise<Transfer | TransferError> {
+    if (options.sourceAccount.balance < options.sourceAmount) {
       return TransferError.InsufficientBalance
     }
-    src.balance -= options.sourceAmount
+    options.sourceAccount.balance -= options.sourceAmount
     return {
       commit: async () => {
-        dst.balance += options.destinationAmount ?? options.sourceAmount
+        options.destinationAccount.balance += options.destinationAmount ?? options.sourceAmount
       },
       rollback: async () => {
-        src.balance += options.sourceAmount
+        options.sourceAccount.balance += options.sourceAmount
       }
     }
   }

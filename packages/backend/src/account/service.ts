@@ -15,9 +15,19 @@ import {
   HttpTokenService
 } from '../httpToken/service'
 import { BaseService } from '../shared/baseService'
-import { UnknownBalanceError } from '../shared/errors'
+import {
+  BalanceTransferError,
+  UnknownBalanceError,
+  UnknownLiquidityAccountError
+} from '../shared/errors'
 import { Pagination } from '../shared/pagination'
 import { validateId } from '../shared/utils'
+import {
+  CommitTransferError,
+  CreateTransferError,
+  TransferService,
+  TwoPhaseTransfer
+} from '../transfer/service'
 import { UnknownAssetError } from './errors'
 import { Account, SubAccount } from './model'
 
@@ -94,6 +104,34 @@ interface Peer {
   ilpAddress: string
 }
 
+export interface TransferOptions {
+  sourceAccount: Account
+  destinationAccount: Account
+
+  sourceAmount: bigint
+  destinationAmount?: bigint
+}
+
+export interface Transfer {
+  commit: () => Promise<void | TransferError>
+  rollback: () => Promise<void | TransferError>
+}
+
+export enum TransferError {
+  InsufficientBalance = 'InsufficientBalance',
+  InsufficientLiquidity = 'InsufficientLiquidity',
+  InvalidSourceAmount = 'InvalidSourceAmount',
+  InvalidDestinationAmount = 'InvalidDestinationAmount',
+  SameAccounts = 'SameAccounts',
+  TransferAlreadyCommitted = 'TransferAlreadyCommitted',
+  TransferAlreadyRejected = 'TransferAlreadyRejected',
+  TransferExpired = 'TransferExpired'
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isTransferError = (o: any): o is TransferError =>
+  Object.values(TransferError).includes(o)
+
 const UUID_LENGTH = 36
 
 export interface AccountService {
@@ -116,12 +154,14 @@ export interface AccountService {
     pagination?: Pagination
     superAccountId?: string
   }): Promise<Account[]>
+  transferFunds(options: TransferOptions): Promise<Transfer | TransferError>
 }
 
 interface ServiceDependencies extends BaseService {
   assetService: AssetService
   balanceService: BalanceService
   httpTokenService: HttpTokenService
+  transferService: TransferService
   ilpAddress?: string
   peerAddresses: Peer[]
 }
@@ -132,6 +172,7 @@ export function createAccountService({
   assetService,
   balanceService,
   httpTokenService,
+  transferService,
   ilpAddress,
   peerAddresses
 }: ServiceDependencies): AccountService {
@@ -144,6 +185,7 @@ export function createAccountService({
     assetService,
     balanceService,
     httpTokenService,
+    transferService,
     ilpAddress,
     peerAddresses
   }
@@ -159,7 +201,8 @@ export function createAccountService({
     getSubAccounts: (id) => getSubAccounts(deps, id),
     getWithSuperAccounts: (id) => getAccountWithSuperAccounts(deps, id),
     getBalance: (id) => getAccountBalance(deps, id),
-    getPage: (options) => getAccountsPage(deps, options)
+    getPage: (options) => getAccountsPage(deps, options),
+    transferFunds: (options) => transferFunds(deps, options)
   }
 }
 
@@ -561,6 +604,146 @@ async function getAccountAddress(
   if (deps.ilpAddress) {
     return deps.ilpAddress + '.' + accountId
   }
+}
+
+async function transferFunds(
+  deps: ServiceDependencies,
+  {
+    sourceAccount,
+    destinationAccount,
+    sourceAmount,
+    destinationAmount
+  }: TransferOptions
+): Promise<Transfer | TransferError> {
+  if (sourceAccount.id === destinationAccount.id) {
+    return TransferError.SameAccounts
+  }
+  if (sourceAmount <= BigInt(0)) {
+    return TransferError.InvalidSourceAmount
+  }
+  if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
+    return TransferError.InvalidDestinationAmount
+  }
+  const transfers: TwoPhaseTransfer[] = []
+
+  if (
+    sourceAccount.asset.code === destinationAccount.asset.code &&
+    sourceAccount.asset.scale === destinationAccount.asset.scale
+  ) {
+    transfers.push({
+      id: uuid(),
+      sourceBalanceId: sourceAccount.balanceId,
+      destinationBalanceId: destinationAccount.balanceId,
+      amount:
+        destinationAmount && destinationAmount < sourceAmount
+          ? destinationAmount
+          : sourceAmount,
+      twoPhaseCommit: true
+    })
+    if (destinationAmount && sourceAmount !== destinationAmount) {
+      if (destinationAmount < sourceAmount) {
+        transfers.push({
+          id: uuid(),
+          sourceBalanceId: sourceAccount.balanceId,
+          destinationBalanceId: sourceAccount.asset.liquidityBalanceId,
+          amount: sourceAmount - destinationAmount,
+          twoPhaseCommit: true
+        })
+      } else {
+        transfers.push({
+          id: uuid(),
+          sourceBalanceId: destinationAccount.asset.liquidityBalanceId,
+          destinationBalanceId: destinationAccount.balanceId,
+          amount: destinationAmount - sourceAmount,
+          twoPhaseCommit: true
+        })
+      }
+    }
+  } else {
+    if (!destinationAmount) {
+      return TransferError.InvalidDestinationAmount
+    }
+    transfers.push(
+      {
+        id: uuid(),
+        sourceBalanceId: sourceAccount.balanceId,
+        destinationBalanceId: sourceAccount.asset.liquidityBalanceId,
+        amount: sourceAmount,
+        twoPhaseCommit: true
+      },
+      {
+        id: uuid(),
+        sourceBalanceId: destinationAccount.asset.liquidityBalanceId,
+        destinationBalanceId: destinationAccount.balanceId,
+        amount: destinationAmount,
+        twoPhaseCommit: true
+      }
+    )
+  }
+  const error = await deps.transferService.create(transfers)
+  if (error) {
+    switch (error.code) {
+      case CreateTransferError.debit_account_not_found:
+        if (error.index === 1) {
+          throw new UnknownLiquidityAccountError(destinationAccount.asset)
+        }
+        throw new UnknownBalanceError(sourceAccount.id)
+      case CreateTransferError.credit_account_not_found:
+        if (error.index === 1) {
+          throw new UnknownBalanceError(destinationAccount.id)
+        }
+        throw new UnknownLiquidityAccountError(sourceAccount.asset)
+      case CreateTransferError.exceeds_credits:
+        if (error.index === 1) {
+          return TransferError.InsufficientLiquidity
+        }
+        return TransferError.InsufficientBalance
+      default:
+        throw new BalanceTransferError(error.code)
+    }
+  }
+
+  const trx: Transfer = {
+    commit: async (): Promise<void | TransferError> => {
+      const error = await deps.transferService.commit(
+        transfers.map((transfer) => transfer.id)
+      )
+      if (error) {
+        switch (error.code) {
+          case CommitTransferError.linked_event_failed:
+            break
+          case CommitTransferError.transfer_expired:
+            return TransferError.TransferExpired
+          case CommitTransferError.already_committed:
+            return TransferError.TransferAlreadyCommitted
+          case CommitTransferError.already_committed_but_rejected:
+            return TransferError.TransferAlreadyRejected
+          default:
+            throw new BalanceTransferError(error.code)
+        }
+      }
+    },
+    rollback: async (): Promise<void | TransferError> => {
+      const error = await deps.transferService.rollback(
+        transfers.map((transfer) => transfer.id)
+      )
+      if (error) {
+        switch (error.code) {
+          case CommitTransferError.linked_event_failed:
+            break
+          case CommitTransferError.transfer_expired:
+            return TransferError.TransferExpired
+          case CommitTransferError.already_committed_but_accepted:
+            return TransferError.TransferAlreadyCommitted
+          case CommitTransferError.already_committed:
+            return TransferError.TransferAlreadyRejected
+          default:
+            throw new BalanceTransferError(error.code)
+        }
+      }
+    }
+  }
+  return trx
 }
 
 /** TODO: Base64 encode/decode the cursors

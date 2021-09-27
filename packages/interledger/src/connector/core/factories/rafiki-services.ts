@@ -17,16 +17,9 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   //  return new InMemoryRouter(peers, { ilpAddress: 'test.rafiki' })
   //})
   .option('ilpAddress', 'test.rafiki')
-  .option('accountService', ['ilpAddress'], (ilpAddress: string) => {
+  .attr('accounts', ['ilpAddress'], (ilpAddress: string) => {
     return new MockAccountsService(ilpAddress)
   })
-  .attr(
-    'accounts',
-    ['accountService'],
-    (accountService: MockAccountsService) => {
-      return accountService
-    }
-  )
   .attr('logger', TestLoggerFactory.build())
   .attr('rates', {
     convert: async (opts) => opts.sourceAmount,
@@ -49,13 +42,4 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       serverAddress: 'test.rafiki',
       serverSecret: crypto.randomBytes(32)
     })
-  )
-  .attr(
-    'transferService',
-    ['accountService'],
-    (accountService: MockAccountsService) => {
-      return {
-        create: async (transfer) => accountService.transferFunds(transfer)
-      }
-    }
   )

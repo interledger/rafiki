@@ -148,6 +148,7 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     const assetService = await deps.use('assetService')
     const balanceService = await deps.use('balanceService')
+    const transferService = await deps.use('transferService')
     const httpTokenService = await deps.use('httpTokenService')
     return await createAccountService({
       logger: logger,
@@ -155,6 +156,7 @@ export function initIocContainer(
       assetService,
       balanceService,
       httpTokenService,
+      transferService,
       ilpAddress: config.ilpAddress,
       peerAddresses: config.peerAddresses
     })

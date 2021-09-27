@@ -74,7 +74,7 @@ describe('Balance Middleware', function () {
   })
 
   test('ignores 0 amount packets', async () => {
-    const transferFundsSpy = jest.spyOn(services.transferService, 'create')
+    const transferFundsSpy = jest.spyOn(accounts, 'transferFunds')
     const prepare = IlpPrepareFactory.build({ amount: '0' })
     const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
