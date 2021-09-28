@@ -29,7 +29,8 @@ export const createTestApp = async (
 ): Promise<TestContainer> => {
   const config = await container.use('config')
   config.port = 0
-  config.adminPort = 0
+  config.connectorPort = 0
+  config.connectorAdminPort = 0
   const logger = createLogger({
     prettyPrint: {
       translateTime: true,

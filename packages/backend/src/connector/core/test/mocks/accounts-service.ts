@@ -1,9 +1,6 @@
 import { AccountService, RafikiAccount } from '../../rafiki'
 
-import {
-  Transfer,
-  TransferError
-} from '../../../../account/service'
+import { Transfer, TransferError } from '../../../../account/service'
 
 export type MockIlpAccount = RafikiAccount & {
   balance: bigint
@@ -56,9 +53,9 @@ export class MockAccountsService implements AccountService {
   }
 
   async transferFunds(options: {
-    sourceAccount: MockIlpAccount,
-    destinationAccount: MockIlpAccount,
-    sourceAmount: bigint,
+    sourceAccount: MockIlpAccount
+    destinationAccount: MockIlpAccount
+    sourceAmount: bigint
     destinationAmount: bigint
   }): Promise<Transfer | TransferError> {
     if (options.sourceAccount.balance < options.sourceAmount) {
@@ -67,7 +64,8 @@ export class MockAccountsService implements AccountService {
     options.sourceAccount.balance -= options.sourceAmount
     return {
       commit: async () => {
-        options.destinationAccount.balance += options.destinationAmount ?? options.sourceAmount
+        options.destinationAccount.balance +=
+          options.destinationAmount ?? options.sourceAmount
       },
       rollback: async () => {
         options.sourceAccount.balance += options.sourceAmount

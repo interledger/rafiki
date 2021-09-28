@@ -75,10 +75,7 @@ export interface RafikiServices {
 export type RafikiConfig = Partial<RafikiServices> & {
   rates: RatesService
   redis: Redis
-  stream: {
-    serverSecret: Buffer
-    serverAddress: string
-  }
+  streamServer: StreamServer
 }
 
 export type RafikiRequestMixin = {
@@ -139,7 +136,7 @@ export class Rafiki<T = any> {
     //  throw new Error('No router service provided to the app')
     //}
 
-    this.streamServer = new StreamServer(config.stream)
+    this.streamServer = config.streamServer
     const { redis, streamServer } = this
     // Set global context that exposes services
     this.publicServer.context.services = this.adminServer.context.services = {

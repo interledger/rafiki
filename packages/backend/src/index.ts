@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events'
+import { Server } from 'http'
 import createLogger from 'pino'
 import Knex from 'knex'
 import { Model } from 'objection'
@@ -25,9 +26,12 @@ import { createTransferService } from './transfer/service'
 import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebMonetizationService } from './webmonetization/service'
+import { createConnectorService } from './connector'
 
 const container = initIocContainer(Config)
 const app = new App(container)
+let connectorServer: Server
+let connectorAdminServer: Server
 
 export function initIocContainer(
   config: typeof Config
@@ -268,6 +272,20 @@ export const gracefulShutdown = async (
   const logger = await container.use('logger')
   logger.info('shutting down.')
   await app.shutdown()
+  if (connectorServer) {
+    await new Promise((resolve, reject) => {
+      connectorServer.close((err?: Error) =>
+        err ? reject(err) : resolve(null)
+      )
+    })
+  }
+  if (connectorAdminServer) {
+    await new Promise((resolve, reject) => {
+      connectorAdminServer.close((err?: Error) =>
+        err ? reject(err) : resolve(null)
+      )
+    })
+  }
   const knex = await container.use('knex')
   await knex.destroy()
   const workerUtils = await container.use('workerUtils')
@@ -346,6 +364,20 @@ export const start = async (
   await app.boot()
   app.listen(config.port)
   logger.info(`Listening on ${app.getPort()}`)
+
+  const connectorApp = await createConnectorService({
+    logger: logger,
+    redis: await container.use('redis'),
+    accountService: await container.use('accountService'),
+    ratesService: await container.use('ratesService'),
+    streamServer: await container.use('streamServer'),
+    ilpAddress: config.ilpAddress
+  })
+  connectorServer = connectorApp.listenPublic(config.connectorPort)
+  logger.info(`Connector listening on ${config.connectorPort}`)
+  connectorAdminServer = connectorApp.listenAdmin(config.connectorAdminPort)
+  logger.info(`Connector listening on ${config.connectorAdminPort}`)
+  logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
 
 // If this script is run directly, start the server

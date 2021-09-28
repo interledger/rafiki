@@ -30,7 +30,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   .attr(
     'redis',
     () =>
-      new IORedis(`${process.env.REDIS}/${process.env.JEST_WORKER_ID}`, {
+      new IORedis(`${process.env.REDIS_URL}/${process.env.JEST_WORKER_ID}`, {
         // lazyConnect so that tests that don't use Redis don't have to disconnect it when they're finished.
         lazyConnect: true,
         stringNumbers: true
@@ -38,8 +38,10 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   )
   .attr(
     'streamServer',
-    new StreamServer({
-      serverAddress: 'test.rafiki',
-      serverSecret: crypto.randomBytes(32)
-    })
+    ['ilpAddress'],
+    (ilpAddress: string) =>
+      new StreamServer({
+        serverAddress: ilpAddress,
+        serverSecret: crypto.randomBytes(32)
+      })
   )

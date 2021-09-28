@@ -1,7 +1,7 @@
-import { randomBytes } from 'crypto'
 import compose = require('koa-compose')
 import IORedis from 'ioredis'
 import { RatesService } from 'rates'
+import { StreamServer } from '@interledger/stream-receiver'
 
 import {
   createApp,
@@ -23,30 +23,25 @@ import {
 import { Logger } from '../logger/service'
 import { AccountService } from '../account/service'
 
-const ILP_ADDRESS = process.env.ILP_ADDRESS || undefined
-const STREAM_SECRET = process.env.STREAM_SECRET
-  ? Buffer.from(process.env.STREAM_SECRET, 'base64')
-  : randomBytes(32)
-
 interface ServiceDependencies {
   redis: IORedis.Redis
   logger?: typeof Logger
   ratesService: RatesService
   accountService: AccountService
+  streamServer: StreamServer
+  ilpAddress: string
 }
 
 export async function createConnectorService({
   redis,
   ratesService,
-  accountService
+  accountService,
+  streamServer,
+  ilpAddress
 }: ServiceDependencies): Promise<Rafiki> {
-  if (!ILP_ADDRESS) {
-    throw new Error('ILP_ADDRESS is required')
-  }
-
   const incoming = compose([
     // Incoming Rules
-    createIncomingErrorHandlerMiddleware(ILP_ADDRESS),
+    createIncomingErrorHandlerMiddleware(ilpAddress),
     createIncomingMaxPacketAmountMiddleware(),
     createIncomingRateLimitMiddleware({}),
     createIncomingThroughputMiddleware()
@@ -72,10 +67,7 @@ export async function createConnectorService({
     accounts: accountService,
     redis,
     rates: ratesService,
-    stream: {
-      serverSecret: STREAM_SECRET,
-      serverAddress: ILP_ADDRESS
-    }
+    streamServer
   })
 
   const appRouter = new RafikiRouter()
@@ -83,7 +75,7 @@ export async function createConnectorService({
   // Default ILP routes
   // TODO Understand the priority and workings of the router... Seems to do funky stuff. Maybe worth just writing ILP one?
   appRouter.ilpRoute('test.*', middleware)
-  appRouter.ilpRoute('peer.config', createIldcpProtocolController(ILP_ADDRESS))
+  appRouter.ilpRoute('peer.config', createIldcpProtocolController(ilpAddress))
   //appRouter.ilpRoute('peer.route.*', createCcpProtocolController())
   // TODO Handle echo
   app.use(appRouter.routes())

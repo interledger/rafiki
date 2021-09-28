@@ -2989,10 +2989,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/debug@npm:^4.1.0, @types/debug@npm:^4.1.2, @types/debug@npm:^4.1.5":
+"@types/debug@npm:^4.1.0, @types/debug@npm:^4.1.2":
   version: 4.1.5
   resolution: "@types/debug@npm:4.1.5"
   checksum: 416ad24bc589be0fb8c78bea972aa7d4ffdf6b136239701b1792674463b2dbf8c6707f6055ec484f79ec1f2b528ffef90c87e55df7e4a0f458184cad5bf0cfc8
+  languageName: node
+  linkType: hard
+
+"@types/debug@npm:^4.1.7":
+  version: 4.1.7
+  resolution: "@types/debug@npm:4.1.7"
+  dependencies:
+    "@types/ms": "*"
+  checksum: cd865a371a4b4184b3f8e25461338fef3134b37ffed983d471f4538c4da7974f661edb25f80b41f2a46f951c735a8163758c094e8bf0869e3abc1f32e85f064b
   languageName: node
   linkType: hard
 
@@ -3062,10 +3071,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/faker@npm:^5.5.3":
-  version: 5.5.3
-  resolution: "@types/faker@npm:5.5.3"
-  checksum: 400a10db2a027bbfa3bd91c4a04fbb2bab4ab98f20a3a60b505db1947f24a8efc9040739bf2380d2635d4db558eb13018dd3025a38f5d8643c0fc058f24b5220
+"@types/faker@npm:^5.5.8":
+  version: 5.5.8
+  resolution: "@types/faker@npm:5.5.8"
+  checksum: 9c36b91aae36951b7ae0f0ae428272963b5d0c4c5bd88436211a616a8e217683df4d5633441367856a7b9cad45c8ee6aa97dd8b7168534032daf56dfc9415216
   languageName: node
   linkType: hard
 
@@ -3342,7 +3351,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/koa@npm:^2.0.46, @types/koa@npm:^2.13.3":
+"@types/koa@npm:^2.0.46":
   version: 2.13.3
   resolution: "@types/koa@npm:2.13.3"
   dependencies:
@@ -3385,10 +3394,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.14.168":
-  version: 4.14.168
-  resolution: "@types/lodash@npm:4.14.168"
-  checksum: 9a4e25f89fc035b9f0388f1f7be85e5eff49f9e6db0d93432c9a89fce0916f8a89db4e8290415f7ea02de6b00d3573826378dcb655b7b2d20530a6e8d6dd6fd0
+"@types/lodash@npm:^4.14.175":
+  version: 4.14.175
+  resolution: "@types/lodash@npm:4.14.175"
+  checksum: d56c57f3784ff73d84ba5d2bb1dba8f6f88f97fb36113010c4a69fd7b823e4fe855b2fbabe8d020bc723e83dc84dc1fc3fc900a6e341fd12a8aaf75f1fddeb70
   languageName: node
   linkType: hard
 
@@ -3424,6 +3433,13 @@ __metadata:
   version: 1.2.1
   resolution: "@types/minimist@npm:1.2.1"
   checksum: 3a6f5fe35f1656b34a4ccd5a5db1c38509d8d5b59625865b8c2b997994fcb0cfde0d9af7c5507b95dc5a0a32a22886c189e505cd2e52a7ef36d3c9982f07ed5a
+  languageName: node
+  linkType: hard
+
+"@types/ms@npm:*":
+  version: 0.7.31
+  resolution: "@types/ms@npm:0.7.31"
+  checksum: 7ff9798a408aaa371f3d0059f013d09b6eb471cd62019f35924301608f57279943b5d322f497f2ea9ae65477e2a47c26dfd8dd833a4352f883a8a86c051f7125
   languageName: node
   linkType: hard
 
@@ -3589,10 +3605,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/rosie@npm:^0.0.39":
-  version: 0.0.39
-  resolution: "@types/rosie@npm:0.0.39"
-  checksum: 89d010c5b78ea4cc5348f55a79429afdbaacaea8582321a9c088cd025457638b0bf4b3d28b8165674ba2f00bc15f2b55ecdeaf0013c6833b0911559fd824195e
+"@types/rosie@npm:^0.0.40":
+  version: 0.0.40
+  resolution: "@types/rosie@npm:0.0.40"
+  checksum: fef3efc73e096ab0a1b1211abf7c07ba5da017790668679ca06ebef90229fe0ad84ffcae378db43f0729502ed9b5c6c9959fafe81dcecd9f0fd9b57dfafb0c78
   languageName: node
   linkType: hard
 
@@ -4019,7 +4035,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^8.0.1, ajv@npm:^8.1.0":
+"ajv@npm:^8.0.1":
   version: 8.1.0
   resolution: "ajv@npm:8.1.0"
   dependencies:
@@ -4028,6 +4044,18 @@ __metadata:
     require-from-string: ^2.0.2
     uri-js: ^4.2.2
   checksum: d946a17d0f44418863d23282868ce79c51ba3a3ca9cca4eb9a0e66151c9f8cf790febb4a1ffe5a831a52d21639d3e140586736406cdde177a804aebacd45f2ca
+  languageName: node
+  linkType: hard
+
+"ajv@npm:^8.6.3":
+  version: 8.6.3
+  resolution: "ajv@npm:8.6.3"
+  dependencies:
+    fast-deep-equal: ^3.1.1
+    json-schema-traverse: ^1.0.0
+    require-from-string: ^2.0.2
+    uri-js: ^4.2.2
+  checksum: d9abd69cbafc06bb38484aac957aa5857f1c4ba65ab86863a78c9aafa04dc67141f57ff1b75569371ba409068a668812fecbf22a5f90b7e083c18f659ae80779
   languageName: node
   linkType: hard
 
@@ -4797,6 +4825,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^0.21.4":
+  version: 0.21.4
+  resolution: "axios@npm:0.21.4"
+  dependencies:
+    follow-redirects: ^1.14.0
+  checksum: e6d42b269b599d36eb13be0671c237781f32e6ae72be824297c55a3e1ce63b22ba4f46bad5ab28da7d3bae50a72637d55c792cf803be1cf9de6a8bcd6d0dcc1a
+  languageName: node
+  linkType: hard
+
 "babel-jest@npm:^26.6.3":
   version: 26.6.3
   resolution: "babel-jest@npm:26.6.3"
@@ -4944,20 +4981,31 @@ __metadata:
     "@interledger/stream-receiver": ^0.2.2
     "@koa/cors": ^3.1.0
     "@koa/router": ^10.0.0
+    "@types/debug": ^4.1.7
+    "@types/faker": ^5.5.8
     "@types/ioredis": ^4.22.3
     "@types/jest": ^26.0.22
-    "@types/koa": ^2.13.3
+    "@types/koa": ^2.13.1
     "@types/koa-bodyparser": ^4.3.0
+    "@types/koa-compose": ^3.2.5
+    "@types/koa-joi-router": ^5.2.5
     "@types/koa__cors": ^3.0.2
     "@types/koa__router": ^8.0.4
+    "@types/lodash": ^4.14.175
     "@types/luxon": ^1.26.4
     "@types/nock": ^11.1.0
     "@types/pino": ^6.3.7
+    "@types/rosie": ^0.0.40
     "@types/uuid": ^8.3.0
     add: ^2.0.6
+    ajv: ^8.6.3
     apollo-server-koa: ^2.25.1
+    axios: ^0.21.4
     base64url: ^3.0.1
     cross-fetch: ^3.1.4
+    debug: ^4.3.2
+    extensible-error: ^1.0.2
+    faker: ^5.5.3
     fishery: ^1.2.0
     got: ^11.8.2
     graphile-scheduler: ^0.8.0
@@ -4967,20 +5015,28 @@ __metadata:
     graphql-tools: ^7.0.5
     ilp-packet: ^3.1.2
     ilp-plugin-http: ^1.6.1
+    ilp-protocol-ccp: ^1.2.2
     ilp-protocol-ildcp: ^2.2.2
+    ilp-protocol-stream: ^2.7.0
     ioredis: ^4.26.0
     knex: ^0.21.17
     koa: ^2.13.1
     koa-bodyparser: ^4.3.0
+    koa-compose: ^4.1.0
+    koa-joi-router: ^7.0.0
+    lodash: ^4.17.21
     luxon: ^2.0.1
     nock: ^13.1.0
     node-mocks-http: ^1.10.1
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
+    oer-utils: ^5.1.2
     pg: ^8.6.0
     pino: ^6.11.3
     pino-pretty: ^4.7.1
     rates: "workspace:packages/rates"
+    raw-body: ^2.4.1
+    rosie: ^2.1.0
     testcontainers: ^7.20.4
     tigerbeetle-node: ^0.4.1
     tmp: ^0.2.1
@@ -7591,6 +7647,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"follow-redirects@npm:^1.14.0":
+  version: 1.14.4
+  resolution: "follow-redirects@npm:1.14.4"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: 93def3c22eba16caa4ff6f6956ccfda5a50e889545b1ba0046194dd8e368ff79ba6ef681b06e6dc7032b50bc93ca59e9441aa8143cb26f43f40a20bbd6374639
+  languageName: node
+  linkType: hard
+
 "for-each@npm:^0.3.3":
   version: 0.3.3
   resolution: "for-each@npm:0.3.3"
@@ -8857,51 +8923,28 @@ __metadata:
     "@graphql-tools/schema": ^8.0.1
     "@interledger/stream-receiver": ^0.2.2
     "@koa/router": ^10.1.0
-    "@types/debug": ^4.1.5
-    "@types/faker": ^5.5.3
     "@types/ioredis": ^4.26.4
     "@types/jest": ^26.0.24
     "@types/jsonwebtoken": ^8.5.1
     "@types/koa": ^2.13.1
     "@types/koa-bodyparser": ^4.3.0
-    "@types/koa-compose": ^3.2.5
-    "@types/koa-joi-router": ^5.2.5
     "@types/koa__router": ^8.0.4
-    "@types/lodash": ^4.14.168
     "@types/node": ^14.14.41
     "@types/node-fetch": ^2.5.10
     "@types/pino": ^6.3.9
-    "@types/rosie": ^0.0.39
     "@types/uuid": ^8.3.1
-    ajv: ^8.1.0
     apollo-server: ^3.1.1
-    axios: ^0.21.1
     cross-fetch: ^3.1.4
-    debug: ^4.3.1
-    extensible-error: ^1.0.2
-    faker: ^5.5.3
     graphql: ^15.5.1
     graphql-scalars: ^1.10.0
-    ilp-packet: ^3.1.2
-    ilp-protocol-ccp: ^1.2.2
-    ilp-protocol-ildcp: ^2.2.2
-    ilp-protocol-stream: ^2.7.0
     ioredis: ^4.27.3
     knex: ^0.21.19
     koa: ^2.13.1
     koa-bodyparser: ^4.3.0
-    koa-compose: ^4.1.0
-    koa-joi-router: ^7.0.0
     koas: ^1.5.0
-    lodash: ^4.17.21
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
-    oer-utils: ^5.1.2
     pg: ^8.6.0
-    pino: ^6.11.3
-    rates: "workspace:packages/rates"
-    raw-body: ^2.4.1
-    rosie: ^2.1.0
     rxjs: ^6.6.7
     testcontainers: ^7.20.4
     tigerbeetle-node: ^0.4.1
@@ -15063,9 +15106,9 @@ typescript@^4.2.4:
   linkType: hard
 
 "urijs@npm:^1.19.0":
-  version: 1.19.6
-  resolution: "urijs@npm:1.19.6"
-  checksum: 8c5c469d2e38ce1ddc0b2ed08e3dbce4e432e5f020c0fde07437aceafd2fc249f545e17921ea137b541bacb46508b414d1f0ec62ee5afd0ed5dad404f47653be
+  version: 1.19.7
+  resolution: "urijs@npm:1.19.7"
+  checksum: 684b31ec964da57a4c24203efdddaac5be5061b76594dfe821504b38d2844effeb79f7d7a27f742e1392a24821f729947794d65942dc865244c6430ec515b36a
   languageName: node
   linkType: hard
 
