@@ -19,11 +19,8 @@ export function createOutgoingExpireMiddleware() {
       throw new TransferTimedOutError('packet expired.')
     }, duration)
 
-    await next().catch((error) => {
+    await next().finally(() => {
       clearTimeout(timeout)
-      throw error
     })
-
-    clearTimeout(timeout)
   }
 }

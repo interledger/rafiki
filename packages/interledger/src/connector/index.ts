@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto'
 import compose = require('koa-compose')
 import IORedis from 'ioredis'
+import { RatesService } from 'rates'
 
 import {
   createApp,
@@ -17,8 +18,7 @@ import {
   createIncomingThroughputMiddleware,
   createOutgoingReduceExpiryMiddleware,
   createOutgoingThroughputMiddleware,
-  createOutgoingValidateFulfillmentMiddleware,
-  RatesService
+  createOutgoingValidateFulfillmentMiddleware
 } from './core'
 import { Logger } from '../logger/service'
 import { AccountsService } from '../accounts/service'

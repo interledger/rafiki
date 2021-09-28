@@ -1,36 +1,122 @@
-import createLogger from 'pino'
-import { createECBService } from './ecb/service'
-import { createXRPService } from './xrp/service'
-import { createHTTPService, HTTPService } from './http/service'
-import { config as envConfig, Config } from './config'
+import Axios, { AxiosInstance } from 'axios'
+import { convert, ConvertOptions, LoggingService } from './util'
 
-export type App = HTTPService
+const REQUEST_TIMEOUT = 5_000 // millseconds
 
-export async function createApp(config: Config): Promise<App> {
-  const ecbService = createECBService()
-  const xrpService = createXRPService()
-  const logger = createLogger()
-  const server = await createHTTPService({
-    config,
-    logger,
-    ecbService,
-    xrpService
-  })
-  return server
+export interface RatesService {
+  prices(): Promise<Prices>
+  convert(
+    opts: Omit<ConvertOptions, 'exchangeRate'>
+  ): Promise<bigint | ConvertError>
 }
 
-export async function shutdownApp(app: App): Promise<void> {
-  await new Promise((resolve, reject) => {
-    app.close((err) => (err ? reject(err) : resolve(null)))
-  })
+interface ServiceDependencies {
+  logger: LoggingService
+  // If `url` is not set, the connector cannot convert between currencies.
+  pricesUrl?: string
+  // Duration (milliseconds) that the fetched prices are valid.
+  pricesLifetime: number
 }
 
-// If this script is run directly, start the server
-if (!module.parent) {
-  createApp(envConfig).catch(
-    async (e): Promise<void> => {
-      const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
-      console.error(errInfo)
+interface Prices {
+  [currency: string]: number
+}
+
+export enum ConvertError {
+  MissingSourceAsset = 'MissingSourceAsset',
+  MissingDestinationAsset = 'MissingDestinationAsset',
+  InvalidSourcePrice = 'InvalidSourcePrice',
+  InvalidDestinationPrice = 'InvalidDestinationPrice'
+}
+
+export function createRatesService(deps: ServiceDependencies): RatesService {
+  return new RatesServiceImpl(deps)
+}
+
+class RatesServiceImpl implements RatesService {
+  private axios: AxiosInstance
+  private pricesRequest?: Promise<Prices>
+  private pricesExpiry?: Date
+  private prefetchRequest?: Promise<Prices>
+
+  constructor(private deps: ServiceDependencies) {
+    this.axios = Axios.create({
+      timeout: REQUEST_TIMEOUT,
+      validateStatus: (status) => status === 200
+    })
+  }
+
+  async convert(
+    opts: Omit<ConvertOptions, 'exchangeRate'>
+  ): Promise<bigint | ConvertError> {
+    const sameCode = opts.sourceAsset.code === opts.destinationAsset.code
+    const sameScale = opts.sourceAsset.scale === opts.destinationAsset.scale
+    if (sameCode && sameScale) return opts.sourceAmount
+    if (sameCode) return convert({ exchangeRate: 1.0, ...opts })
+
+    const prices = await this.sharedLoad()
+    const sourcePrice = prices[opts.sourceAsset.code]
+    if (!sourcePrice) return ConvertError.MissingSourceAsset
+    if (!isValidPrice(sourcePrice)) return ConvertError.InvalidSourcePrice
+    const destinationPrice = prices[opts.destinationAsset.code]
+    if (!destinationPrice) return ConvertError.MissingDestinationAsset
+    if (!isValidPrice(destinationPrice))
+      return ConvertError.InvalidDestinationPrice
+
+    // source asset → base currency → destination asset
+    const exchangeRate = sourcePrice / destinationPrice
+    return convert({ exchangeRate, ...opts })
+  }
+
+  async prices(): Promise<Prices> {
+    return this.sharedLoad()
+  }
+
+  private sharedLoad(): Promise<Prices> {
+    if (this.pricesRequest && this.pricesExpiry) {
+      if (this.pricesExpiry < new Date()) {
+        // Already expired: invalidate cached prices.
+        this.pricesRequest = undefined
+        this.pricesExpiry = undefined
+      } else if (
+        this.pricesExpiry.getTime() <
+        Date.now() + 0.5 * this.deps.pricesLifetime
+      ) {
+        // Expiring soon: start prefetch.
+        if (!this.prefetchRequest) {
+          this.prefetchRequest = this.loadNow().finally(() => {
+            this.prefetchRequest = undefined
+          })
+        }
+      }
     }
-  )
+
+    if (!this.pricesRequest) {
+      this.pricesRequest =
+        this.prefetchRequest ||
+        this.loadNow().catch((err) => {
+          this.pricesRequest = undefined
+          this.pricesExpiry = undefined
+          throw err
+        })
+    }
+    return this.pricesRequest
+  }
+
+  private async loadNow(): Promise<Prices> {
+    const url = this.deps.pricesUrl
+    if (!url) return {}
+
+    const res = await this.axios.get(url).catch((err) => {
+      this.deps.logger.warn('price request error', { err: err.message })
+      throw err
+    })
+    this.pricesRequest = Promise.resolve(res.data)
+    this.pricesExpiry = new Date(Date.now() + this.deps.pricesLifetime)
+    return res.data
+  }
+}
+
+function isValidPrice(r: unknown): boolean {
+  return typeof r === 'number' && isFinite(r) && r > 0
 }

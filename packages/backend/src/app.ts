@@ -9,6 +9,7 @@ import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 import { ApolloServer } from 'apollo-server-koa'
+import { RatesService } from 'rates'
 
 import { IAppConfig } from './config/app'
 import { MessageProducer } from './messaging/messageProducer'
@@ -25,6 +26,8 @@ import { InvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebMonetizationService } from './webmonetization/service'
 import { ConnectorService } from './connector/service'
+import { OutgoingPaymentService } from './outgoing_payment/service'
+import { IlpPlugin } from './outgoing_payment/ilp_plugin'
 
 export interface AppContextData {
   logger: Logger
@@ -53,6 +56,9 @@ export interface AppServices {
   streamServer: Promise<StreamServer>
   wmService: Promise<WebMonetizationService>
   connectorService: Promise<ConnectorService>
+  outgoingPaymentService: Promise<OutgoingPaymentService>
+  makeIlpPlugin: Promise<(sourceAccount: string) => IlpPlugin>
+  ratesService: Promise<RatesService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -67,6 +73,7 @@ export class App {
   private logger!: Logger
   private messageProducer!: MessageProducer
   private config!: IAppConfig
+  private outgoingPaymentTimer!: NodeJS.Timer
 
   public constructor(private container: IocContract<AppServices>) {}
 
@@ -107,6 +114,13 @@ export class App {
     )
     await this._setupRoutes()
     this._setupGraphql()
+
+    // Payment workers are in the way during tests.
+    if (this.config.env !== 'test') {
+      for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
+        process.nextTick(() => this.processOutgoingPayment())
+      }
+    }
   }
 
   public listen(port: number | string): void {
@@ -173,5 +187,26 @@ export class App {
     })
 
     this.koa.use(this.publicRouter.middleware())
+  }
+
+  private async processOutgoingPayment(): Promise<void> {
+    if (this.isShuttingDown) return
+    const outgoingPaymentService = await this.container.use(
+      'outgoingPaymentService'
+    )
+    return outgoingPaymentService
+      .processNext()
+      .catch((err) => {
+        this.logger.warn({ error: err.message }, 'processNext error')
+        return true
+      })
+      .then((hasMoreWork) => {
+        if (hasMoreWork) process.nextTick(() => this.processOutgoingPayment())
+        else
+          setTimeout(
+            () => this.processOutgoingPayment(),
+            this.config.outgoingPaymentWorkerIdle
+          ).unref()
+      })
   }
 }

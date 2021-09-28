@@ -1,6 +1,7 @@
 import Axios from 'axios'
 import { config } from '../config'
 import { createHTTPService, HTTPService } from './service'
+import { logger } from '../../mocks'
 
 const axios = Axios.create({ baseURL: `http://127.0.0.1:${config.port}` })
 
@@ -10,14 +11,7 @@ describe('HTTP Service', function () {
   beforeAll(async () => {
     service = await createHTTPService({
       config,
-      logger: {
-        debug: () => jest.fn(),
-        fatal: () => jest.fn(),
-        error: () => jest.fn(),
-        warn: () => jest.fn(),
-        info: () => jest.fn(),
-        trace: () => jest.fn()
-      },
+      logger,
       ecbService: { fetchPrices: async () => ({ EUR: 1.0, FOO: 2.0 }) },
       xrpService: { fetchPrice: async () => 5.0 }
     })

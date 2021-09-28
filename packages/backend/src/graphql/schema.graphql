@@ -1,5 +1,18 @@
 type Query {
   account(id: String!): Account
+  outgoingPayment(id: String!): OutgoingPayment
+}
+
+type Mutation {
+  createOutgoingPayment(
+    input: CreateOutgoingPaymentInput!
+  ): OutgoingPaymentResponse!
+  "Approve a Ready payment's quote."
+  approveOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
+  "Requote a Cancelled payment."
+  requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
+  "Cancel a Ready payment."
+  cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
 }
 
 type PageInfo {
@@ -54,3 +67,90 @@ type Invoice {
   description: String
   totalAmount: String!
 }
+
+type OutgoingPayment {
+  id: ID!
+  state: PaymentState!
+  error: String
+  stateAttempts: Int!
+  intent: PaymentIntent
+  quote: PaymentQuote
+  superAccountId: String!
+  sourceAccount: PaymentSourceAccount!
+  destinationAccount: PaymentDestinationAccount!
+  outcome: OutgoingPaymentOutcome!
+}
+
+type PaymentIntent {
+  paymentPointer: String
+  amountToSend: String #UInt64
+  invoiceUrl: String
+  autoApprove: Boolean!
+}
+
+enum PaymentState {
+  "Will transition to READY when quote is complete"
+  INACTIVE
+  "Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLING)"
+  READY
+  "Will transition to SENDING once payment funds are reserved"
+  ACTIVATED
+  "Paying, will transition to COMPLETED on success"
+  SENDING
+  "Will transition to CANCELLED when reserved funds are rolled back"
+  CANCELLING
+  "Payment aborted; can be requoted to INACTIVE"
+  CANCELLED
+  "Successfuly completion"
+  COMPLETED
+}
+
+enum PaymentType {
+  FIXED_SEND
+  FIXED_DELIVERY
+}
+
+type PaymentQuote {
+  timestamp: String!
+  activationDeadline: String!
+  targetType: PaymentType!
+  minDeliveryAmount: String! #UInt64!
+  maxSourceAmount: String! #UInt64!
+  maxPacketAmount: String! #UInt64!
+  minExchangeRate: Float!
+  lowExchangeRateEstimate: Float!
+  highExchangeRateEstimate: Float!
+}
+
+type PaymentSourceAccount {
+  id: String!
+  scale: Int!
+  code: String!
+}
+
+type PaymentDestinationAccount {
+  scale: Int!
+  code: String!
+  url: String
+}
+
+type OutgoingPaymentOutcome {
+  amountSent: String!
+}
+
+input CreateOutgoingPaymentInput {
+  accountId: String!
+  paymentPointer: String
+  amountToSend: String #UInt64
+  invoiceUrl: String
+  autoApprove: Boolean!
+}
+
+type OutgoingPaymentResponse {
+  code: String!
+  success: Boolean!
+  message: String
+  payment: OutgoingPayment
+}
+
+#scalar UInt64

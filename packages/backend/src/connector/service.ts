@@ -4,7 +4,11 @@ import { strictEqual } from 'assert'
 import {
   CreateIlpAccountMutationResponse,
   CreateIlpSubAccountMutationResponse,
-  IlpAccount
+  ExtendCreditInput,
+  ExtendCreditMutationResponse,
+  IlpAccount,
+  SettleDebtInput,
+  SettleDebtMutationResponse
 } from './generated/graphql'
 
 export interface ConnectorService {
@@ -13,6 +17,8 @@ export interface ConnectorService {
   createIlpSubAccount(
     superAccountId: string
   ): Promise<CreateIlpSubAccountMutationResponse>
+  extendCredit(input: ExtendCreditInput): Promise<ExtendCreditMutationResponse>
+  settleDebt(input: SettleDebtInput): Promise<SettleDebtMutationResponse>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -34,7 +40,9 @@ export async function createConnectorService({
     getIlpAccount: (id) => getIlpAccount(deps, id),
     createIlpAccount: () => createIlpAccount(deps),
     createIlpSubAccount: (superAccountId) =>
-      createIlpSubAccount(deps, superAccountId)
+      createIlpSubAccount(deps, superAccountId),
+    extendCredit: (input) => extendCredit(deps, input),
+    settleDebt: (input) => settleDebt(deps, input)
   }
 }
 
@@ -50,6 +58,7 @@ async function getIlpAccount(
         query IlpAccount($id: String!) {
           ilpAccount(id: $id) {
             id
+            balance
           }
         }
       `,
@@ -138,4 +147,76 @@ async function createIlpSubAccount(
     )
 
   return response
+}
+
+function extendCredit(
+  deps: ServiceDependencies,
+  input: ExtendCreditInput
+): Promise<ExtendCreditMutationResponse> {
+  deps.logger.trace(
+    {
+      ...input,
+      amount: input.amount.toString()
+    },
+    'connectorService.extendCredit'
+  )
+  return deps.client
+    .mutate({
+      mutation: gql`
+        mutation ExtendCredit($input: ExtendCreditInput!) {
+          extendCredit(input: $input) {
+            code
+            success
+            message
+            error
+          }
+        }
+      `,
+      variables: { input }
+    })
+    .then(
+      (query): ExtendCreditMutationResponse => {
+        if (query.data) {
+          return query.data.extendCredit
+        } else {
+          throw new Error('Data was empty')
+        }
+      }
+    )
+}
+
+async function settleDebt(
+  deps: ServiceDependencies,
+  input: SettleDebtInput
+): Promise<SettleDebtMutationResponse> {
+  deps.logger.trace(
+    {
+      ...input,
+      amount: input.amount.toString()
+    },
+    'connectorService.settleDebt'
+  )
+  return deps.client
+    .mutate({
+      mutation: gql`
+        mutation SettleDebt($input: SettleDebtInput!) {
+          settleDebt(input: $input) {
+            code
+            success
+            message
+            error
+          }
+        }
+      `,
+      variables: { input }
+    })
+    .then(
+      (query): SettleDebtMutationResponse => {
+        if (query.data) {
+          return query.data.settleDebt
+        } else {
+          throw new Error('Data was empty')
+        }
+      }
+    )
 }

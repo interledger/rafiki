@@ -22,7 +22,10 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   })
   .attr('logger', TestLoggerFactory.build())
   .attr('rates', {
-    convert: async (opts) => opts.sourceAmount
+    convert: async (opts) => opts.sourceAmount,
+    prices: () => {
+      throw new Error('unimplemented')
+    }
   })
   .attr(
     'redis',

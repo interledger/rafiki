@@ -20,3 +20,17 @@ export function convert(opts: ConvertOptions): bigint {
     (opts.sourceAmount * BigInt(scaledExchangeRate * shiftUp)) / BigInt(shiftUp)
   )
 }
+
+export interface LoggingService {
+  fatal: LogFn
+  error: LogFn
+  warn: LogFn
+  info: LogFn
+  debug: LogFn
+  trace: LogFn
+}
+
+export interface LogFn {
+  (msg: string, ...args: unknown[]): void
+  (obj: Record<string, unknown>, msg?: string, ...args: unknown[]): void
+}

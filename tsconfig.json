@@ -1,6 +1,9 @@
 {
   "references": [
     {
+      "path": "packages/rates"
+    },
+    {
       "path": "packages/backend"
     },
     {
@@ -8,9 +11,6 @@
     },
     {
       "path": "packages/frontend"
-    },
-    {
-      "path": "packages/rates"
     }
   ],
   "files": [],
