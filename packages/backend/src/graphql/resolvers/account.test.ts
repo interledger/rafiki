@@ -798,7 +798,7 @@ describe('Account Resolvers', (): void => {
         .query({
           query: gql`
             query Accounts {
-              accounts(input: { first: 10 }) {
+              accounts(first: 10) {
                 edges {
                   node {
                     id
@@ -840,7 +840,7 @@ describe('Account Resolvers', (): void => {
         .query({
           query: gql`
             query Accounts($after: String!) {
-              accounts(input: { after: $after }) {
+              accounts(after: $after) {
                 edges {
                   node {
                     id
@@ -885,7 +885,7 @@ describe('Account Resolvers', (): void => {
         .query({
           query: gql`
             query Accounts($after: String!) {
-              accounts(input: { after: $after, first: 10 }) {
+              accounts(after: $after, first: 10) {
                 edges {
                   node {
                     id
@@ -1033,7 +1033,7 @@ describe('Account Resolvers', (): void => {
           query: gql`
             query Account($accountId: String!) {
               account(id: $accountId) {
-                subAccounts(input: { first: 10 }) {
+                subAccounts(first: 10) {
                   edges {
                     node {
                       id
@@ -1076,7 +1076,7 @@ describe('Account Resolvers', (): void => {
           query: gql`
             query Account($accountId: String!, $after: String!) {
               account(id: $accountId) {
-                subAccounts(input: { after: $after }) {
+                subAccounts(after: $after) {
                   edges {
                     node {
                       id
@@ -1120,7 +1120,7 @@ describe('Account Resolvers', (): void => {
           query: gql`
             query Account($accountId: String!, $after: String!) {
               account(id: $accountId) {
-                subAccounts(input: { after: $after, first: 10 }) {
+                subAccounts(after: $after, first: 10) {
                   edges {
                     node {
                       id

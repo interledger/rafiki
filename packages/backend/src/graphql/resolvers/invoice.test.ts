@@ -140,7 +140,7 @@ describe('Invoice Resolver', (): void => {
           query: gql`
             query Account($id: String!) {
               account(id: $id) {
-                invoices(input: { first: 10 }) {
+                invoices(first: 10) {
                   edges {
                     node {
                       id
@@ -183,7 +183,7 @@ describe('Invoice Resolver', (): void => {
           query: gql`
             query Account($id: String!, $after: String!) {
               account(id: $id) {
-                invoices(input: { after: $after }) {
+                invoices(after: $after) {
                   edges {
                     node {
                       id
@@ -227,7 +227,7 @@ describe('Invoice Resolver', (): void => {
           query: gql`
             query Account($id: String!, $after: String!) {
               account(id: $id) {
-                invoices(input: { after: $after, first: 10 }) {
+                invoices(after: $after, first: 10) {
                   edges {
                     node {
                       id

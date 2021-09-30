@@ -21,7 +21,7 @@ export const getAccounts: QueryResolvers['accounts'] = async (
 ): ResolversTypes['AccountsConnection'] => {
   const accountService = await ctx.container.use('accountService')
   const accounts = await accountService.getPage({
-    pagination: args.input
+    pagination: args
   })
   return {
     edges: accounts.map((account: Account) => ({
@@ -221,7 +221,7 @@ export const getSubAccounts: AccountResolvers['subAccounts'] = async (
 ): ResolversTypes['SubAccountsConnection'] => {
   const accountService = await ctx.container.use('accountService')
   const subAccounts = await accountService.getPage({
-    pagination: args.input,
+    pagination: args,
     superAccountId: parent.id
   })
   return {

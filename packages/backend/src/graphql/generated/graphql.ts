@@ -34,22 +34,34 @@ export type Account = {
 
 
 export type AccountSubAccountsArgs = {
-  input?: Maybe<PaginationInput>;
+  after?: Maybe<Scalars['String']>;
+  before?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  last?: Maybe<Scalars['Int']>;
 };
 
 
 export type AccountDepositsArgs = {
-  input?: Maybe<PaginationInput>;
+  after?: Maybe<Scalars['String']>;
+  before?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  last?: Maybe<Scalars['Int']>;
 };
 
 
 export type AccountInvoicesArgs = {
-  input?: Maybe<PaginationInput>;
+  after?: Maybe<Scalars['String']>;
+  before?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  last?: Maybe<Scalars['Int']>;
 };
 
 
 export type AccountWebhooksArgs = {
-  input?: Maybe<PaginationInput>;
+  after?: Maybe<Scalars['String']>;
+  before?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  last?: Maybe<Scalars['Int']>;
 };
 
 export type AccountEdge = {
@@ -476,17 +488,6 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars['String']>;
 };
 
-export type PaginationInput = {
-  /** Paginating forwards: the cursor before the the requested page. */
-  after?: Maybe<Scalars['String']>;
-  /** Paginating backwards: the cursor after the the requested page. */
-  before?: Maybe<Scalars['String']>;
-  /** Paginating forwards: The first **n** elements from the page. */
-  first?: Maybe<Scalars['Int']>;
-  /** Paginating backwards: The last **n** elements from the page. */
-  last?: Maybe<Scalars['Int']>;
-};
-
 export type PaymentDestinationAccount = {
   __typename?: 'PaymentDestinationAccount';
   scale: Scalars['Int'];
@@ -565,7 +566,10 @@ export type QueryAccountArgs = {
 
 
 export type QueryAccountsArgs = {
-  input?: Maybe<PaginationInput>;
+  after?: Maybe<Scalars['String']>;
+  before?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  last?: Maybe<Scalars['Int']>;
 };
 
 
@@ -838,11 +842,11 @@ export type ResolversTypes = {
   Account: ResolverTypeWrapper<Partial<Account>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
-  AccountEdge: ResolverTypeWrapper<Partial<AccountEdge>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
+  Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
+  AccountEdge: ResolverTypeWrapper<Partial<AccountEdge>>;
   AccountsConnection: ResolverTypeWrapper<Partial<AccountsConnection>>;
   Asset: ResolverTypeWrapper<Partial<Asset>>;
-  Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   AssetInput: ResolverTypeWrapper<Partial<AssetInput>>;
   Balance: ResolverTypeWrapper<Partial<Balance>>;
   CreateAccountInput: ResolverTypeWrapper<Partial<CreateAccountInput>>;
@@ -877,7 +881,6 @@ export type ResolversTypes = {
   OutgoingPaymentOutcome: ResolverTypeWrapper<Partial<OutgoingPaymentOutcome>>;
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
-  PaginationInput: ResolverTypeWrapper<Partial<PaginationInput>>;
   PaymentDestinationAccount: ResolverTypeWrapper<Partial<PaymentDestinationAccount>>;
   PaymentIntent: ResolverTypeWrapper<Partial<PaymentIntent>>;
   PaymentQuote: ResolverTypeWrapper<Partial<PaymentQuote>>;
@@ -917,11 +920,11 @@ export type ResolversParentTypes = {
   Account: Partial<Account>;
   ID: Partial<Scalars['ID']>;
   Boolean: Partial<Scalars['Boolean']>;
-  AccountEdge: Partial<AccountEdge>;
   String: Partial<Scalars['String']>;
+  Int: Partial<Scalars['Int']>;
+  AccountEdge: Partial<AccountEdge>;
   AccountsConnection: Partial<AccountsConnection>;
   Asset: Partial<Asset>;
-  Int: Partial<Scalars['Int']>;
   AssetInput: Partial<AssetInput>;
   Balance: Partial<Balance>;
   CreateAccountInput: Partial<CreateAccountInput>;
@@ -955,7 +958,6 @@ export type ResolversParentTypes = {
   OutgoingPaymentOutcome: Partial<OutgoingPaymentOutcome>;
   OutgoingPaymentResponse: Partial<OutgoingPaymentResponse>;
   PageInfo: Partial<PageInfo>;
-  PaginationInput: Partial<PaginationInput>;
   PaymentDestinationAccount: Partial<PaymentDestinationAccount>;
   PaymentIntent: Partial<PaymentIntent>;
   PaymentQuote: Partial<PaymentQuote>;
