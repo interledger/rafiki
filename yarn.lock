@@ -4486,7 +4486,6 @@ __metadata:
     pg: ^8.6.0
     pino: ^6.11.3
     pino-pretty: ^4.7.1
-    rates: "workspace:packages/rates"
     raw-body: ^2.4.1
     rosie: ^2.1.0
     testcontainers: ^7.20.4
@@ -11909,7 +11908,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "rates@workspace:packages/rates"
   dependencies:
-    "@adonisjs/fold": ^8.1.0
     "@koa/router": ^10.0.0
     "@types/jest": ^26.0.22
     "@types/koa": ^2.13.1
@@ -11920,7 +11918,6 @@ __metadata:
     axios: ^0.21.1
     koa: ^2.13.1
     nock: ^13.1.0
-    node-mocks-http: ^1.10.1
     pino: ^6.11.3
     sax: ^1.2.4
   languageName: unknown

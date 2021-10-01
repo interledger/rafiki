@@ -6122,7 +6122,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["pg", "virtual:32e475abcc6dabaea14b24db9aee1b59797d3cabcc03e60dcecd77305a697e5b9687c2679af13682eefd8a3b20c62224e14184bd5b161fae6d8d40f0f55cdb48#npm:8.6.0"],
             ["pino", "npm:6.11.3"],
             ["pino-pretty", "npm:4.7.1"],
-            ["rates", "workspace:packages/rates"],
             ["raw-body", "npm:2.4.1"],
             ["rosie", "npm:2.1.0"],
             ["testcontainers", "npm:7.20.4"],
@@ -14686,7 +14685,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./packages/rates/",
           "packageDependencies": [
             ["rates", "workspace:packages/rates"],
-            ["@adonisjs/fold", "npm:8.1.0"],
             ["@koa/router", "npm:10.0.0"],
             ["@types/jest", "npm:26.0.22"],
             ["@types/koa", "npm:2.13.1"],
@@ -14697,7 +14695,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["axios", "npm:0.21.1"],
             ["koa", "npm:2.13.1"],
             ["nock", "npm:13.1.0"],
-            ["node-mocks-http", "npm:1.10.1"],
             ["pino", "npm:6.11.3"],
             ["sax", "npm:1.2.4"]
           ],

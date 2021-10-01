@@ -82,7 +82,6 @@
     "pg": "^8.6.0",
     "pino": "^6.11.3",
     "pino-pretty": "^4.7.1",
-    "rates": "workspace:packages/rates",
     "raw-body": "^2.4.1",
     "tigerbeetle-node": "^0.4.1",
     "uuid": "^8.3.2"

@@ -1,7 +1,7 @@
 {
   "name": "rates",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/server/index.js",
+  "types": "dist/server/index.d.ts",
   "scripts": {
     "lint": "yarn lint:local",
     "format": "yarn format:local",
@@ -10,7 +10,6 @@
     "test": "yarn test:local"
   },
   "devDependencies": {
-    "@adonisjs/fold": "^8.1.0",
     "@koa/router": "^10.0.0",
     "@types/jest": "^26.0.22",
     "@types/koa": "^2.13.1",
@@ -20,7 +19,6 @@
     "@types/sax": "^1.2.1",
     "koa": "^2.13.1",
     "nock": "^13.1.0",
-    "node-mocks-http": "^1.10.1",
     "sax": "^1.2.4"
   },
   "dependencies": {

@@ -1,5 +1,6 @@
+import { BaseService } from '../shared/baseService'
 import Axios, { AxiosInstance } from 'axios'
-import { convert, ConvertOptions, LoggingService } from './util'
+import { convert, ConvertOptions } from './util'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
@@ -10,8 +11,7 @@ export interface RatesService {
   ): Promise<bigint | ConvertError>
 }
 
-interface ServiceDependencies {
-  logger: LoggingService
+interface ServiceDependencies extends BaseService {
   // If `url` is not set, the connector cannot convert between currencies.
   pricesUrl?: string
   // Duration (milliseconds) that the fetched prices are valid.
@@ -108,7 +108,7 @@ class RatesServiceImpl implements RatesService {
     if (!url) return {}
 
     const res = await this.axios.get(url).catch((err) => {
-      this.deps.logger.warn('price request error', { err: err.message })
+      this.deps.logger.warn({ err: err.message }, 'price request error')
       throw err
     })
     this.pricesRequest = Promise.resolve(res.data)

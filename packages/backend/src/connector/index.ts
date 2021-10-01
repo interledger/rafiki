@@ -1,6 +1,5 @@
 import compose = require('koa-compose')
 import IORedis from 'ioredis'
-import { RatesService } from 'rates'
 import { StreamServer } from '@interledger/stream-receiver'
 
 import {
@@ -22,6 +21,7 @@ import {
 } from './core'
 import { Logger } from '../logger/service'
 import { AccountService } from '../account/service'
+import { RatesService } from '../rates/service'
 
 interface ServiceDependencies {
   redis: IORedis.Redis
