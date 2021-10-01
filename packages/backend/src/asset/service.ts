@@ -126,7 +126,7 @@ async function getLiquidityBalance(
     if (balances.length === 1) {
       return balances[0].balance
     } else {
-      deps.logger.warn('missing liquidity balance', { asset })
+      deps.logger.warn({ asset }, 'missing liquidity balance')
     }
   }
 }
@@ -145,7 +145,7 @@ async function getSettlementBalance(
     if (balances.length === 1) {
       return balances[0].balance
     } else {
-      deps.logger.warn('missing settlement balance', { asset })
+      deps.logger.warn({ asset }, 'missing settlement balance')
     }
   }
 }

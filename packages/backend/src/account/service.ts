@@ -474,8 +474,10 @@ async function getAccountByStaticIlpAddress(
   deps: ServiceDependencies,
   destinationAddress: string
 ): Promise<Account | undefined> {
+  // This query does the equivalent of the following regex
+  // for `staticIlpAddress`s in the accounts table:
+  // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
   const account = await Account.query(deps.knex)
-    // new RegExp('^' + staticIlpAddress + '($|\\.)'))
     .withGraphJoined('asset')
     .where(
       raw('?', [destinationAddress]),
@@ -597,6 +599,7 @@ async function transferFunds(
   }
   const transfers: TwoPhaseTransfer[] = []
 
+  // Same asset
   if (
     sourceAccount.asset.code === destinationAccount.asset.code &&
     sourceAccount.asset.scale === destinationAccount.asset.scale
@@ -611,7 +614,9 @@ async function transferFunds(
           : sourceAmount,
       timeout
     })
+    // Same asset, different amounts
     if (destinationAmount && sourceAmount !== destinationAmount) {
+      // Send excess source amount to liquidity account
       if (destinationAmount < sourceAmount) {
         transfers.push({
           id: uuid(),
@@ -620,6 +625,7 @@ async function transferFunds(
           amount: sourceAmount - destinationAmount,
           timeout
         })
+        // Deliver excess destination amount from liquidity account
       } else {
         transfers.push({
           id: uuid(),
@@ -630,10 +636,14 @@ async function transferFunds(
         })
       }
     }
+    // Different assets
   } else {
+    // must specify destination amount
     if (!destinationAmount) {
       return AccountTransferError.InvalidDestinationAmount
     }
+    // Send to source liquidity account
+    // Deliver from destination liquidity account
     transfers.push(
       {
         id: uuid(),

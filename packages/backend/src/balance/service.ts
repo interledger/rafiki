@@ -119,7 +119,7 @@ function calculateBalance(deps: ServiceDependencies, balance: Account): bigint {
     )
   } else {
     if (!(balance.flags & AccountFlags.debits_must_not_exceed_credits)) {
-      deps.logger.warn('balance missing credit/debit flag', balance)
+      deps.logger.warn({ balance }, 'balance missing credit/debit flag')
     }
     return (
       balance.credits_accepted -

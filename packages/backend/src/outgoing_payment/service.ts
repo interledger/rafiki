@@ -93,6 +93,13 @@ async function createOutgoingPayment(
     superAccountId: options.superAccountId
   })
   if (isAccountError(sourceAccount)) {
+    deps.logger.warn(
+      {
+        superAccountId: options.superAccountId,
+        error: sourceAccount
+      },
+      'createOutgoingPayment source account creation failed'
+    )
     throw new Error('unable to create source account, err=' + sourceAccount)
   }
 

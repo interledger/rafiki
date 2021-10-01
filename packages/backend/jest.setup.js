@@ -8,7 +8,7 @@ const tmp = require('tmp')
 const POSTGRES_PORT = 5432
 
 const TIGERBEETLE_CLUSTER_ID = 1
-const TIGERBEETLE_PORT = 3001
+const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
 
 const REDIS_PORT = 6379

@@ -50,7 +50,7 @@ export const Config = {
   tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 1),
   tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
-    : ['3001'],
+    : ['3004'],
 
   // This endpoint is unauthenticated -- the Bearer token sent is just the account id to impersonate.
   ilpUrl: envString('ADMIN_ILP_URL', 'http://127.0.0.1:3009/ilp'),
