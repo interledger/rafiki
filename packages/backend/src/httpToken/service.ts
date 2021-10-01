@@ -1,3 +1,4 @@
+import { HttpTokenError } from './errors'
 import { HttpToken } from './model'
 import { BaseService } from '../shared/baseService'
 import {
@@ -9,11 +10,6 @@ import {
 export interface HttpTokenOptions {
   token: string
   accountId: string
-}
-
-export enum HttpTokenError {
-  DuplicateToken = 'DuplicateToken',
-  UnknownAccount = 'UnknownAccount'
 }
 
 export interface HttpTokenService {

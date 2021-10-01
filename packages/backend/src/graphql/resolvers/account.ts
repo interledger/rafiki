@@ -7,12 +7,8 @@ import {
   AccountsConnectionResolvers,
   SubAccountsConnectionResolvers
 } from '../generated/graphql'
-import {
-  AccountService,
-  AccountError,
-  isAccountError,
-  Account
-} from '../../account/service'
+import { AccountService, Account } from '../../account/service'
+import { AccountError, isAccountError } from '../../account/errors'
 
 export const getAccounts: QueryResolvers['accounts'] = async (
   parent,

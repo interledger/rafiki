@@ -1,8 +1,10 @@
 import { v4 as uuid } from 'uuid'
 
+import { DepositError } from './errors'
 import { AccountService } from '../account/service'
 import { AssetOptions, AssetService } from '../asset/service'
-import { TransferService, CreateTransferError } from '../transfer/service'
+import { TransferService } from '../transfer/service'
+import { TransferError } from '../transfer/errors'
 import { BaseService } from '../shared/baseService'
 import {
   BalanceTransferError,
@@ -28,16 +30,6 @@ export interface LiquidityDeposit extends DepositOptions {
 export type Deposit = Required<AccountDeposit> & {
   // createdTime: bigint
 }
-
-export enum DepositError {
-  DepositExists = 'DepositExists',
-  InvalidId = 'InvalidId',
-  UnknownAccount = 'UnknownAccount'
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isDepositError = (o: any): o is DepositError =>
-  Object.values(DepositError).includes(o)
 
 export interface DepositService {
   create(deposit: AccountDeposit): Promise<Deposit | DepositError>
@@ -95,16 +87,16 @@ async function createDeposit(
   ])
 
   if (error) {
-    switch (error.code) {
+    switch (error.error) {
       // TODO: query transfer to check if it's a deposit
-      case CreateTransferError.exists:
+      case TransferError.TransferExists:
         return DepositError.DepositExists
-      case CreateTransferError.debit_account_not_found:
+      case TransferError.UnknownSourceBalance:
         throw new UnknownSettlementAccountError(account.asset)
-      case CreateTransferError.credit_account_not_found:
+      case TransferError.UnknownDestinationBalance:
         throw new UnknownBalanceError(accountId)
       default:
-        throw new BalanceTransferError(error.code)
+        throw new BalanceTransferError(error.error)
     }
   }
   return {
@@ -133,15 +125,15 @@ async function createLiquidityDeposit(
     }
   ])
   if (error) {
-    switch (error.code) {
-      case CreateTransferError.exists:
+    switch (error.error) {
+      case TransferError.TransferExists:
         return DepositError.DepositExists
-      case CreateTransferError.debit_account_not_found:
+      case TransferError.UnknownSourceBalance:
         throw new UnknownSettlementAccountError(asset)
-      case CreateTransferError.credit_account_not_found:
+      case TransferError.UnknownDestinationBalance:
         throw new UnknownLiquidityAccountError(asset)
       default:
-        throw new BalanceTransferError(error.code)
+        throw new BalanceTransferError(error.error)
     }
   }
 }

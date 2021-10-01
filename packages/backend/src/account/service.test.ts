@@ -5,13 +5,15 @@ import { v4 as uuid } from 'uuid'
 import {
   Account,
   AccountService,
-  AccountError,
   CreateOptions,
-  isAccountError,
-  isTransferError,
-  TransferError,
   UpdateOptions
 } from './service'
+import {
+  AccountError,
+  isAccountError,
+  AccountTransferError,
+  isAccountTransferError
+} from './errors'
 import { AssetService } from '../asset/service'
 import { BalanceService, Balance } from '../balance/service'
 import { DepositService } from '../deposit/service'
@@ -917,6 +919,8 @@ describe('Account Service', (): void => {
   })
 
   describe('Transfer Funds', (): void => {
+    const timeout = BigInt(10e9) // 10 seconds
+
     test.each`
       srcAmt | destAmt      | accept
       ${1}   | ${1}         | ${true}
@@ -949,10 +953,11 @@ describe('Account Service', (): void => {
           sourceAccount,
           destinationAccount,
           sourceAmount,
-          destinationAmount: destAmt ? BigInt(destAmt) : undefined
+          destinationAmount: destAmt ? BigInt(destAmt) : undefined,
+          timeout
         })
-        expect(isTransferError(trxOrError)).toEqual(false)
-        if (isTransferError(trxOrError)) {
+        expect(isAccountTransferError(trxOrError)).toEqual(false)
+        if (isAccountTransferError(trxOrError)) {
           fail()
         }
         const destinationAmount = destAmt ? BigInt(destAmt) : sourceAmount
@@ -1006,13 +1011,13 @@ describe('Account Service', (): void => {
 
         await expect(trxOrError.commit()).resolves.toEqual(
           accept
-            ? TransferError.TransferAlreadyCommitted
-            : TransferError.TransferAlreadyRejected
+            ? AccountTransferError.AlreadyCommitted
+            : AccountTransferError.AlreadyRolledBack
         )
         await expect(trxOrError.rollback()).resolves.toEqual(
           accept
-            ? TransferError.TransferAlreadyCommitted
-            : TransferError.TransferAlreadyRejected
+            ? AccountTransferError.AlreadyCommitted
+            : AccountTransferError.AlreadyRolledBack
         )
       }
     )
@@ -1053,10 +1058,11 @@ describe('Account Service', (): void => {
           sourceAccount,
           destinationAccount,
           sourceAmount,
-          destinationAmount
+          destinationAmount,
+          timeout
         })
-        expect(isTransferError(trxOrError)).toEqual(false)
-        if (isTransferError(trxOrError)) {
+        expect(isAccountTransferError(trxOrError)).toEqual(false)
+        if (isAccountTransferError(trxOrError)) {
           fail()
         }
 
@@ -1114,13 +1120,13 @@ describe('Account Service', (): void => {
 
         await expect(trxOrError.commit()).resolves.toEqual(
           accept
-            ? TransferError.TransferAlreadyCommitted
-            : TransferError.TransferAlreadyRejected
+            ? AccountTransferError.AlreadyCommitted
+            : AccountTransferError.AlreadyRolledBack
         )
         await expect(trxOrError.rollback()).resolves.toEqual(
           accept
-            ? TransferError.TransferAlreadyCommitted
-            : TransferError.TransferAlreadyRejected
+            ? AccountTransferError.AlreadyCommitted
+            : AccountTransferError.AlreadyRolledBack
         )
       }
     )
@@ -1133,10 +1139,11 @@ describe('Account Service', (): void => {
       const transfer = {
         sourceAccount,
         destinationAccount,
-        sourceAmount: BigInt(5)
+        sourceAmount: BigInt(5),
+        timeout
       }
       await expect(accountService.transferFunds(transfer)).resolves.toEqual(
-        TransferError.InsufficientBalance
+        AccountTransferError.InsufficientBalance
       )
       await expect(
         accountService.getBalance(sourceAccount.id)
@@ -1166,11 +1173,12 @@ describe('Account Service', (): void => {
           sourceAccount,
           destinationAccount,
           sourceAmount,
-          destinationAmount
+          destinationAmount,
+          timeout
         }
 
         await expect(accountService.transferFunds(transfer)).resolves.toEqual(
-          TransferError.InsufficientLiquidity
+          AccountTransferError.InsufficientLiquidity
         )
 
         await expect(
@@ -1202,9 +1210,10 @@ describe('Account Service', (): void => {
         accountService.transferFunds({
           sourceAccount: account,
           destinationAccount: account,
-          sourceAmount: BigInt(5)
+          sourceAmount: BigInt(5),
+          timeout
         })
-      ).resolves.toEqual(TransferError.SameAccounts)
+      ).resolves.toEqual(AccountTransferError.SameAccounts)
     })
 
     test('Returns error for invalid source amount', async (): Promise<void> => {
@@ -1220,17 +1229,19 @@ describe('Account Service', (): void => {
         accountService.transferFunds({
           sourceAccount,
           destinationAccount,
-          sourceAmount: BigInt(0)
+          sourceAmount: BigInt(0),
+          timeout
         })
-      ).resolves.toEqual(TransferError.InvalidSourceAmount)
+      ).resolves.toEqual(AccountTransferError.InvalidSourceAmount)
 
       await expect(
         accountService.transferFunds({
           sourceAccount,
           destinationAccount,
-          sourceAmount: BigInt(-1)
+          sourceAmount: BigInt(-1),
+          timeout
         })
-      ).resolves.toEqual(TransferError.InvalidSourceAmount)
+      ).resolves.toEqual(AccountTransferError.InvalidSourceAmount)
     })
 
     test('Returns error for invalid destination amount', async (): Promise<void> => {
@@ -1245,18 +1256,20 @@ describe('Account Service', (): void => {
           sourceAccount,
           destinationAccount,
           sourceAmount: BigInt(5),
-          destinationAmount: BigInt(0)
+          destinationAmount: BigInt(0),
+          timeout
         })
-      ).resolves.toEqual(TransferError.InvalidDestinationAmount)
+      ).resolves.toEqual(AccountTransferError.InvalidDestinationAmount)
 
       await expect(
         accountService.transferFunds({
           sourceAccount,
           destinationAccount,
           sourceAmount: BigInt(5),
-          destinationAmount: BigInt(-1)
+          destinationAmount: BigInt(-1),
+          timeout
         })
-      ).resolves.toEqual(TransferError.InvalidDestinationAmount)
+      ).resolves.toEqual(AccountTransferError.InvalidDestinationAmount)
     })
 
     test('Returns error for missing destination amount', async (): Promise<void> => {
@@ -1280,9 +1293,10 @@ describe('Account Service', (): void => {
           accountService.transferFunds({
             sourceAccount,
             destinationAccount,
-            sourceAmount: BigInt(5)
+            sourceAmount: BigInt(5),
+            timeout
           })
-        ).resolves.toEqual(TransferError.InvalidDestinationAmount)
+        ).resolves.toEqual(AccountTransferError.InvalidDestinationAmount)
       }
 
       {
@@ -1291,9 +1305,10 @@ describe('Account Service', (): void => {
           accountService.transferFunds({
             sourceAccount,
             destinationAccount,
-            sourceAmount: BigInt(5)
+            sourceAmount: BigInt(5),
+            timeout
           })
-        ).resolves.toEqual(TransferError.InvalidDestinationAmount)
+        ).resolves.toEqual(AccountTransferError.InvalidDestinationAmount)
       }
     })
 

@@ -1,9 +1,7 @@
+import { CreditError } from './errors'
 import { AccountService, Account, SubAccount } from '../account/service'
-import {
-  TransferService,
-  Transfer,
-  CreateTransferError
-} from '../transfer/service'
+import { TransferService, Transfer } from '../transfer/service'
+import { TransferError } from '../transfer/errors'
 import { BaseService } from '../shared/baseService'
 import { BalanceTransferError, UnknownBalanceError } from '../shared/errors'
 
@@ -19,16 +17,6 @@ export interface ExtendCreditOptions extends CreditOptions {
 
 export interface SettleDebtOptions extends CreditOptions {
   revolve?: boolean
-}
-
-export enum CreditError {
-  SameAccounts = 'SameAccounts',
-  UnknownAccount = 'UnknownAccount',
-  UnrelatedSubAccount = 'UnrelatedSubAccount',
-  UnknownSubAccount = 'UnknownSubAccount',
-  InsufficientBalance = 'InsufficientBalance',
-  InsufficientCredit = 'InsufficientCredit',
-  InsufficientDebt = 'InsufficientDebt'
 }
 
 export interface CreditService {
@@ -115,11 +103,11 @@ async function extendCredit(
     if (
       autoApply &&
       err.index === transfers.length - 1 &&
-      err.code === CreateTransferError.exceeds_credits
+      err.error === TransferError.InsufficientBalance
     ) {
       return CreditError.InsufficientBalance
     }
-    throw new BalanceTransferError(err.code)
+    throw new BalanceTransferError(err.error)
   }
 }
 
@@ -165,14 +153,14 @@ async function utilizeCredit(
   })
   const err = await deps.transferService.create(transfers)
   if (err) {
-    if (err.code === CreateTransferError.exceeds_credits) {
+    if (err.error === TransferError.InsufficientBalance) {
       if (err.index === transfers.length - 1) {
         return CreditError.InsufficientBalance
       } else {
         return CreditError.InsufficientCredit
       }
     }
-    throw new BalanceTransferError(err.code)
+    throw new BalanceTransferError(err.error)
   }
 }
 
@@ -212,10 +200,10 @@ async function revokeCredit(
   }
   const err = await deps.transferService.create(transfers)
   if (err) {
-    if (err.code === CreateTransferError.exceeds_credits) {
+    if (err.error === TransferError.InsufficientBalance) {
       return CreditError.InsufficientCredit
     }
-    throw new BalanceTransferError(err.code)
+    throw new BalanceTransferError(err.error)
   }
 }
 
@@ -264,14 +252,14 @@ async function settleDebt(
   })
   const err = await deps.transferService.create(transfers)
   if (err) {
-    if (err.code === CreateTransferError.exceeds_credits) {
+    if (err.error === TransferError.InsufficientBalance) {
       if (err.index === transfers.length - 1) {
         return CreditError.InsufficientBalance
       } else {
         return CreditError.InsufficientDebt
       }
     }
-    throw new BalanceTransferError(err.code)
+    throw new BalanceTransferError(err.error)
   }
 }
 

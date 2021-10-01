@@ -1,7 +1,8 @@
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { BalanceService, BalanceError } from './service'
+import { BalanceService } from './service'
+import { BalanceError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { GraphileProducer } from '../messaging/graphileProducer'

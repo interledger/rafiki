@@ -3,7 +3,7 @@ import * as Pay from '@interledger/pay'
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
-import { CreditError } from '../credit/service'
+import { CreditError } from '../credit/errors'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 

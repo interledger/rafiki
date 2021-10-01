@@ -4,9 +4,9 @@ import {
   Account,
   AccountService,
   CreateOptions,
-  CreateSubAccountOptions,
-  isAccountError
+  CreateSubAccountOptions
 } from '../account/service'
+import { isAccountError } from '../account/errors'
 import { TransferService } from '../transfer/service'
 import { randomAsset } from './asset'
 

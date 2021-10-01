@@ -17,9 +17,22 @@ export class CommitTransferError extends Error {
   }
 }
 
-export class RollbackTransferError extends Error {
-  constructor(public code: CommitTransferErrorCode) {
-    super()
-    this.name = 'RollbackTransferError'
-  }
+export enum TransferError {
+  AlreadyCommitted = 'AlreadyCommitted',
+  AlreadyRolledBack = 'AlreadyRolledBack',
+  DifferentAssets = 'DifferentAssets',
+  InsufficientBalance = 'InsufficientBalance',
+  InsufficientDebitBalance = 'InsufficientDebitBalance',
+  InvalidAmount = 'InvalidAmount',
+  SameBalances = 'SameBalances',
+  TransferExists = 'TransferExists',
+  TransferExpired = 'TransferExpired',
+  UnknownTransfer = 'UnknownTransfer',
+  UnknownSourceBalance = 'UnknownSourceBalance',
+  UnknownDestinationBalance = 'UnknownDestinationBalance'
+}
+
+export type TransfersError = {
+  index: number
+  error: TransferError
 }

@@ -2,11 +2,8 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import {
-  WithdrawalService,
-  isWithdrawalError,
-  WithdrawalError
-} from './service'
+import { WithdrawalService } from './service'
+import { isWithdrawalError, WithdrawalError } from './errors'
 import { AccountService } from '../account/service'
 import { AssetService } from '../asset/service'
 import { DepositService } from '../deposit/service'

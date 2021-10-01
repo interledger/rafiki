@@ -747,7 +747,6 @@ export enum WithdrawalError {
   AlreadyRolledBack = 'AlreadyRolledBack',
   InsufficientBalance = 'InsufficientBalance',
   InsufficientLiquidity = 'InsufficientLiquidity',
-  InsufficientSettlementBalance = 'InsufficientSettlementBalance',
   InvalidId = 'InvalidId',
   UnknownAccount = 'UnknownAccount',
   UnknownAsset = 'UnknownAsset',

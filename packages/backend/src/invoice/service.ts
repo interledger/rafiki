@@ -1,5 +1,6 @@
 import { Invoice } from './model'
-import { AccountService, isAccountError } from '../account/service'
+import { AccountService } from '../account/service'
+import { isAccountError } from '../account/errors'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
 import assert from 'assert'

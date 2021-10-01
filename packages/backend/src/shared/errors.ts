@@ -1,7 +1,8 @@
 import { AssetOptions } from '../asset/service'
+import { TransferError } from '../transfer/errors'
 
 export class BalanceTransferError extends Error {
-  constructor(public code: number) {
+  constructor(public error: TransferError) {
     super()
     this.name = 'TransferError'
   }

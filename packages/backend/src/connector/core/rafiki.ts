@@ -21,7 +21,8 @@ import { DebugLogger } from './services/logger/debug'
 import { RatesService } from 'rates'
 import { createAccountMiddleware } from './middleware/account'
 import { createStreamAddressMiddleware } from './middleware/stream-address'
-import { Transfer, TransferError } from '../../account/service'
+import { AccountTransfer } from '../../account/service'
+import { AccountTransferError } from '../../account/errors'
 
 export interface RafikiAccount {
   id: string
@@ -48,9 +49,9 @@ export interface RafikiAccount {
 export interface TransferOptions {
   sourceAccount: RafikiAccount
   destinationAccount: RafikiAccount
-
   sourceAmount: bigint
   destinationAmount?: bigint
+  timeout: bigint // nano-seconds
 }
 
 export interface AccountService {
@@ -60,7 +61,9 @@ export interface AccountService {
   ): Promise<RafikiAccount | undefined>
   getByToken(token: string): Promise<RafikiAccount | undefined>
   getAddress(id: string): Promise<string | undefined>
-  transferFunds(options: TransferOptions): Promise<Transfer | TransferError>
+  transferFunds(
+    options: TransferOptions
+  ): Promise<AccountTransfer | AccountTransferError>
 }
 
 export interface RafikiServices {

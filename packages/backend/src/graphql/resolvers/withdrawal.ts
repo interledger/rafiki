@@ -5,7 +5,7 @@ import {
   WithdrawalsConnectionResolvers,
   WithdrawalError as WithdrawErrorResp
 } from '../generated/graphql'
-import { WithdrawalError, isWithdrawalError } from '../../withdrawal/service'
+import { WithdrawalError, isWithdrawalError } from '../../withdrawal/errors'
 
 export const getWithdrawal: QueryResolvers['withdrawal'] = async (
   parent,
@@ -112,12 +112,6 @@ const errorToResponse: {
     message: 'Insufficient liquidity',
     success: false,
     error: WithdrawErrorResp.InsufficientLiquidity
-  },
-  [WithdrawalError.InsufficientSettlementBalance]: {
-    code: '403',
-    message: 'Insufficient settlement balance',
-    success: false,
-    error: WithdrawErrorResp.InsufficientSettlementBalance
   },
   [WithdrawalError.InvalidId]: {
     code: '400',

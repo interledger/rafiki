@@ -18,8 +18,10 @@ import { MockPlugin } from './mock_plugin'
 import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { AccountBalance, AccountService } from '../account/service'
-import { CreditError, CreditService } from '../credit/service'
-import { WithdrawalService, isWithdrawalError } from '../withdrawal/service'
+import { CreditService } from '../credit/service'
+import { CreditError } from '../credit/errors'
+import { WithdrawalService } from '../withdrawal/service'
+import { isWithdrawalError } from '../withdrawal/errors'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>

@@ -1,6 +1,7 @@
 import { AccountService, RafikiAccount } from '../../rafiki'
 
-import { Transfer, TransferError } from '../../../../account/service'
+import { AccountTransfer } from '../../../../account/service'
+import { AccountTransferError } from '../../../../account/errors'
 
 export type MockIlpAccount = RafikiAccount & {
   balance: bigint
@@ -57,9 +58,10 @@ export class MockAccountsService implements AccountService {
     destinationAccount: MockIlpAccount
     sourceAmount: bigint
     destinationAmount: bigint
-  }): Promise<Transfer | TransferError> {
+    timeout: bigint
+  }): Promise<AccountTransfer | AccountTransferError> {
     if (options.sourceAccount.balance < options.sourceAmount) {
-      return TransferError.InsufficientBalance
+      return AccountTransferError.InsufficientBalance
     }
     options.sourceAccount.balance -= options.sourceAmount
     return {

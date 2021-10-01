@@ -4,7 +4,7 @@ import {
   MutationResolvers,
   DepositsConnectionResolvers
 } from '../generated/graphql'
-import { DepositError, isDepositError } from '../../deposit/service'
+import { DepositError, isDepositError } from '../../deposit/errors'
 
 export const getDeposit: QueryResolvers['deposit'] = async (
   parent,

@@ -8,7 +8,8 @@ import { serializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { StreamServer } from '@interledger/stream-receiver'
 import { Invoice } from '@interledger/pay'
 import { IlpPlugin } from './ilp_plugin'
-import { WithdrawalService, isWithdrawalError } from '../withdrawal/service'
+import { WithdrawalService } from '../withdrawal/service'
+import { isWithdrawalError } from '../withdrawal/errors'
 
 export class MockPlugin implements IlpPlugin {
   public totalReceived = BigInt(0)

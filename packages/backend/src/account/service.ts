@@ -9,11 +9,8 @@ import { v4 as uuid } from 'uuid'
 
 import { AssetService, AssetOptions } from '../asset/service'
 import { BalanceOptions, BalanceService } from '../balance/service'
-import {
-  HttpTokenOptions,
-  HttpTokenError,
-  HttpTokenService
-} from '../httpToken/service'
+import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
+import { HttpTokenError } from '../httpToken/errors'
 import { BaseService } from '../shared/baseService'
 import {
   BalanceTransferError,
@@ -22,13 +19,9 @@ import {
 } from '../shared/errors'
 import { Pagination } from '../shared/pagination'
 import { validateId } from '../shared/utils'
-import {
-  CommitTransferError,
-  CreateTransferError,
-  TransferService,
-  TwoPhaseTransfer
-} from '../transfer/service'
-import { UnknownAssetError } from './errors'
+import { TransferService, TwoPhaseTransfer } from '../transfer/service'
+import { TransferError, TransfersError } from '../transfer/errors'
+import { AccountError, AccountTransferError, UnknownAssetError } from './errors'
 import { Account, SubAccount } from './model'
 
 export { Account, SubAccount }
@@ -88,49 +81,23 @@ export function isSubAccount(
   return (account as CreateSubAccountOptions).superAccountId !== undefined
 }
 
-export enum AccountError {
-  DuplicateAccountId = 'DuplicateAccountId',
-  DuplicateIncomingToken = 'DuplicateIncomingToken',
-  UnknownAccount = 'UnknownAccount',
-  UnknownSuperAccount = 'UnknownSuperAccount'
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isAccountError = (o: any): o is AccountError =>
-  Object.values(AccountError).includes(o)
-
 interface Peer {
   accountId: string
   ilpAddress: string
 }
 
-export interface TransferOptions {
+export interface AccountTransferOptions {
   sourceAccount: Account
   destinationAccount: Account
-
   sourceAmount: bigint
   destinationAmount?: bigint
+  timeout: bigint // nano-seconds
 }
 
-export interface Transfer {
-  commit: () => Promise<void | TransferError>
-  rollback: () => Promise<void | TransferError>
+export interface AccountTransfer {
+  commit: () => Promise<void | AccountTransferError>
+  rollback: () => Promise<void | AccountTransferError>
 }
-
-export enum TransferError {
-  InsufficientBalance = 'InsufficientBalance',
-  InsufficientLiquidity = 'InsufficientLiquidity',
-  InvalidSourceAmount = 'InvalidSourceAmount',
-  InvalidDestinationAmount = 'InvalidDestinationAmount',
-  SameAccounts = 'SameAccounts',
-  TransferAlreadyCommitted = 'TransferAlreadyCommitted',
-  TransferAlreadyRejected = 'TransferAlreadyRejected',
-  TransferExpired = 'TransferExpired'
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isTransferError = (o: any): o is TransferError =>
-  Object.values(TransferError).includes(o)
 
 const UUID_LENGTH = 36
 
@@ -154,7 +121,9 @@ export interface AccountService {
     pagination?: Pagination
     superAccountId?: string
   }): Promise<Account[]>
-  transferFunds(options: TransferOptions): Promise<Transfer | TransferError>
+  transferFunds(
+    options: AccountTransferOptions
+  ): Promise<AccountTransfer | AccountTransferError>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -612,17 +581,18 @@ async function transferFunds(
     sourceAccount,
     destinationAccount,
     sourceAmount,
-    destinationAmount
-  }: TransferOptions
-): Promise<Transfer | TransferError> {
+    destinationAmount,
+    timeout
+  }: AccountTransferOptions
+): Promise<AccountTransfer | AccountTransferError> {
   if (sourceAccount.id === destinationAccount.id) {
-    return TransferError.SameAccounts
+    return AccountTransferError.SameAccounts
   }
   if (sourceAmount <= BigInt(0)) {
-    return TransferError.InvalidSourceAmount
+    return AccountTransferError.InvalidSourceAmount
   }
   if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
-    return TransferError.InvalidDestinationAmount
+    return AccountTransferError.InvalidDestinationAmount
   }
   const transfers: TwoPhaseTransfer[] = []
 
@@ -638,7 +608,7 @@ async function transferFunds(
         destinationAmount && destinationAmount < sourceAmount
           ? destinationAmount
           : sourceAmount,
-      twoPhaseCommit: true
+      timeout
     })
     if (destinationAmount && sourceAmount !== destinationAmount) {
       if (destinationAmount < sourceAmount) {
@@ -647,7 +617,7 @@ async function transferFunds(
           sourceBalanceId: sourceAccount.balanceId,
           destinationBalanceId: sourceAccount.asset.liquidityBalanceId,
           amount: sourceAmount - destinationAmount,
-          twoPhaseCommit: true
+          timeout
         })
       } else {
         transfers.push({
@@ -655,13 +625,13 @@ async function transferFunds(
           sourceBalanceId: destinationAccount.asset.liquidityBalanceId,
           destinationBalanceId: destinationAccount.balanceId,
           amount: destinationAmount - sourceAmount,
-          twoPhaseCommit: true
+          timeout
         })
       }
     }
   } else {
     if (!destinationAmount) {
-      return TransferError.InvalidDestinationAmount
+      return AccountTransferError.InvalidDestinationAmount
     }
     transfers.push(
       {
@@ -669,81 +639,74 @@ async function transferFunds(
         sourceBalanceId: sourceAccount.balanceId,
         destinationBalanceId: sourceAccount.asset.liquidityBalanceId,
         amount: sourceAmount,
-        twoPhaseCommit: true
+        timeout
       },
       {
         id: uuid(),
         sourceBalanceId: destinationAccount.asset.liquidityBalanceId,
         destinationBalanceId: destinationAccount.balanceId,
         amount: destinationAmount,
-        twoPhaseCommit: true
+        timeout
       }
     )
   }
   const error = await deps.transferService.create(transfers)
   if (error) {
-    switch (error.code) {
-      case CreateTransferError.debit_account_not_found:
+    switch (error.error) {
+      case TransferError.UnknownSourceBalance:
         if (error.index === 1) {
           throw new UnknownLiquidityAccountError(destinationAccount.asset)
         }
         throw new UnknownBalanceError(sourceAccount.id)
-      case CreateTransferError.credit_account_not_found:
+      case TransferError.UnknownDestinationBalance:
         if (error.index === 1) {
           throw new UnknownBalanceError(destinationAccount.id)
         }
         throw new UnknownLiquidityAccountError(sourceAccount.asset)
-      case CreateTransferError.exceeds_credits:
+      case TransferError.InsufficientBalance:
         if (error.index === 1) {
-          return TransferError.InsufficientLiquidity
+          return AccountTransferError.InsufficientLiquidity
         }
-        return TransferError.InsufficientBalance
+        return AccountTransferError.InsufficientBalance
       default:
-        throw new BalanceTransferError(error.code)
+        throw new BalanceTransferError(error.error)
     }
   }
 
-  const trx: Transfer = {
-    commit: async (): Promise<void | TransferError> => {
+  const trx: AccountTransfer = {
+    commit: async (): Promise<void | AccountTransferError> => {
       const error = await deps.transferService.commit(
         transfers.map((transfer) => transfer.id)
       )
       if (error) {
-        switch (error.code) {
-          case CommitTransferError.linked_event_failed:
-            break
-          case CommitTransferError.transfer_expired:
-            return TransferError.TransferExpired
-          case CommitTransferError.already_committed:
-            return TransferError.TransferAlreadyCommitted
-          case CommitTransferError.already_committed_but_rejected:
-            return TransferError.TransferAlreadyRejected
-          default:
-            throw new BalanceTransferError(error.code)
-        }
+        return toAccountTransferError(error)
       }
     },
-    rollback: async (): Promise<void | TransferError> => {
+    rollback: async (): Promise<void | AccountTransferError> => {
       const error = await deps.transferService.rollback(
         transfers.map((transfer) => transfer.id)
       )
       if (error) {
-        switch (error.code) {
-          case CommitTransferError.linked_event_failed:
-            break
-          case CommitTransferError.transfer_expired:
-            return TransferError.TransferExpired
-          case CommitTransferError.already_committed_but_accepted:
-            return TransferError.TransferAlreadyCommitted
-          case CommitTransferError.already_committed:
-            return TransferError.TransferAlreadyRejected
-          default:
-            throw new BalanceTransferError(error.code)
-        }
+        return toAccountTransferError(error)
       }
     }
   }
   return trx
+}
+
+function toAccountTransferError({
+  error
+}: TransfersError): AccountTransferError {
+  switch (error) {
+    case TransferError.TransferExpired:
+      return AccountTransferError.TransferExpired
+    case TransferError.AlreadyCommitted:
+      return AccountTransferError.AlreadyCommitted
+    case TransferError.AlreadyRolledBack:
+      return AccountTransferError.AlreadyRolledBack
+    default:
+      throw new BalanceTransferError(error)
+  }
 }
 
 /** TODO: Base64 encode/decode the cursors

@@ -249,7 +249,6 @@ enum WithdrawalError {
   AlreadyRolledBack
   InsufficientBalance
   InsufficientLiquidity
-  InsufficientSettlementBalance
   InvalidId
   UnknownAccount
   UnknownAsset

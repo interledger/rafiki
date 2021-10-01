@@ -4,13 +4,9 @@ import {
   Client,
   CreateAccountError
 } from 'tigerbeetle-node'
-import { CreateBalanceError } from './errors'
+import { BalanceError, CreateBalanceError, CreateBalancesError } from './errors'
 import { BaseService } from '../shared/baseService'
 import { uuidToBigInt } from '../shared/utils'
-
-export enum BalanceError {
-  DuplicateBalance = 'DuplicateBalance'
-}
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 
@@ -22,11 +18,6 @@ export interface BalanceOptions {
 
 export type Balance = Required<BalanceOptions> & {
   balance: bigint
-}
-
-export type CreateBalancesError = {
-  index: number
-  error: BalanceError
 }
 
 export interface BalanceService {

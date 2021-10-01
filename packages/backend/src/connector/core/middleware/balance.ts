@@ -1,6 +1,6 @@
 import { Errors } from 'ilp-packet'
 import { RafikiContext } from '../rafiki'
-import { isTransferError } from '../../../account/service'
+import { isAccountTransferError } from '../../../account/errors'
 
 export function createBalanceMiddleware() {
   return async (
@@ -33,12 +33,13 @@ export function createBalanceMiddleware() {
       sourceAccount: accounts.incoming,
       destinationAccount: accounts.outgoing,
       sourceAmount,
-      destinationAmount: destinationAmountOrError
+      destinationAmount: destinationAmountOrError,
+      timeout: BigInt(5e9) // 5 seconds
     })
 
     await next()
 
-    if (!isTransferError(trxOrError)) {
+    if (!isAccountTransferError(trxOrError)) {
       if (response.fulfill) {
         await trxOrError.commit()
       } else {

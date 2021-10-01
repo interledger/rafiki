@@ -5490,12 +5490,6 @@
             "deprecationReason": null
           },
           {
-            "name": "InsufficientSettlementBalance",
-            "description": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "InvalidId",
             "description": null,
             "isDeprecated": false,

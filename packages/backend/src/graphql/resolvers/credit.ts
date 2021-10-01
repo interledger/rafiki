@@ -3,7 +3,7 @@ import {
   ResolversTypes,
   MutationResolvers
 } from '../generated/graphql'
-import { CreditError } from '../../credit/service'
+import { CreditError } from '../../credit/errors'
 
 export const extendCredit: MutationResolvers['extendCredit'] = async (
   parent,
