@@ -136,7 +136,7 @@ export type CreateDepositMutationResponse = MutationResponse & {
 export type CreateOutgoingPaymentInput = {
   accountId: Scalars['String'];
   paymentPointer?: Maybe<Scalars['String']>;
-  amountToSend?: Maybe<Scalars['String']>;
+  amountToSend?: Maybe<Scalars['UInt64']>;
   invoiceUrl?: Maybe<Scalars['String']>;
   autoApprove: Scalars['Boolean'];
 };
@@ -273,8 +273,8 @@ export type HttpOutgoingInput = {
 export type Invoice = {
   __typename?: 'Invoice';
   id: Scalars['ID'];
-  receivedAmount: Scalars['Int'];
-  maximumAmount?: Maybe<Scalars['Int']>;
+  receivedAmount: Scalars['UInt64'];
+  maximumAmount?: Maybe<Scalars['UInt64']>;
   asset: Asset;
   active: Scalars['Boolean'];
   createdAt: Scalars['String'];
@@ -498,7 +498,7 @@ export type PaymentDestinationAccount = {
 export type PaymentIntent = {
   __typename?: 'PaymentIntent';
   paymentPointer?: Maybe<Scalars['String']>;
-  amountToSend?: Maybe<Scalars['String']>;
+  amountToSend?: Maybe<Scalars['UInt64']>;
   invoiceUrl?: Maybe<Scalars['String']>;
   autoApprove: Scalars['Boolean'];
 };
@@ -508,9 +508,9 @@ export type PaymentQuote = {
   timestamp: Scalars['String'];
   activationDeadline: Scalars['String'];
   targetType: PaymentType;
-  minDeliveryAmount: Scalars['String'];
-  maxSourceAmount: Scalars['String'];
-  maxPacketAmount: Scalars['String'];
+  minDeliveryAmount: Scalars['UInt64'];
+  maxSourceAmount: Scalars['UInt64'];
+  maxPacketAmount: Scalars['UInt64'];
   minExchangeRate: Scalars['Float'];
   lowExchangeRateEstimate: Scalars['Float'];
   highExchangeRateEstimate: Scalars['Float'];
@@ -1138,8 +1138,8 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 
 export type InvoiceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Invoice'] = ResolversParentTypes['Invoice']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  receivedAmount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  maximumAmount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  receivedAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  maximumAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1235,7 +1235,7 @@ export type PaymentDestinationAccountResolvers<ContextType = any, ParentType ext
 
 export type PaymentIntentResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentIntent'] = ResolversParentTypes['PaymentIntent']> = {
   paymentPointer?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  amountToSend?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  amountToSend?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   invoiceUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   autoApprove?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1245,9 +1245,9 @@ export type PaymentQuoteResolvers<ContextType = any, ParentType extends Resolver
   timestamp?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   activationDeadline?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   targetType?: Resolver<ResolversTypes['PaymentType'], ParentType, ContextType>;
-  minDeliveryAmount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  maxSourceAmount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  maxPacketAmount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  minDeliveryAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  maxSourceAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  maxPacketAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   minExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   lowExchangeRateEstimate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   highExchangeRateEstimate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;

@@ -246,7 +246,8 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockImplementation(async (args) => {
           expect(args).toEqual({
             superAccountId: input.accountId,
-            ...input
+            ...input,
+            amountToSend: BigInt(input.amountToSend)
           })
           return payment
         })

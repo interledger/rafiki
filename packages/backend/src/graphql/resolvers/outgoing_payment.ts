@@ -169,25 +169,15 @@ function paymentToGraphql(
     state: SchemaPaymentState[payment.state],
     error: payment.error,
     stateAttempts: payment.stateAttempts,
-    intent: {
-      ...payment.intent,
-      amountToSend: payment.intent.amountToSend?.toString()
-    },
+    intent: payment.intent,
     quote: payment.quote && {
       ...payment.quote,
       targetType: SchemaPaymentType[payment.quote.targetType],
       timestamp: payment.quote.timestamp.toISOString(),
-      activationDeadline: payment.quote.activationDeadline.toISOString(),
-      minDeliveryAmount: payment.quote.minDeliveryAmount.toString(),
-      maxSourceAmount: payment.quote.maxSourceAmount.toString(),
-      maxPacketAmount: payment.quote.maxPacketAmount.toString()
+      activationDeadline: payment.quote.activationDeadline.toISOString()
     },
     superAccountId: payment.superAccountId,
-    sourceAccount: {
-      id: payment.sourceAccount.id,
-      scale: payment.sourceAccount.scale,
-      code: payment.sourceAccount.code
-    },
+    sourceAccount: payment.sourceAccount,
     destinationAccount: payment.destinationAccount
   }
 }

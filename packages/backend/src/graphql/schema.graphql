@@ -361,8 +361,8 @@ type InvoiceEdge {
 
 type Invoice {
   id: ID!
-  receivedAmount: Int!
-  maximumAmount: Int
+  receivedAmount: UInt64!
+  maximumAmount: UInt64
   asset: Asset!
   active: Boolean!
   createdAt: String!
@@ -386,7 +386,7 @@ type OutgoingPayment {
 
 type PaymentIntent {
   paymentPointer: String
-  amountToSend: String #UInt64
+  amountToSend: UInt64
   invoiceUrl: String
   autoApprove: Boolean!
 }
@@ -417,9 +417,9 @@ type PaymentQuote {
   timestamp: String!
   activationDeadline: String!
   targetType: PaymentType!
-  minDeliveryAmount: String! #UInt64!
-  maxSourceAmount: String! #UInt64!
-  maxPacketAmount: String! #UInt64!
+  minDeliveryAmount: UInt64!
+  maxSourceAmount: UInt64!
+  maxPacketAmount: UInt64!
   minExchangeRate: Float!
   lowExchangeRateEstimate: Float!
   highExchangeRateEstimate: Float!
@@ -444,7 +444,7 @@ type OutgoingPaymentOutcome {
 input CreateOutgoingPaymentInput {
   accountId: String!
   paymentPointer: String
-  amountToSend: String #UInt64
+  amountToSend: UInt64
   invoiceUrl: String
   autoApprove: Boolean!
 }
