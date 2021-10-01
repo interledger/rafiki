@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-koa'
+import assert from 'assert'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
@@ -127,6 +128,7 @@ describe('Account Resolvers', (): void => {
           staticIlpAddress: 'g.rafiki.' + id
         }
       }
+      assert.ok(account.http)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -161,8 +163,7 @@ describe('Account Resolvers', (): void => {
       await expect(accountService.get(id)).resolves.toMatchObject({
         ...account,
         http: {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          outgoing: account.http!.outgoing
+          outgoing: account.http.outgoing
         },
         maxPacketAmount: BigInt(account.maxPacketAmount)
       })
@@ -324,6 +325,9 @@ describe('Account Resolvers', (): void => {
           staticIlpAddress: 'g.rafiki.test'
         }
       })
+      assert.ok(account.http)
+      assert.ok(account.routing)
+      assert.ok(account.maxPacketAmount)
       const subAccount = await accountFactory.build({
         superAccountId: account.id
       })
@@ -421,14 +425,12 @@ describe('Account Resolvers', (): void => {
           __typename: 'Http',
           outgoing: {
             __typename: 'HttpOutgoing',
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            ...account.http!.outgoing
+            ...account.http.outgoing
           }
         },
         routing: {
           __typename: 'Routing',
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          staticIlpAddress: account.routing!.staticIlpAddress
+          staticIlpAddress: account.routing.staticIlpAddress
         },
         superAccountId: superAccount.id,
         superAccount: {
@@ -469,8 +471,7 @@ describe('Account Resolvers', (): void => {
             }
           ]
         },
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        maxPacketAmount: account.maxPacketAmount!.toString(),
+        maxPacketAmount: account.maxPacketAmount.toString(),
         balance: {
           __typename: 'Balance',
           balance: '0',
@@ -676,6 +677,9 @@ describe('Account Resolvers', (): void => {
       expect(query.edges).toHaveLength(2)
       query.edges.forEach((edge, idx) => {
         const account = accounts[idx]
+        assert.ok(account.http)
+        assert.ok(account.routing)
+        assert.ok(account.maxPacketAmount)
         expect(edge.cursor).toEqual(account.id)
         expect(edge.node).toEqual({
           __typename: 'Account',
@@ -694,17 +698,14 @@ describe('Account Resolvers', (): void => {
             __typename: 'Http',
             outgoing: {
               __typename: 'HttpOutgoing',
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              ...account.http!.outgoing
+              ...account.http.outgoing
             }
           },
           routing: {
             __typename: 'Routing',
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            staticIlpAddress: account.routing!.staticIlpAddress
+            staticIlpAddress: account.routing.staticIlpAddress
           },
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          maxPacketAmount: account.maxPacketAmount!.toString()
+          maxPacketAmount: account.maxPacketAmount.toString()
         })
       })
     })
@@ -1182,6 +1183,7 @@ describe('Account Resolvers', (): void => {
           staticIlpAddress: 'g.rafiki.' + account.id
         }
       }
+      assert.ok(updateOptions.http)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -1233,8 +1235,7 @@ describe('Account Resolvers', (): void => {
           __typename: 'Http',
           outgoing: {
             __typename: 'HttpOutgoing',
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            ...updateOptions.http!.outgoing
+            ...updateOptions.http.outgoing
           }
         },
         routing: {
@@ -1250,8 +1251,7 @@ describe('Account Resolvers', (): void => {
         ...updateOptions,
         asset: account.asset,
         http: {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          outgoing: updateOptions.http!.outgoing
+          outgoing: updateOptions.http.outgoing
         },
         maxPacketAmount: BigInt(updateOptions.maxPacketAmount)
       })
@@ -1276,6 +1276,8 @@ describe('Account Resolvers', (): void => {
           staticIlpAddress: 'g.rafiki.' + uuid()
         }
       })
+      assert.ok(account.http)
+      assert.ok(account.routing)
       const updateOptions: UpdateAccountInput = {
         id: account.id,
         disabled: true
@@ -1333,14 +1335,12 @@ describe('Account Resolvers', (): void => {
           __typename: 'Http',
           outgoing: {
             __typename: 'HttpOutgoing',
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            ...account.http!.outgoing
+            ...account.http.outgoing
           }
         },
         routing: {
           __typename: 'Routing',
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          staticIlpAddress: account.routing!.staticIlpAddress
+          staticIlpAddress: account.routing.staticIlpAddress
         },
         stream: {
           __typename: 'Stream',
@@ -1348,10 +1348,10 @@ describe('Account Resolvers', (): void => {
         }
       })
       const updatedAccount = await accountService.get(account.id)
+      assert.ok(updatedAccount?.updatedAt)
       await expect(updatedAccount).toMatchObject({
         ...account,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        updatedAt: updatedAccount!.updatedAt,
+        updatedAt: updatedAccount.updatedAt,
         disabled: updateOptions.disabled
       })
     })

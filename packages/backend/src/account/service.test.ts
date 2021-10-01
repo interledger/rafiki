@@ -1,3 +1,4 @@
+import assert from 'assert'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
@@ -146,6 +147,7 @@ describe('Account Service', (): void => {
           staticIlpAddress: 'g.rafiki.' + id
         }
       }
+      assert.ok(account.http)
       const accountOrError = await accountService.create(account)
       expect(isAccountError(accountOrError)).toEqual(false)
       if (isAccountError(accountOrError)) {
@@ -154,8 +156,7 @@ describe('Account Service', (): void => {
       expect(accountOrError).toMatchObject({
         ...account,
         http: {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          outgoing: account.http!.outgoing
+          outgoing: account.http.outgoing
         }
       })
       await expect(accountService.get(id)).resolves.toEqual(accountOrError)
@@ -673,10 +674,10 @@ describe('Account Service', (): void => {
           staticIlpAddress: 'g.rafiki.' + id
         }
       }
+      assert.ok(updateOptions.http)
       const accountOrError = await accountService.update(updateOptions)
       expect(isAccountError(accountOrError)).toEqual(false)
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      delete updateOptions.http!.incoming
+      delete updateOptions.http.incoming
       const expectedAccount = {
         ...updateOptions,
         asset

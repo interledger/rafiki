@@ -1,3 +1,4 @@
+import assert from 'assert'
 import {
   NotFoundError,
   PartialModelObject,
@@ -201,6 +202,7 @@ async function createAccount(
     newAccount.asset = await deps.assetService.getOrCreate(account.asset)
     newAccount.assetId = newAccount.asset.id
   }
+  assert.ok(newAccount.asset)
 
   const acctTrx = trx || (await Account.startTransaction())
   try {
@@ -250,8 +252,7 @@ async function createAccount(
     newAccount.balanceId = uuid()
     newBalances.push({
       id: newAccount.balanceId,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      unit: newAccount.asset!.unit
+      unit: newAccount.asset.unit
     })
 
     await deps.balanceService.create(newBalances)
