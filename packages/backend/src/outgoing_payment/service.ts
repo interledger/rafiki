@@ -67,7 +67,8 @@ async function createOutgoingPayment(
   ) {
     deps.logger.warn(
       {
-        options
+        ...options,
+        amountToSend: options.amountToSend?.toString() // JSON can't stringify bigints
       },
       'createOutgoingPayment invalid parameters'
     )

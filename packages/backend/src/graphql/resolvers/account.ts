@@ -73,10 +73,13 @@ export const createAccount: MutationResolvers['createAccount'] = async (
       account: accountOrError
     }
   } catch (error) {
-    ctx.logger.error('error creating account', {
-      options: args.input,
-      error
-    })
+    ctx.logger.error(
+      {
+        options: args.input,
+        error
+      },
+      'error creating account'
+    )
     return {
       code: '400',
       message: 'Error trying to create account',
@@ -118,10 +121,13 @@ export const updateAccount: MutationResolvers['updateAccount'] = async (
       account: accountOrError
     }
   } catch (error) {
-    ctx.logger.error('error updating account', {
-      options: args.input,
-      error
-    })
+    ctx.logger.error(
+      {
+        options: args.input,
+        error
+      },
+      'error updating account'
+    )
     return {
       code: '400',
       message: 'Error trying to update account',
@@ -169,10 +175,13 @@ export const createSubAccount: MutationResolvers['createSubAccount'] = async (
       account: accountOrError
     }
   } catch (error) {
-    ctx.logger.error('error creating sub-account', {
-      superAccountId: args.superAccountId,
-      error
-    })
+    ctx.logger.error(
+      {
+        superAccountId: args.superAccountId,
+        error
+      },
+      'error creating sub-account'
+    )
     return {
       code: '400',
       message: 'Error trying to create sub-account',

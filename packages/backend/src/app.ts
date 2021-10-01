@@ -46,6 +46,7 @@ export interface AppContextData {
 export interface ApolloContext {
   messageProducer: MessageProducer
   container: IocContract<AppServices>
+  logger: Logger
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
@@ -179,7 +180,8 @@ export class App {
       context: async (): Promise<ApolloContext> => {
         return {
           messageProducer: this.messageProducer,
-          container: this.container
+          container: this.container,
+          logger: await this.container.use('logger')
         }
       }
     })

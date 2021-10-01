@@ -57,10 +57,13 @@ export const createDeposit: MutationResolvers['createDeposit'] = async (
       deposit: depositOrError
     }
   } catch (error) {
-    ctx.logger.error('error creating deposit', {
-      deposit: args.input,
-      error
-    })
+    ctx.logger.error(
+      {
+        deposit: args.input,
+        error
+      },
+      'error creating deposit'
+    )
     return {
       code: '400',
       message: 'Error trying to create deposit',
