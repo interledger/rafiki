@@ -4,6 +4,7 @@ import Knex from 'knex'
 import { StreamServer } from '@interledger/stream-receiver'
 import { PaymentError, PaymentType } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
+import * as Pay from '@interledger/pay'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -92,9 +93,12 @@ describe('OutgoingPayment Resolvers', (): void => {
           minDeliveryAmount: BigInt(123),
           maxSourceAmount: BigInt(456),
           maxPacketAmount: BigInt(789),
-          minExchangeRate: 1.23,
-          lowExchangeRateEstimate: 1.2,
-          highExchangeRateEstimate: 2.3
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          minExchangeRate: Pay.Ratio.from(1.23)!,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
         superAccountId,
         sourceAccount: {
@@ -195,6 +199,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
         maxSourceAmount: payment.quote?.maxSourceAmount.toString(),
         maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
+        minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
+        lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
+        highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
         __typename: 'PaymentQuote'
       })
       expect(query.superAccountId).toBe(payment.superAccountId)

@@ -10,6 +10,12 @@ const fieldPrefixes = [
   'outcome'
 ]
 
+const ratioFields = [
+  'quoteMinExchangeRate',
+  'quoteLowExchangeRateEstimate',
+  'quoteHighExchangeRateEstimate'
+]
+
 export type PaymentIntent = {
   paymentPointer?: string
   invoiceUrl?: string
@@ -34,9 +40,11 @@ export class OutgoingPayment extends BaseModel {
     minDeliveryAmount: bigint
     maxSourceAmount: bigint
     maxPacketAmount: bigint
-    minExchangeRate: number
-    lowExchangeRateEstimate: number
-    highExchangeRateEstimate: number
+    minExchangeRate: Pay.Ratio
+    lowExchangeRateEstimate: Pay.Ratio
+    // Note that the upper exchange rate bound is *exclusive*.
+    // (Pay.PositiveRatio, but validated later)
+    highExchangeRateEstimate: Pay.Ratio
   }
   public superAccountId!: string
   public sourceAccount!: {
@@ -75,11 +83,31 @@ export class OutgoingPayment extends BaseModel {
       }
       delete json[prefix]
     }
+    ratioFields.forEach((ratioField: string) => {
+      if (!json[ratioField]) return
+      json[ratioField + 'Numerator'] = json[ratioField].a.value
+      json[ratioField + 'Denominator'] = json[ratioField].b.value
+      delete json[ratioField]
+    })
     return super.$formatDatabaseJson(json)
   }
 
   $parseDatabaseJson(json: Pojo): Pojo {
     json = super.$parseDatabaseJson(json)
+    ratioFields.forEach((ratioField: string) => {
+      if (
+        json[ratioField + 'Numerator'] === null ||
+        json[ratioField + 'Denominator'] === null
+      ) {
+        return
+      }
+      json[ratioField] = Pay.Ratio.of(
+        Pay.Int.from(json[ratioField + 'Numerator']),
+        Pay.Int.from(json[ratioField + 'Denominator'])
+      )
+      delete json[ratioField + 'Numerator']
+      delete json[ratioField + 'Denominator']
+    })
     for (const key in json) {
       const prefix = fieldPrefixes.find((prefix) => key.startsWith(prefix))
       if (!prefix) continue

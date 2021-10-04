@@ -174,7 +174,10 @@ function paymentToGraphql(
       ...payment.quote,
       targetType: SchemaPaymentType[payment.quote.targetType],
       timestamp: payment.quote.timestamp.toISOString(),
-      activationDeadline: payment.quote.activationDeadline.toISOString()
+      activationDeadline: payment.quote.activationDeadline.toISOString(),
+      minExchangeRate: payment.quote.minExchangeRate.valueOf(),
+      lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
+      highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
     superAccountId: payment.superAccountId,
     sourceAccount: payment.sourceAccount,

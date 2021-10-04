@@ -127,9 +127,9 @@ export async function handleQuoting(
       // Cap at MAX_INT64 because of postgres type limits.
       maxPacketAmount:
         MAX_INT64 < quote.maxPacketAmount ? MAX_INT64 : quote.maxPacketAmount,
-      minExchangeRate: quote.minExchangeRate.valueOf(),
-      lowExchangeRateEstimate: quote.lowEstimatedExchangeRate.valueOf(),
-      highExchangeRateEstimate: quote.highEstimatedExchangeRate.valueOf()
+      minExchangeRate: quote.minExchangeRate,
+      lowExchangeRateEstimate: quote.lowEstimatedExchangeRate,
+      highExchangeRateEstimate: quote.highEstimatedExchangeRate
     }
   })
 }
@@ -220,7 +220,8 @@ export async function handleSending(
       // eslint-disable-next-line no-case-declarations
       const amountDeliveredSinceQuote = BigInt(
         Math.ceil(
-          +amountSentSinceQuote.toString() * payment.quote.minExchangeRate
+          +amountSentSinceQuote.toString() *
+            payment.quote.minExchangeRate.valueOf()
         )
       )
       newMinDeliveryAmount =
@@ -274,20 +275,11 @@ export async function handleSending(
     throw LifecycleError.BadState
   }
 
-  const lowEstimatedExchangeRate = Pay.Ratio.from(
-    payment.quote.lowExchangeRateEstimate
-  )
-  const highEstimatedExchangeRate = Pay.Ratio.from(
-    payment.quote.highExchangeRateEstimate
-  )
-  const minExchangeRate = Pay.Ratio.from(payment.quote.minExchangeRate)
-  if (
-    !lowEstimatedExchangeRate ||
-    !highEstimatedExchangeRate ||
-    !highEstimatedExchangeRate.isPositive() ||
-    !minExchangeRate
-  ) {
-    // This shouldn't ever happen, since the rates are correct when they are stored during the quoting stage.
+  const lowEstimatedExchangeRate = payment.quote.lowExchangeRateEstimate
+  const highEstimatedExchangeRate = payment.quote.highExchangeRateEstimate
+  const minExchangeRate = payment.quote.minExchangeRate
+  if (!highEstimatedExchangeRate.isPositive()) {
+    // This shouldn't ever happen, since the rate is correct when they are stored during the quoting stage.
     deps.logger.error(
       {
         lowEstimatedExchangeRate,

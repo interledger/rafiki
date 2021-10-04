@@ -333,7 +333,9 @@ describe('OutgoingPaymentService', (): void => {
           0.5 * (1 - config.slippage)
         )
         expect(payment.quote.lowExchangeRateEstimate.valueOf()).toBe(0.5)
-        expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(0.5)
+        expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(
+          0.500000000001
+        )
       })
 
       it('Ready (FixedDelivery)', async (): Promise<void> => {
@@ -356,7 +358,9 @@ describe('OutgoingPaymentService', (): void => {
           0.5 * (1 - config.slippage)
         )
         expect(payment.quote.lowExchangeRateEstimate.valueOf()).toBe(0.5)
-        expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(0.5)
+        expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(
+          0.500000000001
+        )
       })
 
       it('Inactive (rate service error)', async (): Promise<void> => {
