@@ -1,12 +1,20 @@
 import Koa from 'koa'
-import { createRatesService, RatesService, ConvertError } from '.'
-import { logger } from './mocks'
 
-jest.useFakeTimers('modern')
+import { RatesService, ConvertError } from './service'
+import { createTestApp, TestContainer } from '../tests/app'
+import { Config } from '../config/app'
+import { IocContract } from '@adonisjs/fold'
+import { initIocContainer } from '../'
+import { AppServices } from '../app'
+
 describe('Rates service', function () {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
   let service: RatesService
   let requestCount = 0
-
+  const mockMessageProducer = {
+    send: jest.fn()
+  }
   const pricesLifetime = 100
   const koa = new Koa()
   koa.use(function (ctx) {
@@ -21,19 +29,37 @@ describe('Rates service', function () {
   })
   const server = koa.listen(3210)
 
-  beforeEach(() => {
-    jest.setSystemTime(1600000000000)
-    service = createRatesService({
-      pricesUrl: 'http://127.0.0.1:3210/',
-      pricesLifetime,
-      logger
-    })
-    requestCount = 0
-  })
+  beforeAll(
+    async (): Promise<void> => {
+      jest.useFakeTimers('modern')
+      jest.setSystemTime(1600000000000)
+      const config = Config
+      config.pricesLifetime = pricesLifetime
+      config.pricesUrl = 'http://127.0.0.1:3210/'
+      deps = await initIocContainer(config)
+      deps.bind('messageProducer', async () => mockMessageProducer)
+      appContainer = await createTestApp(deps)
+    }
+  )
 
-  afterAll(() => {
-    server.close()
-  })
+  beforeEach(
+    async (): Promise<void> => {
+      // Fast-forward to reset the cache between tests.
+      jest.setSystemTime(Date.now() + pricesLifetime + 1)
+      service = await deps.use('ratesService')
+      requestCount = 0
+    }
+  )
+
+  afterAll(
+    async (): Promise<void> => {
+      jest.useRealTimers()
+      await new Promise((resolve, reject) => {
+        server.close((err?: Error) => (err ? reject(err) : resolve(null)))
+      })
+      await appContainer.shutdown()
+    }
+  )
 
   describe('convert', function () {
     it('returns the source amount when assets are alike', async () => {
