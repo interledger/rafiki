@@ -25,8 +25,8 @@ export type IAppConfig = typeof Config
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   port: envInt('PORT', 3001),
-  adminPort: envInt('ADMIN_PORT', 3003),
-  connectorGraphQLHost: envString('CONNECTOR_GRAPHQL_HOST', '127.0.0.1:3004'),
+  connectorPort: envInt('CONNECTOR_PORT', 3002),
+  connectorAdminPort: envInt('CONNECTOR_ADMIN_PORT', 3003),
   databaseUrl:
     process.env.NODE_ENV === 'test'
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
@@ -40,9 +40,17 @@ export const Config = {
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
 
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
+  peerAddresses: process.env.PEER_ADDRESSES
+    ? JSON.parse(process.env.PEER_ADDRESSES)
+    : [],
   streamSecret: process.env.STREAM_SECRET
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
     : crypto.randomBytes(32),
+
+  tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 1),
+  tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
+    ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
+    : ['3004'],
 
   // This endpoint is unauthenticated -- the Bearer token sent is just the account id to impersonate.
   ilpUrl: envString('ADMIN_ILP_URL', 'http://127.0.0.1:3009/ilp'),

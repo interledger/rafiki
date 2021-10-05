@@ -20,12 +20,18 @@ import {
   loadSchemaSync
 } from 'graphql-tools'
 import { resolvers } from './graphql/resolvers'
+import { HttpTokenService } from './httpToken/service'
+import { BalanceService } from './balance/service'
+import { TransferService } from './transfer/service'
+import { AssetService } from './asset/service'
 import { AccountService } from './account/service'
+import { DepositService } from './deposit/service'
+import { WithdrawalService } from './withdrawal/service'
+import { CreditService } from './credit/service'
 import { SPSPService } from './spsp/service'
 import { InvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebMonetizationService } from './webmonetization/service'
-import { ConnectorService } from './connector/service'
 import { OutgoingPaymentService } from './outgoing_payment/service'
 import { IlpPlugin } from './outgoing_payment/ilp_plugin'
 
@@ -40,6 +46,7 @@ export interface AppContextData {
 export interface ApolloContext {
   messageProducer: MessageProducer
   container: IocContract<AppServices>
+  logger: Logger
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
@@ -50,12 +57,18 @@ export interface AppServices {
   closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
   workerUtils: Promise<WorkerUtils>
+  httpTokenService: Promise<HttpTokenService>
+  balanceService: Promise<BalanceService>
+  transferService: Promise<TransferService>
+  assetService: Promise<AssetService>
   accountService: Promise<AccountService>
+  depositService: Promise<DepositService>
+  withdrawalService: Promise<WithdrawalService>
+  creditService: Promise<CreditService>
   SPSPService: Promise<SPSPService>
   invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
   wmService: Promise<WebMonetizationService>
-  connectorService: Promise<ConnectorService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
   makeIlpPlugin: Promise<(sourceAccount: string) => IlpPlugin>
   ratesService: Promise<RatesService>
@@ -167,7 +180,8 @@ export class App {
       context: async (): Promise<ApolloContext> => {
         return {
           messageProducer: this.messageProducer,
-          container: this.container
+          container: this.container,
+          logger: await this.container.use('logger')
         }
       }
     })

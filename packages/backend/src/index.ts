@@ -1,10 +1,12 @@
 import { EventEmitter } from 'events'
+import { Server } from 'http'
 import createLogger from 'pino'
 import Knex from 'knex'
 import { Model } from 'objection'
 import { makeWorkerUtils } from 'graphile-worker'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import IORedis from 'ioredis'
+import { createClient } from 'tigerbeetle-node'
 
 import { createRatesService } from 'rates'
 import { App, AppServices } from './app'
@@ -12,16 +14,24 @@ import { Config } from './config/app'
 import { GraphileProducer } from './messaging/graphileProducer'
 import { createOutgoingPaymentService } from './outgoing_payment/service'
 import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
+import { createHttpTokenService } from './httpToken/service'
+import { createBalanceService } from './balance/service'
+import { createAssetService } from './asset/service'
 import { createAccountService } from './account/service'
+import { createDepositService } from './deposit/service'
+import { createWithdrawalService } from './withdrawal/service'
+import { createCreditService } from './credit/service'
 import { createSPSPService } from './spsp/service'
+import { createTransferService } from './transfer/service'
 import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebMonetizationService } from './webmonetization/service'
-import { createConnectorService } from './connector/service'
-import { connectorClient } from './connector/client'
+import { createConnectorService } from './connector'
 
 const container = initIocContainer(Config)
 const app = new App(container)
+let connectorServer: Server
+let connectorAdminServer: Server
 
 export function initIocContainer(
   config: typeof Config
@@ -89,18 +99,102 @@ export function initIocContainer(
       serverAddress: config.ilpAddress
     })
   })
+  container.singleton('tigerbeetle', async (deps) => {
+    const config = await deps.use('config')
+    return createClient({
+      cluster_id: config.tigerbeetleClusterId,
+      replica_addresses: config.tigerbeetleReplicaAddresses
+    })
+  })
 
   /**
    * Add services to the container.
    */
-  container.singleton('accountService', async (deps) => {
+  container.singleton('httpTokenService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
-    const connectorService = await deps.use('connectorService')
+    return await createHttpTokenService({
+      logger: logger,
+      knex: knex
+    })
+  })
+  container.singleton('balanceService', async (deps) => {
+    const logger = await deps.use('logger')
+    const tigerbeetle = await deps.use('tigerbeetle')
+    return await createBalanceService({
+      logger: logger,
+      tigerbeetle: tigerbeetle
+    })
+  })
+  container.singleton('transferService', async (deps) => {
+    const logger = await deps.use('logger')
+    const tigerbeetle = await deps.use('tigerbeetle')
+    return await createTransferService({
+      logger: logger,
+      tigerbeetle: tigerbeetle
+    })
+  })
+  container.singleton('assetService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    const balanceService = await deps.use('balanceService')
+    return await createAssetService({
+      logger: logger,
+      knex: knex,
+      balanceService: balanceService
+    })
+  })
+  container.singleton('accountService', async (deps) => {
+    const config = await deps.use('config')
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    const assetService = await deps.use('assetService')
+    const balanceService = await deps.use('balanceService')
+    const transferService = await deps.use('transferService')
+    const httpTokenService = await deps.use('httpTokenService')
     return await createAccountService({
       logger: logger,
       knex: knex,
-      connectorService: connectorService
+      assetService,
+      balanceService,
+      httpTokenService,
+      transferService,
+      ilpAddress: config.ilpAddress,
+      peerAddresses: config.peerAddresses
+    })
+  })
+  container.singleton('depositService', async (deps) => {
+    const logger = await deps.use('logger')
+    const assetService = await deps.use('assetService')
+    const accountService = await deps.use('accountService')
+    const transferService = await deps.use('transferService')
+    return await createDepositService({
+      logger: logger,
+      assetService,
+      accountService,
+      transferService
+    })
+  })
+  container.singleton('withdrawalService', async (deps) => {
+    const logger = await deps.use('logger')
+    const assetService = await deps.use('assetService')
+    const accountService = await deps.use('accountService')
+    const transferService = await deps.use('transferService')
+    return await createWithdrawalService({
+      logger: logger,
+      assetService,
+      accountService,
+      transferService
+    })
+  })
+  container.singleton('creditService', async (deps) => {
+    const logger = await deps.use('logger')
+    const accountService = await deps.use('accountService')
+    const transferService = await deps.use('transferService')
+    return await createCreditService({
+      logger: logger,
+      accountService,
+      transferService
     })
   })
   container.singleton('SPSPService', async (deps) => {
@@ -139,16 +233,6 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('connectorService', async (deps) => {
-    const logger = await deps.use('logger')
-    const config = await deps.use('config')
-    const client = connectorClient(logger, config.connectorGraphQLHost)
-    return await createConnectorService({
-      logger: logger,
-      client: client
-    })
-  })
-
   container.singleton('ratesService', async (deps) => {
     const config = await deps.use('config')
     return createRatesService({
@@ -173,12 +257,11 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountService: await deps.use('accountService'),
-      connectorService: await deps.use('connectorService'),
+      creditService: await deps.use('creditService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       ratesService: await deps.use('ratesService')
     })
   })
-
   return container
 }
 
@@ -189,10 +272,26 @@ export const gracefulShutdown = async (
   const logger = await container.use('logger')
   logger.info('shutting down.')
   await app.shutdown()
+  if (connectorServer) {
+    await new Promise((resolve, reject) => {
+      connectorServer.close((err?: Error) =>
+        err ? reject(err) : resolve(null)
+      )
+    })
+  }
+  if (connectorAdminServer) {
+    await new Promise((resolve, reject) => {
+      connectorAdminServer.close((err?: Error) =>
+        err ? reject(err) : resolve(null)
+      )
+    })
+  }
   const knex = await container.use('knex')
   await knex.destroy()
   const workerUtils = await container.use('workerUtils')
   await workerUtils.release()
+  const tigerbeetle = await container.use('tigerbeetle')
+  await tigerbeetle.destroy()
   const redis = await container.use('redis')
   await redis.disconnect()
 }
@@ -265,6 +364,20 @@ export const start = async (
   await app.boot()
   app.listen(config.port)
   logger.info(`Listening on ${app.getPort()}`)
+
+  const connectorApp = await createConnectorService({
+    logger: logger,
+    redis: await container.use('redis'),
+    accountService: await container.use('accountService'),
+    ratesService: await container.use('ratesService'),
+    streamServer: await container.use('streamServer'),
+    ilpAddress: config.ilpAddress
+  })
+  connectorServer = connectorApp.listenPublic(config.connectorPort)
+  logger.info(`Connector listening on ${config.connectorPort}`)
+  connectorAdminServer = connectorApp.listenAdmin(config.connectorAdminPort)
+  logger.info(`Connector listening on ${config.connectorAdminPort}`)
+  logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
 
 // If this script is run directly, start the server

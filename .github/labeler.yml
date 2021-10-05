@@ -1,7 +1,6 @@
 # This file configures automatic labelling of pr's
 
 'pkg: backend': packages/backend/**/*
-'pkg: interledger': packages/interledger/**/*
 'pkg: frontend': packages/frontend/**/*
 'pkg: rates': packages/rates/**/*
 
@@ -18,7 +17,6 @@
 
 'type: source':
   - packages/backend/src/**/*
-  - packages/interledger/src/**/*
   - packages/frontend/src/**/*
   - packages/rates/src/**/*
 

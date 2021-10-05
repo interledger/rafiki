@@ -17,9 +17,13 @@ exports.up = function (knex) {
     table.bigInteger('quoteMinDeliveryAmount').nullable()
     table.bigInteger('quoteMaxSourceAmount').nullable()
     table.bigInteger('quoteMaxPacketAmount').nullable()
-    table.float('quoteMinExchangeRate').nullable()
-    table.float('quoteLowExchangeRateEstimate').nullable()
-    table.float('quoteHighExchangeRateEstimate').nullable()
+
+    table.bigInteger('quoteMinExchangeRateNumerator').nullable()
+    table.bigInteger('quoteMinExchangeRateDenominator').nullable()
+    table.bigInteger('quoteLowExchangeRateEstimateNumerator').nullable()
+    table.bigInteger('quoteLowExchangeRateEstimateDenominator').nullable()
+    table.bigInteger('quoteHighExchangeRateEstimateNumerator').nullable()
+    table.bigInteger('quoteHighExchangeRateEstimateDenominator').nullable()
 
     table.string('superAccountId').notNullable()
     table.string('sourceAccountId').notNullable()

@@ -31,11 +31,12 @@ export const getOutcome: OutgoingPaymentResolvers['outcome'] = async (
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
-  const connectorService = await ctx.container.use('connectorService')
+  const accountService = await ctx.container.use('accountService')
   const sourceAccountId =
     parent.sourceAccount?.id ||
     (await outgoingPaymentService.get(parent.id)).sourceAccount.id
-  const { balance } = await connectorService.getIlpAccount(sourceAccountId)
+  const balance = await accountService.getBalance(sourceAccountId)
+  if (!balance) throw new Error('source account does not exist')
   return {
     amountSent: (balance.totalBorrowed - balance.balance).toString()
   }
@@ -168,25 +169,18 @@ function paymentToGraphql(
     state: SchemaPaymentState[payment.state],
     error: payment.error,
     stateAttempts: payment.stateAttempts,
-    intent: {
-      ...payment.intent,
-      amountToSend: payment.intent.amountToSend?.toString()
-    },
+    intent: payment.intent,
     quote: payment.quote && {
       ...payment.quote,
       targetType: SchemaPaymentType[payment.quote.targetType],
       timestamp: payment.quote.timestamp.toISOString(),
       activationDeadline: payment.quote.activationDeadline.toISOString(),
-      minDeliveryAmount: payment.quote.minDeliveryAmount.toString(),
-      maxSourceAmount: payment.quote.maxSourceAmount.toString(),
-      maxPacketAmount: payment.quote.maxPacketAmount.toString()
+      minExchangeRate: payment.quote.minExchangeRate.valueOf(),
+      lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
+      highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
     superAccountId: payment.superAccountId,
-    sourceAccount: {
-      id: payment.sourceAccount.id,
-      scale: payment.sourceAccount.scale,
-      code: payment.sourceAccount.code
-    },
+    sourceAccount: payment.sourceAccount,
     destinationAccount: payment.destinationAccount
   }
 }

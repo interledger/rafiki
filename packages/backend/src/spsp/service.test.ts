@@ -16,8 +16,8 @@ import { IocContract } from '@adonisjs/fold'
 import { makeWorkerUtils, WorkerUtils } from 'graphile-worker'
 import { v4 } from 'uuid'
 import { StreamServer } from '@interledger/stream-receiver'
+import { AccountFactory } from '../tests/accountFactory'
 import { truncateTables } from '../tests/tableManager'
-import { AccountService } from '../account/service'
 import { Account } from '../account/model'
 import { WebMonetizationService } from '../webmonetization/service'
 
@@ -26,7 +26,7 @@ describe('SPSP Service', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let workerUtils: WorkerUtils
-  let accountService: AccountService
+  let accountFactory: AccountFactory
   let wmService: WebMonetizationService
   let SPSPService: SPSPService
   let streamServer: StreamServer
@@ -53,7 +53,8 @@ describe('SPSP Service', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      accountService = await deps.use('accountService')
+      const accountService = await deps.use('accountService')
+      accountFactory = new AccountFactory(accountService)
       SPSPService = await deps.use('SPSPService')
       streamServer = await deps.use('streamServer')
       wmService = await deps.use('wmService')
@@ -74,7 +75,12 @@ describe('SPSP Service', (): void => {
 
     beforeEach(
       async (): Promise<void> => {
-        account = await accountService.create(6, 'USD')
+        account = await accountFactory.build({
+          asset: {
+            scale: 6,
+            code: 'USD'
+          }
+        })
       }
     )
 

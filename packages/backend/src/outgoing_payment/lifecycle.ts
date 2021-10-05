@@ -3,6 +3,7 @@ import * as Pay from '@interledger/pay'
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
+import { CreditError } from '../credit/errors'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -21,6 +22,7 @@ export enum LifecycleError {
   BadState = 'BadState',
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
+  MissingBalance = 'MissingBalance',
   MissingQuote = 'MissingQuote',
   MissingInvoice = 'MissingInvoice',
   InvalidRatio = 'InvalidRatio'
@@ -57,9 +59,12 @@ export async function handleQuoting(
   // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
   let amountToSend: bigint | undefined
   if (payment.intent.amountToSend) {
-    const { balance } = await deps.connectorService.getIlpAccount(
+    const balance = await deps.accountService.getBalance(
       payment.sourceAccount.id
     )
+    if (!balance) {
+      throw LifecycleError.MissingBalance
+    }
     const amountSent = balance.totalBorrowed - balance.balance
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
@@ -122,9 +127,9 @@ export async function handleQuoting(
       // Cap at MAX_INT64 because of postgres type limits.
       maxPacketAmount:
         MAX_INT64 < quote.maxPacketAmount ? MAX_INT64 : quote.maxPacketAmount,
-      minExchangeRate: quote.minExchangeRate.valueOf(),
-      lowExchangeRateEstimate: quote.lowEstimatedExchangeRate.valueOf(),
-      highExchangeRateEstimate: quote.highEstimatedExchangeRate.valueOf()
+      minExchangeRate: quote.minExchangeRate,
+      lowExchangeRateEstimate: quote.lowEstimatedExchangeRate,
+      highExchangeRateEstimate: quote.highEstimatedExchangeRate
     }
   })
 }
@@ -165,21 +170,19 @@ export async function handleActivation(
   }
 
   await refundLeftoverBalance(deps, payment)
-  const extendRes = await deps.connectorService.extendCredit({
+  const error = await deps.creditService.extend({
     accountId: payment.superAccountId,
     subAccountId: payment.sourceAccount.id,
     amount: payment.quote.maxSourceAmount,
     autoApply: true
   })
-  if (extendRes.error === 'InsufficientBalance') {
+  if (error === CreditError.InsufficientBalance) {
     throw LifecycleError.InsufficientBalance
-  } else if (!extendRes.success) {
+  } else if (error) {
     // Unexpected account service errors: the money was not reserved.
     deps.logger.warn(
       {
-        code: extendRes.code,
-        message: extendRes.message,
-        error: extendRes.error
+        error
       },
       'extend credit error'
     )
@@ -201,9 +204,10 @@ export async function handleSending(
     paymentPointer: payment.intent.paymentPointer,
     invoiceUrl: payment.intent.invoiceUrl
   })
-  const { balance } = await deps.connectorService.getIlpAccount(
-    payment.sourceAccount.id
-  )
+  const balance = await deps.accountService.getBalance(payment.sourceAccount.id)
+  if (!balance) {
+    throw LifecycleError.MissingBalance
+  }
 
   // Due to Sending→Sending retries, the quote's amount parameters may need adjusting.
   const amountSentSinceQuote = payment.quote.maxSourceAmount - balance.balance
@@ -216,7 +220,8 @@ export async function handleSending(
       // eslint-disable-next-line no-case-declarations
       const amountDeliveredSinceQuote = BigInt(
         Math.ceil(
-          +amountSentSinceQuote.toString() * payment.quote.minExchangeRate
+          +amountSentSinceQuote.toString() *
+            payment.quote.minExchangeRate.valueOf()
         )
       )
       newMinDeliveryAmount =
@@ -270,20 +275,11 @@ export async function handleSending(
     throw LifecycleError.BadState
   }
 
-  const lowEstimatedExchangeRate = Pay.Ratio.from(
-    payment.quote.lowExchangeRateEstimate
-  )
-  const highEstimatedExchangeRate = Pay.Ratio.from(
-    payment.quote.highExchangeRateEstimate
-  )
-  const minExchangeRate = Pay.Ratio.from(payment.quote.minExchangeRate)
-  if (
-    !lowEstimatedExchangeRate ||
-    !highEstimatedExchangeRate ||
-    !highEstimatedExchangeRate.isPositive() ||
-    !minExchangeRate
-  ) {
-    // This shouldn't ever happen, since the rates are correct when they are stored during the quoting stage.
+  const lowEstimatedExchangeRate = payment.quote.lowExchangeRateEstimate
+  const highEstimatedExchangeRate = payment.quote.highExchangeRateEstimate
+  const minExchangeRate = payment.quote.minExchangeRate
+  if (!highEstimatedExchangeRate.isPositive()) {
+    // This shouldn't ever happen, since the rate is correct when they are stored during the quoting stage.
     deps.logger.error(
       {
         lowEstimatedExchangeRate,
@@ -358,23 +354,22 @@ async function refundLeftoverBalance(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  const { balance } = await deps.connectorService.getIlpAccount(
-    payment.sourceAccount.id
-  )
+  const balance = await deps.accountService.getBalance(payment.sourceAccount.id)
+  if (!balance) {
+    throw LifecycleError.MissingBalance
+  }
   if (balance.balance === BigInt(0)) return
 
-  const settleRes = await deps.connectorService.settleDebt({
+  const error = await deps.creditService.settleDebt({
     accountId: payment.superAccountId,
     subAccountId: payment.sourceAccount.id,
     amount: balance.balance,
     revolve: false
   })
-  if (!settleRes.success) {
+  if (error) {
     deps.logger.warn(
       {
-        code: settleRes.code,
-        message: settleRes.message,
-        error: settleRes.error
+        error
       },
       'settle debt error'
     )

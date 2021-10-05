@@ -1,4 +1,0 @@
-{
-  "name": "Interledger Admin GraphQL Schema",
-  "schemaPath": "/src/admin-api/schema.graphql"
-}

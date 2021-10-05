@@ -1,9 +1,43 @@
 type Query {
   account(id: String!): Account
+
+  "Fetch a page of accounts."
+  accounts(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): AccountsConnection!
+
   outgoingPayment(id: String!): OutgoingPayment
+
+  "Get a webhook by ID."
+  webhook("The ID of the webhook to get." id: String!): Webhook!
+
+  "Get a deposit by ID."
+  deposit("The ID of the deposit to get." id: String!): Deposit!
+
+  "Get a withdrawal by ID."
+  withdrawal("The ID of the withdrawal to get." id: String!): Withdrawal!
 }
 
 type Mutation {
+  "Create account"
+  createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
+
+  "Update account"
+  updateAccount(input: UpdateAccountInput!): UpdateAccountMutationResponse!
+
+  "Delete account"
+  deleteAccount(id: String!): DeleteAccountMutationResponse!
+
+  "Create sub-account"
+  createSubAccount(superAccountId: String!): CreateSubAccountMutationResponse!
+
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
@@ -13,6 +47,66 @@ type Mutation {
   requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
   "Cancel a Ready payment."
   cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
+
+  "Transfer between accounts"
+  transfer(
+    sourceAmount: UInt64!
+    sourceAccountId: ID!
+    destinationAccountId: ID!
+    destinationAmount: UInt64
+    autoCommit: Boolean
+    idempotencyKey: ID!
+  ): TransferMutationResponse
+
+  "Create webhook"
+  createWebhook(
+    "The id of the account to create the webhook for."
+    ilpAccountId: String!
+  ): CreateWebhookMutationResponse
+
+  "Update webhook"
+  updateWebhook(
+    "The id of the webhook to update."
+    webhookId: ID!
+  ): UpdateWebhookMutationResponse
+
+  "Delete webhook"
+  deleteWebhook(
+    "The id of the webhook to delete."
+    webhookId: ID!
+  ): DeleteWebhookMutationResponse
+
+  "Create deposit"
+  createDeposit(input: CreateDepositInput!): CreateDepositMutationResponse
+
+  "Create withdrawal"
+  createWithdrawal(
+    input: CreateWithdrawalInput!
+  ): CreateWithdrawalMutationResponse
+
+  "Finalize pending withdrawal"
+  finalizePendingWithdrawal(
+    "The id of the pending withdrawal to finalize."
+    withdrawalId: String!
+  ): FinalizePendingWithdrawalMutationResponse
+
+  "Rollback pending withdrawal"
+  rollbackPendingWithdrawal(
+    "The id of the pending withdrawal to rollback."
+    withdrawalId: String!
+  ): RollbackPendingWithdrawalMutationResponse
+
+  "Extend Credit"
+  extendCredit(input: ExtendCreditInput!): ExtendCreditMutationResponse
+
+  "Revoke Credit"
+  revokeCredit(input: RevokeCreditInput!): RevokeCreditMutationResponse
+
+  "Utilize Credit"
+  utilizeCredit(input: UtilizeCreditInput!): UtilizeCreditMutationResponse
+
+  "Settle Debt"
+  settleDebt(input: SettleDebtInput): SettleDebtMutationResponse
 }
 
 type PageInfo {
@@ -26,15 +120,184 @@ type PageInfo {
   startCursor: String
 }
 
-type Amount {
-  amount: Int!
-  currency: String!
+type AccountsConnection {
+  pageInfo: PageInfo!
+  edges: [AccountEdge!]!
+}
+
+type SubAccountsConnection {
+  pageInfo: PageInfo!
+  edges: [AccountEdge!]!
+}
+
+type AccountEdge {
+  node: Account!
+  cursor: String!
+}
+
+input CreateAccountInput {
+  id: String
+  disabled: Boolean
+  maxPacketAmount: UInt64
+  http: HttpInput
+  asset: AssetInput!
+  stream: StreamInput
+  routing: RoutingInput
+}
+
+input UpdateAccountInput {
+  id: String
+  disabled: Boolean
+  maxPacketAmount: UInt64
+  http: HttpInput
+  stream: StreamInput
+  routing: RoutingInput
+}
+
+input HttpInput {
+  incoming: HttpIncomingInput!
+  outgoing: HttpOutgoingInput!
+}
+
+input HttpIncomingInput {
+  authTokens: [String!]!
+}
+
+input HttpOutgoingInput {
+  authToken: String!
+  endpoint: String!
+}
+
+input AssetInput {
+  code: String!
   scale: Int!
+}
+
+input StreamInput {
+  enabled: Boolean!
+}
+
+input RoutingInput {
+  staticIlpAddress: String!
+}
+
+input CreateDepositInput {
+  "The id of the account to create the deposit for."
+  accountId: String!
+  "Amount of deposit."
+  amount: UInt64!
+  "The id of the deposit."
+  id: String
+}
+
+input CreateWithdrawalInput {
+  "The id of the account to create the withdrawal for."
+  accountId: String!
+  "Amount of withdrawal."
+  amount: UInt64!
+  "The id of the withdrawal."
+  id: String
+}
+
+input ExtendCreditInput {
+  "Account extending credit."
+  accountId: String!
+  "Sub-account to which credit is extended."
+  subAccountId: String!
+  "Amount of additional line of credit."
+  amount: UInt64!
+  "Automatically utilized and applied to the account balance."
+  autoApply: Boolean! = false
+}
+
+input RevokeCreditInput {
+  "Account revoking credit."
+  accountId: String!
+  "Sub-account to which credit is revoked."
+  subAccountId: String!
+  "Amount of revoked line of credit."
+  amount: UInt64!
+}
+
+input UtilizeCreditInput {
+  "Account extending credit."
+  accountId: String!
+  "Sub-account to which credit is extended."
+  subAccountId: String!
+  "Amount of utilized line of credit."
+  amount: UInt64!
+}
+
+input SettleDebtInput {
+  "Account collecting debt."
+  accountId: String!
+  "Sub-account settling debt."
+  subAccountId: String!
+  "Amount of debt."
+  amount: UInt64!
+  "Replenish the account's line of credit commensurate with the debt settled."
+  revolve: Boolean! = true
+}
+
+type Asset {
+  code: String!
+  scale: Int!
+}
+
+enum WithdrawalError {
+  AlreadyFinalized
+  AlreadyRolledBack
+  InsufficientBalance
+  InsufficientLiquidity
+  InvalidId
+  UnknownAccount
+  UnknownAsset
+  UnknownWithdrawal
+  WithdrawalExists
+}
+
+enum CreditError {
+  SameAccounts
+  UnknownAccount
+  UnrelatedSubAccount
+  UnknownSubAccount
+  InsufficientBalance
+  InsufficientCredit
+  InsufficientDebt
 }
 
 type Account {
   id: ID!
-  balance: Amount!
+  disabled: Boolean!
+  superAccountId: ID
+  superAccount: Account
+  subAccounts(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): SubAccountsConnection!
+  maxPacketAmount: UInt64
+  http: Http
+  asset: Asset!
+  stream: Stream!
+  routing: Routing
+
+  balance: Balance!
+  deposits(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): DepositsConnection!
   invoices(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -45,6 +308,45 @@ type Account {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): InvoiceConnection
+  webhooks(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): WebhooksConnection!
+}
+
+type Http {
+  outgoing: HttpOutgoing!
+}
+
+type HttpOutgoing {
+  authToken: String!
+  endpoint: String!
+}
+
+type Stream {
+  enabled: Boolean!
+}
+
+type Routing {
+  staticIlpAddress: String!
+  inheritFromRemote: Boolean
+  dynamicIlpAddress: String
+}
+
+type Balance {
+  balance: UInt64!
+  netLiability: UInt64
+  netAssets: UInt64
+  creditExtended: UInt64!
+  totalLent: UInt64!
+  availableCredit: UInt64!
+  totalBorrowed: UInt64!
 }
 
 type InvoiceConnection {
@@ -59,8 +361,9 @@ type InvoiceEdge {
 
 type Invoice {
   id: ID!
-  receivedAmount: Amount!
-  maximumAmount: Amount
+  receivedAmount: UInt64!
+  maximumAmount: UInt64
+  asset: Asset!
   active: Boolean!
   createdAt: String!
   expiresAt: String
@@ -83,7 +386,7 @@ type OutgoingPayment {
 
 type PaymentIntent {
   paymentPointer: String
-  amountToSend: String #UInt64
+  amountToSend: UInt64
   invoiceUrl: String
   autoApprove: Boolean!
 }
@@ -114,9 +417,9 @@ type PaymentQuote {
   timestamp: String!
   activationDeadline: String!
   targetType: PaymentType!
-  minDeliveryAmount: String! #UInt64!
-  maxSourceAmount: String! #UInt64!
-  maxPacketAmount: String! #UInt64!
+  minDeliveryAmount: UInt64!
+  maxSourceAmount: UInt64!
+  maxPacketAmount: UInt64!
   minExchangeRate: Float!
   lowExchangeRateEstimate: Float!
   highExchangeRateEstimate: Float!
@@ -141,7 +444,7 @@ type OutgoingPaymentOutcome {
 input CreateOutgoingPaymentInput {
   accountId: String!
   paymentPointer: String
-  amountToSend: String #UInt64
+  amountToSend: UInt64
   invoiceUrl: String
   autoApprove: Boolean!
 }
@@ -153,4 +456,169 @@ type OutgoingPaymentResponse {
   payment: OutgoingPayment
 }
 
-#scalar UInt64
+type WebhooksConnection {
+  pageInfo: PageInfo!
+  edges: [WebhookEdge!]!
+}
+
+type WebhookEdge {
+  node: Webhook!
+  cursor: String!
+}
+
+type Webhook {
+  id: ID!
+}
+
+type DepositsConnection {
+  pageInfo: PageInfo!
+  edges: [DepositEdge!]!
+}
+
+type DepositEdge {
+  node: Deposit!
+  cursor: String!
+}
+
+type Deposit {
+  id: ID!
+  amount: UInt64!
+  accountId: ID!
+  # createdTime: Int!
+}
+
+type WithdrawalsConnection {
+  pageInfo: PageInfo!
+  edges: [WithdrawalEdge!]!
+}
+
+type WithdrawalEdge {
+  node: Withdrawal!
+  cursor: String!
+}
+
+type Withdrawal {
+  id: ID!
+  amount: UInt64!
+  accountId: ID!
+  # createdTime: Int!
+  # finalizedTime: Int
+}
+
+type CreateAccountMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  account: Account
+}
+
+type UpdateAccountMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  account: Account
+}
+
+type DeleteAccountMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type CreateSubAccountMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  account: Account
+}
+
+type TransferMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type CreateWebhookMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  webhook: Webhook!
+}
+
+type UpdateWebhookMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  webhook: Webhook!
+}
+
+type DeleteWebhookMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type CreateDepositMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  deposit: Deposit
+}
+
+type CreateWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  withdrawal: Withdrawal
+  error: WithdrawalError
+}
+
+type FinalizePendingWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: WithdrawalError
+}
+
+type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: WithdrawalError
+}
+
+type ExtendCreditMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: CreditError
+}
+
+type RevokeCreditMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: CreditError
+}
+
+type UtilizeCreditMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: CreditError
+}
+
+type SettleDebtMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: CreditError
+}
+
+interface MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+scalar UInt64

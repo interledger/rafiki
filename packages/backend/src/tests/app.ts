@@ -11,12 +11,9 @@ import {
 } from '@apollo/client'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
-import { ConnectorService } from '../connector/service'
 
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
-import { IlpAccount } from '../connector/generated/graphql'
-import { v4 } from 'uuid'
 
 export interface TestContainer {
   port: number
@@ -32,7 +29,8 @@ export const createTestApp = async (
 ): Promise<TestContainer> => {
   const config = await container.use('config')
   config.port = 0
-  config.adminPort = 0
+  config.connectorPort = 0
+  config.connectorAdminPort = 0
   const logger = createLogger({
     prettyPrint: {
       translateTime: true,
@@ -43,10 +41,6 @@ export const createTestApp = async (
   })
 
   container.bind('logger', async () => logger)
-
-  container.bind('connectorService', async () => {
-    return await createMockConnectorService()
-  })
 
   const app = new App(container)
   await start(container, app)
@@ -104,67 +98,6 @@ export const createTestApp = async (
     connectionUrl: config.databaseUrl,
     shutdown: async () => {
       await gracefulShutdown(container, app)
-    }
-  }
-}
-
-export async function createMockConnectorService(): Promise<ConnectorService> {
-  // TODO: store the mock accounts in a database
-  return {
-    getIlpAccount: async (id) => {
-      const account = ({
-        __typename: 'IlpAccount',
-        id: id,
-        enabled: true,
-        subAccounts: null,
-        maxPacketAmount: '3'
-      } as unknown) as IlpAccount
-      return account
-    },
-    createIlpAccount: async () => {
-      const account = ({
-        __typename: 'IlpAccount',
-        id: v4(),
-        enabled: true,
-        subAccounts: null,
-        maxPacketAmount: '3'
-      } as unknown) as IlpAccount
-      return {
-        ilpAccount: account,
-        code: '200',
-        message: 'OK',
-        success: true
-      }
-    },
-    createIlpSubAccount: async (superAccountId) => {
-      const account = ({
-        __typename: 'IlpAccount',
-        id: v4(),
-        superAccountId: superAccountId,
-        enabled: true,
-        subAccounts: null,
-        maxPacketAmount: '3'
-      } as unknown) as IlpAccount
-      return {
-        ilpAccount: account,
-        code: '200',
-        message: 'OK',
-        success: true
-      }
-    },
-    extendCredit: async (_input) => {
-      return {
-        code: '200',
-        message: 'OK',
-        success: true
-      }
-    },
-    settleDebt: async (_input) => {
-      return {
-        code: '200',
-        message: 'OK',
-        success: true
-      }
     }
   }
 }

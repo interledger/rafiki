@@ -8,14 +8,15 @@ import { serializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { StreamServer } from '@interledger/stream-receiver'
 import { Invoice } from '@interledger/pay'
 import { IlpPlugin } from './ilp_plugin'
-import { MockConnectorService } from '../tests/mockConnectorService'
+import { WithdrawalService } from '../withdrawal/service'
+import { isWithdrawalError } from '../withdrawal/errors'
 
 export class MockPlugin implements IlpPlugin {
   public totalReceived = BigInt(0)
   private streamServer: StreamServer
   public exchangeRate: number
   private sourceAccount: string
-  private connectorService: MockConnectorService
+  private withdrawalService: WithdrawalService
   private connected = true
   private invoice: Invoice
 
@@ -23,19 +24,19 @@ export class MockPlugin implements IlpPlugin {
     streamServer,
     exchangeRate,
     sourceAccount,
-    connectorService,
+    withdrawalService,
     invoice
   }: {
     streamServer: StreamServer
     exchangeRate: number
     sourceAccount: string
-    connectorService: MockConnectorService
+    withdrawalService: WithdrawalService
     invoice: Invoice
   }) {
     this.streamServer = streamServer
     this.exchangeRate = exchangeRate
     this.sourceAccount = sourceAccount
-    this.connectorService = connectorService
+    this.withdrawalService = withdrawalService
     this.invoice = invoice
   }
 
@@ -70,15 +71,15 @@ export class MockPlugin implements IlpPlugin {
         return serializeIlpReply(moneyOrReject)
       }
 
-      const success = this.connectorService.modifyAccountBalance(
-        this.sourceAccount,
-        -BigInt(sourceAmount)
-      )
-      if (!success) {
+      const withdrawalOrError = await this.withdrawalService.create({
+        accountId: this.sourceAccount,
+        amount: BigInt(sourceAmount)
+      })
+      if (isWithdrawalError(withdrawalOrError)) {
         return serializeIlpReply({
           code: 'F00',
           triggeredBy: '',
-          message: 'insufficient balance',
+          message: withdrawalOrError,
           data: Buffer.alloc(0)
         })
       }

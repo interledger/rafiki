@@ -4,32 +4,33 @@ import Knex from 'knex'
 import { StreamServer } from '@interledger/stream-receiver'
 import { PaymentError, PaymentType } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
+import * as Pay from '@interledger/pay'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
+import { AccountFactory } from '../../tests/accountFactory'
 import { truncateTables } from '../../tests/tableManager'
 import { OutgoingPaymentService } from '../../outgoing_payment/service'
 import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
 } from '../../outgoing_payment/model'
+import { AccountBalance, AccountService } from '../../account/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
   PaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType
 } from '../generated/graphql'
-import { IlpAccount } from '../../connector/generated/graphql'
-import { MockConnectorService } from '../../tests/mockConnectorService'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let connectorService: MockConnectorService
   let knex: Knex
+  let accountService: AccountService
 
   const streamServer = new StreamServer({
     serverSecret: Buffer.from(
@@ -43,8 +44,6 @@ describe('OutgoingPayment Resolvers', (): void => {
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
-      connectorService = new MockConnectorService()
-      deps.bind('connectorService', async (_deps) => connectorService)
       knex = await deps.use('knex')
 
       const credentials = streamServer.generateCredentials({
@@ -75,10 +74,10 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
-      const superAccountId = (await accountService.create(9, 'USD')).id
-      const accountId = (await accountService.createSubAccount(superAccountId))
-        .id
+      accountService = await deps.use('accountService')
+      const accountFactory = new AccountFactory(accountService)
+      const superAccountId = (await accountFactory.build()).id
+      const accountId = (await accountFactory.build({ superAccountId })).id
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
@@ -94,9 +93,12 @@ describe('OutgoingPayment Resolvers', (): void => {
           minDeliveryAmount: BigInt(123),
           maxSourceAmount: BigInt(456),
           maxPacketAmount: BigInt(789),
-          minExchangeRate: 1.23,
-          lowExchangeRateEstimate: 1.2,
-          highExchangeRateEstimate: 2.3
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          minExchangeRate: Pay.Ratio.from(1.23)!,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
         superAccountId,
         sourceAccount: {
@@ -122,14 +124,12 @@ describe('OutgoingPayment Resolvers', (): void => {
       jest
         .spyOn(outgoingPaymentService, 'get')
         .mockImplementation(async () => payment)
-      jest.spyOn(connectorService, 'getIlpAccount').mockImplementation(
+      jest.spyOn(accountService, 'getBalance').mockImplementation(
         async () =>
           (({
-            balance: {
-              totalBorrowed: BigInt(123),
-              balance: BigInt(45)
-            }
-          } as unknown) as IlpAccount)
+            totalBorrowed: BigInt(123),
+            balance: BigInt(45)
+          } as unknown) as AccountBalance)
       )
 
       const query = await appContainer.apolloClient
@@ -199,6 +199,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
         maxSourceAmount: payment.quote?.maxSourceAmount.toString(),
         maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
+        minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
+        lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
+        highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
         __typename: 'PaymentQuote'
       })
       expect(query.superAccountId).toBe(payment.superAccountId)
@@ -250,7 +253,8 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockImplementation(async (args) => {
           expect(args).toEqual({
             superAccountId: input.accountId,
-            ...input
+            ...input,
+            amountToSend: BigInt(input.amountToSend)
           })
           return payment
         })
