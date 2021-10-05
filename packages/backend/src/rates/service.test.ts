@@ -7,7 +7,6 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 
-jest.useFakeTimers('modern')
 describe('Rates service', function () {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
@@ -32,6 +31,8 @@ describe('Rates service', function () {
 
   beforeAll(
     async (): Promise<void> => {
+      jest.useFakeTimers('modern')
+      jest.setSystemTime(1600000000000)
       const config = Config
       config.pricesLifetime = pricesLifetime
       config.pricesUrl = 'http://127.0.0.1:3210/'
@@ -43,7 +44,8 @@ describe('Rates service', function () {
 
   beforeEach(
     async (): Promise<void> => {
-      jest.setSystemTime(1600000000000)
+      // Fast-forward to reset the cache between tests.
+      jest.setSystemTime(Date.now() + pricesLifetime + 1)
       service = await deps.use('ratesService')
       requestCount = 0
     }
@@ -51,6 +53,7 @@ describe('Rates service', function () {
 
   afterAll(
     async (): Promise<void> => {
+      jest.useRealTimers()
       await new Promise((resolve, reject) => {
         server.close((err?: Error) => (err ? reject(err) : resolve(null)))
       })
