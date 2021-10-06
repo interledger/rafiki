@@ -72,9 +72,9 @@ export async function handleQuoting(
       // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the Completed state.
       deps.logger.error(
         {
-          amountToSend: amountToSend.toString(),
-          intentAmountToSend: payment.intent.amountToSend.toString(),
-          amountSent: amountSent.toString()
+          amountToSend,
+          intentAmountToSend: payment.intent.amountToSend,
+          amountSent
         },
         'quote amountToSend bounds error'
       )
@@ -244,15 +244,11 @@ export async function handleSending(
     // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the invoice could have been paid by a totally different payment in the time since the quote.
     deps.logger.warn(
       {
-        newMaxSourceAmount: newMaxSourceAmount.toString(),
-        newMinDeliveryAmount: newMinDeliveryAmount.toString(),
+        newMaxSourceAmount,
+        newMinDeliveryAmount,
         paymentType: payment.quote.targetType,
-        amountSentSinceQuote: amountSentSinceQuote.toString(),
-        invoice: {
-          ...destination.invoice,
-          amountToDeliver: destination.invoice?.amountToDeliver.toString(),
-          amountDelivered: destination.invoice?.amountDelivered.toString()
-        }
+        amountSentSinceQuote,
+        invoice: destination.invoice
       },
       'handleSending payment was already paid'
     )
@@ -266,8 +262,8 @@ export async function handleSending(
     // I'm not sure whether this case is actually reachable, but handling it here is clearer than passing ilp-pay bad parameters.
     deps.logger.error(
       {
-        newMaxSourceAmount: newMaxSourceAmount.toString(),
-        newMinDeliveryAmount: newMinDeliveryAmount.toString(),
+        newMaxSourceAmount,
+        newMinDeliveryAmount,
         paymentType: payment.quote.targetType
       },
       'handleSending bad retry state'
@@ -319,10 +315,10 @@ export async function handleSending(
       destination: destination.destinationAddress,
       error: receipt.error,
       paymentType: payment.quote.targetType,
-      newMaxSourceAmount: newMaxSourceAmount.toString(),
-      newMinDeliveryAmount: newMinDeliveryAmount.toString(),
-      receiptAmountSent: receipt.amountSent.toString(),
-      receiptAmountDelivered: receipt.amountDelivered.toString()
+      newMaxSourceAmount,
+      newMinDeliveryAmount,
+      receiptAmountSent: receipt.amountSent,
+      receiptAmountDelivered: receipt.amountDelivered
     },
     'payed'
   )

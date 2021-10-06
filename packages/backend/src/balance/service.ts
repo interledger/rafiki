@@ -119,23 +119,7 @@ function calculateBalance(deps: ServiceDependencies, balance: Account): bigint {
     )
   } else {
     if (!(balance.flags & AccountFlags.debits_must_not_exceed_credits)) {
-      deps.logger.warn(
-        {
-          balance: {
-            id: balance.id.toString(),
-            flags: balance.flags,
-            code: balance.code,
-            unit: balance.unit,
-            user_data: balance.user_data.toString(),
-            debits_reserved: balance.debits_reserved.toString(),
-            debits_accepted: balance.debits_accepted.toString(),
-            credits_reserved: balance.credits_reserved.toString(),
-            credits_accepted: balance.credits_accepted.toString(),
-            timestamp: balance.timestamp.toString()
-          }
-        },
-        'balance missing credit/debit flag'
-      )
+      deps.logger.warn({ balance }, 'balance missing credit/debit flag')
     }
     return (
       balance.credits_accepted -
