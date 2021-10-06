@@ -43,8 +43,8 @@ export function createOutgoingThroughputMiddleware(
     if (outgoingBucket) {
       if (!outgoingBucket.take(BigInt(prepare.amount))) {
         logger.warn(
-          'throttling outgoing packet due to bandwidth exceeding limit',
-          { prepare }
+          { prepare },
+          'throttling outgoing packet due to bandwidth exceeding limit'
         )
         throw new InsufficientLiquidityError(
           'exceeded money bandwidth, throttling.'
@@ -79,8 +79,8 @@ export function createIncomingThroughputMiddleware(
     if (incomingBucket) {
       if (!incomingBucket.take(BigInt(prepare.amount))) {
         logger.warn(
-          'throttling incoming packet due to bandwidth exceeding limit',
-          { prepare }
+          { prepare },
+          'throttling incoming packet due to bandwidth exceeding limit'
         )
         throw new InsufficientLiquidityError(
           'exceeded money bandwidth, throttling.'

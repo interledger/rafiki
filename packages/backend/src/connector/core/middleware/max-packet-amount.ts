@@ -15,8 +15,8 @@ export function createIncomingMaxPacketAmountMiddleware(): RafikiMiddleware {
       const amount = request.prepare.intAmount
       if (amount > maxPacketAmount) {
         logger.warn(
-          'rejected a packet due to amount exceeding maxPacketAmount',
-          { maxPacketAmount: maxPacketAmount.toString(), request }
+          { maxPacketAmount: maxPacketAmount.toString(), request },
+          'rejected a packet due to amount exceeding maxPacketAmount'
         )
         throw new AmountTooLargeError(
           `packet size too large. maxAmount=${maxPacketAmount.toString()} actualAmount=${request.prepare.amount.toString()}`,

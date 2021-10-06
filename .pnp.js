@@ -3867,14 +3867,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/debug", "npm:4.1.5"]
           ],
           "linkType": "HARD",
-        }],
-        ["npm:4.1.7", {
-          "packageLocation": "./.yarn/cache/@types-debug-npm-4.1.7-f54c81f8db-cd865a371a.zip/node_modules/@types/debug/",
-          "packageDependencies": [
-            ["@types/debug", "npm:4.1.7"],
-            ["@types/ms", "npm:0.7.31"]
-          ],
-          "linkType": "HARD",
         }]
       ]],
       ["@types/docker-modem", [
@@ -4294,15 +4286,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-minimist-npm-1.2.1-dc316d808d-3a6f5fe35f.zip/node_modules/@types/minimist/",
           "packageDependencies": [
             ["@types/minimist", "npm:1.2.1"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
-      ["@types/ms", [
-        ["npm:0.7.31", {
-          "packageLocation": "./.yarn/cache/@types-ms-npm-0.7.31-ea3b89342b-7ff9798a40.zip/node_modules/@types/ms/",
-          "packageDependencies": [
-            ["@types/ms", "npm:0.7.31"]
           ],
           "linkType": "HARD",
         }]
@@ -6069,7 +6052,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@interledger/stream-receiver", "npm:0.2.2"],
             ["@koa/cors", "npm:3.1.0"],
             ["@koa/router", "npm:10.0.0"],
-            ["@types/debug", "npm:4.1.7"],
             ["@types/faker", "npm:5.5.8"],
             ["@types/ioredis", "npm:4.22.3"],
             ["@types/jest", "npm:26.0.22"],
@@ -6091,7 +6073,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["axios", "npm:0.21.4"],
             ["base64url", "npm:3.0.1"],
             ["cross-fetch", "npm:3.1.4"],
-            ["debug", "virtual:901e1408cc8bfef5550e648cc3ee4f1ec6e307e3f5baab3ad60f0ba461a3df0a2fb4207ed57f6ec68edeacbb88063dcc84f3c35bb45638ba421a021eb350b42b#npm:4.3.2"],
             ["extensible-error", "npm:1.0.2"],
             ["faker", "npm:5.5.3"],
             ["fishery", "npm:1.2.0"],

@@ -46,11 +46,14 @@ export function createStreamController(): RafikiMiddleware {
     if (typeof totalReceived === 'string' && !err && !err2) {
       moneyOrReply.setTotalReceived(totalReceived)
     } else {
-      logger.warn('error incrementing stream totalReceived', {
-        totalReceived,
-        err,
-        err2
-      })
+      logger.warn(
+        {
+          totalReceived,
+          err,
+          err2
+        },
+        'error incrementing stream totalReceived'
+      )
     }
     response.reply = moneyOrReply.accept()
   }

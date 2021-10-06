@@ -18,9 +18,12 @@ export function createIldcpProtocolController(serverAddress: string) {
 
     const clientAddress = await ctx.services.accounts.getAddress(incoming.id)
     if (!clientAddress) {
-      logger.warn('received ILDCP request for peer without an address', {
-        peerId: incoming.id
-      })
+      logger.warn(
+        {
+          peerId: incoming.id
+        },
+        'received ILDCP request for peer without an address'
+      )
       ctx.throw('ILDCP request from peer without configured address')
     }
 
@@ -28,10 +31,13 @@ export function createIldcpProtocolController(serverAddress: string) {
     //const serverAddress = router.getAddresses(SELF_PEER_ID)[0]
     //const clientAddress = router.getAddresses(id)[0]
 
-    logger.info('responding to ILDCP request from child', {
-      peerId: incoming.id,
-      address: clientAddress
-    })
+    logger.info(
+      {
+        peerId: incoming.id,
+        address: clientAddress
+      },
+      'responding to ILDCP request from child'
+    )
 
     // TODO: Remove unnecessary serialization from ILDCP module
     response.rawReply = await ildcpServe({

@@ -20,11 +20,14 @@ export function createOutgoingLiquidityCheckMiddleware(): RafikiMiddleware {
       // money but restarted before it was settled.
       if (response.reject.message !== 'exceeded maximum balance.') return
 
-      logger.error('Liquidity Check Error', {
-        peerId: outgoing.id,
-        triggerBy: response.reject.triggeredBy,
-        message: response.reject.message
-      })
+      logger.error(
+        {
+          peerId: outgoing.id,
+          triggerBy: response.reject.triggeredBy,
+          message: response.reject.message
+        },
+        'Liquidity Check Error'
+      )
     }
   }
 }

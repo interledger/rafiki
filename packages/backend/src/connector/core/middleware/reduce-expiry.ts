@@ -1,5 +1,6 @@
 import { IlpPrepare, Errors } from 'ilp-packet'
-import { RafikiContext, LoggingService, RafikiMiddleware } from '..'
+import { Logger } from 'pino'
+import { RafikiContext, RafikiMiddleware } from '..'
 const { InsufficientTimeoutError } = Errors
 
 export interface ReduceExpiryMiddlewareOptions {
@@ -18,7 +19,7 @@ function getDestinationExpiry(
   request: IlpPrepare,
   minExpirationWindow: number,
   maxHoldWindow: number,
-  log: LoggingService
+  log: Logger
 ): Date {
   const sourceExpiryTime = request.expiresAt.getTime()
 
