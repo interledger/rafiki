@@ -2,6 +2,14 @@ import nock from 'nock'
 import { createXRPService, CHARTS_API } from './service'
 
 describe('XRP Service', function () {
+  const rate = 1.8630767
+
+  beforeEach(() => {
+    nock(CHARTS_API)
+      .get('')
+      .reply(200, { result: 'success', rate: rate.toString() })
+  })
+
   afterAll(() => {
     nock.cleanAll()
   })
@@ -16,10 +24,6 @@ describe('XRP Service', function () {
     })
 
     it('inverts the rate', async () => {
-      const rate = 1.8630767
-      nock(CHARTS_API)
-        .get('')
-        .reply(200, { result: 'success', rate: rate.toString() })
       const price = await service.fetchPrice()
       expect(price).toBe(1.0 / rate)
     })
