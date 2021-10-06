@@ -95,18 +95,6 @@ type Mutation {
     "The id of the pending withdrawal to rollback."
     withdrawalId: String!
   ): RollbackPendingWithdrawalMutationResponse
-
-  "Extend Credit"
-  extendCredit(input: ExtendCreditInput!): ExtendCreditMutationResponse
-
-  "Revoke Credit"
-  revokeCredit(input: RevokeCreditInput!): RevokeCreditMutationResponse
-
-  "Utilize Credit"
-  utilizeCredit(input: UtilizeCreditInput!): UtilizeCreditMutationResponse
-
-  "Settle Debt"
-  settleDebt(input: SettleDebtInput): SettleDebtMutationResponse
 }
 
 type PageInfo {
@@ -199,46 +187,6 @@ input CreateWithdrawalInput {
   id: String
 }
 
-input ExtendCreditInput {
-  "Account extending credit."
-  accountId: String!
-  "Sub-account to which credit is extended."
-  subAccountId: String!
-  "Amount of additional line of credit."
-  amount: UInt64!
-  "Automatically utilized and applied to the account balance."
-  autoApply: Boolean! = false
-}
-
-input RevokeCreditInput {
-  "Account revoking credit."
-  accountId: String!
-  "Sub-account to which credit is revoked."
-  subAccountId: String!
-  "Amount of revoked line of credit."
-  amount: UInt64!
-}
-
-input UtilizeCreditInput {
-  "Account extending credit."
-  accountId: String!
-  "Sub-account to which credit is extended."
-  subAccountId: String!
-  "Amount of utilized line of credit."
-  amount: UInt64!
-}
-
-input SettleDebtInput {
-  "Account collecting debt."
-  accountId: String!
-  "Sub-account settling debt."
-  subAccountId: String!
-  "Amount of debt."
-  amount: UInt64!
-  "Replenish the account's line of credit commensurate with the debt settled."
-  revolve: Boolean! = true
-}
-
 type Asset {
   code: String!
   scale: Int!
@@ -254,16 +202,6 @@ enum WithdrawalError {
   UnknownAsset
   UnknownWithdrawal
   WithdrawalExists
-}
-
-enum CreditError {
-  SameAccounts
-  UnknownAccount
-  UnrelatedSubAccount
-  UnknownSubAccount
-  InsufficientBalance
-  InsufficientCredit
-  InsufficientDebt
 }
 
 type Account {
@@ -586,34 +524,6 @@ type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   error: WithdrawalError
-}
-
-type ExtendCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type RevokeCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type UtilizeCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type SettleDebtMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
 }
 
 interface MutationResponse {

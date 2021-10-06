@@ -12,7 +12,6 @@ import {
   createSubAccount,
   getSubAccounts
 } from './account'
-import { extendCredit, revokeCredit, utilizeCredit, settleDebt } from './credit'
 import { createDeposit } from './deposit'
 import { getAccountInvoices, getPageInfo } from './invoice'
 import {
@@ -85,10 +84,6 @@ export const resolvers: Resolvers = {
     createDeposit: createDeposit,
     createWithdrawal: createWithdrawal,
     finalizePendingWithdrawal: finalizePendingWithdrawal,
-    rollbackPendingWithdrawal: rollbackPendingWithdrawal,
-    extendCredit: extendCredit,
-    revokeCredit: revokeCredit,
-    utilizeCredit: utilizeCredit,
-    settleDebt: settleDebt
+    rollbackPendingWithdrawal: rollbackPendingWithdrawal
   }
 }
