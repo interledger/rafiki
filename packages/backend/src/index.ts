@@ -28,6 +28,10 @@ import { StreamServer } from '@interledger/stream-receiver'
 import { createWebMonetizationService } from './webmonetization/service'
 import { createConnectorService } from './connector'
 
+BigInt.prototype.toJSON = function () {
+  return this.toString()
+}
+
 const container = initIocContainer(Config)
 const app = new App(container)
 let connectorServer: Server

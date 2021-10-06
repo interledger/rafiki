@@ -230,15 +230,7 @@ async function createAccount(
         !superAccount.creditExtendedBalanceId ||
         !superAccount.lentBalanceId
       ) {
-        deps.logger.warn(
-          {
-            superAccount: {
-              ...superAccount,
-              maxPacketAmount: superAccount.maxPacketAmount?.toString()
-            }
-          },
-          'missing super-account balance'
-        )
+        deps.logger.warn({ superAccount }, 'missing super-account balance')
       }
       if (!superAccount.creditExtendedBalanceId) {
         superAccountPatch.creditExtendedBalanceId = uuid()
