@@ -20,10 +20,10 @@ describe('Error Handler Middleware', () => {
 
     expect(ctx.response.reject).toBeDefined()
     expect(ctx.services.logger.error).toHaveBeenCalledWith(
-      'Error thrown in incoming pipeline',
       {
         err: errorToBeThrown
-      }
+      },
+      'Error thrown in incoming pipeline'
     )
   })
 

@@ -19,13 +19,12 @@ import {
   createOutgoingThroughputMiddleware,
   createOutgoingValidateFulfillmentMiddleware
 } from './core'
-import { Logger } from '../logger/service'
 import { AccountService } from '../account/service'
 import { RatesService } from '../rates/service'
+import { BaseService } from '../shared/baseService'
 
-interface ServiceDependencies {
+interface ServiceDependencies extends BaseService {
   redis: IORedis.Redis
-  logger?: typeof Logger
   ratesService: RatesService
   accountService: AccountService
   streamServer: StreamServer
@@ -33,12 +32,17 @@ interface ServiceDependencies {
 }
 
 export async function createConnectorService({
+  logger,
   redis,
   ratesService,
   accountService,
   streamServer,
   ilpAddress
 }: ServiceDependencies): Promise<Rafiki> {
+  const log = logger.child({
+    service: 'ConnectorService'
+  })
+
   const incoming = compose([
     // Incoming Rules
     createIncomingErrorHandlerMiddleware(ilpAddress),
@@ -64,6 +68,7 @@ export async function createConnectorService({
   // TODO Add auth
   const app = createApp({
     //router: router,
+    logger: log,
     accounts: accountService,
     redis,
     rates: ratesService,

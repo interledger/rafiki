@@ -17,7 +17,7 @@ export function createOutgoingValidateFulfillmentMiddleware(): RafikiMiddleware 
         .update(fulfillment)
         .digest()
       if (!calculatedCondition.equals(executionCondition)) {
-        logger.warn('invalid fulfillment', { response })
+        logger.warn({ response }, 'invalid fulfillment')
         throw new WrongConditionError(
           'fulfillment did not match expected value.'
         )

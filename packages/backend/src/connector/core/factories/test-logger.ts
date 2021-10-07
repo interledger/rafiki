@@ -1,9 +1,7 @@
 import { Factory } from 'rosie'
-import { LoggingService } from '../index'
+import { Logger } from 'pino'
 
-export const TestLoggerFactory = Factory.define<LoggingService>(
-  'TestLogger'
-).attrs({
+export const TestLoggerFactory = Factory.define<Logger>('TestLogger').attrs({
   debug: () => jest.fn(),
   fatal: () => jest.fn(),
   error: () => jest.fn(),

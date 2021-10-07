@@ -52,10 +52,10 @@ describe('CCP Rule', function () {
     await expect(controller(ctx)).resolves.toBeUndefined()
 
     expect(services.logger.trace).toHaveBeenCalledWith(
-      'received peer.route.update',
       {
         request: ctx.request.prepare
-      }
+      },
+      'received peer.route.update'
     )
     expect(ctx.response.rawReply).toEqual(serializeCcpResponse())
     expect(services.router.handleRouteUpdate).toHaveBeenCalledWith(
@@ -71,10 +71,10 @@ describe('CCP Rule', function () {
     await expect(controller(ctx)).resolves.toBeUndefined()
 
     expect(services.logger.trace).toHaveBeenCalledWith(
-      'received peer.route.control',
       {
         request: ctx.request.prepare
-      }
+      },
+      'received peer.route.control'
     )
     expect(ctx.response.rawReply).toEqual(serializeCcpResponse())
     expect(services.router.handleRouteControl).toHaveBeenCalledWith(

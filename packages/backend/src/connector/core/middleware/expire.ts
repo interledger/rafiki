@@ -15,7 +15,7 @@ export function createOutgoingExpireMiddleware() {
     const { expiresAt } = request.prepare
     const duration = expiresAt.getTime() - Date.now()
     const timeout = setTimeout(() => {
-      logger.debug('packet expired', { request })
+      logger.debug({ request }, 'packet expired')
       throw new TransferTimedOutError('packet expired.')
     }, duration)
 

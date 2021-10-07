@@ -23,7 +23,7 @@ export function createIncomingErrorHandlerMiddleware(serverAddress: string) {
       if (!err || typeof err !== 'object') {
         err = new Error('Non-object thrown: ' + e)
       }
-      logger.error('Error thrown in incoming pipeline', { err })
+      logger.error({ err }, 'Error thrown in incoming pipeline')
       response.reject = errorToIlpReject(serverAddress, err)
     }
   }
