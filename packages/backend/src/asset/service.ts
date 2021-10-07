@@ -20,6 +20,10 @@ export interface AssetService {
     asset: AssetOptions,
     trx?: Transaction
   ): Promise<bigint | undefined>
+  getOutgoingPaymentsBalance(
+    asset: AssetOptions,
+    trx?: Transaction
+  ): Promise<bigint | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -44,7 +48,10 @@ export async function createAssetService({
     getOrCreate: (asset) => getOrCreateAsset(deps, asset),
     getById: (id, trx) => getAssetById(deps, id, trx),
     getLiquidityBalance: (asset, trx) => getLiquidityBalance(deps, asset, trx),
-    getSettlementBalance: (asset, trx) => getSettlementBalance(deps, asset, trx)
+    getSettlementBalance: (asset, trx) =>
+      getSettlementBalance(deps, asset, trx),
+    getOutgoingPaymentsBalance: (asset, trx) =>
+      getOutgoingPaymentsBalance(deps, asset, trx)
   }
 }
 
@@ -97,6 +104,11 @@ async function getOrCreateAsset(
           id: asset.settlementBalanceId,
           debitBalance: true,
           unit: asset.unit
+        },
+        {
+          id: asset.outgoingPaymentsBalanceId,
+          debitBalance: true,
+          unit: asset.unit
         }
       ])
       return asset
@@ -146,6 +158,27 @@ async function getSettlementBalance(
       return balances[0].balance
     } else {
       deps.logger.warn({ asset }, 'missing settlement balance')
+    }
+  }
+}
+
+async function getOutgoingPaymentsBalance(
+  deps: ServiceDependencies,
+  { code, scale }: AssetOptions,
+  trx?: Transaction
+): Promise<bigint | undefined> {
+  const asset = await Asset.query(trx)
+    .where({ code, scale })
+    .first()
+    .select('outgoingPaymentsBalanceId')
+  if (asset) {
+    const balances = await deps.balanceService.get([
+      asset.outgoingPaymentsBalanceId
+    ])
+    if (balances.length === 1) {
+      return balances[0].balance
+    } else {
+      deps.logger.warn({ asset }, 'missing outgoing payments balance')
     }
   }
 }
