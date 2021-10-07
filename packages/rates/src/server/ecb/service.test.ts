@@ -7,6 +7,10 @@ const FIXTURE_XML = fs
   .toString()
 
 describe('ECB Service', function () {
+  beforeEach(() => {
+    nock(RATES_API).get('').reply(200, FIXTURE_XML)
+  })
+
   afterAll(() => {
     nock.cleanAll()
   })
@@ -21,7 +25,6 @@ describe('ECB Service', function () {
     })
 
     it('requests prices', async () => {
-      nock(RATES_API).get('').reply(200, FIXTURE_XML)
       const prices = await service.fetchPrices()
       expect(prices).toEqual({
         EUR: 1.0,
