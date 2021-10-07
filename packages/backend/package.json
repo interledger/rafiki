@@ -7,9 +7,10 @@
     "test": "yarn test:local",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
-    "build": "yarn clean && tsc && yarn copy-files",
-    "clean": "rm -r dist/",
-    "copy-files": "cp src/graphql/schema.graphql dist/graphql/"
+    "build": "yarn clean && tsc --build tsconfig.json && yarn copy-files",
+    "clean": "rm -fr dist/",
+    "copy-files": "cp src/graphql/schema.graphql dist/graphql/",
+    "prepack": "yarn build"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "1.21.5",
