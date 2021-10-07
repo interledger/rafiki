@@ -15,7 +15,7 @@ export class MockPlugin implements IlpPlugin {
   public totalReceived = BigInt(0)
   private streamServer: StreamServer
   public exchangeRate: number
-  private sourceAccount: string
+  private accountId: string
   private withdrawalService: WithdrawalService
   private connected = true
   private invoice: Invoice
@@ -23,19 +23,19 @@ export class MockPlugin implements IlpPlugin {
   constructor({
     streamServer,
     exchangeRate,
-    sourceAccount,
+    accountId,
     withdrawalService,
     invoice
   }: {
     streamServer: StreamServer
     exchangeRate: number
-    sourceAccount: string
+    accountId: string
     withdrawalService: WithdrawalService
     invoice: Invoice
   }) {
     this.streamServer = streamServer
     this.exchangeRate = exchangeRate
-    this.sourceAccount = sourceAccount
+    this.accountId = accountId
     this.withdrawalService = withdrawalService
     this.invoice = invoice
   }
@@ -72,7 +72,7 @@ export class MockPlugin implements IlpPlugin {
       }
 
       const withdrawalOrError = await this.withdrawalService.create({
-        accountId: this.sourceAccount,
+        accountId: this.accountId,
         amount: BigInt(sourceAmount)
       })
       if (isWithdrawalError(withdrawalOrError)) {

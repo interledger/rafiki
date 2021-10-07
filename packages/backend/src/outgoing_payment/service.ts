@@ -1,11 +1,13 @@
 import { TransactionOrKnex } from 'objection'
+import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { AccountService } from '../account/service'
 import { isAccountError } from '../account/errors'
-import { CreditService } from '../credit/service'
+import { BalanceService } from '../balance/service'
 import { RatesService } from '../rates/service'
+import { TransferService } from '../transfer/service'
 import { IlpPlugin } from './ilp_plugin'
 import * as lifecycle from './lifecycle'
 import * as worker from './worker'
@@ -24,8 +26,9 @@ export interface ServiceDependencies extends BaseService {
   slippage: number
   quoteLifespan: number // milliseconds
   accountService: AccountService
-  creditService: CreditService
+  balanceService: BalanceService
   ratesService: RatesService
+  transferService: TransferService
   makeIlpPlugin: (sourceAccountId: string) => IlpPlugin
 }
 
@@ -54,7 +57,7 @@ async function getOutgoingPayment(
   return OutgoingPayment.query(deps.knex).findById(id)
 }
 
-type CreateOutgoingPaymentOptions = PaymentIntent & { superAccountId: string }
+type CreateOutgoingPaymentOptions = PaymentIntent & { sourceAccountId: string }
 
 // TODO ensure this is idempotent/safe for autoApprove:true payments
 async function createOutgoingPayment(
@@ -76,7 +79,7 @@ async function createOutgoingPayment(
     )
   }
 
-  const plugin = deps.makeIlpPlugin(options.superAccountId)
+  const plugin = deps.makeIlpPlugin(options.sourceAccountId)
   await plugin.connect()
   const destination = await Pay.setupPayment({
     plugin,
@@ -88,18 +91,38 @@ async function createOutgoingPayment(
     })
   })
 
-  const sourceAccount = await deps.accountService.create({
-    superAccountId: options.superAccountId
+  const sourceAccount = await deps.accountService.get(options.sourceAccountId)
+  if (!sourceAccount) {
+    throw new Error('outgoing payment source account does not exist')
+  }
+  const account = await deps.accountService.create({
+    asset: sourceAccount.asset
   })
-  if (isAccountError(sourceAccount)) {
+  if (isAccountError(account)) {
     deps.logger.warn(
       {
-        superAccountId: options.superAccountId,
+        sourceAccountId: options.sourceAccountId,
         error: sourceAccount
       },
-      'createOutgoingPayment source account creation failed'
+      'createOutgoingPayment account creation failed'
     )
-    throw new Error('unable to create source account, err=' + sourceAccount)
+    throw new Error('unable to create account, err=' + account)
+  }
+  const reservedBalanceId = uuid()
+  const error = await deps.balanceService.create([
+    {
+      id: reservedBalanceId,
+      unit: sourceAccount.asset.unit
+    }
+  ])
+  if (error) {
+    deps.logger.warn(
+      {
+        error: error[0].error
+      },
+      'createOutgoingPayment reserved balance creation failed'
+    )
+    throw new Error('unable to create reserved balance, err=' + error[0].error)
   }
 
   return await OutgoingPayment.query(deps.knex).insertAndFetch({
@@ -110,9 +133,10 @@ async function createOutgoingPayment(
       amountToSend: options.amountToSend,
       autoApprove: options.autoApprove
     },
-    superAccountId: options.superAccountId,
+    accountId: account.id,
+    reservedBalanceId,
     sourceAccount: {
-      id: sourceAccount.id,
+      id: options.sourceAccountId,
       code: sourceAccount.asset.code,
       scale: sourceAccount.asset.scale
     },

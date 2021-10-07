@@ -1065,7 +1065,7 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "accountId",
+            "name": "sourceAccountId",
             "description": null,
             "type": {
               "kind": "NON_NULL",
@@ -3353,7 +3353,23 @@
             "deprecationReason": null
           },
           {
-            "name": "superAccountId",
+            "name": "accountId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "reservedBalanceId",
             "description": null,
             "args": [],
             "type": {

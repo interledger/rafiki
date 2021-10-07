@@ -261,9 +261,10 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountService: await deps.use('accountService'),
-      creditService: await deps.use('creditService'),
+      balanceService: await deps.use('balanceService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      ratesService: await deps.use('ratesService')
+      ratesService: await deps.use('ratesService'),
+      transferService: await deps.use('transferService')
     })
   })
   return container

@@ -134,7 +134,7 @@ export type CreateDepositMutationResponse = MutationResponse & {
 };
 
 export type CreateOutgoingPaymentInput = {
-  accountId: Scalars['String'];
+  sourceAccountId: Scalars['String'];
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
   invoiceUrl?: Maybe<Scalars['String']>;
@@ -457,7 +457,8 @@ export type OutgoingPayment = {
   stateAttempts: Scalars['Int'];
   intent?: Maybe<PaymentIntent>;
   quote?: Maybe<PaymentQuote>;
-  superAccountId: Scalars['String'];
+  accountId: Scalars['String'];
+  reservedBalanceId: Scalars['String'];
   sourceAccount: PaymentSourceAccount;
   destinationAccount: PaymentDestinationAccount;
   outcome: OutgoingPaymentOutcome;
@@ -1198,7 +1199,8 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
-  superAccountId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  accountId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  reservedBalanceId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   sourceAccount?: Resolver<ResolversTypes['PaymentSourceAccount'], ParentType, ContextType>;
   destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
   outcome?: Resolver<ResolversTypes['OutgoingPaymentOutcome'], ParentType, ContextType>;

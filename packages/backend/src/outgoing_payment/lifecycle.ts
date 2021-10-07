@@ -3,7 +3,7 @@ import * as Pay from '@interledger/pay'
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
-import { CreditError } from '../credit/errors'
+import { TransferError } from '../transfer/errors'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -16,12 +16,13 @@ export enum LifecycleError {
   CancelledByAPI = 'CancelledByAPI',
   // Not enough money in the super-account.
   InsufficientBalance = 'InsufficientBalance',
-  // Error from the account service, except an InsufficientBalance. (see: CreditError)
+  // Error from the account service, except an InsufficientBalance. (see: TransferError)
   AccountServiceError = 'AccountServiceError',
   // Edge error due to retries, partial payment, and database write errors.
   BadState = 'BadState',
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
+  MissingAccount = 'MissingAccount',
   MissingBalance = 'MissingBalance',
   MissingQuote = 'MissingQuote',
   MissingInvoice = 'MissingInvoice',
@@ -59,13 +60,17 @@ export async function handleQuoting(
   // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
   let amountToSend: bigint | undefined
   if (payment.intent.amountToSend) {
-    const balance = await deps.accountService.getBalance(
-      payment.sourceAccount.id
-    )
+    const balance = await deps.accountService.getBalance(payment.accountId)
     if (!balance) {
       throw LifecycleError.MissingBalance
     }
-    const amountSent = balance.totalBorrowed - balance.balance
+    const reservedBalance = await deps.balanceService.get([
+      payment.reservedBalanceId
+    ])
+    if (!reservedBalance) {
+      throw LifecycleError.MissingBalance
+    }
+    const amountSent = reservedBalance[0].balance - balance.balance
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
       // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.
@@ -170,21 +175,37 @@ export async function handleActivation(
   }
 
   await refundLeftoverBalance(deps, payment)
-  const error = await deps.creditService.extend({
-    accountId: payment.superAccountId,
-    subAccountId: payment.sourceAccount.id,
-    amount: payment.quote.maxSourceAmount,
-    autoApply: true
-  })
-  if (error === CreditError.InsufficientBalance) {
-    throw LifecycleError.InsufficientBalance
-  } else if (error) {
+  const sourceAccount = await deps.accountService.get(payment.sourceAccount.id)
+  const account = await deps.accountService.get(payment.accountId)
+  if (!sourceAccount || !account) {
+    throw LifecycleError.MissingAccount
+  }
+  const error = await deps.transferService.create([
+    {
+      sourceBalanceId: sourceAccount.balanceId,
+      destinationBalanceId: account.balanceId,
+      amount: payment.quote.maxSourceAmount
+    },
+    {
+      sourceBalanceId: sourceAccount.asset.outgoingPaymentsBalanceId,
+      destinationBalanceId: payment.reservedBalanceId,
+      amount: payment.quote.maxSourceAmount
+    }
+  ])
+  if (error) {
+    if (
+      error.index === 0 &&
+      error.error === TransferError.InsufficientBalance
+    ) {
+      throw LifecycleError.InsufficientBalance
+    }
+
     // Unexpected account service errors: the money was not reserved.
     deps.logger.warn(
       {
         error
       },
-      'extend credit error'
+      'reserve transfer error'
     )
     throw LifecycleError.AccountServiceError
   }
@@ -204,7 +225,7 @@ export async function handleSending(
     paymentPointer: payment.intent.paymentPointer,
     invoiceUrl: payment.intent.invoiceUrl
   })
-  const balance = await deps.accountService.getBalance(payment.sourceAccount.id)
+  const balance = await deps.accountService.getBalance(payment.accountId)
   if (!balance) {
     throw LifecycleError.MissingBalance
   }
@@ -350,24 +371,35 @@ async function refundLeftoverBalance(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  const balance = await deps.accountService.getBalance(payment.sourceAccount.id)
+  const balance = await deps.accountService.getBalance(payment.accountId)
   if (!balance) {
     throw LifecycleError.MissingBalance
   }
   if (balance.balance === BigInt(0)) return
 
-  const error = await deps.creditService.settleDebt({
-    accountId: payment.superAccountId,
-    subAccountId: payment.sourceAccount.id,
-    amount: balance.balance,
-    revolve: false
-  })
+  const account = await deps.accountService.get(payment.accountId)
+  const sourceAccount = await deps.accountService.get(payment.sourceAccount.id)
+  if (!account || !sourceAccount) {
+    throw LifecycleError.MissingAccount
+  }
+  const error = await deps.transferService.create([
+    {
+      sourceBalanceId: account.balanceId,
+      destinationBalanceId: sourceAccount.balanceId,
+      amount: balance.balance
+    },
+    {
+      sourceBalanceId: payment.reservedBalanceId,
+      destinationBalanceId: sourceAccount.asset.outgoingPaymentsBalanceId,
+      amount: balance.balance
+    }
+  ])
   if (error) {
     deps.logger.warn(
       {
         error
       },
-      'settle debt error'
+      'refund transfer error'
     )
     throw LifecycleError.AccountServiceError
   }

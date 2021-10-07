@@ -46,7 +46,8 @@ export class OutgoingPayment extends BaseModel {
     // (Pay.PositiveRatio, but validated later)
     highExchangeRateEstimate: Pay.Ratio
   }
-  public superAccountId!: string
+  public accountId!: string
+  public reservedBalanceId!: string
   public sourceAccount!: {
     id: string
     scale: number

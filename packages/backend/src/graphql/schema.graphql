@@ -378,7 +378,8 @@ type OutgoingPayment {
   stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
-  superAccountId: String!
+  accountId: String!
+  reservedBalanceId: String!
   sourceAccount: PaymentSourceAccount!
   destinationAccount: PaymentDestinationAccount!
   outcome: OutgoingPaymentOutcome!
@@ -442,7 +443,7 @@ type OutgoingPaymentOutcome {
 }
 
 input CreateOutgoingPaymentInput {
-  accountId: String!
+  sourceAccountId: String!
   paymentPointer: String
   amountToSend: UInt64
   invoiceUrl: String
