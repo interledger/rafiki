@@ -63,19 +63,21 @@ async function createInvoice(
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))
 
   try {
-    const subAccount = await deps.accountService.create(
-      {
-        superAccountId: accountId
-      },
+    const account = await deps.accountService.get(accountId)
+    if (!account) {
+      throw new Error('unable to create invoice, account does not exist')
+    }
+    const invoiceAccount = await deps.accountService.create(
+      { asset: account.asset },
       invTrx
     )
-    if (isAccountError(subAccount)) {
-      throw new Error('unable to create account, err=' + subAccount)
+    if (isAccountError(invoiceAccount)) {
+      throw new Error('unable to create invoice account, err=' + invoiceAccount)
     }
 
     const invoice = await Invoice.query(invTrx).insertAndFetch({
       accountId,
-      invoiceAccountId: subAccount.id,
+      invoiceAccountId: invoiceAccount.id,
       description,
       expiresAt: expiresAt,
       active: true

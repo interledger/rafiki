@@ -1,5 +1,6 @@
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { v4 as uuid } from 'uuid'
 
 import { InvoiceService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -69,14 +70,19 @@ describe('Invoice Service', (): void => {
       expect(retrievedInvoice.accountId).toEqual(invoice.accountId)
     })
 
-    test('Creating an invoice creates a sub account', async (): Promise<void> => {
+    test('Creating an invoice creates an invoice account', async (): Promise<void> => {
       const accountService = await deps.use('accountService')
       const invoice = await invoiceService.create(account.id, 'Invoice')
-      const subAccount = await accountService.get(invoice.invoiceAccountId)
+      const invoiceAccount = await accountService.get(invoice.invoiceAccountId)
 
       expect(account.id).not.toEqual(invoice.invoiceAccountId)
-      expect(account.id).toEqual(subAccount?.superAccountId)
-      expect(subAccount?.id).toEqual(invoice.invoiceAccountId)
+      expect(invoiceAccount?.id).toEqual(invoice.invoiceAccountId)
+    })
+
+    test('Cannot create invoice for nonexistent account', async (): Promise<void> => {
+      await expect(
+        invoiceService.create(uuid(), 'Test invoice')
+      ).rejects.toThrow('unable to create invoice, account does not exist')
     })
   })
 
