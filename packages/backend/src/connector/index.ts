@@ -40,7 +40,7 @@ export async function createConnectorService({
   ilpAddress
 }: ServiceDependencies): Promise<Rafiki> {
   const log = logger.child({
-    service: 'Connector'
+    service: 'ConnectorService'
   })
 
   const incoming = compose([
