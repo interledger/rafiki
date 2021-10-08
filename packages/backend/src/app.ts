@@ -26,7 +26,6 @@ import { AssetService } from './asset/service'
 import { AccountService } from './account/service'
 import { DepositService } from './deposit/service'
 import { WithdrawalService } from './withdrawal/service'
-import { CreditService } from './credit/service'
 import { RatesService } from './rates/service'
 import { SPSPService } from './spsp/service'
 import { InvoiceService } from './invoice/service'
@@ -64,7 +63,6 @@ export interface AppServices {
   accountService: Promise<AccountService>
   depositService: Promise<DepositService>
   withdrawalService: Promise<WithdrawalService>
-  creditService: Promise<CreditService>
   SPSPService: Promise<SPSPService>
   invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>

@@ -20,7 +20,6 @@ import { createAssetService } from './asset/service'
 import { createAccountService } from './account/service'
 import { createDepositService } from './deposit/service'
 import { createWithdrawalService } from './withdrawal/service'
-import { createCreditService } from './credit/service'
 import { createSPSPService } from './spsp/service'
 import { createTransferService } from './transfer/service'
 import { createInvoiceService } from './invoice/service'
@@ -187,16 +186,6 @@ export function initIocContainer(
     return await createWithdrawalService({
       logger: logger,
       assetService,
-      accountService,
-      transferService
-    })
-  })
-  container.singleton('creditService', async (deps) => {
-    const logger = await deps.use('logger')
-    const accountService = await deps.use('accountService')
-    const transferService = await deps.use('transferService')
-    return await createCreditService({
-      logger: logger,
       accountService,
       transferService
     })
