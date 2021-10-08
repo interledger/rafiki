@@ -18,7 +18,7 @@ import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
 } from '../../outgoing_payment/model'
-import { AccountBalance, AccountService } from '../../account/service'
+import { AccountService } from '../../account/service'
 import { Balance, BalanceService } from '../../balance/service'
 import {
   OutgoingPayment,
@@ -128,12 +128,9 @@ describe('OutgoingPayment Resolvers', (): void => {
       jest
         .spyOn(outgoingPaymentService, 'get')
         .mockImplementation(async () => payment)
-      jest.spyOn(accountService, 'getBalance').mockImplementation(
-        async () =>
-          (({
-            balance: BigInt(45)
-          } as unknown) as AccountBalance)
-      )
+      jest
+        .spyOn(accountService, 'getBalance')
+        .mockImplementation(async () => BigInt(45))
       jest
         .spyOn(balanceService, 'get')
         .mockImplementation(async (ids: string[]) => {

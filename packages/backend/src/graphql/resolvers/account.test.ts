@@ -16,7 +16,6 @@ import { randomAsset } from '../../tests/asset'
 import {
   CreateAccountInput,
   CreateAccountMutationResponse,
-  CreateSubAccountMutationResponse,
   Account,
   AccountsConnection,
   UpdateAccountInput,
@@ -36,7 +35,8 @@ describe('Account Resolvers', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       accountService = await deps.use('accountService')
-      accountFactory = new AccountFactory(accountService)
+      const transferService = await deps.use('transferService')
+      accountFactory = new AccountFactory(accountService, transferService)
     }
   )
 
@@ -308,9 +308,8 @@ describe('Account Resolvers', (): void => {
     })
 
     test('Can get all account fields', async (): Promise<void> => {
-      const superAccount = await accountFactory.build()
+      const balance = BigInt(10)
       const account = await accountFactory.build({
-        superAccountId: superAccount.id,
         maxPacketAmount: BigInt(100),
         http: {
           incoming: {
@@ -323,14 +322,12 @@ describe('Account Resolvers', (): void => {
         },
         routing: {
           staticIlpAddress: 'g.rafiki.test'
-        }
+        },
+        balance
       })
       assert.ok(account.http)
       assert.ok(account.routing)
       assert.ok(account.maxPacketAmount)
-      const subAccount = await accountFactory.build({
-        superAccountId: account.id
-      })
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -342,35 +339,6 @@ describe('Account Resolvers', (): void => {
                   scale
                 }
                 disabled
-                superAccountId
-                superAccount {
-                  id
-                  asset {
-                    code
-                    scale
-                  }
-                  disabled
-                  stream {
-                    enabled
-                  }
-                }
-                subAccounts {
-                  edges {
-                    node {
-                      id
-                      asset {
-                        code
-                        scale
-                      }
-                      disabled
-                      superAccountId
-                      stream {
-                        enabled
-                      }
-                    }
-                    cursor
-                  }
-                }
                 maxPacketAmount
                 http {
                   outgoing {
@@ -384,13 +352,7 @@ describe('Account Resolvers', (): void => {
                 routing {
                   staticIlpAddress
                 }
-                balance {
-                  balance
-                  availableCredit
-                  creditExtended
-                  totalBorrowed
-                  totalLent
-                }
+                balance
               }
             }
           `,
@@ -432,54 +394,8 @@ describe('Account Resolvers', (): void => {
           __typename: 'Routing',
           staticIlpAddress: account.routing.staticIlpAddress
         },
-        superAccountId: superAccount.id,
-        superAccount: {
-          __typename: 'Account',
-          id: superAccount.id,
-          asset: {
-            __typename: 'Asset',
-            code: superAccount.asset.code,
-            scale: superAccount.asset.scale
-          },
-          disabled: superAccount.disabled,
-          stream: {
-            __typename: 'Stream',
-            enabled: superAccount.stream.enabled
-          }
-        },
-        subAccounts: {
-          __typename: 'SubAccountsConnection',
-          edges: [
-            {
-              __typename: 'AccountEdge',
-              cursor: subAccount.id,
-              node: {
-                __typename: 'Account',
-                id: subAccount.id,
-                asset: {
-                  __typename: 'Asset',
-                  code: subAccount.asset.code,
-                  scale: subAccount.asset.scale
-                },
-                disabled: subAccount.disabled,
-                superAccountId: account.id,
-                stream: {
-                  __typename: 'Stream',
-                  enabled: subAccount.stream.enabled
-                }
-              }
-            }
-          ]
-        },
         maxPacketAmount: account.maxPacketAmount.toString(),
-        balance: {
-          __typename: 'Balance',
-          balance: '0',
-          availableCredit: '0',
-          creditExtended: '0',
-          totalBorrowed: '0',
-          totalLent: '0'
-        }
+        balance: balance.toString()
       })
     })
 
@@ -503,36 +419,6 @@ describe('Account Resolvers', (): void => {
           `,
           variables: {
             accountId: uuid()
-          }
-        })
-        .then(
-          (query): Account => {
-            if (query.data) {
-              return query.data.account
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-    })
-
-    test('Returns error for unknown super-account', async (): Promise<void> => {
-      const account = await accountFactory.build()
-      const gqlQuery = appContainer.apolloClient
-        .query({
-          query: gql`
-            query Account($accountId: String!) {
-              account(id: $accountId) {
-                superAccount {
-                  id
-                }
-              }
-            }
-          `,
-          variables: {
-            accountId: account.id
           }
         })
         .then(
@@ -923,243 +809,6 @@ describe('Account Resolvers', (): void => {
     }, 10_000)
   })
 
-  describe('SubAccounts Queries', (): void => {
-    let account: AccountModel
-    let subAccounts: AccountModel[]
-
-    beforeEach(
-      async (): Promise<void> => {
-        account = await accountFactory.build()
-        subAccounts = []
-        for (let i = 0; i < 50; i++) {
-          subAccounts.push(
-            await accountFactory.build({
-              superAccountId: account.id
-            })
-          )
-        }
-      }
-    )
-    test('pageInfo is correct on default query without params', async (): Promise<void> => {
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Account($accountId: String!) {
-              account(id: $accountId) {
-                subAccounts {
-                  edges {
-                    node {
-                      id
-                    }
-                    cursor
-                  }
-                  pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                  }
-                }
-              }
-            }
-          `,
-          variables: {
-            accountId: account.id
-          }
-        })
-        .then(
-          (query): Account => {
-            if (query.data) {
-              return query.data.account
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-
-      expect(query.subAccounts.edges).toHaveLength(20)
-      expect(query.subAccounts.pageInfo.hasNextPage).toBeTruthy()
-      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeFalsy()
-      expect(query.subAccounts.pageInfo.startCursor).toEqual(subAccounts[0].id)
-      expect(query.subAccounts.pageInfo.endCursor).toEqual(subAccounts[19].id)
-    }, 10_000)
-
-    test('No sub-accounts, but sub-accounts requested', async (): Promise<void> => {
-      account = await accountFactory.build()
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Account($accountId: String!) {
-              account(id: $accountId) {
-                subAccounts {
-                  edges {
-                    node {
-                      id
-                    }
-                    cursor
-                  }
-                  pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                  }
-                }
-              }
-            }
-          `,
-          variables: {
-            accountId: account.id
-          }
-        })
-        .then(
-          (query): Account => {
-            if (query.data) {
-              return query.data.account
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-      expect(query.subAccounts.edges).toHaveLength(0)
-      expect(query.subAccounts.pageInfo.hasNextPage).toBeFalsy()
-      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeFalsy()
-      expect(query.subAccounts.pageInfo.startCursor).toBeNull()
-      expect(query.subAccounts.pageInfo.endCursor).toBeNull()
-    })
-
-    test('pageInfo is correct on pagination from start', async (): Promise<void> => {
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Account($accountId: String!) {
-              account(id: $accountId) {
-                subAccounts(first: 10) {
-                  edges {
-                    node {
-                      id
-                    }
-                    cursor
-                  }
-                  pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                  }
-                }
-              }
-            }
-          `,
-          variables: {
-            accountId: account.id
-          }
-        })
-        .then(
-          (query): Account => {
-            if (query.data) {
-              return query.data.account
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-      expect(query.subAccounts.edges).toHaveLength(10)
-      expect(query.subAccounts.pageInfo.hasNextPage).toBeTruthy()
-      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeFalsy()
-      expect(query.subAccounts.pageInfo.startCursor).toEqual(subAccounts[0].id)
-      expect(query.subAccounts.pageInfo.endCursor).toEqual(subAccounts[9].id)
-    }, 10_000)
-
-    test('pageInfo is correct on pagination from middle', async (): Promise<void> => {
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Account($accountId: String!, $after: String!) {
-              account(id: $accountId) {
-                subAccounts(after: $after) {
-                  edges {
-                    node {
-                      id
-                    }
-                    cursor
-                  }
-                  pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                  }
-                }
-              }
-            }
-          `,
-          variables: {
-            accountId: account.id,
-            after: subAccounts[19].id
-          }
-        })
-        .then(
-          (query): Account => {
-            if (query.data) {
-              return query.data.account
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-      expect(query.subAccounts.edges).toHaveLength(20)
-      expect(query.subAccounts.pageInfo.hasNextPage).toBeTruthy()
-      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeTruthy()
-      expect(query.subAccounts.pageInfo.startCursor).toEqual(subAccounts[20].id)
-      expect(query.subAccounts.pageInfo.endCursor).toEqual(subAccounts[39].id)
-    }, 10_000)
-
-    test('pageInfo is correct on pagination near end', async (): Promise<void> => {
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Account($accountId: String!, $after: String!) {
-              account(id: $accountId) {
-                subAccounts(after: $after, first: 10) {
-                  edges {
-                    node {
-                      id
-                    }
-                    cursor
-                  }
-                  pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                  }
-                }
-              }
-            }
-          `,
-          variables: {
-            accountId: account.id,
-            after: subAccounts[44].id
-          }
-        })
-        .then(
-          (query): Account => {
-            if (query.data) {
-              return query.data.account
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-      expect(query.subAccounts.edges).toHaveLength(5)
-      expect(query.subAccounts.pageInfo.hasNextPage).toBeFalsy()
-      expect(query.subAccounts.pageInfo.hasPreviousPage).toBeTruthy()
-      expect(query.subAccounts.pageInfo.startCursor).toEqual(subAccounts[45].id)
-      expect(query.subAccounts.pageInfo.endCursor).toEqual(subAccounts[49].id)
-    }, 10_000)
-  })
-
   describe('Update Account', (): void => {
     test('Can update an account', async (): Promise<void> => {
       const account = await accountFactory.build()
@@ -1440,95 +1089,6 @@ describe('Account Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Incoming token already exists')
-    })
-  })
-
-  describe('Create Sub-Account', (): void => {
-    test('Can create an sub-account', async (): Promise<void> => {
-      const superAccount = await accountFactory.build()
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateSubAccount($superAccountId: String!) {
-              createSubAccount(superAccountId: $superAccountId) {
-                code
-                success
-                message
-                account {
-                  id
-                  superAccountId
-                }
-              }
-            }
-          `,
-          variables: {
-            superAccountId: superAccount.id
-          }
-        })
-        .then(
-          (query): CreateSubAccountMutationResponse => {
-            if (query.data) {
-              return query.data.createSubAccount
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
-      expect(response.account?.id).not.toBeNull()
-      expect(response.account?.superAccountId).toEqual(superAccount.id)
-      if (response.account) {
-        await expect(
-          accountService.get(response.account.id)
-        ).resolves.toMatchObject({
-          id: response.account.id,
-          asset: superAccount.asset,
-          superAccountId: superAccount.id,
-          disabled: false,
-          stream: {
-            enabled: false
-          }
-        })
-      } else {
-        fail()
-      }
-    })
-
-    test('Returns error for unknown super-account', async (): Promise<void> => {
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateSubAccount($superAccountId: String!) {
-              createSubAccount(superAccountId: $superAccountId) {
-                code
-                success
-                message
-                account {
-                  id
-                  superAccountId
-                }
-              }
-            }
-          `,
-          variables: {
-            superAccountId: uuid()
-          }
-        })
-        .then(
-          (query): CreateSubAccountMutationResponse => {
-            if (query.data) {
-              return query.data.createSubAccount
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('404')
-      expect(response.message).toEqual('Unknown super-account')
     })
   })
 })

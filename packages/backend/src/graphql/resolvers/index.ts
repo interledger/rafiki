@@ -3,14 +3,10 @@ import {
   getAccount,
   getAccounts,
   getAccountsConnectionPageInfo,
-  getSubAccountsConnectionPageInfo,
   getBalance,
-  getSuperAccount,
   createAccount,
   updateAccount,
-  deleteAccount,
-  createSubAccount,
-  getSubAccounts
+  deleteAccount
 } from './account'
 import { createDeposit } from './deposit'
 import { getAccountInvoices, getPageInfo } from './invoice'
@@ -41,9 +37,7 @@ export const resolvers: Resolvers = {
   },
   Account: {
     balance: getBalance,
-    invoices: getAccountInvoices,
-    superAccount: getSuperAccount,
-    subAccounts: getSubAccounts
+    invoices: getAccountInvoices
     // deposits: getDeposits,
     // webhooks: getWebhooks,
     // withdrawals: getWithdrawals,
@@ -60,9 +54,6 @@ export const resolvers: Resolvers = {
   OutgoingPayment: {
     outcome: getOutcome
   },
-  SubAccountsConnection: {
-    pageInfo: getSubAccountsConnectionPageInfo
-  },
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo
   },
@@ -73,7 +64,6 @@ export const resolvers: Resolvers = {
     createAccount: createAccount,
     updateAccount: updateAccount,
     deleteAccount: deleteAccount,
-    createSubAccount: createSubAccount,
     createOutgoingPayment,
     approveOutgoingPayment,
     requoteOutgoingPayment,

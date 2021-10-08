@@ -61,7 +61,7 @@ export async function handleQuoting(
   let amountToSend: bigint | undefined
   if (payment.intent.amountToSend) {
     const balance = await deps.accountService.getBalance(payment.accountId)
-    if (!balance) {
+    if (balance === undefined) {
       throw LifecycleError.MissingBalance
     }
     const reservedBalance = await deps.balanceService.get([
@@ -70,7 +70,7 @@ export async function handleQuoting(
     if (!reservedBalance) {
       throw LifecycleError.MissingBalance
     }
-    const amountSent = reservedBalance[0].balance - balance.balance
+    const amountSent = reservedBalance[0].balance - balance
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
       // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.
@@ -226,13 +226,13 @@ export async function handleSending(
     invoiceUrl: payment.intent.invoiceUrl
   })
   const balance = await deps.accountService.getBalance(payment.accountId)
-  if (!balance) {
+  if (balance === undefined) {
     throw LifecycleError.MissingBalance
   }
 
   // Due to Sending→Sending retries, the quote's amount parameters may need adjusting.
-  const amountSentSinceQuote = payment.quote.maxSourceAmount - balance.balance
-  const newMaxSourceAmount = balance.balance
+  const amountSentSinceQuote = payment.quote.maxSourceAmount - balance
+  const newMaxSourceAmount = balance
 
   let newMinDeliveryAmount
   switch (payment.quote.targetType) {
@@ -372,10 +372,10 @@ async function refundLeftoverBalance(
   payment: OutgoingPayment
 ): Promise<void> {
   const balance = await deps.accountService.getBalance(payment.accountId)
-  if (!balance) {
+  if (balance === undefined) {
     throw LifecycleError.MissingBalance
   }
-  if (balance.balance === BigInt(0)) return
+  if (balance === BigInt(0)) return
 
   const account = await deps.accountService.get(payment.accountId)
   const sourceAccount = await deps.accountService.get(payment.sourceAccount.id)
@@ -386,12 +386,12 @@ async function refundLeftoverBalance(
     {
       sourceBalanceId: account.balanceId,
       destinationBalanceId: sourceAccount.balanceId,
-      amount: balance.balance
+      amount: balance
     },
     {
       sourceBalanceId: payment.reservedBalanceId,
       destinationBalanceId: sourceAccount.asset.outgoingPaymentsBalanceId,
-      amount: balance.balance
+      amount: balance
     }
   ])
   if (error) {

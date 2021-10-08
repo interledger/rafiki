@@ -16,7 +16,7 @@ import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { MockPlugin } from './mock_plugin'
 import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
-import { AccountBalance, AccountService } from '../account/service'
+import { AccountService } from '../account/service'
 import { BalanceService, Balance } from '../balance/service'
 import { RatesService } from '../rates/service'
 import { TransferService } from '../transfer/service'
@@ -102,9 +102,9 @@ describe('OutgoingPaymentService', (): void => {
     }
   ) {
     if (amountSent !== undefined) {
-      const balances = await accountService.getBalance(payment.accountId)
-      expect(balances).toBeDefined()
-      if (!balances) {
+      const balance = await accountService.getBalance(payment.accountId)
+      expect(balance).toBeDefined()
+      if (balance === undefined) {
         fail()
       }
       const reservedBalance = await balanceService.get([
@@ -114,7 +114,7 @@ describe('OutgoingPaymentService', (): void => {
       if (!reservedBalance) {
         fail()
       }
-      expect(reservedBalance[0].balance - balances.balance).toBe(amountSent)
+      expect(reservedBalance[0].balance - balance).toBe(amountSent)
     }
     if (amountDelivered !== undefined) {
       expect(plugins[payment.accountId].totalReceived).toBe(amountDelivered)
@@ -122,16 +122,12 @@ describe('OutgoingPaymentService', (): void => {
     if (sourceAccountBalance !== undefined) {
       await expect(
         accountService.getBalance(payment.sourceAccount.id)
-      ).resolves.toMatchObject({
-        balance: sourceAccountBalance
-      })
+      ).resolves.toEqual(sourceAccountBalance)
     }
     if (accountBalance !== undefined) {
       await expect(
         accountService.getBalance(payment.accountId)
-      ).resolves.toMatchObject({
-        balance: accountBalance
-      })
+      ).resolves.toEqual(accountBalance)
     }
     if (invoiceReceived !== undefined) {
       expect(invoice.amountDelivered).toBe(invoiceReceived)
@@ -422,9 +418,7 @@ describe('OutgoingPaymentService', (): void => {
           .spyOn(accountService, 'getBalance')
           .mockImplementation(async (id: string) => {
             expect(id).toBe(payment.accountId)
-            return ({
-              balance: BigInt(0)
-            } as unknown) as AccountBalance
+            return BigInt(0)
           })
         jest
           .spyOn(balanceService, 'get')
@@ -452,9 +446,7 @@ describe('OutgoingPaymentService', (): void => {
           .spyOn(accountService, 'getBalance')
           .mockImplementation(async (id: string) => {
             expect(id).toBe(payment.accountId)
-            return ({
-              balance: BigInt(0)
-            } as unknown) as AccountBalance
+            return BigInt(0)
           })
         jest
           .spyOn(balanceService, 'get')

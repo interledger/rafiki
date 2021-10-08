@@ -8,8 +8,7 @@ export class UnknownAssetError extends Error {
 export enum AccountError {
   DuplicateAccountId = 'DuplicateAccountId',
   DuplicateIncomingToken = 'DuplicateIncomingToken',
-  UnknownAccount = 'UnknownAccount',
-  UnknownSuperAccount = 'UnknownSuperAccount'
+  UnknownAccount = 'UnknownAccount'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

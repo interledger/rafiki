@@ -80,9 +80,9 @@ describe('Deposit Service', (): void => {
         ...deposit,
         id: depositOrError.id
       })
-      await expect(
-        accountService.getBalance(accountId)
-      ).resolves.toMatchObject({ balance: amount })
+      await expect(accountService.getBalance(accountId)).resolves.toEqual(
+        amount
+      )
       const settlementBalance = await assetService.getSettlementBalance(asset)
       expect(settlementBalance).toEqual(amount)
 
@@ -96,9 +96,9 @@ describe('Deposit Service', (): void => {
           ...deposit,
           id: depositOrError.id
         })
-        await expect(
-          accountService.getBalance(accountId)
-        ).resolves.toMatchObject({ balance: amount + amount })
+        await expect(accountService.getBalance(accountId)).resolves.toEqual(
+          amount + amount
+        )
       }
     })
 
