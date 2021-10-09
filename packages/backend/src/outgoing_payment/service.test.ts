@@ -107,14 +107,14 @@ describe('OutgoingPaymentService', (): void => {
       if (balance === undefined) {
         fail()
       }
-      const reservedBalance = await balanceService.get([
+      const reservedBalance = await balanceService.get(
         payment.reservedBalanceId
-      ])
+      )
       expect(reservedBalance).toBeDefined()
       if (!reservedBalance) {
         fail()
       }
-      expect(reservedBalance[0].balance - balance).toBe(amountSent)
+      expect(reservedBalance.balance - balance).toBe(amountSent)
     }
     if (amountDelivered !== undefined) {
       expect(plugins[payment.accountId].totalReceived).toBe(amountDelivered)
@@ -422,13 +422,11 @@ describe('OutgoingPaymentService', (): void => {
           })
         jest
           .spyOn(balanceService, 'get')
-          .mockImplementation(async (ids: string[]) => {
-            expect(ids).toStrictEqual([payment.reservedBalanceId])
-            return [
-              {
-                balance: BigInt(89)
-              } as unknown
-            ] as Balance[]
+          .mockImplementation(async (id: string) => {
+            expect(id).toStrictEqual(payment.reservedBalanceId)
+            return {
+              balance: BigInt(89)
+            } as Balance
           })
         const payment2 = await processNext(payment.id, PaymentState.Ready)
         expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123 - 89))
@@ -450,13 +448,11 @@ describe('OutgoingPaymentService', (): void => {
           })
         jest
           .spyOn(balanceService, 'get')
-          .mockImplementation(async (ids: string[]) => {
-            expect(ids).toStrictEqual([payment.reservedBalanceId])
-            return [
-              {
-                balance: BigInt(123)
-              } as unknown
-            ] as Balance[]
+          .mockImplementation(async (id: string) => {
+            expect(id).toStrictEqual(payment.reservedBalanceId)
+            return {
+              balance: BigInt(123)
+            } as Balance
           })
         await processNext(payment.id, PaymentState.Completed)
       })

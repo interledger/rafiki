@@ -16,7 +16,7 @@ import {
   isAccountTransferError
 } from './errors'
 import { AssetService } from '../asset/service'
-import { BalanceService, Balance } from '../balance/service'
+import { BalanceService } from '../balance/service'
 import { DepositService } from '../deposit/service'
 import { Pagination } from '../shared/pagination'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -116,11 +116,13 @@ describe('Account Service', (): void => {
       await expect(accountService.get(accountOrError.id)).resolves.toEqual(
         accountOrError
       )
-      const balances = await balanceService.get([accountOrError.balanceId])
-      expect(balances.length).toBe(1)
-      balances.forEach(({ balance }: Balance) => {
-        expect(balance).toEqual(BigInt(0))
-        expect(balance).toEqual(BigInt(0))
+      await expect(
+        balanceService.get(accountOrError.balanceId)
+      ).resolves.toEqual({
+        id: accountOrError.balanceId,
+        balance: BigInt(0),
+        unit: accountOrError.asset.unit,
+        debitBalance: false
       })
     })
 
@@ -160,11 +162,13 @@ describe('Account Service', (): void => {
         }
       })
       await expect(accountService.get(id)).resolves.toEqual(accountOrError)
-      const balances = await balanceService.get([accountOrError.balanceId])
-      expect(balances.length).toBe(1)
-      balances.forEach(({ balance }: Balance) => {
-        expect(balance).toEqual(BigInt(0))
-        expect(balance).toEqual(BigInt(0))
+      await expect(
+        balanceService.get(accountOrError.balanceId)
+      ).resolves.toEqual({
+        id: accountOrError.balanceId,
+        balance: BigInt(0),
+        unit: accountOrError.asset.unit,
+        debitBalance: false
       })
     })
 
@@ -260,19 +264,7 @@ describe('Account Service', (): void => {
 
       await accountService.create(account)
 
-      const newAsset = await assetService.get(asset)
-      expect(newAsset).toBeDefined()
-      if (!newAsset) fail()
-      const balances = await balanceService.get([
-        newAsset.liquidityBalanceId,
-        newAsset.settlementBalanceId
-      ])
-      expect(balances.length).toBe(2)
-      balances.forEach(({ balance }: Balance) => {
-        expect(balance).toEqual(BigInt(0))
-        expect(balance).toEqual(BigInt(0))
-      })
-
+      await expect(assetService.get(asset)).resolves.toBeDefined()
       await expect(assetService.getLiquidityBalance(asset)).resolves.toEqual(
         BigInt(0)
       )
@@ -299,8 +291,9 @@ describe('Account Service', (): void => {
     beforeEach(
       async (): Promise<void> => {
         accountsCreated = []
+        const asset = randomAsset()
         for (let i = 0; i < 40; i++) {
-          accountsCreated.push(await accountFactory.build())
+          accountsCreated.push(await accountFactory.build({ asset }))
         }
       }
     )

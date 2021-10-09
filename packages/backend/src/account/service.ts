@@ -162,13 +162,11 @@ async function createAccount(
 
   const acctTrx = trx || (await Account.startTransaction())
   try {
-    newAccount.balanceId = uuid()
-    await deps.balanceService.create([
-      {
-        id: newAccount.balanceId,
+    newAccount.balanceId = (
+      await deps.balanceService.create({
         unit: newAccount.asset.unit
-      }
-    ])
+      })
+    ).id
 
     const accountRow = await Account.query(acctTrx).insertAndFetch(newAccount)
 
@@ -284,13 +282,13 @@ async function getAccountBalance(
     return undefined
   }
 
-  const balance = await deps.balanceService.get([account.balanceId])
+  const balance = await deps.balanceService.get(account.balanceId)
 
-  if (balance.length === 0) {
+  if (!balance) {
     throw new UnknownBalanceError(accountId)
   }
 
-  return balance[0].balance
+  return balance.balance
 }
 
 async function getAccountByToken(

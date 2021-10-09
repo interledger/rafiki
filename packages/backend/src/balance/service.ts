@@ -1,28 +1,25 @@
-import {
-  Account,
-  AccountFlags,
-  Client,
-  CreateAccountError
-} from 'tigerbeetle-node'
-import { BalanceError, CreateBalanceError, CreateBalancesError } from './errors'
+import { Account, AccountFlags, Client } from 'tigerbeetle-node'
+import { v4 as uuid } from 'uuid'
+
+import { CreateBalanceError } from './errors'
 import { BaseService } from '../shared/baseService'
 import { uuidToBigInt } from '../shared/utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 
 export interface BalanceOptions {
-  id: string
   debitBalance?: boolean
   unit: number
 }
 
 export type Balance = Required<BalanceOptions> & {
+  id: string
   balance: bigint
 }
 
 export interface BalanceService {
-  create(balances: BalanceOptions[]): Promise<void | CreateBalancesError>
-  get(ids: string[]): Promise<Balance[]>
+  create(balance: BalanceOptions): Promise<Balance>
+  get(id: string): Promise<Balance | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -41,73 +38,59 @@ export async function createBalanceService({
     tigerbeetle
   }
   return {
-    create: (balances) => createBalances(deps, balances),
-    get: (ids) => getBalances(deps, ids)
+    create: (balance) => createBalance(deps, balance),
+    get: (id) => getBalance(deps, id)
   }
 }
 
-async function createBalances(
+async function createBalance(
   deps: ServiceDependencies,
-  balances: BalanceOptions[]
-): Promise<void | CreateBalancesError> {
-  const res = await deps.tigerbeetle.createAccounts(
-    balances.map(({ id, debitBalance, unit }, idx) => {
-      let flags = 0
-      if (debitBalance) {
-        flags |= AccountFlags.credits_must_not_exceed_debits
-      } else {
-        flags |= AccountFlags.debits_must_not_exceed_credits
-      }
-      if (idx < balances.length - 1) {
-        flags |= AccountFlags.linked
-      }
-      return {
-        id: uuidToBigInt(id),
-        user_data: BigInt(0),
-        reserved: ACCOUNT_RESERVED,
-        unit,
-        code: 0,
-        flags,
-        debits_accepted: BigInt(0),
-        debits_reserved: BigInt(0),
-        credits_accepted: BigInt(0),
-        credits_reserved: BigInt(0),
-        timestamp: 0n
-      }
-    })
-  )
-  for (const { index, code } of res) {
-    switch (code) {
-      case CreateAccountError.linked_event_failed:
-        break
-      case CreateAccountError.exists:
-      case CreateAccountError.exists_with_different_user_data:
-      case CreateAccountError.exists_with_different_reserved_field:
-      case CreateAccountError.exists_with_different_unit:
-      case CreateAccountError.exists_with_different_code:
-      case CreateAccountError.exists_with_different_flags:
-        return { index, error: BalanceError.DuplicateBalance }
-      default:
-        throw new CreateBalanceError(code)
+  { debitBalance, unit }: BalanceOptions
+): Promise<Balance> {
+  const id = uuid()
+  const errors = await deps.tigerbeetle.createAccounts([
+    {
+      id: uuidToBigInt(id),
+      user_data: BigInt(0),
+      reserved: ACCOUNT_RESERVED,
+      unit,
+      code: 0,
+      flags: debitBalance
+        ? AccountFlags.credits_must_not_exceed_debits
+        : AccountFlags.debits_must_not_exceed_credits,
+      debits_accepted: BigInt(0),
+      debits_reserved: BigInt(0),
+      credits_accepted: BigInt(0),
+      credits_reserved: BigInt(0),
+      timestamp: 0n
+    }
+  ])
+  if (errors.length) {
+    throw new CreateBalanceError(errors[0].code)
+  }
+  return {
+    id,
+    unit,
+    debitBalance: !!debitBalance,
+    balance: BigInt(0)
+  }
+}
+
+async function getBalance(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Balance | undefined> {
+  const balance = (await deps.tigerbeetle.lookupAccounts([uuidToBigInt(id)]))[0]
+  if (balance) {
+    return {
+      id,
+      unit: balance.unit,
+      debitBalance: !!(
+        balance.flags & AccountFlags.credits_must_not_exceed_debits
+      ),
+      balance: calculateBalance(deps, balance)
     }
   }
-}
-
-async function getBalances(
-  deps: ServiceDependencies,
-  ids: string[]
-): Promise<Balance[]> {
-  const balances = await deps.tigerbeetle.lookupAccounts(
-    ids.map((id) => uuidToBigInt(id))
-  )
-  return balances.map((balance, idx) => ({
-    id: ids[idx],
-    unit: balance.unit,
-    debitBalance: !!(
-      balance.flags & AccountFlags.credits_must_not_exceed_debits
-    ),
-    balance: calculateBalance(deps, balance)
-  }))
 }
 
 function calculateBalance(deps: ServiceDependencies, balance: Account): bigint {

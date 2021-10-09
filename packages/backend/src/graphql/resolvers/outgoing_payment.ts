@@ -39,10 +39,10 @@ export const getOutcome: OutgoingPaymentResolvers['outcome'] = async (
       : await outgoingPaymentService.get(parent.id)
   const balance = await accountService.getBalance(payment.sourceAccount.id)
   if (balance === undefined) throw new Error('source account does not exist')
-  const reservedBalance = await balanceService.get([payment.reservedBalanceId])
+  const reservedBalance = await balanceService.get(payment.reservedBalanceId)
   if (!reservedBalance) throw new Error('reserved balance does not exist')
   return {
-    amountSent: (reservedBalance[0].balance - balance).toString()
+    amountSent: (reservedBalance.balance - balance).toString()
   }
 }
 

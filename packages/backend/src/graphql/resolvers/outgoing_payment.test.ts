@@ -133,13 +133,11 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockImplementation(async () => BigInt(45))
       jest
         .spyOn(balanceService, 'get')
-        .mockImplementation(async (ids: string[]) => {
-          expect(ids).toStrictEqual([payment.reservedBalanceId])
-          return [
-            {
-              balance: BigInt(123)
-            } as unknown
-          ] as Balance[]
+        .mockImplementation(async (id: string) => {
+          expect(id).toStrictEqual(payment.reservedBalanceId)
+          return {
+            balance: BigInt(123)
+          } as Balance
         })
 
       const query = await appContainer.apolloClient

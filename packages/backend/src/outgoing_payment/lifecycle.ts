@@ -64,13 +64,13 @@ export async function handleQuoting(
     if (balance === undefined) {
       throw LifecycleError.MissingBalance
     }
-    const reservedBalance = await deps.balanceService.get([
+    const reservedBalance = await deps.balanceService.get(
       payment.reservedBalanceId
-    ])
+    )
     if (!reservedBalance) {
       throw LifecycleError.MissingBalance
     }
-    const amountSent = reservedBalance[0].balance - balance
+    const amountSent = reservedBalance.balance - balance
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
       // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.

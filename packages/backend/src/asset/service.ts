@@ -95,23 +95,24 @@ async function getOrCreateAsset(
         code,
         scale
       })
-      await deps.balanceService.create([
-        {
-          id: asset.liquidityBalanceId,
-          unit: asset.unit
-        },
-        {
-          id: asset.settlementBalanceId,
-          debitBalance: true,
-          unit: asset.unit
-        },
-        {
-          id: asset.outgoingPaymentsBalanceId,
-          debitBalance: true,
-          unit: asset.unit
-        }
-      ])
-      return asset
+      const { id: liquidityBalanceId } = await deps.balanceService.create({
+        unit: asset.unit
+      })
+      const { id: settlementBalanceId } = await deps.balanceService.create({
+        debitBalance: true,
+        unit: asset.unit
+      })
+      const {
+        id: outgoingPaymentsBalanceId
+      } = await deps.balanceService.create({
+        debitBalance: true,
+        unit: asset.unit
+      })
+      return await Asset.query(trx).patchAndFetchById(asset.id, {
+        liquidityBalanceId,
+        settlementBalanceId,
+        outgoingPaymentsBalanceId
+      })
     })
   }
 }
@@ -134,9 +135,9 @@ async function getLiquidityBalance(
     .first()
     .select('liquidityBalanceId')
   if (asset) {
-    const balances = await deps.balanceService.get([asset.liquidityBalanceId])
-    if (balances.length === 1) {
-      return balances[0].balance
+    const balance = await deps.balanceService.get(asset.liquidityBalanceId)
+    if (balance) {
+      return balance.balance
     } else {
       deps.logger.warn({ asset }, 'missing liquidity balance')
     }
@@ -153,9 +154,9 @@ async function getSettlementBalance(
     .first()
     .select('settlementBalanceId')
   if (asset) {
-    const balances = await deps.balanceService.get([asset.settlementBalanceId])
-    if (balances.length === 1) {
-      return balances[0].balance
+    const balance = await deps.balanceService.get(asset.settlementBalanceId)
+    if (balance) {
+      return balance.balance
     } else {
       deps.logger.warn({ asset }, 'missing settlement balance')
     }
@@ -172,11 +173,11 @@ async function getOutgoingPaymentsBalance(
     .first()
     .select('outgoingPaymentsBalanceId')
   if (asset) {
-    const balances = await deps.balanceService.get([
+    const balance = await deps.balanceService.get(
       asset.outgoingPaymentsBalanceId
-    ])
-    if (balances.length === 1) {
-      return balances[0].balance
+    )
+    if (balance) {
+      return balance.balance
     } else {
       deps.logger.warn({ asset }, 'missing outgoing payments balance')
     }

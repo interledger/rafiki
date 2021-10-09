@@ -1,5 +1,4 @@
 import { TransactionOrKnex } from 'objection'
-import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
@@ -108,22 +107,11 @@ async function createOutgoingPayment(
     )
     throw new Error('unable to create account, err=' + account)
   }
-  const reservedBalanceId = uuid()
-  const error = await deps.balanceService.create([
-    {
-      id: reservedBalanceId,
+  const reservedBalanceId = (
+    await deps.balanceService.create({
       unit: sourceAccount.asset.unit
-    }
-  ])
-  if (error) {
-    deps.logger.warn(
-      {
-        error: error[0].error
-      },
-      'createOutgoingPayment reserved balance creation failed'
-    )
-    throw new Error('unable to create reserved balance, err=' + error[0].error)
-  }
+    })
+  ).id
 
   return await OutgoingPayment.query(deps.knex).insertAndFetch({
     state: PaymentState.Inactive,
