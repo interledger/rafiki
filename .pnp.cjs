@@ -6106,6 +6106,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["testcontainers", "npm:7.20.4"],
             ["tigerbeetle-node", "npm:0.4.1"],
             ["tmp", "npm:0.2.1"],
+            ["typescript", "patch:typescript@npm%3A4.2.4#~builtin<compat/typescript>::version=4.2.4&hash=32657b"],
             ["uuid", "npm:8.3.2"]
           ],
           "linkType": "SOFT",

@@ -13,3 +13,11 @@ From the monorepo root directory:
 ```shell
 yarn workspace backend test
 ```
+
+## Docker build
+
+In order to build the docker container run the following command.
+
+```shell
+yarn docker build backend -t rafiki-backend
+```

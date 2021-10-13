@@ -13,7 +13,7 @@
     "test": "jest --passWithNoTests",
     "test:local": "jest $INIT_CWD --passWithNoTests",
     "build": "tsc --build",
-    "postinstall": "husky install"
+    "postinstall": "[ -d '.husky' ] && husky install || true"
   },
   "workspaces": [
     "packages/*"
