@@ -44,12 +44,12 @@ describe('Liquidity Check Middleware', function () {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(services.logger.error).toHaveBeenCalledWith(
-      'Liquidity Check Error',
       {
         peerId: 'bob',
         triggerBy: 'test.rafiki.bob',
         message: 'exceeded maximum balance.'
-      }
+      },
+      'Liquidity Check Error'
     )
   })
 

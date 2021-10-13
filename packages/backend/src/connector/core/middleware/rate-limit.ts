@@ -41,11 +41,14 @@ export function createIncomingRateLimitMiddleware(
       buckets.set(incoming.id, bucket)
     }
     if (!bucket.take()) {
-      logger.warn('rate limited a packet', {
-        bucket,
-        prepare,
-        accountId: incoming.id
-      })
+      logger.warn(
+        {
+          bucket,
+          prepare,
+          accountId: incoming.id
+        },
+        'rate limited a packet'
+      )
       throw new RateLimitedError('too many requests, throttling.')
     }
     await next()

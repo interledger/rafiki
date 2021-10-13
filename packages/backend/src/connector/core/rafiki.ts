@@ -3,6 +3,7 @@ import * as http from 'http'
 import Koa, { Middleware } from 'koa'
 import createRouter, { Router as KoaRouter } from 'koa-joi-router'
 import { Redis } from 'ioredis'
+import { Logger } from 'pino'
 import { StreamServer } from '@interledger/stream-receiver'
 //import { Router } from './services/router'
 import {
@@ -14,10 +15,8 @@ import {
   createTokenAuthMiddleware,
   createAdminAuthMiddleware
 } from './middleware'
-import { LoggingService } from './services/logger'
 import { IncomingMessage, ServerResponse } from 'http'
 import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
-import { DebugLogger } from './services/logger/debug'
 import { RatesService } from '../../rates/service'
 import { createAccountMiddleware } from './middleware/account'
 import { createStreamAddressMiddleware } from './middleware/stream-address'
@@ -69,13 +68,7 @@ export interface AccountService {
 export interface RafikiServices {
   //router: Router
   accounts: AccountService
-  logger: LoggingService
-  rates: RatesService
-  redis: Redis
-  streamServer: StreamServer
-}
-
-export type RafikiConfig = Partial<RafikiServices> & {
+  logger: Logger
   rates: RatesService
   redis: Redis
   streamServer: StreamServer
@@ -117,23 +110,16 @@ export type RafikiMiddleware<T = any> = Middleware<T, RafikiContextMixin>
 
 export class Rafiki<T = any> {
   //private _router?: Router
-  private _accounts?: AccountService
   private streamServer: StreamServer
   private redis: Redis
 
   private publicServer: Koa<T, RafikiContextMixin> = new Koa()
   private adminServer: Koa<T, RafikiContextMixin> = new Koa()
 
-  constructor(config: RafikiConfig) {
+  constructor(config: RafikiServices) {
     //this._router = config && config.router ? config.router : undefined
     this.redis = config.redis
-    this._accounts = config && config.accounts ? config.accounts : undefined
-    const logger =
-      config && config.logger ? config.logger : new DebugLogger('rafiki')
-    const accountsOrThrow = (): AccountService => {
-      if (this._accounts) return this._accounts
-      throw new Error('No accounts service provided to the app')
-    }
+    const logger = config.logger
     //const routerOrThrow = (): Router => {
     //  if (this._router) return this._router
     //  throw new Error('No router service provided to the app')
@@ -156,7 +142,7 @@ export class Rafiki<T = any> {
         return streamServer
       },
       get accounts(): AccountService {
-        return accountsOrThrow()
+        return config.accounts
       },
       logger
     }
@@ -171,19 +157,11 @@ export class Rafiki<T = any> {
   //  this._router = router
   //}
 
-  public get accounts(): AccountService | undefined {
-    return this._accounts
-  }
-
-  public set accounts(accounts: AccountService | undefined) {
-    this._accounts = accounts
-  }
-
-  public get logger(): LoggingService {
+  public get logger(): Logger {
     return this.publicServer.context.services.logger
   }
 
-  public set logger(logger: LoggingService) {
+  public set logger(logger: Logger) {
     this.publicServer.context.services.logger = this.adminServer.context.services.logger = logger
   }
 
@@ -209,7 +187,7 @@ export class Rafiki<T = any> {
   }
 }
 
-export function createApp(config: RafikiConfig): Rafiki {
+export function createApp(config: RafikiServices): Rafiki {
   return new Rafiki(config)
 }
 

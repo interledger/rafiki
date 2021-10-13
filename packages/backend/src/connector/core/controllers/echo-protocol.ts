@@ -58,7 +58,7 @@ export function createEchoProtocolController({
       writer.write(ECHO_DATA_PREFIX)
       writer.writeUInt8(0x01)
 
-      logger.debug('responding to echo packet', { sourceAddress })
+      logger.debug({ sourceAddress }, 'responding to echo packet')
 
       const { http } = outgoing
       if (!http) {

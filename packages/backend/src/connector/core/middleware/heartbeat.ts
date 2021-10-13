@@ -41,7 +41,7 @@ export function createIncomingHeartbeatMiddleware(
 //     // TODO: Stagger the sending
 //     for (let peerId in ctx.services.peers) {
 //       try {
-//         logger.debug('sending heartbeat', { peerId })
+//         logger.debug({ peerId }, 'sending heartbeat')
 //         await ctx.services.peers.getOrThrow(peerId).client.send(
 //           serializeIlpPrepare({
 //             amount: '0',
