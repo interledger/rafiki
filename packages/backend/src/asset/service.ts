@@ -20,6 +20,10 @@ export interface AssetService {
     asset: AssetOptions,
     trx?: Transaction
   ): Promise<bigint | undefined>
+  getOutgoingPaymentsBalance(
+    asset: AssetOptions,
+    trx?: Transaction
+  ): Promise<bigint | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -44,7 +48,10 @@ export async function createAssetService({
     getOrCreate: (asset) => getOrCreateAsset(deps, asset),
     getById: (id, trx) => getAssetById(deps, id, trx),
     getLiquidityBalance: (asset, trx) => getLiquidityBalance(deps, asset, trx),
-    getSettlementBalance: (asset, trx) => getSettlementBalance(deps, asset, trx)
+    getSettlementBalance: (asset, trx) =>
+      getSettlementBalance(deps, asset, trx),
+    getOutgoingPaymentsBalance: (asset, trx) =>
+      getOutgoingPaymentsBalance(deps, asset, trx)
   }
 }
 
@@ -88,18 +95,24 @@ async function getOrCreateAsset(
         code,
         scale
       })
-      await deps.balanceService.create([
-        {
-          id: asset.liquidityBalanceId,
-          unit: asset.unit
-        },
-        {
-          id: asset.settlementBalanceId,
-          debitBalance: true,
-          unit: asset.unit
-        }
-      ])
-      return asset
+      const { id: liquidityBalanceId } = await deps.balanceService.create({
+        unit: asset.unit
+      })
+      const { id: settlementBalanceId } = await deps.balanceService.create({
+        debitBalance: true,
+        unit: asset.unit
+      })
+      const {
+        id: outgoingPaymentsBalanceId
+      } = await deps.balanceService.create({
+        debitBalance: true,
+        unit: asset.unit
+      })
+      return await Asset.query(trx).patchAndFetchById(asset.id, {
+        liquidityBalanceId,
+        settlementBalanceId,
+        outgoingPaymentsBalanceId
+      })
     })
   }
 }
@@ -122,9 +135,9 @@ async function getLiquidityBalance(
     .first()
     .select('liquidityBalanceId')
   if (asset) {
-    const balances = await deps.balanceService.get([asset.liquidityBalanceId])
-    if (balances.length === 1) {
-      return balances[0].balance
+    const balance = await deps.balanceService.get(asset.liquidityBalanceId)
+    if (balance) {
+      return balance.balance
     } else {
       deps.logger.warn({ asset }, 'missing liquidity balance')
     }
@@ -141,11 +154,32 @@ async function getSettlementBalance(
     .first()
     .select('settlementBalanceId')
   if (asset) {
-    const balances = await deps.balanceService.get([asset.settlementBalanceId])
-    if (balances.length === 1) {
-      return balances[0].balance
+    const balance = await deps.balanceService.get(asset.settlementBalanceId)
+    if (balance) {
+      return balance.balance
     } else {
       deps.logger.warn({ asset }, 'missing settlement balance')
+    }
+  }
+}
+
+async function getOutgoingPaymentsBalance(
+  deps: ServiceDependencies,
+  { code, scale }: AssetOptions,
+  trx?: Transaction
+): Promise<bigint | undefined> {
+  const asset = await Asset.query(trx)
+    .where({ code, scale })
+    .first()
+    .select('outgoingPaymentsBalanceId')
+  if (asset) {
+    const balance = await deps.balanceService.get(
+      asset.outgoingPaymentsBalanceId
+    )
+    if (balance) {
+      return balance.balance
+    } else {
+      deps.logger.warn({ asset }, 'missing outgoing payments balance')
     }
   }
 }

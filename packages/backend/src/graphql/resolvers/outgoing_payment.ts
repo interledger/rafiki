@@ -32,13 +32,17 @@ export const getOutcome: OutgoingPaymentResolvers['outcome'] = async (
     'outgoingPaymentService'
   )
   const accountService = await ctx.container.use('accountService')
-  const sourceAccountId =
-    parent.sourceAccount?.id ||
-    (await outgoingPaymentService.get(parent.id)).sourceAccount.id
-  const balance = await accountService.getBalance(sourceAccountId)
-  if (!balance) throw new Error('source account does not exist')
+  const balanceService = await ctx.container.use('balanceService')
+  const payment =
+    parent.sourceAccount?.id && parent.reservedBalanceId
+      ? parent
+      : await outgoingPaymentService.get(parent.id)
+  const balance = await accountService.getBalance(payment.sourceAccount.id)
+  if (balance === undefined) throw new Error('source account does not exist')
+  const reservedBalance = await balanceService.get(payment.reservedBalanceId)
+  if (!reservedBalance) throw new Error('reserved balance does not exist')
   return {
-    amountSent: (balance.totalBorrowed - balance.balance).toString()
+    amountSent: (reservedBalance.balance - balance).toString()
   }
 }
 
@@ -79,10 +83,7 @@ export const createOutgoingPayment: MutationResolvers['createOutgoingPayment'] =
     'outgoingPaymentService'
   )
   return outgoingPaymentService
-    .create({
-      superAccountId: args.input.accountId,
-      ...args.input
-    })
+    .create(args.input)
     .then((payment: OutgoingPayment) => ({
       code: '200',
       success: true,
@@ -179,7 +180,8 @@ function paymentToGraphql(
       lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
       highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
-    superAccountId: payment.superAccountId,
+    accountId: payment.accountId,
+    reservedBalanceId: payment.reservedBalanceId,
     sourceAccount: payment.sourceAccount,
     destinationAccount: payment.destinationAccount
   }

@@ -16,7 +16,7 @@ import {
   isAccountTransferError
 } from './errors'
 import { AssetService } from '../asset/service'
-import { BalanceService, Balance } from '../balance/service'
+import { BalanceService } from '../balance/service'
 import { DepositService } from '../deposit/service'
 import { Pagination } from '../shared/pagination'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -116,11 +116,13 @@ describe('Account Service', (): void => {
       await expect(accountService.get(accountOrError.id)).resolves.toEqual(
         accountOrError
       )
-      const balances = await balanceService.get([accountOrError.balanceId])
-      expect(balances.length).toBe(1)
-      balances.forEach(({ balance }: Balance) => {
-        expect(balance).toEqual(BigInt(0))
-        expect(balance).toEqual(BigInt(0))
+      await expect(
+        balanceService.get(accountOrError.balanceId)
+      ).resolves.toEqual({
+        id: accountOrError.balanceId,
+        balance: BigInt(0),
+        unit: accountOrError.asset.unit,
+        debitBalance: false
       })
     })
 
@@ -160,31 +162,14 @@ describe('Account Service', (): void => {
         }
       })
       await expect(accountService.get(id)).resolves.toEqual(accountOrError)
-      const balances = await balanceService.get([accountOrError.balanceId])
-      expect(balances.length).toBe(1)
-      balances.forEach(({ balance }: Balance) => {
-        expect(balance).toEqual(BigInt(0))
-        expect(balance).toEqual(BigInt(0))
+      await expect(
+        balanceService.get(accountOrError.balanceId)
+      ).resolves.toEqual({
+        id: accountOrError.balanceId,
+        balance: BigInt(0),
+        unit: accountOrError.asset.unit,
+        debitBalance: false
       })
-    })
-
-    test('Cannot create an account with non-existent super-account', async (): Promise<void> => {
-      const superAccountId = uuid()
-      const account = {
-        superAccountId
-      }
-
-      await expect(accountService.create(account)).resolves.toEqual(
-        AccountError.UnknownSuperAccount
-      )
-
-      await accountFactory.build({
-        id: superAccountId,
-        asset: randomAsset()
-      })
-
-      const accountOrError = await accountService.create(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
     })
 
     test('Cannot create an account with duplicate id', async (): Promise<void> => {
@@ -279,19 +264,7 @@ describe('Account Service', (): void => {
 
       await accountService.create(account)
 
-      const newAsset = await assetService.get(asset)
-      expect(newAsset).toBeDefined()
-      if (!newAsset) fail()
-      const balances = await balanceService.get([
-        newAsset.liquidityBalanceId,
-        newAsset.settlementBalanceId
-      ])
-      expect(balances.length).toBe(2)
-      balances.forEach(({ balance }: Balance) => {
-        expect(balance).toEqual(BigInt(0))
-        expect(balance).toEqual(BigInt(0))
-      })
-
+      await expect(assetService.get(asset)).resolves.toBeDefined()
       await expect(assetService.getLiquidityBalance(asset)).resolves.toEqual(
         BigInt(0)
       )
@@ -318,14 +291,15 @@ describe('Account Service', (): void => {
     beforeEach(
       async (): Promise<void> => {
         accountsCreated = []
+        const asset = randomAsset()
         for (let i = 0; i < 40; i++) {
-          accountsCreated.push(await accountFactory.build())
+          accountsCreated.push(await accountFactory.build({ asset }))
         }
       }
     )
 
     test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const accounts = await accountService.getPage({})
+      const accounts = await accountService.getPage()
       expect(accounts).toHaveLength(20)
       expect(accounts[0].id).toEqual(accountsCreated[0].id)
       expect(accounts[19].id).toEqual(accountsCreated[19].id)
@@ -336,7 +310,7 @@ describe('Account Service', (): void => {
       const pagination: Pagination = {
         first: 10
       }
-      const accounts = await accountService.getPage({ pagination })
+      const accounts = await accountService.getPage(pagination)
       expect(accounts).toHaveLength(10)
       expect(accounts[0].id).toEqual(accountsCreated[0].id)
       expect(accounts[9].id).toEqual(accountsCreated[9].id)
@@ -347,7 +321,7 @@ describe('Account Service', (): void => {
       const pagination: Pagination = {
         after: accountsCreated[19].id
       }
-      const accounts = await accountService.getPage({ pagination })
+      const accounts = await accountService.getPage(pagination)
       expect(accounts).toHaveLength(20)
       expect(accounts[0].id).toEqual(accountsCreated[20].id)
       expect(accounts[19].id).toEqual(accountsCreated[39].id)
@@ -359,7 +333,7 @@ describe('Account Service', (): void => {
         first: 10,
         after: accountsCreated[9].id
       }
-      const accounts = await accountService.getPage({ pagination })
+      const accounts = await accountService.getPage(pagination)
       expect(accounts).toHaveLength(10)
       expect(accounts[0].id).toEqual(accountsCreated[10].id)
       expect(accounts[9].id).toEqual(accountsCreated[19].id)
@@ -370,7 +344,7 @@ describe('Account Service', (): void => {
       const pagination: Pagination = {
         last: 10
       }
-      const accounts = accountService.getPage({ pagination })
+      const accounts = accountService.getPage(pagination)
       await expect(accounts).rejects.toThrow(
         "Can't paginate backwards from the start."
       )
@@ -380,7 +354,7 @@ describe('Account Service', (): void => {
       const pagination: Pagination = {
         before: accountsCreated[20].id
       }
-      const accounts = await accountService.getPage({ pagination })
+      const accounts = await accountService.getPage(pagination)
       expect(accounts).toHaveLength(20)
       expect(accounts[0].id).toEqual(accountsCreated[0].id)
       expect(accounts[19].id).toEqual(accountsCreated[19].id)
@@ -392,7 +366,7 @@ describe('Account Service', (): void => {
         last: 5,
         before: accountsCreated[10].id
       }
-      const accounts = await accountService.getPage({ pagination })
+      const accounts = await accountService.getPage(pagination)
       expect(accounts).toHaveLength(5)
       expect(accounts[0].id).toEqual(accountsCreated[5].id)
       expect(accounts[4].id).toEqual(accountsCreated[9].id)
@@ -403,16 +377,14 @@ describe('Account Service', (): void => {
       const paginationForwards = {
         first: 10
       }
-      const accountsForwards = await accountService.getPage({
-        pagination: paginationForwards
-      })
+      const accountsForwards = await accountService.getPage(paginationForwards)
       const paginationBackwards = {
         last: 10,
         before: accountsCreated[10].id
       }
-      const accountsBackwards = await accountService.getPage({
-        pagination: paginationBackwards
-      })
+      const accountsBackwards = await accountService.getPage(
+        paginationBackwards
+      )
       expect(accountsForwards).toHaveLength(10)
       expect(accountsBackwards).toHaveLength(10)
       expect(accountsForwards).toEqual(accountsBackwards)
@@ -423,7 +395,7 @@ describe('Account Service', (): void => {
         after: accountsCreated[19].id,
         before: accountsCreated[19].id
       }
-      const accounts = await accountService.getPage({ pagination })
+      const accounts = await accountService.getPage(pagination)
       expect(accounts).toHaveLength(20)
       expect(accounts[0].id).toEqual(accountsCreated[20].id)
       expect(accounts[19].id).toEqual(accountsCreated[39].id)
@@ -434,7 +406,7 @@ describe('Account Service', (): void => {
       const pagination: Pagination = {
         first: -1
       }
-      const accounts = accountService.getPage({ pagination })
+      const accounts = accountService.getPage(pagination)
       await expect(accounts).rejects.toThrow('Pagination index error')
     })
 
@@ -442,197 +414,7 @@ describe('Account Service', (): void => {
       const pagination: Pagination = {
         first: 101
       }
-      const accounts = accountService.getPage({ pagination })
-      await expect(accounts).rejects.toThrow('Pagination index error')
-    })
-  })
-
-  describe('Get Sub-Accounts', (): void => {
-    test("Can get an account's sub-accounts", async (): Promise<void> => {
-      const account = await accountFactory.build()
-      const expectedSubAccounts = [
-        await accountFactory.build({
-          superAccountId: account.id
-        }),
-        await accountFactory.build({
-          superAccountId: account.id
-        })
-      ]
-      const subAccounts = await accountService.getSubAccounts(account.id)
-      expect(subAccounts).toEqual(expectedSubAccounts)
-    })
-
-    test('Returns empty array for nonexistent sub-accounts', async (): Promise<void> => {
-      await expect(accountService.getSubAccounts(uuid())).resolves.toEqual([])
-    })
-  })
-
-  describe('Sub-Account pagination', (): void => {
-    let superAccountId: string
-    let subAccounts: Account[]
-
-    beforeEach(
-      async (): Promise<void> => {
-        ;({ id: superAccountId } = await accountFactory.build())
-        subAccounts = []
-        for (let i = 0; i < 40; i++) {
-          subAccounts.push(
-            await accountFactory.build({
-              superAccountId
-            })
-          )
-        }
-      }
-    )
-
-    test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const accounts = await accountService.getPage({ superAccountId })
-      expect(accounts).toHaveLength(20)
-      expect(accounts[0].id).toEqual(subAccounts[0].id)
-      expect(accounts[19].id).toEqual(subAccounts[19].id)
-      expect(accounts[20]).toBeUndefined()
-    })
-
-    test('Can change forward pagination limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 10
-      }
-      const accounts = await accountService.getPage({
-        pagination,
-        superAccountId
-      })
-      expect(accounts).toHaveLength(10)
-      expect(accounts[0].id).toEqual(subAccounts[0].id)
-      expect(accounts[9].id).toEqual(subAccounts[9].id)
-      expect(accounts[10]).toBeUndefined()
-    })
-
-    test('Can paginate forwards from a cursor', async (): Promise<void> => {
-      const pagination: Pagination = {
-        after: subAccounts[19].id
-      }
-      const accounts = await accountService.getPage({
-        pagination,
-        superAccountId
-      })
-      expect(accounts).toHaveLength(20)
-      expect(accounts[0].id).toEqual(subAccounts[20].id)
-      expect(accounts[19].id).toEqual(subAccounts[39].id)
-      expect(accounts[20]).toBeUndefined()
-    })
-
-    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 10,
-        after: subAccounts[9].id
-      }
-      const accounts = await accountService.getPage({
-        pagination,
-        superAccountId
-      })
-      expect(accounts).toHaveLength(10)
-      expect(accounts[0].id).toEqual(subAccounts[10].id)
-      expect(accounts[9].id).toEqual(subAccounts[19].id)
-      expect(accounts[10]).toBeUndefined()
-    })
-
-    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
-      const pagination: Pagination = {
-        last: 10
-      }
-      const accounts = accountService.getPage({
-        pagination,
-        superAccountId
-      })
-      await expect(accounts).rejects.toThrow(
-        "Can't paginate backwards from the start."
-      )
-    })
-
-    test('Can paginate backwards from a cursor', async (): Promise<void> => {
-      const pagination: Pagination = {
-        before: subAccounts[20].id
-      }
-      const accounts = await accountService.getPage({
-        pagination,
-        superAccountId
-      })
-      expect(accounts).toHaveLength(20)
-      expect(accounts[0].id).toEqual(subAccounts[0].id)
-      expect(accounts[19].id).toEqual(subAccounts[19].id)
-      expect(accounts[20]).toBeUndefined()
-    })
-
-    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        last: 5,
-        before: subAccounts[10].id
-      }
-      const accounts = await accountService.getPage({
-        pagination,
-        superAccountId
-      })
-      expect(accounts).toHaveLength(5)
-      expect(accounts[0].id).toEqual(subAccounts[5].id)
-      expect(accounts[4].id).toEqual(subAccounts[9].id)
-      expect(accounts[5]).toBeUndefined()
-    })
-
-    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
-      const paginationForwards = {
-        first: 10
-      }
-      const accountsForwards = await accountService.getPage({
-        pagination: paginationForwards,
-        superAccountId
-      })
-      const paginationBackwards = {
-        last: 10,
-        before: subAccounts[10].id
-      }
-      const accountsBackwards = await accountService.getPage({
-        pagination: paginationBackwards,
-        superAccountId
-      })
-      expect(accountsForwards).toHaveLength(10)
-      expect(accountsBackwards).toHaveLength(10)
-      expect(accountsForwards).toEqual(accountsBackwards)
-    })
-
-    test('Providing before and after results in forward pagination', async (): Promise<void> => {
-      const pagination: Pagination = {
-        after: subAccounts[19].id,
-        before: subAccounts[19].id
-      }
-      const accounts = await accountService.getPage({
-        pagination,
-        superAccountId
-      })
-      expect(accounts).toHaveLength(20)
-      expect(accounts[0].id).toEqual(subAccounts[20].id)
-      expect(accounts[19].id).toEqual(subAccounts[39].id)
-      expect(accounts[20]).toBeUndefined()
-    })
-
-    test("Can't request less than 0 accounts", async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: -1
-      }
-      const accounts = accountService.getPage({
-        pagination,
-        superAccountId
-      })
-      await expect(accounts).rejects.toThrow('Pagination index error')
-    })
-
-    test("Can't request more than 100 accounts", async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 101
-      }
-      const accounts = accountService.getPage({
-        pagination,
-        superAccountId
-      })
+      const accounts = accountService.getPage(pagination)
       await expect(accounts).rejects.toThrow('Pagination index error')
     })
   })
@@ -760,17 +542,7 @@ describe('Account Service', (): void => {
   describe('Get Account Balance', (): void => {
     test("Can retrieve an account's balance", async (): Promise<void> => {
       const { id } = await accountFactory.build()
-
-      {
-        const balance = await accountService.getBalance(id)
-        expect(balance).toEqual({
-          balance: BigInt(0),
-          availableCredit: BigInt(0),
-          creditExtended: BigInt(0),
-          totalBorrowed: BigInt(0),
-          totalLent: BigInt(0)
-        })
-      }
+      await expect(accountService.getBalance(id)).resolves.toEqual(BigInt(0))
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
@@ -966,9 +738,7 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(sourceAccount.id)
-        ).resolves.toMatchObject({
-          balance: startingSourceBalance - sourceAmount
-        })
+        ).resolves.toEqual(startingSourceBalance - sourceAmount)
 
         await expect(
           assetService.getLiquidityBalance(sourceAccount.asset)
@@ -980,9 +750,7 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(destinationAccount.id)
-        ).resolves.toMatchObject({
-          balance: BigInt(0)
-        })
+        ).resolves.toEqual(BigInt(0))
 
         if (accept) {
           await expect(trxOrError.commit()).resolves.toBeUndefined()
@@ -992,11 +760,9 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(sourceAccount.id)
-        ).resolves.toMatchObject({
-          balance: accept
-            ? startingSourceBalance - sourceAmount
-            : startingSourceBalance
-        })
+        ).resolves.toEqual(
+          accept ? startingSourceBalance - sourceAmount : startingSourceBalance
+        )
 
         await expect(
           assetService.getLiquidityBalance(sourceAccount.asset)
@@ -1006,9 +772,7 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(destinationAccount.id)
-        ).resolves.toMatchObject({
-          balance: accept ? destinationAmount : BigInt(0)
-        })
+        ).resolves.toEqual(accept ? destinationAmount : BigInt(0))
 
         await expect(trxOrError.commit()).resolves.toEqual(
           accept
@@ -1069,9 +833,7 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(sourceAccount.id)
-        ).resolves.toMatchObject({
-          balance: startingSourceBalance - sourceAmount
-        })
+        ).resolves.toEqual(startingSourceBalance - sourceAmount)
 
         await expect(
           assetService.getLiquidityBalance(sourceAccount.asset)
@@ -1083,9 +845,7 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(destinationAccount.id)
-        ).resolves.toMatchObject({
-          balance: BigInt(0)
-        })
+        ).resolves.toEqual(BigInt(0))
 
         if (accept) {
           await expect(trxOrError.commit()).resolves.toBeUndefined()
@@ -1095,11 +855,9 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(sourceAccount.id)
-        ).resolves.toMatchObject({
-          balance: accept
-            ? startingSourceBalance - sourceAmount
-            : startingSourceBalance
-        })
+        ).resolves.toEqual(
+          accept ? startingSourceBalance - sourceAmount : startingSourceBalance
+        )
 
         await expect(
           assetService.getLiquidityBalance(sourceAccount.asset)
@@ -1115,9 +873,7 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(destinationAccount.id)
-        ).resolves.toMatchObject({
-          balance: accept ? destinationAmount : BigInt(0)
-        })
+        ).resolves.toEqual(accept ? destinationAmount : BigInt(0))
 
         await expect(trxOrError.commit()).resolves.toEqual(
           accept
@@ -1148,10 +904,10 @@ describe('Account Service', (): void => {
       )
       await expect(
         accountService.getBalance(sourceAccount.id)
-      ).resolves.toMatchObject({ balance: BigInt(0) })
+      ).resolves.toEqual(BigInt(0))
       await expect(
         accountService.getBalance(destinationAccount.id)
-      ).resolves.toMatchObject({ balance: BigInt(0) })
+      ).resolves.toEqual(BigInt(0))
     })
 
     test.each`
@@ -1184,9 +940,7 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(sourceAccount.id)
-        ).resolves.toMatchObject({
-          balance: startingSourceBalance
-        })
+        ).resolves.toEqual(startingSourceBalance)
 
         await expect(
           assetService.getLiquidityBalance(sourceAccount.asset)
@@ -1198,9 +952,7 @@ describe('Account Service', (): void => {
 
         await expect(
           accountService.getBalance(destinationAccount.id)
-        ).resolves.toMatchObject({
-          balance: BigInt(0)
-        })
+        ).resolves.toEqual(BigInt(0))
       }
     )
 

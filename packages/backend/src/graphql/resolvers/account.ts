@@ -4,8 +4,7 @@ import {
   AccountEdge,
   AccountResolvers,
   MutationResolvers,
-  AccountsConnectionResolvers,
-  SubAccountsConnectionResolvers
+  AccountsConnectionResolvers
 } from '../generated/graphql'
 import { AccountService, Account } from '../../account/service'
 import { AccountError, isAccountError } from '../../account/errors'
@@ -16,9 +15,7 @@ export const getAccounts: QueryResolvers['accounts'] = async (
   ctx
 ): ResolversTypes['AccountsConnection'] => {
   const accountService = await ctx.container.use('accountService')
-  const accounts = await accountService.getPage({
-    pagination: args
-  })
+  const accounts = await accountService.getPage(args)
   return {
     edges: accounts.map((account: Account) => ({
       cursor: account.id,
@@ -146,95 +143,17 @@ export const deleteAccount: MutationResolvers['deleteAccount'] = async (
   return {}
 }
 
-export const createSubAccount: MutationResolvers['createSubAccount'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['CreateSubAccountMutationResponse'] => {
-  try {
-    const accountService = await ctx.container.use('accountService')
-    const accountOrError = await accountService.create({
-      superAccountId: args.superAccountId
-    })
-    if (isAccountError(accountOrError)) {
-      switch (accountOrError) {
-        case AccountError.UnknownSuperAccount:
-          return {
-            code: '404',
-            message: 'Unknown super-account',
-            success: false
-          }
-        default:
-          throw new Error(`AccountError: ${accountOrError}`)
-      }
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Created ILP Sub-Account',
-      account: accountOrError
-    }
-  } catch (error) {
-    ctx.logger.error(
-      {
-        superAccountId: args.superAccountId,
-        error
-      },
-      'error creating sub-account'
-    )
-    return {
-      code: '400',
-      message: 'Error trying to create sub-account',
-      success: false
-    }
-  }
-}
-
 export const getBalance: AccountResolvers['balance'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['Balance'] => {
+): ResolversTypes['UInt64'] => {
   const accountService = await ctx.container.use('accountService')
   const balance = await accountService.getBalance(parent.id)
-  if (!balance) {
+  if (balance === undefined) {
     throw new Error('No account')
   }
   return balance
-}
-
-export const getSuperAccount: AccountResolvers['superAccount'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['Account'] => {
-  if (!parent.superAccountId) {
-    throw new Error('No super-account')
-  }
-  const accountService = await ctx.container.use('accountService')
-  const superAccount = await accountService.get(parent.superAccountId)
-  if (!superAccount) {
-    throw new Error('No super-account')
-  }
-  return superAccount
-}
-
-export const getSubAccounts: AccountResolvers['subAccounts'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['SubAccountsConnection'] => {
-  const accountService = await ctx.container.use('accountService')
-  const subAccounts = await accountService.getPage({
-    pagination: args,
-    superAccountId: parent.id
-  })
-  return {
-    edges: subAccounts.map((subAccount: Account) => ({
-      cursor: subAccount.id,
-      node: subAccount
-    }))
-  }
 }
 
 export const getAccountsConnectionPageInfo: AccountsConnectionResolvers['pageInfo'] = async (
@@ -254,39 +173,12 @@ export const getAccountsConnectionPageInfo: AccountsConnectionResolvers['pageInf
   })
 }
 
-export const getSubAccountsConnectionPageInfo: SubAccountsConnectionResolvers['pageInfo'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['PageInfo'] => {
-  const edges = parent.edges
-  if (edges == null || typeof edges == 'undefined' || edges.length == 0)
-    return {
-      hasPreviousPage: false,
-      hasNextPage: false
-    }
-
-  const accountService = await ctx.container.use('accountService')
-  const firstSubAccount = await accountService.get(edges[0].node.id)
-
-  if (!firstSubAccount.superAccountId) {
-    throw new Error('No super-account')
-  }
-  return getPageInfo({
-    accountService,
-    edges,
-    superAccountId: firstSubAccount.superAccountId
-  })
-}
-
 const getPageInfo = async ({
   accountService,
-  edges,
-  superAccountId
+  edges
 }: {
   accountService: AccountService
   edges: AccountEdge[]
-  superAccountId?: string
 }): ResolversTypes['PageInfo'] => {
   const firstEdge = edges[0].cursor
   const lastEdge = edges[edges.length - 1].cursor
@@ -294,22 +186,16 @@ const getPageInfo = async ({
   let hasNextPageAccounts, hasPreviousPageAccounts
   try {
     hasNextPageAccounts = await accountService.getPage({
-      pagination: {
-        after: lastEdge,
-        first: 1
-      },
-      superAccountId
+      after: lastEdge,
+      first: 1
     })
   } catch (e) {
     hasNextPageAccounts = []
   }
   try {
     hasPreviousPageAccounts = await accountService.getPage({
-      pagination: {
-        before: firstEdge,
-        last: 1
-      },
-      superAccountId
+      before: firstEdge,
+      last: 1
     })
   } catch (e) {
     hasPreviousPageAccounts = []

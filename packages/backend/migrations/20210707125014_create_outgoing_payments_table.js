@@ -25,7 +25,8 @@ exports.up = function (knex) {
     table.bigInteger('quoteHighExchangeRateEstimateNumerator').nullable()
     table.bigInteger('quoteHighExchangeRateEstimateDenominator').nullable()
 
-    table.string('superAccountId').notNullable()
+    table.string('accountId').notNullable()
+    table.string('reservedBalanceId').notNullable()
     table.string('sourceAccountId').notNullable()
     table.integer('sourceAccountScale').notNullable()
     table.string('sourceAccountCode').notNullable()

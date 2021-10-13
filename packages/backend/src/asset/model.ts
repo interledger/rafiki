@@ -16,10 +16,13 @@ export class Asset extends BaseModel {
   public settlementBalanceId!: string
   // TigerBeetle account id tracking liquidity account balance
   public liquidityBalanceId!: string
+  // TigerBeetle account id tracking reserved outgoing payments balance
+  public outgoingPaymentsBalanceId!: string
 
   public $beforeInsert(): void {
     super.$beforeInsert()
     this.settlementBalanceId = this.settlementBalanceId || uuid()
     this.liquidityBalanceId = this.liquidityBalanceId || uuid()
+    this.outgoingPaymentsBalanceId = this.outgoingPaymentsBalanceId || uuid()
   }
 }

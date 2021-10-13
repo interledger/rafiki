@@ -112,5 +112,19 @@ describe('Asset Service', (): void => {
         0n
       )
     })
+
+    test('Can get reserved outgoing payments balance', async (): Promise<void> => {
+      const asset = {
+        code: 'CNY',
+        scale: 2
+      }
+      await expect(
+        assetService.getOutgoingPaymentsBalance(asset)
+      ).resolves.toBeUndefined()
+      await assetService.getOrCreate(asset)
+      await expect(
+        assetService.getOutgoingPaymentsBalance(asset)
+      ).resolves.toEqual(0n)
+    })
   })
 })

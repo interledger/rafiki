@@ -20,7 +20,6 @@ import { createAssetService } from './asset/service'
 import { createAccountService } from './account/service'
 import { createDepositService } from './deposit/service'
 import { createWithdrawalService } from './withdrawal/service'
-import { createCreditService } from './credit/service'
 import { createSPSPService } from './spsp/service'
 import { createTransferService } from './transfer/service'
 import { createInvoiceService } from './invoice/service'
@@ -191,16 +190,6 @@ export function initIocContainer(
       transferService
     })
   })
-  container.singleton('creditService', async (deps) => {
-    const logger = await deps.use('logger')
-    const accountService = await deps.use('accountService')
-    const transferService = await deps.use('transferService')
-    return await createCreditService({
-      logger: logger,
-      accountService,
-      transferService
-    })
-  })
   container.singleton('SPSPService', async (deps) => {
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
@@ -261,9 +250,10 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountService: await deps.use('accountService'),
-      creditService: await deps.use('creditService'),
+      balanceService: await deps.use('balanceService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      ratesService: await deps.use('ratesService')
+      ratesService: await deps.use('ratesService'),
+      transferService: await deps.use('transferService')
     })
   })
   return container

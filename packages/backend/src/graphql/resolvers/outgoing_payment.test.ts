@@ -18,7 +18,8 @@ import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
 } from '../../outgoing_payment/model'
-import { AccountBalance, AccountService } from '../../account/service'
+import { AccountService } from '../../account/service'
+import { Balance, BalanceService } from '../../balance/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
@@ -31,6 +32,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let accountService: AccountService
+  let balanceService: BalanceService
 
   const streamServer = new StreamServer({
     serverSecret: Buffer.from(
@@ -75,9 +77,10 @@ describe('OutgoingPayment Resolvers', (): void => {
   beforeEach(
     async (): Promise<void> => {
       accountService = await deps.use('accountService')
+      balanceService = await deps.use('balanceService')
       const accountFactory = new AccountFactory(accountService)
-      const superAccountId = (await accountFactory.build()).id
-      const accountId = (await accountFactory.build({ superAccountId })).id
+      const { id: sourceAccountId, asset } = await accountFactory.build()
+      const accountId = (await accountFactory.build({ asset })).id
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
@@ -100,9 +103,10 @@ describe('OutgoingPayment Resolvers', (): void => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
-        superAccountId,
+        accountId,
+        reservedBalanceId: uuid(),
         sourceAccount: {
-          id: accountId,
+          id: sourceAccountId,
           scale: 9,
           code: 'USD'
         },
@@ -124,13 +128,17 @@ describe('OutgoingPayment Resolvers', (): void => {
       jest
         .spyOn(outgoingPaymentService, 'get')
         .mockImplementation(async () => payment)
-      jest.spyOn(accountService, 'getBalance').mockImplementation(
-        async () =>
-          (({
-            totalBorrowed: BigInt(123),
-            balance: BigInt(45)
-          } as unknown) as AccountBalance)
-      )
+      jest
+        .spyOn(accountService, 'getBalance')
+        .mockImplementation(async () => BigInt(45))
+      jest
+        .spyOn(balanceService, 'get')
+        .mockImplementation(async (id: string) => {
+          expect(id).toStrictEqual(payment.reservedBalanceId)
+          return {
+            balance: BigInt(123)
+          } as Balance
+        })
 
       const query = await appContainer.apolloClient
         .query({
@@ -158,7 +166,8 @@ describe('OutgoingPayment Resolvers', (): void => {
                   lowExchangeRateEstimate
                   highExchangeRateEstimate
                 }
-                superAccountId
+                accountId
+                reservedBalanceId
                 sourceAccount {
                   id
                   scale
@@ -204,7 +213,8 @@ describe('OutgoingPayment Resolvers', (): void => {
         highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
         __typename: 'PaymentQuote'
       })
-      expect(query.superAccountId).toBe(payment.superAccountId)
+      expect(query.accountId).toBe(payment.accountId)
+      expect(query.reservedBalanceId).toBe(payment.reservedBalanceId)
       expect(query.sourceAccount).toEqual({
         ...payment.sourceAccount,
         __typename: 'PaymentSourceAccount'
@@ -241,7 +251,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   describe('Mutation.createOutgoingPayment', (): void => {
     const input = {
-      accountId: uuid(),
+      sourceAccountId: uuid(),
       paymentPointer: 'http://wallet2.example/paymentpointer/bob',
       amountToSend: '123',
       autoApprove: false
@@ -252,7 +262,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         .spyOn(outgoingPaymentService, 'create')
         .mockImplementation(async (args) => {
           expect(args).toEqual({
-            superAccountId: input.accountId,
             ...input,
             amountToSend: BigInt(input.amountToSend)
           })

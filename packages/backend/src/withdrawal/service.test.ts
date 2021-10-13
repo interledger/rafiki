@@ -87,19 +87,17 @@ describe('Withdrawal Service', (): void => {
         ...withdrawal,
         id: withdrawalOrError.id
       })
-      await expect(
-        accountService.getBalance(accountId)
-      ).resolves.toMatchObject({ balance: startingBalance - amount })
+      await expect(accountService.getBalance(accountId)).resolves.toEqual(
+        startingBalance - amount
+      )
       await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
         startingBalance
       )
 
       const error = await withdrawalService.finalize(withdrawalOrError.id)
       expect(error).toBeUndefined()
-      await expect(accountService.getBalance(accountId)).resolves.toMatchObject(
-        {
-          balance: startingBalance - amount
-        }
+      await expect(accountService.getBalance(accountId)).resolves.toEqual(
+        startingBalance - amount
       )
       await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
         startingBalance - amount
@@ -139,9 +137,9 @@ describe('Withdrawal Service', (): void => {
           amount
         })
       ).resolves.toEqual(WithdrawalError.InsufficientBalance)
-      await expect(
-        accountService.getBalance(accountId)
-      ).resolves.toMatchObject({ balance: startingBalance })
+      await expect(accountService.getBalance(accountId)).resolves.toEqual(
+        startingBalance
+      )
       const settlementBalance = await assetService.getSettlementBalance(asset)
       expect(settlementBalance).toEqual(startingBalance)
     })
@@ -197,9 +195,9 @@ describe('Withdrawal Service', (): void => {
       expect(isWithdrawalError(withdrawalOrError)).toEqual(false)
       const error = await withdrawalService.rollback(withdrawal.id)
       expect(error).toBeUndefined()
-      await expect(
-        accountService.getBalance(accountId)
-      ).resolves.toMatchObject({ balance: startingBalance })
+      await expect(accountService.getBalance(accountId)).resolves.toEqual(
+        startingBalance
+      )
     })
 
     test("Can't finalize non-existent withdrawal", async (): Promise<void> => {

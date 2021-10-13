@@ -35,9 +35,6 @@ type Mutation {
   "Delete account"
   deleteAccount(id: String!): DeleteAccountMutationResponse!
 
-  "Create sub-account"
-  createSubAccount(superAccountId: String!): CreateSubAccountMutationResponse!
-
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
@@ -95,18 +92,6 @@ type Mutation {
     "The id of the pending withdrawal to rollback."
     withdrawalId: String!
   ): RollbackPendingWithdrawalMutationResponse
-
-  "Extend Credit"
-  extendCredit(input: ExtendCreditInput!): ExtendCreditMutationResponse
-
-  "Revoke Credit"
-  revokeCredit(input: RevokeCreditInput!): RevokeCreditMutationResponse
-
-  "Utilize Credit"
-  utilizeCredit(input: UtilizeCreditInput!): UtilizeCreditMutationResponse
-
-  "Settle Debt"
-  settleDebt(input: SettleDebtInput): SettleDebtMutationResponse
 }
 
 type PageInfo {
@@ -121,11 +106,6 @@ type PageInfo {
 }
 
 type AccountsConnection {
-  pageInfo: PageInfo!
-  edges: [AccountEdge!]!
-}
-
-type SubAccountsConnection {
   pageInfo: PageInfo!
   edges: [AccountEdge!]!
 }
@@ -199,46 +179,6 @@ input CreateWithdrawalInput {
   id: String
 }
 
-input ExtendCreditInput {
-  "Account extending credit."
-  accountId: String!
-  "Sub-account to which credit is extended."
-  subAccountId: String!
-  "Amount of additional line of credit."
-  amount: UInt64!
-  "Automatically utilized and applied to the account balance."
-  autoApply: Boolean! = false
-}
-
-input RevokeCreditInput {
-  "Account revoking credit."
-  accountId: String!
-  "Sub-account to which credit is revoked."
-  subAccountId: String!
-  "Amount of revoked line of credit."
-  amount: UInt64!
-}
-
-input UtilizeCreditInput {
-  "Account extending credit."
-  accountId: String!
-  "Sub-account to which credit is extended."
-  subAccountId: String!
-  "Amount of utilized line of credit."
-  amount: UInt64!
-}
-
-input SettleDebtInput {
-  "Account collecting debt."
-  accountId: String!
-  "Sub-account settling debt."
-  subAccountId: String!
-  "Amount of debt."
-  amount: UInt64!
-  "Replenish the account's line of credit commensurate with the debt settled."
-  revolve: Boolean! = true
-}
-
 type Asset {
   code: String!
   scale: Int!
@@ -256,38 +196,16 @@ enum WithdrawalError {
   WithdrawalExists
 }
 
-enum CreditError {
-  SameAccounts
-  UnknownAccount
-  UnrelatedSubAccount
-  UnknownSubAccount
-  InsufficientBalance
-  InsufficientCredit
-  InsufficientDebt
-}
-
 type Account {
   id: ID!
   disabled: Boolean!
-  superAccountId: ID
-  superAccount: Account
-  subAccounts(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): SubAccountsConnection!
   maxPacketAmount: UInt64
   http: Http
   asset: Asset!
   stream: Stream!
   routing: Routing
 
-  balance: Balance!
+  balance: UInt64!
   deposits(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -339,16 +257,6 @@ type Routing {
   dynamicIlpAddress: String
 }
 
-type Balance {
-  balance: UInt64!
-  netLiability: UInt64
-  netAssets: UInt64
-  creditExtended: UInt64!
-  totalLent: UInt64!
-  availableCredit: UInt64!
-  totalBorrowed: UInt64!
-}
-
 type InvoiceConnection {
   pageInfo: PageInfo!
   edges: [InvoiceEdge!]!
@@ -378,7 +286,8 @@ type OutgoingPayment {
   stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
-  superAccountId: String!
+  accountId: String!
+  reservedBalanceId: String!
   sourceAccount: PaymentSourceAccount!
   destinationAccount: PaymentDestinationAccount!
   outcome: OutgoingPaymentOutcome!
@@ -442,7 +351,7 @@ type OutgoingPaymentOutcome {
 }
 
 input CreateOutgoingPaymentInput {
-  accountId: String!
+  sourceAccountId: String!
   paymentPointer: String
   amountToSend: UInt64
   invoiceUrl: String
@@ -525,13 +434,6 @@ type DeleteAccountMutationResponse implements MutationResponse {
   message: String!
 }
 
-type CreateSubAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  account: Account
-}
-
 type TransferMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -585,34 +487,6 @@ type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   error: WithdrawalError
-}
-
-type ExtendCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type RevokeCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type UtilizeCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type SettleDebtMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
 }
 
 interface MutationResponse {

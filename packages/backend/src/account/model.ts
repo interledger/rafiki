@@ -17,22 +17,6 @@ export class Account extends BaseModel {
         to: 'assets.id'
       }
     },
-    subAccounts: {
-      relation: Model.HasManyRelation,
-      modelClass: Account,
-      join: {
-        from: 'accounts.id',
-        to: 'accounts.superAccountId'
-      }
-    },
-    superAccount: {
-      relation: Model.HasOneRelation,
-      modelClass: Account,
-      join: {
-        from: 'accounts.superAccountId',
-        to: 'accounts.id'
-      }
-    },
     incomingTokens: {
       relation: Model.HasManyRelation,
       modelClass: HttpToken,
@@ -49,18 +33,6 @@ export class Account extends BaseModel {
   public asset!: Asset
   // TigerBeetle account id tracking Interledger balance
   public readonly balanceId!: string
-  // TigerBeetle account id tracking credit extended by super-account
-  public readonly creditBalanceId?: string
-  // TigerBeetle account id tracking credit extended to sub-account(s)
-  public readonly creditExtendedBalanceId?: string
-  // TigerBeetle account id tracking amount loaned from super-account
-  public readonly debtBalanceId?: string
-  // TigerBeetle account id tracking amount(s) loaned to sub-account(s)
-  public readonly lentBalanceId?: string
-
-  public readonly superAccountId?: string
-  public readonly subAccounts?: Account[]
-  public readonly superAccount?: Account
 
   public readonly maxPacketAmount!: bigint
 
@@ -123,25 +95,4 @@ export class Account extends BaseModel {
     }
     return formattedJson
   }
-
-  public isSubAccount(): this is SubAccount {
-    return !!this.superAccount
-  }
-
-  public hasSuperAccount(id: string): this is SubAccount {
-    for (
-      let account = this as Account;
-      account.isSubAccount();
-      account = account.superAccount
-    ) {
-      if (account.superAccount.id === id) {
-        return true
-      }
-    }
-    return false
-  }
-}
-
-export interface SubAccount extends Account {
-  superAccount: Account
 }

@@ -3,16 +3,11 @@ import {
   getAccount,
   getAccounts,
   getAccountsConnectionPageInfo,
-  getSubAccountsConnectionPageInfo,
   getBalance,
-  getSuperAccount,
   createAccount,
   updateAccount,
-  deleteAccount,
-  createSubAccount,
-  getSubAccounts
+  deleteAccount
 } from './account'
-import { extendCredit, revokeCredit, utilizeCredit, settleDebt } from './credit'
 import { createDeposit } from './deposit'
 import { getAccountInvoices, getPageInfo } from './invoice'
 import {
@@ -42,9 +37,7 @@ export const resolvers: Resolvers = {
   },
   Account: {
     balance: getBalance,
-    invoices: getAccountInvoices,
-    superAccount: getSuperAccount,
-    subAccounts: getSubAccounts
+    invoices: getAccountInvoices
     // deposits: getDeposits,
     // webhooks: getWebhooks,
     // withdrawals: getWithdrawals,
@@ -61,9 +54,6 @@ export const resolvers: Resolvers = {
   OutgoingPayment: {
     outcome: getOutcome
   },
-  SubAccountsConnection: {
-    pageInfo: getSubAccountsConnectionPageInfo
-  },
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo
   },
@@ -74,7 +64,6 @@ export const resolvers: Resolvers = {
     createAccount: createAccount,
     updateAccount: updateAccount,
     deleteAccount: deleteAccount,
-    createSubAccount: createSubAccount,
     createOutgoingPayment,
     approveOutgoingPayment,
     requoteOutgoingPayment,
@@ -85,10 +74,6 @@ export const resolvers: Resolvers = {
     createDeposit: createDeposit,
     createWithdrawal: createWithdrawal,
     finalizePendingWithdrawal: finalizePendingWithdrawal,
-    rollbackPendingWithdrawal: rollbackPendingWithdrawal,
-    extendCredit: extendCredit,
-    revokeCredit: revokeCredit,
-    utilizeCredit: utilizeCredit,
-    settleDebt: settleDebt
+    rollbackPendingWithdrawal: rollbackPendingWithdrawal
   }
 }

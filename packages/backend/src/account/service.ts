@@ -9,7 +9,7 @@ import {
 import { v4 as uuid } from 'uuid'
 
 import { AssetService, AssetOptions } from '../asset/service'
-import { BalanceOptions, BalanceService } from '../balance/service'
+import { BalanceService } from '../balance/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
 import { BaseService } from '../shared/baseService'
@@ -23,24 +23,11 @@ import { validateId } from '../shared/utils'
 import { TransferService, TwoPhaseTransfer } from '../transfer/service'
 import { TransferError, TransfersError } from '../transfer/errors'
 import { AccountError, AccountTransferError, UnknownAssetError } from './errors'
-import { Account, SubAccount } from './model'
+import { Account } from './model'
 
-export { Account, SubAccount }
-
-export interface AccountBalance {
-  balance: bigint
-  // Remaining credit line available from the super-account
-  availableCredit: bigint
-  // Total (un-utilized) credit lines extended to all sub-accounts
-  creditExtended: bigint
-  // Outstanding amount borrowed from the super-account
-  totalBorrowed: bigint
-  // Total amount lent, or amount owed to this account across all its sub-accounts
-  totalLent: bigint
-}
+export { Account }
 
 export type Options = {
-  id?: string
   disabled?: boolean
   stream?: {
     enabled: boolean
@@ -60,26 +47,13 @@ export type Options = {
   maxPacketAmount?: bigint
 }
 
-export type CreateAccountOptions = Options & {
+export type CreateOptions = Options & {
+  id?: string
   asset: AssetOptions
-  superAccountId?: never
 }
-
-export type CreateSubAccountOptions = Options & {
-  asset?: never
-  superAccountId: string
-}
-
-export type CreateOptions = CreateAccountOptions | CreateSubAccountOptions
 
 export type UpdateOptions = Options & {
   id: string
-}
-
-export function isSubAccount(
-  account: CreateOptions
-): account is CreateSubAccountOptions {
-  return (account as CreateSubAccountOptions).superAccountId !== undefined
 }
 
 interface Peer {
@@ -114,14 +88,9 @@ export interface AccountService {
     destinationAddress: string
   ): Promise<Account | undefined>
   getByToken(token: string): Promise<Account | undefined>
-  getSubAccounts(accountId: string): Promise<Account[]>
-  getWithSuperAccounts(accountId: string): Promise<Account | undefined>
   getAddress(accountId: string): Promise<string | undefined>
-  getBalance(accountId: string): Promise<AccountBalance | undefined>
-  getPage(options: {
-    pagination?: Pagination
-    superAccountId?: string
-  }): Promise<Account[]>
+  getBalance(accountId: string): Promise<bigint | undefined>
+  getPage(pagination?: Pagination): Promise<Account[]>
   transferFunds(
     options: AccountTransferOptions
   ): Promise<AccountTransfer | AccountTransferError>
@@ -168,10 +137,8 @@ export function createAccountService({
       getAccountByDestinationAddress(deps, destinationAddress),
     getByToken: (token) => getAccountByToken(deps, token),
     getAddress: (id) => getAccountAddress(deps, id),
-    getSubAccounts: (id) => getSubAccounts(deps, id),
-    getWithSuperAccounts: (id) => getAccountWithSuperAccounts(deps, id),
     getBalance: (id) => getAccountBalance(deps, id),
-    getPage: (options) => getAccountsPage(deps, options),
+    getPage: (pagination?) => getAccountsPage(deps, pagination),
     transferFunds: (options) => transferFunds(deps, options)
   }
 }
@@ -181,89 +148,25 @@ async function createAccount(
   account: CreateOptions,
   trx?: Transaction
 ): Promise<Account | AccountError> {
-  const newAccount: PartialModelObject<Account> = {
-    ...account,
-    asset: undefined
-  }
   // Don't rollback creating a new asset if account creation fails.
   // Asset rows include a smallserial column that would have sequence gaps
   // if a transaction is rolled back.
   // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
-  if (isSubAccount(account)) {
-    const superAccount = await Account.query(trx || deps.knex)
-      .findById(account.superAccountId)
-      .withGraphFetched('asset')
-    if (!superAccount) {
-      return AccountError.UnknownSuperAccount
-    }
-    newAccount.assetId = superAccount.assetId
-    newAccount.asset = superAccount.asset
-  } else {
-    newAccount.asset = await deps.assetService.getOrCreate(account.asset)
-    newAccount.assetId = newAccount.asset.id
+  const asset = await deps.assetService.getOrCreate(account.asset)
+  const newAccount: PartialModelObject<Account> = {
+    ...account,
+    asset: asset,
+    assetId: asset.id
   }
   assert.ok(newAccount.asset)
 
   const acctTrx = trx || (await Account.startTransaction())
   try {
-    const newBalances: BalanceOptions[] = []
-    const superAccountPatch: PartialModelObject<Account> = {}
-    if (isSubAccount(account)) {
-      const superAccount = await Account.query(acctTrx)
-        .findById(account.superAccountId)
-        .withGraphFetched('asset')
-        .forUpdate()
-        .throwIfNotFound()
-      newAccount.creditBalanceId = uuid()
-      newAccount.debtBalanceId = uuid()
-      newBalances.push(
-        {
-          id: newAccount.creditBalanceId,
-          unit: superAccount.asset.unit
-        },
-        {
-          id: newAccount.debtBalanceId,
-          unit: superAccount.asset.unit
-        }
-      )
-      if (
-        !superAccount.creditExtendedBalanceId ||
-        !superAccount.lentBalanceId
-      ) {
-        deps.logger.warn({ superAccount }, 'missing super-account balance')
-      }
-      if (!superAccount.creditExtendedBalanceId) {
-        superAccountPatch.creditExtendedBalanceId = uuid()
-        newBalances.push({
-          id: superAccountPatch.creditExtendedBalanceId,
-          debitBalance: true,
-          unit: superAccount.asset.unit
-        })
-      }
-      if (!superAccount.lentBalanceId) {
-        superAccountPatch.lentBalanceId = uuid()
-        newBalances.push({
-          id: superAccountPatch.lentBalanceId,
-          debitBalance: true,
-          unit: superAccount.asset.unit
-        })
-      }
-    }
-
-    newAccount.balanceId = uuid()
-    newBalances.push({
-      id: newAccount.balanceId,
-      unit: newAccount.asset.unit
-    })
-
-    await deps.balanceService.create(newBalances)
-
-    if (isSubAccount(account)) {
-      await Account.query(acctTrx)
-        .patch(superAccountPatch)
-        .findById(account.superAccountId)
-        .throwIfNotFound()
-    }
+    newAccount.balanceId = (
+      await deps.balanceService.create({
+        unit: newAccount.asset.unit
+      })
+    ).id
 
     const accountRow = await Account.query(acctTrx).insertAndFetch(newAccount)
 
@@ -300,8 +203,6 @@ async function createAccount(
       err.constraint === 'accounts_pkey'
     ) {
       return AccountError.DuplicateAccountId
-    } else if (err instanceof NotFoundError) {
-      return AccountError.UnknownSuperAccount
     }
     throw err
   }
@@ -369,95 +270,25 @@ async function getAccounts(
   return await Account.query(deps.knex).findByIds(ids).withGraphJoined('asset')
 }
 
-async function getSubAccounts(
-  deps: ServiceDependencies,
-  accountId: string
-): Promise<Account[]> {
-  const account = await Account.query(deps.knex)
-    .withGraphJoined('subAccounts.asset')
-    .findById(accountId)
-    .select('subAccounts')
-
-  return account && account.subAccounts ? account.subAccounts : []
-}
-
-async function getAccountWithSuperAccounts(
-  deps: ServiceDependencies,
-  accountId: string
-): Promise<Account | undefined> {
-  const account = await Account.query(deps.knex)
-    .withGraphFetched(`superAccount.^`, {
-      minimize: true
-    })
-    .findById(accountId)
-  return account || undefined
-}
-
 async function getAccountBalance(
   deps: ServiceDependencies,
   accountId: string
-): Promise<AccountBalance | undefined> {
+): Promise<bigint | undefined> {
   const account = await Account.query(deps.knex)
     .findById(accountId)
-    .select(
-      'balanceId',
-      'creditBalanceId',
-      'creditExtendedBalanceId',
-      'debtBalanceId',
-      'lentBalanceId'
-    )
+    .select('balanceId')
 
   if (!account) {
     return undefined
   }
 
-  const balanceIds = [account.balanceId]
-  const columns = [
-    'creditBalanceId',
-    'creditExtendedBalanceId',
-    'debtBalanceId',
-    'lentBalanceId'
-  ]
-  columns.forEach((balanceId) => {
-    if (account[balanceId]) {
-      balanceIds.push(account[balanceId])
-    }
-  })
-  const balances = await deps.balanceService.get(balanceIds)
+  const balance = await deps.balanceService.get(account.balanceId)
 
-  if (balances.length === 0) {
+  if (!balance) {
     throw new UnknownBalanceError(accountId)
   }
 
-  const accountBalance: AccountBalance = {
-    balance: BigInt(0),
-    availableCredit: BigInt(0),
-    creditExtended: BigInt(0),
-    totalBorrowed: BigInt(0),
-    totalLent: BigInt(0)
-  }
-
-  balances.forEach(({ id, balance }) => {
-    switch (id) {
-      case account.balanceId:
-        accountBalance.balance = balance
-        break
-      case account.creditBalanceId:
-        accountBalance.availableCredit = balance
-        break
-      case account.creditExtendedBalanceId:
-        accountBalance.creditExtended = balance
-        break
-      case account.debtBalanceId:
-        accountBalance.totalBorrowed = balance
-        break
-      case account.lentBalanceId:
-        accountBalance.totalLent = balance
-        break
-    }
-  })
-
-  return accountBalance
+  return balance.balance
 }
 
 async function getAccountByToken(
@@ -730,20 +561,12 @@ function toAccountTransferError({
  * The pagination algorithm is based on the Relay connection specification.
  * Please read the spec before changing things:
  * https://relay.dev/graphql/connections.htm
- * @param options
- * @param options.pagination Pagination - cursors and limits.
- * @param options.superAccountId String - id of account to get sub-accounts of.
+ * @param pagination Pagination - cursors and limits.
  * @returns Account[] An array of accounts that form a page.
  */
 async function getAccountsPage(
   deps: ServiceDependencies,
-  {
-    pagination,
-    superAccountId
-  }: {
-    pagination?: Pagination
-    superAccountId?: string
-  }
+  pagination?: Pagination
 ): Promise<Account[]> {
   if (
     typeof pagination?.before === 'undefined' &&
@@ -762,13 +585,6 @@ async function getAccountsPage(
   if (typeof pagination?.after === 'string') {
     const accounts = await Account.query(deps.knex)
       .withGraphFetched('asset')
-      .where(
-        superAccountId
-          ? {
-              superAccountId
-            }
-          : {}
-      )
       .whereRaw(
         '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "accounts" where "id" = ?)',
         [pagination.after]
@@ -787,13 +603,6 @@ async function getAccountsPage(
   if (typeof pagination?.before === 'string') {
     const accounts = await Account.query(deps.knex)
       .withGraphFetched('asset')
-      .where(
-        superAccountId
-          ? {
-              superAccountId
-            }
-          : {}
-      )
       .whereRaw(
         '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "accounts" where "id" = ?)',
         [pagination.before]
@@ -811,13 +620,6 @@ async function getAccountsPage(
 
   const accounts = await Account.query(deps.knex)
     .withGraphFetched('asset')
-    .where(
-      superAccountId
-        ? {
-            superAccountId
-          }
-        : {}
-    )
     .orderBy([
       { column: 'createdAt', order: 'asc' },
       { column: 'id', order: 'asc' }

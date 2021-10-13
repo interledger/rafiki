@@ -18,26 +18,15 @@ export type Account = {
   __typename?: 'Account';
   id: Scalars['ID'];
   disabled: Scalars['Boolean'];
-  superAccountId?: Maybe<Scalars['ID']>;
-  superAccount?: Maybe<Account>;
-  subAccounts: SubAccountsConnection;
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http?: Maybe<Http>;
   asset: Asset;
   stream: Stream;
   routing?: Maybe<Routing>;
-  balance: Balance;
+  balance: Scalars['UInt64'];
   deposits: DepositsConnection;
   invoices?: Maybe<InvoiceConnection>;
   webhooks: WebhooksConnection;
-};
-
-
-export type AccountSubAccountsArgs = {
-  after?: Maybe<Scalars['String']>;
-  before?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  last?: Maybe<Scalars['Int']>;
 };
 
 
@@ -87,17 +76,6 @@ export type AssetInput = {
   scale: Scalars['Int'];
 };
 
-export type Balance = {
-  __typename?: 'Balance';
-  balance: Scalars['UInt64'];
-  netLiability?: Maybe<Scalars['UInt64']>;
-  netAssets?: Maybe<Scalars['UInt64']>;
-  creditExtended: Scalars['UInt64'];
-  totalLent: Scalars['UInt64'];
-  availableCredit: Scalars['UInt64'];
-  totalBorrowed: Scalars['UInt64'];
-};
-
 export type CreateAccountInput = {
   id?: Maybe<Scalars['String']>;
   disabled?: Maybe<Scalars['Boolean']>;
@@ -134,19 +112,11 @@ export type CreateDepositMutationResponse = MutationResponse & {
 };
 
 export type CreateOutgoingPaymentInput = {
-  accountId: Scalars['String'];
+  sourceAccountId: Scalars['String'];
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
   invoiceUrl?: Maybe<Scalars['String']>;
   autoApprove: Scalars['Boolean'];
-};
-
-export type CreateSubAccountMutationResponse = MutationResponse & {
-  __typename?: 'CreateSubAccountMutationResponse';
-  code: Scalars['String'];
-  success: Scalars['Boolean'];
-  message: Scalars['String'];
-  account?: Maybe<Account>;
 };
 
 export type CreateWebhookMutationResponse = MutationResponse & {
@@ -174,16 +144,6 @@ export type CreateWithdrawalMutationResponse = MutationResponse & {
   withdrawal?: Maybe<Withdrawal>;
   error?: Maybe<WithdrawalError>;
 };
-
-export enum CreditError {
-  SameAccounts = 'SameAccounts',
-  UnknownAccount = 'UnknownAccount',
-  UnrelatedSubAccount = 'UnrelatedSubAccount',
-  UnknownSubAccount = 'UnknownSubAccount',
-  InsufficientBalance = 'InsufficientBalance',
-  InsufficientCredit = 'InsufficientCredit',
-  InsufficientDebt = 'InsufficientDebt'
-}
 
 export type DeleteAccountMutationResponse = MutationResponse & {
   __typename?: 'DeleteAccountMutationResponse';
@@ -216,25 +176,6 @@ export type DepositsConnection = {
   __typename?: 'DepositsConnection';
   pageInfo: PageInfo;
   edges: Array<DepositEdge>;
-};
-
-export type ExtendCreditInput = {
-  /** Account extending credit. */
-  accountId: Scalars['String'];
-  /** Sub-account to which credit is extended. */
-  subAccountId: Scalars['String'];
-  /** Amount of additional line of credit. */
-  amount: Scalars['UInt64'];
-  /** Automatically utilized and applied to the account balance. */
-  autoApply?: Scalars['Boolean'];
-};
-
-export type ExtendCreditMutationResponse = MutationResponse & {
-  __typename?: 'ExtendCreditMutationResponse';
-  code: Scalars['String'];
-  success: Scalars['Boolean'];
-  message: Scalars['String'];
-  error?: Maybe<CreditError>;
 };
 
 export type FinalizePendingWithdrawalMutationResponse = MutationResponse & {
@@ -303,8 +244,6 @@ export type Mutation = {
   updateAccount: UpdateAccountMutationResponse;
   /** Delete account */
   deleteAccount: DeleteAccountMutationResponse;
-  /** Create sub-account */
-  createSubAccount: CreateSubAccountMutationResponse;
   createOutgoingPayment: OutgoingPaymentResponse;
   /** Approve a Ready payment's quote. */
   approveOutgoingPayment: OutgoingPaymentResponse;
@@ -328,14 +267,6 @@ export type Mutation = {
   finalizePendingWithdrawal?: Maybe<FinalizePendingWithdrawalMutationResponse>;
   /** Rollback pending withdrawal */
   rollbackPendingWithdrawal?: Maybe<RollbackPendingWithdrawalMutationResponse>;
-  /** Extend Credit */
-  extendCredit?: Maybe<ExtendCreditMutationResponse>;
-  /** Revoke Credit */
-  revokeCredit?: Maybe<RevokeCreditMutationResponse>;
-  /** Utilize Credit */
-  utilizeCredit?: Maybe<UtilizeCreditMutationResponse>;
-  /** Settle Debt */
-  settleDebt?: Maybe<SettleDebtMutationResponse>;
 };
 
 
@@ -351,11 +282,6 @@ export type MutationUpdateAccountArgs = {
 
 export type MutationDeleteAccountArgs = {
   id: Scalars['String'];
-};
-
-
-export type MutationCreateSubAccountArgs = {
-  superAccountId: Scalars['String'];
 };
 
 
@@ -423,26 +349,6 @@ export type MutationRollbackPendingWithdrawalArgs = {
   withdrawalId: Scalars['String'];
 };
 
-
-export type MutationExtendCreditArgs = {
-  input: ExtendCreditInput;
-};
-
-
-export type MutationRevokeCreditArgs = {
-  input: RevokeCreditInput;
-};
-
-
-export type MutationUtilizeCreditArgs = {
-  input: UtilizeCreditInput;
-};
-
-
-export type MutationSettleDebtArgs = {
-  input?: Maybe<SettleDebtInput>;
-};
-
 export type MutationResponse = {
   code: Scalars['String'];
   success: Scalars['Boolean'];
@@ -457,7 +363,8 @@ export type OutgoingPayment = {
   stateAttempts: Scalars['Int'];
   intent?: Maybe<PaymentIntent>;
   quote?: Maybe<PaymentQuote>;
-  superAccountId: Scalars['String'];
+  accountId: Scalars['String'];
+  reservedBalanceId: Scalars['String'];
   sourceAccount: PaymentSourceAccount;
   destinationAccount: PaymentDestinationAccount;
   outcome: OutgoingPaymentOutcome;
@@ -592,23 +499,6 @@ export type QueryWithdrawalArgs = {
   id: Scalars['String'];
 };
 
-export type RevokeCreditInput = {
-  /** Account revoking credit. */
-  accountId: Scalars['String'];
-  /** Sub-account to which credit is revoked. */
-  subAccountId: Scalars['String'];
-  /** Amount of revoked line of credit. */
-  amount: Scalars['UInt64'];
-};
-
-export type RevokeCreditMutationResponse = MutationResponse & {
-  __typename?: 'RevokeCreditMutationResponse';
-  code: Scalars['String'];
-  success: Scalars['Boolean'];
-  message: Scalars['String'];
-  error?: Maybe<CreditError>;
-};
-
 export type RollbackPendingWithdrawalMutationResponse = MutationResponse & {
   __typename?: 'RollbackPendingWithdrawalMutationResponse';
   code: Scalars['String'];
@@ -628,25 +518,6 @@ export type RoutingInput = {
   staticIlpAddress: Scalars['String'];
 };
 
-export type SettleDebtInput = {
-  /** Account collecting debt. */
-  accountId: Scalars['String'];
-  /** Sub-account settling debt. */
-  subAccountId: Scalars['String'];
-  /** Amount of debt. */
-  amount: Scalars['UInt64'];
-  /** Replenish the account's line of credit commensurate with the debt settled. */
-  revolve?: Scalars['Boolean'];
-};
-
-export type SettleDebtMutationResponse = MutationResponse & {
-  __typename?: 'SettleDebtMutationResponse';
-  code: Scalars['String'];
-  success: Scalars['Boolean'];
-  message: Scalars['String'];
-  error?: Maybe<CreditError>;
-};
-
 export type Stream = {
   __typename?: 'Stream';
   enabled: Scalars['Boolean'];
@@ -654,12 +525,6 @@ export type Stream = {
 
 export type StreamInput = {
   enabled: Scalars['Boolean'];
-};
-
-export type SubAccountsConnection = {
-  __typename?: 'SubAccountsConnection';
-  pageInfo: PageInfo;
-  edges: Array<AccountEdge>;
 };
 
 export type TransferMutationResponse = MutationResponse & {
@@ -693,23 +558,6 @@ export type UpdateWebhookMutationResponse = MutationResponse & {
   success: Scalars['Boolean'];
   message: Scalars['String'];
   webhook: Webhook;
-};
-
-export type UtilizeCreditInput = {
-  /** Account extending credit. */
-  accountId: Scalars['String'];
-  /** Sub-account to which credit is extended. */
-  subAccountId: Scalars['String'];
-  /** Amount of utilized line of credit. */
-  amount: Scalars['UInt64'];
-};
-
-export type UtilizeCreditMutationResponse = MutationResponse & {
-  __typename?: 'UtilizeCreditMutationResponse';
-  code: Scalars['String'];
-  success: Scalars['Boolean'];
-  message: Scalars['String'];
-  error?: Maybe<CreditError>;
 };
 
 export type Webhook = {
@@ -847,24 +695,19 @@ export type ResolversTypes = {
   AccountsConnection: ResolverTypeWrapper<Partial<AccountsConnection>>;
   Asset: ResolverTypeWrapper<Partial<Asset>>;
   AssetInput: ResolverTypeWrapper<Partial<AssetInput>>;
-  Balance: ResolverTypeWrapper<Partial<Balance>>;
   CreateAccountInput: ResolverTypeWrapper<Partial<CreateAccountInput>>;
   CreateAccountMutationResponse: ResolverTypeWrapper<Partial<CreateAccountMutationResponse>>;
   CreateDepositInput: ResolverTypeWrapper<Partial<CreateDepositInput>>;
   CreateDepositMutationResponse: ResolverTypeWrapper<Partial<CreateDepositMutationResponse>>;
   CreateOutgoingPaymentInput: ResolverTypeWrapper<Partial<CreateOutgoingPaymentInput>>;
-  CreateSubAccountMutationResponse: ResolverTypeWrapper<Partial<CreateSubAccountMutationResponse>>;
   CreateWebhookMutationResponse: ResolverTypeWrapper<Partial<CreateWebhookMutationResponse>>;
   CreateWithdrawalInput: ResolverTypeWrapper<Partial<CreateWithdrawalInput>>;
   CreateWithdrawalMutationResponse: ResolverTypeWrapper<Partial<CreateWithdrawalMutationResponse>>;
-  CreditError: ResolverTypeWrapper<Partial<CreditError>>;
   DeleteAccountMutationResponse: ResolverTypeWrapper<Partial<DeleteAccountMutationResponse>>;
   DeleteWebhookMutationResponse: ResolverTypeWrapper<Partial<DeleteWebhookMutationResponse>>;
   Deposit: ResolverTypeWrapper<Partial<Deposit>>;
   DepositEdge: ResolverTypeWrapper<Partial<DepositEdge>>;
   DepositsConnection: ResolverTypeWrapper<Partial<DepositsConnection>>;
-  ExtendCreditInput: ResolverTypeWrapper<Partial<ExtendCreditInput>>;
-  ExtendCreditMutationResponse: ResolverTypeWrapper<Partial<ExtendCreditMutationResponse>>;
   FinalizePendingWithdrawalMutationResponse: ResolverTypeWrapper<Partial<FinalizePendingWithdrawalMutationResponse>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
   HttpIncomingInput: ResolverTypeWrapper<Partial<HttpIncomingInput>>;
@@ -875,7 +718,7 @@ export type ResolversTypes = {
   InvoiceConnection: ResolverTypeWrapper<Partial<InvoiceConnection>>;
   InvoiceEdge: ResolverTypeWrapper<Partial<InvoiceEdge>>;
   Mutation: ResolverTypeWrapper<{}>;
-  MutationResponse: ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateDepositMutationResponse'] | ResolversTypes['CreateSubAccountMutationResponse'] | ResolversTypes['CreateWebhookMutationResponse'] | ResolversTypes['CreateWithdrawalMutationResponse'] | ResolversTypes['DeleteAccountMutationResponse'] | ResolversTypes['DeleteWebhookMutationResponse'] | ResolversTypes['ExtendCreditMutationResponse'] | ResolversTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversTypes['RevokeCreditMutationResponse'] | ResolversTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversTypes['SettleDebtMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdateAccountMutationResponse'] | ResolversTypes['UpdateWebhookMutationResponse'] | ResolversTypes['UtilizeCreditMutationResponse'];
+  MutationResponse: ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateDepositMutationResponse'] | ResolversTypes['CreateWebhookMutationResponse'] | ResolversTypes['CreateWithdrawalMutationResponse'] | ResolversTypes['DeleteAccountMutationResponse'] | ResolversTypes['DeleteWebhookMutationResponse'] | ResolversTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdateAccountMutationResponse'] | ResolversTypes['UpdateWebhookMutationResponse'];
   OutgoingPayment: ResolverTypeWrapper<Partial<OutgoingPayment>>;
   OutgoingPaymentOutcome: ResolverTypeWrapper<Partial<OutgoingPaymentOutcome>>;
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
@@ -888,23 +731,16 @@ export type ResolversTypes = {
   PaymentState: ResolverTypeWrapper<Partial<PaymentState>>;
   PaymentType: ResolverTypeWrapper<Partial<PaymentType>>;
   Query: ResolverTypeWrapper<{}>;
-  RevokeCreditInput: ResolverTypeWrapper<Partial<RevokeCreditInput>>;
-  RevokeCreditMutationResponse: ResolverTypeWrapper<Partial<RevokeCreditMutationResponse>>;
   RollbackPendingWithdrawalMutationResponse: ResolverTypeWrapper<Partial<RollbackPendingWithdrawalMutationResponse>>;
   Routing: ResolverTypeWrapper<Partial<Routing>>;
   RoutingInput: ResolverTypeWrapper<Partial<RoutingInput>>;
-  SettleDebtInput: ResolverTypeWrapper<Partial<SettleDebtInput>>;
-  SettleDebtMutationResponse: ResolverTypeWrapper<Partial<SettleDebtMutationResponse>>;
   Stream: ResolverTypeWrapper<Partial<Stream>>;
   StreamInput: ResolverTypeWrapper<Partial<StreamInput>>;
-  SubAccountsConnection: ResolverTypeWrapper<Partial<SubAccountsConnection>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
   UpdateAccountInput: ResolverTypeWrapper<Partial<UpdateAccountInput>>;
   UpdateAccountMutationResponse: ResolverTypeWrapper<Partial<UpdateAccountMutationResponse>>;
   UpdateWebhookMutationResponse: ResolverTypeWrapper<Partial<UpdateWebhookMutationResponse>>;
-  UtilizeCreditInput: ResolverTypeWrapper<Partial<UtilizeCreditInput>>;
-  UtilizeCreditMutationResponse: ResolverTypeWrapper<Partial<UtilizeCreditMutationResponse>>;
   Webhook: ResolverTypeWrapper<Partial<Webhook>>;
   WebhookEdge: ResolverTypeWrapper<Partial<WebhookEdge>>;
   WebhooksConnection: ResolverTypeWrapper<Partial<WebhooksConnection>>;
@@ -925,13 +761,11 @@ export type ResolversParentTypes = {
   AccountsConnection: Partial<AccountsConnection>;
   Asset: Partial<Asset>;
   AssetInput: Partial<AssetInput>;
-  Balance: Partial<Balance>;
   CreateAccountInput: Partial<CreateAccountInput>;
   CreateAccountMutationResponse: Partial<CreateAccountMutationResponse>;
   CreateDepositInput: Partial<CreateDepositInput>;
   CreateDepositMutationResponse: Partial<CreateDepositMutationResponse>;
   CreateOutgoingPaymentInput: Partial<CreateOutgoingPaymentInput>;
-  CreateSubAccountMutationResponse: Partial<CreateSubAccountMutationResponse>;
   CreateWebhookMutationResponse: Partial<CreateWebhookMutationResponse>;
   CreateWithdrawalInput: Partial<CreateWithdrawalInput>;
   CreateWithdrawalMutationResponse: Partial<CreateWithdrawalMutationResponse>;
@@ -940,8 +774,6 @@ export type ResolversParentTypes = {
   Deposit: Partial<Deposit>;
   DepositEdge: Partial<DepositEdge>;
   DepositsConnection: Partial<DepositsConnection>;
-  ExtendCreditInput: Partial<ExtendCreditInput>;
-  ExtendCreditMutationResponse: Partial<ExtendCreditMutationResponse>;
   FinalizePendingWithdrawalMutationResponse: Partial<FinalizePendingWithdrawalMutationResponse>;
   Http: Partial<Http>;
   HttpIncomingInput: Partial<HttpIncomingInput>;
@@ -952,7 +784,7 @@ export type ResolversParentTypes = {
   InvoiceConnection: Partial<InvoiceConnection>;
   InvoiceEdge: Partial<InvoiceEdge>;
   Mutation: {};
-  MutationResponse: ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateDepositMutationResponse'] | ResolversParentTypes['CreateSubAccountMutationResponse'] | ResolversParentTypes['CreateWebhookMutationResponse'] | ResolversParentTypes['CreateWithdrawalMutationResponse'] | ResolversParentTypes['DeleteAccountMutationResponse'] | ResolversParentTypes['DeleteWebhookMutationResponse'] | ResolversParentTypes['ExtendCreditMutationResponse'] | ResolversParentTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversParentTypes['RevokeCreditMutationResponse'] | ResolversParentTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversParentTypes['SettleDebtMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdateAccountMutationResponse'] | ResolversParentTypes['UpdateWebhookMutationResponse'] | ResolversParentTypes['UtilizeCreditMutationResponse'];
+  MutationResponse: ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateDepositMutationResponse'] | ResolversParentTypes['CreateWebhookMutationResponse'] | ResolversParentTypes['CreateWithdrawalMutationResponse'] | ResolversParentTypes['DeleteAccountMutationResponse'] | ResolversParentTypes['DeleteWebhookMutationResponse'] | ResolversParentTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversParentTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdateAccountMutationResponse'] | ResolversParentTypes['UpdateWebhookMutationResponse'];
   OutgoingPayment: Partial<OutgoingPayment>;
   OutgoingPaymentOutcome: Partial<OutgoingPaymentOutcome>;
   OutgoingPaymentResponse: Partial<OutgoingPaymentResponse>;
@@ -963,23 +795,16 @@ export type ResolversParentTypes = {
   Float: Partial<Scalars['Float']>;
   PaymentSourceAccount: Partial<PaymentSourceAccount>;
   Query: {};
-  RevokeCreditInput: Partial<RevokeCreditInput>;
-  RevokeCreditMutationResponse: Partial<RevokeCreditMutationResponse>;
   RollbackPendingWithdrawalMutationResponse: Partial<RollbackPendingWithdrawalMutationResponse>;
   Routing: Partial<Routing>;
   RoutingInput: Partial<RoutingInput>;
-  SettleDebtInput: Partial<SettleDebtInput>;
-  SettleDebtMutationResponse: Partial<SettleDebtMutationResponse>;
   Stream: Partial<Stream>;
   StreamInput: Partial<StreamInput>;
-  SubAccountsConnection: Partial<SubAccountsConnection>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
   UInt64: Partial<Scalars['UInt64']>;
   UpdateAccountInput: Partial<UpdateAccountInput>;
   UpdateAccountMutationResponse: Partial<UpdateAccountMutationResponse>;
   UpdateWebhookMutationResponse: Partial<UpdateWebhookMutationResponse>;
-  UtilizeCreditInput: Partial<UtilizeCreditInput>;
-  UtilizeCreditMutationResponse: Partial<UtilizeCreditMutationResponse>;
   Webhook: Partial<Webhook>;
   WebhookEdge: Partial<WebhookEdge>;
   WebhooksConnection: Partial<WebhooksConnection>;
@@ -991,15 +816,12 @@ export type ResolversParentTypes = {
 export type AccountResolvers<ContextType = any, ParentType extends ResolversParentTypes['Account'] = ResolversParentTypes['Account']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   disabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  superAccountId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
-  superAccount?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType>;
-  subAccounts?: Resolver<ResolversTypes['SubAccountsConnection'], ParentType, ContextType, RequireFields<AccountSubAccountsArgs, never>>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   http?: Resolver<Maybe<ResolversTypes['Http']>, ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   stream?: Resolver<ResolversTypes['Stream'], ParentType, ContextType>;
   routing?: Resolver<Maybe<ResolversTypes['Routing']>, ParentType, ContextType>;
-  balance?: Resolver<ResolversTypes['Balance'], ParentType, ContextType>;
+  balance?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   deposits?: Resolver<ResolversTypes['DepositsConnection'], ParentType, ContextType, RequireFields<AccountDepositsArgs, never>>;
   invoices?: Resolver<Maybe<ResolversTypes['InvoiceConnection']>, ParentType, ContextType, RequireFields<AccountInvoicesArgs, never>>;
   webhooks?: Resolver<ResolversTypes['WebhooksConnection'], ParentType, ContextType, RequireFields<AccountWebhooksArgs, never>>;
@@ -1024,17 +846,6 @@ export type AssetResolvers<ContextType = any, ParentType extends ResolversParent
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type BalanceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Balance'] = ResolversParentTypes['Balance']> = {
-  balance?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
-  netLiability?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
-  netAssets?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
-  creditExtended?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
-  totalLent?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
-  availableCredit?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
-  totalBorrowed?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type CreateAccountMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateAccountMutationResponse'] = ResolversParentTypes['CreateAccountMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -1048,14 +859,6 @@ export type CreateDepositMutationResponseResolvers<ContextType = any, ParentType
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   deposit?: Resolver<Maybe<ResolversTypes['Deposit']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CreateSubAccountMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateSubAccountMutationResponse'] = ResolversParentTypes['CreateSubAccountMutationResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  account?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1109,14 +912,6 @@ export type DepositsConnectionResolvers<ContextType = any, ParentType extends Re
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type ExtendCreditMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['ExtendCreditMutationResponse'] = ResolversParentTypes['ExtendCreditMutationResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  error?: Resolver<Maybe<ResolversTypes['CreditError']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type FinalizePendingWithdrawalMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['FinalizePendingWithdrawalMutationResponse'] = ResolversParentTypes['FinalizePendingWithdrawalMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -1165,7 +960,6 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createAccount?: Resolver<ResolversTypes['CreateAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAccountArgs, 'input'>>;
   updateAccount?: Resolver<ResolversTypes['UpdateAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateAccountArgs, 'input'>>;
   deleteAccount?: Resolver<ResolversTypes['DeleteAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationDeleteAccountArgs, 'id'>>;
-  createSubAccount?: Resolver<ResolversTypes['CreateSubAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateSubAccountArgs, 'superAccountId'>>;
   createOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentArgs, 'input'>>;
   approveOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationApproveOutgoingPaymentArgs, 'paymentId'>>;
   requoteOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationRequoteOutgoingPaymentArgs, 'paymentId'>>;
@@ -1178,14 +972,10 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createWithdrawal?: Resolver<Maybe<ResolversTypes['CreateWithdrawalMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateWithdrawalArgs, 'input'>>;
   finalizePendingWithdrawal?: Resolver<Maybe<ResolversTypes['FinalizePendingWithdrawalMutationResponse']>, ParentType, ContextType, RequireFields<MutationFinalizePendingWithdrawalArgs, 'withdrawalId'>>;
   rollbackPendingWithdrawal?: Resolver<Maybe<ResolversTypes['RollbackPendingWithdrawalMutationResponse']>, ParentType, ContextType, RequireFields<MutationRollbackPendingWithdrawalArgs, 'withdrawalId'>>;
-  extendCredit?: Resolver<Maybe<ResolversTypes['ExtendCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationExtendCreditArgs, 'input'>>;
-  revokeCredit?: Resolver<Maybe<ResolversTypes['RevokeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeCreditArgs, 'input'>>;
-  utilizeCredit?: Resolver<Maybe<ResolversTypes['UtilizeCreditMutationResponse']>, ParentType, ContextType, RequireFields<MutationUtilizeCreditArgs, 'input'>>;
-  settleDebt?: Resolver<Maybe<ResolversTypes['SettleDebtMutationResponse']>, ParentType, ContextType, RequireFields<MutationSettleDebtArgs, never>>;
 };
 
 export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {
-  __resolveType: TypeResolveFn<'CreateAccountMutationResponse' | 'CreateDepositMutationResponse' | 'CreateSubAccountMutationResponse' | 'CreateWebhookMutationResponse' | 'CreateWithdrawalMutationResponse' | 'DeleteAccountMutationResponse' | 'DeleteWebhookMutationResponse' | 'ExtendCreditMutationResponse' | 'FinalizePendingWithdrawalMutationResponse' | 'RevokeCreditMutationResponse' | 'RollbackPendingWithdrawalMutationResponse' | 'SettleDebtMutationResponse' | 'TransferMutationResponse' | 'UpdateAccountMutationResponse' | 'UpdateWebhookMutationResponse' | 'UtilizeCreditMutationResponse', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'CreateAccountMutationResponse' | 'CreateDepositMutationResponse' | 'CreateWebhookMutationResponse' | 'CreateWithdrawalMutationResponse' | 'DeleteAccountMutationResponse' | 'DeleteWebhookMutationResponse' | 'FinalizePendingWithdrawalMutationResponse' | 'RollbackPendingWithdrawalMutationResponse' | 'TransferMutationResponse' | 'UpdateAccountMutationResponse' | 'UpdateWebhookMutationResponse', ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1198,7 +988,8 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
-  superAccountId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  accountId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  reservedBalanceId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   sourceAccount?: Resolver<ResolversTypes['PaymentSourceAccount'], ParentType, ContextType>;
   destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
   outcome?: Resolver<ResolversTypes['OutgoingPaymentOutcome'], ParentType, ContextType>;
@@ -1270,14 +1061,6 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   withdrawal?: Resolver<ResolversTypes['Withdrawal'], ParentType, ContextType, RequireFields<QueryWithdrawalArgs, 'id'>>;
 };
 
-export type RevokeCreditMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RevokeCreditMutationResponse'] = ResolversParentTypes['RevokeCreditMutationResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  error?: Resolver<Maybe<ResolversTypes['CreditError']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type RollbackPendingWithdrawalMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RollbackPendingWithdrawalMutationResponse'] = ResolversParentTypes['RollbackPendingWithdrawalMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -1293,22 +1076,8 @@ export type RoutingResolvers<ContextType = any, ParentType extends ResolversPare
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type SettleDebtMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['SettleDebtMutationResponse'] = ResolversParentTypes['SettleDebtMutationResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  error?: Resolver<Maybe<ResolversTypes['CreditError']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type StreamResolvers<ContextType = any, ParentType extends ResolversParentTypes['Stream'] = ResolversParentTypes['Stream']> = {
   enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SubAccountsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['SubAccountsConnection'] = ResolversParentTypes['SubAccountsConnection']> = {
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  edges?: Resolver<Array<ResolversTypes['AccountEdge']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1336,14 +1105,6 @@ export type UpdateWebhookMutationResponseResolvers<ContextType = any, ParentType
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   webhook?: Resolver<ResolversTypes['Webhook'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UtilizeCreditMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['UtilizeCreditMutationResponse'] = ResolversParentTypes['UtilizeCreditMutationResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  error?: Resolver<Maybe<ResolversTypes['CreditError']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1388,10 +1149,8 @@ export type Resolvers<ContextType = any> = {
   AccountEdge?: AccountEdgeResolvers<ContextType>;
   AccountsConnection?: AccountsConnectionResolvers<ContextType>;
   Asset?: AssetResolvers<ContextType>;
-  Balance?: BalanceResolvers<ContextType>;
   CreateAccountMutationResponse?: CreateAccountMutationResponseResolvers<ContextType>;
   CreateDepositMutationResponse?: CreateDepositMutationResponseResolvers<ContextType>;
-  CreateSubAccountMutationResponse?: CreateSubAccountMutationResponseResolvers<ContextType>;
   CreateWebhookMutationResponse?: CreateWebhookMutationResponseResolvers<ContextType>;
   CreateWithdrawalMutationResponse?: CreateWithdrawalMutationResponseResolvers<ContextType>;
   DeleteAccountMutationResponse?: DeleteAccountMutationResponseResolvers<ContextType>;
@@ -1399,7 +1158,6 @@ export type Resolvers<ContextType = any> = {
   Deposit?: DepositResolvers<ContextType>;
   DepositEdge?: DepositEdgeResolvers<ContextType>;
   DepositsConnection?: DepositsConnectionResolvers<ContextType>;
-  ExtendCreditMutationResponse?: ExtendCreditMutationResponseResolvers<ContextType>;
   FinalizePendingWithdrawalMutationResponse?: FinalizePendingWithdrawalMutationResponseResolvers<ContextType>;
   Http?: HttpResolvers<ContextType>;
   HttpOutgoing?: HttpOutgoingResolvers<ContextType>;
@@ -1417,17 +1175,13 @@ export type Resolvers<ContextType = any> = {
   PaymentQuote?: PaymentQuoteResolvers<ContextType>;
   PaymentSourceAccount?: PaymentSourceAccountResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
-  RevokeCreditMutationResponse?: RevokeCreditMutationResponseResolvers<ContextType>;
   RollbackPendingWithdrawalMutationResponse?: RollbackPendingWithdrawalMutationResponseResolvers<ContextType>;
   Routing?: RoutingResolvers<ContextType>;
-  SettleDebtMutationResponse?: SettleDebtMutationResponseResolvers<ContextType>;
   Stream?: StreamResolvers<ContextType>;
-  SubAccountsConnection?: SubAccountsConnectionResolvers<ContextType>;
   TransferMutationResponse?: TransferMutationResponseResolvers<ContextType>;
   UInt64?: GraphQLScalarType;
   UpdateAccountMutationResponse?: UpdateAccountMutationResponseResolvers<ContextType>;
   UpdateWebhookMutationResponse?: UpdateWebhookMutationResponseResolvers<ContextType>;
-  UtilizeCreditMutationResponse?: UtilizeCreditMutationResponseResolvers<ContextType>;
   Webhook?: WebhookResolvers<ContextType>;
   WebhookEdge?: WebhookEdgeResolvers<ContextType>;
   WebhooksConnection?: WebhooksConnectionResolvers<ContextType>;
