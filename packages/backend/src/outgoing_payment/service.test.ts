@@ -1,3 +1,4 @@
+import assert from 'assert'
 import nock from 'nock'
 import Knex from 'knex'
 import * as Pay from '@interledger/pay'
@@ -21,8 +22,7 @@ import { BalanceService, Balance } from '../balance/service'
 import { RatesService } from '../rates/service'
 import { TransferService } from '../transfer/service'
 import { TransferError } from '../transfer/errors'
-import { WithdrawalService } from '../withdrawal/service'
-import { isWithdrawalError } from '../withdrawal/errors'
+import { LiquidityService } from '../liquidity/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -32,7 +32,7 @@ describe('OutgoingPaymentService', (): void => {
   let accountService: AccountService
   let balanceService: BalanceService
   let transferService: TransferService
-  let withdrawalService: WithdrawalService
+  let liquidityService: LiquidityService
   let knex: Knex
   let sourceAccountId: string
   let credentials: StreamCredentials
@@ -147,7 +147,8 @@ describe('OutgoingPaymentService', (): void => {
       }
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
-      withdrawalService = await deps.use('withdrawalService')
+      accountService = await deps.use('accountService')
+      liquidityService = await deps.use('liquidityService')
       deps.bind('makeIlpPlugin', async (_deps) => (accountId: string) =>
         (plugins[accountId] =
           plugins[accountId] ||
@@ -155,7 +156,8 @@ describe('OutgoingPaymentService', (): void => {
             streamServer,
             exchangeRate: 0.5,
             accountId,
-            withdrawalService,
+            accountService,
+            liquidityService,
             invoice
           }))
       )
@@ -174,7 +176,6 @@ describe('OutgoingPaymentService', (): void => {
         }
       })
       outgoingPaymentService = await deps.use('outgoingPaymentService')
-      accountService = await deps.use('accountService')
       balanceService = await deps.use('balanceService')
       transferService = await deps.use('transferService')
       const accountFactory = new AccountFactory(accountService, transferService)
@@ -539,11 +540,15 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       it('Cancelling (insufficient balance)', async (): Promise<void> => {
-        const withdrawalOrError = await withdrawalService.create({
-          accountId: sourceAccountId,
-          amount: BigInt(100)
-        })
-        expect(isWithdrawalError(withdrawalOrError)).toEqual(false)
+        const sourceAccount = await accountService.get(sourceAccountId)
+        assert(sourceAccount)
+        await expect(
+          liquidityService.createWithdrawal({
+            id: uuid(),
+            account: sourceAccount,
+            amount: BigInt(100)
+          })
+        ).resolves.toBeUndefined()
 
         const payment = await processNext(paymentId, PaymentState.Cancelling)
         expect(payment.error).toBe(LifecycleError.InsufficientBalance)

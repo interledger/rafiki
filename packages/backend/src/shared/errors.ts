@@ -9,8 +9,8 @@ export class BalanceTransferError extends Error {
 }
 
 export class UnknownBalanceError extends Error {
-  constructor(accountId: string) {
-    super('Balance not found. accountId=' + accountId)
+  constructor(balanceId: string) {
+    super('Balance not found. balanceId=' + balanceId)
     this.name = 'UnknownBalanceError'
   }
 }

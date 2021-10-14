@@ -453,7 +453,7 @@ async function transferFunds(
         transfers.push({
           id: uuid(),
           sourceBalanceId: sourceAccount.balanceId,
-          destinationBalanceId: sourceAccount.asset.liquidityBalanceId,
+          destinationBalanceId: sourceAccount.asset.balanceId,
           amount: sourceAmount - destinationAmount,
           timeout
         })
@@ -461,7 +461,7 @@ async function transferFunds(
       } else {
         transfers.push({
           id: uuid(),
-          sourceBalanceId: destinationAccount.asset.liquidityBalanceId,
+          sourceBalanceId: destinationAccount.asset.balanceId,
           destinationBalanceId: destinationAccount.balanceId,
           amount: destinationAmount - sourceAmount,
           timeout
@@ -480,13 +480,13 @@ async function transferFunds(
       {
         id: uuid(),
         sourceBalanceId: sourceAccount.balanceId,
-        destinationBalanceId: sourceAccount.asset.liquidityBalanceId,
+        destinationBalanceId: sourceAccount.asset.balanceId,
         amount: sourceAmount,
         timeout
       },
       {
         id: uuid(),
-        sourceBalanceId: destinationAccount.asset.liquidityBalanceId,
+        sourceBalanceId: destinationAccount.asset.balanceId,
         destinationBalanceId: destinationAccount.balanceId,
         amount: destinationAmount,
         timeout
@@ -500,10 +500,10 @@ async function transferFunds(
         if (error.index === 1) {
           throw new UnknownLiquidityAccountError(destinationAccount.asset)
         }
-        throw new UnknownBalanceError(sourceAccount.id)
+        throw new UnknownBalanceError(sourceAccount.balanceId)
       case TransferError.UnknownDestinationBalance:
         if (error.index === 1) {
-          throw new UnknownBalanceError(destinationAccount.id)
+          throw new UnknownBalanceError(destinationAccount.balanceId)
         }
         throw new UnknownLiquidityAccountError(sourceAccount.asset)
       case TransferError.InsufficientBalance:

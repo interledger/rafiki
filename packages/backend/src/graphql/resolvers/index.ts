@@ -8,7 +8,6 @@ import {
   updateAccount,
   deleteAccount
 } from './account'
-import { createDeposit } from './deposit'
 import { getAccountInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
@@ -19,10 +18,13 @@ import {
   getOutcome
 } from './outgoing_payment'
 import {
-  createWithdrawal,
-  finalizePendingWithdrawal,
-  rollbackPendingWithdrawal
-} from './withdrawal'
+  addAccountLiquidity,
+  addAssetLiquidity,
+  createAccountLiquidityWithdrawal,
+  createAssetLiquidityWithdrawal,
+  finalizeLiquidityWithdrawal,
+  rollbackLiquidityWithdrawal
+} from './liquidity'
 import { GraphQLBigInt } from '../scalars'
 
 export const resolvers: Resolvers = {
@@ -31,22 +33,15 @@ export const resolvers: Resolvers = {
     account: getAccount,
     accounts: getAccounts,
     outgoingPayment: getOutgoingPayment
-    // deposit: getDeposit,
     // webhook: getWebhook
-    // withdrawal: getWithdrawal
   },
   Account: {
     balance: getBalance,
     invoices: getAccountInvoices
-    // deposits: getDeposits,
     // webhooks: getWebhooks,
-    // withdrawals: getWithdrawals,
   },
   AccountsConnection: {
     pageInfo: getAccountsConnectionPageInfo
-  },
-  DepositsConnection: {
-    // pageInfo: getDepositsConnectionPageInfo
   },
   InvoiceConnection: {
     pageInfo: getPageInfo
@@ -56,9 +51,6 @@ export const resolvers: Resolvers = {
   },
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo
-  },
-  WithdrawalsConnection: {
-    // pageInfo: getWithdrawalsConnectionPageInfo
   },
   Mutation: {
     createAccount: createAccount,
@@ -71,9 +63,11 @@ export const resolvers: Resolvers = {
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,
-    createDeposit: createDeposit,
-    createWithdrawal: createWithdrawal,
-    finalizePendingWithdrawal: finalizePendingWithdrawal,
-    rollbackPendingWithdrawal: rollbackPendingWithdrawal
+    addAccountLiquidity: addAccountLiquidity,
+    addAssetLiquidity: addAssetLiquidity,
+    createAccountLiquidityWithdrawal: createAccountLiquidityWithdrawal,
+    createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
+    finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
+    rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal
   }
 }
