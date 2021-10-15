@@ -1,7 +1,6 @@
-import assert from 'assert'
 import {
+  ForeignKeyViolationError,
   NotFoundError,
-  PartialModelObject,
   raw,
   Transaction,
   UniqueViolationError
@@ -47,10 +46,20 @@ export type Options = {
   maxPacketAmount?: bigint
 }
 
-export type CreateOptions = Options & {
+type CreateAccountOptions = Options & {
   id?: string
+  assetId: string
+  asset?: never
+}
+
+// TODO: remove
+type LegacyCreateAccountOptions = Options & {
+  id?: string
+  assetId?: never
   asset: AssetOptions
 }
+
+export type CreateOptions = CreateAccountOptions | LegacyCreateAccountOptions
 
 export type UpdateOptions = Options & {
   id: string
@@ -148,27 +157,19 @@ async function createAccount(
   account: CreateOptions,
   trx?: Transaction
 ): Promise<Account | AccountError> {
-  // Don't rollback creating a new asset if account creation fails.
-  // Asset rows include a smallserial column that would have sequence gaps
-  // if a transaction is rolled back.
-  // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
-  const asset = await deps.assetService.getOrCreate(account.asset)
-  const newAccount: PartialModelObject<Account> = {
-    ...account,
-    asset: asset,
-    assetId: asset.id
-  }
-  assert.ok(newAccount.asset)
-
   const acctTrx = trx || (await Account.startTransaction())
   try {
-    newAccount.balanceId = (
-      await deps.balanceService.create({
-        unit: newAccount.asset.unit
+    const accountRow = await Account.query(acctTrx)
+      .insertAndFetch({
+        ...account,
+        asset: undefined,
+        assetId:
+          account.assetId ||
+          (await deps.assetService.getOrCreate(account.asset as AssetOptions))
+            .id,
+        balanceId: uuid()
       })
-    ).id
-
-    const accountRow = await Account.query(acctTrx).insertAndFetch(newAccount)
+      .withGraphFetched('asset')
 
     const incomingTokens = account.http?.incoming?.authTokens.map(
       (incomingToken: string): HttpTokenOptions => {
@@ -190,10 +191,22 @@ async function createAccount(
         throw new Error(err)
       }
     }
+
+    const newAccount = await accountRow
+      .$query(acctTrx)
+      .patchAndFetch({
+        balanceId: (
+          await deps.balanceService.create({
+            unit: accountRow.asset.unit
+          })
+        ).id
+      })
+      .withGraphFetched('asset')
+
     if (!trx) {
       await acctTrx.commit()
     }
-    return accountRow
+    return newAccount
   } catch (err) {
     if (!trx) {
       await acctTrx.rollback()
@@ -203,6 +216,8 @@ async function createAccount(
       err.constraint === 'accounts_pkey'
     ) {
       return AccountError.DuplicateAccountId
+    } else if (err instanceof ForeignKeyViolationError) {
+      return AccountError.UnknownAsset
     }
     throw err
   }

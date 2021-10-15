@@ -172,6 +172,44 @@ describe('Account Service', (): void => {
       })
     })
 
+    test('Can create an account with asset id', async (): Promise<void> => {
+      const { id: assetId } = await assetService.getOrCreate(randomAsset())
+      const account: CreateOptions = {
+        assetId
+      }
+      const accountOrError = await accountService.create(account)
+      expect(isAccountError(accountOrError)).toEqual(false)
+      if (isAccountError(accountOrError)) {
+        fail()
+      }
+      const expectedAccount = {
+        ...account,
+        id: accountOrError.id,
+        disabled: false,
+        stream: {
+          enabled: false
+        }
+      }
+      expect(accountOrError).toMatchObject(expectedAccount)
+      await expect(accountService.get(accountOrError.id)).resolves.toEqual(
+        accountOrError
+      )
+      await expect(
+        balanceService.get(accountOrError.balanceId)
+      ).resolves.toEqual({
+        id: accountOrError.balanceId,
+        balance: BigInt(0),
+        unit: accountOrError.asset.unit,
+        debitBalance: false
+      })
+    })
+
+    test('Cannot create an account with unknown asset id', async (): Promise<void> => {
+      await expect(accountService.create({ assetId: uuid() })).resolves.toEqual(
+        AccountError.UnknownAsset
+      )
+    })
+
     test('Cannot create an account with duplicate id', async (): Promise<void> => {
       const account = await accountFactory.build()
       await expect(
