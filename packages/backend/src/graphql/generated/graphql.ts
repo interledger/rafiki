@@ -398,11 +398,12 @@ export type OutgoingPayment = {
   sourceAccount: PaymentSourceAccount;
   destinationAccount: PaymentDestinationAccount;
   outcome: OutgoingPaymentOutcome;
+  createdAt: Scalars['String'];
 };
 
 export type OutgoingPaymentOutcome = {
   __typename?: 'OutgoingPaymentOutcome';
-  amountSent: Scalars['String'];
+  amountSent: Scalars['UInt64'];
 };
 
 export type OutgoingPaymentResponse = {
@@ -971,11 +972,12 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   sourceAccount?: Resolver<ResolversTypes['PaymentSourceAccount'], ParentType, ContextType>;
   destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
   outcome?: Resolver<ResolversTypes['OutgoingPaymentOutcome'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type OutgoingPaymentOutcomeResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPaymentOutcome'] = ResolversParentTypes['OutgoingPaymentOutcome']> = {
-  amountSent?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  amountSent?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

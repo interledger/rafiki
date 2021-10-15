@@ -9,6 +9,7 @@ import {
   ResolversTypes
 } from '../generated/graphql'
 import { OutgoingPayment } from '../../outgoing_payment/model'
+import { AccountService } from '../../account/service'
 
 export const getOutgoingPayment: QueryResolvers['outgoingPayment'] = async (
   parent,
@@ -41,8 +42,9 @@ export const getOutcome: OutgoingPaymentResolvers['outcome'] = async (
   if (balance === undefined) throw new Error('source account does not exist')
   const reservedBalance = await balanceService.get(payment.reservedBalanceId)
   if (!reservedBalance) throw new Error('reserved balance does not exist')
+  const a: bigint = reservedBalance.balance
   return {
-    amountSent: (reservedBalance.balance - balance).toString()
+    amountSent: a - balance
   }
 }
 
@@ -183,6 +185,7 @@ function paymentToGraphql(
     accountId: payment.accountId,
     reservedBalanceId: payment.reservedBalanceId,
     sourceAccount: payment.sourceAccount,
-    destinationAccount: payment.destinationAccount
+    destinationAccount: payment.destinationAccount,
+    createdAt: new Date(+payment.createdAt).toISOString()
   }
 }

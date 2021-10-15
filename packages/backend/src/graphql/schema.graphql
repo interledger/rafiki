@@ -304,6 +304,7 @@ type OutgoingPayment {
   sourceAccount: PaymentSourceAccount!
   destinationAccount: PaymentDestinationAccount!
   outcome: OutgoingPaymentOutcome!
+  createdAt: String!
 }
 
 type PaymentIntent {
@@ -360,7 +361,7 @@ type PaymentDestinationAccount {
 }
 
 type OutgoingPaymentOutcome {
-  amountSent: String!
+  amountSent: UInt64!
 }
 
 input CreateOutgoingPaymentInput {

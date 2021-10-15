@@ -181,6 +181,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                 outcome {
                   amountSent
                 }
+                createdAt
               }
             }
           `,
@@ -227,6 +228,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         amountSent: (123 - 45).toString(),
         __typename: 'OutgoingPaymentOutcome'
       })
+      expect(query.createdAt).toBe(payment.createdAt)
     })
 
     test('404', async (): Promise<void> => {
