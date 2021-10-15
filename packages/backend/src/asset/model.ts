@@ -12,17 +12,17 @@ export class Asset extends BaseModel {
   // TigerBeetle account 2 byte unit field representing account's asset
   public readonly unit!: number
 
+  // TigerBeetle account id tracking liquidity balance
+  public balanceId!: string
   // TigerBeetle account id tracking settlement account balance
   public settlementBalanceId!: string
-  // TigerBeetle account id tracking liquidity account balance
-  public liquidityBalanceId!: string
   // TigerBeetle account id tracking reserved outgoing payments balance
   public outgoingPaymentsBalanceId!: string
 
   public $beforeInsert(): void {
     super.$beforeInsert()
+    this.balanceId = this.balanceId || uuid()
     this.settlementBalanceId = this.settlementBalanceId || uuid()
-    this.liquidityBalanceId = this.liquidityBalanceId || uuid()
     this.outgoingPaymentsBalanceId = this.outgoingPaymentsBalanceId || uuid()
   }
 }

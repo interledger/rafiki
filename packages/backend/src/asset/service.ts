@@ -95,7 +95,7 @@ async function getOrCreateAsset(
         code,
         scale
       })
-      const { id: liquidityBalanceId } = await deps.balanceService.create({
+      const { id: balanceId } = await deps.balanceService.create({
         unit: asset.unit
       })
       const { id: settlementBalanceId } = await deps.balanceService.create({
@@ -109,7 +109,7 @@ async function getOrCreateAsset(
         unit: asset.unit
       })
       return await Asset.query(trx).patchAndFetchById(asset.id, {
-        liquidityBalanceId,
+        balanceId,
         settlementBalanceId,
         outgoingPaymentsBalanceId
       })
@@ -133,9 +133,9 @@ async function getLiquidityBalance(
   const asset = await Asset.query(trx || deps.knex)
     .where({ code, scale })
     .first()
-    .select('liquidityBalanceId')
+    .select('balanceId')
   if (asset) {
-    const balance = await deps.balanceService.get(asset.liquidityBalanceId)
+    const balance = await deps.balanceService.get(asset.balanceId)
     if (balance) {
       return balance.balance
     } else {

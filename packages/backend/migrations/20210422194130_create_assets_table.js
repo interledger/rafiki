@@ -7,10 +7,10 @@ exports.up = function (knex) {
     table.string('code').notNullable()
     table.integer('scale').notNullable()
 
+    // TigerBeetle account id tracking liquidity balance
+    table.uuid('balanceId').notNullable()
     // TigerBeetle account id tracking settlement account balance
     table.uuid('settlementBalanceId').notNullable()
-    // TigerBeetle account id tracking liquidity account balance
-    table.uuid('liquidityBalanceId').notNullable()
     // TigerBeetle account id tracking reserved outgoing payments balance
     table.uuid('outgoingPaymentsBalanceId').notNullable()
 

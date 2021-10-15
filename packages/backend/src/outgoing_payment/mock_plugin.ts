@@ -7,16 +7,19 @@ import {
 import { serializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { StreamServer } from '@interledger/stream-receiver'
 import { Invoice } from '@interledger/pay'
+import { v4 as uuid } from 'uuid'
+
 import { IlpPlugin } from './ilp_plugin'
-import { WithdrawalService } from '../withdrawal/service'
-import { isWithdrawalError } from '../withdrawal/errors'
+import { AccountService } from '../account/service'
+import { LiquidityService } from '../liquidity/service'
 
 export class MockPlugin implements IlpPlugin {
   public totalReceived = BigInt(0)
   private streamServer: StreamServer
   public exchangeRate: number
   private accountId: string
-  private withdrawalService: WithdrawalService
+  private accountService: AccountService
+  private liquidityService: LiquidityService
   private connected = true
   private invoice: Invoice
 
@@ -24,19 +27,22 @@ export class MockPlugin implements IlpPlugin {
     streamServer,
     exchangeRate,
     accountId,
-    withdrawalService,
+    accountService,
+    liquidityService,
     invoice
   }: {
     streamServer: StreamServer
     exchangeRate: number
     accountId: string
-    withdrawalService: WithdrawalService
+    accountService: AccountService
+    liquidityService: LiquidityService
     invoice: Invoice
   }) {
     this.streamServer = streamServer
     this.exchangeRate = exchangeRate
     this.accountId = accountId
-    this.withdrawalService = withdrawalService
+    this.accountService = accountService
+    this.liquidityService = liquidityService
     this.invoice = invoice
   }
 
@@ -71,15 +77,26 @@ export class MockPlugin implements IlpPlugin {
         return serializeIlpReply(moneyOrReject)
       }
 
-      const withdrawalOrError = await this.withdrawalService.create({
-        accountId: this.accountId,
-        amount: BigInt(sourceAmount)
-      })
-      if (isWithdrawalError(withdrawalOrError)) {
+      const account = await this.accountService.get(this.accountId)
+      if (!account) {
         return serializeIlpReply({
           code: 'F00',
           triggeredBy: '',
-          message: withdrawalOrError,
+          message: 'missing account',
+          data: Buffer.alloc(0)
+        })
+      }
+
+      const error = await this.liquidityService.createWithdrawal({
+        id: uuid(),
+        account,
+        amount: BigInt(sourceAmount)
+      })
+      if (error) {
+        return serializeIlpReply({
+          code: 'F00',
+          triggeredBy: '',
+          message: error,
           data: Buffer.alloc(0)
         })
       }

@@ -63,7 +63,7 @@ describe('Asset Service', (): void => {
       const expectedAsset = {
         ...asset,
         id: newAsset.id,
-        liquidityBalanceId: newAsset.liquidityBalanceId,
+        balanceId: newAsset.balanceId,
         settlementBalanceId: newAsset.settlementBalanceId
       }
       await expect(newAsset).toMatchObject(expectedAsset)

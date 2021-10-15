@@ -17,7 +17,7 @@ import {
 } from './errors'
 import { AssetService } from '../asset/service'
 import { BalanceService } from '../balance/service'
-import { DepositService } from '../deposit/service'
+import { LiquidityService } from '../liquidity/service'
 import { Pagination } from '../shared/pagination'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -39,7 +39,7 @@ describe('Account Service', (): void => {
   let accountFactory: AccountFactory
   let assetService: AssetService
   let balanceService: BalanceService
-  let depositService: DepositService
+  let liquidityService: LiquidityService
   let config: IAppConfig
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -75,7 +75,7 @@ describe('Account Service', (): void => {
       accountFactory = new AccountFactory(accountService, transferService)
       assetService = await deps.use('assetService')
       balanceService = await deps.use('balanceService')
-      depositService = await deps.use('depositService')
+      liquidityService = await deps.use('liquidityService')
       config = await deps.use('config')
     }
   )
@@ -716,8 +716,8 @@ describe('Account Service', (): void => {
         })
 
         const startingLiquidity = BigInt(100)
-        await depositService.createLiquidity({
-          asset: sourceAccount.asset,
+        await liquidityService.add({
+          account: sourceAccount.asset,
           amount: startingLiquidity
         })
 
@@ -812,8 +812,8 @@ describe('Account Service', (): void => {
         })
 
         const startingDestinationLiquidity = BigInt(100)
-        await depositService.createLiquidity({
-          asset: destinationAccount.asset,
+        await liquidityService.add({
+          account: destinationAccount.asset,
           amount: startingDestinationLiquidity
         })
 

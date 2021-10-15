@@ -17,12 +17,6 @@ type Query {
 
   "Get a webhook by ID."
   webhook("The ID of the webhook to get." id: String!): Webhook!
-
-  "Get a deposit by ID."
-  deposit("The ID of the deposit to get." id: String!): Deposit!
-
-  "Get a withdrawal by ID."
-  withdrawal("The ID of the withdrawal to get." id: String!): Withdrawal!
 }
 
 type Mutation {
@@ -73,25 +67,37 @@ type Mutation {
     webhookId: ID!
   ): DeleteWebhookMutationResponse
 
-  "Create deposit"
-  createDeposit(input: CreateDepositInput!): CreateDepositMutationResponse
+  "Add account liquidity"
+  addAccountLiquidity(
+    input: AddAccountLiquidityInput!
+  ): AddAccountLiquidityMutationResponse
 
-  "Create withdrawal"
-  createWithdrawal(
-    input: CreateWithdrawalInput!
-  ): CreateWithdrawalMutationResponse
+  "Add asset liquidity"
+  addAssetLiquidity(
+    input: AddAssetLiquidityInput!
+  ): AddAssetLiquidityMutationResponse
 
-  "Finalize pending withdrawal"
-  finalizePendingWithdrawal(
-    "The id of the pending withdrawal to finalize."
+  "Create liquidity withdrawal from account"
+  createAccountLiquidityWithdrawal(
+    input: CreateAccountLiquidityWithdrawalInput!
+  ): CreateAccountLiquidityWithdrawalMutationResponse
+
+  "Create liquidity withdrawal from asset"
+  createAssetLiquidityWithdrawal(
+    input: CreateAssetLiquidityWithdrawalInput!
+  ): CreateAssetLiquidityWithdrawalMutationResponse
+
+  "Finalize liquidity withdrawal"
+  finalizeLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to finalize."
     withdrawalId: String!
-  ): FinalizePendingWithdrawalMutationResponse
+  ): FinalizeLiquidityWithdrawalMutationResponse
 
-  "Rollback pending withdrawal"
-  rollbackPendingWithdrawal(
-    "The id of the pending withdrawal to rollback."
+  "Rollback liquidity withdrawal"
+  rollbackLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to rollback."
     withdrawalId: String!
-  ): RollbackPendingWithdrawalMutationResponse
+  ): RollbackLiquidityWithdrawalMutationResponse
 }
 
 type PageInfo {
@@ -161,22 +167,40 @@ input RoutingInput {
   staticIlpAddress: String!
 }
 
-input CreateDepositInput {
-  "The id of the account to create the deposit for."
+input AddAccountLiquidityInput {
+  "The id of the account to add liquidity."
   accountId: String!
-  "Amount of deposit."
+  "Amount of liquidity to add."
   amount: UInt64!
-  "The id of the deposit."
+  "The id of the transfer."
   id: String
 }
 
-input CreateWithdrawalInput {
+input AddAssetLiquidityInput {
+  "The id of the asset to add liquidity."
+  assetId: String!
+  "Amount of liquidity to add."
+  amount: UInt64!
+  "The id of the transfer."
+  id: String
+}
+
+input CreateAccountLiquidityWithdrawalInput {
   "The id of the account to create the withdrawal for."
   accountId: String!
   "Amount of withdrawal."
   amount: UInt64!
   "The id of the withdrawal."
-  id: String
+  id: String!
+}
+
+input CreateAssetLiquidityWithdrawalInput {
+  "The id of the asset to create the withdrawal for."
+  assetId: String!
+  "Amount of withdrawal."
+  amount: UInt64!
+  "The id of the withdrawal."
+  id: String!
 }
 
 type Asset {
@@ -184,16 +208,15 @@ type Asset {
   scale: Int!
 }
 
-enum WithdrawalError {
+enum LiquidityError {
   AlreadyFinalized
   AlreadyRolledBack
   InsufficientBalance
-  InsufficientLiquidity
   InvalidId
+  TransferExists
   UnknownAccount
   UnknownAsset
   UnknownWithdrawal
-  WithdrawalExists
 }
 
 type Account {
@@ -206,16 +229,6 @@ type Account {
   routing: Routing
 
   balance: UInt64!
-  deposits(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): DepositsConnection!
   invoices(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -379,41 +392,6 @@ type Webhook {
   id: ID!
 }
 
-type DepositsConnection {
-  pageInfo: PageInfo!
-  edges: [DepositEdge!]!
-}
-
-type DepositEdge {
-  node: Deposit!
-  cursor: String!
-}
-
-type Deposit {
-  id: ID!
-  amount: UInt64!
-  accountId: ID!
-  # createdTime: Int!
-}
-
-type WithdrawalsConnection {
-  pageInfo: PageInfo!
-  edges: [WithdrawalEdge!]!
-}
-
-type WithdrawalEdge {
-  node: Withdrawal!
-  cursor: String!
-}
-
-type Withdrawal {
-  id: ID!
-  amount: UInt64!
-  accountId: ID!
-  # createdTime: Int!
-  # finalizedTime: Int
-}
-
 type CreateAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -460,33 +438,46 @@ type DeleteWebhookMutationResponse implements MutationResponse {
   message: String!
 }
 
-type CreateDepositMutationResponse implements MutationResponse {
+type AddAccountLiquidityMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  deposit: Deposit
+  error: LiquidityError
 }
 
-type CreateWithdrawalMutationResponse implements MutationResponse {
+type AddAssetLiquidityMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  withdrawal: Withdrawal
-  error: WithdrawalError
+  error: LiquidityError
 }
 
-type FinalizePendingWithdrawalMutationResponse implements MutationResponse {
+type CreateAccountLiquidityWithdrawalMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  error: WithdrawalError
+  error: LiquidityError
 }
 
-type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
+type CreateAssetLiquidityWithdrawalMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  error: WithdrawalError
+  error: LiquidityError
+}
+
+type FinalizeLiquidityWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: LiquidityError
+}
+
+type RollbackLiquidityWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: LiquidityError
 }
 
 interface MutationResponse {
