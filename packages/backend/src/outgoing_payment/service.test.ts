@@ -499,19 +499,23 @@ describe('OutgoingPaymentService', (): void => {
 
       it('Cancelling (destination asset changed)', async (): Promise<void> => {
         const originalPayment = await outgoingPaymentService.create({
-            sourceAccountId,
-            paymentPointer: 'http://wallet.example/paymentpointer/bob',
-            amountToSend: BigInt(123),
-            autoApprove: false
-          })
+          sourceAccountId,
+          paymentPointer: 'http://wallet.example/paymentpointer/bob',
+          amountToSend: BigInt(123),
+          autoApprove: false
+        })
         const paymentId = originalPayment.id
         // Pretend that the destination asset was initially different.
         await OutgoingPayment.query(knex)
           .findById(paymentId)
           .patch({
-            destinationAccount: Object.assign({}, originalPayment.destinationAccount, {
-              scale: 55,
-            })
+            destinationAccount: Object.assign(
+              {},
+              originalPayment.destinationAccount,
+              {
+                scale: 55
+              }
+            )
           })
 
         const payment = await processNext(paymentId, PaymentState.Cancelling)
@@ -838,7 +842,7 @@ describe('OutgoingPaymentService', (): void => {
             destinationAccount: {
               url: invoice.accountUrl,
               code: invoice.asset.code,
-              scale: 55,
+              scale: 55
             }
           })
 

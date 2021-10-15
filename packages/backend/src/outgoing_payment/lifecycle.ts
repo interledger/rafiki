@@ -1,4 +1,3 @@
-import * as assert from 'assert'
 import * as Pay from '@interledger/pay'
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
@@ -43,15 +42,20 @@ export async function handleQuoting(
   const destination = await Pay.setupPayment({
     plugin,
     paymentPointer: payment.intent.paymentPointer,
-    invoiceUrl: payment.intent.invoiceUrl,
+    invoiceUrl: payment.intent.invoiceUrl
   })
 
-  if (payment.destinationAccount.scale !== destination.destinationAsset.scale
-    || payment.destinationAccount.code !== destination.destinationAsset.code) {
-    deps.logger.warn({
-      oldAsset: payment.destinationAccount,
-      newAsset: destination.destinationAsset
-    }, 'asset changed')
+  if (
+    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
+    payment.destinationAccount.code !== destination.destinationAsset.code
+  ) {
+    deps.logger.warn(
+      {
+        oldAsset: payment.destinationAccount,
+        newAsset: destination.destinationAsset
+      },
+      'asset changed'
+    )
     throw Pay.PaymentError.DestinationAssetConflict
   }
 
@@ -224,12 +228,17 @@ export async function handleSending(
     invoiceUrl: payment.intent.invoiceUrl
   })
 
-  if (payment.destinationAccount.scale !== destination.destinationAsset.scale
-    || payment.destinationAccount.code !== destination.destinationAsset.code) {
-    deps.logger.warn({
-      oldAsset: payment.destinationAccount,
-      newAsset: destination.destinationAsset
-    }, 'asset changed')
+  if (
+    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
+    payment.destinationAccount.code !== destination.destinationAsset.code
+  ) {
+    deps.logger.warn(
+      {
+        oldAsset: payment.destinationAccount,
+        newAsset: destination.destinationAsset
+      },
+      'asset changed'
+    )
     throw Pay.PaymentError.DestinationAssetConflict
   }
 

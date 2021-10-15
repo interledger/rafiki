@@ -9,5 +9,5 @@ export class Invoice extends BaseModel {
   public invoiceAccountId!: string // Refers to the subaccount created for this invoice
   public active!: boolean
   public description!: string
-  public expiresAt!: Date
+  public expiresAt?: Date
 }

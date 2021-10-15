@@ -8,8 +8,9 @@ import {
 } from '../generated/graphql'
 import { AccountService, Account } from '../../account/service'
 import { AccountError, isAccountError } from '../../account/errors'
+import { ApolloContext } from '../../app'
 
-export const getAccounts: QueryResolvers['accounts'] = async (
+export const getAccounts: QueryResolvers<ApolloContext>['accounts'] = async (
   parent,
   args,
   ctx
@@ -24,7 +25,7 @@ export const getAccounts: QueryResolvers['accounts'] = async (
   }
 }
 
-export const getAccount: QueryResolvers['account'] = async (
+export const getAccount: QueryResolvers<ApolloContext>['account'] = async (
   parent,
   args,
   ctx
@@ -37,7 +38,7 @@ export const getAccount: QueryResolvers['account'] = async (
   return account
 }
 
-export const createAccount: MutationResolvers['createAccount'] = async (
+export const createAccount: MutationResolvers<ApolloContext>['createAccount'] = async (
   parent,
   args,
   ctx
@@ -85,7 +86,7 @@ export const createAccount: MutationResolvers['createAccount'] = async (
   }
 }
 
-export const updateAccount: MutationResolvers['updateAccount'] = async (
+export const updateAccount: MutationResolvers<ApolloContext>['updateAccount'] = async (
   parent,
   args,
   ctx
@@ -133,7 +134,7 @@ export const updateAccount: MutationResolvers['updateAccount'] = async (
   }
 }
 
-export const deleteAccount: MutationResolvers['deleteAccount'] = async (
+export const deleteAccount: MutationResolvers<ApolloContext>['deleteAccount'] = async (
   parent,
   args,
   ctx
@@ -143,11 +144,12 @@ export const deleteAccount: MutationResolvers['deleteAccount'] = async (
   return {}
 }
 
-export const getBalance: AccountResolvers['balance'] = async (
+export const getBalance: AccountResolvers<ApolloContext>['balance'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['UInt64'] => {
+  if (!parent.id) throw new Error('missing account id')
   const accountService = await ctx.container.use('accountService')
   const balance = await accountService.getBalance(parent.id)
   if (balance === undefined) {
@@ -156,7 +158,7 @@ export const getBalance: AccountResolvers['balance'] = async (
   return balance
 }
 
-export const getAccountsConnectionPageInfo: AccountsConnectionResolvers['pageInfo'] = async (
+export const getAccountsConnectionPageInfo: AccountsConnectionResolvers<ApolloContext>['pageInfo'] = async (
   parent,
   args,
   ctx

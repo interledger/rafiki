@@ -79,13 +79,15 @@ async function getCurrentInvoice(
     return createInvoice(deps.knex, account.id, expectedExpiryAt)
   } else {
     const invoice = await deps.invoiceService.get(wm.currentInvoiceId)
-    const currentInvoiceExpiry = DateTime.fromJSDate(invoice.expiresAt, {
-      zone: 'utc'
-    })
+    if (invoice.expiresAt) {
+      const currentInvoiceExpiry = DateTime.fromJSDate(invoice.expiresAt, {
+        zone: 'utc'
+      })
 
-    // Check if currentInvoice has expired, if so create new invoice
-    if (expectedExpiryAt.diff(currentInvoiceExpiry).toMillis() !== 0) {
-      return createInvoice(deps.knex, account.id, expectedExpiryAt)
+      // Check if currentInvoice has expired, if so create new invoice
+      if (expectedExpiryAt.diff(currentInvoiceExpiry).toMillis() !== 0) {
+        return createInvoice(deps.knex, account.id, expectedExpiryAt)
+      }
     }
 
     return invoice

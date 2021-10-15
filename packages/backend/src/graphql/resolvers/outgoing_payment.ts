@@ -9,9 +9,9 @@ import {
   ResolversTypes
 } from '../generated/graphql'
 import { OutgoingPayment } from '../../outgoing_payment/model'
-import { AccountService } from '../../account/service'
+import { ApolloContext } from '../../app'
 
-export const getOutgoingPayment: QueryResolvers['outgoingPayment'] = async (
+export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'] = async (
   parent,
   args,
   ctx
@@ -24,27 +24,35 @@ export const getOutgoingPayment: QueryResolvers['outgoingPayment'] = async (
   return paymentToGraphql(payment)
 }
 
-export const getOutcome: OutgoingPaymentResolvers['outcome'] = async (
+export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['OutgoingPaymentOutcome'] => {
+  if (!parent.id) throw new Error('missing id')
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
   const accountService = await ctx.container.use('accountService')
   const balanceService = await ctx.container.use('balanceService')
-  const payment =
-    parent.sourceAccount?.id && parent.reservedBalanceId
-      ? parent
-      : await outgoingPaymentService.get(parent.id)
-  const balance = await accountService.getBalance(payment.sourceAccount.id)
+
+  let sourceAccountId, reservedBalanceId
+  if (parent.sourceAccount?.id && parent.reservedBalanceId) {
+    sourceAccountId = parent.sourceAccount?.id
+    reservedBalanceId = parent.reservedBalanceId
+  } else {
+    const payment = await outgoingPaymentService.get(parent.id)
+    if (!payment) throw new Error('payment does not exist')
+    sourceAccountId = payment.sourceAccount.id
+    reservedBalanceId = payment.reservedBalanceId
+  }
+
+  const balance = await accountService.getBalance(sourceAccountId)
   if (balance === undefined) throw new Error('source account does not exist')
-  const reservedBalance = await balanceService.get(payment.reservedBalanceId)
+  const reservedBalance = await balanceService.get(reservedBalanceId)
   if (!reservedBalance) throw new Error('reserved balance does not exist')
-  const a: bigint = reservedBalance.balance
   return {
-    amountSent: a - balance
+    amountSent: reservedBalance.balance - balance
   }
 }
 
@@ -76,7 +84,7 @@ const clientErrors: { [key in PaymentError]: boolean } = {
   MaxSafeEncryptionLimit: false
 }
 
-export const createOutgoingPayment: MutationResolvers['createOutgoingPayment'] = async (
+export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutgoingPayment'] = async (
   parent,
   args,
   ctx
@@ -98,7 +106,7 @@ export const createOutgoingPayment: MutationResolvers['createOutgoingPayment'] =
     }))
 }
 
-export const requoteOutgoingPayment: MutationResolvers['requoteOutgoingPayment'] = async (
+export const requoteOutgoingPayment: MutationResolvers<ApolloContext>['requoteOutgoingPayment'] = async (
   parent,
   args,
   ctx
@@ -120,7 +128,7 @@ export const requoteOutgoingPayment: MutationResolvers['requoteOutgoingPayment']
     }))
 }
 
-export const approveOutgoingPayment: MutationResolvers['approveOutgoingPayment'] = async (
+export const approveOutgoingPayment: MutationResolvers<ApolloContext>['approveOutgoingPayment'] = async (
   parent,
   args,
   ctx
@@ -142,7 +150,7 @@ export const approveOutgoingPayment: MutationResolvers['approveOutgoingPayment']
     }))
 }
 
-export const cancelOutgoingPayment: MutationResolvers['cancelOutgoingPayment'] = async (
+export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutgoingPayment'] = async (
   parent,
   args,
   ctx
@@ -170,7 +178,7 @@ function paymentToGraphql(
   return {
     id: payment.id,
     state: SchemaPaymentState[payment.state],
-    error: payment.error,
+    error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
     intent: payment.intent,
     quote: payment.quote && {

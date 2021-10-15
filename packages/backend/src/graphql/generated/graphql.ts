@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-export type Maybe<T> = T | null;
+export type Maybe<T> = T | undefined;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
@@ -23,9 +23,9 @@ export type Account = {
   asset: Asset;
   stream: Stream;
   routing?: Maybe<Routing>;
-  balance: Scalars['UInt64'];
+  balance?: Maybe<Scalars['UInt64']>;
   invoices?: Maybe<InvoiceConnection>;
-  webhooks: WebhooksConnection;
+  webhooks?: Maybe<WebhooksConnection>;
 };
 
 
@@ -219,14 +219,11 @@ export type HttpOutgoingInput = {
 export type Invoice = {
   __typename?: 'Invoice';
   id: Scalars['ID'];
-  receivedAmount: Scalars['UInt64'];
   maximumAmount?: Maybe<Scalars['UInt64']>;
-  asset: Asset;
   active: Scalars['Boolean'];
   createdAt: Scalars['String'];
   expiresAt?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
-  totalAmount: Scalars['String'];
 };
 
 export type InvoiceConnection = {
@@ -397,7 +394,7 @@ export type OutgoingPayment = {
   reservedBalanceId: Scalars['String'];
   sourceAccount: PaymentSourceAccount;
   destinationAccount: PaymentDestinationAccount;
-  outcome: OutgoingPaymentOutcome;
+  outcome?: Maybe<OutgoingPaymentOutcome>;
   createdAt: Scalars['String'];
 };
 
@@ -553,7 +550,7 @@ export type TransferMutationResponse = MutationResponse & {
 
 
 export type UpdateAccountInput = {
-  id?: Maybe<Scalars['String']>;
+  id: Scalars['String'];
   disabled?: Maybe<Scalars['Boolean']>;
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http?: Maybe<HttpInput>;
@@ -803,9 +800,9 @@ export type AccountResolvers<ContextType = any, ParentType extends ResolversPare
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   stream?: Resolver<ResolversTypes['Stream'], ParentType, ContextType>;
   routing?: Resolver<Maybe<ResolversTypes['Routing']>, ParentType, ContextType>;
-  balance?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  balance?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   invoices?: Resolver<Maybe<ResolversTypes['InvoiceConnection']>, ParentType, ContextType, RequireFields<AccountInvoicesArgs, never>>;
-  webhooks?: Resolver<ResolversTypes['WebhooksConnection'], ParentType, ContextType, RequireFields<AccountWebhooksArgs, never>>;
+  webhooks?: Resolver<Maybe<ResolversTypes['WebhooksConnection']>, ParentType, ContextType, RequireFields<AccountWebhooksArgs, never>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -910,14 +907,11 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 
 export type InvoiceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Invoice'] = ResolversParentTypes['Invoice']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  receivedAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   maximumAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
-  asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  totalAmount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -971,7 +965,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   reservedBalanceId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   sourceAccount?: Resolver<ResolversTypes['PaymentSourceAccount'], ParentType, ContextType>;
   destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
-  outcome?: Resolver<ResolversTypes['OutgoingPaymentOutcome'], ParentType, ContextType>;
+  outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
