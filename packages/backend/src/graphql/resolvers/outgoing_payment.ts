@@ -168,7 +168,7 @@ export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutg
 
 function paymentToGraphql(
   payment: OutgoingPayment
-): Omit<SchemaOutgoingPayment, 'outcome'> {
+): Omit<SchemaOutgoingPayment, 'outcome' | 'account'> {
   return {
     id: payment.id,
     state: SchemaPaymentState[payment.state],
@@ -185,7 +185,7 @@ function paymentToGraphql(
       highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
     accountId: payment.accountId,
-    sourceAccount: payment.sourceAccount,
+    sourceAccountId: payment.sourceAccountId,
     destinationAccount: payment.destinationAccount,
     createdAt: new Date(+payment.createdAt).toISOString()
   }

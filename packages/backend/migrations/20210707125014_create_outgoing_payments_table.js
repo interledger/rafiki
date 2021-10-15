@@ -25,10 +25,11 @@ exports.up = function (knex) {
     table.bigInteger('quoteHighExchangeRateEstimateNumerator').nullable()
     table.bigInteger('quoteHighExchangeRateEstimateDenominator').nullable()
 
-    table.string('accountId').notNullable()
-    table.string('sourceAccountId').notNullable()
-    table.integer('sourceAccountScale').notNullable()
-    table.string('sourceAccountCode').notNullable()
+    table.uuid('accountId').notNullable()
+    table.foreign('accountId').references('accounts.id')
+
+    // Wallet account from which to request funds for payment
+    table.uuid('sourceAccountId').notNullable()
     table.integer('destinationAccountScale').notNullable()
     table.string('destinationAccountCode').notNullable()
     table.string('destinationAccountUrl').nullable()

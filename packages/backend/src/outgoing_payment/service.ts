@@ -53,10 +53,15 @@ async function getOutgoingPayment(
   deps: ServiceDependencies,
   id: string
 ): Promise<OutgoingPayment | undefined> {
-  return OutgoingPayment.query(deps.knex).findById(id)
+  return OutgoingPayment.query(deps.knex)
+    .findById(id)
+    .withGraphJoined('account.asset')
 }
 
-type CreateOutgoingPaymentOptions = PaymentIntent & { sourceAccountId: string }
+type CreateOutgoingPaymentOptions = PaymentIntent & {
+  sourceAccountId: string
+  assetId: string
+}
 
 // TODO ensure this is idempotent/safe for autoApprove:true payments
 async function createOutgoingPayment(
@@ -90,45 +95,39 @@ async function createOutgoingPayment(
     })
   })
 
-  const sourceAccount = await deps.accountService.get(options.sourceAccountId)
-  if (!sourceAccount) {
-    throw new Error('outgoing payment source account does not exist')
-  }
   const account = await deps.accountService.create({
-    asset: sourceAccount.asset,
+    assetId: options.assetId,
     sentBalance: true
   })
   if (isAccountError(account)) {
     deps.logger.warn(
       {
-        sourceAccountId: options.sourceAccountId,
-        error: sourceAccount
+        ...options,
+        error: account
       },
       'createOutgoingPayment account creation failed'
     )
     throw new Error('unable to create account, err=' + account)
   }
 
-  return await OutgoingPayment.query(deps.knex).insertAndFetch({
-    state: PaymentState.Inactive,
-    intent: {
-      paymentPointer: options.paymentPointer,
-      invoiceUrl: options.invoiceUrl,
-      amountToSend: options.amountToSend,
-      autoApprove: options.autoApprove
-    },
-    accountId: account.id,
-    sourceAccount: {
-      id: options.sourceAccountId,
-      code: sourceAccount.asset.code,
-      scale: sourceAccount.asset.scale
-    },
-    destinationAccount: {
-      scale: destination.destinationAsset.scale,
-      code: destination.destinationAsset.code,
-      url: destination.accountUrl
-    }
-  })
+  return await OutgoingPayment.query(deps.knex)
+    .insertAndFetch({
+      state: PaymentState.Inactive,
+      intent: {
+        paymentPointer: options.paymentPointer,
+        invoiceUrl: options.invoiceUrl,
+        amountToSend: options.amountToSend,
+        autoApprove: options.autoApprove
+      },
+      accountId: account.id,
+      sourceAccountId: options.sourceAccountId,
+      destinationAccount: {
+        scale: destination.destinationAsset.scale,
+        code: destination.destinationAsset.code,
+        url: destination.accountUrl
+      }
+    })
+    .withGraphFetched('account.asset')
 }
 
 function requotePayment(
@@ -156,7 +155,7 @@ async function approvePayment(
     if (payment.state !== PaymentState.Ready) {
       throw new Error(`Cannot approve; payment is in state=${payment.state}`)
     }
-    await payment.$query(trx).patch({ state: PaymentState.Activated })
+    await payment.$query(trx).patch({ state: PaymentState.Funding })
     return payment
   })
 }
@@ -172,7 +171,7 @@ async function cancelPayment(
       throw new Error(`Cannot cancel; payment is in state=${payment.state}`)
     }
     await payment.$query(trx).patch({
-      state: PaymentState.Cancelling,
+      state: PaymentState.Refunding,
       error: lifecycle.LifecycleError.CancelledByAPI
     })
     return payment

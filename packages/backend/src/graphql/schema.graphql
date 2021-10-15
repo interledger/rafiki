@@ -289,15 +289,20 @@ type Invoice {
   description: String
 }
 
-type OutgoingPayment {
+interface AccountHolder {
+  account: Account
+}
+
+type OutgoingPayment implements AccountHolder {
   id: ID!
   state: PaymentState!
   error: String
   stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
-  accountId: String!
-  sourceAccount: PaymentSourceAccount!
+  accountId: ID!
+  account: Account
+  sourceAccountId: ID!
   destinationAccount: PaymentDestinationAccount!
   outcome: OutgoingPaymentOutcome
   createdAt: String!
@@ -344,12 +349,6 @@ type PaymentQuote {
   highExchangeRateEstimate: Float!
 }
 
-type PaymentSourceAccount {
-  id: String!
-  scale: Int!
-  code: String!
-}
-
 type PaymentDestinationAccount {
   scale: Int!
   code: String!
@@ -362,6 +361,7 @@ type OutgoingPaymentOutcome {
 
 input CreateOutgoingPaymentInput {
   sourceAccountId: String!
+  assetId: String!
   paymentPointer: String
   amountToSend: UInt64
   invoiceUrl: String

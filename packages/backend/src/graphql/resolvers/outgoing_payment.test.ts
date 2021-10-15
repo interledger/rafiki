@@ -19,6 +19,7 @@ import {
   PaymentState
 } from '../../outgoing_payment/model'
 import { AccountService } from '../../account/service'
+import { AssetOptions } from '../../asset/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
@@ -71,13 +72,14 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   let outgoingPaymentService: OutgoingPaymentService
   let payment: OutgoingPaymentModel
+  let asset: AssetOptions
 
   beforeEach(
     async (): Promise<void> => {
       accountService = await deps.use('accountService')
       const accountFactory = new AccountFactory(accountService)
-      const { id: sourceAccountId, asset } = await accountFactory.build()
-      const accountId = (await accountFactory.build({ asset })).id
+      const account = await accountFactory.build()
+      asset = account.asset
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
@@ -100,12 +102,8 @@ describe('OutgoingPayment Resolvers', (): void => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
-        accountId,
-        sourceAccount: {
-          id: sourceAccountId,
-          scale: 9,
-          code: 'USD'
-        },
+        accountId: account.id,
+        sourceAccountId: uuid(),
         destinationAccount: {
           scale: 9,
           code: 'XRP',
@@ -159,11 +157,14 @@ describe('OutgoingPayment Resolvers', (): void => {
                   highExchangeRateEstimate
                 }
                 accountId
-                sourceAccount {
+                account {
                   id
-                  scale
-                  code
+                  asset {
+                    code
+                    scale
+                  }
                 }
+                sourceAccountId
                 destinationAccount {
                   scale
                   code
@@ -206,10 +207,16 @@ describe('OutgoingPayment Resolvers', (): void => {
         __typename: 'PaymentQuote'
       })
       expect(query.accountId).toBe(payment.accountId)
-      expect(query.sourceAccount).toEqual({
-        ...payment.sourceAccount,
-        __typename: 'PaymentSourceAccount'
+      expect(query.account).toEqual({
+        id: payment.accountId,
+        asset: {
+          code: asset.code,
+          scale: asset.scale,
+          __typename: 'Asset'
+        },
+        __typename: 'Account'
       })
+      expect(query.sourceAccountId).toBe(payment.sourceAccountId)
       expect(query.destinationAccount).toEqual({
         ...payment.destinationAccount,
         __typename: 'PaymentDestinationAccount'
@@ -244,6 +251,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Mutation.createOutgoingPayment', (): void => {
     const input = {
       sourceAccountId: uuid(),
+      assetId: uuid(),
       paymentPointer: 'http://wallet2.example/paymentpointer/bob',
       amountToSend: '123',
       autoApprove: false

@@ -10,9 +10,9 @@ export const RETRY_BACKOFF_SECONDS = 10
 const maxStateAttempts: { [key in PaymentState]: number } = {
   Inactive: 5, // quoting
   Ready: Infinity, // autoapprove
-  Activated: 5, // reserve funds
+  Funding: Infinity, // reserve funds
   Sending: 5, // send money
-  Cancelling: Infinity, // refund money
+  Refunding: Infinity, // refund money
   Cancelled: 0,
   Completed: 0
 }
@@ -54,9 +54,9 @@ export async function getPendingPayment(
     .skipLocked()
     .whereIn('state', [
       PaymentState.Inactive,
-      PaymentState.Activated,
+      PaymentState.Funding,
       PaymentState.Sending,
-      PaymentState.Cancelling
+      PaymentState.Refunding
     ])
     // Back off between retries.
     .andWhere((builder: knex.QueryBuilder) => {
@@ -76,6 +76,7 @@ export async function getPendingPayment(
             .orWhere('quoteActivationDeadline', '<', now)
         })
     })
+    .withGraphFetched('account.asset')
   return payments[0]
 }
 
@@ -91,7 +92,7 @@ export async function handlePaymentLifecycle(
     const stateAttempts = payment.stateAttempts + 1
 
     if (
-      payment.state === PaymentState.Cancelling ||
+      payment.state === PaymentState.Refunding ||
       (stateAttempts < maxStateAttempts[payment.state] &&
         lifecycle.canRetryError(err))
     ) {
@@ -108,7 +109,7 @@ export async function handlePaymentLifecycle(
       )
       await payment
         .$query(deps.knex)
-        .patch({ state: PaymentState.Cancelling, error })
+        .patch({ state: PaymentState.Refunding, error })
     }
   }
 
@@ -131,8 +132,8 @@ export async function handlePaymentLifecycle(
         })
     case PaymentState.Ready:
       return lifecycle.handleReady(deps, payment).catch(onError)
-    case PaymentState.Activated:
-      return lifecycle.handleActivation(deps, payment).catch(onError)
+    case PaymentState.Funding:
+      return lifecycle.handleFunding(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin(payment.accountId)
       return plugin
@@ -147,8 +148,8 @@ export async function handlePaymentLifecycle(
             )
           })
         })
-    case PaymentState.Cancelling:
-      return lifecycle.handleCancelling(deps, payment).catch(onError)
+    case PaymentState.Refunding:
+      return lifecycle.handleRefunding(deps, payment).catch(onError)
     default:
       deps.logger.warn('unexpected payment in lifecycle')
       break

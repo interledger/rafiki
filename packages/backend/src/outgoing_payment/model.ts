@@ -1,14 +1,9 @@
-import { Pojo, ModelOptions, QueryContext } from 'objection'
+import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
+import { Account } from '../account/model'
 import { BaseModel } from '../shared/baseModel'
 
-const fieldPrefixes = [
-  'intent',
-  'quote',
-  'sourceAccount',
-  'destinationAccount',
-  'outcome'
-]
+const fieldPrefixes = ['intent', 'quote', 'destinationAccount', 'outcome']
 
 const ratioFields = [
   'quoteMinExchangeRate',
@@ -47,15 +42,23 @@ export class OutgoingPayment extends BaseModel {
     highExchangeRateEstimate: Pay.Ratio
   }
   public accountId!: string
-  public sourceAccount!: {
-    id: string
-    scale: number
-    code: string
-  }
+  public account!: Account
+  public sourceAccountId!: string
   public destinationAccount!: {
     scale: number
     code: string
     url?: string
+  }
+
+  static relationMappings = {
+    account: {
+      relation: Model.HasOneRelation,
+      modelClass: Account,
+      join: {
+        from: 'outgoingPayments.accountId',
+        to: 'accounts.id'
+      }
+    }
   }
 
   $beforeUpdate(opts: ModelOptions, queryContext: QueryContext): void {
@@ -64,8 +67,9 @@ export class OutgoingPayment extends BaseModel {
       opts.old &&
       opts.old['error'] &&
       this.state &&
-      this.state !== PaymentState.Cancelling &&
-      this.state !== PaymentState.Cancelled
+      this.state !== PaymentState.Cancelled &&
+      (this.state !== PaymentState.Refunding ||
+        opts.old['state'] === PaymentState.Sending)
     ) {
       this.error = null
     }
@@ -126,19 +130,21 @@ export class OutgoingPayment extends BaseModel {
 export enum PaymentState {
   // Initial state. In this state, an empty trustline account is generated, and the payment is automatically resolved & quoted.
   // On success, transition to `Ready`.
-  // On failure, transition to `Cancelling`.
+  // On failure, transition to `Refunding`.
   Inactive = 'Inactive',
   // Awaiting user approval. Approval is automatic if `intent.autoApprove` is set.
-  // Once approved, transitions to `Activated`.
+  // Once approved, transitions to `Funding`.
   Ready = 'Ready',
-  // During activation, money from the user's (parent) account is moved to the trustline to reserve it for the payment.
+  // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
   // On success, transition to `Sending`.
-  Activated = 'Activated',
+  Funding = 'Funding',
   // Pay from the trustline account to the destination.
+  // On success, transition to `Refunding`.
   Sending = 'Sending',
 
-  // Transitions to Cancelled once leftover reserved money is refunded to the parent account.
-  Cancelling = 'Cancelling',
+  // Awaiting leftover reserved money to be refunded to the wallet account
+  // On success, transition to Cancelled (error) or Completed (no error).
+  Refunding = 'Refunding',
   // The payment failed. (Though some money may have been delivered).
   // Requoting transitions to `Inactive`.
   Cancelled = 'Cancelled',
