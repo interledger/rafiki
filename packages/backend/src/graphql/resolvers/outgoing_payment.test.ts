@@ -19,7 +19,6 @@ import {
   PaymentState
 } from '../../outgoing_payment/model'
 import { AccountService } from '../../account/service'
-import { Balance, BalanceService } from '../../balance/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
@@ -32,7 +31,6 @@ describe('OutgoingPayment Resolvers', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let accountService: AccountService
-  let balanceService: BalanceService
 
   const streamServer = new StreamServer({
     serverSecret: Buffer.from(
@@ -77,7 +75,6 @@ describe('OutgoingPayment Resolvers', (): void => {
   beforeEach(
     async (): Promise<void> => {
       accountService = await deps.use('accountService')
-      balanceService = await deps.use('balanceService')
       const accountFactory = new AccountFactory(accountService)
       const { id: sourceAccountId, asset } = await accountFactory.build()
       const accountId = (await accountFactory.build({ asset })).id
@@ -104,7 +101,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
         accountId,
-        reservedBalanceId: uuid(),
         sourceAccount: {
           id: sourceAccountId,
           scale: 9,
@@ -125,19 +121,15 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   describe('Query.outgoingPayment', (): void => {
     test('200', async (): Promise<void> => {
+      const amountSent = BigInt(78)
       jest
         .spyOn(outgoingPaymentService, 'get')
         .mockImplementation(async () => payment)
       jest
-        .spyOn(accountService, 'getBalance')
-        .mockImplementation(async () => BigInt(45))
-      jest
-        .spyOn(balanceService, 'get')
+        .spyOn(accountService, 'getTotalSent')
         .mockImplementation(async (id: string) => {
-          expect(id).toStrictEqual(payment.reservedBalanceId)
-          return {
-            balance: BigInt(123)
-          } as Balance
+          expect(id).toStrictEqual(payment.accountId)
+          return amountSent
         })
 
       const query = await appContainer.apolloClient
@@ -167,7 +159,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                   highExchangeRateEstimate
                 }
                 accountId
-                reservedBalanceId
                 sourceAccount {
                   id
                   scale
@@ -215,7 +206,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         __typename: 'PaymentQuote'
       })
       expect(query.accountId).toBe(payment.accountId)
-      expect(query.reservedBalanceId).toBe(payment.reservedBalanceId)
       expect(query.sourceAccount).toEqual({
         ...payment.sourceAccount,
         __typename: 'PaymentSourceAccount'
@@ -225,7 +215,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         __typename: 'PaymentDestinationAccount'
       })
       expect(query.outcome).toEqual({
-        amountSent: (123 - 45).toString(),
+        amountSent: amountSent.toString(),
         __typename: 'OutgoingPaymentOutcome'
       })
       expect(new Date(query.createdAt)).toEqual(payment.createdAt)

@@ -95,7 +95,8 @@ async function createOutgoingPayment(
     throw new Error('outgoing payment source account does not exist')
   }
   const account = await deps.accountService.create({
-    asset: sourceAccount.asset
+    asset: sourceAccount.asset,
+    sentBalance: true
   })
   if (isAccountError(account)) {
     deps.logger.warn(
@@ -107,11 +108,6 @@ async function createOutgoingPayment(
     )
     throw new Error('unable to create account, err=' + account)
   }
-  const reservedBalanceId = (
-    await deps.balanceService.create({
-      unit: sourceAccount.asset.unit
-    })
-  ).id
 
   return await OutgoingPayment.query(deps.knex).insertAndFetch({
     state: PaymentState.Inactive,
@@ -122,7 +118,6 @@ async function createOutgoingPayment(
       autoApprove: options.autoApprove
     },
     accountId: account.id,
-    reservedBalanceId,
     sourceAccount: {
       id: options.sourceAccountId,
       code: sourceAccount.asset.code,

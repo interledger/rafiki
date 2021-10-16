@@ -33,26 +33,20 @@ export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = as
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
-  const accountService = await ctx.container.use('accountService')
-  const balanceService = await ctx.container.use('balanceService')
-
-  let sourceAccountId, reservedBalanceId
-  if (parent.sourceAccount?.id && parent.reservedBalanceId) {
-    sourceAccountId = parent.sourceAccount?.id
-    reservedBalanceId = parent.reservedBalanceId
+  let accountId: string
+  if (parent.accountId) {
+    accountId = parent.accountId
   } else {
     const payment = await outgoingPaymentService.get(parent.id)
     if (!payment) throw new Error('payment does not exist')
-    sourceAccountId = payment.sourceAccount.id
-    reservedBalanceId = payment.reservedBalanceId
+    accountId = payment.accountId
   }
-
-  const balance = await accountService.getBalance(sourceAccountId)
-  if (balance === undefined) throw new Error('source account does not exist')
-  const reservedBalance = await balanceService.get(reservedBalanceId)
-  if (!reservedBalance) throw new Error('reserved balance does not exist')
+  const accountService = await ctx.container.use('accountService')
+  const totalSent = await accountService.getTotalSent(accountId)
+  if (totalSent === undefined)
+    throw new Error('account total sent does not exist')
   return {
-    amountSent: reservedBalance.balance - balance
+    amountSent: totalSent
   }
 }
 
@@ -191,7 +185,6 @@ function paymentToGraphql(
       highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
     accountId: payment.accountId,
-    reservedBalanceId: payment.reservedBalanceId,
     sourceAccount: payment.sourceAccount,
     destinationAccount: payment.destinationAccount,
     createdAt: new Date(+payment.createdAt).toISOString()

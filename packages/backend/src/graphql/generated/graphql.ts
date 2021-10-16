@@ -391,7 +391,6 @@ export type OutgoingPayment = {
   intent?: Maybe<PaymentIntent>;
   quote?: Maybe<PaymentQuote>;
   accountId: Scalars['String'];
-  reservedBalanceId: Scalars['String'];
   sourceAccount: PaymentSourceAccount;
   destinationAccount: PaymentDestinationAccount;
   outcome?: Maybe<OutgoingPaymentOutcome>;
@@ -962,7 +961,6 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
   accountId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  reservedBalanceId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   sourceAccount?: Resolver<ResolversTypes['PaymentSourceAccount'], ParentType, ContextType>;
   destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
   outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;

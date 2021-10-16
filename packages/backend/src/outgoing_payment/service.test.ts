@@ -18,7 +18,6 @@ import { MockPlugin } from './mock_plugin'
 import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { AccountService } from '../account/service'
-import { BalanceService, Balance } from '../balance/service'
 import { RatesService } from '../rates/service'
 import { TransferService } from '../transfer/service'
 import { TransferError } from '../transfer/errors'
@@ -30,7 +29,7 @@ describe('OutgoingPaymentService', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let ratesService: RatesService
   let accountService: AccountService
-  let balanceService: BalanceService
+  let accountFactory: AccountFactory
   let transferService: TransferService
   let liquidityService: LiquidityService
   let knex: Knex
@@ -102,19 +101,9 @@ describe('OutgoingPaymentService', (): void => {
     }
   ) {
     if (amountSent !== undefined) {
-      const balance = await accountService.getBalance(payment.accountId)
-      expect(balance).toBeDefined()
-      if (balance === undefined) {
-        fail()
-      }
-      const reservedBalance = await balanceService.get(
-        payment.reservedBalanceId
-      )
-      expect(reservedBalance).toBeDefined()
-      if (!reservedBalance) {
-        fail()
-      }
-      expect(reservedBalance.balance - balance).toBe(amountSent)
+      await expect(
+        accountService.getTotalSent(payment.accountId)
+      ).resolves.toBe(amountSent)
     }
     if (amountDelivered !== undefined) {
       expect(plugins[payment.accountId].totalReceived).toBe(amountDelivered)
@@ -148,7 +137,14 @@ describe('OutgoingPaymentService', (): void => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       accountService = await deps.use('accountService')
-      liquidityService = await deps.use('liquidityService')
+      transferService = await deps.use('transferService')
+      accountFactory = new AccountFactory(accountService, transferService)
+      const { id: destinationAccountId } = await accountFactory.build({
+        asset: {
+          scale: 9,
+          code: 'USD'
+        }
+      })
       deps.bind('makeIlpPlugin', async (_deps) => (accountId: string) =>
         (plugins[accountId] =
           plugins[accountId] ||
@@ -156,8 +152,8 @@ describe('OutgoingPaymentService', (): void => {
             streamServer,
             exchangeRate: 0.5,
             accountId,
+            destinationAccountId,
             accountService,
-            liquidityService,
             invoice
           }))
       )
@@ -176,9 +172,7 @@ describe('OutgoingPaymentService', (): void => {
         }
       })
       outgoingPaymentService = await deps.use('outgoingPaymentService')
-      balanceService = await deps.use('balanceService')
-      transferService = await deps.use('transferService')
-      const accountFactory = new AccountFactory(accountService, transferService)
+      liquidityService = await deps.use('liquidityService')
       sourceAccountId = (
         await accountFactory.build({
           asset: {
@@ -442,18 +436,10 @@ describe('OutgoingPaymentService', (): void => {
           autoApprove: false
         })
         jest
-          .spyOn(accountService, 'getBalance')
+          .spyOn(accountService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
-            expect(id).toBe(payment.accountId)
-            return BigInt(0)
-          })
-        jest
-          .spyOn(balanceService, 'get')
-          .mockImplementation(async (id: string) => {
-            expect(id).toStrictEqual(payment.reservedBalanceId)
-            return {
-              balance: BigInt(89)
-            } as Balance
+            expect(id).toStrictEqual(payment.accountId)
+            return BigInt(89)
           })
         const payment2 = await processNext(payment.id, PaymentState.Ready)
         expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123 - 89))
@@ -468,18 +454,10 @@ describe('OutgoingPaymentService', (): void => {
           autoApprove: false
         })
         jest
-          .spyOn(accountService, 'getBalance')
+          .spyOn(accountService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
-            expect(id).toBe(payment.accountId)
-            return BigInt(0)
-          })
-        jest
-          .spyOn(balanceService, 'get')
-          .mockImplementation(async (id: string) => {
-            expect(id).toStrictEqual(payment.reservedBalanceId)
-            return {
-              balance: BigInt(123)
-            } as Balance
+            expect(id).toStrictEqual(payment.accountId)
+            return BigInt(123)
           })
         await processNext(payment.id, PaymentState.Completed)
       })

@@ -297,7 +297,6 @@ type OutgoingPayment {
   intent: PaymentIntent
   quote: PaymentQuote
   accountId: String!
-  reservedBalanceId: String!
   sourceAccount: PaymentSourceAccount!
   destinationAccount: PaymentDestinationAccount!
   outcome: OutgoingPaymentOutcome

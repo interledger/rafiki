@@ -62,17 +62,10 @@ export async function handleQuoting(
   // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
   let amountToSend: bigint | undefined
   if (payment.intent.amountToSend) {
-    const balance = await deps.accountService.getBalance(payment.accountId)
-    if (balance === undefined) {
+    const amountSent = await deps.accountService.getTotalSent(payment.accountId)
+    if (amountSent === undefined) {
       throw LifecycleError.MissingBalance
     }
-    const reservedBalance = await deps.balanceService.get(
-      payment.reservedBalanceId
-    )
-    if (!reservedBalance) {
-      throw LifecycleError.MissingBalance
-    }
-    const amountSent = reservedBalance.balance - balance
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
       // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.
@@ -186,11 +179,6 @@ export async function handleActivation(
     {
       sourceBalanceId: sourceAccount.balanceId,
       destinationBalanceId: account.balanceId,
-      amount: payment.quote.maxSourceAmount
-    },
-    {
-      sourceBalanceId: sourceAccount.asset.outgoingPaymentsBalanceId,
-      destinationBalanceId: payment.reservedBalanceId,
       amount: payment.quote.maxSourceAmount
     }
   ])
@@ -403,11 +391,6 @@ async function refundLeftoverBalance(
     {
       sourceBalanceId: account.balanceId,
       destinationBalanceId: sourceAccount.balanceId,
-      amount: balance
-    },
-    {
-      sourceBalanceId: payment.reservedBalanceId,
-      destinationBalanceId: sourceAccount.asset.outgoingPaymentsBalanceId,
       amount: balance
     }
   ])

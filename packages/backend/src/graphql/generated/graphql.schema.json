@@ -2826,22 +2826,6 @@
             "deprecationReason": null
           },
           {
-            "name": "reservedBalanceId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "sourceAccount",
             "description": null,
             "args": [],
