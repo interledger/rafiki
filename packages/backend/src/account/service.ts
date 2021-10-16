@@ -50,6 +50,7 @@ type CreateAccountOptions = Options & {
   id?: string
   assetId: string
   asset?: never
+  sentBalance?: boolean
 }
 
 // TODO: remove
@@ -57,6 +58,7 @@ type LegacyCreateAccountOptions = Options & {
   id?: string
   assetId?: never
   asset: AssetOptions
+  sentBalance?: boolean
 }
 
 export type CreateOptions = CreateAccountOptions | LegacyCreateAccountOptions
@@ -99,6 +101,7 @@ export interface AccountService {
   getByToken(token: string): Promise<Account | undefined>
   getAddress(accountId: string): Promise<string | undefined>
   getBalance(accountId: string): Promise<bigint | undefined>
+  getTotalSent(accountId: string): Promise<bigint | undefined>
   getPage(pagination?: Pagination): Promise<Account[]>
   transferFunds(
     options: AccountTransferOptions
@@ -147,6 +150,7 @@ export function createAccountService({
     getByToken: (token) => getAccountByToken(deps, token),
     getAddress: (id) => getAccountAddress(deps, id),
     getBalance: (id) => getAccountBalance(deps, id),
+    getTotalSent: (id) => getAccountTotalSent(deps, id),
     getPage: (pagination?) => getAccountsPage(deps, pagination),
     transferFunds: (options) => transferFunds(deps, options)
   }
@@ -159,6 +163,8 @@ async function createAccount(
 ): Promise<Account | AccountError> {
   const acctTrx = trx || (await Account.startTransaction())
   try {
+    const sentBalance = account.sentBalance
+    delete account.sentBalance
     const accountRow = await Account.query(acctTrx)
       .insertAndFetch({
         ...account,
@@ -192,14 +198,23 @@ async function createAccount(
       }
     }
 
+    const { id: balanceId } = await deps.balanceService.create({
+      unit: accountRow.asset.unit
+    })
+
+    let sentBalanceId: string | undefined
+    if (sentBalance) {
+      sentBalanceId = (
+        await deps.balanceService.create({
+          unit: accountRow.asset.unit
+        })
+      ).id
+    }
     const newAccount = await accountRow
       .$query(acctTrx)
       .patchAndFetch({
-        balanceId: (
-          await deps.balanceService.create({
-            unit: accountRow.asset.unit
-          })
-        ).id
+        balanceId,
+        sentBalanceId
       })
       .withGraphFetched('asset')
 
@@ -298,6 +313,27 @@ async function getAccountBalance(
   }
 
   const balance = await deps.balanceService.get(account.balanceId)
+
+  if (!balance) {
+    throw new UnknownBalanceError(accountId)
+  }
+
+  return balance.balance
+}
+
+async function getAccountTotalSent(
+  deps: ServiceDependencies,
+  accountId: string
+): Promise<bigint | undefined> {
+  const account = await Account.query(deps.knex)
+    .findById(accountId)
+    .select('sentBalanceId')
+
+  if (!account?.sentBalanceId) {
+    return undefined
+  }
+
+  const balance = await deps.balanceService.get(account.sentBalanceId)
 
   if (!balance) {
     throw new UnknownBalanceError(accountId)
@@ -507,6 +543,15 @@ async function transferFunds(
         timeout
       }
     )
+  }
+  if (sourceAccount.sentBalanceId) {
+    transfers.push({
+      id: uuid(),
+      sourceBalanceId: sourceAccount.asset.outgoingPaymentsBalanceId,
+      destinationBalanceId: sourceAccount.sentBalanceId,
+      amount: sourceAmount,
+      timeout
+    })
   }
   const error = await deps.transferService.create(transfers)
   if (error) {

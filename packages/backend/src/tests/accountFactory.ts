@@ -22,7 +22,8 @@ export class AccountFactory {
       asset: options.asset || randomAsset(),
       stream: {
         enabled: options.stream?.enabled || false
-      }
+      },
+      sentBalance: options.sentBalance
     }
     if (options.maxPacketAmount) {
       accountOptions.maxPacketAmount = options.maxPacketAmount
