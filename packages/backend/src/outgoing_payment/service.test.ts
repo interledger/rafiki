@@ -249,7 +249,7 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe('create', (): void => {
-    it('creates an OutgoingPayment', async () => {
+    it('creates an OutgoingPayment (FixedSend)', async () => {
       const payment = await outgoingPaymentService.create({
         sourceAccountId,
         paymentPointer: 'http://wallet.example/paymentpointer/bob',
@@ -270,6 +270,32 @@ describe('OutgoingPaymentService', (): void => {
         scale: 9,
         code: 'XRP',
         url: 'http://wallet.example/paymentpointer/bob'
+      })
+
+      const payment2 = await outgoingPaymentService.get(payment.id)
+      if (!payment2) throw 'no payment'
+      expect(payment2.id).toEqual(payment.id)
+    })
+
+    it('creates an OutgoingPayment (FixedDelivery)', async () => {
+      const payment = await outgoingPaymentService.create({
+        sourceAccountId,
+        invoiceUrl: 'http://wallet.example/bob/invoices/1',
+        autoApprove: false
+      })
+      expect(payment.state).toEqual(PaymentState.Inactive)
+      expect(payment.intent).toEqual({
+        invoiceUrl: 'http://wallet.example/bob/invoices/1',
+        autoApprove: false
+      })
+      expect(payment.sourceAccount.id).toBe(sourceAccountId)
+      await expectOutcome(payment, { accountBalance: BigInt(0) })
+      expect(payment.sourceAccount.code).toBe('USD')
+      expect(payment.sourceAccount.scale).toBe(9)
+      expect(payment.destinationAccount).toEqual({
+        scale: invoice.asset.scale,
+        code: invoice.asset.code,
+        url: invoice.accountUrl
       })
 
       const payment2 = await outgoingPaymentService.get(payment.id)
@@ -469,6 +495,31 @@ describe('OutgoingPaymentService', (): void => {
           })
         ).id
         await processNext(paymentId, PaymentState.Completed)
+      })
+
+      it('Cancelling (destination asset changed)', async (): Promise<void> => {
+        const originalPayment = await outgoingPaymentService.create({
+          sourceAccountId,
+          paymentPointer: 'http://wallet.example/paymentpointer/bob',
+          amountToSend: BigInt(123),
+          autoApprove: false
+        })
+        const paymentId = originalPayment.id
+        // Pretend that the destination asset was initially different.
+        await OutgoingPayment.query(knex)
+          .findById(paymentId)
+          .patch({
+            destinationAccount: Object.assign(
+              {},
+              originalPayment.destinationAccount,
+              {
+                scale: 55
+              }
+            )
+          })
+
+        const payment = await processNext(paymentId, PaymentState.Cancelling)
+        expect(payment.error).toBe(Pay.PaymentError.DestinationAssetConflict)
       })
     })
 
@@ -778,6 +829,25 @@ describe('OutgoingPaymentService', (): void => {
           amountDelivered: BigInt(0),
           invoiceReceived: invoice.amountToDeliver
         })
+      })
+
+      it('Cancelling (destination asset changed)', async (): Promise<void> => {
+        const paymentId = await setup({
+          invoiceUrl: 'http://wallet.example/bob/invoices/1'
+        })
+        // Pretend that the destination asset was initially different.
+        await OutgoingPayment.query(knex)
+          .findById(paymentId)
+          .patch({
+            destinationAccount: {
+              url: invoice.accountUrl,
+              code: invoice.asset.code,
+              scale: 55
+            }
+          })
+
+        const payment = await processNext(paymentId, PaymentState.Cancelling)
+        expect(payment.error).toBe(Pay.PaymentError.DestinationAssetConflict)
       })
     })
 

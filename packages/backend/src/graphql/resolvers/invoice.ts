@@ -4,24 +4,30 @@ import {
   AccountResolvers
 } from '../generated/graphql'
 import { Invoice } from '../../invoice/model'
+import { ApolloContext } from '../../app'
 
-export const getAccountInvoices: AccountResolvers['invoices'] = async (
+export const getAccountInvoices: AccountResolvers<ApolloContext>['invoices'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['InvoiceConnection'] => {
+  if (!parent.id) throw new Error('missing account id')
   const invoiceService = await ctx.container.use('invoiceService')
   const invoices = await invoiceService.getAccountInvoicesPage(parent.id, args)
 
   return {
     edges: invoices.map((invoice: Invoice) => ({
       cursor: invoice.id,
-      node: invoice
+      node: {
+        ...invoice,
+        expiresAt: invoice.expiresAt?.toISOString(),
+        createdAt: invoice.createdAt?.toISOString()
+      }
     }))
   }
 }
 
-export const getPageInfo: InvoiceConnectionResolvers['pageInfo'] = async (
+export const getPageInfo: InvoiceConnectionResolvers<ApolloContext>['pageInfo'] = async (
   parent,
   args,
   ctx
@@ -29,7 +35,7 @@ export const getPageInfo: InvoiceConnectionResolvers['pageInfo'] = async (
   const logger = await ctx.container.use('logger')
   const invoiceService = await ctx.container.use('invoiceService')
 
-  logger.info(parent.edges, 'getPageInfo parent edges')
+  logger.info({ edges: parent.edges }, 'getPageInfo parent edges')
 
   const edges = parent.edges
   if (edges == null || typeof edges == 'undefined' || edges.length == 0)

@@ -1,4 +1,3 @@
-import * as assert from 'assert'
 import * as Pay from '@interledger/pay'
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
@@ -46,16 +45,19 @@ export async function handleQuoting(
     invoiceUrl: payment.intent.invoiceUrl
   })
 
-  assert.equal(
-    destination.destinationAsset.scale,
-    payment.destinationAccount.scale,
-    'destination scale mismatch'
-  )
-  assert.equal(
-    destination.destinationAsset.code,
-    payment.destinationAccount.code,
-    'destination code mismatch'
-  )
+  if (
+    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
+    payment.destinationAccount.code !== destination.destinationAsset.code
+  ) {
+    deps.logger.warn(
+      {
+        oldAsset: payment.destinationAccount,
+        newAsset: destination.destinationAsset
+      },
+      'asset changed'
+    )
+    throw Pay.PaymentError.DestinationAssetConflict
+  }
 
   // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
   let amountToSend: bigint | undefined
@@ -225,6 +227,21 @@ export async function handleSending(
     paymentPointer: payment.intent.paymentPointer,
     invoiceUrl: payment.intent.invoiceUrl
   })
+
+  if (
+    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
+    payment.destinationAccount.code !== destination.destinationAsset.code
+  ) {
+    deps.logger.warn(
+      {
+        oldAsset: payment.destinationAccount,
+        newAsset: destination.destinationAsset
+      },
+      'asset changed'
+    )
+    throw Pay.PaymentError.DestinationAssetConflict
+  }
+
   const balance = await deps.accountService.getBalance(payment.accountId)
   if (balance === undefined) {
     throw LifecycleError.MissingBalance

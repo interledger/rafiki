@@ -8,16 +8,16 @@ export class BaseModel extends DbErrors(Model) {
   }
 
   public id!: string
-  public createdAt!: string
-  public updatedAt!: string
+  public createdAt!: Date
+  public updatedAt!: Date
 
   public $beforeInsert(): void {
     this.id = this.id || uuid()
-    this.createdAt = new Date().toISOString()
-    this.updatedAt = new Date().toISOString()
+    this.createdAt = new Date()
+    this.updatedAt = new Date()
   }
 
   public $beforeUpdate(_opts: ModelOptions, _queryContext: QueryContext): void {
-    this.updatedAt = new Date().toISOString()
+    this.updatedAt = new Date()
   }
 }

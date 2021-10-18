@@ -118,13 +118,9 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -244,13 +240,9 @@
               }
             ],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "WebhooksConnection",
-                "ofType": null
-              }
+              "kind": "OBJECT",
+              "name": "WebhooksConnection",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -1773,22 +1765,6 @@
             "deprecationReason": null
           },
           {
-            "name": "receivedAmount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "maximumAmount",
             "description": null,
             "args": [],
@@ -1796,22 +1772,6 @@
               "kind": "SCALAR",
               "name": "UInt64",
               "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "asset",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Asset",
-                "ofType": null
-              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -1868,22 +1828,6 @@
               "kind": "SCALAR",
               "name": "String",
               "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "totalAmount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -2934,11 +2878,23 @@
             "description": null,
             "args": [],
             "type": {
+              "kind": "OBJECT",
+              "name": "OutgoingPaymentOutcome",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "OBJECT",
-                "name": "OutgoingPaymentOutcome",
+                "kind": "SCALAR",
+                "name": "String",
                 "ofType": null
               }
             },
@@ -2965,7 +2921,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -3991,9 +3947,13 @@
             "name": "id",
             "description": null,
             "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
             },
             "defaultValue": null,
             "isDeprecated": false,

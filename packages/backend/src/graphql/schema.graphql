@@ -132,7 +132,7 @@ input CreateAccountInput {
 }
 
 input UpdateAccountInput {
-  id: String
+  id: String!
   disabled: Boolean
   maxPacketAmount: UInt64
   http: HttpInput
@@ -228,7 +228,7 @@ type Account {
   stream: Stream!
   routing: Routing
 
-  balance: UInt64!
+  balance: UInt64
   invoices(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -248,7 +248,7 @@ type Account {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
-  ): WebhooksConnection!
+  ): WebhooksConnection
 }
 
 type Http {
@@ -282,14 +282,11 @@ type InvoiceEdge {
 
 type Invoice {
   id: ID!
-  receivedAmount: UInt64!
   maximumAmount: UInt64
-  asset: Asset!
   active: Boolean!
   createdAt: String!
   expiresAt: String
   description: String
-  totalAmount: String!
 }
 
 type OutgoingPayment {
@@ -303,7 +300,8 @@ type OutgoingPayment {
   reservedBalanceId: String!
   sourceAccount: PaymentSourceAccount!
   destinationAccount: PaymentDestinationAccount!
-  outcome: OutgoingPaymentOutcome!
+  outcome: OutgoingPaymentOutcome
+  createdAt: String!
 }
 
 type PaymentIntent {
@@ -360,7 +358,7 @@ type PaymentDestinationAccount {
 }
 
 type OutgoingPaymentOutcome {
-  amountSent: String!
+  amountSent: UInt64!
 }
 
 input CreateOutgoingPaymentInput {

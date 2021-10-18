@@ -4,8 +4,9 @@ import {
   LiquidityError as LiquidityErrorResp
 } from '../generated/graphql'
 import { LiquidityError } from '../../liquidity/errors'
+import { ApolloContext } from '../../app'
 
-export const addAccountLiquidity: MutationResolvers['addAccountLiquidity'] = async (
+export const addAccountLiquidity: MutationResolvers<ApolloContext>['addAccountLiquidity'] = async (
   parent,
   args,
   ctx
@@ -51,7 +52,7 @@ export const addAccountLiquidity: MutationResolvers['addAccountLiquidity'] = asy
   }
 }
 
-export const addAssetLiquidity: MutationResolvers['addAssetLiquidity'] = async (
+export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquidity'] = async (
   parent,
   args,
   ctx
@@ -97,7 +98,7 @@ export const addAssetLiquidity: MutationResolvers['addAssetLiquidity'] = async (
   }
 }
 
-export const createAccountLiquidityWithdrawal: MutationResolvers['createAccountLiquidityWithdrawal'] = async (
+export const createAccountLiquidityWithdrawal: MutationResolvers<ApolloContext>['createAccountLiquidityWithdrawal'] = async (
   parent,
   args,
   ctx
@@ -143,7 +144,7 @@ export const createAccountLiquidityWithdrawal: MutationResolvers['createAccountL
   }
 }
 
-export const createAssetLiquidityWithdrawal: MutationResolvers['createAssetLiquidityWithdrawal'] = async (
+export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['createAssetLiquidityWithdrawal'] = async (
   parent,
   args,
   ctx
@@ -189,7 +190,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers['createAssetLiqui
   }
 }
 
-export const finalizeLiquidityWithdrawal: MutationResolvers['finalizeLiquidityWithdrawal'] = async (
+export const finalizeLiquidityWithdrawal: MutationResolvers<ApolloContext>['finalizeLiquidityWithdrawal'] = async (
   parent,
   args,
   ctx
@@ -206,7 +207,7 @@ export const finalizeLiquidityWithdrawal: MutationResolvers['finalizeLiquidityWi
   }
 }
 
-export const rollbackLiquidityWithdrawal: MutationResolvers['rollbackLiquidityWithdrawal'] = async (
+export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['rollbackLiquidityWithdrawal'] = async (
   parent,
   args,
   ctx
