@@ -3118,7 +3118,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["@interledger/pay", "npm:0.3.0"],
             ["abort-controller", "npm:3.0.0"],
-            ["ilp-logger", "npm:1.4.2"],
+            ["ilp-logger", "npm:1.4.4"],
             ["ilp-packet", "npm:3.1.2"],
             ["ilp-protocol-stream", "npm:2.7.0"],
             ["long", "npm:4.0.0"],
@@ -3134,7 +3134,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["@interledger/stream-receiver", "npm:0.2.2"],
             ["@types/long", "npm:4.0.1"],
-            ["ilp-logger", "npm:1.4.2"],
+            ["ilp-logger", "npm:1.4.4"],
             ["ilp-packet", "npm:3.1.2"],
             ["ilp-protocol-ildcp", "npm:2.2.2"],
             ["ilp-protocol-stream", "npm:2.7.0"],
@@ -7550,18 +7550,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],
           "linkType": "HARD",
         }],
-        ["virtual:5c6565ae444b792dcde6c509e447568014350d8fa19988fc85aa860ede8ffd57b097041179fd8651382ed2ed8ad02bda02f2c42952d39dd2a9cf26c2f5631496#npm:4.3.2", {
-          "packageLocation": "./.yarn/__virtual__/debug-virtual-fc856ff746/0/cache/debug-npm-4.3.2-f0148b6afe-820ea160e2.zip/node_modules/debug/",
-          "packageDependencies": [
-            ["debug", "virtual:5c6565ae444b792dcde6c509e447568014350d8fa19988fc85aa860ede8ffd57b097041179fd8651382ed2ed8ad02bda02f2c42952d39dd2a9cf26c2f5631496#npm:4.3.2"],
-            ["ms", "npm:2.1.2"],
-            ["supports-color", "npm:7.2.0"]
-          ],
-          "packagePeers": [
-            "supports-color"
-          ],
-          "linkType": "HARD",
-        }],
         ["virtual:71ea54087243fefc16fde4b11d95f9eb477e415c7421826db923917f0e4dceec4fe3d86d7bfb6c329c21b575806e6747ac2d62e670e3f6883a666e4b547ea8d6#npm:3.1.0", {
           "packageLocation": "./.yarn/__virtual__/debug-virtual-85076ebe0f/0/cache/debug-npm-3.1.0-9f0accb99b-0b52718ab9.zip/node_modules/debug/",
           "packageDependencies": [
@@ -7580,6 +7568,18 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["debug", "virtual:901e1408cc8bfef5550e648cc3ee4f1ec6e307e3f5baab3ad60f0ba461a3df0a2fb4207ed57f6ec68edeacbb88063dcc84f3c35bb45638ba421a021eb350b42b#npm:4.3.2"],
             ["ms", "npm:2.1.2"],
             ["supports-color", null]
+          ],
+          "packagePeers": [
+            "supports-color"
+          ],
+          "linkType": "HARD",
+        }],
+        ["virtual:afc81155bde3c0f82975d1316363f0df1f5caaf3433d8bd8eb00ae0a33e98d398c41d51e1823386d5af298c31b1766f470ee49a6e3c3ca906eb5782191cef317#npm:4.3.2", {
+          "packageLocation": "./.yarn/__virtual__/debug-virtual-15c803ab8d/0/cache/debug-npm-4.3.2-f0148b6afe-820ea160e2.zip/node_modules/debug/",
+          "packageDependencies": [
+            ["debug", "virtual:afc81155bde3c0f82975d1316363f0df1f5caaf3433d8bd8eb00ae0a33e98d398c41d51e1823386d5af298c31b1766f470ee49a6e3c3ca906eb5782191cef317#npm:4.3.2"],
+            ["ms", "npm:2.1.2"],
+            ["supports-color", "npm:7.2.0"]
           ],
           "packagePeers": [
             "supports-color"
@@ -10186,12 +10186,12 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["ilp-logger", [
-        ["npm:1.4.2", {
-          "packageLocation": "./.yarn/cache/ilp-logger-npm-1.4.2-5c6565ae44-32d5e1d9c3.zip/node_modules/ilp-logger/",
+        ["npm:1.4.4", {
+          "packageLocation": "./.yarn/cache/ilp-logger-npm-1.4.4-afc81155bd-f742f13ab9.zip/node_modules/ilp-logger/",
           "packageDependencies": [
-            ["ilp-logger", "npm:1.4.2"],
+            ["ilp-logger", "npm:1.4.4"],
             ["@types/debug", "npm:4.1.5"],
-            ["debug", "virtual:5c6565ae444b792dcde6c509e447568014350d8fa19988fc85aa860ede8ffd57b097041179fd8651382ed2ed8ad02bda02f2c42952d39dd2a9cf26c2f5631496#npm:4.3.2"],
+            ["debug", "virtual:afc81155bde3c0f82975d1316363f0df1f5caaf3433d8bd8eb00ae0a33e98d398c41d51e1823386d5af298c31b1766f470ee49a6e3c3ca906eb5782191cef317#npm:4.3.2"],
             ["supports-color", "npm:7.2.0"]
           ],
           "linkType": "HARD",
@@ -10256,7 +10256,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["ilp-protocol-stream", "npm:2.7.0"],
             ["@types/node", "npm:10.17.59"],
-            ["ilp-logger", "npm:1.4.2"],
+            ["ilp-logger", "npm:1.4.4"],
             ["ilp-packet", "npm:3.1.2"],
             ["ilp-protocol-ildcp", "npm:2.2.2"],
             ["long", "npm:4.0.0"],
