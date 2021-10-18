@@ -228,8 +228,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         amountSent: (123 - 45).toString(),
         __typename: 'OutgoingPaymentOutcome'
       })
-      // TODO for some reason `payment.createdAt` is a Date here, instead of a string.
-      expect(new Date(query.createdAt)).toEqual(new Date(payment.createdAt))
+      expect(new Date(query.createdAt)).toEqual(payment.createdAt)
     })
 
     test('404', async (): Promise<void> => {

@@ -20,7 +20,8 @@ export const getAccountInvoices: AccountResolvers<ApolloContext>['invoices'] = a
       cursor: invoice.id,
       node: {
         ...invoice,
-        expiresAt: invoice.expiresAt?.toISOString()
+        expiresAt: invoice.expiresAt?.toISOString(),
+        createdAt: invoice.createdAt?.toISOString()
       }
     }))
   }
