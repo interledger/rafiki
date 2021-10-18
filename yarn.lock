@@ -5717,7 +5717,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4.0.1, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.2.0, debug@npm:^4.3.1, debug@npm:^4.3.2":
+"debug@npm:4, debug@npm:^4.0.1, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.2.0, debug@npm:^4.3.0, debug@npm:^4.3.1, debug@npm:^4.3.2":
   version: 4.3.2
   resolution: "debug@npm:4.3.2"
   dependencies:
@@ -7982,13 +7982,13 @@ __metadata:
   linkType: hard
 
 "ilp-logger@npm:^1.3.1, ilp-logger@npm:^1.4.2":
-  version: 1.4.2
-  resolution: "ilp-logger@npm:1.4.2"
+  version: 1.4.4
+  resolution: "ilp-logger@npm:1.4.4"
   dependencies:
     "@types/debug": ^4.1.0
-    debug: ^4.1.0
+    debug: ^4.3.0
     supports-color: ^7.1.0
-  checksum: 32d5e1d9c3982d7f08a39bcf8c5efe75bf2b17397a42104f6fdccb8e8d1a5a0b578aed293e1de01b30160dfb5c54d5a595c62dc61a67b265bd8ea9c3b56fbb0c
+  checksum: f742f13ab92cbcca9f945f520a81bf0e77353ba267b5edb873830d570d0ad917aaba2c315763d8cd1a4ca1035ba858504fffab7cd2959d1cfa2d96cf6c41e6cf
   languageName: node
   linkType: hard
 
