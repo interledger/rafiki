@@ -32,9 +32,9 @@ Authorization ends in two possible states:
 
 1. Activation. If the user approves the payment before its activation deadline, or `autoApprove` was `true`, the state advances to `Activated`.
 
-   In this case, Rafiki creates a new Interledger sub-account of the funding account, that is, the top-level Interledger account owned by the payer.
+   In this case, Rafiki creates a new Interledger account.
 
-   Then, Rafiki extends and utilizes a trustline to the sub-account for the `maxSourceAmount` of the quote, reserving the maximum requisite funds for the payment into the sub-account.
+   Then, Rafiki transfers `maxSourceAmount` of the quote from the funding account owned by the payer to the new account, reserving the maximum requisite funds for the payment.
 
 2. Cancellation. If the user explicitly cancels the quote, or the activation deadline is exceeded, the state advances to `Cancelling`. In the latter case, too much time has elapsed for the enforced exchange rate to remain accurate.
 
@@ -42,7 +42,7 @@ Authorization ends in two possible states:
 
 An instance acquires a lock on a payment with an `Activated` state and advances it to `Sending`. The STREAM will use the quote parameters acquired during the `Inactive` state.
 
-The instance connects to the Interledger sub-account it created via ILP-over-HTTP, and sends the payment with STREAM.
+The instance connects to the Interledger account it created via ILP-over-HTTP, and sends the payment with STREAM.
 
 After the payment completes, the instance releases the lock on the payment and advances the state depending upon the outcome:
 
@@ -53,7 +53,7 @@ After the payment completes, the instance releases the lock on the payment and a
 
 3. Recoverable failure. In cases such as an idle timeout, Rafiki may elect to automatically retry the payment. The state remains `Sending`, but internally tracks that the payment failed and when to schedule another attempt.
 
-In the `Completed` and `Cancelled` cases, remaining funds in the Interledger sub-account are returned to the funding account and the trustline is not replenished. Note: if the payment is retried, the same Interledger sub-account is used for the subsequent attempt.
+In the `Completed` and `Cancelled` cases, remaining funds in the Interledger account are returned to the funding account. Note: if the payment is retried, the same Interledger account is used for the subsequent attempt.
 
 ### Manual recovery
 
@@ -83,15 +83,12 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 | `state`                          | No       | `PaymentState` | See [`PaymentState`](#paymentstate).                                                                                                                                                                                                                                                                                     |
 | `error`                          | Yes      | `String`       | Failure reason.                                                                                                                                                                                                                                                                                                          |
 | `stateAttempts`                  | No       | `Integer`      | Retry number at current state.                                                                                                                                                                                                                                                                                           |
-| `intent.paymentPointer`          | Yes      | `String`       | Payment pointer or URL of the destination Open Payments or SPSP account. Requires `amountToSend`.                                                                                                                                                                                                                        |
-| `intent.invoiceUrl`              | Yes      | `String`       | URL of an Open Payments invoice, for a fixed-delivery payment.                                                                                                                                                                                                                                                           |
-| `intent.amountToSend`            | Yes      | `String`       | Fixed amount to send to the recipient, in base units of the sending asset. Requires `paymentPointer`.                                                                                                                                                                                                                    |
-| `intent.autoApprove`             | No       | `Boolean`      | If `false`, require manual approval after the quote is complete. If `true`, automatically activates and begins execution of the payment after the quote. Note: this should only be used for fixed-source amount payments. Paying invoices without any manual review could send an unbounded amount.                      |
+| `intent`                         | No       | `PaymentIntent`| See [`PaymentIntent`](#paymentintent).                                                                                                                                                                                                                                                                                     |
 | `quote`                          | Yes      | `Object`       | Parameters of payment execution and the projected outcome of a payment.                                                                                                                                                                                                                                                  |
 | `quote.timestamp`                | No       | `String`       | Timestamp when the most recent quote for this transaction finished.                                                                                                                                                                                                                                                      |
 | `quote.activationDeadline`       | No       | `String`       | Time when this quote expires.                                                                                                                                                                                                                                                                                            |
 | `quote.targetType`               | No       | `PaymentType`  | See [`PaymentType`](#paymenttype).                                                                                                                                                                                                                                                                                       |
-| `quote.minDeliveryAmount`        | No       | `UInt64`       | Minimum amount that will be delivered if the payment completes, in the base unit and asset of the receiving account. For fixed delivery payments, this will be the provided `amountToDeliver` or amount of the invoice.                                                                                                  |
+| `quote.minDeliveryAmount`        | No       | `UInt64`       | Minimum amount that will be delivered if the payment completes, in the base unit and asset of the receiving account. For fixed delivery payments, this will be the remaining amount of the invoice.                                                                                                  |
 | `quote.maxSourceAmount`          | No       | `UInt64`       | Maximum amount that will be sent in the base unit and asset of the sending account. This is intended to be presented to the user or agent before authorizing a fixed delivery payment. For fixed source amount payments, this will be the provided `amountToSend`.                                                       |
 | `quote.maxPacketAmount`          | No       | `UInt64`       | Discovered maximum packet amount allowed over this payment path.                                                                                                                                                                                                                                                         |
 | `quote.minExchangeRate`          | No       | `Float`        | Aggregate exchange rate the payment is guaranteed to meet, as a ratio of destination base units to source base units. Corresponds to the minimum exchange rate enforced on each packet (_except for the final packet_) to ensure sufficient money gets delivered. For strict bookkeeping, use `maxSourceAmount` instead. |
@@ -111,7 +108,7 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
 ### `PaymentState`
 
-- `INACTIVE`: Initial state. In this state, an empty trustline account is generated, and the payment is automatically resolved & quoted. On success, transition to `Ready`. On failure, transition to `Cancelling`.
+- `INACTIVE`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `Ready`. On failure, transition to `Cancelling`.
 - `READY`: Awaiting user approval. Approval is automatic if `intent.autoApprove` is set. Once approved, transitions to `Activated`.
 - `ACTIVATED`: During activation, money from the user's main account is moved to the payment account to reserve it. On success, transition to `Sending`.
 - `SENDING`: Stream payment from the payment account to the destination.

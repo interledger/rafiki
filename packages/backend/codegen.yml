@@ -8,7 +8,7 @@ generates:
     config:
       defaultMapper: Partial<{T}>
       resolverTypeWrapperSignature: Promise<T>
-      # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This safes the trouble of converting them explicitly.
+      # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
       maybeValue: T | undefined
       scalars:
         UInt64: bigint
