@@ -7,6 +7,7 @@ export interface SessionKeyService {
   create(): Promise<SessionKey>
   revoke(sessionKey: string): void
   renew(sessionKey: string): Promise<SessionKey>
+  getSession(sessionKey: string): Promise<Session>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -15,6 +16,10 @@ interface ServiceDependencies extends BaseService {
 
 interface SessionKey {
   sessionKey: string
+  expiresAt: Date
+}
+
+interface Session {
   expiresAt: Date
 }
 
@@ -32,7 +37,8 @@ export async function createSessionKeyService({
   return {
     create: () => createSessionKey(deps),
     revoke: (sessionKey: string) => revokeSessionKey(deps, sessionKey),
-    renew: (sessionKey: string) => renewSessionKey(deps, sessionKey)
+    renew: (sessionKey: string) => renewSessionKey(deps, sessionKey),
+    getSession: (sessionKey: string) => getSession(deps, sessionKey)
   }
 }
 
@@ -41,7 +47,7 @@ async function createSessionKey(
 ): Promise<SessionKey> {
   const sessionKey = uuid()
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
-  await deps.redis.set(sessionKey, expiresAt, 'EX', 30 * 60)
+  await deps.redis.set(sessionKey, { expiresAt }, 'EX', 30 * 60)
   return { sessionKey, expiresAt }
 }
 
@@ -59,4 +65,11 @@ async function renewSessionKey(
   } else {
     throw new SessionKeyExpiredError()
   }
+}
+
+async function getSession(
+  deps: ServiceDependencies,
+  sessionKey: string
+): Promise<Session> {
+  return deps.redis.get(sessionKey)
 }
