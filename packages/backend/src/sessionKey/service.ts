@@ -1,9 +1,12 @@
 import { BaseService } from '../shared/baseService'
 import { uuid } from '../connector/core'
 import IORedis from 'ioredis'
+import { SessionKeyExpiredError } from './errors'
 
 export interface SessionKeyService {
   create(): Promise<SessionKey>
+  revoke(sessionKey: string): void
+  renew(sessionKey: string): Promise<SessionKey>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -27,7 +30,9 @@ export async function createSessionKeyService({
     redis
   }
   return {
-    create: () => createSessionKey(deps)
+    create: () => createSessionKey(deps),
+    revoke: (sessionKey: string) => revokeSessionKey(deps, sessionKey),
+    renew: (sessionKey: string) => renewSessionKey(deps, sessionKey)
   }
 }
 
@@ -38,4 +43,20 @@ async function createSessionKey(
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
   await deps.redis.set(sessionKey, expiresAt, 'EX', 30 * 60)
   return { sessionKey, expiresAt }
+}
+
+async function revokeSessionKey(deps: ServiceDependencies, sessionKey: string) {
+  deps.redis.del(sessionKey)
+}
+
+async function renewSessionKey(
+  deps: ServiceDependencies,
+  sessionKey: string
+): Promise<SessionKey> {
+  const session = await deps.redis.get(sessionKey)
+  if (session.expiresAt > new Date(Date.now())) {
+    return createSessionKey(deps)
+  } else {
+    throw new SessionKeyExpiredError()
+  }
 }
