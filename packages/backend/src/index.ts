@@ -27,6 +27,7 @@ import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebMonetizationService } from './webmonetization/service'
 import { createConnectorService } from './connector'
+import { createSessionKeyService } from './sessionKey/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -265,6 +266,12 @@ export function initIocContainer(
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       ratesService: await deps.use('ratesService')
     })
+  })
+
+  container.singleton('sessionKeyService', async (deps) => {
+    const logger = await deps.use('logger')
+    const redis = await deps.use('redis')
+    return await createSessionKeyService({ logger: logger, redis: redis })
   })
   return container
 }
