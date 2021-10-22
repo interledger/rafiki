@@ -231,7 +231,10 @@ async function createAccount(
       err.constraint === 'accounts_pkey'
     ) {
       return AccountError.DuplicateAccountId
-    } else if (err instanceof ForeignKeyViolationError) {
+    } else if (
+      err instanceof ForeignKeyViolationError &&
+      err.constraint === 'accounts_assetid_foreign'
+    ) {
       return AccountError.UnknownAsset
     }
     throw err

@@ -53,7 +53,7 @@ After the payment completes, the instance releases the lock on the payment and a
 
 3. Recoverable failure. In cases such as an idle timeout, Rafiki may elect to automatically retry the payment. The state remains `Sending`, but internally tracks that the payment failed and when to schedule another attempt.
 
-After refunding is complete, the state advances to either `Completed` for outcome 1 or `Cancelled` for outcomes 2 and 3.
+After `Refunding` is complete, the state advances to either `Completed` for outcome 1 or `Cancelled` for outcomes 2 and 3.
 
 ### Manual recovery
 

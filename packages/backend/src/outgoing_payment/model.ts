@@ -67,9 +67,8 @@ export class OutgoingPayment extends BaseModel {
       opts.old &&
       opts.old['error'] &&
       this.state &&
-      this.state !== PaymentState.Cancelled &&
-      (this.state !== PaymentState.Refunding ||
-        opts.old['state'] === PaymentState.Sending)
+      this.state !== PaymentState.Refunding &&
+      this.state !== PaymentState.Cancelled
     ) {
       this.error = null
     }
@@ -142,8 +141,8 @@ export enum PaymentState {
   // On success, transition to `Refunding`.
   Sending = 'Sending',
 
-  // Awaiting leftover reserved money to be refunded to the wallet account
-  // On success, transition to Cancelled (error) or Completed (no error).
+  // Awaiting leftover reserved money to be refunded to the wallet account.
+  // On successful refunding, transition to Cancelled (payment error) or Completed (no payment error).
   Refunding = 'Refunding',
   // The payment failed. (Though some money may have been delivered).
   // Requoting transitions to `Inactive`.

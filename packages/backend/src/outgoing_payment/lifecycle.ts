@@ -332,10 +332,10 @@ export async function handleSending(
   await sendingCompleted(deps, payment)
 }
 
-async function sendingCompleted(
+const sendingCompleted = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment
-): Promise<void> {
+): Promise<void> => {
   await payment.$query(deps.knex).patch({ state: PaymentState.Refunding })
 }
 
