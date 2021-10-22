@@ -48,6 +48,7 @@
     "@interledger/stream-receiver": "^0.2.2",
     "@koa/cors": "^3.1.0",
     "@koa/router": "^10.0.0",
+    "@types/bcrypt": "^5.0.0",
     "add": "^2.0.6",
     "ajv": "^8.6.3",
     "apollo-server-koa": "^2.25.1",
