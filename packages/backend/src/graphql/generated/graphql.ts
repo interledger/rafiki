@@ -171,6 +171,18 @@ export type CreateOutgoingPaymentInput = {
   autoApprove: Scalars['Boolean'];
 };
 
+export type CreatePaymentPointerInput = {
+  asset: AssetInput;
+};
+
+export type CreatePaymentPointerMutationResponse = MutationResponse & {
+  __typename?: 'CreatePaymentPointerMutationResponse';
+  code: Scalars['String'];
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+  paymentPointer: PaymentPointer;
+};
+
 export type CreateWebhookMutationResponse = MutationResponse & {
   __typename?: 'CreateWebhookMutationResponse';
   code: Scalars['String'];
@@ -274,6 +286,7 @@ export type Mutation = {
   requoteOutgoingPayment: OutgoingPaymentResponse;
   /** Cancel a Ready payment. */
   cancelOutgoingPayment: OutgoingPaymentResponse;
+  createPaymentPointer: CreatePaymentPointerMutationResponse;
   /** Transfer between accounts */
   transfer?: Maybe<TransferMutationResponse>;
   /** Create webhook */
@@ -329,6 +342,11 @@ export type MutationRequoteOutgoingPaymentArgs = {
 
 export type MutationCancelOutgoingPaymentArgs = {
   paymentId: Scalars['String'];
+};
+
+
+export type MutationCreatePaymentPointerArgs = {
+  input?: Maybe<CreatePaymentPointerInput>;
 };
 
 
@@ -458,6 +476,12 @@ export type PaymentIntent = {
   autoApprove: Scalars['Boolean'];
 };
 
+export type PaymentPointer = {
+  __typename?: 'PaymentPointer';
+  id: Scalars['ID'];
+  asset: Asset;
+};
+
 export type PaymentQuote = {
   __typename?: 'PaymentQuote';
   timestamp: Scalars['String'];
@@ -497,6 +521,7 @@ export type Query = {
   /** Fetch a page of accounts. */
   accounts: AccountsConnection;
   outgoingPayment?: Maybe<OutgoingPayment>;
+  paymentPointer?: Maybe<PaymentPointer>;
   /** Get a webhook by ID. */
   webhook: Webhook;
 };
@@ -516,6 +541,11 @@ export type QueryAccountsArgs = {
 
 
 export type QueryOutgoingPaymentArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryPaymentPointerArgs = {
   id: Scalars['String'];
 };
 
@@ -700,6 +730,8 @@ export type ResolversTypes = {
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateAssetLiquidityWithdrawalMutationResponse: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalMutationResponse>>;
   CreateOutgoingPaymentInput: ResolverTypeWrapper<Partial<CreateOutgoingPaymentInput>>;
+  CreatePaymentPointerInput: ResolverTypeWrapper<Partial<CreatePaymentPointerInput>>;
+  CreatePaymentPointerMutationResponse: ResolverTypeWrapper<Partial<CreatePaymentPointerMutationResponse>>;
   CreateWebhookMutationResponse: ResolverTypeWrapper<Partial<CreateWebhookMutationResponse>>;
   DeleteAccountMutationResponse: ResolverTypeWrapper<Partial<DeleteAccountMutationResponse>>;
   DeleteWebhookMutationResponse: ResolverTypeWrapper<Partial<DeleteWebhookMutationResponse>>;
@@ -714,7 +746,7 @@ export type ResolversTypes = {
   InvoiceEdge: ResolverTypeWrapper<Partial<InvoiceEdge>>;
   LiquidityError: ResolverTypeWrapper<Partial<LiquidityError>>;
   Mutation: ResolverTypeWrapper<{}>;
-  MutationResponse: ResolversTypes['AddAccountLiquidityMutationResponse'] | ResolversTypes['AddAssetLiquidityMutationResponse'] | ResolversTypes['CreateAccountLiquidityWithdrawalMutationResponse'] | ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateAssetLiquidityWithdrawalMutationResponse'] | ResolversTypes['CreateWebhookMutationResponse'] | ResolversTypes['DeleteAccountMutationResponse'] | ResolversTypes['DeleteWebhookMutationResponse'] | ResolversTypes['FinalizeLiquidityWithdrawalMutationResponse'] | ResolversTypes['RollbackLiquidityWithdrawalMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdateAccountMutationResponse'] | ResolversTypes['UpdateWebhookMutationResponse'];
+  MutationResponse: ResolversTypes['AddAccountLiquidityMutationResponse'] | ResolversTypes['AddAssetLiquidityMutationResponse'] | ResolversTypes['CreateAccountLiquidityWithdrawalMutationResponse'] | ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateAssetLiquidityWithdrawalMutationResponse'] | ResolversTypes['CreatePaymentPointerMutationResponse'] | ResolversTypes['CreateWebhookMutationResponse'] | ResolversTypes['DeleteAccountMutationResponse'] | ResolversTypes['DeleteWebhookMutationResponse'] | ResolversTypes['FinalizeLiquidityWithdrawalMutationResponse'] | ResolversTypes['RollbackLiquidityWithdrawalMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdateAccountMutationResponse'] | ResolversTypes['UpdateWebhookMutationResponse'];
   OutgoingPayment: ResolverTypeWrapper<Partial<OutgoingPayment>>;
   OutgoingPaymentConnection: ResolverTypeWrapper<Partial<OutgoingPaymentConnection>>;
   OutgoingPaymentEdge: ResolverTypeWrapper<Partial<OutgoingPaymentEdge>>;
@@ -723,6 +755,7 @@ export type ResolversTypes = {
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   PaymentDestinationAccount: ResolverTypeWrapper<Partial<PaymentDestinationAccount>>;
   PaymentIntent: ResolverTypeWrapper<Partial<PaymentIntent>>;
+  PaymentPointer: ResolverTypeWrapper<Partial<PaymentPointer>>;
   PaymentQuote: ResolverTypeWrapper<Partial<PaymentQuote>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']>>;
   PaymentState: ResolverTypeWrapper<Partial<PaymentState>>;
@@ -765,6 +798,8 @@ export type ResolversParentTypes = {
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
   CreateAssetLiquidityWithdrawalMutationResponse: Partial<CreateAssetLiquidityWithdrawalMutationResponse>;
   CreateOutgoingPaymentInput: Partial<CreateOutgoingPaymentInput>;
+  CreatePaymentPointerInput: Partial<CreatePaymentPointerInput>;
+  CreatePaymentPointerMutationResponse: Partial<CreatePaymentPointerMutationResponse>;
   CreateWebhookMutationResponse: Partial<CreateWebhookMutationResponse>;
   DeleteAccountMutationResponse: Partial<DeleteAccountMutationResponse>;
   DeleteWebhookMutationResponse: Partial<DeleteWebhookMutationResponse>;
@@ -778,7 +813,7 @@ export type ResolversParentTypes = {
   InvoiceConnection: Partial<InvoiceConnection>;
   InvoiceEdge: Partial<InvoiceEdge>;
   Mutation: {};
-  MutationResponse: ResolversParentTypes['AddAccountLiquidityMutationResponse'] | ResolversParentTypes['AddAssetLiquidityMutationResponse'] | ResolversParentTypes['CreateAccountLiquidityWithdrawalMutationResponse'] | ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateAssetLiquidityWithdrawalMutationResponse'] | ResolversParentTypes['CreateWebhookMutationResponse'] | ResolversParentTypes['DeleteAccountMutationResponse'] | ResolversParentTypes['DeleteWebhookMutationResponse'] | ResolversParentTypes['FinalizeLiquidityWithdrawalMutationResponse'] | ResolversParentTypes['RollbackLiquidityWithdrawalMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdateAccountMutationResponse'] | ResolversParentTypes['UpdateWebhookMutationResponse'];
+  MutationResponse: ResolversParentTypes['AddAccountLiquidityMutationResponse'] | ResolversParentTypes['AddAssetLiquidityMutationResponse'] | ResolversParentTypes['CreateAccountLiquidityWithdrawalMutationResponse'] | ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateAssetLiquidityWithdrawalMutationResponse'] | ResolversParentTypes['CreatePaymentPointerMutationResponse'] | ResolversParentTypes['CreateWebhookMutationResponse'] | ResolversParentTypes['DeleteAccountMutationResponse'] | ResolversParentTypes['DeleteWebhookMutationResponse'] | ResolversParentTypes['FinalizeLiquidityWithdrawalMutationResponse'] | ResolversParentTypes['RollbackLiquidityWithdrawalMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdateAccountMutationResponse'] | ResolversParentTypes['UpdateWebhookMutationResponse'];
   OutgoingPayment: Partial<OutgoingPayment>;
   OutgoingPaymentConnection: Partial<OutgoingPaymentConnection>;
   OutgoingPaymentEdge: Partial<OutgoingPaymentEdge>;
@@ -787,6 +822,7 @@ export type ResolversParentTypes = {
   PageInfo: Partial<PageInfo>;
   PaymentDestinationAccount: Partial<PaymentDestinationAccount>;
   PaymentIntent: Partial<PaymentIntent>;
+  PaymentPointer: Partial<PaymentPointer>;
   PaymentQuote: Partial<PaymentQuote>;
   Float: Partial<Scalars['Float']>;
   Query: {};
@@ -878,6 +914,14 @@ export type CreateAssetLiquidityWithdrawalMutationResponseResolvers<ContextType 
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CreatePaymentPointerMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreatePaymentPointerMutationResponse'] = ResolversParentTypes['CreatePaymentPointerMutationResponse']> = {
+  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  paymentPointer?: Resolver<ResolversTypes['PaymentPointer'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateWebhookMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateWebhookMutationResponse'] = ResolversParentTypes['CreateWebhookMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -949,6 +993,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   approveOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationApproveOutgoingPaymentArgs, 'paymentId'>>;
   requoteOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationRequoteOutgoingPaymentArgs, 'paymentId'>>;
   cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'paymentId'>>;
+  createPaymentPointer?: Resolver<ResolversTypes['CreatePaymentPointerMutationResponse'], ParentType, ContextType, RequireFields<MutationCreatePaymentPointerArgs, never>>;
   transfer?: Resolver<Maybe<ResolversTypes['TransferMutationResponse']>, ParentType, ContextType, RequireFields<MutationTransferArgs, 'sourceAmount' | 'sourceAccountId' | 'destinationAccountId' | 'idempotencyKey'>>;
   createWebhook?: Resolver<Maybe<ResolversTypes['CreateWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateWebhookArgs, 'ilpAccountId'>>;
   updateWebhook?: Resolver<Maybe<ResolversTypes['UpdateWebhookMutationResponse']>, ParentType, ContextType, RequireFields<MutationUpdateWebhookArgs, 'webhookId'>>;
@@ -962,7 +1007,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {
-  __resolveType: TypeResolveFn<'AddAccountLiquidityMutationResponse' | 'AddAssetLiquidityMutationResponse' | 'CreateAccountLiquidityWithdrawalMutationResponse' | 'CreateAccountMutationResponse' | 'CreateAssetLiquidityWithdrawalMutationResponse' | 'CreateWebhookMutationResponse' | 'DeleteAccountMutationResponse' | 'DeleteWebhookMutationResponse' | 'FinalizeLiquidityWithdrawalMutationResponse' | 'RollbackLiquidityWithdrawalMutationResponse' | 'TransferMutationResponse' | 'UpdateAccountMutationResponse' | 'UpdateWebhookMutationResponse', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'AddAccountLiquidityMutationResponse' | 'AddAssetLiquidityMutationResponse' | 'CreateAccountLiquidityWithdrawalMutationResponse' | 'CreateAccountMutationResponse' | 'CreateAssetLiquidityWithdrawalMutationResponse' | 'CreatePaymentPointerMutationResponse' | 'CreateWebhookMutationResponse' | 'DeleteAccountMutationResponse' | 'DeleteWebhookMutationResponse' | 'FinalizeLiquidityWithdrawalMutationResponse' | 'RollbackLiquidityWithdrawalMutationResponse' | 'TransferMutationResponse' | 'UpdateAccountMutationResponse' | 'UpdateWebhookMutationResponse', ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1030,6 +1075,12 @@ export type PaymentIntentResolvers<ContextType = any, ParentType extends Resolve
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PaymentPointerResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentPointer'] = ResolversParentTypes['PaymentPointer']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type PaymentQuoteResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentQuote'] = ResolversParentTypes['PaymentQuote']> = {
   timestamp?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   activationDeadline?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1047,6 +1098,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   account?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType, RequireFields<QueryAccountArgs, 'id'>>;
   accounts?: Resolver<ResolversTypes['AccountsConnection'], ParentType, ContextType, RequireFields<QueryAccountsArgs, never>>;
   outgoingPayment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType, RequireFields<QueryOutgoingPaymentArgs, 'id'>>;
+  paymentPointer?: Resolver<Maybe<ResolversTypes['PaymentPointer']>, ParentType, ContextType, RequireFields<QueryPaymentPointerArgs, 'id'>>;
   webhook?: Resolver<ResolversTypes['Webhook'], ParentType, ContextType, RequireFields<QueryWebhookArgs, 'id'>>;
 };
 
@@ -1124,6 +1176,7 @@ export type Resolvers<ContextType = any> = {
   CreateAccountLiquidityWithdrawalMutationResponse?: CreateAccountLiquidityWithdrawalMutationResponseResolvers<ContextType>;
   CreateAccountMutationResponse?: CreateAccountMutationResponseResolvers<ContextType>;
   CreateAssetLiquidityWithdrawalMutationResponse?: CreateAssetLiquidityWithdrawalMutationResponseResolvers<ContextType>;
+  CreatePaymentPointerMutationResponse?: CreatePaymentPointerMutationResponseResolvers<ContextType>;
   CreateWebhookMutationResponse?: CreateWebhookMutationResponseResolvers<ContextType>;
   DeleteAccountMutationResponse?: DeleteAccountMutationResponseResolvers<ContextType>;
   DeleteWebhookMutationResponse?: DeleteWebhookMutationResponseResolvers<ContextType>;
@@ -1143,6 +1196,7 @@ export type Resolvers<ContextType = any> = {
   PageInfo?: PageInfoResolvers<ContextType>;
   PaymentDestinationAccount?: PaymentDestinationAccountResolvers<ContextType>;
   PaymentIntent?: PaymentIntentResolvers<ContextType>;
+  PaymentPointer?: PaymentPointerResolvers<ContextType>;
   PaymentQuote?: PaymentQuoteResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RollbackLiquidityWithdrawalMutationResponse?: RollbackLiquidityWithdrawalMutationResponseResolvers<ContextType>;

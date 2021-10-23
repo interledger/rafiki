@@ -19,6 +19,7 @@ import {
   getAccountOutgoingPayments,
   getOutgoingPaymentPageInfo
 } from './outgoing_payment'
+import { getPaymentPointer, createPaymentPointer } from './payment_pointer'
 import {
   addAccountLiquidity,
   addAssetLiquidity,
@@ -34,7 +35,8 @@ export const resolvers: Resolvers = {
   Query: {
     account: getAccount,
     accounts: getAccounts,
-    outgoingPayment: getOutgoingPayment
+    outgoingPayment: getOutgoingPayment,
+    paymentPointer: getPaymentPointer
     // webhook: getWebhook
   },
   Account: {
@@ -66,6 +68,7 @@ export const resolvers: Resolvers = {
     approveOutgoingPayment,
     requoteOutgoingPayment,
     cancelOutgoingPayment,
+    createPaymentPointer,
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,

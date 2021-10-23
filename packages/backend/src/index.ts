@@ -18,6 +18,7 @@ import { createHttpTokenService } from './httpToken/service'
 import { createBalanceService } from './balance/service'
 import { createAssetService } from './asset/service'
 import { createAccountService } from './account/service'
+import { createPaymentPointerService } from './payment_pointer/service'
 import { createLiquidityService } from './liquidity/service'
 import { createSPSPService } from './spsp/service'
 import { createTransferService } from './transfer/service'
@@ -163,6 +164,14 @@ export function initIocContainer(
       transferService,
       ilpAddress: config.ilpAddress,
       peerAddresses: config.peerAddresses
+    })
+  })
+  container.singleton('paymentPointerService', async (deps) => {
+    const logger = await deps.use('logger')
+    const assetService = await deps.use('assetService')
+    return await createPaymentPointerService({
+      logger: logger,
+      assetService: assetService
     })
   })
   container.singleton('liquidityService', async (deps) => {

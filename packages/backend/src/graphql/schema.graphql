@@ -15,6 +15,8 @@ type Query {
 
   outgoingPayment(id: String!): OutgoingPayment
 
+  paymentPointer(id: String!): PaymentPointer
+
   "Get a webhook by ID."
   webhook("The ID of the webhook to get." id: String!): Webhook!
 }
@@ -38,6 +40,10 @@ type Mutation {
   requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
   "Cancel a Ready payment."
   cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
+
+  createPaymentPointer(
+    input: CreatePaymentPointerInput
+  ): CreatePaymentPointerMutationResponse!
 
   "Transfer between accounts"
   transfer(
@@ -280,6 +286,11 @@ type Routing {
   dynamicIlpAddress: String
 }
 
+type PaymentPointer {
+  id: ID!
+  asset: Asset!
+}
+
 type InvoiceConnection {
   pageInfo: PageInfo!
   edges: [InvoiceEdge!]!
@@ -387,6 +398,10 @@ type OutgoingPaymentResponse {
   payment: OutgoingPayment
 }
 
+input CreatePaymentPointerInput {
+  asset: AssetInput!
+}
+
 type WebhooksConnection {
   pageInfo: PageInfo!
   edges: [WebhookEdge!]!
@@ -419,6 +434,13 @@ type DeleteAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
+}
+
+type CreatePaymentPointerMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  paymentPointer: PaymentPointer!
 }
 
 type TransferMutationResponse implements MutationResponse {
