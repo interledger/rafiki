@@ -462,11 +462,11 @@ export enum PaymentState {
   /** Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLING) */
   Ready = 'READY',
   /** Will transition to SENDING once payment funds are reserved */
-  Activated = 'ACTIVATED',
+  Funding = 'FUNDING',
   /** Paying, will transition to COMPLETED on success */
   Sending = 'SENDING',
-  /** Will transition to CANCELLED when reserved funds are rolled back */
-  Cancelling = 'CANCELLING',
+  /** Will transition to CANCELLED (if payment error) or COMPLETED when unsent funds are rolled back */
+  Refunding = 'REFUNDING',
   /** Payment aborted; can be requoted to INACTIVE */
   Cancelled = 'CANCELLED',
   /** Successfuly completion */

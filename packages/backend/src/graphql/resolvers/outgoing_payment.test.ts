@@ -118,115 +118,130 @@ describe('OutgoingPayment Resolvers', (): void => {
   })
 
   describe('Query.outgoingPayment', (): void => {
-    test('200', async (): Promise<void> => {
-      const amountSent = BigInt(78)
-      jest
-        .spyOn(outgoingPaymentService, 'get')
-        .mockImplementation(async () => payment)
-      jest
-        .spyOn(accountService, 'getTotalSent')
-        .mockImplementation(async (id: string) => {
-          expect(id).toStrictEqual(payment.accountId)
-          return amountSent
-        })
+    // Query with each payment state with and without an error
+    const states: [PaymentState, PaymentError | null][] = Object.values(
+      PaymentState
+    ).flatMap((state) => [
+      [state, null],
+      [state, Pay.PaymentError.ReceiverProtocolViolation]
+    ])
+    test.each(states)(
+      '200 - %s, error: %s',
+      async (state, error): Promise<void> => {
+        const amountSent = BigInt(78)
+        jest
+          .spyOn(outgoingPaymentService, 'get')
+          .mockImplementation(async () => {
+            const updatedPayment = payment
+            updatedPayment.state = state
+            updatedPayment.error = error
+            return updatedPayment
+          })
+        jest
+          .spyOn(accountService, 'getTotalSent')
+          .mockImplementation(async (id: string) => {
+            expect(id).toStrictEqual(payment.accountId)
+            return amountSent
+          })
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query OutgoingPayment($paymentId: String!) {
-              outgoingPayment(id: $paymentId) {
-                id
-                state
-                error
-                stateAttempts
-                intent {
-                  paymentPointer
-                  invoiceUrl
-                  amountToSend
-                  autoApprove
-                }
-                quote {
-                  timestamp
-                  activationDeadline
-                  targetType
-                  minDeliveryAmount
-                  maxSourceAmount
-                  maxPacketAmount
-                  minExchangeRate
-                  lowExchangeRateEstimate
-                  highExchangeRateEstimate
-                }
-                accountId
-                account {
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query OutgoingPayment($paymentId: String!) {
+                outgoingPayment(id: $paymentId) {
                   id
-                  asset {
-                    code
-                    scale
+                  state
+                  error
+                  stateAttempts
+                  intent {
+                    paymentPointer
+                    invoiceUrl
+                    amountToSend
+                    autoApprove
                   }
+                  quote {
+                    timestamp
+                    activationDeadline
+                    targetType
+                    minDeliveryAmount
+                    maxSourceAmount
+                    maxPacketAmount
+                    minExchangeRate
+                    lowExchangeRateEstimate
+                    highExchangeRateEstimate
+                  }
+                  accountId
+                  account {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                  }
+                  sourceAccountId
+                  destinationAccount {
+                    scale
+                    code
+                    url
+                  }
+                  outcome {
+                    amountSent
+                  }
+                  createdAt
                 }
-                sourceAccountId
-                destinationAccount {
-                  scale
-                  code
-                  url
-                }
-                outcome {
-                  amountSent
-                }
-                createdAt
               }
+            `,
+            variables: {
+              paymentId: payment.id
             }
-          `,
-          variables: {
-            paymentId: payment.id
-          }
-        })
-        .then((query): OutgoingPayment => query.data?.outgoingPayment)
+          })
+          .then((query): OutgoingPayment => query.data?.outgoingPayment)
 
-      expect(query.id).toEqual(payment.id)
-      expect(query.state).toEqual(SchemaPaymentState.Inactive)
-      expect(query.error).toBeNull()
-      expect(query.stateAttempts).toBe(0)
-      expect(query.intent).toEqual({
-        ...payment.intent,
-        amountToSend: payment.intent?.amountToSend?.toString(),
-        invoiceUrl: null,
-        __typename: 'PaymentIntent'
-      })
-      expect(query.quote).toEqual({
-        ...payment.quote,
-        timestamp: payment.quote?.timestamp.toISOString(),
-        activationDeadline: payment.quote?.activationDeadline.toISOString(),
-        targetType: SchemaPaymentType.FixedSend,
-        minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
-        maxSourceAmount: payment.quote?.maxSourceAmount.toString(),
-        maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
-        minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
-        lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
-        highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
-        __typename: 'PaymentQuote'
-      })
-      expect(query.accountId).toBe(payment.accountId)
-      expect(query.account).toEqual({
-        id: payment.accountId,
-        asset: {
-          code: asset.code,
-          scale: asset.scale,
-          __typename: 'Asset'
-        },
-        __typename: 'Account'
-      })
-      expect(query.sourceAccountId).toBe(payment.sourceAccountId)
-      expect(query.destinationAccount).toEqual({
-        ...payment.destinationAccount,
-        __typename: 'PaymentDestinationAccount'
-      })
-      expect(query.outcome).toEqual({
-        amountSent: amountSent.toString(),
-        __typename: 'OutgoingPaymentOutcome'
-      })
-      expect(new Date(query.createdAt)).toEqual(payment.createdAt)
-    })
+        expect(query.id).toEqual(payment.id)
+        expect(query.state).toEqual(SchemaPaymentState[state])
+        expect(query.error).toEqual(error)
+        expect(query.stateAttempts).toBe(0)
+        expect(query.intent).toEqual({
+          ...payment.intent,
+          amountToSend: payment.intent?.amountToSend?.toString(),
+          invoiceUrl: null,
+          __typename: 'PaymentIntent'
+        })
+        expect(query.quote).toEqual({
+          ...payment.quote,
+          timestamp: payment.quote?.timestamp.toISOString(),
+          activationDeadline: payment.quote?.activationDeadline.toISOString(),
+          targetType: SchemaPaymentType.FixedSend,
+          minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
+          maxSourceAmount: payment.quote?.maxSourceAmount.toString(),
+          maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
+          minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
+          lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
+          highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
+          __typename: 'PaymentQuote'
+        })
+        expect(query.accountId).toBe(payment.accountId)
+        expect(query.account).toEqual({
+          id: payment.accountId,
+          asset: {
+            code: asset.code,
+            scale: asset.scale,
+            __typename: 'Asset'
+          },
+          __typename: 'Account'
+        })
+        expect(query.sourceAccountId).toBe(payment.sourceAccountId)
+        expect(query.destinationAccount).toEqual({
+          ...payment.destinationAccount,
+          __typename: 'PaymentDestinationAccount'
+        })
+        expect(query.outcome).toEqual({
+          amountSent: amountSent.toString(),
+          __typename: 'OutgoingPaymentOutcome'
+        })
+        expect(new Date(query.createdAt)).toEqual(payment.createdAt)
+      }
+    )
 
     test('404', async (): Promise<void> => {
       jest

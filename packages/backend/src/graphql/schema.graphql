@@ -321,11 +321,11 @@ enum PaymentState {
   "Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLING)"
   READY
   "Will transition to SENDING once payment funds are reserved"
-  ACTIVATED
+  FUNDING
   "Paying, will transition to COMPLETED on success"
   SENDING
-  "Will transition to CANCELLED when reserved funds are rolled back"
-  CANCELLING
+  "Will transition to CANCELLED (if payment error) or COMPLETED when unsent funds are rolled back"
+  REFUNDING
   "Payment aborted; can be requoted to INACTIVE"
   CANCELLED
   "Successfuly completion"

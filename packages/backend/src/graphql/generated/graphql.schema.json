@@ -3419,7 +3419,7 @@
             "deprecationReason": null
           },
           {
-            "name": "ACTIVATED",
+            "name": "FUNDING",
             "description": "Will transition to SENDING once payment funds are reserved",
             "isDeprecated": false,
             "deprecationReason": null
@@ -3431,8 +3431,8 @@
             "deprecationReason": null
           },
           {
-            "name": "CANCELLING",
-            "description": "Will transition to CANCELLED when reserved funds are rolled back",
+            "name": "REFUNDING",
+            "description": "Will transition to CANCELLED (if payment error) or COMPLETED when unsent funds are rolled back",
             "isDeprecated": false,
             "deprecationReason": null
           },
