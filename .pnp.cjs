@@ -6092,7 +6092,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["koa-compose", "npm:4.1.0"],
             ["koa-joi-router", "npm:7.0.0"],
             ["lodash", "npm:4.17.21"],
-            ["luxon", "npm:2.0.1"],
             ["nock", "npm:13.1.0"],
             ["node-mocks-http", "npm:1.10.1"],
             ["objection", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.2.15"],
@@ -12689,15 +12688,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["lru-cache", "npm:6.0.0"],
             ["yallist", "npm:4.0.0"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
-      ["luxon", [
-        ["npm:2.0.1", {
-          "packageLocation": "./.yarn/cache/luxon-npm-2.0.1-8400bf4032-88f089faaa.zip/node_modules/luxon/",
-          "packageDependencies": [
-            ["luxon", "npm:2.0.1"]
           ],
           "linkType": "HARD",
         }]

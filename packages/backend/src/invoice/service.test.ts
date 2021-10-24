@@ -67,10 +67,10 @@ describe('Invoice Service', (): void => {
 
   describe('Create/Get Invoice', (): void => {
     test('An invoice can be created and fetched', async (): Promise<void> => {
-      const invoice = await invoiceService.create(
+      const invoice = await invoiceService.create({
         paymentPointerId,
-        'Test invoice'
-      )
+        description: 'Test invoice'
+      })
       expect(invoice).toMatchObject({
         id: invoice.id,
         account: {
@@ -84,7 +84,10 @@ describe('Invoice Service', (): void => {
 
     test('Creating an invoice creates an invoice account', async (): Promise<void> => {
       const accountService = await deps.use('accountService')
-      const invoice = await invoiceService.create(paymentPointerId, 'Invoice')
+      const invoice = await invoiceService.create({
+        paymentPointerId,
+        description: 'Invoice'
+      })
       const invoiceAccount = await accountService.get(invoice.accountId)
 
       expect(invoiceAccount?.id).toEqual(invoice.accountId)
@@ -92,7 +95,10 @@ describe('Invoice Service', (): void => {
 
     test('Cannot create invoice for nonexistent payment pointer', async (): Promise<void> => {
       await expect(
-        invoiceService.create(uuid(), 'Test invoice')
+        invoiceService.create({
+          paymentPointerId: uuid(),
+          description: 'Test invoice'
+        })
       ).rejects.toThrow(
         'unable to create invoice, payment pointer does not exist'
       )
@@ -111,7 +117,10 @@ describe('Invoice Service', (): void => {
         invoicesCreated = []
         for (let i = 0; i < 40; i++) {
           invoicesCreated.push(
-            await invoiceService.create(paymentPointerId, `Invoice ${i}`)
+            await invoiceService.create({
+              paymentPointerId,
+              description: `Invoice ${i}`
+            })
           )
         }
       }

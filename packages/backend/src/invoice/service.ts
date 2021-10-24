@@ -7,14 +7,15 @@ import { Pagination } from '../shared/pagination'
 import assert from 'assert'
 import { Transaction } from 'knex'
 
+interface CreateOptions {
+  paymentPointerId: string
+  description: string
+  expiresAt?: Date
+}
+
 export interface InvoiceService {
   get(id: string): Promise<Invoice | undefined>
-  create(
-    paymentPointerId: string,
-    description: string,
-    expiresAt?: Date,
-    trx?: Transaction
-  ): Promise<Invoice>
+  create(options: CreateOptions, trx?: Transaction): Promise<Invoice>
   getPaymentPointerInvoicesPage(
     paymentPointerId: string,
     pagination?: Pagination
@@ -43,8 +44,7 @@ export async function createInvoiceService({
   }
   return {
     get: (id) => getInvoice(deps, id),
-    create: (paymentPointerId, description, expiresAt, trx) =>
-      createInvoice(deps, paymentPointerId, description, expiresAt, trx),
+    create: (options, trx) => createInvoice(deps, options, trx),
     getPaymentPointerInvoicesPage: (paymentPointerId, pagination) =>
       getPaymentPointerInvoicesPage(deps, paymentPointerId, pagination)
   }
@@ -59,9 +59,7 @@ async function getInvoice(
 
 async function createInvoice(
   deps: ServiceDependencies,
-  paymentPointerId: string,
-  description: string,
-  expiresAt?: Date,
+  { paymentPointerId, description, expiresAt }: CreateOptions,
   trx?: Transaction
 ): Promise<Invoice> {
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))

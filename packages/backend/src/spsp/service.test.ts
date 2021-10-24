@@ -190,7 +190,7 @@ describe('SPSP Service', (): void => {
       const connectionDetails = await decryptConnectionDetails(
         res.destination_account
       )
-      const currentInvoice = await wmService.getCurrentInvoice(paymentPointerId)
+      const currentInvoice = await wmService.getInvoice(paymentPointerId)
       expect(connectionDetails).toEqual({
         paymentTag: currentInvoice.accountId,
         asset: {
@@ -223,7 +223,7 @@ describe('SPSP Service', (): void => {
       const connectionDetails = await decryptConnectionDetails(
         res.destination_account
       )
-      const currentInvoice = await wmService.getCurrentInvoice(paymentPointerId)
+      const currentInvoice = await wmService.getInvoice(paymentPointerId)
       expect(connectionDetails).toEqual({
         paymentTag: currentInvoice.accountId,
         asset: {

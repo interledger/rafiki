@@ -4459,7 +4459,6 @@ __metadata:
     koa-compose: ^4.1.0
     koa-joi-router: ^7.0.0
     lodash: ^4.17.21
-    luxon: ^2.0.1
     nock: ^13.1.0
     node-mocks-http: ^1.10.1
     objection: ^2.2.15
@@ -10191,13 +10190,6 @@ __metadata:
   dependencies:
     yallist: ^4.0.0
   checksum: f97f499f898f23e4585742138a22f22526254fdba6d75d41a1c2526b3b6cc5747ef59c5612ba7375f42aca4f8461950e925ba08c991ead0651b4918b7c978297
-  languageName: node
-  linkType: hard
-
-"luxon@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "luxon@npm:2.0.1"
-  checksum: 88f089faaa165158838cb8df10fe0886401b5035b19dce68c5b762cbcf23aee5b44f5485e00b47ca53a9b53cbf7d3b1b76644def8d04e404efc2e7a927aedd80
   languageName: node
   linkType: hard
 

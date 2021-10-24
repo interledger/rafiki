@@ -76,7 +76,7 @@ async function getPay(
   }
 
   try {
-    const invoice = await deps.wmService.getCurrentInvoice(paymentPointerId)
+    const invoice = await deps.wmService.getInvoice(paymentPointerId)
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
       paymentTag: invoice.accountId,
       receiptSetup:

@@ -34,7 +34,10 @@ describe('Invoice Resolver', (): void => {
     invoices = []
     for (let i = 0; i < 50; i++) {
       invoices.push(
-        await invoiceService.create(paymentPointerId, `Invoice ${i}`)
+        await invoiceService.create({
+          paymentPointerId,
+          description: `Invoice ${i}`
+        })
       )
     }
   }, 10_000)

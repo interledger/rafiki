@@ -10,7 +10,6 @@ import { AppServices } from '../app'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { Invoice } from '../invoice/model'
-import { DateTime } from 'luxon'
 
 describe('WM Service', (): void => {
   let deps: IocContract<AppServices>
@@ -63,7 +62,7 @@ describe('WM Service', (): void => {
     )
     expect(invoices.length).toEqual(0)
 
-    const wmInvoice = await wmService.getCurrentInvoice(paymentPointerId)
+    const wmInvoice = await wmService.getInvoice(paymentPointerId)
 
     invoices = await deps.use('invoiceService').then(
       (service): Promise<Array<Invoice>> => {
@@ -74,35 +73,17 @@ describe('WM Service', (): void => {
     expect(wmInvoice.paymentPointerId).toEqual(paymentPointerId)
   })
 
-  test('Returns the current one if still valid', async (): Promise<void> => {
-    const currentWmInvoice = await wmService.getCurrentInvoice(paymentPointerId)
-
-    const wmInvoice = await wmService.getCurrentInvoice(paymentPointerId)
-
-    expect(wmInvoice).toEqual(currentWmInvoice)
+  test('Returns the created WM invoice', async (): Promise<void> => {
+    const wmInvoice = await wmService.getInvoice(paymentPointerId)
+    await expect(wmService.getInvoice(paymentPointerId)).resolves.toEqual(
+      wmInvoice
+    )
   })
 
   test('Throws error for nonexistent payment pointer', async (): Promise<void> => {
     const paymentPointerId = uuid()
-    await expect(wmService.getCurrentInvoice(paymentPointerId)).rejects.toThrow(
+    await expect(wmService.getInvoice(paymentPointerId)).rejects.toThrow(
       'payment pointer not found'
     )
-  })
-
-  test('Creates a new one if the old one has expired', async (): Promise<void> => {
-    jest.useFakeTimers('modern')
-    const currentWmInvoice = await wmService.getCurrentInvoice(paymentPointerId)
-    const msTomorrow = DateTime.now().plus({ day: 1 }).toMillis()
-    jest.setSystemTime(msTomorrow)
-
-    const wmInvoice = await wmService.getCurrentInvoice(paymentPointerId)
-
-    expect(wmInvoice).not.toEqual(currentWmInvoice)
-    const invoices = await deps.use('invoiceService').then(
-      (service): Promise<Array<Invoice>> => {
-        return service.getPaymentPointerInvoicesPage(paymentPointerId)
-      }
-    )
-    expect(invoices.length).toEqual(2)
   })
 })
