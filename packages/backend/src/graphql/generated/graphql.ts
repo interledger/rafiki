@@ -24,17 +24,8 @@ export type Account = {
   stream: Stream;
   routing?: Maybe<Routing>;
   balance?: Maybe<Scalars['UInt64']>;
-  invoices?: Maybe<InvoiceConnection>;
   outgoingPayments?: Maybe<OutgoingPaymentConnection>;
   webhooks?: Maybe<WebhooksConnection>;
-};
-
-
-export type AccountInvoicesArgs = {
-  after?: Maybe<Scalars['String']>;
-  before?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  last?: Maybe<Scalars['Int']>;
 };
 
 
@@ -480,6 +471,15 @@ export type PaymentPointer = {
   __typename?: 'PaymentPointer';
   id: Scalars['ID'];
   asset: Asset;
+  invoices?: Maybe<InvoiceConnection>;
+};
+
+
+export type PaymentPointerInvoicesArgs = {
+  after?: Maybe<Scalars['String']>;
+  before?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  last?: Maybe<Scalars['Int']>;
 };
 
 export type PaymentQuote = {
@@ -850,7 +850,6 @@ export type AccountResolvers<ContextType = any, ParentType extends ResolversPare
   stream?: Resolver<ResolversTypes['Stream'], ParentType, ContextType>;
   routing?: Resolver<Maybe<ResolversTypes['Routing']>, ParentType, ContextType>;
   balance?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
-  invoices?: Resolver<Maybe<ResolversTypes['InvoiceConnection']>, ParentType, ContextType, RequireFields<AccountInvoicesArgs, never>>;
   outgoingPayments?: Resolver<Maybe<ResolversTypes['OutgoingPaymentConnection']>, ParentType, ContextType, RequireFields<AccountOutgoingPaymentsArgs, never>>;
   webhooks?: Resolver<Maybe<ResolversTypes['WebhooksConnection']>, ParentType, ContextType, RequireFields<AccountWebhooksArgs, never>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1078,6 +1077,7 @@ export type PaymentIntentResolvers<ContextType = any, ParentType extends Resolve
 export type PaymentPointerResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentPointer'] = ResolversParentTypes['PaymentPointer']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
+  invoices?: Resolver<Maybe<ResolversTypes['InvoiceConnection']>, ParentType, ContextType, RequireFields<PaymentPointerInvoicesArgs, never>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

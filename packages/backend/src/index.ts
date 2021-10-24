@@ -185,11 +185,11 @@ export function initIocContainer(
   container.singleton('SPSPService', async (deps) => {
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
-    const accountService = await deps.use('accountService')
+    const paymentPointerService = await deps.use('paymentPointerService')
     const wmService = await deps.use('wmService')
     return await createSPSPService({
       logger: logger,
-      accountService: accountService,
+      paymentPointerService: paymentPointerService,
       wmService,
       streamServer: streamServer
     })
@@ -198,10 +198,12 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const accountService = await deps.use('accountService')
+    const paymentPointerService = await deps.use('paymentPointerService')
     return await createInvoiceService({
       logger: logger,
       knex: knex,
-      accountService: accountService
+      accountService: accountService,
+      paymentPointerService: paymentPointerService
     })
   })
 
@@ -209,12 +211,12 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const invoiceService = await deps.use('invoiceService')
-    const accountService = await deps.use('accountService')
+    const paymentPointerService = await deps.use('paymentPointerService')
     return createWebMonetizationService({
       logger: logger,
       knex: knex,
       invoiceService,
-      accountService
+      paymentPointerService
     })
   })
 

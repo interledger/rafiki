@@ -8,7 +8,7 @@ import {
   updateAccount,
   deleteAccount
 } from './account'
-import { getAccountInvoices, getPageInfo } from './invoice'
+import { getPaymentPointerInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
@@ -41,7 +41,6 @@ export const resolvers: Resolvers = {
   },
   Account: {
     balance: getBalance,
-    invoices: getAccountInvoices,
     outgoingPayments: getAccountOutgoingPayments
     // webhooks: getWebhooks,
   },
@@ -56,6 +55,9 @@ export const resolvers: Resolvers = {
   },
   OutgoingPayment: {
     outcome: getOutcome
+  },
+  PaymentPointer: {
+    invoices: getPaymentPointerInvoices
   },
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo

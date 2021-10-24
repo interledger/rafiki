@@ -4,23 +4,23 @@ import { Invoice } from '../invoice/model'
 import { WebMonetization } from './model'
 import { ok } from 'assert'
 import { DateTime } from 'luxon'
-import { AccountService } from '../account/service'
+import { PaymentPointerService } from '../payment_pointer/service'
 import { TransactionOrKnex } from 'objection'
 
 export interface WebMonetizationService {
-  getCurrentInvoice(accountId: string): Promise<Invoice>
+  getCurrentInvoice(paymentPointerId: string): Promise<Invoice>
 }
 
 interface ServiceDependencies extends BaseService {
   invoiceService: InvoiceService
-  accountService: AccountService
+  paymentPointerService: PaymentPointerService
 }
 
 export async function createWebMonetizationService({
   logger,
   knex,
   invoiceService,
-  accountService
+  paymentPointerService
 }: ServiceDependencies): Promise<WebMonetizationService> {
   const log = logger.child({
     service: 'WebMonetizationService'
@@ -29,7 +29,7 @@ export async function createWebMonetizationService({
     logger: log,
     knex,
     invoiceService,
-    accountService
+    paymentPointerService
   }
   return {
     getCurrentInvoice: (id) => getCurrentInvoice(deps, id)
@@ -38,29 +38,29 @@ export async function createWebMonetizationService({
 
 async function getCurrentInvoice(
   deps: ServiceDependencies,
-  accountId: string
+  paymentPointerId: string
 ): Promise<Invoice> {
-  const account = await deps.accountService.get(accountId)
-  if (!account) {
-    throw new Error('account not found')
+  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
+  if (!paymentPointer) {
+    throw new Error('payment pointer not found')
   }
 
   const wm = await WebMonetization.query(deps.knex)
     .insertAndFetch({
-      id: account.id
+      id: paymentPointerId
     })
     .onConflict('id')
     .ignore()
 
   const createInvoice = async (
     knex: TransactionOrKnex,
-    accountId: string,
+    paymentPointerId: string,
     expiry: DateTime
   ): Promise<Invoice> => {
     return WebMonetization.transaction(knex, async (trx) => {
       const description = 'Webmonetization earnings'
       const invoice = await deps.invoiceService.create(
-        accountId,
+        paymentPointerId,
         description,
         expiry.toJSDate(),
         trx
@@ -76,7 +76,7 @@ async function getCurrentInvoice(
   const expectedExpiryAt = DateTime.utc().endOf('day') //Expire Every Day
   // Create an invoice
   if (!wm.currentInvoiceId) {
-    return createInvoice(deps.knex, account.id, expectedExpiryAt)
+    return createInvoice(deps.knex, paymentPointerId, expectedExpiryAt)
   } else {
     const invoice = await deps.invoiceService.get(wm.currentInvoiceId)
     if (!invoice) throw new Error('invoice not found') // probably unreachable
@@ -87,7 +87,7 @@ async function getCurrentInvoice(
 
       // Check if currentInvoice has expired, if so create new invoice
       if (expectedExpiryAt.diff(currentInvoiceExpiry).toMillis() !== 0) {
-        return createInvoice(deps.knex, account.id, expectedExpiryAt)
+        return createInvoice(deps.knex, paymentPointerId, expectedExpiryAt)
       }
     }
 

@@ -6,37 +6,38 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { Account as AccountModel } from '../../account/model'
-import { AccountFactory } from '../../tests/accountFactory'
+import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import { Invoice } from '../../invoice/model'
 import { InvoiceService } from '../../invoice/service'
-import { Account } from '../generated/graphql'
+import { PaymentPointerService } from '../../payment_pointer/service'
+import { PaymentPointer } from '../generated/graphql'
 
 describe('Invoice Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let invoiceService: InvoiceService
+  let paymentPointerService: PaymentPointerService
   let knex: Knex
-  let accountFactory: AccountFactory
   let invoices: Invoice[]
-  let account: AccountModel
+  let paymentPointerId: string
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      invoiceService = await deps.use('invoiceService')
-      const accountService = await deps.use('accountService')
-      accountFactory = new AccountFactory(accountService)
-      account = await accountFactory.build()
-      invoices = []
-      for (let i = 0; i < 50; i++) {
-        invoices.push(await invoiceService.create(account.id, `Invoice ${i}`))
-      }
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    invoiceService = await deps.use('invoiceService')
+    paymentPointerService = await deps.use('paymentPointerService')
+    paymentPointerId = (
+      await paymentPointerService.create({ asset: randomAsset() })
+    ).id
+    invoices = []
+    for (let i = 0; i < 50; i++) {
+      invoices.push(
+        await invoiceService.create(paymentPointerId, `Invoice ${i}`)
+      )
     }
-  )
+  }, 10_000)
 
   afterAll(
     async (): Promise<void> => {
@@ -46,13 +47,13 @@ describe('Invoice Resolver', (): void => {
     }
   )
 
-  describe('Account invoices', (): void => {
+  describe('Payment pointer invoices', (): void => {
     test('pageInfo is correct on default query without params', async (): Promise<void> => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!) {
+              paymentPointer(id: $id) {
                 invoices {
                   edges {
                     node {
@@ -71,13 +72,13 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: account.id
+            id: paymentPointerId
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }
@@ -91,12 +92,14 @@ describe('Invoice Resolver', (): void => {
     })
 
     test('No invoices, but invoices requested', async (): Promise<void> => {
-      const tempAccount = await accountFactory.build()
+      const paymentPointer = await paymentPointerService.create({
+        asset: randomAsset()
+      })
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!) {
+              paymentPointer(id: $id) {
                 invoices {
                   edges {
                     node {
@@ -115,13 +118,13 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: tempAccount.id
+            id: paymentPointer.id
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }
@@ -138,8 +141,8 @@ describe('Invoice Resolver', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!) {
+              paymentPointer(id: $id) {
                 invoices(first: 10) {
                   edges {
                     node {
@@ -158,13 +161,13 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: account.id
+            id: paymentPointerId
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }
@@ -181,8 +184,8 @@ describe('Invoice Resolver', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!, $after: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!, $after: String!) {
+              paymentPointer(id: $id) {
                 invoices(after: $after) {
                   edges {
                     node {
@@ -201,14 +204,14 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: account.id,
+            id: paymentPointerId,
             after: invoices[19].id
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }
@@ -225,8 +228,8 @@ describe('Invoice Resolver', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!, $after: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!, $after: String!) {
+              paymentPointer(id: $id) {
                 invoices(after: $after, first: 10) {
                   edges {
                     node {
@@ -245,14 +248,14 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: account.id,
+            id: paymentPointerId,
             after: invoices[44].id
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }

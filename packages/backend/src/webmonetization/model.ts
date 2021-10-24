@@ -5,7 +5,7 @@ export class WebMonetization extends BaseModel {
     return 'webMonetization'
   }
 
-  // Represents the id of the accounts table
+  // Represents the id of the payment pointers table
   public id!: string
   public currentInvoiceId!: string
 }

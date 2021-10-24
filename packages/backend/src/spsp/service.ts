@@ -4,7 +4,7 @@ import { validate } from 'uuid'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebMonetizationService } from '../webmonetization/service'
-import { AccountService } from '../account/service'
+import { PaymentPointerService } from '../payment_pointer/service'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
@@ -13,14 +13,14 @@ export interface SPSPService {
 }
 
 interface ServiceDependencies extends Omit<BaseService, 'knex'> {
-  accountService: AccountService
+  paymentPointerService: PaymentPointerService
   wmService: WebMonetizationService
   streamServer: StreamServer
 }
 
 export async function createSPSPService({
   logger,
-  accountService,
+  paymentPointerService,
   wmService,
   streamServer
 }: ServiceDependencies): Promise<SPSPService> {
@@ -30,7 +30,7 @@ export async function createSPSPService({
 
   const deps: ServiceDependencies = {
     logger: log,
-    accountService,
+    paymentPointerService,
     wmService,
     streamServer
   }
@@ -44,7 +44,7 @@ async function getPay(
   ctx: AppContext
 ): Promise<void> {
   if (!validate(ctx.params.id)) {
-    ctx.throw(400, 'Failed to generate credentials: invalid account id')
+    ctx.throw(400, 'Failed to generate credentials: invalid payment pointer id')
   }
 
   if (!ctx.get('accept').includes(CONTENT_TYPE_V4)) {
@@ -63,9 +63,9 @@ async function getPay(
     )
   }
 
-  const accountId = ctx.params.id
-  const account = await deps.accountService.get(accountId)
-  if (!account) {
+  const paymentPointerId = ctx.params.id
+  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
+  if (!paymentPointer) {
     ctx.status = 404
     ctx.set('Content-Type', CONTENT_TYPE_V4)
     ctx.body = JSON.stringify({
@@ -76,9 +76,9 @@ async function getPay(
   }
 
   try {
-    const invoice = await deps.wmService.getCurrentInvoice(accountId)
+    const invoice = await deps.wmService.getCurrentInvoice(paymentPointerId)
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-      paymentTag: invoice.invoiceAccountId,
+      paymentTag: invoice.accountId,
       receiptSetup:
         nonce && secret
           ? {
@@ -87,8 +87,8 @@ async function getPay(
             }
           : undefined,
       asset: {
-        code: account.asset.code,
-        scale: account.asset.scale
+        code: paymentPointer.asset.code,
+        scale: paymentPointer.asset.scale
       }
     })
 
