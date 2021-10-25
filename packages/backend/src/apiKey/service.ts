@@ -2,18 +2,22 @@ import { BaseService } from '../shared/baseService'
 import { SessionKeyService } from '../sessionKey/service'
 import { ApiKey } from './model'
 import { uuid } from '../connector/core'
-import { bcrypt } from 'bcrypt'
+import bcrypt from 'bcrypt'
 import { Transaction } from 'knex'
-import { SessionKey } from '../sessionKey/model'
+import { SessionKey } from '../sessionKey/util'
 import { UnknownApiKeyError } from './errors'
 
 export interface ApiKeyService {
-  create(accountId: string, trx?: Transaction): Promise<ApiKey>
+  create(accountId: string, trx?: Transaction): Promise<NewApiKey>
   redeem(accountId: string, key: string): Promise<SessionKey>
 }
 
 interface ServiceDependencies extends BaseService {
   sessionKeyService: SessionKeyService
+}
+
+interface NewApiKey extends ApiKey {
+  key: string
 }
 
 export async function createApiKeyService({
@@ -39,7 +43,7 @@ async function createApiKey(
   deps: ServiceDependencies,
   accountId: string,
   trx?: Transaction
-): Promise<ApiKey> {
+): Promise<NewApiKey> {
   const keyTrx = trx || (await ApiKey.startTransaction(deps.knex))
   const key = uuid()
   try {
@@ -49,8 +53,9 @@ async function createApiKey(
       hashedKey
     })
     await keyTrx.commit()
-    keyEntry.key = key
-    return keyEntry
+    const newKey = <NewApiKey>keyEntry
+    newKey.key = key
+    return newKey
   } catch (err) {
     await keyTrx.rollback()
     throw err
@@ -62,10 +67,10 @@ async function redeemSessionKey(
   accountId: string,
   key: string
 ): Promise<SessionKey> {
-  const hashedKey = await ApiKey.query()
+  const keys = await ApiKey.query()
     .select('hashedKey')
     .where('accountId', accountId)
-  const match = await bcrypt.compare(key, hashedKey)
+  const match = await bcrypt.compare(key, keys[0].hashedKey)
   if (match) {
     return deps.sessionKeyService.create()
   } else {

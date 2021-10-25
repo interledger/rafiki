@@ -7,5 +7,4 @@ export class ApiKey extends BaseModel {
 
   public accountId!: string // Refers to which account this API key is for
   public hashedKey!: string // Refers to the bcrypted API key
-  public key?: string // Refers to the API key
 }
