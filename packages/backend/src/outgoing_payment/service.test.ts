@@ -12,7 +12,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { AccountFactory } from '../tests/accountFactory'
-import { truncateTables } from '../tests/tableManager'
+import { truncateTable, truncateTables } from '../tests/tableManager'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { MockPlugin } from './mock_plugin'
 import { LifecycleError } from './lifecycle'
@@ -1085,6 +1085,185 @@ describe('OutgoingPaymentService', (): void => {
         const after = await outgoingPaymentService.get(payment.id)
         expect(after?.state).toBe(startState)
       })
+    })
+  })
+
+  describe('getAccountPage', () => {
+    let paymentsCreated: OutgoingPayment[]
+
+    beforeEach(
+      async (): Promise<void> => {
+        paymentsCreated = []
+        for (let i = 0; i < 40; i++) {
+          paymentsCreated.push(
+            await outgoingPaymentService.create({
+              sourceAccountId,
+              paymentPointer: 'http://wallet.example/paymentpointer/bob',
+              amountToSend: BigInt(123),
+              autoApprove: false
+            })
+          )
+        }
+      }
+    )
+
+    afterEach(
+      async (): Promise<void> => {
+        await truncateTable(knex, 'outgoingPayments')
+      }
+    )
+
+    test('Defaults to fetching first 20 items', async (): Promise<void> => {
+      const payments = await outgoingPaymentService.getAccountPage(
+        sourceAccountId
+      )
+      expect(payments).toHaveLength(20)
+      expect(payments[0].id).toEqual(paymentsCreated[0].id)
+      expect(payments[19].id).toEqual(paymentsCreated[19].id)
+      expect(payments[20]).toBeUndefined()
+    })
+
+    test('Can change forward pagination limit', async (): Promise<void> => {
+      const pagination = {
+        first: 10
+      }
+      const payments = await outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        pagination
+      )
+      expect(payments).toHaveLength(10)
+      expect(payments[0].id).toEqual(paymentsCreated[0].id)
+      expect(payments[9].id).toEqual(paymentsCreated[9].id)
+      expect(payments[10]).toBeUndefined()
+    })
+
+    test('Can paginate forwards from a cursor', async (): Promise<void> => {
+      const pagination = {
+        after: paymentsCreated[19].id
+      }
+      const payments = await outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        pagination
+      )
+      expect(payments).toHaveLength(20)
+      expect(payments[0].id).toEqual(paymentsCreated[20].id)
+      expect(payments[19].id).toEqual(paymentsCreated[39].id)
+      expect(payments[20]).toBeUndefined()
+    })
+
+    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination = {
+        first: 10,
+        after: paymentsCreated[9].id
+      }
+      const payments = await outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        pagination
+      )
+      expect(payments).toHaveLength(10)
+      expect(payments[0].id).toEqual(paymentsCreated[10].id)
+      expect(payments[9].id).toEqual(paymentsCreated[19].id)
+      expect(payments[10]).toBeUndefined()
+    })
+
+    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
+      const pagination = {
+        last: 10
+      }
+      const payments = outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        pagination
+      )
+      await expect(payments).rejects.toThrow(
+        "Can't paginate backwards from the start."
+      )
+    })
+
+    test('Can paginate backwards from a cursor', async (): Promise<void> => {
+      const pagination = {
+        before: paymentsCreated[20].id
+      }
+      const payments = await outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        pagination
+      )
+      expect(payments).toHaveLength(20)
+      expect(payments[0].id).toEqual(paymentsCreated[0].id)
+      expect(payments[19].id).toEqual(paymentsCreated[19].id)
+      expect(payments[20]).toBeUndefined()
+    })
+
+    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination = {
+        last: 5,
+        before: paymentsCreated[10].id
+      }
+      const payments = await outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        pagination
+      )
+      expect(payments).toHaveLength(5)
+      expect(payments[0].id).toEqual(paymentsCreated[5].id)
+      expect(payments[4].id).toEqual(paymentsCreated[9].id)
+      expect(payments[5]).toBeUndefined()
+    })
+
+    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
+      const paginationForwards = {
+        first: 10
+      }
+      const paymentsForwards = await outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        paginationForwards
+      )
+      const paginationBackwards = {
+        last: 10,
+        before: paymentsCreated[10].id
+      }
+      const paymentsBackwards = await outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        paginationBackwards
+      )
+      expect(paymentsForwards).toHaveLength(10)
+      expect(paymentsBackwards).toHaveLength(10)
+      expect(paymentsForwards).toEqual(paymentsBackwards)
+    })
+
+    test('Providing before and after results in forward pagination', async (): Promise<void> => {
+      const pagination = {
+        after: paymentsCreated[19].id,
+        before: paymentsCreated[19].id
+      }
+      const payments = await outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        pagination
+      )
+      expect(payments).toHaveLength(20)
+      expect(payments[0].id).toEqual(paymentsCreated[20].id)
+      expect(payments[19].id).toEqual(paymentsCreated[39].id)
+      expect(payments[20]).toBeUndefined()
+    })
+
+    test("Can't request less than 0 payments", async (): Promise<void> => {
+      const pagination = {
+        first: -1
+      }
+      const payments = outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        pagination
+      )
+      await expect(payments).rejects.toThrow('Pagination index error')
+    })
+
+    test("Can't request more than 100 payments", async (): Promise<void> => {
+      const pagination = {
+        first: 101
+      }
+      const payments = outgoingPaymentService.getAccountPage(
+        sourceAccountId,
+        pagination
+      )
+      await expect(payments).rejects.toThrow('Pagination index error')
     })
   })
 })

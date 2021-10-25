@@ -15,7 +15,9 @@ import {
   approveOutgoingPayment,
   requoteOutgoingPayment,
   cancelOutgoingPayment,
-  getOutcome
+  getOutcome,
+  getAccountOutgoingPayments,
+  getOutgoingPaymentPageInfo
 } from './outgoing_payment'
 import {
   addAccountLiquidity,
@@ -37,7 +39,8 @@ export const resolvers: Resolvers = {
   },
   Account: {
     balance: getBalance,
-    invoices: getAccountInvoices
+    invoices: getAccountInvoices,
+    outgoingPayments: getAccountOutgoingPayments
     // webhooks: getWebhooks,
   },
   AccountsConnection: {
@@ -45,6 +48,9 @@ export const resolvers: Resolvers = {
   },
   InvoiceConnection: {
     pageInfo: getPageInfo
+  },
+  OutgoingPaymentConnection: {
+    pageInfo: getOutgoingPaymentPageInfo
   },
   OutgoingPayment: {
     outcome: getOutcome
