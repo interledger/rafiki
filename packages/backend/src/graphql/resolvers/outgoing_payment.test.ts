@@ -21,6 +21,7 @@ import {
 import { AccountService } from '../../account/service'
 import { AssetOptions } from '../../asset/service'
 import {
+  Account,
   OutgoingPayment,
   OutgoingPaymentResponse,
   PaymentState as SchemaPaymentState,
@@ -32,6 +33,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let accountService: AccountService
+  let outgoingPaymentService: OutgoingPaymentService
 
   const streamServer = new StreamServer({
     serverSecret: Buffer.from(
@@ -46,6 +48,9 @@ describe('OutgoingPayment Resolvers', (): void => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
+      accountService = await deps.use('accountService')
+      balanceService = await deps.use('balanceService')
+      outgoingPaymentService = await deps.use('outgoingPaymentService')
 
       const credentials = streamServer.generateCredentials({
         asset: {
@@ -70,7 +75,6 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
   )
 
-  let outgoingPaymentService: OutgoingPaymentService
   let payment: OutgoingPaymentModel
   let asset: AssetOptions
 
@@ -80,7 +84,6 @@ describe('OutgoingPayment Resolvers', (): void => {
       const accountFactory = new AccountFactory(accountService)
       const account = await accountFactory.build()
       asset = account.asset
-      outgoingPaymentService = await deps.use('outgoingPaymentService')
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
         intent: {
@@ -581,6 +584,293 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.success).toBe(false)
       expect(query.message).toBe('fail')
       expect(query.payment).toBeNull()
+    })
+  })
+
+  describe('Account outgoingPayments', (): void => {
+    let outgoingPayments: OutgoingPaymentModel[]
+    let accountFactory: AccountFactory
+    let accountId: string
+    beforeAll(
+      async (): Promise<void> => {
+        accountFactory = new AccountFactory(accountService)
+        const { id: sourceAccountId, asset } = await accountFactory.build()
+        accountId = sourceAccountId
+        const paymentAccountId = (await accountFactory.build({ asset })).id
+        outgoingPayments = []
+        for (let i = 0; i < 50; i++) {
+          outgoingPayments.push(
+            await OutgoingPaymentModel.query(knex).insertAndFetch({
+              state: PaymentState.Inactive,
+              intent: {
+                paymentPointer: 'http://wallet2.example/paymentpointer/bob',
+                amountToSend: BigInt(123),
+                autoApprove: false
+              },
+              quote: {
+                timestamp: new Date(),
+                activationDeadline: new Date(Date.now() + 1000),
+                targetType: PaymentType.FixedSend,
+                minDeliveryAmount: BigInt(123),
+                maxSourceAmount: BigInt(456),
+                maxPacketAmount: BigInt(789),
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                minExchangeRate: Pay.Ratio.from(1.23)!,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                highExchangeRateEstimate: Pay.Ratio.from(2.3)!
+              },
+              accountId: paymentAccountId,
+              reservedBalanceId: uuid(),
+              sourceAccount: {
+                id: sourceAccountId,
+                scale: 9,
+                code: 'USD'
+              },
+              destinationAccount: {
+                scale: 9,
+                code: 'XRP',
+                url: 'http://wallet2.example/paymentpointer/bob'
+              }
+            })
+          )
+        }
+      }
+    )
+
+    test('pageInfo is correct on default query without params', async (): Promise<void> => {
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query Account($id: String!) {
+              account(id: $id) {
+                outgoingPayments {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            id: accountId
+          }
+        })
+        .then(
+          (query): Account => {
+            if (query.data) {
+              return query.data.account
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.outgoingPayments?.edges).toHaveLength(20)
+      expect(query.outgoingPayments?.pageInfo.hasNextPage).toBeTruthy()
+      expect(query.outgoingPayments?.pageInfo.hasPreviousPage).toBeFalsy()
+      expect(query.outgoingPayments?.pageInfo.startCursor).toEqual(
+        outgoingPayments[0].id
+      )
+      expect(query.outgoingPayments?.pageInfo.endCursor).toEqual(
+        outgoingPayments[19].id
+      )
+    })
+
+    test('No outgoingPayments, but outgoingPayments requested', async (): Promise<void> => {
+      const tempAccount = await accountFactory.build()
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query Account($id: String!) {
+              account(id: $id) {
+                outgoingPayments {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            id: tempAccount.id
+          }
+        })
+        .then(
+          (query): Account => {
+            if (query.data) {
+              return query.data.account
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.outgoingPayments?.edges).toHaveLength(0)
+      expect(query.outgoingPayments?.pageInfo.hasNextPage).toBeFalsy()
+      expect(query.outgoingPayments?.pageInfo.hasPreviousPage).toBeFalsy()
+      expect(query.outgoingPayments?.pageInfo.startCursor).toBeNull()
+      expect(query.outgoingPayments?.pageInfo.endCursor).toBeNull()
+    })
+
+    test('pageInfo is correct on pagination from start', async (): Promise<void> => {
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query Account($id: String!) {
+              account(id: $id) {
+                outgoingPayments(first: 10) {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            id: accountId
+          }
+        })
+        .then(
+          (query): Account => {
+            if (query.data) {
+              return query.data.account
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.outgoingPayments?.edges).toHaveLength(10)
+      expect(query.outgoingPayments?.pageInfo.hasNextPage).toBeTruthy()
+      expect(query.outgoingPayments?.pageInfo.hasPreviousPage).toBeFalsy()
+      expect(query.outgoingPayments?.pageInfo.startCursor).toEqual(
+        outgoingPayments[0].id
+      )
+      expect(query.outgoingPayments?.pageInfo.endCursor).toEqual(
+        outgoingPayments[9].id
+      )
+    })
+
+    test('pageInfo is correct on pagination from middle', async (): Promise<void> => {
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query Account($id: String!, $after: String!) {
+              account(id: $id) {
+                outgoingPayments(after: $after) {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            id: accountId,
+            after: outgoingPayments[19].id
+          }
+        })
+        .then(
+          (query): Account => {
+            if (query.data) {
+              return query.data.account
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.outgoingPayments?.edges).toHaveLength(20)
+      expect(query.outgoingPayments?.pageInfo.hasNextPage).toBeTruthy()
+      expect(query.outgoingPayments?.pageInfo.hasPreviousPage).toBeTruthy()
+      expect(query.outgoingPayments?.pageInfo.startCursor).toEqual(
+        outgoingPayments[20].id
+      )
+      expect(query.outgoingPayments?.pageInfo.endCursor).toEqual(
+        outgoingPayments[39].id
+      )
+    })
+
+    test('pageInfo is correct on pagination near end', async (): Promise<void> => {
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query Account($id: String!, $after: String!) {
+              account(id: $id) {
+                outgoingPayments(after: $after, first: 10) {
+                  edges {
+                    node {
+                      id
+                    }
+                    cursor
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            id: accountId,
+            after: outgoingPayments[44].id
+          }
+        })
+        .then(
+          (query): Account => {
+            if (query.data) {
+              return query.data.account
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(query.outgoingPayments?.edges).toHaveLength(5)
+      expect(query.outgoingPayments?.pageInfo.hasNextPage).toBeFalsy()
+      expect(query.outgoingPayments?.pageInfo.hasPreviousPage).toBeTruthy()
+      expect(query.outgoingPayments?.pageInfo.startCursor).toEqual(
+        outgoingPayments[45].id
+      )
+      expect(query.outgoingPayments?.pageInfo.endCursor).toEqual(
+        outgoingPayments[49].id
+      )
     })
   })
 })

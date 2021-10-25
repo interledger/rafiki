@@ -1,8 +1,10 @@
 import { isPaymentError, PaymentError } from '@interledger/pay'
 import {
+  AccountResolvers,
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
   OutgoingPaymentResolvers,
+  OutgoingPaymentConnectionResolvers,
   PaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType,
   QueryResolvers,
@@ -159,6 +161,83 @@ export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutg
       success: false,
       message: err.message
     }))
+}
+
+export const getAccountOutgoingPayments: AccountResolvers<ApolloContext>['outgoingPayments'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['OutgoingPaymentConnection'] => {
+  if (!parent.id) throw new Error('missing account id')
+  const outgoingPaymentService = await ctx.container.use(
+    'outgoingPaymentService'
+  )
+  const outgoingPayments = await outgoingPaymentService.getAccountPage(
+    parent.id,
+    args
+  )
+  return {
+    edges: outgoingPayments.map((payment: OutgoingPayment) => ({
+      cursor: payment.id,
+      node: paymentToGraphql(payment)
+    }))
+  }
+}
+
+export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<ApolloContext>['pageInfo'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['PageInfo'] => {
+  const logger = await ctx.container.use('logger')
+  const outgoingPaymentService = await ctx.container.use(
+    'outgoingPaymentService'
+  )
+  logger.info({ edges: parent.edges }, 'getPageInfo parent edges')
+
+  const edges = parent.edges
+  if (edges == null || typeof edges == 'undefined' || edges.length == 0)
+    return {
+      hasPreviousPage: false,
+      hasNextPage: false
+    }
+
+  const firstEdge = edges[0].cursor
+  const lastEdge = edges[edges.length - 1].cursor
+
+  const firstPayment = await outgoingPaymentService.get(edges[0].node.id)
+  if (!firstPayment) throw 'payment does not exist'
+
+  let hasNextPagePayments, hasPreviousPagePayments
+  try {
+    hasNextPagePayments = await outgoingPaymentService.getAccountPage(
+      firstPayment.sourceAccount.id,
+      {
+        after: lastEdge,
+        first: 1
+      }
+    )
+  } catch (e) {
+    hasNextPagePayments = []
+  }
+  try {
+    hasPreviousPagePayments = await outgoingPaymentService.getAccountPage(
+      firstPayment.sourceAccount.id,
+      {
+        before: firstEdge,
+        last: 1
+      }
+    )
+  } catch (e) {
+    hasPreviousPagePayments = []
+  }
+
+  return {
+    endCursor: lastEdge,
+    hasNextPage: hasNextPagePayments.length == 1,
+    hasPreviousPage: hasPreviousPagePayments.length == 1,
+    startCursor: firstEdge
+  }
 }
 
 function paymentToGraphql(

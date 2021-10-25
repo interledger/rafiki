@@ -19,7 +19,8 @@ export class OutgoingIlpPlugin extends PluginHttp implements IlpPlugin {
     super({
       // "incoming" is a not actually used. connect() is overridden so that no server is started.
       incoming: {
-        port: 0
+        port: 0,
+        staticToken
       },
       outgoing: {
         url,
