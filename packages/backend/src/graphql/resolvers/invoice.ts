@@ -48,6 +48,7 @@ export const getPageInfo: InvoiceConnectionResolvers<ApolloContext>['pageInfo'] 
   const lastEdge = edges[edges.length - 1].cursor
 
   const firstInvoice = await invoiceService.get(edges[0].node.id)
+  if (!firstInvoice) throw new Error('invoice not found')
 
   let hasNextPageInvoices, hasPreviousPageInvoices
   try {
