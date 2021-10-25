@@ -1112,6 +1112,7 @@ describe('OutgoingPaymentService', (): void => {
           paymentsCreated.push(
             await outgoingPaymentService.create({
               sourceAccountId,
+              assetId,
               paymentPointer: 'http://wallet.example/paymentpointer/bob',
               amountToSend: BigInt(123),
               autoApprove: false

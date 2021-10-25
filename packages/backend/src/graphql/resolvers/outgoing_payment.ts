@@ -211,7 +211,7 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
   let hasNextPagePayments, hasPreviousPagePayments
   try {
     hasNextPagePayments = await outgoingPaymentService.getAccountPage(
-      firstPayment.sourceAccount.id,
+      firstPayment.sourceAccountId,
       {
         after: lastEdge,
         first: 1
@@ -222,7 +222,7 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
   }
   try {
     hasPreviousPagePayments = await outgoingPaymentService.getAccountPage(
-      firstPayment.sourceAccount.id,
+      firstPayment.sourceAccountId,
       {
         before: firstEdge,
         last: 1

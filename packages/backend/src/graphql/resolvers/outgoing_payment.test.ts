@@ -49,7 +49,6 @@ describe('OutgoingPayment Resolvers', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       accountService = await deps.use('accountService')
-      balanceService = await deps.use('balanceService')
       outgoingPaymentService = await deps.use('outgoingPaymentService')
 
       const credentials = streamServer.generateCredentials({
@@ -587,18 +586,18 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
   })
 
+  //TODO: change to payment pointer resolver
   describe('Account outgoingPayments', (): void => {
     let outgoingPayments: OutgoingPaymentModel[]
     let accountFactory: AccountFactory
-    let accountId: string
+    let sourceAccountId: string
     beforeAll(
       async (): Promise<void> => {
         accountFactory = new AccountFactory(accountService)
-        const { id: sourceAccountId, asset } = await accountFactory.build()
-        accountId = sourceAccountId
-        const paymentAccountId = (await accountFactory.build({ asset })).id
+        sourceAccountId = (await accountFactory.build({ asset })).id
         outgoingPayments = []
         for (let i = 0; i < 50; i++) {
+          const { id: accountId } = await accountFactory.build({ asset })
           outgoingPayments.push(
             await OutgoingPaymentModel.query(knex).insertAndFetch({
               state: PaymentState.Inactive,
@@ -621,13 +620,8 @@ describe('OutgoingPayment Resolvers', (): void => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 highExchangeRateEstimate: Pay.Ratio.from(2.3)!
               },
-              accountId: paymentAccountId,
-              reservedBalanceId: uuid(),
-              sourceAccount: {
-                id: sourceAccountId,
-                scale: 9,
-                code: 'USD'
-              },
+              accountId,
+              sourceAccountId,
               destinationAccount: {
                 scale: 9,
                 code: 'XRP',
@@ -663,7 +657,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: accountId
+            id: sourceAccountId
           }
         })
         .then(
@@ -687,7 +681,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
 
     test('No outgoingPayments, but outgoingPayments requested', async (): Promise<void> => {
-      const tempAccount = await accountFactory.build()
+      const { id: sourceAccountId } = await accountFactory.build()
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -711,7 +705,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: tempAccount.id
+            id: sourceAccountId
           }
         })
         .then(
@@ -754,7 +748,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: accountId
+            id: sourceAccountId
           }
         })
         .then(
@@ -801,7 +795,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: accountId,
+            id: sourceAccountId,
             after: outgoingPayments[19].id
           }
         })
@@ -849,7 +843,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: accountId,
+            id: sourceAccountId,
             after: outgoingPayments[44].id
           }
         })
