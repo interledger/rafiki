@@ -2,6 +2,7 @@ import { BaseService } from '../shared/baseService'
 import { uuid } from '../connector/core'
 import IORedis from 'ioredis'
 import { SessionKeyExpiredError, UnknownSessionError } from './errors'
+import { Session, SessionKey } from './util'
 
 export interface SessionKeyService {
   create(): Promise<SessionKey>
@@ -12,15 +13,6 @@ export interface SessionKeyService {
 
 interface ServiceDependencies extends BaseService {
   redis: IORedis.Redis
-}
-
-interface SessionKey {
-  sessionKey: string
-  expiresAt: Date
-}
-
-interface Session {
-  expiresAt: Date
 }
 
 export async function createSessionKeyService({
