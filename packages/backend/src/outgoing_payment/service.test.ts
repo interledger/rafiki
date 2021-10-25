@@ -94,7 +94,7 @@ describe('OutgoingPaymentService', (): void => {
     ).resolves.toBeUndefined()
   }
 
-  async function refund(paymentId: string): Promise<void> {
+  async function withdraw(paymentId: string): Promise<void> {
     const payment = await outgoingPaymentService.get(paymentId)
     if (!payment) throw 'no payment'
     const balance = await accountService.getBalance(payment.accountId)
@@ -466,8 +466,8 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123 - 89))
       })
 
-      // This mocks Inactive→Refunding, but for it to trigger for real, it would go from Sending→Inactive(retry)→Refunding (when the Sending→Refunding transition failed to commit).
-      it('Refunding (FixedSend, intent.amountToSend===amountSent)', async (): Promise<void> => {
+      // This mocks Inactive→Completed, but for it to trigger for real, it would go from Sending→Inactive(retry)→Completed (when the Sending→Completed transition failed to commit).
+      it('Completed (FixedSend, intent.amountToSend===amountSent)', async (): Promise<void> => {
         const payment = await outgoingPaymentService.create({
           sourceAccountId,
           assetId,
@@ -481,11 +481,11 @@ describe('OutgoingPaymentService', (): void => {
             expect(id).toStrictEqual(payment.accountId)
             return BigInt(123)
           })
-        await processNext(payment.id, PaymentState.Refunding)
+        await processNext(payment.id, PaymentState.Completed)
       })
 
-      // Maybe another person or payment paid the invoice already. Or it could be like the FixedSend case, where the Sending→Refunding transition failed to commit, and this is a retry.
-      it('Refunding (FixedDelivery, invoice was already full paid)', async (): Promise<void> => {
+      // Maybe another person or payment paid the invoice already. Or it could be like the FixedSend case, where the Sending→Completed transition failed to commit, and this is a retry.
+      it('Completed (FixedDelivery, invoice was already full paid)', async (): Promise<void> => {
         invoice.amountDelivered = invoice.amountToDeliver
         const paymentId = (
           await outgoingPaymentService.create({
@@ -495,10 +495,10 @@ describe('OutgoingPaymentService', (): void => {
             autoApprove: false
           })
         ).id
-        await processNext(paymentId, PaymentState.Refunding)
+        await processNext(paymentId, PaymentState.Completed)
       })
 
-      it('Refunding (destination asset changed)', async (): Promise<void> => {
+      it('Cancelled (destination asset changed)', async (): Promise<void> => {
         const originalPayment = await outgoingPaymentService.create({
           sourceAccountId,
           assetId,
@@ -522,7 +522,7 @@ describe('OutgoingPaymentService', (): void => {
 
         await processNext(
           paymentId,
-          PaymentState.Refunding,
+          PaymentState.Cancelled,
           Pay.PaymentError.DestinationAssetConflict
         )
       })
@@ -547,14 +547,14 @@ describe('OutgoingPaymentService', (): void => {
         return paymentId
       }
 
-      it('Refunding (quote expired; autoApprove=false)', async (): Promise<void> => {
+      it('Cancelled (quote expired; autoApprove=false)', async (): Promise<void> => {
         const paymentId = await setup({ autoApprove: false })
         jest.useFakeTimers('modern')
         jest.advanceTimersByTime(config.quoteLifespan + 1)
 
         await processNext(
           paymentId,
-          PaymentState.Refunding,
+          PaymentState.Cancelled,
           LifecycleError.QuoteExpired
         )
       })
@@ -592,13 +592,13 @@ describe('OutgoingPaymentService', (): void => {
         }
       )
 
-      it('Refunding (quote expired)', async (): Promise<void> => {
+      it('Cancelled (quote expired)', async (): Promise<void> => {
         jest.useFakeTimers('modern')
         jest.advanceTimersByTime(config.quoteLifespan + 1)
 
         await processNext(
           paymentId,
-          PaymentState.Refunding,
+          PaymentState.Cancelled,
           LifecycleError.QuoteExpired
         )
       })
@@ -639,13 +639,13 @@ describe('OutgoingPaymentService', (): void => {
         return paymentId
       }
 
-      it('Refunding (FixedSend)', async (): Promise<void> => {
+      it('Completed (FixedSend)', async (): Promise<void> => {
         const paymentId = await setup({
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123)
         })
 
-        const payment = await processNext(paymentId, PaymentState.Refunding)
+        const payment = await processNext(paymentId, PaymentState.Completed)
         await expectOutcome(payment, {
           accountBalance: BigInt(0),
           amountSent: BigInt(123),
@@ -653,12 +653,12 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Refunding (FixedDelivery)', async (): Promise<void> => {
+      it('Completed (FixedDelivery)', async (): Promise<void> => {
         const paymentId = await setup({
           invoiceUrl: 'http://wallet.example/bob/invoices/1'
         })
 
-        const payment = await processNext(paymentId, PaymentState.Refunding)
+        const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
         const amountSent = invoice.amountToDeliver * BigInt(2)
         await expectOutcome(payment, {
@@ -669,14 +669,14 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Refunding (FixedDelivery, with invoice initially partially paid)', async (): Promise<void> => {
+      it('Completed (FixedDelivery, with invoice initially partially paid)', async (): Promise<void> => {
         const amountAlreadyDelivered = BigInt(34)
         invoice.amountDelivered = amountAlreadyDelivered
         const paymentId = await setup({
           invoiceUrl: 'http://wallet.example/bob/invoices/1'
         })
 
-        const payment = await processNext(paymentId, PaymentState.Refunding)
+        const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
         const amountSent =
           (invoice.amountToDeliver - amountAlreadyDelivered) * BigInt(2)
@@ -715,7 +715,7 @@ describe('OutgoingPaymentService', (): void => {
         // Last attempt fails, but no more retries.
         const payment = await processNext(
           paymentId,
-          PaymentState.Refunding,
+          PaymentState.Cancelled,
           Pay.PaymentError.ClosedByReceiver
         )
         expect(payment.stateAttempts).toBe(0)
@@ -727,7 +727,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Refunding (non-retryable Pay error)', async (): Promise<void> => {
+      it('Cancelled (non-retryable Pay error)', async (): Promise<void> => {
         mockPay(
           {
             maxSourceAmount: BigInt(10),
@@ -742,7 +742,7 @@ describe('OutgoingPaymentService', (): void => {
 
         const payment = await processNext(
           paymentId,
-          PaymentState.Refunding,
+          PaymentState.Cancelled,
           Pay.PaymentError.ReceiverProtocolViolation
         )
         await expectOutcome(payment, {
@@ -752,7 +752,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('→Sending→Refunding (partial payment, resume, complete)', async (): Promise<void> => {
+      it('→Sending→Completed (partial payment, resume, complete)', async (): Promise<void> => {
         const mockFn = mockPay(
           {
             maxSourceAmount: BigInt(10),
@@ -776,7 +776,7 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         // The next attempt is without the mock, so it succeeds.
-        const payment2 = await processNext(paymentId, PaymentState.Refunding)
+        const payment2 = await processNext(paymentId, PaymentState.Completed)
         await expectOutcome(payment2, {
           accountBalance: BigInt(0),
           amountSent: amountToSend,
@@ -784,19 +784,19 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      // Caused by retry after failed Sending→Refunding transition commit.
-      it('Refunding (FixedSend, already fully paid)', async (): Promise<void> => {
+      // Caused by retry after failed Sending→Completed transition commit.
+      it('Completed (FixedSend, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123)
         })
 
-        await processNext(paymentId, PaymentState.Refunding)
+        await processNext(paymentId, PaymentState.Completed)
         // Pretend that the transaction didn't commit.
         await OutgoingPayment.query(knex)
           .findById(paymentId)
           .patch({ state: PaymentState.Sending })
-        const payment = await processNext(paymentId, PaymentState.Refunding)
+        const payment = await processNext(paymentId, PaymentState.Completed)
         await expectOutcome(payment, {
           accountBalance: BigInt(0),
           amountSent: BigInt(123),
@@ -804,15 +804,15 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      // Caused by retry after failed Sending→Refunding transition commit.
-      it('Refunding (FixedDelivery, already fully paid)', async (): Promise<void> => {
+      // Caused by retry after failed Sending→Completed transition commit.
+      it('Completed (FixedDelivery, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
           invoiceUrl: 'http://wallet.example/bob/invoices/1'
         })
         // The quote thinks there's a full amount to pay, but actually sending will find the invoice has been paid (e.g. by another payment).
         invoice.amountDelivered = invoice.amountToDeliver
 
-        const payment = await processNext(paymentId, PaymentState.Refunding)
+        const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
         await expectOutcome(payment, {
           accountBalance: payment.quote.maxSourceAmount,
@@ -822,7 +822,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Refunding (destination asset changed)', async (): Promise<void> => {
+      it('Cancelled (destination asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
           invoiceUrl: 'http://wallet.example/bob/invoices/1'
         })
@@ -839,14 +839,14 @@ describe('OutgoingPaymentService', (): void => {
 
         await processNext(
           paymentId,
-          PaymentState.Refunding,
+          PaymentState.Cancelled,
           Pay.PaymentError.DestinationAssetConflict
         )
       })
     })
 
     describe.each([PaymentState.Cancelled, PaymentState.Completed])(
-      'Refunding→',
+      '%s',
       (state): void => {
         let paymentId: string
         let amountDelivered: bigint
@@ -879,7 +879,8 @@ describe('OutgoingPaymentService', (): void => {
             await processNext(paymentId, PaymentState.Funding)
             await fund(paymentId)
             await processNext(paymentId, PaymentState.Sending)
-            await processNext(paymentId, PaymentState.Refunding, error)
+            const payment = await processNext(paymentId, state, error)
+            expect(payment.withdrawLiquidity).toBe(true)
 
             amountDelivered =
               state === PaymentState.Cancelled
@@ -889,8 +890,8 @@ describe('OutgoingPaymentService', (): void => {
           }
         )
 
-        it(`${state} (from Sending; restore reserved funds)`, async (): Promise<void> => {
-          await refund(paymentId)
+        it('handles liquidity withdrawal', async (): Promise<void> => {
+          await withdraw(paymentId)
           const payment = await processNext(paymentId, state, error)
 
           await expectOutcome(payment, {
@@ -898,18 +899,13 @@ describe('OutgoingPaymentService', (): void => {
             amountSent,
             amountDelivered
           })
+          expect(payment.withdrawLiquidity).toBe(false)
         })
 
-        it(`Refunding (endlessly wait for refund${
-          state && ' after non-retryable send error'
-        })`, async (): Promise<void> => {
-          // Even after many retries, if Refunding fails it keeps retrying.
+        it('endlessly wait for liquidity withdrawal', async (): Promise<void> => {
+          // Even after many retries, it keeps retrying.
           for (let i = 0; i < 10; i++) {
-            const payment = await processNext(
-              paymentId,
-              PaymentState.Refunding,
-              error
-            )
+            const payment = await processNext(paymentId, state, error)
             expect(payment.stateAttempts).toBe(i + 1)
             fastForwardToAttempt(payment.stateAttempts)
           }
@@ -917,21 +913,20 @@ describe('OutgoingPaymentService', (): void => {
           const payment = await outgoingPaymentService.get(paymentId)
           if (!payment) throw 'unreachable'
           if (!payment.quote) throw 'no quote'
-          expect(payment.state).toBe(PaymentState.Refunding)
+          expect(payment.state).toBe(state)
           expect(payment.error).toEqual(error || null)
           expect(payment.stateAttempts).toBe(10)
           await expectOutcome(payment, {
-            accountBalance: payment.quote.maxSourceAmount - amountSent, // money not yet refunded
+            accountBalance: payment.quote.maxSourceAmount - amountSent, // money not yet withdrawn
             amountSent,
             amountDelivered
           })
+          expect(payment.withdrawLiquidity).toBe(true)
         })
 
-        it(`Refunding (not enough time between attempts${
-          state && ' after non-retryable send error'
-        })`, async (): Promise<void> => {
-          await processNext(paymentId, PaymentState.Refunding, error)
-          await refund(paymentId)
+        it('not enough time between attempts', async (): Promise<void> => {
+          await processNext(paymentId, state, error)
+          await withdraw(paymentId)
           fastForwardToAttempt(0.9)
           // Not enough time has passed before the attempt.
           await expect(
@@ -940,8 +935,9 @@ describe('OutgoingPaymentService', (): void => {
 
           const payment = await outgoingPaymentService.get(paymentId)
           if (!payment) throw 'unreachable'
-          expect(payment.state).toBe(PaymentState.Refunding)
+          expect(payment.state).toBe(state)
           expect(payment.stateAttempts).toBe(1)
+          expect(payment.withdrawLiquidity).toBe(true)
           await expectOutcome(payment, {
             accountBalance: BigInt(0),
             amountSent,
@@ -1080,11 +1076,11 @@ describe('OutgoingPaymentService', (): void => {
         outgoingPaymentService.cancel(payment.id)
       ).resolves.toMatchObject({
         id: payment.id,
-        state: PaymentState.Refunding
+        state: PaymentState.Cancelled
       })
 
       const after = await outgoingPaymentService.get(payment.id)
-      expect(after?.state).toBe(PaymentState.Refunding)
+      expect(after?.state).toBe(PaymentState.Cancelled)
       expect(after?.error).toBe('CancelledByAPI')
     })
 

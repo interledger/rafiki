@@ -3553,7 +3553,7 @@
           },
           {
             "name": "READY",
-            "description": "Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLING)",
+            "description": "Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLED)",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -3566,12 +3566,6 @@
           {
             "name": "SENDING",
             "description": "Paying, will transition to COMPLETED on success",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "REFUNDING",
-            "description": "Will transition to CANCELLED (if payment error) or COMPLETED when unsent funds are rolled back",
             "isDeprecated": false,
             "deprecationReason": null
           },

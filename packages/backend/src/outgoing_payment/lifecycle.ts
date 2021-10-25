@@ -15,8 +15,8 @@ export enum LifecycleError {
   CancelledByAPI = 'CancelledByAPI',
   // Payment needs to be funded.
   Unfunded = 'Unfunded',
-  // Payment needs to be refunded.
-  LeftoverBalance = 'LeftoverBalance',
+  // Payment liquidity needs to be withdrawn.
+  LeftoverLiquidity = 'LeftoverLiquidity',
   // Edge error due to retries, partial payment, and database write errors.
   BadState = 'BadState',
 
@@ -336,11 +336,11 @@ const sendingCompleted = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> => {
-  await payment.$query(deps.knex).patch({ state: PaymentState.Refunding })
+  await payment.$query(deps.knex).patch({ state: PaymentState.Completed })
 }
 
 // "payment" is locked by the "deps.knex" transaction.
-export async function handleRefunding(
+export async function handleLiquidityWithdrawal(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
@@ -352,10 +352,10 @@ export async function handleRefunding(
   if (balance > BigInt(0)) {
     // TODO: notify wallet to create & finalize payment liquidity withdrawal to sourceAccountId
 
-    throw LifecycleError.LeftoverBalance
+    throw LifecycleError.LeftoverLiquidity
   }
   await payment.$query(deps.knex).patch({
-    state: payment.error ? PaymentState.Cancelled : PaymentState.Completed
+    withdrawLiquidity: false
   })
 }
 
@@ -363,7 +363,7 @@ const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
   // Lifecycle errors
   PricesUnavailable: true,
   Unfunded: true,
-  LeftoverBalance: true,
+  LeftoverLiquidity: true,
   // From @interledger/pay's PaymentError:
   QueryFailed: true,
   ConnectorError: true,

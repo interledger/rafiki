@@ -12,9 +12,8 @@ const maxStateAttempts: { [key in PaymentState]: number } = {
   Ready: Infinity, // autoapprove
   Funding: Infinity, // reserve funds
   Sending: 5, // send money
-  Refunding: Infinity, // refund money
-  Cancelled: 0,
-  Completed: 0
+  Cancelled: Infinity,
+  Completed: Infinity
 }
 
 // Returns the id of the processed payment (if any).
@@ -52,12 +51,15 @@ export async function getPendingPayment(
     .forUpdate()
     // Don't wait for a payment that is already being processed.
     .skipLocked()
-    .whereIn('state', [
-      PaymentState.Inactive,
-      PaymentState.Funding,
-      PaymentState.Sending,
-      PaymentState.Refunding
-    ])
+    .where((builder: knex.QueryBuilder) => {
+      builder
+        .whereIn('state', [
+          PaymentState.Inactive,
+          PaymentState.Funding,
+          PaymentState.Sending
+        ])
+        .orWhere('withdrawLiquidity', true)
+    })
     // Back off between retries.
     .andWhere((builder: knex.QueryBuilder) => {
       builder
@@ -92,7 +94,8 @@ export async function handlePaymentLifecycle(
     const stateAttempts = payment.stateAttempts + 1
 
     if (
-      payment.state === PaymentState.Refunding ||
+      payment.state === PaymentState.Cancelled ||
+      payment.state === PaymentState.Completed ||
       (stateAttempts < maxStateAttempts[payment.state] &&
         lifecycle.canRetryError(err))
     ) {
@@ -109,7 +112,7 @@ export async function handlePaymentLifecycle(
       )
       await payment
         .$query(deps.knex)
-        .patch({ state: PaymentState.Refunding, error })
+        .patch({ state: PaymentState.Cancelled, error })
     }
   }
 
@@ -148,9 +151,10 @@ export async function handlePaymentLifecycle(
             )
           })
         })
-    case PaymentState.Refunding:
-      return lifecycle.handleRefunding(deps, payment).catch(onError)
     default:
+      if (payment.withdrawLiquidity) {
+        return lifecycle.handleLiquidityWithdrawal(deps, payment).catch(onError)
+      }
       deps.logger.warn('unexpected payment in lifecycle')
       break
   }

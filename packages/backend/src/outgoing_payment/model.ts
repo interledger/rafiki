@@ -25,6 +25,7 @@ export class OutgoingPayment extends BaseModel {
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
+  public withdrawLiquidity!: boolean
 
   public intent!: PaymentIntent
 
@@ -63,17 +64,19 @@ export class OutgoingPayment extends BaseModel {
 
   $beforeUpdate(opts: ModelOptions, queryContext: QueryContext): void {
     super.$beforeUpdate(opts, queryContext)
-    if (
-      opts.old &&
-      opts.old['error'] &&
-      this.state &&
-      this.state !== PaymentState.Refunding &&
-      this.state !== PaymentState.Cancelled
-    ) {
-      this.error = null
-    }
-    if (opts.old && this.state && opts.old['state'] !== this.state) {
-      this.stateAttempts = 0
+    if (opts.old && this.state) {
+      if (opts.old['error'] && this.state !== PaymentState.Cancelled) {
+        this.error = null
+      }
+      if (opts.old['state'] !== this.state) {
+        this.stateAttempts = 0
+        if (
+          this.state === PaymentState.Cancelled ||
+          this.state === PaymentState.Completed
+        ) {
+          this.withdrawLiquidity = true
+        }
+      }
     }
   }
 
@@ -129,7 +132,7 @@ export class OutgoingPayment extends BaseModel {
 export enum PaymentState {
   // Initial state. In this state, an empty trustline account is generated, and the payment is automatically resolved & quoted.
   // On success, transition to `Ready`.
-  // On failure, transition to `Refunding`.
+  // On failure, transition to `Cancelled`.
   Inactive = 'Inactive',
   // Awaiting user approval. Approval is automatic if `intent.autoApprove` is set.
   // Once approved, transitions to `Funding`.
@@ -138,12 +141,9 @@ export enum PaymentState {
   // On success, transition to `Sending`.
   Funding = 'Funding',
   // Pay from the trustline account to the destination.
-  // On success, transition to `Refunding`.
+  // On success, transition to `Completed`.
   Sending = 'Sending',
 
-  // Awaiting leftover reserved money to be refunded to the wallet account.
-  // On successful refunding, transition to Cancelled (payment error) or Completed (no payment error).
-  Refunding = 'Refunding',
   // The payment failed. (Though some money may have been delivered).
   // Requoting transitions to `Inactive`.
   Cancelled = 'Cancelled',

@@ -177,7 +177,7 @@ async function cancelPayment(
       throw new Error(`Cannot cancel; payment is in state=${payment.state}`)
     }
     await payment.$query(trx).patch({
-      state: PaymentState.Refunding,
+      state: PaymentState.Cancelled,
       error: lifecycle.LifecycleError.CancelledByAPI
     })
     return payment
