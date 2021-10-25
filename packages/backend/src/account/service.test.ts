@@ -730,10 +730,23 @@ describe('Account Service', (): void => {
       expect(account).toBeUndefined()
     })
 
-    test('Properly escapes Postgres pattern wildcards in the static address', async (): Promise<void> => {
+    test('Properly escapes Postgres pattern "_" wildcards in the static address', async (): Promise<void> => {
       await accountFactory.build({
         routing: {
           staticIlpAddress: 'test.rafiki_with_wildcards'
+        }
+      })
+      const account = await accountService.getByDestinationAddress(
+        'test.rafiki-with-wildcards'
+      )
+      expect(account).toBeUndefined()
+    })
+
+    test('Properly escapes Postgres pattern "%" wildcards in the static address', async (): Promise<void> => {
+      await accountFactory.build({
+        routing: {
+          // This is not actually a valid address, but just to be safe...
+          staticIlpAddress: 'test.rafiki%with%wildcards'
         }
       })
       const account = await accountService.getByDestinationAddress(

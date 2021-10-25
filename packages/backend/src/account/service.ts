@@ -370,7 +370,9 @@ async function getAccountByStaticIlpAddress(
       'like',
       // "_" is a Postgres pattern wildcard (matching any one character), and must be escaped.
       // See: https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
-      raw("REPLACE(??, '_', '\\\\_') || '%'", ['staticIlpAddress'])
+      raw("REPLACE(REPLACE(??, '_', '\\\\_'), '%', '\\\\%') || '%'", [
+        'staticIlpAddress'
+      ])
     )
     .andWhere((builder) => {
       builder
