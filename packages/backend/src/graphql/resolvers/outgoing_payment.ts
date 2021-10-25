@@ -33,16 +33,11 @@ export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = as
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
-  let accountId: string
-  if (parent.accountId) {
-    accountId = parent.accountId
-  } else {
-    const payment = await outgoingPaymentService.get(parent.id)
-    if (!payment) throw new Error('payment does not exist')
-    accountId = payment.accountId
-  }
+  const payment = await outgoingPaymentService.get(parent.id)
+  if (!payment) throw new Error('payment does not exist')
+
   const accountService = await ctx.container.use('accountService')
-  const totalSent = await accountService.getTotalSent(accountId)
+  const totalSent = await accountService.getTotalSent(payment.accountId)
   if (totalSent === undefined)
     throw new Error('account total sent does not exist')
   return {
@@ -184,7 +179,6 @@ function paymentToGraphql(
       lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
       highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
-    accountId: payment.accountId,
     sourceAccountId: payment.sourceAccountId,
     destinationAccount: payment.destinationAccount,
     createdAt: new Date(+payment.createdAt).toISOString()

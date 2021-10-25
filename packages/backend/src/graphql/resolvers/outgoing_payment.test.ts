@@ -170,7 +170,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                     lowExchangeRateEstimate
                     highExchangeRateEstimate
                   }
-                  accountId
                   account {
                     id
                     asset {
@@ -220,7 +219,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
           __typename: 'PaymentQuote'
         })
-        expect(query.accountId).toBe(payment.accountId)
         expect(query.account).toEqual({
           id: payment.accountId,
           asset: {

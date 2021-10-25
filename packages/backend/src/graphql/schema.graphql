@@ -300,7 +300,6 @@ type OutgoingPayment implements AccountHolder {
   stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
-  accountId: ID!
   account: Account
   sourceAccountId: ID!
   destinationAccount: PaymentDestinationAccount!

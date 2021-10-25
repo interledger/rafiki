@@ -395,7 +395,6 @@ export type OutgoingPayment = AccountHolder & {
   stateAttempts: Scalars['Int'];
   intent?: Maybe<PaymentIntent>;
   quote?: Maybe<PaymentQuote>;
-  accountId: Scalars['ID'];
   account?: Maybe<Account>;
   sourceAccountId: Scalars['ID'];
   destinationAccount: PaymentDestinationAccount;
@@ -964,7 +963,6 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
-  accountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   account?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType>;
   sourceAccountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
