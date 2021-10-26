@@ -59,10 +59,6 @@ export type AccountEdge = {
   cursor: Scalars['String'];
 };
 
-export type AccountHolder = {
-  account?: Maybe<Account>;
-};
-
 export type AccountsConnection = {
   __typename?: 'AccountsConnection';
   pageInfo: PageInfo;
@@ -396,7 +392,7 @@ export type MutationResponse = {
   message: Scalars['String'];
 };
 
-export type OutgoingPayment = AccountHolder & {
+export type OutgoingPayment = {
   __typename?: 'OutgoingPayment';
   id: Scalars['ID'];
   state: PaymentState;
@@ -404,7 +400,6 @@ export type OutgoingPayment = AccountHolder & {
   stateAttempts: Scalars['Int'];
   intent?: Maybe<PaymentIntent>;
   quote?: Maybe<PaymentQuote>;
-  account?: Maybe<Account>;
   sourceAccountId: Scalars['ID'];
   destinationAccount: PaymentDestinationAccount;
   outcome?: Maybe<OutgoingPaymentOutcome>;
@@ -691,7 +686,6 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   AccountEdge: ResolverTypeWrapper<Partial<AccountEdge>>;
-  AccountHolder: ResolversTypes['OutgoingPayment'];
   AccountsConnection: ResolverTypeWrapper<Partial<AccountsConnection>>;
   AddAccountLiquidityInput: ResolverTypeWrapper<Partial<AddAccountLiquidityInput>>;
   AddAccountLiquidityMutationResponse: ResolverTypeWrapper<Partial<AddAccountLiquidityMutationResponse>>;
@@ -757,7 +751,6 @@ export type ResolversParentTypes = {
   String: Partial<Scalars['String']>;
   Int: Partial<Scalars['Int']>;
   AccountEdge: Partial<AccountEdge>;
-  AccountHolder: ResolversParentTypes['OutgoingPayment'];
   AccountsConnection: Partial<AccountsConnection>;
   AddAccountLiquidityInput: Partial<AddAccountLiquidityInput>;
   AddAccountLiquidityMutationResponse: Partial<AddAccountLiquidityMutationResponse>;
@@ -831,11 +824,6 @@ export type AccountEdgeResolvers<ContextType = any, ParentType extends Resolvers
   node?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
   cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AccountHolderResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountHolder'] = ResolversParentTypes['AccountHolder']> = {
-  __resolveType: TypeResolveFn<'OutgoingPayment', ParentType, ContextType>;
-  account?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType>;
 };
 
 export type AccountsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountsConnection'] = ResolversParentTypes['AccountsConnection']> = {
@@ -987,7 +975,6 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
-  account?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType>;
   sourceAccountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
   outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
@@ -1130,7 +1117,6 @@ export type WebhooksConnectionResolvers<ContextType = any, ParentType extends Re
 export type Resolvers<ContextType = any> = {
   Account?: AccountResolvers<ContextType>;
   AccountEdge?: AccountEdgeResolvers<ContextType>;
-  AccountHolder?: AccountHolderResolvers<ContextType>;
   AccountsConnection?: AccountsConnectionResolvers<ContextType>;
   AddAccountLiquidityMutationResponse?: AddAccountLiquidityMutationResponseResolvers<ContextType>;
   AddAssetLiquidityMutationResponse?: AddAssetLiquidityMutationResponseResolvers<ContextType>;

@@ -309,18 +309,13 @@ type OutgoingPaymentEdge {
   cursor: String!
 }
 
-interface AccountHolder {
-  account: Account
-}
-
-type OutgoingPayment implements AccountHolder {
+type OutgoingPayment {
   id: ID!
   state: PaymentState!
   error: String
   stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
-  account: Account
   sourceAccountId: ID!
   destinationAccount: PaymentDestinationAccount!
   outcome: OutgoingPaymentOutcome

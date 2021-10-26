@@ -1,6 +1,6 @@
 import { Resolvers } from '../generated/graphql'
 import {
-  getAccount as queryAccount,
+  getAccount,
   getAccounts,
   getAccountsConnectionPageInfo,
   getBalance,
@@ -8,7 +8,6 @@ import {
   updateAccount,
   deleteAccount
 } from './account'
-import { getAccount } from './accountHolder'
 import { getAccountInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
@@ -33,7 +32,7 @@ import { GraphQLBigInt } from '../scalars'
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
   Query: {
-    account: queryAccount,
+    account: getAccount,
     accounts: getAccounts,
     outgoingPayment: getOutgoingPayment
     // webhook: getWebhook
@@ -54,7 +53,6 @@ export const resolvers: Resolvers = {
     pageInfo: getOutgoingPaymentPageInfo
   },
   OutgoingPayment: {
-    account: getAccount,
     outcome: getOutcome
   },
   WebhooksConnection: {

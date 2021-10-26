@@ -172,13 +172,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                     lowExchangeRateEstimate
                     highExchangeRateEstimate
                   }
-                  account {
-                    id
-                    asset {
-                      code
-                      scale
-                    }
-                  }
                   sourceAccountId
                   destinationAccount {
                     scale
@@ -220,15 +213,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
           highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
           __typename: 'PaymentQuote'
-        })
-        expect(query.account).toEqual({
-          id: payment.accountId,
-          asset: {
-            code: asset.code,
-            scale: asset.scale,
-            __typename: 'Asset'
-          },
-          __typename: 'Account'
         })
         expect(query.sourceAccountId).toBe(payment.sourceAccountId)
         expect(query.destinationAccount).toEqual({
