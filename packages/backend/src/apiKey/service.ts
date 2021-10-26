@@ -5,7 +5,7 @@ import { uuid } from '../connector/core'
 import bcrypt from 'bcrypt'
 import { Transaction } from 'knex'
 import { SessionKey } from '../sessionKey/util'
-import { UnknownApiKeyError } from './errors'
+import { NoExistingApiKeyError, UnknownApiKeyError } from './errors'
 
 export interface ApiKeyService {
   create(accountId: string, trx?: Transaction): Promise<NewApiKey>
@@ -70,10 +70,14 @@ async function redeemSessionKey(
   const keys = await ApiKey.query()
     .select('hashedKey')
     .where('accountId', accountId)
-  const match = await bcrypt.compare(key, keys[0].hashedKey)
-  if (match) {
-    return deps.sessionKeyService.create()
+  if (keys && !keys.length) {
+    throw new NoExistingApiKeyError(accountId)
   } else {
-    throw new UnknownApiKeyError(accountId)
+    const match = await bcrypt.compare(key, keys[0].hashedKey)
+    if (match) {
+      return deps.sessionKeyService.create()
+    } else {
+      throw new UnknownApiKeyError(accountId)
+    }
   }
 }
