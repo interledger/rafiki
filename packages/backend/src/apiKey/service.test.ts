@@ -13,6 +13,7 @@ import { AccountService } from '../account/service'
 import { AccountFactory } from '../tests/accountFactory'
 import { Account } from '../account/model'
 import bcrypt from 'bcrypt'
+import { NoExistingApiKeyError, UnknownApiKeyError } from './errors'
 
 describe('Api Key Service', (): void => {
   let deps: IocContract<AppServices>
@@ -75,6 +76,25 @@ describe('Api Key Service', (): void => {
       expect(apiKey.updatedAt).toBeDefined()
       const match = await bcrypt.compare(apiKey.key, apiKey.hashedKey)
       expect(match).toBe(true)
+    })
+  })
+
+  describe('Redeem Session Key', (): void => {
+    test('A session key can be redeemed for a valid api key', async (): Promise<void> => {
+      const apiKey = await apiKeyService.create(account.id)
+      const sessionKey = await apiKeyService.redeem(account.id, apiKey.key)
+      expect(sessionKey.sessionKey).toBeDefined()
+    })
+
+    test('A session key cannot be redeemed if no api key for account exists', async (): Promise<void> => {
+      const sessionKey = apiKeyService.redeem(account.id, '123')
+      expect(sessionKey).rejects.toThrow(new NoExistingApiKeyError(account.id))
+    })
+
+    test('A session key cannot be redeemed if api key is unknown', async (): Promise<void> => {
+      await apiKeyService.create(account.id)
+      const sessionKey = apiKeyService.redeem(account.id, '123')
+      expect(sessionKey).rejects.toThrow(new UnknownApiKeyError(account.id))
     })
   })
 })
