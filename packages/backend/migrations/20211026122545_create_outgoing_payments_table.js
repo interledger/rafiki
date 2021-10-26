@@ -30,7 +30,8 @@ exports.up = function (knex) {
     table.foreign('accountId').references('accounts.id')
 
     // Wallet account from which to request funds for payment
-    table.uuid('sourceAccountId').notNullable()
+    table.uuid('paymentPointerId').notNullable()
+    table.foreign('paymentPointerId').references('paymentPointers.id')
     table.integer('destinationAccountScale').notNullable()
     table.string('destinationAccountCode').notNullable()
     table.string('destinationAccountUrl').nullable()
@@ -38,7 +39,7 @@ exports.up = function (knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
-    table.index(['sourceAccountId', 'createdAt', 'id'])
+    table.index(['paymentPointerId', 'createdAt', 'id'])
   })
 }
 

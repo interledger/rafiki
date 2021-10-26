@@ -173,7 +173,7 @@ export async function handleFunding(
     throw LifecycleError.MissingBalance
   }
   if (balance < payment.quote.maxSourceAmount) {
-    // TODO: request payment liquidity from sourceAccountId at wallet
+    // TODO: request payment liquidity from payment pointer's wallet account
 
     throw LifecycleError.Unfunded
   }
@@ -353,7 +353,7 @@ export async function handleLiquidityWithdrawal(
   }
   // TODO: verify that the reserved balance is also zero / withdrawal is final
   if (balance > BigInt(0)) {
-    // TODO: notify wallet to create & finalize payment liquidity withdrawal to sourceAccountId
+    // TODO: notify wallet to create & finalize payment liquidity withdrawal
 
     throw LifecycleError.LeftoverLiquidity
   }

@@ -246,6 +246,7 @@ export function initIocContainer(
       accountService: await deps.use('accountService'),
       balanceService: await deps.use('balanceService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
+      paymentPointerService: await deps.use('paymentPointerService'),
       ratesService: await deps.use('ratesService'),
       transferService: await deps.use('transferService')
     })

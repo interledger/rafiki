@@ -1,11 +1,11 @@
 import { isPaymentError, PaymentError } from '@interledger/pay'
 import {
-  AccountResolvers,
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
   OutgoingPaymentResolvers,
   OutgoingPaymentConnectionResolvers,
   PaymentState as SchemaPaymentState,
+  PaymentPointerResolvers,
   PaymentType as SchemaPaymentType,
   QueryResolvers,
   ResolversTypes
@@ -163,7 +163,7 @@ export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutg
     }))
 }
 
-export const getAccountOutgoingPayments: AccountResolvers<ApolloContext>['outgoingPayments'] = async (
+export const getPaymentPointerOutgoingPayments: PaymentPointerResolvers<ApolloContext>['outgoingPayments'] = async (
   parent,
   args,
   ctx
@@ -172,7 +172,7 @@ export const getAccountOutgoingPayments: AccountResolvers<ApolloContext>['outgoi
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
-  const outgoingPayments = await outgoingPaymentService.getAccountPage(
+  const outgoingPayments = await outgoingPaymentService.getPaymentPointerPage(
     parent.id,
     args
   )
@@ -210,8 +210,8 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
 
   let hasNextPagePayments, hasPreviousPagePayments
   try {
-    hasNextPagePayments = await outgoingPaymentService.getAccountPage(
-      firstPayment.sourceAccountId,
+    hasNextPagePayments = await outgoingPaymentService.getPaymentPointerPage(
+      firstPayment.paymentPointerId,
       {
         after: lastEdge,
         first: 1
@@ -221,8 +221,8 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
     hasNextPagePayments = []
   }
   try {
-    hasPreviousPagePayments = await outgoingPaymentService.getAccountPage(
-      firstPayment.sourceAccountId,
+    hasPreviousPagePayments = await outgoingPaymentService.getPaymentPointerPage(
+      firstPayment.paymentPointerId,
       {
         before: firstEdge,
         last: 1
@@ -258,7 +258,6 @@ function paymentToGraphql(
       lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
       highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
-    sourceAccountId: payment.sourceAccountId,
     destinationAccount: payment.destinationAccount,
     createdAt: new Date(+payment.createdAt).toISOString()
   }
