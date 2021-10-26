@@ -316,9 +316,7 @@ type OutgoingPayment {
   stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
-  accountId: String!
-  reservedBalanceId: String!
-  sourceAccount: PaymentSourceAccount!
+  sourceAccountId: ID!
   destinationAccount: PaymentDestinationAccount!
   outcome: OutgoingPaymentOutcome
   createdAt: String!
@@ -334,14 +332,12 @@ type PaymentIntent {
 enum PaymentState {
   "Will transition to READY when quote is complete"
   INACTIVE
-  "Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLING)"
+  "Quote ready; awaiting user approval (FUNDING) or refusal (CANCELLED)"
   READY
   "Will transition to SENDING once payment funds are reserved"
-  ACTIVATED
+  FUNDING
   "Paying, will transition to COMPLETED on success"
   SENDING
-  "Will transition to CANCELLED when reserved funds are rolled back"
-  CANCELLING
   "Payment aborted; can be requoted to INACTIVE"
   CANCELLED
   "Successfuly completion"
@@ -365,12 +361,6 @@ type PaymentQuote {
   highExchangeRateEstimate: Float!
 }
 
-type PaymentSourceAccount {
-  id: String!
-  scale: Int!
-  code: String!
-}
-
 type PaymentDestinationAccount {
   scale: Int!
   code: String!
@@ -383,6 +373,7 @@ type OutgoingPaymentOutcome {
 
 input CreateOutgoingPaymentInput {
   sourceAccountId: String!
+  assetId: String!
   paymentPointer: String
   amountToSend: UInt64
   invoiceUrl: String

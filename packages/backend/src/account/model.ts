@@ -33,6 +33,8 @@ export class Account extends BaseModel {
   public asset!: Asset
   // TigerBeetle account id tracking Interledger balance
   public readonly balanceId!: string
+  // TigerBeetle account id tracking amount sent
+  public readonly sentBalanceId?: string
 
   public readonly maxPacketAmount!: bigint
 

@@ -10,11 +10,10 @@ export const RETRY_BACKOFF_SECONDS = 10
 const maxStateAttempts: { [key in PaymentState]: number } = {
   Inactive: 5, // quoting
   Ready: Infinity, // autoapprove
-  Activated: 5, // reserve funds
+  Funding: Infinity, // reserve funds
   Sending: 5, // send money
-  Cancelling: Infinity, // refund money
-  Cancelled: 0,
-  Completed: 0
+  Cancelled: Infinity,
+  Completed: Infinity
 }
 
 // Returns the id of the processed payment (if any).
@@ -52,12 +51,15 @@ export async function getPendingPayment(
     .forUpdate()
     // Don't wait for a payment that is already being processed.
     .skipLocked()
-    .whereIn('state', [
-      PaymentState.Inactive,
-      PaymentState.Activated,
-      PaymentState.Sending,
-      PaymentState.Cancelling
-    ])
+    .where((builder: knex.QueryBuilder) => {
+      builder
+        .whereIn('state', [
+          PaymentState.Inactive,
+          PaymentState.Funding,
+          PaymentState.Sending
+        ])
+        .orWhere('withdrawLiquidity', true)
+    })
     // Back off between retries.
     .andWhere((builder: knex.QueryBuilder) => {
       builder
@@ -76,6 +78,7 @@ export async function getPendingPayment(
             .orWhere('quoteActivationDeadline', '<', now)
         })
     })
+    .withGraphFetched('account.asset')
   return payments[0]
 }
 
@@ -91,7 +94,8 @@ export async function handlePaymentLifecycle(
     const stateAttempts = payment.stateAttempts + 1
 
     if (
-      payment.state === PaymentState.Cancelling ||
+      payment.state === PaymentState.Cancelled ||
+      payment.state === PaymentState.Completed ||
       (stateAttempts < maxStateAttempts[payment.state] &&
         lifecycle.canRetryError(err))
     ) {
@@ -106,9 +110,11 @@ export async function handlePaymentLifecycle(
         { state: payment.state, error, stateAttempts },
         'payment lifecycle failed; cancelling'
       )
-      await payment
-        .$query(deps.knex)
-        .patch({ state: PaymentState.Cancelling, error })
+      await payment.$query(deps.knex).patch({
+        state: PaymentState.Cancelled,
+        withdrawLiquidity: true,
+        error
+      })
     }
   }
 
@@ -131,8 +137,8 @@ export async function handlePaymentLifecycle(
         })
     case PaymentState.Ready:
       return lifecycle.handleReady(deps, payment).catch(onError)
-    case PaymentState.Activated:
-      return lifecycle.handleActivation(deps, payment).catch(onError)
+    case PaymentState.Funding:
+      return lifecycle.handleFunding(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin(payment.accountId)
       return plugin
@@ -147,9 +153,10 @@ export async function handlePaymentLifecycle(
             )
           })
         })
-    case PaymentState.Cancelling:
-      return lifecycle.handleCancelling(deps, payment).catch(onError)
     default:
+      if (payment.withdrawLiquidity) {
+        return lifecycle.handleLiquidityWithdrawal(deps, payment).catch(onError)
+      }
       deps.logger.warn('unexpected payment in lifecycle')
       break
   }

@@ -7,19 +7,18 @@ import {
 import { serializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { StreamServer } from '@interledger/stream-receiver'
 import { Invoice } from '@interledger/pay'
-import { v4 as uuid } from 'uuid'
 
 import { IlpPlugin } from './ilp_plugin'
+import { isAccountTransferError } from '../account/errors'
 import { AccountService } from '../account/service'
-import { LiquidityService } from '../liquidity/service'
 
 export class MockPlugin implements IlpPlugin {
   public totalReceived = BigInt(0)
   private streamServer: StreamServer
   public exchangeRate: number
   private accountId: string
+  private destinationAccountId: string
   private accountService: AccountService
-  private liquidityService: LiquidityService
   private connected = true
   private invoice: Invoice
 
@@ -27,22 +26,22 @@ export class MockPlugin implements IlpPlugin {
     streamServer,
     exchangeRate,
     accountId,
+    destinationAccountId,
     accountService,
-    liquidityService,
     invoice
   }: {
     streamServer: StreamServer
     exchangeRate: number
     accountId: string
+    destinationAccountId: string
     accountService: AccountService
-    liquidityService: LiquidityService
     invoice: Invoice
   }) {
     this.streamServer = streamServer
     this.exchangeRate = exchangeRate
     this.accountId = accountId
+    this.destinationAccountId = destinationAccountId
     this.accountService = accountService
-    this.liquidityService = liquidityService
     this.invoice = invoice
   }
 
@@ -77,8 +76,11 @@ export class MockPlugin implements IlpPlugin {
         return serializeIlpReply(moneyOrReject)
       }
 
-      const account = await this.accountService.get(this.accountId)
-      if (!account) {
+      const sourceAccount = await this.accountService.get(this.accountId)
+      const destinationAccount = await this.accountService.get(
+        this.destinationAccountId
+      )
+      if (!sourceAccount || !destinationAccount) {
         return serializeIlpReply({
           code: 'F00',
           triggeredBy: '',
@@ -87,11 +89,22 @@ export class MockPlugin implements IlpPlugin {
         })
       }
 
-      const error = await this.liquidityService.createWithdrawal({
-        id: uuid(),
-        account,
-        amount: BigInt(sourceAmount)
+      const trxOrError = await this.accountService.transferFunds({
+        sourceAccount,
+        destinationAccount,
+        sourceAmount: BigInt(sourceAmount),
+        timeout: BigInt(10e9) // 10 seconds
       })
+      if (isAccountTransferError(trxOrError)) {
+        return serializeIlpReply({
+          code: 'F00',
+          triggeredBy: '',
+          message: trxOrError,
+          data: Buffer.alloc(0)
+        })
+      }
+
+      const error = await trxOrError.commit()
       if (error) {
         return serializeIlpReply({
           code: 'F00',

@@ -19,7 +19,7 @@ import {
   PaymentState
 } from '../../outgoing_payment/model'
 import { AccountService } from '../../account/service'
-import { Balance, BalanceService } from '../../balance/service'
+import { AssetOptions } from '../../asset/service'
 import {
   Account,
   OutgoingPayment,
@@ -33,7 +33,6 @@ describe('OutgoingPayment Resolvers', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let accountService: AccountService
-  let balanceService: BalanceService
   let outgoingPaymentService: OutgoingPaymentService
 
   const streamServer = new StreamServer({
@@ -50,7 +49,6 @@ describe('OutgoingPayment Resolvers', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       accountService = await deps.use('accountService')
-      balanceService = await deps.use('balanceService')
       outgoingPaymentService = await deps.use('outgoingPaymentService')
 
       const credentials = streamServer.generateCredentials({
@@ -77,12 +75,14 @@ describe('OutgoingPayment Resolvers', (): void => {
   )
 
   let payment: OutgoingPaymentModel
+  let asset: AssetOptions
 
   beforeEach(
     async (): Promise<void> => {
+      accountService = await deps.use('accountService')
       const accountFactory = new AccountFactory(accountService)
-      const { id: sourceAccountId, asset } = await accountFactory.build()
-      const accountId = (await accountFactory.build({ asset })).id
+      const account = await accountFactory.build()
+      asset = account.asset
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
         intent: {
@@ -104,13 +104,8 @@ describe('OutgoingPayment Resolvers', (): void => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
-        accountId,
-        reservedBalanceId: uuid(),
-        sourceAccount: {
-          id: sourceAccountId,
-          scale: 9,
-          code: 'USD'
-        },
+        accountId: account.id,
+        sourceAccountId: uuid(),
         destinationAccount: {
           scale: 9,
           code: 'XRP',
@@ -125,112 +120,112 @@ describe('OutgoingPayment Resolvers', (): void => {
   })
 
   describe('Query.outgoingPayment', (): void => {
-    test('200', async (): Promise<void> => {
-      jest
-        .spyOn(outgoingPaymentService, 'get')
-        .mockImplementation(async () => payment)
-      jest
-        .spyOn(accountService, 'getBalance')
-        .mockImplementation(async () => BigInt(45))
-      jest
-        .spyOn(balanceService, 'get')
-        .mockImplementation(async (id: string) => {
-          expect(id).toStrictEqual(payment.reservedBalanceId)
-          return {
-            balance: BigInt(123)
-          } as Balance
-        })
+    // Query with each payment state with and without an error
+    const states: [PaymentState, PaymentError | null][] = Object.values(
+      PaymentState
+    ).flatMap((state) => [
+      [state, null],
+      [state, Pay.PaymentError.ReceiverProtocolViolation]
+    ])
+    test.each(states)(
+      '200 - %s, error: %s',
+      async (state, error): Promise<void> => {
+        const amountSent = BigInt(78)
+        jest
+          .spyOn(outgoingPaymentService, 'get')
+          .mockImplementation(async () => {
+            const updatedPayment = payment
+            updatedPayment.state = state
+            updatedPayment.error = error
+            return updatedPayment
+          })
+        jest
+          .spyOn(accountService, 'getTotalSent')
+          .mockImplementation(async (id: string) => {
+            expect(id).toStrictEqual(payment.accountId)
+            return amountSent
+          })
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query OutgoingPayment($paymentId: String!) {
-              outgoingPayment(id: $paymentId) {
-                id
-                state
-                error
-                stateAttempts
-                intent {
-                  paymentPointer
-                  invoiceUrl
-                  amountToSend
-                  autoApprove
-                }
-                quote {
-                  timestamp
-                  activationDeadline
-                  targetType
-                  minDeliveryAmount
-                  maxSourceAmount
-                  maxPacketAmount
-                  minExchangeRate
-                  lowExchangeRateEstimate
-                  highExchangeRateEstimate
-                }
-                accountId
-                reservedBalanceId
-                sourceAccount {
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query OutgoingPayment($paymentId: String!) {
+                outgoingPayment(id: $paymentId) {
                   id
-                  scale
-                  code
+                  state
+                  error
+                  stateAttempts
+                  intent {
+                    paymentPointer
+                    invoiceUrl
+                    amountToSend
+                    autoApprove
+                  }
+                  quote {
+                    timestamp
+                    activationDeadline
+                    targetType
+                    minDeliveryAmount
+                    maxSourceAmount
+                    maxPacketAmount
+                    minExchangeRate
+                    lowExchangeRateEstimate
+                    highExchangeRateEstimate
+                  }
+                  sourceAccountId
+                  destinationAccount {
+                    scale
+                    code
+                    url
+                  }
+                  outcome {
+                    amountSent
+                  }
+                  createdAt
                 }
-                destinationAccount {
-                  scale
-                  code
-                  url
-                }
-                outcome {
-                  amountSent
-                }
-                createdAt
               }
+            `,
+            variables: {
+              paymentId: payment.id
             }
-          `,
-          variables: {
-            paymentId: payment.id
-          }
-        })
-        .then((query): OutgoingPayment => query.data?.outgoingPayment)
+          })
+          .then((query): OutgoingPayment => query.data?.outgoingPayment)
 
-      expect(query.id).toEqual(payment.id)
-      expect(query.state).toEqual(SchemaPaymentState.Inactive)
-      expect(query.error).toBeNull()
-      expect(query.stateAttempts).toBe(0)
-      expect(query.intent).toEqual({
-        ...payment.intent,
-        amountToSend: payment.intent?.amountToSend?.toString(),
-        invoiceUrl: null,
-        __typename: 'PaymentIntent'
-      })
-      expect(query.quote).toEqual({
-        ...payment.quote,
-        timestamp: payment.quote?.timestamp.toISOString(),
-        activationDeadline: payment.quote?.activationDeadline.toISOString(),
-        targetType: SchemaPaymentType.FixedSend,
-        minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
-        maxSourceAmount: payment.quote?.maxSourceAmount.toString(),
-        maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
-        minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
-        lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
-        highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
-        __typename: 'PaymentQuote'
-      })
-      expect(query.accountId).toBe(payment.accountId)
-      expect(query.reservedBalanceId).toBe(payment.reservedBalanceId)
-      expect(query.sourceAccount).toEqual({
-        ...payment.sourceAccount,
-        __typename: 'PaymentSourceAccount'
-      })
-      expect(query.destinationAccount).toEqual({
-        ...payment.destinationAccount,
-        __typename: 'PaymentDestinationAccount'
-      })
-      expect(query.outcome).toEqual({
-        amountSent: (123 - 45).toString(),
-        __typename: 'OutgoingPaymentOutcome'
-      })
-      expect(new Date(query.createdAt)).toEqual(payment.createdAt)
-    })
+        expect(query.id).toEqual(payment.id)
+        expect(query.state).toEqual(SchemaPaymentState[state])
+        expect(query.error).toEqual(error)
+        expect(query.stateAttempts).toBe(0)
+        expect(query.intent).toEqual({
+          ...payment.intent,
+          amountToSend: payment.intent?.amountToSend?.toString(),
+          invoiceUrl: null,
+          __typename: 'PaymentIntent'
+        })
+        expect(query.quote).toEqual({
+          ...payment.quote,
+          timestamp: payment.quote?.timestamp.toISOString(),
+          activationDeadline: payment.quote?.activationDeadline.toISOString(),
+          targetType: SchemaPaymentType.FixedSend,
+          minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
+          maxSourceAmount: payment.quote?.maxSourceAmount.toString(),
+          maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
+          minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
+          lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
+          highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
+          __typename: 'PaymentQuote'
+        })
+        expect(query.sourceAccountId).toBe(payment.sourceAccountId)
+        expect(query.destinationAccount).toEqual({
+          ...payment.destinationAccount,
+          __typename: 'PaymentDestinationAccount'
+        })
+        expect(query.outcome).toEqual({
+          amountSent: amountSent.toString(),
+          __typename: 'OutgoingPaymentOutcome'
+        })
+        expect(new Date(query.createdAt)).toEqual(payment.createdAt)
+      }
+    )
 
     test('404', async (): Promise<void> => {
       jest
@@ -255,6 +250,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Mutation.createOutgoingPayment', (): void => {
     const input = {
       sourceAccountId: uuid(),
+      assetId: uuid(),
       paymentPointer: 'http://wallet2.example/paymentpointer/bob',
       amountToSend: '123',
       autoApprove: false
@@ -574,18 +570,18 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
   })
 
+  //TODO: change to payment pointer resolver
   describe('Account outgoingPayments', (): void => {
     let outgoingPayments: OutgoingPaymentModel[]
     let accountFactory: AccountFactory
-    let accountId: string
+    let sourceAccountId: string
     beforeAll(
       async (): Promise<void> => {
         accountFactory = new AccountFactory(accountService)
-        const { id: sourceAccountId, asset } = await accountFactory.build()
-        accountId = sourceAccountId
-        const paymentAccountId = (await accountFactory.build({ asset })).id
+        sourceAccountId = (await accountFactory.build({ asset })).id
         outgoingPayments = []
         for (let i = 0; i < 50; i++) {
+          const { id: accountId } = await accountFactory.build({ asset })
           outgoingPayments.push(
             await OutgoingPaymentModel.query(knex).insertAndFetch({
               state: PaymentState.Inactive,
@@ -608,13 +604,8 @@ describe('OutgoingPayment Resolvers', (): void => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 highExchangeRateEstimate: Pay.Ratio.from(2.3)!
               },
-              accountId: paymentAccountId,
-              reservedBalanceId: uuid(),
-              sourceAccount: {
-                id: sourceAccountId,
-                scale: 9,
-                code: 'USD'
-              },
+              accountId,
+              sourceAccountId,
               destinationAccount: {
                 scale: 9,
                 code: 'XRP',
@@ -650,7 +641,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: accountId
+            id: sourceAccountId
           }
         })
         .then(
@@ -674,7 +665,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
 
     test('No outgoingPayments, but outgoingPayments requested', async (): Promise<void> => {
-      const tempAccount = await accountFactory.build()
+      const { id: sourceAccountId } = await accountFactory.build()
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -698,7 +689,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: tempAccount.id
+            id: sourceAccountId
           }
         })
         .then(
@@ -741,7 +732,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: accountId
+            id: sourceAccountId
           }
         })
         .then(
@@ -788,7 +779,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: accountId,
+            id: sourceAccountId,
             after: outgoingPayments[19].id
           }
         })
@@ -836,7 +827,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: accountId,
+            id: sourceAccountId,
             after: outgoingPayments[44].id
           }
         })

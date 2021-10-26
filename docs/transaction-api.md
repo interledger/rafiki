@@ -17,7 +17,7 @@ First, the recipient Open Payments account or invoice is resolved. Then, the STR
 Quotes can end in 3 states:
 
 1. Success. The STREAM sender successfully established a connection to the recipient, and discovered rates and the path capacity. This advances the state to `Ready`. The parameters of the quote are persisted so they may be resumed if the payment is approved. Rafiki also assigns a deadline based on the expected validity of its slippage parameters for the user to authorize the payment.
-2. Irrevocable failure. In cases such as if the payment pointer or account URL was semantically invalid, the invoice was already paid, a terminal ILP Reject was encountered, or the rate was insufficient, the payment is unlikely to ever succeed, or requires some manual intervention. These cases advance the state to `Cancelling`.
+2. Irrevocable failure. In cases such as if the payment pointer or account URL was semantically invalid, the invoice was already paid, a terminal ILP Reject was encountered, or the rate was insufficient, the payment is unlikely to ever succeed, or requires some manual intervention. These cases advance the state to `Cancelled`.
 3. Recoverable failure. In the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available, Rafiki may elect to automatically retry the quote. This returns the state to `Inactive`, but internally tracks that the quote failed and when to schedule another attempt.
 
 After the quote ends and state advances, the lock on the payment is released.
@@ -30,30 +30,30 @@ This step is necessary so the end user can precisely know the maximum amount of 
 
 Authorization ends in two possible states:
 
-1. Activation. If the user approves the payment before its activation deadline, or `autoApprove` was `true`, the state advances to `Activated`.
+1. Approval. If the user approves the payment before its approval deadline, or `autoApprove` was `true`, the state advances to `Funding`.
 
    In this case, Rafiki creates a new Interledger account.
 
-   Then, Rafiki transfers `maxSourceAmount` of the quote from the funding account owned by the payer to the new account, reserving the maximum requisite funds for the payment.
+   Then, Rafiki notifies the wallet operator to transfer `maxSourceAmount` of the quote from the funding account owned by the payer to the new account, reserving the maximum requisite funds for the payment.
 
-2. Cancellation. If the user explicitly cancels the quote, or the activation deadline is exceeded, the state advances to `Cancelling`. In the latter case, too much time has elapsed for the enforced exchange rate to remain accurate.
+2. Cancellation. If the user explicitly cancels the quote, or the approval deadline is exceeded, the state advances to `Cancelled`. In the latter case, too much time has elapsed for the enforced exchange rate to remain accurate.
 
 ### Payment execution
 
-An instance acquires a lock on a payment with an `Activated` state and advances it to `Sending`. The STREAM will use the quote parameters acquired during the `Inactive` state.
+An instance acquires a lock on a payment with an `Funding` state and advances it to `Sending`. The STREAM will use the quote parameters acquired during the `Inactive` state.
 
 The instance connects to the Interledger account it created via ILP-over-HTTP, and sends the payment with STREAM.
 
 After the payment completes, the instance releases the lock on the payment and advances the state depending upon the outcome:
 
 1. Success. If the STREAM sender successfully fulfilled the completion criteria of the payment, sending or delivering the requisite amount, the payment is complete. The instance advances the state to `Completed`, the final state of the payment.
-2. Irrevocable failure. In cases such as if the exchange rate changed (the payment cannot be completed within the parameters of the quote), the receiver closed the connection, or a terminal ILP Reject was encountered, the payment failed permanently. Manual intervention is required to quote and retry the payment, so the state advances to `Cancelling`.
+2. Irrevocable failure. In cases such as if the exchange rate changed (the payment cannot be completed within the parameters of the quote), the receiver closed the connection, or a terminal ILP Reject was encountered, the payment failed permanently. Manual intervention is required to quote and retry the payment, so the state advances to `Cancelled`.
 
-   After too many recoverable failures and attempts, Rafiki may also consider a payment permanently failed, advancing the state to `Cancelling`.
+   After too many recoverable failures and attempts, Rafiki may also consider a payment permanently failed, advancing the state to `Cancelled`.
 
 3. Recoverable failure. In cases such as an idle timeout, Rafiki may elect to automatically retry the payment. The state remains `Sending`, but internally tracks that the payment failed and when to schedule another attempt.
 
-In the `Completed` and `Cancelled` cases, remaining funds in the Interledger account are returned to the funding account. Note: if the payment is retried, the same Interledger account is used for the subsequent attempt.
+In the `Completed` and `Cancelled` cases, the wallet is notifed of any remaining funds in the Interledger account. Note: if the payment is retried, the same Interledger account is used for the subsequent attempt.
 
 ### Manual recovery
 
@@ -94,10 +94,12 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 | `quote.minExchangeRate`          | No       | `Float`         | Aggregate exchange rate the payment is guaranteed to meet, as a ratio of destination base units to source base units. Corresponds to the minimum exchange rate enforced on each packet (_except for the final packet_) to ensure sufficient money gets delivered. For strict bookkeeping, use `maxSourceAmount` instead. |
 | `quote.lowExchangeRateEstimate`  | No       | `Float`         | Lower bound of probed exchange rate over the path (inclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                     |
 | `quote.highExchangeRateEstimate` | No       | `Float`         | Upper bound of probed exchange rate over the path (exclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                     |
-| `sourceAccount`                  | No       | `Object`        |                                                                                                                                                                                                                                                                                                                          |
-| `sourceAccount.id`               | No       | `String`        | Account id of the payment's sender.                                                                                                                                                                                                                                                                                      |
-| `sourceAccount.scale`            | No       | `Integer`       |                                                                                                                                                                                                                                                                                                                          |
-| `sourceAccount.code`             | No       | `String`        |                                                                                                                                                                                                                                                                                                                          |
+| `sourceAccountId`                | No       | `String`        | Account id of the funding account owned by the payer.                                                                                                                                                                                                                                                                    |
+| `account`                        | No       | `Object`        |                                                                                                                                                                                                                                                                                                                          |
+| `account.id`                     | No       | `ID`            | Id of the payment's Interledger account                                                                                                                                                                                                                                                                                  |
+| `account.asset`                  | No       | `Object`        |                                                                                                                                                                                                                                                                                                                          |
+| `account.asset.scale`            | No       | `Integer`       |                                                                                                                                                                                                                                                                                                                          |
+| `account.asset.code`             | No       | `String`        |                                                                                                                                                                                                                                                                                                                          |
 | `destinationAccount`             | No       | `Object`        |                                                                                                                                                                                                                                                                                                                          |
 | `destinationAccount.scale`       | No       | `Integer`       |                                                                                                                                                                                                                                                                                                                          |
 | `destinationAccount.code`        | No       | `String`        |                                                                                                                                                                                                                                                                                                                          |
@@ -108,11 +110,10 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
 ### `PaymentState`
 
-- `INACTIVE`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `Ready`. On failure, transition to `Cancelling`.
-- `READY`: Awaiting user approval. Approval is automatic if `intent.autoApprove` is set. Once approved, transitions to `Activated`.
-- `ACTIVATED`: During activation, money from the user's main account is moved to the payment account to reserve it. On success, transition to `Sending`.
+- `INACTIVE`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `Ready`. On failure, transition to `Cancelled`.
+- `READY`: Awaiting user approval. Approval is automatic if `intent.autoApprove` is set. Once approved, transitions to `Funding`.
+- `FUNDING`: Money from the user's main account is moved to the payment account to reserve it. On success, transition to `Sending`.
 - `SENDING`: Stream payment from the payment account to the destination.
-- `CANCELLING`: Transitions to Cancelled once leftover reserved money is refunded to the user's main account.
 - `CANCELLED`: The payment failed. (Though some money may have been delivered). Requoting transitions to `Inactive`.
 - `COMPLETED`: Successful completion.
 

@@ -172,6 +172,66 @@ describe('Account Service', (): void => {
       })
     })
 
+    test('Can create an account with asset id', async (): Promise<void> => {
+      const { id: assetId } = await assetService.getOrCreate(randomAsset())
+      const account: CreateOptions = {
+        assetId
+      }
+      const accountOrError = await accountService.create(account)
+      expect(isAccountError(accountOrError)).toEqual(false)
+      if (isAccountError(accountOrError)) {
+        fail()
+      }
+      const expectedAccount = {
+        ...account,
+        id: accountOrError.id,
+        disabled: false,
+        stream: {
+          enabled: false
+        }
+      }
+      expect(accountOrError).toMatchObject(expectedAccount)
+      await expect(accountService.get(accountOrError.id)).resolves.toEqual(
+        accountOrError
+      )
+      await expect(
+        balanceService.get(accountOrError.balanceId)
+      ).resolves.toEqual({
+        id: accountOrError.balanceId,
+        balance: BigInt(0),
+        unit: accountOrError.asset.unit,
+        debitBalance: false
+      })
+    })
+
+    test('Cannot create an account with unknown asset id', async (): Promise<void> => {
+      await expect(accountService.create({ assetId: uuid() })).resolves.toEqual(
+        AccountError.UnknownAsset
+      )
+    })
+
+    test('Can create an account with total sent balance', async (): Promise<void> => {
+      const { id: assetId } = await assetService.getOrCreate(randomAsset())
+      const account: CreateOptions = {
+        assetId,
+        sentBalance: true
+      }
+      const accountOrError = await accountService.create(account)
+      expect(isAccountError(accountOrError)).toEqual(false)
+      if (isAccountError(accountOrError)) {
+        fail()
+      }
+      assert.ok(accountOrError.sentBalanceId)
+      await expect(
+        balanceService.get(accountOrError.sentBalanceId)
+      ).resolves.toEqual({
+        id: accountOrError.sentBalanceId,
+        balance: BigInt(0),
+        unit: accountOrError.asset.unit,
+        debitBalance: false
+      })
+    })
+
     test('Cannot create an account with duplicate id', async (): Promise<void> => {
       const account = await accountFactory.build()
       await expect(
@@ -547,6 +607,22 @@ describe('Account Service', (): void => {
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(accountService.getBalance(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Get Account Total Sent Balance', (): void => {
+    test("Can retrieve an account's total sent balance", async (): Promise<void> => {
+      const { id } = await accountFactory.build({ sentBalance: true })
+      await expect(accountService.getTotalSent(id)).resolves.toEqual(BigInt(0))
+    })
+
+    test('Returns undefined for nonexistent account', async (): Promise<void> => {
+      await expect(accountService.getTotalSent(uuid())).resolves.toBeUndefined()
+    })
+
+    test('Returns undefined for account with no total sent balance', async (): Promise<void> => {
+      const { id } = await accountFactory.build()
+      await expect(accountService.getTotalSent(id)).resolves.toBeUndefined()
     })
   })
 
@@ -1065,6 +1141,34 @@ describe('Account Service', (): void => {
       }
     })
 
+    test('Updates source account sent balance', async (): Promise<void> => {
+      const startingSourceBalance = BigInt(10)
+      const sourceAccount = await accountFactory.build({
+        sentBalance: true,
+        balance: startingSourceBalance
+      })
+
+      const destinationAccount = await accountFactory.build({
+        asset: sourceAccount.asset
+      })
+
+      const sourceAmount = BigInt(5)
+
+      const trxOrError = await accountService.transferFunds({
+        sourceAccount,
+        destinationAccount,
+        sourceAmount,
+        timeout
+      })
+      assert.ok(!isAccountTransferError(trxOrError))
+      await expect(
+        accountService.getTotalSent(sourceAccount.id)
+      ).resolves.toEqual(BigInt(0))
+      await expect(trxOrError.commit()).resolves.toBeUndefined()
+      await expect(
+        accountService.getTotalSent(sourceAccount.id)
+      ).resolves.toEqual(sourceAmount)
+    })
     test.todo('Returns error timed out transfer')
   })
 })

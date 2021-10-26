@@ -1269,6 +1269,22 @@
             "deprecationReason": null
           },
           {
+            "name": "assetId",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "paymentPointer",
             "description": null,
             "type": {
@@ -2871,7 +2887,7 @@
             "deprecationReason": null
           },
           {
-            "name": "accountId",
+            "name": "sourceAccountId",
             "description": null,
             "args": [],
             "type": {
@@ -2879,39 +2895,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "reservedBalanceId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "sourceAccount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "PaymentSourceAccount",
+                "name": "ID",
                 "ofType": null
               }
             },
@@ -3507,65 +3491,6 @@
         "possibleTypes": null
       },
       {
-        "kind": "OBJECT",
-        "name": "PaymentSourceAccount",
-        "description": null,
-        "fields": [
-          {
-            "name": "id",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "scale",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "code",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
         "kind": "ENUM",
         "name": "PaymentState",
         "description": null,
@@ -3581,12 +3506,12 @@
           },
           {
             "name": "READY",
-            "description": "Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLING)",
+            "description": "Quote ready; awaiting user approval (FUNDING) or refusal (CANCELLED)",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "ACTIVATED",
+            "name": "FUNDING",
             "description": "Will transition to SENDING once payment funds are reserved",
             "isDeprecated": false,
             "deprecationReason": null
@@ -3594,12 +3519,6 @@
           {
             "name": "SENDING",
             "description": "Paying, will transition to COMPLETED on success",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "CANCELLING",
-            "description": "Will transition to CANCELLED when reserved funds are rolled back",
             "isDeprecated": false,
             "deprecationReason": null
           },

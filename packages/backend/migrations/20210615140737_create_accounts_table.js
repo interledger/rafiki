@@ -9,6 +9,8 @@ exports.up = function (knex) {
 
     // TigerBeetle account id tracking Interledger balance
     table.uuid('balanceId').notNullable()
+    // TigerBeetle account id tracking amount sent
+    table.uuid('sentBalanceId').nullable()
 
     table.bigInteger('maxPacketAmount').nullable()
 

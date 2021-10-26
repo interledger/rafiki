@@ -35,26 +35,15 @@ export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = as
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
+  const payment = await outgoingPaymentService.get(parent.id)
+  if (!payment) throw new Error('payment does not exist')
+
   const accountService = await ctx.container.use('accountService')
-  const balanceService = await ctx.container.use('balanceService')
-
-  let sourceAccountId, reservedBalanceId
-  if (parent.sourceAccount?.id && parent.reservedBalanceId) {
-    sourceAccountId = parent.sourceAccount?.id
-    reservedBalanceId = parent.reservedBalanceId
-  } else {
-    const payment = await outgoingPaymentService.get(parent.id)
-    if (!payment) throw new Error('payment does not exist')
-    sourceAccountId = payment.sourceAccount.id
-    reservedBalanceId = payment.reservedBalanceId
-  }
-
-  const balance = await accountService.getBalance(sourceAccountId)
-  if (balance === undefined) throw new Error('source account does not exist')
-  const reservedBalance = await balanceService.get(reservedBalanceId)
-  if (!reservedBalance) throw new Error('reserved balance does not exist')
+  const totalSent = await accountService.getTotalSent(payment.accountId)
+  if (totalSent === undefined)
+    throw new Error('account total sent does not exist')
   return {
-    amountSent: reservedBalance.balance - balance
+    amountSent: totalSent
   }
 }
 
@@ -222,7 +211,7 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
   let hasNextPagePayments, hasPreviousPagePayments
   try {
     hasNextPagePayments = await outgoingPaymentService.getAccountPage(
-      firstPayment.sourceAccount.id,
+      firstPayment.sourceAccountId,
       {
         after: lastEdge,
         first: 1
@@ -233,7 +222,7 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
   }
   try {
     hasPreviousPagePayments = await outgoingPaymentService.getAccountPage(
-      firstPayment.sourceAccount.id,
+      firstPayment.sourceAccountId,
       {
         before: firstEdge,
         last: 1
@@ -253,7 +242,7 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
 
 function paymentToGraphql(
   payment: OutgoingPayment
-): Omit<SchemaOutgoingPayment, 'outcome'> {
+): Omit<SchemaOutgoingPayment, 'outcome' | 'account'> {
   return {
     id: payment.id,
     state: SchemaPaymentState[payment.state],
@@ -269,9 +258,7 @@ function paymentToGraphql(
       lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
       highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
-    accountId: payment.accountId,
-    reservedBalanceId: payment.reservedBalanceId,
-    sourceAccount: payment.sourceAccount,
+    sourceAccountId: payment.sourceAccountId,
     destinationAccount: payment.destinationAccount,
     createdAt: new Date(+payment.createdAt).toISOString()
   }

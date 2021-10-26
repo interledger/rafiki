@@ -1,7 +1,6 @@
-import assert from 'assert'
 import {
+  ForeignKeyViolationError,
   NotFoundError,
-  PartialModelObject,
   raw,
   Transaction,
   UniqueViolationError
@@ -47,10 +46,22 @@ export type Options = {
   maxPacketAmount?: bigint
 }
 
-export type CreateOptions = Options & {
+type CreateAccountOptions = Options & {
   id?: string
-  asset: AssetOptions
+  assetId: string
+  asset?: never
+  sentBalance?: boolean
 }
+
+// TODO: remove
+type LegacyCreateAccountOptions = Options & {
+  id?: string
+  assetId?: never
+  asset: AssetOptions
+  sentBalance?: boolean
+}
+
+export type CreateOptions = CreateAccountOptions | LegacyCreateAccountOptions
 
 export type UpdateOptions = Options & {
   id: string
@@ -90,6 +101,7 @@ export interface AccountService {
   getByToken(token: string): Promise<Account | undefined>
   getAddress(accountId: string): Promise<string | undefined>
   getBalance(accountId: string): Promise<bigint | undefined>
+  getTotalSent(accountId: string): Promise<bigint | undefined>
   getPage(pagination?: Pagination): Promise<Account[]>
   transferFunds(
     options: AccountTransferOptions
@@ -138,6 +150,7 @@ export function createAccountService({
     getByToken: (token) => getAccountByToken(deps, token),
     getAddress: (id) => getAccountAddress(deps, id),
     getBalance: (id) => getAccountBalance(deps, id),
+    getTotalSent: (id) => getAccountTotalSent(deps, id),
     getPage: (pagination?) => getAccountsPage(deps, pagination),
     transferFunds: (options) => transferFunds(deps, options)
   }
@@ -148,27 +161,21 @@ async function createAccount(
   account: CreateOptions,
   trx?: Transaction
 ): Promise<Account | AccountError> {
-  // Don't rollback creating a new asset if account creation fails.
-  // Asset rows include a smallserial column that would have sequence gaps
-  // if a transaction is rolled back.
-  // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
-  const asset = await deps.assetService.getOrCreate(account.asset)
-  const newAccount: PartialModelObject<Account> = {
-    ...account,
-    asset: asset,
-    assetId: asset.id
-  }
-  assert.ok(newAccount.asset)
-
   const acctTrx = trx || (await Account.startTransaction())
   try {
-    newAccount.balanceId = (
-      await deps.balanceService.create({
-        unit: newAccount.asset.unit
+    const sentBalance = account.sentBalance
+    delete account.sentBalance
+    const accountRow = await Account.query(acctTrx)
+      .insertAndFetch({
+        ...account,
+        asset: undefined,
+        assetId:
+          account.assetId ||
+          (await deps.assetService.getOrCreate(account.asset as AssetOptions))
+            .id,
+        balanceId: uuid()
       })
-    ).id
-
-    const accountRow = await Account.query(acctTrx).insertAndFetch(newAccount)
+      .withGraphFetched('asset')
 
     const incomingTokens = account.http?.incoming?.authTokens.map(
       (incomingToken: string): HttpTokenOptions => {
@@ -190,10 +197,31 @@ async function createAccount(
         throw new Error(err)
       }
     }
+
+    const { id: balanceId } = await deps.balanceService.create({
+      unit: accountRow.asset.unit
+    })
+
+    let sentBalanceId: string | undefined
+    if (sentBalance) {
+      sentBalanceId = (
+        await deps.balanceService.create({
+          unit: accountRow.asset.unit
+        })
+      ).id
+    }
+    const newAccount = await accountRow
+      .$query(acctTrx)
+      .patchAndFetch({
+        balanceId,
+        sentBalanceId
+      })
+      .withGraphFetched('asset')
+
     if (!trx) {
       await acctTrx.commit()
     }
-    return accountRow
+    return newAccount
   } catch (err) {
     if (!trx) {
       await acctTrx.rollback()
@@ -203,6 +231,11 @@ async function createAccount(
       err.constraint === 'accounts_pkey'
     ) {
       return AccountError.DuplicateAccountId
+    } else if (
+      err instanceof ForeignKeyViolationError &&
+      err.constraint === 'accounts_assetid_foreign'
+    ) {
+      return AccountError.UnknownAsset
     }
     throw err
   }
@@ -283,6 +316,27 @@ async function getAccountBalance(
   }
 
   const balance = await deps.balanceService.get(account.balanceId)
+
+  if (!balance) {
+    throw new UnknownBalanceError(accountId)
+  }
+
+  return balance.balance
+}
+
+async function getAccountTotalSent(
+  deps: ServiceDependencies,
+  accountId: string
+): Promise<bigint | undefined> {
+  const account = await Account.query(deps.knex)
+    .findById(accountId)
+    .select('sentBalanceId')
+
+  if (!account?.sentBalanceId) {
+    return undefined
+  }
+
+  const balance = await deps.balanceService.get(account.sentBalanceId)
 
   if (!balance) {
     throw new UnknownBalanceError(accountId)
@@ -492,6 +546,15 @@ async function transferFunds(
         timeout
       }
     )
+  }
+  if (sourceAccount.sentBalanceId) {
+    transfers.push({
+      id: uuid(),
+      sourceBalanceId: sourceAccount.asset.outgoingPaymentsBalanceId,
+      destinationBalanceId: sourceAccount.sentBalanceId,
+      amount: sourceAmount,
+      timeout
+    })
   }
   const error = await deps.transferService.create(transfers)
   if (error) {
