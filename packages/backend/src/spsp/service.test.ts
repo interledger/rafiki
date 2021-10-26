@@ -16,9 +16,8 @@ import { IocContract } from '@adonisjs/fold'
 import { makeWorkerUtils, WorkerUtils } from 'graphile-worker'
 import { v4 } from 'uuid'
 import { StreamServer } from '@interledger/stream-receiver'
-import { AccountFactory } from '../tests/accountFactory'
 import { truncateTables } from '../tests/tableManager'
-import { Account } from '../account/model'
+import { PaymentPointerService } from '../payment_pointer/service'
 import { WebMonetizationService } from '../webmonetization/service'
 
 describe('SPSP Service', (): void => {
@@ -26,7 +25,7 @@ describe('SPSP Service', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let workerUtils: WorkerUtils
-  let accountFactory: AccountFactory
+  let paymentPointerService: PaymentPointerService
   let wmService: WebMonetizationService
   let SPSPService: SPSPService
   let streamServer: StreamServer
@@ -53,10 +52,9 @@ describe('SPSP Service', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
-      accountFactory = new AccountFactory(accountService)
       SPSPService = await deps.use('SPSPService')
       streamServer = await deps.use('streamServer')
+      paymentPointerService = await deps.use('paymentPointerService')
       wmService = await deps.use('wmService')
     }
   )
@@ -71,20 +69,22 @@ describe('SPSP Service', (): void => {
   )
 
   describe('GET /pay/:id handler', (): void => {
-    let account: Account
+    let paymentPointerId: string
 
     beforeEach(
       async (): Promise<void> => {
-        account = await accountFactory.build({
-          asset: {
-            scale: 6,
-            code: 'USD'
-          }
-        })
+        paymentPointerId = (
+          await paymentPointerService.create({
+            asset: {
+              scale: 6,
+              code: 'USD'
+            }
+          })
+        ).id
       }
     )
 
-    test('invalid account id; returns 400', async () => {
+    test('invalid payment pointer id; returns 400', async () => {
       const ctx: AppContext = createContext({}, 'not_a_uuid')
       await expect(SPSPService.GETPayEndpoint(ctx)).rejects.toHaveProperty(
         'status',
@@ -97,7 +97,7 @@ describe('SPSP Service', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        account.id
+        paymentPointerId
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).rejects.toHaveProperty(
         'status',
@@ -110,7 +110,7 @@ describe('SPSP Service', (): void => {
         {
           headers: { 'Receipt-Nonce': nonce }
         },
-        account.id
+        paymentPointerId
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).rejects.toHaveProperty(
         'status',
@@ -123,7 +123,7 @@ describe('SPSP Service', (): void => {
         {
           headers: { 'Receipt-Secret': secret }
         },
-        account.id
+        paymentPointerId
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).rejects.toHaveProperty(
         'status',
@@ -139,7 +139,7 @@ describe('SPSP Service', (): void => {
             'Receipt-Secret': secret
           }
         },
-        account.id
+        paymentPointerId
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).rejects.toHaveProperty(
         'status',
@@ -147,7 +147,7 @@ describe('SPSP Service', (): void => {
       )
     })
 
-    test('no account; returns 404', async () => {
+    test('no payment pointer; returns 404', async () => {
       const ctx = createContext({}, v4())
       await expect(SPSPService.GETPayEndpoint(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(404)
@@ -177,7 +177,7 @@ describe('SPSP Service', (): void => {
   */
 
     test('receipts disabled', async () => {
-      const ctx = createContext({}, account.id)
+      const ctx = createContext({}, paymentPointerId)
       await expect(SPSPService.GETPayEndpoint(ctx)).resolves.toBeUndefined()
       expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
 
@@ -190,9 +190,9 @@ describe('SPSP Service', (): void => {
       const connectionDetails = await decryptConnectionDetails(
         res.destination_account
       )
-      const currentInvoice = await wmService.getCurrentInvoice(account.id)
+      const currentInvoice = await wmService.getInvoice(paymentPointerId)
       expect(connectionDetails).toEqual({
-        paymentTag: currentInvoice.invoiceAccountId,
+        paymentTag: currentInvoice.accountId,
         asset: {
           code: 'USD',
           scale: 6
@@ -208,7 +208,7 @@ describe('SPSP Service', (): void => {
             'Receipt-Secret': secret
           }
         },
-        account.id
+        paymentPointerId
       )
       await expect(SPSPService.GETPayEndpoint(ctx)).resolves.toBeUndefined()
       expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
@@ -223,9 +223,9 @@ describe('SPSP Service', (): void => {
       const connectionDetails = await decryptConnectionDetails(
         res.destination_account
       )
-      const currentInvoice = await wmService.getCurrentInvoice(account.id)
+      const currentInvoice = await wmService.getInvoice(paymentPointerId)
       expect(connectionDetails).toEqual({
-        paymentTag: currentInvoice.invoiceAccountId,
+        paymentTag: currentInvoice.accountId,
         asset: {
           code: 'USD',
           scale: 6
@@ -242,7 +242,7 @@ describe('SPSP Service', (): void => {
      */
     function createContext(
       reqOpts: httpMocks.RequestOptions,
-      accountId: string
+      paymentPointerId: string
     ): AppContext {
       reqOpts.headers = Object.assign(
         { accept: 'application/spsp4+json' },
@@ -252,7 +252,7 @@ describe('SPSP Service', (): void => {
       const res = httpMocks.createResponse()
       const koa = new Koa<unknown, AppContextData>()
       const ctx = koa.createContext(req, res)
-      ctx.params = { id: accountId }
+      ctx.params = { id: paymentPointerId }
       ctx.closeEmitter = new EventEmitter()
       return ctx as AppContext
     }

@@ -1,33 +1,37 @@
 import { Invoice } from './model'
 import { AccountService } from '../account/service'
 import { isAccountError } from '../account/errors'
+import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
 import assert from 'assert'
 import { Transaction } from 'knex'
 
+interface CreateOptions {
+  paymentPointerId: string
+  description: string
+  expiresAt?: Date
+}
+
 export interface InvoiceService {
   get(id: string): Promise<Invoice | undefined>
-  create(
-    accountId: string,
-    description: string,
-    expiresAt?: Date,
-    trx?: Transaction
-  ): Promise<Invoice>
-  getAccountInvoicesPage(
-    accountId: string,
+  create(options: CreateOptions, trx?: Transaction): Promise<Invoice>
+  getPaymentPointerInvoicesPage(
+    paymentPointerId: string,
     pagination?: Pagination
   ): Promise<Invoice[]>
 }
 
 interface ServiceDependencies extends BaseService {
   accountService: AccountService
+  paymentPointerService: PaymentPointerService
 }
 
 export async function createInvoiceService({
   logger,
   knex,
-  accountService
+  accountService,
+  paymentPointerService
 }: ServiceDependencies): Promise<InvoiceService> {
   const log = logger.child({
     service: 'InvoiceService'
@@ -35,14 +39,14 @@ export async function createInvoiceService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountService
+    accountService,
+    paymentPointerService
   }
   return {
     get: (id) => getInvoice(deps, id),
-    create: (accountId, description, expiresAt, trx) =>
-      createInvoice(deps, accountId, description, expiresAt, trx),
-    getAccountInvoicesPage: (accountId, pagination) =>
-      getAccountInvoicesPage(deps, accountId, pagination)
+    create: (options, trx) => createInvoice(deps, options, trx),
+    getPaymentPointerInvoicesPage: (paymentPointerId, pagination) =>
+      getPaymentPointerInvoicesPage(deps, paymentPointerId, pagination)
   }
 }
 
@@ -50,38 +54,42 @@ async function getInvoice(
   deps: ServiceDependencies,
   id: string
 ): Promise<Invoice | undefined> {
-  return Invoice.query(deps.knex).findById(id)
+  return Invoice.query(deps.knex).findById(id).withGraphJoined('account.asset')
 }
 
 async function createInvoice(
   deps: ServiceDependencies,
-  accountId: string,
-  description: string,
-  expiresAt?: Date,
+  { paymentPointerId, description, expiresAt }: CreateOptions,
   trx?: Transaction
 ): Promise<Invoice> {
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))
 
   try {
-    const account = await deps.accountService.get(accountId)
-    if (!account) {
-      throw new Error('unable to create invoice, account does not exist')
+    const paymentPointer = await deps.paymentPointerService.get(
+      paymentPointerId
+    )
+    if (!paymentPointer) {
+      throw new Error(
+        'unable to create invoice, payment pointer does not exist'
+      )
     }
-    const invoiceAccount = await deps.accountService.create(
-      { asset: account.asset },
+    const account = await deps.accountService.create(
+      { assetId: paymentPointer.assetId },
       invTrx
     )
-    if (isAccountError(invoiceAccount)) {
-      throw new Error('unable to create invoice account, err=' + invoiceAccount)
+    if (isAccountError(account)) {
+      throw new Error('unable to create invoice account, err=' + account)
     }
 
-    const invoice = await Invoice.query(invTrx).insertAndFetch({
-      accountId,
-      invoiceAccountId: invoiceAccount.id,
-      description,
-      expiresAt: expiresAt,
-      active: true
-    })
+    const invoice = await Invoice.query(invTrx)
+      .insertAndFetch({
+        paymentPointerId,
+        accountId: account.id,
+        description,
+        expiresAt: expiresAt,
+        active: true
+      })
+      .withGraphFetched('account.asset')
     if (!trx) {
       await invTrx.commit()
     }
@@ -99,18 +107,18 @@ async function createInvoice(
  * Buffer.from("SGVsbG8gV29ybGQ=", 'base64').toString('ascii')
  */
 
-/** getAccountInvoicesPage
+/** getPaymentPointerInvoicesPage
  * The pagination algorithm is based on the Relay connection specification.
  * Please read the spec before changing things:
  * https://relay.dev/graphql/connections.htm
  * @param deps ServiceDependencies.
- * @param accountId The accountId of the invoices.
+ * @param paymentPointerId The paymentPointerId of the invoices.
  * @param pagination Pagination - cursors and limits.
  * @returns Invoice[] An array of invoices that form a page.
  */
-async function getAccountInvoicesPage(
+async function getPaymentPointerInvoicesPage(
   deps: ServiceDependencies,
-  accountId: string,
+  paymentPointerId: string,
   pagination?: Pagination
 ): Promise<Invoice[]> {
   assert.ok(deps.knex, 'Knex undefined')
@@ -132,7 +140,7 @@ async function getAccountInvoicesPage(
   if (typeof pagination?.after === 'string') {
     return Invoice.query(deps.knex)
       .where({
-        accountId: accountId
+        paymentPointerId: paymentPointerId
       })
       .andWhereRaw(
         '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "invoices" where "id" = ?)',
@@ -151,7 +159,7 @@ async function getAccountInvoicesPage(
   if (typeof pagination?.before === 'string') {
     return Invoice.query(deps.knex)
       .where({
-        accountId: accountId
+        paymentPointerId: paymentPointerId
       })
       .andWhereRaw(
         '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "invoices" where "id" = ?)',
@@ -169,7 +177,7 @@ async function getAccountInvoicesPage(
 
   return Invoice.query(deps.knex)
     .where({
-      accountId: accountId
+      paymentPointerId: paymentPointerId
     })
     .orderBy([
       { column: 'createdAt', order: 'asc' },

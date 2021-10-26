@@ -8,7 +8,7 @@ import {
   updateAccount,
   deleteAccount
 } from './account'
-import { getAccountInvoices, getPageInfo } from './invoice'
+import { getPaymentPointerInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
@@ -19,6 +19,7 @@ import {
   getAccountOutgoingPayments,
   getOutgoingPaymentPageInfo
 } from './outgoing_payment'
+import { getPaymentPointer, createPaymentPointer } from './payment_pointer'
 import {
   addAccountLiquidity,
   addAssetLiquidity,
@@ -34,12 +35,12 @@ export const resolvers: Resolvers = {
   Query: {
     account: getAccount,
     accounts: getAccounts,
-    outgoingPayment: getOutgoingPayment
+    outgoingPayment: getOutgoingPayment,
+    paymentPointer: getPaymentPointer
     // webhook: getWebhook
   },
   Account: {
     balance: getBalance,
-    invoices: getAccountInvoices,
     outgoingPayments: getAccountOutgoingPayments
     // webhooks: getWebhooks,
   },
@@ -55,6 +56,9 @@ export const resolvers: Resolvers = {
   OutgoingPayment: {
     outcome: getOutcome
   },
+  PaymentPointer: {
+    invoices: getPaymentPointerInvoices
+  },
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo
   },
@@ -66,6 +70,7 @@ export const resolvers: Resolvers = {
     approveOutgoingPayment,
     requoteOutgoingPayment,
     cancelOutgoingPayment,
+    createPaymentPointer,
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,

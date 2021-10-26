@@ -1,4 +1,5 @@
 import Knex from 'knex'
+import { v4 as uuid } from 'uuid'
 
 import { WebMonetizationService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -6,18 +7,16 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { AccountFactory } from '../tests/accountFactory'
+import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { Account } from '../account/model'
 import { Invoice } from '../invoice/model'
-import { DateTime } from 'luxon'
 
 describe('WM Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let wmService: WebMonetizationService
   let knex: Knex
-  let account: Account
+  let paymentPointerId: string
   const mockMessageProducer = {
     send: jest.fn()
   }
@@ -34,10 +33,10 @@ describe('WM Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       wmService = await deps.use('wmService')
-      const accountFactory = new AccountFactory(
-        await deps.use('accountService')
-      )
-      account = await accountFactory.build()
+      const paymentPointerService = await deps.use('paymentPointerService')
+      paymentPointerId = (
+        await paymentPointerService.create({ asset: randomAsset() })
+      ).id
     }
   )
 
@@ -58,44 +57,33 @@ describe('WM Service', (): void => {
   test('Creates a new WM invoice if none exists', async (): Promise<void> => {
     let invoices = await deps.use('invoiceService').then(
       (service): Promise<Array<Invoice>> => {
-        return service.getAccountInvoicesPage(account.id)
+        return service.getPaymentPointerInvoicesPage(paymentPointerId)
       }
     )
     expect(invoices.length).toEqual(0)
 
-    const wmInvoice = await wmService.getCurrentInvoice(account.id)
+    const wmInvoice = await wmService.getInvoice(paymentPointerId)
 
     invoices = await deps.use('invoiceService').then(
       (service): Promise<Array<Invoice>> => {
-        return service.getAccountInvoicesPage(account.id)
+        return service.getPaymentPointerInvoicesPage(paymentPointerId)
       }
     )
     expect(invoices.length).toEqual(1)
-    expect(wmInvoice.accountId).toEqual(account.id)
+    expect(wmInvoice.paymentPointerId).toEqual(paymentPointerId)
   })
 
-  test('Returns the current one if still valid', async (): Promise<void> => {
-    const currentWmInvoice = await wmService.getCurrentInvoice(account.id)
-
-    const wmInvoice = await wmService.getCurrentInvoice(account.id)
-
-    expect(wmInvoice).toEqual(currentWmInvoice)
-  })
-
-  test('Creates a new one if the old one has expired', async (): Promise<void> => {
-    jest.useFakeTimers('modern')
-    const currentWmInvoice = await wmService.getCurrentInvoice(account.id)
-    const msTomorrow = DateTime.now().plus({ day: 1 }).toMillis()
-    jest.setSystemTime(msTomorrow)
-
-    const wmInvoice = await wmService.getCurrentInvoice(account.id)
-
-    expect(wmInvoice).not.toEqual(currentWmInvoice)
-    const invoices = await deps.use('invoiceService').then(
-      (service): Promise<Array<Invoice>> => {
-        return service.getAccountInvoicesPage(account.id)
-      }
+  test('Returns the created WM invoice', async (): Promise<void> => {
+    const wmInvoice = await wmService.getInvoice(paymentPointerId)
+    await expect(wmService.getInvoice(paymentPointerId)).resolves.toEqual(
+      wmInvoice
     )
-    expect(invoices.length).toEqual(2)
+  })
+
+  test('Throws error for nonexistent payment pointer', async (): Promise<void> => {
+    const paymentPointerId = uuid()
+    await expect(wmService.getInvoice(paymentPointerId)).rejects.toThrow(
+      'payment pointer not found'
+    )
   })
 })
