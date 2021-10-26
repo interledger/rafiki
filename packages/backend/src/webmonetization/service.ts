@@ -79,6 +79,7 @@ async function getCurrentInvoice(
     return createInvoice(deps.knex, account.id, expectedExpiryAt)
   } else {
     const invoice = await deps.invoiceService.get(wm.currentInvoiceId)
+    if (!invoice) throw new Error('invoice not found') // probably unreachable
     if (invoice.expiresAt) {
       const currentInvoiceExpiry = DateTime.fromJSDate(invoice.expiresAt, {
         zone: 'utc'

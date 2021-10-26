@@ -7993,12 +7993,12 @@ __metadata:
   linkType: hard
 
 "ilp-packet@npm:^3.0.9, ilp-packet@npm:^3.1.2":
-  version: 3.1.2
-  resolution: "ilp-packet@npm:3.1.2"
+  version: 3.1.3
+  resolution: "ilp-packet@npm:3.1.3"
   dependencies:
     extensible-error: ^1.0.2
     oer-utils: ^5.1.2
-  checksum: 6d1390567829c35a4ad9d7ff19d6e9618474ff63dbdbb7aa1b35d18d4dcb4922b1cb0ca5073ce2746259625dafd644899102c9a5b87b0494708bfbe4f3dc212b
+  checksum: 410f75c6f62959a6dd4d115044f5201ddb59dcbc393ff42cba4b649a11466f3325b2663e7237986ec5aee53d8a923b74c78c18e5048a1b41adf804d76ccf9a17
   languageName: node
   linkType: hard
 

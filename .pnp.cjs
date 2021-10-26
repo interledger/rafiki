@@ -3119,7 +3119,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@interledger/pay", "npm:0.3.0"],
             ["abort-controller", "npm:3.0.0"],
             ["ilp-logger", "npm:1.4.4"],
-            ["ilp-packet", "npm:3.1.2"],
+            ["ilp-packet", "npm:3.1.3"],
             ["ilp-protocol-stream", "npm:2.7.0"],
             ["long", "npm:4.0.0"],
             ["node-fetch", "npm:2.6.1"],
@@ -3135,7 +3135,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@interledger/stream-receiver", "npm:0.2.2"],
             ["@types/long", "npm:4.0.1"],
             ["ilp-logger", "npm:1.4.4"],
-            ["ilp-packet", "npm:3.1.2"],
+            ["ilp-packet", "npm:3.1.3"],
             ["ilp-protocol-ildcp", "npm:2.2.2"],
             ["ilp-protocol-stream", "npm:2.7.0"],
             ["long", "npm:4.0.0"],
@@ -6080,7 +6080,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["graphql", "npm:15.5.0"],
             ["graphql-scalars", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.10.0"],
             ["graphql-tools", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:7.0.5"],
-            ["ilp-packet", "npm:3.1.2"],
+            ["ilp-packet", "npm:3.1.3"],
             ["ilp-plugin-http", "npm:1.6.1"],
             ["ilp-protocol-ccp", "npm:1.2.2"],
             ["ilp-protocol-ildcp", "npm:2.2.2"],
@@ -10198,10 +10198,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["ilp-packet", [
-        ["npm:3.1.2", {
-          "packageLocation": "./.yarn/cache/ilp-packet-npm-3.1.2-2dfff1c2e5-6d13905678.zip/node_modules/ilp-packet/",
+        ["npm:3.1.3", {
+          "packageLocation": "./.yarn/cache/ilp-packet-npm-3.1.3-2aeafdc54f-410f75c6f6.zip/node_modules/ilp-packet/",
           "packageDependencies": [
-            ["ilp-packet", "npm:3.1.2"],
+            ["ilp-packet", "npm:3.1.3"],
             ["@types/long", "npm:4.0.1"],
             ["extensible-error", "npm:1.0.2"],
             ["long", "npm:4.0.0"],
@@ -10217,7 +10217,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ilp-plugin-http", "npm:1.6.1"],
             ["@types/node", "npm:10.17.60"],
             ["debug", "virtual:aff37b196112a48a1e8e0f7694f5241ca5b34a097a12951e90956d9656fa27d66d4f0a0010dd94c74bdcbeae6068cbbe81c17e64bbc6391d98876362f7ba99a5#npm:3.2.7"],
-            ["ilp-packet", "npm:3.1.2"],
+            ["ilp-packet", "npm:3.1.3"],
             ["ilp-protocol-ildcp", "npm:2.2.2"],
             ["jsonwebtoken", "npm:8.5.1"],
             ["koa", "npm:2.13.1"],
@@ -10232,7 +10232,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/ilp-protocol-ccp-npm-1.2.2-bceb1d7071-bdc33b2bb8.zip/node_modules/ilp-protocol-ccp/",
           "packageDependencies": [
             ["ilp-protocol-ccp", "npm:1.2.2"],
-            ["ilp-packet", "npm:3.1.2"],
+            ["ilp-packet", "npm:3.1.3"],
             ["oer-utils", "npm:5.1.2"]
           ],
           "linkType": "HARD",
@@ -10244,7 +10244,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["ilp-protocol-ildcp", "npm:2.2.2"],
             ["debug", "virtual:901e1408cc8bfef5550e648cc3ee4f1ec6e307e3f5baab3ad60f0ba461a3df0a2fb4207ed57f6ec68edeacbb88063dcc84f3c35bb45638ba421a021eb350b42b#npm:4.3.2"],
-            ["ilp-packet", "npm:3.1.2"],
+            ["ilp-packet", "npm:3.1.3"],
             ["oer-utils", "npm:5.1.2"]
           ],
           "linkType": "HARD",
@@ -10257,7 +10257,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ilp-protocol-stream", "npm:2.7.0"],
             ["@types/node", "npm:10.17.59"],
             ["ilp-logger", "npm:1.4.4"],
-            ["ilp-packet", "npm:3.1.2"],
+            ["ilp-packet", "npm:3.1.3"],
             ["ilp-protocol-ildcp", "npm:2.2.2"],
             ["long", "npm:4.0.0"],
             ["oer-utils", "npm:5.1.2"],

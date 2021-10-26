@@ -66,6 +66,7 @@ describe('Invoice Service', (): void => {
     test('An invoice can be created and fetched', async (): Promise<void> => {
       const invoice = await invoiceService.create(account.id, 'Test invoice')
       const retrievedInvoice = await invoiceService.get(invoice.id)
+      if (!retrievedInvoice) throw new Error('invoice not found')
       expect(retrievedInvoice.id).toEqual(invoice.id)
       expect(retrievedInvoice.accountId).toEqual(invoice.accountId)
     })
@@ -83,6 +84,10 @@ describe('Invoice Service', (): void => {
       await expect(
         invoiceService.create(uuid(), 'Test invoice')
       ).rejects.toThrow('unable to create invoice, account does not exist')
+    })
+
+    test('Cannot fetch a bogus invoice', async (): Promise<void> => {
+      expect(invoiceService.get(uuid())).resolves.toBeUndefined()
     })
   })
 

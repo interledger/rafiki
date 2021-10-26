@@ -7,7 +7,7 @@ import assert from 'assert'
 import { Transaction } from 'knex'
 
 export interface InvoiceService {
-  get(id: string): Promise<Invoice>
+  get(id: string): Promise<Invoice | undefined>
   create(
     accountId: string,
     description: string,
@@ -49,7 +49,7 @@ export async function createInvoiceService({
 async function getInvoice(
   deps: ServiceDependencies,
   id: string
-): Promise<Invoice> {
+): Promise<Invoice | undefined> {
   return Invoice.query(deps.knex).findById(id)
 }
 
