@@ -332,7 +332,7 @@ type PaymentIntent {
 enum PaymentState {
   "Will transition to READY when quote is complete"
   INACTIVE
-  "Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLED)"
+  "Quote ready; awaiting user approval (FUNDING) or refusal (CANCELLED)"
   READY
   "Will transition to SENDING once payment funds are reserved"
   FUNDING

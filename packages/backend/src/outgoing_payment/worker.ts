@@ -110,9 +110,11 @@ export async function handlePaymentLifecycle(
         { state: payment.state, error, stateAttempts },
         'payment lifecycle failed; cancelling'
       )
-      await payment
-        .$query(deps.knex)
-        .patch({ state: PaymentState.Cancelled, error })
+      await payment.$query(deps.knex).patch({
+        state: PaymentState.Cancelled,
+        withdrawLiquidity: true,
+        error
+      })
     }
   }
 

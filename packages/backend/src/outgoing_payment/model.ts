@@ -70,12 +70,6 @@ export class OutgoingPayment extends BaseModel {
       }
       if (opts.old['state'] !== this.state) {
         this.stateAttempts = 0
-        if (
-          this.state === PaymentState.Cancelled ||
-          this.state === PaymentState.Completed
-        ) {
-          this.withdrawLiquidity = true
-        }
       }
     }
   }

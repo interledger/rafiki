@@ -336,7 +336,10 @@ const sendingCompleted = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> => {
-  await payment.$query(deps.knex).patch({ state: PaymentState.Completed })
+  await payment.$query(deps.knex).patch({
+    state: PaymentState.Completed,
+    withdrawLiquidity: true
+  })
 }
 
 // "payment" is locked by the "deps.knex" transaction.

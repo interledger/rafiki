@@ -178,6 +178,7 @@ async function cancelPayment(
     }
     await payment.$query(trx).patch({
       state: PaymentState.Cancelled,
+      withdrawLiquidity: true,
       error: lifecycle.LifecycleError.CancelledByAPI
     })
     return payment

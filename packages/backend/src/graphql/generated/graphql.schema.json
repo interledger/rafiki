@@ -3506,7 +3506,7 @@
           },
           {
             "name": "READY",
-            "description": "Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLED)",
+            "description": "Quote ready; awaiting user approval (FUNDING) or refusal (CANCELLED)",
             "isDeprecated": false,
             "deprecationReason": null
           },

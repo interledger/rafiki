@@ -474,7 +474,7 @@ export type PaymentQuote = {
 export enum PaymentState {
   /** Will transition to READY when quote is complete */
   Inactive = 'INACTIVE',
-  /** Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLED) */
+  /** Quote ready; awaiting user approval (FUNDING) or refusal (CANCELLED) */
   Ready = 'READY',
   /** Will transition to SENDING once payment funds are reserved */
   Funding = 'FUNDING',
