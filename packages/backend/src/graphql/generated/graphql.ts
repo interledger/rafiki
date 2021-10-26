@@ -24,16 +24,7 @@ export type Account = {
   stream: Stream;
   routing?: Maybe<Routing>;
   balance?: Maybe<Scalars['UInt64']>;
-  outgoingPayments?: Maybe<OutgoingPaymentConnection>;
   webhooks?: Maybe<WebhooksConnection>;
-};
-
-
-export type AccountOutgoingPaymentsArgs = {
-  after?: Maybe<Scalars['String']>;
-  before?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  last?: Maybe<Scalars['Int']>;
 };
 
 
@@ -154,8 +145,7 @@ export type CreateAssetLiquidityWithdrawalMutationResponse = MutationResponse & 
 };
 
 export type CreateOutgoingPaymentInput = {
-  sourceAccountId: Scalars['String'];
-  assetId: Scalars['String'];
+  paymentPointerId: Scalars['String'];
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
   invoiceUrl?: Maybe<Scalars['String']>;
@@ -409,7 +399,6 @@ export type OutgoingPayment = {
   stateAttempts: Scalars['Int'];
   intent?: Maybe<PaymentIntent>;
   quote?: Maybe<PaymentQuote>;
-  sourceAccountId: Scalars['ID'];
   destinationAccount: PaymentDestinationAccount;
   outcome?: Maybe<OutgoingPaymentOutcome>;
   createdAt: Scalars['String'];
@@ -472,10 +461,19 @@ export type PaymentPointer = {
   id: Scalars['ID'];
   asset: Asset;
   invoices?: Maybe<InvoiceConnection>;
+  outgoingPayments?: Maybe<OutgoingPaymentConnection>;
 };
 
 
 export type PaymentPointerInvoicesArgs = {
+  after?: Maybe<Scalars['String']>;
+  before?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  last?: Maybe<Scalars['Int']>;
+};
+
+
+export type PaymentPointerOutgoingPaymentsArgs = {
   after?: Maybe<Scalars['String']>;
   before?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
@@ -850,7 +848,6 @@ export type AccountResolvers<ContextType = any, ParentType extends ResolversPare
   stream?: Resolver<ResolversTypes['Stream'], ParentType, ContextType>;
   routing?: Resolver<Maybe<ResolversTypes['Routing']>, ParentType, ContextType>;
   balance?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
-  outgoingPayments?: Resolver<Maybe<ResolversTypes['OutgoingPaymentConnection']>, ParentType, ContextType, RequireFields<AccountOutgoingPaymentsArgs, never>>;
   webhooks?: Resolver<Maybe<ResolversTypes['WebhooksConnection']>, ParentType, ContextType, RequireFields<AccountWebhooksArgs, never>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -1019,7 +1016,6 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
-  sourceAccountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
   outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1078,6 +1074,7 @@ export type PaymentPointerResolvers<ContextType = any, ParentType extends Resolv
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   invoices?: Resolver<Maybe<ResolversTypes['InvoiceConnection']>, ParentType, ContextType, RequireFields<PaymentPointerInvoicesArgs, never>>;
+  outgoingPayments?: Resolver<Maybe<ResolversTypes['OutgoingPaymentConnection']>, ParentType, ContextType, RequireFields<PaymentPointerOutgoingPaymentsArgs, never>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

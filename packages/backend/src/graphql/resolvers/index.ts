@@ -16,7 +16,7 @@ import {
   requoteOutgoingPayment,
   cancelOutgoingPayment,
   getOutcome,
-  getAccountOutgoingPayments,
+  getPaymentPointerOutgoingPayments,
   getOutgoingPaymentPageInfo
 } from './outgoing_payment'
 import { getPaymentPointer, createPaymentPointer } from './payment_pointer'
@@ -40,8 +40,7 @@ export const resolvers: Resolvers = {
     // webhook: getWebhook
   },
   Account: {
-    balance: getBalance,
-    outgoingPayments: getAccountOutgoingPayments
+    balance: getBalance
     // webhooks: getWebhooks,
   },
   AccountsConnection: {
@@ -57,7 +56,8 @@ export const resolvers: Resolvers = {
     outcome: getOutcome
   },
   PaymentPointer: {
-    invoices: getPaymentPointerInvoices
+    invoices: getPaymentPointerInvoices,
+    outgoingPayments: getPaymentPointerOutgoingPayments
   },
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo

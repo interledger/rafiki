@@ -44,7 +44,7 @@ export class OutgoingPayment extends BaseModel {
   }
   public accountId!: string
   public account!: Account
-  public sourceAccountId!: string
+  public paymentPointerId!: string
   public destinationAccount!: {
     scale: number
     code: string

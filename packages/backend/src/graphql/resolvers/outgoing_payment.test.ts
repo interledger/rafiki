@@ -12,6 +12,7 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { AccountFactory } from '../../tests/accountFactory'
+import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import { OutgoingPaymentService } from '../../outgoing_payment/service'
 import {
@@ -20,10 +21,11 @@ import {
 } from '../../outgoing_payment/model'
 import { AccountService } from '../../account/service'
 import { AssetOptions } from '../../asset/service'
+import { PaymentPointerService } from '../../payment_pointer/service'
 import {
-  Account,
   OutgoingPayment,
   OutgoingPaymentResponse,
+  PaymentPointer,
   PaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType
 } from '../generated/graphql'
@@ -34,6 +36,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let knex: Knex
   let accountService: AccountService
   let outgoingPaymentService: OutgoingPaymentService
+  let paymentPointerService: PaymentPointerService
 
   const streamServer = new StreamServer({
     serverSecret: Buffer.from(
@@ -50,6 +53,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       knex = await deps.use('knex')
       accountService = await deps.use('accountService')
       outgoingPaymentService = await deps.use('outgoingPaymentService')
+      paymentPointerService = await deps.use('paymentPointerService')
 
       const credentials = streamServer.generateCredentials({
         asset: {
@@ -79,10 +83,13 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
+      asset = randomAsset()
+      const { id: paymentPointerId } = await paymentPointerService.create({
+        asset
+      })
       accountService = await deps.use('accountService')
       const accountFactory = new AccountFactory(accountService)
-      const account = await accountFactory.build()
-      asset = account.asset
+      const account = await accountFactory.build({ asset })
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
         intent: {
@@ -105,7 +112,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
         accountId: account.id,
-        sourceAccountId: uuid(),
+        paymentPointerId,
         destinationAccount: {
           scale: 9,
           code: 'XRP',
@@ -172,7 +179,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                     lowExchangeRateEstimate
                     highExchangeRateEstimate
                   }
-                  sourceAccountId
                   destinationAccount {
                     scale
                     code
@@ -214,7 +220,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
           __typename: 'PaymentQuote'
         })
-        expect(query.sourceAccountId).toBe(payment.sourceAccountId)
         expect(query.destinationAccount).toEqual({
           ...payment.destinationAccount,
           __typename: 'PaymentDestinationAccount'
@@ -249,8 +254,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   describe('Mutation.createOutgoingPayment', (): void => {
     const input = {
-      sourceAccountId: uuid(),
-      assetId: uuid(),
+      paymentPointerId: uuid(),
       paymentPointer: 'http://wallet2.example/paymentpointer/bob',
       amountToSend: '123',
       autoApprove: false
@@ -570,15 +574,13 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
   })
 
-  //TODO: change to payment pointer resolver
-  describe('Account outgoingPayments', (): void => {
+  describe('Payment pointer outgoingPayments', (): void => {
     let outgoingPayments: OutgoingPaymentModel[]
-    let accountFactory: AccountFactory
-    let sourceAccountId: string
+    let paymentPointerId: string
     beforeAll(
       async (): Promise<void> => {
-        accountFactory = new AccountFactory(accountService)
-        sourceAccountId = (await accountFactory.build({ asset })).id
+        const accountFactory = new AccountFactory(accountService)
+        paymentPointerId = (await paymentPointerService.create({ asset })).id
         outgoingPayments = []
         for (let i = 0; i < 50; i++) {
           const { id: accountId } = await accountFactory.build({ asset })
@@ -605,7 +607,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                 highExchangeRateEstimate: Pay.Ratio.from(2.3)!
               },
               accountId,
-              sourceAccountId,
+              paymentPointerId,
               destinationAccount: {
                 scale: 9,
                 code: 'XRP',
@@ -621,8 +623,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!) {
+              paymentPointer(id: $id) {
                 outgoingPayments {
                   edges {
                     node {
@@ -641,13 +643,13 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: sourceAccountId
+            id: paymentPointerId
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }
@@ -665,12 +667,14 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
 
     test('No outgoingPayments, but outgoingPayments requested', async (): Promise<void> => {
-      const { id: sourceAccountId } = await accountFactory.build()
+      const { id: paymentPointerId } = await paymentPointerService.create({
+        asset
+      })
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!) {
+              paymentPointer(id: $id) {
                 outgoingPayments {
                   edges {
                     node {
@@ -689,13 +693,13 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: sourceAccountId
+            id: paymentPointerId
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }
@@ -712,8 +716,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!) {
+              paymentPointer(id: $id) {
                 outgoingPayments(first: 10) {
                   edges {
                     node {
@@ -732,13 +736,13 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: sourceAccountId
+            id: paymentPointerId
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }
@@ -759,8 +763,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!, $after: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!, $after: String!) {
+              paymentPointer(id: $id) {
                 outgoingPayments(after: $after) {
                   edges {
                     node {
@@ -779,14 +783,14 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: sourceAccountId,
+            id: paymentPointerId,
             after: outgoingPayments[19].id
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }
@@ -807,8 +811,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($id: String!, $after: String!) {
-              account(id: $id) {
+            query PaymentPointer($id: String!, $after: String!) {
+              paymentPointer(id: $id) {
                 outgoingPayments(after: $after, first: 10) {
                   edges {
                     node {
@@ -827,14 +831,14 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: sourceAccountId,
+            id: paymentPointerId,
             after: outgoingPayments[44].id
           }
         })
         .then(
-          (query): Account => {
+          (query): PaymentPointer => {
             if (query.data) {
-              return query.data.account
+              return query.data.paymentPointer
             } else {
               throw new Error('Data was empty')
             }

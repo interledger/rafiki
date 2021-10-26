@@ -17,6 +17,7 @@ import { MockPlugin } from './mock_plugin'
 import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { AccountService } from '../account/service'
+import { AssetOptions } from '../asset/service'
 import { RatesService } from '../rates/service'
 import { LiquidityService } from '../liquidity/service'
 
@@ -28,8 +29,8 @@ describe('OutgoingPaymentService', (): void => {
   let accountService: AccountService
   let liquidityService: LiquidityService
   let knex: Knex
-  let sourceAccountId: string
-  let assetId: string
+  let paymentPointerId: string
+  let asset: AssetOptions
   let credentials: StreamCredentials
   let invoice: Pay.Invoice
   let plugins: { [accountId: string]: MockPlugin } = {}
@@ -159,13 +160,13 @@ describe('OutgoingPaymentService', (): void => {
       appContainer = await createTestApp(deps)
       accountService = await deps.use('accountService')
       const accountFactory = new AccountFactory(accountService)
-      const destinationAccount = await accountFactory.build({
-        asset: {
-          scale: 9,
-          code: 'USD'
-        }
+      asset = {
+        scale: 9,
+        code: 'USD'
+      }
+      const { id: destinationAccountId } = await accountFactory.build({
+        asset
       })
-      assetId = destinationAccount.assetId
       deps.bind('makeIlpPlugin', async (_deps) => (accountId: string) =>
         (plugins[accountId] =
           plugins[accountId] ||
@@ -173,7 +174,7 @@ describe('OutgoingPaymentService', (): void => {
             streamServer,
             exchangeRate: 0.5,
             accountId,
-            destinationAccountId: destinationAccount.id,
+            destinationAccountId,
             accountService,
             invoice
           }))
@@ -194,7 +195,8 @@ describe('OutgoingPaymentService', (): void => {
       })
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       liquidityService = await deps.use('liquidityService')
-      sourceAccountId = uuid()
+      const paymentPointerService = await deps.use('paymentPointerService')
+      paymentPointerId = (await paymentPointerService.create({ asset })).id
       invoice = {
         invoiceUrl: 'http://wallet.example/bob/invoices/1',
         accountUrl: 'http://wallet.example/bob',
@@ -258,8 +260,7 @@ describe('OutgoingPaymentService', (): void => {
   describe('create', (): void => {
     it('creates an OutgoingPayment (FixedSend)', async () => {
       const payment = await outgoingPaymentService.create({
-        sourceAccountId,
-        assetId,
+        paymentPointerId,
         paymentPointer: 'http://wallet.example/paymentpointer/bob',
         amountToSend: BigInt(123),
         autoApprove: false
@@ -270,7 +271,7 @@ describe('OutgoingPaymentService', (): void => {
         amountToSend: BigInt(123),
         autoApprove: false
       })
-      expect(payment.sourceAccountId).toBe(sourceAccountId)
+      expect(payment.paymentPointerId).toBe(paymentPointerId)
       await expectOutcome(payment, { accountBalance: BigInt(0) })
       expect(payment.account.asset.code).toBe('USD')
       expect(payment.account.asset.scale).toBe(9)
@@ -287,8 +288,7 @@ describe('OutgoingPaymentService', (): void => {
 
     it('creates an OutgoingPayment (FixedDelivery)', async () => {
       const payment = await outgoingPaymentService.create({
-        sourceAccountId,
-        assetId,
+        paymentPointerId,
         invoiceUrl: 'http://wallet.example/bob/invoices/1',
         autoApprove: false
       })
@@ -297,7 +297,7 @@ describe('OutgoingPaymentService', (): void => {
         invoiceUrl: 'http://wallet.example/bob/invoices/1',
         autoApprove: false
       })
-      expect(payment.sourceAccountId).toBe(sourceAccountId)
+      expect(payment.paymentPointerId).toBe(paymentPointerId)
       await expectOutcome(payment, { accountBalance: BigInt(0) })
       expect(payment.account.asset.code).toBe('USD')
       expect(payment.account.asset.scale).toBe(9)
@@ -315,8 +315,7 @@ describe('OutgoingPaymentService', (): void => {
     it('fails to create with both invoice and paymentPointer', async () => {
       await expect(
         outgoingPaymentService.create({
-          sourceAccountId,
-          assetId,
+          paymentPointerId,
           invoiceUrl: 'http://wallet.example/bob/invoices/1',
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           autoApprove: false
@@ -329,8 +328,7 @@ describe('OutgoingPaymentService', (): void => {
     it('fails to create with both invoice and amountToSend', async () => {
       await expect(
         outgoingPaymentService.create({
-          sourceAccountId,
-          assetId,
+          paymentPointerId,
           invoiceUrl: 'http://wallet.example/bob/invoices/1',
           amountToSend: BigInt(123),
           autoApprove: false
@@ -340,16 +338,15 @@ describe('OutgoingPaymentService', (): void => {
       )
     })
 
-    it('fails to create with nonexistent asset', async () => {
+    it('fails to create with nonexistent payment pointer', async () => {
       await expect(
         outgoingPaymentService.create({
-          sourceAccountId,
-          assetId: uuid(),
+          paymentPointerId: uuid(),
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123),
           autoApprove: false
         })
-      ).rejects.toThrow('unable to create account, err=UnknownAsset')
+      ).rejects.toThrow('outgoing payment payment pointer does not exist')
     })
   })
 
@@ -358,8 +355,7 @@ describe('OutgoingPaymentService', (): void => {
       it('Ready (FixedSend)', async (): Promise<void> => {
         const paymentId = (
           await outgoingPaymentService.create({
-            sourceAccountId,
-            assetId,
+            paymentPointerId,
             paymentPointer: 'http://wallet.example/paymentpointer/bob',
             amountToSend: BigInt(123),
             autoApprove: false
@@ -395,8 +391,7 @@ describe('OutgoingPaymentService', (): void => {
       it('Ready (FixedDelivery)', async (): Promise<void> => {
         const paymentId = (
           await outgoingPaymentService.create({
-            sourceAccountId,
-            assetId,
+            paymentPointerId,
             invoiceUrl: 'http://wallet.example/bob/invoices/1',
             autoApprove: false
           })
@@ -424,8 +419,7 @@ describe('OutgoingPaymentService', (): void => {
           .mockImplementation(() => Promise.reject(new Error('fail')))
         const paymentId = (
           await outgoingPaymentService.create({
-            sourceAccountId,
-            assetId,
+            paymentPointerId,
             paymentPointer: 'http://wallet.example/paymentpointer/bob',
             amountToSend: BigInt(123),
             autoApprove: false
@@ -450,8 +444,7 @@ describe('OutgoingPaymentService', (): void => {
       // This mocks Inactive→Ready, but for it to trigger for real, it would go from Sending→Inactive(retry)→Ready (when the sending partially failed).
       it('Ready (FixedSend, 0<intent.amountToSend<amountSent)', async (): Promise<void> => {
         const payment = await outgoingPaymentService.create({
-          sourceAccountId,
-          assetId,
+          paymentPointerId,
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123),
           autoApprove: false
@@ -469,8 +462,7 @@ describe('OutgoingPaymentService', (): void => {
       // This mocks Inactive→Completed, but for it to trigger for real, it would go from Sending→Inactive(retry)→Completed (when the Sending→Completed transition failed to commit).
       it('Completed (FixedSend, intent.amountToSend===amountSent)', async (): Promise<void> => {
         const payment = await outgoingPaymentService.create({
-          sourceAccountId,
-          assetId,
+          paymentPointerId,
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123),
           autoApprove: false
@@ -489,8 +481,7 @@ describe('OutgoingPaymentService', (): void => {
         invoice.amountDelivered = invoice.amountToDeliver
         const paymentId = (
           await outgoingPaymentService.create({
-            sourceAccountId,
-            assetId,
+            paymentPointerId,
             invoiceUrl: 'http://wallet.example/bob/invoices/1',
             autoApprove: false
           })
@@ -500,8 +491,7 @@ describe('OutgoingPaymentService', (): void => {
 
       it('Cancelled (destination asset changed)', async (): Promise<void> => {
         const originalPayment = await outgoingPaymentService.create({
-          sourceAccountId,
-          assetId,
+          paymentPointerId,
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123),
           autoApprove: false
@@ -536,8 +526,7 @@ describe('OutgoingPaymentService', (): void => {
       }): Promise<string> {
         const paymentId = (
           await outgoingPaymentService.create({
-            sourceAccountId,
-            assetId,
+            paymentPointerId,
             paymentPointer: 'http://wallet.example/paymentpointer/bob',
             amountToSend: BigInt(123),
             autoApprove
@@ -580,8 +569,7 @@ describe('OutgoingPaymentService', (): void => {
         async (): Promise<void> => {
           paymentId = (
             await outgoingPaymentService.create({
-              sourceAccountId,
-              assetId,
+              paymentPointerId,
               paymentPointer: 'http://wallet.example/paymentpointer/bob',
               amountToSend: BigInt(123),
               autoApprove: true
@@ -626,8 +614,7 @@ describe('OutgoingPaymentService', (): void => {
       ): Promise<string> {
         const paymentId = (
           await outgoingPaymentService.create({
-            sourceAccountId,
-            assetId,
+            paymentPointerId,
             autoApprove: true,
             ...opts
           })
@@ -861,8 +848,7 @@ describe('OutgoingPaymentService', (): void => {
           async (): Promise<void> => {
             paymentId = (
               await outgoingPaymentService.create({
-                sourceAccountId,
-                assetId,
+                paymentPointerId,
                 invoiceUrl: 'http://wallet.example/bob/invoices/1',
                 autoApprove: true
               })
@@ -953,8 +939,7 @@ describe('OutgoingPaymentService', (): void => {
     beforeEach(
       async (): Promise<void> => {
         payment = await outgoingPaymentService.create({
-          sourceAccountId,
-          assetId,
+          paymentPointerId,
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123),
           autoApprove: false
@@ -1008,8 +993,7 @@ describe('OutgoingPaymentService', (): void => {
     beforeEach(
       async (): Promise<void> => {
         payment = await outgoingPaymentService.create({
-          sourceAccountId,
-          assetId,
+          paymentPointerId,
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123),
           autoApprove: false
@@ -1055,8 +1039,7 @@ describe('OutgoingPaymentService', (): void => {
     beforeEach(
       async (): Promise<void> => {
         payment = await outgoingPaymentService.create({
-          sourceAccountId,
-          assetId,
+          paymentPointerId,
           paymentPointer: 'http://wallet.example/paymentpointer/bob',
           amountToSend: BigInt(123),
           autoApprove: false
@@ -1098,7 +1081,7 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
-  describe('getAccountPage', () => {
+  describe('getPaymentPointerPage', () => {
     let paymentsCreated: OutgoingPayment[]
 
     beforeEach(
@@ -1107,8 +1090,7 @@ describe('OutgoingPaymentService', (): void => {
         for (let i = 0; i < 40; i++) {
           paymentsCreated.push(
             await outgoingPaymentService.create({
-              sourceAccountId,
-              assetId,
+              paymentPointerId,
               paymentPointer: 'http://wallet.example/paymentpointer/bob',
               amountToSend: BigInt(123),
               autoApprove: false
@@ -1125,8 +1107,8 @@ describe('OutgoingPaymentService', (): void => {
     )
 
     test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const payments = await outgoingPaymentService.getAccountPage(
-        sourceAccountId
+      const payments = await outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId
       )
       expect(payments).toHaveLength(20)
       expect(payments[0].id).toEqual(paymentsCreated[0].id)
@@ -1138,8 +1120,8 @@ describe('OutgoingPaymentService', (): void => {
       const pagination = {
         first: 10
       }
-      const payments = await outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const payments = await outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         pagination
       )
       expect(payments).toHaveLength(10)
@@ -1152,8 +1134,8 @@ describe('OutgoingPaymentService', (): void => {
       const pagination = {
         after: paymentsCreated[19].id
       }
-      const payments = await outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const payments = await outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         pagination
       )
       expect(payments).toHaveLength(20)
@@ -1167,8 +1149,8 @@ describe('OutgoingPaymentService', (): void => {
         first: 10,
         after: paymentsCreated[9].id
       }
-      const payments = await outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const payments = await outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         pagination
       )
       expect(payments).toHaveLength(10)
@@ -1181,8 +1163,8 @@ describe('OutgoingPaymentService', (): void => {
       const pagination = {
         last: 10
       }
-      const payments = outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const payments = outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         pagination
       )
       await expect(payments).rejects.toThrow(
@@ -1194,8 +1176,8 @@ describe('OutgoingPaymentService', (): void => {
       const pagination = {
         before: paymentsCreated[20].id
       }
-      const payments = await outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const payments = await outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         pagination
       )
       expect(payments).toHaveLength(20)
@@ -1209,8 +1191,8 @@ describe('OutgoingPaymentService', (): void => {
         last: 5,
         before: paymentsCreated[10].id
       }
-      const payments = await outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const payments = await outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         pagination
       )
       expect(payments).toHaveLength(5)
@@ -1223,16 +1205,16 @@ describe('OutgoingPaymentService', (): void => {
       const paginationForwards = {
         first: 10
       }
-      const paymentsForwards = await outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const paymentsForwards = await outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         paginationForwards
       )
       const paginationBackwards = {
         last: 10,
         before: paymentsCreated[10].id
       }
-      const paymentsBackwards = await outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const paymentsBackwards = await outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         paginationBackwards
       )
       expect(paymentsForwards).toHaveLength(10)
@@ -1245,8 +1227,8 @@ describe('OutgoingPaymentService', (): void => {
         after: paymentsCreated[19].id,
         before: paymentsCreated[19].id
       }
-      const payments = await outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const payments = await outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         pagination
       )
       expect(payments).toHaveLength(20)
@@ -1259,8 +1241,8 @@ describe('OutgoingPaymentService', (): void => {
       const pagination = {
         first: -1
       }
-      const payments = outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const payments = outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         pagination
       )
       await expect(payments).rejects.toThrow('Pagination index error')
@@ -1270,8 +1252,8 @@ describe('OutgoingPaymentService', (): void => {
       const pagination = {
         first: 101
       }
-      const payments = outgoingPaymentService.getAccountPage(
-        sourceAccountId,
+      const payments = outgoingPaymentService.getPaymentPointerPage(
+        paymentPointerId,
         pagination
       )
       await expect(payments).rejects.toThrow('Pagination index error')
