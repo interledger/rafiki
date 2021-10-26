@@ -308,6 +308,18 @@ describe('Account Service', (): void => {
       }
     })
 
+    test('Cannot create an account with invalid static ILP address', async (): Promise<void> => {
+      await expect(
+        accountService.create({
+          id: uuid(),
+          asset: randomAsset(),
+          routing: {
+            staticIlpAddress: 'test.hello!'
+          }
+        })
+      ).resolves.toEqual(AccountError.InvalidStaticIlpAddress)
+    })
+
     test('Auto-creates corresponding asset with liquidity and settlement accounts', async (): Promise<void> => {
       const asset = randomAsset()
       const account: CreateOptions = {
@@ -597,6 +609,22 @@ describe('Account Service', (): void => {
       )
       await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
+
+    test('Returns error for invalid static ILP address', async (): Promise<void> => {
+      const account = await accountFactory.build()
+      const updateOptions: UpdateOptions = {
+        id: account.id,
+        disabled: true,
+        maxPacketAmount: BigInt(200),
+        routing: {
+          staticIlpAddress: 'test.hello!'
+        }
+      }
+      await expect(accountService.update(updateOptions)).resolves.toEqual(
+        AccountError.InvalidStaticIlpAddress
+      )
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
+    })
   })
 
   describe('Get Account Balance', (): void => {
@@ -734,19 +762,6 @@ describe('Account Service', (): void => {
       await accountFactory.build({
         routing: {
           staticIlpAddress: 'test.rafiki_with_wildcards'
-        }
-      })
-      const account = await accountService.getByDestinationAddress(
-        'test.rafiki-with-wildcards'
-      )
-      expect(account).toBeUndefined()
-    })
-
-    test('Properly escapes Postgres pattern "%" wildcards in the static address', async (): Promise<void> => {
-      await accountFactory.build({
-        routing: {
-          // This is not actually a valid address, but just to be safe...
-          staticIlpAddress: 'test.rafiki%with%wildcards'
         }
       })
       const account = await accountService.getByDestinationAddress(

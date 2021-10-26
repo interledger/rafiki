@@ -6,6 +6,7 @@ import {
   UniqueViolationError
 } from 'objection'
 import { v4 as uuid } from 'uuid'
+import { isValidIlpAddress } from 'ilp-packet'
 
 import { AssetService, AssetOptions } from '../asset/service'
 import { BalanceService } from '../balance/service'
@@ -161,6 +162,13 @@ async function createAccount(
   account: CreateOptions,
   trx?: Transaction
 ): Promise<Account | AccountError> {
+  if (
+    account.routing?.staticIlpAddress &&
+    !isValidIlpAddress(account.routing.staticIlpAddress)
+  ) {
+    return AccountError.InvalidStaticIlpAddress
+  }
+
   const acctTrx = trx || (await Account.startTransaction())
   try {
     const sentBalance = account.sentBalance
@@ -245,6 +253,13 @@ async function updateAccount(
   deps: ServiceDependencies,
   accountOptions: UpdateOptions
 ): Promise<Account | AccountError> {
+  if (
+    accountOptions.routing?.staticIlpAddress &&
+    !isValidIlpAddress(accountOptions.routing.staticIlpAddress)
+  ) {
+    return AccountError.InvalidStaticIlpAddress
+  }
+
   const trx = await Account.startTransaction()
   try {
     if (accountOptions.http?.incoming?.authTokens) {
