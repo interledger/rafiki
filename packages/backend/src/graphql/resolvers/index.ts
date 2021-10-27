@@ -3,10 +3,7 @@ import {
   getAccount,
   getAccounts,
   getAccountsConnectionPageInfo,
-  getBalance,
-  createAccount,
-  updateAccount,
-  deleteAccount
+  getBalance
 } from './account'
 import { getPaymentPointerInvoices, getPageInfo } from './invoice'
 import {
@@ -76,9 +73,6 @@ export const resolvers: Resolvers = {
     // pageInfo: getWebhooksConnectionPageInfo
   },
   Mutation: {
-    createAccount: createAccount,
-    updateAccount: updateAccount,
-    deleteAccount: deleteAccount,
     createOutgoingPayment,
     approveOutgoingPayment,
     requoteOutgoingPayment,

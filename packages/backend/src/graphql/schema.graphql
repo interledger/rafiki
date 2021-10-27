@@ -36,15 +36,6 @@ type Query {
 }
 
 type Mutation {
-  "Create account"
-  createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
-
-  "Update account"
-  updateAccount(input: UpdateAccountInput!): UpdateAccountMutationResponse!
-
-  "Delete account"
-  deleteAccount(id: String!): DeleteAccountMutationResponse!
-
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
@@ -148,25 +139,6 @@ type AccountsConnection {
 type AccountEdge {
   node: Account!
   cursor: String!
-}
-
-input CreateAccountInput {
-  id: String
-  disabled: Boolean
-  maxPacketAmount: UInt64
-  http: HttpInput
-  asset: AssetInput!
-  stream: StreamInput
-  routing: RoutingInput
-}
-
-input UpdateAccountInput {
-  id: String!
-  disabled: Boolean
-  maxPacketAmount: UInt64
-  http: HttpInput
-  stream: StreamInput
-  routing: RoutingInput
 }
 
 type PeersConnection {
@@ -473,26 +445,6 @@ type WebhookEdge {
 
 type Webhook {
   id: ID!
-}
-
-type CreateAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  account: Account
-}
-
-type UpdateAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  account: Account
-}
-
-type DeleteAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
 }
 
 type CreatePaymentPointerMutationResponse implements MutationResponse {

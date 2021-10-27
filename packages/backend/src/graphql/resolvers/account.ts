@@ -3,11 +3,9 @@ import {
   ResolversTypes,
   AccountEdge,
   AccountResolvers,
-  MutationResolvers,
   AccountsConnectionResolvers
 } from '../generated/graphql'
 import { AccountService, Account } from '../../account/service'
-import { AccountError, isAccountError } from '../../account/errors'
 import { ApolloContext } from '../../app'
 
 export const getAccounts: QueryResolvers<ApolloContext>['accounts'] = async (
@@ -36,112 +34,6 @@ export const getAccount: QueryResolvers<ApolloContext>['account'] = async (
     throw new Error('No account')
   }
   return account
-}
-
-export const createAccount: MutationResolvers<ApolloContext>['createAccount'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['CreateAccountMutationResponse'] => {
-  try {
-    const accountService = await ctx.container.use('accountService')
-    const accountOrError = await accountService.create(args.input)
-    if (isAccountError(accountOrError)) {
-      switch (accountOrError) {
-        case AccountError.DuplicateAccountId:
-          return {
-            code: '409',
-            message: 'Account already exists',
-            success: false
-          }
-        case AccountError.DuplicateIncomingToken:
-          return {
-            code: '409',
-            message: 'Incoming token already exists',
-            success: false
-          }
-        default:
-          throw new Error(`AccountError: ${accountOrError}`)
-      }
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Created ILP Account',
-      account: accountOrError
-    }
-  } catch (error) {
-    ctx.logger.error(
-      {
-        options: args.input,
-        error
-      },
-      'error creating account'
-    )
-    return {
-      code: '400',
-      message: 'Error trying to create account',
-      success: false
-    }
-  }
-}
-
-export const updateAccount: MutationResolvers<ApolloContext>['updateAccount'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['UpdateAccountMutationResponse'] => {
-  try {
-    const accountService = await ctx.container.use('accountService')
-    const accountOrError = await accountService.update(args.input)
-    if (isAccountError(accountOrError)) {
-      switch (accountOrError) {
-        case AccountError.UnknownAccount:
-          return {
-            code: '404',
-            message: 'Unknown ILP account',
-            success: false
-          }
-        case AccountError.DuplicateIncomingToken:
-          return {
-            code: '409',
-            message: 'Incoming token already exists',
-            success: false
-          }
-        default:
-          throw new Error(`AccountError: ${accountOrError}`)
-      }
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Updated ILP Account',
-      account: accountOrError
-    }
-  } catch (error) {
-    ctx.logger.error(
-      {
-        options: args.input,
-        error
-      },
-      'error updating account'
-    )
-    return {
-      code: '400',
-      message: 'Error trying to update account',
-      success: false
-    }
-  }
-}
-
-export const deleteAccount: MutationResolvers<ApolloContext>['deleteAccount'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['DeleteAccountMutationResponse'] => {
-  // TODO:
-  console.log(ctx) // temporary to pass linting
-  return {}
 }
 
 export const getBalance: AccountResolvers<ApolloContext>['balance'] = async (
