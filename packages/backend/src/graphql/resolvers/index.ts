@@ -1,10 +1,4 @@
 import { Resolvers } from '../generated/graphql'
-import {
-  getAccount,
-  getAccounts,
-  getAccountsConnectionPageInfo,
-  getBalance
-} from './account'
 import { getPaymentPointerInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
@@ -38,20 +32,10 @@ import { GraphQLBigInt } from '../scalars'
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
   Query: {
-    account: getAccount,
-    accounts: getAccounts,
     outgoingPayment: getOutgoingPayment,
     paymentPointer: getPaymentPointer,
     peer: getPeer,
     peers: getPeers
-    // webhook: getWebhook
-  },
-  Account: {
-    balance: getBalance
-    // webhooks: getWebhooks,
-  },
-  AccountsConnection: {
-    pageInfo: getAccountsConnectionPageInfo
   },
   InvoiceConnection: {
     pageInfo: getPageInfo
@@ -69,9 +53,6 @@ export const resolvers: Resolvers = {
   PeersConnection: {
     pageInfo: getPeersConnectionPageInfo
   },
-  WebhooksConnection: {
-    // pageInfo: getWebhooksConnectionPageInfo
-  },
   Mutation: {
     createOutgoingPayment,
     approveOutgoingPayment,
@@ -81,9 +62,6 @@ export const resolvers: Resolvers = {
     createPeer: createPeer,
     updatePeer: updatePeer,
     deletePeer: deletePeer,
-    // createWebhook: createWebhook,
-    // updateWebhook: updateWebhook,
-    // deleteWebhook: deleteWebhook,
     addAccountLiquidity: addAccountLiquidity,
     addAssetLiquidity: addAssetLiquidity,
     createAccountLiquidityWithdrawal: createAccountLiquidityWithdrawal,
