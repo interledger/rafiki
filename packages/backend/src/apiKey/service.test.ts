@@ -66,8 +66,8 @@ describe('Api Key Service', (): void => {
     }
   )
 
-  describe('Create Api Key', (): void => {
-    test('An api key can be created for a certain account', async (): Promise<void> => {
+  describe('Create / Get Api Key', (): void => {
+    test('An api key can be created/fetched for a certain account', async (): Promise<void> => {
       const apiKey = await apiKeyService.create(account.id)
       expect(apiKey.key).toBeDefined()
       expect(apiKey.hashedKey).toBeDefined()
@@ -76,6 +76,14 @@ describe('Api Key Service', (): void => {
       expect(apiKey.updatedAt).toBeDefined()
       const match = await bcrypt.compare(apiKey.key, apiKey.hashedKey)
       expect(match).toBe(true)
+
+      const fetchedKeys = await apiKeyService.get(account.id)
+      expect(fetchedKeys.length).toEqual(1)
+      expect(fetchedKeys[0].hashedKey).toEqual(apiKey.hashedKey)
+      expect(fetchedKeys[0].accountId).toEqual(apiKey.accountId)
+      expect(fetchedKeys[0].createdAt).toEqual(apiKey.createdAt)
+      expect(fetchedKeys[0].updatedAt).toEqual(apiKey.updatedAt)
+      expect(fetchedKeys[0]).not.toHaveProperty('key')
     })
   })
 
@@ -95,6 +103,16 @@ describe('Api Key Service', (): void => {
       await apiKeyService.create(account.id)
       const sessionKey = apiKeyService.redeem(account.id, '123')
       expect(sessionKey).rejects.toThrow(new UnknownApiKeyError(account.id))
+    })
+  })
+
+  describe('Delete Api Key', (): void => {
+    test('All api keys for an account can be deleted', async (): Promise<void> => {
+      await apiKeyService.create(account.id)
+      await apiKeyService.create(account.id)
+      await apiKeyService.deleteAll(account.id)
+      const fetchedKeys = await apiKeyService.get(account.id)
+      expect(fetchedKeys).toEqual([])
     })
   })
 })

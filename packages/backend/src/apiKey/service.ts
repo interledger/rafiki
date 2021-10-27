@@ -9,7 +9,9 @@ import { NoExistingApiKeyError, UnknownApiKeyError } from './errors'
 
 export interface ApiKeyService {
   create(accountId: string, trx?: Transaction): Promise<NewApiKey>
+  get(accountId: string): Promise<ApiKey[]>
   redeem(accountId: string, key: string): Promise<SessionKey>
+  deleteAll(accountId: string, trx?: Transaction): Promise<void>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -35,7 +37,9 @@ export async function createApiKeyService({
   }
   return {
     create: (accountId, trx) => createApiKey(deps, accountId, trx),
-    redeem: (accountId, key) => redeemSessionKey(deps, accountId, key)
+    get: (accountId) => getApiKeys(deps, accountId),
+    redeem: (accountId, key) => redeemSessionKey(deps, accountId, key),
+    deleteAll: (accountId, trx) => deleteAllApiKeys(deps, accountId, trx)
   }
 }
 
@@ -62,6 +66,13 @@ async function createApiKey(
   }
 }
 
+async function getApiKeys(
+  deps: ServiceDependencies,
+  accountId: string
+): Promise<ApiKey[]> {
+  return await ApiKey.query().where('accountId', accountId)
+}
+
 async function redeemSessionKey(
   deps: ServiceDependencies,
   accountId: string,
@@ -79,5 +90,20 @@ async function redeemSessionKey(
     } else {
       throw new UnknownApiKeyError(accountId)
     }
+  }
+}
+
+async function deleteAllApiKeys(
+  deps: ServiceDependencies,
+  accountId: string,
+  trx?: Transaction
+): Promise<void> {
+  const keyTrx = trx || (await ApiKey.startTransaction(deps.knex))
+  try {
+    await ApiKey.query(keyTrx).delete().where('accountId', accountId)
+    await keyTrx.commit()
+  } catch (err) {
+    await keyTrx.rollback()
+    throw err
   }
 }
