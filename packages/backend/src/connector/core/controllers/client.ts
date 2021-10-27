@@ -1,5 +1,5 @@
 import Axios, { AxiosInstance } from 'axios'
-import { RafikiAccount, RafikiContext, RafikiMiddleware } from '../rafiki'
+import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
 import { modifySerializedIlpPrepare } from '../lib'
 //import { AxiosClient } from '../services/client/axios'
 import { sendToPeer as sendToPeerDefault } from '../services/client'
@@ -14,14 +14,14 @@ export interface ClientControllerOptions {
 
 export function createClientController({
   sendToPeer
-}: ClientControllerOptions = {}): RafikiMiddleware {
+}: ClientControllerOptions = {}): ILPMiddleware {
   const send = sendToPeer || sendToPeerDefault
   // TODO keepalive
   const axios = Axios.create({ timeout: 30_000 })
 
   return async function ilpClient(
-    { accounts: { outgoing }, request, response }: RafikiContext,
-    _: () => Promise<unknown>
+    { accounts: { outgoing }, request, response }: ILPContext,
+    _: () => Promise<void>
   ): Promise<void> {
     const incomingPrepare = request.rawPrepare
     const amount = request.prepare.amountChanged

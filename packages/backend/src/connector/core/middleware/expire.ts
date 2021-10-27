@@ -1,5 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext } from '../rafiki'
+import { ILPContext } from '../rafiki'
 
 const { TransferTimedOutError } = Errors
 
@@ -9,8 +9,8 @@ const { TransferTimedOutError } = Errors
  */
 export function createOutgoingExpireMiddleware() {
   return async (
-    { request, services: { logger } }: RafikiContext,
-    next: () => Promise<unknown>
+    { request, services: { logger } }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     const { expiresAt } = request.prepare
     const duration = expiresAt.getTime() - Date.now()

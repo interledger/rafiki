@@ -1,14 +1,14 @@
-import { RafikiContext, RafikiMiddleware } from '..'
+import { ILPContext, ILPMiddleware } from '..'
 import { Errors } from 'ilp-packet'
 const { T04_INSUFFICIENT_LIQUIDITY } = Errors.codes
 
 /**
  * Log error for reject packets caused by insufficient liquidity or an exceeded maximum balance.
  */
-export function createOutgoingLiquidityCheckMiddleware(): RafikiMiddleware {
+export function createOutgoingLiquidityCheckMiddleware(): ILPMiddleware {
   return async (
-    { services: { logger }, response, accounts: { outgoing } }: RafikiContext,
-    next: () => Promise<unknown>
+    { services: { logger }, response, accounts: { outgoing } }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     await next()
 

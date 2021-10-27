@@ -34,7 +34,6 @@ BigInt.prototype.toJSON = function () {
 const container = initIocContainer(Config)
 const app = new App(container)
 let connectorServer: Server
-let connectorAdminServer: Server
 
 export function initIocContainer(
   config: typeof Config
@@ -230,9 +229,13 @@ export function initIocContainer(
   })
 
   container.singleton('makeIlpPlugin', async (deps) => {
-    const { ilpUrl } = await deps.use('config')
+    const connectorApp = await deps.use('connectorApp')
     return (sourceAccountId: string): IlpPlugin => {
-      return createIlpPlugin(ilpUrl, `Bearer ${sourceAccountId}`)
+      return createIlpPlugin(
+        (data: Buffer): Promise<Buffer> => {
+          return connectorApp.handleIlpData(sourceAccountId, data)
+        }
+      )
     }
   })
 
@@ -251,6 +254,18 @@ export function initIocContainer(
       transferService: await deps.use('transferService')
     })
   })
+
+  container.singleton('connectorApp', async (deps) => {
+    const config = await deps.use('config')
+    return await createConnectorService({
+      logger: await deps.use('logger'),
+      redis: await deps.use('redis'),
+      accountService: await deps.use('accountService'),
+      ratesService: await deps.use('ratesService'),
+      streamServer: await deps.use('streamServer'),
+      ilpAddress: config.ilpAddress
+    })
+  })
   return container
 }
 
@@ -264,13 +279,6 @@ export const gracefulShutdown = async (
   if (connectorServer) {
     await new Promise((resolve, reject) => {
       connectorServer.close((err?: Error) =>
-        err ? reject(err) : resolve(null)
-      )
-    })
-  }
-  if (connectorAdminServer) {
-    await new Promise((resolve, reject) => {
-      connectorAdminServer.close((err?: Error) =>
         err ? reject(err) : resolve(null)
       )
     })
@@ -354,18 +362,9 @@ export const start = async (
   app.listen(config.port)
   logger.info(`Listening on ${app.getPort()}`)
 
-  const connectorApp = await createConnectorService({
-    logger: logger,
-    redis: await container.use('redis'),
-    accountService: await container.use('accountService'),
-    ratesService: await container.use('ratesService'),
-    streamServer: await container.use('streamServer'),
-    ilpAddress: config.ilpAddress
-  })
+  const connectorApp = await container.use('connectorApp')
   connectorServer = connectorApp.listenPublic(config.connectorPort)
   logger.info(`Connector listening on ${config.connectorPort}`)
-  connectorAdminServer = connectorApp.listenAdmin(config.connectorAdminPort)
-  logger.info(`Connector listening on ${config.connectorAdminPort}`)
   logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
 

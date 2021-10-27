@@ -1,14 +1,14 @@
-import compose = require('koa-compose')
 import IORedis from 'ioredis'
 import { StreamServer } from '@interledger/stream-receiver'
 
 import {
   createApp,
   Rafiki,
-  RafikiRouter,
+  ILPContext,
+  ILPMiddleware,
   createBalanceMiddleware,
   createIncomingErrorHandlerMiddleware,
-  createIldcpProtocolController,
+  createIldcpMiddleware,
   createStreamController,
   createOutgoingExpireMiddleware,
   createClientController,
@@ -17,7 +17,9 @@ import {
   createIncomingThroughputMiddleware,
   createOutgoingReduceExpiryMiddleware,
   createOutgoingThroughputMiddleware,
-  createOutgoingValidateFulfillmentMiddleware
+  createOutgoingValidateFulfillmentMiddleware,
+  createAccountMiddleware,
+  createStreamAddressMiddleware
 } from './core'
 import { AccountService } from '../account/service'
 import { RatesService } from '../rates/service'
@@ -39,51 +41,59 @@ export async function createConnectorService({
   streamServer,
   ilpAddress
 }: ServiceDependencies): Promise<Rafiki> {
-  const log = logger.child({
-    service: 'ConnectorService'
-  })
+  return createApp(
+    {
+      //router: router,
+      logger: logger.child({
+        service: 'ConnectorService'
+      }),
+      accounts: accountService,
+      redis,
+      rates: ratesService,
+      streamServer
+    },
+    compose([
+      // Incoming Rules
+      createIncomingErrorHandlerMiddleware(ilpAddress),
+      createStreamAddressMiddleware(),
+      createAccountMiddleware(),
+      createIncomingMaxPacketAmountMiddleware(),
+      createIncomingRateLimitMiddleware({}),
+      createIncomingThroughputMiddleware(),
+      createIldcpMiddleware(ilpAddress),
 
-  const incoming = compose([
-    // Incoming Rules
-    createIncomingErrorHandlerMiddleware(ilpAddress),
-    createIncomingMaxPacketAmountMiddleware(),
-    createIncomingRateLimitMiddleware({}),
-    createIncomingThroughputMiddleware()
-  ])
+      // Local pay
+      createBalanceMiddleware(),
+      // Outgoing Rules
+      createStreamController(),
+      createOutgoingThroughputMiddleware(),
+      createOutgoingReduceExpiryMiddleware({}),
+      createOutgoingExpireMiddleware(),
+      createOutgoingValidateFulfillmentMiddleware(),
 
-  const outgoing = compose([
-    // Outgoing Rules
-    createStreamController(),
-    createOutgoingThroughputMiddleware(),
-    createOutgoingReduceExpiryMiddleware({}),
-    createOutgoingExpireMiddleware(),
-    createOutgoingValidateFulfillmentMiddleware(),
+      // Send outgoing packets
+      createClientController()
+    ])
+  )
+}
 
-    // Send outgoing packets
-    createClientController()
-  ])
-
-  const middleware = compose([incoming, createBalanceMiddleware(), outgoing])
-
-  // TODO Add auth
-  const app = createApp({
-    //router: router,
-    logger: log,
-    accounts: accountService,
-    redis,
-    rates: ratesService,
-    streamServer
-  })
-
-  const appRouter = new RafikiRouter()
-
-  // Default ILP routes
-  // TODO Understand the priority and workings of the router... Seems to do funky stuff. Maybe worth just writing ILP one?
-  appRouter.ilpRoute('test.*', middleware)
-  appRouter.ilpRoute('peer.config', createIldcpProtocolController(ilpAddress))
-  //appRouter.ilpRoute('peer.route.*', createCcpProtocolController())
-  // TODO Handle echo
-  app.use(appRouter.routes())
-
-  return app
+// Adapted from koa-compose
+function compose(middlewares: ILPMiddleware[]): ILPMiddleware {
+  return function (ctx: ILPContext, next: () => Promise<void>): Promise<void> {
+    // last called middleware
+    let index = -1
+    return (function dispatch(i: number): Promise<void> {
+      if (i <= index)
+        return Promise.reject(new Error('next() called multiple times'))
+      index = i
+      let fn = middlewares[i]
+      if (i === middlewares.length) fn = next
+      if (!fn) return Promise.resolve()
+      try {
+        return Promise.resolve(fn(ctx, dispatch.bind(null, i + 1)))
+      } catch (err) {
+        return Promise.reject(err)
+      }
+    })(0)
+  }
 }

@@ -1,5 +1,5 @@
 import { isIlpReply } from 'ilp-packet'
-import { RafikiContext, RafikiMiddleware } from '../rafiki'
+import { ILPContext, ILPMiddleware } from '../rafiki'
 
 const CONNECTION_EXPIRY = 60 * 10 // seconds
 
@@ -7,10 +7,10 @@ const CONNECTION_EXPIRY = 60 * 10 // seconds
 export const streamReceivedKey = (connectionId: string): string =>
   `stream_received:${connectionId}`
 
-export function createStreamController(): RafikiMiddleware {
+export function createStreamController(): ILPMiddleware {
   return async function (
-    ctx: RafikiContext,
-    next: () => Promise<unknown>
+    ctx: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> {
     const { logger, redis, streamServer } = ctx.services
     const { request, response } = ctx

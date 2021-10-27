@@ -26,7 +26,6 @@ export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   port: envInt('PORT', 3001),
   connectorPort: envInt('CONNECTOR_PORT', 3002),
-  connectorAdminPort: envInt('CONNECTOR_ADMIN_PORT', 3003),
   databaseUrl:
     process.env.NODE_ENV === 'test'
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
@@ -53,7 +52,6 @@ export const Config = {
     : ['3004'],
 
   // This endpoint is unauthenticated -- the Bearer token sent is just the account id to impersonate.
-  ilpUrl: envString('ADMIN_ILP_URL', 'http://127.0.0.1:3009/ilp'),
   pricesUrl: process.env.PRICES_URL, // optional
   pricesLifetime: +(process.env.PRICES_LIFETIME || 15_000),
 

@@ -1,13 +1,13 @@
 import { createHash } from 'crypto'
-import { RafikiContext, RafikiMiddleware } from '..'
+import { ILPContext, ILPMiddleware } from '..'
 import { Errors } from 'ilp-packet'
 
 const { WrongConditionError } = Errors
 
-export function createOutgoingValidateFulfillmentMiddleware(): RafikiMiddleware {
+export function createOutgoingValidateFulfillmentMiddleware(): ILPMiddleware {
   return async (
-    { services: { logger }, request: { prepare }, response }: RafikiContext,
-    next: () => Promise<unknown>
+    { services: { logger }, request: { prepare }, response }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     const { executionCondition } = prepare
     await next()

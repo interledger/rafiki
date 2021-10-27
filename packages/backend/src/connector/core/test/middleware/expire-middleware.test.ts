@@ -1,6 +1,5 @@
-import { createContext } from '../../utils'
+import { createILPContext } from '../../utils'
 import { createOutgoingExpireMiddleware } from '../../middleware/expire'
-import { RafikiContext } from '../../rafiki'
 import { IlpPrepareFactory, RafikiServicesFactory } from '../../factories'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 import { Errors } from 'ilp-packet'
@@ -13,9 +12,13 @@ describe('Expire Middleware', function () {
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 10 * 1000)
     })
-    const ctx = createContext<unknown, RafikiContext>()
-    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    ctx.services = RafikiServicesFactory.build()
+    const ctx = createILPContext({
+      services: RafikiServicesFactory.build(),
+      request: {
+        prepare: new ZeroCopyIlpPrepare(prepare),
+        rawPrepare: Buffer.alloc(0) // ignored
+      }
+    })
     const next = jest.fn().mockImplementation(async () => {
       jest.advanceTimersByTime(11 * 1000)
     })
@@ -30,9 +33,13 @@ describe('Expire Middleware', function () {
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 10 * 1000)
     })
-    const ctx = createContext<unknown, RafikiContext>()
-    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    ctx.services = RafikiServicesFactory.build()
+    const ctx = createILPContext({
+      services: RafikiServicesFactory.build(),
+      request: {
+        prepare: new ZeroCopyIlpPrepare(prepare),
+        rawPrepare: Buffer.alloc(0) // ignored
+      }
+    })
     const next = jest.fn().mockImplementation(async () => {
       jest.advanceTimersByTime(9 * 1000)
     })

@@ -1,5 +1,5 @@
 import { errorToIlpReject } from 'ilp-packet'
-import { RafikiContext } from '../rafiki'
+import { ILPContext } from '../rafiki'
 
 /**
  * Catch errors that bubble back along the pipeline and convert to an ILP Reject
@@ -9,8 +9,8 @@ import { RafikiContext } from '../rafiki'
  */
 export function createIncomingErrorHandlerMiddleware(serverAddress: string) {
   return async (
-    { response, services: { logger } }: RafikiContext,
-    next: () => Promise<unknown>
+    { response, services: { logger } }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     try {
       await next()

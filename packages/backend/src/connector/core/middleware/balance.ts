@@ -1,11 +1,11 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext } from '../rafiki'
+import { ILPContext } from '../rafiki'
 import { isAccountTransferError } from '../../../account/errors'
 
 export function createBalanceMiddleware() {
   return async (
-    { request, response, services, accounts }: RafikiContext,
-    next: () => Promise<unknown>
+    { request, response, services, accounts }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     const { amount } = request.prepare
 

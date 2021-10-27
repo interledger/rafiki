@@ -1,5 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext, RafikiMiddleware } from '..'
+import { ILPContext, ILPMiddleware } from '..'
 import { TokenBucket } from '../utils'
 
 const { RateLimitedError } = Errors
@@ -18,7 +18,7 @@ export interface RateLimitMiddlewareOptions {
  */
 export function createIncomingRateLimitMiddleware(
   options: RateLimitMiddlewareOptions
-): RafikiMiddleware {
+): ILPMiddleware {
   const buckets = new Map<string, TokenBucket>()
   const refillPeriod: number = options.refillPeriod || DEFAULT_REFILL_PERIOD
   const refillCount: bigint = options.refillCount || DEFAULT_REFILL_COUNT
@@ -30,8 +30,8 @@ export function createIncomingRateLimitMiddleware(
       services: { logger },
       request: { prepare },
       accounts: { incoming }
-    }: RafikiContext,
-    next: () => Promise<unknown>
+    }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     let bucket = buckets.get(incoming.id)
     if (!bucket) {

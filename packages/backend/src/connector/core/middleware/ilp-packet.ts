@@ -15,14 +15,10 @@ import {
   deserializeIlpReply
 } from 'ilp-packet'
 import { Readable } from 'stream'
-import { RafikiContext, RafikiMiddleware } from '../rafiki'
+import { RafikiContext, RafikiMiddleware, ILPMiddleware } from '../rafiki'
 import getRawBody from 'raw-body'
 
 const CONTENT_TYPE = 'application/octet-stream'
-
-export function ilpAddressToPath(ilpAddress: string, prefix?: string): string {
-  return (prefix || '') + ilpAddress.replace(/\./g, '/')
-}
 
 export interface IlpPacketMiddlewareOptions {
   getRawBody?: (req: Readable) => Promise<Buffer>
@@ -112,7 +108,109 @@ export class ZeroCopyIlpPrepare implements RafikiPrepare {
   }
 }
 
+export class IlpResponse {
+  private _fulfill?: IlpFulfill
+  private _reject?: IlpReject
+  private _rawFulfill?: Buffer
+  private _rawReject?: Buffer
+
+  get fulfill(): IlpFulfill | undefined {
+    return this._fulfill
+  }
+
+  set fulfill(val: IlpFulfill | undefined) {
+    this._fulfill = val
+    if (val) {
+      this._reject = this._rawReject = undefined
+      this._rawFulfill = serializeIlpFulfill(val)
+    } else {
+      this._rawFulfill = undefined
+    }
+  }
+
+  get rawFulfill(): Buffer | undefined {
+    return this._rawFulfill
+  }
+  set rawFulfill(val: Buffer | undefined) {
+    this._rawFulfill = val
+    if (val) {
+      this._reject = this._rawReject = undefined
+      this._fulfill = deserializeIlpFulfill(val)
+    } else {
+      this._fulfill = undefined
+    }
+  }
+
+  get reject(): IlpReject | undefined {
+    return this._reject
+  }
+  set reject(val: IlpReject | undefined) {
+    this._reject = val
+    if (val) {
+      this._fulfill = this._rawFulfill = undefined
+      this._rawReject = serializeIlpReject(val)
+    } else {
+      this._rawReject = undefined
+    }
+  }
+
+  get rawReject(): Buffer | undefined {
+    return this._rawReject
+  }
+  set rawReject(val: Buffer | undefined) {
+    this._rawReject = val
+    if (val) {
+      this._fulfill = this._rawFulfill = undefined
+      this._reject = deserializeIlpReject(val)
+    } else {
+      this._reject = undefined
+    }
+  }
+
+  get reply(): IlpFulfill | IlpReject | undefined {
+    return this.fulfill || this.reject
+  }
+  set reply(val: IlpReply | undefined) {
+    if (val) {
+      if (isFulfill(val)) {
+        this._fulfill = val
+        this._rawFulfill = serializeIlpFulfill(val)
+        this._reject = this._rawReject = undefined
+      } else {
+        this._reject = val
+        this._rawReject = serializeIlpReject(val)
+        this._fulfill = this._rawFulfill = undefined
+      }
+    } else {
+      this._fulfill = this._rawFulfill = undefined
+      this._reject = this._rawReject = undefined
+    }
+  }
+
+  get rawReply(): Buffer | undefined {
+    return this.rawFulfill || this.rawReject
+  }
+  set rawReply(val: Buffer | undefined) {
+    if (val) {
+      const packet = deserializeIlpReply(val)
+      if (isFulfill(packet)) {
+        this.fulfill = packet
+        this.rawFulfill = val
+        this.reject = this.rawReject = undefined
+      } else {
+        this.reject = packet
+        this.rawReject = val
+        this.fulfill = this.rawFulfill = undefined
+      }
+    } else {
+      this.fulfill = this.rawFulfill = undefined
+      this.reject = this.rawReject = undefined
+    }
+  }
+}
+
 export function createIlpPacketMiddleware(
+  ilpHandler: ILPMiddleware,
   config?: IlpPacketMiddlewareOptions
 ): RafikiMiddleware {
   const _getRawBody =
@@ -120,7 +218,7 @@ export function createIlpPacketMiddleware(
 
   return async function ilpPacket(
     ctx: RafikiContext,
-    next: () => Promise<unknown>
+    next: () => Promise<void>
   ): Promise<void> {
     ctx.assert(
       ctx.request.type === CONTENT_TYPE,
@@ -129,119 +227,25 @@ export function createIlpPacketMiddleware(
     )
     const buffer = await _getRawBody(ctx.req)
     const prepare = new ZeroCopyIlpPrepare(buffer)
-    ctx.req.prepare = prepare
-    ctx.request.prepare = prepare
-    ctx.req.rawPrepare = buffer
-    ctx.request.rawPrepare = buffer
-    ctx.path = ilpAddressToPath(prepare.destination, ctx.path)
 
-    let reject: IlpReject | undefined
-    let fulfill: IlpFulfill | undefined
-    let rawReject: Buffer | undefined
-    let rawFulfill: Buffer | undefined
-
-    const properties: PropertyDescriptorMap = {
-      fulfill: {
-        enumerable: true,
-        get: (): IlpFulfill | undefined => fulfill,
-        set: (val: IlpFulfill | undefined): void => {
-          fulfill = val
-          if (val) {
-            reject = rawReject = undefined
-            rawFulfill = serializeIlpFulfill(val)
-          } else {
-            rawFulfill = undefined
-          }
-        }
+    const response = new IlpResponse()
+    await ilpHandler(
+      {
+        services: ctx.services,
+        accounts: ctx.accounts,
+        throw: ctx.throw,
+        state: ctx.state,
+        request: {
+          prepare,
+          rawPrepare: buffer
+        },
+        response
       },
-      rawFulfill: {
-        enumerable: true,
-        get: (): Buffer | undefined => rawFulfill,
-        set: (val: Buffer | undefined): void => {
-          rawFulfill = val
-          if (val) {
-            reject = rawReject = undefined
-            fulfill = deserializeIlpFulfill(val)
-          } else {
-            fulfill = undefined
-          }
-        }
-      },
-      reject: {
-        enumerable: true,
-        get: (): IlpReject | undefined => reject,
-        set: (val: IlpReject | undefined): void => {
-          reject = val
-          if (val) {
-            fulfill = rawFulfill = undefined
-            rawReject = serializeIlpReject(val)
-          } else {
-            rawReject = undefined
-          }
-        }
-      },
-      rawReject: {
-        enumerable: true,
-        get: (): Buffer | undefined => rawReject,
-        set: (val: Buffer | undefined): void => {
-          rawReject = val
-          if (val) {
-            fulfill = rawFulfill = undefined
-            reject = deserializeIlpReject(val)
-          } else {
-            reject = undefined
-          }
-        }
-      },
-      reply: {
-        enumerable: true,
-        get: (): IlpFulfill | IlpReject | undefined => fulfill || reject,
-        set: (val: IlpReply | undefined): void => {
-          if (val) {
-            if (isFulfill(val)) {
-              fulfill = val
-              rawFulfill = serializeIlpFulfill(val)
-              reject = rawReject = undefined
-            } else {
-              reject = val
-              rawReject = serializeIlpReject(val)
-              fulfill = rawFulfill = undefined
-            }
-          } else {
-            fulfill = rawFulfill = undefined
-            reject = rawReject = undefined
-          }
-        }
-      },
-      rawReply: {
-        enumerable: true,
-        get: (): Buffer | undefined => rawFulfill || rawReject,
-        set: (val: Buffer | undefined): void => {
-          if (val) {
-            const packet = deserializeIlpReply(val)
-            if (isFulfill(packet)) {
-              fulfill = packet
-              rawFulfill = val
-              reject = rawReject = undefined
-            } else {
-              reject = packet
-              rawReject = val
-              fulfill = rawFulfill = undefined
-            }
-          } else {
-            fulfill = rawFulfill = undefined
-            reject = rawReject = undefined
-          }
-        }
-      }
-    }
-    Object.defineProperties(ctx.res, properties)
-    Object.defineProperties(ctx.response, properties)
-
-    await next()
+      next
+    )
 
     ctx.assert(!ctx.body, 500, 'response body already set')
-    ctx.assert(ctx.response.rawReply, 500, 'ilp reply not set')
-    ctx.body = ctx.response.rawReply
+    ctx.assert(response.rawReply, 500, 'ilp reply not set')
+    ctx.body = response.rawReply
   }
 }
