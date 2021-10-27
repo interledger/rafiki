@@ -93,7 +93,10 @@ export interface AccountService {
     account: CreateOptions,
     trx?: Transaction
   ): Promise<Account | AccountError>
-  update(accountOptions: UpdateOptions): Promise<Account | AccountError>
+  update(
+    accountOptions: UpdateOptions,
+    trx?: Transaction
+  ): Promise<Account | AccountError>
   get(accountId: string): Promise<Account | undefined>
   getAccounts(ids: string[]): Promise<Account[]>
   getByDestinationAddress(
@@ -143,7 +146,7 @@ export function createAccountService({
   }
   return {
     create: (account, trx) => createAccount(deps, account, trx),
-    update: (account) => updateAccount(deps, account),
+    update: (account, trx) => updateAccount(deps, account, trx),
     get: (id) => getAccount(deps, id),
     getAccounts: (ids) => getAccounts(deps, ids),
     getByDestinationAddress: (destinationAddress) =>
@@ -251,7 +254,8 @@ async function createAccount(
 
 async function updateAccount(
   deps: ServiceDependencies,
-  accountOptions: UpdateOptions
+  accountOptions: UpdateOptions,
+  trx?: Transaction
 ): Promise<Account | AccountError> {
   if (
     accountOptions.routing?.staticIlpAddress &&
@@ -260,10 +264,10 @@ async function updateAccount(
     return AccountError.InvalidStaticIlpAddress
   }
 
-  const trx = await Account.startTransaction()
+  const acctTrx = trx || (await Account.startTransaction())
   try {
     if (accountOptions.http?.incoming?.authTokens) {
-      await deps.httpTokenService.deleteByAccount(accountOptions.id, trx)
+      await deps.httpTokenService.deleteByAccount(accountOptions.id, acctTrx)
       const incomingTokens = accountOptions.http.incoming.authTokens.map(
         (incomingToken: string): HttpTokenOptions => {
           return {
@@ -272,10 +276,12 @@ async function updateAccount(
           }
         }
       )
-      const err = await deps.httpTokenService.create(incomingTokens, trx)
+      const err = await deps.httpTokenService.create(incomingTokens, acctTrx)
       if (err) {
         if (err === HttpTokenError.DuplicateToken) {
-          await trx.rollback()
+          if (!trx) {
+            await acctTrx.rollback()
+          }
           return AccountError.DuplicateIncomingToken
         }
         throw new Error(err)
@@ -289,10 +295,14 @@ async function updateAccount(
       throw new UnknownAssetError(account.id)
     }
     account.asset = asset
-    await trx.commit()
+    if (!trx) {
+      await acctTrx.commit()
+    }
     return account
   } catch (err) {
-    await trx.rollback()
+    if (!trx) {
+      await acctTrx.rollback()
+    }
     if (err instanceof NotFoundError) {
       return AccountError.UnknownAccount
     }

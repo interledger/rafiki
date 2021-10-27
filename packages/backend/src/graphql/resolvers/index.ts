@@ -21,6 +21,14 @@ import {
 } from './outgoing_payment'
 import { getPaymentPointer, createPaymentPointer } from './payment_pointer'
 import {
+  getPeer,
+  getPeers,
+  getPeersConnectionPageInfo,
+  createPeer,
+  updatePeer,
+  deletePeer
+} from './peer'
+import {
   addAccountLiquidity,
   addAssetLiquidity,
   createAccountLiquidityWithdrawal,
@@ -36,7 +44,9 @@ export const resolvers: Resolvers = {
     account: getAccount,
     accounts: getAccounts,
     outgoingPayment: getOutgoingPayment,
-    paymentPointer: getPaymentPointer
+    paymentPointer: getPaymentPointer,
+    peer: getPeer,
+    peers: getPeers
     // webhook: getWebhook
   },
   Account: {
@@ -59,6 +69,9 @@ export const resolvers: Resolvers = {
     invoices: getPaymentPointerInvoices,
     outgoingPayments: getPaymentPointerOutgoingPayments
   },
+  PeersConnection: {
+    pageInfo: getPeersConnectionPageInfo
+  },
   WebhooksConnection: {
     // pageInfo: getWebhooksConnectionPageInfo
   },
@@ -71,6 +84,9 @@ export const resolvers: Resolvers = {
     requoteOutgoingPayment,
     cancelOutgoingPayment,
     createPaymentPointer,
+    createPeer: createPeer,
+    updatePeer: updatePeer,
+    deletePeer: deletePeer,
     // createWebhook: createWebhook,
     // updateWebhook: updateWebhook,
     // deleteWebhook: deleteWebhook,

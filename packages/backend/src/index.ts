@@ -18,6 +18,7 @@ import { createHttpTokenService } from './httpToken/service'
 import { createBalanceService } from './balance/service'
 import { createAssetService } from './asset/service'
 import { createAccountService } from './account/service'
+import { createPeerService } from './peer/service'
 import { createPaymentPointerService } from './payment_pointer/service'
 import { createLiquidityService } from './liquidity/service'
 import { createSPSPService } from './spsp/service'
@@ -165,10 +166,19 @@ export function initIocContainer(
       peerAddresses: config.peerAddresses
     })
   })
+  container.singleton('peerService', async (deps) => {
+    return await createPeerService({
+      knex: await deps.use('knex'),
+      logger: await deps.use('logger'),
+      accountService: await deps.use('accountService'),
+      assetService: await deps.use('assetService')
+    })
+  })
   container.singleton('paymentPointerService', async (deps) => {
     const logger = await deps.use('logger')
     const assetService = await deps.use('assetService')
     return await createPaymentPointerService({
+      knex: await deps.use('knex'),
       logger: logger,
       assetService: assetService
     })
