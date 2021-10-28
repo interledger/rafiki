@@ -1,5 +1,5 @@
 import * as Koa from 'koa'
-import { RafikiMiddleware } from '../rafiki'
+import { HttpMiddleware } from '../rafiki'
 import { RafikiAccount } from '../rafiki'
 
 export interface AuthState {
@@ -28,7 +28,7 @@ export function getBearerToken(ctx: Koa.Context): string | undefined {
  *
  * The context will implement `AuthState` after being processed by this middleware
  */
-export function createTokenAuthMiddleware(): RafikiMiddleware {
+export function createTokenAuthMiddleware(): HttpMiddleware {
   return async function auth(
     ctx: Koa.Context,
     next: () => Promise<unknown>

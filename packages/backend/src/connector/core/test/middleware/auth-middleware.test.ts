@@ -3,13 +3,13 @@ import Faker from 'faker'
 import { createContext } from '../../utils'
 import { createTokenAuthMiddleware } from '../../middleware'
 import { MockAccountsService } from '../mocks/accounts-service'
-import { RafikiContext } from '../../rafiki'
+import { HttpContext } from '../../rafiki'
 import { PeerAccountFactory, RafikiServicesFactory } from '../../factories'
 
 describe('Token Auth Middleware', function () {
   describe('default behaviour', function () {
     test('returns 401 if there is no authorization header', async () => {
-      const ctx = createContext<unknown, RafikiContext>({
+      const ctx = createContext<unknown, HttpContext>({
         req: { headers: { 'content-type': 'application/octet-stream' } }
       })
 
@@ -21,7 +21,7 @@ describe('Token Auth Middleware', function () {
     })
 
     test('returns 401 if bearer token is malformed', async () => {
-      const ctx = createContext<unknown, RafikiContext>({
+      const ctx = createContext<unknown, HttpContext>({
         req: {
           headers: {
             'content-type': 'application/octet-stream',
@@ -39,7 +39,7 @@ describe('Token Auth Middleware', function () {
 
     test('succeeds for valid token and binds data to context', async () => {
       const accounts = new MockAccountsService('test.rafiki')
-      const ctx = createContext<unknown, RafikiContext>({
+      const ctx = createContext<unknown, HttpContext>({
         req: {
           headers: {
             'content-type': 'application/octet-stream',

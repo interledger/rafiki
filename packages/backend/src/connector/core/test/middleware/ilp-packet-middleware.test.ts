@@ -17,14 +17,14 @@ import {
   IlpFulfillFactory,
   IlpRejectFactory
 } from '../../factories'
-import { RafikiContext } from '../../rafiki'
+import { HttpContext } from '../../rafiki'
 
 describe('ILP Packet Middleware', () => {
   test('sets up request and response', async () => {
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
+    const ctx = createContext<unknown, HttpContext>({ req: options })
     const prepare = IlpPrepareFactory.build()
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const rawReply = serializeIlpFulfill(IlpFulfillFactory.build())
@@ -57,10 +57,12 @@ describe('IlpResponse', () => {
     expect(response.reject).toBeDefined()
     expect(response.rawReject).toBeDefined()
 
-    response.fulfill = IlpFulfillFactory.build()
+    const fulfill = IlpFulfillFactory.build()
+    response.fulfill = fulfill
     expect(response.reject).toBeUndefined()
     expect(response.rawReject).toBeUndefined()
-    expect(serializeIlpFulfill(response.fulfill)).toEqual(response.rawFulfill)
+    expect(response.fulfill).toEqual(fulfill)
+    expect(serializeIlpFulfill(fulfill)).toEqual(response.rawFulfill)
   })
 
   test('setting the rawFulfill sets the fulfill and clears the reject and rawReject', async () => {
@@ -68,10 +70,12 @@ describe('IlpResponse', () => {
     expect(response.reject).toBeDefined()
     expect(response.rawReject).toBeDefined()
 
-    response.rawFulfill = serializeIlpFulfill(IlpFulfillFactory.build())
+    const fulfill = IlpFulfillFactory.build()
+    response.rawFulfill = serializeIlpFulfill(fulfill)
     expect(response.reject).toBeUndefined()
     expect(response.rawReject).toBeUndefined()
-    expect(deserializeIlpFulfill(response.rawFulfill)).toEqual(response.fulfill)
+    expect(response.fulfill).toEqual(fulfill)
+    expect(serializeIlpFulfill(fulfill)).toEqual(response.rawFulfill)
   })
 
   test('setting the reject sets the rawReject and clears the fulfill and rawFulfill', async () => {
@@ -79,10 +83,12 @@ describe('IlpResponse', () => {
     expect(response.fulfill).toBeDefined()
     expect(response.rawFulfill).toBeDefined()
 
-    response.reject = IlpRejectFactory.build()
+    const reject = IlpRejectFactory.build()
+    response.reject = reject
     expect(response.fulfill).toBeUndefined()
     expect(response.rawFulfill).toBeUndefined()
-    expect(serializeIlpReject(response.reject)).toEqual(response.rawReject)
+    expect(response.reject).toEqual(reject)
+    expect(serializeIlpReject(reject)).toEqual(response.rawReject)
   })
 
   test('setting the rawReject sets the reject and clears the fulfill and rawFulfill', async () => {
@@ -90,10 +96,12 @@ describe('IlpResponse', () => {
     expect(response.fulfill).toBeDefined()
     expect(response.rawFulfill).toBeDefined()
 
-    response.rawReject = serializeIlpReject(IlpRejectFactory.build())
+    const reject = IlpRejectFactory.build()
+    response.rawReject = serializeIlpReject(reject)
     expect(response.fulfill).toBeUndefined()
     expect(response.rawFulfill).toBeUndefined()
-    expect(deserializeIlpReject(response.rawReject)).toEqual(response.reject)
+    expect(response.reject).toEqual(reject)
+    expect(serializeIlpReject(reject)).toEqual(response.rawReject)
   })
 
   test('setting the reply as undefined clears the fulfill', async () => {

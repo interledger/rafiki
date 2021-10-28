@@ -36,7 +36,7 @@ export function createIncomingHeartbeatMiddleware(
 }
 
 // TODO: Need to rework logic for starting heartbeat timer
-// startup: async (ctx: RafikiContext) => {
+// startup: async (ctx: HttpContext) => {
 //   this._heartbeat = setInterval(async () => {
 //     // TODO: Stagger the sending
 //     for (let peerId in ctx.services.peers) {

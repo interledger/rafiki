@@ -8,13 +8,10 @@ import { StreamServer } from '@interledger/stream-receiver'
 //import { Router } from './services/router'
 import {
   createIlpPacketMiddleware,
-  RafikiPrepare,
   ZeroCopyIlpPrepare,
   IlpResponse
 } from './middleware/ilp-packet'
 import { createTokenAuthMiddleware } from './middleware'
-import { IncomingMessage, ServerResponse } from 'http'
-import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
 import { RatesService } from '../../rates/service'
 import { AccountTransfer } from '../../account/service'
 import { AccountTransferError } from '../../account/errors'
@@ -70,39 +67,16 @@ export interface RafikiServices {
   streamServer: StreamServer
 }
 
-export type RafikiRequestMixin = {
-  prepare: RafikiPrepare
-  rawPrepare: Buffer
-}
-export type RafikiResponseMixin = {
-  reject?: IlpReject
-  rawReject?: Buffer
-  fulfill?: IlpFulfill
-  rawFulfill?: Buffer
-  reply?: IlpReply
-  rawReply?: Buffer
-}
-
-export type RafikiRequest = Koa.Request & RafikiRequestMixin
-export type RafikiResponse = Koa.Response & RafikiResponseMixin
-
-export type RafikiContextMixin = {
+export type HttpContextMixin = {
   services: RafikiServices
   accounts: {
     readonly incoming: RafikiAccount
     readonly outgoing: RafikiAccount
   }
-  request: RafikiRequest
-  response: RafikiResponse
-  req: IncomingMessage & RafikiRequestMixin
-  res: ServerResponse & RafikiResponseMixin
 }
 
-export type RafikiContext<T = any> = Koa.ParameterizedContext<
-  T,
-  RafikiContextMixin
->
-export type RafikiMiddleware<T = any> = Middleware<T, RafikiContextMixin>
+export type HttpContext<T = any> = Koa.ParameterizedContext<T, HttpContextMixin>
+export type HttpMiddleware<T = any> = Middleware<T, HttpContextMixin>
 
 export type ILPMiddleware<T = any> = (
   ctx: ILPContext<T>,
@@ -129,7 +103,7 @@ export class Rafiki<T = any> {
   private streamServer: StreamServer
   private redis: Redis
 
-  private publicServer: Koa<T, RafikiContextMixin> = new Koa()
+  private publicServer: Koa<T, HttpContextMixin> = new Koa()
 
   constructor(
     private config: RafikiServices,

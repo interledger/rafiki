@@ -31,7 +31,6 @@ describe('Error Handler Middleware', () => {
     const next = jest.fn().mockImplementation(() => {
       throw errorToBeThrown
     })
-    ctx.services = services
     const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()

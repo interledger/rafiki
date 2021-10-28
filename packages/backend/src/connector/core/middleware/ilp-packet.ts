@@ -15,7 +15,7 @@ import {
   deserializeIlpReply
 } from 'ilp-packet'
 import { Readable } from 'stream'
-import { RafikiContext, RafikiMiddleware, ILPMiddleware } from '../rafiki'
+import { HttpContext, HttpMiddleware, ILPMiddleware } from '../rafiki'
 import getRawBody from 'raw-body'
 
 const CONTENT_TYPE = 'application/octet-stream'
@@ -24,16 +24,7 @@ export interface IlpPacketMiddlewareOptions {
   getRawBody?: (req: Readable) => Promise<Buffer>
 }
 
-export interface RafikiPrepare extends IlpPrepare {
-  intAmount: bigint
-  readonly originalAmount: bigint
-  readonly originalExpiresAt: Date
-
-  readonly amountChanged: boolean
-  readonly expiresAtChanged: boolean
-}
-
-export class ZeroCopyIlpPrepare implements RafikiPrepare {
+export class ZeroCopyIlpPrepare implements IlpPrepare {
   private _originalAmount: bigint
   private _originalExpiresAt: Date
   private _prepare: IlpPrepare
@@ -173,13 +164,9 @@ export class IlpResponse {
   set reply(val: IlpReply | undefined) {
     if (val) {
       if (isFulfill(val)) {
-        this._fulfill = val
-        this._rawFulfill = serializeIlpFulfill(val)
-        this._reject = this._rawReject = undefined
+        this.fulfill = val
       } else {
-        this._reject = val
-        this._rawReject = serializeIlpReject(val)
-        this._fulfill = this._rawFulfill = undefined
+        this.reject = val
       }
     } else {
       this._fulfill = this._rawFulfill = undefined
@@ -194,17 +181,17 @@ export class IlpResponse {
     if (val) {
       const packet = deserializeIlpReply(val)
       if (isFulfill(packet)) {
-        this.fulfill = packet
-        this.rawFulfill = val
-        this.reject = this.rawReject = undefined
+        this._fulfill = packet
+        this._rawFulfill = val
+        this._reject = this._rawReject = undefined
       } else {
-        this.reject = packet
-        this.rawReject = val
-        this.fulfill = this.rawFulfill = undefined
+        this._reject = packet
+        this._rawReject = val
+        this._fulfill = this._rawFulfill = undefined
       }
     } else {
-      this.fulfill = this.rawFulfill = undefined
-      this.reject = this.rawReject = undefined
+      this._fulfill = this._rawFulfill = undefined
+      this._reject = this._rawReject = undefined
     }
   }
 }
@@ -212,12 +199,12 @@ export class IlpResponse {
 export function createIlpPacketMiddleware(
   ilpHandler: ILPMiddleware,
   config?: IlpPacketMiddlewareOptions
-): RafikiMiddleware {
+): HttpMiddleware {
   const _getRawBody =
     config && config.getRawBody ? config.getRawBody : getRawBody
 
   return async function ilpPacket(
-    ctx: RafikiContext,
+    ctx: HttpContext,
     next: () => Promise<void>
   ): Promise<void> {
     ctx.assert(
