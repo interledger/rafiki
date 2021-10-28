@@ -1,6 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { createContext } from '../../utils'
-import { RafikiContext } from '../..'
+import { createILPContext } from '../../utils'
 import {
   IlpRejectFactory,
   IlpFulfillFactory,
@@ -14,16 +13,17 @@ describe('Liquidity Check Middleware', function () {
   const services = RafikiServicesFactory.build()
   const alice = PeerAccountFactory.build({ id: 'alice' })
   const bob = PeerAccountFactory.build({ id: 'bob' })
-  const ctx = createContext<unknown, RafikiContext>()
-  ctx.services = services
-  ctx.accounts = {
-    get incoming() {
-      return alice
-    },
-    get outgoing() {
-      return bob
+  const ctx = createILPContext({
+    services,
+    accounts: {
+      get incoming() {
+        return alice
+      },
+      get outgoing() {
+        return bob
+      }
     }
-  }
+  })
   const middleware = createOutgoingLiquidityCheckMiddleware()
 
   beforeEach(() => {

@@ -1,5 +1,4 @@
-import { createContext } from '../../utils'
-import { RafikiContext } from '../../rafiki'
+import { createILPContext } from '../../utils'
 import { RafikiServicesFactory } from '../../factories'
 import { createIncomingErrorHandlerMiddleware } from '../../middleware/error-handler'
 
@@ -8,12 +7,11 @@ describe('Error Handler Middleware', () => {
   const services = RafikiServicesFactory.build({})
 
   test('catches errors and converts into ilp reject', async () => {
-    const ctx = createContext<unknown, RafikiContext>()
+    const ctx = createILPContext({ services })
     const errorToBeThrown = new Error('Test Error')
     const next = jest.fn().mockImplementation(() => {
       throw errorToBeThrown
     })
-    ctx.services = services
     const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
@@ -28,12 +26,11 @@ describe('Error Handler Middleware', () => {
   })
 
   test('sets triggeredBy to own address if error is thrown in next', async () => {
-    const ctx = createContext<unknown, RafikiContext>()
+    const ctx = createILPContext({ services })
     const errorToBeThrown = new Error('Test Error')
     const next = jest.fn().mockImplementation(() => {
       throw errorToBeThrown
     })
-    ctx.services = services
     const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
@@ -44,11 +41,10 @@ describe('Error Handler Middleware', () => {
   })
 
   test('creates reject if reply is not set in next', async () => {
-    const ctx = createContext<unknown, RafikiContext>()
+    const ctx = createILPContext({ services })
     const next = jest.fn().mockImplementation(() => {
       // don't set reply
     })
-    ctx.services = services
     const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()

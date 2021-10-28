@@ -1,25 +1,18 @@
 import * as http from 'http'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Koa, { Middleware } from 'koa'
-import createRouter, { Router as KoaRouter } from 'koa-joi-router'
 import { Redis } from 'ioredis'
 import { Logger } from 'pino'
+import { Errors } from 'ilp-packet'
 import { StreamServer } from '@interledger/stream-receiver'
 //import { Router } from './services/router'
 import {
   createIlpPacketMiddleware,
-  ilpAddressToPath,
-  RafikiPrepare
+  ZeroCopyIlpPrepare,
+  IlpResponse
 } from './middleware/ilp-packet'
-import {
-  createTokenAuthMiddleware,
-  createAdminAuthMiddleware
-} from './middleware'
-import { IncomingMessage, ServerResponse } from 'http'
-import { IlpReply, IlpReject, IlpFulfill } from 'ilp-packet'
+import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
-import { createAccountMiddleware } from './middleware/account'
-import { createStreamAddressMiddleware } from './middleware/stream-address'
 import { AccountTransfer } from '../../account/service'
 import { AccountTransferError } from '../../account/errors'
 
@@ -74,49 +67,48 @@ export interface RafikiServices {
   streamServer: StreamServer
 }
 
-export type RafikiRequestMixin = {
-  prepare: RafikiPrepare
-  rawPrepare: Buffer
-}
-export type RafikiResponseMixin = {
-  reject?: IlpReject
-  rawReject?: Buffer
-  fulfill?: IlpFulfill
-  rawFulfill?: Buffer
-  reply?: IlpReply
-  rawReply?: Buffer
-}
-
-export type RafikiRequest = Koa.Request & RafikiRequestMixin
-export type RafikiResponse = Koa.Response & RafikiResponseMixin
-
-export type RafikiContextMixin = {
+export type HttpContextMixin = {
   services: RafikiServices
   accounts: {
     readonly incoming: RafikiAccount
     readonly outgoing: RafikiAccount
   }
-  request: RafikiRequest
-  response: RafikiResponse
-  req: IncomingMessage & RafikiRequestMixin
-  res: ServerResponse & RafikiResponseMixin
 }
 
-export type RafikiContext<T = any> = Koa.ParameterizedContext<
-  T,
-  RafikiContextMixin
->
-export type RafikiMiddleware<T = any> = Middleware<T, RafikiContextMixin>
+export type HttpContext<T = any> = Koa.ParameterizedContext<T, HttpContextMixin>
+export type HttpMiddleware<T = any> = Middleware<T, HttpContextMixin>
+
+export type ILPMiddleware<T = any> = (
+  ctx: ILPContext<T>,
+  next: () => Promise<void>
+) => Promise<void>
+
+export type ILPContext<T = any> = {
+  services: RafikiServices
+  accounts: {
+    readonly incoming: RafikiAccount
+    readonly outgoing: RafikiAccount
+  }
+  request: {
+    prepare: ZeroCopyIlpPrepare
+    rawPrepare: Buffer
+  }
+  response: IlpResponse
+  throw: (status: number, msg: string) => never
+  state: T
+}
 
 export class Rafiki<T = any> {
   //private _router?: Router
   private streamServer: StreamServer
   private redis: Redis
 
-  private publicServer: Koa<T, RafikiContextMixin> = new Koa()
-  private adminServer: Koa<T, RafikiContextMixin> = new Koa()
+  private publicServer: Koa<T, HttpContextMixin> = new Koa()
 
-  constructor(config: RafikiServices) {
+  constructor(
+    private config: RafikiServices,
+    private routes: ILPMiddleware<any>
+  ) {
     //this._router = config && config.router ? config.router : undefined
     this.redis = config.redis
     const logger = config.logger
@@ -128,7 +120,7 @@ export class Rafiki<T = any> {
     this.streamServer = config.streamServer
     const { redis, streamServer } = this
     // Set global context that exposes services
-    this.publicServer.context.services = this.adminServer.context.services = {
+    this.publicServer.context.services = {
       //get router(): Router {
       //  return routerOrThrow()
       //},
@@ -146,7 +138,43 @@ export class Rafiki<T = any> {
       },
       logger
     }
-    this._useIlp()
+
+    this.publicServer.use(createTokenAuthMiddleware())
+    this.publicServer.use(createIlpPacketMiddleware(routes))
+  }
+
+  async handleIlpData(
+    sourceAccountId: string,
+    rawPrepare: Buffer
+  ): Promise<Buffer> {
+    const prepare = new ZeroCopyIlpPrepare(rawPrepare)
+    const response = new IlpResponse()
+    const account = await this.config.accounts.get(sourceAccountId)
+    await this.routes(
+      {
+        request: { prepare, rawPrepare },
+        response,
+        services: this.publicServer.context.services,
+        accounts: {
+          // These are populated up by the accounts middleware.
+          get incoming(): RafikiAccount {
+            throw new Error('incoming account not available')
+          },
+          get outgoing(): RafikiAccount {
+            throw new Error('outgoing account not available')
+          }
+        },
+        state: { account },
+        throw: (_status: number, msg: string): never => {
+          throw new Errors.BadRequestError(msg)
+        }
+      },
+      async () => {
+        // unreachable, this is the end of the middleware chain
+      }
+    )
+    if (!response.rawReply) throw new Error('error generating reply')
+    return response.rawReply
   }
 
   //public get router(): Router | undefined {
@@ -162,60 +190,17 @@ export class Rafiki<T = any> {
   }
 
   public set logger(logger: Logger) {
-    this.publicServer.context.services.logger = this.adminServer.context.services.logger = logger
-  }
-
-  public _useIlp(): void {
-    this.publicServer.use(createTokenAuthMiddleware())
-    this.adminServer.use(createAdminAuthMiddleware())
-    this.use(createIlpPacketMiddleware())
-    this.use(createStreamAddressMiddleware())
-    this.use(createAccountMiddleware())
-  }
-
-  public use(middleware: Koa.Middleware<T, RafikiContextMixin>): void {
-    this.adminServer.use(middleware)
-    this.publicServer.use(middleware)
+    this.publicServer.context.services.logger = logger
   }
 
   public listenPublic(port: number): http.Server {
     return this.publicServer.listen(port)
   }
-
-  public listenAdmin(port: number): http.Server {
-    return this.adminServer.listen(port)
-  }
 }
 
-export function createApp(config: RafikiServices): Rafiki {
-  return new Rafiki(config)
-}
-
-// TODO the joi-koa-middleware needs to be replaced by @koa/router. But the type defs are funky and require work
-export class RafikiRouter {
-  private _router: KoaRouter
-
-  constructor() {
-    this._router = createRouter()
-  }
-
-  public ilpRoute(
-    ilpAddressPattern: string,
-    handler: RafikiMiddleware<any>
-  ): void {
-    const path =
-      '/' +
-      ilpAddressToPath(ilpAddressPattern)
-        .split('/')
-        .filter(Boolean)
-        .join('/') // Trim trailing slash
-        .replace('*', '(.*)') // Replace wildcard with regex that only matches valid address chars
-
-    // "as any" because of tangled types.
-    this._router.post(path, handler as any)
-  }
-
-  public routes(): RafikiMiddleware<any> {
-    return this._router.middleware()
-  }
+export function createApp(
+  config: RafikiServices,
+  routes: ILPMiddleware<any>
+): Rafiki {
+  return new Rafiki(config, routes)
 }

@@ -1,6 +1,6 @@
 import { Errors } from 'ilp-packet'
-import { createContext } from '../../utils'
-import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import { createILPContext } from '../../utils'
+import { ZeroCopyIlpPrepare } from '../..'
 import {
   IlpPrepareFactory,
   PeerAccountFactory,
@@ -17,16 +17,17 @@ describe('Max Packet Amount Middleware', function () {
     maxPacketAmount: BigInt(50)
   })
   const bob = PeerAccountFactory.build({ id: 'bob' })
-  const ctx = createContext<unknown, RafikiContext>()
-  ctx.services = services
-  ctx.accounts = {
-    get incoming() {
-      return alice
-    },
-    get outgoing() {
-      return bob
+  const ctx = createILPContext({
+    services,
+    accounts: {
+      get incoming() {
+        return alice
+      },
+      get outgoing() {
+        return bob
+      }
     }
-  }
+  })
   const middleware = createIncomingMaxPacketAmountMiddleware()
 
   test('forwards packet below max packet amount', async () => {

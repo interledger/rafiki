@@ -1,4 +1,4 @@
-import { RafikiContext, RafikiMiddleware } from '..'
+import { ILPContext, ILPMiddleware } from '..'
 import { Errors } from 'ilp-packet'
 import { TokenBucket } from '../utils'
 const { InsufficientLiquidityError } = Errors
@@ -24,7 +24,7 @@ function createThroughputLimitBucket(
 
 export function createOutgoingThroughputMiddleware(
   options: ThroughputMiddlewareOptions = {}
-): RafikiMiddleware {
+): ILPMiddleware {
   const _buckets = new Map<string, TokenBucket>()
 
   return async (
@@ -32,8 +32,8 @@ export function createOutgoingThroughputMiddleware(
       services: { logger },
       request: { prepare },
       accounts: { outgoing }
-    }: RafikiContext,
-    next: () => Promise<unknown>
+    }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     let outgoingBucket = _buckets.get(outgoing.id)
     if (!outgoingBucket) {
@@ -60,7 +60,7 @@ export function createOutgoingThroughputMiddleware(
  */
 export function createIncomingThroughputMiddleware(
   options: ThroughputMiddlewareOptions = {}
-): RafikiMiddleware {
+): ILPMiddleware {
   const _buckets = new Map<string, TokenBucket>()
 
   return async (
@@ -68,8 +68,8 @@ export function createIncomingThroughputMiddleware(
       services: { logger },
       request: { prepare },
       accounts: { incoming }
-    }: RafikiContext,
-    next: () => Promise<unknown>
+    }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     let incomingBucket = _buckets.get(incoming.id)
     if (!incomingBucket) {

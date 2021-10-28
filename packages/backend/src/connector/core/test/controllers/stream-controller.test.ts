@@ -4,8 +4,7 @@ import {
   Packet as StreamPacket,
   IlpPacketType
 } from 'ilp-protocol-stream/dist/src/packet'
-import { createContext } from '../../utils'
-import { RafikiContext } from '../../rafiki'
+import { createILPContext } from '../../utils'
 import {
   createStreamController,
   streamReceivedKey
@@ -35,22 +34,23 @@ describe('Stream Controller', function () {
 
   test('constructs a reply when "stream" is enabled', async () => {
     const bob = AccountFactory.build({ stream: { enabled: true } })
-    const ctx = createContext<unknown, RafikiContext>()
     const {
       ilpAddress,
       sharedSecret
     } = services.streamServer.generateCredentials({
       paymentTag: 'foo'
     })
-    ctx.services = services
-    ctx.accounts = {
-      get incoming() {
-        return alice
-      },
-      get outgoing() {
-        return bob
+    const ctx = createILPContext({
+      services,
+      accounts: {
+        get incoming() {
+          return alice
+        },
+        get outgoing() {
+          return bob
+        }
       }
-    }
+    })
 
     const key = hmac(sharedSecret, Buffer.from('ilp_stream_encryption'))
     const data = await new StreamPacket(
@@ -97,17 +97,21 @@ describe('Stream Controller', function () {
 
   test("skips when the payment tag can't be decrypted", async () => {
     const bob = AccountFactory.build({ stream: { enabled: true } })
-    const ctx = createContext<unknown, RafikiContext>()
-    ctx.services = services
-    ctx.request.prepare = new ZeroCopyIlpPrepare(IlpPrepareFactory.build({}))
-    ctx.accounts = {
-      get incoming() {
-        return alice
+    const ctx = createILPContext({
+      services,
+      request: {
+        prepare: new ZeroCopyIlpPrepare(IlpPrepareFactory.build({})),
+        rawPrepare: Buffer.alloc(0) // ignored
       },
-      get outgoing() {
-        return bob
+      accounts: {
+        get incoming() {
+          return alice
+        },
+        get outgoing() {
+          return bob
+        }
       }
-    }
+    })
     const next = jest.fn()
     await expect(controller(ctx, next)).resolves.toBeUndefined()
     expect(ctx.response.reply).toBeUndefined()
@@ -116,16 +120,17 @@ describe('Stream Controller', function () {
 
   test('skips when "stream.enabled" is false', async () => {
     const bob = AccountFactory.build({ stream: { enabled: false } })
-    const ctx = createContext<unknown, RafikiContext>()
-    ctx.services = services
-    ctx.accounts = {
-      get incoming() {
-        return alice
-      },
-      get outgoing() {
-        return bob
+    const ctx = createILPContext({
+      services,
+      accounts: {
+        get incoming() {
+          return alice
+        },
+        get outgoing() {
+          return bob
+        }
       }
-    }
+    })
     const next = jest.fn()
     await expect(controller(ctx, next)).resolves.toBeUndefined()
     expect(ctx.response.reply).toBeUndefined()

@@ -1,16 +1,16 @@
 import { Errors } from 'ilp-packet'
-import { RafikiAccount, RafikiContext, RafikiMiddleware } from '../rafiki'
+import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
 import { AuthState } from './auth'
 import { AccountNotFoundError } from '../errors'
 
-export function createAccountMiddleware(): RafikiMiddleware {
+export function createAccountMiddleware(): ILPMiddleware {
   return async function account(
-    ctx: RafikiContext<AuthState & { streamDestination?: string }>,
-    next: () => Promise<unknown>
+    ctx: ILPContext<AuthState & { streamDestination?: string }>,
+    next: () => Promise<void>
   ): Promise<void> {
     const { accounts } = ctx.services
     const incomingAccount = ctx.state.account
-    ctx.assert(incomingAccount, 401)
+    if (!incomingAccount) ctx.throw(401, 'unauthorized')
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (incomingAccount!.disabled) {
       throw new Errors.UnreachableError('source account is disabled')

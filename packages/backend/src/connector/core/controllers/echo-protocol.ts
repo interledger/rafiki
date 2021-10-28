@@ -3,7 +3,7 @@ import { serializeIlpPrepare } from 'ilp-packet'
 import { Reader, Writer } from 'oer-utils'
 import { Errors } from 'ilp-packet'
 import { sendToPeer as sendToPeerDefault } from '../services'
-import { RafikiAccount, RafikiContext, RafikiMiddleware } from '../rafiki'
+import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
 const { InvalidPacketError } = Errors
 
 const MINIMUM_ECHO_PACKET_DATA_LENGTH = 16 + 1
@@ -24,7 +24,7 @@ export interface EchoProtocolControllerOptions {
 export function createEchoProtocolController({
   minMessageWindow,
   sendToPeer
-}: EchoProtocolControllerOptions): RafikiMiddleware {
+}: EchoProtocolControllerOptions): ILPMiddleware {
   const send = sendToPeer || sendToPeerDefault
   const axios = Axios.create({ timeout: 30_000 })
   return async function echo(
@@ -33,8 +33,8 @@ export function createEchoProtocolController({
       request,
       response,
       accounts: { outgoing }
-    }: RafikiContext,
-    _: () => Promise<unknown>
+    }: ILPContext,
+    _: () => Promise<void>
   ): Promise<void> {
     const { data, amount, expiresAt, executionCondition } = request.prepare
     if (data.length < MINIMUM_ECHO_PACKET_DATA_LENGTH) {

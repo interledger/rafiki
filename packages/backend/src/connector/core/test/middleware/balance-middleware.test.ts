@@ -1,5 +1,5 @@
-import { createContext } from '../../utils'
-import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import { createILPContext } from '../../utils'
+import { ZeroCopyIlpPrepare } from '../..'
 import { createBalanceMiddleware } from '../../middleware'
 import {
   AccountFactory,
@@ -13,16 +13,17 @@ import {
 const aliceAccount = AccountFactory.build({ id: 'alice' })
 const bobAccount = AccountFactory.build({ id: 'bob' })
 const services = RafikiServicesFactory.build({})
-const ctx = createContext<unknown, RafikiContext>()
-ctx.accounts = {
-  get incoming() {
-    return aliceAccount
+const ctx = createILPContext({
+  accounts: {
+    get incoming() {
+      return aliceAccount
+    },
+    get outgoing() {
+      return bobAccount
+    }
   },
-  get outgoing() {
-    return bobAccount
-  }
-}
-ctx.services = services
+  services
+})
 const { accounts } = services
 
 beforeEach(async () => {

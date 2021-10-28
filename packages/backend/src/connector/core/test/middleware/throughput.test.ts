@@ -1,11 +1,11 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import { ZeroCopyIlpPrepare } from '../..'
 import {
   IlpPrepareFactory,
   PeerAccountFactory,
   RafikiServicesFactory
 } from '../../factories'
-import { createContext, TokenBucket } from '../../utils'
+import { createILPContext, TokenBucket } from '../../utils'
 import {
   createIncomingThroughputMiddleware,
   createOutgoingThroughputMiddleware
@@ -19,16 +19,17 @@ describe('Incoming Throughput Middleware', function () {
     id: 'alice'
   })
   const bob = PeerAccountFactory.build({ id: 'bob' })
-  const ctx = createContext<unknown, RafikiContext>()
-  ctx.services = services
-  ctx.accounts = {
-    get incoming() {
-      return alice
-    },
-    get outgoing() {
-      return bob
+  const ctx = createILPContext({
+    services,
+    accounts: {
+      get incoming() {
+        return alice
+      },
+      get outgoing() {
+        return bob
+      }
     }
-  }
+  })
 
   test('throws error if throughput limit exceeded', async () => {
     const middleware = createIncomingThroughputMiddleware({
@@ -104,16 +105,17 @@ describe('Outgoing Throughput Middleware', function () {
   const bob = PeerAccountFactory.build({
     id: 'bob'
   })
-  const ctx = createContext<unknown, RafikiContext>()
-  ctx.services = services
-  ctx.accounts = {
-    get incoming() {
-      return alice
-    },
-    get outgoing() {
-      return bob
+  const ctx = createILPContext({
+    services,
+    accounts: {
+      get incoming() {
+        return alice
+      },
+      get outgoing() {
+        return bob
+      }
     }
-  }
+  })
 
   test('throws error if throughput limit exceeded', async () => {
     const middleware = createOutgoingThroughputMiddleware({
