@@ -19,8 +19,6 @@ exports.up = function (knex) {
 
     table.boolean('streamEnabled').notNullable().defaultTo(false)
 
-    table.string('staticIlpAddress').nullable()
-
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
   })

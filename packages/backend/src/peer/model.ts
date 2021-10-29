@@ -19,5 +19,7 @@ export class Peer extends BaseModel {
   }
 
   public accountId!: string
-  public account!: Account & Required<Pick<Account, 'http' | 'routing'>>
+  public account!: Account & Required<Pick<Account, 'http'>>
+
+  public staticIlpAddress!: string
 }

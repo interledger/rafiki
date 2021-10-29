@@ -22,7 +22,7 @@ import { Pagination } from '../shared/pagination'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { GraphileProducer } from '../messaging/graphileProducer'
-import { Config, IAppConfig } from '../config/app'
+import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -40,7 +40,6 @@ describe('Account Service', (): void => {
   let assetService: AssetService
   let balanceService: BalanceService
   let liquidityService: LiquidityService
-  let config: IAppConfig
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -48,15 +47,7 @@ describe('Account Service', (): void => {
 
   beforeAll(
     async (): Promise<void> => {
-      config = Config
-      config.ilpAddress = 'test.rafiki'
-      config.peerAddresses = [
-        {
-          accountId: uuid(),
-          ilpAddress: 'test.alice'
-        }
-      ]
-      deps = await initIocContainer(config)
+      deps = await initIocContainer(Config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
       workerUtils = await makeWorkerUtils({
@@ -76,7 +67,6 @@ describe('Account Service', (): void => {
       assetService = await deps.use('assetService')
       balanceService = await deps.use('balanceService')
       liquidityService = await deps.use('liquidityService')
-      config = await deps.use('config')
     }
   )
 
@@ -144,9 +134,6 @@ describe('Account Service', (): void => {
         },
         stream: {
           enabled: true
-        },
-        routing: {
-          staticIlpAddress: 'g.rafiki.' + id
         }
       }
       assert.ok(account.http)
@@ -306,18 +293,6 @@ describe('Account Service', (): void => {
         )
         await expect(accountService.get(id)).resolves.toBeUndefined()
       }
-    })
-
-    test('Cannot create an account with invalid static ILP address', async (): Promise<void> => {
-      await expect(
-        accountService.create({
-          id: uuid(),
-          asset: randomAsset(),
-          routing: {
-            staticIlpAddress: 'test.hello!'
-          }
-        })
-      ).resolves.toEqual(AccountError.InvalidStaticIlpAddress)
     })
 
     test('Auto-creates corresponding asset with liquidity and settlement accounts', async (): Promise<void> => {
@@ -523,9 +498,6 @@ describe('Account Service', (): void => {
         },
         stream: {
           enabled: false
-        },
-        routing: {
-          staticIlpAddress: 'g.rafiki.' + id
         }
       }
       assert.ok(updateOptions.http)
@@ -609,22 +581,6 @@ describe('Account Service', (): void => {
       )
       await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
-
-    test('Returns error for invalid static ILP address', async (): Promise<void> => {
-      const account = await accountFactory.build()
-      const updateOptions: UpdateOptions = {
-        id: account.id,
-        disabled: true,
-        maxPacketAmount: BigInt(200),
-        routing: {
-          staticIlpAddress: 'test.hello!'
-        }
-      }
-      await expect(accountService.update(updateOptions)).resolves.toEqual(
-        AccountError.InvalidStaticIlpAddress
-      )
-      await expect(accountService.get(account.id)).resolves.toEqual(account)
-    })
   })
 
   describe('Get Account Balance', (): void => {
@@ -675,135 +631,6 @@ describe('Account Service', (): void => {
     test('Returns undefined if no account exists with token', async (): Promise<void> => {
       const account = await accountService.getByToken(uuid())
       expect(account).toBeUndefined()
-    })
-  })
-
-  describe('Get Account By ILP Address', (): void => {
-    test('Can retrieve account by ILP address', async (): Promise<void> => {
-      const ilpAddress = 'test.rafiki'
-      const { id } = await accountFactory.build({
-        routing: {
-          staticIlpAddress: ilpAddress
-        }
-      })
-      {
-        const account = await accountService.getByDestinationAddress(ilpAddress)
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + '.suffix'
-        )
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + 'suffix'
-        )
-        expect(account).toBeUndefined()
-      }
-    })
-
-    test('Can retrieve account by configured peer ILP address', async (): Promise<void> => {
-      const { ilpAddress, accountId: id } = config.peerAddresses[0]
-      await accountFactory.build({
-        id
-      })
-      {
-        const account = await accountService.getByDestinationAddress(ilpAddress)
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + '.suffix'
-        )
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + 'suffix'
-        )
-        expect(account).toBeUndefined()
-      }
-    })
-
-    test('Can retrieve account by server ILP address', async (): Promise<void> => {
-      const { id } = await accountFactory.build()
-      const ilpAddress = config.ilpAddress + '.' + id
-      {
-        const account = await accountService.getByDestinationAddress(ilpAddress)
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + '.suffix'
-        )
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + 'suffix'
-        )
-        expect(account).toBeUndefined()
-      }
-    })
-
-    test('Returns undefined if no account exists with address', async (): Promise<void> => {
-      await accountFactory.build({
-        routing: {
-          staticIlpAddress: 'test.rafiki'
-        }
-      })
-      const account = await accountService.getByDestinationAddress('test.nope')
-      expect(account).toBeUndefined()
-    })
-
-    test('Properly escapes Postgres pattern "_" wildcards in the static address', async (): Promise<void> => {
-      await accountFactory.build({
-        routing: {
-          staticIlpAddress: 'test.rafiki_with_wildcards'
-        }
-      })
-      const account = await accountService.getByDestinationAddress(
-        'test.rafiki-with-wildcards'
-      )
-      expect(account).toBeUndefined()
-    })
-  })
-
-  describe('Get Account Address', (): void => {
-    test("Can get account's ILP address", async (): Promise<void> => {
-      const ilpAddress = 'test.rafiki'
-      const { id } = await accountFactory.build({
-        routing: {
-          staticIlpAddress: ilpAddress
-        }
-      })
-      {
-        const staticIlpAddress = await accountService.getAddress(id)
-        expect(staticIlpAddress).toEqual(ilpAddress)
-      }
-    })
-
-    test("Can get account's configured peer ILP address", async (): Promise<void> => {
-      const { ilpAddress, accountId: id } = config.peerAddresses[0]
-      await accountFactory.build({ id })
-      {
-        const peerAddress = await accountService.getAddress(id)
-        expect(peerAddress).toEqual(ilpAddress)
-      }
-    })
-
-    test("Can get account's address by server ILP address", async (): Promise<void> => {
-      const { id } = await accountFactory.build()
-      {
-        const ilpAddress = await accountService.getAddress(id)
-        expect(ilpAddress).toEqual(config.ilpAddress + '.' + id)
-      }
-    })
-
-    test('Returns undefined for nonexistent account', async (): Promise<void> => {
-      await expect(accountService.getAddress(uuid())).resolves.toBeUndefined()
     })
   })
 

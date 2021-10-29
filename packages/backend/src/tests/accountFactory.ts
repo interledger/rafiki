@@ -31,9 +31,6 @@ export class AccountFactory {
     if (options.http) {
       accountOptions.http = options.http
     }
-    if (options.routing) {
-      accountOptions.routing = options.routing
-    }
     const account = await this.accounts.create(accountOptions)
 
     if (isAccountError(account)) {

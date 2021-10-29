@@ -119,7 +119,7 @@ export type CreatePeerInput = {
   http: HttpInput;
   asset: AssetInput;
   stream?: Maybe<StreamInput>;
-  routing: RoutingInput;
+  staticIlpAddress: Scalars['String'];
 };
 
 export type CreatePeerMutationResponse = MutationResponse & {
@@ -451,7 +451,7 @@ export type Peer = {
   http: Http;
   asset: Asset;
   stream: Stream;
-  routing: Routing;
+  staticIlpAddress: Scalars['String'];
 };
 
 export type PeerEdge = {
@@ -506,17 +506,6 @@ export type RollbackLiquidityWithdrawalMutationResponse = MutationResponse & {
   error?: Maybe<LiquidityError>;
 };
 
-export type Routing = {
-  __typename?: 'Routing';
-  staticIlpAddress: Scalars['String'];
-  inheritFromRemote?: Maybe<Scalars['Boolean']>;
-  dynamicIlpAddress?: Maybe<Scalars['String']>;
-};
-
-export type RoutingInput = {
-  staticIlpAddress: Scalars['String'];
-};
-
 export type Stream = {
   __typename?: 'Stream';
   enabled: Scalars['Boolean'];
@@ -540,7 +529,7 @@ export type UpdatePeerInput = {
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http?: Maybe<HttpInput>;
   stream?: Maybe<StreamInput>;
-  routing?: Maybe<RoutingInput>;
+  staticIlpAddress?: Maybe<Scalars['String']>;
 };
 
 export type UpdatePeerMutationResponse = MutationResponse & {
@@ -679,8 +668,6 @@ export type ResolversTypes = {
   PeersConnection: ResolverTypeWrapper<Partial<PeersConnection>>;
   Query: ResolverTypeWrapper<{}>;
   RollbackLiquidityWithdrawalMutationResponse: ResolverTypeWrapper<Partial<RollbackLiquidityWithdrawalMutationResponse>>;
-  Routing: ResolverTypeWrapper<Partial<Routing>>;
-  RoutingInput: ResolverTypeWrapper<Partial<RoutingInput>>;
   Stream: ResolverTypeWrapper<Partial<Stream>>;
   StreamInput: ResolverTypeWrapper<Partial<StreamInput>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
@@ -738,8 +725,6 @@ export type ResolversParentTypes = {
   PeersConnection: Partial<PeersConnection>;
   Query: {};
   RollbackLiquidityWithdrawalMutationResponse: Partial<RollbackLiquidityWithdrawalMutationResponse>;
-  Routing: Partial<Routing>;
-  RoutingInput: Partial<RoutingInput>;
   Stream: Partial<Stream>;
   StreamInput: Partial<StreamInput>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
@@ -964,7 +949,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   stream?: Resolver<ResolversTypes['Stream'], ParentType, ContextType>;
-  routing?: Resolver<ResolversTypes['Routing'], ParentType, ContextType>;
+  staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -992,13 +977,6 @@ export type RollbackLiquidityWithdrawalMutationResponseResolvers<ContextType = a
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['LiquidityError']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RoutingResolvers<ContextType = any, ParentType extends ResolversParentTypes['Routing'] = ResolversParentTypes['Routing']> = {
-  staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  inheritFromRemote?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  dynamicIlpAddress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1058,7 +1036,6 @@ export type Resolvers<ContextType = any> = {
   PeersConnection?: PeersConnectionResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RollbackLiquidityWithdrawalMutationResponse?: RollbackLiquidityWithdrawalMutationResponseResolvers<ContextType>;
-  Routing?: RoutingResolvers<ContextType>;
   Stream?: StreamResolvers<ContextType>;
   TransferMutationResponse?: TransferMutationResponseResolvers<ContextType>;
   UInt64?: GraphQLScalarType;

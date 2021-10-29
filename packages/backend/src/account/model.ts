@@ -50,10 +50,6 @@ export class Account extends BaseModel {
     enabled: boolean
   }
 
-  public readonly routing?: {
-    staticIlpAddress: string
-  }
-
   $formatDatabaseJson(json: Pojo): Pojo {
     if (json.stream) {
       json.streamEnabled = json.stream.enabled
@@ -63,10 +59,6 @@ export class Account extends BaseModel {
       json.outgoingToken = json.http.outgoing.authToken
       json.outgoingEndpoint = json.http.outgoing.endpoint
       delete json.http
-    }
-    if (json.routing) {
-      json.staticIlpAddress = json.routing.staticIlpAddress
-      delete json.routing
     }
     return super.$formatDatabaseJson(json)
   }
@@ -88,12 +80,6 @@ export class Account extends BaseModel {
       }
       delete formattedJson.outgoingToken
       delete formattedJson.outgoingEndpoint
-    }
-    if (formattedJson.staticIlpAddress) {
-      formattedJson.routing = {
-        staticIlpAddress: formattedJson.staticIlpAddress
-      }
-      delete formattedJson.staticIlpAddress
     }
     return formattedJson
   }

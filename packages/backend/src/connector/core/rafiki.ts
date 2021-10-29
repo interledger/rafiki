@@ -15,6 +15,7 @@ import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
 import { AccountTransfer } from '../../account/service'
 import { AccountTransferError } from '../../account/errors'
+import { PeerService } from '../../peer/service'
 
 export interface RafikiAccount {
   id: string
@@ -32,9 +33,6 @@ export interface RafikiAccount {
   stream: {
     enabled: boolean
   }
-  routing?: {
-    staticIlpAddress: string
-  }
   maxPacketAmount?: bigint
 }
 
@@ -48,11 +46,7 @@ export interface TransferOptions {
 
 export interface AccountService {
   get(id: string): Promise<RafikiAccount | undefined>
-  getByDestinationAddress(
-    destinationAddress: string
-  ): Promise<RafikiAccount | undefined>
   getByToken(token: string): Promise<RafikiAccount | undefined>
-  getAddress(id: string): Promise<string | undefined>
   transferFunds(
     options: TransferOptions
   ): Promise<AccountTransfer | AccountTransferError>
@@ -62,6 +56,7 @@ export interface RafikiServices {
   //router: Router
   accounts: AccountService
   logger: Logger
+  peers: PeerService
   rates: RatesService
   redis: Redis
   streamServer: StreamServer
@@ -124,6 +119,9 @@ export class Rafiki<T = any> {
       //get router(): Router {
       //  return routerOrThrow()
       //},
+      get peers(): PeerService {
+        return config.peers
+      },
       get rates(): RatesService {
         return config.rates
       },

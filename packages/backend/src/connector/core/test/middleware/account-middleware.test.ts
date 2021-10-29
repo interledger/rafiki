@@ -8,6 +8,7 @@ import { createAccountMiddleware } from '../../middleware/account'
 import { ZeroCopyIlpPrepare } from '../..'
 
 describe('Account Middleware', () => {
+  const ADDRESS = 'test.rafiki'
   const incomingAccount = PeerAccountFactory.build({
     id: 'incomingPeer'
   })
@@ -22,7 +23,7 @@ describe('Account Middleware', () => {
   })
 
   test('set the accounts according to state and destination', async () => {
-    const middleware = createAccountMiddleware()
+    const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
       state: { account: incomingAccount },
@@ -41,7 +42,7 @@ describe('Account Middleware', () => {
   })
 
   test('set the accounts according to state and streamDestination', async () => {
-    const middleware = createAccountMiddleware()
+    const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
       state: {
@@ -63,7 +64,7 @@ describe('Account Middleware', () => {
   })
 
   test('return an error when the source account is disabled', async () => {
-    const middleware = createAccountMiddleware()
+    const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
       state: { account: PeerAccountFactory.build({ disabled: true }) },
@@ -82,7 +83,7 @@ describe('Account Middleware', () => {
 
   test('return an error when the destination account is disabled', async () => {
     outgoingAccount.disabled = true
-    const middleware = createAccountMiddleware()
+    const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
       state: { account: incomingAccount },

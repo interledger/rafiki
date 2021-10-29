@@ -10,27 +10,24 @@ export type MockIlpAccount = RafikiAccount & {
       authTokens: string[]
     }
   }
+  staticIlpAddress?: string
 }
 
 export class MockAccountsService implements AccountService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
-  constructor(private serverIlpAddress: string) {}
-
-  get(accountId: string): Promise<RafikiAccount | undefined> {
+  get(accountId: string): Promise<MockIlpAccount | undefined> {
     const account = this.accounts.get(accountId)
     return Promise.resolve(account)
   }
 
   async getByDestinationAddress(
     destinationAddress: string
-  ): Promise<RafikiAccount | undefined> {
+  ): Promise<MockIlpAccount | undefined> {
     const account = this.find((account) => {
-      const { routing } = account
-      if (!routing) return false
-      return destinationAddress.startsWith(routing.staticIlpAddress)
-      //routing.staticIlpAddress === destinationAddress ||
-      //routing.prefixes.some((prefix) => destinationAddress.startsWith(prefix))
+      const { staticIlpAddress } = account
+      if (!staticIlpAddress) return false
+      return destinationAddress.startsWith(staticIlpAddress)
     })
     return account
   }
@@ -75,19 +72,9 @@ export class MockAccountsService implements AccountService {
     }
   }
 
-  async getAddress(accountId: string): Promise<string | undefined> {
-    const account = this.accounts.get(accountId)
-    if (!account) return undefined
-    if (account.routing) {
-      return account.routing.staticIlpAddress
-    } else {
-      return this.serverIlpAddress + '.' + accountId
-    }
-  }
-
   private find(
     predicate: (account: MockIlpAccount) => boolean
-  ): RafikiAccount | undefined {
+  ): MockIlpAccount | undefined {
     for (const [, account] of this.accounts) {
       if (predicate(account)) return account
     }

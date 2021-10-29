@@ -148,7 +148,6 @@ export function initIocContainer(
     })
   })
   container.singleton('accountService', async (deps) => {
-    const config = await deps.use('config')
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const assetService = await deps.use('assetService')
@@ -161,9 +160,7 @@ export function initIocContainer(
       assetService,
       balanceService,
       httpTokenService,
-      transferService,
-      ilpAddress: config.ilpAddress,
-      peerAddresses: config.peerAddresses
+      transferService
     })
   })
   container.singleton('peerService', async (deps) => {
@@ -260,8 +257,7 @@ export function initIocContainer(
       balanceService: await deps.use('balanceService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       paymentPointerService: await deps.use('paymentPointerService'),
-      ratesService: await deps.use('ratesService'),
-      transferService: await deps.use('transferService')
+      ratesService: await deps.use('ratesService')
     })
   })
 
@@ -271,6 +267,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountService: await deps.use('accountService'),
+      peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress

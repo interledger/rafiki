@@ -31,6 +31,7 @@ describe('Peer Service', (): void => {
 
   const randomPeer = (): CreateOptions => ({
     asset: randomAsset(),
+    disabled: false,
     http: {
       incoming: {
         authTokens: [Faker.datatype.string(32)]
@@ -40,8 +41,10 @@ describe('Peer Service', (): void => {
         endpoint: Faker.internet.url()
       }
     },
-    routing: {
-      staticIlpAddress: 'test.' + uuid()
+    maxPacketAmount: BigInt(100),
+    staticIlpAddress: 'test.' + uuid(),
+    stream: {
+      enabled: true
     }
   })
 
@@ -86,11 +89,20 @@ describe('Peer Service', (): void => {
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
       assert.ok(options.http)
-      expect(peer.account).toMatchObject({
-        ...options,
-        http: {
-          outgoing: options.http.outgoing
-        }
+      expect(peer).toMatchObject({
+        account: {
+          asset: {
+            code: options.asset.code,
+            scale: options.asset.scale
+          },
+          disabled: options.disabled,
+          http: {
+            outgoing: options.http.outgoing
+          },
+          maxPacketAmount: options.maxPacketAmount,
+          stream: options.stream
+        },
+        staticIlpAddress: options.staticIlpAddress
       })
       const retrievedPeer = await peerService.get(peer.id)
       if (!retrievedPeer) throw new Error('peer not found')
@@ -156,9 +168,7 @@ describe('Peer Service', (): void => {
       await expect(
         peerService.create({
           ...options,
-          routing: {
-            staticIlpAddress: 'test.hello!'
-          }
+          staticIlpAddress: 'test.hello!'
         })
       ).resolves.toEqual(PeerError.InvalidStaticIlpAddress)
     })
@@ -179,10 +189,16 @@ describe('Peer Service', (): void => {
       delete updateOptions.http.incoming
       const expectedPeer = {
         account: {
-          ...updateOptions,
           id: peer.account.id,
-          asset: peer.account.asset
-        }
+          asset: peer.account.asset,
+          disabled: updateOptions.disabled,
+          http: {
+            outgoing: updateOptions.http.outgoing
+          },
+          maxPacketAmount: updateOptions.maxPacketAmount,
+          stream: updateOptions.stream
+        },
+        staticIlpAddress: updateOptions.staticIlpAddress
       }
       expect(peerOrError).toMatchObject(expectedPeer)
       await expect(peerService.get(peer.id)).resolves.toEqual(peerOrError)
@@ -251,14 +267,66 @@ describe('Peer Service', (): void => {
       assert.ok(!isPeerError(peer))
       const updateOptions: UpdateOptions = {
         id: peer.id,
-        routing: {
-          staticIlpAddress: 'test.hello!'
-        }
+        staticIlpAddress: 'test.hello!'
       }
       await expect(peerService.update(updateOptions)).resolves.toEqual(
         PeerError.InvalidStaticIlpAddress
       )
       await expect(peerService.get(peer.id)).resolves.toEqual(peer)
+    })
+  })
+
+  describe('Get Peer by Account Id', (): void => {
+    test('Can get peer by account id', async (): Promise<void> => {
+      const options = randomPeer()
+      const peer = await peerService.create(options)
+      assert.ok(!isPeerError(peer))
+
+      await expect(peerService.getByAccountId(peer.accountId)).resolves.toEqual(
+        peer
+      )
+    })
+
+    test('Returns undefined for nonexistent peer account', async (): Promise<void> => {
+      await expect(peerService.getByAccountId(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Get Peer By ILP Address', (): void => {
+    test('Can retrieve peer by ILP address', async (): Promise<void> => {
+      const options = randomPeer()
+      const peer = await peerService.create(options)
+      assert.ok(!isPeerError(peer))
+
+      await expect(
+        peerService.getByDestinationAddress(options.staticIlpAddress)
+      ).resolves.toEqual(peer)
+
+      await expect(
+        peerService.getByDestinationAddress(
+          options.staticIlpAddress + '.suffix'
+        )
+      ).resolves.toEqual(peer)
+
+      await expect(
+        peerService.getByDestinationAddress(options.staticIlpAddress + 'suffix')
+      ).resolves.toBeUndefined()
+    })
+
+    test('Returns undefined if no account exists with address', async (): Promise<void> => {
+      await expect(
+        peerService.getByDestinationAddress('test.nope')
+      ).resolves.toBeUndefined()
+    })
+
+    test('Properly escapes Postgres pattern "_" wildcards in the static address', async (): Promise<void> => {
+      const options = randomPeer()
+      options.staticIlpAddress = 'test.rafiki_with_wildcards'
+      const peer = await peerService.create(options)
+      assert.ok(!isPeerError(peer))
+      await expect(
+        peerService.getByDestinationAddress('test.rafiki-with-wildcards')
+      ).resolves.toBeUndefined()
     })
   })
 

@@ -38,7 +38,7 @@ describe('Token Auth Middleware', function () {
     })
 
     test('succeeds for valid token and binds data to context', async () => {
-      const accounts = new MockAccountsService('test.rafiki')
+      const accounts = new MockAccountsService()
       const ctx = createContext<unknown, HttpContext>({
         req: {
           headers: {

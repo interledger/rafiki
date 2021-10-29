@@ -112,7 +112,7 @@ input CreatePeerInput {
   http: HttpInput!
   asset: AssetInput!
   stream: StreamInput
-  routing: RoutingInput!
+  staticIlpAddress: String!
 }
 
 input UpdatePeerInput {
@@ -121,7 +121,7 @@ input UpdatePeerInput {
   maxPacketAmount: UInt64
   http: HttpInput
   stream: StreamInput
-  routing: RoutingInput
+  staticIlpAddress: String
 }
 
 input HttpInput {
@@ -145,10 +145,6 @@ input AssetInput {
 
 input StreamInput {
   enabled: Boolean!
-}
-
-input RoutingInput {
-  staticIlpAddress: String!
 }
 
 input AddAccountLiquidityInput {
@@ -210,7 +206,7 @@ type Peer {
   http: Http!
   asset: Asset!
   stream: Stream!
-  routing: Routing!
+  staticIlpAddress: String!
 }
 
 type Http {
@@ -224,12 +220,6 @@ type HttpOutgoing {
 
 type Stream {
   enabled: Boolean!
-}
-
-type Routing {
-  staticIlpAddress: String!
-  inheritFromRemote: Boolean
-  dynamicIlpAddress: String
 }
 
 type PaymentPointer {

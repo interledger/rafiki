@@ -1,12 +1,13 @@
 import assert from 'assert'
-import { Transaction } from 'knex'
+import { raw, Transaction } from 'objection'
+import { isValidIlpAddress } from 'ilp-packet'
 
 import { PeerError, isPeerError } from './errors'
 import { Peer } from './model'
 import {
   AccountService,
   CreateOptions as CreateAccountOptions,
-  UpdateOptions
+  UpdateOptions as UpdateAccountOptions
 } from '../account/service'
 import { isAccountError } from '../account/errors'
 import { AssetService, AssetOptions } from '../asset/service'
@@ -24,17 +25,19 @@ export type CreateOptions = Omit<CreateAccountOptions, 'id' | 'assetId'> & {
       endpoint: string
     }
   }
-  routing: {
-    staticIlpAddress: string
-  }
+  staticIlpAddress: string
 }
 
-export { UpdateOptions }
+export type UpdateOptions = UpdateAccountOptions & {
+  staticIlpAddress?: string
+}
 
 export interface PeerService {
   get(id: string): Promise<Peer | undefined>
   create(options: CreateOptions, trx?: Transaction): Promise<Peer | PeerError>
   update(options: UpdateOptions): Promise<Peer | PeerError>
+  getByAccountId(accountId: string): Promise<Peer | undefined>
+  getByDestinationAddress(address: string): Promise<Peer | undefined>
   getPage(pagination?: Pagination): Promise<Peer[]>
 }
 
@@ -62,6 +65,9 @@ export async function createPeerService({
     get: (id) => getPeer(deps, id),
     create: (options, trx) => createPeer(deps, options, trx),
     update: (options) => updatePeer(deps, options),
+    getByAccountId: (accountId) => getPeerByAccountId(deps, accountId),
+    getByDestinationAddress: (destinationAddress) =>
+      getPeerByDestinationAddress(deps, destinationAddress),
     getPage: (pagination?) => getPeersPage(deps, pagination)
   }
 }
@@ -78,16 +84,22 @@ async function createPeer(
   options: CreateOptions,
   trx?: Transaction
 ): Promise<Peer | PeerError> {
+  if (!isValidIlpAddress(options.staticIlpAddress)) {
+    return PeerError.InvalidStaticIlpAddress
+  }
+
   const peerTrx = trx || (await Peer.startTransaction(deps.knex))
 
   try {
     const account = await deps.accountService.create(
       {
-        ...options,
-        asset: undefined,
         assetId: (
           await deps.assetService.getOrCreate(options.asset as AssetOptions)
-        ).id
+        ).id,
+        disabled: options.disabled,
+        http: options.http,
+        maxPacketAmount: options.maxPacketAmount,
+        stream: options.stream
       },
       peerTrx
     )
@@ -103,7 +115,8 @@ async function createPeer(
 
     const peer = await Peer.query(peerTrx)
       .insertAndFetch({
-        accountId: account.id
+        accountId: account.id,
+        staticIlpAddress: options.staticIlpAddress
       })
       .withGraphFetched('account.asset')
     if (!trx) {
@@ -122,6 +135,13 @@ async function updatePeer(
   deps: ServiceDependencies,
   options: UpdateOptions
 ): Promise<Peer | PeerError> {
+  if (
+    options.staticIlpAddress &&
+    !isValidIlpAddress(options.staticIlpAddress)
+  ) {
+    return PeerError.InvalidStaticIlpAddress
+  }
+
   assert.ok(deps.knex, 'Knex undefined')
   return await Peer.transaction(deps.knex, async (trx) => {
     const peer = await Peer.query(trx).findById(options.id).forUpdate()
@@ -131,8 +151,11 @@ async function updatePeer(
 
     const account = await deps.accountService.update(
       {
-        ...options,
-        id: peer.accountId
+        id: peer.accountId,
+        disabled: options.disabled,
+        http: options.http,
+        maxPacketAmount: options.maxPacketAmount,
+        stream: options.stream
       },
       trx
     )
@@ -142,9 +165,55 @@ async function updatePeer(
       }
       throw new Error('unable to update peer account, err=' + account)
     }
-
+    await peer.$query(trx).patch({ staticIlpAddress: options.staticIlpAddress })
     return Peer.query(trx).findById(options.id).withGraphJoined('account.asset')
   })
+}
+
+async function getPeerByAccountId(
+  deps: ServiceDependencies,
+  accountId: string
+): Promise<Peer | undefined> {
+  return await Peer.query(deps.knex)
+    .where({ accountId })
+    .withGraphJoined('account.asset')
+    .first()
+}
+
+async function getPeerByDestinationAddress(
+  deps: ServiceDependencies,
+  destinationAddress: string
+): Promise<Peer | undefined> {
+  // This query does the equivalent of the following regex
+  // for `staticIlpAddress`s in the accounts table:
+  // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
+  const peer = await Peer.query(deps.knex)
+    .withGraphJoined('account.asset')
+    .where(
+      raw('?', [destinationAddress]),
+      'like',
+      // "_" is a Postgres pattern wildcard (matching any one character), and must be escaped.
+      // See: https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
+      raw("REPLACE(REPLACE(??, '_', '\\\\_'), '%', '\\\\%') || '%'", [
+        'staticIlpAddress'
+      ])
+    )
+    .andWhere((builder) => {
+      builder
+        .where(
+          raw('length(??)', ['staticIlpAddress']),
+          destinationAddress.length
+        )
+        .orWhere(
+          raw('substring(?, length(??)+1, 1)', [
+            destinationAddress,
+            'staticIlpAddress'
+          ]),
+          '.'
+        )
+    })
+    .first()
+  return peer || undefined
 }
 
 /** TODO: Base64 encode/decode the cursors

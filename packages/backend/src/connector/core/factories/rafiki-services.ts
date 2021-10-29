@@ -17,10 +17,30 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   //  return new InMemoryRouter(peers, { ilpAddress: 'test.rafiki' })
   //})
   .option('ilpAddress', 'test.rafiki')
-  .attr('accounts', ['ilpAddress'], (ilpAddress: string) => {
-    return new MockAccountsService(ilpAddress)
+  .attr('accounts', () => {
+    return new MockAccountsService()
   })
   .attr('logger', TestLoggerFactory.build())
+  .attr('peers', ['accounts'], (accounts: MockAccountsService) => ({
+    getByDestinationAddress: async (address: string) => {
+      const account = await accounts.getByDestinationAddress(address)
+      if (account) {
+        return {
+          account,
+          staticIlpAddress: account.staticIlpAddress
+        }
+      }
+    },
+    getByAccountId: async (id: string) => {
+      const account = await accounts.get(id)
+      if (account && account.staticIlpAddress) {
+        return {
+          account,
+          staticIlpAddress: account.staticIlpAddress
+        }
+      }
+    }
+  }))
   .attr('rates', {
     convert: async (opts) => opts.sourceAmount,
     prices: () => {

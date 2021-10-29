@@ -43,9 +43,7 @@ describe('Peer Resolvers', (): void => {
       }
     },
     maxPacketAmount: BigInt(100),
-    routing: {
-      staticIlpAddress: 'test.' + uuid()
-    },
+    staticIlpAddress: 'test.' + uuid(),
     stream: {
       enabled: true
     }
@@ -98,9 +96,7 @@ describe('Peer Resolvers', (): void => {
                       endpoint
                     }
                   }
-                  routing {
-                    staticIlpAddress
-                  }
+                  staticIlpAddress
                 }
               }
             }
@@ -124,7 +120,13 @@ describe('Peer Resolvers', (): void => {
       assert.ok(response.peer)
       delete peer.http.incoming
       await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
-        account: peer
+        account: {
+          disabled: peer.disabled,
+          http: peer.http,
+          maxPacketAmount: peer.maxPacketAmount,
+          stream: peer.stream
+        },
+        staticIlpAddress: peer.staticIlpAddress
       })
     })
 
@@ -175,7 +177,7 @@ describe('Peer Resolvers', (): void => {
 
     test('Returns error for invalid ILP address', async (): Promise<void> => {
       const peer = randomPeer()
-      peer.routing.staticIlpAddress = 'test.hello!'
+      peer.staticIlpAddress = 'test.hello!'
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -236,9 +238,7 @@ describe('Peer Resolvers', (): void => {
                 stream {
                   enabled
                 }
-                routing {
-                  staticIlpAddress
-                }
+                staticIlpAddress
               }
             }
           `,
@@ -278,10 +278,7 @@ describe('Peer Resolvers', (): void => {
             ...options.http.outgoing
           }
         },
-        routing: {
-          __typename: 'Routing',
-          staticIlpAddress: options.routing.staticIlpAddress
-        },
+        staticIlpAddress: options.staticIlpAddress,
         maxPacketAmount: options.maxPacketAmount.toString()
       })
     })
@@ -371,9 +368,7 @@ describe('Peer Resolvers', (): void => {
                     stream {
                       enabled
                     }
-                    routing {
-                      staticIlpAddress
-                    }
+                    staticIlpAddress
                   }
                   cursor
                 }
@@ -395,7 +390,6 @@ describe('Peer Resolvers', (): void => {
       query.edges.forEach((edge, idx) => {
         const peer = peers[idx]
         assert.ok(peer.account.http)
-        assert.ok(peer.account.routing)
         assert.ok(peer.account.maxPacketAmount)
         expect(edge.cursor).toEqual(peer.id)
         expect(edge.node).toEqual({
@@ -418,10 +412,7 @@ describe('Peer Resolvers', (): void => {
               ...peer.account.http.outgoing
             }
           },
-          routing: {
-            __typename: 'Routing',
-            staticIlpAddress: peer.account.routing.staticIlpAddress
-          },
+          staticIlpAddress: peer.staticIlpAddress,
           maxPacketAmount: peer.account.maxPacketAmount.toString()
         })
       })
@@ -655,9 +646,7 @@ describe('Peer Resolvers', (): void => {
         stream: {
           enabled: false
         },
-        routing: {
-          staticIlpAddress: 'g.rafiki.' + peer.id
-        }
+        staticIlpAddress: 'g.rafiki.' + peer.id
       }
       assert.ok(updateOptions.http)
       const response = await appContainer.apolloClient
@@ -681,9 +670,7 @@ describe('Peer Resolvers', (): void => {
                   stream {
                     enabled
                   }
-                  routing {
-                    staticIlpAddress
-                  }
+                  staticIlpAddress
                 }
               }
             }
@@ -714,10 +701,7 @@ describe('Peer Resolvers', (): void => {
             ...updateOptions.http.outgoing
           }
         },
-        routing: {
-          __typename: 'Routing',
-          staticIlpAddress: updateOptions.routing.staticIlpAddress
-        },
+        staticIlpAddress: updateOptions.staticIlpAddress,
         stream: {
           __typename: 'Stream',
           enabled: updateOptions.stream.enabled
@@ -725,14 +709,16 @@ describe('Peer Resolvers', (): void => {
       })
       await expect(peerService.get(peer.id)).resolves.toMatchObject({
         account: {
-          ...updateOptions,
           id: peer.account.id,
           asset: peer.account.asset,
+          disabled: updateOptions.disabled,
           http: {
             outgoing: updateOptions.http.outgoing
           },
-          maxPacketAmount: BigInt(updateOptions.maxPacketAmount)
-        }
+          maxPacketAmount: BigInt(updateOptions.maxPacketAmount),
+          stream: updateOptions.stream
+        },
+        staticIlpAddress: updateOptions.staticIlpAddress
       })
     })
 

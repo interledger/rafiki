@@ -32,8 +32,6 @@ export const PeerAccountFactory = Factory.define<MockIlpAccount>(
       }
     })
   })
-  .attr('routing', ['id'], (id: string) => {
-    return {
-      staticIlpAddress: `test.${id}`
-    }
+  .attr('staticIlpAddress', ['id'], (id: string) => {
+    return `test.${id}`
   })

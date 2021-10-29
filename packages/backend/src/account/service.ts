@@ -1,12 +1,10 @@
 import {
   ForeignKeyViolationError,
   NotFoundError,
-  raw,
   Transaction,
   UniqueViolationError
 } from 'objection'
 import { v4 as uuid } from 'uuid'
-import { isValidIlpAddress } from 'ilp-packet'
 
 import { AssetService, AssetOptions } from '../asset/service'
 import { BalanceService } from '../balance/service'
@@ -19,7 +17,6 @@ import {
   UnknownLiquidityAccountError
 } from '../shared/errors'
 import { Pagination } from '../shared/pagination'
-import { validateId } from '../shared/utils'
 import { TransferService, TwoPhaseTransfer } from '../transfer/service'
 import { TransferError, TransfersError } from '../transfer/errors'
 import { AccountError, AccountTransferError, UnknownAssetError } from './errors'
@@ -40,9 +37,6 @@ export type Options = {
       authToken: string
       endpoint: string
     }
-  }
-  routing?: {
-    staticIlpAddress: string // ILP address for this account
   }
   maxPacketAmount?: bigint
 }
@@ -68,11 +62,6 @@ export type UpdateOptions = Options & {
   id: string
 }
 
-interface Peer {
-  accountId: string
-  ilpAddress: string
-}
-
 export interface AccountTransferOptions {
   sourceAccount: Account
   destinationAccount: Account
@@ -86,8 +75,6 @@ export interface AccountTransfer {
   rollback: () => Promise<void | AccountTransferError>
 }
 
-const UUID_LENGTH = 36
-
 export interface AccountService {
   create(
     account: CreateOptions,
@@ -99,11 +86,7 @@ export interface AccountService {
   ): Promise<Account | AccountError>
   get(accountId: string): Promise<Account | undefined>
   getAccounts(ids: string[]): Promise<Account[]>
-  getByDestinationAddress(
-    destinationAddress: string
-  ): Promise<Account | undefined>
   getByToken(token: string): Promise<Account | undefined>
-  getAddress(accountId: string): Promise<string | undefined>
   getBalance(accountId: string): Promise<bigint | undefined>
   getTotalSent(accountId: string): Promise<bigint | undefined>
   getPage(pagination?: Pagination): Promise<Account[]>
@@ -117,8 +100,6 @@ interface ServiceDependencies extends BaseService {
   balanceService: BalanceService
   httpTokenService: HttpTokenService
   transferService: TransferService
-  ilpAddress?: string
-  peerAddresses: Peer[]
 }
 
 export function createAccountService({
@@ -127,9 +108,7 @@ export function createAccountService({
   assetService,
   balanceService,
   httpTokenService,
-  transferService,
-  ilpAddress,
-  peerAddresses
+  transferService
 }: ServiceDependencies): AccountService {
   const log = logger.child({
     service: 'AccountService'
@@ -140,19 +119,14 @@ export function createAccountService({
     assetService,
     balanceService,
     httpTokenService,
-    transferService,
-    ilpAddress,
-    peerAddresses
+    transferService
   }
   return {
     create: (account, trx) => createAccount(deps, account, trx),
     update: (account, trx) => updateAccount(deps, account, trx),
     get: (id) => getAccount(deps, id),
     getAccounts: (ids) => getAccounts(deps, ids),
-    getByDestinationAddress: (destinationAddress) =>
-      getAccountByDestinationAddress(deps, destinationAddress),
     getByToken: (token) => getAccountByToken(deps, token),
-    getAddress: (id) => getAccountAddress(deps, id),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getPage: (pagination?) => getAccountsPage(deps, pagination),
@@ -165,13 +139,6 @@ async function createAccount(
   account: CreateOptions,
   trx?: Transaction
 ): Promise<Account | AccountError> {
-  if (
-    account.routing?.staticIlpAddress &&
-    !isValidIlpAddress(account.routing.staticIlpAddress)
-  ) {
-    return AccountError.InvalidStaticIlpAddress
-  }
-
   const acctTrx = trx || (await Account.startTransaction())
   try {
     const sentBalance = account.sentBalance
@@ -257,13 +224,6 @@ async function updateAccount(
   accountOptions: UpdateOptions,
   trx?: Transaction
 ): Promise<Account | AccountError> {
-  if (
-    accountOptions.routing?.staticIlpAddress &&
-    !isValidIlpAddress(accountOptions.routing.staticIlpAddress)
-  ) {
-    return AccountError.InvalidStaticIlpAddress
-  }
-
   const acctTrx = trx || (await Account.startTransaction())
   try {
     if (accountOptions.http?.incoming?.authTokens) {
@@ -379,118 +339,6 @@ async function getAccountByToken(
     .where('incomingTokens.token', token)
     .first()
   return account || undefined
-}
-
-async function getAccountByStaticIlpAddress(
-  deps: ServiceDependencies,
-  destinationAddress: string
-): Promise<Account | undefined> {
-  // This query does the equivalent of the following regex
-  // for `staticIlpAddress`s in the accounts table:
-  // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
-  const account = await Account.query(deps.knex)
-    .withGraphJoined('asset')
-    .where(
-      raw('?', [destinationAddress]),
-      'like',
-      // "_" is a Postgres pattern wildcard (matching any one character), and must be escaped.
-      // See: https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
-      raw("REPLACE(REPLACE(??, '_', '\\\\_'), '%', '\\\\%') || '%'", [
-        'staticIlpAddress'
-      ])
-    )
-    .andWhere((builder) => {
-      builder
-        .where(
-          raw('length(??)', ['staticIlpAddress']),
-          destinationAddress.length
-        )
-        .orWhere(
-          raw('substring(?, length(??)+1, 1)', [
-            destinationAddress,
-            'staticIlpAddress'
-          ]),
-          '.'
-        )
-    })
-    .first()
-  return account || undefined
-}
-
-async function getAccountByPeerAddress(
-  deps: ServiceDependencies,
-  destinationAddress: string
-): Promise<Account | undefined> {
-  const peerAddress = deps.peerAddresses.find(
-    (peer: Peer) =>
-      destinationAddress.startsWith(peer.ilpAddress) &&
-      (destinationAddress.length === peer.ilpAddress.length ||
-        destinationAddress[peer.ilpAddress.length] === '.')
-  )
-  if (peerAddress) {
-    const account = await Account.query(deps.knex)
-      .findById(peerAddress.accountId)
-      .withGraphJoined('asset')
-    return account || undefined
-  }
-}
-
-async function getAccountByServerAddress(
-  deps: ServiceDependencies,
-  destinationAddress: string
-): Promise<Account | undefined> {
-  if (deps.ilpAddress) {
-    if (
-      destinationAddress.startsWith(deps.ilpAddress + '.') &&
-      (destinationAddress.length === deps.ilpAddress.length + 1 + UUID_LENGTH ||
-        destinationAddress[deps.ilpAddress.length + 1 + UUID_LENGTH] === '.')
-    ) {
-      const accountId = destinationAddress.slice(
-        deps.ilpAddress.length + 1,
-        deps.ilpAddress.length + 1 + UUID_LENGTH
-      )
-      if (validateId(accountId)) {
-        const account = await Account.query(deps.knex)
-          .findById(accountId)
-          .withGraphJoined('asset')
-        return account || undefined
-      }
-    }
-  }
-}
-
-async function getAccountByDestinationAddress(
-  deps: ServiceDependencies,
-  destinationAddress: string
-): Promise<Account | undefined> {
-  return (
-    (await getAccountByStaticIlpAddress(deps, destinationAddress)) ||
-    (await getAccountByPeerAddress(deps, destinationAddress)) ||
-    (await getAccountByServerAddress(deps, destinationAddress))
-  )
-}
-
-async function getAccountAddress(
-  deps: ServiceDependencies,
-  accountId: string
-): Promise<string | undefined> {
-  const account = await Account.query(deps.knex)
-    .findById(accountId)
-    .select('staticIlpAddress')
-  if (!account) {
-    return undefined
-  } else if (account.routing?.staticIlpAddress) {
-    return account.routing.staticIlpAddress
-  }
-  const idx = deps.peerAddresses.findIndex(
-    (peer: Peer) => peer.accountId === accountId
-  )
-  if (idx !== -1) {
-    return deps.peerAddresses[idx].ilpAddress
-  }
-  if (deps.ilpAddress) {
-    return deps.ilpAddress + '.' + accountId
-  }
 }
 
 async function transferFunds(
