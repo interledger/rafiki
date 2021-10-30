@@ -1,7 +1,6 @@
 import { v4 as uuid } from 'uuid'
 
 import { Account, AccountService, CreateOptions } from '../account/service'
-import { isAccountError } from '../account/errors'
 import { TransferService } from '../transfer/service'
 import { randomAsset } from './asset'
 
@@ -17,7 +16,6 @@ export class AccountFactory {
 
   public async build(options: BuildOptions = {}): Promise<Account> {
     const accountOptions: CreateOptions = {
-      id: options.id || uuid(),
       disabled: options.disabled || false,
       asset: options.asset || randomAsset(),
       stream: {
@@ -30,9 +28,6 @@ export class AccountFactory {
     }
     const account = await this.accounts.create(accountOptions)
 
-    if (isAccountError(account)) {
-      throw new Error('unable to create account, err=' + account)
-    }
     if (options.balance) {
       if (!this.transfers) {
         throw new Error('initial balance requires TransferService')

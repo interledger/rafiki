@@ -30,7 +30,7 @@ export type Options = {
 }
 
 export type CreateOptions = Required<Options> &
-  Omit<CreateAccountOptions, 'id' | 'assetId'> & {
+  Omit<CreateAccountOptions, 'assetId'> & {
     asset: AssetOptions
   }
 
@@ -109,9 +109,6 @@ async function createPeer(
       },
       peerTrx
     )
-    if (isAccountError(account)) {
-      throw new Error('unable to create peer account, err=' + account)
-    }
 
     const peer = await Peer.query(peerTrx)
       .insertAndFetch({

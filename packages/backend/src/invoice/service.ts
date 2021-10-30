@@ -1,6 +1,5 @@
 import { Invoice } from './model'
 import { AccountService } from '../account/service'
-import { isAccountError } from '../account/errors'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
@@ -77,9 +76,6 @@ async function createInvoice(
       { assetId: paymentPointer.assetId },
       invTrx
     )
-    if (isAccountError(account)) {
-      throw new Error('unable to create invoice account, err=' + account)
-    }
 
     const invoice = await Invoice.query(invTrx)
       .insertAndFetch({

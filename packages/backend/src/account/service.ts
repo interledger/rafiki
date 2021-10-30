@@ -1,9 +1,4 @@
-import {
-  ForeignKeyViolationError,
-  NotFoundError,
-  Transaction,
-  UniqueViolationError
-} from 'objection'
+import { ForeignKeyViolationError, NotFoundError, Transaction } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { AssetService, AssetOptions } from '../asset/service'
@@ -31,7 +26,6 @@ export type Options = {
 }
 
 type CreateAccountOptions = Options & {
-  id?: string
   assetId: string
   asset?: never
   sentBalance?: boolean
@@ -39,7 +33,6 @@ type CreateAccountOptions = Options & {
 
 // TODO: remove
 type LegacyCreateAccountOptions = Options & {
-  id?: string
   assetId?: never
   asset: AssetOptions
   sentBalance?: boolean
@@ -65,10 +58,7 @@ export interface AccountTransfer {
 }
 
 export interface AccountService {
-  create(
-    account: CreateOptions,
-    trx?: Transaction
-  ): Promise<Account | AccountError>
+  create(account: CreateOptions, trx?: Transaction): Promise<Account>
   update(
     accountOptions: UpdateOptions,
     trx?: Transaction
@@ -122,20 +112,22 @@ async function createAccount(
   deps: ServiceDependencies,
   account: CreateOptions,
   trx?: Transaction
-): Promise<Account | AccountError> {
+): Promise<Account> {
   const acctTrx = trx || (await Account.startTransaction())
   try {
     const sentBalance = account.sentBalance
     delete account.sentBalance
     const accountRow = await Account.query(acctTrx)
       .insertAndFetch({
-        ...account,
         asset: undefined,
         assetId:
           account.assetId ||
           (await deps.assetService.getOrCreate(account.asset as AssetOptions))
             .id,
-        balanceId: uuid()
+        balanceId: uuid(),
+        disabled: account.disabled,
+        maxPacketAmount: account.maxPacketAmount,
+        stream: account.stream
       })
       .withGraphFetched('asset')
 
@@ -168,15 +160,10 @@ async function createAccount(
       await acctTrx.rollback()
     }
     if (
-      err instanceof UniqueViolationError &&
-      err.constraint === 'accounts_pkey'
-    ) {
-      return AccountError.DuplicateAccountId
-    } else if (
       err instanceof ForeignKeyViolationError &&
       err.constraint === 'accounts_assetid_foreign'
     ) {
-      return AccountError.UnknownAsset
+      throw new UnknownAssetError(account?.assetId)
     }
     throw err
   }
@@ -194,7 +181,7 @@ async function updateAccount(
       .throwIfNotFound()
     const asset = await deps.assetService.getById(account.assetId)
     if (!asset) {
-      throw new UnknownAssetError(account.id)
+      throw new UnknownAssetError(account.assetId)
     }
     account.asset = asset
     if (!trx) {

@@ -13,7 +13,8 @@ import {
   AccountError,
   isAccountError,
   AccountTransferError,
-  isAccountTransferError
+  isAccountTransferError,
+  UnknownAssetError
 } from './errors'
 import { AssetService } from '../asset/service'
 import { BalanceService } from '../balance/service'
@@ -86,40 +87,30 @@ describe('Account Service', (): void => {
 
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {
-      const account: CreateOptions = {
+      const options: CreateOptions = {
         asset: randomAsset()
       }
-      const accountOrError = await accountService.create(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      if (isAccountError(accountOrError)) {
-        fail()
-      }
+      const account = await accountService.create(options)
       const expectedAccount = {
-        ...account,
-        id: accountOrError.id,
+        ...options,
+        id: account.id,
         disabled: false,
         stream: {
           enabled: false
         }
       }
-      expect(accountOrError).toMatchObject(expectedAccount)
-      await expect(accountService.get(accountOrError.id)).resolves.toEqual(
-        accountOrError
-      )
-      await expect(
-        balanceService.get(accountOrError.balanceId)
-      ).resolves.toEqual({
-        id: accountOrError.balanceId,
+      expect(account).toMatchObject(expectedAccount)
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
+      await expect(balanceService.get(account.balanceId)).resolves.toEqual({
+        id: account.balanceId,
         balance: BigInt(0),
-        unit: accountOrError.asset.unit,
+        unit: account.asset.unit,
         debitBalance: false
       })
     })
 
     test('Can create an account with all settings', async (): Promise<void> => {
-      const id = uuid()
-      const account: CreateOptions = {
-        id,
+      const options: CreateOptions = {
         disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100),
@@ -127,93 +118,62 @@ describe('Account Service', (): void => {
           enabled: true
         }
       }
-      const accountOrError = await accountService.create(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      if (isAccountError(accountOrError)) {
-        fail()
-      }
-      expect(accountOrError).toMatchObject(account)
-      await expect(accountService.get(id)).resolves.toEqual(accountOrError)
-      await expect(
-        balanceService.get(accountOrError.balanceId)
-      ).resolves.toEqual({
-        id: accountOrError.balanceId,
+      const account = await accountService.create(options)
+      expect(account).toMatchObject(options)
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
+      await expect(balanceService.get(account.balanceId)).resolves.toEqual({
+        id: account.balanceId,
         balance: BigInt(0),
-        unit: accountOrError.asset.unit,
+        unit: account.asset.unit,
         debitBalance: false
       })
     })
 
     test('Can create an account with asset id', async (): Promise<void> => {
       const { id: assetId } = await assetService.getOrCreate(randomAsset())
-      const account: CreateOptions = {
+      const options: CreateOptions = {
         assetId
       }
-      const accountOrError = await accountService.create(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      if (isAccountError(accountOrError)) {
-        fail()
-      }
+      const account = await accountService.create(options)
       const expectedAccount = {
-        ...account,
-        id: accountOrError.id,
+        ...options,
+        id: account.id,
         disabled: false,
         stream: {
           enabled: false
         }
       }
-      expect(accountOrError).toMatchObject(expectedAccount)
-      await expect(accountService.get(accountOrError.id)).resolves.toEqual(
-        accountOrError
-      )
-      await expect(
-        balanceService.get(accountOrError.balanceId)
-      ).resolves.toEqual({
-        id: accountOrError.balanceId,
+      expect(account).toMatchObject(expectedAccount)
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
+      await expect(balanceService.get(account.balanceId)).resolves.toEqual({
+        id: account.balanceId,
         balance: BigInt(0),
-        unit: accountOrError.asset.unit,
+        unit: account.asset.unit,
         debitBalance: false
       })
     })
 
     test('Cannot create an account with unknown asset id', async (): Promise<void> => {
-      await expect(accountService.create({ assetId: uuid() })).resolves.toEqual(
-        AccountError.UnknownAsset
+      const assetId = uuid()
+      await expect(accountService.create({ assetId })).rejects.toThrowError(
+        new UnknownAssetError(assetId)
       )
     })
 
     test('Can create an account with total sent balance', async (): Promise<void> => {
       const { id: assetId } = await assetService.getOrCreate(randomAsset())
-      const account: CreateOptions = {
+      const options: CreateOptions = {
         assetId,
         sentBalance: true
       }
-      const accountOrError = await accountService.create(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      if (isAccountError(accountOrError)) {
-        fail()
-      }
-      assert.ok(accountOrError.sentBalanceId)
-      await expect(
-        balanceService.get(accountOrError.sentBalanceId)
-      ).resolves.toEqual({
-        id: accountOrError.sentBalanceId,
+      const account = await accountService.create(options)
+      assert.ok(account.sentBalanceId)
+      await expect(balanceService.get(account.sentBalanceId)).resolves.toEqual({
+        id: account.sentBalanceId,
         balance: BigInt(0),
-        unit: accountOrError.asset.unit,
+        unit: account.asset.unit,
         debitBalance: false
       })
-    })
-
-    test('Cannot create an account with duplicate id', async (): Promise<void> => {
-      const account = await accountFactory.build()
-      await expect(
-        accountService.create({
-          id: account.id,
-          asset: randomAsset()
-        })
-      ).resolves.toEqual(AccountError.DuplicateAccountId)
-      const retrievedAccount = await accountService.get(account.id)
-      expect(retrievedAccount).toEqual(account)
     })
 
     test('Auto-creates corresponding asset with liquidity and settlement accounts', async (): Promise<void> => {
