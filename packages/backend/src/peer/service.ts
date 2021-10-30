@@ -16,16 +16,18 @@ import { HttpTokenError } from '../httpToken/errors'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
 
-export type Options = {
-  http?: {
-    incoming?: {
-      authTokens: string[]
-    }
-    outgoing: {
-      authToken: string
-      endpoint: string
-    }
+export interface HttpOptions {
+  incoming?: {
+    authTokens: string[]
   }
+  outgoing: {
+    authToken: string
+    endpoint: string
+  }
+}
+
+export type Options = {
+  http?: HttpOptions
   staticIlpAddress?: string
 }
 

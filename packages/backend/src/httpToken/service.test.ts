@@ -1,6 +1,4 @@
-import assert from 'assert'
 import Knex from 'knex'
-import Faker from 'faker'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
@@ -8,16 +6,14 @@ import { HttpTokenService } from './service'
 import { HttpTokenError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
 import { HttpToken } from './model'
-import { randomAsset } from '../tests/asset'
 import { resetGraphileDb } from '../tests/graphileDb'
+import { PeerFactory } from '../tests/peerFactory'
 import { truncateTables } from '../tests/tableManager'
 import { GraphileProducer } from '../messaging/graphileProducer'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { isPeerError } from '../peer/errors'
-import { CreateOptions, PeerService } from '../peer/service'
 import { Peer } from '../peer/model'
 
 describe('HTTP Token Service', (): void => {
@@ -25,24 +21,13 @@ describe('HTTP Token Service', (): void => {
   let appContainer: TestContainer
   let workerUtils: WorkerUtils
   let httpTokenService: HttpTokenService
-  let peerService: PeerService
+  let peerFactory: PeerFactory
   let peer: Peer
   let knex: Knex
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
   }
-
-  const randomPeer = (): CreateOptions => ({
-    asset: randomAsset(),
-    http: {
-      outgoing: {
-        authToken: Faker.datatype.string(32),
-        endpoint: Faker.internet.url()
-      }
-    },
-    staticIlpAddress: 'test.' + uuid()
-  })
 
   beforeAll(
     async (): Promise<void> => {
@@ -56,14 +41,14 @@ describe('HTTP Token Service', (): void => {
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
       httpTokenService = await deps.use('httpTokenService')
-      peerService = await deps.use('peerService')
+      const peerService = await deps.use('peerService')
+      peerFactory = new PeerFactory(peerService)
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      peer = (await peerService.create(randomPeer())) as Peer
-      assert.ok(!isPeerError(peer))
+      peer = await peerFactory.build()
     }
   )
 
@@ -153,22 +138,18 @@ describe('HTTP Token Service', (): void => {
 
     test('Cannot create duplicate token for different peer', async (): Promise<void> => {
       const token = uuid()
-      {
-        const peer = await peerService.create(randomPeer())
-        assert.ok(!isPeerError(peer))
-        await expect(
-          httpTokenService.create([
-            {
-              peerId: peer.id,
-              token
-            }
-          ])
-        ).resolves.toBeUndefined()
-      }
       await expect(
         httpTokenService.create([
           {
             peerId: peer.id,
+            token
+          }
+        ])
+      ).resolves.toBeUndefined()
+      await expect(
+        httpTokenService.create([
+          {
+            peerId: (await peerFactory.build()).id,
             token
           }
         ])

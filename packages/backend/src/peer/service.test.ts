@@ -16,12 +16,14 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { Pagination } from '../shared/pagination'
 import { randomAsset } from '../tests/asset'
+import { PeerFactory } from '../tests/peerFactory'
 import { truncateTables } from '../tests/tableManager'
 
 describe('Peer Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let workerUtils: WorkerUtils
+  let peerFactory: PeerFactory
   let peerService: PeerService
   let knex: Knex
   const messageProducer = new GraphileProducer()
@@ -59,12 +61,8 @@ describe('Peer Service', (): void => {
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
-    }
-  )
-
-  beforeEach(
-    async (): Promise<void> => {
       peerService = await deps.use('peerService')
+      peerFactory = new PeerFactory(peerService)
     }
   )
 
@@ -175,8 +173,7 @@ describe('Peer Service', (): void => {
 
   describe('Update Peer', (): void => {
     test('Can update a peer', async (): Promise<void> => {
-      const peer = await peerService.create(randomPeer())
-      assert.ok(!isPeerError(peer))
+      const peer = await peerFactory.build()
       const updateOptions: UpdateOptions = {
         id: peer.id,
         ...randomPeer()
@@ -216,16 +213,15 @@ describe('Peer Service', (): void => {
 
     test('Returns error for duplicate incoming token', async (): Promise<void> => {
       const incomingToken = Faker.datatype.string(32)
-      {
-        const options = randomPeer()
-        assert.ok(options.http.incoming)
-        options.http.incoming.authTokens.push(incomingToken)
-        const peer = await peerService.create(options)
-        assert.ok(!isPeerError(peer))
-      }
+      await peerFactory.build({
+        http: {
+          incoming: {
+            authTokens: [incomingToken]
+          }
+        }
+      })
 
-      const peer = await peerService.create(randomPeer())
-      assert.ok(!isPeerError(peer))
+      const peer = await peerFactory.build()
       const updateOptions: UpdateOptions = {
         id: peer.id,
         http: {
@@ -242,8 +238,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
-      const peer = await peerService.create(randomPeer())
-      assert.ok(!isPeerError(peer))
+      const peer = await peerFactory.build()
       const incomingToken = Faker.datatype.string(32)
       const updateOptions: UpdateOptions = {
         id: peer.id,
@@ -262,8 +257,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Returns error for invalid static ILP address', async (): Promise<void> => {
-      const peer = await peerService.create(randomPeer())
-      assert.ok(!isPeerError(peer))
+      const peer = await peerFactory.build()
       const updateOptions: UpdateOptions = {
         id: peer.id,
         staticIlpAddress: 'test.hello!'
@@ -277,22 +271,17 @@ describe('Peer Service', (): void => {
 
   describe('Get Peer By ILP Address', (): void => {
     test('Can retrieve peer by ILP address', async (): Promise<void> => {
-      const options = randomPeer()
-      const peer = await peerService.create(options)
-      assert.ok(!isPeerError(peer))
-
+      const peer = await peerFactory.build()
       await expect(
-        peerService.getByDestinationAddress(options.staticIlpAddress)
+        peerService.getByDestinationAddress(peer.staticIlpAddress)
       ).resolves.toEqual(peer)
 
       await expect(
-        peerService.getByDestinationAddress(
-          options.staticIlpAddress + '.suffix'
-        )
+        peerService.getByDestinationAddress(peer.staticIlpAddress + '.suffix')
       ).resolves.toEqual(peer)
 
       await expect(
-        peerService.getByDestinationAddress(options.staticIlpAddress + 'suffix')
+        peerService.getByDestinationAddress(peer.staticIlpAddress + 'suffix')
       ).resolves.toBeUndefined()
     })
 
@@ -303,10 +292,9 @@ describe('Peer Service', (): void => {
     })
 
     test('Properly escapes Postgres pattern "_" wildcards in the static address', async (): Promise<void> => {
-      const options = randomPeer()
-      options.staticIlpAddress = 'test.rafiki_with_wildcards'
-      const peer = await peerService.create(options)
-      assert.ok(!isPeerError(peer))
+      await peerFactory.build({
+        staticIlpAddress: 'test.rafiki_with_wildcards'
+      })
       await expect(
         peerService.getByDestinationAddress('test.rafiki-with-wildcards')
       ).resolves.toBeUndefined()
@@ -316,11 +304,13 @@ describe('Peer Service', (): void => {
   describe('Get Peer by Incoming Token', (): void => {
     test('Can retrieve peer by incoming token', async (): Promise<void> => {
       const incomingToken = Faker.datatype.string(32)
-      const options = randomPeer()
-      assert.ok(options.http.incoming)
-      options.http.incoming.authTokens.push(incomingToken)
-      const peer = await peerService.create(options)
-      assert.ok(!isPeerError(peer))
+      const peer = await peerFactory.build({
+        http: {
+          incoming: {
+            authTokens: [incomingToken]
+          }
+        }
+      })
 
       await expect(
         peerService.getByIncomingToken(incomingToken)
@@ -328,8 +318,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Returns undefined if no peer exists with token', async (): Promise<void> => {
-      const peer = await peerService.create(randomPeer())
-      assert.ok(!isPeerError(peer))
+      await peerFactory.build()
 
       await expect(
         peerService.getByIncomingToken(uuid())
@@ -345,12 +334,7 @@ describe('Peer Service', (): void => {
         peersCreated = []
         const asset = randomAsset()
         for (let i = 0; i < 40; i++) {
-          const peer = await peerService.create({
-            ...randomPeer(),
-            asset
-          })
-          assert.ok(!isPeerError(peer))
-          peersCreated.push(peer)
+          peersCreated.push(await peerFactory.build({ asset }))
         }
       }
     )

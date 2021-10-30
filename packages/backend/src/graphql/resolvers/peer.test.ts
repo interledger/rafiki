@@ -11,10 +11,10 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { isPeerError } from '../../peer/errors'
 import { Peer as PeerModel } from '../../peer/model'
 import { PeerService } from '../../peer/service'
 import { randomAsset } from '../../tests/asset'
+import { PeerFactory } from '../../tests/peerFactory'
 import {
   CreatePeerInput,
   CreatePeerMutationResponse,
@@ -28,6 +28,7 @@ describe('Peer Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
+  let peerFactory: PeerFactory
   let peerService: PeerService
 
   const randomPeer = (): CreatePeerInput => ({
@@ -55,6 +56,7 @@ describe('Peer Resolvers', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       peerService = await deps.use('peerService')
+      peerFactory = new PeerFactory(peerService)
     }
   )
 
@@ -132,13 +134,13 @@ describe('Peer Resolvers', (): void => {
 
     test('Returns error for duplicate incoming token', async (): Promise<void> => {
       const incomingToken = Faker.datatype.string(32)
-      {
-        const options = randomPeer()
-        assert.ok(options.http.incoming)
-        options.http.incoming.authTokens.push(incomingToken)
-        const peer = await peerService.create(options)
-        assert.ok(!isPeerError(peer))
-      }
+      await peerFactory.build({
+        http: {
+          incoming: {
+            authTokens: [incomingToken]
+          }
+        }
+      })
       const peer = randomPeer()
       assert.ok(peer.http.incoming)
       peer.http.incoming.authTokens.push(incomingToken)
@@ -214,9 +216,7 @@ describe('Peer Resolvers', (): void => {
 
   describe('Peer Queries', (): void => {
     test('Can get a peer', async (): Promise<void> => {
-      const options = randomPeer()
-      const peer = await peerService.create(options)
-      assert.ok(!isPeerError(peer))
+      const peer = await peerFactory.build(randomPeer())
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -256,30 +256,30 @@ describe('Peer Resolvers', (): void => {
           }
         )
 
-      assert.ok(options.stream)
-      assert.ok(options.maxPacketAmount)
+      assert.ok(peer.account.stream)
+      assert.ok(peer.account.maxPacketAmount)
       expect(query).toEqual({
         __typename: 'Peer',
         id: peer.id,
         asset: {
           __typename: 'Asset',
-          code: options.asset.code,
-          scale: options.asset.scale
+          code: peer.account.asset.code,
+          scale: peer.account.asset.scale
         },
-        disabled: options.disabled,
+        disabled: peer.account.disabled,
         stream: {
           __typename: 'Stream',
-          enabled: options.stream.enabled
+          enabled: peer.account.stream.enabled
         },
         http: {
           __typename: 'Http',
           outgoing: {
             __typename: 'HttpOutgoing',
-            ...options.http.outgoing
+            ...peer.http.outgoing
           }
         },
-        staticIlpAddress: options.staticIlpAddress,
-        maxPacketAmount: options.maxPacketAmount.toString()
+        staticIlpAddress: peer.staticIlpAddress,
+        maxPacketAmount: peer.account.maxPacketAmount.toString()
       })
     })
 
@@ -324,26 +324,15 @@ describe('Peer Resolvers', (): void => {
       const peers = []
       const asset = randomAsset()
       for (let i = 0; i < 50; i++) {
-        const peer = await peerService.create({
-          ...randomPeer(),
-          asset
-        })
-        assert.ok(!isPeerError(peer))
-        peers.push(peer)
+        peers.push(await peerFactory.build({ asset }))
       }
       return peers
     }
 
     test('Can get peers', async (): Promise<void> => {
       const peers: PeerModel[] = []
-      const asset = randomAsset()
       for (let i = 0; i < 2; i++) {
-        const peer = await peerService.create({
-          ...randomPeer(),
-          asset
-        })
-        assert.ok(!isPeerError(peer))
-        peers.push(peer)
+        peers.push(await peerFactory.build(randomPeer()))
       }
       const query = await appContainer.apolloClient
         .query({
@@ -623,8 +612,7 @@ describe('Peer Resolvers', (): void => {
 
     beforeEach(
       async (): Promise<void> => {
-        peer = (await peerService.create(randomPeer())) as PeerModel
-        assert.ok(!isPeerError(peer))
+        peer = await peerFactory.build()
       }
     )
 
