@@ -150,13 +150,11 @@ export function initIocContainer(
   container.singleton('accountService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
-    const assetService = await deps.use('assetService')
     const balanceService = await deps.use('balanceService')
     const transferService = await deps.use('transferService')
     return await createAccountService({
       logger: logger,
       knex: knex,
-      assetService,
       balanceService,
       transferService
     })

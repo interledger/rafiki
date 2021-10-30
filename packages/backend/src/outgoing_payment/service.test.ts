@@ -159,7 +159,8 @@ describe('OutgoingPaymentService', (): void => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       accountService = await deps.use('accountService')
-      const accountFactory = new AccountFactory(accountService)
+      const assetService = await deps.use('assetService')
+      const accountFactory = new AccountFactory(accountService, assetService)
       asset = {
         scale: 9,
         code: 'USD'

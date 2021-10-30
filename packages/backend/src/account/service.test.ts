@@ -63,9 +63,13 @@ describe('Account Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       accountService = await deps.use('accountService')
-      const transferService = await deps.use('transferService')
-      accountFactory = new AccountFactory(accountService, transferService)
       assetService = await deps.use('assetService')
+      const transferService = await deps.use('transferService')
+      accountFactory = new AccountFactory(
+        accountService,
+        assetService,
+        transferService
+      )
       balanceService = await deps.use('balanceService')
       liquidityService = await deps.use('liquidityService')
     }
@@ -88,7 +92,7 @@ describe('Account Service', (): void => {
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {
       const options: CreateOptions = {
-        asset: randomAsset()
+        assetId: (await assetService.getOrCreate(randomAsset())).id
       }
       const account = await accountService.create(options)
       const expectedAccount = {
@@ -112,7 +116,7 @@ describe('Account Service', (): void => {
     test('Can create an account with all settings', async (): Promise<void> => {
       const options: CreateOptions = {
         disabled: false,
-        asset: randomAsset(),
+        assetId: (await assetService.getOrCreate(randomAsset())).id,
         maxPacketAmount: BigInt(100),
         stream: {
           enabled: true
@@ -120,30 +124,6 @@ describe('Account Service', (): void => {
       }
       const account = await accountService.create(options)
       expect(account).toMatchObject(options)
-      await expect(accountService.get(account.id)).resolves.toEqual(account)
-      await expect(balanceService.get(account.balanceId)).resolves.toEqual({
-        id: account.balanceId,
-        balance: BigInt(0),
-        unit: account.asset.unit,
-        debitBalance: false
-      })
-    })
-
-    test('Can create an account with asset id', async (): Promise<void> => {
-      const { id: assetId } = await assetService.getOrCreate(randomAsset())
-      const options: CreateOptions = {
-        assetId
-      }
-      const account = await accountService.create(options)
-      const expectedAccount = {
-        ...options,
-        id: account.id,
-        disabled: false,
-        stream: {
-          enabled: false
-        }
-      }
-      expect(account).toMatchObject(expectedAccount)
       await expect(accountService.get(account.id)).resolves.toEqual(account)
       await expect(balanceService.get(account.balanceId)).resolves.toEqual({
         id: account.balanceId,
@@ -174,31 +154,6 @@ describe('Account Service', (): void => {
         unit: account.asset.unit,
         debitBalance: false
       })
-    })
-
-    test('Auto-creates corresponding asset with liquidity and settlement accounts', async (): Promise<void> => {
-      const asset = randomAsset()
-      const account: CreateOptions = {
-        asset
-      }
-
-      await expect(assetService.get(asset)).resolves.toBeUndefined()
-      await expect(
-        assetService.getLiquidityBalance(asset)
-      ).resolves.toBeUndefined()
-      await expect(
-        assetService.getSettlementBalance(asset)
-      ).resolves.toBeUndefined()
-
-      await accountService.create(account)
-
-      await expect(assetService.get(asset)).resolves.toBeDefined()
-      await expect(assetService.getLiquidityBalance(asset)).resolves.toEqual(
-        BigInt(0)
-      )
-      await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
-        BigInt(0)
-      )
     })
   })
 

@@ -1,23 +1,27 @@
 import { v4 as uuid } from 'uuid'
 
 import { Account, AccountService, CreateOptions } from '../account/service'
+import { AssetOptions, AssetService } from '../asset/service'
 import { TransferService } from '../transfer/service'
 import { randomAsset } from './asset'
 
 type BuildOptions = Partial<CreateOptions> & {
+  asset?: AssetOptions
   balance?: bigint
 }
 
 export class AccountFactory {
   public constructor(
     private accounts: AccountService,
+    private assets: AssetService,
     private transfers?: TransferService
   ) {}
 
   public async build(options: BuildOptions = {}): Promise<Account> {
     const accountOptions: CreateOptions = {
       disabled: options.disabled || false,
-      asset: options.asset || randomAsset(),
+      assetId: (await this.assets.getOrCreate(options.asset || randomAsset()))
+        .id,
       stream: {
         enabled: options.stream?.enabled || false
       },

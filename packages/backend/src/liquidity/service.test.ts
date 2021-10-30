@@ -50,7 +50,11 @@ describe('Liquidity Service', (): void => {
       assetService = await deps.use('assetService')
       balanceService = await deps.use('balanceService')
       const transferService = await deps.use('transferService')
-      accountFactory = new AccountFactory(accountService, transferService)
+      accountFactory = new AccountFactory(
+        accountService,
+        assetService,
+        transferService
+      )
     }
   )
 
