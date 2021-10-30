@@ -9,7 +9,7 @@ import {
 
 export interface HttpTokenOptions {
   token: string
-  accountId: string
+  peerId: string
 }
 
 export interface HttpTokenService {
@@ -17,7 +17,7 @@ export interface HttpTokenService {
     tokens: HttpTokenOptions[],
     trx?: Transaction
   ): Promise<void | HttpTokenError>
-  deleteByAccount(accountId: string, trx?: Transaction): Promise<void>
+  deleteByPeer(peerId: string, trx?: Transaction): Promise<void>
 }
 
 type ServiceDependencies = BaseService
@@ -35,8 +35,7 @@ export async function createHttpTokenService({
   }
   return {
     create: (tokens, trx) => createHttpTokens(deps, tokens, trx),
-    deleteByAccount: (accountId, trx) =>
-      deleteHttpTokensByAccount(deps, accountId, trx)
+    deleteByPeer: (peerId, trx) => deleteHttpTokensByPeer(deps, peerId, trx)
   }
 }
 
@@ -49,7 +48,7 @@ async function createHttpTokens(
     await HttpToken.query(trx || deps.knex).insert(tokens)
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
-      return HttpTokenError.UnknownAccount
+      return HttpTokenError.UnknownPeer
     } else if (err instanceof UniqueViolationError) {
       return HttpTokenError.DuplicateToken
     }
@@ -57,14 +56,14 @@ async function createHttpTokens(
   }
 }
 
-async function deleteHttpTokensByAccount(
+async function deleteHttpTokensByPeer(
   deps: ServiceDependencies,
-  accountId: string,
+  peerId: string,
   trx?: Transaction
 ): Promise<void> {
   await HttpToken.query(trx || deps.knex)
     .delete()
     .where({
-      accountId
+      peerId
     })
 }

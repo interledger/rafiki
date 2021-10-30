@@ -2,8 +2,9 @@ import Axios, { AxiosInstance } from 'axios'
 import { serializeIlpPrepare } from 'ilp-packet'
 import { Reader, Writer } from 'oer-utils'
 import { Errors } from 'ilp-packet'
-import { sendToPeer as sendToPeerDefault } from '../services'
-import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
+import { OutgoingState } from '../middleware/account'
+import { OutgoingHttp, sendToPeer as sendToPeerDefault } from '../services'
+import { ILPContext, ILPMiddleware } from '../rafiki'
 const { InvalidPacketError } = Errors
 
 const MINIMUM_ECHO_PACKET_DATA_LENGTH = 16 + 1
@@ -13,7 +14,7 @@ export interface EchoProtocolControllerOptions {
   minMessageWindow: number
   sendToPeer?: (
     client: AxiosInstance,
-    account: RafikiAccount,
+    outgoing: OutgoingHttp,
     prepare: Buffer
   ) => Promise<Buffer>
 }
@@ -32,8 +33,8 @@ export function createEchoProtocolController({
       services: { logger },
       request,
       response,
-      accounts: { outgoing }
-    }: ILPContext,
+      state: { outgoing }
+    }: ILPContext<OutgoingState>,
     _: () => Promise<void>
   ): Promise<void> {
     const { data, amount, expiresAt, executionCondition } = request.prepare
@@ -60,8 +61,7 @@ export function createEchoProtocolController({
 
       logger.debug({ sourceAddress }, 'responding to echo packet')
 
-      const { http } = outgoing
-      if (!http) {
+      if (!outgoing) {
         throw new Errors.UnreachableError('no outgoing endpoint')
       }
       response.rawReply = await send(

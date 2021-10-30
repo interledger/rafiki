@@ -7,7 +7,6 @@ export class UnknownAssetError extends Error {
 
 export enum AccountError {
   DuplicateAccountId = 'DuplicateAccountId',
-  DuplicateIncomingToken = 'DuplicateIncomingToken',
   UnknownAccount = 'UnknownAccount',
   UnknownAsset = 'UnknownAsset'
 }

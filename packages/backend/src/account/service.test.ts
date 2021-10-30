@@ -123,31 +123,16 @@ describe('Account Service', (): void => {
         disabled: false,
         asset: randomAsset(),
         maxPacketAmount: BigInt(100),
-        http: {
-          incoming: {
-            authTokens: [uuid()]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        },
         stream: {
           enabled: true
         }
       }
-      assert.ok(account.http)
       const accountOrError = await accountService.create(account)
       expect(isAccountError(accountOrError)).toEqual(false)
       if (isAccountError(accountOrError)) {
         fail()
       }
-      expect(accountOrError).toMatchObject({
-        ...account,
-        http: {
-          outgoing: account.http.outgoing
-        }
-      })
+      expect(accountOrError).toMatchObject(account)
       await expect(accountService.get(id)).resolves.toEqual(accountOrError)
       await expect(
         balanceService.get(accountOrError.balanceId)
@@ -229,70 +214,6 @@ describe('Account Service', (): void => {
       ).resolves.toEqual(AccountError.DuplicateAccountId)
       const retrievedAccount = await accountService.get(account.id)
       expect(retrievedAccount).toEqual(account)
-    })
-
-    test('Cannot create an account with duplicate incoming tokens', async (): Promise<void> => {
-      const id = uuid()
-      const incomingToken = uuid()
-      const account = {
-        id,
-        asset: randomAsset(),
-        http: {
-          incoming: {
-            authTokens: [incomingToken, incomingToken]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        }
-      }
-
-      await expect(accountService.create(account)).resolves.toEqual(
-        AccountError.DuplicateIncomingToken
-      )
-
-      await expect(accountService.get(id)).resolves.toBeUndefined()
-    })
-
-    test('Cannot create an account with duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = uuid()
-      {
-        const account = {
-          id: uuid(),
-          asset: randomAsset(),
-          http: {
-            incoming: {
-              authTokens: [incomingToken]
-            },
-            outgoing: {
-              authToken: uuid(),
-              endpoint: '/outgoingEndpoint'
-            }
-          }
-        }
-        await accountService.create(account)
-      }
-      {
-        const id = uuid()
-        const account = {
-          id,
-          asset: randomAsset(),
-          http: {
-            incoming: {
-              authTokens: [incomingToken]
-            },
-            outgoing: {
-              authToken: uuid(),
-              endpoint: '/outgoingEndpoint'
-            }
-          }
-        }
-        await expect(accountService.create(account)).resolves.toEqual(
-          AccountError.DuplicateIncomingToken
-        )
-        await expect(accountService.get(id)).resolves.toBeUndefined()
-      }
     })
 
     test('Auto-creates corresponding asset with liquidity and settlement accounts', async (): Promise<void> => {
@@ -470,15 +391,6 @@ describe('Account Service', (): void => {
     test('Can update an account', async (): Promise<void> => {
       const { id, asset } = await accountFactory.build({
         disabled: false,
-        http: {
-          incoming: {
-            authTokens: [uuid()]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        },
         stream: {
           enabled: true
         }
@@ -487,23 +399,12 @@ describe('Account Service', (): void => {
         id,
         disabled: true,
         maxPacketAmount: BigInt(200),
-        http: {
-          incoming: {
-            authTokens: [uuid()]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoing'
-          }
-        },
         stream: {
           enabled: false
         }
       }
-      assert.ok(updateOptions.http)
       const accountOrError = await accountService.update(updateOptions)
       expect(isAccountError(accountOrError)).toEqual(false)
-      delete updateOptions.http.incoming
       const expectedAccount = {
         ...updateOptions,
         asset
@@ -521,65 +422,6 @@ describe('Account Service', (): void => {
       await expect(accountService.update(updateOptions)).resolves.toEqual(
         AccountError.UnknownAccount
       )
-    })
-
-    test('Returns error for duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = uuid()
-      await accountFactory.build({
-        http: {
-          incoming: {
-            authTokens: [incomingToken]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        }
-      })
-
-      const account = await accountFactory.build()
-      const updateOptions: UpdateOptions = {
-        id: account.id,
-        disabled: true,
-        maxPacketAmount: BigInt(200),
-        http: {
-          incoming: {
-            authTokens: [incomingToken]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoing'
-          }
-        }
-      }
-      await expect(accountService.update(updateOptions)).resolves.toEqual(
-        AccountError.DuplicateIncomingToken
-      )
-      await expect(accountService.get(account.id)).resolves.toEqual(account)
-    })
-
-    test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
-      const incomingToken = uuid()
-
-      const account = await accountFactory.build()
-      const updateOptions: UpdateOptions = {
-        id: account.id,
-        disabled: true,
-        maxPacketAmount: BigInt(200),
-        http: {
-          incoming: {
-            authTokens: [incomingToken, incomingToken]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoing'
-          }
-        }
-      }
-      await expect(accountService.update(updateOptions)).resolves.toEqual(
-        AccountError.DuplicateIncomingToken
-      )
-      await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
   })
 
@@ -607,30 +449,6 @@ describe('Account Service', (): void => {
     test('Returns undefined for account with no total sent balance', async (): Promise<void> => {
       const { id } = await accountFactory.build()
       await expect(accountService.getTotalSent(id)).resolves.toBeUndefined()
-    })
-  })
-
-  describe('Account Tokens', (): void => {
-    test('Can retrieve account by incoming token', async (): Promise<void> => {
-      const incomingToken = uuid()
-      const { id } = await accountFactory.build({
-        http: {
-          incoming: {
-            authTokens: [incomingToken, uuid()]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        }
-      })
-      const account = await accountService.getByToken(incomingToken)
-      expect(account?.id).toEqual(id)
-    })
-
-    test('Returns undefined if no account exists with token', async (): Promise<void> => {
-      const account = await accountService.getByToken(uuid())
-      expect(account).toBeUndefined()
     })
   })
 

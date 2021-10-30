@@ -9,6 +9,10 @@ export type MockIlpAccount = RafikiAccount & {
     incoming?: {
       authTokens: string[]
     }
+    outgoing: {
+      authToken: string
+      endpoint: string
+    }
   }
   staticIlpAddress?: string
 }
@@ -32,7 +36,7 @@ export class MockAccountsService implements AccountService {
     return account
   }
 
-  async getByToken(token: string): Promise<RafikiAccount | undefined> {
+  async getByIncomingToken(token: string): Promise<MockIlpAccount | undefined> {
     return this.find(
       (account) => !!account.http?.incoming?.authTokens.includes(token)
     )

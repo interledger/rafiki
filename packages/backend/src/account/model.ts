@@ -1,6 +1,5 @@
 import { BaseModel } from '../shared/baseModel'
 import { Asset } from '../asset/model'
-import { HttpToken } from '../httpToken/model'
 import { Model, Pojo } from 'objection'
 
 export class Account extends BaseModel {
@@ -16,14 +15,6 @@ export class Account extends BaseModel {
         from: 'accounts.assetId',
         to: 'assets.id'
       }
-    },
-    incomingTokens: {
-      relation: Model.HasManyRelation,
-      modelClass: HttpToken,
-      join: {
-        from: 'accounts.id',
-        to: 'httpTokens.accountId'
-      }
     }
   }
 
@@ -38,14 +29,6 @@ export class Account extends BaseModel {
 
   public readonly maxPacketAmount!: bigint
 
-  public readonly incomingTokens?: HttpToken[]
-  public readonly http?: {
-    outgoing: {
-      authToken: string
-      endpoint: string
-    }
-  }
-
   public readonly stream!: {
     enabled: boolean
   }
@@ -54,11 +37,6 @@ export class Account extends BaseModel {
     if (json.stream) {
       json.streamEnabled = json.stream.enabled
       delete json.stream
-    }
-    if (json.http?.outgoing) {
-      json.outgoingToken = json.http.outgoing.authToken
-      json.outgoingEndpoint = json.http.outgoing.endpoint
-      delete json.http
     }
     return super.$formatDatabaseJson(json)
   }
@@ -70,16 +48,6 @@ export class Account extends BaseModel {
         enabled: formattedJson.streamEnabled
       }
       delete formattedJson.streamEnabled
-    }
-    if (formattedJson.outgoingToken) {
-      formattedJson.http = {
-        outgoing: {
-          authToken: formattedJson.outgoingToken,
-          endpoint: formattedJson.outgoingEndpoint
-        }
-      }
-      delete formattedJson.outgoingToken
-      delete formattedJson.outgoingEndpoint
     }
     return formattedJson
   }

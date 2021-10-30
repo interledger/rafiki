@@ -88,7 +88,6 @@ describe('Peer Service', (): void => {
     test('A peer can be created and fetched', async (): Promise<void> => {
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
-      assert.ok(options.http)
       expect(peer).toMatchObject({
         account: {
           asset: {
@@ -96,11 +95,11 @@ describe('Peer Service', (): void => {
             scale: options.asset.scale
           },
           disabled: options.disabled,
-          http: {
-            outgoing: options.http.outgoing
-          },
           maxPacketAmount: options.maxPacketAmount,
           stream: options.stream
+        },
+        http: {
+          outgoing: options.http.outgoing
         },
         staticIlpAddress: options.staticIlpAddress
       })
@@ -192,11 +191,11 @@ describe('Peer Service', (): void => {
           id: peer.account.id,
           asset: peer.account.asset,
           disabled: updateOptions.disabled,
-          http: {
-            outgoing: updateOptions.http.outgoing
-          },
           maxPacketAmount: updateOptions.maxPacketAmount,
           stream: updateOptions.stream
+        },
+        http: {
+          outgoing: updateOptions.http.outgoing
         },
         staticIlpAddress: updateOptions.staticIlpAddress
       }
@@ -233,7 +232,7 @@ describe('Peer Service', (): void => {
           incoming: {
             authTokens: [incomingToken]
           },
-          outgoing: peer.account.http.outgoing
+          outgoing: peer.http.outgoing
         }
       }
       await expect(peerService.update(updateOptions)).resolves.toEqual(
@@ -252,7 +251,7 @@ describe('Peer Service', (): void => {
           incoming: {
             authTokens: [incomingToken, incomingToken]
           },
-          outgoing: peer.account.http.outgoing
+          outgoing: peer.http.outgoing
         }
       }
 
@@ -273,22 +272,6 @@ describe('Peer Service', (): void => {
         PeerError.InvalidStaticIlpAddress
       )
       await expect(peerService.get(peer.id)).resolves.toEqual(peer)
-    })
-  })
-
-  describe('Get Peer by Account Id', (): void => {
-    test('Can get peer by account id', async (): Promise<void> => {
-      const options = randomPeer()
-      const peer = await peerService.create(options)
-      assert.ok(!isPeerError(peer))
-
-      await expect(peerService.getByAccountId(peer.accountId)).resolves.toEqual(
-        peer
-      )
-    })
-
-    test('Returns undefined for nonexistent peer account', async (): Promise<void> => {
-      await expect(peerService.getByAccountId(uuid())).resolves.toBeUndefined()
     })
   })
 
@@ -326,6 +309,30 @@ describe('Peer Service', (): void => {
       assert.ok(!isPeerError(peer))
       await expect(
         peerService.getByDestinationAddress('test.rafiki-with-wildcards')
+      ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Get Peer by Incoming Token', (): void => {
+    test('Can retrieve peer by incoming token', async (): Promise<void> => {
+      const incomingToken = Faker.datatype.string(32)
+      const options = randomPeer()
+      assert.ok(options.http.incoming)
+      options.http.incoming.authTokens.push(incomingToken)
+      const peer = await peerService.create(options)
+      assert.ok(!isPeerError(peer))
+
+      await expect(
+        peerService.getByIncomingToken(incomingToken)
+      ).resolves.toEqual(peer)
+    })
+
+    test('Returns undefined if no peer exists with token', async (): Promise<void> => {
+      const peer = await peerService.create(randomPeer())
+      assert.ok(!isPeerError(peer))
+
+      await expect(
+        peerService.getByIncomingToken(uuid())
       ).resolves.toBeUndefined()
     })
   })

@@ -28,9 +28,6 @@ export class AccountFactory {
     if (options.maxPacketAmount) {
       accountOptions.maxPacketAmount = options.maxPacketAmount
     }
-    if (options.http) {
-      accountOptions.http = options.http
-    }
     const account = await this.accounts.create(accountOptions)
 
     if (isAccountError(account)) {

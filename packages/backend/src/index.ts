@@ -153,13 +153,11 @@ export function initIocContainer(
     const assetService = await deps.use('assetService')
     const balanceService = await deps.use('balanceService')
     const transferService = await deps.use('transferService')
-    const httpTokenService = await deps.use('httpTokenService')
     return await createAccountService({
       logger: logger,
       knex: knex,
       assetService,
       balanceService,
-      httpTokenService,
       transferService
     })
   })
@@ -168,7 +166,8 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       logger: await deps.use('logger'),
       accountService: await deps.use('accountService'),
-      assetService: await deps.use('assetService')
+      assetService: await deps.use('assetService'),
+      httpTokenService: await deps.use('httpTokenService')
     })
   })
   container.singleton('paymentPointerService', async (deps) => {

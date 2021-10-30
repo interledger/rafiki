@@ -11,12 +11,13 @@ import {
 } from '../account/service'
 import { isAccountError } from '../account/errors'
 import { AssetService, AssetOptions } from '../asset/service'
+import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
+import { HttpTokenError } from '../httpToken/errors'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
 
-export type CreateOptions = Omit<CreateAccountOptions, 'id' | 'assetId'> & {
-  asset: AssetOptions
-  http: {
+export type Options = {
+  http?: {
     incoming?: {
       authTokens: string[]
     }
@@ -25,32 +26,37 @@ export type CreateOptions = Omit<CreateAccountOptions, 'id' | 'assetId'> & {
       endpoint: string
     }
   }
-  staticIlpAddress: string
-}
-
-export type UpdateOptions = UpdateAccountOptions & {
   staticIlpAddress?: string
 }
+
+export type CreateOptions = Required<Options> &
+  Omit<CreateAccountOptions, 'id' | 'assetId'> & {
+    asset: AssetOptions
+  }
+
+export type UpdateOptions = Options & UpdateAccountOptions
 
 export interface PeerService {
   get(id: string): Promise<Peer | undefined>
   create(options: CreateOptions, trx?: Transaction): Promise<Peer | PeerError>
   update(options: UpdateOptions): Promise<Peer | PeerError>
-  getByAccountId(accountId: string): Promise<Peer | undefined>
   getByDestinationAddress(address: string): Promise<Peer | undefined>
+  getByIncomingToken(token: string): Promise<Peer | undefined>
   getPage(pagination?: Pagination): Promise<Peer[]>
 }
 
 interface ServiceDependencies extends BaseService {
   accountService: AccountService
   assetService: AssetService
+  httpTokenService: HttpTokenService
 }
 
 export async function createPeerService({
   logger,
   knex,
   accountService,
-  assetService
+  assetService,
+  httpTokenService
 }: ServiceDependencies): Promise<PeerService> {
   const log = logger.child({
     service: 'PeerService'
@@ -59,15 +65,16 @@ export async function createPeerService({
     logger: log,
     knex,
     accountService,
-    assetService
+    assetService,
+    httpTokenService
   }
   return {
     get: (id) => getPeer(deps, id),
     create: (options, trx) => createPeer(deps, options, trx),
     update: (options) => updatePeer(deps, options),
-    getByAccountId: (accountId) => getPeerByAccountId(deps, accountId),
     getByDestinationAddress: (destinationAddress) =>
       getPeerByDestinationAddress(deps, destinationAddress),
+    getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?) => getPeersPage(deps, pagination)
   }
 }
@@ -97,28 +104,38 @@ async function createPeer(
           await deps.assetService.getOrCreate(options.asset as AssetOptions)
         ).id,
         disabled: options.disabled,
-        http: options.http,
         maxPacketAmount: options.maxPacketAmount,
         stream: options.stream
       },
       peerTrx
     )
     if (isAccountError(account)) {
-      if (isPeerError(account)) {
-        if (!trx) {
-          await peerTrx.rollback()
-        }
-        return account
-      }
       throw new Error('unable to create peer account, err=' + account)
     }
 
     const peer = await Peer.query(peerTrx)
       .insertAndFetch({
         accountId: account.id,
+        http: options.http,
         staticIlpAddress: options.staticIlpAddress
       })
       .withGraphFetched('account.asset')
+
+    if (options.http?.incoming) {
+      const err = await addIncomingHttpTokens({
+        deps,
+        peerId: peer.id,
+        tokens: options.http?.incoming?.authTokens,
+        trx: peerTrx
+      })
+      if (err) {
+        if (!trx) {
+          await peerTrx.rollback()
+        }
+        return err
+      }
+    }
+
     if (!trx) {
       await peerTrx.commit()
     }
@@ -143,41 +160,84 @@ async function updatePeer(
   }
 
   assert.ok(deps.knex, 'Knex undefined')
-  return await Peer.transaction(deps.knex, async (trx) => {
-    const peer = await Peer.query(trx).findById(options.id).forUpdate()
-    if (!peer) {
-      return PeerError.UnknownPeer
-    }
-
-    const account = await deps.accountService.update(
-      {
-        id: peer.accountId,
-        disabled: options.disabled,
-        http: options.http,
-        maxPacketAmount: options.maxPacketAmount,
-        stream: options.stream
-      },
-      trx
-    )
-    if (isAccountError(account)) {
-      if (isPeerError(account)) {
-        return account
+  try {
+    return await Peer.transaction(deps.knex, async (trx) => {
+      if (options.http?.incoming) {
+        await deps.httpTokenService.deleteByPeer(options.id, trx)
+        const err = await addIncomingHttpTokens({
+          deps,
+          peerId: options.id,
+          tokens: options.http?.incoming?.authTokens,
+          trx
+        })
+        if (err) {
+          await trx.rollback(err)
+        }
       }
-      throw new Error('unable to update peer account, err=' + account)
+      const peer = await Peer.query(trx).findById(options.id).forUpdate()
+      if (!peer) {
+        return PeerError.UnknownPeer
+      }
+
+      const account = await deps.accountService.update(
+        {
+          id: peer.accountId,
+          disabled: options.disabled,
+          maxPacketAmount: options.maxPacketAmount,
+          stream: options.stream
+        },
+        trx
+      )
+      if (isAccountError(account)) {
+        throw new Error('unable to update peer account, err=' + account)
+      }
+      if (options.http) {
+        await peer.$query(trx).patch({ http: options.http })
+      }
+      if (options.staticIlpAddress) {
+        await peer
+          .$query(trx)
+          .patch({ staticIlpAddress: options.staticIlpAddress })
+      }
+      return Peer.query(trx)
+        .findById(options.id)
+        .withGraphJoined('account.asset')
+    })
+  } catch (err) {
+    if (isPeerError(err)) {
+      return err
     }
-    await peer.$query(trx).patch({ staticIlpAddress: options.staticIlpAddress })
-    return Peer.query(trx).findById(options.id).withGraphJoined('account.asset')
-  })
+    throw err
+  }
 }
 
-async function getPeerByAccountId(
-  deps: ServiceDependencies,
-  accountId: string
-): Promise<Peer | undefined> {
-  return await Peer.query(deps.knex)
-    .where({ accountId })
-    .withGraphJoined('account.asset')
-    .first()
+async function addIncomingHttpTokens({
+  deps,
+  peerId,
+  tokens,
+  trx
+}: {
+  deps: ServiceDependencies
+  peerId: string
+  tokens: string[]
+  trx: Transaction
+}): Promise<void | PeerError> {
+  const incomingTokens = tokens.map(
+    (token: string): HttpTokenOptions => {
+      return {
+        peerId,
+        token
+      }
+    }
+  )
+
+  const err = await deps.httpTokenService.create(incomingTokens, trx)
+  if (err) {
+    if (err === HttpTokenError.DuplicateToken) {
+      return PeerError.DuplicateIncomingToken
+    }
+    throw new Error(err)
+  }
 }
 
 async function getPeerByDestinationAddress(
@@ -214,6 +274,20 @@ async function getPeerByDestinationAddress(
     })
     .first()
   return peer || undefined
+}
+
+async function getPeerByIncomingToken(
+  deps: ServiceDependencies,
+  token: string
+): Promise<Peer | undefined> {
+  const peer = await Peer.query(deps.knex)
+    .withGraphJoined('[account.asset, incomingTokens]')
+    .where('incomingTokens.token', token)
+    .first()
+  if (peer) {
+    delete peer.incomingTokens
+    return peer
+  }
 }
 
 /** TODO: Base64 encode/decode the cursors

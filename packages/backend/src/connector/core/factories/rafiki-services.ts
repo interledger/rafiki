@@ -27,15 +27,17 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       if (account) {
         return {
           account,
+          http: account.http,
           staticIlpAddress: account.staticIlpAddress
         }
       }
     },
-    getByAccountId: async (id: string) => {
-      const account = await accounts.get(id)
-      if (account && account.staticIlpAddress) {
+    getByIncomingToken: async (token: string) => {
+      const account = await accounts.getByIncomingToken(token)
+      if (account) {
         return {
           account,
+          http: account.http,
           staticIlpAddress: account.staticIlpAddress
         }
       }

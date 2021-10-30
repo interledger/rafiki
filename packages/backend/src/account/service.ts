@@ -8,8 +8,6 @@ import { v4 as uuid } from 'uuid'
 
 import { AssetService, AssetOptions } from '../asset/service'
 import { BalanceService } from '../balance/service'
-import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
-import { HttpTokenError } from '../httpToken/errors'
 import { BaseService } from '../shared/baseService'
 import {
   BalanceTransferError,
@@ -28,15 +26,6 @@ export type Options = {
   disabled?: boolean
   stream?: {
     enabled: boolean
-  }
-  http?: {
-    incoming?: {
-      authTokens: string[]
-    }
-    outgoing: {
-      authToken: string
-      endpoint: string
-    }
   }
   maxPacketAmount?: bigint
 }
@@ -86,7 +75,6 @@ export interface AccountService {
   ): Promise<Account | AccountError>
   get(accountId: string): Promise<Account | undefined>
   getAccounts(ids: string[]): Promise<Account[]>
-  getByToken(token: string): Promise<Account | undefined>
   getBalance(accountId: string): Promise<bigint | undefined>
   getTotalSent(accountId: string): Promise<bigint | undefined>
   getPage(pagination?: Pagination): Promise<Account[]>
@@ -98,7 +86,6 @@ export interface AccountService {
 interface ServiceDependencies extends BaseService {
   assetService: AssetService
   balanceService: BalanceService
-  httpTokenService: HttpTokenService
   transferService: TransferService
 }
 
@@ -107,7 +94,6 @@ export function createAccountService({
   knex,
   assetService,
   balanceService,
-  httpTokenService,
   transferService
 }: ServiceDependencies): AccountService {
   const log = logger.child({
@@ -118,7 +104,6 @@ export function createAccountService({
     knex: knex,
     assetService,
     balanceService,
-    httpTokenService,
     transferService
   }
   return {
@@ -126,7 +111,6 @@ export function createAccountService({
     update: (account, trx) => updateAccount(deps, account, trx),
     get: (id) => getAccount(deps, id),
     getAccounts: (ids) => getAccounts(deps, ids),
-    getByToken: (token) => getAccountByToken(deps, token),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getPage: (pagination?) => getAccountsPage(deps, pagination),
@@ -154,27 +138,6 @@ async function createAccount(
         balanceId: uuid()
       })
       .withGraphFetched('asset')
-
-    const incomingTokens = account.http?.incoming?.authTokens.map(
-      (incomingToken: string): HttpTokenOptions => {
-        return {
-          accountId: accountRow.id,
-          token: incomingToken
-        }
-      }
-    )
-    if (incomingTokens) {
-      const err = await deps.httpTokenService.create(incomingTokens, acctTrx)
-      if (err) {
-        if (err === HttpTokenError.DuplicateToken) {
-          if (!trx) {
-            await acctTrx.rollback()
-          }
-          return AccountError.DuplicateIncomingToken
-        }
-        throw new Error(err)
-      }
-    }
 
     const { id: balanceId } = await deps.balanceService.create({
       unit: accountRow.asset.unit
@@ -226,27 +189,6 @@ async function updateAccount(
 ): Promise<Account | AccountError> {
   const acctTrx = trx || (await Account.startTransaction())
   try {
-    if (accountOptions.http?.incoming?.authTokens) {
-      await deps.httpTokenService.deleteByAccount(accountOptions.id, acctTrx)
-      const incomingTokens = accountOptions.http.incoming.authTokens.map(
-        (incomingToken: string): HttpTokenOptions => {
-          return {
-            accountId: accountOptions.id,
-            token: incomingToken
-          }
-        }
-      )
-      const err = await deps.httpTokenService.create(incomingTokens, acctTrx)
-      if (err) {
-        if (err === HttpTokenError.DuplicateToken) {
-          if (!trx) {
-            await acctTrx.rollback()
-          }
-          return AccountError.DuplicateIncomingToken
-        }
-        throw new Error(err)
-      }
-    }
     const account = await Account.query(deps.knex)
       .patchAndFetchById(accountOptions.id, accountOptions)
       .throwIfNotFound()
@@ -328,17 +270,6 @@ async function getAccountTotalSent(
   }
 
   return balance.balance
-}
-
-async function getAccountByToken(
-  deps: ServiceDependencies,
-  token: string
-): Promise<Account | undefined> {
-  const account = await Account.query(deps.knex)
-    .withGraphJoined('[asset, incomingTokens]')
-    .where('incomingTokens.token', token)
-    .first()
-  return account || undefined
 }
 
 async function transferFunds(

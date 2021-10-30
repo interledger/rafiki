@@ -1,13 +1,18 @@
 import Axios, { AxiosInstance } from 'axios'
-import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
+import { Errors } from 'ilp-packet'
+import { ILPContext, ILPMiddleware } from '../rafiki'
 import { modifySerializedIlpPrepare } from '../lib'
 //import { AxiosClient } from '../services/client/axios'
-import { sendToPeer as sendToPeerDefault } from '../services/client'
+import { OutgoingState } from '../middleware/account'
+import {
+  OutgoingHttp,
+  sendToPeer as sendToPeerDefault
+} from '../services/client'
 
 export interface ClientControllerOptions {
   sendToPeer?: (
     client: AxiosInstance,
-    account: RafikiAccount,
+    outgoing: OutgoingHttp,
     prepare: Buffer
   ) => Promise<Buffer>
 }
@@ -20,9 +25,13 @@ export function createClientController({
   const axios = Axios.create({ timeout: 30_000 })
 
   return async function ilpClient(
-    { accounts: { outgoing }, request, response }: ILPContext,
+    { request, response, state: { outgoing } }: ILPContext<OutgoingState>,
     _: () => Promise<void>
   ): Promise<void> {
+    if (!outgoing) {
+      throw new Errors.UnreachableError('no outgoing endpoint')
+    }
+
     const incomingPrepare = request.rawPrepare
     const amount = request.prepare.amountChanged
       ? request.prepare.intAmount

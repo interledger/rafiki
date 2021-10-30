@@ -24,12 +24,6 @@ export interface RafikiAccount {
     code: string
     scale: number
   }
-  http?: {
-    outgoing: {
-      authToken: string
-      endpoint: string
-    }
-  }
   stream: {
     enabled: boolean
   }
@@ -46,7 +40,6 @@ export interface TransferOptions {
 
 export interface AccountService {
   get(id: string): Promise<RafikiAccount | undefined>
-  getByToken(token: string): Promise<RafikiAccount | undefined>
   transferFunds(
     options: TransferOptions
   ): Promise<AccountTransfer | AccountTransferError>

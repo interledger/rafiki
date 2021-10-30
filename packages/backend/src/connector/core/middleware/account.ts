@@ -2,13 +2,18 @@ import { Errors } from 'ilp-packet'
 import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
 import { AuthState } from './auth'
 import { AccountNotFoundError } from '../errors'
+import { OutgoingHttp } from '../services/client'
 import { validateId } from '../../../shared/utils'
+
+export interface OutgoingState {
+  outgoing?: OutgoingHttp
+}
 
 const UUID_LENGTH = 36
 
 export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
   return async function account(
-    ctx: ILPContext<AuthState & { streamDestination?: string }>,
+    ctx: ILPContext<AuthState & OutgoingState & { streamDestination?: string }>,
     next: () => Promise<void>
   ): Promise<void> {
     const { accounts, peers } = ctx.services
@@ -24,6 +29,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     ): Promise<RafikiAccount | undefined> => {
       const peer = await peers.getByDestinationAddress(address)
       if (peer) {
+        ctx.state.outgoing = peer.http.outgoing
         return peer.account
       }
       if (

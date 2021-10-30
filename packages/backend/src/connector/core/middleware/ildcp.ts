@@ -1,4 +1,5 @@
 import { serve as ildcpServe } from 'ilp-protocol-ildcp'
+import { AuthState } from './auth'
 import { ILPMiddleware, ILPContext } from '../rafiki'
 
 /**
@@ -6,11 +7,11 @@ import { ILPMiddleware, ILPContext } from '../rafiki'
  */
 export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
   return async function ildcp(
-    ctx: ILPContext,
+    ctx: ILPContext<AuthState>,
     next: () => Promise<void>
   ): Promise<void> {
     const {
-      services: { logger, peers },
+      services: { logger },
       request,
       response,
       accounts: { incoming }
@@ -20,8 +21,7 @@ export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
       return
     }
 
-    const peer = await peers.getByAccountId(incoming.id)
-    if (!peer) {
+    if (!ctx.state.peer) {
       logger.warn(
         {
           peerId: incoming.id
@@ -30,6 +30,7 @@ export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
       )
       ctx.throw(500, 'not a peer account')
     }
+    const clientAddress = ctx.state.peer.staticIlpAddress
 
     // TODO: Ensure we get at least length > 0
     //const serverAddress = router.getAddresses(SELF_PEER_ID)[0]
@@ -38,7 +39,7 @@ export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
     logger.info(
       {
         peerId: incoming.id,
-        address: peer.staticIlpAddress
+        address: clientAddress
       },
       'responding to ILDCP request from child'
     )
@@ -48,7 +49,7 @@ export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
       requestPacket: request.rawPrepare,
       handler: () =>
         Promise.resolve({
-          clientAddress: peer.staticIlpAddress,
+          clientAddress,
           assetScale: incoming.asset.scale,
           assetCode: incoming.asset.code
         }),
