@@ -1,5 +1,5 @@
 exports.up = function (knex) {
-  return knex.schema.createTable('apikeys', function (table) {
+  return knex.schema.createTable('apiKeys', function (table) {
     table.uuid('id').notNullable().primary()
     table.string('hashedKey').notNullable().unique().index()
     table.uuid('accountId').notNullable().index()
