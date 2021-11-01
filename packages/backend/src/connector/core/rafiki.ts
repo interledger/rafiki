@@ -27,7 +27,6 @@ export interface RafikiAccount {
   stream: {
     enabled: boolean
   }
-  maxPacketAmount?: bigint
 }
 
 export interface TransferOptions {

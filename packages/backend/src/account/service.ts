@@ -21,7 +21,6 @@ export type Options = {
   stream?: {
     enabled: boolean
   }
-  maxPacketAmount?: bigint
 }
 
 type CreateAccountOptions = Options & {
@@ -110,7 +109,6 @@ async function createAccount(
         assetId: account.assetId,
         balanceId: uuid(),
         disabled: account.disabled,
-        maxPacketAmount: account.maxPacketAmount,
         stream: account.stream
       })
       .withGraphFetched('asset')

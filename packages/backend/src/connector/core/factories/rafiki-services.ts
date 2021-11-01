@@ -28,6 +28,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
         return {
           account,
           http: account.http,
+          maxPacketAmount: account.maxPacketAmount,
           staticIlpAddress: account.staticIlpAddress
         }
       }
@@ -38,6 +39,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
         return {
           account,
           http: account.http,
+          maxPacketAmount: account.maxPacketAmount,
           staticIlpAddress: account.staticIlpAddress
         }
       }

@@ -30,7 +30,8 @@ export const PeerAccountFactory = Factory.define<MockIlpAccount>(
         authToken: Faker.datatype.string(32),
         endpoint: Faker.internet.url()
       }
-    })
+    }),
+    maxPacketAmount: BigInt(Faker.datatype.number())
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`

@@ -14,6 +14,7 @@ export type MockIlpAccount = RafikiAccount & {
       endpoint: string
     }
   }
+  maxPacketAmount?: bigint
   staticIlpAddress?: string
 }
 

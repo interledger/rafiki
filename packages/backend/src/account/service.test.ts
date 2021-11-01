@@ -117,7 +117,6 @@ describe('Account Service', (): void => {
       const options: CreateOptions = {
         disabled: false,
         assetId: (await assetService.getOrCreate(randomAsset())).id,
-        maxPacketAmount: BigInt(100),
         stream: {
           enabled: true
         }
@@ -313,7 +312,6 @@ describe('Account Service', (): void => {
       const updateOptions: UpdateOptions = {
         id,
         disabled: true,
-        maxPacketAmount: BigInt(200),
         stream: {
           enabled: false
         }

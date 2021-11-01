@@ -27,16 +27,17 @@ export interface HttpOptions {
 }
 
 export type Options = {
-  http?: HttpOptions
-  staticIlpAddress?: string
+  http: HttpOptions
+  maxPacketAmount?: bigint
+  staticIlpAddress: string
 }
 
-export type CreateOptions = Required<Options> &
+export type CreateOptions = Options &
   Omit<CreateAccountOptions, 'assetId'> & {
     asset: AssetOptions
   }
 
-export type UpdateOptions = Options & UpdateAccountOptions
+export type UpdateOptions = Partial<Options> & UpdateAccountOptions
 
 export interface PeerService {
   get(id: string): Promise<Peer | undefined>
@@ -106,7 +107,6 @@ async function createPeer(
           await deps.assetService.getOrCreate(options.asset as AssetOptions)
         ).id,
         disabled: options.disabled,
-        maxPacketAmount: options.maxPacketAmount,
         stream: options.stream
       },
       peerTrx
@@ -116,6 +116,7 @@ async function createPeer(
       .insertAndFetch({
         accountId: account.id,
         http: options.http,
+        maxPacketAmount: options.maxPacketAmount,
         staticIlpAddress: options.staticIlpAddress
       })
       .withGraphFetched('account.asset')
@@ -182,7 +183,6 @@ async function updatePeer(
         {
           id: peer.accountId,
           disabled: options.disabled,
-          maxPacketAmount: options.maxPacketAmount,
           stream: options.stream
         },
         trx
@@ -192,6 +192,11 @@ async function updatePeer(
       }
       if (options.http) {
         await peer.$query(trx).patch({ http: options.http })
+      }
+      if (options.maxPacketAmount) {
+        await peer
+          .$query(trx)
+          .patch({ maxPacketAmount: options.maxPacketAmount })
       }
       if (options.staticIlpAddress) {
         await peer

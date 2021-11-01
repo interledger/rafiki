@@ -27,8 +27,6 @@ export class Account extends BaseModel {
   // TigerBeetle account id tracking amount sent
   public readonly sentBalanceId?: string
 
-  public readonly maxPacketAmount!: bigint
-
   public readonly stream!: {
     enabled: boolean
   }

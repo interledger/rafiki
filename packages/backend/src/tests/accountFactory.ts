@@ -27,9 +27,6 @@ export class AccountFactory {
       },
       sentBalance: options.sentBalance
     }
-    if (options.maxPacketAmount) {
-      accountOptions.maxPacketAmount = options.maxPacketAmount
-    }
     const account = await this.accounts.create(accountOptions)
 
     if (options.balance) {

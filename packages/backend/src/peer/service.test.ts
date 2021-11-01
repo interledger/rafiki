@@ -84,6 +84,37 @@ describe('Peer Service', (): void => {
     const options = randomPeer()
 
     test('A peer can be created and fetched', async (): Promise<void> => {
+      const options = {
+        asset: randomAsset(),
+        http: {
+          outgoing: {
+            authToken: Faker.datatype.string(32),
+            endpoint: Faker.internet.url()
+          }
+        },
+        staticIlpAddress: 'test.' + uuid()
+      }
+      const peer = await peerService.create(options)
+      assert.ok(!isPeerError(peer))
+      expect(peer).toMatchObject({
+        account: {
+          asset: {
+            code: options.asset.code,
+            scale: options.asset.scale
+          },
+          disabled: false
+        },
+        http: {
+          outgoing: options.http.outgoing
+        },
+        staticIlpAddress: options.staticIlpAddress
+      })
+      const retrievedPeer = await peerService.get(peer.id)
+      if (!retrievedPeer) throw new Error('peer not found')
+      expect(retrievedPeer).toEqual(peer)
+    })
+
+    test('A peer can be created with all settings', async (): Promise<void> => {
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
       expect(peer).toMatchObject({
@@ -93,12 +124,12 @@ describe('Peer Service', (): void => {
             scale: options.asset.scale
           },
           disabled: options.disabled,
-          maxPacketAmount: options.maxPacketAmount,
           stream: options.stream
         },
         http: {
           outgoing: options.http.outgoing
         },
+        maxPacketAmount: options.maxPacketAmount,
         staticIlpAddress: options.staticIlpAddress
       })
       const retrievedPeer = await peerService.get(peer.id)
@@ -188,12 +219,12 @@ describe('Peer Service', (): void => {
           id: peer.account.id,
           asset: peer.account.asset,
           disabled: updateOptions.disabled,
-          maxPacketAmount: updateOptions.maxPacketAmount,
           stream: updateOptions.stream
         },
         http: {
           outgoing: updateOptions.http.outgoing
         },
+        maxPacketAmount: updateOptions.maxPacketAmount,
         staticIlpAddress: updateOptions.staticIlpAddress
       }
       expect(peerOrError).toMatchObject(expectedPeer)

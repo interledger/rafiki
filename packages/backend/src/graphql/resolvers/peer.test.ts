@@ -124,10 +124,10 @@ describe('Peer Resolvers', (): void => {
       await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
         account: {
           disabled: peer.disabled,
-          maxPacketAmount: peer.maxPacketAmount,
           stream: peer.stream
         },
         http: peer.http,
+        maxPacketAmount: peer.maxPacketAmount,
         staticIlpAddress: peer.staticIlpAddress
       })
     })
@@ -257,7 +257,6 @@ describe('Peer Resolvers', (): void => {
         )
 
       assert.ok(peer.account.stream)
-      assert.ok(peer.account.maxPacketAmount)
       expect(query).toEqual({
         __typename: 'Peer',
         id: peer.id,
@@ -279,7 +278,7 @@ describe('Peer Resolvers', (): void => {
           }
         },
         staticIlpAddress: peer.staticIlpAddress,
-        maxPacketAmount: peer.account.maxPacketAmount.toString()
+        maxPacketAmount: peer.maxPacketAmount?.toString()
       })
     })
 
@@ -378,7 +377,6 @@ describe('Peer Resolvers', (): void => {
       expect(query.edges).toHaveLength(2)
       query.edges.forEach((edge, idx) => {
         const peer = peers[idx]
-        assert.ok(peer.account.maxPacketAmount)
         expect(edge.cursor).toEqual(peer.id)
         expect(edge.node).toEqual({
           __typename: 'Peer',
@@ -401,7 +399,7 @@ describe('Peer Resolvers', (): void => {
             }
           },
           staticIlpAddress: peer.staticIlpAddress,
-          maxPacketAmount: peer.account.maxPacketAmount.toString()
+          maxPacketAmount: peer.maxPacketAmount?.toString()
         })
       })
     })
@@ -699,12 +697,12 @@ describe('Peer Resolvers', (): void => {
           id: peer.account.id,
           asset: peer.account.asset,
           disabled: updateOptions.disabled,
-          maxPacketAmount: BigInt(updateOptions.maxPacketAmount),
           stream: updateOptions.stream
         },
         http: {
           outgoing: updateOptions.http.outgoing
         },
+        maxPacketAmount: BigInt(updateOptions.maxPacketAmount),
         staticIlpAddress: updateOptions.staticIlpAddress
       })
     })

@@ -38,6 +38,8 @@ export class Peer extends BaseModel {
     }
   }
 
+  public maxPacketAmount?: bigint
+
   public staticIlpAddress!: string
 
   $formatDatabaseJson(json: Pojo): Pojo {

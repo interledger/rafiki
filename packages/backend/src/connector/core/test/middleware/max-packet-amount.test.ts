@@ -12,9 +12,10 @@ const { AmountTooLargeError } = Errors
 
 describe('Max Packet Amount Middleware', function () {
   const services = RafikiServicesFactory.build()
+  const maxPacketAmount = BigInt(50)
   const alice = PeerAccountFactory.build({
     id: 'alice',
-    maxPacketAmount: BigInt(50)
+    maxPacketAmount
   })
   const bob = PeerAccountFactory.build({ id: 'bob' })
   const ctx = createILPContext({
@@ -25,6 +26,13 @@ describe('Max Packet Amount Middleware', function () {
       },
       get outgoing() {
         return bob
+      }
+    },
+    state: {
+      peer: {
+        account: alice,
+        maxPacketAmount,
+        staticIlpAddress: alice.staticIlpAddress
       }
     }
   })

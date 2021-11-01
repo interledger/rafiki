@@ -6,6 +6,7 @@ export interface AuthState {
   account?: RafikiAccount
   peer?: {
     account: RafikiAccount
+    maxPacketAmount?: bigint
     staticIlpAddress: string
   }
 }

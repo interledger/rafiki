@@ -4,6 +4,8 @@ exports.up = function (knex) {
     table.uuid('accountId').notNullable().index()
     table.foreign('accountId').references('accounts.id')
 
+    table.bigInteger('maxPacketAmount').nullable()
+
     table.string('staticIlpAddress').notNullable().index()
 
     table.string('outgoingToken').nullable()
