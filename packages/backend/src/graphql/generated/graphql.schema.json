@@ -910,18 +910,6 @@
             "deprecationReason": null
           },
           {
-            "name": "stream",
-            "description": null,
-            "type": {
-              "kind": "INPUT_OBJECT",
-              "name": "StreamInput",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "staticIlpAddress",
             "description": null,
             "type": {
@@ -3261,22 +3249,6 @@
             "deprecationReason": null
           },
           {
-            "name": "stream",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Stream",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "staticIlpAddress",
             "description": null,
             "args": [],
@@ -3634,60 +3606,6 @@
       },
       {
         "kind": "OBJECT",
-        "name": "Stream",
-        "description": null,
-        "fields": [
-          {
-            "name": "enabled",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Boolean",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "INPUT_OBJECT",
-        "name": "StreamInput",
-        "description": null,
-        "fields": null,
-        "inputFields": [
-          {
-            "name": "enabled",
-            "description": null,
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Boolean",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "interfaces": null,
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
         "name": "TransferMutationResponse",
         "description": null,
         "fields": [
@@ -3813,18 +3731,6 @@
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "HttpInput",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "stream",
-            "description": null,
-            "type": {
-              "kind": "INPUT_OBJECT",
-              "name": "StreamInput",
               "ofType": null
             },
             "defaultValue": null,

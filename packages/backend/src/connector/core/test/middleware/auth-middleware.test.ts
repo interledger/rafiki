@@ -50,9 +50,6 @@ describe('Token Auth Middleware', function () {
       })
       const account = PeerAccountFactory.build({
         id: 'alice',
-        stream: {
-          enabled: true
-        },
         http: {
           incoming: {
             authTokens: ['asd123']

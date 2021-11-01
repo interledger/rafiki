@@ -17,8 +17,10 @@ describe('Client Controller', function () {
   const bob = PeerAccountFactory.build({ id: 'bob' })
   const services = RafikiServicesFactory.build()
   const outgoing = {
-    authToken: Faker.datatype.string(32),
-    endpoint: Faker.internet.url()
+    http: {
+      authToken: Faker.datatype.string(32),
+      endpoint: Faker.internet.url()
+    }
   }
   const ctx = createILPContext({
     services,
@@ -47,7 +49,7 @@ describe('Client Controller', function () {
 
     await expect(controller(ctx, next)).resolves.toBeUndefined()
 
-    expect(sendToPeer.mock.calls[0][1]).toEqual(outgoing)
+    expect(sendToPeer.mock.calls[0][1]).toEqual(outgoing.http)
     expect(ctx.response.rawReply).toBeDefined()
   })
 })

@@ -106,8 +106,7 @@ async function createPeer(
         assetId: (
           await deps.assetService.getOrCreate(options.asset as AssetOptions)
         ).id,
-        disabled: options.disabled,
-        stream: options.stream
+        disabled: options.disabled
       },
       peerTrx
     )
@@ -182,8 +181,7 @@ async function updatePeer(
       const account = await deps.accountService.update(
         {
           id: peer.accountId,
-          disabled: options.disabled,
-          stream: options.stream
+          disabled: options.disabled
         },
         trx
       )

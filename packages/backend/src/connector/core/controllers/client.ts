@@ -28,7 +28,7 @@ export function createClientController({
     { request, response, state: { outgoing } }: ILPContext<OutgoingState>,
     _: () => Promise<void>
   ): Promise<void> {
-    if (!outgoing) {
+    if (!outgoing?.http) {
       throw new Errors.UnreachableError('no outgoing endpoint')
     }
 
@@ -45,6 +45,6 @@ export function createClientController({
       expiresAt
     )
 
-    response.rawReply = await send(axios, outgoing, outgoingPrepare)
+    response.rawReply = await send(axios, outgoing.http, outgoingPrepare)
   }
 }

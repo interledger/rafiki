@@ -7,12 +7,12 @@ export interface OutgoingHttp {
 
 export async function sendToPeer(
   client: AxiosInstance,
-  outgoing: OutgoingHttp,
+  outgoingHttp: OutgoingHttp,
   prepare: Buffer
 ): Promise<Buffer> {
-  const res = await client.post<Buffer>(outgoing.endpoint, prepare, {
+  const res = await client.post<Buffer>(outgoingHttp.endpoint, prepare, {
     responseType: 'arraybuffer',
-    headers: { Authorization: `Bearer ${outgoing.authToken}` }
+    headers: { Authorization: `Bearer ${outgoingHttp.authToken}` }
   })
   return res.data
 }

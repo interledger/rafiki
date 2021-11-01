@@ -23,10 +23,7 @@ export class PeerFactory {
           endpoint: Faker.internet.url()
         }
       },
-      staticIlpAddress: options.staticIlpAddress || 'test.' + uuid(),
-      stream: {
-        enabled: options.stream?.enabled || false
-      }
+      staticIlpAddress: options.staticIlpAddress || 'test.' + uuid()
     }
     if (options.http?.incoming) {
       peerOptions.http.incoming = options.http.incoming

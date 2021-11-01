@@ -37,8 +37,10 @@ describe('Echo protocol', function () {
   const alice = PeerAccountFactory.build()
   const bob = PeerAccountFactory.build()
   const outgoing = {
-    authToken: Faker.datatype.string(32),
-    endpoint: Faker.internet.url()
+    http: {
+      authToken: Faker.datatype.string(32),
+      endpoint: Faker.internet.url()
+    }
   }
   const ctx = createILPContext({
     services: RafikiServicesFactory.build(),
@@ -83,7 +85,7 @@ describe('Echo protocol', function () {
 
     expect(sendToPeer).toHaveBeenCalledWith(
       sendToPeer.mock.calls[0][0],
-      outgoing,
+      outgoing.http,
       serializeIlpPrepare(type1EchoPacket)
     )
   })

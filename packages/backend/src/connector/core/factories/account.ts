@@ -11,9 +11,6 @@ export const AccountFactory = Factory.define<MockIlpAccount>(
   id: Faker.datatype.uuid,
   disabled: false,
   asset: { code: assetCode, scale: assetScale },
-  stream: {
-    enabled: false
-  },
   balance: 0n
 })
 

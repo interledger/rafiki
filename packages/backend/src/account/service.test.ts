@@ -98,10 +98,7 @@ describe('Account Service', (): void => {
       const expectedAccount = {
         ...options,
         id: account.id,
-        disabled: false,
-        stream: {
-          enabled: false
-        }
+        disabled: false
       }
       expect(account).toMatchObject(expectedAccount)
       await expect(accountService.get(account.id)).resolves.toEqual(account)
@@ -116,10 +113,7 @@ describe('Account Service', (): void => {
     test('Can create an account with all settings', async (): Promise<void> => {
       const options: CreateOptions = {
         disabled: false,
-        assetId: (await assetService.getOrCreate(randomAsset())).id,
-        stream: {
-          enabled: true
-        }
+        assetId: (await assetService.getOrCreate(randomAsset())).id
       }
       const account = await accountService.create(options)
       expect(account).toMatchObject(options)
@@ -304,17 +298,11 @@ describe('Account Service', (): void => {
   describe('Update Account', (): void => {
     test('Can update an account', async (): Promise<void> => {
       const { id, asset } = await accountFactory.build({
-        disabled: false,
-        stream: {
-          enabled: true
-        }
+        disabled: false
       })
       const updateOptions: UpdateOptions = {
         id,
-        disabled: true,
-        stream: {
-          enabled: false
-        }
+        disabled: true
       }
       const accountOrError = await accountService.update(updateOptions)
       expect(isAccountError(accountOrError)).toEqual(false)

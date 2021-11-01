@@ -18,9 +18,6 @@ export { Account }
 
 export type Options = {
   disabled?: boolean
-  stream?: {
-    enabled: boolean
-  }
 }
 
 type CreateAccountOptions = Options & {
@@ -108,8 +105,7 @@ async function createAccount(
       .insertAndFetch({
         assetId: account.assetId,
         balanceId: uuid(),
-        disabled: account.disabled,
-        stream: account.stream
+        disabled: account.disabled
       })
       .withGraphFetched('asset')
 

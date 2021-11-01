@@ -118,7 +118,6 @@ export type CreatePeerInput = {
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http: HttpInput;
   asset: AssetInput;
-  stream?: Maybe<StreamInput>;
   staticIlpAddress: Scalars['String'];
 };
 
@@ -450,7 +449,6 @@ export type Peer = {
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http: Http;
   asset: Asset;
-  stream: Stream;
   staticIlpAddress: Scalars['String'];
 };
 
@@ -506,15 +504,6 @@ export type RollbackLiquidityWithdrawalMutationResponse = MutationResponse & {
   error?: Maybe<LiquidityError>;
 };
 
-export type Stream = {
-  __typename?: 'Stream';
-  enabled: Scalars['Boolean'];
-};
-
-export type StreamInput = {
-  enabled: Scalars['Boolean'];
-};
-
 export type TransferMutationResponse = MutationResponse & {
   __typename?: 'TransferMutationResponse';
   code: Scalars['String'];
@@ -528,7 +517,6 @@ export type UpdatePeerInput = {
   disabled?: Maybe<Scalars['Boolean']>;
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http?: Maybe<HttpInput>;
-  stream?: Maybe<StreamInput>;
   staticIlpAddress?: Maybe<Scalars['String']>;
 };
 
@@ -668,8 +656,6 @@ export type ResolversTypes = {
   PeersConnection: ResolverTypeWrapper<Partial<PeersConnection>>;
   Query: ResolverTypeWrapper<{}>;
   RollbackLiquidityWithdrawalMutationResponse: ResolverTypeWrapper<Partial<RollbackLiquidityWithdrawalMutationResponse>>;
-  Stream: ResolverTypeWrapper<Partial<Stream>>;
-  StreamInput: ResolverTypeWrapper<Partial<StreamInput>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
   UpdatePeerInput: ResolverTypeWrapper<Partial<UpdatePeerInput>>;
@@ -725,8 +711,6 @@ export type ResolversParentTypes = {
   PeersConnection: Partial<PeersConnection>;
   Query: {};
   RollbackLiquidityWithdrawalMutationResponse: Partial<RollbackLiquidityWithdrawalMutationResponse>;
-  Stream: Partial<Stream>;
-  StreamInput: Partial<StreamInput>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
   UInt64: Partial<Scalars['UInt64']>;
   UpdatePeerInput: Partial<UpdatePeerInput>;
@@ -948,7 +932,6 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
-  stream?: Resolver<ResolversTypes['Stream'], ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -977,11 +960,6 @@ export type RollbackLiquidityWithdrawalMutationResponseResolvers<ContextType = a
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['LiquidityError']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type StreamResolvers<ContextType = any, ParentType extends ResolversParentTypes['Stream'] = ResolversParentTypes['Stream']> = {
-  enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1036,7 +1014,6 @@ export type Resolvers<ContextType = any> = {
   PeersConnection?: PeersConnectionResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RollbackLiquidityWithdrawalMutationResponse?: RollbackLiquidityWithdrawalMutationResponseResolvers<ContextType>;
-  Stream?: StreamResolvers<ContextType>;
   TransferMutationResponse?: TransferMutationResponseResolvers<ContextType>;
   UInt64?: GraphQLScalarType;
   UpdatePeerMutationResponse?: UpdatePeerMutationResponseResolvers<ContextType>;

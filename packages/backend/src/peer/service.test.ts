@@ -44,10 +44,7 @@ describe('Peer Service', (): void => {
       }
     },
     maxPacketAmount: BigInt(100),
-    staticIlpAddress: 'test.' + uuid(),
-    stream: {
-      enabled: true
-    }
+    staticIlpAddress: 'test.' + uuid()
   })
 
   beforeAll(
@@ -123,8 +120,7 @@ describe('Peer Service', (): void => {
             code: options.asset.code,
             scale: options.asset.scale
           },
-          disabled: options.disabled,
-          stream: options.stream
+          disabled: options.disabled
         },
         http: {
           outgoing: options.http.outgoing
@@ -218,8 +214,7 @@ describe('Peer Service', (): void => {
         account: {
           id: peer.account.id,
           asset: peer.account.asset,
-          disabled: updateOptions.disabled,
-          stream: updateOptions.stream
+          disabled: updateOptions.disabled
         },
         http: {
           outgoing: updateOptions.http.outgoing

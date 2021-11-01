@@ -6,7 +6,12 @@ import { OutgoingHttp } from '../services/client'
 import { validateId } from '../../../shared/utils'
 
 export interface OutgoingState {
-  outgoing?: OutgoingHttp
+  outgoing?: {
+    http?: OutgoingHttp
+    stream: {
+      enabled: boolean
+    }
+  }
 }
 
 const UUID_LENGTH = 36
@@ -29,7 +34,12 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     ): Promise<RafikiAccount | undefined> => {
       const peer = await peers.getByDestinationAddress(address)
       if (peer) {
-        ctx.state.outgoing = peer.http.outgoing
+        ctx.state.outgoing = {
+          http: peer.http.outgoing,
+          stream: {
+            enabled: false
+          }
+        }
         return peer.account
       }
       if (
@@ -47,6 +57,11 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
       }
     }
 
+    ctx.state.outgoing = {
+      stream: {
+        enabled: true
+      }
+    }
     const outgoingAccount = ctx.state.streamDestination
       ? await accounts.get(ctx.state.streamDestination)
       : await getAccountByDestinationAddress(ctx.request.prepare.destination)

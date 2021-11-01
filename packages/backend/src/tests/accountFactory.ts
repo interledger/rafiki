@@ -22,9 +22,6 @@ export class AccountFactory {
       disabled: options.disabled || false,
       assetId: (await this.assets.getOrCreate(options.asset || randomAsset()))
         .id,
-      stream: {
-        enabled: options.stream?.enabled || false
-      },
       sentBalance: options.sentBalance
     }
     const account = await this.accounts.create(accountOptions)

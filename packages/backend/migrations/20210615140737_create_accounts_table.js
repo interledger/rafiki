@@ -12,8 +12,6 @@ exports.up = function (knex) {
     // TigerBeetle account id tracking amount sent
     table.uuid('sentBalanceId').nullable()
 
-    table.boolean('streamEnabled').notNullable().defaultTo(false)
-
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
   })

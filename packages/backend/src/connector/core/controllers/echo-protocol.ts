@@ -61,12 +61,12 @@ export function createEchoProtocolController({
 
       logger.debug({ sourceAddress }, 'responding to echo packet')
 
-      if (!outgoing) {
+      if (!outgoing?.http) {
         throw new Errors.UnreachableError('no outgoing endpoint')
       }
       response.rawReply = await send(
         axios,
-        outgoing,
+        outgoing.http,
         serializeIlpPrepare({
           amount: amount,
           destination: sourceAddress,

@@ -24,9 +24,6 @@ export interface RafikiAccount {
     code: string
     scale: number
   }
-  stream: {
-    enabled: boolean
-  }
 }
 
 export interface TransferOptions {

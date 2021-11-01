@@ -44,10 +44,7 @@ describe('Peer Resolvers', (): void => {
       }
     },
     maxPacketAmount: BigInt(100),
-    staticIlpAddress: 'test.' + uuid(),
-    stream: {
-      enabled: true
-    }
+    staticIlpAddress: 'test.' + uuid()
   })
 
   beforeAll(
@@ -123,8 +120,7 @@ describe('Peer Resolvers', (): void => {
       delete peer.http.incoming
       await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
         account: {
-          disabled: peer.disabled,
-          stream: peer.stream
+          disabled: peer.disabled
         },
         http: peer.http,
         maxPacketAmount: peer.maxPacketAmount,
@@ -235,9 +231,6 @@ describe('Peer Resolvers', (): void => {
                     endpoint
                   }
                 }
-                stream {
-                  enabled
-                }
                 staticIlpAddress
               }
             }
@@ -256,7 +249,6 @@ describe('Peer Resolvers', (): void => {
           }
         )
 
-      assert.ok(peer.account.stream)
       expect(query).toEqual({
         __typename: 'Peer',
         id: peer.id,
@@ -266,10 +258,6 @@ describe('Peer Resolvers', (): void => {
           scale: peer.account.asset.scale
         },
         disabled: peer.account.disabled,
-        stream: {
-          __typename: 'Stream',
-          enabled: peer.account.stream.enabled
-        },
         http: {
           __typename: 'Http',
           outgoing: {
@@ -294,9 +282,6 @@ describe('Peer Resolvers', (): void => {
                   scale
                 }
                 disabled
-                stream {
-                  enabled
-                }
               }
             }
           `,
@@ -353,9 +338,6 @@ describe('Peer Resolvers', (): void => {
                         endpoint
                       }
                     }
-                    stream {
-                      enabled
-                    }
                     staticIlpAddress
                   }
                   cursor
@@ -387,10 +369,6 @@ describe('Peer Resolvers', (): void => {
             scale: peer.account.asset.scale
           },
           disabled: peer.account.disabled,
-          stream: {
-            __typename: 'Stream',
-            enabled: peer.account.stream.enabled
-          },
           http: {
             __typename: 'Http',
             outgoing: {
@@ -628,9 +606,6 @@ describe('Peer Resolvers', (): void => {
             endpoint: Faker.internet.url()
           }
         },
-        stream: {
-          enabled: false
-        },
         staticIlpAddress: 'g.rafiki.' + peer.id
       }
       assert.ok(updateOptions.http)
@@ -651,9 +626,6 @@ describe('Peer Resolvers', (): void => {
                       authToken
                       endpoint
                     }
-                  }
-                  stream {
-                    enabled
                   }
                   staticIlpAddress
                 }
@@ -686,18 +658,13 @@ describe('Peer Resolvers', (): void => {
             ...updateOptions.http.outgoing
           }
         },
-        staticIlpAddress: updateOptions.staticIlpAddress,
-        stream: {
-          __typename: 'Stream',
-          enabled: updateOptions.stream.enabled
-        }
+        staticIlpAddress: updateOptions.staticIlpAddress
       })
       await expect(peerService.get(peer.id)).resolves.toMatchObject({
         account: {
           id: peer.account.id,
           asset: peer.account.asset,
-          disabled: updateOptions.disabled,
-          stream: updateOptions.stream
+          disabled: updateOptions.disabled
         },
         http: {
           outgoing: updateOptions.http.outgoing
