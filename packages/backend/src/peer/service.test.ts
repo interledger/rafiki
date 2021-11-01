@@ -33,7 +33,6 @@ describe('Peer Service', (): void => {
 
   const randomPeer = (): CreateOptions => ({
     asset: randomAsset(),
-    disabled: false,
     http: {
       incoming: {
         authTokens: [Faker.datatype.string(32)]
@@ -120,7 +119,7 @@ describe('Peer Service', (): void => {
             code: options.asset.code,
             scale: options.asset.scale
           },
-          disabled: options.disabled
+          disabled: false
         },
         http: {
           outgoing: options.http.outgoing
@@ -201,9 +200,12 @@ describe('Peer Service', (): void => {
   describe('Update Peer', (): void => {
     test('Can update a peer', async (): Promise<void> => {
       const peer = await peerFactory.build()
+      const { http, maxPacketAmount, staticIlpAddress } = randomPeer()
       const updateOptions: UpdateOptions = {
         id: peer.id,
-        ...randomPeer()
+        http,
+        maxPacketAmount,
+        staticIlpAddress
       }
 
       const peerOrError = await peerService.update(updateOptions)
@@ -213,8 +215,7 @@ describe('Peer Service', (): void => {
       const expectedPeer = {
         account: {
           id: peer.account.id,
-          asset: peer.account.asset,
-          disabled: updateOptions.disabled
+          asset: peer.account.asset
         },
         http: {
           outgoing: updateOptions.http.outgoing
@@ -229,7 +230,7 @@ describe('Peer Service', (): void => {
     test('Cannot update nonexistent peer', async (): Promise<void> => {
       const updateOptions: UpdateOptions = {
         id: uuid(),
-        disabled: true
+        maxPacketAmount: BigInt(2)
       }
 
       await expect(peerService.update(updateOptions)).resolves.toEqual(

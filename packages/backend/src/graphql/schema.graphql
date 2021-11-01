@@ -107,7 +107,6 @@ type PeerEdge {
 }
 
 input CreatePeerInput {
-  disabled: Boolean
   maxPacketAmount: UInt64
   http: HttpInput!
   asset: AssetInput!
@@ -116,7 +115,6 @@ input CreatePeerInput {
 
 input UpdatePeerInput {
   id: String!
-  disabled: Boolean
   maxPacketAmount: UInt64
   http: HttpInput
   staticIlpAddress: String
@@ -195,7 +193,6 @@ enum LiquidityError {
 
 type Peer {
   id: ID!
-  disabled: Boolean!
   maxPacketAmount: UInt64
   http: Http!
   asset: Asset!

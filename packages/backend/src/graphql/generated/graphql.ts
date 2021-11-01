@@ -114,7 +114,6 @@ export type CreatePaymentPointerMutationResponse = MutationResponse & {
 };
 
 export type CreatePeerInput = {
-  disabled?: Maybe<Scalars['Boolean']>;
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http: HttpInput;
   asset: AssetInput;
@@ -445,7 +444,6 @@ export enum PaymentType {
 export type Peer = {
   __typename?: 'Peer';
   id: Scalars['ID'];
-  disabled: Scalars['Boolean'];
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http: Http;
   asset: Asset;
@@ -514,7 +512,6 @@ export type TransferMutationResponse = MutationResponse & {
 
 export type UpdatePeerInput = {
   id: Scalars['String'];
-  disabled?: Maybe<Scalars['Boolean']>;
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   http?: Maybe<HttpInput>;
   staticIlpAddress?: Maybe<Scalars['String']>;
@@ -928,7 +925,6 @@ export type PaymentQuoteResolvers<ContextType = any, ParentType extends Resolver
 
 export type PeerResolvers<ContextType = any, ParentType extends ResolversParentTypes['Peer'] = ResolversParentTypes['Peer']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  disabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;

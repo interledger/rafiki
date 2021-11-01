@@ -33,7 +33,6 @@ describe('Peer Resolvers', (): void => {
 
   const randomPeer = (): CreatePeerInput => ({
     asset: randomAsset(),
-    disabled: false,
     http: {
       incoming: {
         authTokens: [Faker.datatype.string(32)]
@@ -87,7 +86,6 @@ describe('Peer Resolvers', (): void => {
                     code
                     scale
                   }
-                  disabled
                   maxPacketAmount
                   http {
                     outgoing {
@@ -120,7 +118,7 @@ describe('Peer Resolvers', (): void => {
       delete peer.http.incoming
       await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
         account: {
-          disabled: peer.disabled
+          asset: peer.asset
         },
         http: peer.http,
         maxPacketAmount: peer.maxPacketAmount,
@@ -223,7 +221,6 @@ describe('Peer Resolvers', (): void => {
                   code
                   scale
                 }
-                disabled
                 maxPacketAmount
                 http {
                   outgoing {
@@ -257,7 +254,6 @@ describe('Peer Resolvers', (): void => {
           code: peer.account.asset.code,
           scale: peer.account.asset.scale
         },
-        disabled: peer.account.disabled,
         http: {
           __typename: 'Http',
           outgoing: {
@@ -281,7 +277,6 @@ describe('Peer Resolvers', (): void => {
                   code
                   scale
                 }
-                disabled
               }
             }
           `,
@@ -330,7 +325,6 @@ describe('Peer Resolvers', (): void => {
                       code
                       scale
                     }
-                    disabled
                     maxPacketAmount
                     http {
                       outgoing {
@@ -368,7 +362,6 @@ describe('Peer Resolvers', (): void => {
             code: peer.account.asset.code,
             scale: peer.account.asset.scale
           },
-          disabled: peer.account.disabled,
           http: {
             __typename: 'Http',
             outgoing: {
@@ -595,7 +588,6 @@ describe('Peer Resolvers', (): void => {
     test('Can update a peer', async (): Promise<void> => {
       const updateOptions = {
         id: peer.id,
-        disabled: true,
         maxPacketAmount: '100',
         http: {
           incoming: {
@@ -619,7 +611,6 @@ describe('Peer Resolvers', (): void => {
                 message
                 peer {
                   id
-                  disabled
                   maxPacketAmount
                   http {
                     outgoing {
@@ -663,8 +654,7 @@ describe('Peer Resolvers', (): void => {
       await expect(peerService.get(peer.id)).resolves.toMatchObject({
         account: {
           id: peer.account.id,
-          asset: peer.account.asset,
-          disabled: updateOptions.disabled
+          asset: peer.account.asset
         },
         http: {
           outgoing: updateOptions.http.outgoing

@@ -1,15 +1,10 @@
 import assert from 'assert'
-import { raw, Transaction } from 'objection'
+import { NotFoundError, raw, Transaction } from 'objection'
 import { isValidIlpAddress } from 'ilp-packet'
 
-import { PeerError, isPeerError } from './errors'
+import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
-import {
-  AccountService,
-  CreateOptions as CreateAccountOptions,
-  UpdateOptions as UpdateAccountOptions
-} from '../account/service'
-import { isAccountError } from '../account/errors'
+import { AccountService } from '../account/service'
 import { AssetService, AssetOptions } from '../asset/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
@@ -32,12 +27,13 @@ export type Options = {
   staticIlpAddress: string
 }
 
-export type CreateOptions = Options &
-  Omit<CreateAccountOptions, 'assetId'> & {
-    asset: AssetOptions
-  }
+export type CreateOptions = Options & {
+  asset: AssetOptions
+}
 
-export type UpdateOptions = Partial<Options> & UpdateAccountOptions
+export type UpdateOptions = Partial<Options> & {
+  id: string
+}
 
 export interface PeerService {
   get(id: string): Promise<Peer | undefined>
@@ -105,8 +101,7 @@ async function createPeer(
       {
         assetId: (
           await deps.assetService.getOrCreate(options.asset as AssetOptions)
-        ).id,
-        disabled: options.disabled
+        ).id
       },
       peerTrx
     )
@@ -173,40 +168,15 @@ async function updatePeer(
           await trx.rollback(err)
         }
       }
-      const peer = await Peer.query(trx).findById(options.id).forUpdate()
-      if (!peer) {
-        return PeerError.UnknownPeer
-      }
-
-      const account = await deps.accountService.update(
-        {
-          id: peer.accountId,
-          disabled: options.disabled
-        },
-        trx
-      )
-      if (isAccountError(account)) {
-        throw new Error('unable to update peer account, err=' + account)
-      }
-      if (options.http) {
-        await peer.$query(trx).patch({ http: options.http })
-      }
-      if (options.maxPacketAmount) {
-        await peer
-          .$query(trx)
-          .patch({ maxPacketAmount: options.maxPacketAmount })
-      }
-      if (options.staticIlpAddress) {
-        await peer
-          .$query(trx)
-          .patch({ staticIlpAddress: options.staticIlpAddress })
-      }
-      return Peer.query(trx)
-        .findById(options.id)
-        .withGraphJoined('account.asset')
+      return await Peer.query(trx)
+        .patchAndFetchById(options.id, options)
+        .withGraphFetched('account.asset')
+        .throwIfNotFound()
     })
   } catch (err) {
-    if (isPeerError(err)) {
+    if (err instanceof NotFoundError) {
+      return PeerError.UnknownPeer
+    } else if (isPeerError(err)) {
       return err
     }
     throw err

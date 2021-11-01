@@ -16,7 +16,6 @@ export class PeerFactory {
   public async build(options: BuildOptions = {}): Promise<Peer> {
     const peerOptions: CreateOptions = {
       asset: options.asset || randomAsset(),
-      disabled: options.disabled || false,
       http: {
         outgoing: options.http?.outgoing || {
           authToken: Faker.datatype.string(32),
