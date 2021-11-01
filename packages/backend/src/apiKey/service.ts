@@ -5,12 +5,12 @@ import { uuid } from '../connector/core'
 import bcrypt from 'bcrypt'
 import { Transaction } from 'knex'
 import { SessionKey } from '../sessionKey/util'
-import { NoExistingApiKeyError, UnknownApiKeyError } from './errors'
+import { ApiKeyError } from './errors'
 
 export interface ApiKeyService {
   create(accountId: string, trx?: Transaction): Promise<NewApiKey>
   get(accountId: string): Promise<ApiKey[]>
-  redeem(accountId: string, key: string): Promise<SessionKey>
+  redeem(accountId: string, key: string): Promise<SessionKey | ApiKeyError>
   deleteAll(accountId: string, trx?: Transaction): Promise<void>
 }
 
@@ -77,20 +77,17 @@ async function redeemSessionKey(
   deps: ServiceDependencies,
   accountId: string,
   key: string
-): Promise<SessionKey> {
+): Promise<SessionKey | ApiKeyError> {
   const keys = await ApiKey.query()
     .select('hashedKey')
     .where('accountId', accountId)
-  if (keys && !keys.length) {
-    throw new NoExistingApiKeyError(accountId)
-  } else {
+  if (keys && keys.length) {
     const match = await bcrypt.compare(key, keys[0].hashedKey)
     if (match) {
       return deps.sessionKeyService.create()
-    } else {
-      throw new UnknownApiKeyError(accountId)
     }
   }
+  return ApiKeyError.UnknownApiKey
 }
 
 async function deleteAllApiKeys(
