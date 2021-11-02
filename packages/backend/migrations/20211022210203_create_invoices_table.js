@@ -12,7 +12,7 @@ exports.up = function (knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
-    table.index(['accountId', 'createdAt', 'id'])
+    table.index(['paymentPointerId', 'createdAt', 'id'])
   })
 }
 

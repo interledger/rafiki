@@ -1,13 +1,4 @@
 import { Resolvers } from '../generated/graphql'
-import {
-  getAccount,
-  getAccounts,
-  getAccountsConnectionPageInfo,
-  getBalance,
-  createAccount,
-  updateAccount,
-  deleteAccount
-} from './account'
 import { getPaymentPointerInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
@@ -21,6 +12,14 @@ import {
 } from './outgoing_payment'
 import { getPaymentPointer, createPaymentPointer } from './payment_pointer'
 import {
+  getPeer,
+  getPeers,
+  getPeersConnectionPageInfo,
+  createPeer,
+  updatePeer,
+  deletePeer
+} from './peer'
+import {
   addAccountLiquidity,
   addAssetLiquidity,
   createAccountLiquidityWithdrawal,
@@ -33,18 +32,10 @@ import { GraphQLBigInt } from '../scalars'
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
   Query: {
-    account: getAccount,
-    accounts: getAccounts,
     outgoingPayment: getOutgoingPayment,
-    paymentPointer: getPaymentPointer
-    // webhook: getWebhook
-  },
-  Account: {
-    balance: getBalance
-    // webhooks: getWebhooks,
-  },
-  AccountsConnection: {
-    pageInfo: getAccountsConnectionPageInfo
+    paymentPointer: getPaymentPointer,
+    peer: getPeer,
+    peers: getPeers
   },
   InvoiceConnection: {
     pageInfo: getPageInfo
@@ -59,21 +50,18 @@ export const resolvers: Resolvers = {
     invoices: getPaymentPointerInvoices,
     outgoingPayments: getPaymentPointerOutgoingPayments
   },
-  WebhooksConnection: {
-    // pageInfo: getWebhooksConnectionPageInfo
+  PeersConnection: {
+    pageInfo: getPeersConnectionPageInfo
   },
   Mutation: {
-    createAccount: createAccount,
-    updateAccount: updateAccount,
-    deleteAccount: deleteAccount,
     createOutgoingPayment,
     approveOutgoingPayment,
     requoteOutgoingPayment,
     cancelOutgoingPayment,
     createPaymentPointer,
-    // createWebhook: createWebhook,
-    // updateWebhook: updateWebhook,
-    // deleteWebhook: deleteWebhook,
+    createPeer: createPeer,
+    updatePeer: updatePeer,
+    deletePeer: deletePeer,
     addAccountLiquidity: addAccountLiquidity,
     addAssetLiquidity: addAssetLiquidity,
     createAccountLiquidityWithdrawal: createAccountLiquidityWithdrawal,

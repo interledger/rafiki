@@ -65,7 +65,7 @@ describe('ILDCP Middleware', function () {
     expect(next).toHaveBeenCalledTimes(1)
   })
 
-  test.skip('returns an ildcp response if incoming account is not a peer', async () => {
+  test('returns an ildcp response if incoming account is not a peer', async () => {
     const bob = await services.accounts.create(
       AccountFactory.build({ id: 'bob' })
     )

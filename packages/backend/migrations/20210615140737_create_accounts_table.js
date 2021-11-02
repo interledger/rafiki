@@ -12,15 +12,6 @@ exports.up = function (knex) {
     // TigerBeetle account id tracking amount sent
     table.uuid('sentBalanceId').nullable()
 
-    table.bigInteger('maxPacketAmount').nullable()
-
-    table.string('outgoingToken').nullable()
-    table.string('outgoingEndpoint').nullable()
-
-    table.boolean('streamEnabled').notNullable().defaultTo(false)
-
-    table.string('staticIlpAddress').nullable()
-
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
   })

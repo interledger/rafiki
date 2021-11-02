@@ -3,26 +3,19 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
+import { AccountService, CreateOptions } from './service'
 import {
-  Account,
-  AccountService,
-  CreateOptions,
-  UpdateOptions
-} from './service'
-import {
-  AccountError,
-  isAccountError,
   AccountTransferError,
-  isAccountTransferError
+  isAccountTransferError,
+  UnknownAssetError
 } from './errors'
 import { AssetService } from '../asset/service'
 import { BalanceService } from '../balance/service'
 import { LiquidityService } from '../liquidity/service'
-import { Pagination } from '../shared/pagination'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { GraphileProducer } from '../messaging/graphileProducer'
-import { Config, IAppConfig } from '../config/app'
+import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -40,7 +33,6 @@ describe('Account Service', (): void => {
   let assetService: AssetService
   let balanceService: BalanceService
   let liquidityService: LiquidityService
-  let config: IAppConfig
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -48,15 +40,7 @@ describe('Account Service', (): void => {
 
   beforeAll(
     async (): Promise<void> => {
-      config = Config
-      config.ilpAddress = 'test.rafiki'
-      config.peerAddresses = [
-        {
-          accountId: uuid(),
-          ilpAddress: 'test.alice'
-        }
-      ]
-      deps = await initIocContainer(config)
+      deps = await initIocContainer(Config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
       workerUtils = await makeWorkerUtils({
@@ -71,12 +55,15 @@ describe('Account Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       accountService = await deps.use('accountService')
-      const transferService = await deps.use('transferService')
-      accountFactory = new AccountFactory(accountService, transferService)
       assetService = await deps.use('assetService')
+      const transferService = await deps.use('transferService')
+      accountFactory = new AccountFactory(
+        accountService,
+        assetService,
+        transferService
+      )
       balanceService = await deps.use('balanceService')
       liquidityService = await deps.use('liquidityService')
-      config = await deps.use('config')
     }
   )
 
@@ -96,253 +83,62 @@ describe('Account Service', (): void => {
 
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {
-      const account: CreateOptions = {
-        asset: randomAsset()
+      const options: CreateOptions = {
+        assetId: (await assetService.getOrCreate(randomAsset())).id
       }
-      const accountOrError = await accountService.create(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      if (isAccountError(accountOrError)) {
-        fail()
-      }
+      const account = await accountService.create(options)
       const expectedAccount = {
-        ...account,
-        id: accountOrError.id,
-        disabled: false,
-        stream: {
-          enabled: false
-        }
+        ...options,
+        id: account.id,
+        disabled: false
       }
-      expect(accountOrError).toMatchObject(expectedAccount)
-      await expect(accountService.get(accountOrError.id)).resolves.toEqual(
-        accountOrError
-      )
-      await expect(
-        balanceService.get(accountOrError.balanceId)
-      ).resolves.toEqual({
-        id: accountOrError.balanceId,
+      expect(account).toMatchObject(expectedAccount)
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
+      await expect(balanceService.get(account.balanceId)).resolves.toEqual({
+        id: account.balanceId,
         balance: BigInt(0),
-        unit: accountOrError.asset.unit,
+        unit: account.asset.unit,
         debitBalance: false
       })
     })
 
     test('Can create an account with all settings', async (): Promise<void> => {
-      const id = uuid()
-      const account: CreateOptions = {
-        id,
+      const options: CreateOptions = {
         disabled: false,
-        asset: randomAsset(),
-        maxPacketAmount: BigInt(100),
-        http: {
-          incoming: {
-            authTokens: [uuid()]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        },
-        stream: {
-          enabled: true
-        },
-        routing: {
-          staticIlpAddress: 'g.rafiki.' + id
-        }
+        assetId: (await assetService.getOrCreate(randomAsset())).id
       }
-      assert.ok(account.http)
-      const accountOrError = await accountService.create(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      if (isAccountError(accountOrError)) {
-        fail()
-      }
-      expect(accountOrError).toMatchObject({
-        ...account,
-        http: {
-          outgoing: account.http.outgoing
-        }
-      })
-      await expect(accountService.get(id)).resolves.toEqual(accountOrError)
-      await expect(
-        balanceService.get(accountOrError.balanceId)
-      ).resolves.toEqual({
-        id: accountOrError.balanceId,
+      const account = await accountService.create(options)
+      expect(account).toMatchObject(options)
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
+      await expect(balanceService.get(account.balanceId)).resolves.toEqual({
+        id: account.balanceId,
         balance: BigInt(0),
-        unit: accountOrError.asset.unit,
-        debitBalance: false
-      })
-    })
-
-    test('Can create an account with asset id', async (): Promise<void> => {
-      const { id: assetId } = await assetService.getOrCreate(randomAsset())
-      const account: CreateOptions = {
-        assetId
-      }
-      const accountOrError = await accountService.create(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      if (isAccountError(accountOrError)) {
-        fail()
-      }
-      const expectedAccount = {
-        ...account,
-        id: accountOrError.id,
-        disabled: false,
-        stream: {
-          enabled: false
-        }
-      }
-      expect(accountOrError).toMatchObject(expectedAccount)
-      await expect(accountService.get(accountOrError.id)).resolves.toEqual(
-        accountOrError
-      )
-      await expect(
-        balanceService.get(accountOrError.balanceId)
-      ).resolves.toEqual({
-        id: accountOrError.balanceId,
-        balance: BigInt(0),
-        unit: accountOrError.asset.unit,
+        unit: account.asset.unit,
         debitBalance: false
       })
     })
 
     test('Cannot create an account with unknown asset id', async (): Promise<void> => {
-      await expect(accountService.create({ assetId: uuid() })).resolves.toEqual(
-        AccountError.UnknownAsset
+      const assetId = uuid()
+      await expect(accountService.create({ assetId })).rejects.toThrowError(
+        new UnknownAssetError(assetId)
       )
     })
 
     test('Can create an account with total sent balance', async (): Promise<void> => {
       const { id: assetId } = await assetService.getOrCreate(randomAsset())
-      const account: CreateOptions = {
+      const options: CreateOptions = {
         assetId,
         sentBalance: true
       }
-      const accountOrError = await accountService.create(account)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      if (isAccountError(accountOrError)) {
-        fail()
-      }
-      assert.ok(accountOrError.sentBalanceId)
-      await expect(
-        balanceService.get(accountOrError.sentBalanceId)
-      ).resolves.toEqual({
-        id: accountOrError.sentBalanceId,
+      const account = await accountService.create(options)
+      assert.ok(account.sentBalanceId)
+      await expect(balanceService.get(account.sentBalanceId)).resolves.toEqual({
+        id: account.sentBalanceId,
         balance: BigInt(0),
-        unit: accountOrError.asset.unit,
+        unit: account.asset.unit,
         debitBalance: false
       })
-    })
-
-    test('Cannot create an account with duplicate id', async (): Promise<void> => {
-      const account = await accountFactory.build()
-      await expect(
-        accountService.create({
-          id: account.id,
-          asset: randomAsset()
-        })
-      ).resolves.toEqual(AccountError.DuplicateAccountId)
-      const retrievedAccount = await accountService.get(account.id)
-      expect(retrievedAccount).toEqual(account)
-    })
-
-    test('Cannot create an account with duplicate incoming tokens', async (): Promise<void> => {
-      const id = uuid()
-      const incomingToken = uuid()
-      const account = {
-        id,
-        asset: randomAsset(),
-        http: {
-          incoming: {
-            authTokens: [incomingToken, incomingToken]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        }
-      }
-
-      await expect(accountService.create(account)).resolves.toEqual(
-        AccountError.DuplicateIncomingToken
-      )
-
-      await expect(accountService.get(id)).resolves.toBeUndefined()
-    })
-
-    test('Cannot create an account with duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = uuid()
-      {
-        const account = {
-          id: uuid(),
-          asset: randomAsset(),
-          http: {
-            incoming: {
-              authTokens: [incomingToken]
-            },
-            outgoing: {
-              authToken: uuid(),
-              endpoint: '/outgoingEndpoint'
-            }
-          }
-        }
-        await accountService.create(account)
-      }
-      {
-        const id = uuid()
-        const account = {
-          id,
-          asset: randomAsset(),
-          http: {
-            incoming: {
-              authTokens: [incomingToken]
-            },
-            outgoing: {
-              authToken: uuid(),
-              endpoint: '/outgoingEndpoint'
-            }
-          }
-        }
-        await expect(accountService.create(account)).resolves.toEqual(
-          AccountError.DuplicateIncomingToken
-        )
-        await expect(accountService.get(id)).resolves.toBeUndefined()
-      }
-    })
-
-    test('Cannot create an account with invalid static ILP address', async (): Promise<void> => {
-      await expect(
-        accountService.create({
-          id: uuid(),
-          asset: randomAsset(),
-          routing: {
-            staticIlpAddress: 'test.hello!'
-          }
-        })
-      ).resolves.toEqual(AccountError.InvalidStaticIlpAddress)
-    })
-
-    test('Auto-creates corresponding asset with liquidity and settlement accounts', async (): Promise<void> => {
-      const asset = randomAsset()
-      const account: CreateOptions = {
-        asset
-      }
-
-      await expect(assetService.get(asset)).resolves.toBeUndefined()
-      await expect(
-        assetService.getLiquidityBalance(asset)
-      ).resolves.toBeUndefined()
-      await expect(
-        assetService.getSettlementBalance(asset)
-      ).resolves.toBeUndefined()
-
-      await accountService.create(account)
-
-      await expect(assetService.get(asset)).resolves.toBeDefined()
-      await expect(assetService.getLiquidityBalance(asset)).resolves.toEqual(
-        BigInt(0)
-      )
-      await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
-        BigInt(0)
-      )
     })
   })
 
@@ -354,276 +150,6 @@ describe('Account Service', (): void => {
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(accountService.get(uuid())).resolves.toBeUndefined()
-    })
-  })
-
-  describe('Account pagination', (): void => {
-    let accountsCreated: Account[]
-
-    beforeEach(
-      async (): Promise<void> => {
-        accountsCreated = []
-        const asset = randomAsset()
-        for (let i = 0; i < 40; i++) {
-          accountsCreated.push(await accountFactory.build({ asset }))
-        }
-      }
-    )
-
-    test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const accounts = await accountService.getPage()
-      expect(accounts).toHaveLength(20)
-      expect(accounts[0].id).toEqual(accountsCreated[0].id)
-      expect(accounts[19].id).toEqual(accountsCreated[19].id)
-      expect(accounts[20]).toBeUndefined()
-    })
-
-    test('Can change forward pagination limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 10
-      }
-      const accounts = await accountService.getPage(pagination)
-      expect(accounts).toHaveLength(10)
-      expect(accounts[0].id).toEqual(accountsCreated[0].id)
-      expect(accounts[9].id).toEqual(accountsCreated[9].id)
-      expect(accounts[10]).toBeUndefined()
-    }, 10_000)
-
-    test('Can paginate forwards from a cursor', async (): Promise<void> => {
-      const pagination: Pagination = {
-        after: accountsCreated[19].id
-      }
-      const accounts = await accountService.getPage(pagination)
-      expect(accounts).toHaveLength(20)
-      expect(accounts[0].id).toEqual(accountsCreated[20].id)
-      expect(accounts[19].id).toEqual(accountsCreated[39].id)
-      expect(accounts[20]).toBeUndefined()
-    })
-
-    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 10,
-        after: accountsCreated[9].id
-      }
-      const accounts = await accountService.getPage(pagination)
-      expect(accounts).toHaveLength(10)
-      expect(accounts[0].id).toEqual(accountsCreated[10].id)
-      expect(accounts[9].id).toEqual(accountsCreated[19].id)
-      expect(accounts[10]).toBeUndefined()
-    })
-
-    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
-      const pagination: Pagination = {
-        last: 10
-      }
-      const accounts = accountService.getPage(pagination)
-      await expect(accounts).rejects.toThrow(
-        "Can't paginate backwards from the start."
-      )
-    })
-
-    test('Can paginate backwards from a cursor', async (): Promise<void> => {
-      const pagination: Pagination = {
-        before: accountsCreated[20].id
-      }
-      const accounts = await accountService.getPage(pagination)
-      expect(accounts).toHaveLength(20)
-      expect(accounts[0].id).toEqual(accountsCreated[0].id)
-      expect(accounts[19].id).toEqual(accountsCreated[19].id)
-      expect(accounts[20]).toBeUndefined()
-    })
-
-    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        last: 5,
-        before: accountsCreated[10].id
-      }
-      const accounts = await accountService.getPage(pagination)
-      expect(accounts).toHaveLength(5)
-      expect(accounts[0].id).toEqual(accountsCreated[5].id)
-      expect(accounts[4].id).toEqual(accountsCreated[9].id)
-      expect(accounts[5]).toBeUndefined()
-    })
-
-    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
-      const paginationForwards = {
-        first: 10
-      }
-      const accountsForwards = await accountService.getPage(paginationForwards)
-      const paginationBackwards = {
-        last: 10,
-        before: accountsCreated[10].id
-      }
-      const accountsBackwards = await accountService.getPage(
-        paginationBackwards
-      )
-      expect(accountsForwards).toHaveLength(10)
-      expect(accountsBackwards).toHaveLength(10)
-      expect(accountsForwards).toEqual(accountsBackwards)
-    })
-
-    test('Providing before and after results in forward pagination', async (): Promise<void> => {
-      const pagination: Pagination = {
-        after: accountsCreated[19].id,
-        before: accountsCreated[19].id
-      }
-      const accounts = await accountService.getPage(pagination)
-      expect(accounts).toHaveLength(20)
-      expect(accounts[0].id).toEqual(accountsCreated[20].id)
-      expect(accounts[19].id).toEqual(accountsCreated[39].id)
-      expect(accounts[20]).toBeUndefined()
-    })
-
-    test("Can't request less than 0 accounts", async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: -1
-      }
-      const accounts = accountService.getPage(pagination)
-      await expect(accounts).rejects.toThrow('Pagination index error')
-    })
-
-    test("Can't request more than 100 accounts", async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 101
-      }
-      const accounts = accountService.getPage(pagination)
-      await expect(accounts).rejects.toThrow('Pagination index error')
-    })
-  })
-
-  describe('Update Account', (): void => {
-    test('Can update an account', async (): Promise<void> => {
-      const { id, asset } = await accountFactory.build({
-        disabled: false,
-        http: {
-          incoming: {
-            authTokens: [uuid()]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        },
-        stream: {
-          enabled: true
-        }
-      })
-      const updateOptions: UpdateOptions = {
-        id,
-        disabled: true,
-        maxPacketAmount: BigInt(200),
-        http: {
-          incoming: {
-            authTokens: [uuid()]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoing'
-          }
-        },
-        stream: {
-          enabled: false
-        },
-        routing: {
-          staticIlpAddress: 'g.rafiki.' + id
-        }
-      }
-      assert.ok(updateOptions.http)
-      const accountOrError = await accountService.update(updateOptions)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      delete updateOptions.http.incoming
-      const expectedAccount = {
-        ...updateOptions,
-        asset
-      }
-      expect(accountOrError as Account).toMatchObject(expectedAccount)
-      await expect(accountService.get(id)).resolves.toEqual(accountOrError)
-    })
-
-    test('Cannot update nonexistent account', async (): Promise<void> => {
-      const updateOptions: UpdateOptions = {
-        id: uuid(),
-        disabled: true
-      }
-
-      await expect(accountService.update(updateOptions)).resolves.toEqual(
-        AccountError.UnknownAccount
-      )
-    })
-
-    test('Returns error for duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = uuid()
-      await accountFactory.build({
-        http: {
-          incoming: {
-            authTokens: [incomingToken]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        }
-      })
-
-      const account = await accountFactory.build()
-      const updateOptions: UpdateOptions = {
-        id: account.id,
-        disabled: true,
-        maxPacketAmount: BigInt(200),
-        http: {
-          incoming: {
-            authTokens: [incomingToken]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoing'
-          }
-        }
-      }
-      await expect(accountService.update(updateOptions)).resolves.toEqual(
-        AccountError.DuplicateIncomingToken
-      )
-      await expect(accountService.get(account.id)).resolves.toEqual(account)
-    })
-
-    test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
-      const incomingToken = uuid()
-
-      const account = await accountFactory.build()
-      const updateOptions: UpdateOptions = {
-        id: account.id,
-        disabled: true,
-        maxPacketAmount: BigInt(200),
-        http: {
-          incoming: {
-            authTokens: [incomingToken, incomingToken]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoing'
-          }
-        }
-      }
-      await expect(accountService.update(updateOptions)).resolves.toEqual(
-        AccountError.DuplicateIncomingToken
-      )
-      await expect(accountService.get(account.id)).resolves.toEqual(account)
-    })
-
-    test('Returns error for invalid static ILP address', async (): Promise<void> => {
-      const account = await accountFactory.build()
-      const updateOptions: UpdateOptions = {
-        id: account.id,
-        disabled: true,
-        maxPacketAmount: BigInt(200),
-        routing: {
-          staticIlpAddress: 'test.hello!'
-        }
-      }
-      await expect(accountService.update(updateOptions)).resolves.toEqual(
-        AccountError.InvalidStaticIlpAddress
-      )
-      await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
   })
 
@@ -651,159 +177,6 @@ describe('Account Service', (): void => {
     test('Returns undefined for account with no total sent balance', async (): Promise<void> => {
       const { id } = await accountFactory.build()
       await expect(accountService.getTotalSent(id)).resolves.toBeUndefined()
-    })
-  })
-
-  describe('Account Tokens', (): void => {
-    test('Can retrieve account by incoming token', async (): Promise<void> => {
-      const incomingToken = uuid()
-      const { id } = await accountFactory.build({
-        http: {
-          incoming: {
-            authTokens: [incomingToken, uuid()]
-          },
-          outgoing: {
-            authToken: uuid(),
-            endpoint: '/outgoingEndpoint'
-          }
-        }
-      })
-      const account = await accountService.getByToken(incomingToken)
-      expect(account?.id).toEqual(id)
-    })
-
-    test('Returns undefined if no account exists with token', async (): Promise<void> => {
-      const account = await accountService.getByToken(uuid())
-      expect(account).toBeUndefined()
-    })
-  })
-
-  describe('Get Account By ILP Address', (): void => {
-    test('Can retrieve account by ILP address', async (): Promise<void> => {
-      const ilpAddress = 'test.rafiki'
-      const { id } = await accountFactory.build({
-        routing: {
-          staticIlpAddress: ilpAddress
-        }
-      })
-      {
-        const account = await accountService.getByDestinationAddress(ilpAddress)
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + '.suffix'
-        )
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + 'suffix'
-        )
-        expect(account).toBeUndefined()
-      }
-    })
-
-    test('Can retrieve account by configured peer ILP address', async (): Promise<void> => {
-      const { ilpAddress, accountId: id } = config.peerAddresses[0]
-      await accountFactory.build({
-        id
-      })
-      {
-        const account = await accountService.getByDestinationAddress(ilpAddress)
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + '.suffix'
-        )
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + 'suffix'
-        )
-        expect(account).toBeUndefined()
-      }
-    })
-
-    test('Can retrieve account by server ILP address', async (): Promise<void> => {
-      const { id } = await accountFactory.build()
-      const ilpAddress = config.ilpAddress + '.' + id
-      {
-        const account = await accountService.getByDestinationAddress(ilpAddress)
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + '.suffix'
-        )
-        expect(account?.id).toEqual(id)
-      }
-      {
-        const account = await accountService.getByDestinationAddress(
-          ilpAddress + 'suffix'
-        )
-        expect(account).toBeUndefined()
-      }
-    })
-
-    test('Returns undefined if no account exists with address', async (): Promise<void> => {
-      await accountFactory.build({
-        routing: {
-          staticIlpAddress: 'test.rafiki'
-        }
-      })
-      const account = await accountService.getByDestinationAddress('test.nope')
-      expect(account).toBeUndefined()
-    })
-
-    test('Properly escapes Postgres pattern "_" wildcards in the static address', async (): Promise<void> => {
-      await accountFactory.build({
-        routing: {
-          staticIlpAddress: 'test.rafiki_with_wildcards'
-        }
-      })
-      const account = await accountService.getByDestinationAddress(
-        'test.rafiki-with-wildcards'
-      )
-      expect(account).toBeUndefined()
-    })
-  })
-
-  describe('Get Account Address', (): void => {
-    test("Can get account's ILP address", async (): Promise<void> => {
-      const ilpAddress = 'test.rafiki'
-      const { id } = await accountFactory.build({
-        routing: {
-          staticIlpAddress: ilpAddress
-        }
-      })
-      {
-        const staticIlpAddress = await accountService.getAddress(id)
-        expect(staticIlpAddress).toEqual(ilpAddress)
-      }
-    })
-
-    test("Can get account's configured peer ILP address", async (): Promise<void> => {
-      const { ilpAddress, accountId: id } = config.peerAddresses[0]
-      await accountFactory.build({ id })
-      {
-        const peerAddress = await accountService.getAddress(id)
-        expect(peerAddress).toEqual(ilpAddress)
-      }
-    })
-
-    test("Can get account's address by server ILP address", async (): Promise<void> => {
-      const { id } = await accountFactory.build()
-      {
-        const ilpAddress = await accountService.getAddress(id)
-        expect(ilpAddress).toEqual(config.ilpAddress + '.' + id)
-      }
-    })
-
-    test('Returns undefined for nonexistent account', async (): Promise<void> => {
-      await expect(accountService.getAddress(uuid())).resolves.toBeUndefined()
     })
   })
 

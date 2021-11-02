@@ -38,7 +38,7 @@ describe('Token Auth Middleware', function () {
     })
 
     test('succeeds for valid token and binds data to context', async () => {
-      const accounts = new MockAccountsService('test.rafiki')
+      const accounts = new MockAccountsService()
       const ctx = createContext<unknown, HttpContext>({
         req: {
           headers: {
@@ -50,9 +50,6 @@ describe('Token Auth Middleware', function () {
       })
       const account = PeerAccountFactory.build({
         id: 'alice',
-        stream: {
-          enabled: true
-        },
         http: {
           incoming: {
             authTokens: ['asd123']
@@ -66,7 +63,7 @@ describe('Token Auth Middleware', function () {
       await accounts.create(account)
 
       await createTokenAuthMiddleware()(ctx, async () => {})
-      expect(ctx.state.account).toBe(account)
+      expect(ctx.state.incomingAccount).toStrictEqual(account)
     })
   })
 })

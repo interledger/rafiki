@@ -10,7 +10,7 @@ export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
     next: () => Promise<void>
   ): Promise<void> {
     const {
-      services: { accounts, logger },
+      services: { logger },
       request,
       response,
       accounts: { incoming }
@@ -20,7 +20,7 @@ export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
       return
     }
 
-    const clientAddress = await accounts.getAddress(incoming.id)
+    const clientAddress = incoming.staticIlpAddress
     if (!clientAddress) {
       logger.warn(
         {
@@ -28,7 +28,7 @@ export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
         },
         'received ILDCP request for peer without an address'
       )
-      ctx.throw(500, 'ILDCP request from peer without configured address')
+      ctx.throw(500, 'not a peer account')
     }
 
     // TODO: Ensure we get at least length > 0

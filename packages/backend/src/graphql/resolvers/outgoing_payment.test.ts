@@ -20,7 +20,7 @@ import {
   PaymentState
 } from '../../outgoing_payment/model'
 import { AccountService } from '../../account/service'
-import { AssetOptions } from '../../asset/service'
+import { AssetOptions, AssetService } from '../../asset/service'
 import { PaymentPointerService } from '../../payment_pointer/service'
 import {
   OutgoingPayment,
@@ -35,6 +35,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let accountService: AccountService
+  let assetService: AssetService
   let outgoingPaymentService: OutgoingPaymentService
   let paymentPointerService: PaymentPointerService
 
@@ -52,6 +53,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       accountService = await deps.use('accountService')
+      assetService = await deps.use('assetService')
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       paymentPointerService = await deps.use('paymentPointerService')
 
@@ -88,7 +90,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         asset
       })
       accountService = await deps.use('accountService')
-      const accountFactory = new AccountFactory(accountService)
+      const accountFactory = new AccountFactory(accountService, assetService)
       const account = await accountFactory.build({ asset })
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
@@ -579,7 +581,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     let paymentPointerId: string
     beforeAll(
       async (): Promise<void> => {
-        const accountFactory = new AccountFactory(accountService)
+        const accountFactory = new AccountFactory(accountService, assetService)
         paymentPointerId = (await paymentPointerService.create({ asset })).id
         outgoingPayments = []
         for (let i = 0; i < 50; i++) {

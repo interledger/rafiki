@@ -18,6 +18,7 @@ import { createHttpTokenService } from './httpToken/service'
 import { createBalanceService } from './balance/service'
 import { createAssetService } from './asset/service'
 import { createAccountService } from './account/service'
+import { createPeerService } from './peer/service'
 import { createPaymentPointerService } from './payment_pointer/service'
 import { createLiquidityService } from './liquidity/service'
 import { createSPSPService } from './spsp/service'
@@ -147,28 +148,31 @@ export function initIocContainer(
     })
   })
   container.singleton('accountService', async (deps) => {
-    const config = await deps.use('config')
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
-    const assetService = await deps.use('assetService')
     const balanceService = await deps.use('balanceService')
     const transferService = await deps.use('transferService')
-    const httpTokenService = await deps.use('httpTokenService')
     return await createAccountService({
       logger: logger,
       knex: knex,
-      assetService,
       balanceService,
-      httpTokenService,
-      transferService,
-      ilpAddress: config.ilpAddress,
-      peerAddresses: config.peerAddresses
+      transferService
+    })
+  })
+  container.singleton('peerService', async (deps) => {
+    return await createPeerService({
+      knex: await deps.use('knex'),
+      logger: await deps.use('logger'),
+      accountService: await deps.use('accountService'),
+      assetService: await deps.use('assetService'),
+      httpTokenService: await deps.use('httpTokenService')
     })
   })
   container.singleton('paymentPointerService', async (deps) => {
     const logger = await deps.use('logger')
     const assetService = await deps.use('assetService')
     return await createPaymentPointerService({
+      knex: await deps.use('knex'),
       logger: logger,
       assetService: assetService
     })
@@ -250,8 +254,7 @@ export function initIocContainer(
       balanceService: await deps.use('balanceService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       paymentPointerService: await deps.use('paymentPointerService'),
-      ratesService: await deps.use('ratesService'),
-      transferService: await deps.use('transferService')
+      ratesService: await deps.use('ratesService')
     })
   })
 
@@ -261,6 +264,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountService: await deps.use('accountService'),
+      peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress

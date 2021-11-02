@@ -1,8 +1,12 @@
 type Query {
-  account(id: String!): Account
+  outgoingPayment(id: String!): OutgoingPayment
 
-  "Fetch a page of accounts."
-  accounts(
+  paymentPointer(id: String!): PaymentPointer
+
+  peer(id: String!): Peer
+
+  "Fetch a page of peers."
+  peers(
     "Paginating forwards: the cursor before the the requested page."
     after: String
     "Paginating backwards: the cursor after the the requested page."
@@ -11,26 +15,10 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
-  ): AccountsConnection!
-
-  outgoingPayment(id: String!): OutgoingPayment
-
-  paymentPointer(id: String!): PaymentPointer
-
-  "Get a webhook by ID."
-  webhook("The ID of the webhook to get." id: String!): Webhook!
+  ): PeersConnection!
 }
 
 type Mutation {
-  "Create account"
-  createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
-
-  "Update account"
-  updateAccount(input: UpdateAccountInput!): UpdateAccountMutationResponse!
-
-  "Delete account"
-  deleteAccount(id: String!): DeleteAccountMutationResponse!
-
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
@@ -45,6 +33,15 @@ type Mutation {
     input: CreatePaymentPointerInput
   ): CreatePaymentPointerMutationResponse!
 
+  "Create peer"
+  createPeer(input: CreatePeerInput!): CreatePeerMutationResponse!
+
+  "Update peer"
+  updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
+
+  "Delete peer"
+  deletePeer(id: String!): DeletePeerMutationResponse!
+
   "Transfer between accounts"
   transfer(
     sourceAmount: UInt64!
@@ -54,24 +51,6 @@ type Mutation {
     autoCommit: Boolean
     idempotencyKey: ID!
   ): TransferMutationResponse
-
-  "Create webhook"
-  createWebhook(
-    "The id of the account to create the webhook for."
-    ilpAccountId: String!
-  ): CreateWebhookMutationResponse
-
-  "Update webhook"
-  updateWebhook(
-    "The id of the webhook to update."
-    webhookId: ID!
-  ): UpdateWebhookMutationResponse
-
-  "Delete webhook"
-  deleteWebhook(
-    "The id of the webhook to delete."
-    webhookId: ID!
-  ): DeleteWebhookMutationResponse
 
   "Add account liquidity"
   addAccountLiquidity(
@@ -117,37 +96,32 @@ type PageInfo {
   startCursor: String
 }
 
-type AccountsConnection {
+type PeersConnection {
   pageInfo: PageInfo!
-  edges: [AccountEdge!]!
+  edges: [PeerEdge!]!
 }
 
-type AccountEdge {
-  node: Account!
+type PeerEdge {
+  node: Peer!
   cursor: String!
 }
 
-input CreateAccountInput {
-  id: String
-  disabled: Boolean
+input CreatePeerInput {
   maxPacketAmount: UInt64
-  http: HttpInput
+  http: HttpInput!
   asset: AssetInput!
-  stream: StreamInput
-  routing: RoutingInput
+  staticIlpAddress: String!
 }
 
-input UpdateAccountInput {
+input UpdatePeerInput {
   id: String!
-  disabled: Boolean
   maxPacketAmount: UInt64
   http: HttpInput
-  stream: StreamInput
-  routing: RoutingInput
+  staticIlpAddress: String
 }
 
 input HttpInput {
-  incoming: HttpIncomingInput!
+  incoming: HttpIncomingInput
   outgoing: HttpOutgoingInput!
 }
 
@@ -163,14 +137,6 @@ input HttpOutgoingInput {
 input AssetInput {
   code: String!
   scale: Int!
-}
-
-input StreamInput {
-  enabled: Boolean!
-}
-
-input RoutingInput {
-  staticIlpAddress: String!
 }
 
 input AddAccountLiquidityInput {
@@ -225,26 +191,12 @@ enum LiquidityError {
   UnknownWithdrawal
 }
 
-type Account {
+type Peer {
   id: ID!
-  disabled: Boolean!
   maxPacketAmount: UInt64
-  http: Http
+  http: Http!
   asset: Asset!
-  stream: Stream!
-  routing: Routing
-
-  balance: UInt64
-  webhooks(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): WebhooksConnection
+  staticIlpAddress: String!
 }
 
 type Http {
@@ -254,16 +206,6 @@ type Http {
 type HttpOutgoing {
   authToken: String!
   endpoint: String!
-}
-
-type Stream {
-  enabled: Boolean!
-}
-
-type Routing {
-  staticIlpAddress: String!
-  inheritFromRemote: Boolean
-  dynamicIlpAddress: String
 }
 
 type PaymentPointer {
@@ -400,40 +342,6 @@ input CreatePaymentPointerInput {
   asset: AssetInput!
 }
 
-type WebhooksConnection {
-  pageInfo: PageInfo!
-  edges: [WebhookEdge!]!
-}
-
-type WebhookEdge {
-  node: Webhook!
-  cursor: String!
-}
-
-type Webhook {
-  id: ID!
-}
-
-type CreateAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  account: Account
-}
-
-type UpdateAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  account: Account
-}
-
-type DeleteAccountMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-}
-
 type CreatePaymentPointerMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -441,27 +349,27 @@ type CreatePaymentPointerMutationResponse implements MutationResponse {
   paymentPointer: PaymentPointer!
 }
 
+type CreatePeerMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  peer: Peer
+}
+
+type UpdatePeerMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  peer: Peer
+}
+
+type DeletePeerMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
 type TransferMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-}
-
-type CreateWebhookMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  webhook: Webhook!
-}
-
-type UpdateWebhookMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  webhook: Webhook!
-}
-
-type DeleteWebhookMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!

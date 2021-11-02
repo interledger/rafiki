@@ -41,7 +41,7 @@ export function createILPContext<StateT = any>(
     request: {},
     response: {},
     state: {},
-    throw: (msg: string): never => {
+    throw: (code: number, msg: string): never => {
       throw new Errors.BadRequestError(msg)
     },
     ...options

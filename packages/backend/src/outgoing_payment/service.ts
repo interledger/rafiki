@@ -3,11 +3,9 @@ import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { AccountService } from '../account/service'
-import { isAccountError } from '../account/errors'
 import { BalanceService } from '../balance/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { RatesService } from '../rates/service'
-import { TransferService } from '../transfer/service'
 import { IlpPlugin } from './ilp_plugin'
 import * as lifecycle from './lifecycle'
 import * as worker from './worker'
@@ -33,7 +31,6 @@ export interface ServiceDependencies extends BaseService {
   balanceService: BalanceService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
-  transferService: TransferService
   makeIlpPlugin: (paymentPointerId: string) => IlpPlugin
 }
 
@@ -112,16 +109,6 @@ async function createOutgoingPayment(
     assetId: paymentPointer.assetId,
     sentBalance: true
   })
-  if (isAccountError(account)) {
-    deps.logger.warn(
-      {
-        ...options,
-        error: account
-      },
-      'createOutgoingPayment account creation failed'
-    )
-    throw new Error('unable to create account, err=' + account)
-  }
 
   return await OutgoingPayment.query(deps.knex)
     .insertAndFetch({

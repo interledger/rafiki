@@ -33,7 +33,7 @@ describe('Stream Controller', function () {
   })
 
   test('constructs a reply when "stream" is enabled', async () => {
-    const bob = AccountFactory.build({ stream: { enabled: true } })
+    const bob = AccountFactory.build()
     const {
       ilpAddress,
       sharedSecret
@@ -96,7 +96,7 @@ describe('Stream Controller', function () {
   })
 
   test("skips when the payment tag can't be decrypted", async () => {
-    const bob = AccountFactory.build({ stream: { enabled: true } })
+    const bob = AccountFactory.build()
     const ctx = createILPContext({
       services,
       request: {
@@ -119,7 +119,7 @@ describe('Stream Controller', function () {
   })
 
   test('skips when "stream.enabled" is false', async () => {
-    const bob = AccountFactory.build({ stream: { enabled: false } })
+    const bob = PeerAccountFactory.build()
     const ctx = createILPContext({
       services,
       accounts: {

@@ -22,6 +22,7 @@ import {
   createStreamAddressMiddleware
 } from './core'
 import { AccountService } from '../account/service'
+import { PeerService } from '../peer/service'
 import { RatesService } from '../rates/service'
 import { BaseService } from '../shared/baseService'
 
@@ -29,6 +30,7 @@ interface ServiceDependencies extends BaseService {
   redis: IORedis.Redis
   ratesService: RatesService
   accountService: AccountService
+  peerService: PeerService
   streamServer: StreamServer
   ilpAddress: string
 }
@@ -38,6 +40,7 @@ export async function createConnectorService({
   redis,
   ratesService,
   accountService,
+  peerService,
   streamServer,
   ilpAddress
 }: ServiceDependencies): Promise<Rafiki> {
@@ -48,6 +51,7 @@ export async function createConnectorService({
         service: 'ConnectorService'
       }),
       accounts: accountService,
+      peers: peerService,
       redis,
       rates: ratesService,
       streamServer
@@ -56,7 +60,7 @@ export async function createConnectorService({
       // Incoming Rules
       createIncomingErrorHandlerMiddleware(ilpAddress),
       createStreamAddressMiddleware(),
-      createAccountMiddleware(),
+      createAccountMiddleware(ilpAddress),
       createIncomingMaxPacketAmountMiddleware(),
       createIncomingRateLimitMiddleware({}),
       createIncomingThroughputMiddleware(),
