@@ -8,7 +8,6 @@ import {
   UnknownBalanceError,
   UnknownLiquidityAccountError
 } from '../shared/errors'
-import { Pagination } from '../shared/pagination'
 import { TransferService, TwoPhaseTransfer } from '../transfer/service'
 import { TransferError, TransfersError } from '../transfer/errors'
 import { AccountTransferError, UnknownAssetError } from './errors'
@@ -38,10 +37,8 @@ export interface AccountTransfer {
 export interface AccountService {
   create(account: CreateOptions, trx?: Transaction): Promise<Account>
   get(accountId: string): Promise<Account | undefined>
-  getAccounts(ids: string[]): Promise<Account[]>
   getBalance(accountId: string): Promise<bigint | undefined>
   getTotalSent(accountId: string): Promise<bigint | undefined>
-  getPage(pagination?: Pagination): Promise<Account[]>
   transferFunds(
     options: AccountTransferOptions
   ): Promise<AccountTransfer | AccountTransferError>
@@ -70,10 +67,8 @@ export function createAccountService({
   return {
     create: (account, trx) => createAccount(deps, account, trx),
     get: (id) => getAccount(deps, id),
-    getAccounts: (ids) => getAccounts(deps, ids),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
-    getPage: (pagination?) => getAccountsPage(deps, pagination),
     transferFunds: (options) => transferFunds(deps, options)
   }
 }
@@ -142,13 +137,6 @@ async function getAccount(
     .withGraphJoined('asset')
 
   return account || undefined
-}
-
-async function getAccounts(
-  deps: ServiceDependencies,
-  ids: string[]
-): Promise<Account[]> {
-  return await Account.query(deps.knex).findByIds(ids).withGraphJoined('asset')
 }
 
 async function getAccountBalance(
@@ -342,80 +330,4 @@ function toAccountTransferError({
     default:
       throw new BalanceTransferError(error)
   }
-}
-
-/** TODO: Base64 encode/decode the cursors
- * Buffer.from("Hello World").toString('base64')
- * Buffer.from("SGVsbG8gV29ybGQ=", 'base64').toString('ascii')
- */
-
-/** getAccountsPage
- * The pagination algorithm is based on the Relay connection specification.
- * Please read the spec before changing things:
- * https://relay.dev/graphql/connections.htm
- * @param pagination Pagination - cursors and limits.
- * @returns Account[] An array of accounts that form a page.
- */
-async function getAccountsPage(
-  deps: ServiceDependencies,
-  pagination?: Pagination
-): Promise<Account[]> {
-  if (
-    typeof pagination?.before === 'undefined' &&
-    typeof pagination?.last === 'number'
-  )
-    throw new Error("Can't paginate backwards from the start.")
-
-  const first = pagination?.first || 20
-  if (first < 0 || first > 100) throw new Error('Pagination index error')
-  const last = pagination?.last || 20
-  if (last < 0 || last > 100) throw new Error('Pagination index error')
-
-  /**
-   * Forward pagination
-   */
-  if (typeof pagination?.after === 'string') {
-    const accounts = await Account.query(deps.knex)
-      .withGraphFetched('asset')
-      .whereRaw(
-        '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "accounts" where "id" = ?)',
-        [pagination.after]
-      )
-      .orderBy([
-        { column: 'createdAt', order: 'asc' },
-        { column: 'id', order: 'asc' }
-      ])
-      .limit(first)
-    return accounts
-  }
-
-  /**
-   * Backward pagination
-   */
-  if (typeof pagination?.before === 'string') {
-    const accounts = await Account.query(deps.knex)
-      .withGraphFetched('asset')
-      .whereRaw(
-        '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "accounts" where "id" = ?)',
-        [pagination.before]
-      )
-      .orderBy([
-        { column: 'createdAt', order: 'desc' },
-        { column: 'id', order: 'desc' }
-      ])
-      .limit(last)
-      .then((resp) => {
-        return resp.reverse()
-      })
-    return accounts
-  }
-
-  const accounts = await Account.query(deps.knex)
-    .withGraphFetched('asset')
-    .orderBy([
-      { column: 'createdAt', order: 'asc' },
-      { column: 'id', order: 'asc' }
-    ])
-    .limit(first)
-  return accounts
 }
