@@ -1,4 +1,4 @@
-import { ForeignKeyViolationError, NotFoundError, Transaction } from 'objection'
+import { ForeignKeyViolationError, Transaction } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { BalanceService } from '../balance/service'
@@ -11,24 +11,15 @@ import {
 import { Pagination } from '../shared/pagination'
 import { TransferService, TwoPhaseTransfer } from '../transfer/service'
 import { TransferError, TransfersError } from '../transfer/errors'
-import { AccountError, AccountTransferError, UnknownAssetError } from './errors'
+import { AccountTransferError, UnknownAssetError } from './errors'
 import { Account } from './model'
 
 export { Account }
 
-export type Options = {
+export interface CreateOptions {
   disabled?: boolean
-}
-
-type CreateAccountOptions = Options & {
   assetId: string
   sentBalance?: boolean
-}
-
-export type CreateOptions = CreateAccountOptions
-
-export type UpdateOptions = Options & {
-  id: string
 }
 
 export interface AccountTransferOptions {
@@ -46,10 +37,6 @@ export interface AccountTransfer {
 
 export interface AccountService {
   create(account: CreateOptions, trx?: Transaction): Promise<Account>
-  update(
-    accountOptions: UpdateOptions,
-    trx?: Transaction
-  ): Promise<Account | AccountError>
   get(accountId: string): Promise<Account | undefined>
   getAccounts(ids: string[]): Promise<Account[]>
   getBalance(accountId: string): Promise<bigint | undefined>
@@ -82,7 +69,6 @@ export function createAccountService({
   }
   return {
     create: (account, trx) => createAccount(deps, account, trx),
-    update: (account, trx) => updateAccount(deps, account, trx),
     get: (id) => getAccount(deps, id),
     getAccounts: (ids) => getAccounts(deps, ids),
     getBalance: (id) => getAccountBalance(deps, id),
@@ -142,32 +128,6 @@ async function createAccount(
       err.constraint === 'accounts_assetid_foreign'
     ) {
       throw new UnknownAssetError(account.assetId)
-    }
-    throw err
-  }
-}
-
-async function updateAccount(
-  deps: ServiceDependencies,
-  accountOptions: UpdateOptions,
-  trx?: Transaction
-): Promise<Account | AccountError> {
-  const acctTrx = trx || (await Account.startTransaction(deps.knex))
-  try {
-    const account = await Account.query(acctTrx)
-      .patchAndFetchById(accountOptions.id, accountOptions)
-      .withGraphFetched('asset')
-      .throwIfNotFound()
-    if (!trx) {
-      await acctTrx.commit()
-    }
-    return account
-  } catch (err) {
-    if (!trx) {
-      await acctTrx.rollback()
-    }
-    if (err instanceof NotFoundError) {
-      return AccountError.UnknownAccount
     }
     throw err
   }

@@ -5,14 +5,6 @@ export class UnknownAssetError extends Error {
   }
 }
 
-export enum AccountError {
-  UnknownAccount = 'UnknownAccount'
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isAccountError = (o: any): o is AccountError =>
-  Object.values(AccountError).includes(o)
-
 export enum AccountTransferError {
   AlreadyCommitted = 'AlreadyCommitted',
   AlreadyRolledBack = 'AlreadyRolledBack',

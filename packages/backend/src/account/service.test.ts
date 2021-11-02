@@ -3,15 +3,8 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
+import { Account, AccountService, CreateOptions } from './service'
 import {
-  Account,
-  AccountService,
-  CreateOptions,
-  UpdateOptions
-} from './service'
-import {
-  AccountError,
-  isAccountError,
   AccountTransferError,
   isAccountTransferError,
   UnknownAssetError
@@ -292,37 +285,6 @@ describe('Account Service', (): void => {
       }
       const accounts = accountService.getPage(pagination)
       await expect(accounts).rejects.toThrow('Pagination index error')
-    })
-  })
-
-  describe('Update Account', (): void => {
-    test('Can update an account', async (): Promise<void> => {
-      const { id, asset } = await accountFactory.build({
-        disabled: false
-      })
-      const updateOptions: UpdateOptions = {
-        id,
-        disabled: true
-      }
-      const accountOrError = await accountService.update(updateOptions)
-      expect(isAccountError(accountOrError)).toEqual(false)
-      const expectedAccount = {
-        ...updateOptions,
-        asset
-      }
-      expect(accountOrError as Account).toMatchObject(expectedAccount)
-      await expect(accountService.get(id)).resolves.toEqual(accountOrError)
-    })
-
-    test('Cannot update nonexistent account', async (): Promise<void> => {
-      const updateOptions: UpdateOptions = {
-        id: uuid(),
-        disabled: true
-      }
-
-      await expect(accountService.update(updateOptions)).resolves.toEqual(
-        AccountError.UnknownAccount
-      )
     })
   })
 
