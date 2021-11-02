@@ -24,7 +24,6 @@ const hmac = (key: Buffer, message: Buffer): Buffer =>
 
 describe('Stream Controller', function () {
   const alice = PeerAccountFactory.build()
-  const bob = AccountFactory.build()
   const controller = createStreamController()
   const services = RafikiServicesFactory.build()
 
@@ -34,6 +33,7 @@ describe('Stream Controller', function () {
   })
 
   test('constructs a reply when "stream" is enabled', async () => {
+    const bob = AccountFactory.build()
     const {
       ilpAddress,
       sharedSecret
@@ -48,13 +48,6 @@ describe('Stream Controller', function () {
         },
         get outgoing() {
           return bob
-        }
-      },
-      state: {
-        outgoing: {
-          stream: {
-            enabled: true
-          }
         }
       }
     })
@@ -103,6 +96,7 @@ describe('Stream Controller', function () {
   })
 
   test("skips when the payment tag can't be decrypted", async () => {
+    const bob = AccountFactory.build()
     const ctx = createILPContext({
       services,
       request: {
@@ -116,13 +110,6 @@ describe('Stream Controller', function () {
         get outgoing() {
           return bob
         }
-      },
-      state: {
-        outgoing: {
-          stream: {
-            enabled: true
-          }
-        }
       }
     })
     const next = jest.fn()
@@ -132,6 +119,7 @@ describe('Stream Controller', function () {
   })
 
   test('skips when "stream.enabled" is false', async () => {
+    const bob = PeerAccountFactory.build()
     const ctx = createILPContext({
       services,
       accounts: {
@@ -140,13 +128,6 @@ describe('Stream Controller', function () {
         },
         get outgoing() {
           return bob
-        }
-      },
-      state: {
-        outgoing: {
-          stream: {
-            enabled: false
-          }
         }
       }
     })

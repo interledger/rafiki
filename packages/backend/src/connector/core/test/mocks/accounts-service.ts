@@ -9,26 +9,20 @@ export type MockIlpAccount = RafikiAccount & {
     incoming?: {
       authTokens: string[]
     }
-    outgoing: {
-      authToken: string
-      endpoint: string
-    }
   }
-  maxPacketAmount?: bigint
-  staticIlpAddress?: string
 }
 
 export class MockAccountsService implements AccountService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
-  get(accountId: string): Promise<MockIlpAccount | undefined> {
+  get(accountId: string): Promise<RafikiAccount | undefined> {
     const account = this.accounts.get(accountId)
     return Promise.resolve(account)
   }
 
-  async getByDestinationAddress(
+  async _getByDestinationAddress(
     destinationAddress: string
-  ): Promise<MockIlpAccount | undefined> {
+  ): Promise<RafikiAccount | undefined> {
     const account = this.find((account) => {
       const { staticIlpAddress } = account
       if (!staticIlpAddress) return false
@@ -37,7 +31,7 @@ export class MockAccountsService implements AccountService {
     return account
   }
 
-  async getByIncomingToken(token: string): Promise<MockIlpAccount | undefined> {
+  async _getByIncomingToken(token: string): Promise<RafikiAccount | undefined> {
     return this.find(
       (account) => !!account.http?.incoming?.authTokens.includes(token)
     )
@@ -79,7 +73,7 @@ export class MockAccountsService implements AccountService {
 
   private find(
     predicate: (account: MockIlpAccount) => boolean
-  ): MockIlpAccount | undefined {
+  ): RafikiAccount | undefined {
     for (const [, account] of this.accounts) {
       if (predicate(account)) return account
     }

@@ -3,12 +3,7 @@ import { HttpMiddleware } from '../rafiki'
 import { RafikiAccount } from '../rafiki'
 
 export interface AuthState {
-  account?: RafikiAccount
-  peer?: {
-    account: RafikiAccount
-    maxPacketAmount?: bigint
-    staticIlpAddress: string
-  }
+  incomingAccount?: RafikiAccount
 }
 
 // TODO incomingTokens
@@ -46,11 +41,13 @@ export function createTokenAuthMiddleware(): HttpMiddleware {
       'Bearer token required in Authorization header'
     )
 
-    ctx.state.peer = await ctx.services.peers.getByIncomingToken(
-      ctx.state.token
-    )
-    ctx.assert(ctx.state.peer, 401, 'Access Denied - Invalid Token')
-    ctx.state.account = ctx.state.peer.account
+    const peer = await ctx.services.peers.getByIncomingToken(ctx.state.token)
+    ctx.assert(peer, 401, 'Access Denied - Invalid Token')
+    ctx.state.incomingAccount = {
+      ...peer.account,
+      maxPacketAmount: peer.maxPacketAmount,
+      staticIlpAddress: peer.staticIlpAddress
+    }
 
     await next()
   }

@@ -11,6 +11,9 @@ export const AccountFactory = Factory.define<MockIlpAccount>(
   id: Faker.datatype.uuid,
   disabled: false,
   asset: { code: assetCode, scale: assetScale },
+  stream: {
+    enabled: true
+  },
   balance: 0n
 })
 
@@ -28,7 +31,10 @@ export const PeerAccountFactory = Factory.define<MockIlpAccount>(
         endpoint: Faker.internet.url()
       }
     }),
-    maxPacketAmount: BigInt(Faker.datatype.number())
+    maxPacketAmount: BigInt(Faker.datatype.number()),
+    stream: {
+      enabled: false
+    }
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`

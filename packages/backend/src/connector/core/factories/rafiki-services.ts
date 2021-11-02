@@ -23,7 +23,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   .attr('logger', TestLoggerFactory.build())
   .attr('peers', ['accounts'], (accounts: MockAccountsService) => ({
     getByDestinationAddress: async (address: string) => {
-      const account = await accounts.getByDestinationAddress(address)
+      const account = await accounts._getByDestinationAddress(address)
       if (account) {
         return {
           account,
@@ -34,7 +34,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       }
     },
     getByIncomingToken: async (token: string) => {
-      const account = await accounts.getByIncomingToken(token)
+      const account = await accounts._getByIncomingToken(token)
       if (account) {
         return {
           account,

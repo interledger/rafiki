@@ -24,6 +24,17 @@ export interface RafikiAccount {
     code: string
     scale: number
   }
+  http?: {
+    outgoing: {
+      authToken: string
+      endpoint: string
+    }
+  }
+  stream?: {
+    enabled: boolean
+  }
+  staticIlpAddress?: string
+  maxPacketAmount?: bigint
 }
 
 export interface TransferOptions {

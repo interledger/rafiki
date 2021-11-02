@@ -1,5 +1,6 @@
 import { createILPContext } from '../../utils'
 import {
+  AccountFactory,
   IlpPrepareFactory,
   PeerAccountFactory,
   RafikiServicesFactory
@@ -26,7 +27,7 @@ describe('Account Middleware', () => {
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
-      state: { account: incomingAccount },
+      state: { incomingAccount },
       services: rafikiServices,
       request: {
         prepare: new ZeroCopyIlpPrepare(
@@ -42,11 +43,15 @@ describe('Account Middleware', () => {
   })
 
   test('set the accounts according to state and streamDestination', async () => {
+    const outgoingAccount = AccountFactory.build({
+      id: 'outgoingAccount'
+    })
+    await rafikiServices.accounts.create(outgoingAccount)
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
       state: {
-        account: incomingAccount,
+        incomingAccount,
         streamDestination: outgoingAccount.id
       },
       services: rafikiServices,
@@ -67,7 +72,7 @@ describe('Account Middleware', () => {
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
-      state: { account: PeerAccountFactory.build({ disabled: true }) },
+      state: { incomingAccount: PeerAccountFactory.build({ disabled: true }) },
       services: rafikiServices,
       request: {
         prepare: new ZeroCopyIlpPrepare(
@@ -86,7 +91,7 @@ describe('Account Middleware', () => {
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
-      state: { account: incomingAccount },
+      state: { incomingAccount },
       services: rafikiServices,
       request: {
         prepare: new ZeroCopyIlpPrepare(

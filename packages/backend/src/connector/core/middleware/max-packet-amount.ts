@@ -1,5 +1,4 @@
 import { Errors } from 'ilp-packet'
-import { AuthState } from './auth'
 import { ILPContext, ILPMiddleware } from '..'
 const { AmountTooLargeError } = Errors
 
@@ -8,11 +7,11 @@ const { AmountTooLargeError } = Errors
  */
 export function createIncomingMaxPacketAmountMiddleware(): ILPMiddleware {
   return async (
-    { services: { logger }, request, state: { peer } }: ILPContext<AuthState>,
+    { services: { logger }, request, accounts: { incoming } }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
-    if (peer?.maxPacketAmount) {
-      const { maxPacketAmount } = peer
+    const { maxPacketAmount } = incoming
+    if (maxPacketAmount) {
       const amount = request.prepare.intAmount
       if (amount > maxPacketAmount) {
         logger.warn(

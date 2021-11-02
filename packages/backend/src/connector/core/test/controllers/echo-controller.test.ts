@@ -1,4 +1,3 @@
-import Faker from 'faker'
 import { Writer } from 'oer-utils'
 import {
   IlpPrepare,
@@ -36,12 +35,6 @@ describe('Echo protocol', function () {
 
   const alice = PeerAccountFactory.build()
   const bob = PeerAccountFactory.build()
-  const outgoing = {
-    http: {
-      authToken: Faker.datatype.string(32),
-      endpoint: Faker.internet.url()
-    }
-  }
   const ctx = createILPContext({
     services: RafikiServicesFactory.build(),
     accounts: {
@@ -51,8 +44,7 @@ describe('Echo protocol', function () {
       get outgoing() {
         return bob
       }
-    },
-    state: { outgoing }
+    }
   })
   const next = () => {
     throw new Error('unreachable')
@@ -85,7 +77,7 @@ describe('Echo protocol', function () {
 
     expect(sendToPeer).toHaveBeenCalledWith(
       sendToPeer.mock.calls[0][0],
-      outgoing.http,
+      bob,
       serializeIlpPrepare(type1EchoPacket)
     )
   })

@@ -1,5 +1,5 @@
 export class UnknownAssetError extends Error {
-  constructor(public assetId?: string) {
+  constructor(public assetId: string) {
     super('Asset not found. assetId=' + assetId)
     this.name = 'UnknownAssetError'
   }

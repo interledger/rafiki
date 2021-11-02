@@ -44,10 +44,6 @@ describe('ILDCP Middleware', function () {
     const ctx = makeContext(
       IlpPrepareFactory.build({ destination: 'peer.config' })
     )
-    ctx.state.peer = {
-      account: alice,
-      staticIlpAddress: alice.staticIlpAddress
-    }
     const next = jest.fn()
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
