@@ -22,8 +22,10 @@ import {
 import {
   addAccountLiquidity,
   addAssetLiquidity,
+  addPeerLiquidity,
   createAccountLiquidityWithdrawal,
   createAssetLiquidityWithdrawal,
+  createPeerLiquidityWithdrawal,
   finalizeLiquidityWithdrawal,
   rollbackLiquidityWithdrawal
 } from './liquidity'
@@ -64,8 +66,10 @@ export const resolvers: Resolvers = {
     deletePeer: deletePeer,
     addAccountLiquidity: addAccountLiquidity,
     addAssetLiquidity: addAssetLiquidity,
+    addPeerLiquidity: addPeerLiquidity,
     createAccountLiquidityWithdrawal: createAccountLiquidityWithdrawal,
     createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
+    createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
     finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
     rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal
   }

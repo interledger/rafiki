@@ -55,12 +55,20 @@ type Mutation {
     input: AddAccountLiquidityInput!
   ): LiquidityMutationResponse
 
+  "Add peer liquidity"
+  addPeerLiquidity(input: AddPeerLiquidityInput!): LiquidityMutationResponse
+
   "Add asset liquidity"
   addAssetLiquidity(input: AddAssetLiquidityInput!): LiquidityMutationResponse
 
   "Create liquidity withdrawal from account"
   createAccountLiquidityWithdrawal(
     input: CreateAccountLiquidityWithdrawalInput!
+  ): LiquidityMutationResponse
+
+  "Create liquidity withdrawal from peer"
+  createPeerLiquidityWithdrawal(
+    input: CreatePeerLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
   "Create liquidity withdrawal from asset"
@@ -144,6 +152,15 @@ input AddAccountLiquidityInput {
   id: String
 }
 
+input AddPeerLiquidityInput {
+  "The id of the peer to add liquidity."
+  peerId: String!
+  "Amount of liquidity to add."
+  amount: UInt64!
+  "The id of the transfer."
+  id: String
+}
+
 input AddAssetLiquidityInput {
   "The id of the asset to add liquidity."
   assetId: String!
@@ -156,6 +173,15 @@ input AddAssetLiquidityInput {
 input CreateAccountLiquidityWithdrawalInput {
   "The id of the account to create the withdrawal for."
   accountId: String!
+  "Amount of withdrawal."
+  amount: UInt64!
+  "The id of the withdrawal."
+  id: String!
+}
+
+input CreatePeerLiquidityWithdrawalInput {
+  "The id of the peer to create the withdrawal for."
+  peerId: String!
   "Amount of withdrawal."
   amount: UInt64!
   "The id of the withdrawal."
@@ -184,6 +210,7 @@ enum LiquidityError {
   TransferExists
   UnknownAccount
   UnknownAsset
+  UnknownPeer
   UnknownTransfer
 }
 
