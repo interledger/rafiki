@@ -8,6 +8,7 @@ exports.up = function (knex) {
     table.boolean('active').notNullable()
     table.string('description').nullable()
     table.timestamp('expiresAt').nullable()
+    table.bigInteger('amountToReceive').nullable()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())

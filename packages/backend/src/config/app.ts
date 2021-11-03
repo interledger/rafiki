@@ -24,6 +24,8 @@ export type IAppConfig = typeof Config
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
+  // publicHost is for open payments URLs.
+  publicHost: envString('PUBLIC_HOST', 'http://127.0.0.1:3001'),
   port: envInt('PORT', 3001),
   connectorPort: envInt('CONNECTOR_PORT', 3002),
   databaseUrl:

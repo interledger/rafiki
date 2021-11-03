@@ -28,7 +28,9 @@ import { PeerService } from './peer/service'
 import { PaymentPointerService } from './payment_pointer/service'
 import { LiquidityService } from './liquidity/service'
 import { RatesService } from './rates/service'
-import { SPSPService } from './spsp/service'
+import { SPSPRoutes } from './spsp/routes'
+import { InvoiceRoutes } from './invoice/routes'
+import { AccountRoutes } from './account/routes'
 import { InvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebMonetizationService } from './webmonetization/service'
@@ -65,7 +67,9 @@ export interface AppServices {
   peerService: Promise<PeerService>
   paymentPointer: Promise<PaymentPointerService>
   liquidityService: Promise<LiquidityService>
-  SPSPService: Promise<SPSPService>
+  spspRoutes: Promise<SPSPRoutes>
+  invoiceRoutes: Promise<InvoiceRoutes>
+  accountRoutes: Promise<AccountRoutes>
   invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
   wmService: Promise<WebMonetizationService>
@@ -195,10 +199,22 @@ export class App {
       ctx.status = 200
     })
 
-    const SPSPService = await this.container.use('SPSPService')
-    this.publicRouter.get('/pay/:id', (ctx: AppContext): void => {
-      SPSPService.GETPayEndpoint(ctx)
+    const spspRoutes = await this.container.use('spspRoutes')
+    const accountRoutes = await this.container.use('accountRoutes')
+    const invoiceRoutes = await this.container.use('invoiceRoutes')
+    this.publicRouter.get('/pay/:paymentPointerId', (ctx: AppContext): void => {
+      // Fall back to legacy protocols if client doesn't support Open Payments.
+      if (ctx.accepts('application/json')) accountRoutes.get(ctx)
+      //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
+      else if (ctx.accepts('application/spsp4+json')) spspRoutes.get(ctx)
+      else ctx.throw(406, 'no accepted Content-Type available')
     })
+
+    this.publicRouter.get('/invoices/:invoiceId', invoiceRoutes.get)
+    this.publicRouter.post(
+      '/pay/:paymentPointerId/invoices',
+      invoiceRoutes.create
+    )
 
     this.koa.use(this.publicRouter.middleware())
   }

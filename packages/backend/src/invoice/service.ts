@@ -10,6 +10,7 @@ interface CreateOptions {
   paymentPointerId: string
   description: string
   expiresAt?: Date
+  amountToReceive?: bigint // TODO test
 }
 
 export interface InvoiceService {
@@ -58,7 +59,7 @@ async function getInvoice(
 
 async function createInvoice(
   deps: ServiceDependencies,
-  { paymentPointerId, description, expiresAt }: CreateOptions,
+  { paymentPointerId, description, expiresAt, amountToReceive }: CreateOptions,
   trx?: Transaction
 ): Promise<Invoice> {
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))
@@ -82,7 +83,8 @@ async function createInvoice(
         paymentPointerId,
         accountId: account.id,
         description,
-        expiresAt: expiresAt,
+        expiresAt,
+        amountToReceive,
         active: true
       })
       .withGraphFetched('account.asset')

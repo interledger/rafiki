@@ -176,6 +176,7 @@ export type Invoice = {
   createdAt: Scalars['String'];
   expiresAt?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
+  amountToReceive?: Maybe<Scalars['UInt64']>;
 };
 
 export type InvoiceConnection = {
@@ -801,6 +802,7 @@ export type InvoiceResolvers<ContextType = any, ParentType extends ResolversPare
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  amountToReceive?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

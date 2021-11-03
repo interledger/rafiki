@@ -21,7 +21,9 @@ import { createAccountService } from './account/service'
 import { createPeerService } from './peer/service'
 import { createPaymentPointerService } from './payment_pointer/service'
 import { createLiquidityService } from './liquidity/service'
-import { createSPSPService } from './spsp/service'
+import { createSPSPRoutes } from './spsp/routes'
+import { createAccountRoutes } from './account/routes'
+import { createInvoiceRoutes } from './invoice/routes'
 import { createTransferService } from './transfer/service'
 import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -185,12 +187,12 @@ export function initIocContainer(
       transferService
     })
   })
-  container.singleton('SPSPService', async (deps) => {
+  container.singleton('spspRoutes', async (deps) => {
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
     const paymentPointerService = await deps.use('paymentPointerService')
     const wmService = await deps.use('wmService')
-    return await createSPSPService({
+    return await createSPSPRoutes({
       logger: logger,
       paymentPointerService: paymentPointerService,
       wmService,
@@ -207,6 +209,21 @@ export function initIocContainer(
       knex: knex,
       accountService: accountService,
       paymentPointerService: paymentPointerService
+    })
+  })
+  container.singleton('invoiceRoutes', async (deps) => {
+    return createInvoiceRoutes({
+      config: await deps.use('config'),
+      logger: await deps.use('logger'),
+      accountService: await deps.use('accountService'),
+      invoiceService: await deps.use('invoiceService'),
+      streamServer: await deps.use('streamServer')
+    })
+  })
+  container.singleton('accountRoutes', async (deps) => {
+    return createAccountRoutes({
+      config: await deps.use('config'),
+      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
 
