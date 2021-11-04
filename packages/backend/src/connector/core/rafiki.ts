@@ -142,12 +142,11 @@ export class Rafiki<T = any> {
   }
 
   async handleIlpData(
-    sourceAccountId: string,
+    sourceAccount: RafikiAccount,
     rawPrepare: Buffer
   ): Promise<Buffer> {
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
     const response = new IlpResponse()
-    const account = await this.config.accounts.get(sourceAccountId)
     await this.routes(
       {
         request: { prepare, rawPrepare },
@@ -162,7 +161,7 @@ export class Rafiki<T = any> {
             throw new Error('outgoing account not available')
           }
         },
-        state: { account },
+        state: { incomingAccount: sourceAccount },
         throw: (_status: number, msg: string): never => {
           throw new Errors.BadRequestError(msg)
         }

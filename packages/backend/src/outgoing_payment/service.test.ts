@@ -16,6 +16,7 @@ import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { MockPlugin } from './mock_plugin'
 import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
+import { Account } from '../account/model'
 import { AccountService } from '../account/service'
 import { AssetOptions } from '../asset/service'
 import { RatesService } from '../rates/service'
@@ -168,13 +169,13 @@ describe('OutgoingPaymentService', (): void => {
       const { id: destinationAccountId } = await accountFactory.build({
         asset
       })
-      deps.bind('makeIlpPlugin', async (_deps) => (accountId: string) =>
-        (plugins[accountId] =
-          plugins[accountId] ||
+      deps.bind('makeIlpPlugin', async (_deps) => (sourceAccount: Account) =>
+        (plugins[sourceAccount.id] =
+          plugins[sourceAccount.id] ||
           new MockPlugin({
             streamServer,
             exchangeRate: 0.5,
-            accountId,
+            sourceAccount,
             destinationAccountId,
             accountService,
             invoice

@@ -10,13 +10,14 @@ import { Invoice } from '@interledger/pay'
 
 import { IlpPlugin } from './ilp_plugin'
 import { isAccountTransferError } from '../account/errors'
+import { Account } from '../account/model'
 import { AccountService } from '../account/service'
 
 export class MockPlugin implements IlpPlugin {
   public totalReceived = BigInt(0)
   private streamServer: StreamServer
   public exchangeRate: number
-  private accountId: string
+  private sourceAccount: Account
   private destinationAccountId: string
   private accountService: AccountService
   private connected = true
@@ -25,21 +26,21 @@ export class MockPlugin implements IlpPlugin {
   constructor({
     streamServer,
     exchangeRate,
-    accountId,
+    sourceAccount,
     destinationAccountId,
     accountService,
     invoice
   }: {
     streamServer: StreamServer
     exchangeRate: number
-    accountId: string
+    sourceAccount: Account
     destinationAccountId: string
     accountService: AccountService
     invoice: Invoice
   }) {
     this.streamServer = streamServer
     this.exchangeRate = exchangeRate
-    this.accountId = accountId
+    this.sourceAccount = sourceAccount
     this.destinationAccountId = destinationAccountId
     this.accountService = accountService
     this.invoice = invoice
@@ -76,11 +77,10 @@ export class MockPlugin implements IlpPlugin {
         return serializeIlpReply(moneyOrReject)
       }
 
-      const sourceAccount = await this.accountService.get(this.accountId)
       const destinationAccount = await this.accountService.get(
         this.destinationAccountId
       )
-      if (!sourceAccount || !destinationAccount) {
+      if (!destinationAccount) {
         return serializeIlpReply({
           code: 'F00',
           triggeredBy: '',
@@ -90,7 +90,7 @@ export class MockPlugin implements IlpPlugin {
       }
 
       const trxOrError = await this.accountService.transferFunds({
-        sourceAccount,
+        sourceAccount: this.sourceAccount,
         destinationAccount,
         sourceAmount: BigInt(sourceAmount),
         timeout: BigInt(10e9) // 10 seconds
