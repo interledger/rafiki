@@ -28,6 +28,7 @@ import {
   finalizePendingWithdrawal,
   rollbackPendingWithdrawal
 } from './withdrawal'
+import { createApiKey, deleteAllApiKeys, redeemSessionKey } from './apiKey'
 import { GraphQLBigInt } from '../scalars'
 
 export const resolvers: Resolvers = {
@@ -89,6 +90,9 @@ export const resolvers: Resolvers = {
     extendCredit: extendCredit,
     revokeCredit: revokeCredit,
     utilizeCredit: utilizeCredit,
-    settleDebt: settleDebt
+    settleDebt: settleDebt,
+    createApiKey: createApiKey,
+    redeemSessionKey: redeemSessionKey,
+    deleteAllApiKeys: deleteAllApiKeys
   }
 }
