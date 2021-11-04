@@ -68,7 +68,8 @@ describe('Api Key Service', (): void => {
 
   describe('Create / Get Api Key', (): void => {
     test('An api key can be created/fetched for a certain account', async (): Promise<void> => {
-      const apiKey = await apiKeyService.create(account.id)
+      const apiKeyOptions = { accountId: account.id }
+      const apiKey = await apiKeyService.create(apiKeyOptions)
       expect(apiKey.key).toBeDefined()
       expect(apiKey.hashedKey).toBeDefined()
       expect(apiKey.accountId).toBeDefined()
@@ -77,7 +78,7 @@ describe('Api Key Service', (): void => {
       const match = await bcrypt.compare(apiKey.key, apiKey.hashedKey)
       expect(match).toBe(true)
 
-      const fetchedKeys = await apiKeyService.get(account.id)
+      const fetchedKeys = await apiKeyService.get(apiKeyOptions)
       expect(fetchedKeys.length).toEqual(1)
       expect(fetchedKeys[0].hashedKey).toEqual(apiKey.hashedKey)
       expect(fetchedKeys[0].accountId).toEqual(apiKey.accountId)
@@ -89,37 +90,44 @@ describe('Api Key Service', (): void => {
 
   describe('Redeem Session Key', (): void => {
     test('A session key can be redeemed for a valid api key', async (): Promise<void> => {
-      const apiKey = await apiKeyService.create(account.id)
-      const sessionKeyOrError = await apiKeyService.redeem(
-        account.id,
-        apiKey.key
-      )
+      const apiKey = await apiKeyService.create({ accountId: account.id })
+      const sessionKeyOrError = await apiKeyService.redeem({
+        accountId: account.id,
+        key: apiKey.key
+      })
       expect(isApiKeyError(sessionKeyOrError)).toEqual(false)
       if (isApiKeyError(sessionKeyOrError)) {
         fail()
       } else {
-        expect(sessionKeyOrError.sessionKey).toBeDefined()
+        expect(sessionKeyOrError.key).toBeDefined()
       }
     })
 
     test('A session key cannot be redeemed if no api key for account exists', async (): Promise<void> => {
-      const sessionKeyOrError = apiKeyService.redeem(account.id, '123')
+      const sessionKeyOrError = apiKeyService.redeem({
+        accountId: account.id,
+        key: '123'
+      })
       expect(sessionKeyOrError).resolves.toEqual(ApiKeyError.UnknownApiKey)
     })
 
     test('A session key cannot be redeemed if api key is unknown', async (): Promise<void> => {
-      await apiKeyService.create(account.id)
-      const sessionKeyOrError = apiKeyService.redeem(account.id, '123')
+      await apiKeyService.create({ accountId: account.id })
+      const sessionKeyOrError = apiKeyService.redeem({
+        accountId: account.id,
+        key: '123'
+      })
       expect(sessionKeyOrError).resolves.toEqual(ApiKeyError.UnknownApiKey)
     })
   })
 
   describe('Delete Api Key', (): void => {
     test('All api keys for an account can be deleted', async (): Promise<void> => {
-      await apiKeyService.create(account.id)
-      await apiKeyService.create(account.id)
-      await apiKeyService.deleteAll(account.id)
-      const fetchedKeys = await apiKeyService.get(account.id)
+      const apiKeyOptions = { accountId: account.id }
+      await apiKeyService.create(apiKeyOptions)
+      await apiKeyService.create(apiKeyOptions)
+      await apiKeyService.deleteAll(apiKeyOptions)
+      const fetchedKeys = await apiKeyService.get(apiKeyOptions)
       expect(fetchedKeys).toEqual([])
     })
   })

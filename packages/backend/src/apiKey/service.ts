@@ -8,14 +8,23 @@ import { SessionKey } from '../sessionKey/util'
 import { ApiKeyError } from './errors'
 
 export interface ApiKeyService {
-  create(accountId: string, trx?: Transaction): Promise<NewApiKey>
-  get(accountId: string): Promise<ApiKey[]>
-  redeem(accountId: string, key: string): Promise<SessionKey | ApiKeyError>
-  deleteAll(accountId: string, trx?: Transaction): Promise<void>
+  create(apiKey: ApiKeyOptions, trx?: Transaction): Promise<NewApiKey>
+  get(apiKey: ApiKeyOptions): Promise<ApiKey[]>
+  redeem(sessionKey: SessionKeyOptions): Promise<SessionKey | ApiKeyError>
+  deleteAll(apiKey: ApiKeyOptions, trx?: Transaction): Promise<void>
 }
 
 interface ServiceDependencies extends BaseService {
   sessionKeyService: SessionKeyService
+}
+
+type ApiKeyOptions = {
+  accountId: string
+}
+
+type SessionKeyOptions = {
+  accountId: string
+  key: string
 }
 
 interface NewApiKey extends ApiKey {
@@ -36,16 +45,16 @@ export async function createApiKeyService({
     sessionKeyService
   }
   return {
-    create: (accountId, trx) => createApiKey(deps, accountId, trx),
-    get: (accountId) => getApiKeys(deps, accountId),
-    redeem: (accountId, key) => redeemSessionKey(deps, accountId, key),
-    deleteAll: (accountId, trx) => deleteAllApiKeys(deps, accountId, trx)
+    create: (options, trx) => createApiKey(deps, options, trx),
+    get: (options) => getApiKeys(deps, options),
+    redeem: (options) => redeemSessionKey(deps, options),
+    deleteAll: (options, trx) => deleteAllApiKeys(deps, options, trx)
   }
 }
 
 async function createApiKey(
   deps: ServiceDependencies,
-  accountId: string,
+  { accountId }: ApiKeyOptions,
   trx?: Transaction
 ): Promise<NewApiKey> {
   const keyTrx = trx || (await ApiKey.startTransaction(deps.knex))
@@ -68,15 +77,14 @@ async function createApiKey(
 
 async function getApiKeys(
   deps: ServiceDependencies,
-  accountId: string
+  { accountId }: ApiKeyOptions
 ): Promise<ApiKey[]> {
   return await ApiKey.query().where('accountId', accountId)
 }
 
 async function redeemSessionKey(
   deps: ServiceDependencies,
-  accountId: string,
-  key: string
+  { accountId, key }: SessionKeyOptions
 ): Promise<SessionKey | ApiKeyError> {
   const keys = await ApiKey.query()
     .select('hashedKey')
@@ -92,7 +100,7 @@ async function redeemSessionKey(
 
 async function deleteAllApiKeys(
   deps: ServiceDependencies,
-  accountId: string,
+  { accountId }: ApiKeyOptions,
   trx?: Transaction
 ): Promise<void> {
   const keyTrx = trx || (await ApiKey.startTransaction(deps.knex))
