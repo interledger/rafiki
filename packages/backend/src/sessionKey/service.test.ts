@@ -38,11 +38,9 @@ describe('Session Key Service', (): void => {
   describe('Create / Get Session', (): void => {
     test('Can create and fetch session', async (): Promise<void> => {
       const session = await SessionKeyService.create()
-      expect(session).toHaveProperty('sessionKey')
+      expect(session).toHaveProperty('key')
       expect(session).toHaveProperty('expiresAt')
-      const retrievedSession = await SessionKeyService.getSession(
-        session.sessionKey
-      )
+      const retrievedSession = await SessionKeyService.getSession(session.key)
       expect(retrievedSession).toEqual({ expiresAt: session.expiresAt })
     })
 
@@ -55,17 +53,17 @@ describe('Session Key Service', (): void => {
   describe('Manage Session', (): void => {
     test('Can revoke a session', async (): Promise<void> => {
       const session = await SessionKeyService.create()
-      await SessionKeyService.revoke(session.sessionKey)
-      const revokedSession = SessionKeyService.getSession(session.sessionKey)
+      await SessionKeyService.revoke(session.key)
+      const revokedSession = SessionKeyService.getSession(session.key)
       expect(revokedSession).rejects.toThrow(
-        new UnknownSessionError(session.sessionKey)
+        new UnknownSessionError(session.key)
       )
     })
 
     test('Can renew a session', async (): Promise<void> => {
       const session = await SessionKeyService.create()
-      const renewedSession = await SessionKeyService.renew(session.sessionKey)
-      expect(session.sessionKey).not.toEqual(renewedSession.sessionKey)
+      const renewedSession = await SessionKeyService.renew(session.key)
+      expect(session.key).not.toEqual(renewedSession.key)
       expect(session.expiresAt.getTime()).toBeLessThanOrEqual(
         renewedSession.expiresAt.getTime()
       )

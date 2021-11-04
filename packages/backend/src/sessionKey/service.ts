@@ -40,7 +40,7 @@ async function createSessionKey(
   const sessionKey = uuid()
   const expiresAt = Date.now() + 30 * 60 * 1000 // 30 minutes
   await deps.redis.set(sessionKey, JSON.stringify({ expiresAt }), 'EX', 30 * 60)
-  return { sessionKey, expiresAt: new Date(expiresAt) }
+  return { key: sessionKey, expiresAt: new Date(expiresAt) }
 }
 
 async function revokeSessionKey(deps: ServiceDependencies, sessionKey: string) {

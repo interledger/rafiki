@@ -1,5 +1,5 @@
 export interface SessionKey {
-  sessionKey: string
+  key: string
   expiresAt: Date
 }
 
