@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { Errors } from 'ilp-packet'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
@@ -10,7 +11,7 @@ import {
   UnknownAssetError
 } from './errors'
 import { AssetService } from '../asset/service'
-import { BalanceService, BalanceType } from '../balance/service'
+import { Balance, BalanceService, BalanceType } from '../balance/service'
 import { LiquidityService } from '../liquidity/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -22,6 +23,8 @@ import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { AccountFactory } from '../tests/accountFactory'
 import { randomAsset } from '../tests/asset'
+
+const { AmountTooLargeError } = Errors
 
 describe('Account Service', (): void => {
   let deps: IocContract<AppServices>
@@ -126,10 +129,9 @@ describe('Account Service', (): void => {
 
     test('Cannot create an account with unknown asset id', async (): Promise<void> => {
       const assetId = uuid()
-      await expect(accountService.create({ assetId,
-        balanceType: BalanceType.Credit })).rejects.toThrowError(
-        new UnknownAssetError(assetId)
-      )
+      await expect(
+        accountService.create({ assetId, balanceType: BalanceType.Credit })
+      ).rejects.toThrowError(new UnknownAssetError(assetId))
     })
 
     test('Can create an account with total sent balance', async (): Promise<void> => {
@@ -655,14 +657,27 @@ describe('Account Service', (): void => {
         description: 'Invoice',
         amountToReceive: BigInt(123)
       })
+      assert(invoice.account.receiveLimitBalanceId)
+      const largeAmount = BigInt(123 + 2)
+      const maximumAmount = ((await balanceService.get(
+        invoice.account.receiveLimitBalanceId
+      )) as Balance).balance.toString()
       await expect(
         accountService.transferFunds({
           sourceAccount,
           destinationAccount: invoice.account,
-          sourceAmount: BigInt(123 + 2),
+          sourceAmount: largeAmount,
           timeout
         })
-      ).resolves.toBe(AccountTransferError.ReceiveLimitExceeded)
+      ).rejects.toThrowError(
+        new AmountTooLargeError(
+          `amount too large. maxAmount=${maximumAmount} actualAmount=${largeAmount.toString()}`,
+          {
+            receivedAmount: largeAmount.toString(),
+            maximumAmount
+          }
+        )
+      )
 
       // ... but a smaller payment is fine
       const trxOrError = await accountService.transferFunds({

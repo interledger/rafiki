@@ -1,10 +1,14 @@
 import { Errors } from 'ilp-packet'
-import { ILPContext } from '../rafiki'
-import { isAccountTransferError } from '../../../account/errors'
+import { ILPContext, ILPMiddleware } from '../rafiki'
+import {
+  isAccountTransferError,
+  AccountTransferError
+} from '../../../account/errors'
+const { InsufficientLiquidityError } = Errors
 
-export function createBalanceMiddleware() {
+export function createBalanceMiddleware(): ILPMiddleware {
   return async (
-    { request, response, services, accounts }: ILPContext,
+    { request, response, services, accounts, throw: ctxThrow }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
     const { amount } = request.prepare
@@ -28,6 +32,8 @@ export function createBalanceMiddleware() {
       )
     }
 
+    request.prepare.amount = destinationAmountOrError.toString()
+
     // Update balances on prepare
     const trxOrError = await services.accounts.transferFunds({
       sourceAccount: accounts.incoming,
@@ -37,9 +43,18 @@ export function createBalanceMiddleware() {
       timeout: BigInt(5e9) // 5 seconds
     })
 
-    await next()
+    if (isAccountTransferError(trxOrError)) {
+      switch (trxOrError) {
+        case AccountTransferError.InsufficientBalance:
+        case AccountTransferError.InsufficientLiquidity:
+          throw new InsufficientLiquidityError(trxOrError)
+        default:
+          // TODO: map transfer errors to ILP errors or throw from transferFunds
+          ctxThrow(500, destinationAmountOrError.toString())
+      }
+    } else {
+      await next()
 
-    if (!isAccountTransferError(trxOrError)) {
       if (response.fulfill) {
         await trxOrError.commit()
       } else {

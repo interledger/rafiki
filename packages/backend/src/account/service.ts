@@ -1,7 +1,8 @@
+import { Errors } from 'ilp-packet'
 import { ForeignKeyViolationError, Transaction } from 'objection'
 import { v4 as uuid } from 'uuid'
 
-import { BalanceService, BalanceType } from '../balance/service'
+import { Balance, BalanceService, BalanceType } from '../balance/service'
 import { BaseService } from '../shared/baseService'
 import {
   BalanceTransferError,
@@ -12,6 +13,8 @@ import { TransferService, TwoPhaseTransfer } from '../transfer/service'
 import { TransferError, TransfersError } from '../transfer/errors'
 import { AccountTransferError, UnknownAssetError } from './errors'
 import { Account } from './model'
+
+const { AmountTooLargeError } = Errors
 
 export { Account }
 
@@ -340,7 +343,17 @@ async function transferFunds(
           destinationAccount.receiveLimitBalanceId &&
           error.index === transfers.length - 1
         ) {
-          return AccountTransferError.ReceiveLimitExceeded
+          const receivedAmount = (destinationAmount || sourceAmount).toString()
+          const maximumAmount = ((await deps.balanceService.get(
+            destinationAccount.receiveLimitBalanceId
+          )) as Balance).balance.toString()
+          throw new AmountTooLargeError(
+            `amount too large. maxAmount=${maximumAmount} actualAmount=${receivedAmount}`,
+            {
+              receivedAmount,
+              maximumAmount
+            }
+          )
         }
         if (error.index === 1) {
           return AccountTransferError.InsufficientLiquidity
