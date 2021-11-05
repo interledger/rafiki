@@ -59,8 +59,12 @@ export const Config = {
 
   slippage: envFloat('SLIPPAGE', 0.01),
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
+
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 200), // milliseconds
+
+  deactivateInvoiceWorkers: envInt('DEACTIVATE_INVOICE_WORKERS', 1),
+  deactivateInvoiceWorkerIdle: envInt('DEACTIVATE_INVOICE_WORKER_IDLE', 200), // milliseconds
 
   /** Frontend **/
   frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')

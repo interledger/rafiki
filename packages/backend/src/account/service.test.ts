@@ -582,6 +582,43 @@ describe('Account Service', (): void => {
         accountService.getTotalSent(sourceAccount.id)
       ).resolves.toEqual(sourceAmount)
     })
+
+    test('Cannot exceed an invoice receive limit', async (): Promise<void> => {
+      const paymentPointerService = await deps.use('paymentPointerService')
+      const invoiceService = await deps.use('invoiceService')
+      const sourceAccount = await accountFactory.build({
+        sentBalance: true,
+        balance: BigInt(200)
+      })
+      const paymentPointerId = (
+        await paymentPointerService.create({ asset: sourceAccount.asset })
+      ).id
+      const invoice = await invoiceService.create({
+        paymentPointerId,
+        description: 'Invoice',
+        amountToReceive: BigInt(123)
+      })
+      await expect(
+        accountService.transferFunds({
+          sourceAccount,
+          destinationAccount: invoice.account,
+          sourceAmount: BigInt(123 + 2),
+          timeout
+        })
+      ).resolves.toBe(AccountTransferError.InvoiceLimitExceeded)
+
+      // ... but a smaller payment is fine
+      const trxOrError = await expect(
+        accountService.transferFunds({
+          sourceAccount,
+          destinationAccount: invoice.account,
+          sourceAmount: BigInt(123 + 2),
+          timeout
+        })
+      ).resolves.toBe(AccountTransferError.InvoiceLimitExceeded)
+      expect(isAccountTransferError(trxOrError)).toEqual(false)
+    })
+
     test.todo('Returns error timed out transfer')
   })
 })

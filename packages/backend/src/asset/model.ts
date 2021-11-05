@@ -18,11 +18,14 @@ export class Asset extends BaseModel {
   public settlementBalanceId!: string
   // TigerBeetle account id tracking reserved outgoing payments balance
   public outgoingPaymentsBalanceId!: string
+  // TigerBeetle account id for invoice receive limit
+  public receiveLimitBalanceId!: string
 
   public $beforeInsert(): void {
     super.$beforeInsert()
     this.balanceId = this.balanceId || uuid()
     this.settlementBalanceId = this.settlementBalanceId || uuid()
     this.outgoingPaymentsBalanceId = this.outgoingPaymentsBalanceId || uuid()
+    this.receiveLimitBalanceId = this.receiveLimitBalanceId || uuid()
   }
 }

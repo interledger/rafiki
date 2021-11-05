@@ -126,5 +126,19 @@ describe('Asset Service', (): void => {
         assetService.getOutgoingPaymentsBalance(asset)
       ).resolves.toEqual(0n)
     })
+
+    test('Can get receive limit balance', async (): Promise<void> => {
+      const asset = {
+        code: 'CNY',
+        scale: 2
+      }
+      await expect(
+        assetService.getReceiveLimitBalance(asset)
+      ).resolves.toBeUndefined()
+      await assetService.getOrCreate(asset)
+      await expect(assetService.getReceiveLimitBalance(asset)).resolves.toEqual(
+        0n
+      )
+    })
   })
 })

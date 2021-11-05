@@ -19,6 +19,7 @@ export interface CreateOptions {
   disabled?: boolean
   assetId: string
   sentBalance?: boolean
+  receiveLimit?: bigint
 }
 
 export interface AccountTransferOptions {
@@ -102,11 +103,23 @@ async function createAccount(
         })
       ).id
     }
+
+    let receiveLimitBalanceId: string | undefined
+    if (account.receiveLimit) {
+      // TODO or create the TigerBeetle account with the limit (i.e. pass in credits_accepted)? Is that allowed or would it mess up accounting?
+      receiveLimitBalanceId = (
+        await deps.balanceService.create({
+          debitBalance: true,
+          unit: accountRow.asset.unit
+        })
+      ).id
+    }
     const newAccount = await accountRow
       .$query(acctTrx)
       .patchAndFetch({
         balanceId,
-        sentBalanceId
+        sentBalanceId,
+        receiveLimitBalanceId
       })
       .withGraphFetched('asset')
 
@@ -273,6 +286,15 @@ async function transferFunds(
       timeout
     })
   }
+  if (destinationAccount.receiveLimitBalanceId) {
+    transfers.push({
+      id: uuid(),
+      sourceBalanceId: destinationAccount.asset.receiveLimitBalanceId,
+      destinationBalanceId: destinationAccount.receiveLimitBalanceId,
+      amount: destinationAmount || sourceAmount,
+      timeout
+    })
+  }
   const error = await deps.transferService.create(transfers)
   if (error) {
     switch (error.error) {
@@ -287,6 +309,12 @@ async function transferFunds(
         }
         throw new UnknownLiquidityAccountError(sourceAccount.asset)
       case TransferError.InsufficientBalance:
+        if (
+          destinationAccount.receiveLimitBalanceId &&
+          error.index === transfers.length - 1
+        ) {
+          return AccountTransferError.InvoiceLimitExceeded
+        }
         if (error.index === 1) {
           return AccountTransferError.InsufficientLiquidity
         }

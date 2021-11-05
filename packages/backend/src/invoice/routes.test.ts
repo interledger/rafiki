@@ -173,7 +173,7 @@ describe('Invoice Routes', (): void => {
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
-      expect(Buffer.from(sharedSecret, 'base64')).toHaveLength(32)
+      expect(Buffer.from(sharedSecret as string, 'base64')).toHaveLength(32)
     })
   })
 

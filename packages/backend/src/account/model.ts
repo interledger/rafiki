@@ -26,4 +26,9 @@ export class Account extends BaseModel {
   public readonly balanceId!: string
   // TigerBeetle account id tracking amount sent
   public readonly sentBalanceId?: string
+
+  // TigerBeetle account id tracking an invoice's receive limit.
+  // - "credits" is the actual limit.
+  // - "debits" is the progress towards that limit.
+  public readonly receiveLimitBalanceId?: string
 }

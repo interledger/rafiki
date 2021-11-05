@@ -1,16 +1,19 @@
+import { v4 as uuid } from 'uuid'
 import { Invoice } from './model'
 import { AccountService } from '../account/service'
 import { PaymentPointerService } from '../payment_pointer/service'
+import { TransferService } from '../transfer/service'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
 import assert from 'assert'
 import { Transaction } from 'knex'
+import { TransactionOrKnex } from 'objection'
 
 interface CreateOptions {
   paymentPointerId: string
   description: string
   expiresAt?: Date
-  amountToReceive?: bigint // TODO test
+  amountToReceive?: bigint
 }
 
 export interface InvoiceService {
@@ -20,33 +23,32 @@ export interface InvoiceService {
     paymentPointerId: string,
     pagination?: Pagination
   ): Promise<Invoice[]>
+  deactivateNext(): Promise<string | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
+  knex: TransactionOrKnex
   accountService: AccountService
   paymentPointerService: PaymentPointerService
+  transferService: TransferService
 }
 
-export async function createInvoiceService({
-  logger,
-  knex,
-  accountService,
-  paymentPointerService
-}: ServiceDependencies): Promise<InvoiceService> {
-  const log = logger.child({
+export async function createInvoiceService(
+  deps_: ServiceDependencies
+): Promise<InvoiceService> {
+  const log = deps_.logger.child({
     service: 'InvoiceService'
   })
   const deps: ServiceDependencies = {
-    logger: log,
-    knex,
-    accountService,
-    paymentPointerService
+    ...deps_,
+    logger: log
   }
   return {
     get: (id) => getInvoice(deps, id),
     create: (options, trx) => createInvoice(deps, options, trx),
     getPaymentPointerInvoicesPage: (paymentPointerId, pagination) =>
-      getPaymentPointerInvoicesPage(deps, paymentPointerId, pagination)
+      getPaymentPointerInvoicesPage(deps, paymentPointerId, pagination),
+    deactivateNext: () => deactivateNextInvoice(deps)
   }
 }
 
@@ -74,9 +76,30 @@ async function createInvoice(
       )
     }
     const account = await deps.accountService.create(
-      { assetId: paymentPointer.assetId },
+      {
+        assetId: paymentPointer.assetId,
+        receiveLimit: amountToReceive
+      },
       invTrx
     )
+
+    // Establish the maximum amount the invoice can receive.
+    if (amountToReceive) {
+      if (!account.receiveLimitBalanceId) throw new Error('unreachable')
+      const error = await deps.transferService.create([
+        {
+          id: uuid(),
+          sourceBalanceId: account.receiveLimitBalanceId,
+          destinationBalanceId: account.asset.receiveLimitBalanceId,
+          // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
+          amount: amountToReceive + BigInt(1)
+        }
+      ])
+      if (error) {
+        deps.logger.error({ error }, 'invoice limit setup TigerBeetle error')
+        throw new Error('unable to create invoice, TigerBeetle error')
+      }
+    }
 
     const invoice = await Invoice.query(invTrx)
       .insertAndFetch({
@@ -98,6 +121,39 @@ async function createInvoice(
     }
     throw err
   }
+}
+
+// Deactivate expired invoices that have some money.
+// Delete expired invoices that have never received money.
+// Returns the id of the processed invoice (if any).
+async function deactivateNextInvoice(
+  deps: ServiceDependencies
+): Promise<string | undefined> {
+  return deps.knex.transaction(async (trx) => {
+    // 30 seconds backwards to allow a prepared (but not yet fulfilled/rejected) packet to finish before being deactivated.
+    const now = new Date(Date.now() - 30_000).toISOString()
+    const invoices = await Invoice.query(trx)
+      .limit(1)
+      // Ensure the invoices cannot be processed concurrently by multiple workers.
+      .forUpdate()
+      // If an invoice is locked, don't wait — just come back for it later.
+      .skipLocked()
+      .where('active', true)
+      .andWhere('expiresAt', '<', now)
+    const invoice = invoices[0]
+    if (!invoice) return
+
+    // Fetch the account with a separate transaction to avoid locking it.
+    const balance = await deps.accountService.getBalance(invoice.accountId)
+    if (balance) {
+      deps.logger.trace({ invoice: invoice.id }, 'deactivating expired invoice')
+      await invoice.$query(trx).patch({ active: false })
+    } else {
+      deps.logger.debug({ invoice: invoice.id }, 'deleting expired invoice')
+      await invoice.$query(trx).delete()
+    }
+    return invoice.id
+  })
 }
 
 /** TODO: Base64 encode/decode the cursors

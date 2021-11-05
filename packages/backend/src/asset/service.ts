@@ -24,6 +24,10 @@ export interface AssetService {
     asset: AssetOptions,
     trx?: Transaction
   ): Promise<bigint | undefined>
+  getReceiveLimitBalance(
+    asset: AssetOptions,
+    trx?: Transaction
+  ): Promise<bigint | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -51,7 +55,9 @@ export async function createAssetService({
     getSettlementBalance: (asset, trx) =>
       getSettlementBalance(deps, asset, trx),
     getOutgoingPaymentsBalance: (asset, trx) =>
-      getOutgoingPaymentsBalance(deps, asset, trx)
+      getOutgoingPaymentsBalance(deps, asset, trx),
+    getReceiveLimitBalance: (asset, trx) =>
+      getReceiveLimitBalance(deps, asset, trx)
   }
 }
 
@@ -108,10 +114,14 @@ async function getOrCreateAsset(
         debitBalance: true,
         unit: asset.unit
       })
+      const { id: receiveLimitBalanceId } = await deps.balanceService.create({
+        unit: asset.unit
+      })
       return await Asset.query(trx).patchAndFetchById(asset.id, {
         balanceId,
         settlementBalanceId,
-        outgoingPaymentsBalanceId
+        outgoingPaymentsBalanceId,
+        receiveLimitBalanceId
       })
     })
   }
@@ -180,6 +190,25 @@ async function getOutgoingPaymentsBalance(
       return balance.balance
     } else {
       deps.logger.warn({ asset }, 'missing outgoing payments balance')
+    }
+  }
+}
+
+async function getReceiveLimitBalance(
+  deps: ServiceDependencies,
+  { code, scale }: AssetOptions,
+  trx?: Transaction
+): Promise<bigint | undefined> {
+  const asset = await Asset.query(trx)
+    .where({ code, scale })
+    .first()
+    .select('receiveLimitBalanceId')
+  if (asset) {
+    const balance = await deps.balanceService.get(asset.receiveLimitBalanceId)
+    if (balance) {
+      return balance.balance
+    } else {
+      deps.logger.warn({ asset }, 'missing receive limit balance')
     }
   }
 }

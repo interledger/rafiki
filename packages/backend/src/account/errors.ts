@@ -12,6 +12,7 @@ export enum AccountTransferError {
   InsufficientLiquidity = 'InsufficientLiquidity',
   InvalidSourceAmount = 'InvalidSourceAmount',
   InvalidDestinationAmount = 'InvalidDestinationAmount',
+  InvoiceLimitExceeded = 'InvoiceLimitExceeded',
   SameAccounts = 'SameAccounts',
   TransferExpired = 'TransferExpired'
 }

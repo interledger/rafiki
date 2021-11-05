@@ -91,6 +91,7 @@ export class App {
   private messageProducer!: MessageProducer
   private config!: IAppConfig
   private outgoingPaymentTimer!: NodeJS.Timer
+  private deactivateInvoiceTimer!: NodeJS.Timer
 
   public constructor(private container: IocContract<AppServices>) {}
 
@@ -132,10 +133,13 @@ export class App {
     await this._setupRoutes()
     this._setupGraphql()
 
-    // Payment workers are in the way during tests.
+    // Workers are in the way during tests.
     if (this.config.env !== 'test') {
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
         process.nextTick(() => this.processOutgoingPayment())
+      }
+      for (let i = 0; i < this.config.deactivateInvoiceWorkers; i++) {
+        process.nextTick(() => this.deactivateInvoice())
       }
     }
   }
@@ -227,7 +231,7 @@ export class App {
     return outgoingPaymentService
       .processNext()
       .catch((err) => {
-        this.logger.warn({ error: err.message }, 'processNext error')
+        this.logger.warn({ error: err.message }, 'processOutgoingPayment error')
         return true
       })
       .then((hasMoreWork) => {
@@ -236,6 +240,24 @@ export class App {
           setTimeout(
             () => this.processOutgoingPayment(),
             this.config.outgoingPaymentWorkerIdle
+          ).unref()
+      })
+  }
+
+  private async deactivateInvoice(): Promise<void> {
+    const invoiceService = await this.container.use('invoiceService')
+    return invoiceService
+      .deactivateNext()
+      .catch((err) => {
+        this.logger.warn({ error: err.message }, 'deactivateInvoice error')
+        return true
+      })
+      .then((hasMoreWork) => {
+        if (hasMoreWork) process.nextTick(() => this.deactivateInvoice())
+        else
+          setTimeout(
+            () => this.deactivateInvoice(),
+            this.config.deactivateInvoiceWorkerIdle
           ).unref()
       })
   }

@@ -200,15 +200,12 @@ export function initIocContainer(
     })
   })
   container.singleton('invoiceService', async (deps) => {
-    const logger = await deps.use('logger')
-    const knex = await deps.use('knex')
-    const accountService = await deps.use('accountService')
-    const paymentPointerService = await deps.use('paymentPointerService')
     return await createInvoiceService({
-      logger: logger,
-      knex: knex,
-      accountService: accountService,
-      paymentPointerService: paymentPointerService
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      accountService: await deps.use('accountService'),
+      paymentPointerService: await deps.use('paymentPointerService'),
+      transferService: await deps.use('transferService')
     })
   })
   container.singleton('invoiceRoutes', async (deps) => {
