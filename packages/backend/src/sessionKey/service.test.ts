@@ -60,9 +60,9 @@ describe('Session Key Service', (): void => {
       )
     })
 
-    test('Can renew a session', async (): Promise<void> => {
+    test('Can refresh a session', async (): Promise<void> => {
       const session = await SessionKeyService.create()
-      const renewedSession = await SessionKeyService.renew(session.key)
+      const renewedSession = await SessionKeyService.refresh(session.key)
       expect(session.key).not.toEqual(renewedSession.key)
       expect(session.expiresAt.getTime()).toBeLessThanOrEqual(
         renewedSession.expiresAt.getTime()
@@ -70,7 +70,7 @@ describe('Session Key Service', (): void => {
     })
 
     test('Cannot renew non-existing session', async (): Promise<void> => {
-      const renewedSession = SessionKeyService.renew('123')
+      const renewedSession = SessionKeyService.refresh('123')
       expect(renewedSession).rejects.toThrow(new UnknownSessionError('123'))
     })
   })

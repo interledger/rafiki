@@ -7,7 +7,7 @@ import { Session, SessionKey } from './util'
 export interface SessionKeyService {
   create(): Promise<SessionKey>
   revoke(sessionKey: string): void
-  renew(sessionKey: string): Promise<SessionKey>
+  refresh(sessionKey: string): Promise<SessionKey>
   getSession(sessionKey: string): Promise<Session>
 }
 
@@ -29,7 +29,7 @@ export async function createSessionKeyService({
   return {
     create: () => createSessionKey(deps),
     revoke: (sessionKey: string) => revokeSessionKey(deps, sessionKey),
-    renew: (sessionKey: string) => renewSessionKey(deps, sessionKey),
+    refresh: (sessionKey: string) => refreshSessionKey(deps, sessionKey),
     getSession: (sessionKey: string) => getSession(deps, sessionKey)
   }
 }
@@ -47,7 +47,7 @@ async function revokeSessionKey(deps: ServiceDependencies, sessionKey: string) {
   deps.redis.del(sessionKey)
 }
 
-async function renewSessionKey(
+async function refreshSessionKey(
   deps: ServiceDependencies,
   sessionKey: string
 ): Promise<SessionKey> {
