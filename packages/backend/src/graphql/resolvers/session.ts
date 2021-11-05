@@ -1,4 +1,4 @@
-import { isSessionKeyError, SessionKeyError } from '../../sessionKey/errors'
+import { isSessionError, SessionError } from '../../session/errors'
 import { ResolversTypes, MutationResolvers } from '../generated/graphql'
 
 export const refreshSession: MutationResolvers['refreshSession'] = async (
@@ -7,17 +7,17 @@ export const refreshSession: MutationResolvers['refreshSession'] = async (
   ctx
 ): ResolversTypes['RefreshSessionMutationResponse'] => {
   try {
-    const sessionKeyService = await ctx.container.use('sessionKeyService')
-    const sessionOrError = await sessionKeyService.refresh(args.input)
-    if (isSessionKeyError(sessionOrError)) {
+    const sessionService = await ctx.container.use('sessionService')
+    const sessionOrError = await sessionService.refresh(args.input)
+    if (isSessionError(sessionOrError)) {
       switch (sessionOrError) {
-        case SessionKeyError.UnknownSession:
+        case SessionError.UnknownSession:
           return {
             code: '404',
             message: 'Session not found.',
             success: false
           }
-        case SessionKeyError.SessionExpired:
+        case SessionError.SessionExpired:
           return {
             code: '401',
             message: 'Session expired.',
@@ -53,7 +53,7 @@ export const revokeSession: MutationResolvers['revokeSession'] = async (
   ctx
 ): ResolversTypes['RevokeSessionMutationResponse'] => {
   try {
-    const sessionKeyService = await ctx.container.use('sessionKeyService')
+    const sessionKeyService = await ctx.container.use('sessionService')
     await sessionKeyService.revoke(args.input)
     return {
       code: '200',

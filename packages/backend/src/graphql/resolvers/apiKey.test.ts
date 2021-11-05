@@ -19,8 +19,8 @@ import {
 } from '../generated/graphql'
 import { ApiKeyService } from '../../apiKey/service'
 import bcrypt from 'bcrypt'
-import { SessionKeyService } from '../../sessionKey/service'
-import { isSessionKeyError } from '../../sessionKey/errors'
+import { SessionService } from '../../session/service'
+import { isSessionError } from '../../session/errors'
 
 describe('ApiKey Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -29,7 +29,7 @@ describe('ApiKey Resolvers', (): void => {
   let accountService: AccountService
   let accountFactory: AccountFactory
   let apiKeyService: ApiKeyService
-  let sessionKeyService: SessionKeyService
+  let sessionService: SessionService
 
   beforeAll(
     async (): Promise<void> => {
@@ -39,7 +39,7 @@ describe('ApiKey Resolvers', (): void => {
       accountService = await deps.use('accountService')
       accountFactory = new AccountFactory(accountService)
       apiKeyService = await deps.use('apiKeyService')
-      sessionKeyService = await deps.use('sessionKeyService')
+      sessionService = await deps.use('sessionService')
     }
   )
 
@@ -158,10 +158,10 @@ describe('ApiKey Resolvers', (): void => {
       expect(response.session?.key).not.toBeNull()
       expect(response.session?.expiresAt).not.toBeNull()
       if (response.session) {
-        const session = await sessionKeyService.getSession({
+        const session = await sessionService.get({
           key: response.session.key
         })
-        if (isSessionKeyError(session)) {
+        if (isSessionError(session)) {
           fail()
         } else {
           expect(new Date(Number(response.session.expiresAt))).toEqual(

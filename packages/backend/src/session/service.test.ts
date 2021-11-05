@@ -1,23 +1,23 @@
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { createTestApp, TestContainer } from '../tests/app'
-import { SessionKeyService } from './service'
-import { initIocContainer } from '../'
+import { SessionService } from './service'
+import { initIocContainer } from '..'
 import { Redis } from 'ioredis'
 import { Config } from '../config/app'
-import { isSessionKeyError, SessionKeyError } from './errors'
+import { isSessionError, SessionError } from './errors'
 
 describe('Session Key Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let SessionKeyService: SessionKeyService
+  let SessionService: SessionService
   let redis: Redis
 
   beforeAll(
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
-      SessionKeyService = await deps.use('sessionKeyService')
+      SessionService = await deps.use('sessionService')
       redis = await deps.use('redis')
     }
   )
@@ -37,39 +37,39 @@ describe('Session Key Service', (): void => {
 
   describe('Create / Get Session', (): void => {
     test('Can create and fetch session', async (): Promise<void> => {
-      const session = await SessionKeyService.create()
+      const session = await SessionService.create()
       expect(session).toHaveProperty('key')
       expect(session).toHaveProperty('expiresAt')
-      const retrievedSession = await SessionKeyService.getSession({
+      const retrievedSession = await SessionService.get({
         key: session.key
       })
       expect(retrievedSession).toEqual({ expiresAt: session.expiresAt })
     })
 
     test('Cannot fetch non-existing session', async (): Promise<void> => {
-      const sessionOrError = SessionKeyService.getSession({ key: '123' })
-      expect(sessionOrError).resolves.toEqual(SessionKeyError.UnknownSession)
+      const sessionOrError = SessionService.get({ key: '123' })
+      expect(sessionOrError).resolves.toEqual(SessionError.UnknownSession)
     })
   })
 
   describe('Manage Session', (): void => {
     test('Can revoke a session', async (): Promise<void> => {
-      const session = await SessionKeyService.create()
-      await SessionKeyService.revoke({ key: session.key })
-      const revokedSessionOrError = SessionKeyService.getSession({
+      const session = await SessionService.create()
+      await SessionService.revoke({ key: session.key })
+      const revokedSessionOrError = SessionService.get({
         key: session.key
       })
       expect(revokedSessionOrError).resolves.toEqual(
-        SessionKeyError.UnknownSession
+        SessionError.UnknownSession
       )
     })
 
     test('Can refresh a session', async (): Promise<void> => {
-      const session = await SessionKeyService.create()
-      const refreshSessionOrError = await SessionKeyService.refresh({
+      const session = await SessionService.create()
+      const refreshSessionOrError = await SessionService.refresh({
         key: session.key
       })
-      if (isSessionKeyError(refreshSessionOrError)) {
+      if (isSessionError(refreshSessionOrError)) {
         fail()
       } else {
         expect(session.key).not.toEqual(refreshSessionOrError.key)
@@ -80,9 +80,9 @@ describe('Session Key Service', (): void => {
     })
 
     test('Cannot refresh non-existing session', async (): Promise<void> => {
-      const refreshSessionOrError = SessionKeyService.refresh({ key: '123' })
+      const refreshSessionOrError = SessionService.refresh({ key: '123' })
       expect(refreshSessionOrError).resolves.toEqual(
-        SessionKeyError.UnknownSession
+        SessionError.UnknownSession
       )
     })
   })

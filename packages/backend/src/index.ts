@@ -27,7 +27,7 @@ import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebMonetizationService } from './webmonetization/service'
 import { createConnectorService } from './connector'
-import { createSessionKeyService } from './sessionKey/service'
+import { createSessionService } from './session/service'
 import { createApiKeyService } from './apiKey/service'
 
 BigInt.prototype.toJSON = function () {
@@ -269,20 +269,20 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('sessionKeyService', async (deps) => {
+  container.singleton('sessionService', async (deps) => {
     const logger = await deps.use('logger')
     const redis = await deps.use('redis')
-    return await createSessionKeyService({ logger: logger, redis: redis })
+    return await createSessionService({ logger: logger, redis: redis })
   })
 
   container.singleton('apiKeyService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
-    const sessionKeyService = await deps.use('sessionKeyService')
+    const sessionService = await deps.use('sessionService')
     return await createApiKeyService({
       logger: logger,
       knex: knex,
-      sessionKeyService: sessionKeyService
+      sessionService: sessionService
     })
   })
   return container

@@ -1,10 +1,10 @@
 import { BaseService } from '../shared/baseService'
-import { SessionKeyService } from '../sessionKey/service'
+import { SessionService } from '../session/service'
 import { ApiKey } from './model'
 import { uuid } from '../connector/core'
 import bcrypt from 'bcrypt'
 import { Transaction } from 'knex'
-import { SessionKey } from '../sessionKey/util'
+import { SessionKey } from '../session/util'
 import { ApiKeyError } from './errors'
 
 export interface ApiKeyService {
@@ -15,7 +15,7 @@ export interface ApiKeyService {
 }
 
 interface ServiceDependencies extends BaseService {
-  sessionKeyService: SessionKeyService
+  sessionService: SessionService
 }
 
 type ApiKeyOptions = {
@@ -34,7 +34,7 @@ interface NewApiKey extends ApiKey {
 export async function createApiKeyService({
   logger,
   knex,
-  sessionKeyService
+  sessionService: sessionKeyService
 }: ServiceDependencies): Promise<ApiKeyService> {
   const log = logger.child({
     service: 'ApiKeyService'
@@ -42,7 +42,7 @@ export async function createApiKeyService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    sessionKeyService
+    sessionService: sessionKeyService
   }
   return {
     create: (options, trx) => createApiKey(deps, options, trx),
@@ -92,7 +92,7 @@ async function redeemSessionKey(
   if (keys && keys.length) {
     const match = await bcrypt.compare(key, keys[0].hashedKey)
     if (match) {
-      return deps.sessionKeyService.create()
+      return deps.sessionService.create()
     }
   }
   return ApiKeyError.UnknownApiKey
