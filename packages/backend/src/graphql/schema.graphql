@@ -120,6 +120,12 @@ type Mutation {
   redeemSessionKey(
     input: RedeemSessionKeyInput!
   ): RedeemSessionKeyMutationResponse
+
+  "Refresh Session"
+  refreshSession(input: RefreshSessionInput!): RefreshSessionMutationResponse
+
+  "Revoke Session"
+  revokeSession(input: RevokeSessionInput!): RevokeSessionMutationResponse
 }
 
 type PageInfo {
@@ -267,6 +273,16 @@ input RedeemSessionKeyInput {
   key: String!
   "Account API key was issued for."
   accountId: String!
+}
+
+input RefreshSessionInput {
+  "Session key"
+  key: String!
+}
+
+input RevokeSessionInput {
+  "Session key"
+  key: String!
 }
 
 type Asset {
@@ -676,6 +692,19 @@ type RedeemSessionKeyMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   session: Session
+}
+
+type RefreshSessionMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  session: Session
+}
+
+type RevokeSessionMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
 }
 
 interface MutationResponse {

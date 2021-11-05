@@ -30,6 +30,7 @@ import {
 } from './withdrawal'
 import { createApiKey, deleteAllApiKeys, redeemSessionKey } from './apiKey'
 import { GraphQLBigInt } from '../scalars'
+import { refreshSession, revokeSession } from './session'
 
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
@@ -93,6 +94,8 @@ export const resolvers: Resolvers = {
     settleDebt: settleDebt,
     createApiKey: createApiKey,
     redeemSessionKey: redeemSessionKey,
-    deleteAllApiKeys: deleteAllApiKeys
+    deleteAllApiKeys: deleteAllApiKeys,
+    refreshSession: refreshSession,
+    revokeSession: revokeSession
   }
 }

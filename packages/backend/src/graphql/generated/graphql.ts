@@ -376,6 +376,10 @@ export type Mutation = {
   deleteAllApiKeys?: Maybe<DeleteAllApiKeysMutationResponse>;
   /** Redeem Session Key */
   redeemSessionKey?: Maybe<RedeemSessionKeyMutationResponse>;
+  /** Refresh Session */
+  refreshSession?: Maybe<RefreshSessionMutationResponse>;
+  /** Revoke Session */
+  revokeSession?: Maybe<RevokeSessionMutationResponse>;
 };
 
 
@@ -496,6 +500,16 @@ export type MutationDeleteAllApiKeysArgs = {
 
 export type MutationRedeemSessionKeyArgs = {
   input: RedeemSessionKeyInput;
+};
+
+
+export type MutationRefreshSessionArgs = {
+  input: RefreshSessionInput;
+};
+
+
+export type MutationRevokeSessionArgs = {
+  input: RevokeSessionInput;
 };
 
 export type MutationResponse = {
@@ -662,6 +676,19 @@ export type RedeemSessionKeyMutationResponse = MutationResponse & {
   session?: Maybe<Session>;
 };
 
+export type RefreshSessionInput = {
+  /** Session key */
+  key: Scalars['String'];
+};
+
+export type RefreshSessionMutationResponse = MutationResponse & {
+  __typename?: 'RefreshSessionMutationResponse';
+  code: Scalars['String'];
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+  session?: Maybe<Session>;
+};
+
 export type RevokeCreditInput = {
   /** Account revoking credit. */
   accountId: Scalars['String'];
@@ -677,6 +704,18 @@ export type RevokeCreditMutationResponse = MutationResponse & {
   success: Scalars['Boolean'];
   message: Scalars['String'];
   error?: Maybe<CreditError>;
+};
+
+export type RevokeSessionInput = {
+  /** Session key */
+  key: Scalars['String'];
+};
+
+export type RevokeSessionMutationResponse = MutationResponse & {
+  __typename?: 'RevokeSessionMutationResponse';
+  code: Scalars['String'];
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
 
 export type RollbackPendingWithdrawalMutationResponse = MutationResponse & {
@@ -956,7 +995,7 @@ export type ResolversTypes = {
   InvoiceConnection: ResolverTypeWrapper<Partial<InvoiceConnection>>;
   InvoiceEdge: ResolverTypeWrapper<Partial<InvoiceEdge>>;
   Mutation: ResolverTypeWrapper<{}>;
-  MutationResponse: ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateApiKeyMutationResponse'] | ResolversTypes['CreateDepositMutationResponse'] | ResolversTypes['CreateSubAccountMutationResponse'] | ResolversTypes['CreateWebhookMutationResponse'] | ResolversTypes['CreateWithdrawalMutationResponse'] | ResolversTypes['DeleteAccountMutationResponse'] | ResolversTypes['DeleteAllApiKeysMutationResponse'] | ResolversTypes['DeleteWebhookMutationResponse'] | ResolversTypes['ExtendCreditMutationResponse'] | ResolversTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversTypes['RedeemSessionKeyMutationResponse'] | ResolversTypes['RevokeCreditMutationResponse'] | ResolversTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversTypes['SettleDebtMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdateAccountMutationResponse'] | ResolversTypes['UpdateWebhookMutationResponse'] | ResolversTypes['UtilizeCreditMutationResponse'];
+  MutationResponse: ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateApiKeyMutationResponse'] | ResolversTypes['CreateDepositMutationResponse'] | ResolversTypes['CreateSubAccountMutationResponse'] | ResolversTypes['CreateWebhookMutationResponse'] | ResolversTypes['CreateWithdrawalMutationResponse'] | ResolversTypes['DeleteAccountMutationResponse'] | ResolversTypes['DeleteAllApiKeysMutationResponse'] | ResolversTypes['DeleteWebhookMutationResponse'] | ResolversTypes['ExtendCreditMutationResponse'] | ResolversTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversTypes['RedeemSessionKeyMutationResponse'] | ResolversTypes['RefreshSessionMutationResponse'] | ResolversTypes['RevokeCreditMutationResponse'] | ResolversTypes['RevokeSessionMutationResponse'] | ResolversTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversTypes['SettleDebtMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdateAccountMutationResponse'] | ResolversTypes['UpdateWebhookMutationResponse'] | ResolversTypes['UtilizeCreditMutationResponse'];
   OutgoingPayment: ResolverTypeWrapper<Partial<OutgoingPayment>>;
   OutgoingPaymentOutcome: ResolverTypeWrapper<Partial<OutgoingPaymentOutcome>>;
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
@@ -971,8 +1010,12 @@ export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
   RedeemSessionKeyInput: ResolverTypeWrapper<Partial<RedeemSessionKeyInput>>;
   RedeemSessionKeyMutationResponse: ResolverTypeWrapper<Partial<RedeemSessionKeyMutationResponse>>;
+  RefreshSessionInput: ResolverTypeWrapper<Partial<RefreshSessionInput>>;
+  RefreshSessionMutationResponse: ResolverTypeWrapper<Partial<RefreshSessionMutationResponse>>;
   RevokeCreditInput: ResolverTypeWrapper<Partial<RevokeCreditInput>>;
   RevokeCreditMutationResponse: ResolverTypeWrapper<Partial<RevokeCreditMutationResponse>>;
+  RevokeSessionInput: ResolverTypeWrapper<Partial<RevokeSessionInput>>;
+  RevokeSessionMutationResponse: ResolverTypeWrapper<Partial<RevokeSessionMutationResponse>>;
   RollbackPendingWithdrawalMutationResponse: ResolverTypeWrapper<Partial<RollbackPendingWithdrawalMutationResponse>>;
   Routing: ResolverTypeWrapper<Partial<Routing>>;
   RoutingInput: ResolverTypeWrapper<Partial<RoutingInput>>;
@@ -1041,7 +1084,7 @@ export type ResolversParentTypes = {
   InvoiceConnection: Partial<InvoiceConnection>;
   InvoiceEdge: Partial<InvoiceEdge>;
   Mutation: {};
-  MutationResponse: ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateApiKeyMutationResponse'] | ResolversParentTypes['CreateDepositMutationResponse'] | ResolversParentTypes['CreateSubAccountMutationResponse'] | ResolversParentTypes['CreateWebhookMutationResponse'] | ResolversParentTypes['CreateWithdrawalMutationResponse'] | ResolversParentTypes['DeleteAccountMutationResponse'] | ResolversParentTypes['DeleteAllApiKeysMutationResponse'] | ResolversParentTypes['DeleteWebhookMutationResponse'] | ResolversParentTypes['ExtendCreditMutationResponse'] | ResolversParentTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversParentTypes['RedeemSessionKeyMutationResponse'] | ResolversParentTypes['RevokeCreditMutationResponse'] | ResolversParentTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversParentTypes['SettleDebtMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdateAccountMutationResponse'] | ResolversParentTypes['UpdateWebhookMutationResponse'] | ResolversParentTypes['UtilizeCreditMutationResponse'];
+  MutationResponse: ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateApiKeyMutationResponse'] | ResolversParentTypes['CreateDepositMutationResponse'] | ResolversParentTypes['CreateSubAccountMutationResponse'] | ResolversParentTypes['CreateWebhookMutationResponse'] | ResolversParentTypes['CreateWithdrawalMutationResponse'] | ResolversParentTypes['DeleteAccountMutationResponse'] | ResolversParentTypes['DeleteAllApiKeysMutationResponse'] | ResolversParentTypes['DeleteWebhookMutationResponse'] | ResolversParentTypes['ExtendCreditMutationResponse'] | ResolversParentTypes['FinalizePendingWithdrawalMutationResponse'] | ResolversParentTypes['RedeemSessionKeyMutationResponse'] | ResolversParentTypes['RefreshSessionMutationResponse'] | ResolversParentTypes['RevokeCreditMutationResponse'] | ResolversParentTypes['RevokeSessionMutationResponse'] | ResolversParentTypes['RollbackPendingWithdrawalMutationResponse'] | ResolversParentTypes['SettleDebtMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdateAccountMutationResponse'] | ResolversParentTypes['UpdateWebhookMutationResponse'] | ResolversParentTypes['UtilizeCreditMutationResponse'];
   OutgoingPayment: Partial<OutgoingPayment>;
   OutgoingPaymentOutcome: Partial<OutgoingPaymentOutcome>;
   OutgoingPaymentResponse: Partial<OutgoingPaymentResponse>;
@@ -1054,8 +1097,12 @@ export type ResolversParentTypes = {
   Query: {};
   RedeemSessionKeyInput: Partial<RedeemSessionKeyInput>;
   RedeemSessionKeyMutationResponse: Partial<RedeemSessionKeyMutationResponse>;
+  RefreshSessionInput: Partial<RefreshSessionInput>;
+  RefreshSessionMutationResponse: Partial<RefreshSessionMutationResponse>;
   RevokeCreditInput: Partial<RevokeCreditInput>;
   RevokeCreditMutationResponse: Partial<RevokeCreditMutationResponse>;
+  RevokeSessionInput: Partial<RevokeSessionInput>;
+  RevokeSessionMutationResponse: Partial<RevokeSessionMutationResponse>;
   RollbackPendingWithdrawalMutationResponse: Partial<RollbackPendingWithdrawalMutationResponse>;
   Routing: Partial<Routing>;
   RoutingInput: Partial<RoutingInput>;
@@ -1301,10 +1348,12 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createApiKey?: Resolver<Maybe<ResolversTypes['CreateApiKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateApiKeyArgs, 'input'>>;
   deleteAllApiKeys?: Resolver<Maybe<ResolversTypes['DeleteAllApiKeysMutationResponse']>, ParentType, ContextType, RequireFields<MutationDeleteAllApiKeysArgs, 'input'>>;
   redeemSessionKey?: Resolver<Maybe<ResolversTypes['RedeemSessionKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationRedeemSessionKeyArgs, 'input'>>;
+  refreshSession?: Resolver<Maybe<ResolversTypes['RefreshSessionMutationResponse']>, ParentType, ContextType, RequireFields<MutationRefreshSessionArgs, 'input'>>;
+  revokeSession?: Resolver<Maybe<ResolversTypes['RevokeSessionMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeSessionArgs, 'input'>>;
 };
 
 export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {
-  __resolveType: TypeResolveFn<'CreateAccountMutationResponse' | 'CreateApiKeyMutationResponse' | 'CreateDepositMutationResponse' | 'CreateSubAccountMutationResponse' | 'CreateWebhookMutationResponse' | 'CreateWithdrawalMutationResponse' | 'DeleteAccountMutationResponse' | 'DeleteAllApiKeysMutationResponse' | 'DeleteWebhookMutationResponse' | 'ExtendCreditMutationResponse' | 'FinalizePendingWithdrawalMutationResponse' | 'RedeemSessionKeyMutationResponse' | 'RevokeCreditMutationResponse' | 'RollbackPendingWithdrawalMutationResponse' | 'SettleDebtMutationResponse' | 'TransferMutationResponse' | 'UpdateAccountMutationResponse' | 'UpdateWebhookMutationResponse' | 'UtilizeCreditMutationResponse', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'CreateAccountMutationResponse' | 'CreateApiKeyMutationResponse' | 'CreateDepositMutationResponse' | 'CreateSubAccountMutationResponse' | 'CreateWebhookMutationResponse' | 'CreateWithdrawalMutationResponse' | 'DeleteAccountMutationResponse' | 'DeleteAllApiKeysMutationResponse' | 'DeleteWebhookMutationResponse' | 'ExtendCreditMutationResponse' | 'FinalizePendingWithdrawalMutationResponse' | 'RedeemSessionKeyMutationResponse' | 'RefreshSessionMutationResponse' | 'RevokeCreditMutationResponse' | 'RevokeSessionMutationResponse' | 'RollbackPendingWithdrawalMutationResponse' | 'SettleDebtMutationResponse' | 'TransferMutationResponse' | 'UpdateAccountMutationResponse' | 'UpdateWebhookMutationResponse' | 'UtilizeCreditMutationResponse', ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1397,11 +1446,26 @@ export type RedeemSessionKeyMutationResponseResolvers<ContextType = any, ParentT
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type RefreshSessionMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RefreshSessionMutationResponse'] = ResolversParentTypes['RefreshSessionMutationResponse']> = {
+  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  session?: Resolver<Maybe<ResolversTypes['Session']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type RevokeCreditMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RevokeCreditMutationResponse'] = ResolversParentTypes['RevokeCreditMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['CreditError']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type RevokeSessionMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RevokeSessionMutationResponse'] = ResolversParentTypes['RevokeSessionMutationResponse']> = {
+  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1554,7 +1618,9 @@ export type Resolvers<ContextType = any> = {
   PaymentSourceAccount?: PaymentSourceAccountResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RedeemSessionKeyMutationResponse?: RedeemSessionKeyMutationResponseResolvers<ContextType>;
+  RefreshSessionMutationResponse?: RefreshSessionMutationResponseResolvers<ContextType>;
   RevokeCreditMutationResponse?: RevokeCreditMutationResponseResolvers<ContextType>;
+  RevokeSessionMutationResponse?: RevokeSessionMutationResponseResolvers<ContextType>;
   RollbackPendingWithdrawalMutationResponse?: RollbackPendingWithdrawalMutationResponseResolvers<ContextType>;
   Routing?: RoutingResolvers<ContextType>;
   Session?: SessionResolvers<ContextType>;
