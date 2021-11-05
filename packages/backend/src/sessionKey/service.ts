@@ -6,13 +6,17 @@ import { Session, SessionKey } from './util'
 
 export interface SessionKeyService {
   create(): Promise<SessionKey>
-  revoke(sessionKey: string): void
-  refresh(sessionKey: string): Promise<SessionKey | SessionKeyError>
-  getSession(sessionKey: string): Promise<Session | SessionKeyError>
+  revoke(sessionKey: SessionKeyOptions): void
+  refresh(sessionKey: SessionKeyOptions): Promise<SessionKey | SessionKeyError>
+  getSession(sessionKey: SessionKeyOptions): Promise<Session | SessionKeyError>
 }
 
 interface ServiceDependencies extends BaseService {
   redis: IORedis.Redis
+}
+
+type SessionKeyOptions = {
+  key: string
 }
 
 export async function createSessionKeyService({
@@ -28,9 +32,9 @@ export async function createSessionKeyService({
   }
   return {
     create: () => createSessionKey(deps),
-    revoke: (sessionKey: string) => revokeSessionKey(deps, sessionKey),
-    refresh: (sessionKey: string) => refreshSessionKey(deps, sessionKey),
-    getSession: (sessionKey: string) => getSession(deps, sessionKey)
+    revoke: (options: SessionKeyOptions) => revokeSessionKey(deps, options),
+    refresh: (options: SessionKeyOptions) => refreshSessionKey(deps, options),
+    getSession: (options: SessionKeyOptions) => getSession(deps, options)
   }
 }
 
@@ -43,15 +47,18 @@ async function createSessionKey(
   return { key: sessionKey, expiresAt: new Date(expiresAt) }
 }
 
-async function revokeSessionKey(deps: ServiceDependencies, sessionKey: string) {
-  deps.redis.del(sessionKey)
+async function revokeSessionKey(
+  deps: ServiceDependencies,
+  { key }: SessionKeyOptions
+) {
+  deps.redis.del(key)
 }
 
 async function refreshSessionKey(
   deps: ServiceDependencies,
-  sessionKey: string
+  { key }: SessionKeyOptions
 ): Promise<SessionKey | SessionKeyError> {
-  const sessionOrError = await getSession(deps, sessionKey)
+  const sessionOrError = await getSession(deps, { key })
   if (isSessionKeyError(sessionOrError)) {
     return sessionOrError
   } else {
@@ -65,9 +72,9 @@ async function refreshSessionKey(
 
 async function getSession(
   deps: ServiceDependencies,
-  sessionKey: string
+  { key }: SessionKeyOptions
 ): Promise<Session | SessionKeyError> {
-  const retrievedSession = await deps.redis.get(sessionKey)
+  const retrievedSession = await deps.redis.get(key)
   if (retrievedSession) {
     const session = JSON.parse(retrievedSession)
     session.expiresAt = new Date(session.expiresAt)

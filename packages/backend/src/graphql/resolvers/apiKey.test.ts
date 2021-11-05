@@ -20,6 +20,7 @@ import {
 import { ApiKeyService } from '../../apiKey/service'
 import bcrypt from 'bcrypt'
 import { SessionKeyService } from '../../sessionKey/service'
+import { isSessionKeyError } from '../../sessionKey/errors'
 
 describe('ApiKey Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -157,10 +158,16 @@ describe('ApiKey Resolvers', (): void => {
       expect(response.session?.key).not.toBeNull()
       expect(response.session?.expiresAt).not.toBeNull()
       if (response.session) {
-        const session = await sessionKeyService.getSession(response.session.key)
-        expect(new Date(Number(response.session.expiresAt))).toEqual(
-          session.expiresAt
-        )
+        const session = await sessionKeyService.getSession({
+          key: response.session.key
+        })
+        if (isSessionKeyError(session)) {
+          fail()
+        } else {
+          expect(new Date(Number(response.session.expiresAt))).toEqual(
+            session.expiresAt
+          )
+        }
       } else {
         fail()
       }

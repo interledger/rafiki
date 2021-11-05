@@ -40,12 +40,14 @@ describe('Session Key Service', (): void => {
       const session = await SessionKeyService.create()
       expect(session).toHaveProperty('key')
       expect(session).toHaveProperty('expiresAt')
-      const retrievedSession = await SessionKeyService.getSession(session.key)
+      const retrievedSession = await SessionKeyService.getSession({
+        key: session.key
+      })
       expect(retrievedSession).toEqual({ expiresAt: session.expiresAt })
     })
 
     test('Cannot fetch non-existing session', async (): Promise<void> => {
-      const sessionOrError = SessionKeyService.getSession('123')
+      const sessionOrError = SessionKeyService.getSession({ key: '123' })
       expect(sessionOrError).resolves.toEqual(SessionKeyError.UnknownSession)
     })
   })
@@ -53,8 +55,10 @@ describe('Session Key Service', (): void => {
   describe('Manage Session', (): void => {
     test('Can revoke a session', async (): Promise<void> => {
       const session = await SessionKeyService.create()
-      await SessionKeyService.revoke(session.key)
-      const revokedSessionOrError = SessionKeyService.getSession(session.key)
+      await SessionKeyService.revoke({ key: session.key })
+      const revokedSessionOrError = SessionKeyService.getSession({
+        key: session.key
+      })
       expect(revokedSessionOrError).resolves.toEqual(
         SessionKeyError.UnknownSession
       )
@@ -62,7 +66,9 @@ describe('Session Key Service', (): void => {
 
     test('Can refresh a session', async (): Promise<void> => {
       const session = await SessionKeyService.create()
-      const refreshSessionOrError = await SessionKeyService.refresh(session.key)
+      const refreshSessionOrError = await SessionKeyService.refresh({
+        key: session.key
+      })
       if (isSessionKeyError(refreshSessionOrError)) {
         fail()
       } else {
@@ -74,7 +80,7 @@ describe('Session Key Service', (): void => {
     })
 
     test('Cannot refresh non-existing session', async (): Promise<void> => {
-      const refreshSessionOrError = SessionKeyService.refresh('123')
+      const refreshSessionOrError = SessionKeyService.refresh({ key: '123' })
       expect(refreshSessionOrError).resolves.toEqual(
         SessionKeyError.UnknownSession
       )
