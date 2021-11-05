@@ -1,13 +1,8 @@
-export class SessionKeyExpiredError extends Error {
-  constructor() {
-    super('Session key expired')
-    this.name = 'SessionKeyExpiredError'
-  }
+export enum SessionKeyError {
+  SessionExpired = 'SessionExpired',
+  UnknownSession = 'UnknownSession'
 }
 
-export class UnknownSessionError extends Error {
-  constructor(public sessionKey: string) {
-    super('Session not found. sessionKey=' + sessionKey)
-    this.name = 'UnknownSessionError'
-  }
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isSessionKeyError = (o: any): o is SessionKeyError =>
+  Object.values(SessionKeyError).includes(o)

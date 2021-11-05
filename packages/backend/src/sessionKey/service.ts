@@ -1,14 +1,14 @@
 import { BaseService } from '../shared/baseService'
 import { uuid } from '../connector/core'
 import IORedis from 'ioredis'
-import { SessionKeyExpiredError, UnknownSessionError } from './errors'
+import { isSessionKeyError, SessionKeyError } from './errors'
 import { Session, SessionKey } from './util'
 
 export interface SessionKeyService {
   create(): Promise<SessionKey>
   revoke(sessionKey: string): void
-  refresh(sessionKey: string): Promise<SessionKey>
-  getSession(sessionKey: string): Promise<Session>
+  refresh(sessionKey: string): Promise<SessionKey | SessionKeyError>
+  getSession(sessionKey: string): Promise<Session | SessionKeyError>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -50,25 +50,29 @@ async function revokeSessionKey(deps: ServiceDependencies, sessionKey: string) {
 async function refreshSessionKey(
   deps: ServiceDependencies,
   sessionKey: string
-): Promise<SessionKey> {
-  const session = await getSession(deps, sessionKey)
-  if (session.expiresAt > new Date(Date.now())) {
-    return createSessionKey(deps)
+): Promise<SessionKey | SessionKeyError> {
+  const sessionOrError = await getSession(deps, sessionKey)
+  if (isSessionKeyError(sessionOrError)) {
+    return sessionOrError
   } else {
-    throw new SessionKeyExpiredError()
+    if (sessionOrError.expiresAt > new Date(Date.now())) {
+      return createSessionKey(deps)
+    } else {
+      return SessionKeyError.SessionExpired
+    }
   }
 }
 
 async function getSession(
   deps: ServiceDependencies,
   sessionKey: string
-): Promise<Session> {
+): Promise<Session | SessionKeyError> {
   const retrievedSession = await deps.redis.get(sessionKey)
   if (retrievedSession) {
     const session = JSON.parse(retrievedSession)
     session.expiresAt = new Date(session.expiresAt)
     return session
   } else {
-    throw new UnknownSessionError(sessionKey)
+    return SessionKeyError.UnknownSession
   }
 }

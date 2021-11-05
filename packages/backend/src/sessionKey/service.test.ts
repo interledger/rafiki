@@ -5,7 +5,7 @@ import { SessionKeyService } from './service'
 import { initIocContainer } from '../'
 import { Redis } from 'ioredis'
 import { Config } from '../config/app'
-import { UnknownSessionError } from './errors'
+import { isSessionKeyError, SessionKeyError } from './errors'
 
 describe('Session Key Service', (): void => {
   let deps: IocContract<AppServices>
@@ -45,8 +45,8 @@ describe('Session Key Service', (): void => {
     })
 
     test('Cannot fetch non-existing session', async (): Promise<void> => {
-      const session = SessionKeyService.getSession('123')
-      expect(session).rejects.toThrow(new UnknownSessionError('123'))
+      const sessionOrError = SessionKeyService.getSession('123')
+      expect(sessionOrError).resolves.toEqual(SessionKeyError.UnknownSession)
     })
   })
 
@@ -54,24 +54,30 @@ describe('Session Key Service', (): void => {
     test('Can revoke a session', async (): Promise<void> => {
       const session = await SessionKeyService.create()
       await SessionKeyService.revoke(session.key)
-      const revokedSession = SessionKeyService.getSession(session.key)
-      expect(revokedSession).rejects.toThrow(
-        new UnknownSessionError(session.key)
+      const revokedSessionOrError = SessionKeyService.getSession(session.key)
+      expect(revokedSessionOrError).resolves.toEqual(
+        SessionKeyError.UnknownSession
       )
     })
 
     test('Can refresh a session', async (): Promise<void> => {
       const session = await SessionKeyService.create()
-      const renewedSession = await SessionKeyService.refresh(session.key)
-      expect(session.key).not.toEqual(renewedSession.key)
-      expect(session.expiresAt.getTime()).toBeLessThanOrEqual(
-        renewedSession.expiresAt.getTime()
-      )
+      const refreshSessionOrError = await SessionKeyService.refresh(session.key)
+      if (isSessionKeyError(refreshSessionOrError)) {
+        fail()
+      } else {
+        expect(session.key).not.toEqual(refreshSessionOrError.key)
+        expect(session.expiresAt.getTime()).toBeLessThanOrEqual(
+          refreshSessionOrError.expiresAt.getTime()
+        )
+      }
     })
 
-    test('Cannot renew non-existing session', async (): Promise<void> => {
-      const renewedSession = SessionKeyService.refresh('123')
-      expect(renewedSession).rejects.toThrow(new UnknownSessionError('123'))
+    test('Cannot refresh non-existing session', async (): Promise<void> => {
+      const refreshSessionOrError = SessionKeyService.refresh('123')
+      expect(refreshSessionOrError).resolves.toEqual(
+        SessionKeyError.UnknownSession
+      )
     })
   })
 })
