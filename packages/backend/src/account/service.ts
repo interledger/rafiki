@@ -106,13 +106,28 @@ async function createAccount(
 
     let receiveLimitBalanceId: string | undefined
     if (account.receiveLimit) {
-      // TODO or create the TigerBeetle account with the limit (i.e. pass in credits_accepted)? Is that allowed or would it mess up accounting?
       receiveLimitBalanceId = (
         await deps.balanceService.create({
           debitBalance: true,
           unit: accountRow.asset.unit
         })
       ).id
+      const transferError = await deps.transferService.create([
+        {
+          id: uuid(),
+          sourceBalanceId: receiveLimitBalanceId,
+          destinationBalanceId: accountRow.asset.receiveLimitBalanceId,
+          // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
+          amount: account.receiveLimit + BigInt(1)
+        }
+      ])
+      if (transferError) {
+        deps.logger.error(
+          { transferError },
+          'receive limit setup TigerBeetle error'
+        )
+        throw new Error('unable to create invoice, TigerBeetle error')
+      }
     }
     const newAccount = await accountRow
       .$query(acctTrx)
@@ -313,7 +328,7 @@ async function transferFunds(
           destinationAccount.receiveLimitBalanceId &&
           error.index === transfers.length - 1
         ) {
-          return AccountTransferError.InvoiceLimitExceeded
+          return AccountTransferError.ReceiveLimitExceeded
         }
         if (error.index === 1) {
           return AccountTransferError.InsufficientLiquidity

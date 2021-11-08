@@ -37,14 +37,7 @@ describe('Invoice Routes', (): void => {
   beforeAll(
     async (): Promise<void> => {
       config = Config
-      config.ilpAddress = 'test.rafiki'
       config.publicHost = 'https://wallet.example'
-      config.peerAddresses = [
-        {
-          accountId: uuid(),
-          ilpAddress: 'test.alice'
-        }
-      ]
       deps = await initIocContainer(config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
@@ -298,6 +291,30 @@ describe('Invoice Routes', (): void => {
         assetCode: invoice.account.asset.code,
         assetScale: invoice.account.asset.scale,
         description: invoice.description,
+        received: '0'
+      })
+    })
+
+    test('returns the invoice on undefined description', async (): Promise<void> => {
+      const ctx = setup({})
+      ctx.request.body['description'] = undefined
+      await expect(invoiceRoutes.create(ctx)).resolves.toBeUndefined()
+      expect(ctx.response.status).toBe(201)
+      const invoiceId = ((ctx.response.body as Record<string, unknown>)[
+        'id'
+      ] as string)
+        .split('/')
+        .pop()
+      expect(ctx.response.headers['location']).toBe(
+        `${config.publicHost}/invoices/${invoiceId}`
+      )
+      expect(ctx.response.body).toEqual({
+        id: `${config.publicHost}/invoices/${invoiceId}`,
+        account: `${config.publicHost}/pay/${invoice.paymentPointerId}`,
+        amount: invoice.amountToReceive?.toString(),
+        assetCode: invoice.account.asset.code,
+        assetScale: invoice.account.asset.scale,
+        description: null,
         received: '0'
       })
     })

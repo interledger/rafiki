@@ -1,4 +1,3 @@
-import { v4 as uuid } from 'uuid'
 import { Invoice } from './model'
 import { AccountService } from '../account/service'
 import { PaymentPointerService } from '../payment_pointer/service'
@@ -11,7 +10,7 @@ import { TransactionOrKnex } from 'objection'
 
 interface CreateOptions {
   paymentPointerId: string
-  description: string
+  description?: string
   expiresAt?: Date
   amountToReceive?: bigint
 }
@@ -82,24 +81,6 @@ async function createInvoice(
       },
       invTrx
     )
-
-    // Establish the maximum amount the invoice can receive.
-    if (amountToReceive) {
-      if (!account.receiveLimitBalanceId) throw new Error('unreachable')
-      const error = await deps.transferService.create([
-        {
-          id: uuid(),
-          sourceBalanceId: account.receiveLimitBalanceId,
-          destinationBalanceId: account.asset.receiveLimitBalanceId,
-          // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
-          amount: amountToReceive + BigInt(1)
-        }
-      ])
-      if (error) {
-        deps.logger.error({ error }, 'invoice limit setup TigerBeetle error')
-        throw new Error('unable to create invoice, TigerBeetle error')
-      }
-    }
 
     const invoice = await Invoice.query(invTrx)
       .insertAndFetch({

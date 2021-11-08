@@ -41,9 +41,6 @@ export const Config = {
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
 
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
-  peerAddresses: process.env.PEER_ADDRESSES
-    ? JSON.parse(process.env.PEER_ADDRESSES)
-    : [],
   streamSecret: process.env.STREAM_SECRET
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
     : crypto.randomBytes(32),

@@ -22,7 +22,7 @@ export class Invoice extends BaseModel {
   public paymentPointerId!: string // Refers to payment pointer this invoice is for
   public accountId!: string // Refers to the account created for this invoice
   public active!: boolean
-  public description!: string
+  public description?: string
   public expiresAt?: Date
   public readonly amountToReceive?: bigint
 }

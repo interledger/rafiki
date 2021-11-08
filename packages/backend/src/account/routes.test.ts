@@ -31,14 +31,7 @@ describe('Account Routes', (): void => {
   beforeAll(
     async (): Promise<void> => {
       config = Config
-      config.ilpAddress = 'test.rafiki'
       config.publicHost = 'https://wallet.example'
-      config.peerAddresses = [
-        {
-          accountId: uuid(),
-          ilpAddress: 'test.alice'
-        }
-      ]
       deps = await initIocContainer(config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)

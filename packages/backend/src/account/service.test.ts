@@ -140,6 +140,24 @@ describe('Account Service', (): void => {
         debitBalance: false
       })
     })
+
+    it('Can create an account with a receive limit', async (): Promise<void> => {
+      const { id: assetId } = await assetService.getOrCreate(randomAsset())
+      const options: CreateOptions = {
+        assetId,
+        receiveLimit: BigInt(123)
+      }
+      const account = await accountService.create(options)
+      assert.ok(account.receiveLimitBalanceId)
+      await expect(
+        balanceService.get(account.receiveLimitBalanceId)
+      ).resolves.toEqual({
+        id: account.receiveLimitBalanceId,
+        balance: BigInt(124),
+        unit: account.asset.unit,
+        debitBalance: true
+      })
+    })
   })
 
   describe('Get Account', (): void => {
@@ -605,17 +623,15 @@ describe('Account Service', (): void => {
           sourceAmount: BigInt(123 + 2),
           timeout
         })
-      ).resolves.toBe(AccountTransferError.InvoiceLimitExceeded)
+      ).resolves.toBe(AccountTransferError.ReceiveLimitExceeded)
 
       // ... but a smaller payment is fine
-      const trxOrError = await expect(
-        accountService.transferFunds({
-          sourceAccount,
-          destinationAccount: invoice.account,
-          sourceAmount: BigInt(123 + 2),
-          timeout
-        })
-      ).resolves.toBe(AccountTransferError.InvoiceLimitExceeded)
+      const trxOrError = await accountService.transferFunds({
+        sourceAccount,
+        destinationAccount: invoice.account,
+        sourceAmount: BigInt(123),
+        timeout
+      })
       expect(isAccountTransferError(trxOrError)).toEqual(false)
     })
 

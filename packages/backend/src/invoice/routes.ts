@@ -102,7 +102,7 @@ async function createInvoice(
   if (!amountToReceive) return ctx.throw(400, 'invalid amount')
   const expiresAt = Date.parse(body['expiresAt'] as string)
   if (!expiresAt) return ctx.throw(400, 'invalid expiresAt')
-  if (typeof body.description !== 'string')
+  if (body.description !== undefined && typeof body.description !== 'string')
     return ctx.throw(400, 'invalid description')
   if (Date.now() + MAX_EXPIRY < expiresAt)
     return ctx.throw(400, 'expiry too high')

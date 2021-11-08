@@ -206,13 +206,17 @@ export class App {
     const spspRoutes = await this.container.use('spspRoutes')
     const accountRoutes = await this.container.use('accountRoutes')
     const invoiceRoutes = await this.container.use('invoiceRoutes')
-    this.publicRouter.get('/pay/:paymentPointerId', (ctx: AppContext): void => {
-      // Fall back to legacy protocols if client doesn't support Open Payments.
-      if (ctx.accepts('application/json')) accountRoutes.get(ctx)
-      //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
-      else if (ctx.accepts('application/spsp4+json')) spspRoutes.get(ctx)
-      else ctx.throw(406, 'no accepted Content-Type available')
-    })
+    this.publicRouter.get(
+      '/pay/:paymentPointerId',
+      async (ctx: AppContext): Promise<void> => {
+        // Fall back to legacy protocols if client doesn't support Open Payments.
+        if (ctx.accepts('application/json')) await accountRoutes.get(ctx)
+        //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
+        else if (ctx.accepts('application/spsp4+json'))
+          await spspRoutes.get(ctx)
+        else ctx.throw(406, 'no accepted Content-Type available')
+      }
+    )
 
     this.publicRouter.get('/invoices/:invoiceId', invoiceRoutes.get)
     this.publicRouter.post(
