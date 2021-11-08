@@ -175,16 +175,16 @@ describe('Invoice Service', (): void => {
       expect(invoiceAfter.active).toBe(false)
     })
 
-    test('Deletes an expired invoice with no money', async (): Promise<void> => {
-      const invoiceId = (
-        await invoiceService.create({
-          paymentPointerId,
-          description: 'Test invoice',
-          expiresAt: new Date(Date.now() - 40_000)
-        })
-      ).id
-      await expect(invoiceService.deactivateNext()).resolves.toBe(invoiceId)
-      expect(await invoiceService.get(invoiceId)).toBeUndefined()
+    test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
+      const accountService = await deps.use('accountService')
+      const invoice = await invoiceService.create({
+        paymentPointerId,
+        description: 'Test invoice',
+        expiresAt: new Date(Date.now() - 40_000)
+      })
+      await expect(invoiceService.deactivateNext()).resolves.toBe(invoice.id)
+      expect(await invoiceService.get(invoice.id)).toBeUndefined()
+      expect(await accountService.get(invoice.accountId)).toBeUndefined()
     })
   })
 

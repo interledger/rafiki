@@ -2,7 +2,7 @@ exports.up = function (knex) {
   return knex.schema.createTable('invoices', function (table) {
     table.uuid('id').notNullable().primary()
     table.uuid('accountId').notNullable()
-    table.foreign('accountId').references('accounts.id')
+    table.foreign('accountId').references('accounts.id').onDelete('CASCADE')
     table.uuid('paymentPointerId').notNullable()
     table.foreign('paymentPointerId').references('paymentPointers.id')
     table.boolean('active').notNullable()

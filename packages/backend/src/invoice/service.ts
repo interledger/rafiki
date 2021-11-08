@@ -131,7 +131,7 @@ async function deactivateNextInvoice(
       await invoice.$query(trx).patch({ active: false })
     } else {
       deps.logger.debug({ invoice: invoice.id }, 'deleting expired invoice')
-      await invoice.$query(trx).delete()
+      await invoice.$relatedQuery('account', trx).delete()
     }
     return invoice.id
   })
