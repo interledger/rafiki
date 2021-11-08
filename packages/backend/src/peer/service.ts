@@ -6,6 +6,7 @@ import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
 import { AccountService } from '../account/service'
 import { AssetService, AssetOptions } from '../asset/service'
+import { BalanceType } from '../balance/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
 import { BaseService } from '../shared/baseService'
@@ -101,7 +102,8 @@ async function createPeer(
       {
         assetId: (
           await deps.assetService.getOrCreate(options.asset as AssetOptions)
-        ).id
+        ).id,
+        balanceType: BalanceType.Credit
       },
       peerTrx
     )
@@ -252,13 +254,9 @@ async function getPeerByIncomingToken(
   deps: ServiceDependencies,
   token: string
 ): Promise<Peer | undefined> {
-  const peer = await Peer.query(deps.knex)
-    .withGraphJoined('[account.asset, incomingTokens]')
-    .where('incomingTokens.token', token)
-    .first()
-  if (peer) {
-    delete peer.incomingTokens
-    return peer
+  const httpToken = await deps.httpTokenService.get(token)
+  if (httpToken) {
+    return httpToken.peer
   }
 }
 

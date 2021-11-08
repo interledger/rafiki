@@ -142,11 +142,10 @@ export function initIocContainer(
   container.singleton('assetService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
-    const balanceService = await deps.use('balanceService')
     return await createAssetService({
       logger: logger,
       knex: knex,
-      balanceService: balanceService
+      accountService: await deps.use('accountService')
     })
   })
   container.singleton('accountService', async (deps) => {
@@ -264,7 +263,6 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountService: await deps.use('accountService'),
-      balanceService: await deps.use('balanceService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       paymentPointerService: await deps.use('paymentPointerService'),
       ratesService: await deps.use('ratesService')

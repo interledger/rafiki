@@ -20,6 +20,7 @@ export interface CreateOptions {
   assetId: string
   sentBalance?: boolean
   receiveLimit?: bigint
+  balanceType: BalanceType
 }
 
 export interface AccountTransferOptions {
@@ -92,7 +93,7 @@ async function createAccount(
       .withGraphFetched('asset')
 
     const { id: balanceId } = await deps.balanceService.create({
-      type: BalanceType.Credit,
+      type: account.balanceType,
       unit: accountRow.asset.unit
     })
 
@@ -114,11 +115,12 @@ async function createAccount(
           unit: accountRow.asset.unit
         })
       ).id
+      const receiveLimitAccount = await accountRow.asset.getReceiveLimitAccount()
       const transferError = await deps.transferService.create([
         {
           id: uuid(),
           sourceBalanceId: receiveLimitBalanceId,
-          destinationBalanceId: accountRow.asset.receiveLimitBalanceId,
+          destinationBalanceId: receiveLimitAccount.balanceId,
           // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
           amount: account.receiveLimit + BigInt(1)
         }
@@ -253,18 +255,20 @@ async function transferFunds(
     if (destinationAmount && sourceAmount !== destinationAmount) {
       // Send excess source amount to liquidity account
       if (destinationAmount < sourceAmount) {
+        const sourceLiquidityAccount = await sourceAccount.asset.getLiquidityAccount()
         transfers.push({
           id: uuid(),
           sourceBalanceId: sourceAccount.balanceId,
-          destinationBalanceId: sourceAccount.asset.balanceId,
+          destinationBalanceId: sourceLiquidityAccount.balanceId,
           amount: sourceAmount - destinationAmount,
           timeout
         })
         // Deliver excess destination amount from liquidity account
       } else {
+        const destinationLiquidityAccount = await destinationAccount.asset.getLiquidityAccount()
         transfers.push({
           id: uuid(),
-          sourceBalanceId: destinationAccount.asset.balanceId,
+          sourceBalanceId: destinationLiquidityAccount.balanceId,
           destinationBalanceId: destinationAccount.balanceId,
           amount: destinationAmount - sourceAmount,
           timeout
@@ -279,17 +283,19 @@ async function transferFunds(
     }
     // Send to source liquidity account
     // Deliver from destination liquidity account
+    const sourceLiquidityAccount = await sourceAccount.asset.getLiquidityAccount()
+    const destinationLiquidityAccount = await destinationAccount.asset.getLiquidityAccount()
     transfers.push(
       {
         id: uuid(),
         sourceBalanceId: sourceAccount.balanceId,
-        destinationBalanceId: sourceAccount.asset.balanceId,
+        destinationBalanceId: sourceLiquidityAccount.balanceId,
         amount: sourceAmount,
         timeout
       },
       {
         id: uuid(),
-        sourceBalanceId: destinationAccount.asset.balanceId,
+        sourceBalanceId: destinationLiquidityAccount.balanceId,
         destinationBalanceId: destinationAccount.balanceId,
         amount: destinationAmount,
         timeout
@@ -297,18 +303,20 @@ async function transferFunds(
     )
   }
   if (sourceAccount.sentBalanceId) {
+    const sentAccount = await sourceAccount.asset.getSentAccount()
     transfers.push({
       id: uuid(),
-      sourceBalanceId: sourceAccount.asset.outgoingPaymentsBalanceId,
+      sourceBalanceId: sentAccount.balanceId,
       destinationBalanceId: sourceAccount.sentBalanceId,
       amount: sourceAmount,
       timeout
     })
   }
   if (destinationAccount.receiveLimitBalanceId) {
+    const receiveLimitAccount = await destinationAccount.asset.getReceiveLimitAccount()
     transfers.push({
       id: uuid(),
-      sourceBalanceId: destinationAccount.asset.receiveLimitBalanceId,
+      sourceBalanceId: receiveLimitAccount.balanceId,
       destinationBalanceId: destinationAccount.receiveLimitBalanceId,
       amount: destinationAmount || sourceAmount,
       timeout

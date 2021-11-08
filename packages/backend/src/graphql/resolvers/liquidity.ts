@@ -59,8 +59,10 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
 ): ResolversTypes['AddAssetLiquidityMutationResponse'] => {
   try {
     const assetService = await ctx.container.use('assetService')
-    const asset = await assetService.getById(args.input.assetId)
-    if (!asset) {
+    const liquidityAccount = await assetService.getLiquidityAccount(
+      args.input.assetId
+    )
+    if (!liquidityAccount) {
       return {
         code: '404',
         message: 'Unknown asset',
@@ -71,7 +73,7 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
     const liquidityService = await ctx.container.use('liquidityService')
     const error = await liquidityService.add({
       id: args.input.id,
-      account: asset,
+      account: liquidityAccount,
       amount: args.input.amount
     })
     if (error) {
@@ -151,8 +153,10 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
 ): ResolversTypes['CreateAssetLiquidityWithdrawalMutationResponse'] => {
   try {
     const assetService = await ctx.container.use('assetService')
-    const asset = await assetService.getById(args.input.assetId)
-    if (!asset) {
+    const liquidityAccount = await assetService.getLiquidityAccount(
+      args.input.assetId
+    )
+    if (!liquidityAccount) {
       return {
         code: '404',
         message: 'Unknown asset',
@@ -163,7 +167,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     const liquidityService = await ctx.container.use('liquidityService')
     const error = await liquidityService.createWithdrawal({
       id: args.input.id,
-      account: asset,
+      account: liquidityAccount,
       amount: args.input.amount
     })
     if (error) {

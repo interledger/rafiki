@@ -2,6 +2,7 @@ import { v4 as uuid } from 'uuid'
 
 import { Account, AccountService, CreateOptions } from '../account/service'
 import { AssetOptions, AssetService } from '../asset/service'
+import { BalanceType } from '../balance/service'
 import { TransferService } from '../transfer/service'
 import { randomAsset } from './asset'
 
@@ -22,6 +23,7 @@ export class AccountFactory {
       disabled: options.disabled || false,
       assetId: (await this.assets.getOrCreate(options.asset || randomAsset()))
         .id,
+      balanceType: options.balanceType || BalanceType.Credit,
       sentBalance: options.sentBalance
     }
     const account = await this.accounts.create(accountOptions)
@@ -30,10 +32,11 @@ export class AccountFactory {
       if (!this.transfers) {
         throw new Error('initial balance requires TransferService')
       }
+      const settlementAccount = await account.asset.getSettlementAccount()
       await this.transfers.create([
         {
           id: uuid(),
-          sourceBalanceId: account.asset.settlementBalanceId,
+          sourceBalanceId: settlementAccount.balanceId,
           destinationBalanceId: account.balanceId,
           amount: options.balance
         }

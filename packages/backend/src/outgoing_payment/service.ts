@@ -3,7 +3,7 @@ import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { AccountService } from '../account/service'
-import { BalanceService } from '../balance/service'
+import { BalanceType } from '../balance/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { RatesService } from '../rates/service'
 import { IlpPlugin } from './ilp_plugin'
@@ -28,7 +28,6 @@ export interface ServiceDependencies extends BaseService {
   slippage: number
   quoteLifespan: number // milliseconds
   accountService: AccountService
-  balanceService: BalanceService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
   makeIlpPlugin: (paymentPointerId: string) => IlpPlugin
@@ -107,6 +106,7 @@ async function createOutgoingPayment(
   }
   const account = await deps.accountService.create({
     assetId: paymentPointer.assetId,
+    balanceType: BalanceType.Credit,
     sentBalance: true
   })
 

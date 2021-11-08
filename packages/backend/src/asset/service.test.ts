@@ -3,7 +3,9 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { AssetService } from './service'
+import { BalanceType } from '../balance/service'
 import { createTestApp, TestContainer } from '../tests/app'
+import { randomAsset } from '../tests/asset'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { truncateTables } from '../tests/tableManager'
 import { GraphileProducer } from '../messaging/graphileProducer'
@@ -54,17 +56,13 @@ describe('Asset Service', (): void => {
 
   describe('Create or Get Asset', (): void => {
     test('Asset can be created or fetched', async (): Promise<void> => {
-      const asset = {
-        code: 'USD',
-        scale: 2
-      }
+      const asset = randomAsset()
       await expect(assetService.get(asset)).resolves.toBeUndefined()
       const newAsset = await assetService.getOrCreate(asset)
       const expectedAsset = {
         ...asset,
         id: newAsset.id,
-        balanceId: newAsset.balanceId,
-        settlementBalanceId: newAsset.settlementBalanceId
+        unit: newAsset.unit
       }
       await expect(newAsset).toMatchObject(expectedAsset)
       await expect(assetService.get(asset)).resolves.toMatchObject(
@@ -73,6 +71,52 @@ describe('Asset Service', (): void => {
       await expect(assetService.getOrCreate(asset)).resolves.toMatchObject(
         expectedAsset
       )
+    })
+
+    test('Asset accounts are created', async (): Promise<void> => {
+      const balanceService = await deps.use('balanceService')
+      const asset = await assetService.getOrCreate(randomAsset())
+      const liquidityAccount = await asset.getLiquidityAccount()
+      expect(liquidityAccount.asset).toEqual(asset)
+      await expect(
+        balanceService.get(liquidityAccount.balanceId)
+      ).resolves.toEqual({
+        id: liquidityAccount.balanceId,
+        balance: BigInt(0),
+        type: BalanceType.Credit,
+        unit: asset.unit
+      })
+
+      const settlementAccount = await asset.getSettlementAccount()
+      expect(settlementAccount.asset).toEqual(asset)
+      await expect(
+        balanceService.get(settlementAccount.balanceId)
+      ).resolves.toEqual({
+        id: settlementAccount.balanceId,
+        balance: BigInt(0),
+        type: BalanceType.Debit,
+        unit: asset.unit
+      })
+
+      const sentAccount = await asset.getSentAccount()
+      expect(sentAccount.asset).toEqual(asset)
+      await expect(balanceService.get(sentAccount.balanceId)).resolves.toEqual({
+        id: sentAccount.balanceId,
+        balance: BigInt(0),
+        type: BalanceType.Debit,
+        unit: asset.unit
+      })
+
+      const receiveLimitAccount = await asset.getReceiveLimitAccount()
+      expect(receiveLimitAccount.asset).toEqual(asset)
+      await expect(
+        balanceService.get(receiveLimitAccount.balanceId)
+      ).resolves.toEqual({
+        id: receiveLimitAccount.balanceId,
+        balance: BigInt(0),
+        type: BalanceType.Credit,
+        unit: asset.unit
+      })
     })
 
     test('Can get asset by id', async (): Promise<void> => {
@@ -84,61 +128,19 @@ describe('Asset Service', (): void => {
 
       await expect(assetService.getById(uuid())).resolves.toBeUndefined()
     })
-  })
 
-  describe('Get Asset Balances', (): void => {
-    test('Can get liquidity balance', async (): Promise<void> => {
-      const asset = {
-        code: 'XRP',
-        scale: 6
-      }
+    test('Can get asset liquidity account', async (): Promise<void> => {
+      const asset = await assetService.getOrCreate(randomAsset())
       await expect(
-        assetService.getLiquidityBalance(asset)
-      ).resolves.toBeUndefined()
-      await assetService.getOrCreate(asset)
-      await expect(assetService.getLiquidityBalance(asset)).resolves.toEqual(0n)
-    })
+        assetService.getLiquidityAccount(asset.id)
+      ).resolves.toMatchObject({
+        assetId: asset.id,
+        asset
+      })
 
-    test('Can get settlement balance', async (): Promise<void> => {
-      const asset = {
-        code: 'BTC',
-        scale: 9
-      }
       await expect(
-        assetService.getSettlementBalance(asset)
+        assetService.getLiquidityAccount(uuid())
       ).resolves.toBeUndefined()
-      await assetService.getOrCreate(asset)
-      await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
-        0n
-      )
-    })
-
-    test('Can get reserved outgoing payments balance', async (): Promise<void> => {
-      const asset = {
-        code: 'CNY',
-        scale: 2
-      }
-      await expect(
-        assetService.getOutgoingPaymentsBalance(asset)
-      ).resolves.toBeUndefined()
-      await assetService.getOrCreate(asset)
-      await expect(
-        assetService.getOutgoingPaymentsBalance(asset)
-      ).resolves.toEqual(0n)
-    })
-
-    test('Can get receive limit balance', async (): Promise<void> => {
-      const asset = {
-        code: 'CNY',
-        scale: 2
-      }
-      await expect(
-        assetService.getReceiveLimitBalance(asset)
-      ).resolves.toBeUndefined()
-      await assetService.getOrCreate(asset)
-      await expect(assetService.getReceiveLimitBalance(asset)).resolves.toEqual(
-        0n
-      )
     })
   })
 })
