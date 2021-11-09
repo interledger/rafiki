@@ -34,6 +34,8 @@ import { StreamServer } from '@interledger/stream-receiver'
 import { WebMonetizationService } from './webmonetization/service'
 import { OutgoingPaymentService } from './outgoing_payment/service'
 import { IlpPlugin } from './outgoing_payment/ilp_plugin'
+import { ApiKeyService } from './apiKey/service'
+import { SessionService } from './session/service'
 
 export interface AppContextData {
   logger: Logger
@@ -72,6 +74,8 @@ export interface AppServices {
   outgoingPaymentService: Promise<OutgoingPaymentService>
   makeIlpPlugin: Promise<(sourceAccount: string) => IlpPlugin>
   ratesService: Promise<RatesService>
+  apiKeyService: Promise<ApiKeyService>
+  sessionService: Promise<SessionService>
 }
 
 export type AppContainer = IocContract<AppServices>
