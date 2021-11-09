@@ -54,6 +54,7 @@ describe('Invoice Routes', (): void => {
   let asset: { code: string; scale: number }
   let paymentPointer: PaymentPointer
   let invoice: Invoice
+  let expiresAt: Date
 
   beforeEach(
     async (): Promise<void> => {
@@ -63,11 +64,12 @@ describe('Invoice Routes', (): void => {
       invoiceRoutes = await deps.use('invoiceRoutes')
 
       asset = randomAsset()
+      expiresAt = new Date(Date.now() + 30_000)
       paymentPointer = await paymentPointerService.create({ asset })
       invoice = await invoiceService.create({
         paymentPointerId: paymentPointer.id,
         description: 'text',
-        expiresAt: new Date(Date.now() + 30_000),
+        expiresAt,
         amountToReceive: BigInt(123)
       })
     }
@@ -141,6 +143,7 @@ describe('Invoice Routes', (): void => {
         assetCode: asset.code,
         assetScale: asset.scale,
         description: invoice.description,
+        expiresAt: expiresAt.toISOString(),
         received: '0'
       })
     })
@@ -164,6 +167,7 @@ describe('Invoice Routes', (): void => {
         assetScale: asset.scale,
         description: invoice.description,
         received: '0',
+        expiresAt: expiresAt.toISOString(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -294,6 +298,7 @@ describe('Invoice Routes', (): void => {
         assetCode: invoice.account.asset.code,
         assetScale: invoice.account.asset.scale,
         description: invoice.description,
+        expiresAt: expiresAt.toISOString(),
         received: '0'
       })
     })
@@ -318,6 +323,7 @@ describe('Invoice Routes', (): void => {
         assetCode: invoice.account.asset.code,
         assetScale: invoice.account.asset.scale,
         description: null,
+        expiresAt: expiresAt.toISOString(),
         received: '0'
       })
     })

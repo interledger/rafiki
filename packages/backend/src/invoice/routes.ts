@@ -135,6 +135,7 @@ function invoiceToBody(
     assetCode: invoice.account.asset.code,
     assetScale: invoice.account.asset.scale,
     description: invoice.description,
+    expiresAt: invoice.expiresAt?.toISOString(),
     received: received.toString()
   }
 }
