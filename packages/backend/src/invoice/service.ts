@@ -5,11 +5,13 @@ import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
 import assert from 'assert'
 import { Transaction } from 'knex'
+import { TransactionOrKnex } from 'objection'
 
 interface CreateOptions {
   paymentPointerId: string
-  description: string
+  description?: string
   expiresAt?: Date
+  amountToReceive?: bigint
 }
 
 export interface InvoiceService {
@@ -19,33 +21,31 @@ export interface InvoiceService {
     paymentPointerId: string,
     pagination?: Pagination
   ): Promise<Invoice[]>
+  deactivateNext(): Promise<string | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
+  knex: TransactionOrKnex
   accountService: AccountService
   paymentPointerService: PaymentPointerService
 }
 
-export async function createInvoiceService({
-  logger,
-  knex,
-  accountService,
-  paymentPointerService
-}: ServiceDependencies): Promise<InvoiceService> {
-  const log = logger.child({
+export async function createInvoiceService(
+  deps_: ServiceDependencies
+): Promise<InvoiceService> {
+  const log = deps_.logger.child({
     service: 'InvoiceService'
   })
   const deps: ServiceDependencies = {
-    logger: log,
-    knex,
-    accountService,
-    paymentPointerService
+    ...deps_,
+    logger: log
   }
   return {
     get: (id) => getInvoice(deps, id),
     create: (options, trx) => createInvoice(deps, options, trx),
     getPaymentPointerInvoicesPage: (paymentPointerId, pagination) =>
-      getPaymentPointerInvoicesPage(deps, paymentPointerId, pagination)
+      getPaymentPointerInvoicesPage(deps, paymentPointerId, pagination),
+    deactivateNext: () => deactivateNextInvoice(deps)
   }
 }
 
@@ -58,7 +58,7 @@ async function getInvoice(
 
 async function createInvoice(
   deps: ServiceDependencies,
-  { paymentPointerId, description, expiresAt }: CreateOptions,
+  { paymentPointerId, description, expiresAt, amountToReceive }: CreateOptions,
   trx?: Transaction
 ): Promise<Invoice> {
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))
@@ -73,7 +73,10 @@ async function createInvoice(
       )
     }
     const account = await deps.accountService.create(
-      { assetId: paymentPointer.assetId },
+      {
+        assetId: paymentPointer.assetId,
+        receiveLimit: amountToReceive
+      },
       invTrx
     )
 
@@ -82,7 +85,8 @@ async function createInvoice(
         paymentPointerId,
         accountId: account.id,
         description,
-        expiresAt: expiresAt,
+        expiresAt,
+        amountToReceive,
         active: true
       })
       .withGraphFetched('account.asset')
@@ -96,6 +100,39 @@ async function createInvoice(
     }
     throw err
   }
+}
+
+// Deactivate expired invoices that have some money.
+// Delete expired invoices that have never received money.
+// Returns the id of the processed invoice (if any).
+async function deactivateNextInvoice(
+  deps: ServiceDependencies
+): Promise<string | undefined> {
+  return deps.knex.transaction(async (trx) => {
+    // 30 seconds backwards to allow a prepared (but not yet fulfilled/rejected) packet to finish before being deactivated.
+    const now = new Date(Date.now() - 30_000).toISOString()
+    const invoices = await Invoice.query(trx)
+      .limit(1)
+      // Ensure the invoices cannot be processed concurrently by multiple workers.
+      .forUpdate()
+      // If an invoice is locked, don't wait — just come back for it later.
+      .skipLocked()
+      .where('active', true)
+      .andWhere('expiresAt', '<', now)
+    const invoice = invoices[0]
+    if (!invoice) return
+
+    // Fetch the account with a separate transaction to avoid locking it.
+    const balance = await deps.accountService.getBalance(invoice.accountId)
+    if (balance) {
+      deps.logger.trace({ invoice: invoice.id }, 'deactivating expired invoice')
+      await invoice.$query(trx).patch({ active: false })
+    } else {
+      deps.logger.debug({ invoice: invoice.id }, 'deleting expired invoice')
+      await invoice.$relatedQuery('account', trx).delete()
+    }
+    return invoice.id
+  })
 }
 
 /** TODO: Base64 encode/decode the cursors

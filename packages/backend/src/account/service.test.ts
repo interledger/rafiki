@@ -140,6 +140,24 @@ describe('Account Service', (): void => {
         debitBalance: false
       })
     })
+
+    it('Can create an account with a receive limit', async (): Promise<void> => {
+      const { id: assetId } = await assetService.getOrCreate(randomAsset())
+      const options: CreateOptions = {
+        assetId,
+        receiveLimit: BigInt(123)
+      }
+      const account = await accountService.create(options)
+      assert.ok(account.receiveLimitBalanceId)
+      await expect(
+        balanceService.get(account.receiveLimitBalanceId)
+      ).resolves.toEqual({
+        id: account.receiveLimitBalanceId,
+        balance: BigInt(124),
+        unit: account.asset.unit,
+        debitBalance: true
+      })
+    })
   })
 
   describe('Get Account', (): void => {
@@ -582,6 +600,41 @@ describe('Account Service', (): void => {
         accountService.getTotalSent(sourceAccount.id)
       ).resolves.toEqual(sourceAmount)
     })
+
+    test('Cannot exceed an invoice receive limit', async (): Promise<void> => {
+      const paymentPointerService = await deps.use('paymentPointerService')
+      const invoiceService = await deps.use('invoiceService')
+      const sourceAccount = await accountFactory.build({
+        sentBalance: true,
+        balance: BigInt(200)
+      })
+      const paymentPointerId = (
+        await paymentPointerService.create({ asset: sourceAccount.asset })
+      ).id
+      const invoice = await invoiceService.create({
+        paymentPointerId,
+        description: 'Invoice',
+        amountToReceive: BigInt(123)
+      })
+      await expect(
+        accountService.transferFunds({
+          sourceAccount,
+          destinationAccount: invoice.account,
+          sourceAmount: BigInt(123 + 2),
+          timeout
+        })
+      ).resolves.toBe(AccountTransferError.ReceiveLimitExceeded)
+
+      // ... but a smaller payment is fine
+      const trxOrError = await accountService.transferFunds({
+        sourceAccount,
+        destinationAccount: invoice.account,
+        sourceAmount: BigInt(123),
+        timeout
+      })
+      expect(isAccountTransferError(trxOrError)).toEqual(false)
+    })
+
     test.todo('Returns error timed out transfer')
   })
 })

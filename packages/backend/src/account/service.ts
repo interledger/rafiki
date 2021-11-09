@@ -19,6 +19,7 @@ export interface CreateOptions {
   disabled?: boolean
   assetId: string
   sentBalance?: boolean
+  receiveLimit?: bigint
 }
 
 export interface AccountTransferOptions {
@@ -102,11 +103,40 @@ async function createAccount(
         })
       ).id
     }
+
+    let receiveLimitBalanceId: string | undefined
+    if (account.receiveLimit) {
+      receiveLimitBalanceId = (
+        await deps.balanceService.create({
+          debitBalance: true,
+          unit: accountRow.asset.unit
+        })
+      ).id
+      const transferError = await deps.transferService.create([
+        {
+          id: uuid(),
+          sourceBalanceId: receiveLimitBalanceId,
+          destinationBalanceId: accountRow.asset.receiveLimitBalanceId,
+          // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
+          amount: account.receiveLimit + BigInt(1)
+        }
+      ])
+      if (transferError) {
+        deps.logger.error(
+          { transferError },
+          'receive limit setup TigerBeetle error'
+        )
+        throw new Error(
+          'unable to create receive limit balance, TigerBeetle error'
+        )
+      }
+    }
     const newAccount = await accountRow
       .$query(acctTrx)
       .patchAndFetch({
         balanceId,
-        sentBalanceId
+        sentBalanceId,
+        receiveLimitBalanceId
       })
       .withGraphFetched('asset')
 
@@ -273,6 +303,15 @@ async function transferFunds(
       timeout
     })
   }
+  if (destinationAccount.receiveLimitBalanceId) {
+    transfers.push({
+      id: uuid(),
+      sourceBalanceId: destinationAccount.asset.receiveLimitBalanceId,
+      destinationBalanceId: destinationAccount.receiveLimitBalanceId,
+      amount: destinationAmount || sourceAmount,
+      timeout
+    })
+  }
   const error = await deps.transferService.create(transfers)
   if (error) {
     switch (error.error) {
@@ -287,6 +326,12 @@ async function transferFunds(
         }
         throw new UnknownLiquidityAccountError(sourceAccount.asset)
       case TransferError.InsufficientBalance:
+        if (
+          destinationAccount.receiveLimitBalanceId &&
+          error.index === transfers.length - 1
+        ) {
+          return AccountTransferError.ReceiveLimitExceeded
+        }
         if (error.index === 1) {
           return AccountTransferError.InsufficientLiquidity
         }

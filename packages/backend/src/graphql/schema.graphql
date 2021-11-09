@@ -250,6 +250,7 @@ type Invoice {
   createdAt: String!
   expiresAt: String
   description: String
+  amountToReceive: UInt64
 }
 
 type OutgoingPaymentConnection {

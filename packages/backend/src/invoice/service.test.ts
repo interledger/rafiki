@@ -2,6 +2,7 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
+import { isAccountTransferError } from '../account/errors'
 import { InvoiceService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Invoice } from './model'
@@ -14,6 +15,7 @@ import { AppServices } from '../app'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { AssetOptions } from '../asset/service'
+import { AccountFactory } from '../tests/accountFactory'
 
 describe('Invoice Service', (): void => {
   let deps: IocContract<AppServices>
@@ -23,6 +25,7 @@ describe('Invoice Service', (): void => {
   let knex: Knex
   let paymentPointerId: string
   let asset: AssetOptions
+  let accountFactory: AccountFactory
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -36,6 +39,11 @@ describe('Invoice Service', (): void => {
       workerUtils = await makeWorkerUtils({
         connectionString: appContainer.connectionUrl
       })
+      accountFactory = new AccountFactory(
+        await deps.use('accountService'),
+        await deps.use('assetService'),
+        await deps.use('transferService')
+      )
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
@@ -91,6 +99,23 @@ describe('Invoice Service', (): void => {
       const invoiceAccount = await accountService.get(invoice.accountId)
 
       expect(invoiceAccount?.id).toEqual(invoice.accountId)
+      expect(invoiceAccount?.receiveLimitBalanceId).toBeNull()
+    })
+
+    test('Creating an invoice with amountToReceive sets up a "receive limit" balance', async (): Promise<void> => {
+      const invoice = await invoiceService.create({
+        paymentPointerId,
+        description: 'Invoice',
+        amountToReceive: BigInt(123)
+      })
+      const balanceService = await deps.use('balanceService')
+      if (!invoice.account.receiveLimitBalanceId) throw new Error('fail')
+      await expect(
+        balanceService.get(invoice.account.receiveLimitBalanceId)
+      ).resolves.toMatchObject({
+        debitBalance: true,
+        balance: BigInt(123 + 1)
+      })
     })
 
     test('Cannot create invoice for nonexistent payment pointer', async (): Promise<void> => {
@@ -106,6 +131,60 @@ describe('Invoice Service', (): void => {
 
     test('Cannot fetch a bogus invoice', async (): Promise<void> => {
       expect(invoiceService.get(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('deactivateNext', (): void => {
+    test('Does not deactivate a not-expired invoice', async (): Promise<void> => {
+      const invoiceId = (
+        await invoiceService.create({
+          paymentPointerId,
+          description: 'Test invoice',
+          expiresAt: new Date(Date.now() + 30_000)
+        })
+      ).id
+      await expect(invoiceService.deactivateNext()).resolves.toBeUndefined()
+      const invoice = await invoiceService.get(invoiceId)
+      if (!invoice) throw new Error('invoice was deleted')
+      expect(invoice.active).toBe(true)
+    })
+
+    test('Deactivates an expired invoice with received money', async (): Promise<void> => {
+      const invoice = await invoiceService.create({
+        paymentPointerId,
+        description: 'Test invoice',
+        expiresAt: new Date(Date.now() - 40_000)
+      })
+      const accountService = await deps.use('accountService')
+      const sourceAccount = await accountFactory.build({
+        balance: BigInt(10),
+        asset
+      })
+      const trxOrError = await accountService.transferFunds({
+        sourceAccount,
+        destinationAccount: invoice.account,
+        sourceAmount: BigInt(1),
+        timeout: BigInt(10e9) // 10 seconds
+      })
+      if (isAccountTransferError(trxOrError)) throw trxOrError
+      await expect(trxOrError.commit()).resolves.toBeUndefined()
+
+      await expect(invoiceService.deactivateNext()).resolves.toBe(invoice.id)
+      const invoiceAfter = await invoiceService.get(invoice.id)
+      if (!invoiceAfter) throw new Error('invoice was deleted')
+      expect(invoiceAfter.active).toBe(false)
+    })
+
+    test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
+      const accountService = await deps.use('accountService')
+      const invoice = await invoiceService.create({
+        paymentPointerId,
+        description: 'Test invoice',
+        expiresAt: new Date(Date.now() - 40_000)
+      })
+      await expect(invoiceService.deactivateNext()).resolves.toBe(invoice.id)
+      expect(await invoiceService.get(invoice.id)).toBeUndefined()
+      expect(await accountService.get(invoice.accountId)).toBeUndefined()
     })
   })
 
