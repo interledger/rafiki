@@ -204,8 +204,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountService: await deps.use('accountService'),
-      paymentPointerService: await deps.use('paymentPointerService'),
-      transferService: await deps.use('transferService')
+      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
   container.singleton('invoiceRoutes', async (deps) => {

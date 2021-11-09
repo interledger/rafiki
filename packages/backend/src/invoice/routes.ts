@@ -1,3 +1,4 @@
+import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
 import { Logger } from 'pino'
 import { validateId } from '../shared/utils'
@@ -79,7 +80,7 @@ async function getInvoice(
   })
 
   body['ilpAddress'] = ilpAddress
-  body['sharedSecret'] = sharedSecret
+  body['sharedSecret'] = base64url(sharedSecret)
 }
 
 // Spec: https://docs.openpayments.dev/invoices#create

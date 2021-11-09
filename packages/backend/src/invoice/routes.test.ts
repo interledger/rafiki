@@ -1,4 +1,5 @@
 import * as httpMocks from 'node-mocks-http'
+import base64url from 'base64url'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
@@ -166,7 +167,9 @@ describe('Invoice Routes', (): void => {
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
-      expect(Buffer.from(sharedSecret as string, 'base64')).toHaveLength(32)
+      const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
+      expect(sharedSecretBuffer).toHaveLength(32)
+      expect(sharedSecret).toEqual(base64url(sharedSecretBuffer))
     })
   })
 

@@ -1,7 +1,6 @@
 import { Invoice } from './model'
 import { AccountService } from '../account/service'
 import { PaymentPointerService } from '../payment_pointer/service'
-import { TransferService } from '../transfer/service'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
 import assert from 'assert'
@@ -29,7 +28,6 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountService: AccountService
   paymentPointerService: PaymentPointerService
-  transferService: TransferService
 }
 
 export async function createInvoiceService(

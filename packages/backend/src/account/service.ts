@@ -126,7 +126,9 @@ async function createAccount(
           { transferError },
           'receive limit setup TigerBeetle error'
         )
-        throw new Error('unable to create invoice, TigerBeetle error')
+        throw new Error(
+          'unable to create receive limit balance, TigerBeetle error'
+        )
       }
     }
     const newAccount = await accountRow
