@@ -10,7 +10,7 @@ import {
   UnknownAssetError
 } from './errors'
 import { AssetService } from '../asset/service'
-import { BalanceService } from '../balance/service'
+import { BalanceService, BalanceType } from '../balance/service'
 import { LiquidityService } from '../liquidity/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -97,8 +97,8 @@ describe('Account Service', (): void => {
       await expect(balanceService.get(account.balanceId)).resolves.toEqual({
         id: account.balanceId,
         balance: BigInt(0),
-        unit: account.asset.unit,
-        debitBalance: false
+        type: BalanceType.Credit,
+        unit: account.asset.unit
       })
     })
 
@@ -113,8 +113,8 @@ describe('Account Service', (): void => {
       await expect(balanceService.get(account.balanceId)).resolves.toEqual({
         id: account.balanceId,
         balance: BigInt(0),
-        unit: account.asset.unit,
-        debitBalance: false
+        type: BalanceType.Credit,
+        unit: account.asset.unit
       })
     })
 
@@ -136,8 +136,8 @@ describe('Account Service', (): void => {
       await expect(balanceService.get(account.sentBalanceId)).resolves.toEqual({
         id: account.sentBalanceId,
         balance: BigInt(0),
-        unit: account.asset.unit,
-        debitBalance: false
+        type: BalanceType.Credit,
+        unit: account.asset.unit
       })
     })
 
@@ -154,8 +154,8 @@ describe('Account Service', (): void => {
       ).resolves.toEqual({
         id: account.receiveLimitBalanceId,
         balance: BigInt(124),
-        unit: account.asset.unit,
-        debitBalance: true
+        type: BalanceType.Debit,
+        unit: account.asset.unit
       })
     })
   })

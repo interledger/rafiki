@@ -1,7 +1,7 @@
 import { Asset } from './model'
 import { BaseService } from '../shared/baseService'
 import { Transaction } from 'knex'
-import { BalanceService } from '../balance/service'
+import { BalanceService, BalanceType } from '../balance/service'
 
 export interface AssetOptions {
   code: string
@@ -102,19 +102,21 @@ async function getOrCreateAsset(
         scale
       })
       const { id: balanceId } = await deps.balanceService.create({
+        type: BalanceType.Credit,
         unit: asset.unit
       })
       const { id: settlementBalanceId } = await deps.balanceService.create({
-        debitBalance: true,
+        type: BalanceType.Debit,
         unit: asset.unit
       })
       const {
         id: outgoingPaymentsBalanceId
       } = await deps.balanceService.create({
-        debitBalance: true,
+        type: BalanceType.Debit,
         unit: asset.unit
       })
       const { id: receiveLimitBalanceId } = await deps.balanceService.create({
+        type: BalanceType.Credit,
         unit: asset.unit
       })
       return await Asset.query(trx).patchAndFetchById(asset.id, {

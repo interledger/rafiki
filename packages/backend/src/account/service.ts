@@ -1,7 +1,7 @@
 import { ForeignKeyViolationError, Transaction } from 'objection'
 import { v4 as uuid } from 'uuid'
 
-import { BalanceService } from '../balance/service'
+import { BalanceService, BalanceType } from '../balance/service'
 import { BaseService } from '../shared/baseService'
 import {
   BalanceTransferError,
@@ -92,6 +92,7 @@ async function createAccount(
       .withGraphFetched('asset')
 
     const { id: balanceId } = await deps.balanceService.create({
+      type: BalanceType.Credit,
       unit: accountRow.asset.unit
     })
 
@@ -99,6 +100,7 @@ async function createAccount(
     if (sentBalance) {
       sentBalanceId = (
         await deps.balanceService.create({
+          type: BalanceType.Credit,
           unit: accountRow.asset.unit
         })
       ).id
@@ -108,7 +110,7 @@ async function createAccount(
     if (account.receiveLimit) {
       receiveLimitBalanceId = (
         await deps.balanceService.create({
-          debitBalance: true,
+          type: BalanceType.Debit,
           unit: accountRow.asset.unit
         })
       ).id

@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 
 import { TransferService, TwoPhaseTransfer } from './service'
 import { TransferError } from './errors'
-import { BalanceService } from '../balance/service'
+import { BalanceService, BalanceType } from '../balance/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { GraphileProducer } from '../messaging/graphileProducer'
@@ -44,12 +44,16 @@ describe('Transfer Service', (): void => {
     async (): Promise<void> => {
       transferService = await deps.use('transferService')
       balanceService = await deps.use('balanceService')
-      sourceBalanceId = (await balanceService.create({ unit: 1 })).id
-      destinationBalanceId = (await balanceService.create({ unit: 1 })).id
+      sourceBalanceId = (
+        await balanceService.create({ type: BalanceType.Credit, unit: 1 })
+      ).id
+      destinationBalanceId = (
+        await balanceService.create({ type: BalanceType.Credit, unit: 1 })
+      ).id
       const settlementBalanceId = (
         await balanceService.create({
-          unit: 1,
-          debitBalance: true
+          type: BalanceType.Debit,
+          unit: 1
         })
       ).id
       await expect(
@@ -208,6 +212,7 @@ describe('Transfer Service', (): void => {
 
     test('Cannot transfer between balances with different assets', async (): Promise<void> => {
       const { id: destinationBalanceId } = await balanceService.create({
+        type: BalanceType.Credit,
         unit: 2
       })
 
@@ -238,8 +243,8 @@ describe('Transfer Service', (): void => {
 
     test('Cannot create transfer exceeding debit destination balance', async (): Promise<void> => {
       const { id: debitBalanceId } = await balanceService.create({
-        unit: 1,
-        debitBalance: true
+        type: BalanceType.Debit,
+        unit: 1
       })
       const transfer = {
         id: uuid(),

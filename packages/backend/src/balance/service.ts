@@ -7,12 +7,17 @@ import { uuidToBigInt } from '../shared/utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 
+export enum BalanceType {
+  Credit = 'Credit', // >= 0
+  Debit = 'Debit' // <= 0
+}
+
 export interface BalanceOptions {
-  debitBalance?: boolean
+  type: BalanceType
   unit: number
 }
 
-export type Balance = Required<BalanceOptions> & {
+export type Balance = BalanceOptions & {
   id: string
   balance: bigint
 }
@@ -45,7 +50,7 @@ export async function createBalanceService({
 
 async function createBalance(
   deps: ServiceDependencies,
-  { debitBalance, unit }: BalanceOptions
+  { type, unit }: BalanceOptions
 ): Promise<Balance> {
   const id = uuid()
   const errors = await deps.tigerbeetle.createAccounts([
@@ -55,9 +60,10 @@ async function createBalance(
       reserved: ACCOUNT_RESERVED,
       unit,
       code: 0,
-      flags: debitBalance
-        ? AccountFlags.credits_must_not_exceed_debits
-        : AccountFlags.debits_must_not_exceed_credits,
+      flags:
+        type === BalanceType.Debit
+          ? AccountFlags.credits_must_not_exceed_debits
+          : AccountFlags.debits_must_not_exceed_credits,
       debits_accepted: BigInt(0),
       debits_reserved: BigInt(0),
       credits_accepted: BigInt(0),
@@ -71,7 +77,7 @@ async function createBalance(
   return {
     id,
     unit,
-    debitBalance: !!debitBalance,
+    type,
     balance: BigInt(0)
   }
 }
@@ -85,9 +91,10 @@ async function getBalance(
     return {
       id,
       unit: balance.unit,
-      debitBalance: !!(
+      type:
         balance.flags & AccountFlags.credits_must_not_exceed_debits
-      ),
+          ? BalanceType.Debit
+          : BalanceType.Credit,
       balance: calculateBalance(deps, balance)
     }
   }

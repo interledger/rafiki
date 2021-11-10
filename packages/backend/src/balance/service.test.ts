@@ -2,7 +2,7 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { Client, CreateAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { BalanceService } from './service'
+import { BalanceService, BalanceType } from './service'
 import { CreateBalanceError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -53,16 +53,15 @@ describe('Balance Service', (): void => {
 
   describe('Balance', (): void => {
     test.each`
-      unit | debitBalance
-      ${1} | ${undefined}
-      ${2} | ${false}
-      ${3} | ${true}
+      unit | type
+      ${1} | ${BalanceType.Credit}
+      ${2} | ${BalanceType.Debit}
     `(
-      'A balance can be created and fetched { unit: $unit, debitBalance: $debitBalance }',
-      async ({ unit, debitBalance }): Promise<void> => {
-        const balance = await balanceService.create({ unit, debitBalance })
+      'A balance can be created and fetched { unit: $unit, type: $type }',
+      async ({ unit, type }): Promise<void> => {
+        const balance = await balanceService.create({ type, unit })
         expect(balance.unit).toEqual(unit)
-        expect(balance.debitBalance).toEqual(!!debitBalance)
+        expect(balance.type).toEqual(type)
         const retrievedBalance = await balanceService.get(balance.id)
         expect(retrievedBalance).toEqual(balance)
       }
@@ -77,7 +76,9 @@ describe('Balance Service', (): void => {
             code: CreateAccountError.exists_with_different_unit
           }
         ])
-      await expect(balanceService.create({ unit: 1 })).rejects.toThrowError(
+      await expect(
+        balanceService.create({ type: BalanceType.Credit, unit: 1 })
+      ).rejects.toThrowError(
         new CreateBalanceError(CreateAccountError.exists_with_different_unit)
       )
     })
