@@ -7,9 +7,14 @@ import { uuidToBigInt } from '../shared/utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 
+// Credit and debit balances can both send and receive
+// but are restricted by their respective Tigerbeetle flags.
+// In Rafiki transfers:
+// - the source account's debits increase
+// - the destination account's credits increase
 export enum BalanceType {
-  Credit = 'Credit', // >= 0
-  Debit = 'Debit' // <= 0
+  Credit = 'Credit', // debits_must_not_exceed_credits
+  Debit = 'Debit' // credits_must_not_exceed_debits
 }
 
 export interface BalanceOptions {
