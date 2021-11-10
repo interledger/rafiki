@@ -3,7 +3,7 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { AssetService } from './service'
-import { BalanceType } from '../balance/service'
+import { BalanceType } from '../tigerbeetle/balance/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { randomAsset } from '../tests/asset'
 import { resetGraphileDb } from '../tests/graphileDb'

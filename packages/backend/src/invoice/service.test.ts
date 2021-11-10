@@ -2,7 +2,7 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { isAccountTransferError } from '../account/errors'
+import { isAccountTransferError } from '../tigerbeetle/account/errors'
 import { InvoiceService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Invoice } from './model'
@@ -15,7 +15,7 @@ import { AppServices } from '../app'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { AssetOptions } from '../asset/service'
-import { BalanceType } from '../balance/service'
+import { BalanceType } from '../tigerbeetle/balance/service'
 import { AccountFactory } from '../tests/accountFactory'
 
 describe('Invoice Service', (): void => {

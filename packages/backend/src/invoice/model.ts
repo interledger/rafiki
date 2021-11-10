@@ -1,5 +1,5 @@
 import { Model } from 'objection'
-import { Account } from '../account/model'
+import { Account } from '../tigerbeetle/account/model'
 import { BaseModel } from '../shared/baseModel'
 
 export class Invoice extends BaseModel {

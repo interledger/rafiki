@@ -4,7 +4,7 @@ import { Logger } from 'pino'
 import { validateId } from '../shared/utils'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
-import { AccountService } from '../account/service'
+import { AccountService } from '../tigerbeetle/account/service'
 import { InvoiceService } from './service'
 import { Invoice } from './model'
 

@@ -1,9 +1,13 @@
 import { v4 as uuid } from 'uuid'
 
-import { Account, AccountService, CreateOptions } from '../account/service'
+import {
+  Account,
+  AccountService,
+  CreateOptions
+} from '../tigerbeetle/account/service'
 import { AssetOptions, AssetService } from '../asset/service'
-import { BalanceType } from '../balance/service'
-import { TransferService } from '../transfer/service'
+import { BalanceType } from '../tigerbeetle/balance/service'
+import { TransferService } from '../tigerbeetle/transfer/service'
 import { randomAsset } from './asset'
 
 type BuildOptions = Partial<CreateOptions> & {

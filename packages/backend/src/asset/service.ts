@@ -1,9 +1,9 @@
 import { Asset, AssetAccounts } from './model'
 import { BaseService } from '../shared/baseService'
 import { Transaction } from 'knex'
-import { BalanceType } from '../balance/service'
-import { Account } from '../account/model'
-import { AccountService } from '../account/service'
+import { BalanceType } from '../tigerbeetle/balance/service'
+import { Account } from '../tigerbeetle/account/model'
+import { AccountService } from '../tigerbeetle/account/service'
 
 export interface AssetOptions {
   code: string

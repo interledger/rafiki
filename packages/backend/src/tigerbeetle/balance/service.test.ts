@@ -4,13 +4,13 @@ import { v4 as uuid } from 'uuid'
 
 import { BalanceService, BalanceType } from './service'
 import { CreateBalanceError } from './errors'
-import { createTestApp, TestContainer } from '../tests/app'
-import { resetGraphileDb } from '../tests/graphileDb'
-import { GraphileProducer } from '../messaging/graphileProducer'
-import { Config } from '../config/app'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { resetGraphileDb } from '../../tests/graphileDb'
+import { GraphileProducer } from '../../messaging/graphileProducer'
+import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppServices } from '../app'
+import { initIocContainer } from '../../'
+import { AppServices } from '../../app'
 
 describe('Balance Service', (): void => {
   let deps: IocContract<AppServices>

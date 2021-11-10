@@ -21,7 +21,7 @@ import {
   createAccountMiddleware,
   createStreamAddressMiddleware
 } from './core'
-import { AccountService } from '../account/service'
+import { AccountService } from '../tigerbeetle/account/service'
 import { PeerService } from '../peer/service'
 import { RatesService } from '../rates/service'
 import { BaseService } from '../shared/baseService'

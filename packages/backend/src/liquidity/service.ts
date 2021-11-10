@@ -1,9 +1,9 @@
 import { v4 as uuid } from 'uuid'
 
 import { LiquidityError } from './errors'
-import { Account } from '../account/model'
-import { TransferService } from '../transfer/service'
-import { TransferError, TransfersError } from '../transfer/errors'
+import { Account } from '../tigerbeetle/account/model'
+import { TransferService } from '../tigerbeetle/transfer/service'
+import { TransferError, TransfersError } from '../tigerbeetle/transfer/errors'
 import { BaseService } from '../shared/baseService'
 import {
   BalanceTransferError,

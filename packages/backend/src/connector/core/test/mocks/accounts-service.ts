@@ -1,7 +1,7 @@
 import { AccountService, RafikiAccount } from '../../rafiki'
 
-import { AccountTransfer } from '../../../../account/service'
-import { AccountTransferError } from '../../../../account/errors'
+import { AccountTransfer } from '../../../../tigerbeetle/account/service'
+import { AccountTransferError } from '../../../../tigerbeetle/account/errors'
 
 export type MockIlpAccount = RafikiAccount & {
   balance: bigint

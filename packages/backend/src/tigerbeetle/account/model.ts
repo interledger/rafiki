@@ -1,5 +1,5 @@
-import { BaseModel } from '../shared/baseModel'
-import { Asset } from '../asset/model'
+import { BaseModel } from '../../shared/baseModel'
+import { Asset } from '../../asset/model'
 import { Model, RelationMappings } from 'objection'
 
 export class Account extends BaseModel {

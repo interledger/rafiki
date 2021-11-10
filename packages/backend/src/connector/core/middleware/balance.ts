@@ -3,7 +3,7 @@ import { ILPContext, ILPMiddleware } from '../rafiki'
 import {
   isAccountTransferError,
   AccountTransferError
-} from '../../../account/errors'
+} from '../../../tigerbeetle/account/errors'
 const { InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {

@@ -2,8 +2,8 @@ import { Account, AccountFlags, Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import { CreateBalanceError } from './errors'
-import { BaseService } from '../shared/baseService'
-import { uuidToBigInt } from '../shared/utils'
+import { BaseService } from '../../shared/baseService'
+import { uuidToBigInt } from '../../shared/utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 

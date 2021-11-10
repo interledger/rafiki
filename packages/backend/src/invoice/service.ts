@@ -1,6 +1,6 @@
 import { Invoice } from './model'
-import { AccountService } from '../account/service'
-import { BalanceType } from '../balance/service'
+import { AccountService } from '../tigerbeetle/account/service'
+import { BalanceType } from '../tigerbeetle/balance/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'

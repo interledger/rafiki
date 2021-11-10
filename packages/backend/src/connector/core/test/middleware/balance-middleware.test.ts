@@ -9,7 +9,7 @@ import {
   IlpRejectFactory,
   RafikiServicesFactory
 } from '../../factories'
-import { AccountTransferError } from '../../../../account/errors'
+import { AccountTransferError } from '../../../../tigerbeetle/account/errors'
 
 // TODO: make one peer to many account relationship
 const aliceAccount = AccountFactory.build({ id: 'alice' })

@@ -14,8 +14,8 @@ import {
   TransfersError,
   TransferError
 } from './errors'
-import { BaseService } from '../shared/baseService'
-import { uuidToBigInt } from '../shared/utils'
+import { BaseService } from '../../shared/baseService'
+import { uuidToBigInt } from '../../shared/utils'
 
 const TRANSFER_RESERVED = Buffer.alloc(32)
 

@@ -3,12 +3,12 @@ import { ForeignKeyViolationError, Transaction } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { Balance, BalanceService, BalanceType } from '../balance/service'
-import { BaseService } from '../shared/baseService'
+import { BaseService } from '../../shared/baseService'
 import {
   BalanceTransferError,
   UnknownBalanceError,
   UnknownLiquidityAccountError
-} from '../shared/errors'
+} from '../../shared/errors'
 import { TransferService, TwoPhaseTransfer } from '../transfer/service'
 import { TransferError, TransfersError } from '../transfer/errors'
 import { AccountTransferError, UnknownAssetError } from './errors'

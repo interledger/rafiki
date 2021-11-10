@@ -19,7 +19,7 @@ import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
 } from '../../outgoing_payment/model'
-import { AccountService } from '../../account/service'
+import { AccountService } from '../../tigerbeetle/account/service'
 import { AssetOptions, AssetService } from '../../asset/service'
 import { PaymentPointerService } from '../../payment_pointer/service'
 import {

@@ -1,6 +1,6 @@
 import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
-import { Account } from '../account/model'
+import { Account } from '../tigerbeetle/account/model'
 import { BaseModel } from '../shared/baseModel'
 
 const fieldPrefixes = ['intent', 'quote', 'destinationAccount', 'outcome']

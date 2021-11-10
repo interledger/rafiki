@@ -10,19 +10,19 @@ import {
   isAccountTransferError,
   UnknownAssetError
 } from './errors'
-import { AssetService } from '../asset/service'
+import { AssetService } from '../../asset/service'
 import { Balance, BalanceService, BalanceType } from '../balance/service'
-import { LiquidityService } from '../liquidity/service'
-import { createTestApp, TestContainer } from '../tests/app'
-import { resetGraphileDb } from '../tests/graphileDb'
-import { GraphileProducer } from '../messaging/graphileProducer'
-import { Config } from '../config/app'
+import { LiquidityService } from '../../liquidity/service'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { resetGraphileDb } from '../../tests/graphileDb'
+import { GraphileProducer } from '../../messaging/graphileProducer'
+import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppServices } from '../app'
-import { truncateTables } from '../tests/tableManager'
-import { AccountFactory } from '../tests/accountFactory'
-import { randomAsset } from '../tests/asset'
+import { initIocContainer } from '../../'
+import { AppServices } from '../../app'
+import { truncateTables } from '../../tests/tableManager'
+import { AccountFactory } from '../../tests/accountFactory'
+import { randomAsset } from '../../tests/asset'
 
 const { AmountTooLargeError } = Errors
 

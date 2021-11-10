@@ -13,8 +13,8 @@ import {
 } from './middleware/ilp-packet'
 import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
-import { AccountTransfer } from '../../account/service'
-import { AccountTransferError } from '../../account/errors'
+import { AccountTransfer } from '../../tigerbeetle/account/service'
+import { AccountTransferError } from '../../tigerbeetle/account/errors'
 import { PeerService } from '../../peer/service'
 
 export interface RafikiAccount {

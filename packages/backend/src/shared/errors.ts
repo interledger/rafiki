@@ -1,5 +1,5 @@
 import { AssetOptions } from '../asset/service'
-import { TransferError } from '../transfer/errors'
+import { TransferError } from '../tigerbeetle/transfer/errors'
 
 export class BalanceTransferError extends Error {
   constructor(public error: TransferError) {

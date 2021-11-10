@@ -14,10 +14,13 @@ import { truncateTable, truncateTables } from '../tests/tableManager'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
-import { isAccountTransferError } from '../account/errors'
-import { AccountService, AccountTransferOptions } from '../account/service'
+import { isAccountTransferError } from '../tigerbeetle/account/errors'
+import {
+  AccountService,
+  AccountTransferOptions
+} from '../tigerbeetle/account/service'
 import { AssetOptions } from '../asset/service'
-import { BalanceType } from '../balance/service'
+import { BalanceType } from '../tigerbeetle/balance/service'
 import { Invoice } from '../invoice/model'
 import { RatesService } from '../rates/service'
 import { LiquidityService } from '../liquidity/service'

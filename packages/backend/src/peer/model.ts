@@ -1,5 +1,5 @@
 import { Model, Pojo } from 'objection'
-import { Account } from '../account/model'
+import { Account } from '../tigerbeetle/account/model'
 import { HttpToken } from '../httpToken/model'
 import { BaseModel } from '../shared/baseModel'
 
