@@ -16,7 +16,7 @@ export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
       accounts: { incoming }
     } = ctx
     if (request.prepare.destination !== 'peer.config') {
-      next()
+      await next()
       return
     }
 

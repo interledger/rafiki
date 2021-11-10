@@ -122,7 +122,8 @@ export async function handlePaymentLifecycle(
   let plugin: IlpPlugin
   switch (payment.state) {
     case PaymentState.Inactive:
-      plugin = deps.makeIlpPlugin(payment.accountId)
+      // Use asset's sentAccount debit balance to not be limited by liquidity when sending rate probe packets
+      plugin = deps.makeIlpPlugin(await payment.account.asset.getSentAccount())
       return plugin
         .connect()
         .then(() => lifecycle.handleQuoting(deps, payment, plugin))
@@ -140,7 +141,7 @@ export async function handlePaymentLifecycle(
     case PaymentState.Funding:
       return lifecycle.handleFunding(deps, payment).catch(onError)
     case PaymentState.Sending:
-      plugin = deps.makeIlpPlugin(payment.accountId)
+      plugin = deps.makeIlpPlugin(payment.account)
       return plugin
         .connect()
         .then(() => lifecycle.handleSending(deps, payment, plugin))

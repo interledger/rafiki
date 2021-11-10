@@ -15,6 +15,7 @@ import { AppServices } from '../app'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { AssetOptions } from '../asset/service'
+import { BalanceType } from '../balance/service'
 import { AccountFactory } from '../tests/accountFactory'
 
 describe('Invoice Service', (): void => {
@@ -113,7 +114,7 @@ describe('Invoice Service', (): void => {
       await expect(
         balanceService.get(invoice.account.receiveLimitBalanceId)
       ).resolves.toMatchObject({
-        debitBalance: true,
+        type: BalanceType.Debit,
         balance: BigInt(123 + 1)
       })
     })

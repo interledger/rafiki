@@ -18,6 +18,7 @@ export interface HttpTokenService {
     trx?: Transaction
   ): Promise<void | HttpTokenError>
   deleteByPeer(peerId: string, trx?: Transaction): Promise<void>
+  get(token: string): Promise<HttpToken | undefined>
 }
 
 type ServiceDependencies = BaseService
@@ -35,7 +36,8 @@ export async function createHttpTokenService({
   }
   return {
     create: (tokens, trx) => createHttpTokens(deps, tokens, trx),
-    deleteByPeer: (peerId, trx) => deleteHttpTokensByPeer(deps, peerId, trx)
+    deleteByPeer: (peerId, trx) => deleteHttpTokensByPeer(deps, peerId, trx),
+    get: (token) => getHttpToken(deps, token)
   }
 }
 
@@ -66,4 +68,15 @@ async function deleteHttpTokensByPeer(
     .where({
       peerId
     })
+}
+
+async function getHttpToken(
+  deps: ServiceDependencies,
+  token: string
+): Promise<HttpToken | undefined> {
+  return await HttpToken.query(deps.knex)
+    .findOne({
+      token
+    })
+    .withGraphFetched('peer.account.asset')
 }

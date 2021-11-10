@@ -2,8 +2,9 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { Account, LiquidityService } from './service'
+import { LiquidityService } from './service'
 import { LiquidityError } from './errors'
+import { Account } from '../account/model'
 import { AccountService } from '../account/service'
 import { Asset } from '../asset/model'
 import { AssetService } from '../asset/service'
@@ -82,7 +83,7 @@ describe('Liquidity Service', (): void => {
         if (type === 'account') {
           account = await accountFactory.build({ asset })
         } else {
-          account = asset
+          account = await asset.getLiquidityAccount()
         }
       }
     )
@@ -101,8 +102,9 @@ describe('Liquidity Service', (): void => {
         ).resolves.toMatchObject({
           balance: amount * BigInt(i + 1)
         })
+        const settlementAccount = await asset.getSettlementAccount()
         await expect(
-          balanceService.get(asset.settlementBalanceId)
+          balanceService.get(settlementAccount.balanceId)
         ).resolves.toMatchObject({
           balance: amount * BigInt(i + 1)
         })
@@ -135,6 +137,7 @@ describe('Liquidity Service', (): void => {
   describe.each(['account', 'asset'])('Withdraw %s liquidity', (type): void => {
     let account: Account
     let asset: Asset
+    let settlementAccount: Account
     const startingBalance = BigInt(100)
 
     beforeEach(
@@ -143,7 +146,7 @@ describe('Liquidity Service', (): void => {
         if (type === 'account') {
           account = await accountFactory.build({ asset })
         } else {
-          account = asset
+          account = await asset.getLiquidityAccount()
         }
         await expect(
           liquidityService.add({
@@ -151,6 +154,7 @@ describe('Liquidity Service', (): void => {
             amount: startingBalance
           })
         ).resolves.toBeUndefined()
+        settlementAccount = await asset.getSettlementAccount()
       }
     )
 
@@ -171,7 +175,7 @@ describe('Liquidity Service', (): void => {
           balance: startingBalance - amount * BigInt(i + 1)
         })
         await expect(
-          balanceService.get(asset.settlementBalanceId)
+          balanceService.get(settlementAccount.balanceId)
         ).resolves.toMatchObject({
           balance: startingBalance - amount * BigInt(i)
         })
@@ -185,7 +189,7 @@ describe('Liquidity Service', (): void => {
           balance: startingBalance - amount * BigInt(i + 1)
         })
         await expect(
-          balanceService.get(asset.settlementBalanceId)
+          balanceService.get(settlementAccount.balanceId)
         ).resolves.toMatchObject({
           balance: startingBalance - amount * BigInt(i + 1)
         })
@@ -217,7 +221,7 @@ describe('Liquidity Service', (): void => {
         balance: startingBalance
       })
       await expect(
-        balanceService.get(asset.settlementBalanceId)
+        balanceService.get(settlementAccount.balanceId)
       ).resolves.toMatchObject({
         balance: startingBalance
       })

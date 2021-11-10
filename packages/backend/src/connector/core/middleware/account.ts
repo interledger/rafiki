@@ -1,7 +1,6 @@
 import { Errors } from 'ilp-packet'
 import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
 import { AuthState } from './auth'
-import { AccountNotFoundError } from '../errors'
 import { validateId } from '../../../shared/utils'
 
 const UUID_LENGTH = 36
@@ -70,7 +69,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
 
     const outgoingAccount = await getAccountByDestinationAddress()
     if (!outgoingAccount) {
-      throw new AccountNotFoundError('')
+      throw new Errors.UnreachableError('unknown destination account')
     }
     if (outgoingAccount.disabled) {
       throw new Errors.UnreachableError('destination account is disabled')

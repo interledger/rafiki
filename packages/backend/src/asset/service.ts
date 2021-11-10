@@ -1,7 +1,9 @@
-import { Asset } from './model'
+import { Asset, AssetAccounts } from './model'
 import { BaseService } from '../shared/baseService'
 import { Transaction } from 'knex'
-import { BalanceService } from '../balance/service'
+import { BalanceType } from '../balance/service'
+import { Account } from '../account/model'
+import { AccountService } from '../account/service'
 
 export interface AssetOptions {
   code: string
@@ -12,32 +14,17 @@ export interface AssetService {
   get(asset: AssetOptions, trx?: Transaction): Promise<void | Asset>
   getOrCreate(asset: AssetOptions): Promise<Asset>
   getById(id: string, trx?: Transaction): Promise<void | Asset>
-  getLiquidityBalance(
-    asset: AssetOptions,
-    trx?: Transaction
-  ): Promise<bigint | undefined>
-  getSettlementBalance(
-    asset: AssetOptions,
-    trx?: Transaction
-  ): Promise<bigint | undefined>
-  getOutgoingPaymentsBalance(
-    asset: AssetOptions,
-    trx?: Transaction
-  ): Promise<bigint | undefined>
-  getReceiveLimitBalance(
-    asset: AssetOptions,
-    trx?: Transaction
-  ): Promise<bigint | undefined>
+  getLiquidityAccount(assetId: string): Promise<Account | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
-  balanceService: BalanceService
+  accountService: AccountService
 }
 
 export async function createAssetService({
   logger,
   knex,
-  balanceService
+  accountService
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
     service: 'AssetService'
@@ -45,19 +32,13 @@ export async function createAssetService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    balanceService
+    accountService
   }
   return {
     get: (asset, trx) => getAsset(deps, asset, trx),
     getOrCreate: (asset) => getOrCreateAsset(deps, asset),
     getById: (id, trx) => getAssetById(deps, id, trx),
-    getLiquidityBalance: (asset, trx) => getLiquidityBalance(deps, asset, trx),
-    getSettlementBalance: (asset, trx) =>
-      getSettlementBalance(deps, asset, trx),
-    getOutgoingPaymentsBalance: (asset, trx) =>
-      getOutgoingPaymentsBalance(deps, asset, trx),
-    getReceiveLimitBalance: (asset, trx) =>
-      getReceiveLimitBalance(deps, asset, trx)
+    getLiquidityAccount: (assetId) => getAssetLiquidityAccount(deps, assetId)
   }
 }
 
@@ -66,20 +47,14 @@ async function getAsset(
   { code, scale }: AssetOptions,
   trx?: Transaction
 ): Promise<void | Asset> {
-  return await Asset.query(trx || deps.knex)
-    .where({ code, scale })
-    .limit(1)
-    .first()
+  return await Asset.query(trx || deps.knex).findOne({ code, scale })
 }
 
 async function getOrCreateAsset(
   deps: ServiceDependencies,
   { code, scale }: AssetOptions
 ): Promise<Asset> {
-  const asset = await Asset.query(deps.knex)
-    .where({ code, scale })
-    .limit(1)
-    .first()
+  const asset = await Asset.query(deps.knex).findOne({ code, scale })
   if (asset) {
     return asset
   } else {
@@ -88,41 +63,49 @@ async function getOrCreateAsset(
     // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
     //
     // However, we need to know the 'unit' column value from the inserted asset row
-    // before we can create the liquidity and settlement tigerbeetle balances,
-    // and we don't want to have invalid balance id(s) in the the asset row if the
-    // tigerbeetle balance creation fails.
-    //
-    // If tigerbeetle supported patching a balance's 'unit', we could:
-    // 1) create the tigerbeetle balances with empty 'unit's
-    // 2) insert new asset row
-    // 3) patch the tigerbeetle balance 'unit's
+    // before we can create the liquidity and settlement tigerbeetle balances.
     return await Asset.transaction(async (trx) => {
       const asset = await Asset.query(trx).insertAndFetch({
         code,
         scale
       })
-      const { id: balanceId } = await deps.balanceService.create({
-        unit: asset.unit
+      const { id: liquidityAccountId } = await deps.accountService.create(
+        {
+          assetId: asset.id,
+          balanceType: BalanceType.Credit
+        },
+        trx
+      )
+      const { id: settlementAccountId } = await deps.accountService.create(
+        {
+          assetId: asset.id,
+          balanceType: BalanceType.Debit
+        },
+        trx
+      )
+      const { id: sentAccountId } = await deps.accountService.create(
+        {
+          assetId: asset.id,
+          balanceType: BalanceType.Debit
+        },
+        trx
+      )
+      const { id: receiveLimitAccountId } = await deps.accountService.create(
+        {
+          assetId: asset.id,
+          balanceType: BalanceType.Credit
+        },
+        trx
+      )
+      await AssetAccounts.query(trx).insert({
+        id: asset.id,
+        liquidityAccountId,
+        settlementAccountId,
+        sentAccountId,
+        receiveLimitAccountId
       })
-      const { id: settlementBalanceId } = await deps.balanceService.create({
-        debitBalance: true,
-        unit: asset.unit
-      })
-      const {
-        id: outgoingPaymentsBalanceId
-      } = await deps.balanceService.create({
-        debitBalance: true,
-        unit: asset.unit
-      })
-      const { id: receiveLimitBalanceId } = await deps.balanceService.create({
-        unit: asset.unit
-      })
-      return await Asset.query(trx).patchAndFetchById(asset.id, {
-        balanceId,
-        settlementBalanceId,
-        outgoingPaymentsBalanceId,
-        receiveLimitBalanceId
-      })
+
+      return asset
     })
   }
 }
@@ -135,80 +118,14 @@ async function getAssetById(
   return await Asset.query(trx || deps.knex).findById(id)
 }
 
-async function getLiquidityBalance(
+async function getAssetLiquidityAccount(
   deps: ServiceDependencies,
-  { code, scale }: AssetOptions,
-  trx?: Transaction
-): Promise<bigint | undefined> {
-  const asset = await Asset.query(trx || deps.knex)
-    .where({ code, scale })
-    .first()
-    .select('balanceId')
+  assetId: string
+): Promise<Account | undefined> {
+  const asset = await AssetAccounts.query(deps.knex)
+    .findById(assetId)
+    .withGraphJoined('liquidityAccount.asset')
   if (asset) {
-    const balance = await deps.balanceService.get(asset.balanceId)
-    if (balance) {
-      return balance.balance
-    } else {
-      deps.logger.warn({ asset }, 'missing liquidity balance')
-    }
-  }
-}
-
-async function getSettlementBalance(
-  deps: ServiceDependencies,
-  { code, scale }: AssetOptions,
-  trx?: Transaction
-): Promise<bigint | undefined> {
-  const asset = await Asset.query(trx)
-    .where({ code, scale })
-    .first()
-    .select('settlementBalanceId')
-  if (asset) {
-    const balance = await deps.balanceService.get(asset.settlementBalanceId)
-    if (balance) {
-      return balance.balance
-    } else {
-      deps.logger.warn({ asset }, 'missing settlement balance')
-    }
-  }
-}
-
-async function getOutgoingPaymentsBalance(
-  deps: ServiceDependencies,
-  { code, scale }: AssetOptions,
-  trx?: Transaction
-): Promise<bigint | undefined> {
-  const asset = await Asset.query(trx)
-    .where({ code, scale })
-    .first()
-    .select('outgoingPaymentsBalanceId')
-  if (asset) {
-    const balance = await deps.balanceService.get(
-      asset.outgoingPaymentsBalanceId
-    )
-    if (balance) {
-      return balance.balance
-    } else {
-      deps.logger.warn({ asset }, 'missing outgoing payments balance')
-    }
-  }
-}
-
-async function getReceiveLimitBalance(
-  deps: ServiceDependencies,
-  { code, scale }: AssetOptions,
-  trx?: Transaction
-): Promise<bigint | undefined> {
-  const asset = await Asset.query(trx)
-    .where({ code, scale })
-    .first()
-    .select('receiveLimitBalanceId')
-  if (asset) {
-    const balance = await deps.balanceService.get(asset.receiveLimitBalanceId)
-    if (balance) {
-      return balance.balance
-    } else {
-      deps.logger.warn({ asset }, 'missing receive limit balance')
-    }
+    return asset.liquidityAccount
   }
 }

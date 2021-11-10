@@ -7,7 +7,8 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { Account, LiquidityService } from '../../liquidity/service'
+import { LiquidityService } from '../../liquidity/service'
+import { Account } from '../../account/model'
 import { AssetService } from '../../asset/service'
 import { AccountFactory } from '../../tests/accountFactory'
 import { randomAsset } from '../../tests/asset'
@@ -611,7 +612,7 @@ describe('Withdrawal Resolvers', (): void => {
         const asset = await assetService.getOrCreate(randomAsset())
         await expect(
           liquidityService.add({
-            account: asset,
+            account: await asset.getLiquidityAccount(),
             amount: startingBalance
           })
         )
@@ -834,7 +835,7 @@ describe('Withdrawal Resolvers', (): void => {
           if (type === 'account') {
             account = await accountFactory.build({ asset })
           } else {
-            account = asset
+            account = await asset.getLiquidityAccount()
           }
           await expect(
             liquidityService.add({
@@ -1037,7 +1038,7 @@ describe('Withdrawal Resolvers', (): void => {
           if (type === 'account') {
             account = await accountFactory.build({ asset })
           } else {
-            account = asset
+            account = await asset.getLiquidityAccount()
           }
           await expect(
             liquidityService.add({

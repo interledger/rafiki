@@ -1,5 +1,6 @@
 import { Invoice } from './model'
 import { AccountService } from '../account/service'
+import { BalanceType } from '../balance/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
@@ -75,6 +76,7 @@ async function createInvoice(
     const account = await deps.accountService.create(
       {
         assetId: paymentPointer.assetId,
+        balanceType: BalanceType.Credit,
         receiveLimit: amountToReceive
       },
       invTrx

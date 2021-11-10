@@ -1,7 +1,8 @@
+import { Errors } from 'ilp-packet'
 import { ForeignKeyViolationError, Transaction } from 'objection'
 import { v4 as uuid } from 'uuid'
 
-import { BalanceService } from '../balance/service'
+import { Balance, BalanceService, BalanceType } from '../balance/service'
 import { BaseService } from '../shared/baseService'
 import {
   BalanceTransferError,
@@ -13,6 +14,8 @@ import { TransferError, TransfersError } from '../transfer/errors'
 import { AccountTransferError, UnknownAssetError } from './errors'
 import { Account } from './model'
 
+const { AmountTooLargeError } = Errors
+
 export { Account }
 
 export interface CreateOptions {
@@ -20,6 +23,7 @@ export interface CreateOptions {
   assetId: string
   sentBalance?: boolean
   receiveLimit?: bigint
+  balanceType: BalanceType
 }
 
 export interface AccountTransferOptions {
@@ -92,6 +96,7 @@ async function createAccount(
       .withGraphFetched('asset')
 
     const { id: balanceId } = await deps.balanceService.create({
+      type: account.balanceType,
       unit: accountRow.asset.unit
     })
 
@@ -99,6 +104,7 @@ async function createAccount(
     if (sentBalance) {
       sentBalanceId = (
         await deps.balanceService.create({
+          type: BalanceType.Credit,
           unit: accountRow.asset.unit
         })
       ).id
@@ -108,15 +114,16 @@ async function createAccount(
     if (account.receiveLimit) {
       receiveLimitBalanceId = (
         await deps.balanceService.create({
-          debitBalance: true,
+          type: BalanceType.Debit,
           unit: accountRow.asset.unit
         })
       ).id
+      const receiveLimitAccount = await accountRow.asset.getReceiveLimitAccount()
       const transferError = await deps.transferService.create([
         {
           id: uuid(),
           sourceBalanceId: receiveLimitBalanceId,
-          destinationBalanceId: accountRow.asset.receiveLimitBalanceId,
+          destinationBalanceId: receiveLimitAccount.balanceId,
           // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
           amount: account.receiveLimit + BigInt(1)
         }
@@ -251,18 +258,20 @@ async function transferFunds(
     if (destinationAmount && sourceAmount !== destinationAmount) {
       // Send excess source amount to liquidity account
       if (destinationAmount < sourceAmount) {
+        const sourceLiquidityAccount = await sourceAccount.asset.getLiquidityAccount()
         transfers.push({
           id: uuid(),
           sourceBalanceId: sourceAccount.balanceId,
-          destinationBalanceId: sourceAccount.asset.balanceId,
+          destinationBalanceId: sourceLiquidityAccount.balanceId,
           amount: sourceAmount - destinationAmount,
           timeout
         })
         // Deliver excess destination amount from liquidity account
       } else {
+        const destinationLiquidityAccount = await destinationAccount.asset.getLiquidityAccount()
         transfers.push({
           id: uuid(),
-          sourceBalanceId: destinationAccount.asset.balanceId,
+          sourceBalanceId: destinationLiquidityAccount.balanceId,
           destinationBalanceId: destinationAccount.balanceId,
           amount: destinationAmount - sourceAmount,
           timeout
@@ -277,17 +286,19 @@ async function transferFunds(
     }
     // Send to source liquidity account
     // Deliver from destination liquidity account
+    const sourceLiquidityAccount = await sourceAccount.asset.getLiquidityAccount()
+    const destinationLiquidityAccount = await destinationAccount.asset.getLiquidityAccount()
     transfers.push(
       {
         id: uuid(),
         sourceBalanceId: sourceAccount.balanceId,
-        destinationBalanceId: sourceAccount.asset.balanceId,
+        destinationBalanceId: sourceLiquidityAccount.balanceId,
         amount: sourceAmount,
         timeout
       },
       {
         id: uuid(),
-        sourceBalanceId: destinationAccount.asset.balanceId,
+        sourceBalanceId: destinationLiquidityAccount.balanceId,
         destinationBalanceId: destinationAccount.balanceId,
         amount: destinationAmount,
         timeout
@@ -295,18 +306,20 @@ async function transferFunds(
     )
   }
   if (sourceAccount.sentBalanceId) {
+    const sentAccount = await sourceAccount.asset.getSentAccount()
     transfers.push({
       id: uuid(),
-      sourceBalanceId: sourceAccount.asset.outgoingPaymentsBalanceId,
+      sourceBalanceId: sentAccount.balanceId,
       destinationBalanceId: sourceAccount.sentBalanceId,
       amount: sourceAmount,
       timeout
     })
   }
   if (destinationAccount.receiveLimitBalanceId) {
+    const receiveLimitAccount = await destinationAccount.asset.getReceiveLimitAccount()
     transfers.push({
       id: uuid(),
-      sourceBalanceId: destinationAccount.asset.receiveLimitBalanceId,
+      sourceBalanceId: receiveLimitAccount.balanceId,
       destinationBalanceId: destinationAccount.receiveLimitBalanceId,
       amount: destinationAmount || sourceAmount,
       timeout
@@ -330,7 +343,17 @@ async function transferFunds(
           destinationAccount.receiveLimitBalanceId &&
           error.index === transfers.length - 1
         ) {
-          return AccountTransferError.ReceiveLimitExceeded
+          const receivedAmount = (destinationAmount || sourceAmount).toString()
+          const maximumAmount = ((await deps.balanceService.get(
+            destinationAccount.receiveLimitBalanceId
+          )) as Balance).balance.toString()
+          throw new AmountTooLargeError(
+            `amount too large. maxAmount=${maximumAmount} actualAmount=${receivedAmount}`,
+            {
+              receivedAmount,
+              maximumAmount
+            }
+          )
         }
         if (error.index === 1) {
           return AccountTransferError.InsufficientLiquidity

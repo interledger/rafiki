@@ -17,7 +17,7 @@ describe('Error Handler Middleware', () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.response.reject).toBeDefined()
-    expect(ctx.services.logger.error).toHaveBeenCalledWith(
+    expect(ctx.services.logger.debug).toHaveBeenCalledWith(
       {
         err: errorToBeThrown
       },

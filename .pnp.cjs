@@ -3094,10 +3094,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["@interledger/pay", [
-        ["npm:0.3.0", {
-          "packageLocation": "./.yarn/cache/@interledger-pay-npm-0.3.0-3be9eb0001-af3d4ebde8.zip/node_modules/@interledger/pay/",
+        ["npm:0.3.3", {
+          "packageLocation": "./.yarn/cache/@interledger-pay-npm-0.3.3-b6b57301fa-c8c819695a.zip/node_modules/@interledger/pay/",
           "packageDependencies": [
-            ["@interledger/pay", "npm:0.3.0"],
+            ["@interledger/pay", "npm:0.3.3"],
             ["abort-controller", "npm:3.0.0"],
             ["ilp-logger", "npm:1.4.4"],
             ["ilp-packet", "npm:3.1.3"],
@@ -5941,7 +5941,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@graphql-tools/graphql-file-loader", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:7.0.6"],
             ["@graphql-tools/load", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:7.1.9"],
             ["@graphql-tools/schema", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:8.1.2"],
-            ["@interledger/pay", "npm:0.3.0"],
+            ["@interledger/pay", "npm:0.3.3"],
             ["@interledger/stream-receiver", "npm:0.2.2"],
             ["@koa/cors", "npm:3.1.0"],
             ["@koa/router", "npm:10.0.0"],

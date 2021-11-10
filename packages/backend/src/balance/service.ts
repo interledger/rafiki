@@ -7,12 +7,22 @@ import { uuidToBigInt } from '../shared/utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 
+// Credit and debit balances can both send and receive
+// but are restricted by their respective Tigerbeetle flags.
+// In Rafiki transfers:
+// - the source account's debits increase
+// - the destination account's credits increase
+export enum BalanceType {
+  Credit = 'Credit', // debits_must_not_exceed_credits
+  Debit = 'Debit' // credits_must_not_exceed_debits
+}
+
 export interface BalanceOptions {
-  debitBalance?: boolean
+  type: BalanceType
   unit: number
 }
 
-export type Balance = Required<BalanceOptions> & {
+export type Balance = BalanceOptions & {
   id: string
   balance: bigint
 }
@@ -45,7 +55,7 @@ export async function createBalanceService({
 
 async function createBalance(
   deps: ServiceDependencies,
-  { debitBalance, unit }: BalanceOptions
+  { type, unit }: BalanceOptions
 ): Promise<Balance> {
   const id = uuid()
   const errors = await deps.tigerbeetle.createAccounts([
@@ -55,9 +65,10 @@ async function createBalance(
       reserved: ACCOUNT_RESERVED,
       unit,
       code: 0,
-      flags: debitBalance
-        ? AccountFlags.credits_must_not_exceed_debits
-        : AccountFlags.debits_must_not_exceed_credits,
+      flags:
+        type === BalanceType.Debit
+          ? AccountFlags.credits_must_not_exceed_debits
+          : AccountFlags.debits_must_not_exceed_credits,
       debits_accepted: BigInt(0),
       debits_reserved: BigInt(0),
       credits_accepted: BigInt(0),
@@ -71,7 +82,7 @@ async function createBalance(
   return {
     id,
     unit,
-    debitBalance: !!debitBalance,
+    type,
     balance: BigInt(0)
   }
 }
@@ -85,9 +96,10 @@ async function getBalance(
     return {
       id,
       unit: balance.unit,
-      debitBalance: !!(
+      type:
         balance.flags & AccountFlags.credits_must_not_exceed_debits
-      ),
+          ? BalanceType.Debit
+          : BalanceType.Credit,
       balance: calculateBalance(deps, balance)
     }
   }

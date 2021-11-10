@@ -50,7 +50,6 @@ export const Config = {
     ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
     : ['3004'],
 
-  // This endpoint is unauthenticated -- the Bearer token sent is just the account id to impersonate.
   pricesUrl: process.env.PRICES_URL, // optional
   pricesLifetime: +(process.env.PRICES_LIFETIME || 15_000),
 
