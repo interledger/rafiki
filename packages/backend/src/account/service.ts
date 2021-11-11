@@ -16,7 +16,9 @@ import { Account } from './model'
 export { Account }
 
 export interface CreateOptions {
-  disabled?: boolean
+  sendEnabled?: boolean
+  receiveEnabled?: boolean
+  finalized?: boolean
   assetId: string
   sentBalance?: boolean
   receiveLimit?: bigint
@@ -87,7 +89,7 @@ async function createAccount(
       .insertAndFetch({
         assetId: account.assetId,
         balanceId: uuid(),
-        disabled: account.disabled
+        finalized: account.finalized
       })
       .withGraphFetched('asset')
 

@@ -90,7 +90,7 @@ describe('Account Service', (): void => {
       const expectedAccount = {
         ...options,
         id: account.id,
-        disabled: false
+        finalized: false
       }
       expect(account).toMatchObject(expectedAccount)
       await expect(accountService.get(account.id)).resolves.toEqual(account)
@@ -104,7 +104,7 @@ describe('Account Service', (): void => {
 
     test('Can create an account with all settings', async (): Promise<void> => {
       const options: CreateOptions = {
-        disabled: false,
+        finalized: false,
         assetId: (await assetService.getOrCreate(randomAsset())).id
       }
       const account = await accountService.create(options)

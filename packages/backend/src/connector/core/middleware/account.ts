@@ -15,7 +15,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     const incomingAccount = ctx.state.incomingAccount
     if (!incomingAccount) ctx.throw(401, 'unauthorized')
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (incomingAccount!.disabled) {
+    if (incomingAccount!.finalized) {
       throw new Errors.UnreachableError('source account is disabled')
     }
 
@@ -72,7 +72,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     if (!outgoingAccount) {
       throw new AccountNotFoundError('')
     }
-    if (outgoingAccount.disabled) {
+    if (outgoingAccount.finalized) {
       throw new Errors.UnreachableError('destination account is disabled')
     }
 

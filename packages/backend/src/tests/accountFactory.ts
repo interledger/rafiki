@@ -19,7 +19,7 @@ export class AccountFactory {
 
   public async build(options: BuildOptions = {}): Promise<Account> {
     const accountOptions: CreateOptions = {
-      disabled: options.disabled || false,
+      finalized: options.finalized || false,
       assetId: (await this.assets.getOrCreate(options.asset || randomAsset()))
         .id,
       sentBalance: options.sentBalance

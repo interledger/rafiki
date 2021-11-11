@@ -9,7 +9,9 @@ export const AccountFactory = Factory.define<MockIlpAccount>(
   'AccountFactory'
 ).attrs({
   id: Faker.datatype.uuid,
-  disabled: false,
+  sendEnabled: true,
+  receiveEnabled: true,
+  finalized: false,
   asset: { code: assetCode, scale: assetScale },
   stream: {
     enabled: true

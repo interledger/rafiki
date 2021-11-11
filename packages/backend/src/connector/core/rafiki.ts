@@ -19,7 +19,9 @@ import { PeerService } from '../../peer/service'
 
 export interface RafikiAccount {
   id: string
-  disabled: boolean
+  sendEnabled: boolean
+  receiveEnabled: boolean
+  finalized: boolean
   asset: {
     code: string
     scale: number

@@ -72,7 +72,7 @@ describe('Account Middleware', () => {
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
-      state: { incomingAccount: PeerAccountFactory.build({ disabled: true }) },
+      state: { incomingAccount: PeerAccountFactory.build({ finalized: true }) },
       services: rafikiServices,
       request: {
         prepare: new ZeroCopyIlpPrepare(
@@ -87,7 +87,7 @@ describe('Account Middleware', () => {
   })
 
   test('return an error when the destination account is disabled', async () => {
-    outgoingAccount.disabled = true
+    outgoingAccount.finalized = true
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({

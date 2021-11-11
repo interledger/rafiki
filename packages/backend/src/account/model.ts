@@ -18,7 +18,9 @@ export class Account extends BaseModel {
     }
   }
 
-  public readonly disabled!: boolean
+  public readonly sendEnabled!: boolean
+  public readonly receiveEnabled!: boolean
+  public readonly finalized!: boolean
 
   public readonly assetId!: string
   public asset!: Asset
