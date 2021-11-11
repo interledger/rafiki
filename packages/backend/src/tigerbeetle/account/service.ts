@@ -1,12 +1,20 @@
+import assert from 'assert'
 import { Errors } from 'ilp-packet'
 import { ForeignKeyViolationError, Transaction } from 'objection'
+import {
+  Account as TigerBeetleAccount,
+  AccountFlags,
+  Client,
+  CreateAccountError as CreateTbAccountError
+} from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { Balance, BalanceService, BalanceType } from '../balance/service'
+import { CreateAccountError } from './errors'
 import { BaseService } from '../../shared/baseService'
+import { uuidToBigInt } from '../../shared/utils'
 import {
   BalanceTransferError,
-  UnknownBalanceError,
+  UnknownAccountError,
   UnknownLiquidityAccountError
 } from '../../shared/errors'
 import { TransferService, TwoPhaseTransfer } from '../transfer/service'
@@ -16,14 +24,24 @@ import { Account } from './model'
 
 const { AmountTooLargeError } = Errors
 
-export { Account }
+const ACCOUNT_RESERVED = Buffer.alloc(48)
+
+// Credit and debit accounts can both send and receive
+// but are restricted by their respective Tigerbeetle flags.
+// In Rafiki transfers:
+// - the source account's debits increase
+// - the destination account's credits increase
+export enum AccountType {
+  Credit = 'Credit', // debits_must_not_exceed_credits
+  Debit = 'Debit' // credits_must_not_exceed_debits
+}
 
 export interface CreateOptions {
   disabled?: boolean
   assetId: string
   sentBalance?: boolean
   receiveLimit?: bigint
-  balanceType: BalanceType
+  type: AccountType
 }
 
 export interface AccountTransferOptions {
@@ -44,20 +62,21 @@ export interface AccountService {
   get(accountId: string): Promise<Account | undefined>
   getBalance(accountId: string): Promise<bigint | undefined>
   getTotalSent(accountId: string): Promise<bigint | undefined>
+  getType(accountId: string): Promise<AccountType | undefined>
   transferFunds(
     options: AccountTransferOptions
   ): Promise<AccountTransfer | AccountTransferError>
 }
 
 interface ServiceDependencies extends BaseService {
-  balanceService: BalanceService
+  tigerbeetle: Client
   transferService: TransferService
 }
 
 export function createAccountService({
   logger,
   knex,
-  balanceService,
+  tigerbeetle,
   transferService
 }: ServiceDependencies): AccountService {
   const log = logger.child({
@@ -66,7 +85,7 @@ export function createAccountService({
   const deps: ServiceDependencies = {
     logger: log,
     knex: knex,
-    balanceService,
+    tigerbeetle,
     transferService
   }
   return {
@@ -74,58 +93,101 @@ export function createAccountService({
     get: (id) => getAccount(deps, id),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
+    getType: (id) => getAccountType(deps, id),
     transferFunds: (options) => transferFunds(deps, options)
+  }
+}
+
+async function createTbAccounts(
+  deps: ServiceDependencies,
+  accounts: {
+    id: string
+    type: AccountType
+    unit: number
+  }[]
+): Promise<void> {
+  const errors = await deps.tigerbeetle.createAccounts(
+    accounts.map(({ id, type, unit }) => ({
+      id: uuidToBigInt(id),
+      user_data: BigInt(0),
+      reserved: ACCOUNT_RESERVED,
+      unit,
+      code: 0,
+      flags:
+        type === AccountType.Debit
+          ? AccountFlags.credits_must_not_exceed_debits
+          : AccountFlags.debits_must_not_exceed_credits,
+      debits_accepted: BigInt(0),
+      debits_reserved: BigInt(0),
+      credits_accepted: BigInt(0),
+      credits_reserved: BigInt(0),
+      timestamp: 0n
+    }))
+  )
+  for (const { code } of errors) {
+    if (code !== CreateTbAccountError.linked_event_failed) {
+      throw new CreateAccountError(code)
+    }
   }
 }
 
 async function createAccount(
   deps: ServiceDependencies,
-  account: CreateOptions,
+  options: CreateOptions,
   trx?: Transaction
 ): Promise<Account> {
   const acctTrx = trx || (await Account.startTransaction())
   try {
-    const sentBalance = account.sentBalance
-    delete account.sentBalance
-    const accountRow = await Account.query(acctTrx)
+    const account = await Account.query(acctTrx)
       .insertAndFetch({
-        assetId: account.assetId,
-        balanceId: uuid(),
-        disabled: account.disabled
+        assetId: options.assetId,
+        disabled: options.disabled
       })
       .withGraphFetched('asset')
 
-    const { id: balanceId } = await deps.balanceService.create({
-      type: account.balanceType,
-      unit: accountRow.asset.unit
-    })
+    const tbAccounts = [
+      {
+        id: account.id,
+        type: options.type,
+        unit: account.asset.unit
+      }
+    ]
 
-    let sentBalanceId: string | undefined
-    if (sentBalance) {
-      sentBalanceId = (
-        await deps.balanceService.create({
-          type: BalanceType.Credit,
-          unit: accountRow.asset.unit
-        })
-      ).id
+    if (options.sentBalance) {
+      await account.$query(acctTrx).patch({
+        sentBalanceId: uuid()
+      })
+      assert.ok(account.sentBalanceId)
+      tbAccounts.push({
+        id: account.sentBalanceId,
+        type: AccountType.Credit,
+        unit: account.asset.unit
+      })
     }
 
-    let receiveLimitBalanceId: string | undefined
-    if (account.receiveLimit) {
-      receiveLimitBalanceId = (
-        await deps.balanceService.create({
-          type: BalanceType.Debit,
-          unit: accountRow.asset.unit
-        })
-      ).id
-      const receiveLimitAccount = await accountRow.asset.getReceiveLimitAccount()
+    if (options.receiveLimit) {
+      await account.$query(acctTrx).patch({
+        receiveLimitBalanceId: uuid()
+      })
+      assert.ok(account.receiveLimitBalanceId)
+      tbAccounts.push({
+        id: account.receiveLimitBalanceId,
+        type: AccountType.Debit,
+        unit: account.asset.unit
+      })
+    }
+
+    await createTbAccounts(deps, tbAccounts)
+
+    if (options.receiveLimit && account.receiveLimitBalanceId) {
+      const receiveLimitAccount = await account.asset.getReceiveLimitAccount()
       const transferError = await deps.transferService.create([
         {
           id: uuid(),
-          sourceBalanceId: receiveLimitBalanceId,
-          destinationBalanceId: receiveLimitAccount.balanceId,
+          sourceBalanceId: account.receiveLimitBalanceId,
+          destinationBalanceId: receiveLimitAccount.id,
           // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
-          amount: account.receiveLimit + BigInt(1)
+          amount: options.receiveLimit + BigInt(1)
         }
       ])
       if (transferError) {
@@ -138,19 +200,11 @@ async function createAccount(
         )
       }
     }
-    const newAccount = await accountRow
-      .$query(acctTrx)
-      .patchAndFetch({
-        balanceId,
-        sentBalanceId,
-        receiveLimitBalanceId
-      })
-      .withGraphFetched('asset')
 
     if (!trx) {
       await acctTrx.commit()
     }
-    return newAccount
+    return account
   } catch (err) {
     if (!trx) {
       await acctTrx.rollback()
@@ -159,7 +213,7 @@ async function createAccount(
       err instanceof ForeignKeyViolationError &&
       err.constraint === 'accounts_assetid_foreign'
     ) {
-      throw new UnknownAssetError(account.assetId)
+      throw new UnknownAssetError(options.assetId)
     }
     throw err
   }
@@ -180,21 +234,37 @@ async function getAccountBalance(
   deps: ServiceDependencies,
   accountId: string
 ): Promise<bigint | undefined> {
-  const account = await Account.query(deps.knex)
-    .findById(accountId)
-    .select('balanceId')
+  const account = (
+    await deps.tigerbeetle.lookupAccounts([uuidToBigInt(accountId)])
+  )[0]
 
   if (!account) {
     return undefined
   }
 
-  const balance = await deps.balanceService.get(account.balanceId)
+  return calculateBalance(deps, account)
+}
 
-  if (!balance) {
-    throw new UnknownBalanceError(accountId)
+function calculateBalance(
+  deps: ServiceDependencies,
+  account: TigerBeetleAccount
+): bigint {
+  if (account.flags & AccountFlags.credits_must_not_exceed_debits) {
+    return (
+      account.debits_accepted -
+      account.credits_accepted +
+      account.debits_reserved
+    )
+  } else {
+    if (!(account.flags & AccountFlags.debits_must_not_exceed_credits)) {
+      deps.logger.warn({ account }, 'account missing credit/debit flag')
+    }
+    return (
+      account.credits_accepted -
+      account.debits_accepted -
+      account.debits_reserved
+    )
   }
-
-  return balance.balance
 }
 
 async function getAccountTotalSent(
@@ -209,13 +279,24 @@ async function getAccountTotalSent(
     return undefined
   }
 
-  const balance = await deps.balanceService.get(account.sentBalanceId)
+  return getAccountBalance(deps, account.sentBalanceId)
+}
 
-  if (!balance) {
-    throw new UnknownBalanceError(accountId)
+async function getAccountType(
+  deps: ServiceDependencies,
+  accountId: string
+): Promise<AccountType | undefined> {
+  const account = (
+    await deps.tigerbeetle.lookupAccounts([uuidToBigInt(accountId)])
+  )[0]
+
+  if (!account) {
+    return undefined
   }
 
-  return balance.balance
+  return account.flags & AccountFlags.credits_must_not_exceed_debits
+    ? AccountType.Debit
+    : AccountType.Credit
 }
 
 async function transferFunds(
@@ -246,8 +327,8 @@ async function transferFunds(
   ) {
     transfers.push({
       id: uuid(),
-      sourceBalanceId: sourceAccount.balanceId,
-      destinationBalanceId: destinationAccount.balanceId,
+      sourceBalanceId: sourceAccount.id,
+      destinationBalanceId: destinationAccount.id,
       amount:
         destinationAmount && destinationAmount < sourceAmount
           ? destinationAmount
@@ -261,8 +342,8 @@ async function transferFunds(
         const sourceLiquidityAccount = await sourceAccount.asset.getLiquidityAccount()
         transfers.push({
           id: uuid(),
-          sourceBalanceId: sourceAccount.balanceId,
-          destinationBalanceId: sourceLiquidityAccount.balanceId,
+          sourceBalanceId: sourceAccount.id,
+          destinationBalanceId: sourceLiquidityAccount.id,
           amount: sourceAmount - destinationAmount,
           timeout
         })
@@ -271,8 +352,8 @@ async function transferFunds(
         const destinationLiquidityAccount = await destinationAccount.asset.getLiquidityAccount()
         transfers.push({
           id: uuid(),
-          sourceBalanceId: destinationLiquidityAccount.balanceId,
-          destinationBalanceId: destinationAccount.balanceId,
+          sourceBalanceId: destinationLiquidityAccount.id,
+          destinationBalanceId: destinationAccount.id,
           amount: destinationAmount - sourceAmount,
           timeout
         })
@@ -291,15 +372,15 @@ async function transferFunds(
     transfers.push(
       {
         id: uuid(),
-        sourceBalanceId: sourceAccount.balanceId,
-        destinationBalanceId: sourceLiquidityAccount.balanceId,
+        sourceBalanceId: sourceAccount.id,
+        destinationBalanceId: sourceLiquidityAccount.id,
         amount: sourceAmount,
         timeout
       },
       {
         id: uuid(),
-        sourceBalanceId: destinationLiquidityAccount.balanceId,
-        destinationBalanceId: destinationAccount.balanceId,
+        sourceBalanceId: destinationLiquidityAccount.id,
+        destinationBalanceId: destinationAccount.id,
         amount: destinationAmount,
         timeout
       }
@@ -309,7 +390,7 @@ async function transferFunds(
     const sentAccount = await sourceAccount.asset.getSentAccount()
     transfers.push({
       id: uuid(),
-      sourceBalanceId: sentAccount.balanceId,
+      sourceBalanceId: sentAccount.id,
       destinationBalanceId: sourceAccount.sentBalanceId,
       amount: sourceAmount,
       timeout
@@ -319,7 +400,7 @@ async function transferFunds(
     const receiveLimitAccount = await destinationAccount.asset.getReceiveLimitAccount()
     transfers.push({
       id: uuid(),
-      sourceBalanceId: receiveLimitAccount.balanceId,
+      sourceBalanceId: receiveLimitAccount.id,
       destinationBalanceId: destinationAccount.receiveLimitBalanceId,
       amount: destinationAmount || sourceAmount,
       timeout
@@ -332,10 +413,10 @@ async function transferFunds(
         if (error.index === 1) {
           throw new UnknownLiquidityAccountError(destinationAccount.asset)
         }
-        throw new UnknownBalanceError(sourceAccount.balanceId)
+        throw new UnknownAccountError(sourceAccount.id)
       case TransferError.UnknownDestinationBalance:
         if (error.index === 1) {
-          throw new UnknownBalanceError(destinationAccount.balanceId)
+          throw new UnknownAccountError(destinationAccount.id)
         }
         throw new UnknownLiquidityAccountError(sourceAccount.asset)
       case TransferError.InsufficientBalance:
@@ -344,9 +425,10 @@ async function transferFunds(
           error.index === transfers.length - 1
         ) {
           const receivedAmount = (destinationAmount || sourceAmount).toString()
-          const maximumAmount = ((await deps.balanceService.get(
+          const maximumAmount = ((await getAccountBalance(
+            deps,
             destinationAccount.receiveLimitBalanceId
-          )) as Balance).balance.toString()
+          )) as bigint).toString()
           throw new AmountTooLargeError(
             `amount too large. maxAmount=${maximumAmount} actualAmount=${receivedAmount}`,
             {

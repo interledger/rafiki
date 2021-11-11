@@ -22,8 +22,6 @@ export class Account extends BaseModel {
 
   public readonly assetId!: string
   public asset!: Asset
-  // TigerBeetle account id tracking Interledger balance
-  public readonly balanceId!: string
   // TigerBeetle account id tracking amount sent
   public readonly sentBalanceId?: string
 

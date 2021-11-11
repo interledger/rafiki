@@ -8,7 +8,6 @@ import { Account } from '../tigerbeetle/account/model'
 import { AccountService } from '../tigerbeetle/account/service'
 import { Asset } from '../asset/model'
 import { AssetService } from '../asset/service'
-import { BalanceService } from '../tigerbeetle/balance/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { GraphileProducer } from '../messaging/graphileProducer'
@@ -29,7 +28,6 @@ describe('Liquidity Service', (): void => {
   let accountService: AccountService
   let accountFactory: AccountFactory
   let assetService: AssetService
-  let balanceService: BalanceService
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -49,7 +47,6 @@ describe('Liquidity Service', (): void => {
       liquidityService = await deps.use('liquidityService')
       accountService = await deps.use('accountService')
       assetService = await deps.use('assetService')
-      balanceService = await deps.use('balanceService')
       const transferService = await deps.use('transferService')
       accountFactory = new AccountFactory(
         accountService,
@@ -97,17 +94,13 @@ describe('Liquidity Service', (): void => {
             amount
           })
         ).resolves.toBeUndefined()
-        await expect(
-          balanceService.get(account.balanceId)
-        ).resolves.toMatchObject({
-          balance: amount * BigInt(i + 1)
-        })
+        await expect(accountService.getBalance(account.id)).resolves.toEqual(
+          amount * BigInt(i + 1)
+        )
         const settlementAccount = await asset.getSettlementAccount()
         await expect(
-          balanceService.get(settlementAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: amount * BigInt(i + 1)
-        })
+          accountService.getBalance(settlementAccount.id)
+        ).resolves.toEqual(amount * BigInt(i + 1))
       }
     })
 
@@ -169,30 +162,22 @@ describe('Liquidity Service', (): void => {
             amount
           })
         ).resolves.toBeUndefined()
+        await expect(accountService.getBalance(account.id)).resolves.toEqual(
+          startingBalance - amount * BigInt(i + 1)
+        )
         await expect(
-          balanceService.get(account.balanceId)
-        ).resolves.toMatchObject({
-          balance: startingBalance - amount * BigInt(i + 1)
-        })
-        await expect(
-          balanceService.get(settlementAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: startingBalance - amount * BigInt(i)
-        })
+          accountService.getBalance(settlementAccount.id)
+        ).resolves.toEqual(startingBalance - amount * BigInt(i))
 
         await expect(
           liquidityService.finalizeWithdrawal(id)
         ).resolves.toBeUndefined()
+        await expect(accountService.getBalance(account.id)).resolves.toEqual(
+          startingBalance - amount * BigInt(i + 1)
+        )
         await expect(
-          balanceService.get(account.balanceId)
-        ).resolves.toMatchObject({
-          balance: startingBalance - amount * BigInt(i + 1)
-        })
-        await expect(
-          balanceService.get(settlementAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: startingBalance - amount * BigInt(i + 1)
-        })
+          accountService.getBalance(settlementAccount.id)
+        ).resolves.toEqual(startingBalance - amount * BigInt(i + 1))
       }
     })
 
@@ -215,16 +200,12 @@ describe('Liquidity Service', (): void => {
           amount
         })
       ).resolves.toEqual(LiquidityError.InsufficientBalance)
+      await expect(accountService.getBalance(account.id)).resolves.toEqual(
+        startingBalance
+      )
       await expect(
-        balanceService.get(account.balanceId)
-      ).resolves.toMatchObject({
-        balance: startingBalance
-      })
-      await expect(
-        balanceService.get(settlementAccount.balanceId)
-      ).resolves.toMatchObject({
-        balance: startingBalance
-      })
+        accountService.getBalance(settlementAccount.id)
+      ).resolves.toEqual(startingBalance)
     })
 
     test("Can't create withdrawal with duplicate id", async (): Promise<void> => {
@@ -254,11 +235,9 @@ describe('Liquidity Service', (): void => {
       await expect(
         liquidityService.rollbackWithdrawal(id)
       ).resolves.toBeUndefined()
-      await expect(
-        balanceService.get(account.balanceId)
-      ).resolves.toMatchObject({
-        balance: startingBalance
-      })
+      await expect(accountService.getBalance(account.id)).resolves.toEqual(
+        startingBalance
+      )
     })
 
     test("Can't finalize non-existent withdrawal", async (): Promise<void> => {

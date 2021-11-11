@@ -3,7 +3,7 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { AssetService } from './service'
-import { BalanceType } from '../tigerbeetle/balance/service'
+import { AccountType } from '../tigerbeetle/account/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { randomAsset } from '../tests/asset'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -74,49 +74,31 @@ describe('Asset Service', (): void => {
     })
 
     test('Asset accounts are created', async (): Promise<void> => {
-      const balanceService = await deps.use('balanceService')
+      const accountService = await deps.use('accountService')
       const asset = await assetService.getOrCreate(randomAsset())
       const liquidityAccount = await asset.getLiquidityAccount()
       expect(liquidityAccount.asset).toEqual(asset)
       await expect(
-        balanceService.get(liquidityAccount.balanceId)
-      ).resolves.toEqual({
-        id: liquidityAccount.balanceId,
-        balance: BigInt(0),
-        type: BalanceType.Credit,
-        unit: asset.unit
-      })
+        accountService.getType(liquidityAccount.id)
+      ).resolves.toEqual(AccountType.Credit)
 
       const settlementAccount = await asset.getSettlementAccount()
       expect(settlementAccount.asset).toEqual(asset)
       await expect(
-        balanceService.get(settlementAccount.balanceId)
-      ).resolves.toEqual({
-        id: settlementAccount.balanceId,
-        balance: BigInt(0),
-        type: BalanceType.Debit,
-        unit: asset.unit
-      })
+        accountService.getType(settlementAccount.id)
+      ).resolves.toEqual(AccountType.Debit)
 
       const sentAccount = await asset.getSentAccount()
       expect(sentAccount.asset).toEqual(asset)
-      await expect(balanceService.get(sentAccount.balanceId)).resolves.toEqual({
-        id: sentAccount.balanceId,
-        balance: BigInt(0),
-        type: BalanceType.Debit,
-        unit: asset.unit
-      })
+      await expect(accountService.getType(sentAccount.id)).resolves.toEqual(
+        AccountType.Debit
+      )
 
       const receiveLimitAccount = await asset.getReceiveLimitAccount()
       expect(receiveLimitAccount.asset).toEqual(asset)
       await expect(
-        balanceService.get(receiveLimitAccount.balanceId)
-      ).resolves.toEqual({
-        id: receiveLimitAccount.balanceId,
-        balance: BigInt(0),
-        type: BalanceType.Credit,
-        unit: asset.unit
-      })
+        accountService.getType(receiveLimitAccount.id)
+      ).resolves.toEqual(AccountType.Credit)
     })
 
     test('Can get asset by id', async (): Promise<void> => {

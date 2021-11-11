@@ -1,6 +1,5 @@
 import { Invoice } from './model'
-import { AccountService } from '../tigerbeetle/account/service'
-import { BalanceType } from '../tigerbeetle/balance/service'
+import { AccountService, AccountType } from '../tigerbeetle/account/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
@@ -76,7 +75,7 @@ async function createInvoice(
     const account = await deps.accountService.create(
       {
         assetId: paymentPointer.assetId,
-        balanceType: BalanceType.Credit,
+        type: AccountType.Credit,
         receiveLimit: amountToReceive
       },
       invTrx

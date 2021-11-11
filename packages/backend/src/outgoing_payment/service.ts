@@ -3,8 +3,7 @@ import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { Account } from '../tigerbeetle/account/model'
-import { AccountService } from '../tigerbeetle/account/service'
-import { BalanceType } from '../tigerbeetle/balance/service'
+import { AccountService, AccountType } from '../tigerbeetle/account/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { RatesService } from '../rates/service'
 import { IlpPlugin } from './ilp_plugin'
@@ -109,7 +108,7 @@ async function createOutgoingPayment(
 
   const account = await deps.accountService.create({
     assetId: paymentPointer.assetId,
-    balanceType: BalanceType.Credit,
+    type: AccountType.Credit,
     sentBalance: true
   })
 

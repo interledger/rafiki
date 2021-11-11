@@ -4,9 +4,8 @@ import { isValidIlpAddress } from 'ilp-packet'
 
 import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
-import { AccountService } from '../tigerbeetle/account/service'
+import { AccountService, AccountType } from '../tigerbeetle/account/service'
 import { AssetService, AssetOptions } from '../asset/service'
-import { BalanceType } from '../tigerbeetle/balance/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
 import { BaseService } from '../shared/baseService'
@@ -103,7 +102,7 @@ async function createPeer(
         assetId: (
           await deps.assetService.getOrCreate(options.asset as AssetOptions)
         ).id,
-        balanceType: BalanceType.Credit
+        type: AccountType.Credit
       },
       peerTrx
     )

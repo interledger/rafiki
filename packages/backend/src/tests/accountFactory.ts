@@ -1,12 +1,12 @@
 import { v4 as uuid } from 'uuid'
 
+import { Account } from '../tigerbeetle/account/model'
 import {
-  Account,
   AccountService,
+  AccountType,
   CreateOptions
 } from '../tigerbeetle/account/service'
 import { AssetOptions, AssetService } from '../asset/service'
-import { BalanceType } from '../tigerbeetle/balance/service'
 import { TransferService } from '../tigerbeetle/transfer/service'
 import { randomAsset } from './asset'
 
@@ -27,7 +27,7 @@ export class AccountFactory {
       disabled: options.disabled || false,
       assetId: (await this.assets.getOrCreate(options.asset || randomAsset()))
         .id,
-      balanceType: options.balanceType || BalanceType.Credit,
+      type: options.type || AccountType.Credit,
       sentBalance: options.sentBalance
     }
     const account = await this.accounts.create(accountOptions)
@@ -40,8 +40,8 @@ export class AccountFactory {
       await this.transfers.create([
         {
           id: uuid(),
-          sourceBalanceId: settlementAccount.balanceId,
-          destinationBalanceId: account.balanceId,
+          sourceBalanceId: settlementAccount.id,
+          destinationBalanceId: account.id,
           amount: options.balance
         }
       ])

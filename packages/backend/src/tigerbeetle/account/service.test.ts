@@ -2,16 +2,17 @@ import assert from 'assert'
 import { Errors } from 'ilp-packet'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { AccountService, CreateOptions } from './service'
+import { AccountService, AccountType, CreateOptions } from './service'
 import {
   AccountTransferError,
+  CreateAccountError,
   isAccountTransferError,
   UnknownAssetError
 } from './errors'
 import { AssetService } from '../../asset/service'
-import { Balance, BalanceService, BalanceType } from '../balance/service'
 import { LiquidityService } from '../../liquidity/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { resetGraphileDb } from '../../tests/graphileDb'
@@ -34,7 +35,6 @@ describe('Account Service', (): void => {
   let accountService: AccountService
   let accountFactory: AccountFactory
   let assetService: AssetService
-  let balanceService: BalanceService
   let liquidityService: LiquidityService
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -65,7 +65,6 @@ describe('Account Service', (): void => {
         assetService,
         transferService
       )
-      balanceService = await deps.use('balanceService')
       liquidityService = await deps.use('liquidityService')
     }
   )
@@ -88,7 +87,7 @@ describe('Account Service', (): void => {
     test('Can create an account', async (): Promise<void> => {
       const options: CreateOptions = {
         assetId: (await assetService.getOrCreate(randomAsset())).id,
-        balanceType: BalanceType.Credit
+        type: AccountType.Credit
       }
       const account = await accountService.create(options)
       const expectedAccount = {
@@ -98,19 +97,19 @@ describe('Account Service', (): void => {
       }
       expect(account).toMatchObject(expectedAccount)
       await expect(accountService.get(account.id)).resolves.toEqual(account)
-      await expect(balanceService.get(account.balanceId)).resolves.toEqual({
-        id: account.balanceId,
-        balance: BigInt(0),
-        type: BalanceType.Credit,
-        unit: account.asset.unit
-      })
+      await expect(accountService.getBalance(account.id)).resolves.toEqual(
+        BigInt(0)
+      )
+      await expect(accountService.getType(account.id)).resolves.toEqual(
+        options.type
+      )
     })
 
     test('Can create a disabled account', async (): Promise<void> => {
       const options: CreateOptions = {
         disabled: false,
         assetId: (await assetService.getOrCreate(randomAsset())).id,
-        balanceType: BalanceType.Credit
+        type: AccountType.Credit
       }
       const account = await accountService.create(options)
       expect(account).toMatchObject({
@@ -119,18 +118,18 @@ describe('Account Service', (): void => {
         disabled: options.disabled
       })
       await expect(accountService.get(account.id)).resolves.toEqual(account)
-      await expect(balanceService.get(account.balanceId)).resolves.toEqual({
-        id: account.balanceId,
-        balance: BigInt(0),
-        type: BalanceType.Credit,
-        unit: account.asset.unit
-      })
+      await expect(accountService.getBalance(account.id)).resolves.toEqual(
+        BigInt(0)
+      )
+      await expect(accountService.getType(account.id)).resolves.toEqual(
+        options.type
+      )
     })
 
     test('Cannot create an account with unknown asset id', async (): Promise<void> => {
       const assetId = uuid()
       await expect(
-        accountService.create({ assetId, balanceType: BalanceType.Credit })
+        accountService.create({ assetId, type: AccountType.Credit })
       ).rejects.toThrowError(new UnknownAssetError(assetId))
     })
 
@@ -138,51 +137,69 @@ describe('Account Service', (): void => {
       const { id: assetId } = await assetService.getOrCreate(randomAsset())
       const options: CreateOptions = {
         assetId,
-        balanceType: BalanceType.Credit,
+        type: AccountType.Credit,
         sentBalance: true
       }
       const account = await accountService.create(options)
       assert.ok(account.sentBalanceId)
-      await expect(balanceService.get(account.sentBalanceId)).resolves.toEqual({
-        id: account.sentBalanceId,
-        balance: BigInt(0),
-        type: BalanceType.Credit,
-        unit: account.asset.unit
-      })
+      await expect(
+        accountService.getBalance(account.sentBalanceId)
+      ).resolves.toEqual(BigInt(0))
+      await expect(
+        accountService.getType(account.sentBalanceId)
+      ).resolves.toEqual(options.type)
     })
 
     it('Can create an account with a receive limit', async (): Promise<void> => {
       const { id: assetId } = await assetService.getOrCreate(randomAsset())
       const options: CreateOptions = {
         assetId,
-        balanceType: BalanceType.Credit,
+        type: AccountType.Credit,
         receiveLimit: BigInt(123)
       }
       const account = await accountService.create(options)
       assert.ok(account.receiveLimitBalanceId)
       await expect(
-        balanceService.get(account.receiveLimitBalanceId)
-      ).resolves.toEqual({
-        id: account.receiveLimitBalanceId,
-        balance: BigInt(124),
-        type: BalanceType.Debit,
-        unit: account.asset.unit
-      })
+        accountService.getBalance(account.receiveLimitBalanceId)
+      ).resolves.toEqual(BigInt(123 + 1))
+      await expect(
+        accountService.getType(account.receiveLimitBalanceId)
+      ).resolves.toEqual(AccountType.Debit)
     })
 
     test('Can create an account with a debit balance', async (): Promise<void> => {
       const { id: assetId } = await assetService.getOrCreate(randomAsset())
       const options: CreateOptions = {
         assetId,
-        balanceType: BalanceType.Debit
+        type: AccountType.Debit
       }
       const account = await accountService.create(options)
-      await expect(balanceService.get(account.balanceId)).resolves.toEqual({
-        id: account.balanceId,
-        balance: BigInt(0),
-        type: BalanceType.Debit,
-        unit: account.asset.unit
-      })
+      await expect(accountService.getType(account.id)).resolves.toEqual(
+        options.type
+      )
+    })
+
+    test('Create throws on error', async (): Promise<void> => {
+      const { id: assetId } = await assetService.getOrCreate(randomAsset())
+
+      const tigerbeetle = await deps.use('tigerbeetle')
+      jest
+        .spyOn(tigerbeetle, 'createAccounts')
+        .mockImplementationOnce(async () => [
+          {
+            index: 0,
+            code: CreateTbAccountError.exists_with_different_unit
+          }
+        ])
+
+      await expect(
+        accountService.create({
+          assetId,
+          type: AccountType.Credit
+        })
+      ).rejects.toThrowError(
+        new CreateAccountError(CreateTbAccountError.exists_with_different_unit)
+      )
     })
   })
 
@@ -275,13 +292,12 @@ describe('Account Service', (): void => {
         ).resolves.toEqual(startingSourceBalance - sourceAmount)
 
         await expect(
-          balanceService.get(sourceLiquidityAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance:
-            sourceAmount < destinationAmount
-              ? startingLiquidity - amountDiff
-              : startingLiquidity
-        })
+          accountService.getBalance(sourceLiquidityAccount.id)
+        ).resolves.toEqual(
+          sourceAmount < destinationAmount
+            ? startingLiquidity - amountDiff
+            : startingLiquidity
+        )
 
         await expect(
           accountService.getBalance(destinationAccount.id)
@@ -300,10 +316,10 @@ describe('Account Service', (): void => {
         )
 
         await expect(
-          balanceService.get(sourceLiquidityAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: accept ? startingLiquidity - amountDiff : startingLiquidity
-        })
+          accountService.getBalance(sourceLiquidityAccount.id)
+        ).resolves.toEqual(
+          accept ? startingLiquidity - amountDiff : startingLiquidity
+        )
 
         await expect(
           accountService.getBalance(destinationAccount.id)
@@ -372,16 +388,12 @@ describe('Account Service', (): void => {
         ).resolves.toEqual(startingSourceBalance - sourceAmount)
 
         await expect(
-          balanceService.get(sourceLiquidityAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: BigInt(0)
-        })
+          accountService.getBalance(sourceLiquidityAccount.id)
+        ).resolves.toEqual(BigInt(0))
 
         await expect(
-          balanceService.get(destinationLiquidityAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: startingDestinationLiquidity - destinationAmount
-        })
+          accountService.getBalance(destinationLiquidityAccount.id)
+        ).resolves.toEqual(startingDestinationLiquidity - destinationAmount)
 
         await expect(
           accountService.getBalance(destinationAccount.id)
@@ -400,18 +412,16 @@ describe('Account Service', (): void => {
         )
 
         await expect(
-          balanceService.get(sourceLiquidityAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: accept ? sourceAmount : BigInt(0)
-        })
+          accountService.getBalance(sourceLiquidityAccount.id)
+        ).resolves.toEqual(accept ? sourceAmount : BigInt(0))
 
         await expect(
-          balanceService.get(destinationLiquidityAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: accept
+          accountService.getBalance(destinationLiquidityAccount.id)
+        ).resolves.toEqual(
+          accept
             ? startingDestinationLiquidity - destinationAmount
             : startingDestinationLiquidity
-        })
+        )
 
         await expect(
           accountService.getBalance(destinationAccount.id)
@@ -487,16 +497,12 @@ describe('Account Service', (): void => {
         ).resolves.toEqual(startingSourceBalance)
 
         await expect(
-          balanceService.get(sourceLiquidityAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: BigInt(0)
-        })
+          accountService.getBalance(sourceLiquidityAccount.id)
+        ).resolves.toEqual(BigInt(0))
 
         await expect(
-          balanceService.get(destinationLiquidityAccount.balanceId)
-        ).resolves.toMatchObject({
-          balance: BigInt(0)
-        })
+          accountService.getBalance(destinationLiquidityAccount.id)
+        ).resolves.toEqual(BigInt(0))
 
         await expect(
           accountService.getBalance(destinationAccount.id)
@@ -659,9 +665,10 @@ describe('Account Service', (): void => {
       })
       assert(invoice.account.receiveLimitBalanceId)
       const largeAmount = BigInt(123 + 2)
-      const maximumAmount = ((await balanceService.get(
+      const maximumAmount = await accountService.getBalance(
         invoice.account.receiveLimitBalanceId
-      )) as Balance).balance.toString()
+      )
+      assert(maximumAmount)
       await expect(
         accountService.transferFunds({
           sourceAccount,
@@ -671,10 +678,10 @@ describe('Account Service', (): void => {
         })
       ).rejects.toThrowError(
         new AmountTooLargeError(
-          `amount too large. maxAmount=${maximumAmount} actualAmount=${largeAmount.toString()}`,
+          `amount too large. maxAmount=${maximumAmount.toString()} actualAmount=${largeAmount.toString()}`,
           {
             receivedAmount: largeAmount.toString(),
-            maximumAmount
+            maximumAmount: maximumAmount.toString()
           }
         )
       )

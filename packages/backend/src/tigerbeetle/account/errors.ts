@@ -1,3 +1,10 @@
+export class CreateAccountError extends Error {
+  constructor(public code: number) {
+    super()
+    this.name = 'CreateAccountError'
+  }
+}
+
 export class UnknownAssetError extends Error {
   constructor(public assetId: string) {
     super('Asset not found. assetId=' + assetId)

@@ -20,7 +20,6 @@ import {
 } from 'graphql-tools'
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
-import { BalanceService } from './tigerbeetle/balance/service'
 import { TransferService } from './tigerbeetle/transfer/service'
 import { AssetService } from './asset/service'
 import { Account } from './tigerbeetle/account/model'
@@ -61,7 +60,6 @@ export interface AppServices {
   config: Promise<IAppConfig>
   workerUtils: Promise<WorkerUtils>
   httpTokenService: Promise<HttpTokenService>
-  balanceService: Promise<BalanceService>
   transferService: Promise<TransferService>
   assetService: Promise<AssetService>
   accountService: Promise<AccountService>

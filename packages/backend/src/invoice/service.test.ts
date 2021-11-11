@@ -15,7 +15,7 @@ import { AppServices } from '../app'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { AssetOptions } from '../asset/service'
-import { BalanceType } from '../tigerbeetle/balance/service'
+import { AccountType } from '../tigerbeetle/account/service'
 import { AccountFactory } from '../tests/accountFactory'
 
 describe('Invoice Service', (): void => {
@@ -109,14 +109,14 @@ describe('Invoice Service', (): void => {
         description: 'Invoice',
         amountToReceive: BigInt(123)
       })
-      const balanceService = await deps.use('balanceService')
+      const accountService = await deps.use('accountService')
       if (!invoice.account.receiveLimitBalanceId) throw new Error('fail')
       await expect(
-        balanceService.get(invoice.account.receiveLimitBalanceId)
-      ).resolves.toMatchObject({
-        type: BalanceType.Debit,
-        balance: BigInt(123 + 1)
-      })
+        accountService.getBalance(invoice.account.receiveLimitBalanceId)
+      ).resolves.toEqual(BigInt(123 + 1))
+      await expect(
+        accountService.getType(invoice.account.receiveLimitBalanceId)
+      ).resolves.toEqual(AccountType.Debit)
     })
 
     test('Cannot create invoice for nonexistent payment pointer', async (): Promise<void> => {

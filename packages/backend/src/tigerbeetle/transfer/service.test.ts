@@ -1,10 +1,12 @@
+import assert from 'assert'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { TransferService, TwoPhaseTransfer } from './service'
 import { TransferError } from './errors'
-import { BalanceService, BalanceType } from '../balance/service'
+import { AccountService, AccountType } from '../account/service'
 import { createTestApp, TestContainer } from '../../tests/app'
+import { randomAsset } from '../../tests/asset'
 import { resetGraphileDb } from '../../tests/graphileDb'
 import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config } from '../../config/app'
@@ -17,7 +19,7 @@ describe('Transfer Service', (): void => {
   let appContainer: TestContainer
   let workerUtils: WorkerUtils
   let transferService: TransferService
-  let balanceService: BalanceService
+  let accountService: AccountService
   let sourceBalanceId: string
   let destinationBalanceId: string
   const startingSourceBalance = BigInt(100)
@@ -42,37 +44,39 @@ describe('Transfer Service', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
+      const assetService = await deps.use('assetService')
+      const asset = await assetService.getOrCreate(randomAsset())
       transferService = await deps.use('transferService')
-      balanceService = await deps.use('balanceService')
+      accountService = await deps.use('accountService')
+
       sourceBalanceId = (
-        await balanceService.create({ type: BalanceType.Credit, unit: 1 })
-      ).id
-      destinationBalanceId = (
-        await balanceService.create({ type: BalanceType.Credit, unit: 1 })
-      ).id
-      const settlementBalanceId = (
-        await balanceService.create({
-          type: BalanceType.Debit,
-          unit: 1
+        await accountService.create({
+          assetId: asset.id,
+          type: AccountType.Credit
         })
       ).id
+      destinationBalanceId = (
+        await accountService.create({
+          assetId: asset.id,
+          type: AccountType.Credit
+        })
+      ).id
+      const settlementAccount = await asset.getSettlementAccount()
       await expect(
         transferService.create([
           {
-            sourceBalanceId: settlementBalanceId,
+            sourceBalanceId: settlementAccount.id,
             destinationBalanceId: sourceBalanceId,
             amount: startingSourceBalance
           }
         ])
       ).resolves.toBeUndefined()
-      await expect(balanceService.get(sourceBalanceId)).resolves.toMatchObject({
-        balance: startingSourceBalance
-      })
+      await expect(accountService.getBalance(sourceBalanceId)).resolves.toEqual(
+        startingSourceBalance
+      )
       await expect(
-        balanceService.get(destinationBalanceId)
-      ).resolves.toMatchObject({
-        balance: BigInt(0)
-      })
+        accountService.getBalance(destinationBalanceId)
+      ).resolves.toEqual(BigInt(0))
     }
   )
 
@@ -94,14 +98,12 @@ describe('Transfer Service', (): void => {
         timeout
       }
       await expect(transferService.create([transfer])).resolves.toBeUndefined()
-      await expect(balanceService.get(sourceBalanceId)).resolves.toMatchObject({
-        balance: startingSourceBalance - transfer.amount
-      })
+      await expect(accountService.getBalance(sourceBalanceId)).resolves.toEqual(
+        startingSourceBalance - transfer.amount
+      )
       await expect(
-        balanceService.get(destinationBalanceId)
-      ).resolves.toMatchObject({
-        balance: BigInt(0)
-      })
+        accountService.getBalance(destinationBalanceId)
+      ).resolves.toEqual(BigInt(0))
     })
 
     test('A transfer can be auto-committed', async (): Promise<void> => {
@@ -111,14 +113,12 @@ describe('Transfer Service', (): void => {
         amount: BigInt(10)
       }
       await expect(transferService.create([transfer])).resolves.toBeUndefined()
-      await expect(balanceService.get(sourceBalanceId)).resolves.toMatchObject({
-        balance: startingSourceBalance - transfer.amount
-      })
+      await expect(accountService.getBalance(sourceBalanceId)).resolves.toEqual(
+        startingSourceBalance - transfer.amount
+      )
       await expect(
-        balanceService.get(destinationBalanceId)
-      ).resolves.toMatchObject({
-        balance: transfer.amount
-      })
+        accountService.getBalance(destinationBalanceId)
+      ).resolves.toEqual(transfer.amount)
     })
 
     test('Cannot create duplicate transfer', async (): Promise<void> => {
@@ -210,10 +210,12 @@ describe('Transfer Service', (): void => {
       })
     })
 
-    test('Cannot transfer between balances with different assets', async (): Promise<void> => {
-      const { id: destinationBalanceId } = await balanceService.create({
-        type: BalanceType.Credit,
-        unit: 2
+    test('Cannot transfer between accounts with different assets', async (): Promise<void> => {
+      const assetService = await deps.use('assetService')
+      const { id: assetId } = await assetService.getOrCreate(randomAsset())
+      const { id: destinationBalanceId } = await accountService.create({
+        assetId,
+        type: AccountType.Credit
       })
 
       const transfer = {
@@ -242,9 +244,11 @@ describe('Transfer Service', (): void => {
     })
 
     test('Cannot create transfer exceeding debit destination balance', async (): Promise<void> => {
-      const { id: debitBalanceId } = await balanceService.create({
-        type: BalanceType.Debit,
-        unit: 1
+      const sourceAccount = await accountService.get(sourceBalanceId)
+      assert.ok(sourceAccount)
+      const { id: debitBalanceId } = await accountService.create({
+        assetId: sourceAccount.assetId,
+        type: AccountType.Debit
       })
       const transfer = {
         id: uuid(),
@@ -269,14 +273,12 @@ describe('Transfer Service', (): void => {
       await expect(
         transferService.create([transfer, transfer])
       ).resolves.toBeUndefined()
-      await expect(balanceService.get(sourceBalanceId)).resolves.toMatchObject({
-        balance: startingSourceBalance - transfer.amount - transfer.amount
-      })
+      await expect(accountService.getBalance(sourceBalanceId)).resolves.toEqual(
+        startingSourceBalance - transfer.amount - transfer.amount
+      )
       await expect(
-        balanceService.get(destinationBalanceId)
-      ).resolves.toMatchObject({
-        balance: transfer.amount + transfer.amount
-      })
+        accountService.getBalance(destinationBalanceId)
+      ).resolves.toEqual(transfer.amount + transfer.amount)
 
       await expect(
         transferService.create([
@@ -290,14 +292,12 @@ describe('Transfer Service', (): void => {
         index: 1,
         error: TransferError.SameBalances
       })
-      await expect(balanceService.get(sourceBalanceId)).resolves.toMatchObject({
-        balance: startingSourceBalance - transfer.amount - transfer.amount
-      })
+      await expect(accountService.getBalance(sourceBalanceId)).resolves.toEqual(
+        startingSourceBalance - transfer.amount - transfer.amount
+      )
       await expect(
-        balanceService.get(destinationBalanceId)
-      ).resolves.toMatchObject({
-        balance: transfer.amount + transfer.amount
-      })
+        accountService.getBalance(destinationBalanceId)
+      ).resolves.toEqual(transfer.amount + transfer.amount)
     })
   })
 
@@ -317,15 +317,11 @@ describe('Transfer Service', (): void => {
           transferService.create([transfer])
         ).resolves.toBeUndefined()
         await expect(
-          balanceService.get(sourceBalanceId)
-        ).resolves.toMatchObject({
-          balance: startingSourceBalance - transfer.amount
-        })
+          accountService.getBalance(sourceBalanceId)
+        ).resolves.toEqual(startingSourceBalance - transfer.amount)
         await expect(
-          balanceService.get(destinationBalanceId)
-        ).resolves.toMatchObject({
-          balance: BigInt(0)
-        })
+          accountService.getBalance(destinationBalanceId)
+        ).resolves.toEqual(BigInt(0))
       }
     )
 
@@ -335,15 +331,11 @@ describe('Transfer Service', (): void => {
           transferService.commit([transfer.id])
         ).resolves.toBeUndefined()
         await expect(
-          balanceService.get(sourceBalanceId)
-        ).resolves.toMatchObject({
-          balance: startingSourceBalance - transfer.amount
-        })
+          accountService.getBalance(sourceBalanceId)
+        ).resolves.toEqual(startingSourceBalance - transfer.amount)
         await expect(
-          balanceService.get(destinationBalanceId)
-        ).resolves.toMatchObject({
-          balance: transfer.amount
-        })
+          accountService.getBalance(destinationBalanceId)
+        ).resolves.toEqual(transfer.amount)
       })
 
       test('Cannot commit unknown transfer', async (): Promise<void> => {
@@ -422,15 +414,13 @@ describe('Transfer Service', (): void => {
             transferService.commit([transfer.id, transferId])
           ).resolves.toBeUndefined()
           await expect(
-            balanceService.get(sourceBalanceId)
-          ).resolves.toMatchObject({
-            balance: startingSourceBalance - transfer.amount - transfer.amount
-          })
+            accountService.getBalance(sourceBalanceId)
+          ).resolves.toEqual(
+            startingSourceBalance - transfer.amount - transfer.amount
+          )
           await expect(
-            balanceService.get(destinationBalanceId)
-          ).resolves.toMatchObject({
-            balance: transfer.amount + transfer.amount
-          })
+            accountService.getBalance(destinationBalanceId)
+          ).resolves.toEqual(transfer.amount + transfer.amount)
         }
         {
           const transferId = uuid()
@@ -449,19 +439,16 @@ describe('Transfer Service', (): void => {
             error: TransferError.AlreadyCommitted
           })
           await expect(
-            balanceService.get(sourceBalanceId)
-          ).resolves.toMatchObject({
-            balance:
-              startingSourceBalance -
+            accountService.getBalance(sourceBalanceId)
+          ).resolves.toEqual(
+            startingSourceBalance -
               transfer.amount -
               transfer.amount -
               transfer.amount
-          })
+          )
           await expect(
-            balanceService.get(destinationBalanceId)
-          ).resolves.toMatchObject({
-            balance: transfer.amount + transfer.amount
-          })
+            accountService.getBalance(destinationBalanceId)
+          ).resolves.toEqual(transfer.amount + transfer.amount)
         }
       })
     })
@@ -472,15 +459,11 @@ describe('Transfer Service', (): void => {
           transferService.rollback([transfer.id])
         ).resolves.toBeUndefined()
         await expect(
-          balanceService.get(sourceBalanceId)
-        ).resolves.toMatchObject({
-          balance: startingSourceBalance
-        })
+          accountService.getBalance(sourceBalanceId)
+        ).resolves.toEqual(startingSourceBalance)
         await expect(
-          balanceService.get(destinationBalanceId)
-        ).resolves.toMatchObject({
-          balance: BigInt(0)
-        })
+          accountService.getBalance(destinationBalanceId)
+        ).resolves.toEqual(BigInt(0))
       })
 
       test('Cannot rollback unknown transfer', async (): Promise<void> => {
@@ -559,15 +542,11 @@ describe('Transfer Service', (): void => {
             transferService.rollback([transfer.id, transferId])
           ).resolves.toBeUndefined()
           await expect(
-            balanceService.get(sourceBalanceId)
-          ).resolves.toMatchObject({
-            balance: startingSourceBalance
-          })
+            accountService.getBalance(sourceBalanceId)
+          ).resolves.toEqual(startingSourceBalance)
           await expect(
-            balanceService.get(destinationBalanceId)
-          ).resolves.toMatchObject({
-            balance: BigInt(0)
-          })
+            accountService.getBalance(destinationBalanceId)
+          ).resolves.toEqual(BigInt(0))
         }
         {
           const transferId = uuid()
@@ -586,15 +565,11 @@ describe('Transfer Service', (): void => {
             error: TransferError.AlreadyRolledBack
           })
           await expect(
-            balanceService.get(sourceBalanceId)
-          ).resolves.toMatchObject({
-            balance: startingSourceBalance - transfer.amount
-          })
+            accountService.getBalance(sourceBalanceId)
+          ).resolves.toEqual(startingSourceBalance - transfer.amount)
           await expect(
-            balanceService.get(destinationBalanceId)
-          ).resolves.toMatchObject({
-            balance: BigInt(0)
-          })
+            accountService.getBalance(destinationBalanceId)
+          ).resolves.toEqual(BigInt(0))
         }
       })
     })

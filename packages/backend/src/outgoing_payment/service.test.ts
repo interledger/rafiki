@@ -20,7 +20,7 @@ import {
   AccountTransferOptions
 } from '../tigerbeetle/account/service'
 import { AssetOptions } from '../asset/service'
-import { BalanceType } from '../tigerbeetle/balance/service'
+import { AccountType } from '../tigerbeetle/account/service'
 import { Invoice } from '../invoice/model'
 import { RatesService } from '../rates/service'
 import { LiquidityService } from '../liquidity/service'
@@ -96,7 +96,7 @@ describe('OutgoingPaymentService', (): void => {
   async function payInvoice(amount: bigint): Promise<void> {
     const sourceAccount = await accountService.create({
       assetId: invoice.account.assetId,
-      balanceType: BalanceType.Debit
+      type: AccountType.Debit
     })
     const trxOrError = await accountService.transferFunds({
       sourceAccount,

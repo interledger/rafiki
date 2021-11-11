@@ -15,7 +15,6 @@ import { createRatesService } from './rates/service'
 import { createOutgoingPaymentService } from './outgoing_payment/service'
 import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
-import { createBalanceService } from './tigerbeetle/balance/service'
 import { createAssetService } from './asset/service'
 import { Account } from './tigerbeetle/account/model'
 import { createAccountService } from './tigerbeetle/account/service'
@@ -124,14 +123,6 @@ export function initIocContainer(
       knex: knex
     })
   })
-  container.singleton('balanceService', async (deps) => {
-    const logger = await deps.use('logger')
-    const tigerbeetle = await deps.use('tigerbeetle')
-    return await createBalanceService({
-      logger: logger,
-      tigerbeetle: tigerbeetle
-    })
-  })
   container.singleton('transferService', async (deps) => {
     const logger = await deps.use('logger')
     const tigerbeetle = await deps.use('tigerbeetle')
@@ -152,12 +143,12 @@ export function initIocContainer(
   container.singleton('accountService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
-    const balanceService = await deps.use('balanceService')
+    const tigerbeetle = await deps.use('tigerbeetle')
     const transferService = await deps.use('transferService')
     return await createAccountService({
       logger: logger,
       knex: knex,
-      balanceService,
+      tigerbeetle,
       transferService
     })
   })

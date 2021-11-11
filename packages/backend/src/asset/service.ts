@@ -1,9 +1,8 @@
 import { Asset, AssetAccounts } from './model'
 import { BaseService } from '../shared/baseService'
 import { Transaction } from 'knex'
-import { BalanceType } from '../tigerbeetle/balance/service'
 import { Account } from '../tigerbeetle/account/model'
-import { AccountService } from '../tigerbeetle/account/service'
+import { AccountService, AccountType } from '../tigerbeetle/account/service'
 
 export interface AssetOptions {
   code: string
@@ -72,28 +71,28 @@ async function getOrCreateAsset(
       const { id: liquidityAccountId } = await deps.accountService.create(
         {
           assetId: asset.id,
-          balanceType: BalanceType.Credit
+          type: AccountType.Credit
         },
         trx
       )
       const { id: settlementAccountId } = await deps.accountService.create(
         {
           assetId: asset.id,
-          balanceType: BalanceType.Debit
+          type: AccountType.Debit
         },
         trx
       )
       const { id: sentAccountId } = await deps.accountService.create(
         {
           assetId: asset.id,
-          balanceType: BalanceType.Debit
+          type: AccountType.Debit
         },
         trx
       )
       const { id: receiveLimitAccountId } = await deps.accountService.create(
         {
           assetId: asset.id,
-          balanceType: BalanceType.Credit
+          type: AccountType.Credit
         },
         trx
       )

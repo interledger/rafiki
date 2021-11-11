@@ -7,8 +7,6 @@ exports.up = function (knex) {
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
 
-    // TigerBeetle account id tracking Interledger balance
-    table.uuid('balanceId').notNullable()
     // TigerBeetle account id tracking amount sent
     table.uuid('sentBalanceId').nullable()
     // TigerBeetle account id for invoice receive limit
