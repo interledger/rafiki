@@ -5,7 +5,7 @@ import {
   OutgoingPaymentResolvers,
   OutgoingPaymentConnectionResolvers,
   PaymentState as SchemaPaymentState,
-  PaymentPointerResolvers,
+  AccountResolvers,
   PaymentType as SchemaPaymentType,
   QueryResolvers,
   ResolversTypes
@@ -163,7 +163,7 @@ export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutg
     }))
 }
 
-export const getPaymentPointerOutgoingPayments: PaymentPointerResolvers<ApolloContext>['outgoingPayments'] = async (
+export const getAccountOutgoingPayments: AccountResolvers<ApolloContext>['outgoingPayments'] = async (
   parent,
   args,
   ctx
@@ -172,7 +172,7 @@ export const getPaymentPointerOutgoingPayments: PaymentPointerResolvers<ApolloCo
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
-  const outgoingPayments = await outgoingPaymentService.getPaymentPointerPage(
+  const outgoingPayments = await outgoingPaymentService.getAccountPage(
     parent.id,
     args
   )
@@ -210,8 +210,8 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
 
   let hasNextPagePayments, hasPreviousPagePayments
   try {
-    hasNextPagePayments = await outgoingPaymentService.getPaymentPointerPage(
-      firstPayment.paymentPointerId,
+    hasNextPagePayments = await outgoingPaymentService.getAccountPage(
+      firstPayment.accountId,
       {
         after: lastEdge,
         first: 1
@@ -221,8 +221,8 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
     hasNextPagePayments = []
   }
   try {
-    hasPreviousPagePayments = await outgoingPaymentService.getPaymentPointerPage(
-      firstPayment.paymentPointerId,
+    hasPreviousPagePayments = await outgoingPaymentService.getAccountPage(
+      firstPayment.accountId,
       {
         before: firstEdge,
         last: 1

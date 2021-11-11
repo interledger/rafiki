@@ -1,22 +1,19 @@
 import {
   ResolversTypes,
   InvoiceConnectionResolvers,
-  PaymentPointerResolvers
+  AccountResolvers
 } from '../generated/graphql'
 import { Invoice } from '../../open_payments/invoice/model'
 import { ApolloContext } from '../../app'
 
-export const getPaymentPointerInvoices: PaymentPointerResolvers<ApolloContext>['invoices'] = async (
+export const getAccountInvoices: AccountResolvers<ApolloContext>['invoices'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['InvoiceConnection'] => {
-  if (!parent.id) throw new Error('missing payment pointer id')
+  if (!parent.id) throw new Error('missing account id')
   const invoiceService = await ctx.container.use('invoiceService')
-  const invoices = await invoiceService.getPaymentPointerInvoicesPage(
-    parent.id,
-    args
-  )
+  const invoices = await invoiceService.getAccountInvoicesPage(parent.id, args)
 
   return {
     edges: invoices.map((invoice: Invoice) => ({
@@ -55,8 +52,8 @@ export const getPageInfo: InvoiceConnectionResolvers<ApolloContext>['pageInfo'] 
 
   let hasNextPageInvoices, hasPreviousPageInvoices
   try {
-    hasNextPageInvoices = await invoiceService.getPaymentPointerInvoicesPage(
-      firstInvoice.paymentPointerId,
+    hasNextPageInvoices = await invoiceService.getAccountInvoicesPage(
+      firstInvoice.accountId,
       {
         after: lastEdge,
         first: 1
@@ -66,8 +63,8 @@ export const getPageInfo: InvoiceConnectionResolvers<ApolloContext>['pageInfo'] 
     hasNextPageInvoices = []
   }
   try {
-    hasPreviousPageInvoices = await invoiceService.getPaymentPointerInvoicesPage(
-      firstInvoice.paymentPointerId,
+    hasPreviousPageInvoices = await invoiceService.getAccountInvoicesPage(
+      firstInvoice.accountId,
       {
         before: firstEdge,
         last: 1

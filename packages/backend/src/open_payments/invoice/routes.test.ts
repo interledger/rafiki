@@ -5,8 +5,8 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../tests/context'
-import { PaymentPointerService } from '../../payment_pointer/service'
-import { PaymentPointer } from '../../payment_pointer/model'
+import { AccountService } from '../account/service'
+import { Account } from '../account/model'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { resetGraphileDb } from '../../tests/graphileDb'
 import { GraphileProducer } from '../../messaging/graphileProducer'
@@ -26,7 +26,7 @@ describe('Invoice Routes', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let workerUtils: WorkerUtils
-  let paymentPointerService: PaymentPointerService
+  let accountService: AccountService
   let invoiceService: InvoiceService
   let config: IAppConfig
   let invoiceRoutes: InvoiceRoutes
@@ -52,22 +52,22 @@ describe('Invoice Routes', (): void => {
   )
 
   let asset: { code: string; scale: number }
-  let paymentPointer: PaymentPointer
+  let account: Account
   let invoice: Invoice
   let expiresAt: Date
 
   beforeEach(
     async (): Promise<void> => {
-      paymentPointerService = await deps.use('paymentPointerService')
+      accountService = await deps.use('accountService')
       invoiceService = await deps.use('invoiceService')
       config = await deps.use('config')
       invoiceRoutes = await deps.use('invoiceRoutes')
 
       asset = randomAsset()
       expiresAt = new Date(Date.now() + 30_000)
-      paymentPointer = await paymentPointerService.create({ asset })
+      account = await accountService.create({ asset })
       invoice = await invoiceService.create({
-        paymentPointerId: paymentPointer.id,
+        accountId: account.id,
         description: 'text',
         expiresAt,
         amountToReceive: BigInt(123)
@@ -138,7 +138,7 @@ describe('Invoice Routes', (): void => {
 
       expect(ctx.body).toEqual({
         id: `https://wallet.example/invoices/${invoice.id}`,
-        account: `https://wallet.example/pay/${paymentPointer.id}`,
+        account: `https://wallet.example/pay/${account.id}`,
         amount: '123',
         assetCode: asset.code,
         assetScale: asset.scale,
@@ -161,7 +161,7 @@ describe('Invoice Routes', (): void => {
       ]
       expect(ctx.body).toEqual({
         id: `https://wallet.example/invoices/${invoice.id}`,
-        account: `https://wallet.example/pay/${paymentPointer.id}`,
+        account: `https://wallet.example/pay/${account.id}`,
         amount: '123',
         assetCode: asset.code,
         assetScale: asset.scale,
@@ -188,7 +188,7 @@ describe('Invoice Routes', (): void => {
             reqOpts.headers
           )
         },
-        { paymentPointerId: paymentPointer.id }
+        { accountId: account.id }
       )
       ctx.request.body = {
         amount: invoice.amountToReceive,
@@ -200,10 +200,10 @@ describe('Invoice Routes', (): void => {
 
     test('returns error on invalid id', async (): Promise<void> => {
       const ctx = setup({})
-      ctx.params.paymentPointerId = 'not_a_uuid'
+      ctx.params.accountId = 'not_a_uuid'
       await expect(invoiceRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
-        'invalid payment pointer'
+        'invalid account id'
       )
     })
 
@@ -293,10 +293,10 @@ describe('Invoice Routes', (): void => {
       )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/invoices/${invoiceId}`,
-        account: `${config.publicHost}/pay/${invoice.paymentPointerId}`,
+        account: `${config.publicHost}/pay/${invoice.accountId}`,
         amount: invoice.amountToReceive?.toString(),
-        assetCode: invoice.paymentPointer.asset.code,
-        assetScale: invoice.paymentPointer.asset.scale,
+        assetCode: invoice.account.asset.code,
+        assetScale: invoice.account.asset.scale,
         description: invoice.description,
         expiresAt: expiresAt.toISOString(),
         received: '0'
@@ -318,10 +318,10 @@ describe('Invoice Routes', (): void => {
       )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/invoices/${invoiceId}`,
-        account: `${config.publicHost}/pay/${invoice.paymentPointerId}`,
+        account: `${config.publicHost}/pay/${invoice.accountId}`,
         amount: invoice.amountToReceive?.toString(),
-        assetCode: invoice.paymentPointer.asset.code,
-        assetScale: invoice.paymentPointer.asset.scale,
+        assetCode: invoice.account.asset.code,
+        assetScale: invoice.account.asset.scale,
         description: null,
         expiresAt: expiresAt.toISOString(),
         received: '0'

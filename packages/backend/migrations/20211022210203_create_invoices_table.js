@@ -2,8 +2,9 @@ exports.up = function (knex) {
   return knex.schema.createTable('invoices', function (table) {
     table.uuid('id').notNullable().primary()
 
-    table.uuid('paymentPointerId').notNullable()
-    table.foreign('paymentPointerId').references('paymentPointers.id')
+    // Open payments account id
+    table.uuid('accountId').notNullable()
+    table.foreign('accountId').references('accounts.id')
     table.boolean('active').notNullable()
     table.string('description').nullable()
     table.timestamp('expiresAt').nullable()
@@ -12,7 +13,7 @@ exports.up = function (knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
-    table.index(['paymentPointerId', 'createdAt', 'id'])
+    table.index(['accountId', 'createdAt', 'id'])
 
     table.index('expiresAt')
     /*

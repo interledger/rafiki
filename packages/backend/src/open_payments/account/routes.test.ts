@@ -3,7 +3,7 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../tests/context'
-import { PaymentPointerService } from '../../payment_pointer/service'
+import { AccountService } from './service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { resetGraphileDb } from '../../tests/graphileDb'
 import { GraphileProducer } from '../../messaging/graphileProducer'
@@ -20,7 +20,7 @@ describe('Account Routes', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let workerUtils: WorkerUtils
-  let paymentPointerService: PaymentPointerService
+  let accountService: AccountService
   let config: IAppConfig
   let accountRoutes: AccountRoutes
   const messageProducer = new GraphileProducer()
@@ -46,7 +46,7 @@ describe('Account Routes', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      paymentPointerService = await deps.use('paymentPointerService')
+      accountService = await deps.use('accountService')
       config = await deps.use('config')
       accountRoutes = await deps.use('accountRoutes')
     }
@@ -72,7 +72,7 @@ describe('Account Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { paymentPointerId: 'not_a_uuid' }
+        { accountId: 'not_a_uuid' }
       )
       await expect(accountRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
@@ -82,7 +82,7 @@ describe('Account Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { paymentPointerId: uuid() }
+        { accountId: uuid() }
       )
       await expect(accountRoutes.get(ctx)).rejects.toHaveProperty('status', 404)
     })
@@ -92,19 +92,19 @@ describe('Account Routes', (): void => {
         {
           headers: { Accept: 'application/spsp4+json' }
         },
-        { paymentPointerId: uuid() }
+        { accountId: uuid() }
       )
       await expect(accountRoutes.get(ctx)).rejects.toHaveProperty('status', 406)
     })
 
     test('returns 200 with an open payments account', async (): Promise<void> => {
       const asset = randomAsset()
-      const paymentPointer = await paymentPointerService.create({ asset })
+      const account = await accountService.create({ asset })
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' }
         },
-        { paymentPointerId: paymentPointer.id }
+        { accountId: account.id }
       )
       await expect(accountRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(200)
@@ -113,7 +113,7 @@ describe('Account Routes', (): void => {
       )
 
       expect(ctx.body).toEqual({
-        id: `https://wallet.example/accounts/${paymentPointer.id}`,
+        id: `https://wallet.example/accounts/${account.id}`,
         accountServicer: 'https://wallet.example',
         assetCode: asset.code,
         assetScale: asset.scale

@@ -1,5 +1,5 @@
 import { Model } from 'objection'
-import { PaymentPointer } from '../../payment_pointer/model'
+import { Account } from '../account/model'
 import { BaseModel } from '../../shared/baseModel'
 
 export class Invoice extends BaseModel {
@@ -8,18 +8,19 @@ export class Invoice extends BaseModel {
   }
 
   static relationMappings = {
-    paymentPointer: {
+    account: {
       relation: Model.HasOneRelation,
-      modelClass: PaymentPointer,
+      modelClass: Account,
       join: {
-        from: 'invoices.paymentPointerId',
-        to: 'paymentPointers.id'
+        from: 'invoices.accountId',
+        to: 'accounts.id'
       }
     }
   }
 
-  public paymentPointerId!: string // Refers to payment pointer this invoice is for
-  public paymentPointer!: PaymentPointer
+  // Open payments account id this invoice is for
+  public accountId!: string
+  public account!: Account
   public active!: boolean
   public description?: string
   public expiresAt?: Date

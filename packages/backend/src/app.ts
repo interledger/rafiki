@@ -23,7 +23,7 @@ import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
 import { AccountOptions, AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
-import { PaymentPointerService } from './payment_pointer/service'
+import { AccountService } from './open_payments/account/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { InvoiceRoutes } from './open_payments/invoice/routes'
@@ -60,7 +60,7 @@ export interface AppServices {
   assetService: Promise<AssetService>
   accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
-  paymentPointer: Promise<PaymentPointerService>
+  accountService: Promise<AccountService>
   spspRoutes: Promise<SPSPRoutes>
   invoiceRoutes: Promise<InvoiceRoutes>
   accountRoutes: Promise<AccountRoutes>
@@ -201,7 +201,7 @@ export class App {
     const accountRoutes = await this.container.use('accountRoutes')
     const invoiceRoutes = await this.container.use('invoiceRoutes')
     this.publicRouter.get(
-      '/pay/:paymentPointerId',
+      '/pay/:accountId',
       async (ctx: AppContext): Promise<void> => {
         // Fall back to legacy protocols if client doesn't support Open Payments.
         if (ctx.accepts('application/json')) await accountRoutes.get(ctx)
@@ -213,10 +213,7 @@ export class App {
     )
 
     this.publicRouter.get('/invoices/:invoiceId', invoiceRoutes.get)
-    this.publicRouter.post(
-      '/pay/:paymentPointerId/invoices',
-      invoiceRoutes.create
-    )
+    this.publicRouter.post('/pay/:accountId/invoices', invoiceRoutes.create)
 
     this.koa.use(this.publicRouter.middleware())
   }

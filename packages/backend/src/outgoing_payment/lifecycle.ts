@@ -86,8 +86,8 @@ export async function handleQuoting(
     plugin,
     destination,
     sourceAsset: {
-      scale: payment.paymentPointer.asset.scale,
-      code: payment.paymentPointer.asset.code
+      scale: payment.account.asset.scale,
+      code: payment.account.asset.code
     },
     amountToSend,
     slippage: deps.slippage,
@@ -173,7 +173,7 @@ export async function handleFunding(
     throw LifecycleError.MissingBalance
   }
   if (balance < payment.quote.maxSourceAmount) {
-    // TODO: request payment liquidity from payment pointer's wallet account
+    // TODO: request payment liquidity from open payment account's wallet account
 
     throw LifecycleError.Unfunded
   }

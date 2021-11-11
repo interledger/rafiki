@@ -18,7 +18,7 @@ export class WebMonetization extends BaseModel {
     }
   }
 
-  // Represents the id of the payment pointers table
+  // Represents the id of the accounts table
   public id!: string
   public invoiceId!: string
   public invoice!: Invoice

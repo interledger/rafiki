@@ -4,7 +4,7 @@ import { validateId } from '../shared/utils'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebMonetizationService } from '../webmonetization/service'
-import { PaymentPointerService } from '../payment_pointer/service'
+import { AccountService } from '../open_payments/account/service'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
@@ -13,14 +13,14 @@ export interface SPSPRoutes {
 }
 
 interface ServiceDependencies extends Omit<BaseService, 'knex'> {
-  paymentPointerService: PaymentPointerService
+  accountService: AccountService
   wmService: WebMonetizationService
   streamServer: StreamServer
 }
 
 export async function createSPSPRoutes({
   logger,
-  paymentPointerService,
+  accountService,
   wmService,
   streamServer
 }: ServiceDependencies): Promise<SPSPRoutes> {
@@ -30,7 +30,7 @@ export async function createSPSPRoutes({
 
   const deps: ServiceDependencies = {
     logger: log,
-    paymentPointerService,
+    accountService,
     wmService,
     streamServer
   }
@@ -43,12 +43,12 @@ async function getPay(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { paymentPointerId } = ctx.params
+  const { accountId } = ctx.params
 
   ctx.assert(
-    validateId(paymentPointerId),
+    validateId(accountId),
     400,
-    'Failed to generate credentials: invalid payment pointer id'
+    'Failed to generate credentials: invalid account id'
   )
   ctx.assert(ctx.accepts(CONTENT_TYPE_V4), 406)
 
@@ -60,8 +60,8 @@ async function getPay(
     'Failed to generate credentials: receipt nonce and secret must accompany each other'
   )
 
-  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
-  if (!paymentPointer) {
+  const account = await deps.accountService.get(accountId)
+  if (!account) {
     ctx.status = 404
     ctx.set('Content-Type', CONTENT_TYPE_V4)
     ctx.body = JSON.stringify({
@@ -72,7 +72,7 @@ async function getPay(
   }
 
   try {
-    const invoice = await deps.wmService.getInvoice(paymentPointerId)
+    const invoice = await deps.wmService.getInvoice(accountId)
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
       paymentTag: invoice.id,
       receiptSetup:
@@ -83,8 +83,8 @@ async function getPay(
             }
           : undefined,
       asset: {
-        code: paymentPointer.asset.code,
-        scale: paymentPointer.asset.scale
+        code: account.asset.code,
+        scale: account.asset.scale
       }
     })
 

@@ -1,5 +1,6 @@
 import { Resolvers } from '../generated/graphql'
-import { getPaymentPointerInvoices, getPageInfo } from './invoice'
+import { getAccount, createAccount } from './account'
+import { getAccountInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
@@ -7,10 +8,9 @@ import {
   requoteOutgoingPayment,
   cancelOutgoingPayment,
   getOutcome,
-  getPaymentPointerOutgoingPayments,
+  getAccountOutgoingPayments,
   getOutgoingPaymentPageInfo
 } from './outgoing_payment'
-import { getPaymentPointer, createPaymentPointer } from './payment_pointer'
 import {
   getPeer,
   getPeers,
@@ -32,10 +32,14 @@ import { GraphQLBigInt } from '../scalars'
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
   Query: {
+    account: getAccount,
     outgoingPayment: getOutgoingPayment,
-    paymentPointer: getPaymentPointer,
     peer: getPeer,
     peers: getPeers
+  },
+  Account: {
+    invoices: getAccountInvoices,
+    outgoingPayments: getAccountOutgoingPayments
   },
   InvoiceConnection: {
     pageInfo: getPageInfo
@@ -46,19 +50,15 @@ export const resolvers: Resolvers = {
   OutgoingPayment: {
     outcome: getOutcome
   },
-  PaymentPointer: {
-    invoices: getPaymentPointerInvoices,
-    outgoingPayments: getPaymentPointerOutgoingPayments
-  },
   PeersConnection: {
     pageInfo: getPeersConnectionPageInfo
   },
   Mutation: {
+    createAccount,
     createOutgoingPayment,
     approveOutgoingPayment,
     requoteOutgoingPayment,
     cancelOutgoingPayment,
-    createPaymentPointer,
     createPeer: createPeer,
     updatePeer: updatePeer,
     deletePeer: deletePeer,

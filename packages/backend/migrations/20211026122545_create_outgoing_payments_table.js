@@ -26,9 +26,10 @@ exports.up = function (knex) {
     table.bigInteger('quoteHighExchangeRateEstimateNumerator').nullable()
     table.bigInteger('quoteHighExchangeRateEstimateDenominator').nullable()
 
-    // Wallet account from which to request funds for payment
-    table.uuid('paymentPointerId').notNullable()
-    table.foreign('paymentPointerId').references('paymentPointers.id')
+    // Open payments account corresponding to wallet account
+    // from which to request funds for payment
+    table.uuid('accountId').notNullable()
+    table.foreign('accountId').references('accounts.id')
     table.integer('destinationAccountScale').notNullable()
     table.string('destinationAccountCode').notNullable()
     table.string('destinationAccountUrl').nullable()
@@ -36,7 +37,7 @@ exports.up = function (knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
-    table.index(['paymentPointerId', 'createdAt', 'id'])
+    table.index(['accountId', 'createdAt', 'id'])
   })
 }
 

@@ -79,7 +79,7 @@ export async function getPendingPayment(
             .orWhere('quoteActivationDeadline', '<', now)
         })
     })
-    .withGraphFetched('paymentPointer.asset')
+    .withGraphFetched('account.asset')
   return payments[0]
 }
 
@@ -126,7 +126,7 @@ export async function handlePaymentLifecycle(
       // Use asset's sentAccount debit balance to not be limited by liquidity when sending rate probe packets
       plugin = deps.makeIlpPlugin({
         asset: {
-          ...payment.paymentPointer.asset,
+          ...payment.account.asset,
           account: AssetAccount.Sent
         }
       })
@@ -149,7 +149,7 @@ export async function handlePaymentLifecycle(
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin({
         id: payment.id,
-        asset: payment.paymentPointer.asset,
+        asset: payment.account.asset,
         withBalance: Balance.TotalSent
       })
       return plugin

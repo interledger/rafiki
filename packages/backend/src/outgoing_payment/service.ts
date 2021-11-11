@@ -8,7 +8,7 @@ import {
   AccountType,
   AssetAccount
 } from '../accounting/service'
-import { PaymentPointerService } from '../payment_pointer/service'
+import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
 import { IlpPlugin } from './ilp_plugin'
 import * as lifecycle from './lifecycle'
@@ -21,8 +21,8 @@ export interface OutgoingPaymentService {
   cancel(id: string): Promise<OutgoingPayment>
   requote(id: string): Promise<OutgoingPayment>
   processNext(): Promise<string | undefined>
-  getPaymentPointerPage(
-    paymentPointerId: string,
+  getAccountPage(
+    accountId: string,
     pagination?: Pagination
   ): Promise<OutgoingPayment[]>
 }
@@ -37,7 +37,7 @@ export interface ServiceDependencies extends BaseService {
   slippage: number
   quoteLifespan: number // milliseconds
   accountingService: AccountingService
-  paymentPointerService: PaymentPointerService
+  accountService: AccountService
   ratesService: RatesService
   makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
 }
@@ -57,8 +57,8 @@ export async function createOutgoingPaymentService(
     cancel: (id) => cancelPayment(deps, id),
     requote: (id) => requotePayment(deps, id),
     processNext: () => worker.processPendingPayment(deps),
-    getPaymentPointerPage: (paymentPointerId, pagination) =>
-      getPaymentPointerPage(deps, paymentPointerId, pagination)
+    getAccountPage: (accountId, pagination) =>
+      getAccountPage(deps, accountId, pagination)
   }
 }
 
@@ -68,11 +68,11 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   return OutgoingPayment.query(deps.knex)
     .findById(id)
-    .withGraphJoined('paymentPointer.asset')
+    .withGraphJoined('account.asset')
 }
 
 type CreateOutgoingPaymentOptions = PaymentIntent & {
-  paymentPointerId: string
+  accountId: string
 }
 
 // TODO ensure this is idempotent/safe for autoApprove:true payments
@@ -106,14 +106,14 @@ async function createOutgoingPayment(
             amountToSend: options.amountToSend,
             autoApprove: options.autoApprove
           },
-          paymentPointerId: options.paymentPointerId,
+          accountId: options.accountId,
           destinationAccount: PLACEHOLDER_DESTINATION
         })
-        .withGraphFetched('paymentPointer.asset')
+        .withGraphFetched('account.asset')
 
       const plugin = deps.makeIlpPlugin({
         asset: {
-          ...payment.paymentPointer.asset,
+          ...payment.account.asset,
           account: AssetAccount.Sent
         }
       })
@@ -138,7 +138,7 @@ async function createOutgoingPayment(
 
       await deps.accountingService.createAccount({
         id: payment.id,
-        asset: payment.paymentPointer.asset,
+        asset: payment.account.asset,
         type: AccountType.Credit,
         sentBalance: true
       })
@@ -147,7 +147,7 @@ async function createOutgoingPayment(
     })
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
-      throw new Error('outgoing payment payment pointer does not exist')
+      throw new Error('outgoing payment account does not exist')
     }
     throw err
   }
@@ -214,13 +214,13 @@ interface Pagination {
  * Please read the spec before changing things:
  * https://relay.dev/graphql/connections.htm
  * @param deps ServiceDependencies.
- * @param paymentPointerId The paymentPointerId of the payments' sending user.
+ * @param accountId The accountId of the payments' sending user.
  * @param pagination Pagination - cursors and limits.
  * @returns OutgoingPayment[] An array of payments that form a page.
  */
-async function getPaymentPointerPage(
+async function getAccountPage(
   deps: ServiceDependencies,
-  paymentPointerId: string,
+  accountId: string,
   pagination?: Pagination
 ): Promise<OutgoingPayment[]> {
   if (
@@ -240,7 +240,7 @@ async function getPaymentPointerPage(
    */
   if (typeof pagination?.after === 'string') {
     return OutgoingPayment.query(deps.knex)
-      .where({ paymentPointerId })
+      .where({ accountId })
       .andWhereRaw(
         '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "outgoingPayments" where "id" = ?)',
         [pagination.after]
@@ -257,7 +257,7 @@ async function getPaymentPointerPage(
    */
   if (typeof pagination?.before === 'string') {
     return OutgoingPayment.query(deps.knex)
-      .where({ paymentPointerId })
+      .where({ accountId })
       .andWhereRaw(
         '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "outgoingPayments" where "id" = ?)',
         [pagination.before]
@@ -273,7 +273,7 @@ async function getPaymentPointerPage(
   }
 
   return OutgoingPayment.query(deps.knex)
-    .where({ paymentPointerId })
+    .where({ accountId })
     .orderBy([
       { column: 'createdAt', order: 'asc' },
       { column: 'id', order: 'asc' }

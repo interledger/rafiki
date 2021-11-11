@@ -19,11 +19,11 @@ import {
   PaymentState
 } from '../../outgoing_payment/model'
 import { AccountingService } from '../../accounting/service'
-import { PaymentPointerService } from '../../payment_pointer/service'
+import { AccountService } from '../../open_payments/account/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
-  PaymentPointer,
+  Account,
   PaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType
 } from '../generated/graphql'
@@ -34,7 +34,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let knex: Knex
   let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
-  let paymentPointerService: PaymentPointerService
+  let accountService: AccountService
 
   const streamServer = new StreamServer({
     serverSecret: Buffer.from(
@@ -51,7 +51,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       knex = await deps.use('knex')
       accountingService = await deps.use('accountingService')
       outgoingPaymentService = await deps.use('outgoingPaymentService')
-      paymentPointerService = await deps.use('paymentPointerService')
+      accountService = await deps.use('accountService')
 
       const credentials = streamServer.generateCredentials({
         asset: {
@@ -80,7 +80,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
+      const { id: accountId } = await accountService.create({
         asset: randomAsset()
       })
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
@@ -104,7 +104,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
-        paymentPointerId,
+        accountId,
         destinationAccount: {
           scale: 9,
           code: 'XRP',
@@ -246,7 +246,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   describe('Mutation.createOutgoingPayment', (): void => {
     const input = {
-      paymentPointerId: uuid(),
+      accountId: uuid(),
       paymentPointer: 'http://wallet2.example/paymentpointer/bob',
       amountToSend: '123',
       autoApprove: false
@@ -566,15 +566,16 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
   })
 
-  describe('Payment pointer outgoingPayments', (): void => {
+  describe('Account outgoingPayments', (): void => {
     let outgoingPayments: OutgoingPaymentModel[]
-    let paymentPointerId: string
+    let accountId: string
     beforeAll(
       async (): Promise<void> => {
-        const paymentPointer = await paymentPointerService.create({
-          asset: randomAsset()
-        })
-        paymentPointerId = paymentPointer.id
+        accountId = (
+          await accountService.create({
+            asset: randomAsset()
+          })
+        ).id
         outgoingPayments = []
         for (let i = 0; i < 50; i++) {
           outgoingPayments.push(
@@ -599,7 +600,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 highExchangeRateEstimate: Pay.Ratio.from(2.3)!
               },
-              paymentPointerId,
+              accountId,
               destinationAccount: {
                 scale: 9,
                 code: 'XRP',
@@ -615,8 +616,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query PaymentPointer($id: String!) {
-              paymentPointer(id: $id) {
+            query Account($id: String!) {
+              account(id: $id) {
                 outgoingPayments {
                   edges {
                     node {
@@ -635,13 +636,13 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: paymentPointerId
+            id: accountId
           }
         })
         .then(
-          (query): PaymentPointer => {
+          (query): Account => {
             if (query.data) {
-              return query.data.paymentPointer
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }
@@ -659,14 +660,14 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
 
     test('No outgoingPayments, but outgoingPayments requested', async (): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
+      const { id: accountId } = await accountService.create({
         asset: randomAsset()
       })
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query PaymentPointer($id: String!) {
-              paymentPointer(id: $id) {
+            query Account($id: String!) {
+              account(id: $id) {
                 outgoingPayments {
                   edges {
                     node {
@@ -685,13 +686,13 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: paymentPointerId
+            id: accountId
           }
         })
         .then(
-          (query): PaymentPointer => {
+          (query): Account => {
             if (query.data) {
-              return query.data.paymentPointer
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }
@@ -708,8 +709,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query PaymentPointer($id: String!) {
-              paymentPointer(id: $id) {
+            query Account($id: String!) {
+              account(id: $id) {
                 outgoingPayments(first: 10) {
                   edges {
                     node {
@@ -728,13 +729,13 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: paymentPointerId
+            id: accountId
           }
         })
         .then(
-          (query): PaymentPointer => {
+          (query): Account => {
             if (query.data) {
-              return query.data.paymentPointer
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }
@@ -755,8 +756,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query PaymentPointer($id: String!, $after: String!) {
-              paymentPointer(id: $id) {
+            query Account($id: String!, $after: String!) {
+              account(id: $id) {
                 outgoingPayments(after: $after) {
                   edges {
                     node {
@@ -775,14 +776,14 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: paymentPointerId,
+            id: accountId,
             after: outgoingPayments[19].id
           }
         })
         .then(
-          (query): PaymentPointer => {
+          (query): Account => {
             if (query.data) {
-              return query.data.paymentPointer
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }
@@ -803,8 +804,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query PaymentPointer($id: String!, $after: String!) {
-              paymentPointer(id: $id) {
+            query Account($id: String!, $after: String!) {
+              account(id: $id) {
                 outgoingPayments(after: $after, first: 10) {
                   edges {
                     node {
@@ -823,14 +824,14 @@ describe('OutgoingPayment Resolvers', (): void => {
             }
           `,
           variables: {
-            id: paymentPointerId,
+            id: accountId,
             after: outgoingPayments[44].id
           }
         })
         .then(
-          (query): PaymentPointer => {
+          (query): Account => {
             if (query.data) {
-              return query.data.paymentPointer
+              return query.data.account
             } else {
               throw new Error('Data was empty')
             }

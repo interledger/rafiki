@@ -22,7 +22,7 @@ describe('Invoice Service', (): void => {
   let workerUtils: WorkerUtils
   let invoiceService: InvoiceService
   let knex: Knex
-  let paymentPointerId: string
+  let accountId: string
   let accountFactory: AccountFactory
   let accountingService: AccountingService
   const messageProducer = new GraphileProducer()
@@ -49,10 +49,8 @@ describe('Invoice Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       invoiceService = await deps.use('invoiceService')
-      const paymentPointerService = await deps.use('paymentPointerService')
-      paymentPointerId = (
-        await paymentPointerService.create({ asset: randomAsset() })
-      ).id
+      const accountService = await deps.use('accountService')
+      accountId = (await accountService.create({ asset: randomAsset() })).id
     }
   )
 
@@ -73,13 +71,13 @@ describe('Invoice Service', (): void => {
   describe('Create/Get Invoice', (): void => {
     test('An invoice can be created and fetched', async (): Promise<void> => {
       const invoice = await invoiceService.create({
-        paymentPointerId,
+        accountId,
         description: 'Test invoice'
       })
-      const paymentPointerService = await deps.use('paymentPointerService')
+      const accountService = await deps.use('accountService')
       expect(invoice).toMatchObject({
         id: invoice.id,
-        paymentPointer: await paymentPointerService.get(paymentPointerId)
+        account: await accountService.get(accountId)
       })
       const retrievedInvoice = await invoiceService.get(invoice.id)
       if (!retrievedInvoice) throw new Error('invoice not found')
@@ -88,7 +86,7 @@ describe('Invoice Service', (): void => {
 
     test('Creating an invoice creates an invoice account', async (): Promise<void> => {
       const invoice = await invoiceService.create({
-        paymentPointerId,
+        accountId,
         description: 'Invoice'
       })
       const invoiceAccount = await accountingService.getAccount(invoice.id)
@@ -101,7 +99,7 @@ describe('Invoice Service', (): void => {
 
     test('Creating an invoice with amountToReceive sets up a "receive limit" balance', async (): Promise<void> => {
       const invoice = await invoiceService.create({
-        paymentPointerId,
+        accountId,
         description: 'Invoice',
         amountToReceive: BigInt(123)
       })
@@ -110,15 +108,13 @@ describe('Invoice Service', (): void => {
       ).resolves.toEqual(BigInt(123 + 1))
     })
 
-    test('Cannot create invoice for nonexistent payment pointer', async (): Promise<void> => {
+    test('Cannot create invoice for nonexistent account', async (): Promise<void> => {
       await expect(
         invoiceService.create({
-          paymentPointerId: uuid(),
+          accountId: uuid(),
           description: 'Test invoice'
         })
-      ).rejects.toThrow(
-        'unable to create invoice, payment pointer does not exist'
-      )
+      ).rejects.toThrow('unable to create invoice, account does not exist')
     })
 
     test('Cannot fetch a bogus invoice', async (): Promise<void> => {
@@ -130,7 +126,7 @@ describe('Invoice Service', (): void => {
     test('Does not deactivate a not-expired invoice', async (): Promise<void> => {
       const invoiceId = (
         await invoiceService.create({
-          paymentPointerId,
+          accountId,
           description: 'Test invoice',
           expiresAt: new Date(Date.now() + 30_000)
         })
@@ -143,22 +139,20 @@ describe('Invoice Service', (): void => {
 
     test('Deactivates an expired invoice with received money', async (): Promise<void> => {
       const invoice = await invoiceService.create({
-        paymentPointerId,
+        accountId,
         description: 'Test invoice',
         expiresAt: new Date(Date.now() - 40_000)
       })
-      const paymentPointerService = await deps.use('paymentPointerService')
-      const paymentPointer = await paymentPointerService.get(paymentPointerId)
       const sourceAccount = await accountFactory.build({
         balance: BigInt(10),
-        asset: paymentPointer.asset
+        asset: invoice.account.asset
       })
       await expect(
         accountingService.createTransfer({
           sourceAccount,
           destinationAccount: {
             id: invoice.id,
-            asset: paymentPointer.asset
+            asset: invoice.account.asset
           },
           amount: BigInt(1)
         })
@@ -172,7 +166,7 @@ describe('Invoice Service', (): void => {
 
     test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
       const invoice = await invoiceService.create({
-        paymentPointerId,
+        accountId,
         description: 'Test invoice',
         expiresAt: new Date(Date.now() - 40_000)
       })
@@ -190,7 +184,7 @@ describe('Invoice Service', (): void => {
         for (let i = 0; i < 40; i++) {
           invoicesCreated.push(
             await invoiceService.create({
-              paymentPointerId,
+              accountId,
               description: `Invoice ${i}`
             })
           )
@@ -199,9 +193,7 @@ describe('Invoice Service', (): void => {
     )
 
     test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const invoices = await invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId
-      )
+      const invoices = await invoiceService.getAccountInvoicesPage(accountId)
       expect(invoices).toHaveLength(20)
       expect(invoices[0].id).toEqual(invoicesCreated[0].id)
       expect(invoices[19].id).toEqual(invoicesCreated[19].id)
@@ -212,8 +204,8 @@ describe('Invoice Service', (): void => {
       const pagination = {
         first: 10
       }
-      const invoices = await invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        accountId,
         pagination
       )
       expect(invoices).toHaveLength(10)
@@ -226,8 +218,8 @@ describe('Invoice Service', (): void => {
       const pagination = {
         after: invoicesCreated[19].id
       }
-      const invoices = await invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        accountId,
         pagination
       )
       expect(invoices).toHaveLength(20)
@@ -241,8 +233,8 @@ describe('Invoice Service', (): void => {
         first: 10,
         after: invoicesCreated[9].id
       }
-      const invoices = await invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        accountId,
         pagination
       )
       expect(invoices).toHaveLength(10)
@@ -255,8 +247,8 @@ describe('Invoice Service', (): void => {
       const pagination = {
         last: 10
       }
-      const invoices = invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoices = invoiceService.getAccountInvoicesPage(
+        accountId,
         pagination
       )
       await expect(invoices).rejects.toThrow(
@@ -268,8 +260,8 @@ describe('Invoice Service', (): void => {
       const pagination = {
         before: invoicesCreated[20].id
       }
-      const invoices = await invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        accountId,
         pagination
       )
       expect(invoices).toHaveLength(20)
@@ -283,8 +275,8 @@ describe('Invoice Service', (): void => {
         last: 5,
         before: invoicesCreated[10].id
       }
-      const invoices = await invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        accountId,
         pagination
       )
       expect(invoices).toHaveLength(5)
@@ -297,16 +289,16 @@ describe('Invoice Service', (): void => {
       const paginationForwards = {
         first: 10
       }
-      const invoicesForwards = await invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoicesForwards = await invoiceService.getAccountInvoicesPage(
+        accountId,
         paginationForwards
       )
       const paginationBackwards = {
         last: 10,
         before: invoicesCreated[10].id
       }
-      const invoicesBackwards = await invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoicesBackwards = await invoiceService.getAccountInvoicesPage(
+        accountId,
         paginationBackwards
       )
       expect(invoicesForwards).toHaveLength(10)
@@ -319,8 +311,8 @@ describe('Invoice Service', (): void => {
         after: invoicesCreated[19].id,
         before: invoicesCreated[19].id
       }
-      const invoices = await invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoices = await invoiceService.getAccountInvoicesPage(
+        accountId,
         pagination
       )
       expect(invoices).toHaveLength(20)
@@ -333,8 +325,8 @@ describe('Invoice Service', (): void => {
       const pagination = {
         first: -1
       }
-      const invoices = invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoices = invoiceService.getAccountInvoicesPage(
+        accountId,
         pagination
       )
       await expect(invoices).rejects.toThrow('Pagination index error')
@@ -344,8 +336,8 @@ describe('Invoice Service', (): void => {
       const pagination = {
         first: 101
       }
-      const invoices = invoiceService.getPaymentPointerInvoicesPage(
-        paymentPointerId,
+      const invoices = invoiceService.getAccountInvoicesPage(
+        accountId,
         pagination
       )
       await expect(invoices).rejects.toThrow('Pagination index error')

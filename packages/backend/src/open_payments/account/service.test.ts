@@ -1,22 +1,22 @@
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 
-import { PaymentPointerService } from './service'
-import { createTestApp, TestContainer } from '../tests/app'
-import { randomAsset } from '../tests/asset'
-import { resetGraphileDb } from '../tests/graphileDb'
-import { truncateTables } from '../tests/tableManager'
-import { GraphileProducer } from '../messaging/graphileProducer'
-import { Config } from '../config/app'
+import { AccountService } from './service'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { randomAsset } from '../../tests/asset'
+import { resetGraphileDb } from '../../tests/graphileDb'
+import { truncateTables } from '../../tests/tableManager'
+import { GraphileProducer } from '../../messaging/graphileProducer'
+import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppServices } from '../app'
+import { initIocContainer } from '../../'
+import { AppServices } from '../../app'
 
-describe('Payment Pointer Service', (): void => {
+describe('Open Payments Account Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let workerUtils: WorkerUtils
-  let paymentPointerService: PaymentPointerService
+  let accountService: AccountService
   let knex: Knex
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -34,7 +34,7 @@ describe('Payment Pointer Service', (): void => {
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
-      paymentPointerService = await deps.use('paymentPointerService')
+      accountService = await deps.use('accountService')
     }
   )
 
@@ -52,16 +52,14 @@ describe('Payment Pointer Service', (): void => {
     }
   )
 
-  describe('Create or Get Payment Pointer', (): void => {
-    test('Payment pointer can be created or fetched', async (): Promise<void> => {
+  describe('Create or Get Account', (): void => {
+    test('Account can be created or fetched', async (): Promise<void> => {
       const options = {
         asset: randomAsset()
       }
-      const paymentPointer = await paymentPointerService.create(options)
-      await expect(paymentPointer).toMatchObject(options)
-      await expect(
-        paymentPointerService.get(paymentPointer.id)
-      ).resolves.toEqual(paymentPointer)
+      const account = await accountService.create(options)
+      await expect(account).toMatchObject(options)
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
   })
 })
