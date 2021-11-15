@@ -1,5 +1,5 @@
 type Query {
-  account(id: String!): Account @auth
+  account(id: String!): Account
 
   "Fetch a page of accounts."
   accounts(

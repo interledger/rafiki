@@ -204,8 +204,8 @@ export class App {
 
   private async _getSession(ctx: Koa.Context): Promise<Session | SessionError> {
     const key = ctx.request.header.authorization || ''
-    const sessionService = await this.container.use('sessionService')
     if (key && key.length) {
+      const sessionService = await this.container.use('sessionService')
       return await sessionService.get({ key })
     } else {
       return SessionError.UnknownSession

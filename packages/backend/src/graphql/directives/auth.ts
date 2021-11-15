@@ -36,7 +36,11 @@ export function authDirectiveTransformer(schema: GraphQLSchema): GraphQLSchema {
           info: any
         ) {
           if (isSessionError(context.sessionOrError)) {
-            throw new Error('not authorized')
+            return {
+              code: '401',
+              success: false,
+              message: 'Unauthorized'
+            }
           }
           return resolve(parent, args, context, info)
         }
