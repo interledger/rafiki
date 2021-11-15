@@ -1956,6 +1956,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-tools/utils@npm:^8.5.3":
+  version: 8.5.3
+  resolution: "@graphql-tools/utils@npm:8.5.3"
+  dependencies:
+    tslib: ~2.3.0
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: f5f8e82c46f205c0d48c2d6d160e28183706a86755e7ea31db6e54b32da7db9eecf988d0935538e27cc3706b5031b75798dc85532e11724fdb4578a9a1b00450
+  languageName: node
+  linkType: hard
+
 "@graphql-tools/wrap@npm:^7.0.0, @graphql-tools/wrap@npm:^7.0.4, @graphql-tools/wrap@npm:^7.0.6":
   version: 7.0.8
   resolution: "@graphql-tools/wrap@npm:7.0.8"
@@ -4441,6 +4452,7 @@ __metadata:
     "@graphql-tools/graphql-file-loader": ^7.0.6
     "@graphql-tools/load": ^7.1.9
     "@graphql-tools/schema": ^8.1.2
+    "@graphql-tools/utils": ^8.5.3
     "@interledger/pay": ^0.3.0
     "@interledger/stream-receiver": ^0.2.2
     "@koa/cors": ^3.1.0

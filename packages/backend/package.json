@@ -44,6 +44,7 @@
     "@graphql-tools/graphql-file-loader": "^7.0.6",
     "@graphql-tools/load": "^7.1.9",
     "@graphql-tools/schema": "^8.1.2",
+    "@graphql-tools/utils": "^8.5.3",
     "@interledger/pay": "^0.3.0",
     "@interledger/stream-receiver": "^0.2.2",
     "@koa/cors": "^3.1.0",

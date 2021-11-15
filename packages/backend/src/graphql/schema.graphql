@@ -1,5 +1,5 @@
 type Query {
-  account(id: String!): Account
+  account(id: String!): Account @auth
 
   "Fetch a page of accounts."
   accounts(
@@ -714,3 +714,5 @@ interface MutationResponse {
 }
 
 scalar UInt64
+
+directive @auth on OBJECT | FIELD_DEFINITION

@@ -36,6 +36,9 @@ import { OutgoingPaymentService } from './outgoing_payment/service'
 import { IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
 import { SessionService } from './session/service'
+import { authDirectiveTransformer } from './graphql/directives/auth'
+import { SessionError } from './session/errors'
+import { Session } from './session/util'
 
 export interface AppContextData {
   logger: Logger
@@ -49,6 +52,7 @@ export interface ApolloContext {
   messageProducer: MessageProducer
   container: IocContract<AppServices>
   logger: Logger
+  sessionOrError: Session | SessionError
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
@@ -178,19 +182,34 @@ export class App {
       resolvers
     })
 
+    // Add directives to schema
+    const schemaWithDirectives = authDirectiveTransformer(schemaWithResolvers)
+
     // Setup Apollo on graphql endpoint
     this.apolloServer = new ApolloServer({
-      schema: schemaWithResolvers,
-      context: async (): Promise<ApolloContext> => {
+      schema: schemaWithDirectives,
+      context: async ({ ctx }: Koa.Context): Promise<ApolloContext> => {
+        const sessionOrError = await this._getSession(ctx)
         return {
           messageProducer: this.messageProducer,
           container: this.container,
-          logger: await this.container.use('logger')
+          logger: await this.container.use('logger'),
+          sessionOrError
         }
       }
     })
 
     this.koa.use(this.apolloServer.getMiddleware())
+  }
+
+  private async _getSession(ctx: Koa.Context): Promise<Session | SessionError> {
+    const key = ctx.request.header.authorization || ''
+    const sessionService = await this.container.use('sessionService')
+    if (key && key.length) {
+      return await sessionService.get({ key })
+    } else {
+      return SessionError.UnknownSession
+    }
   }
 
   private async _setupRoutes(): Promise<void> {
