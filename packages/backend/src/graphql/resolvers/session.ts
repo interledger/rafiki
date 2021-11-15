@@ -13,7 +13,7 @@ export const refreshSession: MutationResolvers['refreshSession'] = async (
       switch (sessionOrError) {
         case SessionError.UnknownSession:
           return {
-            code: '404',
+            code: '401',
             message: 'Session not found.',
             success: false
           }
