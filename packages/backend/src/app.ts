@@ -39,6 +39,7 @@ import { SessionService } from './session/service'
 import { authDirectiveTransformer } from './graphql/directives/auth'
 import { SessionError } from './session/errors'
 import { Session } from './session/util'
+import { isAdminDirectiveTransformer } from './graphql/directives/isAdmin'
 
 export interface AppContextData {
   logger: Logger
@@ -52,6 +53,7 @@ export interface ApolloContext {
   messageProducer: MessageProducer
   container: IocContract<AppServices>
   logger: Logger
+  admin: boolean
   sessionOrError: Session | SessionError
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
@@ -182,24 +184,40 @@ export class App {
       resolvers
     })
 
+    let schemaWithDirectives = schemaWithResolvers
     // Add directives to schema
-    const schemaWithDirectives = authDirectiveTransformer(schemaWithResolvers)
+    if (this.config.env !== 'test') {
+      schemaWithDirectives = isAdminDirectiveTransformer(
+        authDirectiveTransformer(schemaWithResolvers)
+      )
+    }
 
     // Setup Apollo on graphql endpoint
     this.apolloServer = new ApolloServer({
       schema: schemaWithDirectives,
       context: async ({ ctx }: Koa.Context): Promise<ApolloContext> => {
+        const admin = this._isAdmin(ctx)
         const sessionOrError = await this._getSession(ctx)
         return {
           messageProducer: this.messageProducer,
           container: this.container,
           logger: await this.container.use('logger'),
+          admin,
           sessionOrError
         }
       }
     })
 
     this.koa.use(this.apolloServer.getMiddleware())
+  }
+
+  private _isAdmin(ctx: Koa.Context): boolean {
+    const key = ctx.request.header['x-api-key'] || ''
+    if (key && key.length) {
+      return key == this.config.adminKey
+    } else {
+      return false
+    }
   }
 
   private async _getSession(ctx: Koa.Context): Promise<Session | SessionError> {

@@ -38,6 +38,7 @@ export const Config = {
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   coilApiGrpcUrl: envString('COIL_API_GRPC_URL', 'localhost:6000'),
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
+  adminKey: envString('ADMIN_KEY', 'qwertyuiop1234567890'),
 
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
   peerAddresses: process.env.PEER_ADDRESSES
