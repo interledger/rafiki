@@ -716,3 +716,4 @@ interface MutationResponse {
 scalar UInt64
 
 directive @auth on OBJECT | FIELD_DEFINITION
+directive @isAdmin on OBJECT | FIELD_DEFINITION
