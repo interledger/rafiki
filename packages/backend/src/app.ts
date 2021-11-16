@@ -36,10 +36,9 @@ import { OutgoingPaymentService } from './outgoing_payment/service'
 import { IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
 import { SessionService } from './session/service'
-import { authDirectiveTransformer } from './graphql/directives/auth'
+import { addDirectivesToSchema } from './graphql/directives'
 import { SessionError } from './session/errors'
 import { Session } from './session/util'
-import { isAdminDirectiveTransformer } from './graphql/directives/isAdmin'
 
 export interface AppContextData {
   logger: Logger
@@ -187,9 +186,7 @@ export class App {
     let schemaWithDirectives = schemaWithResolvers
     // Add directives to schema
     if (this.config.env !== 'test') {
-      schemaWithDirectives = isAdminDirectiveTransformer(
-        authDirectiveTransformer(schemaWithResolvers)
-      )
+      schemaWithDirectives = addDirectivesToSchema(schemaWithResolvers)
     }
 
     // Setup Apollo on graphql endpoint
