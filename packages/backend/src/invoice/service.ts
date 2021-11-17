@@ -5,7 +5,8 @@ import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
 import assert from 'assert'
 import { Transaction } from 'knex'
-import { TransactionOrKnex } from 'objection'
+import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import { v4 as uuid } from 'uuid'
 
 interface CreateOptions {
   paymentPointerId: string
@@ -53,7 +54,9 @@ async function getInvoice(
   deps: ServiceDependencies,
   id: string
 ): Promise<Invoice | undefined> {
-  return Invoice.query(deps.knex).findById(id).withGraphJoined('account.asset')
+  return Invoice.query(deps.knex)
+    .findById(id)
+    .withGraphJoined('paymentPointer.asset')
 }
 
 async function createInvoice(
@@ -64,33 +67,25 @@ async function createInvoice(
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))
 
   try {
-    const paymentPointer = await deps.paymentPointerService.get(
-      paymentPointerId
-    )
-    if (!paymentPointer) {
-      throw new Error(
-        'unable to create invoice, payment pointer does not exist'
-      )
-    }
-    const account = await deps.accountService.create(
-      {
-        assetId: paymentPointer.assetId,
-        type: AccountType.Credit,
-        receiveLimit: amountToReceive
-      },
-      invTrx
-    )
-
     const invoice = await Invoice.query(invTrx)
       .insertAndFetch({
         paymentPointerId,
-        accountId: account.id,
+        accountId: uuid(),
         description,
         expiresAt,
         amountToReceive,
         active: true
       })
-      .withGraphFetched('account.asset')
+      .withGraphFetched('paymentPointer.asset')
+
+    const { id: accountId } = await deps.accountService.create({
+      asset: invoice.paymentPointer.asset,
+      type: AccountType.Credit,
+      receiveLimit: amountToReceive
+    })
+
+    await invoice.$query(invTrx).patchAndFetch({ accountId })
+
     if (!trx) {
       await invTrx.commit()
     }
@@ -98,6 +93,11 @@ async function createInvoice(
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()
+    }
+    if (err instanceof ForeignKeyViolationError) {
+      throw new Error(
+        'unable to create invoice, payment pointer does not exist'
+      )
     }
     throw err
   }
@@ -123,14 +123,13 @@ async function deactivateNextInvoice(
     const invoice = invoices[0]
     if (!invoice) return
 
-    // Fetch the account with a separate transaction to avoid locking it.
     const balance = await deps.accountService.getBalance(invoice.accountId)
     if (balance) {
       deps.logger.trace({ invoice: invoice.id }, 'deactivating expired invoice')
       await invoice.$query(trx).patch({ active: false })
     } else {
       deps.logger.debug({ invoice: invoice.id }, 'deleting expired invoice')
-      await invoice.$relatedQuery('account', trx).delete()
+      await invoice.$query(trx).delete()
     }
     return invoice.id
   })

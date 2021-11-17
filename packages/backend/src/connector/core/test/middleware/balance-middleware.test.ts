@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { Errors } from 'ilp-packet'
 import { createILPContext } from '../../utils'
 import { ZeroCopyIlpPrepare } from '../..'
@@ -14,6 +15,8 @@ import { AccountTransferError } from '../../../../tigerbeetle/account/errors'
 // TODO: make one peer to many account relationship
 const aliceAccount = AccountFactory.build({ id: 'alice' })
 const bobAccount = AccountFactory.build({ id: 'bob' })
+assert.ok(aliceAccount.id)
+assert.ok(bobAccount.id)
 const services = RafikiServicesFactory.build({})
 const ctx = createILPContext({
   accounts: {

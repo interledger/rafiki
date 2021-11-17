@@ -1,7 +1,7 @@
 import { createILPContext } from '../../utils'
 import {
-  AccountFactory,
   IlpPrepareFactory,
+  InvoiceAccountFactory,
   PeerAccountFactory,
   RafikiServicesFactory
 } from '../../factories'
@@ -13,17 +13,18 @@ describe('Account Middleware', () => {
   const incomingAccount = PeerAccountFactory.build({
     id: 'incomingPeer'
   })
-  const outgoingAccount = PeerAccountFactory.build({
-    id: 'outgoingPeer'
-  })
   const rafikiServices = RafikiServicesFactory.build({})
 
   beforeAll(async () => {
     await rafikiServices.accounts.create(incomingAccount)
-    await rafikiServices.accounts.create(outgoingAccount)
   })
 
   test('set the accounts according to state and destination', async () => {
+    const outgoingAccount = PeerAccountFactory.build({
+      id: 'outgoingPeer'
+    })
+    await rafikiServices.accounts.create(outgoingAccount)
+
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
@@ -39,12 +40,15 @@ describe('Account Middleware', () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.accounts.incoming).toEqual(incomingAccount)
-    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
+    expect(ctx.accounts.outgoing).toEqual({
+      ...outgoingAccount,
+      balance: undefined
+    })
   })
 
   test('set the accounts according to state and streamDestination', async () => {
-    const outgoingAccount = AccountFactory.build({
-      id: 'outgoingAccount'
+    const outgoingAccount = InvoiceAccountFactory.build({
+      id: 'outgoingInvoice'
     })
     await rafikiServices.accounts.create(outgoingAccount)
     const middleware = createAccountMiddleware(ADDRESS)
@@ -65,37 +69,30 @@ describe('Account Middleware', () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.accounts.incoming).toEqual(incomingAccount)
-    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
-  })
-
-  test('return an error when the source account is disabled', async () => {
-    const middleware = createAccountMiddleware(ADDRESS)
-    const next = jest.fn()
-    const ctx = createILPContext({
-      state: { incomingAccount: PeerAccountFactory.build({ disabled: true }) },
-      services: rafikiServices,
-      request: {
-        prepare: new ZeroCopyIlpPrepare(
-          IlpPrepareFactory.build({ destination: 'test.outgoingPeer.123' })
-        ),
-        rawPrepare: Buffer.alloc(0) // ignored
-      }
+    expect(ctx.accounts.outgoing).toEqual({
+      ...outgoingAccount,
+      active: undefined,
+      balance: undefined
     })
-    await expect(middleware(ctx, next)).rejects.toThrowError(
-      'source account is disabled'
-    )
   })
 
   test('return an error when the destination account is disabled', async () => {
-    outgoingAccount.disabled = true
+    const outgoingAccount = InvoiceAccountFactory.build({
+      id: 'deactivatedInvoice',
+      active: false
+    })
+    await rafikiServices.accounts.create(outgoingAccount)
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
-      state: { incomingAccount },
+      state: {
+        incomingAccount,
+        streamDestination: outgoingAccount.id
+      },
       services: rafikiServices,
       request: {
         prepare: new ZeroCopyIlpPrepare(
-          IlpPrepareFactory.build({ destination: 'test.outgoingPeer.123' })
+          IlpPrepareFactory.build({ destination: 'test.123' })
         ),
         rawPrepare: Buffer.alloc(0) // ignored
       }

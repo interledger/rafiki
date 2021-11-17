@@ -1,20 +1,17 @@
 import { v4 as uuid } from 'uuid'
 
 import { LiquidityError } from './errors'
-import { Account } from '../tigerbeetle/account/model'
+import { AccountOptions, AssetAccount } from '../tigerbeetle/account/service'
 import { TransferService } from '../tigerbeetle/transfer/service'
 import { TransferError, TransfersError } from '../tigerbeetle/transfer/errors'
 import { BaseService } from '../shared/baseService'
-import {
-  BalanceTransferError,
-  UnknownAccountError,
-  UnknownSettlementAccountError
-} from '../shared/errors'
+import { BalanceTransferError, UnknownAccountError } from '../shared/errors'
 import { validateId } from '../shared/utils'
 
 interface Options {
   id?: string
-  account: Account
+  // TODO: disallow balances and non-liquidity asset account
+  account: AccountOptions
   amount: bigint
 }
 
@@ -58,12 +55,16 @@ async function addLiquidity(
   if (id && !validateId(id)) {
     return LiquidityError.InvalidId
   }
-  const settlementAccount = await account.asset.getSettlementAccount()
   const error = await deps.transferService.create([
     {
       id: id || uuid(),
-      sourceBalanceId: settlementAccount.id,
-      destinationBalanceId: account.id,
+      sourceAccount: {
+        asset: {
+          unit: account.asset.unit,
+          account: AssetAccount.Settlement
+        }
+      },
+      destinationAccount: account,
       amount
     }
   ])
@@ -73,9 +74,14 @@ async function addLiquidity(
       case TransferError.TransferExists:
         return LiquidityError.TransferExists
       case TransferError.UnknownSourceBalance:
-        throw new UnknownSettlementAccountError(account.asset)
+        throw new UnknownAccountError({
+          asset: {
+            unit: account.asset.unit,
+            account: AssetAccount.Settlement
+          }
+        })
       case TransferError.UnknownDestinationBalance:
-        throw new UnknownAccountError(account.id)
+        throw new UnknownAccountError(account)
       default:
         throw new BalanceTransferError(error.error)
     }
@@ -89,12 +95,16 @@ async function createLiquidityWithdrawal(
   if (!validateId(id)) {
     return LiquidityError.InvalidId
   }
-  const settlementAccount = await account.asset.getSettlementAccount()
   const error = await deps.transferService.create([
     {
       id,
-      sourceBalanceId: account.id,
-      destinationBalanceId: settlementAccount.id,
+      sourceAccount: account,
+      destinationAccount: {
+        asset: {
+          unit: account.asset.unit,
+          account: AssetAccount.Settlement
+        }
+      },
       amount,
       timeout: BigInt(60e9) // 1 minute
     }
@@ -105,9 +115,14 @@ async function createLiquidityWithdrawal(
       case TransferError.TransferExists:
         return LiquidityError.TransferExists
       case TransferError.UnknownSourceBalance:
-        throw new UnknownAccountError(account.id)
+        throw new UnknownAccountError(account)
       case TransferError.UnknownDestinationBalance:
-        throw new UnknownSettlementAccountError(account.asset)
+        throw new UnknownAccountError({
+          asset: {
+            unit: account.asset.unit,
+            account: AssetAccount.Settlement
+          }
+        })
       case TransferError.InsufficientBalance:
         return LiquidityError.InsufficientBalance
       default:

@@ -1,4 +1,4 @@
-import { AssetOptions } from '../asset/service'
+import { AccountOptions } from '../tigerbeetle/account/service'
 import { TransferError } from '../tigerbeetle/transfer/errors'
 
 export class BalanceTransferError extends Error {
@@ -9,26 +9,8 @@ export class BalanceTransferError extends Error {
 }
 
 export class UnknownAccountError extends Error {
-  constructor(accountId: string) {
-    super('Account not found. accountId=' + accountId)
+  constructor(account: AccountOptions) {
+    super('Account not found. account=' + JSON.stringify(account))
     this.name = 'UnknownAccountError'
-  }
-}
-
-export class UnknownLiquidityAccountError extends Error {
-  constructor(asset: AssetOptions) {
-    super(
-      'Unknown liquidity account. code=' + asset.code + ' scale=' + asset.scale
-    )
-    this.name = 'UnknownLiquidityAccountError'
-  }
-}
-
-export class UnknownSettlementAccountError extends Error {
-  constructor(asset: AssetOptions) {
-    super(
-      'Unknown settlement account. code=' + asset.code + ' scale=' + asset.scale
-    )
-    this.name = 'UnknownSettlementAccountError'
   }
 }

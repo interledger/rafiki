@@ -20,7 +20,6 @@ import {
   PaymentState
 } from '../../outgoing_payment/model'
 import { AccountService } from '../../tigerbeetle/account/service'
-import { AssetOptions, AssetService } from '../../asset/service'
 import { PaymentPointerService } from '../../payment_pointer/service'
 import {
   OutgoingPayment,
@@ -35,7 +34,6 @@ describe('OutgoingPayment Resolvers', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let accountService: AccountService
-  let assetService: AssetService
   let outgoingPaymentService: OutgoingPaymentService
   let paymentPointerService: PaymentPointerService
 
@@ -53,7 +51,6 @@ describe('OutgoingPayment Resolvers', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       accountService = await deps.use('accountService')
-      assetService = await deps.use('assetService')
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       paymentPointerService = await deps.use('paymentPointerService')
 
@@ -81,16 +78,17 @@ describe('OutgoingPayment Resolvers', (): void => {
   )
 
   let payment: OutgoingPaymentModel
-  let asset: AssetOptions
 
   beforeEach(
     async (): Promise<void> => {
-      asset = randomAsset()
-      const { id: paymentPointerId } = await paymentPointerService.create({
+      const {
+        id: paymentPointerId,
         asset
+      } = await paymentPointerService.create({
+        asset: randomAsset()
       })
       accountService = await deps.use('accountService')
-      const accountFactory = new AccountFactory(accountService, assetService)
+      const accountFactory = new AccountFactory(accountService)
       const account = await accountFactory.build({ asset })
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
@@ -581,11 +579,16 @@ describe('OutgoingPayment Resolvers', (): void => {
     let paymentPointerId: string
     beforeAll(
       async (): Promise<void> => {
-        const accountFactory = new AccountFactory(accountService, assetService)
-        paymentPointerId = (await paymentPointerService.create({ asset })).id
+        const accountFactory = new AccountFactory(accountService)
+        const paymentPointer = await paymentPointerService.create({
+          asset: randomAsset()
+        })
+        paymentPointerId = paymentPointer.id
         outgoingPayments = []
         for (let i = 0; i < 50; i++) {
-          const { id: accountId } = await accountFactory.build({ asset })
+          const { id: accountId } = await accountFactory.build({
+            asset: paymentPointer.asset
+          })
           outgoingPayments.push(
             await OutgoingPaymentModel.query(knex).insertAndFetch({
               state: PaymentState.Inactive,
@@ -670,7 +673,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
     test('No outgoingPayments, but outgoingPayments requested', async (): Promise<void> => {
       const { id: paymentPointerId } = await paymentPointerService.create({
-        asset
+        asset: randomAsset()
       })
       const query = await appContainer.apolloClient
         .query({

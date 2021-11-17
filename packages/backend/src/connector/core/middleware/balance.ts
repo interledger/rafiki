@@ -1,10 +1,11 @@
+import assert from 'assert'
 import { Errors } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 import {
   isAccountTransferError,
   AccountTransferError
 } from '../../../tigerbeetle/account/errors'
-const { InsufficientLiquidityError } = Errors
+const { AmountTooLargeError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
   return async (
@@ -48,6 +49,22 @@ export function createBalanceMiddleware(): ILPMiddleware {
         case AccountTransferError.InsufficientBalance:
         case AccountTransferError.InsufficientLiquidity:
           throw new InsufficientLiquidityError(trxOrError)
+        case AccountTransferError.ReceiveLimitExceeded: {
+          const receivedAmount = destinationAmountOrError.toString()
+          assert.ok(accounts.outgoing.id)
+          const receiveLimit = await services.accounts.getReceiveLimit(
+            accounts.outgoing.id
+          )
+          assert.ok(receiveLimit !== undefined)
+          const maximumAmount = receiveLimit.toString()
+          throw new AmountTooLargeError(
+            `amount too large. maxAmount=${maximumAmount} actualAmount=${receivedAmount}`,
+            {
+              receivedAmount,
+              maximumAmount
+            }
+          )
+        }
         default:
           // TODO: map transfer errors to ILP errors or throw from transferFunds
           ctxThrow(500, destinationAmountOrError.toString())

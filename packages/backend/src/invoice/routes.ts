@@ -64,7 +64,7 @@ async function getInvoice(
   if (!acceptStream) return
 
   const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-    paymentTag: invoice.accountId,
+    paymentTag: invoice.id,
     // TODO receipt support on invoices?
     //receiptSetup:
     //  nonce && secret
@@ -74,8 +74,8 @@ async function getInvoice(
     //      }
     //    : undefined,
     asset: {
-      code: invoice.account.asset.code,
-      scale: invoice.account.asset.scale
+      code: invoice.paymentPointer.asset.code,
+      scale: invoice.paymentPointer.asset.scale
     }
   })
 
@@ -132,8 +132,8 @@ function invoiceToBody(
     id: location,
     account: `${deps.config.publicHost}/pay/${invoice.paymentPointerId}`,
     amount: invoice.amountToReceive?.toString(),
-    assetCode: invoice.account.asset.code,
-    assetScale: invoice.account.asset.scale,
+    assetCode: invoice.paymentPointer.asset.code,
+    assetScale: invoice.paymentPointer.asset.scale,
     description: invoice.description,
     expiresAt: invoice.expiresAt?.toISOString(),
     received: received.toString()

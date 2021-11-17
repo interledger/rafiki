@@ -14,6 +14,7 @@ import {
   TransfersError,
   TransferError
 } from './errors'
+import { AccountOptions, getAccountId } from '../account/service'
 import { BaseService } from '../../shared/baseService'
 import { uuidToBigInt } from '../../shared/utils'
 
@@ -21,8 +22,8 @@ const TRANSFER_RESERVED = Buffer.alloc(32)
 
 type Options = {
   id?: string
-  sourceBalanceId: string
-  destinationBalanceId: string
+  sourceAccount: AccountOptions
+  destinationAccount: AccountOptions
   amount: bigint
 }
 
@@ -83,8 +84,8 @@ async function createTransfers(
     }
     tbTransfers.push({
       id: uuidToBigInt(transfers[i].id || uuid()),
-      debit_account_id: uuidToBigInt(transfer.sourceBalanceId),
-      credit_account_id: uuidToBigInt(transfer.destinationBalanceId),
+      debit_account_id: getAccountId(transfer.sourceAccount),
+      credit_account_id: getAccountId(transfer.destinationAccount),
       amount: transfer.amount,
       user_data: BigInt(0),
       reserved: TRANSFER_RESERVED,

@@ -16,8 +16,10 @@ import { createOutgoingPaymentService } from './outgoing_payment/service'
 import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
-import { Account } from './tigerbeetle/account/model'
-import { createAccountService } from './tigerbeetle/account/service'
+import {
+  AccountOptions,
+  createAccountService
+} from './tigerbeetle/account/service'
 import { createPeerService } from './peer/service'
 import { createPaymentPointerService } from './payment_pointer/service'
 import { createLiquidityService } from './liquidity/service'
@@ -238,7 +240,7 @@ export function initIocContainer(
 
   container.singleton('makeIlpPlugin', async (deps) => {
     const connectorApp = await deps.use('connectorApp')
-    return (sourceAccount: Account): IlpPlugin => {
+    return (sourceAccount: AccountOptions): IlpPlugin => {
       return createIlpPlugin(
         (data: Buffer): Promise<Buffer> => {
           return connectorApp.handleIlpData(sourceAccount, data)
@@ -267,6 +269,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountService: await deps.use('accountService'),
+      invoiceService: await deps.use('invoiceService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),

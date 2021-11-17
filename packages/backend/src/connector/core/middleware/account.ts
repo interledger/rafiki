@@ -10,35 +10,39 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     ctx: ILPContext<AuthState & { streamDestination?: string }>,
     next: () => Promise<void>
   ): Promise<void> {
-    const { accounts, peers } = ctx.services
+    const { invoices, peers } = ctx.services
     const incomingAccount = ctx.state.incomingAccount
     if (!incomingAccount) ctx.throw(401, 'unauthorized')
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (incomingAccount!.disabled) {
-      throw new Errors.UnreachableError('source account is disabled')
-    }
 
     const getAccountByDestinationAddress = async (): Promise<
       RafikiAccount | undefined
     > => {
       if (ctx.state.streamDestination) {
-        const account = await accounts.get(ctx.state.streamDestination)
-        return account
-          ? {
-              ...account,
-              stream: {
-                enabled: true
-              }
+        const invoice = await invoices.get(ctx.state.streamDestination)
+        if (invoice) {
+          if (!invoice.active) {
+            throw new Errors.UnreachableError('destination account is disabled')
+          }
+          return {
+            id: invoice.accountId,
+            asset: invoice.paymentPointer.asset,
+            receiveLimit: invoice.amountToReceive,
+            stream: {
+              enabled: true
             }
-          : undefined
+          }
+        }
+        return undefined
       }
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(address)
       if (peer) {
         return {
-          ...peer.account,
+          id: peer.accountId,
+          asset: peer.asset,
           http: peer.http,
           maxPacketAmount: peer.maxPacketAmount,
+          staticIlpAddress: peer.staticIlpAddress,
           stream: {
             enabled: false
           }
@@ -54,15 +58,17 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           serverAddress.length + 1 + UUID_LENGTH
         )
         if (validateId(accountId)) {
-          const account = await accounts.get(accountId)
-          return account
-            ? {
-                ...account,
-                stream: {
-                  enabled: true
-                }
-              }
-            : undefined
+          // TODO: Look up direct ILP access account
+          // const account = await accounts.get(accountId)
+          // return account
+          //   ? {
+          //       // TODO: this is missing asset code and scale
+          //       ...account,
+          //       stream: {
+          //         enabled: true
+          //       }
+          //     }
+          //   : undefined
         }
       }
     }
@@ -71,10 +77,6 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     if (!outgoingAccount) {
       throw new Errors.UnreachableError('unknown destination account')
     }
-    if (outgoingAccount.disabled) {
-      throw new Errors.UnreachableError('destination account is disabled')
-    }
-
     ctx.accounts = {
       get incoming(): RafikiAccount {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

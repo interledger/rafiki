@@ -1,6 +1,6 @@
 import { ILPContext, ILPMiddleware } from '..'
 import { Errors } from 'ilp-packet'
-import { TokenBucket } from '../utils'
+import { accountToId, TokenBucket } from '../utils'
 const { InsufficientLiquidityError } = Errors
 
 const DEFAULT_REFILL_PERIOD = 1000 // 1 second
@@ -35,10 +35,11 @@ export function createOutgoingThroughputMiddleware(
     }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
-    let outgoingBucket = _buckets.get(outgoing.id)
+    const outgoingId = accountToId(outgoing)
+    let outgoingBucket = _buckets.get(outgoingId)
     if (!outgoingBucket) {
       outgoingBucket = createThroughputLimitBucket(options)
-      if (outgoingBucket) _buckets.set(outgoing.id, outgoingBucket)
+      if (outgoingBucket) _buckets.set(outgoingId, outgoingBucket)
     }
     if (outgoingBucket) {
       if (!outgoingBucket.take(BigInt(prepare.amount))) {
@@ -71,10 +72,11 @@ export function createIncomingThroughputMiddleware(
     }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
-    let incomingBucket = _buckets.get(incoming.id)
+    const incomingId = accountToId(incoming)
+    let incomingBucket = _buckets.get(incomingId)
     if (!incomingBucket) {
       incomingBucket = createThroughputLimitBucket(options)
-      if (incomingBucket) _buckets.set(incoming.id, incomingBucket)
+      if (incomingBucket) _buckets.set(incomingId, incomingBucket)
     }
     if (incomingBucket) {
       if (!incomingBucket.take(BigInt(prepare.amount))) {

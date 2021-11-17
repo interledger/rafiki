@@ -20,7 +20,7 @@ import {
   AccountTransferOptions
 } from '../tigerbeetle/account/service'
 import { AssetOptions } from '../asset/service'
-import { AccountType } from '../tigerbeetle/account/service'
+import { AssetAccount } from '../tigerbeetle/account/service'
 import { Invoice } from '../invoice/model'
 import { RatesService } from '../rates/service'
 import { LiquidityService } from '../liquidity/service'
@@ -87,20 +87,27 @@ describe('OutgoingPaymentService', (): void => {
     if (!payment.quote) throw 'no quote'
     await expect(
       liquidityService.add({
-        account: payment.account,
+        account: {
+          id: payment.accountId,
+          asset: payment.paymentPointer.asset
+        },
         amount: payment.quote.maxSourceAmount
       })
     ).resolves.toBeUndefined()
   }
 
   async function payInvoice(amount: bigint): Promise<void> {
-    const sourceAccount = await accountService.create({
-      assetId: invoice.account.assetId,
-      type: AccountType.Debit
-    })
     const trxOrError = await accountService.transferFunds({
-      sourceAccount,
-      destinationAccount: invoice.account,
+      sourceAccount: {
+        asset: {
+          unit: invoice.paymentPointer.asset.unit,
+          account: AssetAccount.Settlement
+        }
+      },
+      destinationAccount: {
+        id: invoice.accountId,
+        asset: invoice.paymentPointer.asset
+      },
       sourceAmount: amount,
       timeout: BigInt(10e9) // 10 seconds
     })
@@ -117,7 +124,10 @@ describe('OutgoingPaymentService', (): void => {
     await expect(
       liquidityService.createWithdrawal({
         id: withdrawalId,
-        account: payment.account,
+        account: {
+          id: payment.accountId,
+          asset: payment.paymentPointer.asset
+        },
         amount: balance
       })
     ).resolves.toBeUndefined()
@@ -219,7 +229,12 @@ describe('OutgoingPaymentService', (): void => {
       // receiving T04_INSUFFICIENT_LIQUIDITY replies.
       await expect(
         liquidityService.add({
-          account: await destinationPaymentPointer.asset.getLiquidityAccount(),
+          account: {
+            asset: {
+              unit: destinationPaymentPointer.asset.unit,
+              account: AssetAccount.Liquidity
+            }
+          },
           amount: BigInt(10e12)
         })
       ).resolves.toBeUndefined()
@@ -234,7 +249,6 @@ describe('OutgoingPaymentService', (): void => {
       })
       invoiceUrl = `${config.publicHost}/invoices/${invoice.id}`
       amtDelivered = BigInt(0)
-      await knex.raw('TRUNCATE TABLE "outgoingPayments" RESTART IDENTITY')
     }
   )
 
@@ -274,8 +288,8 @@ describe('OutgoingPaymentService', (): void => {
       })
       expect(payment.paymentPointerId).toBe(paymentPointerId)
       await expectOutcome(payment, { accountBalance: BigInt(0) })
-      expect(payment.account.asset.code).toBe('USD')
-      expect(payment.account.asset.scale).toBe(9)
+      expect(payment.paymentPointer.asset.code).toBe('USD')
+      expect(payment.paymentPointer.asset.scale).toBe(9)
       expect(payment.destinationAccount).toEqual({
         scale: 9,
         code: 'XRP',
@@ -300,11 +314,11 @@ describe('OutgoingPaymentService', (): void => {
       })
       expect(payment.paymentPointerId).toBe(paymentPointerId)
       await expectOutcome(payment, { accountBalance: BigInt(0) })
-      expect(payment.account.asset.code).toBe('USD')
-      expect(payment.account.asset.scale).toBe(9)
+      expect(payment.paymentPointer.asset.code).toBe('USD')
+      expect(payment.paymentPointer.asset.scale).toBe(9)
       expect(payment.destinationAccount).toEqual({
-        scale: invoice.account.asset.scale,
-        code: invoice.account.asset.code,
+        scale: invoice.paymentPointer.asset.scale,
+        code: invoice.paymentPointer.asset.code,
         url: accountUrl
       })
 
@@ -831,7 +845,7 @@ describe('OutgoingPaymentService', (): void => {
           .patch({
             destinationAccount: {
               url: accountUrl,
-              code: invoice.account.asset.code,
+              code: invoice.paymentPointer.asset.code,
               scale: 55
             }
           })

@@ -4,10 +4,12 @@ import { v4 as uuid } from 'uuid'
 
 import { LiquidityService } from './service'
 import { LiquidityError } from './errors'
-import { Account } from '../tigerbeetle/account/model'
-import { AccountService } from '../tigerbeetle/account/service'
-import { Asset } from '../asset/model'
-import { AssetService } from '../asset/service'
+import {
+  AccountOptions,
+  AccountService,
+  AssetAccount,
+  isAssetAccount
+} from '../tigerbeetle/account/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { GraphileProducer } from '../messaging/graphileProducer'
@@ -16,7 +18,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { AccountFactory } from '../tests/accountFactory'
-import { randomAsset } from '../tests/asset'
+import { randomUnit } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 
 describe('Liquidity Service', (): void => {
@@ -27,7 +29,6 @@ describe('Liquidity Service', (): void => {
   let liquidityService: LiquidityService
   let accountService: AccountService
   let accountFactory: AccountFactory
-  let assetService: AssetService
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -46,13 +47,8 @@ describe('Liquidity Service', (): void => {
       knex = await deps.use('knex')
       liquidityService = await deps.use('liquidityService')
       accountService = await deps.use('accountService')
-      assetService = await deps.use('assetService')
       const transferService = await deps.use('transferService')
-      accountFactory = new AccountFactory(
-        accountService,
-        assetService,
-        transferService
-      )
+      accountFactory = new AccountFactory(accountService, transferService)
     }
   )
 
@@ -71,16 +67,20 @@ describe('Liquidity Service', (): void => {
   )
 
   describe.each(['account', 'asset'])('Add %s liquidity', (type): void => {
-    let account: Account
-    let asset: Asset
+    let account: AccountOptions
 
     beforeEach(
       async (): Promise<void> => {
-        asset = await assetService.getOrCreate(randomAsset())
         if (type === 'account') {
-          account = await accountFactory.build({ asset })
+          account = await accountFactory.build()
         } else {
-          account = await asset.getLiquidityAccount()
+          account = {
+            asset: {
+              unit: randomUnit(),
+              account: AssetAccount.Liquidity
+            }
+          }
+          await accountService.createAssetAccounts(account.asset.unit)
         }
       }
     )
@@ -94,12 +94,18 @@ describe('Liquidity Service', (): void => {
             amount
           })
         ).resolves.toBeUndefined()
-        await expect(accountService.getBalance(account.id)).resolves.toEqual(
-          amount * BigInt(i + 1)
-        )
-        const settlementAccount = await asset.getSettlementAccount()
+        const balance = isAssetAccount(account)
+          ? await accountService.getAssetAccountBalance(
+              account.asset.unit,
+              account.asset.account
+            )
+          : await accountService.getBalance(account.id)
+        expect(balance).toEqual(amount * BigInt(i + 1))
         await expect(
-          accountService.getBalance(settlementAccount.id)
+          accountService.getAssetAccountBalance(
+            account.asset.unit,
+            AssetAccount.Settlement
+          )
         ).resolves.toEqual(amount * BigInt(i + 1))
       }
     })
@@ -128,18 +134,21 @@ describe('Liquidity Service', (): void => {
   })
 
   describe.each(['account', 'asset'])('Withdraw %s liquidity', (type): void => {
-    let account: Account
-    let asset: Asset
-    let settlementAccount: Account
+    let account: AccountOptions
     const startingBalance = BigInt(100)
 
     beforeEach(
       async (): Promise<void> => {
-        asset = await assetService.getOrCreate(randomAsset())
         if (type === 'account') {
-          account = await accountFactory.build({ asset })
+          account = await accountFactory.build()
         } else {
-          account = await asset.getLiquidityAccount()
+          account = {
+            asset: {
+              unit: randomUnit(),
+              account: AssetAccount.Liquidity
+            }
+          }
+          await accountService.createAssetAccounts(account.asset.unit)
         }
         await expect(
           liquidityService.add({
@@ -147,7 +156,6 @@ describe('Liquidity Service', (): void => {
             amount: startingBalance
           })
         ).resolves.toBeUndefined()
-        settlementAccount = await asset.getSettlementAccount()
       }
     )
 
@@ -162,21 +170,37 @@ describe('Liquidity Service', (): void => {
             amount
           })
         ).resolves.toBeUndefined()
-        await expect(accountService.getBalance(account.id)).resolves.toEqual(
-          startingBalance - amount * BigInt(i + 1)
-        )
+        const balance = isAssetAccount(account)
+          ? await accountService.getAssetAccountBalance(
+              account.asset.unit,
+              account.asset.account
+            )
+          : await accountService.getBalance(account.id)
+        expect(balance).toEqual(startingBalance - amount * BigInt(i + 1))
         await expect(
-          accountService.getBalance(settlementAccount.id)
+          accountService.getAssetAccountBalance(
+            account.asset.unit,
+            AssetAccount.Settlement
+          )
         ).resolves.toEqual(startingBalance - amount * BigInt(i))
 
         await expect(
           liquidityService.finalizeWithdrawal(id)
         ).resolves.toBeUndefined()
-        await expect(accountService.getBalance(account.id)).resolves.toEqual(
-          startingBalance - amount * BigInt(i + 1)
-        )
+        {
+          const balance = isAssetAccount(account)
+            ? await accountService.getAssetAccountBalance(
+                account.asset.unit,
+                account.asset.account
+              )
+            : await accountService.getBalance(account.id)
+          expect(balance).toEqual(startingBalance - amount * BigInt(i + 1))
+        }
         await expect(
-          accountService.getBalance(settlementAccount.id)
+          accountService.getAssetAccountBalance(
+            account.asset.unit,
+            AssetAccount.Settlement
+          )
         ).resolves.toEqual(startingBalance - amount * BigInt(i + 1))
       }
     })
@@ -200,11 +224,19 @@ describe('Liquidity Service', (): void => {
           amount
         })
       ).resolves.toEqual(LiquidityError.InsufficientBalance)
-      await expect(accountService.getBalance(account.id)).resolves.toEqual(
-        startingBalance
-      )
+      const balance = isAssetAccount(account)
+        ? await accountService.getAssetAccountBalance(
+            account.asset.unit,
+            account.asset.account
+          )
+        : await accountService.getBalance(account.id)
+      expect(balance).toEqual(startingBalance)
+
       await expect(
-        accountService.getBalance(settlementAccount.id)
+        accountService.getAssetAccountBalance(
+          account.asset.unit,
+          AssetAccount.Settlement
+        )
       ).resolves.toEqual(startingBalance)
     })
 
@@ -235,9 +267,13 @@ describe('Liquidity Service', (): void => {
       await expect(
         liquidityService.rollbackWithdrawal(id)
       ).resolves.toBeUndefined()
-      await expect(accountService.getBalance(account.id)).resolves.toEqual(
-        startingBalance
-      )
+      const balance = isAssetAccount(account)
+        ? await accountService.getAssetAccountBalance(
+            account.asset.unit,
+            account.asset.account
+          )
+        : await accountService.getBalance(account.id)
+      expect(balance).toEqual(startingBalance)
     })
 
     test("Can't finalize non-existent withdrawal", async (): Promise<void> => {

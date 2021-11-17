@@ -21,15 +21,28 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
     return new MockAccountsService()
   })
   .attr('logger', TestLoggerFactory.build())
+  .attr('invoices', ['accounts'], (accounts: MockAccountsService) => ({
+    get: async (id: string) => {
+      const account = await accounts._get(id)
+      if (account) {
+        return {
+          ...account,
+          paymentPointer: {
+            asset: account.asset
+          },
+          accountId: account.id,
+          amountToReceive: account.receiveLimit
+        }
+      }
+    }
+  }))
   .attr('peers', ['accounts'], (accounts: MockAccountsService) => ({
     getByDestinationAddress: async (address: string) => {
       const account = await accounts._getByDestinationAddress(address)
       if (account) {
         return {
-          account,
-          http: account.http,
-          maxPacketAmount: account.maxPacketAmount,
-          staticIlpAddress: account.staticIlpAddress
+          ...account,
+          accountId: account.id
         }
       }
     },
@@ -37,10 +50,8 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       const account = await accounts._getByIncomingToken(token)
       if (account) {
         return {
-          account,
-          http: account.http,
-          maxPacketAmount: account.maxPacketAmount,
-          staticIlpAddress: account.staticIlpAddress
+          ...account,
+          accountId: account.id
         }
       }
     }

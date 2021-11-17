@@ -4,6 +4,7 @@ import {
   LiquidityError as LiquidityErrorResp
 } from '../generated/graphql'
 import { LiquidityError } from '../../liquidity/errors'
+import { AssetAccount } from '../../tigerbeetle/account/service'
 import { ApolloContext } from '../../app'
 
 export const addAccountLiquidity: MutationResolvers<ApolloContext>['addAccountLiquidity'] = async (
@@ -59,10 +60,8 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
 ): ResolversTypes['AddAssetLiquidityMutationResponse'] => {
   try {
     const assetService = await ctx.container.use('assetService')
-    const liquidityAccount = await assetService.getLiquidityAccount(
-      args.input.assetId
-    )
-    if (!liquidityAccount) {
+    const asset = await assetService.getById(args.input.assetId)
+    if (!asset) {
       return {
         code: '404',
         message: 'Unknown asset',
@@ -73,7 +72,12 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
     const liquidityService = await ctx.container.use('liquidityService')
     const error = await liquidityService.add({
       id: args.input.id,
-      account: liquidityAccount,
+      account: {
+        asset: {
+          unit: asset.unit,
+          account: AssetAccount.Liquidity
+        }
+      },
       amount: args.input.amount
     })
     if (error) {
@@ -153,10 +157,8 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
 ): ResolversTypes['CreateAssetLiquidityWithdrawalMutationResponse'] => {
   try {
     const assetService = await ctx.container.use('assetService')
-    const liquidityAccount = await assetService.getLiquidityAccount(
-      args.input.assetId
-    )
-    if (!liquidityAccount) {
+    const asset = await assetService.getById(args.input.assetId)
+    if (!asset) {
       return {
         code: '404',
         message: 'Unknown asset',
@@ -167,7 +169,12 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     const liquidityService = await ctx.container.use('liquidityService')
     const error = await liquidityService.createWithdrawal({
       id: args.input.id,
-      account: liquidityAccount,
+      account: {
+        asset: {
+          unit: asset.unit,
+          account: AssetAccount.Liquidity
+        }
+      },
       amount: args.input.amount
     })
     if (error) {

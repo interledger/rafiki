@@ -13,13 +13,15 @@ import {
 } from './middleware/ilp-packet'
 import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
-import { AccountTransfer } from '../../tigerbeetle/account/service'
+import {
+  AccountOptions,
+  AccountTransfer
+} from '../../tigerbeetle/account/service'
 import { AccountTransferError } from '../../tigerbeetle/account/errors'
+import { InvoiceService } from '../../invoice/service'
 import { PeerService } from '../../peer/service'
 
-export interface RafikiAccount {
-  id: string
-  disabled: boolean
+export type RafikiAccount = AccountOptions & {
   asset: {
     code: string
     scale: number
@@ -46,7 +48,7 @@ export interface TransferOptions {
 }
 
 export interface AccountService {
-  get(id: string): Promise<RafikiAccount | undefined>
+  getReceiveLimit(id: string): Promise<bigint | undefined>
   transferFunds(
     options: TransferOptions
   ): Promise<AccountTransfer | AccountTransferError>
@@ -56,6 +58,7 @@ export interface RafikiServices {
   //router: Router
   accounts: AccountService
   logger: Logger
+  invoices: InvoiceService
   peers: PeerService
   rates: RatesService
   redis: Redis
@@ -119,6 +122,9 @@ export class Rafiki<T = any> {
       //get router(): Router {
       //  return routerOrThrow()
       //},
+      get invoices(): InvoiceService {
+        return config.invoices
+      },
       get peers(): PeerService {
         return config.peers
       },

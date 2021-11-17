@@ -86,8 +86,8 @@ export async function handleQuoting(
     plugin,
     destination,
     sourceAsset: {
-      scale: payment.account.asset.scale,
-      code: payment.account.asset.code
+      scale: payment.paymentPointer.asset.scale,
+      code: payment.paymentPointer.asset.code
     },
     amountToSend,
     slippage: deps.slippage,

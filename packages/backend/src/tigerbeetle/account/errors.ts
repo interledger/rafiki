@@ -5,13 +5,6 @@ export class CreateAccountError extends Error {
   }
 }
 
-export class UnknownAssetError extends Error {
-  constructor(public assetId: string) {
-    super('Asset not found. assetId=' + assetId)
-    this.name = 'UnknownAssetError'
-  }
-}
-
 export enum AccountTransferError {
   AlreadyCommitted = 'AlreadyCommitted',
   AlreadyRolledBack = 'AlreadyRolledBack',
@@ -19,6 +12,7 @@ export enum AccountTransferError {
   InsufficientLiquidity = 'InsufficientLiquidity',
   InvalidSourceAmount = 'InvalidSourceAmount',
   InvalidDestinationAmount = 'InvalidDestinationAmount',
+  ReceiveLimitExceeded = 'ReceiveLimitExceeded',
   SameAccounts = 'SameAccounts',
   TransferExpired = 'TransferExpired'
 }

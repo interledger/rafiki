@@ -1,6 +1,7 @@
 import assert from 'assert'
 import { NotFoundError, raw, Transaction } from 'objection'
 import { isValidIlpAddress } from 'ilp-packet'
+import { v4 as uuid } from 'uuid'
 
 import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
@@ -82,7 +83,7 @@ async function getPeer(
   deps: ServiceDependencies,
   id: string
 ): Promise<Peer | undefined> {
-  return Peer.query(deps.knex).findById(id).withGraphJoined('account.asset')
+  return Peer.query(deps.knex).findById(id).withGraphJoined('asset')
 }
 
 async function createPeer(
@@ -97,24 +98,19 @@ async function createPeer(
   const peerTrx = trx || (await Peer.startTransaction(deps.knex))
 
   try {
-    const account = await deps.accountService.create(
-      {
-        assetId: (
-          await deps.assetService.getOrCreate(options.asset as AssetOptions)
-        ).id,
-        type: AccountType.Credit
-      },
-      peerTrx
+    const asset = await deps.assetService.getOrCreate(
+      options.asset as AssetOptions
     )
 
     const peer = await Peer.query(peerTrx)
       .insertAndFetch({
-        accountId: account.id,
+        accountId: uuid(),
+        assetId: asset.id,
         http: options.http,
         maxPacketAmount: options.maxPacketAmount,
         staticIlpAddress: options.staticIlpAddress
       })
-      .withGraphFetched('account.asset')
+      .withGraphFetched('asset')
 
     if (options.http?.incoming) {
       const err = await addIncomingHttpTokens({
@@ -130,6 +126,12 @@ async function createPeer(
         return err
       }
     }
+
+    const { id: accountId } = await deps.accountService.create({
+      asset,
+      type: AccountType.Credit
+    })
+    await peer.$query(peerTrx).patchAndFetch({ accountId })
 
     if (!trx) {
       await peerTrx.commit()
@@ -171,7 +173,7 @@ async function updatePeer(
       }
       return await Peer.query(trx)
         .patchAndFetchById(options.id, options)
-        .withGraphFetched('account.asset')
+        .withGraphFetched('asset')
         .throwIfNotFound()
     })
   } catch (err) {
@@ -221,7 +223,7 @@ async function getPeerByDestinationAddress(
   // for `staticIlpAddress`s in the accounts table:
   // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
   const peer = await Peer.query(deps.knex)
-    .withGraphJoined('account.asset')
+    .withGraphJoined('asset')
     .where(
       raw('?', [destinationAddress]),
       'like',
@@ -291,7 +293,7 @@ async function getPeersPage(
    */
   if (typeof pagination?.after === 'string') {
     const peers = await Peer.query(deps.knex)
-      .withGraphFetched('account.asset')
+      .withGraphFetched('asset')
       .whereRaw(
         '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "peers" where "id" = ?)',
         [pagination.after]
@@ -309,7 +311,7 @@ async function getPeersPage(
    */
   if (typeof pagination?.before === 'string') {
     const peers = await Peer.query(deps.knex)
-      .withGraphFetched('account.asset')
+      .withGraphFetched('asset')
       .whereRaw(
         '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "peers" where "id" = ?)',
         [pagination.before]
@@ -326,7 +328,7 @@ async function getPeersPage(
   }
 
   const peers = await Peer.query(deps.knex)
-    .withGraphFetched('account.asset')
+    .withGraphFetched('asset')
     .orderBy([
       { column: 'createdAt', order: 'asc' },
       { column: 'id', order: 'asc' }

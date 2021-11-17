@@ -78,5 +78,5 @@ async function getHttpToken(
     .findOne({
       token
     })
-    .withGraphFetched('peer.account.asset')
+    .withGraphFetched('peer.asset')
 }

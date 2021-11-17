@@ -10,12 +10,13 @@ export type MockIlpAccount = RafikiAccount & {
       authTokens: string[]
     }
   }
+  active?: boolean
 }
 
 export class MockAccountsService implements AccountService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
-  get(accountId: string): Promise<RafikiAccount | undefined> {
+  _get(accountId: string): Promise<RafikiAccount | undefined> {
     const account = this.accounts.get(accountId)
     return Promise.resolve(account)
   }
@@ -44,7 +45,15 @@ export class MockAccountsService implements AccountService {
     }
   }
 
+  async getReceiveLimit(accountId: string): Promise<bigint | undefined> {
+    const account = this.accounts.get(accountId)
+    if (account?.receiveLimit) {
+      return account.receiveLimit
+    }
+  }
+
   async create(account: MockIlpAccount): Promise<RafikiAccount> {
+    if (!account.id) throw new Error('unexpected asset account')
     this.accounts.set(account.id, account)
     return account
   }

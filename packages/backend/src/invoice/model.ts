@@ -1,5 +1,5 @@
 import { Model } from 'objection'
-import { Account } from '../tigerbeetle/account/model'
+import { PaymentPointer } from '../payment_pointer/model'
 import { BaseModel } from '../shared/baseModel'
 
 export class Invoice extends BaseModel {
@@ -8,18 +8,18 @@ export class Invoice extends BaseModel {
   }
 
   static relationMappings = {
-    account: {
+    paymentPointer: {
       relation: Model.HasOneRelation,
-      modelClass: Account,
+      modelClass: PaymentPointer,
       join: {
-        from: 'invoices.accountId',
-        to: 'accounts.id'
+        from: 'invoices.paymentPointerId',
+        to: 'paymentPointers.id'
       }
     }
   }
-  public account!: Account
 
   public paymentPointerId!: string // Refers to payment pointer this invoice is for
+  public paymentPointer!: PaymentPointer
   public accountId!: string // Refers to the account created for this invoice
   public active!: boolean
   public description?: string

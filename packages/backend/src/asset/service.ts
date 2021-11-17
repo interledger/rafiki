@@ -1,8 +1,7 @@
-import { Asset, AssetAccounts } from './model'
+import { Asset } from './model'
 import { BaseService } from '../shared/baseService'
 import { Transaction } from 'knex'
-import { Account } from '../tigerbeetle/account/model'
-import { AccountService, AccountType } from '../tigerbeetle/account/service'
+import { AccountService } from '../tigerbeetle/account/service'
 
 export interface AssetOptions {
   code: string
@@ -13,7 +12,6 @@ export interface AssetService {
   get(asset: AssetOptions, trx?: Transaction): Promise<void | Asset>
   getOrCreate(asset: AssetOptions): Promise<Asset>
   getById(id: string, trx?: Transaction): Promise<void | Asset>
-  getLiquidityAccount(assetId: string): Promise<Account | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -36,8 +34,7 @@ export async function createAssetService({
   return {
     get: (asset, trx) => getAsset(deps, asset, trx),
     getOrCreate: (asset) => getOrCreateAsset(deps, asset),
-    getById: (id, trx) => getAssetById(deps, id, trx),
-    getLiquidityAccount: (assetId) => getAssetLiquidityAccount(deps, assetId)
+    getById: (id, trx) => getAssetById(deps, id, trx)
   }
 }
 
@@ -68,41 +65,7 @@ async function getOrCreateAsset(
         code,
         scale
       })
-      const { id: liquidityAccountId } = await deps.accountService.create(
-        {
-          assetId: asset.id,
-          type: AccountType.Credit
-        },
-        trx
-      )
-      const { id: settlementAccountId } = await deps.accountService.create(
-        {
-          assetId: asset.id,
-          type: AccountType.Debit
-        },
-        trx
-      )
-      const { id: sentAccountId } = await deps.accountService.create(
-        {
-          assetId: asset.id,
-          type: AccountType.Debit
-        },
-        trx
-      )
-      const { id: receiveLimitAccountId } = await deps.accountService.create(
-        {
-          assetId: asset.id,
-          type: AccountType.Credit
-        },
-        trx
-      )
-      await AssetAccounts.query(trx).insert({
-        id: asset.id,
-        liquidityAccountId,
-        settlementAccountId,
-        sentAccountId,
-        receiveLimitAccountId
-      })
+      await deps.accountService.createAssetAccounts(asset.unit)
 
       return asset
     })
@@ -115,16 +78,4 @@ async function getAssetById(
   trx?: Transaction
 ): Promise<void | Asset> {
   return await Asset.query(trx || deps.knex).findById(id)
-}
-
-async function getAssetLiquidityAccount(
-  deps: ServiceDependencies,
-  assetId: string
-): Promise<Account | undefined> {
-  const asset = await AssetAccounts.query(deps.knex)
-    .findById(assetId)
-    .withGraphJoined('liquidityAccount.asset')
-  if (asset) {
-    return asset.liquidityAccount
-  }
 }

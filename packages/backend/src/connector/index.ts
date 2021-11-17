@@ -22,6 +22,7 @@ import {
   createStreamAddressMiddleware
 } from './core'
 import { AccountService } from '../tigerbeetle/account/service'
+import { InvoiceService } from '../invoice/service'
 import { PeerService } from '../peer/service'
 import { RatesService } from '../rates/service'
 import { BaseService } from '../shared/baseService'
@@ -30,6 +31,7 @@ interface ServiceDependencies extends BaseService {
   redis: IORedis.Redis
   ratesService: RatesService
   accountService: AccountService
+  invoiceService: InvoiceService
   peerService: PeerService
   streamServer: StreamServer
   ilpAddress: string
@@ -40,6 +42,7 @@ export async function createConnectorService({
   redis,
   ratesService,
   accountService,
+  invoiceService,
   peerService,
   streamServer,
   ilpAddress
@@ -51,6 +54,7 @@ export async function createConnectorService({
         service: 'ConnectorService'
       }),
       accounts: accountService,
+      invoices: invoiceService,
       peers: peerService,
       redis,
       rates: ratesService,

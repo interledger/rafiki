@@ -8,10 +8,14 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { LiquidityService } from '../../liquidity/service'
-import { Account } from '../../tigerbeetle/account/model'
+import {
+  AccountOptions,
+  AccountService,
+  AssetAccount
+} from '../../tigerbeetle/account/service'
 import { AssetService } from '../../asset/service'
 import { AccountFactory } from '../../tests/accountFactory'
-import { randomAsset } from '../../tests/asset'
+import { randomAsset, randomUnit } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import {
   AddAccountLiquidityMutationResponse,
@@ -28,6 +32,7 @@ describe('Withdrawal Resolvers', (): void => {
   let appContainer: TestContainer
   let liquidityService: LiquidityService
   let accountFactory: AccountFactory
+  let accountService: AccountService
   let assetService: AssetService
   let knex: Knex
 
@@ -37,25 +42,16 @@ describe('Withdrawal Resolvers', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       liquidityService = await deps.use('liquidityService')
-      const accountService = await deps.use('accountService')
+      accountService = await deps.use('accountService')
       assetService = await deps.use('assetService')
       const transferService = await deps.use('transferService')
-      accountFactory = new AccountFactory(
-        accountService,
-        assetService,
-        transferService
-      )
-    }
-  )
-
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
+      accountFactory = new AccountFactory(accountService, transferService)
     }
   )
 
   afterAll(
     async (): Promise<void> => {
+      await truncateTables(knex)
       await appContainer.apolloClient.stop()
       await appContainer.shutdown()
     }
@@ -238,7 +234,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAsseLiquidity($input: AddAssetLiquidityInput!) {
+            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
               addAssetLiquidity(input: $input) {
                 code
                 success
@@ -273,7 +269,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAsseLiquidity($input: AddAssetLiquidityInput!) {
+            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
               addAssetLiquidity(input: $input) {
                 code
                 success
@@ -310,7 +306,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAsseLiquidity($input: AddAssetLiquidityInput!) {
+            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
               addAssetLiquidity(input: $input) {
                 code
                 success
@@ -355,7 +351,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAsseLiquidity($input: AddAssetLiquidityInput!) {
+            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
               addAssetLiquidity(input: $input) {
                 code
                 success
@@ -612,7 +608,12 @@ describe('Withdrawal Resolvers', (): void => {
         const asset = await assetService.getOrCreate(randomAsset())
         await expect(
           liquidityService.add({
-            account: await asset.getLiquidityAccount(),
+            account: {
+              asset: {
+                unit: asset.unit,
+                account: AssetAccount.Liquidity
+              }
+            },
             amount: startingBalance
           })
         )
@@ -830,12 +831,17 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          const asset = await assetService.getOrCreate(randomAsset())
-          let account: Account
+          let account: AccountOptions
           if (type === 'account') {
-            account = await accountFactory.build({ asset })
+            account = await accountFactory.build()
           } else {
-            account = await asset.getLiquidityAccount()
+            account = {
+              asset: {
+                unit: randomUnit(),
+                account: AssetAccount.Liquidity
+              }
+            }
+            await accountService.createAssetAccounts(account.asset.unit)
           }
           await expect(
             liquidityService.add({
@@ -1033,12 +1039,17 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          const asset = await assetService.getOrCreate(randomAsset())
-          let account: Account
+          let account: AccountOptions
           if (type === 'account') {
-            account = await accountFactory.build({ asset })
+            account = await accountFactory.build()
           } else {
-            account = await asset.getLiquidityAccount()
+            account = {
+              asset: {
+                unit: randomUnit(),
+                account: AssetAccount.Liquidity
+              }
+            }
+            await accountService.createAssetAccounts(account.asset.unit)
           }
           await expect(
             liquidityService.add({

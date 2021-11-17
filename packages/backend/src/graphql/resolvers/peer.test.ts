@@ -117,9 +117,7 @@ describe('Peer Resolvers', (): void => {
       assert.ok(response.peer)
       delete peer.http.incoming
       await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
-        account: {
-          asset: peer.asset
-        },
+        asset: peer.asset,
         http: peer.http,
         maxPacketAmount: peer.maxPacketAmount,
         staticIlpAddress: peer.staticIlpAddress
@@ -251,8 +249,8 @@ describe('Peer Resolvers', (): void => {
         id: peer.id,
         asset: {
           __typename: 'Asset',
-          code: peer.account.asset.code,
-          scale: peer.account.asset.scale
+          code: peer.asset.code,
+          scale: peer.asset.scale
         },
         http: {
           __typename: 'Http',
@@ -359,8 +357,8 @@ describe('Peer Resolvers', (): void => {
           id: peer.id,
           asset: {
             __typename: 'Asset',
-            code: peer.account.asset.code,
-            scale: peer.account.asset.scale
+            code: peer.asset.code,
+            scale: peer.asset.scale
           },
           http: {
             __typename: 'Http',
@@ -652,10 +650,7 @@ describe('Peer Resolvers', (): void => {
         staticIlpAddress: updateOptions.staticIlpAddress
       })
       await expect(peerService.get(peer.id)).resolves.toMatchObject({
-        account: {
-          id: peer.account.id,
-          asset: peer.account.asset
-        },
+        asset: peer.asset,
         http: {
           outgoing: updateOptions.http.outgoing
         },

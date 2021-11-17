@@ -44,9 +44,8 @@ export function createTokenAuthMiddleware(): HttpMiddleware {
     const peer = await ctx.services.peers.getByIncomingToken(ctx.state.token)
     ctx.assert(peer, 401, 'Access Denied - Invalid Token')
     ctx.state.incomingAccount = {
-      ...peer.account,
-      maxPacketAmount: peer.maxPacketAmount,
-      staticIlpAddress: peer.staticIlpAddress
+      ...peer,
+      id: peer.accountId
     }
 
     await next()

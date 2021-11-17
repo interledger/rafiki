@@ -1,6 +1,6 @@
 import { Errors } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '..'
-import { TokenBucket } from '../utils'
+import { accountToId, TokenBucket } from '../utils'
 
 const { RateLimitedError } = Errors
 
@@ -33,19 +33,20 @@ export function createIncomingRateLimitMiddleware(
     }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
-    let bucket = buckets.get(incoming.id)
+    const accountId = accountToId(incoming)
+    let bucket = buckets.get(accountId)
     if (!bucket) {
       // TODO: When we add the ability to update middleware, our state will get
       //   reset every update, which may not be desired.
       bucket = new TokenBucket({ refillPeriod, refillCount, capacity })
-      buckets.set(incoming.id, bucket)
+      buckets.set(accountId, bucket)
     }
     if (!bucket.take()) {
       logger.warn(
         {
           bucket,
           prepare,
-          accountId: incoming.id
+          accountId
         },
         'rate limited a packet'
       )

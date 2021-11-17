@@ -22,8 +22,7 @@ import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
 import { TransferService } from './tigerbeetle/transfer/service'
 import { AssetService } from './asset/service'
-import { Account } from './tigerbeetle/account/model'
-import { AccountService } from './tigerbeetle/account/service'
+import { AccountOptions, AccountService } from './tigerbeetle/account/service'
 import { PeerService } from './peer/service'
 import { PaymentPointerService } from './payment_pointer/service'
 import { LiquidityService } from './liquidity/service'
@@ -73,7 +72,7 @@ export interface AppServices {
   streamServer: Promise<StreamServer>
   wmService: Promise<WebMonetizationService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
-  makeIlpPlugin: Promise<(sourceAccount: Account) => IlpPlugin>
+  makeIlpPlugin: Promise<(sourceAccount: AccountOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
 }
 

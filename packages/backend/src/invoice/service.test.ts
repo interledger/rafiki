@@ -14,8 +14,6 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { AssetOptions } from '../asset/service'
-import { AccountType } from '../tigerbeetle/account/service'
 import { AccountFactory } from '../tests/accountFactory'
 
 describe('Invoice Service', (): void => {
@@ -25,7 +23,6 @@ describe('Invoice Service', (): void => {
   let invoiceService: InvoiceService
   let knex: Knex
   let paymentPointerId: string
-  let asset: AssetOptions
   let accountFactory: AccountFactory
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -42,7 +39,6 @@ describe('Invoice Service', (): void => {
       })
       accountFactory = new AccountFactory(
         await deps.use('accountService'),
-        await deps.use('assetService'),
         await deps.use('transferService')
       )
       await workerUtils.migrate()
@@ -55,8 +51,9 @@ describe('Invoice Service', (): void => {
     async (): Promise<void> => {
       invoiceService = await deps.use('invoiceService')
       const paymentPointerService = await deps.use('paymentPointerService')
-      asset = randomAsset()
-      paymentPointerId = (await paymentPointerService.create({ asset })).id
+      paymentPointerId = (
+        await paymentPointerService.create({ asset: randomAsset() })
+      ).id
     }
   )
 
@@ -80,11 +77,10 @@ describe('Invoice Service', (): void => {
         paymentPointerId,
         description: 'Test invoice'
       })
+      const paymentPointerService = await deps.use('paymentPointerService')
       expect(invoice).toMatchObject({
         id: invoice.id,
-        account: {
-          asset
-        }
+        paymentPointer: await paymentPointerService.get(paymentPointerId)
       })
       const retrievedInvoice = await invoiceService.get(invoice.id)
       if (!retrievedInvoice) throw new Error('invoice not found')
@@ -100,7 +96,9 @@ describe('Invoice Service', (): void => {
       const invoiceAccount = await accountService.get(invoice.accountId)
 
       expect(invoiceAccount?.id).toEqual(invoice.accountId)
-      expect(invoiceAccount?.receiveLimitBalanceId).toBeNull()
+      await expect(
+        accountService.getReceiveLimit(invoice.accountId)
+      ).resolves.toBeUndefined()
     })
 
     test('Creating an invoice with amountToReceive sets up a "receive limit" balance', async (): Promise<void> => {
@@ -110,13 +108,9 @@ describe('Invoice Service', (): void => {
         amountToReceive: BigInt(123)
       })
       const accountService = await deps.use('accountService')
-      if (!invoice.account.receiveLimitBalanceId) throw new Error('fail')
       await expect(
-        accountService.getBalance(invoice.account.receiveLimitBalanceId)
+        accountService.getReceiveLimit(invoice.accountId)
       ).resolves.toEqual(BigInt(123 + 1))
-      await expect(
-        accountService.getType(invoice.account.receiveLimitBalanceId)
-      ).resolves.toEqual(AccountType.Debit)
     })
 
     test('Cannot create invoice for nonexistent payment pointer', async (): Promise<void> => {
@@ -131,7 +125,7 @@ describe('Invoice Service', (): void => {
     })
 
     test('Cannot fetch a bogus invoice', async (): Promise<void> => {
-      expect(invoiceService.get(uuid())).resolves.toBeUndefined()
+      await expect(invoiceService.get(uuid())).resolves.toBeUndefined()
     })
   })
 
@@ -157,13 +151,18 @@ describe('Invoice Service', (): void => {
         expiresAt: new Date(Date.now() - 40_000)
       })
       const accountService = await deps.use('accountService')
+      const paymentPointerService = await deps.use('paymentPointerService')
+      const paymentPointer = await paymentPointerService.get(paymentPointerId)
       const sourceAccount = await accountFactory.build({
         balance: BigInt(10),
-        asset
+        asset: paymentPointer.asset
       })
       const trxOrError = await accountService.transferFunds({
         sourceAccount,
-        destinationAccount: invoice.account,
+        destinationAccount: {
+          id: invoice.accountId,
+          asset: paymentPointer.asset
+        },
         sourceAmount: BigInt(1),
         timeout: BigInt(10e9) // 10 seconds
       })
@@ -177,7 +176,6 @@ describe('Invoice Service', (): void => {
     })
 
     test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
       const invoice = await invoiceService.create({
         paymentPointerId,
         description: 'Test invoice',
@@ -185,7 +183,6 @@ describe('Invoice Service', (): void => {
       })
       await expect(invoiceService.deactivateNext()).resolves.toBe(invoice.id)
       expect(await invoiceService.get(invoice.id)).toBeUndefined()
-      expect(await accountService.get(invoice.accountId)).toBeUndefined()
     })
   })
 

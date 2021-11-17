@@ -2,8 +2,12 @@ import { TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import { Account } from '../tigerbeetle/account/model'
-import { AccountService, AccountType } from '../tigerbeetle/account/service'
+import {
+  AccountOptions,
+  AccountService,
+  AccountType,
+  AssetAccount
+} from '../tigerbeetle/account/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { RatesService } from '../rates/service'
 import { IlpPlugin } from './ilp_plugin'
@@ -30,7 +34,7 @@ export interface ServiceDependencies extends BaseService {
   accountService: AccountService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
-  makeIlpPlugin: (sourceAccount: Account) => IlpPlugin
+  makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
 }
 
 export async function createOutgoingPaymentService(
@@ -59,7 +63,7 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   return OutgoingPayment.query(deps.knex)
     .findById(id)
-    .withGraphJoined('account.asset')
+    .withGraphJoined('paymentPointer.asset')
 }
 
 type CreateOutgoingPaymentOptions = PaymentIntent & {
@@ -93,8 +97,12 @@ async function createOutgoingPayment(
     throw new Error('outgoing payment payment pointer does not exist')
   }
 
-  const sentAccount = await paymentPointer.asset.getSentAccount()
-  const plugin = deps.makeIlpPlugin(sentAccount)
+  const plugin = deps.makeIlpPlugin({
+    asset: {
+      ...paymentPointer.asset,
+      account: AssetAccount.Sent
+    }
+  })
   await plugin.connect()
   const destination = await Pay.setupPayment({
     plugin,
@@ -107,7 +115,7 @@ async function createOutgoingPayment(
   })
 
   const account = await deps.accountService.create({
-    assetId: paymentPointer.assetId,
+    asset: paymentPointer.asset,
     type: AccountType.Credit,
     sentBalance: true
   })
@@ -129,7 +137,7 @@ async function createOutgoingPayment(
         url: destination.accountUrl
       }
     })
-    .withGraphFetched('account.asset')
+    .withGraphFetched('paymentPointer.asset')
 }
 
 function requotePayment(

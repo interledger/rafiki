@@ -295,8 +295,8 @@ describe('Invoice Routes', (): void => {
         id: `${config.publicHost}/invoices/${invoiceId}`,
         account: `${config.publicHost}/pay/${invoice.paymentPointerId}`,
         amount: invoice.amountToReceive?.toString(),
-        assetCode: invoice.account.asset.code,
-        assetScale: invoice.account.asset.scale,
+        assetCode: invoice.paymentPointer.asset.code,
+        assetScale: invoice.paymentPointer.asset.scale,
         description: invoice.description,
         expiresAt: expiresAt.toISOString(),
         received: '0'
@@ -320,8 +320,8 @@ describe('Invoice Routes', (): void => {
         id: `${config.publicHost}/invoices/${invoiceId}`,
         account: `${config.publicHost}/pay/${invoice.paymentPointerId}`,
         amount: invoice.amountToReceive?.toString(),
-        assetCode: invoice.account.asset.code,
-        assetScale: invoice.account.asset.scale,
+        assetCode: invoice.paymentPointer.asset.code,
+        assetScale: invoice.paymentPointer.asset.scale,
         description: null,
         expiresAt: expiresAt.toISOString(),
         received: '0'
