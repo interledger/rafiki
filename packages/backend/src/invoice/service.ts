@@ -9,7 +9,6 @@ import { Pagination } from '../shared/pagination'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
-import { v4 as uuid } from 'uuid'
 
 interface CreateOptions {
   paymentPointerId: string
@@ -73,7 +72,6 @@ async function createInvoice(
     const invoice = await Invoice.query(invTrx)
       .insertAndFetch({
         paymentPointerId,
-        tbAccountId: uuid(),
         description,
         expiresAt,
         amountToReceive,
@@ -81,13 +79,12 @@ async function createInvoice(
       })
       .withGraphFetched('paymentPointer.asset')
 
-    const { id: tbAccountId } = await deps.tbAccountService.create({
+    await deps.tbAccountService.create({
+      id: invoice.id,
       asset: invoice.paymentPointer.asset,
       type: AccountType.Credit,
       receiveLimit: amountToReceive
     })
-
-    await invoice.$query(invTrx).patchAndFetch({ tbAccountId })
 
     if (!trx) {
       await invTrx.commit()
@@ -126,7 +123,7 @@ async function deactivateNextInvoice(
     const invoice = invoices[0]
     if (!invoice) return
 
-    const balance = await deps.tbAccountService.getBalance(invoice.tbAccountId)
+    const balance = await deps.tbAccountService.getBalance(invoice.id)
     if (balance) {
       deps.logger.trace({ invoice: invoice.id }, 'deactivating expired invoice')
       await invoice.$query(trx).patch({ active: false })

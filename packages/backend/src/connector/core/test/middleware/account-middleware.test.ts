@@ -40,10 +40,7 @@ describe('Account Middleware', () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.accounts.incoming).toEqual(incomingAccount)
-    expect(ctx.accounts.outgoing).toEqual({
-      ...outgoingAccount,
-      balance: undefined
-    })
+    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
   })
 
   test('set the accounts according to state and streamDestination', async () => {

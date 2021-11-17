@@ -30,31 +30,16 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
           paymentPointer: {
             asset: account.asset
           },
-          tbAccountId: account.id,
           amountToReceive: account.receiveLimit
         }
       }
     }
   }))
   .attr('peers', ['accounts'], (accounts: MockAccountsService) => ({
-    getByDestinationAddress: async (address: string) => {
-      const account = await accounts._getByDestinationAddress(address)
-      if (account) {
-        return {
-          ...account,
-          tbAccountId: account.id
-        }
-      }
-    },
-    getByIncomingToken: async (token: string) => {
-      const account = await accounts._getByIncomingToken(token)
-      if (account) {
-        return {
-          ...account,
-          tbAccountId: account.id
-        }
-      }
-    }
+    getByDestinationAddress: async (address: string) =>
+      await accounts._getByDestinationAddress(address),
+    getByIncomingToken: async (token: string) =>
+      await accounts._getByIncomingToken(token)
   }))
   .attr('rates', {
     convert: async (opts) => opts.sourceAmount,

@@ -11,7 +11,6 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { AccountFactory } from '../../tests/accountFactory'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import { OutgoingPaymentService } from '../../outgoing_payment/service'
@@ -81,15 +80,10 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      const {
-        id: paymentPointerId,
-        asset
-      } = await paymentPointerService.create({
+      const { id: paymentPointerId } = await paymentPointerService.create({
         asset: randomAsset()
       })
       tbAccountService = await deps.use('tigerbeetleAccountService')
-      const accountFactory = new AccountFactory(tbAccountService)
-      const tbAccount = await accountFactory.build({ asset })
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
         intent: {
@@ -111,7 +105,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
-        tbAccountId: tbAccount.id,
         paymentPointerId,
         destinationAccount: {
           scale: 9,
@@ -149,7 +142,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         jest
           .spyOn(tbAccountService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
-            expect(id).toStrictEqual(payment.tbAccountId)
+            expect(id).toStrictEqual(payment.id)
             return amountSent
           })
 
@@ -579,16 +572,12 @@ describe('OutgoingPayment Resolvers', (): void => {
     let paymentPointerId: string
     beforeAll(
       async (): Promise<void> => {
-        const accountFactory = new AccountFactory(tbAccountService)
         const paymentPointer = await paymentPointerService.create({
           asset: randomAsset()
         })
         paymentPointerId = paymentPointer.id
         outgoingPayments = []
         for (let i = 0; i < 50; i++) {
-          const { id: tbAccountId } = await accountFactory.build({
-            asset: paymentPointer.asset
-          })
           outgoingPayments.push(
             await OutgoingPaymentModel.query(knex).insertAndFetch({
               state: PaymentState.Inactive,
@@ -611,7 +600,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 highExchangeRateEstimate: Pay.Ratio.from(2.3)!
               },
-              tbAccountId,
               paymentPointerId,
               destinationAccount: {
                 scale: 9,

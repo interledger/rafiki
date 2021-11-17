@@ -95,11 +95,11 @@ describe('Invoice Service', (): void => {
         paymentPointerId,
         description: 'Invoice'
       })
-      const invoiceAccount = await tbAccountService.get(invoice.tbAccountId)
+      const invoiceAccount = await tbAccountService.get(invoice.id)
 
-      expect(invoiceAccount?.id).toEqual(invoice.tbAccountId)
+      expect(invoiceAccount?.id).toEqual(invoice.id)
       await expect(
-        tbAccountService.getReceiveLimit(invoice.tbAccountId)
+        tbAccountService.getReceiveLimit(invoice.id)
       ).resolves.toBeUndefined()
     })
 
@@ -110,7 +110,7 @@ describe('Invoice Service', (): void => {
         amountToReceive: BigInt(123)
       })
       await expect(
-        tbAccountService.getReceiveLimit(invoice.tbAccountId)
+        tbAccountService.getReceiveLimit(invoice.id)
       ).resolves.toEqual(BigInt(123 + 1))
     })
 
@@ -160,7 +160,7 @@ describe('Invoice Service', (): void => {
       const trxOrError = await tbAccountService.transferFunds({
         sourceAccount,
         destinationAccount: {
-          id: invoice.tbAccountId,
+          id: invoice.id,
           asset: paymentPointer.asset
         },
         sourceAmount: BigInt(1),

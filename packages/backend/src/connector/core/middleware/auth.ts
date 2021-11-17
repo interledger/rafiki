@@ -41,12 +41,10 @@ export function createTokenAuthMiddleware(): HttpMiddleware {
       'Bearer token required in Authorization header'
     )
 
-    const peer = await ctx.services.peers.getByIncomingToken(ctx.state.token)
-    ctx.assert(peer, 401, 'Access Denied - Invalid Token')
-    ctx.state.incomingAccount = {
-      ...peer,
-      id: peer.tbAccountId
-    }
+    ctx.state.incomingAccount = await ctx.services.peers.getByIncomingToken(
+      ctx.state.token
+    )
+    ctx.assert(ctx.state.incomingAccount, 401, 'Access Denied - Invalid Token')
 
     await next()
   }

@@ -2,8 +2,6 @@ exports.up = function (knex) {
   return knex.schema.createTable('invoices', function (table) {
     table.uuid('id').notNullable().primary()
 
-    // Tigerbeetle account id
-    table.uuid('tbAccountId').notNullable()
     table.uuid('paymentPointerId').notNullable()
     table.foreign('paymentPointerId').references('paymentPointers.id')
     table.boolean('active').notNullable()

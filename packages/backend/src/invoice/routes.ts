@@ -50,14 +50,9 @@ async function getInvoice(
   const invoice = await deps.invoiceService.get(invoiceId)
   if (!invoice) return ctx.throw(404)
 
-  const amountReceived = await deps.tbAccountService.getBalance(
-    invoice.tbAccountId
-  )
+  const amountReceived = await deps.tbAccountService.getBalance(invoice.id)
   if (amountReceived === undefined) {
-    deps.logger.error(
-      { account: invoice.tbAccountId, invoice: invoice.id },
-      'balance not found'
-    )
+    deps.logger.error({ invoice: invoice.id }, 'balance not found')
     return ctx.throw(500)
   }
 

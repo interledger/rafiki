@@ -24,7 +24,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
             throw new Errors.UnreachableError('destination account is disabled')
           }
           return {
-            id: invoice.tbAccountId,
+            id: invoice.id,
             asset: invoice.paymentPointer.asset,
             receiveLimit: invoice.amountToReceive,
             stream: {
@@ -38,11 +38,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
       const peer = await peers.getByDestinationAddress(address)
       if (peer) {
         return {
-          id: peer.tbAccountId,
-          asset: peer.asset,
-          http: peer.http,
-          maxPacketAmount: peer.maxPacketAmount,
-          staticIlpAddress: peer.staticIlpAddress,
+          ...peer,
           stream: {
             enabled: false
           }

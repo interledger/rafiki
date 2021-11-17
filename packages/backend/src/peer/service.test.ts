@@ -133,8 +133,8 @@ describe('Peer Service', (): void => {
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
       const assetService = await deps.use('assetService')
-      await expect(tbAccountService.get(peer.tbAccountId)).resolves.toEqual({
-        id: peer.tbAccountId,
+      await expect(tbAccountService.get(peer.id)).resolves.toEqual({
+        id: peer.id,
         asset: {
           unit: ((await assetService.get(options.asset)) as Asset).unit
         },
@@ -215,7 +215,6 @@ describe('Peer Service', (): void => {
       assert.ok(updateOptions.http)
       delete updateOptions.http.incoming
       const expectedPeer = {
-        tbAccountId: peer.tbAccountId,
         asset: peer.asset,
         http: {
           outgoing: updateOptions.http.outgoing

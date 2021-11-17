@@ -1,7 +1,6 @@
 import assert from 'assert'
 import { NotFoundError, raw, Transaction } from 'objection'
 import { isValidIlpAddress } from 'ilp-packet'
-import { v4 as uuid } from 'uuid'
 
 import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
@@ -107,7 +106,6 @@ async function createPeer(
 
     const peer = await Peer.query(peerTrx)
       .insertAndFetch({
-        tbAccountId: uuid(),
         assetId: asset.id,
         http: options.http,
         maxPacketAmount: options.maxPacketAmount,
@@ -130,11 +128,11 @@ async function createPeer(
       }
     }
 
-    const { id: tbAccountId } = await deps.tbAccountService.create({
+    await deps.tbAccountService.create({
+      id: peer.id,
       asset,
       type: AccountType.Credit
     })
-    await peer.$query(peerTrx).patchAndFetch({ tbAccountId })
 
     if (!trx) {
       await peerTrx.commit()

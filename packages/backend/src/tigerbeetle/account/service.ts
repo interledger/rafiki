@@ -40,6 +40,7 @@ export interface Account {
 }
 
 export interface CreateOptions {
+  id?: string
   asset: {
     unit: number
   }
@@ -213,7 +214,7 @@ async function createAccount(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<Account> {
-  const id = uuid()
+  const id = options.id || uuid()
 
   const accounts = [
     {

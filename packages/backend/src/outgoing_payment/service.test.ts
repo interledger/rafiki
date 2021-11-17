@@ -88,7 +88,7 @@ describe('OutgoingPaymentService', (): void => {
     await expect(
       liquidityService.add({
         account: {
-          id: payment.tbAccountId,
+          id: payment.id,
           asset: payment.paymentPointer.asset
         },
         amount: payment.quote.maxSourceAmount
@@ -105,7 +105,7 @@ describe('OutgoingPaymentService', (): void => {
         }
       },
       destinationAccount: {
-        id: invoice.tbAccountId,
+        id: invoice.id,
         asset: invoice.paymentPointer.asset
       },
       sourceAmount: amount,
@@ -118,14 +118,14 @@ describe('OutgoingPaymentService', (): void => {
   async function withdraw(paymentId: string): Promise<void> {
     const payment = await outgoingPaymentService.get(paymentId)
     if (!payment) throw 'no payment'
-    const balance = await tbAccountService.getBalance(payment.tbAccountId)
+    const balance = await tbAccountService.getBalance(payment.id)
     if (balance === undefined) throw 'no balance'
     const withdrawalId = uuid()
     await expect(
       liquidityService.createWithdrawal({
         id: withdrawalId,
         account: {
-          id: payment.tbAccountId,
+          id: payment.id,
           asset: payment.paymentPointer.asset
         },
         amount: balance
@@ -167,22 +167,22 @@ describe('OutgoingPaymentService', (): void => {
     }
   ) {
     if (amountSent !== undefined) {
-      await expect(
-        tbAccountService.getTotalSent(payment.tbAccountId)
-      ).resolves.toBe(amountSent)
+      await expect(tbAccountService.getTotalSent(payment.id)).resolves.toBe(
+        amountSent
+      )
     }
     if (amountDelivered !== undefined) {
       expect(amtDelivered).toEqual(amountDelivered)
     }
     if (accountBalance !== undefined) {
-      await expect(
-        tbAccountService.getBalance(payment.tbAccountId)
-      ).resolves.toEqual(accountBalance)
+      await expect(tbAccountService.getBalance(payment.id)).resolves.toEqual(
+        accountBalance
+      )
     }
     if (invoiceReceived !== undefined) {
-      await expect(
-        tbAccountService.getBalance(invoice.tbAccountId)
-      ).resolves.toEqual(invoiceReceived)
+      await expect(tbAccountService.getBalance(invoice.id)).resolves.toEqual(
+        invoiceReceived
+      )
     }
   }
 
@@ -470,7 +470,7 @@ describe('OutgoingPaymentService', (): void => {
         jest
           .spyOn(tbAccountService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
-            expect(id).toStrictEqual(payment.tbAccountId)
+            expect(id).toStrictEqual(payment.id)
             return BigInt(89)
           })
         const payment2 = await processNext(payment.id, PaymentState.Ready)
@@ -488,7 +488,7 @@ describe('OutgoingPaymentService', (): void => {
         jest
           .spyOn(tbAccountService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
-            expect(id).toStrictEqual(payment.tbAccountId)
+            expect(id).toStrictEqual(payment.id)
             return BigInt(123)
           })
         await processNext(payment.id, PaymentState.Completed)
@@ -631,16 +631,13 @@ describe('OutgoingPaymentService', (): void => {
           'amountToSend' | 'paymentPointer' | 'invoiceUrl'
         >
       ): Promise<string> {
-        const {
-          id: paymentId,
-          tbAccountId
-        } = await outgoingPaymentService.create({
+        const { id: paymentId } = await outgoingPaymentService.create({
           paymentPointerId,
           autoApprove: true,
           ...opts
         })
 
-        trackAmountDelivered(tbAccountId)
+        trackAmountDelivered(paymentId)
 
         await processNext(paymentId, PaymentState.Ready)
         await processNext(paymentId, PaymentState.Funding)
@@ -880,7 +877,7 @@ describe('OutgoingPaymentService', (): void => {
               })
               paymentId = payment.id
 
-              trackAmountDelivered(payment.tbAccountId)
+              trackAmountDelivered(payment.id)
             }
 
             if (state === PaymentState.Cancelled) {

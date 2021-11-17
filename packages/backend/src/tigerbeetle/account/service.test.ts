@@ -94,6 +94,20 @@ describe('Account Service', (): void => {
       await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
 
+    test('Can create an account with specified id', async (): Promise<void> => {
+      const options: CreateOptions = {
+        id: uuid(),
+        asset: {
+          unit: randomUnit()
+        },
+        type: AccountType.Credit
+      }
+      await expect(accountService.create(options)).resolves.toEqual({
+        ...options,
+        balance: BigInt(0)
+      })
+    })
+
     test('Can create an account with total sent balance', async (): Promise<void> => {
       const options: CreateOptions = {
         asset: {
