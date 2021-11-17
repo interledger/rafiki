@@ -16,7 +16,7 @@ import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isAccountTransferError } from '../tigerbeetle/account/errors'
 import {
-  AccountService,
+  AccountService as TigerbeetleAccountService,
   AccountTransferOptions
 } from '../tigerbeetle/account/service'
 import { AssetOptions } from '../asset/service'
@@ -30,7 +30,7 @@ describe('OutgoingPaymentService', (): void => {
   let appContainer: TestContainer
   let outgoingPaymentService: OutgoingPaymentService
   let ratesService: RatesService
-  let accountService: AccountService
+  let tbAccountService: TigerbeetleAccountService
   let liquidityService: LiquidityService
   let knex: Knex
   let paymentPointerId: string
@@ -88,7 +88,7 @@ describe('OutgoingPaymentService', (): void => {
     await expect(
       liquidityService.add({
         account: {
-          id: payment.accountId,
+          id: payment.tbAccountId,
           asset: payment.paymentPointer.asset
         },
         amount: payment.quote.maxSourceAmount
@@ -97,7 +97,7 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   async function payInvoice(amount: bigint): Promise<void> {
-    const trxOrError = await accountService.transferFunds({
+    const trxOrError = await tbAccountService.transferFunds({
       sourceAccount: {
         asset: {
           unit: invoice.paymentPointer.asset.unit,
@@ -105,7 +105,7 @@ describe('OutgoingPaymentService', (): void => {
         }
       },
       destinationAccount: {
-        id: invoice.accountId,
+        id: invoice.tbAccountId,
         asset: invoice.paymentPointer.asset
       },
       sourceAmount: amount,
@@ -118,14 +118,14 @@ describe('OutgoingPaymentService', (): void => {
   async function withdraw(paymentId: string): Promise<void> {
     const payment = await outgoingPaymentService.get(paymentId)
     if (!payment) throw 'no payment'
-    const balance = await accountService.getBalance(payment.accountId)
+    const balance = await tbAccountService.getBalance(payment.tbAccountId)
     if (balance === undefined) throw 'no balance'
     const withdrawalId = uuid()
     await expect(
       liquidityService.createWithdrawal({
         id: withdrawalId,
         account: {
-          id: payment.accountId,
+          id: payment.tbAccountId,
           asset: payment.paymentPointer.asset
         },
         amount: balance
@@ -137,9 +137,9 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   function trackAmountDelivered(sourceAccountId: string): void {
-    const { transferFunds } = accountService
+    const { transferFunds } = tbAccountService
     jest
-      .spyOn(accountService, 'transferFunds')
+      .spyOn(tbAccountService, 'transferFunds')
       .mockImplementation(async (options: AccountTransferOptions) => {
         const trxOrError = await transferFunds(options)
         if (
@@ -168,7 +168,7 @@ describe('OutgoingPaymentService', (): void => {
   ) {
     if (amountSent !== undefined) {
       await expect(
-        accountService.getTotalSent(payment.accountId)
+        tbAccountService.getTotalSent(payment.tbAccountId)
       ).resolves.toBe(amountSent)
     }
     if (amountDelivered !== undefined) {
@@ -176,12 +176,12 @@ describe('OutgoingPaymentService', (): void => {
     }
     if (accountBalance !== undefined) {
       await expect(
-        accountService.getBalance(payment.accountId)
+        tbAccountService.getBalance(payment.tbAccountId)
       ).resolves.toEqual(accountBalance)
     }
     if (invoiceReceived !== undefined) {
       await expect(
-        accountService.getBalance(invoice.accountId)
+        tbAccountService.getBalance(invoice.tbAccountId)
       ).resolves.toEqual(invoiceReceived)
     }
   }
@@ -198,7 +198,7 @@ describe('OutgoingPaymentService', (): void => {
         .persist()
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
-      accountService = await deps.use('accountService')
+      tbAccountService = await deps.use('tigerbeetleAccountService')
       ratesService = await deps.use('ratesService')
 
       asset = {
@@ -468,9 +468,9 @@ describe('OutgoingPaymentService', (): void => {
           autoApprove: false
         })
         jest
-          .spyOn(accountService, 'getTotalSent')
+          .spyOn(tbAccountService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
-            expect(id).toStrictEqual(payment.accountId)
+            expect(id).toStrictEqual(payment.tbAccountId)
             return BigInt(89)
           })
         const payment2 = await processNext(payment.id, PaymentState.Ready)
@@ -486,9 +486,9 @@ describe('OutgoingPaymentService', (): void => {
           autoApprove: false
         })
         jest
-          .spyOn(accountService, 'getTotalSent')
+          .spyOn(tbAccountService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
-            expect(id).toStrictEqual(payment.accountId)
+            expect(id).toStrictEqual(payment.tbAccountId)
             return BigInt(123)
           })
         await processNext(payment.id, PaymentState.Completed)
@@ -633,14 +633,14 @@ describe('OutgoingPaymentService', (): void => {
       ): Promise<string> {
         const {
           id: paymentId,
-          accountId
+          tbAccountId
         } = await outgoingPaymentService.create({
           paymentPointerId,
           autoApprove: true,
           ...opts
         })
 
-        trackAmountDelivered(accountId)
+        trackAmountDelivered(tbAccountId)
 
         await processNext(paymentId, PaymentState.Ready)
         await processNext(paymentId, PaymentState.Funding)
@@ -880,7 +880,7 @@ describe('OutgoingPaymentService', (): void => {
               })
               paymentId = payment.id
 
-              trackAmountDelivered(payment.accountId)
+              trackAmountDelivered(payment.tbAccountId)
             }
 
             if (state === PaymentState.Cancelled) {

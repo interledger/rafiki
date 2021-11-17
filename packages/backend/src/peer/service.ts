@@ -5,7 +5,10 @@ import { v4 as uuid } from 'uuid'
 
 import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
-import { AccountService, AccountType } from '../tigerbeetle/account/service'
+import {
+  AccountService as TigerbeetleAccountService,
+  AccountType
+} from '../tigerbeetle/account/service'
 import { AssetService, AssetOptions } from '../asset/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
@@ -46,7 +49,7 @@ export interface PeerService {
 }
 
 interface ServiceDependencies extends BaseService {
-  accountService: AccountService
+  tbAccountService: TigerbeetleAccountService
   assetService: AssetService
   httpTokenService: HttpTokenService
 }
@@ -54,7 +57,7 @@ interface ServiceDependencies extends BaseService {
 export async function createPeerService({
   logger,
   knex,
-  accountService,
+  tbAccountService,
   assetService,
   httpTokenService
 }: ServiceDependencies): Promise<PeerService> {
@@ -64,7 +67,7 @@ export async function createPeerService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountService,
+    tbAccountService,
     assetService,
     httpTokenService
   }
@@ -104,7 +107,7 @@ async function createPeer(
 
     const peer = await Peer.query(peerTrx)
       .insertAndFetch({
-        accountId: uuid(),
+        tbAccountId: uuid(),
         assetId: asset.id,
         http: options.http,
         maxPacketAmount: options.maxPacketAmount,
@@ -127,11 +130,11 @@ async function createPeer(
       }
     }
 
-    const { id: accountId } = await deps.accountService.create({
+    const { id: tbAccountId } = await deps.tbAccountService.create({
       asset,
       type: AccountType.Credit
     })
-    await peer.$query(peerTrx).patchAndFetch({ accountId })
+    await peer.$query(peerTrx).patchAndFetch({ tbAccountId })
 
     if (!trx) {
       await peerTrx.commit()

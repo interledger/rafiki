@@ -1,7 +1,9 @@
 exports.up = function (knex) {
   return knex.schema.createTable('peers', function (table) {
     table.uuid('id').notNullable().primary()
-    table.uuid('accountId').notNullable().index()
+
+    // Tigerbeetle account id
+    table.uuid('tbAccountId').notNullable().index()
 
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')

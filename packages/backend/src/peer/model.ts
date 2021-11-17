@@ -27,7 +27,8 @@ export class Peer extends BaseModel {
     }
   }
 
-  public accountId!: string
+  // Tigerbeetle account id
+  public tbAccountId!: string
   public assetId!: string
   public asset!: Asset
 

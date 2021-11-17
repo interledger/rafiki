@@ -45,7 +45,7 @@ export function createTokenAuthMiddleware(): HttpMiddleware {
     ctx.assert(peer, 401, 'Access Denied - Invalid Token')
     ctx.state.incomingAccount = {
       ...peer,
-      id: peer.accountId
+      id: peer.tbAccountId
     }
 
     await next()

@@ -22,7 +22,10 @@ import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
 import { TransferService } from './tigerbeetle/transfer/service'
 import { AssetService } from './asset/service'
-import { AccountOptions, AccountService } from './tigerbeetle/account/service'
+import {
+  AccountOptions,
+  AccountService as TigerbeetleAccountService
+} from './tigerbeetle/account/service'
 import { PeerService } from './peer/service'
 import { PaymentPointerService } from './payment_pointer/service'
 import { LiquidityService } from './liquidity/service'
@@ -61,7 +64,7 @@ export interface AppServices {
   httpTokenService: Promise<HttpTokenService>
   transferService: Promise<TransferService>
   assetService: Promise<AssetService>
-  accountService: Promise<AccountService>
+  tbAccountService: Promise<TigerbeetleAccountService>
   peerService: Promise<PeerService>
   paymentPointer: Promise<PaymentPointerService>
   liquidityService: Promise<LiquidityService>

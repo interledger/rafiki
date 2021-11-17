@@ -26,7 +26,8 @@ exports.up = function (knex) {
     table.bigInteger('quoteHighExchangeRateEstimateNumerator').nullable()
     table.bigInteger('quoteHighExchangeRateEstimateDenominator').nullable()
 
-    table.uuid('accountId').notNullable()
+    // Tigerbeetle account id
+    table.uuid('tbAccountId').notNullable()
 
     // Wallet account from which to request funds for payment
     table.uuid('paymentPointerId').notNullable()

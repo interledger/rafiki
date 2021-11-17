@@ -46,7 +46,7 @@ describe('Liquidity Service', (): void => {
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
       liquidityService = await deps.use('liquidityService')
-      accountService = await deps.use('accountService')
+      accountService = await deps.use('tigerbeetleAccountService')
       const transferService = await deps.use('transferService')
       accountFactory = new AccountFactory(accountService, transferService)
     }

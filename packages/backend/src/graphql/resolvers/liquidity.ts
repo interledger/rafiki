@@ -13,7 +13,7 @@ export const addAccountLiquidity: MutationResolvers<ApolloContext>['addAccountLi
   ctx
 ): ResolversTypes['AddAccountLiquidityMutationResponse'] => {
   try {
-    const accountService = await ctx.container.use('accountService')
+    const accountService = await ctx.container.use('tigerbeetleAccountService')
     const account = await accountService.get(args.input.accountId)
     if (!account) {
       return {
@@ -110,7 +110,7 @@ export const createAccountLiquidityWithdrawal: MutationResolvers<ApolloContext>[
   ctx
 ): ResolversTypes['CreateAccountLiquidityWithdrawalMutationResponse'] => {
   try {
-    const accountService = await ctx.container.use('accountService')
+    const accountService = await ctx.container.use('tigerbeetleAccountService')
     const account = await accountService.get(args.input.accountId)
     if (!account) {
       return {

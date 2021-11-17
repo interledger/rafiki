@@ -4,7 +4,7 @@ import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import {
   AccountOptions,
-  AccountService,
+  AccountService as TigerbeetleAccountService,
   AccountType,
   AssetAccount
 } from '../tigerbeetle/account/service'
@@ -31,7 +31,7 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   slippage: number
   quoteLifespan: number // milliseconds
-  accountService: AccountService
+  tbAccountService: TigerbeetleAccountService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
   makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
@@ -114,7 +114,7 @@ async function createOutgoingPayment(
     })
   })
 
-  const account = await deps.accountService.create({
+  const tbAccount = await deps.tbAccountService.create({
     asset: paymentPointer.asset,
     type: AccountType.Credit,
     sentBalance: true
@@ -129,7 +129,7 @@ async function createOutgoingPayment(
         amountToSend: options.amountToSend,
         autoApprove: options.autoApprove
       },
-      accountId: account.id,
+      tbAccountId: tbAccount.id,
       paymentPointerId: options.paymentPointerId,
       destinationAccount: {
         scale: destination.destinationAsset.scale,

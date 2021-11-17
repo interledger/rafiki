@@ -30,7 +30,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
           paymentPointer: {
             asset: account.asset
           },
-          accountId: account.id,
+          tbAccountId: account.id,
           amountToReceive: account.receiveLimit
         }
       }
@@ -42,7 +42,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       if (account) {
         return {
           ...account,
-          accountId: account.id
+          tbAccountId: account.id
         }
       }
     },
@@ -51,7 +51,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       if (account) {
         return {
           ...account,
-          accountId: account.id
+          tbAccountId: account.id
         }
       }
     }

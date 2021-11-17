@@ -52,7 +52,7 @@ describe('Transfer Service', (): void => {
         unit: randomUnit()
       }
       transferService = await deps.use('transferService')
-      accountService = await deps.use('accountService')
+      accountService = await deps.use('tigerbeetleAccountService')
 
       sourceAccount = await accountService.create({
         asset,

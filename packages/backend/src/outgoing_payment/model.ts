@@ -42,7 +42,8 @@ export class OutgoingPayment extends BaseModel {
     // (Pay.PositiveRatio, but validated later)
     highExchangeRateEstimate: Pay.Ratio
   }
-  public accountId!: string
+  // Tigerbeetle account id
+  public tbAccountId!: string
   public paymentPointerId!: string
   public paymentPointer!: PaymentPointer
   public destinationAccount!: {

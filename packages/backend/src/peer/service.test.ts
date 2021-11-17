@@ -129,12 +129,12 @@ describe('Peer Service', (): void => {
     })
 
     test('Creating a peer creates a peer account', async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
+      const tbAccountService = await deps.use('tigerbeetleAccountService')
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
       const assetService = await deps.use('assetService')
-      await expect(accountService.get(peer.accountId)).resolves.toEqual({
-        id: peer.accountId,
+      await expect(tbAccountService.get(peer.tbAccountId)).resolves.toEqual({
+        id: peer.tbAccountId,
         asset: {
           unit: ((await assetService.get(options.asset)) as Asset).unit
         },
@@ -215,7 +215,7 @@ describe('Peer Service', (): void => {
       assert.ok(updateOptions.http)
       delete updateOptions.http.incoming
       const expectedPeer = {
-        accountId: peer.accountId,
+        tbAccountId: peer.tbAccountId,
         asset: peer.asset,
         http: {
           outgoing: updateOptions.http.outgoing

@@ -20,7 +20,8 @@ export class Invoice extends BaseModel {
 
   public paymentPointerId!: string // Refers to payment pointer this invoice is for
   public paymentPointer!: PaymentPointer
-  public accountId!: string // Refers to the account created for this invoice
+  // Tigerbeetle account id
+  public tbAccountId!: string
   public active!: boolean
   public description?: string
   public expiresAt?: Date

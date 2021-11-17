@@ -74,13 +74,13 @@ describe('Asset Service', (): void => {
     })
 
     test('Asset accounts are created', async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
+      const tbAccountService = await deps.use('tigerbeetleAccountService')
       const unit = 1
 
       for (const account in AssetAccount) {
         if (typeof account === 'number') {
           await expect(
-            accountService.getAssetAccountBalance(unit, account)
+            tbAccountService.getAssetAccountBalance(unit, account)
           ).resolves.toBeUndefined()
         }
       }
@@ -91,7 +91,7 @@ describe('Asset Service', (): void => {
       for (const account in AssetAccount) {
         if (typeof account === 'number') {
           await expect(
-            accountService.getAssetAccountBalance(asset.unit, account)
+            tbAccountService.getAssetAccountBalance(asset.unit, account)
           ).resolves.toEqual(BigInt(0))
         }
       }

@@ -139,10 +139,10 @@ export function initIocContainer(
     return await createAssetService({
       logger: logger,
       knex: knex,
-      accountService: await deps.use('accountService')
+      tbAccountService: await deps.use('tigerbeetleAccountService')
     })
   })
-  container.singleton('accountService', async (deps) => {
+  container.singleton('tigerbeetleAccountService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const tigerbeetle = await deps.use('tigerbeetle')
@@ -158,7 +158,7 @@ export function initIocContainer(
     return await createPeerService({
       knex: await deps.use('knex'),
       logger: await deps.use('logger'),
-      accountService: await deps.use('accountService'),
+      tbAccountService: await deps.use('tigerbeetleAccountService'),
       assetService: await deps.use('assetService'),
       httpTokenService: await deps.use('httpTokenService')
     })
@@ -196,7 +196,7 @@ export function initIocContainer(
     return await createInvoiceService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      accountService: await deps.use('accountService'),
+      tbAccountService: await deps.use('tigerbeetleAccountService'),
       paymentPointerService: await deps.use('paymentPointerService')
     })
   })
@@ -204,7 +204,7 @@ export function initIocContainer(
     return createInvoiceRoutes({
       config: await deps.use('config'),
       logger: await deps.use('logger'),
-      accountService: await deps.use('accountService'),
+      tbAccountService: await deps.use('tigerbeetleAccountService'),
       invoiceService: await deps.use('invoiceService'),
       streamServer: await deps.use('streamServer')
     })
@@ -256,7 +256,7 @@ export function initIocContainer(
       quoteLifespan: config.quoteLifespan,
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      accountService: await deps.use('accountService'),
+      tbAccountService: await deps.use('tigerbeetleAccountService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       paymentPointerService: await deps.use('paymentPointerService'),
       ratesService: await deps.use('ratesService')
@@ -268,7 +268,7 @@ export function initIocContainer(
     return await createConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
-      accountService: await deps.use('accountService'),
+      accountService: await deps.use('tigerbeetleAccountService'),
       invoiceService: await deps.use('invoiceService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),

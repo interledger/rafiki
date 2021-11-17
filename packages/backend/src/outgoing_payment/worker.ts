@@ -148,7 +148,7 @@ export async function handlePaymentLifecycle(
       return lifecycle.handleFunding(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin({
-        id: payment.accountId,
+        id: payment.tbAccountId,
         asset: payment.paymentPointer.asset,
         // Value doesn't matter. Defining totalSent tells the connector
         // to update the source account's totalSent balance.

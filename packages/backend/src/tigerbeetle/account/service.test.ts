@@ -56,7 +56,7 @@ describe('Account Service', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      accountService = await deps.use('accountService')
+      accountService = await deps.use('tigerbeetleAccountService')
       const transferService = await deps.use('transferService')
       accountFactory = new AccountFactory(accountService, transferService)
       liquidityService = await deps.use('liquidityService')
