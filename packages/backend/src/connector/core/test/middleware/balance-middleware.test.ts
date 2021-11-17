@@ -160,4 +160,48 @@ describe('Balance Middleware', function () {
     const bobBalance = await accounts.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
+
+  test('receive limit already reached throws F07', async () => {
+    bobAccount.receiveLimit = BigInt(0)
+    const prepare = IlpPrepareFactory.build({ amount: '100' })
+    const fulfill = IlpFulfillFactory.build()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    const next = jest.fn().mockImplementation(() => {
+      ctx.response.fulfill = fulfill
+    })
+
+    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
+      Errors.CannotReceiveError
+    )
+
+    expect(next).toHaveBeenCalledTimes(0)
+
+    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    expect(aliceBalance).toEqual(BigInt(100))
+
+    const bobBalance = await accounts.getBalance(bobAccount.id)
+    expect(bobBalance).toEqual(BigInt(0))
+  })
+
+  test('receive limit exceeded throws F08', async () => {
+    bobAccount.receiveLimit = BigInt(10)
+    const prepare = IlpPrepareFactory.build({ amount: '100' })
+    const fulfill = IlpFulfillFactory.build()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    const next = jest.fn().mockImplementation(() => {
+      ctx.response.fulfill = fulfill
+    })
+
+    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
+      Errors.AmountTooLargeError
+    )
+
+    expect(next).toHaveBeenCalledTimes(0)
+
+    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    expect(aliceBalance).toEqual(BigInt(100))
+
+    const bobBalance = await accounts.getBalance(bobAccount.id)
+    expect(bobBalance).toEqual(BigInt(0))
+  })
 })

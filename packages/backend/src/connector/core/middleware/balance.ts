@@ -5,7 +5,11 @@ import {
   isAccountTransferError,
   AccountTransferError
 } from '../../../tigerbeetle/account/errors'
-const { AmountTooLargeError, InsufficientLiquidityError } = Errors
+const {
+  AmountTooLargeError,
+  CannotReceiveError,
+  InsufficientLiquidityError
+} = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
   return async (
@@ -28,7 +32,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     })
     if (typeof destinationAmountOrError !== 'bigint') {
       // ConvertError
-      throw new Errors.CannotReceiveError(
+      throw new CannotReceiveError(
         `Exchange rate error: ${destinationAmountOrError}`
       )
     }
@@ -56,6 +60,9 @@ export function createBalanceMiddleware(): ILPMiddleware {
             accounts.outgoing.id
           )
           assert.ok(receiveLimit !== undefined)
+          if (receiveLimit === BigInt(0)) {
+            throw new CannotReceiveError('receive limit already reached')
+          }
           const maximumAmount = receiveLimit.toString()
           throw new AmountTooLargeError(
             `amount too large. maxAmount=${maximumAmount} actualAmount=${receivedAmount}`,

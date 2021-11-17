@@ -47,7 +47,7 @@ export class MockAccountsService implements AccountService {
 
   async getReceiveLimit(accountId: string): Promise<bigint | undefined> {
     const account = this.accounts.get(accountId)
-    if (account?.receiveLimit) {
+    if (account?.receiveLimit != null) {
       return account.receiveLimit
     }
   }
@@ -68,11 +68,22 @@ export class MockAccountsService implements AccountService {
     if (options.sourceAccount.balance < options.sourceAmount) {
       return AccountTransferError.InsufficientBalance
     }
+    if (
+      options.destinationAccount.receiveLimit != null &&
+      options.destinationAccount.receiveLimit <
+        (options.destinationAmount || options.sourceAmount)
+    ) {
+      return AccountTransferError.ReceiveLimitExceeded
+    }
     options.sourceAccount.balance -= options.sourceAmount
     return {
       commit: async () => {
         options.destinationAccount.balance +=
           options.destinationAmount ?? options.sourceAmount
+        if (options.destinationAccount.receiveLimit != null) {
+          options.destinationAccount.receiveLimit -=
+            options.destinationAmount ?? options.sourceAmount
+        }
       },
       rollback: async () => {
         options.sourceAccount.balance += options.sourceAmount
