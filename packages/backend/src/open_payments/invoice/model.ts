@@ -1,6 +1,6 @@
 import { Model } from 'objection'
-import { PaymentPointer } from '../payment_pointer/model'
-import { BaseModel } from '../shared/baseModel'
+import { PaymentPointer } from '../../payment_pointer/model'
+import { BaseModel } from '../../shared/baseModel'
 
 export class Invoice extends BaseModel {
   public static get tableName(): string {

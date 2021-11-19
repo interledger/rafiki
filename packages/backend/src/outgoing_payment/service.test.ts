@@ -21,7 +21,7 @@ import {
   AccountTransferOptions
 } from '../accounting/service'
 import { AssetOptions } from '../asset/service'
-import { Invoice } from '../invoice/model'
+import { Invoice } from '../open_payments/invoice/model'
 import { RatesService } from '../rates/service'
 
 describe('OutgoingPaymentService', (): void => {

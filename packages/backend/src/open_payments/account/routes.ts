@@ -1,7 +1,7 @@
-import { validateId } from '../shared/utils'
-import { AppContext } from '../app'
-import { IAppConfig } from '../config/app'
-import { PaymentPointerService } from '../payment_pointer/service'
+import { validateId } from '../../shared/utils'
+import { AppContext } from '../../app'
+import { IAppConfig } from '../../config/app'
+import { PaymentPointerService } from '../../payment_pointer/service'
 
 interface ServiceDependencies {
   config: IAppConfig

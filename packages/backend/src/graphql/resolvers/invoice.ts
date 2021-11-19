@@ -3,7 +3,7 @@ import {
   InvoiceConnectionResolvers,
   PaymentPointerResolvers
 } from '../generated/graphql'
-import { Invoice } from '../../invoice/model'
+import { Invoice } from '../../open_payments/invoice/model'
 import { ApolloContext } from '../../app'
 
 export const getPaymentPointerInvoices: PaymentPointerResolvers<ApolloContext>['invoices'] = async (

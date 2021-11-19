@@ -1,6 +1,6 @@
 import { BaseService } from '../shared/baseService'
-import { InvoiceService } from '../invoice/service'
-import { Invoice } from '../invoice/model'
+import { InvoiceService } from '../open_payments/invoice/service'
+import { Invoice } from '../open_payments/invoice/model'
 import { WebMonetization } from './model'
 import { ok } from 'assert'
 import { PaymentPointerService } from '../payment_pointer/service'

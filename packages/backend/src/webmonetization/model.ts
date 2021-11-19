@@ -1,5 +1,5 @@
 import { Model } from 'objection'
-import { Invoice } from '../invoice/model'
+import { Invoice } from '../open_payments/invoice/model'
 import { BaseModel } from '../shared/baseModel'
 
 export class WebMonetization extends BaseModel {

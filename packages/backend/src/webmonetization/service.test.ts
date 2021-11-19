@@ -9,7 +9,7 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { Invoice } from '../invoice/model'
+import { Invoice } from '../open_payments/invoice/model'
 
 describe('WM Service', (): void => {
   let deps: IocContract<AppServices>
