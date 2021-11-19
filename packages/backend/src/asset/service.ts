@@ -1,9 +1,7 @@
-import { Asset, AssetAccounts } from './model'
+import { Asset } from './model'
 import { BaseService } from '../shared/baseService'
 import { Transaction } from 'knex'
-import { BalanceType } from '../balance/service'
-import { Account } from '../account/model'
-import { AccountService } from '../account/service'
+import { AccountingService } from '../accounting/service'
 
 export interface AssetOptions {
   code: string
@@ -14,17 +12,16 @@ export interface AssetService {
   get(asset: AssetOptions, trx?: Transaction): Promise<void | Asset>
   getOrCreate(asset: AssetOptions): Promise<Asset>
   getById(id: string, trx?: Transaction): Promise<void | Asset>
-  getLiquidityAccount(assetId: string): Promise<Account | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
-  accountService: AccountService
+  accountingService: AccountingService
 }
 
 export async function createAssetService({
   logger,
   knex,
-  accountService
+  accountingService
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
     service: 'AssetService'
@@ -32,13 +29,12 @@ export async function createAssetService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountService
+    accountingService
   }
   return {
     get: (asset, trx) => getAsset(deps, asset, trx),
     getOrCreate: (asset) => getOrCreateAsset(deps, asset),
-    getById: (id, trx) => getAssetById(deps, id, trx),
-    getLiquidityAccount: (assetId) => getAssetLiquidityAccount(deps, assetId)
+    getById: (id, trx) => getAssetById(deps, id, trx)
   }
 }
 
@@ -69,41 +65,7 @@ async function getOrCreateAsset(
         code,
         scale
       })
-      const { id: liquidityAccountId } = await deps.accountService.create(
-        {
-          assetId: asset.id,
-          balanceType: BalanceType.Credit
-        },
-        trx
-      )
-      const { id: settlementAccountId } = await deps.accountService.create(
-        {
-          assetId: asset.id,
-          balanceType: BalanceType.Debit
-        },
-        trx
-      )
-      const { id: sentAccountId } = await deps.accountService.create(
-        {
-          assetId: asset.id,
-          balanceType: BalanceType.Debit
-        },
-        trx
-      )
-      const { id: receiveLimitAccountId } = await deps.accountService.create(
-        {
-          assetId: asset.id,
-          balanceType: BalanceType.Credit
-        },
-        trx
-      )
-      await AssetAccounts.query(trx).insert({
-        id: asset.id,
-        liquidityAccountId,
-        settlementAccountId,
-        sentAccountId,
-        receiveLimitAccountId
-      })
+      await deps.accountingService.createAssetAccounts(asset.unit)
 
       return asset
     })
@@ -116,16 +78,4 @@ async function getAssetById(
   trx?: Transaction
 ): Promise<void | Asset> {
   return await Asset.query(trx || deps.knex).findById(id)
-}
-
-async function getAssetLiquidityAccount(
-  deps: ServiceDependencies,
-  assetId: string
-): Promise<Account | undefined> {
-  const asset = await AssetAccounts.query(deps.knex)
-    .findById(assetId)
-    .withGraphJoined('liquidityAccount.asset')
-  if (asset) {
-    return asset.liquidityAccount
-  }
 }

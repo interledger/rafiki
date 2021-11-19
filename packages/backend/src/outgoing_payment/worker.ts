@@ -3,6 +3,7 @@ import { ServiceDependencies } from './service'
 import { OutgoingPayment, PaymentState } from './model'
 import * as lifecycle from './lifecycle'
 import { IlpPlugin } from './ilp_plugin'
+import { AssetAccount, Balance } from '../accounting/service'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -78,7 +79,7 @@ export async function getPendingPayment(
             .orWhere('quoteActivationDeadline', '<', now)
         })
     })
-    .withGraphFetched('account.asset')
+    .withGraphFetched('paymentPointer.asset')
   return payments[0]
 }
 
@@ -123,7 +124,12 @@ export async function handlePaymentLifecycle(
   switch (payment.state) {
     case PaymentState.Inactive:
       // Use asset's sentAccount debit balance to not be limited by liquidity when sending rate probe packets
-      plugin = deps.makeIlpPlugin(await payment.account.asset.getSentAccount())
+      plugin = deps.makeIlpPlugin({
+        asset: {
+          ...payment.paymentPointer.asset,
+          account: AssetAccount.Sent
+        }
+      })
       return plugin
         .connect()
         .then(() => lifecycle.handleQuoting(deps, payment, plugin))
@@ -141,7 +147,11 @@ export async function handlePaymentLifecycle(
     case PaymentState.Funding:
       return lifecycle.handleFunding(deps, payment).catch(onError)
     case PaymentState.Sending:
-      plugin = deps.makeIlpPlugin(payment.account)
+      plugin = deps.makeIlpPlugin({
+        id: payment.id,
+        asset: payment.paymentPointer.asset,
+        withBalance: Balance.TotalSent
+      })
       return plugin
         .connect()
         .then(() => lifecycle.handleSending(deps, payment, plugin))

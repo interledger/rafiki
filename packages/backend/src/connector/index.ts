@@ -21,7 +21,8 @@ import {
   createAccountMiddleware,
   createStreamAddressMiddleware
 } from './core'
-import { AccountService } from '../account/service'
+import { AccountingService } from '../accounting/service'
+import { InvoiceService } from '../invoice/service'
 import { PeerService } from '../peer/service'
 import { RatesService } from '../rates/service'
 import { BaseService } from '../shared/baseService'
@@ -29,7 +30,8 @@ import { BaseService } from '../shared/baseService'
 interface ServiceDependencies extends BaseService {
   redis: IORedis.Redis
   ratesService: RatesService
-  accountService: AccountService
+  accountingService: AccountingService
+  invoiceService: InvoiceService
   peerService: PeerService
   streamServer: StreamServer
   ilpAddress: string
@@ -39,7 +41,8 @@ export async function createConnectorService({
   logger,
   redis,
   ratesService,
-  accountService,
+  accountingService,
+  invoiceService,
   peerService,
   streamServer,
   ilpAddress
@@ -50,7 +53,8 @@ export async function createConnectorService({
       logger: logger.child({
         service: 'ConnectorService'
       }),
-      accounts: accountService,
+      accounts: accountingService,
+      invoices: invoiceService,
       peers: peerService,
       redis,
       rates: ratesService,

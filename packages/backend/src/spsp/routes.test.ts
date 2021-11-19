@@ -190,7 +190,7 @@ describe('SPSP Routes', (): void => {
       )
       const currentInvoice = await wmService.getInvoice(paymentPointerId)
       expect(connectionDetails).toEqual({
-        paymentTag: currentInvoice.accountId,
+        paymentTag: currentInvoice.id,
         asset: {
           code: 'USD',
           scale: 6
@@ -224,7 +224,7 @@ describe('SPSP Routes', (): void => {
       )
       const currentInvoice = await wmService.getInvoice(paymentPointerId)
       expect(connectionDetails).toEqual({
-        paymentTag: currentInvoice.accountId,
+        paymentTag: currentInvoice.id,
         asset: {
           code: 'USD',
           scale: 6

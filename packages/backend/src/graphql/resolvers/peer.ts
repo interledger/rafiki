@@ -1,7 +1,6 @@
 import {
   QueryResolvers,
   ResolversTypes,
-  Peer as SchemaPeer,
   PeerEdge,
   MutationResolvers,
   PeersConnectionResolvers
@@ -21,7 +20,7 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   return {
     edges: peers.map((peer: Peer) => ({
       cursor: peer.id,
-      node: peerToGraphql(peer)
+      node: peer
     }))
   }
 }
@@ -36,7 +35,7 @@ export const getPeer: QueryResolvers<ApolloContext>['peer'] = async (
   if (!peer) {
     throw new Error('No peer')
   }
-  return peerToGraphql(peer)
+  return peer
 }
 
 export const createPeer: MutationResolvers<ApolloContext>['createPeer'] = async (
@@ -69,7 +68,7 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] = async 
       code: '200',
       success: true,
       message: 'Created ILP Peer',
-      peer: peerToGraphql(peerOrError)
+      peer: peerOrError
     }
   } catch (error) {
     ctx.logger.error(
@@ -117,7 +116,7 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] = async 
       code: '200',
       success: true,
       message: 'Updated ILP Peer',
-      peer: peerToGraphql(peerOrError)
+      peer: peerOrError
     }
   } catch (error) {
     ctx.logger.error(
@@ -195,12 +194,5 @@ const getPageInfo = async ({
     hasNextPage: hasNextPagePeers.length == 1,
     hasPreviousPage: hasPreviousPagePeers.length == 1,
     startCursor: firstEdge
-  }
-}
-
-function peerToGraphql(peer: Peer): SchemaPeer {
-  return {
-    ...peer.account,
-    ...peer
   }
 }

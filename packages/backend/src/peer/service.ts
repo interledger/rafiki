@@ -4,9 +4,8 @@ import { isValidIlpAddress } from 'ilp-packet'
 
 import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
-import { AccountService } from '../account/service'
+import { AccountingService, AccountType } from '../accounting/service'
 import { AssetService, AssetOptions } from '../asset/service'
-import { BalanceType } from '../balance/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
 import { BaseService } from '../shared/baseService'
@@ -46,7 +45,7 @@ export interface PeerService {
 }
 
 interface ServiceDependencies extends BaseService {
-  accountService: AccountService
+  accountingService: AccountingService
   assetService: AssetService
   httpTokenService: HttpTokenService
 }
@@ -54,7 +53,7 @@ interface ServiceDependencies extends BaseService {
 export async function createPeerService({
   logger,
   knex,
-  accountService,
+  accountingService,
   assetService,
   httpTokenService
 }: ServiceDependencies): Promise<PeerService> {
@@ -64,7 +63,7 @@ export async function createPeerService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountService,
+    accountingService,
     assetService,
     httpTokenService
   }
@@ -83,7 +82,7 @@ async function getPeer(
   deps: ServiceDependencies,
   id: string
 ): Promise<Peer | undefined> {
-  return Peer.query(deps.knex).findById(id).withGraphJoined('account.asset')
+  return Peer.query(deps.knex).findById(id).withGraphJoined('asset')
 }
 
 async function createPeer(
@@ -98,24 +97,18 @@ async function createPeer(
   const peerTrx = trx || (await Peer.startTransaction(deps.knex))
 
   try {
-    const account = await deps.accountService.create(
-      {
-        assetId: (
-          await deps.assetService.getOrCreate(options.asset as AssetOptions)
-        ).id,
-        balanceType: BalanceType.Credit
-      },
-      peerTrx
+    const asset = await deps.assetService.getOrCreate(
+      options.asset as AssetOptions
     )
 
     const peer = await Peer.query(peerTrx)
       .insertAndFetch({
-        accountId: account.id,
+        assetId: asset.id,
         http: options.http,
         maxPacketAmount: options.maxPacketAmount,
         staticIlpAddress: options.staticIlpAddress
       })
-      .withGraphFetched('account.asset')
+      .withGraphFetched('asset')
 
     if (options.http?.incoming) {
       const err = await addIncomingHttpTokens({
@@ -131,6 +124,12 @@ async function createPeer(
         return err
       }
     }
+
+    await deps.accountingService.createAccount({
+      id: peer.id,
+      asset,
+      type: AccountType.Credit
+    })
 
     if (!trx) {
       await peerTrx.commit()
@@ -172,7 +171,7 @@ async function updatePeer(
       }
       return await Peer.query(trx)
         .patchAndFetchById(options.id, options)
-        .withGraphFetched('account.asset')
+        .withGraphFetched('asset')
         .throwIfNotFound()
     })
   } catch (err) {
@@ -222,7 +221,7 @@ async function getPeerByDestinationAddress(
   // for `staticIlpAddress`s in the accounts table:
   // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
   const peer = await Peer.query(deps.knex)
-    .withGraphJoined('account.asset')
+    .withGraphJoined('asset')
     .where(
       raw('?', [destinationAddress]),
       'like',
@@ -292,7 +291,7 @@ async function getPeersPage(
    */
   if (typeof pagination?.after === 'string') {
     const peers = await Peer.query(deps.knex)
-      .withGraphFetched('account.asset')
+      .withGraphFetched('asset')
       .whereRaw(
         '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "peers" where "id" = ?)',
         [pagination.after]
@@ -310,7 +309,7 @@ async function getPeersPage(
    */
   if (typeof pagination?.before === 'string') {
     const peers = await Peer.query(deps.knex)
-      .withGraphFetched('account.asset')
+      .withGraphFetched('asset')
       .whereRaw(
         '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "peers" where "id" = ?)',
         [pagination.before]
@@ -327,7 +326,7 @@ async function getPeersPage(
   }
 
   const peers = await Peer.query(deps.knex)
-    .withGraphFetched('account.asset')
+    .withGraphFetched('asset')
     .orderBy([
       { column: 'createdAt', order: 'asc' },
       { column: 'id', order: 'asc' }

@@ -48,7 +48,7 @@ async function getInvoice(
     .insertAndFetch({
       id: paymentPointerId
     })
-    .withGraphFetched('invoice.account.asset')
+    .withGraphFetched('invoice.paymentPointer.asset')
     .onConflict('id')
     .ignore()
 

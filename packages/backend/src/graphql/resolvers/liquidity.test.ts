@@ -7,55 +7,87 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { LiquidityService } from '../../liquidity/service'
-import { Account } from '../../account/model'
+import {
+  AccountingService,
+  AccountOptions,
+  AssetAccount
+} from '../../accounting/service'
 import { AssetService } from '../../asset/service'
 import { AccountFactory } from '../../tests/accountFactory'
-import { randomAsset } from '../../tests/asset'
+import { randomAsset, randomUnit } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import {
-  AddAccountLiquidityMutationResponse,
-  AddAssetLiquidityMutationResponse,
-  CreateAccountLiquidityWithdrawalMutationResponse,
-  CreateAssetLiquidityWithdrawalMutationResponse,
-  FinalizeLiquidityWithdrawalMutationResponse,
-  RollbackLiquidityWithdrawalMutationResponse,
-  LiquidityError
-} from '../generated/graphql'
+import { LiquidityError, LiquidityMutationResponse } from '../generated/graphql'
 
 describe('Withdrawal Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let liquidityService: LiquidityService
   let accountFactory: AccountFactory
+  let accountingService: AccountingService
   let assetService: AssetService
   let knex: Knex
+  const timeout = BigInt(10e9) // 10 seconds
+
+  interface LiquidityOptions {
+    id?: string
+    account: AccountOptions
+    amount: bigint
+  }
+
+  async function addLiquidity({
+    id,
+    account,
+    amount
+  }: LiquidityOptions): Promise<void> {
+    await expect(
+      accountingService.createTransfer({
+        id,
+        sourceAccount: {
+          asset: {
+            unit: account.asset.unit,
+            account: AssetAccount.Settlement
+          }
+        },
+        destinationAccount: account,
+        amount
+      })
+    ).resolves.toBeUndefined()
+  }
+
+  async function createLiquidityWithdrawal({
+    id,
+    account,
+    amount
+  }: Required<LiquidityOptions>): Promise<void> {
+    await expect(
+      accountingService.createTransfer({
+        id,
+        sourceAccount: account,
+        destinationAccount: {
+          asset: {
+            unit: account.asset.unit,
+            account: AssetAccount.Settlement
+          }
+        },
+        amount,
+        timeout
+      })
+    ).resolves.toBeUndefined()
+  }
 
   beforeAll(
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
-      liquidityService = await deps.use('liquidityService')
-      const accountService = await deps.use('accountService')
+      accountingService = await deps.use('accountingService')
       assetService = await deps.use('assetService')
-      const transferService = await deps.use('transferService')
-      accountFactory = new AccountFactory(
-        accountService,
-        assetService,
-        transferService
-      )
-    }
-  )
-
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
+      accountFactory = new AccountFactory(accountingService)
     }
   )
 
   afterAll(
     async (): Promise<void> => {
+      await truncateTables(knex)
       await appContainer.apolloClient.stop()
       await appContainer.shutdown()
     }
@@ -91,7 +123,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): AddAccountLiquidityMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.addAccountLiquidity
             } else {
@@ -127,7 +159,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): AddAccountLiquidityMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.addAccountLiquidity
             } else {
@@ -163,7 +195,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): AddAccountLiquidityMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.addAccountLiquidity
             } else {
@@ -181,13 +213,11 @@ describe('Withdrawal Resolvers', (): void => {
     test('Returns an error for existing transfer', async (): Promise<void> => {
       const account = await accountFactory.build()
       const id = uuid()
-      await expect(
-        liquidityService.add({
-          id,
-          account,
-          amount: BigInt(100)
-        })
-      ).resolves.toBeUndefined()
+      await addLiquidity({
+        id,
+        account,
+        amount: BigInt(100)
+      })
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -209,7 +239,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): AddAccountLiquidityMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.addAccountLiquidity
             } else {
@@ -238,7 +268,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAsseLiquidity($input: AddAssetLiquidityInput!) {
+            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
               addAssetLiquidity(input: $input) {
                 code
                 success
@@ -255,7 +285,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): AddAssetLiquidityMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.addAssetLiquidity
             } else {
@@ -273,7 +303,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAsseLiquidity($input: AddAssetLiquidityInput!) {
+            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
               addAssetLiquidity(input: $input) {
                 code
                 success
@@ -291,7 +321,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): AddAssetLiquidityMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.addAssetLiquidity
             } else {
@@ -310,7 +340,7 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAsseLiquidity($input: AddAssetLiquidityInput!) {
+            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
               addAssetLiquidity(input: $input) {
                 code
                 success
@@ -327,7 +357,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): AddAssetLiquidityMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.addAssetLiquidity
             } else {
@@ -345,17 +375,15 @@ describe('Withdrawal Resolvers', (): void => {
     test('Returns an error for existing transfer', async (): Promise<void> => {
       const account = await accountFactory.build()
       const id = uuid()
-      await expect(
-        liquidityService.add({
-          id,
-          account,
-          amount: BigInt(100)
-        })
-      ).resolves.toBeUndefined()
+      await addLiquidity({
+        id,
+        account,
+        amount: BigInt(100)
+      })
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAsseLiquidity($input: AddAssetLiquidityInput!) {
+            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
               addAssetLiquidity(input: $input) {
                 code
                 success
@@ -373,7 +401,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): AddAssetLiquidityMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.addAssetLiquidity
             } else {
@@ -424,7 +452,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAccountLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAccountLiquidityWithdrawal
             } else {
@@ -462,7 +490,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAccountLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAccountLiquidityWithdrawal
             } else {
@@ -501,7 +529,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAccountLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAccountLiquidityWithdrawal
             } else {
@@ -519,13 +547,11 @@ describe('Withdrawal Resolvers', (): void => {
     test('Returns an error for existing transfer', async (): Promise<void> => {
       const account = await accountFactory.build()
       const id = uuid()
-      await expect(
-        liquidityService.add({
-          id,
-          account,
-          amount: BigInt(10)
-        })
-      ).resolves.toBeUndefined()
+      await addLiquidity({
+        id,
+        account,
+        amount: BigInt(10)
+      })
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -549,7 +575,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAccountLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAccountLiquidityWithdrawal
             } else {
@@ -587,7 +613,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAccountLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAccountLiquidityWithdrawal
             } else {
@@ -610,12 +636,15 @@ describe('Withdrawal Resolvers', (): void => {
     beforeEach(
       async (): Promise<void> => {
         const asset = await assetService.getOrCreate(randomAsset())
-        await expect(
-          liquidityService.add({
-            account: await asset.getLiquidityAccount(),
-            amount: startingBalance
-          })
-        )
+        await addLiquidity({
+          account: {
+            asset: {
+              unit: asset.unit,
+              account: AssetAccount.Liquidity
+            }
+          },
+          amount: startingBalance
+        })
         assetId = asset.id
       }
     )
@@ -644,7 +673,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAssetLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAssetLiquidityWithdrawal
             } else {
@@ -682,7 +711,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAssetLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAssetLiquidityWithdrawal
             } else {
@@ -721,7 +750,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAssetLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAssetLiquidityWithdrawal
             } else {
@@ -739,13 +768,11 @@ describe('Withdrawal Resolvers', (): void => {
     test('Returns an error for existing transfer', async (): Promise<void> => {
       const account = await accountFactory.build()
       const id = uuid()
-      await expect(
-        liquidityService.add({
-          id,
-          account,
-          amount: BigInt(10)
-        })
-      ).resolves.toBeUndefined()
+      await addLiquidity({
+        id,
+        account,
+        amount: BigInt(10)
+      })
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -769,7 +796,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAssetLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAssetLiquidityWithdrawal
             } else {
@@ -807,7 +834,7 @@ describe('Withdrawal Resolvers', (): void => {
           }
         })
         .then(
-          (query): CreateAssetLiquidityWithdrawalMutationResponse => {
+          (query): LiquidityMutationResponse => {
             if (query.data) {
               return query.data.createAssetLiquidityWithdrawal
             } else {
@@ -830,27 +857,28 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          const asset = await assetService.getOrCreate(randomAsset())
-          let account: Account
+          let account: AccountOptions
           if (type === 'account') {
-            account = await accountFactory.build({ asset })
+            account = await accountFactory.build()
           } else {
-            account = await asset.getLiquidityAccount()
+            account = {
+              asset: {
+                unit: randomUnit(),
+                account: AssetAccount.Liquidity
+              }
+            }
+            await accountingService.createAssetAccounts(account.asset.unit)
           }
-          await expect(
-            liquidityService.add({
-              account,
-              amount: BigInt(100)
-            })
-          ).resolves.toBeUndefined()
+          await addLiquidity({
+            account,
+            amount: BigInt(100)
+          })
           withdrawalId = uuid()
-          await expect(
-            liquidityService.createWithdrawal({
-              id: withdrawalId,
-              account,
-              amount: BigInt(10)
-            })
-          ).resolves.toBeUndefined()
+          await createLiquidityWithdrawal({
+            id: withdrawalId,
+            account,
+            amount: BigInt(10)
+          })
         }
       )
 
@@ -872,7 +900,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): FinalizeLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.finalizeLiquidityWithdrawal
               } else {
@@ -904,7 +932,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): FinalizeLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.finalizeLiquidityWithdrawal
               } else {
@@ -916,7 +944,7 @@ describe('Withdrawal Resolvers', (): void => {
         expect(response.success).toBe(false)
         expect(response.code).toEqual('404')
         expect(response.message).toEqual('Unknown withdrawal')
-        expect(response.error).toEqual(LiquidityError.UnknownWithdrawal)
+        expect(response.error).toEqual(LiquidityError.UnknownTransfer)
       })
 
       test("Can't finalize invalid withdrawal id", async (): Promise<void> => {
@@ -937,7 +965,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): FinalizeLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.finalizeLiquidityWithdrawal
               } else {
@@ -954,7 +982,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       test("Can't finalize finalized withdrawal", async (): Promise<void> => {
         await expect(
-          liquidityService.finalizeWithdrawal(withdrawalId)
+          accountingService.commitTransfer(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -973,7 +1001,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): FinalizeLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.finalizeLiquidityWithdrawal
               } else {
@@ -985,12 +1013,12 @@ describe('Withdrawal Resolvers', (): void => {
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
         expect(response.message).toEqual('Withdrawal already finalized')
-        expect(response.error).toEqual(LiquidityError.AlreadyFinalized)
+        expect(response.error).toEqual(LiquidityError.AlreadyCommitted)
       })
 
       test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
         await expect(
-          liquidityService.rollbackWithdrawal(withdrawalId)
+          accountingService.rollbackTransfer(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -1009,7 +1037,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): FinalizeLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.finalizeLiquidityWithdrawal
               } else {
@@ -1033,27 +1061,28 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          const asset = await assetService.getOrCreate(randomAsset())
-          let account: Account
+          let account: AccountOptions
           if (type === 'account') {
-            account = await accountFactory.build({ asset })
+            account = await accountFactory.build()
           } else {
-            account = await asset.getLiquidityAccount()
+            account = {
+              asset: {
+                unit: randomUnit(),
+                account: AssetAccount.Liquidity
+              }
+            }
+            await accountingService.createAssetAccounts(account.asset.unit)
           }
-          await expect(
-            liquidityService.add({
-              account,
-              amount: BigInt(100)
-            })
-          ).resolves.toBeUndefined()
+          await addLiquidity({
+            account,
+            amount: BigInt(100)
+          })
           withdrawalId = uuid()
-          await expect(
-            liquidityService.createWithdrawal({
-              id: withdrawalId,
-              account,
-              amount: BigInt(10)
-            })
-          ).resolves.toBeUndefined()
+          await createLiquidityWithdrawal({
+            id: withdrawalId,
+            account,
+            amount: BigInt(10)
+          })
         }
       )
 
@@ -1075,7 +1104,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): RollbackLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.rollbackLiquidityWithdrawal
               } else {
@@ -1107,7 +1136,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): RollbackLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.rollbackLiquidityWithdrawal
               } else {
@@ -1119,7 +1148,7 @@ describe('Withdrawal Resolvers', (): void => {
         expect(response.success).toBe(false)
         expect(response.code).toEqual('404')
         expect(response.message).toEqual('Unknown withdrawal')
-        expect(response.error).toEqual(LiquidityError.UnknownWithdrawal)
+        expect(response.error).toEqual(LiquidityError.UnknownTransfer)
       })
 
       test("Can't rollback invalid withdrawal id", async (): Promise<void> => {
@@ -1140,7 +1169,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): RollbackLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.rollbackLiquidityWithdrawal
               } else {
@@ -1157,7 +1186,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       test("Can't rollback finalized withdrawal", async (): Promise<void> => {
         await expect(
-          liquidityService.finalizeWithdrawal(withdrawalId)
+          accountingService.commitTransfer(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -1176,7 +1205,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): RollbackLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.rollbackLiquidityWithdrawal
               } else {
@@ -1188,12 +1217,12 @@ describe('Withdrawal Resolvers', (): void => {
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
         expect(response.message).toEqual('Withdrawal already finalized')
-        expect(response.error).toEqual(LiquidityError.AlreadyFinalized)
+        expect(response.error).toEqual(LiquidityError.AlreadyCommitted)
       })
 
       test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
         await expect(
-          liquidityService.rollbackWithdrawal(withdrawalId)
+          accountingService.rollbackTransfer(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -1212,7 +1241,7 @@ describe('Withdrawal Resolvers', (): void => {
             }
           })
           .then(
-            (query): RollbackLiquidityWithdrawalMutationResponse => {
+            (query): LiquidityMutationResponse => {
               if (query.data) {
                 return query.data.rollbackLiquidityWithdrawal
               } else {

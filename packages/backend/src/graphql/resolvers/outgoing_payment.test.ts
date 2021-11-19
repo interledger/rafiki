@@ -11,7 +11,6 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { AccountFactory } from '../../tests/accountFactory'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import { OutgoingPaymentService } from '../../outgoing_payment/service'
@@ -19,8 +18,7 @@ import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
 } from '../../outgoing_payment/model'
-import { AccountService } from '../../account/service'
-import { AssetOptions, AssetService } from '../../asset/service'
+import { AccountingService } from '../../accounting/service'
 import { PaymentPointerService } from '../../payment_pointer/service'
 import {
   OutgoingPayment,
@@ -34,8 +32,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let accountService: AccountService
-  let assetService: AssetService
+  let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
   let paymentPointerService: PaymentPointerService
 
@@ -52,8 +49,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
-      accountService = await deps.use('accountService')
-      assetService = await deps.use('assetService')
+      accountingService = await deps.use('accountingService')
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       paymentPointerService = await deps.use('paymentPointerService')
 
@@ -81,17 +77,12 @@ describe('OutgoingPayment Resolvers', (): void => {
   )
 
   let payment: OutgoingPaymentModel
-  let asset: AssetOptions
 
   beforeEach(
     async (): Promise<void> => {
-      asset = randomAsset()
       const { id: paymentPointerId } = await paymentPointerService.create({
-        asset
+        asset: randomAsset()
       })
-      accountService = await deps.use('accountService')
-      const accountFactory = new AccountFactory(accountService, assetService)
-      const account = await accountFactory.build({ asset })
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
         intent: {
@@ -113,7 +104,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           highExchangeRateEstimate: Pay.Ratio.from(2.3)!
         },
-        accountId: account.id,
         paymentPointerId,
         destinationAccount: {
           scale: 9,
@@ -149,9 +139,9 @@ describe('OutgoingPayment Resolvers', (): void => {
             return updatedPayment
           })
         jest
-          .spyOn(accountService, 'getTotalSent')
+          .spyOn(accountingService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
-            expect(id).toStrictEqual(payment.accountId)
+            expect(id).toStrictEqual(payment.id)
             return amountSent
           })
 
@@ -581,11 +571,12 @@ describe('OutgoingPayment Resolvers', (): void => {
     let paymentPointerId: string
     beforeAll(
       async (): Promise<void> => {
-        const accountFactory = new AccountFactory(accountService, assetService)
-        paymentPointerId = (await paymentPointerService.create({ asset })).id
+        const paymentPointer = await paymentPointerService.create({
+          asset: randomAsset()
+        })
+        paymentPointerId = paymentPointer.id
         outgoingPayments = []
         for (let i = 0; i < 50; i++) {
-          const { id: accountId } = await accountFactory.build({ asset })
           outgoingPayments.push(
             await OutgoingPaymentModel.query(knex).insertAndFetch({
               state: PaymentState.Inactive,
@@ -608,7 +599,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 highExchangeRateEstimate: Pay.Ratio.from(2.3)!
               },
-              accountId,
               paymentPointerId,
               destinationAccount: {
                 scale: 9,
@@ -670,7 +660,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
     test('No outgoingPayments, but outgoingPayments requested', async (): Promise<void> => {
       const { id: paymentPointerId } = await paymentPointerService.create({
-        asset
+        asset: randomAsset()
       })
       const query = await appContainer.apolloClient
         .query({

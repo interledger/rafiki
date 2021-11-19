@@ -63,7 +63,7 @@ describe('Token Auth Middleware', function () {
       await accounts.create(account)
 
       await createTokenAuthMiddleware()(ctx, async () => {})
-      expect(ctx.state.incomingAccount).toStrictEqual(account)
+      expect(ctx.state.incomingAccount).toMatchObject(account)
     })
   })
 })

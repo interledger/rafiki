@@ -1,6 +1,6 @@
 import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
-import { Account } from '../account/model'
+import { PaymentPointer } from '../payment_pointer/model'
 import { BaseModel } from '../shared/baseModel'
 
 const fieldPrefixes = ['intent', 'quote', 'destinationAccount', 'outcome']
@@ -42,9 +42,8 @@ export class OutgoingPayment extends BaseModel {
     // (Pay.PositiveRatio, but validated later)
     highExchangeRateEstimate: Pay.Ratio
   }
-  public accountId!: string
-  public account!: Account
   public paymentPointerId!: string
+  public paymentPointer!: PaymentPointer
   public destinationAccount!: {
     scale: number
     code: string
@@ -52,12 +51,12 @@ export class OutgoingPayment extends BaseModel {
   }
 
   static relationMappings = {
-    account: {
+    paymentPointer: {
       relation: Model.HasOneRelation,
-      modelClass: Account,
+      modelClass: PaymentPointer,
       join: {
-        from: 'outgoingPayments.accountId',
-        to: 'accounts.id'
+        from: 'outgoingPayments.paymentPointerId',
+        to: 'paymentPointers.id'
       }
     }
   }

@@ -4,7 +4,7 @@ import { Logger } from 'pino'
 import { validateId } from '../shared/utils'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
-import { AccountService } from '../account/service'
+import { AccountingService } from '../accounting/service'
 import { InvoiceService } from './service'
 import { Invoice } from './model'
 
@@ -15,7 +15,7 @@ export const MAX_EXPIRY = 24 * 60 * 60 * 1000 // milliseconds
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
-  accountService: AccountService
+  accountingService: AccountingService
   invoiceService: InvoiceService
   streamServer: StreamServer
 }
@@ -50,12 +50,9 @@ async function getInvoice(
   const invoice = await deps.invoiceService.get(invoiceId)
   if (!invoice) return ctx.throw(404)
 
-  const amountReceived = await deps.accountService.getBalance(invoice.accountId)
+  const amountReceived = await deps.accountingService.getBalance(invoice.id)
   if (amountReceived === undefined) {
-    deps.logger.error(
-      { account: invoice.accountId, invoice: invoice.id },
-      'balance not found'
-    )
+    deps.logger.error({ invoice: invoice.id }, 'balance not found')
     return ctx.throw(500)
   }
 
@@ -64,7 +61,7 @@ async function getInvoice(
   if (!acceptStream) return
 
   const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-    paymentTag: invoice.accountId,
+    paymentTag: invoice.id,
     // TODO receipt support on invoices?
     //receiptSetup:
     //  nonce && secret
@@ -74,8 +71,8 @@ async function getInvoice(
     //      }
     //    : undefined,
     asset: {
-      code: invoice.account.asset.code,
-      scale: invoice.account.asset.scale
+      code: invoice.paymentPointer.asset.code,
+      scale: invoice.paymentPointer.asset.scale
     }
   })
 
@@ -132,8 +129,8 @@ function invoiceToBody(
     id: location,
     account: `${deps.config.publicHost}/pay/${invoice.paymentPointerId}`,
     amount: invoice.amountToReceive?.toString(),
-    assetCode: invoice.account.asset.code,
-    assetScale: invoice.account.asset.scale,
+    assetCode: invoice.paymentPointer.asset.code,
+    assetScale: invoice.paymentPointer.asset.scale,
     description: invoice.description,
     expiresAt: invoice.expiresAt?.toISOString(),
     received: received.toString()

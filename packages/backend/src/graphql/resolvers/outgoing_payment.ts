@@ -38,8 +38,8 @@ export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = as
   const payment = await outgoingPaymentService.get(parent.id)
   if (!payment) throw new Error('payment does not exist')
 
-  const accountService = await ctx.container.use('accountService')
-  const totalSent = await accountService.getTotalSent(payment.accountId)
+  const accountingService = await ctx.container.use('accountingService')
+  const totalSent = await accountingService.getTotalSent(payment.id)
   if (totalSent === undefined)
     throw new Error('account total sent does not exist')
   return {

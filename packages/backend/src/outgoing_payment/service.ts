@@ -1,10 +1,13 @@
-import { TransactionOrKnex } from 'objection'
+import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import { Account } from '../account/model'
-import { AccountService } from '../account/service'
-import { BalanceType } from '../balance/service'
+import {
+  AccountingService,
+  AccountOptions,
+  AccountType,
+  AssetAccount
+} from '../accounting/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { RatesService } from '../rates/service'
 import { IlpPlugin } from './ilp_plugin'
@@ -24,14 +27,19 @@ export interface OutgoingPaymentService {
   ): Promise<OutgoingPayment[]>
 }
 
+const PLACEHOLDER_DESTINATION = {
+  code: 'TMP',
+  scale: 2
+}
+
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   slippage: number
   quoteLifespan: number // milliseconds
-  accountService: AccountService
+  accountingService: AccountingService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
-  makeIlpPlugin: (sourceAccount: Account) => IlpPlugin
+  makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
 }
 
 export async function createOutgoingPaymentService(
@@ -60,7 +68,7 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   return OutgoingPayment.query(deps.knex)
     .findById(id)
-    .withGraphJoined('account.asset')
+    .withGraphJoined('paymentPointer.asset')
 }
 
 type CreateOutgoingPaymentOptions = PaymentIntent & {
@@ -87,50 +95,62 @@ async function createOutgoingPayment(
     )
   }
 
-  const paymentPointer = await deps.paymentPointerService.get(
-    options.paymentPointerId
-  )
-  if (!paymentPointer) {
-    throw new Error('outgoing payment payment pointer does not exist')
-  }
+  try {
+    return await OutgoingPayment.transaction(deps.knex, async (trx) => {
+      const payment = await OutgoingPayment.query(trx)
+        .insertAndFetch({
+          state: PaymentState.Inactive,
+          intent: {
+            paymentPointer: options.paymentPointer,
+            invoiceUrl: options.invoiceUrl,
+            amountToSend: options.amountToSend,
+            autoApprove: options.autoApprove
+          },
+          paymentPointerId: options.paymentPointerId,
+          destinationAccount: PLACEHOLDER_DESTINATION
+        })
+        .withGraphFetched('paymentPointer.asset')
 
-  const sentAccount = await paymentPointer.asset.getSentAccount()
-  const plugin = deps.makeIlpPlugin(sentAccount)
-  await plugin.connect()
-  const destination = await Pay.setupPayment({
-    plugin,
-    paymentPointer: options.paymentPointer,
-    invoiceUrl: options.invoiceUrl
-  }).finally(() => {
-    plugin.disconnect().catch((err) => {
-      deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
-    })
-  })
-
-  const account = await deps.accountService.create({
-    assetId: paymentPointer.assetId,
-    balanceType: BalanceType.Credit,
-    sentBalance: true
-  })
-
-  return await OutgoingPayment.query(deps.knex)
-    .insertAndFetch({
-      state: PaymentState.Inactive,
-      intent: {
+      const plugin = deps.makeIlpPlugin({
+        asset: {
+          ...payment.paymentPointer.asset,
+          account: AssetAccount.Sent
+        }
+      })
+      await plugin.connect()
+      const destination = await Pay.setupPayment({
+        plugin,
         paymentPointer: options.paymentPointer,
-        invoiceUrl: options.invoiceUrl,
-        amountToSend: options.amountToSend,
-        autoApprove: options.autoApprove
-      },
-      accountId: account.id,
-      paymentPointerId: options.paymentPointerId,
-      destinationAccount: {
-        scale: destination.destinationAsset.scale,
-        code: destination.destinationAsset.code,
-        url: destination.accountUrl
-      }
+        invoiceUrl: options.invoiceUrl
+      }).finally(() => {
+        plugin.disconnect().catch((err) => {
+          deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
+        })
+      })
+
+      await payment.$query(trx).patch({
+        destinationAccount: {
+          scale: destination.destinationAsset.scale,
+          code: destination.destinationAsset.code,
+          url: destination.accountUrl
+        }
+      })
+
+      await deps.accountingService.createAccount({
+        id: payment.id,
+        asset: payment.paymentPointer.asset,
+        type: AccountType.Credit,
+        sentBalance: true
+      })
+
+      return payment
     })
-    .withGraphFetched('account.asset')
+  } catch (err) {
+    if (err instanceof ForeignKeyViolationError) {
+      throw new Error('outgoing payment payment pointer does not exist')
+    }
+    throw err
+  }
 }
 
 function requotePayment(

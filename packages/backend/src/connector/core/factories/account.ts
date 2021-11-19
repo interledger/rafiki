@@ -9,8 +9,7 @@ export const AccountFactory = Factory.define<MockIlpAccount>(
   'AccountFactory'
 ).attrs({
   id: Faker.datatype.uuid,
-  disabled: false,
-  asset: { code: assetCode, scale: assetScale },
+  asset: { code: assetCode, scale: assetScale, unit: Faker.datatype.number() },
   stream: {
     enabled: true
   },
@@ -38,4 +37,13 @@ export const PeerAccountFactory = Factory.define<MockIlpAccount>(
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`
+  })
+
+export const InvoiceAccountFactory = Factory.define<MockIlpAccount>(
+  'InvoiceAccountFactory'
+)
+  .extend(AccountFactory)
+  .attrs({
+    active: true,
+    receiveLimit: BigInt(Faker.datatype.number())
   })

@@ -1,46 +1,41 @@
-import { v4 as uuid } from 'uuid'
-
-import { Account, AccountService, CreateOptions } from '../account/service'
-import { AssetOptions, AssetService } from '../asset/service'
-import { BalanceType } from '../balance/service'
-import { TransferService } from '../transfer/service'
-import { randomAsset } from './asset'
+import {
+  AccountingService,
+  Account,
+  AccountType,
+  AssetAccount,
+  CreateOptions
+} from '../accounting/service'
+import { randomUnit } from './asset'
 
 type BuildOptions = Partial<CreateOptions> & {
-  asset?: AssetOptions
   balance?: bigint
 }
 
 export class AccountFactory {
-  public constructor(
-    private accounts: AccountService,
-    private assets: AssetService,
-    private transfers?: TransferService
-  ) {}
+  public constructor(private accounts: AccountingService) {}
 
   public async build(options: BuildOptions = {}): Promise<Account> {
+    const unit = options.asset?.unit || randomUnit()
+    await this.accounts.createAssetAccounts(unit)
     const accountOptions: CreateOptions = {
-      disabled: options.disabled || false,
-      assetId: (await this.assets.getOrCreate(options.asset || randomAsset()))
-        .id,
-      balanceType: options.balanceType || BalanceType.Credit,
-      sentBalance: options.sentBalance
+      asset: { unit },
+      type: options.type || AccountType.Credit,
+      sentBalance: options.sentBalance,
+      receiveLimit: options.receiveLimit
     }
-    const account = await this.accounts.create(accountOptions)
+    const account = await this.accounts.createAccount(accountOptions)
 
     if (options.balance) {
-      if (!this.transfers) {
-        throw new Error('initial balance requires TransferService')
-      }
-      const settlementAccount = await account.asset.getSettlementAccount()
-      await this.transfers.create([
-        {
-          id: uuid(),
-          sourceBalanceId: settlementAccount.balanceId,
-          destinationBalanceId: account.balanceId,
-          amount: options.balance
-        }
-      ])
+      await this.accounts.createTransfer({
+        sourceAccount: {
+          asset: {
+            unit,
+            account: AssetAccount.Settlement
+          }
+        },
+        destinationAccount: account,
+        amount: options.balance
+      })
     }
 
     return account

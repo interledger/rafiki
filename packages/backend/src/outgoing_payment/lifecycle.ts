@@ -61,7 +61,7 @@ export async function handleQuoting(
   // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
   let amountToSend: bigint | undefined
   if (payment.intent.amountToSend) {
-    const amountSent = await deps.accountService.getTotalSent(payment.accountId)
+    const amountSent = await deps.accountingService.getTotalSent(payment.id)
     if (amountSent === undefined) {
       throw LifecycleError.MissingBalance
     }
@@ -86,8 +86,8 @@ export async function handleQuoting(
     plugin,
     destination,
     sourceAsset: {
-      scale: payment.account.asset.scale,
-      code: payment.account.asset.code
+      scale: payment.paymentPointer.asset.scale,
+      code: payment.paymentPointer.asset.code
     },
     amountToSend,
     slippage: deps.slippage,
@@ -168,7 +168,7 @@ export async function handleFunding(
     throw LifecycleError.QuoteExpired
   }
 
-  const balance = await deps.accountService.getBalance(payment.accountId)
+  const balance = await deps.accountingService.getBalance(payment.id)
   if (balance === undefined) {
     throw LifecycleError.MissingBalance
   }
@@ -209,7 +209,7 @@ export async function handleSending(
     throw Pay.PaymentError.DestinationAssetConflict
   }
 
-  const balance = await deps.accountService.getBalance(payment.accountId)
+  const balance = await deps.accountingService.getBalance(payment.id)
   if (balance === undefined) {
     throw LifecycleError.MissingBalance
   }
@@ -347,7 +347,7 @@ export async function handleLiquidityWithdrawal(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  const balance = await deps.accountService.getBalance(payment.accountId)
+  const balance = await deps.accountingService.getBalance(payment.id)
   if (balance === undefined) {
     throw LifecycleError.MissingBalance
   }

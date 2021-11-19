@@ -26,9 +26,6 @@ exports.up = function (knex) {
     table.bigInteger('quoteHighExchangeRateEstimateNumerator').nullable()
     table.bigInteger('quoteHighExchangeRateEstimateDenominator').nullable()
 
-    table.uuid('accountId').notNullable()
-    table.foreign('accountId').references('accounts.id')
-
     // Wallet account from which to request funds for payment
     table.uuid('paymentPointerId').notNullable()
     table.foreign('paymentPointerId').references('paymentPointers.id')

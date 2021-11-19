@@ -21,29 +21,25 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
     return new MockAccountsService()
   })
   .attr('logger', TestLoggerFactory.build())
-  .attr('peers', ['accounts'], (accounts: MockAccountsService) => ({
-    getByDestinationAddress: async (address: string) => {
-      const account = await accounts._getByDestinationAddress(address)
+  .attr('invoices', ['accounts'], (accounts: MockAccountsService) => ({
+    get: async (id: string) => {
+      const account = await accounts._get(id)
       if (account) {
         return {
-          account,
-          http: account.http,
-          maxPacketAmount: account.maxPacketAmount,
-          staticIlpAddress: account.staticIlpAddress
-        }
-      }
-    },
-    getByIncomingToken: async (token: string) => {
-      const account = await accounts._getByIncomingToken(token)
-      if (account) {
-        return {
-          account,
-          http: account.http,
-          maxPacketAmount: account.maxPacketAmount,
-          staticIlpAddress: account.staticIlpAddress
+          ...account,
+          paymentPointer: {
+            asset: account.asset
+          },
+          amountToReceive: account.receiveLimit
         }
       }
     }
+  }))
+  .attr('peers', ['accounts'], (accounts: MockAccountsService) => ({
+    getByDestinationAddress: async (address: string) =>
+      await accounts._getByDestinationAddress(address),
+    getByIncomingToken: async (token: string) =>
+      await accounts._getByIncomingToken(token)
   }))
   .attr('rates', {
     convert: async (opts) => opts.sourceAmount,

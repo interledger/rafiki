@@ -18,6 +18,8 @@ import { Pagination } from '../shared/pagination'
 import { randomAsset } from '../tests/asset'
 import { PeerFactory } from '../tests/peerFactory'
 import { truncateTables } from '../tests/tableManager'
+import { Asset } from '../asset/model'
+import { AccountType } from '../accounting/service'
 
 describe('Peer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -93,12 +95,9 @@ describe('Peer Service', (): void => {
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
       expect(peer).toMatchObject({
-        account: {
-          asset: {
-            code: options.asset.code,
-            scale: options.asset.scale
-          },
-          disabled: false
+        asset: {
+          code: options.asset.code,
+          scale: options.asset.scale
         },
         http: {
           outgoing: options.http.outgoing
@@ -114,12 +113,9 @@ describe('Peer Service', (): void => {
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
       expect(peer).toMatchObject({
-        account: {
-          asset: {
-            code: options.asset.code,
-            scale: options.asset.scale
-          },
-          disabled: false
+        asset: {
+          code: options.asset.code,
+          scale: options.asset.scale
         },
         http: {
           outgoing: options.http.outgoing
@@ -133,12 +129,18 @@ describe('Peer Service', (): void => {
     })
 
     test('Creating a peer creates a peer account', async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
+      const accountingService = await deps.use('accountingService')
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
-      const peerAccount = await accountService.get(peer.accountId)
-
-      expect(peerAccount).toEqual(peer.account)
+      const assetService = await deps.use('assetService')
+      await expect(accountingService.getAccount(peer.id)).resolves.toEqual({
+        id: peer.id,
+        asset: {
+          unit: ((await assetService.get(options.asset)) as Asset).unit
+        },
+        balance: BigInt(0),
+        type: AccountType.Credit
+      })
     })
 
     test('Auto-creates corresponding asset', async (): Promise<void> => {
@@ -153,7 +155,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Cannot fetch a bogus peer', async (): Promise<void> => {
-      expect(peerService.get(uuid())).resolves.toBeUndefined()
+      await expect(peerService.get(uuid())).resolves.toBeUndefined()
     })
 
     test('Cannot create a peer with duplicate incoming tokens', async (): Promise<void> => {
@@ -213,10 +215,7 @@ describe('Peer Service', (): void => {
       assert.ok(updateOptions.http)
       delete updateOptions.http.incoming
       const expectedPeer = {
-        account: {
-          id: peer.account.id,
-          asset: peer.account.asset
-        },
+        asset: peer.asset,
         http: {
           outgoing: updateOptions.http.outgoing
         },

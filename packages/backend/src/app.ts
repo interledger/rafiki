@@ -20,14 +20,10 @@ import {
 } from 'graphql-tools'
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
-import { BalanceService } from './balance/service'
-import { TransferService } from './transfer/service'
 import { AssetService } from './asset/service'
-import { Account } from './account/model'
-import { AccountService } from './account/service'
+import { AccountOptions, AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
 import { PaymentPointerService } from './payment_pointer/service'
-import { LiquidityService } from './liquidity/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { InvoiceRoutes } from './invoice/routes'
@@ -61,13 +57,10 @@ export interface AppServices {
   config: Promise<IAppConfig>
   workerUtils: Promise<WorkerUtils>
   httpTokenService: Promise<HttpTokenService>
-  balanceService: Promise<BalanceService>
-  transferService: Promise<TransferService>
   assetService: Promise<AssetService>
-  accountService: Promise<AccountService>
+  accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
   paymentPointer: Promise<PaymentPointerService>
-  liquidityService: Promise<LiquidityService>
   spspRoutes: Promise<SPSPRoutes>
   invoiceRoutes: Promise<InvoiceRoutes>
   accountRoutes: Promise<AccountRoutes>
@@ -75,7 +68,7 @@ export interface AppServices {
   streamServer: Promise<StreamServer>
   wmService: Promise<WebMonetizationService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
-  makeIlpPlugin: Promise<(sourceAccount: Account) => IlpPlugin>
+  makeIlpPlugin: Promise<(sourceAccount: AccountOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
 }
 

@@ -55,34 +55,32 @@ type Mutation {
   "Add account liquidity"
   addAccountLiquidity(
     input: AddAccountLiquidityInput!
-  ): AddAccountLiquidityMutationResponse
+  ): LiquidityMutationResponse
 
   "Add asset liquidity"
-  addAssetLiquidity(
-    input: AddAssetLiquidityInput!
-  ): AddAssetLiquidityMutationResponse
+  addAssetLiquidity(input: AddAssetLiquidityInput!): LiquidityMutationResponse
 
   "Create liquidity withdrawal from account"
   createAccountLiquidityWithdrawal(
     input: CreateAccountLiquidityWithdrawalInput!
-  ): CreateAccountLiquidityWithdrawalMutationResponse
+  ): LiquidityMutationResponse
 
   "Create liquidity withdrawal from asset"
   createAssetLiquidityWithdrawal(
     input: CreateAssetLiquidityWithdrawalInput!
-  ): CreateAssetLiquidityWithdrawalMutationResponse
+  ): LiquidityMutationResponse
 
   "Finalize liquidity withdrawal"
   finalizeLiquidityWithdrawal(
     "The id of the liquidity withdrawal to finalize."
     withdrawalId: String!
-  ): FinalizeLiquidityWithdrawalMutationResponse
+  ): LiquidityMutationResponse
 
   "Rollback liquidity withdrawal"
   rollbackLiquidityWithdrawal(
     "The id of the liquidity withdrawal to rollback."
     withdrawalId: String!
-  ): RollbackLiquidityWithdrawalMutationResponse
+  ): LiquidityMutationResponse
 }
 
 type PageInfo {
@@ -181,14 +179,14 @@ type Asset {
 }
 
 enum LiquidityError {
-  AlreadyFinalized
+  AlreadyCommitted
   AlreadyRolledBack
   InsufficientBalance
   InvalidId
   TransferExists
   UnknownAccount
   UnknownAsset
-  UnknownWithdrawal
+  UnknownTransfer
 }
 
 type Peer {
@@ -376,42 +374,7 @@ type TransferMutationResponse implements MutationResponse {
   message: String!
 }
 
-type AddAccountLiquidityMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: LiquidityError
-}
-
-type AddAssetLiquidityMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: LiquidityError
-}
-
-type CreateAccountLiquidityWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: LiquidityError
-}
-
-type CreateAssetLiquidityWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: LiquidityError
-}
-
-type FinalizeLiquidityWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: LiquidityError
-}
-
-type RollbackLiquidityWithdrawalMutationResponse implements MutationResponse {
+type LiquidityMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!

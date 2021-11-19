@@ -1,5 +1,5 @@
 import { Model, Pojo } from 'objection'
-import { Account } from '../account/model'
+import { Asset } from '../asset/model'
 import { HttpToken } from '../httpToken/model'
 import { BaseModel } from '../shared/baseModel'
 
@@ -9,12 +9,12 @@ export class Peer extends BaseModel {
   }
 
   static relationMappings = {
-    account: {
+    asset: {
       relation: Model.HasOneRelation,
-      modelClass: Account,
+      modelClass: Asset,
       join: {
-        from: 'peers.accountId',
-        to: 'accounts.id'
+        from: 'peers.assetId',
+        to: 'assets.id'
       }
     },
     incomingTokens: {
@@ -27,8 +27,8 @@ export class Peer extends BaseModel {
     }
   }
 
-  public accountId!: string
-  public account!: Account
+  public assetId!: string
+  public asset!: Asset
 
   public http!: {
     outgoing: {

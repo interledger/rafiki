@@ -1,8 +1,9 @@
 exports.up = function (knex) {
   return knex.schema.createTable('peers', function (table) {
     table.uuid('id').notNullable().primary()
-    table.uuid('accountId').notNullable().index()
-    table.foreign('accountId').references('accounts.id')
+
+    table.uuid('assetId').notNullable()
+    table.foreign('assetId').references('assets.id')
 
     table.bigInteger('maxPacketAmount').nullable()
 
