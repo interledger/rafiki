@@ -14,24 +14,22 @@ import { truncateTable, truncateTables } from '../tests/tableManager'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { LifecycleError } from './lifecycle'
 import { RETRY_BACKOFF_SECONDS } from './worker'
-import { isAccountTransferError } from '../tigerbeetle/account/errors'
+import { isTransferError } from '../accounting/errors'
 import {
-  AccountService as TigerbeetleAccountService,
+  AssetAccount,
+  AccountingService,
   AccountTransferOptions
-} from '../tigerbeetle/account/service'
+} from '../accounting/service'
 import { AssetOptions } from '../asset/service'
-import { AssetAccount } from '../tigerbeetle/account/service'
 import { Invoice } from '../invoice/model'
 import { RatesService } from '../rates/service'
-import { LiquidityService } from '../liquidity/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let outgoingPaymentService: OutgoingPaymentService
   let ratesService: RatesService
-  let tbAccountService: TigerbeetleAccountService
-  let liquidityService: LiquidityService
+  let accountingService: AccountingService
   let knex: Knex
   let paymentPointerId: string
   let asset: AssetOptions
@@ -86,8 +84,14 @@ describe('OutgoingPaymentService', (): void => {
     if (!payment) throw 'no payment'
     if (!payment.quote) throw 'no quote'
     await expect(
-      liquidityService.add({
-        account: {
+      accountingService.createTransfer({
+        sourceAccount: {
+          asset: {
+            unit: payment.paymentPointer.asset.unit,
+            account: AssetAccount.Settlement
+          }
+        },
+        destinationAccount: {
           id: payment.id,
           asset: payment.paymentPointer.asset
         },
@@ -97,7 +101,7 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   async function payInvoice(amount: bigint): Promise<void> {
-    const trxOrError = await tbAccountService.transferFunds({
+    const trxOrError = await accountingService.transferFunds({
       sourceAccount: {
         asset: {
           unit: invoice.paymentPointer.asset.unit,
@@ -111,39 +115,40 @@ describe('OutgoingPaymentService', (): void => {
       sourceAmount: amount,
       timeout: BigInt(10e9) // 10 seconds
     })
-    assert.ok(!isAccountTransferError(trxOrError))
+    assert.ok(!isTransferError(trxOrError))
     await expect(trxOrError.commit()).resolves.toBeUndefined()
   }
 
   async function withdraw(paymentId: string): Promise<void> {
     const payment = await outgoingPaymentService.get(paymentId)
     if (!payment) throw 'no payment'
-    const balance = await tbAccountService.getBalance(payment.id)
+    const balance = await accountingService.getBalance(payment.id)
     if (balance === undefined) throw 'no balance'
-    const withdrawalId = uuid()
     await expect(
-      liquidityService.createWithdrawal({
-        id: withdrawalId,
-        account: {
+      accountingService.createTransfer({
+        sourceAccount: {
           id: payment.id,
           asset: payment.paymentPointer.asset
+        },
+        destinationAccount: {
+          asset: {
+            unit: payment.paymentPointer.asset.unit,
+            account: AssetAccount.Settlement
+          }
         },
         amount: balance
       })
     ).resolves.toBeUndefined()
-    await expect(
-      liquidityService.finalizeWithdrawal(withdrawalId)
-    ).resolves.toBeUndefined()
   }
 
   function trackAmountDelivered(sourceAccountId: string): void {
-    const { transferFunds } = tbAccountService
+    const { transferFunds } = accountingService
     jest
-      .spyOn(tbAccountService, 'transferFunds')
+      .spyOn(accountingService, 'transferFunds')
       .mockImplementation(async (options: AccountTransferOptions) => {
         const trxOrError = await transferFunds(options)
         if (
-          !isAccountTransferError(trxOrError) &&
+          !isTransferError(trxOrError) &&
           options.sourceAccount.id === sourceAccountId
         ) {
           amtDelivered += options.destinationAmount || options.sourceAmount
@@ -167,7 +172,7 @@ describe('OutgoingPaymentService', (): void => {
     }
   ) {
     if (amountSent !== undefined) {
-      await expect(tbAccountService.getTotalSent(payment.id)).resolves.toBe(
+      await expect(accountingService.getTotalSent(payment.id)).resolves.toBe(
         amountSent
       )
     }
@@ -175,12 +180,12 @@ describe('OutgoingPaymentService', (): void => {
       expect(amtDelivered).toEqual(amountDelivered)
     }
     if (accountBalance !== undefined) {
-      await expect(tbAccountService.getBalance(payment.id)).resolves.toEqual(
+      await expect(accountingService.getBalance(payment.id)).resolves.toEqual(
         accountBalance
       )
     }
     if (invoiceReceived !== undefined) {
-      await expect(tbAccountService.getBalance(invoice.id)).resolves.toEqual(
+      await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
         invoiceReceived
       )
     }
@@ -198,7 +203,7 @@ describe('OutgoingPaymentService', (): void => {
         .persist()
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
-      tbAccountService = await deps.use('tigerbeetleAccountService')
+      accountingService = await deps.use('accountingService')
       ratesService = await deps.use('ratesService')
 
       asset = {
@@ -214,7 +219,6 @@ describe('OutgoingPaymentService', (): void => {
   beforeEach(
     async (): Promise<void> => {
       outgoingPaymentService = await deps.use('outgoingPaymentService')
-      liquidityService = await deps.use('liquidityService')
       const paymentPointerService = await deps.use('paymentPointerService')
       paymentPointerId = (await paymentPointerService.create({ asset })).id
       const destinationAsset = {
@@ -228,8 +232,14 @@ describe('OutgoingPaymentService', (): void => {
       // Pay's rate probe will timeout due to backoffs after
       // receiving T04_INSUFFICIENT_LIQUIDITY replies.
       await expect(
-        liquidityService.add({
-          account: {
+        accountingService.createTransfer({
+          sourceAccount: {
+            asset: {
+              unit: destinationPaymentPointer.asset.unit,
+              account: AssetAccount.Settlement
+            }
+          },
+          destinationAccount: {
             asset: {
               unit: destinationPaymentPointer.asset.unit,
               account: AssetAccount.Liquidity
@@ -468,7 +478,7 @@ describe('OutgoingPaymentService', (): void => {
           autoApprove: false
         })
         jest
-          .spyOn(tbAccountService, 'getTotalSent')
+          .spyOn(accountingService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
             expect(id).toStrictEqual(payment.id)
             return BigInt(89)
@@ -486,7 +496,7 @@ describe('OutgoingPaymentService', (): void => {
           autoApprove: false
         })
         jest
-          .spyOn(tbAccountService, 'getTotalSent')
+          .spyOn(accountingService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
             expect(id).toStrictEqual(payment.id)
             return BigInt(123)

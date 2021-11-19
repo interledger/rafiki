@@ -3,11 +3,11 @@ import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import {
+  AccountingService,
   AccountOptions,
-  AccountService as TigerbeetleAccountService,
   AccountType,
   AssetAccount
-} from '../tigerbeetle/account/service'
+} from '../accounting/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { RatesService } from '../rates/service'
 import { IlpPlugin } from './ilp_plugin'
@@ -36,7 +36,7 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   slippage: number
   quoteLifespan: number // milliseconds
-  tbAccountService: TigerbeetleAccountService
+  accountingService: AccountingService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
   makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
@@ -136,7 +136,7 @@ async function createOutgoingPayment(
         }
       })
 
-      await deps.tbAccountService.create({
+      await deps.accountingService.createAccount({
         id: payment.id,
         asset: payment.paymentPointer.asset,
         type: AccountType.Credit,

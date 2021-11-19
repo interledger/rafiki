@@ -1,13 +1,10 @@
-import { v4 as uuid } from 'uuid'
-
 import {
+  AccountingService,
   Account,
-  AccountService,
   AccountType,
   AssetAccount,
   CreateOptions
-} from '../tigerbeetle/account/service'
-import { TransferService } from '../tigerbeetle/transfer/service'
+} from '../accounting/service'
 import { randomUnit } from './asset'
 
 type BuildOptions = Partial<CreateOptions> & {
@@ -15,10 +12,7 @@ type BuildOptions = Partial<CreateOptions> & {
 }
 
 export class AccountFactory {
-  public constructor(
-    private accounts: AccountService,
-    private transfers?: TransferService
-  ) {}
+  public constructor(private accounts: AccountingService) {}
 
   public async build(options: BuildOptions = {}): Promise<Account> {
     const unit = options.asset?.unit || randomUnit()
@@ -29,25 +23,19 @@ export class AccountFactory {
       sentBalance: options.sentBalance,
       receiveLimit: options.receiveLimit
     }
-    const account = await this.accounts.create(accountOptions)
+    const account = await this.accounts.createAccount(accountOptions)
 
     if (options.balance) {
-      if (!this.transfers) {
-        throw new Error('initial balance requires TransferService')
-      }
-      await this.transfers.create([
-        {
-          id: uuid(),
-          sourceAccount: {
-            asset: {
-              unit,
-              account: AssetAccount.Settlement
-            }
-          },
-          destinationAccount: account,
-          amount: options.balance
-        }
-      ])
+      await this.accounts.createTransfer({
+        sourceAccount: {
+          asset: {
+            unit,
+            account: AssetAccount.Settlement
+          }
+        },
+        destinationAccount: account,
+        amount: options.balance
+      })
     }
 
     return account

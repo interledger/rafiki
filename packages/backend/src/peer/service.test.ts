@@ -19,7 +19,7 @@ import { randomAsset } from '../tests/asset'
 import { PeerFactory } from '../tests/peerFactory'
 import { truncateTables } from '../tests/tableManager'
 import { Asset } from '../asset/model'
-import { AccountType } from '../tigerbeetle/account/service'
+import { AccountType } from '../accounting/service'
 
 describe('Peer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -129,11 +129,11 @@ describe('Peer Service', (): void => {
     })
 
     test('Creating a peer creates a peer account', async (): Promise<void> => {
-      const tbAccountService = await deps.use('tigerbeetleAccountService')
+      const accountingService = await deps.use('accountingService')
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
       const assetService = await deps.use('assetService')
-      await expect(tbAccountService.get(peer.id)).resolves.toEqual({
+      await expect(accountingService.getAccount(peer.id)).resolves.toEqual({
         id: peer.id,
         asset: {
           unit: ((await assetService.get(options.asset)) as Asset).unit

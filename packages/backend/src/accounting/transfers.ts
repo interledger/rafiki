@@ -1,5 +1,4 @@
 import {
-  Client,
   Commit,
   CommitFlags,
   CommitTransferError as CommitTransferErrorCode,
@@ -8,66 +7,33 @@ import {
   TransferFlags
 } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
+
 import {
   CommitTransferError,
   CreateTransferError,
-  TransfersError,
   TransferError
 } from './errors'
-import { AccountOptions, getAccountId } from '../account/service'
-import { BaseService } from '../../shared/baseService'
-import { uuidToBigInt } from '../../shared/utils'
+import { ServiceDependencies } from './service'
+import { AccountIdOptions, getAccountId, uuidToBigInt } from './utils'
 
 const TRANSFER_RESERVED = Buffer.alloc(32)
 
-type Options = {
+type TransfersError = {
+  index: number
+  error: TransferError
+}
+
+export interface CreateTransferOptions {
   id?: string
-  sourceAccount: AccountOptions
-  destinationAccount: AccountOptions
+  sourceAccount: AccountIdOptions
+  destinationAccount: AccountIdOptions
   amount: bigint
-}
-
-export type AutoCommitTransfer = Options & {
-  timeout?: never
-}
-
-export type TwoPhaseTransfer = Required<Options> & {
   timeout?: bigint // nano-seconds
 }
 
-export type Transfer = AutoCommitTransfer | TwoPhaseTransfer
-
-export interface TransferService {
-  create(transfers: Transfer[]): Promise<void | TransfersError>
-  commit(ids: string[]): Promise<void | TransfersError>
-  rollback(ids: string[]): Promise<void | TransfersError>
-}
-
-interface ServiceDependencies extends BaseService {
-  tigerbeetle: Client
-}
-
-export async function createTransferService({
-  logger,
-  tigerbeetle
-}: ServiceDependencies): Promise<TransferService> {
-  const log = logger.child({
-    service: 'TransferService'
-  })
-  const deps: ServiceDependencies = {
-    logger: log,
-    tigerbeetle
-  }
-  return {
-    create: (transfers) => createTransfers(deps, transfers),
-    commit: (ids) => commitTransfers(deps, ids),
-    rollback: (ids) => rollbackTransfers(deps, ids)
-  }
-}
-
-async function createTransfers(
+export async function createTransfers(
   deps: ServiceDependencies,
-  transfers: Transfer[]
+  transfers: CreateTransferOptions[]
 ): Promise<void | TransfersError> {
   const tbTransfers: TbTransfer[] = []
   for (let i = 0; i < transfers.length; i++) {
@@ -113,7 +79,7 @@ async function createTransfers(
       case CreateTransferErrorCode.exists_and_already_committed_and_rejected:
         return { index, error: TransferError.TransferExists }
       case CreateTransferErrorCode.accounts_are_the_same:
-        return { index, error: TransferError.SameBalances }
+        return { index, error: TransferError.SameAccounts }
       case CreateTransferErrorCode.debit_account_not_found:
         return { index, error: TransferError.UnknownSourceBalance }
       case CreateTransferErrorCode.credit_account_not_found:
@@ -130,7 +96,7 @@ async function createTransfers(
   }
 }
 
-async function commitTransfers(
+export async function commitTransfers(
   deps: ServiceDependencies,
   transferIds: string[]
 ): Promise<void | TransfersError> {
@@ -148,7 +114,7 @@ async function commitTransfers(
   })
 }
 
-async function rollbackTransfers(
+export async function rollbackTransfers(
   deps: ServiceDependencies,
   transferIds: string[]
 ): Promise<void | TransfersError> {

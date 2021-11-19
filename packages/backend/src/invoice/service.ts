@@ -1,8 +1,5 @@
 import { Invoice } from './model'
-import {
-  AccountService as TigerbeetleAccountService,
-  AccountType
-} from '../tigerbeetle/account/service'
+import { AccountingService, AccountType } from '../accounting/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/pagination'
@@ -29,7 +26,7 @@ export interface InvoiceService {
 
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
-  tbAccountService: TigerbeetleAccountService
+  accountingService: AccountingService
   paymentPointerService: PaymentPointerService
 }
 
@@ -79,7 +76,7 @@ async function createInvoice(
       })
       .withGraphFetched('paymentPointer.asset')
 
-    await deps.tbAccountService.create({
+    await deps.accountingService.createAccount({
       id: invoice.id,
       asset: invoice.paymentPointer.asset,
       type: AccountType.Credit,
@@ -123,7 +120,7 @@ async function deactivateNextInvoice(
     const invoice = invoices[0]
     if (!invoice) return
 
-    const balance = await deps.tbAccountService.getBalance(invoice.id)
+    const balance = await deps.accountingService.getBalance(invoice.id)
     if (balance) {
       deps.logger.trace({ invoice: invoice.id }, 'deactivating expired invoice')
       await invoice.$query(trx).patch({ active: false })

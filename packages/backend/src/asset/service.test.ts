@@ -3,7 +3,7 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { AssetService } from './service'
-import { AssetAccount } from '../tigerbeetle/account/service'
+import { AssetAccount } from '../accounting/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { randomAsset } from '../tests/asset'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -74,13 +74,13 @@ describe('Asset Service', (): void => {
     })
 
     test('Asset accounts are created', async (): Promise<void> => {
-      const tbAccountService = await deps.use('tigerbeetleAccountService')
+      const accountingService = await deps.use('accountingService')
       const unit = 1
 
       for (const account in AssetAccount) {
         if (typeof account === 'number') {
           await expect(
-            tbAccountService.getAssetAccountBalance(unit, account)
+            accountingService.getAssetAccountBalance(unit, account)
           ).resolves.toBeUndefined()
         }
       }
@@ -91,7 +91,7 @@ describe('Asset Service', (): void => {
       for (const account in AssetAccount) {
         if (typeof account === 'number') {
           await expect(
-            tbAccountService.getAssetAccountBalance(asset.unit, account)
+            accountingService.getAssetAccountBalance(asset.unit, account)
           ).resolves.toEqual(BigInt(0))
         }
       }

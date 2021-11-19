@@ -1,6 +1,7 @@
 import { Errors } from 'ilp-packet'
 import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
 import { AuthState } from './auth'
+import { Balance } from '../../../accounting/service'
 import { validateId } from '../../../shared/utils'
 
 const UUID_LENGTH = 36
@@ -26,7 +27,10 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           return {
             id: invoice.id,
             asset: invoice.paymentPointer.asset,
-            receiveLimit: invoice.amountToReceive,
+            withBalance:
+              invoice.amountToReceive != null
+                ? Balance.ReceiveLimit
+                : undefined,
             stream: {
               enabled: true
             }

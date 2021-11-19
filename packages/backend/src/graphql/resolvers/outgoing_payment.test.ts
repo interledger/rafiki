@@ -18,7 +18,7 @@ import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
 } from '../../outgoing_payment/model'
-import { AccountService as TigerbeetleAccountService } from '../../tigerbeetle/account/service'
+import { AccountingService } from '../../accounting/service'
 import { PaymentPointerService } from '../../payment_pointer/service'
 import {
   OutgoingPayment,
@@ -32,7 +32,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let tbAccountService: TigerbeetleAccountService
+  let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
   let paymentPointerService: PaymentPointerService
 
@@ -49,7 +49,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
-      tbAccountService = await deps.use('tigerbeetleAccountService')
+      accountingService = await deps.use('accountingService')
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       paymentPointerService = await deps.use('paymentPointerService')
 
@@ -83,7 +83,6 @@ describe('OutgoingPayment Resolvers', (): void => {
       const { id: paymentPointerId } = await paymentPointerService.create({
         asset: randomAsset()
       })
-      tbAccountService = await deps.use('tigerbeetleAccountService')
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
         state: PaymentState.Inactive,
         intent: {
@@ -140,7 +139,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             return updatedPayment
           })
         jest
-          .spyOn(tbAccountService, 'getTotalSent')
+          .spyOn(accountingService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
             expect(id).toStrictEqual(payment.id)
             return amountSent

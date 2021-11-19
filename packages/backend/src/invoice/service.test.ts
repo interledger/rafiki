@@ -2,8 +2,7 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { isAccountTransferError } from '../tigerbeetle/account/errors'
-import { AccountService as TigerbeetleAccountService } from '../tigerbeetle/account/service'
+import { AccountingService } from '../accounting/service'
 import { InvoiceService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Invoice } from './model'
@@ -25,7 +24,7 @@ describe('Invoice Service', (): void => {
   let knex: Knex
   let paymentPointerId: string
   let accountFactory: AccountFactory
-  let tbAccountService: TigerbeetleAccountService
+  let accountingService: AccountingService
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -39,11 +38,8 @@ describe('Invoice Service', (): void => {
       workerUtils = await makeWorkerUtils({
         connectionString: appContainer.connectionUrl
       })
-      tbAccountService = await deps.use('tigerbeetleAccountService')
-      accountFactory = new AccountFactory(
-        tbAccountService,
-        await deps.use('transferService')
-      )
+      accountingService = await deps.use('accountingService')
+      accountFactory = new AccountFactory(accountingService)
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
@@ -95,11 +91,11 @@ describe('Invoice Service', (): void => {
         paymentPointerId,
         description: 'Invoice'
       })
-      const invoiceAccount = await tbAccountService.get(invoice.id)
+      const invoiceAccount = await accountingService.getAccount(invoice.id)
 
       expect(invoiceAccount?.id).toEqual(invoice.id)
       await expect(
-        tbAccountService.getReceiveLimit(invoice.id)
+        accountingService.getReceiveLimit(invoice.id)
       ).resolves.toBeUndefined()
     })
 
@@ -110,7 +106,7 @@ describe('Invoice Service', (): void => {
         amountToReceive: BigInt(123)
       })
       await expect(
-        tbAccountService.getReceiveLimit(invoice.id)
+        accountingService.getReceiveLimit(invoice.id)
       ).resolves.toEqual(BigInt(123 + 1))
     })
 
@@ -157,17 +153,16 @@ describe('Invoice Service', (): void => {
         balance: BigInt(10),
         asset: paymentPointer.asset
       })
-      const trxOrError = await tbAccountService.transferFunds({
-        sourceAccount,
-        destinationAccount: {
-          id: invoice.id,
-          asset: paymentPointer.asset
-        },
-        sourceAmount: BigInt(1),
-        timeout: BigInt(10e9) // 10 seconds
-      })
-      if (isAccountTransferError(trxOrError)) throw trxOrError
-      await expect(trxOrError.commit()).resolves.toBeUndefined()
+      await expect(
+        accountingService.createTransfer({
+          sourceAccount,
+          destinationAccount: {
+            id: invoice.id,
+            asset: paymentPointer.asset
+          },
+          amount: BigInt(1)
+        })
+      ).resolves.toBeUndefined()
 
       await expect(invoiceService.deactivateNext()).resolves.toBe(invoice.id)
       const invoiceAfter = await invoiceService.get(invoice.id)

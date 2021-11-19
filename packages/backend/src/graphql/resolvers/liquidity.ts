@@ -1,36 +1,42 @@
 import {
   ResolversTypes,
   MutationResolvers,
-  LiquidityError as LiquidityErrorResp
+  LiquidityError,
+  LiquidityMutationResponse
 } from '../generated/graphql'
-import { LiquidityError } from '../../liquidity/errors'
-import { AssetAccount } from '../../tigerbeetle/account/service'
+import { TransferError } from '../../accounting/errors'
+import { AssetAccount } from '../../accounting/service'
 import { ApolloContext } from '../../app'
 
 export const addAccountLiquidity: MutationResolvers<ApolloContext>['addAccountLiquidity'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['AddAccountLiquidityMutationResponse'] => {
+): ResolversTypes['LiquidityMutationResponse'] => {
   try {
-    const accountService = await ctx.container.use('tigerbeetleAccountService')
-    const account = await accountService.get(args.input.accountId)
+    const accountingService = await ctx.container.use('accountingService')
+    const account = await accountingService.getAccount(args.input.accountId)
     if (!account) {
       return {
         code: '404',
         message: 'Unknown account',
         success: false,
-        error: LiquidityErrorResp.UnknownAccount
+        error: LiquidityError.UnknownAccount
       }
     }
-    const liquidityService = await ctx.container.use('liquidityService')
-    const error = await liquidityService.add({
+    const error = await accountingService.createTransfer({
       id: args.input.id,
-      account,
+      sourceAccount: {
+        asset: {
+          unit: account.asset.unit,
+          account: AssetAccount.Settlement
+        }
+      },
+      destinationAccount: account,
       amount: args.input.amount
     })
     if (error) {
-      return errorToResponse[error]
+      return errorToResponse(error)
     }
     return {
       code: '200',
@@ -57,7 +63,7 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
   parent,
   args,
   ctx
-): ResolversTypes['AddAssetLiquidityMutationResponse'] => {
+): ResolversTypes['LiquidityMutationResponse'] => {
   try {
     const assetService = await ctx.container.use('assetService')
     const asset = await assetService.getById(args.input.assetId)
@@ -66,13 +72,19 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
         code: '404',
         message: 'Unknown asset',
         success: false,
-        error: LiquidityErrorResp.UnknownAsset
+        error: LiquidityError.UnknownAsset
       }
     }
-    const liquidityService = await ctx.container.use('liquidityService')
-    const error = await liquidityService.add({
+    const accountingService = await ctx.container.use('accountingService')
+    const error = await accountingService.createTransfer({
       id: args.input.id,
-      account: {
+      sourceAccount: {
+        asset: {
+          unit: asset.unit,
+          account: AssetAccount.Settlement
+        }
+      },
+      destinationAccount: {
         asset: {
           unit: asset.unit,
           account: AssetAccount.Liquidity
@@ -81,7 +93,7 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
       amount: args.input.amount
     })
     if (error) {
-      return errorToResponse[error]
+      return errorToResponse(error)
     }
     return {
       code: '200',
@@ -108,26 +120,32 @@ export const createAccountLiquidityWithdrawal: MutationResolvers<ApolloContext>[
   parent,
   args,
   ctx
-): ResolversTypes['CreateAccountLiquidityWithdrawalMutationResponse'] => {
+): ResolversTypes['LiquidityMutationResponse'] => {
   try {
-    const accountService = await ctx.container.use('tigerbeetleAccountService')
-    const account = await accountService.get(args.input.accountId)
+    const accountingService = await ctx.container.use('accountingService')
+    const account = await accountingService.getAccount(args.input.accountId)
     if (!account) {
       return {
         code: '404',
         message: 'Unknown account',
         success: false,
-        error: LiquidityErrorResp.UnknownAccount
+        error: LiquidityError.UnknownAccount
       }
     }
-    const liquidityService = await ctx.container.use('liquidityService')
-    const error = await liquidityService.createWithdrawal({
+    const error = await accountingService.createTransfer({
       id: args.input.id,
-      account,
-      amount: args.input.amount
+      sourceAccount: account,
+      destinationAccount: {
+        asset: {
+          unit: account.asset.unit,
+          account: AssetAccount.Settlement
+        }
+      },
+      amount: args.input.amount,
+      timeout: BigInt(60e9) // 1 minute
     })
     if (error) {
-      return errorToResponse[error]
+      return errorToResponse(error)
     }
     return {
       code: '200',
@@ -154,7 +172,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
   parent,
   args,
   ctx
-): ResolversTypes['CreateAssetLiquidityWithdrawalMutationResponse'] => {
+): ResolversTypes['LiquidityMutationResponse'] => {
   try {
     const assetService = await ctx.container.use('assetService')
     const asset = await assetService.getById(args.input.assetId)
@@ -163,22 +181,29 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
         code: '404',
         message: 'Unknown asset',
         success: false,
-        error: LiquidityErrorResp.UnknownAsset
+        error: LiquidityError.UnknownAsset
       }
     }
-    const liquidityService = await ctx.container.use('liquidityService')
-    const error = await liquidityService.createWithdrawal({
+    const accountingService = await ctx.container.use('accountingService')
+    const error = await accountingService.createTransfer({
       id: args.input.id,
-      account: {
+      sourceAccount: {
         asset: {
           unit: asset.unit,
           account: AssetAccount.Liquidity
         }
       },
-      amount: args.input.amount
+      destinationAccount: {
+        asset: {
+          unit: asset.unit,
+          account: AssetAccount.Settlement
+        }
+      },
+      amount: args.input.amount,
+      timeout: BigInt(60e9) // 1 minute
     })
     if (error) {
-      return errorToResponse[error]
+      return errorToResponse(error)
     }
     return {
       code: '200',
@@ -205,11 +230,11 @@ export const finalizeLiquidityWithdrawal: MutationResolvers<ApolloContext>['fina
   parent,
   args,
   ctx
-): ResolversTypes['FinalizeLiquidityWithdrawalMutationResponse'] => {
-  const liquidityService = await ctx.container.use('liquidityService')
-  const error = await liquidityService.finalizeWithdrawal(args.withdrawalId)
+): ResolversTypes['LiquidityMutationResponse'] => {
+  const accountingService = await ctx.container.use('accountingService')
+  const error = await accountingService.commitTransfer(args.withdrawalId)
   if (error) {
-    return errorToResponse[error]
+    return errorToResponse(error)
   }
   return {
     code: '200',
@@ -222,11 +247,11 @@ export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['roll
   parent,
   args,
   ctx
-): ResolversTypes['RollbackLiquidityWithdrawalMutationResponse'] => {
-  const liquidityService = await ctx.container.use('liquidityService')
-  const error = await liquidityService.rollbackWithdrawal(args.withdrawalId)
+): ResolversTypes['LiquidityMutationResponse'] => {
+  const accountingService = await ctx.container.use('accountingService')
+  const error = await accountingService.rollbackTransfer(args.withdrawalId)
   if (error) {
-    return errorToResponse[error]
+    return errorToResponse(error)
   }
   return {
     code: '200',
@@ -235,48 +260,66 @@ export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['roll
   }
 }
 
-const errorToResponse: {
-  [key in LiquidityError]: {
-    code: string
-    message: string
-    success: boolean
-    error: LiquidityErrorResp
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+const isLiquidityError = (o: any): o is LiquidityError =>
+  Object.values(LiquidityError).includes(o)
+
+const errorToResponse = (error: TransferError): LiquidityMutationResponse => {
+  if (!isLiquidityError(error)) {
+    throw new Error(error)
   }
+  return responses[error]
+}
+
+const responses: {
+  [key in LiquidityError]: LiquidityMutationResponse
 } = {
-  [LiquidityError.AlreadyFinalized]: {
+  [LiquidityError.AlreadyCommitted]: {
     code: '409',
     message: 'Withdrawal already finalized',
     success: false,
-    error: LiquidityErrorResp.AlreadyFinalized
+    error: LiquidityError.AlreadyCommitted
   },
   [LiquidityError.AlreadyRolledBack]: {
     code: '409',
     message: 'Withdrawal already rolled back',
     success: false,
-    error: LiquidityErrorResp.AlreadyRolledBack
+    error: LiquidityError.AlreadyRolledBack
   },
   [LiquidityError.InsufficientBalance]: {
     code: '403',
     message: 'Insufficient balance',
     success: false,
-    error: LiquidityErrorResp.InsufficientBalance
+    error: LiquidityError.InsufficientBalance
   },
   [LiquidityError.InvalidId]: {
     code: '400',
     message: 'Invalid id',
     success: false,
-    error: LiquidityErrorResp.InvalidId
+    error: LiquidityError.InvalidId
   },
   [LiquidityError.TransferExists]: {
     code: '409',
     message: 'Transfer exists',
     success: false,
-    error: LiquidityErrorResp.TransferExists
+    error: LiquidityError.TransferExists
   },
-  [LiquidityError.UnknownWithdrawal]: {
+  [LiquidityError.UnknownAccount]: {
+    code: '404',
+    message: 'Unknown account',
+    success: false,
+    error: LiquidityError.UnknownAccount
+  },
+  [LiquidityError.UnknownAsset]: {
+    code: '404',
+    message: 'Unknown asset',
+    success: false,
+    error: LiquidityError.UnknownAsset
+  },
+  [LiquidityError.UnknownTransfer]: {
     code: '404',
     message: 'Unknown withdrawal',
     success: false,
-    error: LiquidityErrorResp.UnknownWithdrawal
+    error: LiquidityError.UnknownTransfer
   }
 }

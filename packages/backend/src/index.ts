@@ -16,17 +16,12 @@ import { createOutgoingPaymentService } from './outgoing_payment/service'
 import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
-import {
-  AccountOptions,
-  createAccountService
-} from './tigerbeetle/account/service'
+import { AccountOptions, createAccountingService } from './accounting/service'
 import { createPeerService } from './peer/service'
 import { createPaymentPointerService } from './payment_pointer/service'
-import { createLiquidityService } from './liquidity/service'
 import { createSPSPRoutes } from './spsp/routes'
 import { createAccountRoutes } from './account/routes'
 import { createInvoiceRoutes } from './invoice/routes'
-import { createTransferService } from './tigerbeetle/transfer/service'
 import { createInvoiceService } from './invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebMonetizationService } from './webmonetization/service'
@@ -125,40 +120,30 @@ export function initIocContainer(
       knex: knex
     })
   })
-  container.singleton('transferService', async (deps) => {
-    const logger = await deps.use('logger')
-    const tigerbeetle = await deps.use('tigerbeetle')
-    return await createTransferService({
-      logger: logger,
-      tigerbeetle: tigerbeetle
-    })
-  })
   container.singleton('assetService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     return await createAssetService({
       logger: logger,
       knex: knex,
-      tbAccountService: await deps.use('tigerbeetleAccountService')
+      accountingService: await deps.use('accountingService')
     })
   })
-  container.singleton('tigerbeetleAccountService', async (deps) => {
+  container.singleton('accountingService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const tigerbeetle = await deps.use('tigerbeetle')
-    const transferService = await deps.use('transferService')
-    return await createAccountService({
+    return await createAccountingService({
       logger: logger,
       knex: knex,
-      tigerbeetle,
-      transferService
+      tigerbeetle
     })
   })
   container.singleton('peerService', async (deps) => {
     return await createPeerService({
       knex: await deps.use('knex'),
       logger: await deps.use('logger'),
-      tbAccountService: await deps.use('tigerbeetleAccountService'),
+      accountingService: await deps.use('accountingService'),
       assetService: await deps.use('assetService'),
       httpTokenService: await deps.use('httpTokenService')
     })
@@ -170,14 +155,6 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       logger: logger,
       assetService: assetService
-    })
-  })
-  container.singleton('liquidityService', async (deps) => {
-    const logger = await deps.use('logger')
-    const transferService = await deps.use('transferService')
-    return await createLiquidityService({
-      logger: logger,
-      transferService
     })
   })
   container.singleton('spspRoutes', async (deps) => {
@@ -196,7 +173,7 @@ export function initIocContainer(
     return await createInvoiceService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      tbAccountService: await deps.use('tigerbeetleAccountService'),
+      accountingService: await deps.use('accountingService'),
       paymentPointerService: await deps.use('paymentPointerService')
     })
   })
@@ -204,7 +181,7 @@ export function initIocContainer(
     return createInvoiceRoutes({
       config: await deps.use('config'),
       logger: await deps.use('logger'),
-      tbAccountService: await deps.use('tigerbeetleAccountService'),
+      accountingService: await deps.use('accountingService'),
       invoiceService: await deps.use('invoiceService'),
       streamServer: await deps.use('streamServer')
     })
@@ -256,7 +233,7 @@ export function initIocContainer(
       quoteLifespan: config.quoteLifespan,
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      tbAccountService: await deps.use('tigerbeetleAccountService'),
+      accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       paymentPointerService: await deps.use('paymentPointerService'),
       ratesService: await deps.use('ratesService')
@@ -268,7 +245,7 @@ export function initIocContainer(
     return await createConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
-      accountService: await deps.use('tigerbeetleAccountService'),
+      accountingService: await deps.use('accountingService'),
       invoiceService: await deps.use('invoiceService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),

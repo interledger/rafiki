@@ -20,15 +20,10 @@ import {
 } from 'graphql-tools'
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
-import { TransferService } from './tigerbeetle/transfer/service'
 import { AssetService } from './asset/service'
-import {
-  AccountOptions,
-  AccountService as TigerbeetleAccountService
-} from './tigerbeetle/account/service'
+import { AccountOptions, AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
 import { PaymentPointerService } from './payment_pointer/service'
-import { LiquidityService } from './liquidity/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { InvoiceRoutes } from './invoice/routes'
@@ -62,12 +57,10 @@ export interface AppServices {
   config: Promise<IAppConfig>
   workerUtils: Promise<WorkerUtils>
   httpTokenService: Promise<HttpTokenService>
-  transferService: Promise<TransferService>
   assetService: Promise<AssetService>
-  tbAccountService: Promise<TigerbeetleAccountService>
+  accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
   paymentPointer: Promise<PaymentPointerService>
-  liquidityService: Promise<LiquidityService>
   spspRoutes: Promise<SPSPRoutes>
   invoiceRoutes: Promise<InvoiceRoutes>
   accountRoutes: Promise<AccountRoutes>

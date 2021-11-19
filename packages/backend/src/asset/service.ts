@@ -1,7 +1,7 @@
 import { Asset } from './model'
 import { BaseService } from '../shared/baseService'
 import { Transaction } from 'knex'
-import { AccountService as TigerbeetleAccountService } from '../tigerbeetle/account/service'
+import { AccountingService } from '../accounting/service'
 
 export interface AssetOptions {
   code: string
@@ -15,13 +15,13 @@ export interface AssetService {
 }
 
 interface ServiceDependencies extends BaseService {
-  tbAccountService: TigerbeetleAccountService
+  accountingService: AccountingService
 }
 
 export async function createAssetService({
   logger,
   knex,
-  tbAccountService
+  accountingService
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
     service: 'AssetService'
@@ -29,7 +29,7 @@ export async function createAssetService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    tbAccountService
+    accountingService
   }
   return {
     get: (asset, trx) => getAsset(deps, asset, trx),
@@ -65,7 +65,7 @@ async function getOrCreateAsset(
         code,
         scale
       })
-      await deps.tbAccountService.createAssetAccounts(asset.unit)
+      await deps.accountingService.createAssetAccounts(asset.unit)
 
       return asset
     })

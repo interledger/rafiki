@@ -10,7 +10,7 @@ import {
   IlpRejectFactory,
   RafikiServicesFactory
 } from '../../factories'
-import { AccountTransferError } from '../../../../tigerbeetle/account/errors'
+import { Balance } from '../../../../accounting/service'
 
 // TODO: make one peer to many account relationship
 const aliceAccount = AccountFactory.build({ id: 'alice' })
@@ -136,17 +136,12 @@ describe('Balance Middleware', function () {
   })
 
   test('insufficient liquidity throws T04', async () => {
-    const prepare = IlpPrepareFactory.build({ amount: '100' })
+    const prepare = IlpPrepareFactory.build({ amount: '200' })
     const fulfill = IlpFulfillFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     const next = jest.fn().mockImplementation(() => {
       ctx.response.fulfill = fulfill
     })
-    jest
-      .spyOn(accounts, 'transferFunds')
-      .mockImplementationOnce(
-        async () => AccountTransferError.InsufficientLiquidity
-      )
 
     await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
       Errors.InsufficientLiquidityError
@@ -163,6 +158,7 @@ describe('Balance Middleware', function () {
 
   test('receive limit already reached throws F07', async () => {
     bobAccount.receiveLimit = BigInt(0)
+    bobAccount.withBalance = Balance.ReceiveLimit
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -185,6 +181,7 @@ describe('Balance Middleware', function () {
 
   test('receive limit exceeded throws F08', async () => {
     bobAccount.receiveLimit = BigInt(10)
+    bobAccount.withBalance = Balance.ReceiveLimit
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)

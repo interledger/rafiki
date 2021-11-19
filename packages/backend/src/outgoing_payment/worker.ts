@@ -3,7 +3,7 @@ import { ServiceDependencies } from './service'
 import { OutgoingPayment, PaymentState } from './model'
 import * as lifecycle from './lifecycle'
 import { IlpPlugin } from './ilp_plugin'
-import { AssetAccount } from '../tigerbeetle/account/service'
+import { AssetAccount, Balance } from '../accounting/service'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -150,9 +150,7 @@ export async function handlePaymentLifecycle(
       plugin = deps.makeIlpPlugin({
         id: payment.id,
         asset: payment.paymentPointer.asset,
-        // Value doesn't matter. Defining totalSent tells the connector
-        // to update the source account's totalSent balance.
-        totalSent: BigInt(0)
+        withBalance: Balance.TotalSent
       })
       return plugin
         .connect()

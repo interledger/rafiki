@@ -1,10 +1,7 @@
 import assert from 'assert'
 import { Errors } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
-import {
-  isAccountTransferError,
-  AccountTransferError
-} from '../../../tigerbeetle/account/errors'
+import { isTransferError, TransferError } from '../../../accounting/errors'
 const {
   AmountTooLargeError,
   CannotReceiveError,
@@ -48,12 +45,12 @@ export function createBalanceMiddleware(): ILPMiddleware {
       timeout: BigInt(5e9) // 5 seconds
     })
 
-    if (isAccountTransferError(trxOrError)) {
+    if (isTransferError(trxOrError)) {
       switch (trxOrError) {
-        case AccountTransferError.InsufficientBalance:
-        case AccountTransferError.InsufficientLiquidity:
+        case TransferError.InsufficientBalance:
+        case TransferError.InsufficientLiquidity:
           throw new InsufficientLiquidityError(trxOrError)
-        case AccountTransferError.ReceiveLimitExceeded: {
+        case TransferError.ReceiveLimitExceeded: {
           const receivedAmount = destinationAmountOrError.toString()
           assert.ok(accounts.outgoing.id)
           const receiveLimit = await services.accounts.getReceiveLimit(

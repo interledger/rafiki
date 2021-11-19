@@ -4,7 +4,7 @@ import { Logger } from 'pino'
 import { validateId } from '../shared/utils'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
-import { AccountService as TigerbeetleAccountService } from '../tigerbeetle/account/service'
+import { AccountingService } from '../accounting/service'
 import { InvoiceService } from './service'
 import { Invoice } from './model'
 
@@ -15,7 +15,7 @@ export const MAX_EXPIRY = 24 * 60 * 60 * 1000 // milliseconds
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
-  tbAccountService: TigerbeetleAccountService
+  accountingService: AccountingService
   invoiceService: InvoiceService
   streamServer: StreamServer
 }
@@ -50,7 +50,7 @@ async function getInvoice(
   const invoice = await deps.invoiceService.get(invoiceId)
   if (!invoice) return ctx.throw(404)
 
-  const amountReceived = await deps.tbAccountService.getBalance(invoice.id)
+  const amountReceived = await deps.accountingService.getBalance(invoice.id)
   if (amountReceived === undefined) {
     deps.logger.error({ invoice: invoice.id }, 'balance not found')
     return ctx.throw(500)

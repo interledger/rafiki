@@ -13,11 +13,8 @@ import {
 } from './middleware/ilp-packet'
 import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
-import {
-  AccountOptions,
-  AccountTransfer
-} from '../../tigerbeetle/account/service'
-import { AccountTransferError } from '../../tigerbeetle/account/errors'
+import { TransferError } from '../../accounting/errors'
+import { AccountOptions, AccountTransfer } from '../../accounting/service'
 import { InvoiceService } from '../../invoice/service'
 import { PeerService } from '../../peer/service'
 
@@ -51,7 +48,7 @@ export interface AccountService {
   getReceiveLimit(id: string): Promise<bigint | undefined>
   transferFunds(
     options: TransferOptions
-  ): Promise<AccountTransfer | AccountTransferError>
+  ): Promise<AccountTransfer | TransferError>
 }
 
 export interface RafikiServices {

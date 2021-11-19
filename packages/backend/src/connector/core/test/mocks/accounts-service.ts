@@ -1,7 +1,8 @@
+import assert from 'assert'
 import { AccountService, RafikiAccount } from '../../rafiki'
 
-import { AccountTransfer } from '../../../../tigerbeetle/account/service'
-import { AccountTransferError } from '../../../../tigerbeetle/account/errors'
+import { AccountTransfer, Balance } from '../../../../accounting/service'
+import { TransferError } from '../../../../accounting/errors'
 
 export type MockIlpAccount = RafikiAccount & {
   balance: bigint
@@ -11,12 +12,13 @@ export type MockIlpAccount = RafikiAccount & {
     }
   }
   active?: boolean
+  receiveLimit?: bigint
 }
 
 export class MockAccountsService implements AccountService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
-  _get(accountId: string): Promise<RafikiAccount | undefined> {
+  _get(accountId: string): Promise<MockIlpAccount | undefined> {
     const account = this.accounts.get(accountId)
     return Promise.resolve(account)
   }
@@ -47,7 +49,7 @@ export class MockAccountsService implements AccountService {
 
   async getReceiveLimit(accountId: string): Promise<bigint | undefined> {
     const account = this.accounts.get(accountId)
-    if (account?.receiveLimit != null) {
+    if (account) {
       return account.receiveLimit
     }
   }
@@ -64,16 +66,18 @@ export class MockAccountsService implements AccountService {
     sourceAmount: bigint
     destinationAmount: bigint
     timeout: bigint
-  }): Promise<AccountTransfer | AccountTransferError> {
+  }): Promise<AccountTransfer | TransferError> {
     if (options.sourceAccount.balance < options.sourceAmount) {
-      return AccountTransferError.InsufficientBalance
+      return TransferError.InsufficientBalance
     }
-    if (
-      options.destinationAccount.receiveLimit != null &&
-      options.destinationAccount.receiveLimit <
+    if (options.destinationAccount.withBalance === Balance.ReceiveLimit) {
+      assert.ok(options.destinationAccount.receiveLimit !== undefined)
+      if (
+        options.destinationAccount.receiveLimit <
         (options.destinationAmount || options.sourceAmount)
-    ) {
-      return AccountTransferError.ReceiveLimitExceeded
+      ) {
+        return TransferError.ReceiveLimitExceeded
+      }
     }
     options.sourceAccount.balance -= options.sourceAmount
     return {
