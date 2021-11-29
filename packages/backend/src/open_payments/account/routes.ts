@@ -1,11 +1,11 @@
-import { validateId } from '../shared/utils'
-import { AppContext } from '../app'
-import { IAppConfig } from '../config/app'
-import { PaymentPointerService } from '../payment_pointer/service'
+import { validateId } from '../../shared/utils'
+import { AppContext } from '../../app'
+import { IAppConfig } from '../../config/app'
+import { AccountService } from './service'
 
 interface ServiceDependencies {
   config: IAppConfig
-  paymentPointerService: PaymentPointerService
+  accountService: AccountService
 }
 
 export interface AccountRoutes {
@@ -23,21 +23,21 @@ export async function getAccount(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { paymentPointerId } = ctx.params
-  ctx.assert(validateId(paymentPointerId), 400, 'Invalid payment pointer')
+  const { accountId } = ctx.params
+  ctx.assert(validateId(accountId), 400, 'Invalid account id')
   ctx.assert(ctx.accepts('application/json'), 406)
 
-  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
-  if (!paymentPointer) {
+  const account = await deps.accountService.get(accountId)
+  if (!account) {
     ctx.throw(404)
     return // unreachable, but satisfies typescript
   }
 
   const config = await deps.config
   ctx.body = {
-    id: `${config.publicHost}/accounts/${encodeURIComponent(paymentPointerId)}`,
+    id: `${config.publicHost}/accounts/${encodeURIComponent(accountId)}`,
     accountServicer: config.publicHost,
-    assetCode: paymentPointer.asset.code,
-    assetScale: paymentPointer.asset.scale
+    assetCode: account.asset.code,
+    assetScale: account.asset.scale
   }
 }

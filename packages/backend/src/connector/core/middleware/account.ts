@@ -26,7 +26,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           }
           return {
             id: invoice.id,
-            asset: invoice.paymentPointer.asset,
+            asset: invoice.account.asset,
             withBalance:
               invoice.amountToReceive != null
                 ? Balance.ReceiveLimit

@@ -27,7 +27,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       if (account) {
         return {
           ...account,
-          paymentPointer: {
+          account: {
             asset: account.asset
           },
           amountToReceive: account.receiveLimit

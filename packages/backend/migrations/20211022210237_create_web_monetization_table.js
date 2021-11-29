@@ -1,7 +1,7 @@
 exports.up = function (knex) {
   return knex.schema.createTable('webMonetization', function (table) {
     table.uuid('id').notNullable().primary()
-    table.foreign('id').references('paymentPointers.id')
+    table.foreign('id').references('accounts.id')
     table.uuid('invoiceId').nullable()
     table.foreign('invoiceId').references('invoices.id')
 

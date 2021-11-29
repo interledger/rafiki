@@ -22,7 +22,7 @@ import {
   createStreamAddressMiddleware
 } from './core'
 import { AccountingService } from '../accounting/service'
-import { InvoiceService } from '../invoice/service'
+import { InvoiceService } from '../open_payments/invoice/service'
 import { PeerService } from '../peer/service'
 import { RatesService } from '../rates/service'
 import { BaseService } from '../shared/baseService'

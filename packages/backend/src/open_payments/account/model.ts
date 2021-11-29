@@ -1,11 +1,11 @@
 import { Model } from 'objection'
 
-import { Asset } from '../asset/model'
-import { BaseModel } from '../shared/baseModel'
+import { Asset } from '../../asset/model'
+import { BaseModel } from '../../shared/baseModel'
 
-export class PaymentPointer extends BaseModel {
+export class Account extends BaseModel {
   public static get tableName(): string {
-    return 'paymentPointers'
+    return 'accounts'
   }
 
   static relationMappings = {
@@ -13,7 +13,7 @@ export class PaymentPointer extends BaseModel {
       relation: Model.HasOneRelation,
       modelClass: Asset,
       join: {
-        from: 'paymentPointers.assetId',
+        from: 'accounts.assetId',
         to: 'assets.id'
       }
     }

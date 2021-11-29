@@ -79,7 +79,7 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] = async 
       'error creating peer'
     )
     return {
-      code: '400',
+      code: '500',
       message: 'Error trying to create peer',
       success: false
     }

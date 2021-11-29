@@ -15,7 +15,7 @@ import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
 import { TransferError } from '../../accounting/errors'
 import { AccountOptions, AccountTransfer } from '../../accounting/service'
-import { InvoiceService } from '../../invoice/service'
+import { InvoiceService } from '../../open_payments/invoice/service'
 import { PeerService } from '../../peer/service'
 
 export type RafikiAccount = AccountOptions & {

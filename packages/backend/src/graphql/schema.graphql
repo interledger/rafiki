@@ -1,7 +1,7 @@
 type Query {
   outgoingPayment(id: String!): OutgoingPayment
 
-  paymentPointer(id: String!): PaymentPointer
+  account(id: String!): Account
 
   peer(id: String!): Peer
 
@@ -29,9 +29,7 @@ type Mutation {
   "Cancel a Ready payment."
   cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
 
-  createPaymentPointer(
-    input: CreatePaymentPointerInput
-  ): CreatePaymentPointerMutationResponse!
+  createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
 
   "Create peer"
   createPeer(input: CreatePeerInput!): CreatePeerMutationResponse!
@@ -206,7 +204,7 @@ type HttpOutgoing {
   endpoint: String!
 }
 
-type PaymentPointer {
+type Account {
   id: ID!
   asset: Asset!
   invoices(
@@ -323,7 +321,7 @@ type OutgoingPaymentOutcome {
 }
 
 input CreateOutgoingPaymentInput {
-  paymentPointerId: String!
+  accountId: String!
   paymentPointer: String
   amountToSend: UInt64
   invoiceUrl: String
@@ -337,15 +335,15 @@ type OutgoingPaymentResponse {
   payment: OutgoingPayment
 }
 
-input CreatePaymentPointerInput {
+input CreateAccountInput {
   asset: AssetInput!
 }
 
-type CreatePaymentPointerMutationResponse implements MutationResponse {
+type CreateAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  paymentPointer: PaymentPointer!
+  account: Account
 }
 
 type CreatePeerMutationResponse implements MutationResponse {

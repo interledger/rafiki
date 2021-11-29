@@ -204,6 +204,45 @@ describe('Peer Resolvers', (): void => {
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Invalid ILP address')
     })
+
+    test('500', async (): Promise<void> => {
+      jest
+        .spyOn(peerService, 'create')
+        .mockImplementationOnce(async (_args) => {
+          throw new Error('unexpected')
+        })
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreatePeer($input: CreatePeerInput!) {
+              createPeer(input: $input) {
+                code
+                success
+                message
+                peer {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: randomPeer()
+          }
+        })
+        .then(
+          (query): CreatePeerMutationResponse => {
+            if (query.data) {
+              return query.data.createPeer
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(response.code).toBe('500')
+      expect(response.success).toBe(false)
+      expect(response.message).toBe('Error trying to create peer')
+    })
   })
 
   describe('Peer Queries', (): void => {

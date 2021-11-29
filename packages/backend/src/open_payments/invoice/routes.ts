@@ -1,10 +1,10 @@
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
 import { Logger } from 'pino'
-import { validateId } from '../shared/utils'
-import { AppContext } from '../app'
-import { IAppConfig } from '../config/app'
-import { AccountingService } from '../accounting/service'
+import { validateId } from '../../shared/utils'
+import { AppContext } from '../../app'
+import { IAppConfig } from '../../config/app'
+import { AccountingService } from '../../accounting/service'
 import { InvoiceService } from './service'
 import { Invoice } from './model'
 
@@ -71,8 +71,8 @@ async function getInvoice(
     //      }
     //    : undefined,
     asset: {
-      code: invoice.paymentPointer.asset.code,
-      scale: invoice.paymentPointer.asset.scale
+      code: invoice.account.asset.code,
+      scale: invoice.account.asset.scale
     }
   })
 
@@ -85,8 +85,8 @@ async function createInvoice(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { paymentPointerId } = ctx.params
-  ctx.assert(validateId(paymentPointerId), 400, 'invalid payment pointer')
+  const { accountId } = ctx.params
+  ctx.assert(validateId(accountId), 400, 'invalid account id')
   ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
   ctx.assert(
     ctx.get('Content-Type') === 'application/json',
@@ -107,7 +107,7 @@ async function createInvoice(
   if (expiresAt < Date.now()) return ctx.throw(400, 'already expired')
 
   const invoice = await deps.invoiceService.create({
-    paymentPointerId,
+    accountId,
     description: body.description,
     expiresAt: new Date(expiresAt),
     amountToReceive
@@ -127,10 +127,10 @@ function invoiceToBody(
   const location = `${deps.config.publicHost}/invoices/${invoice.id}`
   return {
     id: location,
-    account: `${deps.config.publicHost}/pay/${invoice.paymentPointerId}`,
+    account: `${deps.config.publicHost}/pay/${invoice.accountId}`,
     amount: invoice.amountToReceive?.toString(),
-    assetCode: invoice.paymentPointer.asset.code,
-    assetScale: invoice.paymentPointer.asset.scale,
+    assetCode: invoice.account.asset.code,
+    assetScale: invoice.account.asset.scale,
     description: invoice.description,
     expiresAt: invoice.expiresAt?.toISOString(),
     received: received.toString()
