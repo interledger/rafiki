@@ -343,7 +343,7 @@ type CreateAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  account: Account!
+  account: Account
 }
 
 type CreatePeerMutationResponse implements MutationResponse {

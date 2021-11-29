@@ -41,7 +41,7 @@ export const createAccount: MutationResolvers<ApolloContext>['createAccount'] = 
       'error creating account'
     )
     return {
-      code: '400',
+      code: '500',
       message: 'Error trying to create account',
       success: false
     }

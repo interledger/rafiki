@@ -85,7 +85,7 @@ export type CreateAccountMutationResponse = MutationResponse & {
   code: Scalars['String'];
   success: Scalars['Boolean'];
   message: Scalars['String'];
-  account: Account;
+  account?: Maybe<Account>;
 };
 
 export type CreateAssetLiquidityWithdrawalInput = {
@@ -683,7 +683,7 @@ export type CreateAccountMutationResponseResolvers<ContextType = any, ParentType
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  account?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
+  account?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
@@ -84,6 +85,7 @@ describe('Account Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
+      assert(response.account)
       expect(response.account).toEqual({
         __typename: 'Account',
         id: response.account.id,
@@ -102,6 +104,51 @@ describe('Account Resolvers', (): void => {
           scale: input.asset.scale
         }
       })
+    })
+
+    test('500', async (): Promise<void> => {
+      jest
+        .spyOn(accountService, 'create')
+        .mockImplementationOnce(async (_args) => {
+          throw new Error('unexpected')
+        })
+      const input: CreateAccountInput = {
+        asset: randomAsset()
+      }
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateAccount($input: CreateAccountInput!) {
+              createAccount(input: $input) {
+                code
+                success
+                message
+                account {
+                  id
+                  asset {
+                    code
+                    scale
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            input
+          }
+        })
+        .then(
+          (query): CreateAccountMutationResponse => {
+            if (query.data) {
+              return query.data.createAccount
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(response.code).toBe('500')
+      expect(response.success).toBe(false)
+      expect(response.message).toBe('Error trying to create account')
     })
   })
 
