@@ -125,12 +125,9 @@ export class OutgoingPayment extends BaseModel {
 
 export enum PaymentState {
   // Initial state. In this state, an empty trustline account is generated, and the payment is automatically resolved & quoted.
-  // On success, transition to `Ready`.
+  // On success, transition to `Funding`.
   // On failure, transition to `Cancelled`.
-  Inactive = 'Inactive',
-  // Awaiting user approval. Approval is automatic if `intent.autoApprove` is set.
-  // Once approved, transitions to `Funding`.
-  Ready = 'Ready',
+  Quoting = 'Quoting',
   // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
   // On success, transition to `Sending`.
   Funding = 'Funding',
@@ -139,7 +136,7 @@ export enum PaymentState {
   Sending = 'Sending',
 
   // The payment failed. (Though some money may have been delivered).
-  // Requoting transitions to `Inactive`.
+  // Requoting transitions to `Quoting`.
   Cancelled = 'Cancelled',
   // Successful completion.
   Completed = 'Completed'

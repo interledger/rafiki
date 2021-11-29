@@ -84,7 +84,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         asset: randomAsset()
       })
       payment = await OutgoingPaymentModel.query(knex).insertAndFetch({
-        state: PaymentState.Inactive,
+        state: PaymentState.Quoting,
         intent: {
           paymentPointer: 'http://wallet2.example/paymentpointer/bob',
           amountToSend: BigInt(123),
@@ -288,7 +288,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.code).toBe('200')
       expect(query.success).toBe(true)
       expect(query.payment?.id).toBe(payment.id)
-      expect(query.payment?.state).toBe(SchemaPaymentState.Inactive)
+      expect(query.payment?.state).toBe(SchemaPaymentState.Quoting)
     })
 
     test('400', async (): Promise<void> => {
@@ -430,74 +430,6 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
   })
 
-  describe(`Mutation.approveOutgoingPayment`, (): void => {
-    test('200', async (): Promise<void> => {
-      const spy = jest
-        .spyOn(outgoingPaymentService, 'approve')
-        .mockImplementation(async (id: string) => {
-          expect(id).toBe(payment.id)
-          return payment
-        })
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation ApproveOutgoingPayment($paymentId: String!) {
-              approveOutgoingPayment(paymentId: $paymentId) {
-                code
-                success
-                message
-                payment {
-                  id
-                }
-              }
-            }
-          `,
-          variables: { paymentId: payment.id }
-        })
-        .then(
-          (query): OutgoingPaymentResponse => query.data?.approveOutgoingPayment
-        )
-      expect(spy).toHaveBeenCalledTimes(1)
-      expect(query.code).toBe('200')
-      expect(query.success).toBe(true)
-      expect(query.message).toBeNull()
-      expect(query.payment?.id).toBe(payment.id)
-    })
-
-    test('500', async (): Promise<void> => {
-      const spy = jest
-        .spyOn(outgoingPaymentService, 'approve')
-        .mockImplementation(async (id: string) => {
-          expect(id).toBe(payment.id)
-          throw new Error('fail')
-        })
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation ApproveOutgoingPayment($paymentId: String!) {
-              approveOutgoingPayment(paymentId: $paymentId) {
-                code
-                success
-                message
-                payment {
-                  id
-                }
-              }
-            }
-          `,
-          variables: { paymentId: payment.id }
-        })
-        .then(
-          (query): OutgoingPaymentResponse => query.data?.approveOutgoingPayment
-        )
-      expect(spy).toHaveBeenCalledTimes(1)
-      expect(query.code).toBe('500')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe('fail')
-      expect(query.payment).toBeNull()
-    })
-  })
-
   describe(`Mutation.cancelOutgoingPayment`, (): void => {
     test('200', async (): Promise<void> => {
       const spy = jest
@@ -580,7 +512,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         for (let i = 0; i < 50; i++) {
           outgoingPayments.push(
             await OutgoingPaymentModel.query(knex).insertAndFetch({
-              state: PaymentState.Inactive,
+              state: PaymentState.Quoting,
               intent: {
                 paymentPointer: 'http://wallet2.example/paymentpointer/bob',
                 amountToSend: BigInt(123),

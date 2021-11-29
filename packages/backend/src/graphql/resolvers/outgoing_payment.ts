@@ -119,28 +119,6 @@ export const requoteOutgoingPayment: MutationResolvers<ApolloContext>['requoteOu
     }))
 }
 
-export const approveOutgoingPayment: MutationResolvers<ApolloContext>['approveOutgoingPayment'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['OutgoingPaymentResponse'] => {
-  const outgoingPaymentService = await ctx.container.use(
-    'outgoingPaymentService'
-  )
-  return outgoingPaymentService
-    .approve(args.paymentId)
-    .then((payment: OutgoingPayment) => ({
-      code: '200',
-      success: true,
-      payment: paymentToGraphql(payment)
-    }))
-    .catch((err: Error) => ({
-      code: '500',
-      success: false,
-      message: err.message
-    }))
-}
-
 export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutgoingPayment'] = async (
   parent,
   args,
