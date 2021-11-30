@@ -209,12 +209,7 @@ export class App {
   }
 
   private _isAdmin(ctx: Koa.Context): boolean {
-    const key = ctx.request.header['x-api-key'] || ''
-    if (key && key.length) {
-      return key == this.config.adminKey
-    } else {
-      return false
-    }
+    return ctx.request.header['x-api-key'] == this.config.adminKey
   }
 
   private async _getSession(ctx: Koa.Context): Promise<Session | SessionError> {
