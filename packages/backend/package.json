@@ -28,6 +28,7 @@
     "@types/pino": "^6.3.7",
     "@types/rosie": "^0.0.40",
     "@types/uuid": "^8.3.0",
+    "apollo-server": "^3.5.0",
     "cross-fetch": "^3.1.4",
     "ilp-packet": "^3.1.2",
     "ilp-protocol-ildcp": "^2.2.2",
