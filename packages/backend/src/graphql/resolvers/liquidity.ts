@@ -8,52 +8,6 @@ import { TransferError } from '../../accounting/errors'
 import { AssetAccount } from '../../accounting/service'
 import { ApolloContext } from '../../app'
 
-export const addAccountLiquidity: MutationResolvers<ApolloContext>['addAccountLiquidity'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
-  try {
-    const accountingService = await ctx.container.use('accountingService')
-    const account = await accountingService.getAccount(args.input.accountId)
-    if (!account) {
-      return responses[LiquidityError.UnknownAccount]
-    }
-    const error = await accountingService.createTransfer({
-      id: args.input.id,
-      sourceAccount: {
-        asset: {
-          unit: account.asset.unit,
-          account: AssetAccount.Settlement
-        }
-      },
-      destinationAccount: account,
-      amount: args.input.amount
-    })
-    if (error) {
-      return errorToResponse(error)
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Added account liquidity'
-    }
-  } catch (error) {
-    ctx.logger.error(
-      {
-        input: args.input,
-        error
-      },
-      'error adding account liquidity'
-    )
-    return {
-      code: '400',
-      message: 'Error trying to add account liquidity',
-      success: false
-    }
-  }
-}
-
 export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] = async (
   parent,
   args,
@@ -148,53 +102,6 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
     return {
       code: '400',
       message: 'Error trying to add asset liquidity',
-      success: false
-    }
-  }
-}
-
-export const createAccountLiquidityWithdrawal: MutationResolvers<ApolloContext>['createAccountLiquidityWithdrawal'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
-  try {
-    const accountingService = await ctx.container.use('accountingService')
-    const account = await accountingService.getAccount(args.input.accountId)
-    if (!account) {
-      return responses[LiquidityError.UnknownAccount]
-    }
-    const error = await accountingService.createTransfer({
-      id: args.input.id,
-      sourceAccount: account,
-      destinationAccount: {
-        asset: {
-          unit: account.asset.unit,
-          account: AssetAccount.Settlement
-        }
-      },
-      amount: args.input.amount,
-      timeout: BigInt(60e9) // 1 minute
-    })
-    if (error) {
-      return errorToResponse(error)
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Created account liquidity withdrawal'
-    }
-  } catch (error) {
-    ctx.logger.error(
-      {
-        input: args.input,
-        error
-      },
-      'error creating account liquidity withdrawal'
-    )
-    return {
-      code: '400',
-      message: 'Error trying to create account liquidity withdrawal',
       success: false
     }
   }
@@ -378,12 +285,6 @@ const responses: {
     message: 'Transfer exists',
     success: false,
     error: LiquidityError.TransferExists
-  },
-  [LiquidityError.UnknownAccount]: {
-    code: '404',
-    message: 'Unknown account',
-    success: false,
-    error: LiquidityError.UnknownAccount
   },
   [LiquidityError.UnknownAsset]: {
     code: '404',
