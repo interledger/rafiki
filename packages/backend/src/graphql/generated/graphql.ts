@@ -38,18 +38,18 @@ export type AccountOutgoingPaymentsArgs = {
   last?: Maybe<Scalars['Int']>;
 };
 
-export type AddAccountLiquidityInput = {
-  /** The id of the account to add liquidity. */
-  accountId: Scalars['String'];
+export type AddAssetLiquidityInput = {
+  /** The id of the asset to add liquidity. */
+  assetId: Scalars['String'];
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64'];
   /** The id of the transfer. */
   id?: Maybe<Scalars['String']>;
 };
 
-export type AddAssetLiquidityInput = {
-  /** The id of the asset to add liquidity. */
-  assetId: Scalars['String'];
+export type AddPeerLiquidityInput = {
+  /** The id of the peer to add liquidity. */
+  peerId: Scalars['String'];
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64'];
   /** The id of the transfer. */
@@ -69,15 +69,6 @@ export type AssetInput = {
 
 export type CreateAccountInput = {
   asset: AssetInput;
-};
-
-export type CreateAccountLiquidityWithdrawalInput = {
-  /** The id of the account to create the withdrawal for. */
-  accountId: Scalars['String'];
-  /** Amount of withdrawal. */
-  amount: Scalars['UInt64'];
-  /** The id of the withdrawal. */
-  id: Scalars['String'];
 };
 
 export type CreateAccountMutationResponse = MutationResponse & {
@@ -110,6 +101,15 @@ export type CreatePeerInput = {
   http: HttpInput;
   asset: AssetInput;
   staticIlpAddress: Scalars['String'];
+};
+
+export type CreatePeerLiquidityWithdrawalInput = {
+  /** The id of the peer to create the withdrawal for. */
+  peerId: Scalars['String'];
+  /** Amount of withdrawal. */
+  amount: Scalars['UInt64'];
+  /** The id of the withdrawal. */
+  id: Scalars['String'];
 };
 
 export type CreatePeerMutationResponse = MutationResponse & {
@@ -181,8 +181,8 @@ export enum LiquidityError {
   InsufficientBalance = 'InsufficientBalance',
   InvalidId = 'InvalidId',
   TransferExists = 'TransferExists',
-  UnknownAccount = 'UnknownAccount',
   UnknownAsset = 'UnknownAsset',
+  UnknownPeer = 'UnknownPeer',
   UnknownTransfer = 'UnknownTransfer'
 }
 
@@ -212,12 +212,12 @@ export type Mutation = {
   deletePeer: DeletePeerMutationResponse;
   /** Transfer between accounts */
   transfer?: Maybe<TransferMutationResponse>;
-  /** Add account liquidity */
-  addAccountLiquidity?: Maybe<LiquidityMutationResponse>;
+  /** Add peer liquidity */
+  addPeerLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Add asset liquidity */
   addAssetLiquidity?: Maybe<LiquidityMutationResponse>;
-  /** Create liquidity withdrawal from account */
-  createAccountLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
+  /** Create liquidity withdrawal from peer */
+  createPeerLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Create liquidity withdrawal from asset */
   createAssetLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Finalize liquidity withdrawal */
@@ -277,8 +277,8 @@ export type MutationTransferArgs = {
 };
 
 
-export type MutationAddAccountLiquidityArgs = {
-  input: AddAccountLiquidityInput;
+export type MutationAddPeerLiquidityArgs = {
+  input: AddPeerLiquidityInput;
 };
 
 
@@ -287,8 +287,8 @@ export type MutationAddAssetLiquidityArgs = {
 };
 
 
-export type MutationCreateAccountLiquidityWithdrawalArgs = {
-  input: CreateAccountLiquidityWithdrawalInput;
+export type MutationCreatePeerLiquidityWithdrawalArgs = {
+  input: CreatePeerLiquidityWithdrawalInput;
 };
 
 
@@ -568,17 +568,17 @@ export type ResolversTypes = {
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
-  AddAccountLiquidityInput: ResolverTypeWrapper<Partial<AddAccountLiquidityInput>>;
   AddAssetLiquidityInput: ResolverTypeWrapper<Partial<AddAssetLiquidityInput>>;
+  AddPeerLiquidityInput: ResolverTypeWrapper<Partial<AddPeerLiquidityInput>>;
   Asset: ResolverTypeWrapper<Partial<Asset>>;
   AssetInput: ResolverTypeWrapper<Partial<AssetInput>>;
   CreateAccountInput: ResolverTypeWrapper<Partial<CreateAccountInput>>;
-  CreateAccountLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAccountLiquidityWithdrawalInput>>;
   CreateAccountMutationResponse: ResolverTypeWrapper<Partial<CreateAccountMutationResponse>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateOutgoingPaymentInput: ResolverTypeWrapper<Partial<CreateOutgoingPaymentInput>>;
   CreatePeerInput: ResolverTypeWrapper<Partial<CreatePeerInput>>;
+  CreatePeerLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreatePeerLiquidityWithdrawalInput>>;
   CreatePeerMutationResponse: ResolverTypeWrapper<Partial<CreatePeerMutationResponse>>;
   DeletePeerMutationResponse: ResolverTypeWrapper<Partial<DeletePeerMutationResponse>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
@@ -621,17 +621,17 @@ export type ResolversParentTypes = {
   ID: Partial<Scalars['ID']>;
   String: Partial<Scalars['String']>;
   Int: Partial<Scalars['Int']>;
-  AddAccountLiquidityInput: Partial<AddAccountLiquidityInput>;
   AddAssetLiquidityInput: Partial<AddAssetLiquidityInput>;
+  AddPeerLiquidityInput: Partial<AddPeerLiquidityInput>;
   Asset: Partial<Asset>;
   AssetInput: Partial<AssetInput>;
   CreateAccountInput: Partial<CreateAccountInput>;
-  CreateAccountLiquidityWithdrawalInput: Partial<CreateAccountLiquidityWithdrawalInput>;
   CreateAccountMutationResponse: Partial<CreateAccountMutationResponse>;
   Boolean: Partial<Scalars['Boolean']>;
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
   CreateOutgoingPaymentInput: Partial<CreateOutgoingPaymentInput>;
   CreatePeerInput: Partial<CreatePeerInput>;
+  CreatePeerLiquidityWithdrawalInput: Partial<CreatePeerLiquidityWithdrawalInput>;
   CreatePeerMutationResponse: Partial<CreatePeerMutationResponse>;
   DeletePeerMutationResponse: Partial<DeletePeerMutationResponse>;
   Http: Partial<Http>;
@@ -754,9 +754,9 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   updatePeer?: Resolver<ResolversTypes['UpdatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePeerArgs, 'input'>>;
   deletePeer?: Resolver<ResolversTypes['DeletePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationDeletePeerArgs, 'id'>>;
   transfer?: Resolver<Maybe<ResolversTypes['TransferMutationResponse']>, ParentType, ContextType, RequireFields<MutationTransferArgs, 'sourceAmount' | 'sourceAccountId' | 'destinationAccountId' | 'idempotencyKey'>>;
-  addAccountLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationAddAccountLiquidityArgs, 'input'>>;
+  addPeerLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationAddPeerLiquidityArgs, 'input'>>;
   addAssetLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationAddAssetLiquidityArgs, 'input'>>;
-  createAccountLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAccountLiquidityWithdrawalArgs, 'input'>>;
+  createPeerLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreatePeerLiquidityWithdrawalArgs, 'input'>>;
   createAssetLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAssetLiquidityWithdrawalArgs, 'input'>>;
   finalizeLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationFinalizeLiquidityWithdrawalArgs, 'withdrawalId'>>;
   rollbackLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationRollbackLiquidityWithdrawalArgs, 'withdrawalId'>>;

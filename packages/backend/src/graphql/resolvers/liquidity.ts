@@ -8,31 +8,27 @@ import { TransferError } from '../../accounting/errors'
 import { AssetAccount } from '../../accounting/service'
 import { ApolloContext } from '../../app'
 
-export const addAccountLiquidity: MutationResolvers<ApolloContext>['addAccountLiquidity'] = async (
+export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['LiquidityMutationResponse'] => {
   try {
-    const accountingService = await ctx.container.use('accountingService')
-    const account = await accountingService.getAccount(args.input.accountId)
-    if (!account) {
-      return {
-        code: '404',
-        message: 'Unknown account',
-        success: false,
-        error: LiquidityError.UnknownAccount
-      }
+    const peerService = await ctx.container.use('peerService')
+    const peer = await peerService.get(args.input.peerId)
+    if (!peer) {
+      return responses[LiquidityError.UnknownPeer]
     }
+    const accountingService = await ctx.container.use('accountingService')
     const error = await accountingService.createTransfer({
       id: args.input.id,
       sourceAccount: {
         asset: {
-          unit: account.asset.unit,
+          unit: peer.asset.unit,
           account: AssetAccount.Settlement
         }
       },
-      destinationAccount: account,
+      destinationAccount: peer,
       amount: args.input.amount
     })
     if (error) {
@@ -41,7 +37,7 @@ export const addAccountLiquidity: MutationResolvers<ApolloContext>['addAccountLi
     return {
       code: '200',
       success: true,
-      message: 'Added account liquidity'
+      message: 'Added peer liquidity'
     }
   } catch (error) {
     ctx.logger.error(
@@ -49,11 +45,11 @@ export const addAccountLiquidity: MutationResolvers<ApolloContext>['addAccountLi
         input: args.input,
         error
       },
-      'error adding account liquidity'
+      'error adding peer liquidity'
     )
     return {
       code: '400',
-      message: 'Error trying to add account liquidity',
+      message: 'Error trying to add peer liquidity',
       success: false
     }
   }
@@ -68,12 +64,7 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
     const assetService = await ctx.container.use('assetService')
     const asset = await assetService.getById(args.input.assetId)
     if (!asset) {
-      return {
-        code: '404',
-        message: 'Unknown asset',
-        success: false,
-        error: LiquidityError.UnknownAsset
-      }
+      return responses[LiquidityError.UnknownAsset]
     }
     const accountingService = await ctx.container.use('accountingService')
     const error = await accountingService.createTransfer({
@@ -116,28 +107,24 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
   }
 }
 
-export const createAccountLiquidityWithdrawal: MutationResolvers<ApolloContext>['createAccountLiquidityWithdrawal'] = async (
+export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['createPeerLiquidityWithdrawal'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['LiquidityMutationResponse'] => {
   try {
-    const accountingService = await ctx.container.use('accountingService')
-    const account = await accountingService.getAccount(args.input.accountId)
-    if (!account) {
-      return {
-        code: '404',
-        message: 'Unknown account',
-        success: false,
-        error: LiquidityError.UnknownAccount
-      }
+    const peerService = await ctx.container.use('peerService')
+    const peer = await peerService.get(args.input.peerId)
+    if (!peer) {
+      return responses[LiquidityError.UnknownPeer]
     }
+    const accountingService = await ctx.container.use('accountingService')
     const error = await accountingService.createTransfer({
       id: args.input.id,
-      sourceAccount: account,
+      sourceAccount: peer,
       destinationAccount: {
         asset: {
-          unit: account.asset.unit,
+          unit: peer.asset.unit,
           account: AssetAccount.Settlement
         }
       },
@@ -150,7 +137,7 @@ export const createAccountLiquidityWithdrawal: MutationResolvers<ApolloContext>[
     return {
       code: '200',
       success: true,
-      message: 'Created account liquidity withdrawal'
+      message: 'Created peer liquidity withdrawal'
     }
   } catch (error) {
     ctx.logger.error(
@@ -158,11 +145,11 @@ export const createAccountLiquidityWithdrawal: MutationResolvers<ApolloContext>[
         input: args.input,
         error
       },
-      'error creating account liquidity withdrawal'
+      'error creating peer liquidity withdrawal'
     )
     return {
       code: '400',
-      message: 'Error trying to create account liquidity withdrawal',
+      message: 'Error trying to create peer liquidity withdrawal',
       success: false
     }
   }
@@ -177,12 +164,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     const assetService = await ctx.container.use('assetService')
     const asset = await assetService.getById(args.input.assetId)
     if (!asset) {
-      return {
-        code: '404',
-        message: 'Unknown asset',
-        success: false,
-        error: LiquidityError.UnknownAsset
-      }
+      return responses[LiquidityError.UnknownAsset]
     }
     const accountingService = await ctx.container.use('accountingService')
     const error = await accountingService.createTransfer({
@@ -304,17 +286,17 @@ const responses: {
     success: false,
     error: LiquidityError.TransferExists
   },
-  [LiquidityError.UnknownAccount]: {
-    code: '404',
-    message: 'Unknown account',
-    success: false,
-    error: LiquidityError.UnknownAccount
-  },
   [LiquidityError.UnknownAsset]: {
     code: '404',
     message: 'Unknown asset',
     success: false,
     error: LiquidityError.UnknownAsset
+  },
+  [LiquidityError.UnknownPeer]: {
+    code: '404',
+    message: 'Unknown peer',
+    success: false,
+    error: LiquidityError.UnknownPeer
   },
   [LiquidityError.UnknownTransfer]: {
     code: '404',

@@ -20,10 +20,10 @@ import {
   deletePeer
 } from './peer'
 import {
-  addAccountLiquidity,
   addAssetLiquidity,
-  createAccountLiquidityWithdrawal,
+  addPeerLiquidity,
   createAssetLiquidityWithdrawal,
+  createPeerLiquidityWithdrawal,
   finalizeLiquidityWithdrawal,
   rollbackLiquidityWithdrawal
 } from './liquidity'
@@ -62,10 +62,10 @@ export const resolvers: Resolvers = {
     createPeer: createPeer,
     updatePeer: updatePeer,
     deletePeer: deletePeer,
-    addAccountLiquidity: addAccountLiquidity,
     addAssetLiquidity: addAssetLiquidity,
-    createAccountLiquidityWithdrawal: createAccountLiquidityWithdrawal,
+    addPeerLiquidity: addPeerLiquidity,
     createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
+    createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
     finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
     rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal
   }

@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
@@ -15,6 +16,7 @@ import {
 import { AssetService } from '../../asset/service'
 import { AccountFactory } from '../../tests/accountFactory'
 import { randomAsset, randomUnit } from '../../tests/asset'
+import { PeerFactory } from '../../tests/peerFactory'
 import { truncateTables } from '../../tests/tableManager'
 import { LiquidityError, LiquidityMutationResponse } from '../generated/graphql'
 
@@ -24,6 +26,7 @@ describe('Withdrawal Resolvers', (): void => {
   let accountFactory: AccountFactory
   let accountingService: AccountingService
   let assetService: AssetService
+  let peerFactory: PeerFactory
   let knex: Knex
   const timeout = BigInt(10e9) // 10 seconds
 
@@ -82,6 +85,8 @@ describe('Withdrawal Resolvers', (): void => {
       accountingService = await deps.use('accountingService')
       assetService = await deps.use('assetService')
       accountFactory = new AccountFactory(accountingService)
+      const peerService = await deps.use('peerService')
+      peerFactory = new PeerFactory(peerService)
     }
   )
 
@@ -93,21 +98,21 @@ describe('Withdrawal Resolvers', (): void => {
     }
   )
 
-  describe('Add account liquidity', (): void => {
-    let accountId: string
+  describe('Add peer liquidity', (): void => {
+    let peerId: string
 
     beforeEach(
       async (): Promise<void> => {
-        accountId = (await accountFactory.build()).id
+        peerId = (await peerFactory.build()).id
       }
     )
 
-    test('Can add liquidity to account', async (): Promise<void> => {
+    test('Can add liquidity to peer', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAccountLiquidity($input: AddAccountLiquidityInput!) {
-              addAccountLiquidity(input: $input) {
+            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
+              addPeerLiquidity(input: $input) {
                 code
                 success
                 message
@@ -117,7 +122,7 @@ describe('Withdrawal Resolvers', (): void => {
           `,
           variables: {
             input: {
-              accountId,
+              peerId,
               amount: '100'
             }
           }
@@ -125,7 +130,7 @@ describe('Withdrawal Resolvers', (): void => {
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.addAccountLiquidity
+              return query.data.addPeerLiquidity
             } else {
               throw new Error('Data was empty')
             }
@@ -141,8 +146,8 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAccountLiquidity($input: AddAccountLiquidityInput!) {
-              addAccountLiquidity(input: $input) {
+            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
+              addPeerLiquidity(input: $input) {
                 code
                 success
                 message
@@ -153,7 +158,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid v4',
-              accountId,
+              peerId,
               amount: '100'
             }
           }
@@ -161,7 +166,7 @@ describe('Withdrawal Resolvers', (): void => {
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.addAccountLiquidity
+              return query.data.addPeerLiquidity
             } else {
               throw new Error('Data was empty')
             }
@@ -174,12 +179,12 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.error).toEqual(LiquidityError.InvalidId)
     })
 
-    test('Returns an error for unknown account', async (): Promise<void> => {
+    test('Returns an error for unknown peer', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAccountLiquidity($input: AddAccountLiquidityInput!) {
-              addAccountLiquidity(input: $input) {
+            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
+              addPeerLiquidity(input: $input) {
                 code
                 success
                 message
@@ -189,7 +194,7 @@ describe('Withdrawal Resolvers', (): void => {
           `,
           variables: {
             input: {
-              accountId: uuid(),
+              peerId: uuid(),
               amount: '100'
             }
           }
@@ -197,7 +202,7 @@ describe('Withdrawal Resolvers', (): void => {
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.addAccountLiquidity
+              return query.data.addPeerLiquidity
             } else {
               throw new Error('Data was empty')
             }
@@ -206,8 +211,8 @@ describe('Withdrawal Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
-      expect(response.message).toEqual('Unknown account')
-      expect(response.error).toEqual(LiquidityError.UnknownAccount)
+      expect(response.message).toEqual('Unknown peer')
+      expect(response.error).toEqual(LiquidityError.UnknownPeer)
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -221,8 +226,8 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAccountLiquidity($input: AddAccountLiquidityInput!) {
-              addAccountLiquidity(input: $input) {
+            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
+              addPeerLiquidity(input: $input) {
                 code
                 success
                 message
@@ -233,7 +238,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id,
-              accountId,
+              peerId,
               amount: '100'
             }
           }
@@ -241,7 +246,7 @@ describe('Withdrawal Resolvers', (): void => {
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.addAccountLiquidity
+              return query.data.addPeerLiquidity
             } else {
               throw new Error('Data was empty')
             }
@@ -417,25 +422,29 @@ describe('Withdrawal Resolvers', (): void => {
     })
   })
 
-  describe('Create account liquidity withdrawal', (): void => {
-    let accountId: string
+  describe('Create peer liquidity withdrawal', (): void => {
+    let peerId: string
     const startingBalance = BigInt(100)
 
     beforeEach(
       async (): Promise<void> => {
-        accountId = (await accountFactory.build({ balance: startingBalance }))
-          .id
+        const peer = await peerFactory.build()
+        await addLiquidity({
+          account: peer,
+          amount: startingBalance
+        })
+        peerId = peer.id
       }
     )
 
-    test('Can create liquidity withdrawal from account', async (): Promise<void> => {
+    test('Can create liquidity withdrawal from peer', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountLiquidityWithdrawal(
-              $input: CreateAccountLiquidityWithdrawalInput!
+            mutation CreatePeerLiquidityWithdrawal(
+              $input: CreatePeerLiquidityWithdrawalInput!
             ) {
-              createAccountLiquidityWithdrawal(input: $input) {
+              createPeerLiquidityWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -446,7 +455,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              accountId,
+              peerId,
               amount: startingBalance.toString()
             }
           }
@@ -454,7 +463,7 @@ describe('Withdrawal Resolvers', (): void => {
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.createAccountLiquidityWithdrawal
+              return query.data.createPeerLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -466,14 +475,14 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.error).toBeNull()
     })
 
-    test('Returns an error for unknown account', async (): Promise<void> => {
+    test('Returns an error for unknown peer', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountLiquidityWithdrawal(
-              $input: CreateAccountLiquidityWithdrawalInput!
+            mutation CreatePeerLiquidityWithdrawal(
+              $input: CreatePeerLiquidityWithdrawalInput!
             ) {
-              createAccountLiquidityWithdrawal(input: $input) {
+              createPeerLiquidityWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -484,7 +493,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              accountId: uuid(),
+              peerId: uuid(),
               amount: '100'
             }
           }
@@ -492,7 +501,7 @@ describe('Withdrawal Resolvers', (): void => {
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.createAccountLiquidityWithdrawal
+              return query.data.createPeerLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -501,18 +510,18 @@ describe('Withdrawal Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
-      expect(response.message).toEqual('Unknown account')
-      expect(response.error).toEqual(LiquidityError.UnknownAccount)
+      expect(response.message).toEqual('Unknown peer')
+      expect(response.error).toEqual(LiquidityError.UnknownPeer)
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountLiquidityWithdrawal(
-              $input: CreateAccountLiquidityWithdrawalInput!
+            mutation CreatePeerLiquidityWithdrawal(
+              $input: CreatePeerLiquidityWithdrawalInput!
             ) {
-              createAccountLiquidityWithdrawal(input: $input) {
+              createPeerLiquidityWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -523,7 +532,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid',
-              accountId,
+              peerId,
               amount: startingBalance.toString()
             }
           }
@@ -531,7 +540,7 @@ describe('Withdrawal Resolvers', (): void => {
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.createAccountLiquidityWithdrawal
+              return query.data.createPeerLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -555,10 +564,10 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountLiquidityWithdrawal(
-              $input: CreateAccountLiquidityWithdrawalInput!
+            mutation CreatePeerLiquidityWithdrawal(
+              $input: CreatePeerLiquidityWithdrawalInput!
             ) {
-              createAccountLiquidityWithdrawal(input: $input) {
+              createPeerLiquidityWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -569,7 +578,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id,
-              accountId,
+              peerId,
               amount: startingBalance.toString()
             }
           }
@@ -577,7 +586,7 @@ describe('Withdrawal Resolvers', (): void => {
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.createAccountLiquidityWithdrawal
+              return query.data.createPeerLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -593,10 +602,10 @@ describe('Withdrawal Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountLiquidityWithdrawal(
-              $input: CreateAccountLiquidityWithdrawalInput!
+            mutation CreatePeerLiquidityWithdrawal(
+              $input: CreatePeerLiquidityWithdrawalInput!
             ) {
-              createAccountLiquidityWithdrawal(input: $input) {
+              createPeerLiquidityWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -607,7 +616,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              accountId,
+              peerId,
               amount: (startingBalance + BigInt(1)).toString()
             }
           }
@@ -615,7 +624,7 @@ describe('Withdrawal Resolvers', (): void => {
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.createAccountLiquidityWithdrawal
+              return query.data.createPeerLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -850,7 +859,7 @@ describe('Withdrawal Resolvers', (): void => {
     })
   })
 
-  describe.each(['account', 'asset'])(
+  describe.each(['peer', 'asset'])(
     'Finalize %s liquidity withdrawal',
     (type): void => {
       let withdrawalId: string
@@ -858,9 +867,10 @@ describe('Withdrawal Resolvers', (): void => {
       beforeEach(
         async (): Promise<void> => {
           let account: AccountOptions
-          if (type === 'account') {
-            account = await accountFactory.build()
+          if (type === 'peer') {
+            account = await peerFactory.build()
           } else {
+            assert.equal(type, 'asset')
             account = {
               asset: {
                 unit: randomUnit(),
@@ -1054,7 +1064,7 @@ describe('Withdrawal Resolvers', (): void => {
     }
   )
 
-  describe.each(['account', 'asset'])(
+  describe.each(['peer', 'asset'])(
     'Roll back %s liquidity withdrawal',
     (type): void => {
       let withdrawalId: string
@@ -1062,9 +1072,10 @@ describe('Withdrawal Resolvers', (): void => {
       beforeEach(
         async (): Promise<void> => {
           let account: AccountOptions
-          if (type === 'account') {
-            account = await accountFactory.build()
+          if (type === 'peer') {
+            account = await peerFactory.build()
           } else {
+            assert.equal(type, 'asset')
             account = {
               asset: {
                 unit: randomUnit(),

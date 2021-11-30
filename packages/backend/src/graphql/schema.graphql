@@ -50,17 +50,15 @@ type Mutation {
     idempotencyKey: ID!
   ): TransferMutationResponse
 
-  "Add account liquidity"
-  addAccountLiquidity(
-    input: AddAccountLiquidityInput!
-  ): LiquidityMutationResponse
+  "Add peer liquidity"
+  addPeerLiquidity(input: AddPeerLiquidityInput!): LiquidityMutationResponse
 
   "Add asset liquidity"
   addAssetLiquidity(input: AddAssetLiquidityInput!): LiquidityMutationResponse
 
-  "Create liquidity withdrawal from account"
-  createAccountLiquidityWithdrawal(
-    input: CreateAccountLiquidityWithdrawalInput!
+  "Create liquidity withdrawal from peer"
+  createPeerLiquidityWithdrawal(
+    input: CreatePeerLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
   "Create liquidity withdrawal from asset"
@@ -135,9 +133,9 @@ input AssetInput {
   scale: Int!
 }
 
-input AddAccountLiquidityInput {
-  "The id of the account to add liquidity."
-  accountId: String!
+input AddPeerLiquidityInput {
+  "The id of the peer to add liquidity."
+  peerId: String!
   "Amount of liquidity to add."
   amount: UInt64!
   "The id of the transfer."
@@ -153,9 +151,9 @@ input AddAssetLiquidityInput {
   id: String
 }
 
-input CreateAccountLiquidityWithdrawalInput {
-  "The id of the account to create the withdrawal for."
-  accountId: String!
+input CreatePeerLiquidityWithdrawalInput {
+  "The id of the peer to create the withdrawal for."
+  peerId: String!
   "Amount of withdrawal."
   amount: UInt64!
   "The id of the withdrawal."
@@ -182,8 +180,8 @@ enum LiquidityError {
   InsufficientBalance
   InvalidId
   TransferExists
-  UnknownAccount
   UnknownAsset
+  UnknownPeer
   UnknownTransfer
 }
 
