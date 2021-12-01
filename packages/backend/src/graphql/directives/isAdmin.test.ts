@@ -62,7 +62,12 @@ describe('isAdmin Directive', (): void => {
       })
       client = new ApolloClient({
         link: httpLink,
-        cache: new InMemoryCache()
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          query: {
+            fetchPolicy: 'no-cache'
+          }
+        }
       })
     }
   )
@@ -119,7 +124,6 @@ describe('isAdmin Directive', (): void => {
         })
         .then((query) => {
           if (query.data) {
-            console.log(query.data.hello)
             return query.data.hello
           } else {
             throw new Error('Data was empty')
