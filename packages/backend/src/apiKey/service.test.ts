@@ -9,9 +9,9 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { truncateTables } from '../tests/tableManager'
-import { AccountService } from '../account/service'
-import { AccountFactory } from '../tests/accountFactory'
-import { Account } from '../account/model'
+import { AccountService } from '../open_payments/account/service'
+import { randomAsset } from '../tests/asset'
+import { Account } from '../open_payments/account/model'
 import bcrypt from 'bcrypt'
 import { ApiKeyError, isApiKeyError } from './errors'
 
@@ -21,7 +21,6 @@ describe('Api Key Service', (): void => {
   let workerUtils: WorkerUtils
   let apiKeyService: ApiKeyService
   let accountService: AccountService
-  let accountFactory: AccountFactory
   let account: Account
   let knex: Knex
   const messageProducer = new GraphileProducer()
@@ -42,13 +41,12 @@ describe('Api Key Service', (): void => {
       knex = await deps.use('knex')
       apiKeyService = await deps.use('apiKeyService')
       accountService = await deps.use('accountService')
-      accountFactory = new AccountFactory(accountService)
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      account = await accountFactory.build()
+      account = await accountService.create({ asset: randomAsset() })
     }
   )
 

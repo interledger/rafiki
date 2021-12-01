@@ -12,3 +12,7 @@ export function randomAsset(): { code: string; scale: number } {
     scale: randomInt(0, 256)
   }
 }
+
+export function randomUnit(): number {
+  return randomInt(2 ** 16)
+}

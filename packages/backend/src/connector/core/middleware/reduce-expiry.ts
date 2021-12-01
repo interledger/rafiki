@@ -1,6 +1,6 @@
 import { IlpPrepare, Errors } from 'ilp-packet'
 import { Logger } from 'pino'
-import { RafikiContext, RafikiMiddleware } from '..'
+import { ILPContext, ILPMiddleware } from '..'
 const { InsufficientTimeoutError } = Errors
 
 export interface ReduceExpiryMiddlewareOptions {
@@ -68,10 +68,10 @@ function getDestinationExpiry(
 export function createOutgoingReduceExpiryMiddleware({
   minExpirationWindow,
   maxHoldWindow
-}: ReduceExpiryMiddlewareOptions): RafikiMiddleware {
+}: ReduceExpiryMiddlewareOptions): ILPMiddleware {
   return async (
-    { services: { logger }, request: { prepare } }: RafikiContext,
-    next: () => Promise<unknown>
+    { services: { logger }, request: { prepare } }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     // TODO: These values should not be undefined. The defaults should be set in the service
     prepare.expiresAt = getDestinationExpiry(

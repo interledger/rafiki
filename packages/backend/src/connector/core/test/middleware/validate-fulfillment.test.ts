@@ -1,6 +1,6 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
-import { createContext } from '../../utils'
+import { ZeroCopyIlpPrepare } from '../..'
+import { createILPContext } from '../../utils'
 import { createOutgoingValidateFulfillmentMiddleware } from '../../middleware/validate-fulfillment'
 import {
   IlpPrepareFactory,
@@ -13,8 +13,7 @@ const { WrongConditionError } = Errors
 
 describe('Validate Fulfillment Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const ctx = createContext<unknown, RafikiContext>()
-  ctx.services = services
+  const ctx = createILPContext({ services })
   const middleware = createOutgoingValidateFulfillmentMiddleware()
 
   beforeEach(() => {

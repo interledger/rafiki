@@ -1,19 +1,5 @@
 import { Resolvers } from '../generated/graphql'
-import {
-  getAccount,
-  getAccounts,
-  getAccountsConnectionPageInfo,
-  getSubAccountsConnectionPageInfo,
-  getBalance,
-  getSuperAccount,
-  createAccount,
-  updateAccount,
-  deleteAccount,
-  createSubAccount,
-  getSubAccounts
-} from './account'
-import { extendCredit, revokeCredit, utilizeCredit, settleDebt } from './credit'
-import { createDeposit } from './deposit'
+import { getAccount, createAccount } from './account'
 import { getAccountInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
@@ -21,14 +7,27 @@ import {
   approveOutgoingPayment,
   requoteOutgoingPayment,
   cancelOutgoingPayment,
-  getOutcome
+  getOutcome,
+  getAccountOutgoingPayments,
+  getOutgoingPaymentPageInfo
 } from './outgoing_payment'
-import {
-  createWithdrawal,
-  finalizePendingWithdrawal,
-  rollbackPendingWithdrawal
-} from './withdrawal'
 import { createApiKey, deleteAllApiKeys, redeemSessionKey } from './apiKey'
+import {
+  getPeer,
+  getPeers,
+  getPeersConnectionPageInfo,
+  createPeer,
+  updatePeer,
+  deletePeer
+} from './peer'
+import {
+  addAssetLiquidity,
+  addPeerLiquidity,
+  createAssetLiquidityWithdrawal,
+  createPeerLiquidityWithdrawal,
+  finalizeLiquidityWithdrawal,
+  rollbackLiquidityWithdrawal
+} from './liquidity'
 import { GraphQLBigInt } from '../scalars'
 import { refreshSession, revokeSession } from './session'
 
@@ -36,66 +35,45 @@ export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
   Query: {
     account: getAccount,
-    accounts: getAccounts,
-    outgoingPayment: getOutgoingPayment
-    // deposit: getDeposit,
-    // webhook: getWebhook
-    // withdrawal: getWithdrawal
+    outgoingPayment: getOutgoingPayment,
+    peer: getPeer,
+    peers: getPeers
   },
   Account: {
-    balance: getBalance,
     invoices: getAccountInvoices,
-    superAccount: getSuperAccount,
-    subAccounts: getSubAccounts
-    // deposits: getDeposits,
-    // webhooks: getWebhooks,
-    // withdrawals: getWithdrawals,
-  },
-  AccountsConnection: {
-    pageInfo: getAccountsConnectionPageInfo
-  },
-  DepositsConnection: {
-    // pageInfo: getDepositsConnectionPageInfo
+    outgoingPayments: getAccountOutgoingPayments
   },
   InvoiceConnection: {
     pageInfo: getPageInfo
   },
+  OutgoingPaymentConnection: {
+    pageInfo: getOutgoingPaymentPageInfo
+  },
   OutgoingPayment: {
     outcome: getOutcome
   },
-  SubAccountsConnection: {
-    pageInfo: getSubAccountsConnectionPageInfo
-  },
-  WebhooksConnection: {
-    // pageInfo: getWebhooksConnectionPageInfo
-  },
-  WithdrawalsConnection: {
-    // pageInfo: getWithdrawalsConnectionPageInfo
+  PeersConnection: {
+    pageInfo: getPeersConnectionPageInfo
   },
   Mutation: {
-    createAccount: createAccount,
-    updateAccount: updateAccount,
-    deleteAccount: deleteAccount,
-    createSubAccount: createSubAccount,
+    createAccount,
     createOutgoingPayment,
     approveOutgoingPayment,
     requoteOutgoingPayment,
     cancelOutgoingPayment,
-    // createWebhook: createWebhook,
-    // updateWebhook: updateWebhook,
-    // deleteWebhook: deleteWebhook,
-    createDeposit: createDeposit,
-    createWithdrawal: createWithdrawal,
-    finalizePendingWithdrawal: finalizePendingWithdrawal,
-    rollbackPendingWithdrawal: rollbackPendingWithdrawal,
-    extendCredit: extendCredit,
-    revokeCredit: revokeCredit,
-    utilizeCredit: utilizeCredit,
-    settleDebt: settleDebt,
     createApiKey: createApiKey,
     redeemSessionKey: redeemSessionKey,
     deleteAllApiKeys: deleteAllApiKeys,
     refreshSession: refreshSession,
-    revokeSession: revokeSession
+    revokeSession: revokeSession,
+    createPeer: createPeer,
+    updatePeer: updatePeer,
+    deletePeer: deletePeer,
+    addAssetLiquidity: addAssetLiquidity,
+    addPeerLiquidity: addPeerLiquidity,
+    createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
+    createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
+    finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
+    rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal
   }
 }

@@ -1,5 +1,5 @@
 import { errorToIlpReject } from 'ilp-packet'
-import { RafikiContext } from '../rafiki'
+import { ILPContext, ILPMiddleware } from '../rafiki'
 
 /**
  * Catch errors that bubble back along the pipeline and convert to an ILP Reject
@@ -7,10 +7,12 @@ import { RafikiContext } from '../rafiki'
  * Important rule! It ensures any errors thrown through the middleware pipe is converted to correct ILP
  * reject that is sent back to sender.
  */
-export function createIncomingErrorHandlerMiddleware(serverAddress: string) {
+export function createIncomingErrorHandlerMiddleware(
+  serverAddress: string
+): ILPMiddleware {
   return async (
-    { response, services: { logger } }: RafikiContext,
-    next: () => Promise<unknown>
+    { response, services: { logger } }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     try {
       await next()
@@ -23,7 +25,7 @@ export function createIncomingErrorHandlerMiddleware(serverAddress: string) {
       if (!err || typeof err !== 'object') {
         err = new Error('Non-object thrown: ' + e)
       }
-      logger.error({ err }, 'Error thrown in incoming pipeline')
+      logger.debug({ err }, 'Error thrown in incoming pipeline')
       response.reject = errorToIlpReject(serverAddress, err)
     }
   }

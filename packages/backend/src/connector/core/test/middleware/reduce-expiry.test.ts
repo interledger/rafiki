@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Errors } from 'ilp-packet'
-import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import { ZeroCopyIlpPrepare } from '../..'
 import {
   IlpPrepareFactory,
   PeerAccountFactory,
   RafikiServicesFactory
 } from '../../factories'
-import { createContext } from '../../utils'
+import { createILPContext } from '../../utils'
 import { createOutgoingReduceExpiryMiddleware } from '../../middleware/reduce-expiry'
 
 const { InsufficientTimeoutError } = Errors
@@ -17,16 +17,17 @@ describe('Outgoing Reduce Expiry Middleware', function () {
   const services = RafikiServicesFactory.build()
   const alice = PeerAccountFactory.build({ id: 'alice' })
   const bob = PeerAccountFactory.build({ id: 'bob' })
-  const ctx = createContext<unknown, RafikiContext>()
-  ctx.services = services
-  ctx.accounts = {
-    get incoming() {
-      return alice
-    },
-    get outgoing() {
-      return bob
+  const ctx = createILPContext({
+    services,
+    accounts: {
+      get incoming() {
+        return alice
+      },
+      get outgoing() {
+        return bob
+      }
     }
-  }
+  })
   const minExpirationWindow = 3000
   const maxHoldWindow = 31000
   const middleware = createOutgoingReduceExpiryMiddleware({

@@ -3,7 +3,9 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { AssetService } from './service'
+import { AssetAccount } from '../accounting/service'
 import { createTestApp, TestContainer } from '../tests/app'
+import { randomAsset } from '../tests/asset'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { truncateTables } from '../tests/tableManager'
 import { GraphileProducer } from '../messaging/graphileProducer'
@@ -54,17 +56,13 @@ describe('Asset Service', (): void => {
 
   describe('Create or Get Asset', (): void => {
     test('Asset can be created or fetched', async (): Promise<void> => {
-      const asset = {
-        code: 'USD',
-        scale: 2
-      }
+      const asset = randomAsset()
       await expect(assetService.get(asset)).resolves.toBeUndefined()
       const newAsset = await assetService.getOrCreate(asset)
       const expectedAsset = {
         ...asset,
         id: newAsset.id,
-        liquidityBalanceId: newAsset.liquidityBalanceId,
-        settlementBalanceId: newAsset.settlementBalanceId
+        unit: newAsset.unit
       }
       await expect(newAsset).toMatchObject(expectedAsset)
       await expect(assetService.get(asset)).resolves.toMatchObject(
@@ -75,6 +73,30 @@ describe('Asset Service', (): void => {
       )
     })
 
+    test('Asset accounts are created', async (): Promise<void> => {
+      const accountingService = await deps.use('accountingService')
+      const unit = 1
+
+      for (const account in AssetAccount) {
+        if (typeof account === 'number') {
+          await expect(
+            accountingService.getAssetAccountBalance(unit, account)
+          ).resolves.toBeUndefined()
+        }
+      }
+
+      const asset = await assetService.getOrCreate(randomAsset())
+      expect(asset.unit).toEqual(unit)
+
+      for (const account in AssetAccount) {
+        if (typeof account === 'number') {
+          await expect(
+            accountingService.getAssetAccountBalance(asset.unit, account)
+          ).resolves.toEqual(BigInt(0))
+        }
+      }
+    })
+
     test('Can get asset by id', async (): Promise<void> => {
       const asset = await assetService.getOrCreate({
         code: 'EUR',
@@ -83,34 +105,6 @@ describe('Asset Service', (): void => {
       await expect(assetService.getById(asset.id)).resolves.toEqual(asset)
 
       await expect(assetService.getById(uuid())).resolves.toBeUndefined()
-    })
-  })
-
-  describe('Get Asset Balances', (): void => {
-    test('Can get liquidity balance', async (): Promise<void> => {
-      const asset = {
-        code: 'XRP',
-        scale: 6
-      }
-      await expect(
-        assetService.getLiquidityBalance(asset)
-      ).resolves.toBeUndefined()
-      await assetService.getOrCreate(asset)
-      await expect(assetService.getLiquidityBalance(asset)).resolves.toEqual(0n)
-    })
-
-    test('Can get settlement balance', async (): Promise<void> => {
-      const asset = {
-        code: 'BTC',
-        scale: 9
-      }
-      await expect(
-        assetService.getSettlementBalance(asset)
-      ).resolves.toBeUndefined()
-      await assetService.getOrCreate(asset)
-      await expect(assetService.getSettlementBalance(asset)).resolves.toEqual(
-        0n
-      )
     })
   })
 })

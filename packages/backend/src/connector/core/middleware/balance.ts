@@ -1,11 +1,17 @@
+import assert from 'assert'
 import { Errors } from 'ilp-packet'
-import { RafikiContext } from '../rafiki'
-import { isAccountTransferError } from '../../../account/errors'
+import { ILPContext, ILPMiddleware } from '../rafiki'
+import { isTransferError, TransferError } from '../../../accounting/errors'
+const {
+  AmountTooLargeError,
+  CannotReceiveError,
+  InsufficientLiquidityError
+} = Errors
 
-export function createBalanceMiddleware() {
+export function createBalanceMiddleware(): ILPMiddleware {
   return async (
-    { request, response, services, accounts }: RafikiContext,
-    next: () => Promise<unknown>
+    { request, response, services, accounts, throw: ctxThrow }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     const { amount } = request.prepare
 
@@ -23,10 +29,12 @@ export function createBalanceMiddleware() {
     })
     if (typeof destinationAmountOrError !== 'bigint') {
       // ConvertError
-      throw new Errors.CannotReceiveError(
+      throw new CannotReceiveError(
         `Exchange rate error: ${destinationAmountOrError}`
       )
     }
+
+    request.prepare.amount = destinationAmountOrError.toString()
 
     // Update balances on prepare
     const trxOrError = await services.accounts.transferFunds({
@@ -37,9 +45,37 @@ export function createBalanceMiddleware() {
       timeout: BigInt(5e9) // 5 seconds
     })
 
-    await next()
+    if (isTransferError(trxOrError)) {
+      switch (trxOrError) {
+        case TransferError.InsufficientBalance:
+        case TransferError.InsufficientLiquidity:
+          throw new InsufficientLiquidityError(trxOrError)
+        case TransferError.ReceiveLimitExceeded: {
+          const receivedAmount = destinationAmountOrError.toString()
+          assert.ok(accounts.outgoing.id)
+          const receiveLimit = await services.accounts.getReceiveLimit(
+            accounts.outgoing.id
+          )
+          assert.ok(receiveLimit !== undefined)
+          if (receiveLimit === BigInt(0)) {
+            throw new CannotReceiveError('receive limit already reached')
+          }
+          const maximumAmount = receiveLimit.toString()
+          throw new AmountTooLargeError(
+            `amount too large. maxAmount=${maximumAmount} actualAmount=${receivedAmount}`,
+            {
+              receivedAmount,
+              maximumAmount
+            }
+          )
+        }
+        default:
+          // TODO: map transfer errors to ILP errors or throw from transferFunds
+          ctxThrow(500, destinationAmountOrError.toString())
+      }
+    } else {
+      await next()
 
-    if (!isAccountTransferError(trxOrError)) {
       if (response.fulfill) {
         await trxOrError.commit()
       } else {

@@ -1,4 +1,4 @@
 export enum HttpTokenError {
   DuplicateToken = 'DuplicateToken',
-  UnknownAccount = 'UnknownAccount'
+  UnknownPeer = 'UnknownPeer'
 }

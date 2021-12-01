@@ -1,14 +1,14 @@
 import { Errors } from 'ilp-packet'
-import { RafikiContext, RafikiMiddleware } from '..'
+import { ILPContext, ILPMiddleware } from '..'
 const { AmountTooLargeError } = Errors
 
 /**
  * @throws {AmountTooLargeError} Throws if the request amount is greater than the prescribed max packet amount.
  */
-export function createIncomingMaxPacketAmountMiddleware(): RafikiMiddleware {
+export function createIncomingMaxPacketAmountMiddleware(): ILPMiddleware {
   return async (
-    { services: { logger }, request, accounts: { incoming } }: RafikiContext,
-    next: () => Promise<unknown>
+    { services: { logger }, request, accounts: { incoming } }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     const { maxPacketAmount } = incoming
     if (maxPacketAmount) {

@@ -1,14 +1,9 @@
-import { Pojo, ModelOptions, QueryContext } from 'objection'
+import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
+import { Account } from '../open_payments/account/model'
 import { BaseModel } from '../shared/baseModel'
 
-const fieldPrefixes = [
-  'intent',
-  'quote',
-  'sourceAccount',
-  'destinationAccount',
-  'outcome'
-]
+const fieldPrefixes = ['intent', 'quote', 'destinationAccount', 'outcome']
 
 const ratioFields = [
   'quoteMinExchangeRate',
@@ -30,6 +25,7 @@ export class OutgoingPayment extends BaseModel {
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
+  public withdrawLiquidity!: boolean
 
   public intent!: PaymentIntent
 
@@ -46,31 +42,35 @@ export class OutgoingPayment extends BaseModel {
     // (Pay.PositiveRatio, but validated later)
     highExchangeRateEstimate: Pay.Ratio
   }
-  public superAccountId!: string
-  public sourceAccount!: {
-    id: string
-    scale: number
-    code: string
-  }
+  // Open payments account id of the sender
+  public accountId!: string
+  public account!: Account
   public destinationAccount!: {
     scale: number
     code: string
     url?: string
   }
 
+  static relationMappings = {
+    account: {
+      relation: Model.HasOneRelation,
+      modelClass: Account,
+      join: {
+        from: 'outgoingPayments.accountId',
+        to: 'accounts.id'
+      }
+    }
+  }
+
   $beforeUpdate(opts: ModelOptions, queryContext: QueryContext): void {
     super.$beforeUpdate(opts, queryContext)
-    if (
-      opts.old &&
-      opts.old['error'] &&
-      this.state &&
-      this.state !== PaymentState.Cancelling &&
-      this.state !== PaymentState.Cancelled
-    ) {
-      this.error = null
-    }
-    if (opts.old && this.state && opts.old['state'] !== this.state) {
-      this.stateAttempts = 0
+    if (opts.old && this.state) {
+      if (opts.old['error'] && this.state !== PaymentState.Cancelled) {
+        this.error = null
+      }
+      if (opts.old['state'] !== this.state) {
+        this.stateAttempts = 0
+      }
     }
   }
 
@@ -128,17 +128,16 @@ export enum PaymentState {
   // On success, transition to `Ready`.
   // On failure, transition to `Cancelled`.
   Inactive = 'Inactive',
-  // Awaiting user approval. Approval is automatic if `autoApprove` is set.
-  // Once approved, transitions to `Activated`.
+  // Awaiting user approval. Approval is automatic if `intent.autoApprove` is set.
+  // Once approved, transitions to `Funding`.
   Ready = 'Ready',
-  // During activation, money from the user's (parent) account is moved to the trustline to reserve it for the payment.
+  // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
   // On success, transition to `Sending`.
-  Activated = 'Activated',
+  Funding = 'Funding',
   // Pay from the trustline account to the destination.
+  // On success, transition to `Completed`.
   Sending = 'Sending',
 
-  // Transitions to Cancelled once leftover reserved money is refunded to the parent account.
-  Cancelling = 'Cancelling',
   // The payment failed. (Though some money may have been delivered).
   // Requoting transitions to `Inactive`.
   Cancelled = 'Cancelled',

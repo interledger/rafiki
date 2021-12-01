@@ -1,9 +1,8 @@
-import * as assert from 'assert'
 import * as Pay from '@interledger/pay'
+
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
-import { CreditError } from '../credit/errors'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -14,10 +13,10 @@ export enum LifecycleError {
   PricesUnavailable = 'PricesUnavailable',
   // Payment aborted via "cancel payment" API call.
   CancelledByAPI = 'CancelledByAPI',
-  // Not enough money in the super-account.
-  InsufficientBalance = 'InsufficientBalance',
-  // Error from the account service, except an InsufficientBalance. (see: CreditError)
-  AccountServiceError = 'AccountServiceError',
+  // Payment needs to be funded.
+  Unfunded = 'Unfunded',
+  // Payment liquidity needs to be withdrawn.
+  LeftoverLiquidity = 'LeftoverLiquidity',
   // Edge error due to retries, partial payment, and database write errors.
   BadState = 'BadState',
 
@@ -45,27 +44,27 @@ export async function handleQuoting(
     invoiceUrl: payment.intent.invoiceUrl
   })
 
-  assert.equal(
-    destination.destinationAsset.scale,
-    payment.destinationAccount.scale,
-    'destination scale mismatch'
-  )
-  assert.equal(
-    destination.destinationAsset.code,
-    payment.destinationAccount.code,
-    'destination code mismatch'
-  )
+  if (
+    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
+    payment.destinationAccount.code !== destination.destinationAsset.code
+  ) {
+    deps.logger.warn(
+      {
+        oldAsset: payment.destinationAccount,
+        newAsset: destination.destinationAsset
+      },
+      'asset changed'
+    )
+    throw Pay.PaymentError.DestinationAssetConflict
+  }
 
   // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
   let amountToSend: bigint | undefined
   if (payment.intent.amountToSend) {
-    const balance = await deps.accountService.getBalance(
-      payment.sourceAccount.id
-    )
-    if (!balance) {
+    const amountSent = await deps.accountingService.getTotalSent(payment.id)
+    if (amountSent === undefined) {
       throw LifecycleError.MissingBalance
     }
-    const amountSent = balance.totalBorrowed - balance.balance
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
       // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.
@@ -78,7 +77,7 @@ export async function handleQuoting(
         },
         'quote amountToSend bounds error'
       )
-      await paymentCompleted(deps, payment)
+      await sendingCompleted(deps, payment)
       return
     }
   }
@@ -87,8 +86,8 @@ export async function handleQuoting(
     plugin,
     destination,
     sourceAsset: {
-      scale: payment.sourceAccount.scale,
-      code: payment.sourceAccount.code
+      scale: payment.account.asset.scale,
+      code: payment.account.asset.code
     },
     amountToSend,
     slippage: deps.slippage,
@@ -112,7 +111,7 @@ export async function handleQuoting(
   // InvoiceAlreadyPaid: the invoice was already paid, either by this payment (which retried due to a failed Sending→Completed transition commit) or another payment entirely.
   if (quote === null) {
     deps.logger.warn('quote invoice already paid')
-    await paymentCompleted(deps, payment)
+    await sendingCompleted(deps, payment)
     return
   }
 
@@ -145,7 +144,7 @@ export async function handleReady(
     throw LifecycleError.QuoteExpired
   }
   if (payment.intent.autoApprove) {
-    await payment.$query(deps.knex).patch({ state: PaymentState.Activated })
+    await payment.$query(deps.knex).patch({ state: PaymentState.Funding })
     deps.logger.debug('auto-approve')
     return
   }
@@ -160,7 +159,7 @@ export async function handleReady(
 }
 
 // "payment" is locked by the "deps.knex" transaction.
-export async function handleActivation(
+export async function handleFunding(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
@@ -169,25 +168,16 @@ export async function handleActivation(
     throw LifecycleError.QuoteExpired
   }
 
-  await refundLeftoverBalance(deps, payment)
-  const error = await deps.creditService.extend({
-    accountId: payment.superAccountId,
-    subAccountId: payment.sourceAccount.id,
-    amount: payment.quote.maxSourceAmount,
-    autoApply: true
-  })
-  if (error === CreditError.InsufficientBalance) {
-    throw LifecycleError.InsufficientBalance
-  } else if (error) {
-    // Unexpected account service errors: the money was not reserved.
-    deps.logger.warn(
-      {
-        error
-      },
-      'extend credit error'
-    )
-    throw LifecycleError.AccountServiceError
+  const balance = await deps.accountingService.getBalance(payment.id)
+  if (balance === undefined) {
+    throw LifecycleError.MissingBalance
   }
+  if (balance < payment.quote.maxSourceAmount) {
+    // TODO: request payment liquidity from open payment account's wallet account
+
+    throw LifecycleError.Unfunded
+  }
+
   await payment.$query(deps.knex).patch({ state: PaymentState.Sending })
 }
 
@@ -204,14 +194,29 @@ export async function handleSending(
     paymentPointer: payment.intent.paymentPointer,
     invoiceUrl: payment.intent.invoiceUrl
   })
-  const balance = await deps.accountService.getBalance(payment.sourceAccount.id)
-  if (!balance) {
+
+  if (
+    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
+    payment.destinationAccount.code !== destination.destinationAsset.code
+  ) {
+    deps.logger.warn(
+      {
+        oldAsset: payment.destinationAccount,
+        newAsset: destination.destinationAsset
+      },
+      'asset changed'
+    )
+    throw Pay.PaymentError.DestinationAssetConflict
+  }
+
+  const balance = await deps.accountingService.getBalance(payment.id)
+  if (balance === undefined) {
     throw LifecycleError.MissingBalance
   }
 
   // Due to Sending→Sending retries, the quote's amount parameters may need adjusting.
-  const amountSentSinceQuote = payment.quote.maxSourceAmount - balance.balance
-  const newMaxSourceAmount = balance.balance
+  const amountSentSinceQuote = payment.quote.maxSourceAmount - balance
+  const newMaxSourceAmount = balance
 
   let newMinDeliveryAmount
   switch (payment.quote.targetType) {
@@ -252,7 +257,7 @@ export async function handleSending(
       },
       'handleSending payment was already paid'
     )
-    await paymentCompleted(deps, payment)
+    await sendingCompleted(deps, payment)
     return
   } else if (
     newMaxSourceAmount <= BigInt(0) ||
@@ -324,58 +329,44 @@ export async function handleSending(
   )
 
   if (receipt.error) throw receipt.error
-  await paymentCompleted(deps, payment)
+  await sendingCompleted(deps, payment)
+}
+
+const sendingCompleted = async (
+  deps: ServiceDependencies,
+  payment: OutgoingPayment
+): Promise<void> => {
+  await payment.$query(deps.knex).patch({
+    state: PaymentState.Completed,
+    withdrawLiquidity: true
+  })
 }
 
 // "payment" is locked by the "deps.knex" transaction.
-export async function handleCancelling(
+export async function handleLiquidityWithdrawal(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  await refundLeftoverBalance(deps, payment)
-  await payment.$query(deps.knex).patch({ state: PaymentState.Cancelled })
-}
-
-async function paymentCompleted(
-  deps: ServiceDependencies,
-  payment: OutgoingPayment
-): Promise<void> {
-  // Restore leftover reserved money to the parent account.
-  await refundLeftoverBalance(deps, payment)
-  await payment.$query(deps.knex).patch({ state: PaymentState.Completed })
-}
-
-// Refund money in the subaccount to the parent account.
-async function refundLeftoverBalance(
-  deps: ServiceDependencies,
-  payment: OutgoingPayment
-): Promise<void> {
-  const balance = await deps.accountService.getBalance(payment.sourceAccount.id)
-  if (!balance) {
+  const balance = await deps.accountingService.getBalance(payment.id)
+  if (balance === undefined) {
     throw LifecycleError.MissingBalance
   }
-  if (balance.balance === BigInt(0)) return
+  // TODO: verify that the reserved balance is also zero / withdrawal is final
+  if (balance > BigInt(0)) {
+    // TODO: notify wallet to create & finalize payment liquidity withdrawal
 
-  const error = await deps.creditService.settleDebt({
-    accountId: payment.superAccountId,
-    subAccountId: payment.sourceAccount.id,
-    amount: balance.balance,
-    revolve: false
-  })
-  if (error) {
-    deps.logger.warn(
-      {
-        error
-      },
-      'settle debt error'
-    )
-    throw LifecycleError.AccountServiceError
+    throw LifecycleError.LeftoverLiquidity
   }
+  await payment.$query(deps.knex).patch({
+    withdrawLiquidity: false
+  })
 }
 
 const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
   // Lifecycle errors
   PricesUnavailable: true,
+  Unfunded: true,
+  LeftoverLiquidity: true,
   // From @interledger/pay's PaymentError:
   QueryFailed: true,
   ConnectorError: true,

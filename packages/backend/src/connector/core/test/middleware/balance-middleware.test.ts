@@ -1,5 +1,7 @@
-import { createContext } from '../../utils'
-import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import assert from 'assert'
+import { Errors } from 'ilp-packet'
+import { createILPContext } from '../../utils'
+import { ZeroCopyIlpPrepare } from '../..'
 import { createBalanceMiddleware } from '../../middleware'
 import {
   AccountFactory,
@@ -8,22 +10,26 @@ import {
   IlpRejectFactory,
   RafikiServicesFactory
 } from '../../factories'
+import { Balance } from '../../../../accounting/service'
 
 // TODO: make one peer to many account relationship
 const aliceAccount = AccountFactory.build({ id: 'alice' })
 const bobAccount = AccountFactory.build({ id: 'bob' })
+assert.ok(aliceAccount.id)
+assert.ok(bobAccount.id)
 const services = RafikiServicesFactory.build({})
-const ctx = createContext<unknown, RafikiContext>()
-ctx.accounts = {
-  get incoming() {
-    return aliceAccount
+const ctx = createILPContext({
+  accounts: {
+    get incoming() {
+      return aliceAccount
+    },
+    get outgoing() {
+      return bobAccount
+    }
   },
-  get outgoing() {
-    return bobAccount
-  }
-}
-ctx.services = services
-const { accounts } = services
+  services
+})
+const { accounts, rates } = services
 
 beforeEach(async () => {
   ctx.response.fulfill = undefined
@@ -54,6 +60,23 @@ describe('Balance Middleware', function () {
 
     const bobBalance = await accounts.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(100))
+  })
+
+  it('converts prepare amount to destination asset', async () => {
+    const prepare = IlpPrepareFactory.build({ amount: '100' })
+    const fulfill = IlpFulfillFactory.build()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    const next = jest.fn().mockImplementation(() => {
+      ctx.response.fulfill = fulfill
+    })
+    const destinationAmount = BigInt(200)
+    jest
+      .spyOn(rates, 'convert')
+      .mockImplementationOnce(async () => destinationAmount)
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    expect(prepare.amount).toEqual(destinationAmount.toString())
   })
 
   test('reject response does not adjust the account balances', async () => {
@@ -101,7 +124,76 @@ describe('Balance Middleware', function () {
       ctx.response.reject = reject
     })
 
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
+      Errors.InsufficientLiquidityError
+    )
+
+    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    expect(aliceBalance).toEqual(BigInt(100))
+
+    const bobBalance = await accounts.getBalance(bobAccount.id)
+    expect(bobBalance).toEqual(BigInt(0))
+  })
+
+  test('insufficient liquidity throws T04', async () => {
+    const prepare = IlpPrepareFactory.build({ amount: '200' })
+    const fulfill = IlpFulfillFactory.build()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    const next = jest.fn().mockImplementation(() => {
+      ctx.response.fulfill = fulfill
+    })
+
+    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
+      Errors.InsufficientLiquidityError
+    )
+
+    expect(next).toHaveBeenCalledTimes(0)
+
+    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    expect(aliceBalance).toEqual(BigInt(100))
+
+    const bobBalance = await accounts.getBalance(bobAccount.id)
+    expect(bobBalance).toEqual(BigInt(0))
+  })
+
+  test('receive limit already reached throws F07', async () => {
+    bobAccount.receiveLimit = BigInt(0)
+    bobAccount.withBalance = Balance.ReceiveLimit
+    const prepare = IlpPrepareFactory.build({ amount: '100' })
+    const fulfill = IlpFulfillFactory.build()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    const next = jest.fn().mockImplementation(() => {
+      ctx.response.fulfill = fulfill
+    })
+
+    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
+      Errors.CannotReceiveError
+    )
+
+    expect(next).toHaveBeenCalledTimes(0)
+
+    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    expect(aliceBalance).toEqual(BigInt(100))
+
+    const bobBalance = await accounts.getBalance(bobAccount.id)
+    expect(bobBalance).toEqual(BigInt(0))
+  })
+
+  test('receive limit exceeded throws F08', async () => {
+    bobAccount.receiveLimit = BigInt(10)
+    bobAccount.withBalance = Balance.ReceiveLimit
+    const prepare = IlpPrepareFactory.build({ amount: '100' })
+    const fulfill = IlpFulfillFactory.build()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    const next = jest.fn().mockImplementation(() => {
+      ctx.response.fulfill = fulfill
+    })
+
+    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
+      Errors.AmountTooLargeError
+    )
+
+    expect(next).toHaveBeenCalledTimes(0)
 
     const aliceBalance = await accounts.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
