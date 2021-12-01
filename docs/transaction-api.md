@@ -24,7 +24,7 @@ After the quote ends and state advances, the lock on the payment is released.
 
 ### Authorization
 
-After quoting completes, Rafiki notifies the wallet operator to add `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment, reserving the maximum requisite funds for the payment.
+After quoting completes, Rafiki notifies the wallet operator to add `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment, reserving the maximum requisite funds for the payment attempt.
 
 If the payment intent did not specify `autoApprove` of `true`, a client should manually approve the payment, based on the parameters of the quote, before the wallet adds payment liquidity.
 
