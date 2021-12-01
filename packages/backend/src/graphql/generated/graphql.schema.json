@@ -1486,39 +1486,6 @@
             "deprecationReason": null
           },
           {
-            "name": "approveOutgoingPayment",
-            "description": "Approve a Ready payment's quote.",
-            "args": [
-              {
-                "name": "paymentId",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              }
-            ],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "OutgoingPaymentResponse",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "requoteOutgoingPayment",
             "description": "Requote a Cancelled payment.",
             "args": [
@@ -1553,7 +1520,7 @@
           },
           {
             "name": "cancelOutgoingPayment",
-            "description": "Cancel a Ready payment.",
+            "description": "Cancel a Funding payment.",
             "args": [
               {
                 "name": "paymentId",
@@ -2773,14 +2740,8 @@
         "interfaces": null,
         "enumValues": [
           {
-            "name": "INACTIVE",
-            "description": "Will transition to READY when quote is complete",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "READY",
-            "description": "Quote ready; awaiting user approval (FUNDING) or refusal (CANCELLED)",
+            "name": "QUOTING",
+            "description": "Will transition to FUNDING when quote is complete",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -2798,7 +2759,7 @@
           },
           {
             "name": "CANCELLED",
-            "description": "Payment aborted; can be requoted to INACTIVE",
+            "description": "Payment aborted; can be requoted to QUOTING",
             "isDeprecated": false,
             "deprecationReason": null
           },

@@ -116,7 +116,7 @@ export async function handleQuoting(
   }
 
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Ready,
+    state: PaymentState.Funding,
     quote: {
       timestamp: new Date(),
       activationDeadline: new Date(Date.now() + deps.quoteLifespan),
@@ -131,31 +131,6 @@ export async function handleQuoting(
       highExchangeRateEstimate: quote.highEstimatedExchangeRate
     }
   })
-}
-
-// "payment" is locked by the "deps.knex" transaction.
-export async function handleReady(
-  deps: ServiceDependencies,
-  payment: OutgoingPayment
-): Promise<void> {
-  if (!payment.quote) throw LifecycleError.MissingQuote
-  const now = new Date()
-  if (payment.quote.activationDeadline < now) {
-    throw LifecycleError.QuoteExpired
-  }
-  if (payment.intent.autoApprove) {
-    await payment.$query(deps.knex).patch({ state: PaymentState.Funding })
-    deps.logger.debug('auto-approve')
-    return
-  }
-  deps.logger.error(
-    {
-      activationDeadline: payment.quote.activationDeadline.getTime(),
-      now: now.getTime(),
-      autoApprove: payment.intent.autoApprove
-    },
-    "handleReady for payment that isn't ready"
-  )
 }
 
 // "payment" is locked by the "deps.knex" transaction.

@@ -4,43 +4,41 @@
 
 ### Payment creation
 
-A user creates a payment by passing a `PaymentIntent` to `Mutation.createOutgoingPayment`. If the payment destination (the payment pointer or invoice URL) is successfully resolved, the payment is created in the `Inactive` state.
+A user creates a payment by passing a `PaymentIntent` to `Mutation.createOutgoingPayment`. If the payment destination (the payment pointer or invoice URL) is successfully resolved, the payment is created in the `Quoting` state.
 
 If the payment destination cannot be resolved, no payment is created and the query returns an error.
 
 ### Quoting
 
-To begin a payment attempt, an instance acquires a lock to setup and quote the payment, advancing it from `Inactive` to the `Ready` state.
+To begin a payment attempt, an instance acquires a lock to setup and quote the payment, advancing it from `Quoting` to the `Funding` state.
 
 First, the recipient Open Payments account or invoice is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
 
 Quotes can end in 3 states:
 
-1. Success. The STREAM sender successfully established a connection to the recipient, and discovered rates and the path capacity. This advances the state to `Ready`. The parameters of the quote are persisted so they may be resumed if the payment is approved. Rafiki also assigns a deadline based on the expected validity of its slippage parameters for the user to authorize the payment.
+1. Success. The STREAM sender successfully established a connection to the recipient, and discovered rates and the path capacity. This advances the state to `Funding`. The parameters of the quote are persisted so they may be resumed if the payment is funded. Rafiki also assigns a deadline based on the expected validity of its slippage parameters for the wallet to fund the payment.
 2. Irrevocable failure. In cases such as if the payment pointer or account URL was semantically invalid, the invoice was already paid, a terminal ILP Reject was encountered, or the rate was insufficient, the payment is unlikely to ever succeed, or requires some manual intervention. These cases advance the state to `Cancelled`.
-3. Recoverable failure. In the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available, Rafiki may elect to automatically retry the quote. This returns the state to `Inactive`, but internally tracks that the quote failed and when to schedule another attempt.
+3. Recoverable failure. In the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available, Rafiki may elect to automatically retry the quote. This returns the state to `Quoting`, but internally tracks that the quote failed and when to schedule another attempt.
 
 After the quote ends and state advances, the lock on the payment is released.
 
 ### Authorization
 
-If the payment intent did not specify `autoApprove` of `true`, a client must manually approve the payment, based on the parameters of the quote, before Rafiki may execute it.
+After quoting completes, Rafiki notifies the wallet operator to add `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment, reserving the maximum requisite funds for the payment attempt.
+
+If the payment intent did not specify `autoApprove` of `true`, a client should manually approve the payment, based on the parameters of the quote, before the wallet adds payment liquidity.
 
 This step is necessary so the end user can precisely know the maximum amount of source units that will leave their account. Typically, the payment application will present these parameters in the user interface before the user elects to approve the payment. This step is particularly important for invoices, to prevent an unbounded sum from leaving the user's account. During this step, the user may also be presented with additional information about the payment, such as details of the payment recipient, or how much is expected to be delivered.
 
 Authorization ends in two possible states:
 
-1. Approval. If the user approves the payment before its approval deadline, or `autoApprove` was `true`, the state advances to `Funding`.
+1. Approval. If the user approves the payment before its funding deadline, or `autoApprove` was `true`, the wallet funds the payment and the state advances to `Sending`.
 
-   In this case, Rafiki creates a new Interledger account.
-
-   Then, Rafiki notifies the wallet operator to transfer `maxSourceAmount` of the quote from the funding account owned by the payer to the new account, reserving the maximum requisite funds for the payment.
-
-2. Cancellation. If the user explicitly cancels the quote, or the approval deadline is exceeded, the state advances to `Cancelled`. In the latter case, too much time has elapsed for the enforced exchange rate to remain accurate.
+2. Cancellation. If the user explicitly cancels the quote, or the funding deadline is exceeded, the state advances to `Cancelled`. In the latter case, too much time has elapsed for the enforced exchange rate to remain accurate.
 
 ### Payment execution
 
-An instance acquires a lock on a payment with an `Funding` state and advances it to `Sending`. The STREAM will use the quote parameters acquired during the `Inactive` state.
+An instance acquires a lock on a payment with a `Funding` state and advances it to `Sending`. The STREAM will use the quote parameters acquired during the `Quoting` state.
 
 The instance connects to the Interledger account it created via ILP-over-HTTP, and sends the payment with STREAM.
 
@@ -68,12 +66,12 @@ A payment in the `Cancelled` state may be explicitly retried ("requoted") by the
 
 The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
-| Name             | Optional | Type      | Description                                                                                                                                                                                                                                                                                         |
-| :--------------- | :------- | :-------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `paymentPointer` | Yes      | `String`  | Payment pointer or URL of the destination Open Payments or SPSP account. Requires `amountToSend`.                                                                                                                                                                                                   |
-| `invoiceUrl`     | Yes      | `String`  | URL of an Open Payments invoice, for a fixed-delivery payment.                                                                                                                                                                                                                                      |
-| `amountToSend`   | Yes      | `String`  | Fixed amount to send to the recipient, in base units of the sending asset. Requires `paymentPointer`.                                                                                                                                                                                               |
-| `autoApprove`    | No       | `Boolean` | If `false`, require manual approval after the quote is complete. If `true`, automatically activates and begins execution of the payment after the quote. Note: this should only be used for fixed-source amount payments. Paying invoices without any manual review could send an unbounded amount. |
+| Name             | Optional | Type      | Description                                                                                                                                                                                                                                                                           |
+| :--------------- | :------- | :-------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `paymentPointer` | Yes      | `String`  | Payment pointer or URL of the destination Open Payments or SPSP account. Requires `amountToSend`.                                                                                                                                                                                     |
+| `invoiceUrl`     | Yes      | `String`  | URL of an Open Payments invoice, for a fixed-delivery payment.                                                                                                                                                                                                                        |
+| `amountToSend`   | Yes      | `String`  | Fixed amount to send to the recipient, in base units of the sending asset. Requires `paymentPointer`.                                                                                                                                                                                 |
+| `autoApprove`    | No       | `Boolean` | If `false`, require manual approval after the quote is complete. If `true`, the wallet may automatically fund the payment after the quote. Note: this should only be used for fixed-source amount payments. Paying invoices without any manual review could send an unbounded amount. |
 
 ### `OutgoingPayment`
 
@@ -110,11 +108,10 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
 ### `PaymentState`
 
-- `INACTIVE`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `Ready`. On failure, transition to `Cancelled`.
-- `READY`: Awaiting user approval. Approval is automatic if `intent.autoApprove` is set. Once approved, transitions to `Funding`.
-- `FUNDING`: Money from the user's main account is moved to the payment account to reserve it. On success, transition to `Sending`.
+- `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING`. On failure, transition to `Cancelled`.
+- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `Sending`.
 - `SENDING`: Stream payment from the payment account to the destination.
-- `CANCELLED`: The payment failed. (Though some money may have been delivered). Requoting transitions to `Inactive`.
+- `CANCELLED`: The payment failed. (Though some money may have been delivered). Requoting transitions to `Quoting`.
 - `COMPLETED`: Successful completion.
 
 ### `PaymentType`

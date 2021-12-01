@@ -17,7 +17,6 @@ import * as worker from './worker'
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
   create(options: CreateOutgoingPaymentOptions): Promise<OutgoingPayment>
-  approve(id: string): Promise<OutgoingPayment>
   cancel(id: string): Promise<OutgoingPayment>
   requote(id: string): Promise<OutgoingPayment>
   processNext(): Promise<string | undefined>
@@ -53,7 +52,6 @@ export async function createOutgoingPaymentService(
     get: (id) => getOutgoingPayment(deps, id),
     create: (options: CreateOutgoingPaymentOptions) =>
       createOutgoingPayment(deps, options),
-    approve: (id) => approvePayment(deps, id),
     cancel: (id) => cancelPayment(deps, id),
     requote: (id) => requotePayment(deps, id),
     processNext: () => worker.processPendingPayment(deps),
@@ -99,7 +97,7 @@ async function createOutgoingPayment(
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
-          state: PaymentState.Inactive,
+          state: PaymentState.Quoting,
           intent: {
             paymentPointer: options.paymentPointer,
             invoiceUrl: options.invoiceUrl,
@@ -163,22 +161,7 @@ function requotePayment(
     if (payment.state !== PaymentState.Cancelled) {
       throw new Error(`Cannot quote; payment is in state=${payment.state}`)
     }
-    await payment.$query(trx).patch({ state: PaymentState.Inactive })
-    return payment
-  })
-}
-
-async function approvePayment(
-  deps: ServiceDependencies,
-  id: string
-): Promise<OutgoingPayment> {
-  return deps.knex.transaction(async (trx) => {
-    const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
-    if (!payment) throw new Error('payment does not exist')
-    if (payment.state !== PaymentState.Ready) {
-      throw new Error(`Cannot approve; payment is in state=${payment.state}`)
-    }
-    await payment.$query(trx).patch({ state: PaymentState.Funding })
+    await payment.$query(trx).patch({ state: PaymentState.Quoting })
     return payment
   })
 }
@@ -190,7 +173,7 @@ async function cancelPayment(
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
     if (!payment) throw new Error('payment does not exist')
-    if (payment.state !== PaymentState.Ready) {
+    if (payment.state !== PaymentState.Funding) {
       throw new Error(`Cannot cancel; payment is in state=${payment.state}`)
     }
     await payment.$query(trx).patch({

@@ -197,11 +197,9 @@ export type LiquidityMutationResponse = MutationResponse & {
 export type Mutation = {
   __typename?: 'Mutation';
   createOutgoingPayment: OutgoingPaymentResponse;
-  /** Approve a Ready payment's quote. */
-  approveOutgoingPayment: OutgoingPaymentResponse;
   /** Requote a Cancelled payment. */
   requoteOutgoingPayment: OutgoingPaymentResponse;
-  /** Cancel a Ready payment. */
+  /** Cancel a Funding payment. */
   cancelOutgoingPayment: OutgoingPaymentResponse;
   createAccount: CreateAccountMutationResponse;
   /** Create peer */
@@ -229,11 +227,6 @@ export type Mutation = {
 
 export type MutationCreateOutgoingPaymentArgs = {
   input: CreateOutgoingPaymentInput;
-};
-
-
-export type MutationApproveOutgoingPaymentArgs = {
-  paymentId: Scalars['String'];
 };
 
 
@@ -391,15 +384,13 @@ export type PaymentQuote = {
 };
 
 export enum PaymentState {
-  /** Will transition to READY when quote is complete */
-  Inactive = 'INACTIVE',
-  /** Quote ready; awaiting user approval (FUNDING) or refusal (CANCELLED) */
-  Ready = 'READY',
+  /** Will transition to FUNDING when quote is complete */
+  Quoting = 'QUOTING',
   /** Will transition to SENDING once payment funds are reserved */
   Funding = 'FUNDING',
   /** Paying, will transition to COMPLETED on success */
   Sending = 'SENDING',
-  /** Payment aborted; can be requoted to INACTIVE */
+  /** Payment aborted; can be requoted to QUOTING */
   Cancelled = 'CANCELLED',
   /** Successfuly completion */
   Completed = 'COMPLETED'
@@ -746,7 +737,6 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentArgs, 'input'>>;
-  approveOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationApproveOutgoingPaymentArgs, 'paymentId'>>;
   requoteOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationRequoteOutgoingPaymentArgs, 'paymentId'>>;
   cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'paymentId'>>;
   createAccount?: Resolver<ResolversTypes['CreateAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAccountArgs, 'input'>>;

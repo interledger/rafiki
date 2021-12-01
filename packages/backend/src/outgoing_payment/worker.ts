@@ -9,9 +9,8 @@ import { AssetAccount, Balance } from '../accounting/service'
 export const RETRY_BACKOFF_SECONDS = 10
 
 const maxStateAttempts: { [key in PaymentState]: number } = {
-  Inactive: 5, // quoting
-  Ready: Infinity, // autoapprove
-  Funding: Infinity, // reserve funds
+  Quoting: 5, // quoting
+  Funding: Infinity, // add funds
   Sending: 5, // send money
   Cancelled: Infinity,
   Completed: Infinity
@@ -55,7 +54,7 @@ export async function getPendingPayment(
     .where((builder: knex.QueryBuilder) => {
       builder
         .whereIn('state', [
-          PaymentState.Inactive,
+          PaymentState.Quoting,
           PaymentState.Funding,
           PaymentState.Sending
         ])
@@ -72,12 +71,8 @@ export async function getPendingPayment(
     })
     .orWhere((builder: knex.QueryBuilder) => {
       builder
-        .where('state', PaymentState.Ready)
-        .andWhere((builder: knex.QueryBuilder) => {
-          builder
-            .where('intentAutoApprove', true)
-            .orWhere('quoteActivationDeadline', '<', now)
-        })
+        .where('state', PaymentState.Funding)
+        .andWhere('quoteActivationDeadline', '<', now)
     })
     .withGraphFetched('account.asset')
   return payments[0]
@@ -122,7 +117,7 @@ export async function handlePaymentLifecycle(
   // Plugins are cleaned up in `finally` to avoid leaking http2 connections.
   let plugin: IlpPlugin
   switch (payment.state) {
-    case PaymentState.Inactive:
+    case PaymentState.Quoting:
       // Use asset's sentAccount debit balance to not be limited by liquidity when sending rate probe packets
       plugin = deps.makeIlpPlugin({
         asset: {
@@ -142,8 +137,6 @@ export async function handlePaymentLifecycle(
             )
           })
         })
-    case PaymentState.Ready:
-      return lifecycle.handleReady(deps, payment).catch(onError)
     case PaymentState.Funding:
       return lifecycle.handleFunding(deps, payment).catch(onError)
     case PaymentState.Sending:

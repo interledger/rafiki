@@ -22,11 +22,9 @@ type Mutation {
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
-  "Approve a Ready payment's quote."
-  approveOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
   "Requote a Cancelled payment."
   requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
-  "Cancel a Ready payment."
+  "Cancel a Funding payment."
   cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
 
   createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
@@ -277,15 +275,13 @@ type PaymentIntent {
 }
 
 enum PaymentState {
-  "Will transition to READY when quote is complete"
-  INACTIVE
-  "Quote ready; awaiting user approval (FUNDING) or refusal (CANCELLED)"
-  READY
+  "Will transition to FUNDING when quote is complete"
+  QUOTING
   "Will transition to SENDING once payment funds are reserved"
   FUNDING
   "Paying, will transition to COMPLETED on success"
   SENDING
-  "Payment aborted; can be requoted to INACTIVE"
+  "Payment aborted; can be requoted to QUOTING"
   CANCELLED
   "Successfuly completion"
   COMPLETED
