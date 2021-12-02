@@ -72,7 +72,7 @@ describe('Api Key Service', (): void => {
       const apiKey = await apiKeyService.create(apiKeyOptions)
       expect(apiKey.key).toBeDefined()
       expect(apiKey.hashedKey).toBeDefined()
-      expect(apiKey.accountId).toBeDefined()
+      expect(apiKey.accountId).toEqual(account.id)
       expect(apiKey.createdAt).toBeDefined()
       expect(apiKey.updatedAt).toBeDefined()
       const match = await bcrypt.compare(apiKey.key, apiKey.hashedKey)
