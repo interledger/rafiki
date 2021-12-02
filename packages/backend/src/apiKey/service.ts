@@ -100,15 +100,7 @@ async function redeemApiKey(
 
 async function deleteAllApiKeys(
   deps: ServiceDependencies,
-  { accountId }: ApiKeyOptions,
-  trx?: Transaction
+  { accountId }: ApiKeyOptions
 ): Promise<void> {
-  const keyTrx = trx || (await ApiKey.startTransaction(deps.knex))
-  try {
-    await ApiKey.query(keyTrx).delete().where('accountId', accountId)
-    await keyTrx.commit()
-  } catch (err) {
-    await keyTrx.rollback()
-    throw err
-  }
+  await ApiKey.query(deps.knex).delete().where('accountId', accountId)
 }
