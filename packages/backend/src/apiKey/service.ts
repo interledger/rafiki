@@ -3,15 +3,14 @@ import { SessionService } from '../session/service'
 import { ApiKey } from './model'
 import { uuid } from '../connector/core'
 import bcrypt from 'bcrypt'
-import { Transaction } from 'knex'
 import { SessionKey } from '../session/util'
 import { ApiKeyError } from './errors'
 
 export interface ApiKeyService {
-  create(apiKey: ApiKeyOptions, trx?: Transaction): Promise<NewApiKey>
+  create(apiKey: ApiKeyOptions): Promise<NewApiKey>
   get(apiKey: ApiKeyOptions): Promise<ApiKey[]>
   redeem(sessionKey: SessionKeyOptions): Promise<SessionKey | ApiKeyError>
-  deleteAll(apiKey: ApiKeyOptions, trx?: Transaction): Promise<void>
+  deleteAll(apiKey: ApiKeyOptions): Promise<void>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -45,10 +44,10 @@ export async function createApiKeyService({
     sessionService: sessionKeyService
   }
   return {
-    create: (options, trx) => createApiKey(deps, options, trx),
+    create: (options) => createApiKey(deps, options),
     get: (options) => getApiKeys(deps, options),
     redeem: (options) => redeemApiKey(deps, options),
-    deleteAll: (options, trx) => deleteAllApiKeys(deps, options, trx)
+    deleteAll: (options) => deleteAllApiKeys(deps, options)
   }
 }
 
