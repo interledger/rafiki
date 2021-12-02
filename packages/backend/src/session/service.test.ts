@@ -72,7 +72,7 @@ describe('Session Key Service', (): void => {
       if (isSessionError(refreshSessionOrError)) {
         fail()
       } else {
-        expect(session.key).not.toEqual(refreshSessionOrError.key)
+        expect(session.key).toEqual(refreshSessionOrError.key)
         expect(session.expiresAt.getTime()).toBeLessThanOrEqual(
           refreshSessionOrError.expiresAt.getTime()
         )
