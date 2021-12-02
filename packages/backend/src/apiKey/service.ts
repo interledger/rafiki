@@ -89,8 +89,8 @@ async function redeemApiKey(
   const keys = await ApiKey.query()
     .select('hashedKey')
     .where('accountId', accountId)
-  if (keys && keys.length) {
-    const match = await bcrypt.compare(key, keys[0].hashedKey)
+  for (const { hashedKey } of keys) {
+    const match = await bcrypt.compare(key, hashedKey)
     if (match) {
       return deps.sessionService.create()
     }
