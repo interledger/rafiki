@@ -31,15 +31,18 @@ export async function createSessionService({
     redis
   }
   return {
-    create: () => createSession(deps),
+    create: () => createOrExtendSession(deps),
     revoke: (options: SessionOptions) => revokeSession(deps, options),
     refresh: (options: SessionOptions) => refreshSession(deps, options),
     get: (options: SessionOptions) => getSession(deps, options)
   }
 }
 
-async function createSession(deps: ServiceDependencies): Promise<SessionKey> {
-  const sessionKey = uuid()
+async function createOrExtendSession(
+  deps: ServiceDependencies,
+  key?: string
+): Promise<SessionKey> {
+  const sessionKey = key || uuid()
   const expiresAt = Date.now() + 30 * 60 * 1000 // 30 minutes
   await deps.redis.set(sessionKey, JSON.stringify({ expiresAt }), 'EX', 30 * 60)
   return { key: sessionKey, expiresAt: new Date(expiresAt) }
@@ -61,7 +64,7 @@ async function refreshSession(
     return sessionOrError
   } else {
     if (sessionOrError.expiresAt > new Date(Date.now())) {
-      return createSession(deps)
+      return createOrExtendSession(deps, key)
     } else {
       return SessionError.SessionExpired
     }
