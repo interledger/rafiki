@@ -5,7 +5,6 @@ exports.up = function (knex) {
     table.string('state').notNullable().index() // PaymentState
     table.string('error').nullable()
     table.integer('stateAttempts').notNullable().defaultTo(0)
-    table.boolean('withdrawLiquidity').notNullable().defaultTo(false).index()
 
     table.string('intentPaymentPointer').nullable()
     table.string('intentInvoiceUrl').nullable()
@@ -25,6 +24,9 @@ exports.up = function (knex) {
     table.bigInteger('quoteLowExchangeRateEstimateDenominator').nullable()
     table.bigInteger('quoteHighExchangeRateEstimateNumerator').nullable()
     table.bigInteger('quoteHighExchangeRateEstimateDenominator').nullable()
+
+    // Amount already sent at the time of the quote
+    table.bigInteger('quoteAmountSent').nullable()
 
     // Open payments account corresponding to wallet account
     // from which to request funds for payment

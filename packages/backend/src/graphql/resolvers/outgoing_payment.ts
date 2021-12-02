@@ -39,9 +39,8 @@ export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = as
   if (!payment) throw new Error('payment does not exist')
 
   const accountingService = await ctx.container.use('accountingService')
-  const totalSent = await accountingService.getTotalSent(payment.id)
-  if (totalSent === undefined)
-    throw new Error('account total sent does not exist')
+  const totalSent = await accountingService.getBalance(payment.id)
+  if (totalSent === undefined) throw new Error('payment account does not exist')
   return {
     amountSent: totalSent
   }
@@ -107,6 +106,28 @@ export const requoteOutgoingPayment: MutationResolvers<ApolloContext>['requoteOu
   )
   return outgoingPaymentService
     .requote(args.paymentId)
+    .then((payment: OutgoingPayment) => ({
+      code: '200',
+      success: true,
+      payment: paymentToGraphql(payment)
+    }))
+    .catch((err: Error) => ({
+      code: '500',
+      success: false,
+      message: err.message
+    }))
+}
+
+export const sendOutgoingPayment: MutationResolvers<ApolloContext>['sendOutgoingPayment'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['OutgoingPaymentResponse'] => {
+  const outgoingPaymentService = await ctx.container.use(
+    'outgoingPaymentService'
+  )
+  return outgoingPaymentService
+    .send(args.paymentId)
     .then((payment: OutgoingPayment) => ({
       code: '200',
       success: true,

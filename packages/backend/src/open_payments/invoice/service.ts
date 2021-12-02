@@ -1,10 +1,16 @@
 import { Invoice } from './model'
-import { AccountingService, AccountType } from '../../accounting/service'
+import {
+  AccountingService,
+  AccountType,
+  AssetAccount
+} from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+
+export const POSITIVE_SLIPPAGE = BigInt(1)
 
 interface CreateOptions {
   accountId: string
@@ -72,12 +78,43 @@ async function createInvoice(
       })
       .withGraphFetched('account.asset')
 
+    // Invoice accounts are credited by the amounts received by the invoice.
+    //
+    // If amountToReceive is specified, the invoice account is initially
+    // debited by the amountToReceive, credits are restricted such that the
+    // invoice cannot receive more than that amount. The account balance
+    // represents the remaining receive limit.
+    //
+    // Otherwise, the invoice account balance represents the total amount
+    // received by the invoice.
     await deps.accountingService.createAccount({
       id: invoice.id,
       asset: invoice.account.asset,
-      type: AccountType.Credit,
-      receiveLimit: amountToReceive
+      type: amountToReceive ? AccountType.Debit : AccountType.Credit
     })
+
+    if (amountToReceive) {
+      const error = await deps.accountingService.createTransfer({
+        sourceAccount: {
+          id: invoice.id,
+          asset: {
+            unit: invoice.account.asset.unit
+          }
+        },
+        destinationAccount: {
+          asset: {
+            unit: invoice.account.asset.unit,
+            account: AssetAccount.ReceiveLimit
+          }
+        },
+        // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
+        amount: amountToReceive + POSITIVE_SLIPPAGE
+      })
+      if (error) {
+        deps.logger.error({ error }, 'receive limit setup TigerBeetle error')
+        throw new Error('unable to create invoice, TigerBeetle error')
+      }
+    }
 
     if (!trx) {
       await invTrx.commit()

@@ -1,7 +1,7 @@
 import assert from 'assert'
 import { AccountService, RafikiAccount } from '../../rafiki'
 
-import { AccountTransfer, Balance } from '../../../../accounting/service'
+import { AccountTransfer } from '../../../../accounting/service'
 import { TransferError } from '../../../../accounting/errors'
 
 export type MockIlpAccount = RafikiAccount & {
@@ -12,7 +12,6 @@ export type MockIlpAccount = RafikiAccount & {
     }
   }
   active?: boolean
-  receiveLimit?: bigint
 }
 
 export class MockAccountsService implements AccountService {
@@ -47,13 +46,6 @@ export class MockAccountsService implements AccountService {
     }
   }
 
-  async getReceiveLimit(accountId: string): Promise<bigint | undefined> {
-    const account = this.accounts.get(accountId)
-    if (account) {
-      return account.receiveLimit
-    }
-  }
-
   async create(account: MockIlpAccount): Promise<RafikiAccount> {
     if (!account.id) throw new Error('unexpected asset account')
     this.accounts.set(account.id, account)
@@ -70,10 +62,14 @@ export class MockAccountsService implements AccountService {
     if (options.sourceAccount.balance < options.sourceAmount) {
       return TransferError.InsufficientBalance
     }
-    if (options.destinationAccount.withBalance === Balance.ReceiveLimit) {
-      assert.ok(options.destinationAccount.receiveLimit !== undefined)
+    let receiveLimit: MockIlpAccount | undefined
+    if (options.destinationAccount.receivedAccountId) {
+      receiveLimit = await this._get(
+        options.destinationAccount.receivedAccountId
+      )
+      assert.ok(receiveLimit)
       if (
-        options.destinationAccount.receiveLimit <
+        receiveLimit.balance <
         (options.destinationAmount || options.sourceAmount)
       ) {
         return TransferError.ReceiveLimitExceeded
@@ -84,8 +80,8 @@ export class MockAccountsService implements AccountService {
       commit: async () => {
         options.destinationAccount.balance +=
           options.destinationAmount ?? options.sourceAmount
-        if (options.destinationAccount.receiveLimit != null) {
-          options.destinationAccount.receiveLimit -=
+        if (receiveLimit) {
+          receiveLimit.balance -=
             options.destinationAmount ?? options.sourceAmount
         }
       },

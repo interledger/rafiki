@@ -199,6 +199,8 @@ export type Mutation = {
   createOutgoingPayment: OutgoingPaymentResponse;
   /** Requote a Cancelled payment. */
   requoteOutgoingPayment: OutgoingPaymentResponse;
+  /** Send a Funding payment. */
+  sendOutgoingPayment: OutgoingPaymentResponse;
   /** Cancel a Funding payment. */
   cancelOutgoingPayment: OutgoingPaymentResponse;
   createAccount: CreateAccountMutationResponse;
@@ -231,6 +233,11 @@ export type MutationCreateOutgoingPaymentArgs = {
 
 
 export type MutationRequoteOutgoingPaymentArgs = {
+  paymentId: Scalars['String'];
+};
+
+
+export type MutationSendOutgoingPaymentArgs = {
   paymentId: Scalars['String'];
 };
 
@@ -381,6 +388,7 @@ export type PaymentQuote = {
   minExchangeRate: Scalars['Float'];
   lowExchangeRateEstimate: Scalars['Float'];
   highExchangeRateEstimate: Scalars['Float'];
+  amountSent: Scalars['UInt64'];
 };
 
 export enum PaymentState {
@@ -738,6 +746,7 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentArgs, 'input'>>;
   requoteOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationRequoteOutgoingPaymentArgs, 'paymentId'>>;
+  sendOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationSendOutgoingPaymentArgs, 'paymentId'>>;
   cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'paymentId'>>;
   createAccount?: Resolver<ResolversTypes['CreateAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAccountArgs, 'input'>>;
   createPeer?: Resolver<ResolversTypes['CreatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationCreatePeerArgs, 'input'>>;
@@ -830,6 +839,7 @@ export type PaymentQuoteResolvers<ContextType = any, ParentType extends Resolver
   minExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   lowExchangeRateEstimate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   highExchangeRateEstimate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  amountSent?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

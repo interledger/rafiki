@@ -1,4 +1,3 @@
-import assert from 'assert'
 import {
   AccountFlags,
   Client,
@@ -6,12 +5,7 @@ import {
 } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import {
-  calculateBalance,
-  CreateAccountOptions,
-  createAccounts,
-  getAccounts
-} from './accounts'
+import { calculateBalance, createAccounts, getAccounts } from './accounts'
 import {
   BalanceTransferError,
   CreateAccountError,
@@ -44,8 +38,6 @@ export interface Account {
     unit: number
   }
   type: AccountType
-  totalSent?: bigint
-  receiveLimit?: bigint
 }
 
 export interface CreateOptions {
@@ -54,13 +46,6 @@ export interface CreateOptions {
     unit: number
   }
   type: AccountType
-  sentBalance?: boolean
-  receiveLimit?: bigint
-}
-
-export enum Balance {
-  TotalSent = 1,
-  ReceiveLimit
 }
 
 export enum AssetAccount {
@@ -72,11 +57,11 @@ export enum AssetAccount {
 
 interface BasicAccountOptions {
   id: string
+  // TODO: don't require asset unit for regular transfers
   asset: {
     unit: number
     account?: never
   }
-  withBalance?: Balance
 }
 
 interface AssetAccountOptions {
@@ -85,10 +70,12 @@ interface AssetAccountOptions {
     unit: number
     account: AssetAccount
   }
-  withBalance?: never
 }
 
-export type AccountOptions = BasicAccountOptions | AssetAccountOptions
+export type AccountOptions = (BasicAccountOptions | AssetAccountOptions) & {
+  receivedAccountId?: string
+  sentAccountId?: string
+}
 
 type Options = {
   id?: string
@@ -125,8 +112,6 @@ export interface AccountingService {
   createAssetAccounts(unit: number): Promise<void>
   getAccount(id: string): Promise<Account | undefined>
   getBalance(id: string): Promise<bigint | undefined>
-  getTotalSent(accountId: string): Promise<bigint | undefined>
-  getReceiveLimit(accountId: string): Promise<bigint | undefined>
   getAssetAccountBalance(
     unit: number,
     account: AssetAccount
@@ -161,8 +146,6 @@ export function createAccountingService({
     createAssetAccounts: (unit) => createAssetAccounts(deps, unit),
     getAccount: (id) => getAccount(deps, id),
     getBalance: (id) => getAccountBalance(deps, id),
-    getTotalSent: (id) => getTotalSent(deps, id),
-    getReceiveLimit: (id) => getReceiveLimit(deps, id),
     getAssetAccountBalance: (unit, account) =>
       getAssetAccountBalance(deps, unit, account),
     transferFunds: (options) => transferFunds(deps, options),
@@ -181,76 +164,19 @@ export async function createAccount(
   }
 
   const id = options.id || uuid()
-
-  const accounts: CreateAccountOptions[] = [
+  await createAccounts(deps, [
     {
       id,
       asset: options.asset,
       type: options.type
     }
-  ]
-
-  if (options.sentBalance) {
-    accounts.push({
-      id,
-      asBalance: Balance.TotalSent,
-      asset: options.asset,
-      type: AccountType.Credit
-    })
-  }
-
-  if (options.receiveLimit) {
-    accounts.push({
-      id,
-      asBalance: Balance.ReceiveLimit,
-      asset: options.asset,
-      type: AccountType.Debit
-    })
-  }
-
-  await createAccounts(deps, accounts)
-
-  let receiveLimit: bigint | undefined
-  if (options.receiveLimit) {
-    // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
-    receiveLimit = options.receiveLimit + BigInt(1)
-    const transferError = await createTransfers(deps, [
-      {
-        id: uuid(),
-        sourceAccount: {
-          id,
-          asBalance: Balance.ReceiveLimit,
-          asset: {
-            unit: options.asset.unit
-          }
-        },
-        destinationAccount: {
-          asset: {
-            unit: options.asset.unit,
-            account: AssetAccount.ReceiveLimit
-          }
-        },
-        amount: receiveLimit
-      }
-    ])
-    if (transferError) {
-      deps.logger.error(
-        { transferError },
-        'receive limit setup TigerBeetle error'
-      )
-      throw new Error(
-        'unable to create receive limit balance, TigerBeetle error'
-      )
-    }
-  }
+  ])
 
   return {
     id,
     asset: options.asset,
     type: options.type,
-    balance: BigInt(0),
-    totalSent: options.sentBalance ? BigInt(0) : undefined,
-    receiveLimit
+    balance: BigInt(0)
   }
 }
 
@@ -284,8 +210,7 @@ export async function createAssetAccounts(
       asset: {
         unit,
         account: AssetAccount.ReceiveLimit
-      },
-      type: AccountType.Credit
+      }
     }
   ]
 
@@ -311,35 +236,11 @@ export async function getAccount(
   const accounts = await getAccounts(deps, [
     {
       id
-    },
-    {
-      id,
-      asBalance: Balance.TotalSent
-    },
-    {
-      id,
-      asBalance: Balance.ReceiveLimit
     }
   ])
 
-  // TODO: sort accounts by id if order isn't guaranteed
   if (accounts.length) {
     const account = accounts[0]
-    let totalSent: bigint | undefined
-    let receiveLimit: bigint | undefined
-    for (let i = 1; i < accounts.length; i++) {
-      if (
-        !totalSent &&
-        accounts[i]?.id === accounts[0].id + BigInt(Balance.TotalSent)
-      ) {
-        totalSent = calculateBalance(accounts[i])
-      } else {
-        assert.ok(
-          accounts[i]?.id === accounts[0].id + BigInt(Balance.ReceiveLimit)
-        )
-        receiveLimit = calculateBalance(accounts[i])
-      }
-    }
     return {
       id,
       asset: {
@@ -349,9 +250,7 @@ export async function getAccount(
         account.flags & AccountFlags.credits_must_not_exceed_debits
           ? AccountType.Debit
           : AccountType.Credit,
-      balance: calculateBalance(account),
-      totalSent,
-      receiveLimit
+      balance: calculateBalance(account)
     }
   }
 }
@@ -361,32 +260,6 @@ export async function getAccountBalance(
   id: string
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [{ id }]))[0]
-
-  if (account) {
-    return calculateBalance(account)
-  }
-}
-
-export async function getTotalSent(
-  deps: ServiceDependencies,
-  id: string
-): Promise<bigint | undefined> {
-  const account = (
-    await getAccounts(deps, [{ id, asBalance: Balance.TotalSent }])
-  )[0]
-
-  if (account) {
-    return calculateBalance(account)
-  }
-}
-
-export async function getReceiveLimit(
-  deps: ServiceDependencies,
-  id: string
-): Promise<bigint | undefined> {
-  const account = (
-    await getAccounts(deps, [{ id, asBalance: Balance.ReceiveLimit }])
-  )[0]
 
   if (account) {
     return calculateBalance(account)
@@ -417,7 +290,11 @@ export async function transferFunds(
     timeout
   }: AccountTransferOptions
 ): Promise<AccountTransfer | TransferError> {
-  if (sourceAccount.id === destinationAccount.id) {
+  if (
+    sourceAccount.id &&
+    destinationAccount.id &&
+    sourceAccount.id === destinationAccount.id
+  ) {
     return TransferError.SameAccounts
   }
   if (sourceAmount <= BigInt(0)) {
@@ -507,7 +384,7 @@ export async function transferFunds(
       }
     )
   }
-  if (sourceAccount.withBalance === Balance.TotalSent) {
+  if (sourceAccount.sentAccountId) {
     transfers.push({
       id: uuid(),
       sourceAccount: {
@@ -517,14 +394,13 @@ export async function transferFunds(
         }
       },
       destinationAccount: {
-        ...sourceAccount,
-        asBalance: Balance.TotalSent
+        id: sourceAccount.sentAccountId
       },
       amount: sourceAmount,
       timeout
     })
   }
-  if (destinationAccount.withBalance === Balance.ReceiveLimit) {
+  if (destinationAccount.receivedAccountId) {
     transfers.push({
       id: uuid(),
       sourceAccount: {
@@ -534,8 +410,7 @@ export async function transferFunds(
         }
       },
       destinationAccount: {
-        ...destinationAccount,
-        asBalance: Balance.ReceiveLimit
+        id: destinationAccount.receivedAccountId
       },
       amount: destinationAmount || sourceAmount,
       timeout
@@ -549,21 +424,13 @@ export async function transferFunds(
       case TransferError.UnknownDestinationBalance:
         throw new UnknownAccountError(transfers[error.index].destinationAccount)
       case TransferError.InsufficientBalance:
-        // Exceeding the account's receive limit debit balance might also
-        // exceed the corresponding asset receive limit credit balance.
-        if (
-          destinationAccount.withBalance === Balance.ReceiveLimit &&
-          error.index === transfers.length - 1
-        ) {
-          return TransferError.ReceiveLimitExceeded
-        }
         if (error.index === 1) {
           return TransferError.InsufficientLiquidity
         }
         return TransferError.InsufficientBalance
       case TransferError.InsufficientDebitBalance:
         if (
-          destinationAccount.withBalance === Balance.ReceiveLimit &&
+          destinationAccount.receivedAccountId &&
           error.index === transfers.length - 1
         ) {
           return TransferError.ReceiveLimitExceeded

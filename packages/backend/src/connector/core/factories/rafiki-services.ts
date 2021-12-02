@@ -29,8 +29,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
           ...account,
           account: {
             asset: account.asset
-          },
-          amountToReceive: account.receiveLimit
+          }
         }
       }
     }

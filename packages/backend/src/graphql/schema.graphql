@@ -24,6 +24,8 @@ type Mutation {
   ): OutgoingPaymentResponse!
   "Requote a Cancelled payment."
   requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
+  "Send a Funding payment."
+  sendOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
   "Cancel a Funding payment."
   cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
 
@@ -302,6 +304,7 @@ type PaymentQuote {
   minExchangeRate: Float!
   lowExchangeRateEstimate: Float!
   highExchangeRateEstimate: Float!
+  amountSent: UInt64!
 }
 
 type PaymentDestinationAccount {

@@ -1,7 +1,7 @@
 import { Errors } from 'ilp-packet'
 import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
 import { AuthState } from './auth'
-import { Balance } from '../../../accounting/service'
+import { AssetAccount } from '../../../accounting/service'
 import { validateId } from '../../../shared/utils'
 
 const UUID_LENGTH = 36
@@ -25,12 +25,11 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
             throw new Errors.UnreachableError('destination account is disabled')
           }
           return {
-            id: invoice.id,
-            asset: invoice.account.asset,
-            withBalance:
-              invoice.amountToReceive != null
-                ? Balance.ReceiveLimit
-                : undefined,
+            asset: {
+              ...invoice.account.asset,
+              account: AssetAccount.Settlement
+            },
+            receivedAccountId: invoice.id,
             stream: {
               enabled: true
             }

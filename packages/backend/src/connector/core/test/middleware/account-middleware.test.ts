@@ -7,7 +7,7 @@ import {
 } from '../../factories'
 import { createAccountMiddleware } from '../../middleware/account'
 import { ZeroCopyIlpPrepare } from '../..'
-import { Balance } from '../../../../accounting/service'
+import { AssetAccount } from '../../../../accounting/service'
 
 describe('Account Middleware', () => {
   const ADDRESS = 'test.rafiki'
@@ -68,9 +68,11 @@ describe('Account Middleware', () => {
 
     expect(ctx.accounts.incoming).toEqual(incomingAccount)
     expect(ctx.accounts.outgoing).toEqual({
-      id: outgoingAccount.id,
-      asset: outgoingAccount.asset,
-      withBalance: Balance.ReceiveLimit,
+      asset: {
+        ...outgoingAccount.asset,
+        account: AssetAccount.Settlement
+      },
+      receivedAccountId: outgoingAccount.id,
       stream: {
         enabled: true
       }

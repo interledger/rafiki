@@ -3,7 +3,7 @@ import { ServiceDependencies } from './service'
 import { OutgoingPayment, PaymentState } from './model'
 import * as lifecycle from './lifecycle'
 import { IlpPlugin } from './ilp_plugin'
-import { AssetAccount, Balance } from '../accounting/service'
+import { AssetAccount } from '../accounting/service'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -51,15 +51,11 @@ export async function getPendingPayment(
     .forUpdate()
     // Don't wait for a payment that is already being processed.
     .skipLocked()
-    .where((builder: knex.QueryBuilder) => {
-      builder
-        .whereIn('state', [
-          PaymentState.Quoting,
-          PaymentState.Funding,
-          PaymentState.Sending
-        ])
-        .orWhere('withdrawLiquidity', true)
-    })
+    .whereIn('state', [
+      PaymentState.Quoting,
+      PaymentState.Funding,
+      PaymentState.Sending
+    ])
     // Back off between retries.
     .andWhere((builder: knex.QueryBuilder) => {
       builder
@@ -106,9 +102,9 @@ export async function handlePaymentLifecycle(
         { state: payment.state, error, stateAttempts },
         'payment lifecycle failed; cancelling'
       )
+      // TODO: notify wallet
       await payment.$query(deps.knex).patch({
         state: PaymentState.Cancelled,
-        withdrawLiquidity: true,
         error
       })
     }
@@ -141,9 +137,11 @@ export async function handlePaymentLifecycle(
       return lifecycle.handleFunding(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin({
-        id: payment.id,
-        asset: payment.account.asset,
-        withBalance: Balance.TotalSent
+        asset: {
+          ...payment.account.asset,
+          account: AssetAccount.Settlement
+        },
+        sentAccountId: payment.id
       })
       return plugin
         .connect()
@@ -158,9 +156,6 @@ export async function handlePaymentLifecycle(
           })
         })
     default:
-      if (payment.withdrawLiquidity) {
-        return lifecycle.handleLiquidityWithdrawal(deps, payment).catch(onError)
-      }
       deps.logger.warn('unexpected payment in lifecycle')
       break
   }

@@ -19,9 +19,7 @@ export class AccountFactory {
     await this.accounts.createAssetAccounts(unit)
     const accountOptions: CreateOptions = {
       asset: { unit },
-      type: options.type || AccountType.Credit,
-      sentBalance: options.sentBalance,
-      receiveLimit: options.receiveLimit
+      type: options.type || AccountType.Credit
     }
     const account = await this.accounts.createAccount(accountOptions)
 

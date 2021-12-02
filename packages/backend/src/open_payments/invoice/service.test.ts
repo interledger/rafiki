@@ -92,9 +92,9 @@ describe('Invoice Service', (): void => {
       const invoiceAccount = await accountingService.getAccount(invoice.id)
 
       expect(invoiceAccount?.id).toEqual(invoice.id)
-      await expect(
-        accountingService.getReceiveLimit(invoice.id)
-      ).resolves.toBeUndefined()
+      await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
+        BigInt(0)
+      )
     })
 
     test('Creating an invoice with amountToReceive sets up a "receive limit" balance', async (): Promise<void> => {
@@ -103,9 +103,9 @@ describe('Invoice Service', (): void => {
         description: 'Invoice',
         amountToReceive: BigInt(123)
       })
-      await expect(
-        accountingService.getReceiveLimit(invoice.id)
-      ).resolves.toEqual(BigInt(123 + 1))
+      await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
+        BigInt(123 + 1)
+      )
     })
 
     test('Cannot create invoice for nonexistent account', async (): Promise<void> => {

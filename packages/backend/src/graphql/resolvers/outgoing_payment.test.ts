@@ -102,7 +102,8 @@ describe('OutgoingPayment Resolvers', (): void => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          highExchangeRateEstimate: Pay.Ratio.from(2.3)!
+          highExchangeRateEstimate: Pay.Ratio.from(2.3)!,
+          amountSent: BigInt(0)
         },
         accountId,
         destinationAccount: {
@@ -139,7 +140,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             return updatedPayment
           })
         jest
-          .spyOn(accountingService, 'getTotalSent')
+          .spyOn(accountingService, 'getBalance')
           .mockImplementation(async (id: string) => {
             expect(id).toStrictEqual(payment.id)
             return amountSent
@@ -170,6 +171,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     minExchangeRate
                     lowExchangeRateEstimate
                     highExchangeRateEstimate
+                    amountSent
                   }
                   destinationAccount {
                     scale
@@ -210,6 +212,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
           lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
           highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
+          amountSent: payment.quote?.amountSent.toString(),
           __typename: 'PaymentQuote'
         })
         expect(query.destinationAccount).toEqual({
@@ -430,6 +433,74 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
   })
 
+  describe(`Mutation.sendOutgoingPayment`, (): void => {
+    test('200', async (): Promise<void> => {
+      const spy = jest
+        .spyOn(outgoingPaymentService, 'send')
+        .mockImplementation(async (id: string) => {
+          expect(id).toBe(payment.id)
+          return payment
+        })
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation SendOutgoingPayment($paymentId: String!) {
+              sendOutgoingPayment(paymentId: $paymentId) {
+                code
+                success
+                message
+                payment {
+                  id
+                }
+              }
+            }
+          `,
+          variables: { paymentId: payment.id }
+        })
+        .then(
+          (query): OutgoingPaymentResponse => query.data?.sendOutgoingPayment
+        )
+      expect(spy).toHaveBeenCalledTimes(1)
+      expect(query.code).toBe('200')
+      expect(query.success).toBe(true)
+      expect(query.message).toBeNull()
+      expect(query.payment?.id).toBe(payment.id)
+    })
+
+    test('500', async (): Promise<void> => {
+      const spy = jest
+        .spyOn(outgoingPaymentService, 'send')
+        .mockImplementation(async (id: string) => {
+          expect(id).toBe(payment.id)
+          throw new Error('fail')
+        })
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation SendOutgoingPayment($paymentId: String!) {
+              sendOutgoingPayment(paymentId: $paymentId) {
+                code
+                success
+                message
+                payment {
+                  id
+                }
+              }
+            }
+          `,
+          variables: { paymentId: payment.id }
+        })
+        .then(
+          (query): OutgoingPaymentResponse => query.data?.sendOutgoingPayment
+        )
+      expect(spy).toHaveBeenCalledTimes(1)
+      expect(query.code).toBe('500')
+      expect(query.success).toBe(false)
+      expect(query.message).toBe('fail')
+      expect(query.payment).toBeNull()
+    })
+  })
+
   describe(`Mutation.cancelOutgoingPayment`, (): void => {
     test('200', async (): Promise<void> => {
       const spy = jest
@@ -530,7 +601,8 @@ describe('OutgoingPayment Resolvers', (): void => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                highExchangeRateEstimate: Pay.Ratio.from(2.3)!
+                highExchangeRateEstimate: Pay.Ratio.from(2.3)!,
+                amountSent: BigInt(0)
               },
               accountId,
               destinationAccount: {

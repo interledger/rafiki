@@ -17,6 +17,7 @@ import * as worker from './worker'
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
   create(options: CreateOutgoingPaymentOptions): Promise<OutgoingPayment>
+  send(id: string): Promise<OutgoingPayment>
   cancel(id: string): Promise<OutgoingPayment>
   requote(id: string): Promise<OutgoingPayment>
   processNext(): Promise<string | undefined>
@@ -52,6 +53,7 @@ export async function createOutgoingPaymentService(
     get: (id) => getOutgoingPayment(deps, id),
     create: (options: CreateOutgoingPaymentOptions) =>
       createOutgoingPayment(deps, options),
+    send: (id) => sendPayment(deps, id),
     cancel: (id) => cancelPayment(deps, id),
     requote: (id) => requotePayment(deps, id),
     processNext: () => worker.processPendingPayment(deps),
@@ -137,8 +139,7 @@ async function createOutgoingPayment(
       await deps.accountingService.createAccount({
         id: payment.id,
         asset: payment.account.asset,
-        type: AccountType.Credit,
-        sentBalance: true
+        type: AccountType.Credit
       })
 
       return payment
@@ -166,6 +167,21 @@ function requotePayment(
   })
 }
 
+async function sendPayment(
+  deps: ServiceDependencies,
+  id: string
+): Promise<OutgoingPayment> {
+  return deps.knex.transaction(async (trx) => {
+    const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
+    if (!payment) throw new Error('payment does not exist')
+    if (payment.state !== PaymentState.Funding) {
+      throw new Error(`Cannot send; payment is in state=${payment.state}`)
+    }
+    await payment.$query(trx).patch({ state: PaymentState.Sending })
+    return payment
+  })
+}
+
 async function cancelPayment(
   deps: ServiceDependencies,
   id: string
@@ -176,9 +192,9 @@ async function cancelPayment(
     if (payment.state !== PaymentState.Funding) {
       throw new Error(`Cannot cancel; payment is in state=${payment.state}`)
     }
+    // TODO: Notify wallet
     await payment.$query(trx).patch({
       state: PaymentState.Cancelled,
-      withdrawLiquidity: true,
       error: lifecycle.LifecycleError.CancelledByAPI
     })
     return payment

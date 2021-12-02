@@ -44,6 +44,5 @@ export const InvoiceAccountFactory = Factory.define<MockIlpAccount>(
 )
   .extend(AccountFactory)
   .attrs({
-    active: true,
-    receiveLimit: BigInt(Faker.datatype.number())
+    active: true
   })

@@ -25,7 +25,6 @@ export class OutgoingPayment extends BaseModel {
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
-  public withdrawLiquidity!: boolean
 
   public intent!: PaymentIntent
 
@@ -41,6 +40,8 @@ export class OutgoingPayment extends BaseModel {
     // Note that the upper exchange rate bound is *exclusive*.
     // (Pay.PositiveRatio, but validated later)
     highExchangeRateEstimate: Pay.Ratio
+    // Amount already sent at the time of the quote
+    amountSent: bigint
   }
   // Open payments account id of the sender
   public accountId!: string

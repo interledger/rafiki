@@ -45,7 +45,7 @@ export interface TransferOptions {
 }
 
 export interface AccountService {
-  getReceiveLimit(id: string): Promise<bigint | undefined>
+  getBalance(id: string): Promise<bigint | undefined>
   transferFunds(
     options: TransferOptions
   ): Promise<AccountTransfer | TransferError>

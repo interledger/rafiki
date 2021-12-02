@@ -10,7 +10,6 @@ import {
   IlpRejectFactory,
   RafikiServicesFactory
 } from '../../factories'
-import { Balance } from '../../../../accounting/service'
 
 // TODO: make one peer to many account relationship
 const aliceAccount = AccountFactory.build({ id: 'alice' })
@@ -157,8 +156,10 @@ describe('Balance Middleware', function () {
   })
 
   test('receive limit already reached throws F07', async () => {
-    bobAccount.receiveLimit = BigInt(0)
-    bobAccount.withBalance = Balance.ReceiveLimit
+    const receiveLimit = AccountFactory.build({ id: 'reachedLimit' })
+    receiveLimit.balance = 0n
+    await accounts.create(receiveLimit)
+    bobAccount.receivedAccountId = receiveLimit.id
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -180,8 +181,10 @@ describe('Balance Middleware', function () {
   })
 
   test('receive limit exceeded throws F08', async () => {
-    bobAccount.receiveLimit = BigInt(10)
-    bobAccount.withBalance = Balance.ReceiveLimit
+    const receiveLimit = AccountFactory.build({ id: 'exceededLimit' })
+    receiveLimit.balance = BigInt(10)
+    await accounts.create(receiveLimit)
+    bobAccount.receivedAccountId = receiveLimit.id
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
