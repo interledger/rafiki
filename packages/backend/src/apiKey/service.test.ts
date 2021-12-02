@@ -88,8 +88,8 @@ describe('Api Key Service', (): void => {
     })
   })
 
-  describe('Redeem Session Key', (): void => {
-    test('A session key can be redeemed for a valid api key', async (): Promise<void> => {
+  describe('Redeem Api Key for Session Key', (): void => {
+    test('A valid api key can be redeemed for a session key', async (): Promise<void> => {
       const apiKey = await apiKeyService.create({ accountId: account.id })
       const sessionKeyOrError = await apiKeyService.redeem({
         accountId: account.id,
@@ -103,7 +103,7 @@ describe('Api Key Service', (): void => {
       }
     })
 
-    test('A session key cannot be redeemed if no api key for account exists', async (): Promise<void> => {
+    test('A session key cannot be acquired if no api key for account exists', async (): Promise<void> => {
       const sessionKeyOrError = apiKeyService.redeem({
         accountId: account.id,
         key: '123'
@@ -111,7 +111,7 @@ describe('Api Key Service', (): void => {
       expect(sessionKeyOrError).resolves.toEqual(ApiKeyError.UnknownApiKey)
     })
 
-    test('A session key cannot be redeemed if api key is unknown', async (): Promise<void> => {
+    test('A session key cannot be acquired if api key is unknown', async (): Promise<void> => {
       await apiKeyService.create({ accountId: account.id })
       const sessionKeyOrError = apiKeyService.redeem({
         accountId: account.id,
