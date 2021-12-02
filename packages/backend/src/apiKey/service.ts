@@ -54,25 +54,17 @@ export async function createApiKeyService({
 
 async function createApiKey(
   deps: ServiceDependencies,
-  { accountId }: ApiKeyOptions,
-  trx?: Transaction
+  { accountId }: ApiKeyOptions
 ): Promise<NewApiKey> {
-  const keyTrx = trx || (await ApiKey.startTransaction(deps.knex))
   const key = uuid()
-  try {
-    const hashedKey = await bcrypt.hash(key, 10)
-    const keyEntry = await ApiKey.query(keyTrx).insertAndFetch({
-      accountId,
-      hashedKey
-    })
-    await keyTrx.commit()
-    const newKey = <NewApiKey>keyEntry
-    newKey.key = key
-    return newKey
-  } catch (err) {
-    await keyTrx.rollback()
-    throw err
-  }
+  const hashedKey = await bcrypt.hash(key, 10)
+  const keyEntry = await ApiKey.query(deps.knex).insertAndFetch({
+    accountId,
+    hashedKey
+  })
+  const newKey = <NewApiKey>keyEntry
+  newKey.key = key
+  return newKey
 }
 
 async function getApiKeys(
