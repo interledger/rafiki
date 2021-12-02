@@ -47,7 +47,7 @@ export async function createApiKeyService({
   return {
     create: (options, trx) => createApiKey(deps, options, trx),
     get: (options) => getApiKeys(deps, options),
-    redeem: (options) => redeemSessionKey(deps, options),
+    redeem: (options) => redeemApiKey(deps, options),
     deleteAll: (options, trx) => deleteAllApiKeys(deps, options, trx)
   }
 }
@@ -82,7 +82,7 @@ async function getApiKeys(
   return await ApiKey.query().where('accountId', accountId)
 }
 
-async function redeemSessionKey(
+async function redeemApiKey(
   deps: ServiceDependencies,
   { accountId, key }: SessionKeyOptions
 ): Promise<SessionKey | ApiKeyError> {
