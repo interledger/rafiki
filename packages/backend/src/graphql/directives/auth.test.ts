@@ -56,6 +56,7 @@ describe('auth Directive', (): void => {
             case 'validKey':
               return {
                 session: {
+                  key,
                   expiresAt: new Date(Date.now() + 30 * 60 * 1000)
                 }
               }

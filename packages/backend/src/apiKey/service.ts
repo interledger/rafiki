@@ -3,13 +3,13 @@ import { SessionService } from '../session/service'
 import { ApiKey } from './model'
 import { uuid } from '../connector/core'
 import bcrypt from 'bcrypt'
-import { SessionKey } from '../session/util'
+import { Session } from '../session/util'
 import { ApiKeyError } from './errors'
 
 export interface ApiKeyService {
   create(apiKey: ApiKeyOptions): Promise<NewApiKey>
   get(apiKey: ApiKeyOptions): Promise<ApiKey[]>
-  redeem(sessionKey: SessionKeyOptions): Promise<SessionKey | ApiKeyError>
+  redeem(session: SessionOptions): Promise<Session | ApiKeyError>
   deleteAll(apiKey: ApiKeyOptions): Promise<void>
 }
 
@@ -21,7 +21,7 @@ type ApiKeyOptions = {
   accountId: string
 }
 
-type SessionKeyOptions = {
+type SessionOptions = {
   accountId: string
   key: string
 }
@@ -75,8 +75,8 @@ async function getApiKeys(
 
 async function redeemApiKey(
   deps: ServiceDependencies,
-  { accountId, key }: SessionKeyOptions
-): Promise<SessionKey | ApiKeyError> {
+  { accountId, key }: SessionOptions
+): Promise<Session | ApiKeyError> {
   const keys = await ApiKey.query()
     .select('hashedKey')
     .where('accountId', accountId)
