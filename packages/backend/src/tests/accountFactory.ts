@@ -1,78 +1,41 @@
-import { v4 as uuid } from 'uuid'
-
 import {
+  AccountingService,
   Account,
-  AccountService,
-  CreateOptions,
-  CreateSubAccountOptions
-} from '../account/service'
-import { isAccountError } from '../account/errors'
-import { TransferService } from '../transfer/service'
-import { randomAsset } from './asset'
-
-export function isSubAccount(
-  account: Partial<CreateOptions>
-): account is CreateSubAccountOptions {
-  return (account as CreateSubAccountOptions).superAccountId !== undefined
-}
+  AccountType,
+  AssetAccount,
+  CreateOptions
+} from '../accounting/service'
+import { randomUnit } from './asset'
 
 type BuildOptions = Partial<CreateOptions> & {
   balance?: bigint
 }
 
 export class AccountFactory {
-  public constructor(
-    private accounts: AccountService,
-    private transfers?: TransferService
-  ) {}
+  public constructor(private accounts: AccountingService) {}
 
   public async build(options: BuildOptions = {}): Promise<Account> {
-    let accountOptions: CreateOptions
-    if (isSubAccount(options)) {
-      accountOptions = {
-        id: options.id || uuid(),
-        disabled: options.disabled || false,
-        superAccountId: options.superAccountId,
-        stream: {
-          enabled: options.stream?.enabled || false
-        }
-      }
-    } else {
-      accountOptions = {
-        id: options.id || uuid(),
-        disabled: options.disabled || false,
-        asset: options.asset || randomAsset(),
-        stream: {
-          enabled: options.stream?.enabled || false
-        }
-      }
+    const unit = options.asset?.unit || randomUnit()
+    await this.accounts.createAssetAccounts(unit)
+    const accountOptions: CreateOptions = {
+      asset: { unit },
+      type: options.type || AccountType.Credit,
+      sentBalance: options.sentBalance,
+      receiveLimit: options.receiveLimit
     }
-    if (options.maxPacketAmount) {
-      accountOptions.maxPacketAmount = options.maxPacketAmount
-    }
-    if (options.http) {
-      accountOptions.http = options.http
-    }
-    if (options.routing) {
-      accountOptions.routing = options.routing
-    }
-    const account = await this.accounts.create(accountOptions)
+    const account = await this.accounts.createAccount(accountOptions)
 
-    if (isAccountError(account)) {
-      throw new Error('unable to create account, err=' + account)
-    }
     if (options.balance) {
-      if (!this.transfers) {
-        throw new Error('initial balance requires TransferService')
-      }
-      await this.transfers.create([
-        {
-          id: uuid(),
-          sourceBalanceId: account.asset.settlementBalanceId,
-          destinationBalanceId: account.balanceId,
-          amount: options.balance
-        }
-      ])
+      await this.accounts.createTransfer({
+        sourceAccount: {
+          asset: {
+            unit,
+            account: AssetAccount.Settlement
+          }
+        },
+        destinationAccount: account,
+        amount: options.balance
+      })
     }
 
     return account

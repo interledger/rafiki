@@ -1,10 +1,14 @@
-import { TransactionOrKnex } from 'objection'
+import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import { AccountService } from '../account/service'
-import { isAccountError } from '../account/errors'
-import { CreditService } from '../credit/service'
+import {
+  AccountingService,
+  AccountOptions,
+  AccountType,
+  AssetAccount
+} from '../accounting/service'
+import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
 import { IlpPlugin } from './ilp_plugin'
 import * as lifecycle from './lifecycle'
@@ -17,16 +21,25 @@ export interface OutgoingPaymentService {
   cancel(id: string): Promise<OutgoingPayment>
   requote(id: string): Promise<OutgoingPayment>
   processNext(): Promise<string | undefined>
+  getAccountPage(
+    accountId: string,
+    pagination?: Pagination
+  ): Promise<OutgoingPayment[]>
+}
+
+const PLACEHOLDER_DESTINATION = {
+  code: 'TMP',
+  scale: 2
 }
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   slippage: number
   quoteLifespan: number // milliseconds
+  accountingService: AccountingService
   accountService: AccountService
-  creditService: CreditService
   ratesService: RatesService
-  makeIlpPlugin: (sourceAccountId: string) => IlpPlugin
+  makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
 }
 
 export async function createOutgoingPaymentService(
@@ -43,7 +56,9 @@ export async function createOutgoingPaymentService(
     approve: (id) => approvePayment(deps, id),
     cancel: (id) => cancelPayment(deps, id),
     requote: (id) => requotePayment(deps, id),
-    processNext: () => worker.processPendingPayment(deps)
+    processNext: () => worker.processPendingPayment(deps),
+    getAccountPage: (accountId, pagination) =>
+      getAccountPage(deps, accountId, pagination)
   }
 }
 
@@ -51,10 +66,14 @@ async function getOutgoingPayment(
   deps: ServiceDependencies,
   id: string
 ): Promise<OutgoingPayment | undefined> {
-  return OutgoingPayment.query(deps.knex).findById(id)
+  return OutgoingPayment.query(deps.knex)
+    .findById(id)
+    .withGraphJoined('account.asset')
 }
 
-type CreateOutgoingPaymentOptions = PaymentIntent & { superAccountId: string }
+type CreateOutgoingPaymentOptions = PaymentIntent & {
+  accountId: string
+}
 
 // TODO ensure this is idempotent/safe for autoApprove:true payments
 async function createOutgoingPayment(
@@ -76,52 +95,62 @@ async function createOutgoingPayment(
     )
   }
 
-  const plugin = deps.makeIlpPlugin(options.superAccountId)
-  await plugin.connect()
-  const destination = await Pay.setupPayment({
-    plugin,
-    paymentPointer: options.paymentPointer,
-    invoiceUrl: options.invoiceUrl
-  }).finally(() => {
-    plugin.disconnect().catch((err) => {
-      deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
+  try {
+    return await OutgoingPayment.transaction(deps.knex, async (trx) => {
+      const payment = await OutgoingPayment.query(trx)
+        .insertAndFetch({
+          state: PaymentState.Inactive,
+          intent: {
+            paymentPointer: options.paymentPointer,
+            invoiceUrl: options.invoiceUrl,
+            amountToSend: options.amountToSend,
+            autoApprove: options.autoApprove
+          },
+          accountId: options.accountId,
+          destinationAccount: PLACEHOLDER_DESTINATION
+        })
+        .withGraphFetched('account.asset')
+
+      const plugin = deps.makeIlpPlugin({
+        asset: {
+          ...payment.account.asset,
+          account: AssetAccount.Sent
+        }
+      })
+      await plugin.connect()
+      const destination = await Pay.setupPayment({
+        plugin,
+        paymentPointer: options.paymentPointer,
+        invoiceUrl: options.invoiceUrl
+      }).finally(() => {
+        plugin.disconnect().catch((err) => {
+          deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
+        })
+      })
+
+      await payment.$query(trx).patch({
+        destinationAccount: {
+          scale: destination.destinationAsset.scale,
+          code: destination.destinationAsset.code,
+          url: destination.accountUrl
+        }
+      })
+
+      await deps.accountingService.createAccount({
+        id: payment.id,
+        asset: payment.account.asset,
+        type: AccountType.Credit,
+        sentBalance: true
+      })
+
+      return payment
     })
-  })
-
-  const sourceAccount = await deps.accountService.create({
-    superAccountId: options.superAccountId
-  })
-  if (isAccountError(sourceAccount)) {
-    deps.logger.warn(
-      {
-        superAccountId: options.superAccountId,
-        error: sourceAccount
-      },
-      'createOutgoingPayment source account creation failed'
-    )
-    throw new Error('unable to create source account, err=' + sourceAccount)
-  }
-
-  return await OutgoingPayment.query(deps.knex).insertAndFetch({
-    state: PaymentState.Inactive,
-    intent: {
-      paymentPointer: options.paymentPointer,
-      invoiceUrl: options.invoiceUrl,
-      amountToSend: options.amountToSend,
-      autoApprove: options.autoApprove
-    },
-    superAccountId: options.superAccountId,
-    sourceAccount: {
-      id: sourceAccount.id,
-      code: sourceAccount.asset.code,
-      scale: sourceAccount.asset.scale
-    },
-    destinationAccount: {
-      scale: destination.destinationAsset.scale,
-      code: destination.destinationAsset.code,
-      url: destination.accountUrl
+  } catch (err) {
+    if (err instanceof ForeignKeyViolationError) {
+      throw new Error('outgoing payment account does not exist')
     }
-  })
+    throw err
+  }
 }
 
 function requotePayment(
@@ -149,7 +178,7 @@ async function approvePayment(
     if (payment.state !== PaymentState.Ready) {
       throw new Error(`Cannot approve; payment is in state=${payment.state}`)
     }
-    await payment.$query(trx).patch({ state: PaymentState.Activated })
+    await payment.$query(trx).patch({ state: PaymentState.Funding })
     return payment
   })
 }
@@ -165,9 +194,89 @@ async function cancelPayment(
       throw new Error(`Cannot cancel; payment is in state=${payment.state}`)
     }
     await payment.$query(trx).patch({
-      state: PaymentState.Cancelling,
+      state: PaymentState.Cancelled,
+      withdrawLiquidity: true,
       error: lifecycle.LifecycleError.CancelledByAPI
     })
     return payment
   })
+}
+
+interface Pagination {
+  after?: string // Forward pagination: cursor.
+  before?: string // Backward pagination: cursor.
+  first?: number // Forward pagination: limit.
+  last?: number // Backward pagination: limit.
+}
+
+/**
+ * The pagination algorithm is based on the Relay connection specification.
+ * Please read the spec before changing things:
+ * https://relay.dev/graphql/connections.htm
+ * @param deps ServiceDependencies.
+ * @param accountId The accountId of the payments' sending user.
+ * @param pagination Pagination - cursors and limits.
+ * @returns OutgoingPayment[] An array of payments that form a page.
+ */
+async function getAccountPage(
+  deps: ServiceDependencies,
+  accountId: string,
+  pagination?: Pagination
+): Promise<OutgoingPayment[]> {
+  if (
+    typeof pagination?.before === 'undefined' &&
+    typeof pagination?.last === 'number'
+  ) {
+    throw new Error("Can't paginate backwards from the start.")
+  }
+
+  const first = pagination?.first || 20
+  if (first < 0 || first > 100) throw new Error('Pagination index error')
+  const last = pagination?.last || 20
+  if (last < 0 || last > 100) throw new Error('Pagination index error')
+
+  /**
+   * Forward pagination
+   */
+  if (typeof pagination?.after === 'string') {
+    return OutgoingPayment.query(deps.knex)
+      .where({ accountId })
+      .andWhereRaw(
+        '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "outgoingPayments" where "id" = ?)',
+        [pagination.after]
+      )
+      .orderBy([
+        { column: 'createdAt', order: 'asc' },
+        { column: 'id', order: 'asc' }
+      ])
+      .limit(first)
+  }
+
+  /**
+   * Backward pagination
+   */
+  if (typeof pagination?.before === 'string') {
+    return OutgoingPayment.query(deps.knex)
+      .where({ accountId })
+      .andWhereRaw(
+        '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "outgoingPayments" where "id" = ?)',
+        [pagination.before]
+      )
+      .orderBy([
+        { column: 'createdAt', order: 'desc' },
+        { column: 'id', order: 'desc' }
+      ])
+      .limit(last)
+      .then((resp) => {
+        return resp.reverse()
+      })
+  }
+
+  return OutgoingPayment.query(deps.knex)
+    .where({ accountId })
+    .orderBy([
+      { column: 'createdAt', order: 'asc' },
+      { column: 'id', order: 'asc' }
+    ])
+    .limit(first)
 }

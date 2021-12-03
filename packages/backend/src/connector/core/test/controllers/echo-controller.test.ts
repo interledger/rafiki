@@ -4,8 +4,7 @@ import {
   serializeIlpPrepare,
   serializeIlpFulfill
 } from 'ilp-packet'
-import { createContext } from '../../utils'
-import { RafikiContext } from '../../rafiki'
+import { createILPContext } from '../../utils'
 import { createEchoProtocolController } from '../../controllers/echo-protocol'
 import {
   PeerAccountFactory,
@@ -36,16 +35,17 @@ describe('Echo protocol', function () {
 
   const alice = PeerAccountFactory.build()
   const bob = PeerAccountFactory.build()
-  const ctx = createContext<unknown, RafikiContext>()
-  ctx.services = RafikiServicesFactory.build()
-  ctx.accounts = {
-    get incoming() {
-      return alice
-    },
-    get outgoing() {
-      return bob
+  const ctx = createILPContext({
+    services: RafikiServicesFactory.build(),
+    accounts: {
+      get incoming() {
+        return alice
+      },
+      get outgoing() {
+        return bob
+      }
     }
-  }
+  })
   const next = () => {
     throw new Error('unreachable')
   }

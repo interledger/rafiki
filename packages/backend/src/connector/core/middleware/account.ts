@@ -1,31 +1,82 @@
 import { Errors } from 'ilp-packet'
-import { RafikiAccount, RafikiContext, RafikiMiddleware } from '../rafiki'
+import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
 import { AuthState } from './auth'
-import { AccountNotFoundError } from '../errors'
+import { Balance } from '../../../accounting/service'
+import { validateId } from '../../../shared/utils'
 
-export function createAccountMiddleware(): RafikiMiddleware {
+const UUID_LENGTH = 36
+
+export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
   return async function account(
-    ctx: RafikiContext<AuthState & { streamDestination?: string }>,
-    next: () => Promise<unknown>
+    ctx: ILPContext<AuthState & { streamDestination?: string }>,
+    next: () => Promise<void>
   ): Promise<void> {
-    const { accounts } = ctx.services
-    const incomingAccount = ctx.state.account
-    ctx.assert(incomingAccount, 401)
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (incomingAccount!.disabled) {
-      throw new Errors.UnreachableError('source account is disabled')
+    const { invoices, peers } = ctx.services
+    const incomingAccount = ctx.state.incomingAccount
+    if (!incomingAccount) ctx.throw(401, 'unauthorized')
+
+    const getAccountByDestinationAddress = async (): Promise<
+      RafikiAccount | undefined
+    > => {
+      if (ctx.state.streamDestination) {
+        const invoice = await invoices.get(ctx.state.streamDestination)
+        if (invoice) {
+          if (!invoice.active) {
+            throw new Errors.UnreachableError('destination account is disabled')
+          }
+          return {
+            id: invoice.id,
+            asset: invoice.account.asset,
+            withBalance:
+              invoice.amountToReceive != null
+                ? Balance.ReceiveLimit
+                : undefined,
+            stream: {
+              enabled: true
+            }
+          }
+        }
+        return undefined
+      }
+      const address = ctx.request.prepare.destination
+      const peer = await peers.getByDestinationAddress(address)
+      if (peer) {
+        return {
+          ...peer,
+          stream: {
+            enabled: false
+          }
+        }
+      }
+      if (
+        address.startsWith(serverAddress + '.') &&
+        (address.length === serverAddress.length + 1 + UUID_LENGTH ||
+          address[serverAddress.length + 1 + UUID_LENGTH] === '.')
+      ) {
+        const accountId = address.slice(
+          serverAddress.length + 1,
+          serverAddress.length + 1 + UUID_LENGTH
+        )
+        if (validateId(accountId)) {
+          // TODO: Look up direct ILP access account
+          // const account = await accounts.get(accountId)
+          // return account
+          //   ? {
+          //       // TODO: this is missing asset code and scale
+          //       ...account,
+          //       stream: {
+          //         enabled: true
+          //       }
+          //     }
+          //   : undefined
+        }
+      }
     }
 
-    const outgoingAccount = ctx.state.streamDestination
-      ? await accounts.get(ctx.state.streamDestination)
-      : await accounts.getByDestinationAddress(ctx.request.prepare.destination)
+    const outgoingAccount = await getAccountByDestinationAddress()
     if (!outgoingAccount) {
-      throw new AccountNotFoundError('')
+      throw new Errors.UnreachableError('unknown destination account')
     }
-    if (outgoingAccount.disabled) {
-      throw new Errors.UnreachableError('destination account is disabled')
-    }
-
     ctx.accounts = {
       get incoming(): RafikiAccount {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

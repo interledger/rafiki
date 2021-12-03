@@ -1,12 +1,11 @@
-import { createContext } from '../../utils'
-import { RafikiContext, ZeroCopyIlpPrepare } from '../..'
+import { createILPContext } from '../../utils'
+import { ZeroCopyIlpPrepare } from '../..'
 import { IlpPrepareFactory, RafikiServicesFactory } from '../../factories'
 import { createStreamAddressMiddleware } from '../../middleware/stream-address'
 
 describe('Stream Address Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const ctx = createContext<unknown, RafikiContext>()
-  ctx.services = services
+  const ctx = createILPContext({ services })
   const middleware = createStreamAddressMiddleware()
 
   test('skips non-stream packets', async () => {
@@ -32,6 +31,6 @@ describe('Stream Address Middleware', function () {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(next).toHaveBeenCalledTimes(1)
-    expect(ctx.state.streamDestination).toBe('bob')
+    expect(ctx.state['streamDestination']).toBe('bob')
   })
 })

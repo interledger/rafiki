@@ -10,7 +10,7 @@ import {
   deserializeCcpRouteUpdateRequest
 } from 'ilp-protocol-ccp'
 import { createContext } from '../../utils'
-import { RafikiContext } from '../../rafiki'
+import { HttpContext } from '../../rafiki'
 import { createCcpProtocolController } from '../../controllers/ccp-protocol'
 import {
   IlpPrepareFactory,
@@ -33,7 +33,7 @@ describe('CCP Rule', function () {
       handleRouteUpdate: jest.fn().mockResolvedValue(undefined)
     }
   })
-  const ctx = createContext<unknown, RafikiContext>()
+  const ctx = createContext<unknown, HttpContext>()
   ctx.services = services
   ctx.peers = {
     get incoming() {

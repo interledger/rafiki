@@ -7,307 +7,171 @@ import {
   deserializeIlpReject
 } from 'ilp-packet'
 import { createContext, MockIncomingMessageOptions } from '../../utils'
-import { createIlpPacketMiddleware } from '../../middleware/ilp-packet'
+import {
+  createIlpPacketMiddleware,
+  IlpResponse,
+  ZeroCopyIlpPrepare
+} from '../../middleware/ilp-packet'
 import {
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory
 } from '../../factories'
-import { RafikiContext } from '../../rafiki'
+import { HttpContext } from '../../rafiki'
 
 describe('ILP Packet Middleware', () => {
-  test('attaches the ilp prepare to the req object', async () => {
+  test('sets up request and response', async () => {
+    const options: MockIncomingMessageOptions = {
+      headers: { 'content-type': 'application/octet-stream' }
+    }
+    const ctx = createContext<unknown, HttpContext>({ req: options })
     const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.rawReply = serializeIlpFulfill(IlpFulfillFactory.build())
+    const rawReply = serializeIlpFulfill(IlpFulfillFactory.build())
+    const ilpHandler = jest.fn().mockImplementation((ctx, next) => {
+      expect(ctx.request.prepare).toBeInstanceOf(ZeroCopyIlpPrepare)
+      expect(ctx.request.rawPrepare).toEqual(serializeIlpPrepare(prepare))
+      expect(ctx.response).toBeInstanceOf(IlpResponse)
+      ctx.response.rawReply = rawReply
+      next()
     })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
+    const next = jest.fn()
+    const middleware = createIlpPacketMiddleware(ilpHandler, { getRawBody })
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-    expect(Object.keys(ctx.req)).toContain('prepare')
-    expect(Object.keys(ctx.req)).toContain('rawPrepare')
-    expect(Object.keys(ctx.request)).toContain('prepare')
-    expect(Object.keys(ctx.request)).toContain('rawPrepare')
+    expect(ilpHandler).toHaveBeenCalledTimes(1)
+    expect(next).toHaveBeenCalledTimes(1)
+    expect(ctx.body).toEqual(rawReply)
   })
+})
 
-  test('sets the path to be the ilpAddress converted into a url path', async () => {
-    const prepare = IlpPrepareFactory.build({
-      destination: 'test.rafiki.alice'
-    })
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.rawReply = serializeIlpFulfill(IlpFulfillFactory.build())
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
+describe('IlpResponse', () => {
+  let response: IlpResponse
 
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-    expect(ctx.path).toEqual('test/rafiki/alice')
+  beforeEach(() => {
+    response = new IlpResponse()
   })
 
   test('setting the fulfill sets the rawFulfill and clears the reject and rawReject', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.reject = IlpRejectFactory.build()
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.response.reject).toBeDefined()
-    expect(ctx.response.rawReject).toBeDefined()
+    response.reject = IlpRejectFactory.build()
+    expect(response.reject).toBeDefined()
+    expect(response.rawReject).toBeDefined()
 
-    ctx.response.fulfill = IlpFulfillFactory.build()
-
-    expect(ctx.response.reject).toBeUndefined()
-    expect(ctx.response.rawReject).toBeUndefined()
-    expect(serializeIlpFulfill(ctx.response.fulfill)).toEqual(
-      ctx.response.rawFulfill
-    )
+    const fulfill = IlpFulfillFactory.build()
+    response.fulfill = fulfill
+    expect(response.reject).toBeUndefined()
+    expect(response.rawReject).toBeUndefined()
+    expect(response.fulfill).toEqual(fulfill)
+    expect(serializeIlpFulfill(fulfill)).toEqual(response.rawFulfill)
   })
 
   test('setting the rawFulfill sets the fulfill and clears the reject and rawReject', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.reject = IlpRejectFactory.build()
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.response.reject).toBeDefined()
-    expect(ctx.response.rawReject).toBeDefined()
+    response.reject = IlpRejectFactory.build()
+    expect(response.reject).toBeDefined()
+    expect(response.rawReject).toBeDefined()
 
-    ctx.response.rawFulfill = serializeIlpFulfill(IlpFulfillFactory.build())
-
-    expect(ctx.response.reject).toBeUndefined()
-    expect(ctx.response.rawReject).toBeUndefined()
-    expect(deserializeIlpFulfill(ctx.response.rawFulfill)).toEqual(
-      ctx.response.fulfill
-    )
+    const fulfill = IlpFulfillFactory.build()
+    response.rawFulfill = serializeIlpFulfill(fulfill)
+    expect(response.reject).toBeUndefined()
+    expect(response.rawReject).toBeUndefined()
+    expect(response.fulfill).toEqual(fulfill)
+    expect(serializeIlpFulfill(fulfill)).toEqual(response.rawFulfill)
   })
 
   test('setting the reject sets the rawReject and clears the fulfill and rawFulfill', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.fulfill = IlpFulfillFactory.build()
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.response.fulfill).toBeDefined()
-    expect(ctx.response.rawFulfill).toBeDefined()
+    response.fulfill = IlpFulfillFactory.build()
+    expect(response.fulfill).toBeDefined()
+    expect(response.rawFulfill).toBeDefined()
 
-    ctx.response.reject = IlpRejectFactory.build()
-
-    expect(ctx.response.fulfill).toBeUndefined()
-    expect(ctx.response.rawFulfill).toBeUndefined()
-    expect(serializeIlpReject(ctx.response.reject)).toEqual(
-      ctx.response.rawReject
-    )
+    const reject = IlpRejectFactory.build()
+    response.reject = reject
+    expect(response.fulfill).toBeUndefined()
+    expect(response.rawFulfill).toBeUndefined()
+    expect(response.reject).toEqual(reject)
+    expect(serializeIlpReject(reject)).toEqual(response.rawReject)
   })
 
   test('setting the rawReject sets the reject and clears the fulfill and rawFulfill', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.fulfill = IlpFulfillFactory.build()
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.response.fulfill).toBeDefined()
-    expect(ctx.response.rawFulfill).toBeDefined()
+    response.fulfill = IlpFulfillFactory.build()
+    expect(response.fulfill).toBeDefined()
+    expect(response.rawFulfill).toBeDefined()
 
-    ctx.response.rawReject = serializeIlpReject(IlpRejectFactory.build())
-
-    expect(ctx.response.fulfill).toBeUndefined()
-    expect(ctx.response.rawFulfill).toBeUndefined()
-    expect(deserializeIlpReject(ctx.response.rawReject)).toEqual(
-      ctx.response.reject
-    )
+    const reject = IlpRejectFactory.build()
+    response.rawReject = serializeIlpReject(reject)
+    expect(response.fulfill).toBeUndefined()
+    expect(response.rawFulfill).toBeUndefined()
+    expect(response.reject).toEqual(reject)
+    expect(serializeIlpReject(reject)).toEqual(response.rawReject)
   })
 
   test('setting the reply as undefined clears the fulfill', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.reply = IlpFulfillFactory.build()
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.response.fulfill).toBeDefined()
-    expect(ctx.response.rawFulfill).toBeDefined()
+    response.reply = IlpFulfillFactory.build()
+    expect(response.fulfill).toBeDefined()
+    expect(response.rawFulfill).toBeDefined()
 
-    ctx.response.reply = undefined
-
-    expect(ctx.response.fulfill).toBeUndefined()
-    expect(ctx.response.rawFulfill).toBeUndefined()
+    response.reply = undefined
+    expect(response.fulfill).toBeUndefined()
+    expect(response.rawFulfill).toBeUndefined()
   })
 
   test('setting the reply as undefined clears the reject', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.reply = IlpRejectFactory.build()
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.response.reject).toBeDefined()
-    expect(ctx.response.rawReject).toBeDefined()
+    response.reply = IlpRejectFactory.build()
+    expect(response.reject).toBeDefined()
+    expect(response.rawReject).toBeDefined()
 
-    ctx.response.reply = undefined
-
-    expect(ctx.response.reject).toBeUndefined()
-    expect(ctx.response.rawReject).toBeUndefined()
+    response.reply = undefined
+    expect(response.reject).toBeUndefined()
+    expect(response.rawReject).toBeUndefined()
   })
 
   test('setting the reply as a fulfill sets the fulfill and rawFulfill', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const fulfill = IlpFulfillFactory.build()
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.reply = fulfill
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
-
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-    expect(ctx.response.fulfill).toEqual(fulfill)
-    expect(ctx.response.rawFulfill).toEqual(serializeIlpFulfill(fulfill))
+    response.reply = fulfill
+    expect(response.fulfill).toEqual(fulfill)
+    expect(response.rawFulfill).toEqual(serializeIlpFulfill(fulfill))
   })
 
   test('setting the reply as a reject sets the reject and rawReject', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const reject = IlpRejectFactory.build()
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.reply = reject // set the fulfill after the getters and setters have been attached
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
+    response.reply = reject // set the fulfill after the getters and setters have been attached
 
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-    expect(ctx.response.reject).toEqual(reject)
-    expect(ctx.response.rawReject).toEqual(serializeIlpReject(reject))
+    expect(response.reject).toEqual(reject)
+    expect(response.rawReject).toEqual(serializeIlpReject(reject))
   })
 
   test('setting the rawReply as rawFulfill sets the fulfill and rawFulfill', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const rawFulfill = serializeIlpFulfill(IlpFulfillFactory.build())
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.rawReply = rawFulfill // set the fulfill after the getters and setters have been attached
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
+    response.rawReply = rawFulfill // set the fulfill after the getters and setters have been attached
 
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-    expect(ctx.response.fulfill).toEqual(deserializeIlpFulfill(rawFulfill))
-    expect(ctx.response.rawFulfill).toEqual(rawFulfill)
+    expect(response.fulfill).toEqual(deserializeIlpFulfill(rawFulfill))
+    expect(response.rawFulfill).toEqual(rawFulfill)
   })
 
   test('setting the rawReply as rawReject sets the reject and rawReject', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const rawReject = serializeIlpReject(IlpRejectFactory.build())
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.rawReply = rawReject
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
+    response.rawReply = rawReject
 
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-    expect(ctx.response.reject).toEqual(deserializeIlpReject(rawReject))
-    expect(ctx.response.rawReject).toEqual(rawReject)
+    expect(response.reject).toEqual(deserializeIlpReject(rawReject))
+    expect(response.rawReject).toEqual(rawReject)
   })
 
   test('setting the rawReply as undefined clears the reject and rawReject', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.rawReject = serializeIlpReject(IlpRejectFactory.build())
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.response.reject).toBeDefined()
-    expect(ctx.response.rawReject).toBeDefined()
+    response.rawReject = serializeIlpReject(IlpRejectFactory.build())
+    expect(response.reject).toBeDefined()
+    expect(response.rawReject).toBeDefined()
 
-    ctx.response.rawReply = undefined
-
-    expect(ctx.response.reject).toBeUndefined()
-    expect(ctx.response.rawReject).toBeUndefined()
+    response.rawReply = undefined
+    expect(response.reject).toBeUndefined()
+    expect(response.rawReject).toBeUndefined()
   })
 
   test('setting the rawReply as undefined clears the fulfill and rawFulfill', async () => {
-    const prepare = IlpPrepareFactory.build()
-    const options: MockIncomingMessageOptions = {
-      headers: { 'content-type': 'application/octet-stream' }
-    }
-    const ctx = createContext<unknown, RafikiContext>({ req: options })
-    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.rawFulfill = serializeIlpFulfill(IlpFulfillFactory.build())
-    })
-    const middleware = createIlpPacketMiddleware({ getRawBody })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.response.fulfill).toBeDefined()
-    expect(ctx.response.rawFulfill).toBeDefined()
+    response.rawFulfill = serializeIlpFulfill(IlpFulfillFactory.build())
+    expect(response.fulfill).toBeDefined()
+    expect(response.rawFulfill).toBeDefined()
 
-    ctx.response.rawReply = undefined
-
-    expect(ctx.response.fulfill).toBeUndefined()
-    expect(ctx.response.rawFulfill).toBeUndefined()
+    response.rawReply = undefined
+    expect(response.fulfill).toBeUndefined()
+    expect(response.rawFulfill).toBeUndefined()
   })
 })

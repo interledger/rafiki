@@ -1,5 +1,3 @@
-import PluginHttp from 'ilp-plugin-http'
-
 // Maybe @interledger/pay should export this interface.
 export interface IlpPlugin {
   connect: () => Promise<void>
@@ -10,22 +8,17 @@ export interface IlpPlugin {
   deregisterDataHandler: () => void
 }
 
-export function createIlpPlugin(url: string, token: string): OutgoingIlpPlugin {
-  return new OutgoingIlpPlugin(url, token)
+export function createIlpPlugin(
+  sendData: (data: Buffer) => Promise<Buffer>
+): OutgoingIlpPlugin {
+  return new OutgoingIlpPlugin(sendData)
 }
 
-export class OutgoingIlpPlugin extends PluginHttp implements IlpPlugin {
-  constructor(url: string, staticToken: string) {
-    super({
-      // "incoming" is a not actually used. connect() is overridden so that no server is started.
-      incoming: {
-        port: 0
-      },
-      outgoing: {
-        url,
-        staticToken
-      }
-    })
+export class OutgoingIlpPlugin implements IlpPlugin {
+  constructor(private _sendData: (data: Buffer) => Promise<Buffer>) {}
+
+  sendData(data: Buffer): Promise<Buffer> {
+    return this._sendData(data)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function

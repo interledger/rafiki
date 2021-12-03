@@ -6,37 +6,39 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { Account as AccountModel } from '../../account/model'
-import { AccountFactory } from '../../tests/accountFactory'
+import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { Invoice } from '../../invoice/model'
-import { InvoiceService } from '../../invoice/service'
+import { Invoice } from '../../open_payments/invoice/model'
+import { InvoiceService } from '../../open_payments/invoice/service'
+import { AccountService } from '../../open_payments/account/service'
 import { Account } from '../generated/graphql'
 
 describe('Invoice Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let invoiceService: InvoiceService
+  let accountService: AccountService
   let knex: Knex
-  let accountFactory: AccountFactory
   let invoices: Invoice[]
-  let account: AccountModel
+  let accountId: string
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      invoiceService = await deps.use('invoiceService')
-      const accountService = await deps.use('accountService')
-      accountFactory = new AccountFactory(accountService)
-      account = await accountFactory.build()
-      invoices = []
-      for (let i = 0; i < 50; i++) {
-        invoices.push(await invoiceService.create(account.id, `Invoice ${i}`))
-      }
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    invoiceService = await deps.use('invoiceService')
+    accountService = await deps.use('accountService')
+    accountId = (await accountService.create({ asset: randomAsset() })).id
+    invoices = []
+    for (let i = 0; i < 50; i++) {
+      invoices.push(
+        await invoiceService.create({
+          accountId,
+          description: `Invoice ${i}`
+        })
+      )
     }
-  )
+  }, 10_000)
 
   afterAll(
     async (): Promise<void> => {
@@ -71,7 +73,7 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: account.id
+            id: accountId
           }
         })
         .then(
@@ -91,7 +93,9 @@ describe('Invoice Resolver', (): void => {
     })
 
     test('No invoices, but invoices requested', async (): Promise<void> => {
-      const tempAccount = await accountFactory.build()
+      const account = await accountService.create({
+        asset: randomAsset()
+      })
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -115,7 +119,7 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: tempAccount.id
+            id: account.id
           }
         })
         .then(
@@ -158,7 +162,7 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: account.id
+            id: accountId
           }
         })
         .then(
@@ -201,7 +205,7 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: account.id,
+            id: accountId,
             after: invoices[19].id
           }
         })
@@ -245,7 +249,7 @@ describe('Invoice Resolver', (): void => {
             }
           `,
           variables: {
-            id: account.id,
+            id: accountId,
             after: invoices[44].id
           }
         })

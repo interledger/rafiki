@@ -5,26 +5,23 @@ import { v4 as uuid } from 'uuid'
 import { HttpTokenService } from './service'
 import { HttpTokenError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
-import { HttpToken } from './model'
 import { resetGraphileDb } from '../tests/graphileDb'
+import { PeerFactory } from '../tests/peerFactory'
 import { truncateTables } from '../tests/tableManager'
 import { GraphileProducer } from '../messaging/graphileProducer'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { AccountFactory } from '../tests/accountFactory'
-import { AccountService } from '../account/service'
-import { Account } from '../account/model'
+import { Peer } from '../peer/model'
 
 describe('HTTP Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let workerUtils: WorkerUtils
   let httpTokenService: HttpTokenService
-  let accountService: AccountService
-  let accountFactory: AccountFactory
-  let account: Account
+  let peerFactory: PeerFactory
+  let peer: Peer
   let knex: Knex
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -43,14 +40,14 @@ describe('HTTP Token Service', (): void => {
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
       httpTokenService = await deps.use('httpTokenService')
-      accountService = await deps.use('accountService')
-      accountFactory = new AccountFactory(accountService)
+      const peerService = await deps.use('peerService')
+      peerFactory = new PeerFactory(peerService)
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      account = await accountFactory.build()
+      peer = await peerFactory.build()
     }
   )
 
@@ -68,43 +65,54 @@ describe('HTTP Token Service', (): void => {
     }
   )
 
-  describe('Create Tokens', (): void => {
-    test('Tokens can be created', async (): Promise<void> => {
+  describe('Create or Get Tokens', (): void => {
+    test('Tokens can be created and fetched', async (): Promise<void> => {
       const httpToken = {
-        accountId: account.id,
+        peerId: peer.id,
         token: uuid()
       }
       await expect(
         httpTokenService.create([httpToken])
       ).resolves.toBeUndefined()
-      await expect(HttpToken.query().where(httpToken)).resolves.toHaveLength(1)
+      await expect(
+        httpTokenService.get(httpToken.token)
+      ).resolves.toMatchObject({
+        ...httpToken,
+        peer
+      })
 
       const httpTokens = [
         {
-          accountId: account.id,
+          peerId: peer.id,
           token: uuid()
         },
         {
-          accountId: account.id,
+          peerId: peer.id,
           token: uuid()
         }
       ]
       await expect(httpTokenService.create(httpTokens)).resolves.toBeUndefined()
       await expect(
-        HttpToken.query().where(httpTokens[0])
-      ).resolves.toHaveLength(1)
+        httpTokenService.get(httpTokens[0].token)
+      ).resolves.toMatchObject({
+        ...httpTokens[0],
+        peer
+      })
       await expect(
-        HttpToken.query().where(httpTokens[1])
-      ).resolves.toHaveLength(1)
+        httpTokenService.get(httpTokens[1].token)
+      ).resolves.toMatchObject({
+        ...httpTokens[1],
+        peer
+      })
     })
 
-    test('Cannot create token with unknown account', async (): Promise<void> => {
+    test('Cannot create token with unknown peer', async (): Promise<void> => {
       const httpToken = {
-        accountId: uuid(),
+        peerId: uuid(),
         token: uuid()
       }
       await expect(httpTokenService.create([httpToken])).resolves.toEqual(
-        HttpTokenError.UnknownAccount
+        HttpTokenError.UnknownPeer
       )
     })
 
@@ -112,11 +120,11 @@ describe('HTTP Token Service', (): void => {
       const token = uuid()
       const httpTokens = [
         {
-          accountId: account.id,
+          peerId: peer.id,
           token
         },
         {
-          accountId: account.id,
+          peerId: peer.id,
           token
         }
       ]
@@ -125,9 +133,9 @@ describe('HTTP Token Service', (): void => {
       )
     })
 
-    test('Cannot create duplicate token for same account', async (): Promise<void> => {
+    test('Cannot create duplicate token for same peer', async (): Promise<void> => {
       const httpToken = {
-        accountId: account.id,
+        peerId: peer.id,
         token: uuid()
       }
       await expect(
@@ -138,12 +146,12 @@ describe('HTTP Token Service', (): void => {
       )
     })
 
-    test('Cannot create duplicate token for different account', async (): Promise<void> => {
+    test('Cannot create duplicate token for different peer', async (): Promise<void> => {
       const token = uuid()
       await expect(
         httpTokenService.create([
           {
-            accountId: account.id,
+            peerId: peer.id,
             token
           }
         ])
@@ -151,7 +159,7 @@ describe('HTTP Token Service', (): void => {
       await expect(
         httpTokenService.create([
           {
-            accountId: (await accountFactory.build()).id,
+            peerId: (await peerFactory.build()).id,
             token
           }
         ])
@@ -160,27 +168,33 @@ describe('HTTP Token Service', (): void => {
   })
 
   describe('Delete Tokens', (): void => {
-    test('Tokens can be deleted by account id', async (): Promise<void> => {
+    test('Tokens can be deleted by peer id', async (): Promise<void> => {
       const httpTokens = [
         {
-          accountId: account.id,
+          peerId: peer.id,
           token: uuid()
         },
         {
-          accountId: account.id,
+          peerId: peer.id,
           token: uuid()
         }
       ]
       await expect(httpTokenService.create(httpTokens)).resolves.toBeUndefined()
       await expect(
-        HttpToken.query().where({ accountId: account.id })
-      ).resolves.toHaveLength(2)
+        httpTokenService.get(httpTokens[0].token)
+      ).resolves.toBeDefined()
       await expect(
-        httpTokenService.deleteByAccount(account.id)
+        httpTokenService.get(httpTokens[1].token)
+      ).resolves.toBeDefined()
+      await expect(
+        httpTokenService.deleteByPeer(peer.id)
       ).resolves.toBeUndefined()
       await expect(
-        HttpToken.query().where({ accountId: account.id })
-      ).resolves.toHaveLength(0)
+        httpTokenService.get(httpTokens[0].token)
+      ).resolves.toBeUndefined()
+      await expect(
+        httpTokenService.get(httpTokens[1].token)
+      ).resolves.toBeUndefined()
     })
   })
 })

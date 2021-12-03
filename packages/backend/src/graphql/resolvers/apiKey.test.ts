@@ -7,8 +7,8 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { AccountService } from '../../account/service'
-import { AccountFactory } from '../../tests/accountFactory'
+import { AccountService } from '../../open_payments/account/service'
+import { randomAsset } from '../../tests/asset'
 import {
   CreateApiKeyInput,
   CreateApiKeyMutationResponse,
@@ -25,7 +25,6 @@ describe('ApiKey Resolvers', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let accountService: AccountService
-  let accountFactory: AccountFactory
   let apiKeyService: ApiKeyService
   let sessionService: SessionService
 
@@ -35,7 +34,6 @@ describe('ApiKey Resolvers', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       accountService = await deps.use('accountService')
-      accountFactory = new AccountFactory(accountService)
       apiKeyService = await deps.use('apiKeyService')
       sessionService = await deps.use('sessionService')
     }
@@ -56,7 +54,10 @@ describe('ApiKey Resolvers', (): void => {
 
   describe('Api Key Mutations', (): void => {
     test('Api key can be created', async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
+      const { id: accountId } = await accountService.create({
+        asset: randomAsset()
+      })
+
       const input: CreateApiKeyInput = { accountId }
       const response = await appContainer.apolloClient
         .mutate({
@@ -116,7 +117,9 @@ describe('ApiKey Resolvers', (): void => {
     })
 
     test('Session Key can be redeemed', async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
+      const { id: accountId } = await accountService.create({
+        asset: randomAsset()
+      })
       const apiKey = await apiKeyService.create({ accountId })
       const input: RedeemSessionKeyInput = {
         accountId,
@@ -172,7 +175,9 @@ describe('ApiKey Resolvers', (): void => {
     })
 
     test('Api keys can be deleted', async (): Promise<void> => {
-      const { id: accountId } = await accountFactory.build()
+      const { id: accountId } = await accountService.create({
+        asset: randomAsset()
+      })
       await apiKeyService.create({ accountId })
       const input: DeleteAllApiKeysInput = { accountId }
       const response = await appContainer.apolloClient

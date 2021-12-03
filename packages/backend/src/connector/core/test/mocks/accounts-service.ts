@@ -1,7 +1,8 @@
+import assert from 'assert'
 import { AccountService, RafikiAccount } from '../../rafiki'
 
-import { AccountTransfer } from '../../../../account/service'
-import { AccountTransferError } from '../../../../account/errors'
+import { AccountTransfer, Balance } from '../../../../accounting/service'
+import { TransferError } from '../../../../accounting/errors'
 
 export type MockIlpAccount = RafikiAccount & {
   balance: bigint
@@ -10,32 +11,30 @@ export type MockIlpAccount = RafikiAccount & {
       authTokens: string[]
     }
   }
+  active?: boolean
+  receiveLimit?: bigint
 }
 
 export class MockAccountsService implements AccountService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
-  constructor(private serverIlpAddress: string) {}
-
-  get(accountId: string): Promise<RafikiAccount | undefined> {
+  _get(accountId: string): Promise<MockIlpAccount | undefined> {
     const account = this.accounts.get(accountId)
     return Promise.resolve(account)
   }
 
-  async getByDestinationAddress(
+  async _getByDestinationAddress(
     destinationAddress: string
   ): Promise<RafikiAccount | undefined> {
     const account = this.find((account) => {
-      const { routing } = account
-      if (!routing) return false
-      return destinationAddress.startsWith(routing.staticIlpAddress)
-      //routing.staticIlpAddress === destinationAddress ||
-      //routing.prefixes.some((prefix) => destinationAddress.startsWith(prefix))
+      const { staticIlpAddress } = account
+      if (!staticIlpAddress) return false
+      return destinationAddress.startsWith(staticIlpAddress)
     })
     return account
   }
 
-  async getByToken(token: string): Promise<RafikiAccount | undefined> {
+  async _getByIncomingToken(token: string): Promise<RafikiAccount | undefined> {
     return this.find(
       (account) => !!account.http?.incoming?.authTokens.includes(token)
     )
@@ -48,7 +47,15 @@ export class MockAccountsService implements AccountService {
     }
   }
 
+  async getReceiveLimit(accountId: string): Promise<bigint | undefined> {
+    const account = this.accounts.get(accountId)
+    if (account) {
+      return account.receiveLimit
+    }
+  }
+
   async create(account: MockIlpAccount): Promise<RafikiAccount> {
+    if (!account.id) throw new Error('unexpected asset account')
     this.accounts.set(account.id, account)
     return account
   }
@@ -59,29 +66,32 @@ export class MockAccountsService implements AccountService {
     sourceAmount: bigint
     destinationAmount: bigint
     timeout: bigint
-  }): Promise<AccountTransfer | AccountTransferError> {
+  }): Promise<AccountTransfer | TransferError> {
     if (options.sourceAccount.balance < options.sourceAmount) {
-      return AccountTransferError.InsufficientBalance
+      return TransferError.InsufficientBalance
+    }
+    if (options.destinationAccount.withBalance === Balance.ReceiveLimit) {
+      assert.ok(options.destinationAccount.receiveLimit !== undefined)
+      if (
+        options.destinationAccount.receiveLimit <
+        (options.destinationAmount || options.sourceAmount)
+      ) {
+        return TransferError.ReceiveLimitExceeded
+      }
     }
     options.sourceAccount.balance -= options.sourceAmount
     return {
       commit: async () => {
         options.destinationAccount.balance +=
           options.destinationAmount ?? options.sourceAmount
+        if (options.destinationAccount.receiveLimit != null) {
+          options.destinationAccount.receiveLimit -=
+            options.destinationAmount ?? options.sourceAmount
+        }
       },
       rollback: async () => {
         options.sourceAccount.balance += options.sourceAmount
       }
-    }
-  }
-
-  async getAddress(accountId: string): Promise<string | undefined> {
-    const account = this.accounts.get(accountId)
-    if (!account) return undefined
-    if (account.routing) {
-      return account.routing.staticIlpAddress
-    } else {
-      return this.serverIlpAddress + '.' + accountId
     }
   }
 

@@ -1,6 +1,5 @@
 import { serializeIlpFulfill } from 'ilp-packet'
-import { createContext } from '../../utils'
-import { RafikiContext } from '../../rafiki'
+import { createILPContext } from '../../utils'
 import {
   IlpFulfillFactory,
   IlpPrepareFactory,
@@ -16,16 +15,17 @@ describe('Client Controller', function () {
   const alice = PeerAccountFactory.build({ id: 'alice' })
   const bob = PeerAccountFactory.build({ id: 'bob' })
   const services = RafikiServicesFactory.build()
-  const ctx = createContext<unknown, RafikiContext>()
-  ctx.services = services
-  ctx.accounts = {
-    get incoming() {
-      return alice
-    },
-    get outgoing() {
-      return bob
+  const ctx = createILPContext({
+    services,
+    accounts: {
+      get incoming() {
+        return alice
+      },
+      get outgoing() {
+        return bob
+      }
     }
-  }
+  })
   const controller = createClientController({ sendToPeer })
   const next = () => {
     throw new Error('unreachable')

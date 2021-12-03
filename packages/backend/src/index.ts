@@ -15,15 +15,14 @@ import { createRatesService } from './rates/service'
 import { createOutgoingPaymentService } from './outgoing_payment/service'
 import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
-import { createBalanceService } from './balance/service'
 import { createAssetService } from './asset/service'
-import { createAccountService } from './account/service'
-import { createDepositService } from './deposit/service'
-import { createWithdrawalService } from './withdrawal/service'
-import { createCreditService } from './credit/service'
-import { createSPSPService } from './spsp/service'
-import { createTransferService } from './transfer/service'
-import { createInvoiceService } from './invoice/service'
+import { AccountOptions, createAccountingService } from './accounting/service'
+import { createPeerService } from './peer/service'
+import { createAccountService } from './open_payments/account/service'
+import { createSPSPRoutes } from './spsp/routes'
+import { createAccountRoutes } from './open_payments/account/routes'
+import { createInvoiceRoutes } from './open_payments/invoice/routes'
+import { createInvoiceService } from './open_payments/invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebMonetizationService } from './webmonetization/service'
 import { createConnectorService } from './connector'
@@ -37,7 +36,6 @@ BigInt.prototype.toJSON = function () {
 const container = initIocContainer(Config)
 const app = new App(container)
 let connectorServer: Server
-let connectorAdminServer: Server
 
 export function initIocContainer(
   config: typeof Config
@@ -124,91 +122,49 @@ export function initIocContainer(
       knex: knex
     })
   })
-  container.singleton('balanceService', async (deps) => {
-    const logger = await deps.use('logger')
-    const tigerbeetle = await deps.use('tigerbeetle')
-    return await createBalanceService({
-      logger: logger,
-      tigerbeetle: tigerbeetle
-    })
-  })
-  container.singleton('transferService', async (deps) => {
-    const logger = await deps.use('logger')
-    const tigerbeetle = await deps.use('tigerbeetle')
-    return await createTransferService({
-      logger: logger,
-      tigerbeetle: tigerbeetle
-    })
-  })
   container.singleton('assetService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
-    const balanceService = await deps.use('balanceService')
     return await createAssetService({
       logger: logger,
       knex: knex,
-      balanceService: balanceService
+      accountingService: await deps.use('accountingService')
+    })
+  })
+  container.singleton('accountingService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    const tigerbeetle = await deps.use('tigerbeetle')
+    return await createAccountingService({
+      logger: logger,
+      knex: knex,
+      tigerbeetle
+    })
+  })
+  container.singleton('peerService', async (deps) => {
+    return await createPeerService({
+      knex: await deps.use('knex'),
+      logger: await deps.use('logger'),
+      accountingService: await deps.use('accountingService'),
+      assetService: await deps.use('assetService'),
+      httpTokenService: await deps.use('httpTokenService')
     })
   })
   container.singleton('accountService', async (deps) => {
-    const config = await deps.use('config')
     const logger = await deps.use('logger')
-    const knex = await deps.use('knex')
     const assetService = await deps.use('assetService')
-    const balanceService = await deps.use('balanceService')
-    const transferService = await deps.use('transferService')
-    const httpTokenService = await deps.use('httpTokenService')
     return await createAccountService({
+      knex: await deps.use('knex'),
       logger: logger,
-      knex: knex,
-      assetService,
-      balanceService,
-      httpTokenService,
-      transferService,
-      ilpAddress: config.ilpAddress,
-      peerAddresses: config.peerAddresses
+      assetService: assetService
     })
   })
-  container.singleton('depositService', async (deps) => {
-    const logger = await deps.use('logger')
-    const assetService = await deps.use('assetService')
-    const accountService = await deps.use('accountService')
-    const transferService = await deps.use('transferService')
-    return await createDepositService({
-      logger: logger,
-      assetService,
-      accountService,
-      transferService
-    })
-  })
-  container.singleton('withdrawalService', async (deps) => {
-    const logger = await deps.use('logger')
-    const assetService = await deps.use('assetService')
-    const accountService = await deps.use('accountService')
-    const transferService = await deps.use('transferService')
-    return await createWithdrawalService({
-      logger: logger,
-      assetService,
-      accountService,
-      transferService
-    })
-  })
-  container.singleton('creditService', async (deps) => {
-    const logger = await deps.use('logger')
-    const accountService = await deps.use('accountService')
-    const transferService = await deps.use('transferService')
-    return await createCreditService({
-      logger: logger,
-      accountService,
-      transferService
-    })
-  })
-  container.singleton('SPSPService', async (deps) => {
+  container.singleton('spspRoutes', async (deps) => {
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
     const accountService = await deps.use('accountService')
     const wmService = await deps.use('wmService')
-    return await createSPSPService({
+    return await createSPSPRoutes({
       logger: logger,
       accountService: accountService,
       wmService,
@@ -216,13 +172,25 @@ export function initIocContainer(
     })
   })
   container.singleton('invoiceService', async (deps) => {
-    const logger = await deps.use('logger')
-    const knex = await deps.use('knex')
-    const accountService = await deps.use('accountService')
     return await createInvoiceService({
-      logger: logger,
-      knex: knex,
-      accountService: accountService
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      accountingService: await deps.use('accountingService')
+    })
+  })
+  container.singleton('invoiceRoutes', async (deps) => {
+    return createInvoiceRoutes({
+      config: await deps.use('config'),
+      logger: await deps.use('logger'),
+      accountingService: await deps.use('accountingService'),
+      invoiceService: await deps.use('invoiceService'),
+      streamServer: await deps.use('streamServer')
+    })
+  })
+  container.singleton('accountRoutes', async (deps) => {
+    return createAccountRoutes({
+      config: await deps.use('config'),
+      accountService: await deps.use('accountService')
     })
   })
 
@@ -230,12 +198,10 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const invoiceService = await deps.use('invoiceService')
-    const accountService = await deps.use('accountService')
     return createWebMonetizationService({
       logger: logger,
       knex: knex,
-      invoiceService,
-      accountService
+      invoiceService
     })
   })
 
@@ -249,9 +215,13 @@ export function initIocContainer(
   })
 
   container.singleton('makeIlpPlugin', async (deps) => {
-    const { ilpUrl } = await deps.use('config')
-    return (sourceAccountId: string): IlpPlugin => {
-      return createIlpPlugin(ilpUrl, `Bearer ${sourceAccountId}`)
+    const connectorApp = await deps.use('connectorApp')
+    return (sourceAccount: AccountOptions): IlpPlugin => {
+      return createIlpPlugin(
+        (data: Buffer): Promise<Buffer> => {
+          return connectorApp.handleIlpData(sourceAccount, data)
+        }
+      )
     }
   })
 
@@ -262,9 +232,9 @@ export function initIocContainer(
       quoteLifespan: config.quoteLifespan,
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      accountService: await deps.use('accountService'),
-      creditService: await deps.use('creditService'),
+      accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
+      accountService: await deps.use('accountService'),
       ratesService: await deps.use('ratesService')
     })
   })
@@ -285,6 +255,20 @@ export function initIocContainer(
       sessionService: sessionService
     })
   })
+
+  container.singleton('connectorApp', async (deps) => {
+    const config = await deps.use('config')
+    return await createConnectorService({
+      logger: await deps.use('logger'),
+      redis: await deps.use('redis'),
+      accountingService: await deps.use('accountingService'),
+      invoiceService: await deps.use('invoiceService'),
+      peerService: await deps.use('peerService'),
+      ratesService: await deps.use('ratesService'),
+      streamServer: await deps.use('streamServer'),
+      ilpAddress: config.ilpAddress
+    })
+  })
   return container
 }
 
@@ -298,13 +282,6 @@ export const gracefulShutdown = async (
   if (connectorServer) {
     await new Promise((resolve, reject) => {
       connectorServer.close((err?: Error) =>
-        err ? reject(err) : resolve(null)
-      )
-    })
-  }
-  if (connectorAdminServer) {
-    await new Promise((resolve, reject) => {
-      connectorAdminServer.close((err?: Error) =>
         err ? reject(err) : resolve(null)
       )
     })
@@ -388,18 +365,9 @@ export const start = async (
   app.listen(config.port)
   logger.info(`Listening on ${app.getPort()}`)
 
-  const connectorApp = await createConnectorService({
-    logger: logger,
-    redis: await container.use('redis'),
-    accountService: await container.use('accountService'),
-    ratesService: await container.use('ratesService'),
-    streamServer: await container.use('streamServer'),
-    ilpAddress: config.ilpAddress
-  })
+  const connectorApp = await container.use('connectorApp')
   connectorServer = connectorApp.listenPublic(config.connectorPort)
   logger.info(`Connector listening on ${config.connectorPort}`)
-  connectorAdminServer = connectorApp.listenAdmin(config.connectorAdminPort)
-  logger.info(`Connector listening on ${config.connectorAdminPort}`)
   logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 }
 

@@ -1,8 +1,12 @@
 type Query {
+  outgoingPayment(id: String!): OutgoingPayment
+
   account(id: String!): Account
 
-  "Fetch a page of accounts."
-  accounts(
+  peer(id: String!): Peer
+
+  "Fetch a page of peers."
+  peers(
     "Paginating forwards: the cursor before the the requested page."
     after: String
     "Paginating backwards: the cursor after the the requested page."
@@ -11,33 +15,10 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
-  ): AccountsConnection!
-
-  outgoingPayment(id: String!): OutgoingPayment
-
-  "Get a webhook by ID."
-  webhook("The ID of the webhook to get." id: String!): Webhook!
-
-  "Get a deposit by ID."
-  deposit("The ID of the deposit to get." id: String!): Deposit!
-
-  "Get a withdrawal by ID."
-  withdrawal("The ID of the withdrawal to get." id: String!): Withdrawal!
+  ): PeersConnection!
 }
 
 type Mutation {
-  "Create account"
-  createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
-
-  "Update account"
-  updateAccount(input: UpdateAccountInput!): UpdateAccountMutationResponse!
-
-  "Delete account"
-  deleteAccount(id: String!): DeleteAccountMutationResponse!
-
-  "Create sub-account"
-  createSubAccount(superAccountId: String!): CreateSubAccountMutationResponse!
-
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
@@ -47,6 +28,17 @@ type Mutation {
   requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
   "Cancel a Ready payment."
   cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
+
+  createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
+
+  "Create peer"
+  createPeer(input: CreatePeerInput!): CreatePeerMutationResponse!
+
+  "Update peer"
+  updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
+
+  "Delete peer"
+  deletePeer(id: String!): DeletePeerMutationResponse!
 
   "Transfer between accounts"
   transfer(
@@ -58,55 +50,33 @@ type Mutation {
     idempotencyKey: ID!
   ): TransferMutationResponse
 
-  "Create webhook"
-  createWebhook(
-    "The id of the account to create the webhook for."
-    ilpAccountId: String!
-  ): CreateWebhookMutationResponse
+  "Add peer liquidity"
+  addPeerLiquidity(input: AddPeerLiquidityInput!): LiquidityMutationResponse
 
-  "Update webhook"
-  updateWebhook(
-    "The id of the webhook to update."
-    webhookId: ID!
-  ): UpdateWebhookMutationResponse
+  "Add asset liquidity"
+  addAssetLiquidity(input: AddAssetLiquidityInput!): LiquidityMutationResponse
 
-  "Delete webhook"
-  deleteWebhook(
-    "The id of the webhook to delete."
-    webhookId: ID!
-  ): DeleteWebhookMutationResponse
+  "Create liquidity withdrawal from peer"
+  createPeerLiquidityWithdrawal(
+    input: CreatePeerLiquidityWithdrawalInput!
+  ): LiquidityMutationResponse
 
-  "Create deposit"
-  createDeposit(input: CreateDepositInput!): CreateDepositMutationResponse
+  "Create liquidity withdrawal from asset"
+  createAssetLiquidityWithdrawal(
+    input: CreateAssetLiquidityWithdrawalInput!
+  ): LiquidityMutationResponse
 
-  "Create withdrawal"
-  createWithdrawal(
-    input: CreateWithdrawalInput!
-  ): CreateWithdrawalMutationResponse
-
-  "Finalize pending withdrawal"
-  finalizePendingWithdrawal(
-    "The id of the pending withdrawal to finalize."
+  "Finalize liquidity withdrawal"
+  finalizeLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to finalize."
     withdrawalId: String!
-  ): FinalizePendingWithdrawalMutationResponse
+  ): LiquidityMutationResponse
 
-  "Rollback pending withdrawal"
-  rollbackPendingWithdrawal(
-    "The id of the pending withdrawal to rollback."
+  "Rollback liquidity withdrawal"
+  rollbackLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to rollback."
     withdrawalId: String!
-  ): RollbackPendingWithdrawalMutationResponse
-
-  "Extend Credit"
-  extendCredit(input: ExtendCreditInput!): ExtendCreditMutationResponse
-
-  "Revoke Credit"
-  revokeCredit(input: RevokeCreditInput!): RevokeCreditMutationResponse
-
-  "Utilize Credit"
-  utilizeCredit(input: UtilizeCreditInput!): UtilizeCreditMutationResponse
-
-  "Settle Debt"
-  settleDebt(input: SettleDebtInput): SettleDebtMutationResponse
+  ): LiquidityMutationResponse
 
   "Create API Key"
   createApiKey(input: CreateApiKeyInput!): CreateApiKeyMutationResponse
@@ -139,42 +109,32 @@ type PageInfo {
   startCursor: String
 }
 
-type AccountsConnection {
+type PeersConnection {
   pageInfo: PageInfo!
-  edges: [AccountEdge!]!
+  edges: [PeerEdge!]!
 }
 
-type SubAccountsConnection {
-  pageInfo: PageInfo!
-  edges: [AccountEdge!]!
-}
-
-type AccountEdge {
-  node: Account!
+type PeerEdge {
+  node: Peer!
   cursor: String!
 }
 
-input CreateAccountInput {
-  id: String
-  disabled: Boolean
+input CreatePeerInput {
   maxPacketAmount: UInt64
-  http: HttpInput
+  http: HttpInput!
   asset: AssetInput!
-  stream: StreamInput
-  routing: RoutingInput
+  staticIlpAddress: String!
 }
 
-input UpdateAccountInput {
-  id: String
-  disabled: Boolean
+input UpdatePeerInput {
+  id: String!
   maxPacketAmount: UInt64
   http: HttpInput
-  stream: StreamInput
-  routing: RoutingInput
+  staticIlpAddress: String
 }
 
 input HttpInput {
-  incoming: HttpIncomingInput!
+  incoming: HttpIncomingInput
   outgoing: HttpOutgoingInput!
 }
 
@@ -192,70 +152,40 @@ input AssetInput {
   scale: Int!
 }
 
-input StreamInput {
-  enabled: Boolean!
-}
-
-input RoutingInput {
-  staticIlpAddress: String!
-}
-
-input CreateDepositInput {
-  "The id of the account to create the deposit for."
-  accountId: String!
-  "Amount of deposit."
+input AddPeerLiquidityInput {
+  "The id of the peer to add liquidity."
+  peerId: String!
+  "Amount of liquidity to add."
   amount: UInt64!
-  "The id of the deposit."
+  "The id of the transfer."
   id: String
 }
 
-input CreateWithdrawalInput {
-  "The id of the account to create the withdrawal for."
-  accountId: String!
+input AddAssetLiquidityInput {
+  "The id of the asset to add liquidity."
+  assetId: String!
+  "Amount of liquidity to add."
+  amount: UInt64!
+  "The id of the transfer."
+  id: String
+}
+
+input CreatePeerLiquidityWithdrawalInput {
+  "The id of the peer to create the withdrawal for."
+  peerId: String!
   "Amount of withdrawal."
   amount: UInt64!
   "The id of the withdrawal."
-  id: String
+  id: String!
 }
 
-input ExtendCreditInput {
-  "Account extending credit."
-  accountId: String!
-  "Sub-account to which credit is extended."
-  subAccountId: String!
-  "Amount of additional line of credit."
+input CreateAssetLiquidityWithdrawalInput {
+  "The id of the asset to create the withdrawal for."
+  assetId: String!
+  "Amount of withdrawal."
   amount: UInt64!
-  "Automatically utilized and applied to the account balance."
-  autoApply: Boolean! = false
-}
-
-input RevokeCreditInput {
-  "Account revoking credit."
-  accountId: String!
-  "Sub-account to which credit is revoked."
-  subAccountId: String!
-  "Amount of revoked line of credit."
-  amount: UInt64!
-}
-
-input UtilizeCreditInput {
-  "Account extending credit."
-  accountId: String!
-  "Sub-account to which credit is extended."
-  subAccountId: String!
-  "Amount of utilized line of credit."
-  amount: UInt64!
-}
-
-input SettleDebtInput {
-  "Account collecting debt."
-  accountId: String!
-  "Sub-account settling debt."
-  subAccountId: String!
-  "Amount of debt."
-  amount: UInt64!
-  "Replenish the account's line of credit commensurate with the debt settled."
-  revolve: Boolean! = true
+  "The id of the withdrawal."
+  id: String!
 }
 
 input CreateApiKeyInput {
@@ -290,80 +220,23 @@ type Asset {
   scale: Int!
 }
 
-enum WithdrawalError {
-  AlreadyFinalized
+enum LiquidityError {
+  AlreadyCommitted
   AlreadyRolledBack
   InsufficientBalance
-  InsufficientLiquidity
   InvalidId
-  UnknownAccount
+  TransferExists
   UnknownAsset
-  UnknownWithdrawal
-  WithdrawalExists
+  UnknownPeer
+  UnknownTransfer
 }
 
-enum CreditError {
-  SameAccounts
-  UnknownAccount
-  UnrelatedSubAccount
-  UnknownSubAccount
-  InsufficientBalance
-  InsufficientCredit
-  InsufficientDebt
-}
-
-type Account {
+type Peer {
   id: ID!
-  disabled: Boolean!
-  superAccountId: ID
-  superAccount: Account
-  subAccounts(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): SubAccountsConnection!
   maxPacketAmount: UInt64
-  http: Http
+  http: Http!
   asset: Asset!
-  stream: Stream!
-  routing: Routing
-
-  balance: Balance!
-  deposits(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): DepositsConnection!
-  invoices(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): InvoiceConnection
-  webhooks(
-    "Paginating forwards: the cursor before the the requested page."
-    after: String
-    "Paginating backwards: the cursor after the the requested page."
-    before: String
-    "Paginating forwards: The first **n** elements from the page."
-    first: Int
-    "Paginating backwards: The last **n** elements from the page."
-    last: Int
-  ): WebhooksConnection!
+  staticIlpAddress: String!
 }
 
 type Http {
@@ -375,24 +248,29 @@ type HttpOutgoing {
   endpoint: String!
 }
 
-type Stream {
-  enabled: Boolean!
-}
-
-type Routing {
-  staticIlpAddress: String!
-  inheritFromRemote: Boolean
-  dynamicIlpAddress: String
-}
-
-type Balance {
-  balance: UInt64!
-  netLiability: UInt64
-  netAssets: UInt64
-  creditExtended: UInt64!
-  totalLent: UInt64!
-  availableCredit: UInt64!
-  totalBorrowed: UInt64!
+type Account {
+  id: ID!
+  asset: Asset!
+  invoices(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): InvoiceConnection
+  outgoingPayments(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): OutgoingPaymentConnection
 }
 
 type InvoiceConnection {
@@ -407,14 +285,22 @@ type InvoiceEdge {
 
 type Invoice {
   id: ID!
-  receivedAmount: UInt64!
   maximumAmount: UInt64
-  asset: Asset!
   active: Boolean!
   createdAt: String!
   expiresAt: String
   description: String
-  totalAmount: String!
+  amountToReceive: UInt64
+}
+
+type OutgoingPaymentConnection {
+  pageInfo: PageInfo!
+  edges: [OutgoingPaymentEdge!]!
+}
+
+type OutgoingPaymentEdge {
+  node: OutgoingPayment!
+  cursor: String!
 }
 
 type OutgoingPayment {
@@ -424,10 +310,9 @@ type OutgoingPayment {
   stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
-  superAccountId: String!
-  sourceAccount: PaymentSourceAccount!
   destinationAccount: PaymentDestinationAccount!
-  outcome: OutgoingPaymentOutcome!
+  outcome: OutgoingPaymentOutcome
+  createdAt: String!
 }
 
 type PaymentIntent {
@@ -440,14 +325,12 @@ type PaymentIntent {
 enum PaymentState {
   "Will transition to READY when quote is complete"
   INACTIVE
-  "Quote ready; awaiting user approval (ACTIVATED) or refusal (CANCELLING)"
+  "Quote ready; awaiting user approval (FUNDING) or refusal (CANCELLED)"
   READY
   "Will transition to SENDING once payment funds are reserved"
-  ACTIVATED
+  FUNDING
   "Paying, will transition to COMPLETED on success"
   SENDING
-  "Will transition to CANCELLED when reserved funds are rolled back"
-  CANCELLING
   "Payment aborted; can be requoted to INACTIVE"
   CANCELLED
   "Successfuly completion"
@@ -471,12 +354,6 @@ type PaymentQuote {
   highExchangeRateEstimate: Float!
 }
 
-type PaymentSourceAccount {
-  id: String!
-  scale: Int!
-  code: String!
-}
-
 type PaymentDestinationAccount {
   scale: Int!
   code: String!
@@ -484,7 +361,7 @@ type PaymentDestinationAccount {
 }
 
 type OutgoingPaymentOutcome {
-  amountSent: String!
+  amountSent: UInt64!
 }
 
 input CreateOutgoingPaymentInput {
@@ -502,53 +379,8 @@ type OutgoingPaymentResponse {
   payment: OutgoingPayment
 }
 
-type WebhooksConnection {
-  pageInfo: PageInfo!
-  edges: [WebhookEdge!]!
-}
-
-type WebhookEdge {
-  node: Webhook!
-  cursor: String!
-}
-
-type Webhook {
-  id: ID!
-}
-
-type DepositsConnection {
-  pageInfo: PageInfo!
-  edges: [DepositEdge!]!
-}
-
-type DepositEdge {
-  node: Deposit!
-  cursor: String!
-}
-
-type Deposit {
-  id: ID!
-  amount: UInt64!
-  accountId: ID!
-  # createdTime: Int!
-}
-
-type WithdrawalsConnection {
-  pageInfo: PageInfo!
-  edges: [WithdrawalEdge!]!
-}
-
-type WithdrawalEdge {
-  node: Withdrawal!
-  cursor: String!
-}
-
-type Withdrawal {
-  id: ID!
-  amount: UInt64!
-  accountId: ID!
-  # createdTime: Int!
-  # finalizedTime: Int
+input CreateAccountInput {
+  asset: AssetInput!
 }
 
 type ApiKey {
@@ -571,24 +403,24 @@ type CreateAccountMutationResponse implements MutationResponse {
   account: Account
 }
 
-type UpdateAccountMutationResponse implements MutationResponse {
+type CreatePeerMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  account: Account
+  peer: Peer
 }
 
-type DeleteAccountMutationResponse implements MutationResponse {
+type UpdatePeerMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
+  peer: Peer
 }
 
-type CreateSubAccountMutationResponse implements MutationResponse {
+type DeletePeerMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  account: Account
 }
 
 type TransferMutationResponse implements MutationResponse {
@@ -597,81 +429,11 @@ type TransferMutationResponse implements MutationResponse {
   message: String!
 }
 
-type CreateWebhookMutationResponse implements MutationResponse {
+type LiquidityMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  webhook: Webhook!
-}
-
-type UpdateWebhookMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  webhook: Webhook!
-}
-
-type DeleteWebhookMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-}
-
-type CreateDepositMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  deposit: Deposit
-}
-
-type CreateWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  withdrawal: Withdrawal
-  error: WithdrawalError
-}
-
-type FinalizePendingWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: WithdrawalError
-}
-
-type RollbackPendingWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: WithdrawalError
-}
-
-type ExtendCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type RevokeCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type UtilizeCreditMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
-}
-
-type SettleDebtMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: CreditError
+  error: LiquidityError
 }
 
 type CreateApiKeyMutationResponse implements MutationResponse {

@@ -1,4 +1,4 @@
-import { RafikiContext, RafikiMiddleware } from '..'
+import { ILPContext, ILPMiddleware } from '..'
 
 // const DEFAULT_HEARTBEAT_INTERVAL = 30 * 1000
 
@@ -17,10 +17,10 @@ export interface HeartbeatRuleServices {
 export function createIncomingHeartbeatMiddleware(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   config: HeartbeatRuleServices
-): RafikiMiddleware {
+): ILPMiddleware {
   return async (
-    { services: { logger }, request, response }: RafikiContext,
-    next: () => Promise<unknown>
+    { services: { logger }, request, response }: ILPContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     const { destination, data } = request.prepare
     if (destination === 'peer.heartbeat') {
@@ -36,7 +36,7 @@ export function createIncomingHeartbeatMiddleware(
 }
 
 // TODO: Need to rework logic for starting heartbeat timer
-// startup: async (ctx: RafikiContext) => {
+// startup: async (ctx: HttpContext) => {
 //   this._heartbeat = setInterval(async () => {
 //     // TODO: Stagger the sending
 //     for (let peerId in ctx.services.peers) {
