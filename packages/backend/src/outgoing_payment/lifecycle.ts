@@ -115,7 +115,7 @@ export async function handleQuoting(
   }
 
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Funding,
+    state: PaymentState.Ready,
     quote: {
       timestamp: new Date(),
       activationDeadline: new Date(Date.now() + deps.quoteLifespan),

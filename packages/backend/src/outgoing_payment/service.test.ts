@@ -334,7 +334,7 @@ describe('OutgoingPaymentService', (): void => {
 
   describe('processNext', (): void => {
     describe('Quoting→', (): void => {
-      it('Funding (FixedSend)', async (): Promise<void> => {
+      it('Ready (FixedSend)', async (): Promise<void> => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
@@ -343,7 +343,7 @@ describe('OutgoingPaymentService', (): void => {
             autoApprove: false
           })
         ).id
-        const payment = await processNext(paymentId, PaymentState.Funding)
+        const payment = await processNext(paymentId, PaymentState.Ready)
         if (!payment.quote) throw 'no quote'
 
         expect(payment.quote.timestamp).toBeInstanceOf(Date)
@@ -370,7 +370,7 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
 
-      it('Funding (FixedDelivery)', async (): Promise<void> => {
+      it('Ready (FixedDelivery)', async (): Promise<void> => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
@@ -378,7 +378,7 @@ describe('OutgoingPaymentService', (): void => {
             autoApprove: false
           })
         ).id
-        const payment = await processNext(paymentId, PaymentState.Funding)
+        const payment = await processNext(paymentId, PaymentState.Ready)
         if (!payment.quote) throw 'no quote'
 
         expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedDelivery)
@@ -422,12 +422,12 @@ describe('OutgoingPaymentService', (): void => {
           .spyOn(Date, 'now')
           .mockReturnValueOnce(Date.now() + 1 * RETRY_BACKOFF_SECONDS * 1000)
 
-        const payment2 = await processNext(paymentId, PaymentState.Funding)
+        const payment2 = await processNext(paymentId, PaymentState.Ready)
         expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123))
       })
 
-      // This mocks Quoting→Funding, but for it to trigger for real, it would go from Sending→Quoting(retry)→Funding (when the sending partially failed).
-      it('Funding (FixedSend, 0<intent.amountToSend<amountSent)', async (): Promise<void> => {
+      // This mocks Quoting→Ready, but for it to trigger for real, it would go from Sending→Quoting(retry)→Ready (when the sending partially failed).
+      it('Ready (FixedSend, 0<intent.amountToSend<amountSent)', async (): Promise<void> => {
         const payment = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
@@ -440,7 +440,7 @@ describe('OutgoingPaymentService', (): void => {
             expect(id).toStrictEqual(payment.id)
             return BigInt(89)
           })
-        const payment2 = await processNext(payment.id, PaymentState.Funding)
+        const payment2 = await processNext(payment.id, PaymentState.Ready)
         expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123 - 89))
       })
 
@@ -504,7 +504,7 @@ describe('OutgoingPaymentService', (): void => {
       })
     })
 
-    describe('Funding→', (): void => {
+    describe('Ready→', (): void => {
       let paymentId: string
 
       beforeEach(
@@ -517,7 +517,7 @@ describe('OutgoingPaymentService', (): void => {
               autoApprove: true
             })
           ).id
-          await processNext(paymentId, PaymentState.Funding)
+          await processNext(paymentId, PaymentState.Ready)
         }
       )
 
@@ -532,8 +532,8 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
 
-      it('Funding (waiting for liquidity)', async (): Promise<void> => {
-        await processNext(paymentId, PaymentState.Funding)
+      it('Ready (waiting for liquidity)', async (): Promise<void> => {
+        await processNext(paymentId, PaymentState.Ready)
       })
     })
 
@@ -552,7 +552,7 @@ describe('OutgoingPaymentService', (): void => {
 
         trackAmountDelivered(paymentId)
 
-        await processNext(paymentId, PaymentState.Funding)
+        await processNext(paymentId, PaymentState.Ready)
         await expect(
           outgoingPaymentService.send(paymentId)
         ).resolves.toMatchObject({
@@ -826,7 +826,7 @@ describe('OutgoingPaymentService', (): void => {
         amountToSend: BigInt(123),
         autoApprove: false
       })
-      await processNext(payment.id, PaymentState.Funding)
+      await processNext(payment.id, PaymentState.Ready)
     }, 10_000)
 
     it('fails when no payment exists', async (): Promise<void> => {
@@ -835,7 +835,7 @@ describe('OutgoingPaymentService', (): void => {
       )
     })
 
-    it('transitions a Funding payment to Sending state', async (): Promise<void> => {
+    it('transitions a Ready payment to Sending state', async (): Promise<void> => {
       await expect(
         outgoingPaymentService.send(payment.id)
       ).resolves.toMatchObject({
@@ -848,7 +848,7 @@ describe('OutgoingPaymentService', (): void => {
     })
 
     Object.values(PaymentState).forEach((startState) => {
-      if (startState === PaymentState.Funding) return
+      if (startState === PaymentState.Ready) return
       it(`does not activate a ${startState} payment`, async (): Promise<void> => {
         await payment.$query().patch({ state: startState })
         await expect(outgoingPaymentService.send(payment.id)).rejects.toThrow(
@@ -880,8 +880,8 @@ describe('OutgoingPaymentService', (): void => {
       )
     })
 
-    it('cancels a Funding payment', async (): Promise<void> => {
-      await payment.$query().patch({ state: PaymentState.Funding })
+    it('cancels a Ready payment', async (): Promise<void> => {
+      await payment.$query().patch({ state: PaymentState.Ready })
       await expect(
         outgoingPaymentService.cancel(payment.id)
       ).resolves.toMatchObject({
@@ -895,7 +895,7 @@ describe('OutgoingPaymentService', (): void => {
     })
 
     Object.values(PaymentState).forEach((startState) => {
-      if (startState === PaymentState.Funding) return
+      if (startState === PaymentState.Ready) return
       it(`does not cancel a ${startState} payment`, async (): Promise<void> => {
         await payment.$query().patch({ state: startState })
         await expect(outgoingPaymentService.cancel(payment.id)).rejects.toThrow(

@@ -174,7 +174,7 @@ async function sendPayment(
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
     if (!payment) throw new Error('payment does not exist')
-    if (payment.state !== PaymentState.Funding) {
+    if (payment.state !== PaymentState.Ready) {
       throw new Error(`Cannot send; payment is in state=${payment.state}`)
     }
     await payment.$query(trx).patch({ state: PaymentState.Sending })
@@ -189,7 +189,7 @@ async function cancelPayment(
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
     if (!payment) throw new Error('payment does not exist')
-    if (payment.state !== PaymentState.Funding) {
+    if (payment.state !== PaymentState.Ready) {
       throw new Error(`Cannot cancel; payment is in state=${payment.state}`)
     }
     // TODO: Notify wallet

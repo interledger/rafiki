@@ -1520,7 +1520,7 @@
           },
           {
             "name": "sendOutgoingPayment",
-            "description": "Send a Funding payment.",
+            "description": "Send a Ready payment.",
             "args": [
               {
                 "name": "paymentId",
@@ -1553,7 +1553,7 @@
           },
           {
             "name": "cancelOutgoingPayment",
-            "description": "Cancel a Funding payment.",
+            "description": "Cancel a Ready payment.",
             "args": [
               {
                 "name": "paymentId",
@@ -2790,12 +2790,12 @@
         "enumValues": [
           {
             "name": "QUOTING",
-            "description": "Will transition to FUNDING when quote is complete",
+            "description": "Will transition to READY when quote is complete",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "FUNDING",
+            "name": "READY",
             "description": "Will transition to SENDING once payment funds are reserved",
             "isDeprecated": false,
             "deprecationReason": null

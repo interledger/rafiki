@@ -199,9 +199,9 @@ export type Mutation = {
   createOutgoingPayment: OutgoingPaymentResponse;
   /** Requote a Cancelled payment. */
   requoteOutgoingPayment: OutgoingPaymentResponse;
-  /** Send a Funding payment. */
+  /** Send a Ready payment. */
   sendOutgoingPayment: OutgoingPaymentResponse;
-  /** Cancel a Funding payment. */
+  /** Cancel a Ready payment. */
   cancelOutgoingPayment: OutgoingPaymentResponse;
   createAccount: CreateAccountMutationResponse;
   /** Create peer */
@@ -392,10 +392,10 @@ export type PaymentQuote = {
 };
 
 export enum PaymentState {
-  /** Will transition to FUNDING when quote is complete */
+  /** Will transition to READY when quote is complete */
   Quoting = 'QUOTING',
   /** Will transition to SENDING once payment funds are reserved */
-  Funding = 'FUNDING',
+  Ready = 'READY',
   /** Paying, will transition to COMPLETED on success */
   Sending = 'SENDING',
   /** Payment aborted; can be requoted to QUOTING */
