@@ -1,5 +1,10 @@
 import { Errors } from 'ilp-packet'
-import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
+import {
+  IncomingAccount,
+  OutgoingAccount,
+  ILPContext,
+  ILPMiddleware
+} from '../rafiki'
 import { AuthState } from './auth'
 import { AssetAccount } from '../../../accounting/service'
 import { validateId } from '../../../shared/utils'
@@ -16,7 +21,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     if (!incomingAccount) ctx.throw(401, 'unauthorized')
 
     const getAccountByDestinationAddress = async (): Promise<
-      RafikiAccount | undefined
+      OutgoingAccount | undefined
     > => {
       if (ctx.state.streamDestination) {
         const invoice = await invoices.get(ctx.state.streamDestination)
@@ -77,11 +82,11 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
       throw new Errors.UnreachableError('unknown destination account')
     }
     ctx.accounts = {
-      get incoming(): RafikiAccount {
+      get incoming(): IncomingAccount {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return incomingAccount!
       },
-      get outgoing(): RafikiAccount {
+      get outgoing(): OutgoingAccount {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return outgoingAccount!
       }

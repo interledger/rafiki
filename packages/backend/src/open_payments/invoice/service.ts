@@ -95,12 +95,7 @@ async function createInvoice(
 
     if (amountToReceive) {
       const error = await deps.accountingService.createTransfer({
-        sourceAccount: {
-          id: invoice.id,
-          asset: {
-            unit: invoice.account.asset.unit
-          }
-        },
+        sourceAccount: invoice,
         destinationAccount: {
           asset: {
             unit: invoice.account.asset.unit,

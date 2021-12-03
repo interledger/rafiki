@@ -150,10 +150,7 @@ describe('Invoice Service', (): void => {
       await expect(
         accountingService.createTransfer({
           sourceAccount,
-          destinationAccount: {
-            id: invoice.id,
-            asset: invoice.account.asset
-          },
+          destinationAccount: invoice,
           amount: BigInt(1)
         })
       ).resolves.toBeUndefined()

@@ -21,7 +21,7 @@ import {
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
-import { AccountOptions, AccountingService } from './accounting/service'
+import { SendAccountOptions, AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
 import { AccountService } from './open_payments/account/service'
 import { RatesService } from './rates/service'
@@ -68,7 +68,7 @@ export interface AppServices {
   streamServer: Promise<StreamServer>
   wmService: Promise<WebMonetizationService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
-  makeIlpPlugin: Promise<(sourceAccount: AccountOptions) => IlpPlugin>
+  makeIlpPlugin: Promise<(sourceAccount: SendAccountOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
 }
 

@@ -1,5 +1,7 @@
-import { RafikiAccount } from '../rafiki'
+import { IncomingAccount, OutgoingAccount } from '../rafiki'
 
-export function accountToId(account: RafikiAccount): string {
+export function accountToId(
+  account: IncomingAccount | OutgoingAccount
+): string {
   return account.id || `${account.asset.unit}|${account.asset.account}`
 }

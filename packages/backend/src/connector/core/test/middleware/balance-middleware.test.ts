@@ -4,7 +4,8 @@ import { createILPContext } from '../../utils'
 import { ZeroCopyIlpPrepare } from '../..'
 import { createBalanceMiddleware } from '../../middleware'
 import {
-  AccountFactory,
+  IncomingAccountFactory,
+  OutgoingAccountFactory,
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory,
@@ -12,8 +13,8 @@ import {
 } from '../../factories'
 
 // TODO: make one peer to many account relationship
-const aliceAccount = AccountFactory.build({ id: 'alice' })
-const bobAccount = AccountFactory.build({ id: 'bob' })
+const aliceAccount = IncomingAccountFactory.build({ id: 'alice' })
+const bobAccount = OutgoingAccountFactory.build({ id: 'bob' })
 assert.ok(aliceAccount.id)
 assert.ok(bobAccount.id)
 const services = RafikiServicesFactory.build({})
@@ -96,7 +97,7 @@ describe('Balance Middleware', function () {
   })
 
   test('ignores 0 amount packets', async () => {
-    const transferFundsSpy = jest.spyOn(accounts, 'transferFunds')
+    const sendReceiveSpy = jest.spyOn(accounts, 'sendAndReceive')
     const prepare = IlpPrepareFactory.build({ amount: '0' })
     const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -112,7 +113,7 @@ describe('Balance Middleware', function () {
     const bobBalance = await accounts.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
 
-    expect(transferFundsSpy).toHaveBeenCalledTimes(0)
+    expect(sendReceiveSpy).toHaveBeenCalledTimes(0)
   })
 
   test('insufficient balance does not adjust the account balances', async () => {
@@ -156,7 +157,7 @@ describe('Balance Middleware', function () {
   })
 
   test('receive limit already reached throws F07', async () => {
-    const receiveLimit = AccountFactory.build({ id: 'reachedLimit' })
+    const receiveLimit = OutgoingAccountFactory.build({ id: 'reachedLimit' })
     receiveLimit.balance = 0n
     await accounts.create(receiveLimit)
     bobAccount.receivedAccountId = receiveLimit.id
@@ -181,7 +182,7 @@ describe('Balance Middleware', function () {
   })
 
   test('receive limit exceeded throws F08', async () => {
-    const receiveLimit = AccountFactory.build({ id: 'exceededLimit' })
+    const receiveLimit = OutgoingAccountFactory.build({ id: 'exceededLimit' })
     receiveLimit.balance = BigInt(10)
     await accounts.create(receiveLimit)
     bobAccount.receivedAccountId = receiveLimit.id

@@ -4,9 +4,9 @@ import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import {
   AccountingService,
-  AccountOptions,
   AccountType,
-  AssetAccount
+  AssetAccount,
+  SendAccountOptions
 } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
@@ -39,7 +39,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   accountService: AccountService
   ratesService: RatesService
-  makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
+  makeIlpPlugin: (sourceAccount: SendAccountOptions) => IlpPlugin
 }
 
 export async function createOutgoingPaymentService(

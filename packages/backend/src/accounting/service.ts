@@ -18,6 +18,7 @@ import {
   commitTransfers,
   rollbackTransfers
 } from './transfers'
+import { AccountIdOptions } from './utils'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 
@@ -57,7 +58,6 @@ export enum AssetAccount {
 
 interface BasicAccountOptions {
   id: string
-  // TODO: don't require asset unit for regular transfers
   asset: {
     unit: number
     account?: never
@@ -72,15 +72,28 @@ interface AssetAccountOptions {
   }
 }
 
-export type AccountOptions = (BasicAccountOptions | AssetAccountOptions) & {
-  receivedAccountId?: string
+type AccountOptions = BasicAccountOptions | AssetAccountOptions
+
+export type SendAccountOptions = AccountOptions & {
   sentAccountId?: string
+}
+
+export type ReceiveAccountOptions = AccountOptions & {
+  receivedAccountId?: string
+}
+
+export interface SendReceiveOptions {
+  sourceAccount: SendAccountOptions
+  destinationAccount: ReceiveAccountOptions
+  sourceAmount: bigint
+  destinationAmount?: bigint
+  timeout: bigint // nano-seconds
 }
 
 type Options = {
   id?: string
-  sourceAccount: AccountOptions
-  destinationAccount: AccountOptions
+  sourceAccount: AccountIdOptions
+  destinationAccount: AccountIdOptions
   amount: bigint
 }
 
@@ -94,15 +107,7 @@ export type TwoPhaseTransfer = Required<Options> & {
 
 export type Transfer = AutoCommitTransfer | TwoPhaseTransfer
 
-export interface AccountTransferOptions {
-  sourceAccount: AccountOptions
-  destinationAccount: AccountOptions
-  sourceAmount: bigint
-  destinationAmount?: bigint
-  timeout: bigint // nano-seconds
-}
-
-export interface AccountTransfer {
+export interface Transaction {
   commit: () => Promise<void | TransferError>
   rollback: () => Promise<void | TransferError>
 }
@@ -116,9 +121,9 @@ export interface AccountingService {
     unit: number,
     account: AssetAccount
   ): Promise<bigint | undefined>
-  transferFunds(
-    options: AccountTransferOptions
-  ): Promise<AccountTransfer | TransferError>
+  sendAndReceive(
+    options: SendReceiveOptions
+  ): Promise<Transaction | TransferError>
   createTransfer(transfer: Transfer): Promise<void | TransferError>
   commitTransfer(id: string): Promise<void | TransferError>
   rollbackTransfer(id: string): Promise<void | TransferError>
@@ -148,7 +153,7 @@ export function createAccountingService({
     getBalance: (id) => getAccountBalance(deps, id),
     getAssetAccountBalance: (unit, account) =>
       getAssetAccountBalance(deps, unit, account),
-    transferFunds: (options) => transferFunds(deps, options),
+    sendAndReceive: (options) => sendAndReceive(deps, options),
     createTransfer: (transfer) => createTransfer(deps, transfer),
     commitTransfer: (options) => commitTransfer(deps, options),
     rollbackTransfer: (options) => rollbackTransfer(deps, options)
@@ -280,7 +285,7 @@ export async function getAssetAccountBalance(
   }
 }
 
-export async function transferFunds(
+export async function sendAndReceive(
   deps: ServiceDependencies,
   {
     sourceAccount,
@@ -288,8 +293,8 @@ export async function transferFunds(
     sourceAmount,
     destinationAmount,
     timeout
-  }: AccountTransferOptions
-): Promise<AccountTransfer | TransferError> {
+  }: SendReceiveOptions
+): Promise<Transaction | TransferError> {
   if (
     sourceAccount.id &&
     destinationAccount.id &&
@@ -441,7 +446,7 @@ export async function transferFunds(
     }
   }
 
-  const trx: AccountTransfer = {
+  const trx: Transaction = {
     commit: async (): Promise<void | TransferError> => {
       const error = await commitTransfers(
         deps,

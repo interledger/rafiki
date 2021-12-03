@@ -2,7 +2,8 @@ import { createILPContext } from '../../utils'
 import {
   IlpPrepareFactory,
   InvoiceAccountFactory,
-  PeerAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createAccountMiddleware } from '../../middleware/account'
@@ -11,7 +12,7 @@ import { AssetAccount } from '../../../../accounting/service'
 
 describe('Account Middleware', () => {
   const ADDRESS = 'test.rafiki'
-  const incomingAccount = PeerAccountFactory.build({
+  const incomingAccount = IncomingPeerFactory.build({
     id: 'incomingPeer'
   })
   const rafikiServices = RafikiServicesFactory.build({})
@@ -21,7 +22,7 @@ describe('Account Middleware', () => {
   })
 
   test('set the accounts according to state and destination', async () => {
-    const outgoingAccount = PeerAccountFactory.build({
+    const outgoingAccount = OutgoingPeerFactory.build({
       id: 'outgoingPeer'
     })
     await rafikiServices.accounts.create(outgoingAccount)

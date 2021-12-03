@@ -7,7 +7,8 @@ import {
 import { createILPContext } from '../../utils'
 import { createEchoProtocolController } from '../../controllers/echo-protocol'
 import {
-  PeerAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   IlpFulfillFactory,
   RafikiServicesFactory
 } from '../../factories'
@@ -33,8 +34,8 @@ describe('Echo protocol', function () {
   responseEchoWriter.writeUInt8(0x01)
   const responseEchoData = responseEchoWriter.getBuffer()
 
-  const alice = PeerAccountFactory.build()
-  const bob = PeerAccountFactory.build()
+  const alice = IncomingPeerFactory.build()
+  const bob = OutgoingPeerFactory.build()
   const ctx = createILPContext({
     services: RafikiServicesFactory.build(),
     accounts: {

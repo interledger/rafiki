@@ -37,7 +37,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     request.prepare.amount = destinationAmountOrError.toString()
 
     // Update balances on prepare
-    const trxOrError = await services.accounts.transferFunds({
+    const trxOrError = await services.accounts.sendAndReceive({
       sourceAccount: accounts.incoming,
       destinationAccount: accounts.outgoing,
       sourceAmount,
@@ -70,7 +70,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
           )
         }
         default:
-          // TODO: map transfer errors to ILP errors or throw from transferFunds
+          // TODO: map transfer errors to ILP errors
           ctxThrow(500, destinationAmountOrError.toString())
       }
     } else {

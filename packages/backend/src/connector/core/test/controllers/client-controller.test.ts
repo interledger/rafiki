@@ -3,7 +3,8 @@ import { createILPContext } from '../../utils'
 import {
   IlpFulfillFactory,
   IlpPrepareFactory,
-  PeerAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createClientController } from '../../controllers/client'
@@ -12,8 +13,8 @@ import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 describe('Client Controller', function () {
   const fulfill = serializeIlpFulfill(IlpFulfillFactory.build())
   const sendToPeer = jest.fn().mockResolvedValue(fulfill)
-  const alice = PeerAccountFactory.build({ id: 'alice' })
-  const bob = PeerAccountFactory.build({ id: 'bob' })
+  const alice = IncomingPeerFactory.build({ id: 'alice' })
+  const bob = OutgoingPeerFactory.build({ id: 'bob' })
   const services = RafikiServicesFactory.build()
   const ctx = createILPContext({
     services,

@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import Faker from 'faker'
 import { createContext } from '../../utils'
 import { createTokenAuthMiddleware } from '../../middleware'
 import { MockAccountsService } from '../mocks/accounts-service'
 import { HttpContext } from '../../rafiki'
-import { PeerAccountFactory, RafikiServicesFactory } from '../../factories'
+import { IncomingPeerFactory, RafikiServicesFactory } from '../../factories'
 
 describe('Token Auth Middleware', function () {
   describe('default behaviour', function () {
@@ -48,15 +47,11 @@ describe('Token Auth Middleware', function () {
         },
         services: RafikiServicesFactory.build({ accounts })
       })
-      const account = PeerAccountFactory.build({
+      const account = IncomingPeerFactory.build({
         id: 'alice',
         http: {
           incoming: {
             authTokens: ['asd123']
-          },
-          outgoing: {
-            authToken: Faker.datatype.string(32),
-            endpoint: Faker.internet.url()
           }
         }
       })

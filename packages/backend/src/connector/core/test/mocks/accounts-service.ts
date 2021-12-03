@@ -1,18 +1,33 @@
 import assert from 'assert'
-import { AccountService, RafikiAccount } from '../../rafiki'
+import { AccountService, IncomingAccount, OutgoingAccount } from '../../rafiki'
 
-import { AccountTransfer } from '../../../../accounting/service'
+import { Transaction } from '../../../../accounting/service'
 import { TransferError } from '../../../../accounting/errors'
 
-export type MockIlpAccount = RafikiAccount & {
+interface MockAccount {
+  id: string
   balance: bigint
-  http?: {
-    incoming?: {
-      authTokens: string[]
+}
+
+export type MockIncomingAccount = IncomingAccount &
+  MockAccount & {
+    http?: {
+      incoming?: {
+        authTokens: string[]
+      }
     }
   }
-  active?: boolean
-}
+
+export type MockOutgoingAccount = OutgoingAccount &
+  MockAccount & {
+    active?: boolean
+    staticIlpAddress?: string
+  }
+
+type MockIlpAccount = MockIncomingAccount | MockOutgoingAccount
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+const isIncomingPeer = (o: any): o is MockIncomingAccount => o.http?.incoming
 
 export class MockAccountsService implements AccountService {
   private accounts: Map<string, MockIlpAccount> = new Map()
@@ -24,18 +39,21 @@ export class MockAccountsService implements AccountService {
 
   async _getByDestinationAddress(
     destinationAddress: string
-  ): Promise<RafikiAccount | undefined> {
+  ): Promise<OutgoingAccount | undefined> {
     const account = this.find((account) => {
-      const { staticIlpAddress } = account
-      if (!staticIlpAddress) return false
-      return destinationAddress.startsWith(staticIlpAddress)
+      if (!account.staticIlpAddress) return false
+      return destinationAddress.startsWith(account.staticIlpAddress)
     })
-    return account
+    return account as OutgoingAccount
   }
 
-  async _getByIncomingToken(token: string): Promise<RafikiAccount | undefined> {
+  async _getByIncomingToken(
+    token: string
+  ): Promise<IncomingAccount | undefined> {
     return this.find(
-      (account) => !!account.http?.incoming?.authTokens.includes(token)
+      (account) =>
+        isIncomingPeer(account) &&
+        !!account.http?.incoming?.authTokens.includes(token)
     )
   }
 
@@ -46,19 +64,19 @@ export class MockAccountsService implements AccountService {
     }
   }
 
-  async create(account: MockIlpAccount): Promise<RafikiAccount> {
+  async create(account: MockIlpAccount): Promise<MockIlpAccount> {
     if (!account.id) throw new Error('unexpected asset account')
     this.accounts.set(account.id, account)
     return account
   }
 
-  async transferFunds(options: {
-    sourceAccount: MockIlpAccount
-    destinationAccount: MockIlpAccount
+  async sendAndReceive(options: {
+    sourceAccount: MockIncomingAccount
+    destinationAccount: MockOutgoingAccount
     sourceAmount: bigint
     destinationAmount: bigint
     timeout: bigint
-  }): Promise<AccountTransfer | TransferError> {
+  }): Promise<Transaction | TransferError> {
     if (options.sourceAccount.balance < options.sourceAmount) {
       return TransferError.InsufficientBalance
     }
@@ -93,7 +111,7 @@ export class MockAccountsService implements AccountService {
 
   private find(
     predicate: (account: MockIlpAccount) => boolean
-  ): RafikiAccount | undefined {
+  ): MockIlpAccount | undefined {
     for (const [, account] of this.accounts) {
       if (predicate(account)) return account
     }

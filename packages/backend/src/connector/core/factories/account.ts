@@ -1,36 +1,59 @@
 import { Factory } from 'rosie'
 import Faker from 'faker'
-import { MockIlpAccount } from '../test/mocks/accounts-service'
+import {
+  MockIncomingAccount,
+  MockOutgoingAccount
+} from '../test/mocks/accounts-service'
 
 const assetCode = Faker.finance.currencyCode().toString().toUpperCase()
 const assetScale = Faker.datatype.number(6)
 
-export const AccountFactory = Factory.define<MockIlpAccount>(
-  'AccountFactory'
-).attrs({
+const accountAttrs = {
   id: Faker.datatype.uuid,
   asset: { code: assetCode, scale: assetScale, unit: Faker.datatype.number() },
+  balance: 0n
+}
+
+export const IncomingAccountFactory = Factory.define<MockIncomingAccount>(
+  'IncomingAccountFactory'
+).attrs(accountAttrs)
+
+export const OutgoingAccountFactory = Factory.define<MockOutgoingAccount>(
+  'OutgoingAccountFactory'
+).attrs({
+  ...accountAttrs,
   stream: {
     enabled: true
-  },
-  balance: 0n
+  }
 })
 
-export const PeerAccountFactory = Factory.define<MockIlpAccount>(
-  'PeerAccountFactory'
+export const IncomingPeerFactory = Factory.define<MockIncomingAccount>(
+  'IncomingPeerFactory'
 )
-  .extend(AccountFactory)
+  .extend(IncomingAccountFactory)
   .attrs({
     http: () => ({
       incoming: {
         authTokens: [Faker.datatype.string(32)]
-      },
+      }
+    }),
+    maxPacketAmount: BigInt(Faker.datatype.number())
+  })
+  .attr('staticIlpAddress', ['id'], (id: string) => {
+    return `test.${id}`
+  })
+
+export const OutgoingPeerFactory = Factory.define<MockOutgoingAccount>(
+  'OutgoingPeerFactory'
+)
+  .extend(OutgoingAccountFactory)
+  .attrs({
+    http: () => ({
       outgoing: {
         authToken: Faker.datatype.string(32),
         endpoint: Faker.internet.url()
       }
     }),
-    maxPacketAmount: BigInt(Faker.datatype.number()),
     stream: {
       enabled: false
     }
@@ -39,10 +62,10 @@ export const PeerAccountFactory = Factory.define<MockIlpAccount>(
     return `test.${id}`
   })
 
-export const InvoiceAccountFactory = Factory.define<MockIlpAccount>(
+export const InvoiceAccountFactory = Factory.define<MockOutgoingAccount>(
   'InvoiceAccountFactory'
 )
-  .extend(AccountFactory)
+  .extend(OutgoingAccountFactory)
   .attrs({
     active: true
   })

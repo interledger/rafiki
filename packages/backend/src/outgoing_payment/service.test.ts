@@ -18,7 +18,7 @@ import { isTransferError } from '../accounting/errors'
 import {
   AssetAccount,
   AccountingService,
-  AccountTransferOptions
+  SendReceiveOptions
 } from '../accounting/service'
 import { AssetOptions } from '../asset/service'
 import { Invoice } from '../open_payments/invoice/model'
@@ -81,7 +81,7 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   async function payInvoice(amount: bigint): Promise<void> {
-    const trxOrError = await accountingService.transferFunds({
+    const trxOrError = await accountingService.sendAndReceive({
       sourceAccount: {
         asset: {
           unit: invoice.account.asset.unit,
@@ -100,11 +100,11 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   function trackAmountDelivered(sourceAccountId: string): void {
-    const { transferFunds } = accountingService
+    const { sendAndReceive } = accountingService
     jest
-      .spyOn(accountingService, 'transferFunds')
-      .mockImplementation(async (options: AccountTransferOptions) => {
-        const trxOrError = await transferFunds(options)
+      .spyOn(accountingService, 'sendAndReceive')
+      .mockImplementation(async (options: SendReceiveOptions) => {
+        const trxOrError = await sendAndReceive(options)
         if (
           !isTransferError(trxOrError) &&
           options.sourceAccount.sentAccountId === sourceAccountId

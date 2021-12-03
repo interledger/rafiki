@@ -3,7 +3,8 @@ import { Errors } from 'ilp-packet'
 import { ZeroCopyIlpPrepare } from '../..'
 import {
   IlpPrepareFactory,
-  PeerAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createILPContext } from '../../utils'
@@ -15,8 +16,8 @@ Date.now = jest.fn(() => 1434412800000) // June 16, 2015 00:00:00 GMT
 describe('Outgoing Reduce Expiry Middleware', function () {
   const now = Date.now()
   const services = RafikiServicesFactory.build()
-  const alice = PeerAccountFactory.build({ id: 'alice' })
-  const bob = PeerAccountFactory.build({ id: 'bob' })
+  const alice = IncomingPeerFactory.build({ id: 'alice' })
+  const bob = OutgoingPeerFactory.build({ id: 'bob' })
   const ctx = createILPContext({
     services,
     accounts: {
@@ -88,7 +89,7 @@ describe('Outgoing Reduce Expiry Middleware', function () {
       expiresAt: new Date(originalExpiry)
     })
     const next = jest.fn()
-    const fred = PeerAccountFactory.build({
+    const fred = OutgoingPeerFactory.build({
       id: 'fred'
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)

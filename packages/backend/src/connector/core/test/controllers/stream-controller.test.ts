@@ -10,8 +10,9 @@ import {
   streamReceivedKey
 } from '../../controllers/stream'
 import {
-  AccountFactory,
-  PeerAccountFactory,
+  OutgoingAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   IlpPrepareFactory,
   RafikiServicesFactory
 } from '../../factories'
@@ -23,7 +24,7 @@ const hmac = (key: Buffer, message: Buffer): Buffer =>
   crypto.createHmac('sha256', key).update(message).digest()
 
 describe('Stream Controller', function () {
-  const alice = PeerAccountFactory.build()
+  const alice = IncomingPeerFactory.build()
   const controller = createStreamController()
   const services = RafikiServicesFactory.build()
 
@@ -33,7 +34,7 @@ describe('Stream Controller', function () {
   })
 
   test('constructs a reply when "stream" is enabled', async () => {
-    const bob = AccountFactory.build()
+    const bob = OutgoingAccountFactory.build()
     const {
       ilpAddress,
       sharedSecret
@@ -96,7 +97,7 @@ describe('Stream Controller', function () {
   })
 
   test("skips when the payment tag can't be decrypted", async () => {
-    const bob = AccountFactory.build()
+    const bob = OutgoingAccountFactory.build()
     const ctx = createILPContext({
       services,
       request: {
@@ -119,7 +120,7 @@ describe('Stream Controller', function () {
   })
 
   test('skips when "stream.enabled" is false', async () => {
-    const bob = PeerAccountFactory.build()
+    const bob = OutgoingPeerFactory.build()
     const ctx = createILPContext({
       services,
       accounts: {
