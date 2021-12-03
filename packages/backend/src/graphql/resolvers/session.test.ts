@@ -17,7 +17,6 @@ import {
 } from '../generated/graphql'
 import { ApiKeyService } from '../../apiKey/service'
 import { SessionService } from '../../session/service'
-import { isSessionError } from '../../session/errors'
 import { isApiKeyError } from '../../apiKey/errors'
 
 describe('Session Resolvers', (): void => {
@@ -105,7 +104,7 @@ describe('Session Resolvers', (): void => {
           const session = await sessionService.get({
             key: response.session.key
           })
-          if (isSessionError(session)) {
+          if (!session) {
             fail()
           } else {
             expect(new Date(Number(response.session.expiresAt))).toEqual(

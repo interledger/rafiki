@@ -10,7 +10,6 @@ import {
 } from '@apollo/client'
 import fetch from 'cross-fetch'
 import { Session } from '../../session/util'
-import { SessionError } from '../../session/errors'
 
 describe('auth Directive', (): void => {
   let server: ApolloServer
@@ -51,21 +50,17 @@ describe('auth Directive', (): void => {
 
       server = new ApolloServer({
         schema: schemaWithDirectives,
-        context: ({ req }): { sessionOrError: Session | SessionError } => {
+        context: ({ req }): { session: Session | undefined } => {
           const key = req.headers['authorization']
           switch (key) {
-            case 'invalidKey':
-              return { sessionOrError: SessionError.UnknownSession }
             case 'validKey':
               return {
-                sessionOrError: {
+                session: {
                   expiresAt: new Date(Date.now() + 30 * 60 * 1000)
                 }
               }
-            case 'expiredKey':
-              return { sessionOrError: SessionError.SessionExpired }
           }
-          return { sessionOrError: SessionError.UnknownSession }
+          return { session: undefined }
         }
       })
       await server.listen(3010)
@@ -204,7 +199,7 @@ describe('auth Directive', (): void => {
         })
       expect(response.success).toBe(false)
       expect(response.code).toEqual('401')
-      expect(response.message).toEqual('Session expired.')
+      expect(response.message).toEqual('Session not found.')
     })
   })
 })

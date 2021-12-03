@@ -5,7 +5,6 @@ import { SessionService } from './service'
 import { initIocContainer } from '..'
 import { Redis } from 'ioredis'
 import { Config } from '../config/app'
-import { isSessionError, SessionError } from './errors'
 
 describe('Session Key Service', (): void => {
   let deps: IocContract<AppServices>
@@ -48,7 +47,7 @@ describe('Session Key Service', (): void => {
 
     test('Cannot fetch non-existing session', async (): Promise<void> => {
       const sessionOrError = SessionService.get({ key: '123' })
-      expect(sessionOrError).resolves.toEqual(SessionError.UnknownSession)
+      expect(sessionOrError).resolves.toBeUndefined()
     })
   })
 
@@ -59,31 +58,27 @@ describe('Session Key Service', (): void => {
       const revokedSessionOrError = SessionService.get({
         key: session.key
       })
-      expect(revokedSessionOrError).resolves.toEqual(
-        SessionError.UnknownSession
-      )
+      expect(revokedSessionOrError).resolves.toBeUndefined()
     })
 
     test('Can refresh a session', async (): Promise<void> => {
       const session = await SessionService.create()
-      const refreshSessionOrError = await SessionService.refresh({
+      const refreshedSession = await SessionService.refresh({
         key: session.key
       })
-      if (isSessionError(refreshSessionOrError)) {
+      if (!refreshedSession) {
         fail()
       } else {
-        expect(session.key).toEqual(refreshSessionOrError.key)
+        expect(session.key).toEqual(refreshedSession.key)
         expect(session.expiresAt.getTime()).toBeLessThanOrEqual(
-          refreshSessionOrError.expiresAt.getTime()
+          refreshedSession.expiresAt.getTime()
         )
       }
     })
 
     test('Cannot refresh non-existing session', async (): Promise<void> => {
       const refreshSessionOrError = SessionService.refresh({ key: '123' })
-      expect(refreshSessionOrError).resolves.toEqual(
-        SessionError.UnknownSession
-      )
+      expect(refreshSessionOrError).resolves.toBeUndefined()
     })
   })
 })

@@ -37,7 +37,6 @@ import { IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
 import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
-import { SessionError } from './session/errors'
 import { Session } from './session/util'
 
 export interface AppContextData {
@@ -53,7 +52,7 @@ export interface ApolloContext {
   container: IocContract<AppServices>
   logger: Logger
   admin: boolean
-  sessionOrError: Session | SessionError
+  session: Session | undefined
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
@@ -194,13 +193,13 @@ export class App {
       schema: schemaWithDirectives,
       context: async ({ ctx }: Koa.Context): Promise<ApolloContext> => {
         const admin = this._isAdmin(ctx)
-        const sessionOrError = await this._getSession(ctx)
+        const session = await this._getSession(ctx)
         return {
           messageProducer: this.messageProducer,
           container: this.container,
           logger: await this.container.use('logger'),
           admin,
-          sessionOrError
+          session
         }
       }
     })
@@ -212,13 +211,13 @@ export class App {
     return ctx.request.header['x-api-key'] == this.config.adminKey
   }
 
-  private async _getSession(ctx: Koa.Context): Promise<Session | SessionError> {
+  private async _getSession(ctx: Koa.Context): Promise<Session | undefined> {
     const key = ctx.request.header.authorization || ''
     if (key && key.length) {
       const sessionService = await this.container.use('sessionService')
       return await sessionService.get({ key })
     } else {
-      return SessionError.UnknownSession
+      return undefined
     }
   }
 
