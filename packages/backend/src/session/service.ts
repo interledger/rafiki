@@ -1,12 +1,12 @@
 import { BaseService } from '../shared/baseService'
 import { uuid } from '../connector/core'
 import IORedis from 'ioredis'
-import { Session, SessionKey } from './util'
+import { Session } from './util'
 
 export interface SessionService {
-  create(): Promise<SessionKey>
+  create(): Promise<Session>
   revoke(session: SessionOptions): void
-  refresh(session: SessionOptions): Promise<SessionKey | undefined>
+  refresh(session: SessionOptions): Promise<Session | undefined>
   get(session: SessionOptions): Promise<Session | undefined>
 }
 
@@ -30,21 +30,21 @@ export async function createSessionService({
     redis
   }
   return {
-    create: () => createOrExtendSession(deps),
+    create: () => createSession(deps),
     revoke: (options: SessionOptions) => revokeSession(deps, options),
     refresh: (options: SessionOptions) => refreshSession(deps, options),
     get: (options: SessionOptions) => getSession(deps, options)
   }
 }
 
-async function createOrExtendSession(
-  deps: ServiceDependencies,
-  key?: string
-): Promise<SessionKey> {
-  const sessionKey = key || uuid()
-  const expiresAt = Date.now() + 30 * 60 * 1000 // 30 minutes
-  await deps.redis.set(sessionKey, JSON.stringify({ expiresAt }), 'EX', 30 * 60)
-  return { key: sessionKey, expiresAt: new Date(expiresAt) }
+async function createSession(deps: ServiceDependencies): Promise<Session> {
+  const key = uuid()
+  await deps.redis.set(key, 0, 'EX', 30 * 60)
+  const sessionExpiry = await deps.redis.pttl(key)
+  return {
+    key,
+    expiresAt: new Date(Date.now() + sessionExpiry)
+  }
 }
 
 async function revokeSession(
@@ -57,24 +57,21 @@ async function revokeSession(
 async function refreshSession(
   deps: ServiceDependencies,
   { key }: SessionOptions
-): Promise<SessionKey | undefined> {
-  const session = await getSession(deps, { key })
-  if (session) {
-    return createOrExtendSession(deps, key)
-  } else {
-    return undefined
-  }
+): Promise<Session | undefined> {
+  await deps.redis.expire(key, 30 * 60)
+  return getSession(deps, { key })
 }
 
 async function getSession(
   deps: ServiceDependencies,
   { key }: SessionOptions
 ): Promise<Session | undefined> {
-  const retrievedSession = await deps.redis.get(key)
-  if (retrievedSession) {
-    const session = JSON.parse(retrievedSession)
-    session.expiresAt = new Date(session.expiresAt)
-    return session
+  const sessionExpiry = await deps.redis.pttl(key)
+  if (sessionExpiry > 0) {
+    return {
+      key,
+      expiresAt: new Date(Date.now() + sessionExpiry)
+    }
   } else {
     return undefined
   }

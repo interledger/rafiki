@@ -165,9 +165,12 @@ describe('ApiKey Resolvers', (): void => {
         if (!session) {
           fail()
         } else {
-          expect(new Date(Number(response.session.expiresAt))).toEqual(
-            session.expiresAt
-          )
+          expect(
+            Number(response.session.expiresAt) - session.expiresAt.getTime()
+          ).toBeLessThanOrEqual(1)
+          expect(
+            Number(response.session.expiresAt) - session.expiresAt.getTime()
+          ).toBeGreaterThanOrEqual(-1)
         }
       } else {
         fail()

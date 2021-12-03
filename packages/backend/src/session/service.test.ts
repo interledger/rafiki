@@ -42,7 +42,17 @@ describe('Session Key Service', (): void => {
       const retrievedSession = await SessionService.get({
         key: session.key
       })
-      expect(retrievedSession).toEqual({ expiresAt: session.expiresAt })
+      if (retrievedSession) {
+        expect(retrievedSession.key).toEqual(session.key)
+        expect(
+          retrievedSession.expiresAt.getTime() - session.expiresAt.getTime()
+        ).toBeLessThanOrEqual(1)
+        expect(
+          retrievedSession.expiresAt.getTime() - session.expiresAt.getTime()
+        ).toBeGreaterThanOrEqual(-1)
+      } else {
+        fail()
+      }
     })
 
     test('Cannot fetch non-existing session', async (): Promise<void> => {
@@ -70,9 +80,12 @@ describe('Session Key Service', (): void => {
         fail()
       } else {
         expect(session.key).toEqual(refreshedSession.key)
-        expect(session.expiresAt.getTime()).toBeLessThanOrEqual(
-          refreshedSession.expiresAt.getTime()
-        )
+        expect(
+          session.expiresAt.getTime() - refreshedSession.expiresAt.getTime()
+        ).toBeLessThanOrEqual(1)
+        expect(
+          session.expiresAt.getTime() - refreshedSession.expiresAt.getTime()
+        ).toBeGreaterThanOrEqual(-1)
       }
     })
 
