@@ -388,7 +388,6 @@ export type PaymentQuote = {
   minExchangeRate: Scalars['Float'];
   lowExchangeRateEstimate: Scalars['Float'];
   highExchangeRateEstimate: Scalars['Float'];
-  amountSent: Scalars['UInt64'];
 };
 
 export enum PaymentState {
@@ -839,7 +838,6 @@ export type PaymentQuoteResolvers<ContextType = any, ParentType extends Resolver
   minExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   lowExchangeRateEstimate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   highExchangeRateEstimate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  amountSent?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

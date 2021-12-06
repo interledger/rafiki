@@ -171,7 +171,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                     minExchangeRate
                     lowExchangeRateEstimate
                     highExchangeRateEstimate
-                    amountSent
                   }
                   destinationAccount {
                     scale
@@ -202,7 +201,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           __typename: 'PaymentIntent'
         })
         expect(query.quote).toEqual({
-          ...payment.quote,
           timestamp: payment.quote?.timestamp.toISOString(),
           activationDeadline: payment.quote?.activationDeadline.toISOString(),
           targetType: SchemaPaymentType.FixedSend,
@@ -212,7 +210,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
           lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
           highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
-          amountSent: payment.quote?.amountSent.toString(),
           __typename: 'PaymentQuote'
         })
         expect(query.destinationAccount).toEqual({
