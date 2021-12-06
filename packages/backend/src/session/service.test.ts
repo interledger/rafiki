@@ -43,13 +43,7 @@ describe('Session Key Service', (): void => {
         key: session.key
       })
       if (retrievedSession) {
-        expect(retrievedSession.key).toEqual(session.key)
-        expect(
-          retrievedSession.expiresAt.getTime() - session.expiresAt.getTime()
-        ).toBeLessThanOrEqual(1)
-        expect(
-          retrievedSession.expiresAt.getTime() - session.expiresAt.getTime()
-        ).toBeGreaterThanOrEqual(-1)
+        expect(retrievedSession).toEqual(session)
       } else {
         fail()
       }
@@ -57,6 +51,7 @@ describe('Session Key Service', (): void => {
 
     test('Cannot fetch non-existing session', async (): Promise<void> => {
       const session = sessionService.get({ key: '123' })
+      console.log(session)
       expect(session).resolves.toBeUndefined()
     })
 
@@ -86,12 +81,9 @@ describe('Session Key Service', (): void => {
         fail()
       } else {
         expect(session.key).toEqual(refreshedSession.key)
-        expect(
-          session.expiresAt.getTime() - refreshedSession.expiresAt.getTime()
-        ).toBeLessThanOrEqual(1)
-        expect(
-          session.expiresAt.getTime() - refreshedSession.expiresAt.getTime()
-        ).toBeGreaterThanOrEqual(-1)
+        expect(refreshedSession.expiresAt.getTime()).toBeGreaterThanOrEqual(
+          session.expiresAt.getTime()
+        )
       }
     })
 

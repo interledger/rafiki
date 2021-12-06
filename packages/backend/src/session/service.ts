@@ -39,11 +39,12 @@ export async function createSessionService({
 
 async function createSession(deps: ServiceDependencies): Promise<Session> {
   const key = uuid()
-  await deps.redis.set(key, 0, 'EX', 30 * 60)
-  const sessionExpiry = await deps.redis.pttl(key)
+  const expiry = Date.now() + 30 * 60 * 1000
+  await deps.redis.set(key, expiry)
+  await deps.redis.pexpireat(key, expiry)
   return {
     key,
-    expiresAt: new Date(Date.now() + sessionExpiry)
+    expiresAt: new Date(expiry)
   }
 }
 
@@ -58,19 +59,28 @@ async function refreshSession(
   deps: ServiceDependencies,
   { key }: SessionOptions
 ): Promise<Session | undefined> {
-  await deps.redis.expire(key, 30 * 60)
-  return getSession(deps, { key })
+  const session = await deps.redis.get(key)
+  if (session) {
+    const expiry = Date.now() + 30 * 60 * 1000
+    await deps.redis.pexpireat(key, expiry)
+    return {
+      key,
+      expiresAt: new Date(expiry)
+    }
+  } else {
+    return undefined
+  }
 }
 
 async function getSession(
   deps: ServiceDependencies,
   { key }: SessionOptions
 ): Promise<Session | undefined> {
-  const sessionExpiry = await deps.redis.pttl(key)
-  if (sessionExpiry > 0) {
+  const expiry = await deps.redis.get(key)
+  if (expiry) {
     return {
       key,
-      expiresAt: new Date(Date.now() + sessionExpiry)
+      expiresAt: new Date(Number(expiry))
     }
   } else {
     return undefined
