@@ -50,8 +50,8 @@ async function createSession(deps: ServiceDependencies): Promise<Session> {
 async function revokeSession(
   deps: ServiceDependencies,
   { key }: SessionOptions
-) {
-  deps.redis.del(key)
+): Promise<void> {
+  await deps.redis.del(key)
 }
 
 async function refreshSession(
