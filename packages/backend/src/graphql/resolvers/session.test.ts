@@ -162,6 +162,8 @@ describe('Session Resolvers', (): void => {
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
+        const session = sessionService.get({ key: sessionOrError.key })
+        expect(session).resolves.toBeUndefined()
       }
     })
   })
