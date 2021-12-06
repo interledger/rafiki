@@ -56,8 +56,14 @@ describe('Session Key Service', (): void => {
     })
 
     test('Cannot fetch non-existing session', async (): Promise<void> => {
-      const sessionOrError = sessionService.get({ key: '123' })
-      expect(sessionOrError).resolves.toBeUndefined()
+      const session = sessionService.get({ key: '123' })
+      expect(session).resolves.toBeUndefined()
+    })
+
+    test('Session expires', async (): Promise<void> => {
+      const session = await sessionService.create()
+      const ttl = await redis.pttl(session.key)
+      expect(ttl).toBeGreaterThan(0)
     })
   })
 
@@ -65,10 +71,10 @@ describe('Session Key Service', (): void => {
     test('Can revoke a session', async (): Promise<void> => {
       const session = await sessionService.create()
       await sessionService.revoke({ key: session.key })
-      const revokedSessionOrError = sessionService.get({
+      const revokedSession = sessionService.get({
         key: session.key
       })
-      expect(revokedSessionOrError).resolves.toBeUndefined()
+      expect(revokedSession).resolves.toBeUndefined()
     })
 
     test('Can refresh a session', async (): Promise<void> => {
@@ -90,8 +96,8 @@ describe('Session Key Service', (): void => {
     })
 
     test('Cannot refresh non-existing session', async (): Promise<void> => {
-      const refreshSessionOrError = sessionService.refresh({ key: '123' })
-      expect(refreshSessionOrError).resolves.toBeUndefined()
+      const refreshSession = sessionService.refresh({ key: '123' })
+      expect(refreshSession).resolves.toBeUndefined()
     })
   })
 })
