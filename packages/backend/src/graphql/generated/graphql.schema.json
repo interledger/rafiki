@@ -2337,8 +2337,8 @@
             "deprecationReason": null
           },
           {
-            "name": "redeemSessionKey",
-            "description": "Redeem Session Key",
+            "name": "redeemApiKey",
+            "description": "Redeem API Key",
             "args": [
               {
                 "name": "input",
@@ -2348,7 +2348,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "INPUT_OBJECT",
-                    "name": "RedeemSessionKeyInput",
+                    "name": "RedeemApiKeyInput",
                     "ofType": null
                   }
                 },
@@ -2359,7 +2359,7 @@
             ],
             "type": {
               "kind": "OBJECT",
-              "name": "RedeemSessionKeyMutationResponse",
+              "name": "RedeemApiKeyMutationResponse",
               "ofType": null
             },
             "isDeprecated": false,
@@ -2519,7 +2519,7 @@
           },
           {
             "kind": "OBJECT",
-            "name": "RedeemSessionKeyMutationResponse",
+            "name": "RedeemApiKeyMutationResponse",
             "ofType": null
           },
           {
@@ -3637,7 +3637,7 @@
       },
       {
         "kind": "INPUT_OBJECT",
-        "name": "RedeemSessionKeyInput",
+        "name": "RedeemApiKeyInput",
         "description": null,
         "fields": null,
         "inputFields": [
@@ -3680,7 +3680,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "RedeemSessionKeyMutationResponse",
+        "name": "RedeemApiKeyMutationResponse",
         "description": null,
         "fields": [
           {

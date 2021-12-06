@@ -67,11 +67,11 @@ export const deleteAllApiKeys: MutationResolvers['deleteAllApiKeys'] = async (
   }
 }
 
-export const redeemSessionKey: MutationResolvers['redeemSessionKey'] = async (
+export const redeemApiKey: MutationResolvers['redeemApiKey'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['RedeemSessionKeyMutationResponse'] => {
+): ResolversTypes['RedeemApiKeyMutationResponse'] => {
   try {
     const apiKeyService = await ctx.container.use('apiKeyService')
     const sessionKeyOrError = await apiKeyService.redeem(args.input)
@@ -88,7 +88,7 @@ export const redeemSessionKey: MutationResolvers['redeemSessionKey'] = async (
     return {
       code: '200',
       success: true,
-      message: 'Redeemed Session Key',
+      message: 'Redeemed API Key',
       session: sessionKeyOrError
     }
   } catch (error) {
@@ -97,11 +97,11 @@ export const redeemSessionKey: MutationResolvers['redeemSessionKey'] = async (
         options: args.input,
         error
       },
-      'error redeeming session key'
+      'error redeeming API key'
     )
     return {
       code: '400',
-      message: 'Error trying to redeem session key',
+      message: 'Error trying to redeem API key',
       success: false
     }
   }

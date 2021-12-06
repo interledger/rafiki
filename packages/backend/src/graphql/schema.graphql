@@ -86,10 +86,8 @@ type Mutation {
     input: DeleteAllApiKeysInput!
   ): DeleteAllApiKeysMutationResponse
 
-  "Redeem Session Key"
-  redeemSessionKey(
-    input: RedeemSessionKeyInput!
-  ): RedeemSessionKeyMutationResponse
+  "Redeem API Key"
+  redeemApiKey(input: RedeemApiKeyInput!): RedeemApiKeyMutationResponse
 
   "Refresh Session"
   refreshSession(input: RefreshSessionInput!): RefreshSessionMutationResponse
@@ -198,7 +196,7 @@ input DeleteAllApiKeysInput {
   accountId: String!
 }
 
-input RedeemSessionKeyInput {
+input RedeemApiKeyInput {
   "API key"
   key: String!
   "Account API key was issued for."
@@ -449,7 +447,7 @@ type DeleteAllApiKeysMutationResponse implements MutationResponse {
   message: String!
 }
 
-type RedeemSessionKeyMutationResponse implements MutationResponse {
+type RedeemApiKeyMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!

@@ -11,7 +11,7 @@ import {
   getAccountOutgoingPayments,
   getOutgoingPaymentPageInfo
 } from './outgoing_payment'
-import { createApiKey, deleteAllApiKeys, redeemSessionKey } from './apiKey'
+import { createApiKey, deleteAllApiKeys, redeemApiKey } from './apiKey'
 import {
   getPeer,
   getPeers,
@@ -62,7 +62,7 @@ export const resolvers: Resolvers = {
     requoteOutgoingPayment,
     cancelOutgoingPayment,
     createApiKey: createApiKey,
-    redeemSessionKey: redeemSessionKey,
+    redeemApiKey: redeemApiKey,
     deleteAllApiKeys: deleteAllApiKeys,
     refreshSession: refreshSession,
     revokeSession: revokeSession,

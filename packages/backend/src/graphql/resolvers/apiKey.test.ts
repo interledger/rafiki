@@ -14,8 +14,8 @@ import {
   CreateApiKeyMutationResponse,
   DeleteAllApiKeysInput,
   DeleteAllApiKeysMutationResponse,
-  RedeemSessionKeyInput,
-  RedeemSessionKeyMutationResponse
+  RedeemApiKeyInput,
+  RedeemApiKeyMutationResponse
 } from '../generated/graphql'
 import { ApiKeyService } from '../../apiKey/service'
 import bcrypt from 'bcrypt'
@@ -116,20 +116,20 @@ describe('ApiKey Resolvers', (): void => {
       }
     })
 
-    test('Session Key can be redeemed', async (): Promise<void> => {
+    test('API Key can be redeemed', async (): Promise<void> => {
       const { id: accountId } = await accountService.create({
         asset: randomAsset()
       })
       const apiKey = await apiKeyService.create({ accountId })
-      const input: RedeemSessionKeyInput = {
+      const input: RedeemApiKeyInput = {
         accountId,
         key: apiKey.key
       }
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation RedeemSessionKey($input: RedeemSessionKeyInput!) {
-              redeemSessionKey(input: $input) {
+            mutation RedeemApiKey($input: RedeemApiKeyInput!) {
+              redeemApiKey(input: $input) {
                 code
                 success
                 message
@@ -145,9 +145,9 @@ describe('ApiKey Resolvers', (): void => {
           }
         })
         .then(
-          (query): RedeemSessionKeyMutationResponse => {
+          (query): RedeemApiKeyMutationResponse => {
             if (query.data) {
-              return query.data.redeemSessionKey
+              return query.data.redeemApiKey
             } else {
               throw new Error('Data was empty')
             }
