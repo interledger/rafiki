@@ -40,8 +40,7 @@ export async function createSessionService({
 async function createSession(deps: ServiceDependencies): Promise<Session> {
   const key = uuid()
   const expiry = Date.now() + 30 * 60 * 1000
-  await deps.redis.set(key, expiry)
-  await deps.redis.pexpireat(key, expiry)
+  await deps.redis.set(key, expiry, 'PXAT', expiry)
   return {
     key,
     expiresAt: new Date(expiry)
@@ -62,7 +61,7 @@ async function refreshSession(
   const session = await deps.redis.get(key)
   if (session) {
     const expiry = Date.now() + 30 * 60 * 1000
-    await deps.redis.pexpireat(key, expiry)
+    await deps.redis.set(key, expiry, 'PXAT', expiry)
     return {
       key,
       expiresAt: new Date(expiry)
