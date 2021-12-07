@@ -107,7 +107,7 @@ describe('Session Resolvers', (): void => {
           if (!session) {
             fail()
           } else {
-            expect(Number(response.session.expiresAt)).toBeGreaterThan(
+            expect(Number(response.session.expiresAt)).toBeGreaterThanOrEqual(
               session.expiresAt.getTime()
             )
           }

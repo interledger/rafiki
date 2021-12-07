@@ -18,6 +18,7 @@ describe('Session Key Service', (): void => {
       appContainer = await createTestApp(deps)
       sessionService = await deps.use('sessionService')
       redis = await deps.use('redis')
+      jest.useFakeTimers('modern')
     }
   )
 
@@ -73,6 +74,7 @@ describe('Session Key Service', (): void => {
 
     test('Can refresh a session', async (): Promise<void> => {
       const session = await sessionService.create()
+      jest.setSystemTime(new Date(Date.now() + 60 * 1000))
       const refreshedSession = await sessionService.refresh({
         key: session.key
       })
@@ -80,7 +82,7 @@ describe('Session Key Service', (): void => {
         fail()
       } else {
         expect(session.key).toEqual(refreshedSession.key)
-        expect(refreshedSession.expiresAt.getTime()).toBeGreaterThanOrEqual(
+        expect(refreshedSession.expiresAt.getTime()).toBeGreaterThan(
           session.expiresAt.getTime()
         )
       }
