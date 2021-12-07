@@ -51,7 +51,6 @@ describe('Session Key Service', (): void => {
 
     test('Cannot fetch non-existing session', async (): Promise<void> => {
       const session = sessionService.get({ key: '123' })
-      console.log(session)
       expect(session).resolves.toBeUndefined()
     })
 
