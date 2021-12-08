@@ -1,5 +1,7 @@
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import nock from 'nock'
+import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { InvoiceService } from './service'
@@ -14,6 +16,7 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
+import { EventType } from '../../webhook/service'
 
 describe('Invoice Service', (): void => {
   let deps: IocContract<AppServices>
@@ -26,6 +29,18 @@ describe('Invoice Service', (): void => {
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
+  }
+  const webhookUrl = new URL(Config.webhookUrl)
+
+  function mockWebhookServer(invoiceId: string, type: EventType): nock.Scope {
+    return nock(webhookUrl.origin)
+      .post(webhookUrl.pathname, (body): boolean => {
+        expect(body.type).toEqual(type)
+        expect(body.data.invoice.id).toEqual(invoiceId)
+        expect(body.data.invoice.active).toEqual(false)
+        return true
+      })
+      .reply(200)
   }
 
   beforeAll(
@@ -163,7 +178,9 @@ describe('Invoice Service', (): void => {
         })
       ).resolves.toBeUndefined()
 
+      const scope = mockWebhookServer(invoice.id, EventType.InvoicePaid)
       await invoiceService.handlePayment(invoice.id)
+      expect(scope.isDone()).toBe(true)
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: false
       })
@@ -206,7 +223,9 @@ describe('Invoice Service', (): void => {
         })
       ).resolves.toBeUndefined()
 
+      const scope = mockWebhookServer(invoice.id, EventType.InvoiceExpired)
       await expect(invoiceService.deactivateNext()).resolves.toBe(invoice.id)
+      expect(scope.isDone()).toBe(true)
       const invoiceAfter = await invoiceService.get(invoice.id)
       if (!invoiceAfter) throw new Error('invoice was deleted')
       expect(invoiceAfter.active).toBe(false)

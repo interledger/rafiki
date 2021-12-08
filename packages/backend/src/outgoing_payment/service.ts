@@ -8,7 +8,9 @@ import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { AccountingService, AssetAccount } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
+import { WebhookService } from '../webhook/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
+import * as lifecycle from './lifecycle'
 import * as worker from './worker'
 
 export interface OutgoingPaymentService {
@@ -38,6 +40,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   accountService: AccountService
   ratesService: RatesService
+  webhookService: WebhookService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
 }
 
@@ -223,11 +226,14 @@ async function cancelPayment(
     if (payment.state !== PaymentState.Funding) {
       return OutgoingPaymentError.WrongState
     }
-    // TODO: Notify wallet
-    await payment.$query(trx).patch({
-      state: PaymentState.Cancelled,
-      error: LifecycleError.CancelledByAPI
-    })
+    await lifecycle.handleCancelled(
+      {
+        ...deps,
+        knex: trx
+      },
+      payment,
+      LifecycleError.CancelledByAPI
+    )
     return payment
   })
 }

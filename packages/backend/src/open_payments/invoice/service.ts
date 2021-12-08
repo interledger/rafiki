@@ -2,6 +2,7 @@ import { Invoice } from './model'
 import { AccountingService } from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
+import { EventType, WebhookService } from '../../webhook/service'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
@@ -29,6 +30,7 @@ export interface InvoiceService {
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
+  webhookService: WebhookService
 }
 
 export async function createInvoiceService(
@@ -108,14 +110,20 @@ async function handleInvoicePayment(
   if (!amountReceived) {
     return
   }
-  const deactivated = await Invoice.query(deps.knex)
+  const invoice = await Invoice.query(deps.knex)
     .patch({
       active: false
     })
     .where('id', invoiceId)
     .andWhere('amount', '<=', amountReceived.toString())
-  if (deactivated) {
-    // Notify wallet
+    .returning('*')
+    .first()
+  if (invoice) {
+    await deps.webhookService.send({
+      type: EventType.InvoicePaid,
+      invoice,
+      amountReceived
+    })
   }
 }
 
@@ -145,6 +153,11 @@ async function deactivateNextInvoice(
     if (amountReceived) {
       deps.logger.trace({ invoice: invoice.id }, 'deactivating expired invoice')
       await invoice.$query(trx).patch({ active: false })
+      await deps.webhookService.send({
+        type: EventType.InvoiceExpired,
+        invoice,
+        amountReceived
+      })
     } else {
       deps.logger.debug({ invoice: invoice.id }, 'deleting expired invoice')
       await invoice.$query(trx).delete()

@@ -24,7 +24,7 @@ After the quote ends and state advances, the lock on the payment is released.
 
 ### Authorization
 
-After quoting completes, Rafiki notifies the wallet operator to add `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment, reserving the maximum requisite funds for the payment attempt.
+After quoting completes, Rafiki notifies the wallet operator via an `outgoing_payment.funding` to add `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment, reserving the maximum requisite funds for the payment attempt.
 
 If the payment intent did not specify `autoApprove` of `true`, a client should manually approve the payment, based on the parameters of the quote, before the wallet adds payment liquidity.
 
@@ -51,7 +51,7 @@ After the payment completes, the instance releases the lock on the payment and a
 
 3. Recoverable failure. In cases such as an idle timeout, Rafiki may elect to automatically retry the payment. The state remains `Sending`, but internally tracks that the payment failed and when to schedule another attempt.
 
-In the `Completed` and `Cancelled` cases, the wallet is notifed of any remaining funds in the Interledger account. Note: if the payment is retried, the same Interledger account is used for the subsequent attempt.
+In the `Completed` and `Cancelled` cases, the wallet is notifed of any remaining funds in the Interledger account via `outgoing_payment.completed` and `outgoing_payment.cancelled` webhook events. Note: if the payment is retried, the same Interledger account is used for the subsequent attempt.
 
 ### Manual recovery
 

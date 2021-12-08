@@ -2,6 +2,7 @@ import assert from 'assert'
 import nock from 'nock'
 import Knex from 'knex'
 import * as Pay from '@interledger/pay'
+import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { OutgoingPaymentService } from './service'
@@ -23,6 +24,7 @@ import {
 import { AssetOptions } from '../asset/service'
 import { Invoice } from '../open_payments/invoice/model'
 import { RatesService } from '../rates/service'
+import { EventType } from '../webhook/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -40,12 +42,51 @@ describe('OutgoingPaymentService', (): void => {
   let amtDelivered: bigint
   let config: IAppConfig
 
+  const webhookUrl = new URL(Config.webhookUrl)
+
+  enum WebhookState {
+    Funding = PaymentState.Funding,
+    Cancelled = PaymentState.Cancelled,
+    Completed = PaymentState.Completed
+  }
+
+  const isWebhookState = (state: PaymentState): boolean =>
+    Object.values(WebhookState).includes(state)
+
+  const webhookTypes: {
+    [key in WebhookState]: EventType
+  } = {
+    [WebhookState.Funding]: EventType.PaymentFunding,
+    [WebhookState.Cancelled]: EventType.PaymentCancelled,
+    [WebhookState.Completed]: EventType.PaymentCompleted
+  }
+
+  function mockWebhookServer(
+    paymentId: string,
+    state: PaymentState
+  ): nock.Scope | undefined {
+    if (isWebhookState(state)) {
+      return nock(webhookUrl.origin)
+        .post(webhookUrl.pathname, (body): boolean => {
+          expect(body.type).toEqual(webhookTypes[state])
+          expect(body.data.payment.id).toEqual(paymentId)
+          expect(body.data.payment.state).toEqual(state)
+          return true
+        })
+        .reply(200)
+    }
+  }
+
   async function processNext(
     paymentId: string,
-    expectState?: PaymentState,
+    expectState: PaymentState,
     expectedError?: string
   ): Promise<OutgoingPayment> {
+    const scope = mockWebhookServer(paymentId, expectState)
     await expect(outgoingPaymentService.processNext()).resolves.toBe(paymentId)
+    if (scope) {
+      expect(scope.isDone()).toBe(true)
+    }
     const payment = await outgoingPaymentService.get(paymentId)
     if (!payment) throw 'no payment'
     if (expectState) expect(payment.state).toBe(expectState)
@@ -214,7 +255,6 @@ describe('OutgoingPaymentService', (): void => {
 
   afterEach(
     async (): Promise<void> => {
-      jest.useRealTimers()
       jest.restoreAllMocks()
       await truncateTables(knex)
     }
@@ -524,28 +564,34 @@ describe('OutgoingPaymentService', (): void => {
     })
 
     describe('Funding→', (): void => {
-      let paymentId: string
+      let payment: OutgoingPayment
 
       beforeEach(
         async (): Promise<void> => {
-          paymentId = (
-            await outgoingPaymentService.create({
-              accountId,
-              paymentPointer,
-              amountToSend: BigInt(123),
-              autoApprove: true
-            })
-          ).id
-          await processNext(paymentId, PaymentState.Funding)
+          const { id: paymentId } = await outgoingPaymentService.create({
+            accountId,
+            paymentPointer,
+            amountToSend: BigInt(123),
+            autoApprove: true
+          })
+          payment = await processNext(paymentId, PaymentState.Funding)
         }
       )
 
       it('Cancelled (quote expired)', async (): Promise<void> => {
-        jest.useFakeTimers('modern')
-        jest.advanceTimersByTime(config.quoteLifespan + 1)
+        // nock doesn't work with 'modern' fake timers
+        // https://github.com/nock/nock/issues/2200
+        // jest.useFakeTimers('modern')
+        // jest.advanceTimersByTime(config.quoteLifespan + 1)
+
+        await payment.$query(knex).patch({
+          quote: Object.assign({}, payment.quote, {
+            activationDeadline: new Date(Date.now() - config.quoteLifespan - 1)
+          })
+        })
 
         await processNext(
-          paymentId,
+          payment.id,
           PaymentState.Cancelled,
           LifecycleError.QuoteExpired
         )
@@ -555,12 +601,22 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.processNext()
         ).resolves.toBeUndefined()
-        const after = await outgoingPaymentService.get(paymentId)
+        const after = await outgoingPaymentService.get(payment.id)
         expect(after?.state).toBe(PaymentState.Funding)
       })
     })
 
     describe('Sending→', (): void => {
+      beforeEach(
+        async (): Promise<void> => {
+          // Don't send invoice.paid webhook events
+          const invoiceService = await deps.use('invoiceService')
+          jest
+            .spyOn(invoiceService, 'handlePayment')
+            .mockImplementation(() => Promise.resolve())
+        }
+      )
+
       async function setup(
         opts: Pick<
           PaymentIntent,
@@ -944,12 +1000,15 @@ describe('OutgoingPaymentService', (): void => {
 
     it('cancels a Funding payment', async (): Promise<void> => {
       await payment.$query().patch({ state: PaymentState.Funding })
+      const scope = mockWebhookServer(payment.id, PaymentState.Cancelled)
+      assert.ok(scope)
       await expect(
         outgoingPaymentService.cancel(payment.id)
       ).resolves.toMatchObject({
         id: payment.id,
         state: PaymentState.Cancelled
       })
+      expect(scope.isDone()).toBe(true)
 
       const after = await outgoingPaymentService.get(payment.id)
       expect(after?.state).toBe(PaymentState.Cancelled)
