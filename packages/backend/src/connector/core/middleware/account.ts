@@ -16,7 +16,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     ctx: ILPContext<AuthState & { streamDestination?: string }>,
     next: () => Promise<void>
   ): Promise<void> {
-    const { invoices, peers } = ctx.services
+    const { accounts, invoices, peers } = ctx.services
     const incomingAccount = ctx.state.incomingAccount
     if (!incomingAccount) ctx.throw(401, 'unauthorized')
 
@@ -35,6 +35,20 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               account: AssetAccount.Settlement
             },
             receivedAccountId: invoice.id,
+            stream: {
+              enabled: true
+            }
+          }
+        }
+        // Open Payments SPSP fallback account
+        const spspAccount = await accounts.get(ctx.state.streamDestination)
+        if (spspAccount) {
+          return {
+            asset: {
+              ...spspAccount.asset,
+              account: AssetAccount.Settlement
+            },
+            receivedAccountId: spspAccount.id,
             stream: {
               enabled: true
             }

@@ -21,14 +21,17 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
     return new MockAccountingService()
   })
   .attr('logger', TestLoggerFactory.build())
+  .attr('accounts', ['accounting'], (accounting: MockAccountingService) => ({
+    get: async (id: string) => await accounting._getAccount(id)
+  }))
   .attr('invoices', ['accounting'], (accounting: MockAccountingService) => ({
     get: async (id: string) => {
-      const account = await accounting._get(id)
-      if (account) {
+      const invoice = await accounting._getInvoice(id)
+      if (invoice) {
         return {
-          ...account,
+          ...invoice,
           account: {
-            asset: account.asset
+            asset: invoice.asset
           }
         }
       }

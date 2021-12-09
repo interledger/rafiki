@@ -1,6 +1,7 @@
 import { Factory } from 'rosie'
 import Faker from 'faker'
 import {
+  MockAccountType,
   MockIncomingAccount,
   MockOutgoingAccount
 } from '../test/mocks/accounting-service'
@@ -37,7 +38,8 @@ export const IncomingPeerFactory = Factory.define<MockIncomingAccount>(
         authTokens: [Faker.datatype.string(32)]
       }
     }),
-    maxPacketAmount: BigInt(Faker.datatype.number())
+    maxPacketAmount: BigInt(Faker.datatype.number()),
+    type: MockAccountType.Peer
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`
@@ -56,7 +58,8 @@ export const OutgoingPeerFactory = Factory.define<MockOutgoingAccount>(
     }),
     stream: {
       enabled: false
-    }
+    },
+    type: MockAccountType.Peer
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`
@@ -67,5 +70,14 @@ export const InvoiceAccountFactory = Factory.define<MockOutgoingAccount>(
 )
   .extend(OutgoingAccountFactory)
   .attrs({
-    active: true
+    active: true,
+    type: MockAccountType.Invoice
+  })
+
+export const AccountFactory = Factory.define<MockOutgoingAccount>(
+  'AccountFactory'
+)
+  .extend(OutgoingAccountFactory)
+  .attrs({
+    type: MockAccountType.Account
   })

@@ -20,6 +20,7 @@ import {
   Transaction
 } from '../../accounting/service'
 import { AssetOptions } from '../../asset/service'
+import { AccountService } from '../../open_payments/account/service'
 import { InvoiceService } from '../../open_payments/invoice/service'
 import { PeerService } from '../../peer/service'
 
@@ -60,6 +61,7 @@ export interface AccountingService {
 export interface RafikiServices {
   //router: Router
   accounting: AccountingService
+  accounts: AccountService
   logger: Logger
   invoices: InvoiceService
   peers: PeerService
@@ -142,6 +144,9 @@ export class Rafiki<T = any> {
       },
       get accounting(): AccountingService {
         return config.accounting
+      },
+      get accounts(): AccountService {
+        return config.accounts
       },
       logger
     }

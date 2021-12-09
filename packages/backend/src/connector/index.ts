@@ -22,6 +22,7 @@ import {
   createStreamAddressMiddleware
 } from './core'
 import { AccountingService } from '../accounting/service'
+import { AccountService } from '../open_payments/account/service'
 import { InvoiceService } from '../open_payments/invoice/service'
 import { PeerService } from '../peer/service'
 import { RatesService } from '../rates/service'
@@ -31,6 +32,7 @@ interface ServiceDependencies extends BaseService {
   redis: IORedis.Redis
   ratesService: RatesService
   accountingService: AccountingService
+  accountService: AccountService
   invoiceService: InvoiceService
   peerService: PeerService
   streamServer: StreamServer
@@ -42,6 +44,7 @@ export async function createConnectorService({
   redis,
   ratesService,
   accountingService,
+  accountService,
   invoiceService,
   peerService,
   streamServer,
@@ -54,6 +57,7 @@ export async function createConnectorService({
         service: 'ConnectorService'
       }),
       accounting: accountingService,
+      accounts: accountService,
       invoices: invoiceService,
       peers: peerService,
       redis,

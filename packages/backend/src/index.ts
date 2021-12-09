@@ -27,7 +27,6 @@ import { createAccountRoutes } from './open_payments/account/routes'
 import { createInvoiceRoutes } from './open_payments/invoice/routes'
 import { createInvoiceService } from './open_payments/invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
-import { createWebMonetizationService } from './webmonetization/service'
 import { createConnectorService } from './connector'
 
 BigInt.prototype.toJSON = function () {
@@ -157,6 +156,7 @@ export function initIocContainer(
     return await createAccountService({
       knex: await deps.use('knex'),
       logger: logger,
+      accountingService: await deps.use('accountingService'),
       assetService: assetService
     })
   })
@@ -164,11 +164,9 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
     const accountService = await deps.use('accountService')
-    const wmService = await deps.use('wmService')
     return await createSPSPRoutes({
       logger: logger,
       accountService: accountService,
-      wmService,
       streamServer: streamServer
     })
   })
@@ -192,17 +190,6 @@ export function initIocContainer(
     return createAccountRoutes({
       config: await deps.use('config'),
       accountService: await deps.use('accountService')
-    })
-  })
-
-  container.singleton('wmService', async (deps) => {
-    const logger = await deps.use('logger')
-    const knex = await deps.use('knex')
-    const invoiceService = await deps.use('invoiceService')
-    return createWebMonetizationService({
-      logger: logger,
-      knex: knex,
-      invoiceService
     })
   })
 
@@ -246,6 +233,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),
+      accountService: await deps.use('accountService'),
       invoiceService: await deps.use('invoiceService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),

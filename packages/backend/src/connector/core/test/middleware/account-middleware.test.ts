@@ -1,5 +1,6 @@
 import { createILPContext } from '../../utils'
 import {
+  AccountFactory,
   IlpPrepareFactory,
   InvoiceAccountFactory,
   IncomingPeerFactory,
@@ -45,9 +46,44 @@ describe('Account Middleware', () => {
     expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
   })
 
-  test('set the accounts according to state and streamDestination', async () => {
+  test('set the accounts according to state and streamDestination invoice', async () => {
     const outgoingAccount = InvoiceAccountFactory.build({
       id: 'outgoingInvoice'
+    })
+    await rafikiServices.accounting.create(outgoingAccount)
+    const middleware = createAccountMiddleware(ADDRESS)
+    const next = jest.fn()
+    const ctx = createILPContext({
+      state: {
+        incomingAccount,
+        streamDestination: outgoingAccount.id
+      },
+      services: rafikiServices,
+      request: {
+        prepare: new ZeroCopyIlpPrepare(
+          IlpPrepareFactory.build({ destination: 'test.123' })
+        ),
+        rawPrepare: Buffer.alloc(0) // ignored
+      }
+    })
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    expect(ctx.accounts.incoming).toEqual(incomingAccount)
+    expect(ctx.accounts.outgoing).toEqual({
+      asset: {
+        ...outgoingAccount.asset,
+        account: AssetAccount.Settlement
+      },
+      receivedAccountId: outgoingAccount.id,
+      stream: {
+        enabled: true
+      }
+    })
+  })
+
+  test('set the accounts according to state and streamDestination SPSP fallback', async () => {
+    const outgoingAccount = AccountFactory.build({
+      id: 'spspFallback'
     })
     await rafikiServices.accounting.create(outgoingAccount)
     const middleware = createAccountMiddleware(ADDRESS)

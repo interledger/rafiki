@@ -1,5 +1,8 @@
+import { TransactionOrKnex } from 'objection'
+
 import { Account } from './model'
 import { BaseService } from '../../shared/baseService'
+import { AccountingService, AccountType } from '../../accounting/service'
 import { AssetService, AssetOptions } from '../../asset/service'
 
 export interface CreateOptions {
@@ -12,12 +15,15 @@ export interface AccountService {
 }
 
 interface ServiceDependencies extends BaseService {
+  knex: TransactionOrKnex
+  accountingService: AccountingService
   assetService: AssetService
 }
 
 export async function createAccountService({
   logger,
   knex,
+  accountingService,
   assetService
 }: ServiceDependencies): Promise<AccountService> {
   const log = logger.child({
@@ -26,6 +32,7 @@ export async function createAccountService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
+    accountingService,
     assetService
   }
   return {
@@ -38,12 +45,23 @@ async function createAccount(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<Account> {
-  const { id: assetId } = await deps.assetService.getOrCreate(options.asset)
-  return await Account.query(deps.knex)
-    .insertAndFetch({
-      assetId
+  const asset = await deps.assetService.getOrCreate(options.asset)
+  return await Account.transaction(deps.knex, async (trx) => {
+    const account = await Account.query(trx)
+      .insertAndFetch({
+        assetId: asset.id
+      })
+      .withGraphFetched('asset')
+
+    // SPSP fallback account
+    await deps.accountingService.createAccount({
+      id: account.id,
+      asset,
+      type: AccountType.Credit
     })
-    .withGraphFetched('asset')
+
+    return account
+  })
 }
 
 async function getAccount(

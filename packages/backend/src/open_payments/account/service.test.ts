@@ -61,5 +61,17 @@ describe('Open Payments Account Service', (): void => {
       await expect(account).toMatchObject(options)
       await expect(accountService.get(account.id)).resolves.toEqual(account)
     })
+
+    test('Creating an account creates an SPSP fallback account', async (): Promise<void> => {
+      const account = await accountService.create({ asset: randomAsset() })
+
+      const accountingService = await deps.use('accountingService')
+      const spspAccount = await accountingService.getAccount(account.id)
+
+      expect(spspAccount?.id).toEqual(account.id)
+      await expect(
+        accountingService.getTotalReceived(account.id)
+      ).resolves.toEqual(BigInt(0))
+    })
   })
 })

@@ -8,9 +8,16 @@ import {
 import { Transaction } from '../../../../accounting/service'
 import { TransferError } from '../../../../accounting/errors'
 
+export enum MockAccountType {
+  Account = 1,
+  Invoice,
+  Peer
+}
+
 interface MockAccount {
   id: string
   balance: bigint
+  type?: MockAccountType
 }
 
 export type MockIncomingAccount = IncomingAccount &
@@ -31,21 +38,34 @@ export type MockOutgoingAccount = OutgoingAccount &
 type MockIlpAccount = MockIncomingAccount | MockOutgoingAccount
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-const isIncomingPeer = (o: any): o is MockIncomingAccount => o.http?.incoming
+const isIncomingPeer = (o: any): o is MockIncomingAccount =>
+  o.type === MockAccountType.Peer && o.http?.incoming
 
 export class MockAccountingService implements AccountingService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
-  _get(accountId: string): Promise<MockIlpAccount | undefined> {
-    const account = this.accounts.get(accountId)
-    return Promise.resolve(account)
+  async _getInvoice(invoiceId: string): Promise<OutgoingAccount | undefined> {
+    const invoice = this.find(
+      (account) =>
+        account.type === MockAccountType.Invoice && account.id === invoiceId
+    )
+    return invoice as OutgoingAccount
+  }
+
+  async _getAccount(accountId: string): Promise<OutgoingAccount | undefined> {
+    const account = this.find(
+      (account) =>
+        account.type === MockAccountType.Account && account.id === accountId
+    )
+    return account as OutgoingAccount
   }
 
   async _getByDestinationAddress(
     destinationAddress: string
   ): Promise<OutgoingAccount | undefined> {
     const account = this.find((account) => {
-      if (!account.staticIlpAddress) return false
+      if (account.type !== MockAccountType.Peer || !account.staticIlpAddress)
+        return false
       return destinationAddress.startsWith(account.staticIlpAddress)
     })
     return account as OutgoingAccount
@@ -86,7 +106,7 @@ export class MockAccountingService implements AccountingService {
     }
     let receiveLimit: MockIlpAccount | undefined
     if (options.destinationAccount.receivedAccountId) {
-      receiveLimit = await this._get(
+      receiveLimit = this.accounts.get(
         options.destinationAccount.receivedAccountId
       )
       assert.ok(receiveLimit)
