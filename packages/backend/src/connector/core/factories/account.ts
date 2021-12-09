@@ -3,7 +3,7 @@ import Faker from 'faker'
 import {
   MockIncomingAccount,
   MockOutgoingAccount
-} from '../test/mocks/accounts-service'
+} from '../test/mocks/accounting-service'
 
 const assetCode = Faker.finance.currencyCode().toString().toUpperCase()
 const assetScale = Faker.datatype.number(6)

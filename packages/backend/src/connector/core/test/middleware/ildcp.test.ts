@@ -37,8 +37,8 @@ describe('ILDCP Middleware', function () {
   }
 
   beforeAll(async () => {
-    await services.accounts.create(self)
-    await services.accounts.create(alice)
+    await services.accounting.create(self)
+    await services.accounting.create(alice)
   })
 
   test('returns an ildcp response on success', async () => {
@@ -67,7 +67,7 @@ describe('ILDCP Middleware', function () {
   })
 
   test('returns an ildcp response if incoming account is not a peer', async () => {
-    const bob = await services.accounts.create(
+    const bob = await services.accounting.create(
       IncomingAccountFactory.build({ id: 'bob' })
     )
     const ctx = makeContext(

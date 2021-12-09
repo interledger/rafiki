@@ -1,5 +1,9 @@
 import assert from 'assert'
-import { AccountService, IncomingAccount, OutgoingAccount } from '../../rafiki'
+import {
+  AccountingService,
+  IncomingAccount,
+  OutgoingAccount
+} from '../../rafiki'
 
 import { Transaction } from '../../../../accounting/service'
 import { TransferError } from '../../../../accounting/errors'
@@ -29,7 +33,7 @@ type MockIlpAccount = MockIncomingAccount | MockOutgoingAccount
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isIncomingPeer = (o: any): o is MockIncomingAccount => o.http?.incoming
 
-export class MockAccountsService implements AccountService {
+export class MockAccountingService implements AccountingService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
   _get(accountId: string): Promise<MockIlpAccount | undefined> {

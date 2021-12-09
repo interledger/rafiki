@@ -29,7 +29,7 @@ const ctx = createILPContext({
   },
   services
 })
-const { accounts, rates } = services
+const { accounting, rates } = services
 
 beforeEach(async () => {
   ctx.response.fulfill = undefined
@@ -38,8 +38,8 @@ beforeEach(async () => {
   aliceAccount.balance = 100n
   bobAccount.balance = 0n
 
-  await accounts.create(aliceAccount)
-  await accounts.create(bobAccount)
+  await accounting.create(aliceAccount)
+  await accounting.create(bobAccount)
 })
 
 describe('Balance Middleware', function () {
@@ -55,10 +55,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(0))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(100))
   })
 
@@ -89,15 +89,15 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 
   test('ignores 0 amount packets', async () => {
-    const sendReceiveSpy = jest.spyOn(accounts, 'sendAndReceive')
+    const sendReceiveSpy = jest.spyOn(accounting, 'sendAndReceive')
     const prepare = IlpPrepareFactory.build({ amount: '0' })
     const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -107,10 +107,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
 
     expect(sendReceiveSpy).toHaveBeenCalledTimes(0)
@@ -128,10 +128,10 @@ describe('Balance Middleware', function () {
       Errors.InsufficientLiquidityError
     )
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 
@@ -149,17 +149,17 @@ describe('Balance Middleware', function () {
 
     expect(next).toHaveBeenCalledTimes(0)
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 
   test('receive limit already reached throws F07', async () => {
     const receiveLimit = OutgoingAccountFactory.build({ id: 'reachedLimit' })
     receiveLimit.balance = 0n
-    await accounts.create(receiveLimit)
+    await accounting.create(receiveLimit)
     bobAccount.receivedAccountId = receiveLimit.id
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()
@@ -174,17 +174,17 @@ describe('Balance Middleware', function () {
 
     expect(next).toHaveBeenCalledTimes(0)
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 
   test('receive limit exceeded throws F08', async () => {
     const receiveLimit = OutgoingAccountFactory.build({ id: 'exceededLimit' })
     receiveLimit.balance = BigInt(10)
-    await accounts.create(receiveLimit)
+    await accounting.create(receiveLimit)
     bobAccount.receivedAccountId = receiveLimit.id
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()
@@ -199,10 +199,10 @@ describe('Balance Middleware', function () {
 
     expect(next).toHaveBeenCalledTimes(0)
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 })

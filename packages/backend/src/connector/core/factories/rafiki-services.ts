@@ -3,11 +3,11 @@ import { Factory } from 'rosie'
 import IORedis from 'ioredis'
 import { StreamServer } from '@interledger/stream-receiver'
 import { RafikiServices } from '../rafiki'
-import { MockAccountsService } from '../test/mocks/accounts-service'
+import { MockAccountingService } from '../test/mocks/accounting-service'
 import { TestLoggerFactory } from './test-logger'
 
 interface MockRafikiServices extends RafikiServices {
-  accounts: MockAccountsService
+  accounting: MockAccountingService
 }
 
 export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
@@ -17,13 +17,13 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   //  return new InMemoryRouter(peers, { ilpAddress: 'test.rafiki' })
   //})
   .option('ilpAddress', 'test.rafiki')
-  .attr('accounts', () => {
-    return new MockAccountsService()
+  .attr('accounting', () => {
+    return new MockAccountingService()
   })
   .attr('logger', TestLoggerFactory.build())
-  .attr('invoices', ['accounts'], (accounts: MockAccountsService) => ({
+  .attr('invoices', ['accounting'], (accounting: MockAccountingService) => ({
     get: async (id: string) => {
-      const account = await accounts._get(id)
+      const account = await accounting._get(id)
       if (account) {
         return {
           ...account,
@@ -34,11 +34,11 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       }
     }
   }))
-  .attr('peers', ['accounts'], (accounts: MockAccountsService) => ({
+  .attr('peers', ['accounting'], (accounting: MockAccountingService) => ({
     getByDestinationAddress: async (address: string) =>
-      await accounts._getByDestinationAddress(address),
+      await accounting._getByDestinationAddress(address),
     getByIncomingToken: async (token: string) =>
-      await accounts._getByIncomingToken(token)
+      await accounting._getByIncomingToken(token)
   }))
   .attr('rates', {
     convert: async (opts) => opts.sourceAmount,

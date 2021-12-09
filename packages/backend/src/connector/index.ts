@@ -53,7 +53,7 @@ export async function createConnectorService({
       logger: logger.child({
         service: 'ConnectorService'
       }),
-      accounts: accountingService,
+      accounting: accountingService,
       invoices: invoiceService,
       peers: peerService,
       redis,

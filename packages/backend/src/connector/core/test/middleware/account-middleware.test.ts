@@ -18,14 +18,14 @@ describe('Account Middleware', () => {
   const rafikiServices = RafikiServicesFactory.build({})
 
   beforeAll(async () => {
-    await rafikiServices.accounts.create(incomingAccount)
+    await rafikiServices.accounting.create(incomingAccount)
   })
 
   test('set the accounts according to state and destination', async () => {
     const outgoingAccount = OutgoingPeerFactory.build({
       id: 'outgoingPeer'
     })
-    await rafikiServices.accounts.create(outgoingAccount)
+    await rafikiServices.accounting.create(outgoingAccount)
 
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
@@ -49,7 +49,7 @@ describe('Account Middleware', () => {
     const outgoingAccount = InvoiceAccountFactory.build({
       id: 'outgoingInvoice'
     })
-    await rafikiServices.accounts.create(outgoingAccount)
+    await rafikiServices.accounting.create(outgoingAccount)
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({
@@ -85,7 +85,7 @@ describe('Account Middleware', () => {
       id: 'deactivatedInvoice',
       active: false
     })
-    await rafikiServices.accounts.create(outgoingAccount)
+    await rafikiServices.accounting.create(outgoingAccount)
     const middleware = createAccountMiddleware(ADDRESS)
     const next = jest.fn()
     const ctx = createILPContext({

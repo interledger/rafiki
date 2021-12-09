@@ -50,7 +50,7 @@ export interface SendReceiveOptions {
   timeout: bigint // nano-seconds
 }
 
-export interface AccountService {
+export interface AccountingService {
   getBalance(id: string): Promise<bigint | undefined>
   sendAndReceive(
     options: SendReceiveOptions
@@ -59,7 +59,7 @@ export interface AccountService {
 
 export interface RafikiServices {
   //router: Router
-  accounts: AccountService
+  accounting: AccountingService
   logger: Logger
   invoices: InvoiceService
   peers: PeerService
@@ -140,8 +140,8 @@ export class Rafiki<T = any> {
       get streamServer(): StreamServer {
         return streamServer
       },
-      get accounts(): AccountService {
-        return config.accounts
+      get accounting(): AccountingService {
+        return config.accounting
       },
       logger
     }

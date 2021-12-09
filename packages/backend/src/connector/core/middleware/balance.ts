@@ -37,7 +37,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     request.prepare.amount = destinationAmountOrError.toString()
 
     // Update balances on prepare
-    const trxOrError = await services.accounts.sendAndReceive({
+    const trxOrError = await services.accounting.sendAndReceive({
       sourceAccount: accounts.incoming,
       destinationAccount: accounts.outgoing,
       sourceAmount,
@@ -53,7 +53,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
         case TransferError.ReceiveLimitExceeded: {
           const receivedAmount = destinationAmountOrError.toString()
           assert.ok(accounts.outgoing.receivedAccountId)
-          const receiveLimit = await services.accounts.getBalance(
+          const receiveLimit = await services.accounting.getBalance(
             accounts.outgoing.receivedAccountId
           )
           assert.ok(receiveLimit !== undefined)
