@@ -29,7 +29,8 @@ import { validateId } from '../shared/utils'
 // - the destinationAccount account's credits increase
 export enum AccountType {
   Credit = 'Credit', // debits_must_not_exceed_credits
-  Debit = 'Debit' // credits_must_not_exceed_debits
+  Debit = 'Debit', // credits_must_not_exceed_debits
+  Unrestricted = 'Unrestricted'
 }
 
 export interface Account {
@@ -211,7 +212,8 @@ export async function createAssetAccounts(
       asset: {
         unit,
         account: AssetAccount.SendReceive
-      }
+      },
+      type: AccountType.Unrestricted
     }
   ]
 

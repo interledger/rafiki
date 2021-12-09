@@ -14,7 +14,7 @@ export type CreateAccountOptions = AccountIdOptions & {
   asset: {
     unit: number
   }
-  type?: AccountType
+  type: AccountType
 }
 
 export async function createAccounts(
@@ -33,7 +33,7 @@ export async function createAccounts(
           ? AccountFlags.credits_must_not_exceed_debits
           : account.type === AccountType.Credit
           ? AccountFlags.debits_must_not_exceed_credits
-          : 0,
+          : 0, // AccountType.Unrestricted
       debits_accepted: BigInt(0),
       debits_reserved: BigInt(0),
       credits_accepted: BigInt(0),
