@@ -242,7 +242,11 @@ export function initIocContainer(
   container.singleton('sessionService', async (deps) => {
     const logger = await deps.use('logger')
     const redis = await deps.use('redis')
-    return await createSessionService({ logger: logger, redis: redis })
+    return await createSessionService({
+      logger: logger,
+      redis: redis,
+      sessionLength: config.sessionLength
+    })
   })
 
   container.singleton('apiKeyService', async (deps) => {

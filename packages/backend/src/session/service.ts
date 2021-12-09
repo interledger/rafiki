@@ -12,6 +12,7 @@ export interface SessionService {
 
 interface ServiceDependencies extends BaseService {
   redis: IORedis.Redis
+  sessionLength: number
 }
 
 type SessionOptions = {
@@ -20,14 +21,16 @@ type SessionOptions = {
 
 export async function createSessionService({
   logger,
-  redis
+  redis,
+  sessionLength
 }: ServiceDependencies): Promise<SessionService> {
   const log = logger.child({
     service: 'SessionService'
   })
   const deps: ServiceDependencies = {
     logger: log,
-    redis
+    redis,
+    sessionLength
   }
   return {
     create: () => createSession(deps),
@@ -39,7 +42,7 @@ export async function createSessionService({
 
 async function createSession(deps: ServiceDependencies): Promise<Session> {
   const key = uuid()
-  const expiry = Date.now() + 30 * 60 * 1000
+  const expiry = Date.now() + deps.sessionLength * 60 * 1000
   await deps.redis.set(key, expiry, 'PXAT', expiry)
   return {
     key,
@@ -60,7 +63,7 @@ async function refreshSession(
 ): Promise<Session | undefined> {
   const session = await deps.redis.get(key)
   if (session) {
-    const expiry = Date.now() + 30 * 60 * 1000
+    const expiry = Date.now() + deps.sessionLength * 60 * 1000
     await deps.redis.set(key, expiry, 'PXAT', expiry)
     return {
       key,
