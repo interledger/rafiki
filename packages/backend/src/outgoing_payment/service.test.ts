@@ -203,7 +203,7 @@ describe('OutgoingPaymentService', (): void => {
       const invoiceService = await deps.use('invoiceService')
       invoice = await invoiceService.create({
         accountId: destinationAccount.id,
-        amountToReceive: BigInt(56),
+        amount: BigInt(56),
         expiresAt: new Date(Date.now() + 60 * 1000),
         description: 'description!'
       })
@@ -463,8 +463,7 @@ describe('OutgoingPaymentService', (): void => {
             autoApprove: false
           })
         ).id
-        assert.ok(invoice.amountToReceive)
-        await payInvoice(invoice.amountToReceive)
+        await payInvoice(invoice.amount)
         await processNext(paymentId, PaymentState.Completed)
       })
 
@@ -575,12 +574,11 @@ describe('OutgoingPaymentService', (): void => {
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
-        assert.ok(invoice.amountToReceive)
-        const amountSent = invoice.amountToReceive * BigInt(2)
+        const amountSent = invoice.amount * BigInt(2)
         await expectOutcome(payment, {
           amountSent,
-          amountDelivered: invoice.amountToReceive,
-          invoiceReceived: invoice.amountToReceive
+          amountDelivered: invoice.amount,
+          invoiceReceived: invoice.amount
         })
       })
 
@@ -593,13 +591,11 @@ describe('OutgoingPaymentService', (): void => {
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
-        assert.ok(invoice.amountToReceive)
-        const amountSent =
-          (invoice.amountToReceive - amountAlreadyDelivered) * BigInt(2)
+        const amountSent = (invoice.amount - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
           amountSent,
-          amountDelivered: invoice.amountToReceive - amountAlreadyDelivered,
-          invoiceReceived: invoice.amountToReceive
+          amountDelivered: invoice.amount - amountAlreadyDelivered,
+          invoiceReceived: invoice.amount
         })
       })
 
@@ -720,15 +716,14 @@ describe('OutgoingPaymentService', (): void => {
           invoiceUrl
         })
         // The quote thinks there's a full amount to pay, but actually sending will find the invoice has been paid (e.g. by another payment).
-        assert.ok(invoice.amountToReceive)
-        await payInvoice(invoice.amountToReceive)
+        await payInvoice(invoice.amount)
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
         await expectOutcome(payment, {
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
-          invoiceReceived: invoice.amountToReceive
+          invoiceReceived: invoice.amount
         })
       })
 

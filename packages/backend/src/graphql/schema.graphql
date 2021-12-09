@@ -239,12 +239,11 @@ type InvoiceEdge {
 
 type Invoice {
   id: ID!
-  maximumAmount: UInt64
   active: Boolean!
   createdAt: String!
-  expiresAt: String
+  expiresAt: String!
   description: String
-  amountToReceive: UInt64
+  amount: UInt64!
 }
 
 type OutgoingPaymentConnection {

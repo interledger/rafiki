@@ -1132,18 +1132,6 @@
             "deprecationReason": null
           },
           {
-            "name": "maximumAmount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "UInt64",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "active",
             "description": null,
             "args": [],
@@ -1180,9 +1168,13 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -1200,13 +1192,17 @@
             "deprecationReason": null
           },
           {
-            "name": "amountToReceive",
+            "name": "amount",
             "description": null,
             "args": [],
             "type": {
-              "kind": "SCALAR",
-              "name": "UInt64",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UInt64",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null

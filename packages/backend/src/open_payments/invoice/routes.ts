@@ -98,8 +98,8 @@ async function createInvoice(
 
   const { body } = ctx.request
   if (typeof body !== 'object') return ctx.throw(400, 'json body required')
-  const amountToReceive = tryParseAmount(body['amount'])
-  if (!amountToReceive) return ctx.throw(400, 'invalid amount')
+  const amount = tryParseAmount(body['amount'])
+  if (!amount) return ctx.throw(400, 'invalid amount')
   const expiresAt = Date.parse(body['expiresAt'] as string)
   if (!expiresAt) return ctx.throw(400, 'invalid expiresAt')
   if (body.description !== undefined && typeof body.description !== 'string')
@@ -112,7 +112,7 @@ async function createInvoice(
     accountId,
     description: body.description,
     expiresAt: new Date(expiresAt),
-    amountToReceive
+    amount
   })
 
   ctx.status = 201
@@ -130,7 +130,7 @@ function invoiceToBody(
   return {
     id: location,
     account: `${deps.config.publicHost}/pay/${invoice.accountId}`,
-    amount: invoice.amountToReceive?.toString(),
+    amount: invoice.amount.toString(),
     assetCode: invoice.account.asset.code,
     assetScale: invoice.account.asset.scale,
     description: invoice.description,

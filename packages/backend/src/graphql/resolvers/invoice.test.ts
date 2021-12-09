@@ -34,6 +34,8 @@ describe('Invoice Resolver', (): void => {
       invoices.push(
         await invoiceService.create({
           accountId,
+          amount: BigInt(123),
+          expiresAt: new Date(Date.now() + 30_000),
           description: `Invoice ${i}`
         })
       )

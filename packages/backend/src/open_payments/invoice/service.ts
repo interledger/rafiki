@@ -15,8 +15,8 @@ export const POSITIVE_SLIPPAGE = BigInt(1)
 interface CreateOptions {
   accountId: string
   description?: string
-  expiresAt?: Date
-  amountToReceive?: bigint
+  expiresAt: Date
+  amount: bigint
 }
 
 export interface InvoiceService {
@@ -62,7 +62,7 @@ async function getInvoice(
 
 async function createInvoice(
   deps: ServiceDependencies,
-  { accountId, description, expiresAt, amountToReceive }: CreateOptions,
+  { accountId, description, expiresAt, amount }: CreateOptions,
   trx?: Transaction
 ): Promise<Invoice> {
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))
@@ -73,42 +73,36 @@ async function createInvoice(
         accountId,
         description,
         expiresAt,
-        amountToReceive,
+        amount,
         active: true
       })
       .withGraphFetched('account.asset')
 
     // Invoice accounts are credited by the amounts received by the invoice.
     //
-    // If amountToReceive is specified, the invoice account is initially
-    // debited by the amountToReceive, credits are restricted such that the
-    // invoice cannot receive more than that amount. The account balance
-    // represents the remaining receive limit.
-    //
-    // Otherwise, the invoice account balance represents the total amount
-    // received by the invoice.
+    // Invoice accounts are initially debited by the invoice amount.
+    // Credits are restricted such that the invoice cannot receive more than that amount.
+    // The account balance represents the remaining receive limit.
     await deps.accountingService.createAccount({
       id: invoice.id,
       asset: invoice.account.asset,
-      type: amountToReceive ? AccountType.Debit : AccountType.Credit
+      type: AccountType.Debit
     })
 
-    if (amountToReceive) {
-      const error = await deps.accountingService.createTransfer({
-        sourceAccount: invoice,
-        destinationAccount: {
-          asset: {
-            unit: invoice.account.asset.unit,
-            account: AssetAccount.SendReceive
-          }
-        },
-        // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
-        amount: amountToReceive + POSITIVE_SLIPPAGE
-      })
-      if (error) {
-        deps.logger.error({ error }, 'receive limit setup TigerBeetle error')
-        throw new Error('unable to create invoice, TigerBeetle error')
-      }
+    const error = await deps.accountingService.createTransfer({
+      sourceAccount: invoice,
+      destinationAccount: {
+        asset: {
+          unit: invoice.account.asset.unit,
+          account: AssetAccount.SendReceive
+        }
+      },
+      // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
+      amount: amount + POSITIVE_SLIPPAGE
+    })
+    if (error) {
+      deps.logger.error({ error }, 'receive limit setup TigerBeetle error')
+      throw new Error('unable to create invoice, TigerBeetle error')
     }
 
     if (!trx) {

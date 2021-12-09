@@ -7,8 +7,8 @@ exports.up = function (knex) {
     table.foreign('accountId').references('accounts.id')
     table.boolean('active').notNullable()
     table.string('description').nullable()
-    table.timestamp('expiresAt').nullable()
-    table.bigInteger('amountToReceive').nullable()
+    table.timestamp('expiresAt').notNullable()
+    table.bigInteger('amount').notNullable()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())

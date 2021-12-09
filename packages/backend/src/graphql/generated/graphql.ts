@@ -155,12 +155,11 @@ export type HttpOutgoingInput = {
 export type Invoice = {
   __typename?: 'Invoice';
   id: Scalars['ID'];
-  maximumAmount?: Maybe<Scalars['UInt64']>;
   active: Scalars['Boolean'];
   createdAt: Scalars['String'];
-  expiresAt?: Maybe<Scalars['String']>;
+  expiresAt: Scalars['String'];
   description?: Maybe<Scalars['String']>;
-  amountToReceive?: Maybe<Scalars['UInt64']>;
+  amount: Scalars['UInt64'];
 };
 
 export type InvoiceConnection = {
@@ -713,12 +712,11 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 
 export type InvoiceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Invoice'] = ResolversParentTypes['Invoice']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  maximumAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  amountToReceive?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  amount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

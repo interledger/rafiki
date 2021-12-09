@@ -2,7 +2,7 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { InvoiceService } from './service'
+import { InvoiceService, POSITIVE_SLIPPAGE } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Invoice } from './model'
@@ -72,6 +72,8 @@ describe('Invoice Service', (): void => {
     test('An invoice can be created and fetched', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
+        amount: BigInt(123),
+        expiresAt: new Date(Date.now() + 30_000),
         description: 'Test invoice'
       })
       const accountService = await deps.use('accountService')
@@ -84,30 +86,18 @@ describe('Invoice Service', (): void => {
       expect(retrievedInvoice).toEqual(invoice)
     })
 
-    test('Creating an invoice creates an invoice account', async (): Promise<void> => {
-      const invoice = await invoiceService.create({
-        accountId,
-        description: 'Invoice'
-      })
-      const invoiceAccount = await accountingService.getAccount(invoice.id)
-
-      expect(invoiceAccount?.id).toEqual(invoice.id)
-      await expect(
-        accountingService.getTotalReceived(invoice.id)
-      ).resolves.toEqual(BigInt(0))
-    })
-
-    test('Creating an invoice with amountToReceive sets up a "receive limit" balance', async (): Promise<void> => {
+    test('Creating an invoice creates invoice account with "receive limit" balance', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
         description: 'Invoice',
-        amountToReceive: BigInt(123)
+        expiresAt: new Date(Date.now() + 30_000),
+        amount: BigInt(123)
       })
       await expect(
         accountingService.getTotalReceived(invoice.id)
       ).resolves.toEqual(BigInt(0))
       await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
-        BigInt(123 + 1)
+        invoice.amount + POSITIVE_SLIPPAGE
       )
     })
 
@@ -115,6 +105,8 @@ describe('Invoice Service', (): void => {
       await expect(
         invoiceService.create({
           accountId: uuid(),
+          amount: BigInt(123),
+          expiresAt: new Date(Date.now() + 30_000),
           description: 'Test invoice'
         })
       ).rejects.toThrow('unable to create invoice, account does not exist')
@@ -130,6 +122,7 @@ describe('Invoice Service', (): void => {
       const invoiceId = (
         await invoiceService.create({
           accountId,
+          amount: BigInt(123),
           description: 'Test invoice',
           expiresAt: new Date(Date.now() + 30_000)
         })
@@ -143,6 +136,7 @@ describe('Invoice Service', (): void => {
     test('Deactivates an expired invoice with received money', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
+        amount: BigInt(123),
         description: 'Test invoice',
         expiresAt: new Date(Date.now() - 40_000)
       })
@@ -167,6 +161,7 @@ describe('Invoice Service', (): void => {
     test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
+        amount: BigInt(123),
         description: 'Test invoice',
         expiresAt: new Date(Date.now() - 40_000)
       })
@@ -185,6 +180,8 @@ describe('Invoice Service', (): void => {
           invoicesCreated.push(
             await invoiceService.create({
               accountId,
+              amount: BigInt(123),
+              expiresAt: new Date(Date.now() + 30_000),
               description: `Invoice ${i}`
             })
           )
