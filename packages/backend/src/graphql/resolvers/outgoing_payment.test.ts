@@ -140,7 +140,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             return updatedPayment
           })
         jest
-          .spyOn(accountingService, 'getBalance')
+          .spyOn(accountingService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
             expect(id).toStrictEqual(payment.id)
             return amountSent

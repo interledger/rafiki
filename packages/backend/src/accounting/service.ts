@@ -52,8 +52,7 @@ export interface CreateOptions {
 export enum AssetAccount {
   Liquidity = 1,
   Settlement,
-  Sent,
-  ReceiveLimit
+  SendReceive
 }
 
 interface BasicAccountOptions {
@@ -117,6 +116,8 @@ export interface AccountingService {
   createAssetAccounts(unit: number): Promise<void>
   getAccount(id: string): Promise<Account | undefined>
   getBalance(id: string): Promise<bigint | undefined>
+  getTotalSent(id: string): Promise<bigint | undefined>
+  getTotalReceived(id: string): Promise<bigint | undefined>
   getAssetAccountBalance(
     unit: number,
     account: AssetAccount
@@ -151,6 +152,8 @@ export function createAccountingService({
     createAssetAccounts: (unit) => createAssetAccounts(deps, unit),
     getAccount: (id) => getAccount(deps, id),
     getBalance: (id) => getAccountBalance(deps, id),
+    getTotalSent: (id) => getAccountTotalSent(deps, id),
+    getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAssetAccountBalance: (unit, account) =>
       getAssetAccountBalance(deps, unit, account),
     sendAndReceive: (options) => sendAndReceive(deps, options),
@@ -207,14 +210,7 @@ export async function createAssetAccounts(
     {
       asset: {
         unit,
-        account: AssetAccount.Sent
-      },
-      type: AccountType.Debit
-    },
-    {
-      asset: {
-        unit,
-        account: AssetAccount.ReceiveLimit
+        account: AssetAccount.SendReceive
       }
     }
   ]
@@ -268,6 +264,26 @@ export async function getAccountBalance(
 
   if (account) {
     return calculateBalance(account)
+  }
+}
+
+export async function getAccountTotalSent(
+  deps: ServiceDependencies,
+  id: string
+): Promise<bigint | undefined> {
+  const account = (await getAccounts(deps, [{ id }]))[0]
+  if (account) {
+    return account.debits_accepted
+  }
+}
+
+export async function getAccountTotalReceived(
+  deps: ServiceDependencies,
+  id: string
+): Promise<bigint | undefined> {
+  const account = (await getAccounts(deps, [{ id }]))[0]
+  if (account) {
+    return account.credits_accepted
   }
 }
 
@@ -393,13 +409,13 @@ export async function sendAndReceive(
     transfers.push({
       id: uuid(),
       sourceAccount: {
-        asset: {
-          unit: sourceAccount.asset.unit,
-          account: AssetAccount.Sent
-        }
+        id: sourceAccount.sentAccountId
       },
       destinationAccount: {
-        id: sourceAccount.sentAccountId
+        asset: {
+          unit: sourceAccount.asset.unit,
+          account: AssetAccount.SendReceive
+        }
       },
       amount: sourceAmount,
       timeout
@@ -411,7 +427,7 @@ export async function sendAndReceive(
       sourceAccount: {
         asset: {
           unit: destinationAccount.asset.unit,
-          account: AssetAccount.ReceiveLimit
+          account: AssetAccount.SendReceive
         }
       },
       destinationAccount: {

@@ -114,7 +114,7 @@ async function createOutgoingPayment(
       const plugin = deps.makeIlpPlugin({
         asset: {
           ...payment.account.asset,
-          account: AssetAccount.Sent
+          account: AssetAccount.SendReceive
         }
       })
       await plugin.connect()
@@ -139,7 +139,7 @@ async function createOutgoingPayment(
       await deps.accountingService.createAccount({
         id: payment.id,
         asset: payment.account.asset,
-        type: AccountType.Credit
+        type: AccountType.Debit
       })
 
       return payment

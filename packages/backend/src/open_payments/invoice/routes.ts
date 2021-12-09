@@ -5,7 +5,7 @@ import { validateId } from '../../shared/utils'
 import { AppContext } from '../../app'
 import { IAppConfig } from '../../config/app'
 import { AccountingService } from '../../accounting/service'
-import { InvoiceService, POSITIVE_SLIPPAGE } from './service'
+import { InvoiceService } from './service'
 import { Invoice } from './model'
 
 // Don't allow creating an invoice too far out. Invoices with no payments before they expire are cleaned up, since invoice creation is unauthenticated.
@@ -50,15 +50,14 @@ async function getInvoice(
   const invoice = await deps.invoiceService.get(invoiceId)
   if (!invoice) return ctx.throw(404)
 
-  const balance = await deps.accountingService.getBalance(invoice.id)
-  if (balance === undefined) {
-    deps.logger.error({ invoice: invoice.id }, 'balance not found')
+  const amountReceived = await deps.accountingService.getTotalReceived(
+    invoice.id
+  )
+  if (amountReceived === undefined) {
+    deps.logger.error({ invoice: invoice.id }, 'account not found')
     return ctx.throw(500)
   }
 
-  const amountReceived = invoice.amountToReceive
-    ? invoice.amountToReceive + POSITIVE_SLIPPAGE - balance
-    : balance
   const body = invoiceToBody(deps, invoice, amountReceived)
   ctx.body = body
   if (!acceptStream) return

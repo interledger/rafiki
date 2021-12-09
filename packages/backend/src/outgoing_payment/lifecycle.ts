@@ -56,7 +56,7 @@ export async function handleQuoting(
     throw Pay.PaymentError.DestinationAssetConflict
   }
 
-  const amountSent = await deps.accountingService.getBalance(payment.id)
+  const amountSent = await deps.accountingService.getTotalSent(payment.id)
   if (amountSent === undefined) {
     throw LifecycleError.MissingBalance
   }
@@ -183,7 +183,7 @@ export async function handleSending(
     throw Pay.PaymentError.DestinationAssetConflict
   }
 
-  const amountSent = await deps.accountingService.getBalance(payment.id)
+  const amountSent = await deps.accountingService.getTotalSent(payment.id)
   if (amountSent === undefined) {
     throw LifecycleError.MissingBalance
   }

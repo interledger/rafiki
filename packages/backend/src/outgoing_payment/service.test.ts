@@ -22,7 +22,6 @@ import {
 } from '../accounting/service'
 import { AssetOptions } from '../asset/service'
 import { Invoice } from '../open_payments/invoice/model'
-import { POSITIVE_SLIPPAGE } from '../open_payments/invoice/service'
 import { RatesService } from '../rates/service'
 
 describe('OutgoingPaymentService', (): void => {
@@ -128,7 +127,7 @@ describe('OutgoingPaymentService', (): void => {
     }
   ) {
     if (amountSent !== undefined) {
-      await expect(accountingService.getBalance(payment.id)).resolves.toBe(
+      await expect(accountingService.getTotalSent(payment.id)).resolves.toBe(
         amountSent
       )
     }
@@ -136,15 +135,9 @@ describe('OutgoingPaymentService', (): void => {
       expect(amtDelivered).toEqual(amountDelivered)
     }
     if (invoiceReceived !== undefined) {
-      if (invoice.amountToReceive) {
-        await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
-          invoice.amountToReceive + POSITIVE_SLIPPAGE - invoiceReceived
-        )
-      } else {
-        await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
-          invoiceReceived
-        )
-      }
+      await expect(
+        accountingService.getTotalReceived(invoice.id)
+      ).resolves.toEqual(invoiceReceived)
     }
   }
 
@@ -435,7 +428,7 @@ describe('OutgoingPaymentService', (): void => {
           autoApprove: false
         })
         jest
-          .spyOn(accountingService, 'getBalance')
+          .spyOn(accountingService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
             expect(id).toStrictEqual(payment.id)
             return BigInt(89)
@@ -453,7 +446,7 @@ describe('OutgoingPaymentService', (): void => {
           autoApprove: false
         })
         jest
-          .spyOn(accountingService, 'getBalance')
+          .spyOn(accountingService, 'getTotalSent')
           .mockImplementation(async (id: string) => {
             expect(id).toStrictEqual(payment.id)
             return BigInt(123)

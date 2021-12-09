@@ -613,14 +613,15 @@ describe('Accounting Service', (): void => {
       ).resolves.toEqual(TransferError.InvalidDestinationAmount)
     })
 
-    test('Updates sent account balance', async (): Promise<void> => {
+    test('Updates total sent', async (): Promise<void> => {
       const startingSourceBalance = BigInt(10)
       const sourceAccount = await accountFactory.build({
         balance: startingSourceBalance
       })
 
       const sentAccount = await accountFactory.build({
-        asset: sourceAccount.asset
+        asset: sourceAccount.asset,
+        type: AccountType.Debit
       })
 
       const destinationAccount = await accountFactory.build({
@@ -640,15 +641,15 @@ describe('Accounting Service', (): void => {
       })
       assert.ok(!isTransferError(trxOrError))
       await expect(
-        accountingService.getBalance(sentAccount.id)
+        accountingService.getTotalSent(sentAccount.id)
       ).resolves.toEqual(BigInt(0))
       await expect(trxOrError.commit()).resolves.toBeUndefined()
       await expect(
-        accountingService.getBalance(sentAccount.id)
+        accountingService.getTotalSent(sentAccount.id)
       ).resolves.toEqual(sourceAmount)
     })
 
-    test('Updates received account balance', async (): Promise<void> => {
+    test('Updates total received', async (): Promise<void> => {
       const sourceAccount = await accountFactory.build({
         balance: BigInt(10)
       })
@@ -676,11 +677,11 @@ describe('Accounting Service', (): void => {
 
       assert.ok(!isTransferError(trxOrError))
       await expect(
-        accountingService.getBalance(receivedAccount.id)
+        accountingService.getTotalReceived(receivedAccount.id)
       ).resolves.toEqual(BigInt(0))
       await expect(trxOrError.commit()).resolves.toBeUndefined()
       await expect(
-        accountingService.getBalance(receivedAccount.id)
+        accountingService.getTotalReceived(receivedAccount.id)
       ).resolves.toEqual(amount)
     })
 
@@ -702,7 +703,7 @@ describe('Accounting Service', (): void => {
           destinationAccount: {
             asset: {
               unit: receiveLimitAccount.asset.unit,
-              account: AssetAccount.ReceiveLimit
+              account: AssetAccount.SendReceive
             }
           },
           amount: receiveLimit

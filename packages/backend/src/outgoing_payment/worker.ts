@@ -118,7 +118,7 @@ export async function handlePaymentLifecycle(
       plugin = deps.makeIlpPlugin({
         asset: {
           ...payment.account.asset,
-          account: AssetAccount.Sent
+          account: AssetAccount.SendReceive
         }
       })
       return plugin

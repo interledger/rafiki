@@ -99,7 +99,7 @@ async function createInvoice(
         destinationAccount: {
           asset: {
             unit: invoice.account.asset.unit,
-            account: AssetAccount.ReceiveLimit
+            account: AssetAccount.SendReceive
           }
         },
         // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
@@ -146,8 +146,10 @@ async function deactivateNextInvoice(
     const invoice = invoices[0]
     if (!invoice) return
 
-    const balance = await deps.accountingService.getBalance(invoice.id)
-    if (balance) {
+    const amountReceived = await deps.accountingService.getTotalReceived(
+      invoice.id
+    )
+    if (amountReceived) {
       deps.logger.trace({ invoice: invoice.id }, 'deactivating expired invoice')
       await invoice.$query(trx).patch({ active: false })
     } else {
