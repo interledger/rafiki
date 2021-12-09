@@ -18,12 +18,18 @@ describe('Session Key Service', (): void => {
       appContainer = await createTestApp(deps)
       sessionService = await deps.use('sessionService')
       redis = await deps.use('redis')
+    }
+  )
+
+  beforeEach(
+    async (): Promise<void> => {
       jest.useFakeTimers('modern')
     }
   )
 
   afterEach(
     async (): Promise<void> => {
+      jest.useRealTimers()
       await redis.flushdb()
     }
   )
