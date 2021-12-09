@@ -52,7 +52,6 @@ export interface SendReceiveOptions {
 }
 
 export interface AccountingService {
-  getBalance(id: string): Promise<bigint | undefined>
   sendAndReceive(
     options: SendReceiveOptions
   ): Promise<Transaction | TransferError>

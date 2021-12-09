@@ -53,7 +53,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
         case TransferError.ReceiveLimitExceeded: {
           const receivedAmount = destinationAmountOrError.toString()
           assert.ok(accounts.outgoing.receivedAccountId)
-          const receiveLimit = await services.accounting.getBalance(
+          const receiveLimit = await services.invoices.getReceiveLimit(
             accounts.outgoing.receivedAccountId
           )
           assert.ok(receiveLimit !== undefined)

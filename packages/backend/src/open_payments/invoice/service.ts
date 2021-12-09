@@ -21,6 +21,7 @@ interface CreateOptions {
 
 export interface InvoiceService {
   get(id: string): Promise<Invoice | undefined>
+  getReceiveLimit(id: string): Promise<bigint | undefined>
   create(options: CreateOptions, trx?: Transaction): Promise<Invoice>
   getAccountInvoicesPage(
     accountId: string,
@@ -46,6 +47,7 @@ export async function createInvoiceService(
   }
   return {
     get: (id) => getInvoice(deps, id),
+    getReceiveLimit: (id) => getInvoiceReceiveLimit(deps, id),
     create: (options, trx) => createInvoice(deps, options, trx),
     getAccountInvoicesPage: (accountId, pagination) =>
       getAccountInvoicesPage(deps, accountId, pagination),
@@ -58,6 +60,13 @@ async function getInvoice(
   id: string
 ): Promise<Invoice | undefined> {
   return Invoice.query(deps.knex).findById(id).withGraphJoined('account.asset')
+}
+
+async function getInvoiceReceiveLimit(
+  deps: ServiceDependencies,
+  id: string
+): Promise<bigint | undefined> {
+  return deps.accountingService.getBalance(id)
 }
 
 async function createInvoice(

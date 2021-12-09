@@ -96,7 +96,7 @@ describe('Invoice Service', (): void => {
       await expect(
         accountingService.getTotalReceived(invoice.id)
       ).resolves.toEqual(BigInt(0))
-      await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
+      await expect(invoiceService.getReceiveLimit(invoice.id)).resolves.toEqual(
         invoice.amount + POSITIVE_SLIPPAGE
       )
     })
