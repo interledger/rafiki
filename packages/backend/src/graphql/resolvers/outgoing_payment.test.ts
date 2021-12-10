@@ -152,6 +152,7 @@ describe('OutgoingPayment Resolvers', (): void => {
               query OutgoingPayment($paymentId: String!) {
                 outgoingPayment(id: $paymentId) {
                   id
+                  accountId
                   state
                   error
                   stateAttempts
@@ -191,6 +192,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           .then((query): OutgoingPayment => query.data?.outgoingPayment)
 
         expect(query.id).toEqual(payment.id)
+        expect(query.accountId).toEqual(payment.accountId)
         expect(query.state).toEqual(SchemaPaymentState[state])
         expect(query.error).toEqual(error)
         expect(query.stateAttempts).toBe(0)

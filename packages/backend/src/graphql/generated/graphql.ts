@@ -314,6 +314,7 @@ export type MutationResponse = {
 export type OutgoingPayment = {
   __typename?: 'OutgoingPayment';
   id: Scalars['ID'];
+  accountId: Scalars['ID'];
   state: PaymentState;
   error?: Maybe<Scalars['String']>;
   stateAttempts: Scalars['Int'];
@@ -767,6 +768,7 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
 
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  accountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['PaymentState'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;

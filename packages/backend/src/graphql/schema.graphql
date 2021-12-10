@@ -258,6 +258,7 @@ type OutgoingPaymentEdge {
 
 type OutgoingPayment {
   id: ID!
+  accountId: ID!
   state: PaymentState!
   error: String
   stateAttempts: Int!

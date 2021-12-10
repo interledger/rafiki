@@ -244,6 +244,7 @@ function paymentToGraphql(
 ): Omit<SchemaOutgoingPayment, 'outcome' | 'account'> {
   return {
     id: payment.id,
+    accountId: payment.accountId,
     state: SchemaPaymentState[payment.state],
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
