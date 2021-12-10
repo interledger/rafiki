@@ -217,7 +217,7 @@ export class App {
     const key = ctx.request.header.authorization || ''
     if (key && key.length) {
       const sessionService = await this.container.use('sessionService')
-      return await sessionService.get({ key })
+      return await sessionService.get(key)
     } else {
       return undefined
     }

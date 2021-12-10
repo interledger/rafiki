@@ -7,7 +7,7 @@ export const refreshSession: MutationResolvers['refreshSession'] = async (
 ): ResolversTypes['RefreshSessionMutationResponse'] => {
   try {
     const sessionService = await ctx.container.use('sessionService')
-    const session = await sessionService.refresh(args.input)
+    const session = await sessionService.refresh(args.input.key)
     if (!session) {
       return {
         code: '401',
@@ -44,7 +44,7 @@ export const revokeSession: MutationResolvers['revokeSession'] = async (
 ): ResolversTypes['RevokeSessionMutationResponse'] => {
   try {
     const sessionKeyService = await ctx.container.use('sessionService')
-    await sessionKeyService.revoke(args.input)
+    await sessionKeyService.revoke(args.input.key)
     return {
       code: '200',
       success: true,

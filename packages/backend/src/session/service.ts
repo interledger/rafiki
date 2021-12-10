@@ -5,18 +5,14 @@ import { Session } from './util'
 
 export interface SessionService {
   create(): Promise<Session>
-  revoke(session: SessionOptions): void
-  refresh(session: SessionOptions): Promise<Session | undefined>
-  get(session: SessionOptions): Promise<Session | undefined>
+  revoke(key: string): void
+  refresh(key: string): Promise<Session | undefined>
+  get(key: string): Promise<Session | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
   redis: IORedis.Redis
   sessionLength: number
-}
-
-type SessionOptions = {
-  key: string
 }
 
 export async function createSessionService({
@@ -34,9 +30,9 @@ export async function createSessionService({
   }
   return {
     create: () => createSession(deps),
-    revoke: (options: SessionOptions) => revokeSession(deps, options),
-    refresh: (options: SessionOptions) => refreshSession(deps, options),
-    get: (options: SessionOptions) => getSession(deps, options)
+    revoke: (key: string) => revokeSession(deps, key),
+    refresh: (key: string) => refreshSession(deps, key),
+    get: (key: string) => getSession(deps, key)
   }
 }
 
@@ -52,14 +48,14 @@ async function createSession(deps: ServiceDependencies): Promise<Session> {
 
 async function revokeSession(
   deps: ServiceDependencies,
-  { key }: SessionOptions
+  key: string
 ): Promise<void> {
   await deps.redis.del(key)
 }
 
 async function refreshSession(
   deps: ServiceDependencies,
-  { key }: SessionOptions
+  key: string
 ): Promise<Session | undefined> {
   const session = await deps.redis.get(key)
   if (session) {
@@ -76,7 +72,7 @@ async function refreshSession(
 
 async function getSession(
   deps: ServiceDependencies,
-  { key }: SessionOptions
+  key: string
 ): Promise<Session | undefined> {
   const expiry = await deps.redis.get(key)
   if (expiry) {

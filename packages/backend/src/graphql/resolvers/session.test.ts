@@ -101,9 +101,7 @@ describe('Session Resolvers', (): void => {
         expect(response.session?.key).not.toBeNull()
         expect(response.session?.expiresAt).not.toBeNull()
         if (response.session) {
-          const session = await sessionService.get({
-            key: response.session.key
-          })
+          const session = await sessionService.get(response.session.key)
           if (!session) {
             fail()
           } else {
@@ -159,7 +157,7 @@ describe('Session Resolvers', (): void => {
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
-        const session = sessionService.get({ key: sessionOrError.key })
+        const session = sessionService.get(sessionOrError.key)
         expect(session).resolves.toBeUndefined()
       }
     })

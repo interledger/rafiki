@@ -46,9 +46,7 @@ describe('Session Key Service', (): void => {
       const session = await sessionService.create()
       expect(session).toHaveProperty('key')
       expect(session).toHaveProperty('expiresAt')
-      const retrievedSession = await sessionService.get({
-        key: session.key
-      })
+      const retrievedSession = await sessionService.get(session.key)
       if (retrievedSession) {
         expect(retrievedSession).toEqual(session)
       } else {
@@ -57,7 +55,7 @@ describe('Session Key Service', (): void => {
     })
 
     test('Cannot fetch non-existing session', async (): Promise<void> => {
-      const session = sessionService.get({ key: '123' })
+      const session = sessionService.get('123')
       expect(session).resolves.toBeUndefined()
     })
 
@@ -71,19 +69,15 @@ describe('Session Key Service', (): void => {
   describe('Manage Session', (): void => {
     test('Can revoke a session', async (): Promise<void> => {
       const session = await sessionService.create()
-      await sessionService.revoke({ key: session.key })
-      const revokedSession = sessionService.get({
-        key: session.key
-      })
+      await sessionService.revoke(session.key)
+      const revokedSession = sessionService.get(session.key)
       expect(revokedSession).resolves.toBeUndefined()
     })
 
     test('Can refresh a session', async (): Promise<void> => {
       const session = await sessionService.create()
       jest.setSystemTime(new Date(Date.now() + 60 * 1000))
-      const refreshedSession = await sessionService.refresh({
-        key: session.key
-      })
+      const refreshedSession = await sessionService.refresh(session.key)
       if (!refreshedSession) {
         fail()
       } else {
@@ -95,7 +89,7 @@ describe('Session Key Service', (): void => {
     })
 
     test('Cannot refresh non-existing session', async (): Promise<void> => {
-      const refreshSession = sessionService.refresh({ key: '123' })
+      const refreshSession = sessionService.refresh('123')
       expect(refreshSession).resolves.toBeUndefined()
     })
   })

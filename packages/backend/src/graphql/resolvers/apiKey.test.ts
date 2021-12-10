@@ -159,9 +159,7 @@ describe('ApiKey Resolvers', (): void => {
       expect(response.session?.key).not.toBeNull()
       expect(response.session?.expiresAt).not.toBeNull()
       if (response.session) {
-        const session = await sessionService.get({
-          key: response.session.key
-        })
+        const session = await sessionService.get(response.session.key)
         if (!session) {
           fail()
         } else {
