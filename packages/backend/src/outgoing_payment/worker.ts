@@ -51,11 +51,7 @@ export async function getPendingPayment(
     .forUpdate()
     // Don't wait for a payment that is already being processed.
     .skipLocked()
-    .whereIn('state', [
-      PaymentState.Quoting,
-      PaymentState.Ready,
-      PaymentState.Sending
-    ])
+    .whereIn('state', [PaymentState.Quoting, PaymentState.Sending])
     // Back off between retries.
     .andWhere((builder: knex.QueryBuilder) => {
       builder
@@ -114,7 +110,7 @@ export async function handlePaymentLifecycle(
   let plugin: IlpPlugin
   switch (payment.state) {
     case PaymentState.Quoting:
-      // Use asset's sentAccount debit balance to not be limited by liquidity when sending rate probe packets
+      // Use asset's unrestricted SendReceive account to not be limited by liquidity when sending rate probe packets
       plugin = deps.makeIlpPlugin({
         asset: {
           ...payment.account.asset,
@@ -134,7 +130,7 @@ export async function handlePaymentLifecycle(
           })
         })
     case PaymentState.Ready:
-      return lifecycle.handleFunding(deps, payment).catch(onError)
+      return lifecycle.handleReady(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin({
         asset: {

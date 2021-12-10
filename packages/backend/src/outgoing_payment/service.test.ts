@@ -524,8 +524,12 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
 
-      it('Ready (waiting for liquidity)', async (): Promise<void> => {
-        await processNext(paymentId, PaymentState.Ready)
+      it('Ready (waiting to send)', async (): Promise<void> => {
+        await expect(
+          outgoingPaymentService.processNext()
+        ).resolves.toBeUndefined()
+        const after = await outgoingPaymentService.get(paymentId)
+        expect(after?.state).toBe(PaymentState.Ready)
       })
     })
 

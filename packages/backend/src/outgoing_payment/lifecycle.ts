@@ -13,8 +13,6 @@ export enum LifecycleError {
   PricesUnavailable = 'PricesUnavailable',
   // Payment aborted via "cancel payment" API call.
   CancelledByAPI = 'CancelledByAPI',
-  // Payment liquidity needs to be withdrawn.
-  LeftoverLiquidity = 'LeftoverLiquidity',
   // Edge error due to retries, partial payment, and database write errors.
   BadState = 'BadState',
 
@@ -136,7 +134,7 @@ export async function handleQuoting(
 }
 
 // "payment" is locked by the "deps.knex" transaction.
-export async function handleFunding(
+export async function handleReady(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
@@ -151,7 +149,7 @@ export async function handleFunding(
       activationDeadline: payment.quote.activationDeadline.getTime(),
       now: now.getTime()
     },
-    "handleFunding for payment quote that isn't expired"
+    "handleReady for payment quote that isn't expired"
   )
 }
 
@@ -319,7 +317,6 @@ const sendingCompleted = async (
 const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
   // Lifecycle errors
   PricesUnavailable: true,
-  LeftoverLiquidity: true,
   // From @interledger/pay's PaymentError:
   QueryFailed: true,
   ConnectorError: true,
