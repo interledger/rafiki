@@ -193,7 +193,7 @@ describe('Invoice Routes', (): void => {
       ctx.request.body = {
         amount: invoice.amount,
         description: invoice.description,
-        expiresAt: invoice.expiresAt?.toISOString()
+        expiresAt: invoice.expiresAt.toISOString()
       }
       return ctx
     }
