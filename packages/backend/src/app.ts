@@ -29,6 +29,7 @@ import { SPSPRoutes } from './spsp/routes'
 import { InvoiceRoutes } from './open_payments/invoice/routes'
 import { AccountRoutes } from './open_payments/account/routes'
 import { InvoiceService } from './open_payments/invoice/service'
+import { MandateService } from './open_payments/mandate/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
 import { OutgoingPaymentService } from './outgoing_payment/service'
@@ -71,6 +72,7 @@ export interface AppServices {
   invoiceRoutes: Promise<InvoiceRoutes>
   accountRoutes: Promise<AccountRoutes>
   invoiceService: Promise<InvoiceService>
+  mandateService: Promise<MandateService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
@@ -142,6 +144,9 @@ export class App {
       }
       for (let i = 0; i < this.config.deactivateInvoiceWorkers; i++) {
         process.nextTick(() => this.deactivateInvoice())
+      }
+      for (let i = 0; i < this.config.mandateWorkers; i++) {
+        process.nextTick(() => this.processMandate())
       }
     }
   }
@@ -285,6 +290,24 @@ export class App {
           setTimeout(
             () => this.deactivateInvoice(),
             this.config.deactivateInvoiceWorkerIdle
+          ).unref()
+      })
+  }
+
+  private async processMandate(): Promise<void> {
+    const mandateService = await this.container.use('mandateService')
+    return mandateService
+      .processNext()
+      .catch((err) => {
+        this.logger.warn({ error: err.message }, 'processMandate error')
+        return true
+      })
+      .then((hasMoreWork) => {
+        if (hasMoreWork) process.nextTick(() => this.processMandate())
+        else
+          setTimeout(
+            () => this.processMandate(),
+            this.config.mandateWorkerIdle
           ).unref()
       })
   }

@@ -2,6 +2,11 @@ import { Resolvers } from '../generated/graphql'
 import { getAccount, createAccount } from './account'
 import { getAccountInvoices, getPageInfo } from './invoice'
 import {
+  getAccountMandates,
+  getMandatePageInfo,
+  revokeMandate
+} from './mandate'
+import {
   getOutgoingPayment,
   createOutgoingPayment,
   requoteOutgoingPayment,
@@ -44,10 +49,14 @@ export const resolvers: Resolvers = {
   },
   Account: {
     invoices: getAccountInvoices,
+    mandates: getAccountMandates,
     outgoingPayments: getAccountOutgoingPayments
   },
   InvoiceConnection: {
     pageInfo: getPageInfo
+  },
+  MandateConnection: {
+    pageInfo: getMandatePageInfo
   },
   OutgoingPaymentConnection: {
     pageInfo: getOutgoingPaymentPageInfo
@@ -80,6 +89,7 @@ export const resolvers: Resolvers = {
     createInvoiceWithdrawal,
     createOutgoingPaymentWithdrawal,
     finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
-    rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal
+    rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal,
+    revokeMandate: revokeMandate
   }
 }
