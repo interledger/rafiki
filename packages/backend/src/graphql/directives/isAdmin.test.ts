@@ -55,9 +55,9 @@ describe('isAdmin Directive', (): void => {
           }
         }
       })
-      await server.listen(3010)
+      await server.listen(3011)
       const httpLink = createHttpLink({
-        uri: 'http://localhost:3010/graphql',
+        uri: 'http://localhost:3011/graphql',
         fetch
       })
       client = new ApolloClient({
