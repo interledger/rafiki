@@ -10,6 +10,7 @@ import {
   getAccountOutgoingPayments,
   getOutgoingPaymentPageInfo
 } from './outgoing_payment'
+import { createApiKey, deleteAllApiKeys, redeemApiKey } from './apiKey'
 import {
   getPeer,
   getPeers,
@@ -27,6 +28,7 @@ import {
   rollbackLiquidityWithdrawal
 } from './liquidity'
 import { GraphQLBigInt } from '../scalars'
+import { refreshSession, revokeSession } from './session'
 
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
@@ -57,6 +59,11 @@ export const resolvers: Resolvers = {
     createOutgoingPayment,
     requoteOutgoingPayment,
     cancelOutgoingPayment,
+    createApiKey: createApiKey,
+    redeemApiKey: redeemApiKey,
+    deleteAllApiKeys: deleteAllApiKeys,
+    refreshSession: refreshSession,
+    revokeSession: revokeSession,
     createPeer: createPeer,
     updatePeer: updatePeer,
     deletePeer: deletePeer,

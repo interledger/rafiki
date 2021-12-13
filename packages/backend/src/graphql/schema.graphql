@@ -75,6 +75,23 @@ type Mutation {
     "The id of the liquidity withdrawal to rollback."
     withdrawalId: String!
   ): LiquidityMutationResponse
+
+  "Create API Key"
+  createApiKey(input: CreateApiKeyInput!): CreateApiKeyMutationResponse
+
+  "Delete all API Keys"
+  deleteAllApiKeys(
+    input: DeleteAllApiKeysInput!
+  ): DeleteAllApiKeysMutationResponse
+
+  "Redeem API Key"
+  redeemApiKey(input: RedeemApiKeyInput!): RedeemApiKeyMutationResponse
+
+  "Refresh Session"
+  refreshSession(input: RefreshSessionInput!): RefreshSessionMutationResponse
+
+  "Revoke Session"
+  revokeSession(input: RevokeSessionInput!): RevokeSessionMutationResponse
 }
 
 type PageInfo {
@@ -165,6 +182,33 @@ input CreateAssetLiquidityWithdrawalInput {
   amount: UInt64!
   "The id of the withdrawal."
   id: String!
+}
+
+input CreateApiKeyInput {
+  "Account API key is created for."
+  accountId: String!
+}
+
+input DeleteAllApiKeysInput {
+  "Account API keys are deleted from."
+  accountId: String!
+}
+
+input RedeemApiKeyInput {
+  "API key"
+  key: String!
+  "Account API key was issued for."
+  accountId: String!
+}
+
+input RefreshSessionInput {
+  "Session key"
+  key: String!
+}
+
+input RevokeSessionInput {
+  "Session key"
+  key: String!
 }
 
 type Asset {
@@ -333,6 +377,19 @@ input CreateAccountInput {
   asset: AssetInput!
 }
 
+type ApiKey {
+  id: ID!
+  accountId: String!
+  key: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Session {
+  key: String!
+  expiresAt: String!
+}
+
 type CreateAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -373,6 +430,39 @@ type LiquidityMutationResponse implements MutationResponse {
   error: LiquidityError
 }
 
+type CreateApiKeyMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  apiKey: ApiKey
+}
+
+type DeleteAllApiKeysMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type RedeemApiKeyMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  session: Session
+}
+
+type RefreshSessionMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  session: Session
+}
+
+type RevokeSessionMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
 interface MutationResponse {
   code: String!
   success: Boolean!
@@ -380,3 +470,6 @@ interface MutationResponse {
 }
 
 scalar UInt64
+
+directive @auth on OBJECT | FIELD_DEFINITION
+directive @isAdmin on OBJECT | FIELD_DEFINITION
