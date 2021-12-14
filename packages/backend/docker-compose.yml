@@ -1,19 +1,42 @@
 version: '3'
 services:
+  backend:
+    privileged: true
+    image: rafiki-backend
+    command: yarn start2
+    volumes:
+      - .:/workspace
+      - ./packages/backend/migrations:/workspace/packages/backend/migrations
+    expose:
+      - 3001
+    depends_on:
+      - database
+      - redis
+    environment:
+      POSTGRES_PASSWORD: password
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/development
+      TIGERBEETLE_REPLICA_ADDRESSES: "[3001]"
+      python: /bin/python
+    network_mode: host
   database:
+    privileged: true
     image: "postgres" # use latest official postgres version
     restart: unless-stopped
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
       - ./scripts/init.sh:/docker-entrypoint-initdb.d/init.sh
-    ports:
-      - "5432:5432"
+    expose:
+      - 5432
     environment:
       POSTGRES_PASSWORD: password
+    network_mode: host
   redis:
+    privileged: true
     image: "redis:5" # use latest official postgres version
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    expose:
+      - 6379
+    network_mode: host
 volumes:
   database-data: # named volumes can be managed easier using docker-compose

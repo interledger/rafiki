@@ -10,7 +10,10 @@
     "build": "yarn clean && tsc --build tsconfig.json && yarn copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/",
-    "prepack": "yarn build"
+    "prepack": "yarn build",
+    "start": "node ./dist/app.js",
+    "start2": "yarn && node ./dist/runner.js",
+    "start3": "node ./testhttpsvr.js"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "1.21.5",
