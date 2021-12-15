@@ -3,7 +3,7 @@ import { ServiceDependencies } from './service'
 import { OutgoingPayment, PaymentState } from './model'
 import * as lifecycle from './lifecycle'
 import { IlpPlugin } from './ilp_plugin'
-import { AssetAccount } from '../accounting/service'
+import { AccountType, RATE_PROBE_ACCOUNT_ID } from '../accounting/service'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -110,12 +110,11 @@ export async function handlePaymentLifecycle(
   let plugin: IlpPlugin
   switch (payment.state) {
     case PaymentState.Quoting:
-      // Use asset's unrestricted SendReceive account to not be limited by liquidity when sending rate probe packets
+      // Use RATE_PROBE_ACCOUNT_ID to not be limited by liquidity when sending rate probe packets
       plugin = deps.makeIlpPlugin({
-        asset: {
-          ...payment.account.asset,
-          account: AssetAccount.SendReceive
-        }
+        id: RATE_PROBE_ACCOUNT_ID,
+        asset: payment.account.asset,
+        type: AccountType.Send
       })
       return plugin
         .connect()
@@ -133,11 +132,9 @@ export async function handlePaymentLifecycle(
       return lifecycle.handleReady(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin({
-        asset: {
-          ...payment.account.asset,
-          account: AssetAccount.Settlement
-        },
-        sentAccountId: payment.id
+        id: payment.id,
+        asset: payment.account.asset,
+        type: AccountType.Send
       })
       return plugin
         .connect()

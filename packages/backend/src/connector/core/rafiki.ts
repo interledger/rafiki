@@ -14,32 +14,27 @@ import {
 import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
 import { TransferError } from '../../accounting/errors'
-import {
-  SendAccountOptions,
-  ReceiveAccountOptions,
-  Transaction
-} from '../../accounting/service'
+import { AccountOptions, Transaction } from '../../accounting/service'
 import { AssetOptions } from '../../asset/service'
 import { AccountService } from '../../open_payments/account/service'
 import { InvoiceService } from '../../open_payments/invoice/service'
 import { PeerService } from '../../peer/service'
 
-export type IncomingAccount = SendAccountOptions & {
+type Account = AccountOptions & {
   asset: AssetOptions
+}
+
+export type IncomingAccount = Account & {
   maxPacketAmount?: bigint
   staticIlpAddress?: string
 }
 
-export type OutgoingAccount = ReceiveAccountOptions & {
-  asset: AssetOptions
+export type OutgoingAccount = Account & {
   http?: {
     outgoing: {
       authToken: string
       endpoint: string
     }
-  }
-  stream?: {
-    enabled: boolean
   }
 }
 

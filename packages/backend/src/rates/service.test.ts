@@ -31,14 +31,14 @@ describe('Rates service', function () {
 
   beforeAll(
     async (): Promise<void> => {
-      jest.useFakeTimers('modern')
-      jest.setSystemTime(1600000000000)
       const config = Config
       config.pricesLifetime = pricesLifetime
       config.pricesUrl = 'http://127.0.0.1:3210/'
       deps = await initIocContainer(config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
+      jest.useFakeTimers('modern')
+      jest.setSystemTime(1600000000000)
     }
   )
 

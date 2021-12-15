@@ -6,6 +6,7 @@ import { createBalanceMiddleware } from '../../middleware'
 import {
   IncomingAccountFactory,
   OutgoingAccountFactory,
+  InvoiceAccountFactory,
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory,
@@ -157,10 +158,23 @@ describe('Balance Middleware', function () {
   })
 
   test('receive limit already reached throws F07', async () => {
-    const receiveLimit = OutgoingAccountFactory.build({ id: 'reachedLimit' })
-    receiveLimit.balance = 0n
-    await accounting.create(receiveLimit)
-    bobAccount.receivedAccountId = receiveLimit.id
+    const invoiceAccount = InvoiceAccountFactory.build({
+      id: 'reachedLimit',
+      receiveLimit: BigInt(0)
+    })
+    await accounting.create(invoiceAccount)
+    const ctx = createILPContext({
+      accounts: {
+        get incoming() {
+          return aliceAccount
+        },
+        get outgoing() {
+          return invoiceAccount
+        }
+      },
+      services
+    })
+
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -182,10 +196,23 @@ describe('Balance Middleware', function () {
   })
 
   test('receive limit exceeded throws F08', async () => {
-    const receiveLimit = OutgoingAccountFactory.build({ id: 'exceededLimit' })
-    receiveLimit.balance = BigInt(10)
-    await accounting.create(receiveLimit)
-    bobAccount.receivedAccountId = receiveLimit.id
+    const invoiceAccount = InvoiceAccountFactory.build({
+      id: 'exceededLimit',
+      receiveLimit: BigInt(10)
+    })
+    await accounting.create(invoiceAccount)
+    const ctx = createILPContext({
+      accounts: {
+        get incoming() {
+          return aliceAccount
+        },
+        get outgoing() {
+          return invoiceAccount
+        }
+      },
+      services
+    })
+
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const fulfill = IlpFulfillFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)

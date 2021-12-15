@@ -3,7 +3,11 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { InvoiceService, POSITIVE_SLIPPAGE } from './service'
-import { AccountingService } from '../../accounting/service'
+import {
+  AccountingService,
+  AccountType,
+  RECEIVE_ACCOUNT_ID
+} from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Invoice } from './model'
 import { resetGraphileDb } from '../../tests/graphileDb'
@@ -14,7 +18,6 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { AccountFactory } from '../../tests/accountFactory'
 
 describe('Invoice Service', (): void => {
   let deps: IocContract<AppServices>
@@ -23,7 +26,6 @@ describe('Invoice Service', (): void => {
   let invoiceService: InvoiceService
   let knex: Knex
   let accountId: string
-  let accountFactory: AccountFactory
   let accountingService: AccountingService
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -39,7 +41,6 @@ describe('Invoice Service', (): void => {
         connectionString: appContainer.connectionUrl
       })
       accountingService = await deps.use('accountingService')
-      accountFactory = new AccountFactory(accountingService)
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
@@ -86,19 +87,19 @@ describe('Invoice Service', (): void => {
       expect(retrievedInvoice).toEqual(invoice)
     })
 
-    test('Creating an invoice creates invoice account with "receive limit" balance', async (): Promise<void> => {
+    test('Creating an invoice creates receive account with receive limit', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
         description: 'Invoice',
         expiresAt: new Date(Date.now() + 30_000),
         amount: BigInt(123)
       })
-      await expect(
-        accountingService.getTotalReceived(invoice.id)
-      ).resolves.toEqual(BigInt(0))
-      await expect(invoiceService.getReceiveLimit(invoice.id)).resolves.toEqual(
-        invoice.amount + POSITIVE_SLIPPAGE
-      )
+      await expect(accountingService.getAccount(invoice.id)).resolves.toEqual({
+        id: invoice.id,
+        type: AccountType.Receive,
+        totalReceived: BigInt(0),
+        receiveLimit: invoice.amount + POSITIVE_SLIPPAGE
+      })
     })
 
     test('Cannot create invoice for nonexistent account', async (): Promise<void> => {
@@ -140,13 +141,11 @@ describe('Invoice Service', (): void => {
         description: 'Test invoice',
         expiresAt: new Date(Date.now() - 40_000)
       })
-      const sourceAccount = await accountFactory.build({
-        balance: BigInt(10),
-        asset: invoice.account.asset
-      })
       await expect(
         accountingService.createTransfer({
-          sourceAccount,
+          sourceAccount: {
+            id: RECEIVE_ACCOUNT_ID
+          },
           destinationAccount: invoice,
           amount: BigInt(1)
         })

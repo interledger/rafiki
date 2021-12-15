@@ -56,8 +56,7 @@ async function createAccount(
     // SPSP fallback account
     await deps.accountingService.createAccount({
       id: account.id,
-      asset,
-      type: AccountType.Credit
+      type: AccountType.Receive
     })
 
     return account

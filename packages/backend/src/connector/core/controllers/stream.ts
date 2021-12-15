@@ -1,5 +1,6 @@
 import { isIlpReply } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
+import { AccountType } from '../../../accounting/service'
 
 const CONNECTION_EXPIRY = 60 * 10 // seconds
 
@@ -13,12 +14,10 @@ export function createStreamController(): ILPMiddleware {
     next: () => Promise<void>
   ): Promise<void> {
     const { logger, redis, streamServer } = ctx.services
-    const { request, response } = ctx
+    const { request, response, accounts } = ctx
 
-    const { stream } = ctx.accounts.outgoing
     if (
-      !stream ||
-      !stream.enabled ||
+      accounts.outgoing.type !== AccountType.Receive ||
       !streamServer.decodePaymentTag(request.prepare.destination) // XXX mark this earlier in the middleware pipeline
     ) {
       await next()

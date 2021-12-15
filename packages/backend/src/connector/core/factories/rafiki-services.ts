@@ -36,7 +36,10 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
         }
       }
     },
-    getReceiveLimit: async (id: string) => await accounting.getBalance(id)
+    getReceiveLimit: async (id: string) => {
+      const invoice = await accounting._getInvoice(id)
+      return invoice?.receiveLimit
+    }
   }))
   .attr('peers', ['accounting'], (accounting: MockAccountingService) => ({
     getByDestinationAddress: async (address: string) =>

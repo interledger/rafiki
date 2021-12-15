@@ -10,7 +10,7 @@ import {
   streamReceivedKey
 } from '../../controllers/stream'
 import {
-  OutgoingAccountFactory,
+  InvoiceAccountFactory,
   IncomingPeerFactory,
   OutgoingPeerFactory,
   IlpPrepareFactory,
@@ -33,8 +33,8 @@ describe('Stream Controller', function () {
     await services.redis.disconnect()
   })
 
-  test('constructs a reply when "stream" is enabled', async () => {
-    const bob = OutgoingAccountFactory.build()
+  test('constructs a reply for a receive account', async () => {
+    const bob = InvoiceAccountFactory.build()
     const {
       ilpAddress,
       sharedSecret
@@ -97,7 +97,7 @@ describe('Stream Controller', function () {
   })
 
   test("skips when the payment tag can't be decrypted", async () => {
-    const bob = OutgoingAccountFactory.build()
+    const bob = InvoiceAccountFactory.build()
     const ctx = createILPContext({
       services,
       request: {
@@ -119,7 +119,7 @@ describe('Stream Controller', function () {
     expect(next).toHaveBeenCalledTimes(1)
   })
 
-  test('skips when "stream.enabled" is false', async () => {
+  test('skips when not a receive account', async () => {
     const bob = OutgoingPeerFactory.build()
     const ctx = createILPContext({
       services,

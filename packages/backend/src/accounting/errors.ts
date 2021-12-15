@@ -29,7 +29,7 @@ export class CommitTransferError extends Error {
 export enum TransferError {
   AlreadyCommitted = 'AlreadyCommitted',
   AlreadyRolledBack = 'AlreadyRolledBack',
-  DifferentAssets = 'DifferentAssets',
+  DifferentUnits = 'DifferentUnits',
   InsufficientBalance = 'InsufficientBalance',
   InsufficientDebitBalance = 'InsufficientDebitBalance',
   InsufficientLiquidity = 'InsufficientLiquidity',
@@ -42,8 +42,8 @@ export enum TransferError {
   TransferExists = 'TransferExists',
   TransferExpired = 'TransferExpired',
   UnknownTransfer = 'UnknownTransfer',
-  UnknownSourceBalance = 'UnknownSourceBalance',
-  UnknownDestinationBalance = 'UnknownDestinationBalance'
+  UnknownSourceAccount = 'UnknownSourceAccount',
+  UnknownDestinationAccount = 'UnknownDestinationAccount'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

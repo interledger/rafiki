@@ -128,7 +128,7 @@ describe('Peer Service', (): void => {
       expect(retrievedPeer).toEqual(peer)
     })
 
-    test('Creating a peer creates a peer account', async (): Promise<void> => {
+    test('Creating a peer creates a liquidity account', async (): Promise<void> => {
       const accountingService = await deps.use('accountingService')
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
@@ -139,7 +139,7 @@ describe('Peer Service', (): void => {
           unit: ((await assetService.get(options.asset)) as Asset).unit
         },
         balance: BigInt(0),
-        type: AccountType.Credit
+        type: AccountType.Liquidity
       })
     })
 

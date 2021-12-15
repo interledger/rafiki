@@ -81,15 +81,15 @@ export async function createTransfers(
       case CreateTransferErrorCode.accounts_are_the_same:
         return { index, error: TransferError.SameAccounts }
       case CreateTransferErrorCode.debit_account_not_found:
-        return { index, error: TransferError.UnknownSourceBalance }
+        return { index, error: TransferError.UnknownSourceAccount }
       case CreateTransferErrorCode.credit_account_not_found:
-        return { index, error: TransferError.UnknownDestinationBalance }
+        return { index, error: TransferError.UnknownDestinationAccount }
       case CreateTransferErrorCode.exceeds_credits:
         return { index, error: TransferError.InsufficientBalance }
       case CreateTransferErrorCode.exceeds_debits:
         return { index, error: TransferError.InsufficientDebitBalance }
       case CreateTransferErrorCode.accounts_have_different_units:
-        return { index, error: TransferError.DifferentAssets }
+        return { index, error: TransferError.DifferentUnits }
       default:
         throw new CreateTransferError(code)
     }

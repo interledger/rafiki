@@ -128,7 +128,7 @@ async function createPeer(
     await deps.accountingService.createAccount({
       id: peer.id,
       asset,
-      type: AccountType.Credit
+      type: AccountType.Liquidity
     })
 
     if (!trx) {

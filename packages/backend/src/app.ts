@@ -21,7 +21,7 @@ import {
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
-import { SendAccountOptions, AccountingService } from './accounting/service'
+import { AccountOptions, AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
 import { AccountService } from './open_payments/account/service'
 import { RatesService } from './rates/service'
@@ -66,7 +66,7 @@ export interface AppServices {
   invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
   outgoingPaymentService: Promise<OutgoingPaymentService>
-  makeIlpPlugin: Promise<(sourceAccount: SendAccountOptions) => IlpPlugin>
+  makeIlpPlugin: Promise<(sourceAccount: AccountOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
 }
 
@@ -134,6 +134,9 @@ export class App {
         process.nextTick(() => this.deactivateInvoice())
       }
     }
+
+    const accountingService = await this.container.use('accountingService')
+    await accountingService.boot()
   }
 
   public listen(port: number | string): void {

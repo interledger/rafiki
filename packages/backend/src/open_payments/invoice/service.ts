@@ -1,9 +1,5 @@
 import { Invoice } from './model'
-import {
-  AccountingService,
-  AccountType,
-  AssetAccount
-} from '../../accounting/service'
+import { AccountingService, AccountType } from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
 import assert from 'assert'
@@ -66,7 +62,10 @@ async function getInvoiceReceiveLimit(
   deps: ServiceDependencies,
   id: string
 ): Promise<bigint | undefined> {
-  return deps.accountingService.getBalance(id)
+  const account = await deps.accountingService.getAccount(id)
+  if (account?.type === AccountType.Receive) {
+    return account.receiveLimit
+  }
 }
 
 async function createInvoice(
@@ -88,31 +87,13 @@ async function createInvoice(
       .withGraphFetched('account.asset')
 
     // Invoice accounts are credited by the amounts received by the invoice.
-    //
-    // Invoice accounts are initially debited by the invoice amount.
     // Credits are restricted such that the invoice cannot receive more than that amount.
-    // The account balance represents the remaining receive limit.
     await deps.accountingService.createAccount({
       id: invoice.id,
-      asset: invoice.account.asset,
-      type: AccountType.Debit
-    })
-
-    const error = await deps.accountingService.createTransfer({
-      sourceAccount: invoice,
-      destinationAccount: {
-        asset: {
-          unit: invoice.account.asset.unit,
-          account: AssetAccount.SendReceive
-        }
-      },
+      type: AccountType.Receive,
       // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
-      amount: amount + POSITIVE_SLIPPAGE
+      receiveLimit: amount + POSITIVE_SLIPPAGE
     })
-    if (error) {
-      deps.logger.error({ error }, 'receive limit setup TigerBeetle error')
-      throw new Error('unable to create invoice, TigerBeetle error')
-    }
 
     if (!trx) {
       await invTrx.commit()

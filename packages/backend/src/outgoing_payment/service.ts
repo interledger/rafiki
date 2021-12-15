@@ -5,8 +5,8 @@ import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import {
   AccountingService,
   AccountType,
-  AssetAccount,
-  SendAccountOptions
+  AccountOptions,
+  RATE_PROBE_ACCOUNT_ID
 } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
@@ -39,7 +39,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   accountService: AccountService
   ratesService: RatesService
-  makeIlpPlugin: (sourceAccount: SendAccountOptions) => IlpPlugin
+  makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
 }
 
 export async function createOutgoingPaymentService(
@@ -112,10 +112,9 @@ async function createOutgoingPayment(
         .withGraphFetched('account.asset')
 
       const plugin = deps.makeIlpPlugin({
-        asset: {
-          ...payment.account.asset,
-          account: AssetAccount.SendReceive
-        }
+        id: RATE_PROBE_ACCOUNT_ID,
+        asset: payment.account.asset,
+        type: AccountType.Send
       })
       await plugin.connect()
       const destination = await Pay.setupPayment({
@@ -138,8 +137,7 @@ async function createOutgoingPayment(
 
       await deps.accountingService.createAccount({
         id: payment.id,
-        asset: payment.account.asset,
-        type: AccountType.Debit
+        type: AccountType.Send
       })
 
       return payment

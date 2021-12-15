@@ -1,4 +1,3 @@
-import assert from 'assert'
 import nock from 'nock'
 import Knex from 'knex'
 import * as Pay from '@interledger/pay'
@@ -18,6 +17,7 @@ import { isTransferError } from '../accounting/errors'
 import {
   AssetAccount,
   AccountingService,
+  RECEIVE_ACCOUNT_ID,
   SendReceiveOptions
 } from '../accounting/service'
 import { AssetOptions } from '../asset/service'
@@ -80,22 +80,13 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   async function payInvoice(amount: bigint): Promise<void> {
-    const trxOrError = await accountingService.sendAndReceive({
-      sourceAccount: {
-        asset: {
-          unit: invoice.account.asset.unit,
-          account: AssetAccount.Settlement
-        }
-      },
-      destinationAccount: {
-        id: invoice.id,
-        asset: invoice.account.asset
-      },
-      sourceAmount: amount,
-      timeout: BigInt(10e9) // 10 seconds
-    })
-    assert.ok(!isTransferError(trxOrError))
-    await expect(trxOrError.commit()).resolves.toBeUndefined()
+    await expect(
+      accountingService.createTransfer({
+        sourceAccount: { id: RECEIVE_ACCOUNT_ID },
+        destinationAccount: invoice,
+        amount
+      })
+    ).resolves.toBeUndefined()
   }
 
   function trackAmountDelivered(sourceAccountId: string): void {
@@ -106,7 +97,7 @@ describe('OutgoingPaymentService', (): void => {
         const trxOrError = await sendAndReceive(options)
         if (
           !isTransferError(trxOrError) &&
-          options.sourceAccount.sentAccountId === sourceAccountId
+          options.sourceAccount.id === sourceAccountId
         ) {
           amtDelivered += options.destinationAmount || options.sourceAmount
         }

@@ -6,7 +6,7 @@ import {
   ILPMiddleware
 } from '../rafiki'
 import { AuthState } from './auth'
-import { AssetAccount } from '../../../accounting/service'
+import { AccountType } from '../../../accounting/service'
 import { validateId } from '../../../shared/utils'
 
 const UUID_LENGTH = 36
@@ -30,28 +30,18 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
             throw new Errors.UnreachableError('destination account is disabled')
           }
           return {
-            asset: {
-              ...invoice.account.asset,
-              account: AssetAccount.Settlement
-            },
-            receivedAccountId: invoice.id,
-            stream: {
-              enabled: true
-            }
+            id: invoice.id,
+            asset: invoice.account.asset,
+            type: AccountType.Receive
           }
         }
         // Open Payments SPSP fallback account
         const spspAccount = await accounts.get(ctx.state.streamDestination)
         if (spspAccount) {
           return {
-            asset: {
-              ...spspAccount.asset,
-              account: AssetAccount.Settlement
-            },
-            receivedAccountId: spspAccount.id,
-            stream: {
-              enabled: true
-            }
+            id: spspAccount.id,
+            asset: spspAccount.asset,
+            type: AccountType.Receive
           }
         }
         return undefined
@@ -61,9 +51,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
       if (peer) {
         return {
           ...peer,
-          stream: {
-            enabled: false
-          }
+          type: AccountType.Liquidity
         }
       }
       if (

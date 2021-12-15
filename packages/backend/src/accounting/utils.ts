@@ -1,6 +1,6 @@
 import { AssetAccount } from './service'
 
-const ASSET_ACCOUNTS_RESERVED = 32
+const ASSET_ACCOUNTS_RESERVED = 8
 
 export interface AccountId {
   id: string

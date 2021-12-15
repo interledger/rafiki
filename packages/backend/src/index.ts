@@ -16,10 +16,7 @@ import { createOutgoingPaymentService } from './outgoing_payment/service'
 import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
-import {
-  SendAccountOptions,
-  createAccountingService
-} from './accounting/service'
+import { AccountOptions, createAccountingService } from './accounting/service'
 import { createPeerService } from './peer/service'
 import { createAccountService } from './open_payments/account/service'
 import { createSPSPRoutes } from './spsp/routes'
@@ -204,7 +201,7 @@ export function initIocContainer(
 
   container.singleton('makeIlpPlugin', async (deps) => {
     const connectorApp = await deps.use('connectorApp')
-    return (sourceAccount: SendAccountOptions): IlpPlugin => {
+    return (sourceAccount: AccountOptions): IlpPlugin => {
       return createIlpPlugin(
         (data: Buffer): Promise<Buffer> => {
           return connectorApp.handleIlpData(sourceAccount, data)
