@@ -11,7 +11,7 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTable, truncateTables } from '../tests/tableManager'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import { LifecycleError } from './lifecycle'
+import { LifecycleError, OutgoingPaymentError } from './errors'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../accounting/errors'
 import {
@@ -760,8 +760,8 @@ describe('OutgoingPaymentService', (): void => {
     )
 
     it('fails when no payment exists', async (): Promise<void> => {
-      await expect(outgoingPaymentService.requote(uuid())).rejects.toThrow(
-        'payment does not exist'
+      await expect(outgoingPaymentService.requote(uuid())).resolves.toEqual(
+        OutgoingPaymentError.UnknownPayment
       )
     })
 
@@ -791,7 +791,7 @@ describe('OutgoingPaymentService', (): void => {
         })
         await expect(
           outgoingPaymentService.requote(payment.id)
-        ).rejects.toThrow(`Cannot quote; payment is in state=${startState}`)
+        ).resolves.toEqual(OutgoingPaymentError.WrongState)
 
         const after = await outgoingPaymentService.get(payment.id)
         expect(after?.state).toBe(startState)
@@ -813,8 +813,8 @@ describe('OutgoingPaymentService', (): void => {
     }, 10_000)
 
     it('fails when no payment exists', async (): Promise<void> => {
-      await expect(outgoingPaymentService.send(uuid())).rejects.toThrow(
-        'payment does not exist'
+      await expect(outgoingPaymentService.send(uuid())).resolves.toEqual(
+        OutgoingPaymentError.UnknownPayment
       )
     })
 
@@ -834,8 +834,8 @@ describe('OutgoingPaymentService', (): void => {
       if (startState === PaymentState.Ready) return
       it(`does not activate a ${startState} payment`, async (): Promise<void> => {
         await payment.$query().patch({ state: startState })
-        await expect(outgoingPaymentService.send(payment.id)).rejects.toThrow(
-          `Cannot send; payment is in state=${startState}`
+        await expect(outgoingPaymentService.send(payment.id)).resolves.toEqual(
+          OutgoingPaymentError.WrongState
         )
 
         const after = await outgoingPaymentService.get(payment.id)
@@ -858,8 +858,8 @@ describe('OutgoingPaymentService', (): void => {
     )
 
     it('fails when no payment exists', async (): Promise<void> => {
-      await expect(outgoingPaymentService.cancel(uuid())).rejects.toThrow(
-        'payment does not exist'
+      await expect(outgoingPaymentService.cancel(uuid())).resolves.toEqual(
+        OutgoingPaymentError.UnknownPayment
       )
     })
 
@@ -881,9 +881,9 @@ describe('OutgoingPaymentService', (): void => {
       if (startState === PaymentState.Ready) return
       it(`does not cancel a ${startState} payment`, async (): Promise<void> => {
         await payment.$query().patch({ state: startState })
-        await expect(outgoingPaymentService.cancel(payment.id)).rejects.toThrow(
-          `Cannot cancel; payment is in state=${startState}`
-        )
+        await expect(
+          outgoingPaymentService.cancel(payment.id)
+        ).resolves.toEqual(OutgoingPaymentError.WrongState)
 
         const after = await outgoingPaymentService.get(payment.id)
         expect(after?.state).toBe(startState)

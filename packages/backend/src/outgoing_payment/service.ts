@@ -1,6 +1,7 @@
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 import { BaseService } from '../shared/baseService'
+import { LifecycleError, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import {
   AccountingService,
@@ -11,15 +12,14 @@ import {
 import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
 import { IlpPlugin } from './ilp_plugin'
-import * as lifecycle from './lifecycle'
 import * as worker from './worker'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
   create(options: CreateOutgoingPaymentOptions): Promise<OutgoingPayment>
-  send(id: string): Promise<OutgoingPayment>
-  cancel(id: string): Promise<OutgoingPayment>
-  requote(id: string): Promise<OutgoingPayment>
+  send(id: string): Promise<OutgoingPayment | OutgoingPaymentError>
+  cancel(id: string): Promise<OutgoingPayment | OutgoingPaymentError>
+  requote(id: string): Promise<OutgoingPayment | OutgoingPaymentError>
   processNext(): Promise<string | undefined>
   getAccountPage(
     accountId: string,
@@ -153,12 +153,12 @@ async function createOutgoingPayment(
 function requotePayment(
   deps: ServiceDependencies,
   id: string
-): Promise<OutgoingPayment> {
+): Promise<OutgoingPayment | OutgoingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
-    if (!payment) throw new Error('payment does not exist')
+    if (!payment) return OutgoingPaymentError.UnknownPayment
     if (payment.state !== PaymentState.Cancelled) {
-      throw new Error(`Cannot quote; payment is in state=${payment.state}`)
+      return OutgoingPaymentError.WrongState
     }
     await payment.$query(trx).patch({ state: PaymentState.Quoting })
     return payment
@@ -168,12 +168,12 @@ function requotePayment(
 async function sendPayment(
   deps: ServiceDependencies,
   id: string
-): Promise<OutgoingPayment> {
+): Promise<OutgoingPayment | OutgoingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
-    if (!payment) throw new Error('payment does not exist')
+    if (!payment) return OutgoingPaymentError.UnknownPayment
     if (payment.state !== PaymentState.Ready) {
-      throw new Error(`Cannot send; payment is in state=${payment.state}`)
+      return OutgoingPaymentError.WrongState
     }
     await payment.$query(trx).patch({ state: PaymentState.Sending })
     return payment
@@ -183,17 +183,17 @@ async function sendPayment(
 async function cancelPayment(
   deps: ServiceDependencies,
   id: string
-): Promise<OutgoingPayment> {
+): Promise<OutgoingPayment | OutgoingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
-    if (!payment) throw new Error('payment does not exist')
+    if (!payment) return OutgoingPaymentError.UnknownPayment
     if (payment.state !== PaymentState.Ready) {
-      throw new Error(`Cannot cancel; payment is in state=${payment.state}`)
+      return OutgoingPaymentError.WrongState
     }
     // TODO: Notify wallet
     await payment.$query(trx).patch({
       state: PaymentState.Cancelled,
-      error: lifecycle.LifecycleError.CancelledByAPI
+      error: LifecycleError.CancelledByAPI
     })
     return payment
   })

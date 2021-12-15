@@ -10,6 +10,10 @@ import {
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
+import {
+  isOutgoingPaymentError,
+  OutgoingPaymentError
+} from '../../outgoing_payment/errors'
 import { OutgoingPayment } from '../../outgoing_payment/model'
 import { ApolloContext } from '../../app'
 
@@ -106,11 +110,19 @@ export const requoteOutgoingPayment: MutationResolvers<ApolloContext>['requoteOu
   )
   return outgoingPaymentService
     .requote(args.paymentId)
-    .then((payment: OutgoingPayment) => ({
-      code: '200',
-      success: true,
-      payment: paymentToGraphql(payment)
-    }))
+    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+      isOutgoingPaymentError(paymentOrErr)
+        ? {
+            code: '400',
+            success: false,
+            message: paymentOrErr
+          }
+        : {
+            code: '200',
+            success: true,
+            payment: paymentToGraphql(paymentOrErr)
+          }
+    )
     .catch((err: Error) => ({
       code: '500',
       success: false,
@@ -128,11 +140,19 @@ export const sendOutgoingPayment: MutationResolvers<ApolloContext>['sendOutgoing
   )
   return outgoingPaymentService
     .send(args.paymentId)
-    .then((payment: OutgoingPayment) => ({
-      code: '200',
-      success: true,
-      payment: paymentToGraphql(payment)
-    }))
+    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+      isOutgoingPaymentError(paymentOrErr)
+        ? {
+            code: '400',
+            success: false,
+            message: paymentOrErr
+          }
+        : {
+            code: '200',
+            success: true,
+            payment: paymentToGraphql(paymentOrErr)
+          }
+    )
     .catch((err: Error) => ({
       code: '500',
       success: false,
@@ -150,11 +170,19 @@ export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutg
   )
   return outgoingPaymentService
     .cancel(args.paymentId)
-    .then((payment: OutgoingPayment) => ({
-      code: '200',
-      success: true,
-      payment: paymentToGraphql(payment)
-    }))
+    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+      isOutgoingPaymentError(paymentOrErr)
+        ? {
+            code: '400',
+            success: false,
+            message: paymentOrErr
+          }
+        : {
+            code: '200',
+            success: true,
+            payment: paymentToGraphql(paymentOrErr)
+          }
+    )
     .catch((err: Error) => ({
       code: '500',
       success: false,

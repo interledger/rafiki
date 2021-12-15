@@ -1,6 +1,7 @@
 import * as knex from 'knex'
 import { ServiceDependencies } from './service'
 import { OutgoingPayment, PaymentState } from './model'
+import { canRetryError, PaymentError } from './errors'
 import * as lifecycle from './lifecycle'
 import { IlpPlugin } from './ilp_plugin'
 import { AccountType, RATE_PROBE_ACCOUNT_ID } from '../accounting/service'
@@ -75,17 +76,14 @@ export async function handlePaymentLifecycle(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  const onError = async (
-    err: Error | lifecycle.PaymentError
-  ): Promise<void> => {
+  const onError = async (err: Error | PaymentError): Promise<void> => {
     const error = typeof err === 'string' ? err : err.message
     const stateAttempts = payment.stateAttempts + 1
 
     if (
       payment.state === PaymentState.Cancelled ||
       payment.state === PaymentState.Completed ||
-      (stateAttempts < maxStateAttempts[payment.state] &&
-        lifecycle.canRetryError(err))
+      (stateAttempts < maxStateAttempts[payment.state] && canRetryError(err))
     ) {
       deps.logger.warn(
         { state: payment.state, error, stateAttempts },

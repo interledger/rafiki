@@ -14,6 +14,7 @@ import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import { OutgoingPaymentService } from '../../outgoing_payment/service'
+import { OutgoingPaymentError } from '../../outgoing_payment/errors'
 import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
@@ -398,6 +399,53 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.payment?.id).toBe(payment.id)
     })
 
+    test.each([
+      [OutgoingPaymentError.UnknownPayment],
+      [OutgoingPaymentError.WrongState]
+    ])(
+      '400 - %s',
+      async (error): Promise<void> => {
+        const spy = jest.spyOn(outgoingPaymentService, 'requote')
+
+        if (error === OutgoingPaymentError.WrongState) {
+          spy.mockImplementation(async (id: string) => {
+            expect(id).toBe(payment.id)
+            return OutgoingPaymentError.WrongState
+          })
+        }
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation RequoteOutgoingPayment($paymentId: String!) {
+                requoteOutgoingPayment(paymentId: $paymentId) {
+                  code
+                  success
+                  message
+                  payment {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              paymentId:
+                error === OutgoingPaymentError.UnknownPayment
+                  ? uuid()
+                  : payment.id
+            }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.requoteOutgoingPayment
+          )
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(query.code).toBe('400')
+        expect(query.success).toBe(false)
+        expect(query.message).toBe(error)
+        expect(query.payment).toBeNull()
+      }
+    )
+
     test('500', async (): Promise<void> => {
       const spy = jest
         .spyOn(outgoingPaymentService, 'requote')
@@ -466,6 +514,52 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.payment?.id).toBe(payment.id)
     })
 
+    test.each([
+      [OutgoingPaymentError.UnknownPayment],
+      [OutgoingPaymentError.WrongState]
+    ])(
+      '400 - %s',
+      async (error): Promise<void> => {
+        const spy = jest.spyOn(outgoingPaymentService, 'send')
+
+        if (error === OutgoingPaymentError.WrongState) {
+          spy.mockImplementation(async (id: string) => {
+            expect(id).toBe(payment.id)
+            return OutgoingPaymentError.WrongState
+          })
+        }
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation SendOutgoingPayment($paymentId: String!) {
+                sendOutgoingPayment(paymentId: $paymentId) {
+                  code
+                  success
+                  message
+                  payment {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              paymentId:
+                error === OutgoingPaymentError.UnknownPayment
+                  ? uuid()
+                  : payment.id
+            }
+          })
+          .then(
+            (query): OutgoingPaymentResponse => query.data?.sendOutgoingPayment
+          )
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(query.code).toBe('400')
+        expect(query.success).toBe(false)
+        expect(query.message).toBe(error)
+        expect(query.payment).toBeNull()
+      }
+    )
+
     test('500', async (): Promise<void> => {
       const spy = jest
         .spyOn(outgoingPaymentService, 'send')
@@ -533,6 +627,53 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.message).toBeNull()
       expect(query.payment?.id).toBe(payment.id)
     })
+
+    test.each([
+      [OutgoingPaymentError.UnknownPayment],
+      [OutgoingPaymentError.WrongState]
+    ])(
+      '400 - %s',
+      async (error): Promise<void> => {
+        const spy = jest.spyOn(outgoingPaymentService, 'cancel')
+
+        if (error === OutgoingPaymentError.WrongState) {
+          spy.mockImplementation(async (id: string) => {
+            expect(id).toBe(payment.id)
+            return OutgoingPaymentError.WrongState
+          })
+        }
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CancelOutgoingPayment($paymentId: String!) {
+                cancelOutgoingPayment(paymentId: $paymentId) {
+                  code
+                  success
+                  message
+                  payment {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              paymentId:
+                error === OutgoingPaymentError.UnknownPayment
+                  ? uuid()
+                  : payment.id
+            }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.cancelOutgoingPayment
+          )
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(query.code).toBe('400')
+        expect(query.success).toBe(false)
+        expect(query.message).toBe(error)
+        expect(query.payment).toBeNull()
+      }
+    )
 
     test('500', async (): Promise<void> => {
       const spy = jest
