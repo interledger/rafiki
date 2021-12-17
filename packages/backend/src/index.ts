@@ -245,6 +245,7 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       accountService: await deps.use('accountService'),
+      mandateService: await deps.use('mandateService'),
       ratesService: await deps.use('ratesService'),
       webhookService: await deps.use('webhookService')
     })

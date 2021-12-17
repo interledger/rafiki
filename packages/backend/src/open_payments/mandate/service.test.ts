@@ -39,15 +39,17 @@ describe('Mandate Service', (): void => {
   const mockMessageProducer = {
     send: jest.fn()
   }
-  const { code: assetCode, scale: assetScale } = randomAsset()
+  const { code: assetCode } = randomAsset()
+  const assetScale = 2
   const prices = {
-    [assetCode]: 1.0
+    [assetCode]: 2.0
   }
   const amount = BigInt(100)
 
   beforeAll(
     async (): Promise<void> => {
       Config.pricesUrl = 'https://test.prices'
+      Config.pricesLifetime = 0
       nock(Config.pricesUrl)
         .get('/')
         .reply(200, () => prices)
@@ -68,9 +70,11 @@ describe('Mandate Service', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      const asset = randomAsset()
-      accountId = (await accountService.create({ asset })).id
-      prices[asset.code] = 2.0
+      // mandate asset/account asset: 5.0
+      const { code } = randomAsset()
+      const scale = 1
+      accountId = (await accountService.create({ asset: { code, scale } })).id
+      prices[code] = 1.0
     }
   )
 
@@ -389,6 +393,89 @@ describe('Mandate Service', (): void => {
         RevokeError.AlreadyRevoked
       )
       await expect(mandateService.get(mandate.id)).resolves.toEqual(revoked)
+    })
+  })
+
+  describe('charge', (): void => {
+    let mandate: Mandate
+
+    beforeEach(
+      async (): Promise<void> => {
+        mandate = (await mandateService.create({
+          accountId,
+          amount,
+          assetCode,
+          assetScale
+        })) as Mandate
+        assert.ok(!isCreateError(mandate))
+      }
+    )
+
+    test('Deducts converted amount from mandate balance', async (): Promise<void> => {
+      await expect(
+        mandateService.charge(mandate.id, mandate.amount)
+      ).resolves.toMatchObject({
+        balance: BigInt(0)
+      })
+      await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+        balance: BigInt(0)
+      })
+    })
+
+    test('Returns undefined for unknown mandate', async (): Promise<void> => {
+      await expect(
+        mandateService.charge(uuid(), mandate.amount)
+      ).resolves.toBeUndefined()
+    })
+
+    test('Returns undefined for insufficient mandate balance', async (): Promise<void> => {
+      await expect(
+        mandateService.charge(mandate.id, mandate.amount + 1n)
+      ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('refund', (): void => {
+    let mandate: Mandate
+
+    beforeEach(
+      async (): Promise<void> => {
+        mandate = (await mandateService.create({
+          accountId,
+          amount,
+          assetCode,
+          assetScale
+        })) as Mandate
+        assert.ok(!isCreateError(mandate))
+        await mandate.$query(knex).patch({
+          balance: BigInt(0)
+        })
+      }
+    )
+
+    test('Refunds amount to mandate balance', async (): Promise<void> => {
+      await expect(
+        mandateService.refund(mandate.id, mandate.amount)
+      ).resolves.toMatchObject({
+        balance: mandate.amount
+      })
+      await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+        balance: mandate.amount
+      })
+    })
+
+    test('Limits refund by mandate amount', async (): Promise<void> => {
+      await expect(
+        mandateService.refund(mandate.id, mandate.amount + 1n)
+      ).resolves.toMatchObject({
+        balance: mandate.amount
+      })
+    })
+
+    test('Returns undefined for unknown mandate', async (): Promise<void> => {
+      await expect(
+        mandateService.refund(uuid(), mandate.amount)
+      ).resolves.toBeUndefined()
     })
   })
 

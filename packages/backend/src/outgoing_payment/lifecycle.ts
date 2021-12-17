@@ -4,6 +4,8 @@ import { LifecycleError } from './errors'
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
+import { isRateError } from '../rates/service'
+import { convert } from '../rates/util'
 import { EventType } from '../webhook/service'
 
 const MAX_INT64 = BigInt('9223372036854775807')
@@ -96,6 +98,49 @@ export async function handleQuoting(
     deps.logger.warn('quote invoice already paid')
     await handleCompleted(deps, payment, amountSent)
     return
+  }
+
+  if (payment.mandateId) {
+    if (!payment.mandate) throw LifecycleError.MissingMandate
+    // Charge the mandate minDeliveryAmount if the mandate and destination have the same asset
+    // Otherwise, convert maxSourceAmount
+    const destinationAsset =
+      payment.mandate.assetCode === payment.destinationAccount.code
+    const sourceAmount = destinationAsset
+      ? quote.minDeliveryAmount
+      : quote.maxSourceAmount
+    const sourceAsset = destinationAsset
+      ? payment.destinationAccount
+      : payment.account.asset
+    const rateOrError = await deps.ratesService.getRate({
+      sourceAssetCode: sourceAsset.code,
+      destinationAssetCode: payment.mandate.assetCode
+    })
+    if (isRateError(rateOrError)) {
+      throw rateOrError
+    }
+    const chargeAmount = convert({
+      exchangeRate: rateOrError,
+      sourceAmount,
+      sourceAsset,
+      destinationAsset: {
+        code: payment.mandate.assetCode,
+        scale: payment.mandate.assetScale
+      }
+    })
+    const mandate = await deps.mandateService.charge(
+      payment.mandateId,
+      chargeAmount,
+      deps.knex
+    )
+    if (!mandate) {
+      throw LifecycleError.InsufficientMandate
+    }
+    await payment.$query(deps.knex).patch({
+      mandateExchangeRate: rateOrError,
+      mandateRefundDeadline: mandate.processAt
+    })
+    payment.mandate = mandate
   }
 
   const balance = await deps.accountingService.getBalance(payment.id)
@@ -328,6 +373,10 @@ export async function handleCancelled(
     throw LifecycleError.MissingBalance
   }
 
+  if (error !== LifecycleError.InsufficientMandate) {
+    await refundMandate(deps, payment, amountSent)
+  }
+
   await deps.webhookService.send({
     type: EventType.PaymentCancelled,
     payment,
@@ -344,9 +393,67 @@ const handleCompleted = async (
     state: PaymentState.Completed
   })
 
+  await refundMandate(deps, payment, amountSent)
+
   await deps.webhookService.send({
     type: EventType.PaymentCompleted,
     payment,
     amountSent
   })
+}
+
+const refundMandate = async (
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  amountSent: bigint
+): Promise<void> => {
+  // Refund mandate with unsent charged amount
+  if (payment.mandateId && payment.mandateExchangeRate) {
+    if (
+      !payment.mandateRefundDeadline ||
+      payment.mandateRefundDeadline >= new Date()
+    ) {
+      if (!payment.mandate) throw LifecycleError.MissingMandate
+      if (!payment.quote) throw LifecycleError.MissingQuote
+      const destinationAsset =
+        payment.mandate.assetCode === payment.destinationAccount.code
+      const amountSentSinceQuote = amountSent - payment.quote.amountSent
+      let sourceAmount: bigint
+      if (destinationAsset) {
+        // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
+        // eslint-disable-next-line no-case-declarations
+        const amountDeliveredSinceQuote = BigInt(
+          Math.ceil(
+            +amountSentSinceQuote.toString() *
+              payment.quote.minExchangeRate.valueOf()
+          )
+        )
+        sourceAmount =
+          payment.quote.minDeliveryAmount - amountDeliveredSinceQuote
+      } else {
+        sourceAmount = payment.quote.maxSourceAmount - amountSentSinceQuote
+      }
+      if (sourceAmount > BigInt(0)) {
+        const sourceAsset = destinationAsset
+          ? payment.destinationAccount
+          : payment.account.asset
+        const refundAmount = convert({
+          exchangeRate: payment.mandateExchangeRate,
+          sourceAmount,
+          sourceAsset,
+          destinationAsset: {
+            code: payment.mandate.assetCode,
+            scale: payment.mandate.assetScale
+          }
+        })
+        const mandate = await deps.mandateService.refund(
+          payment.mandateId,
+          refundAmount,
+          deps.knex
+        )
+        if (!mandate) throw LifecycleError.MissingMandate
+        payment.mandate = mandate
+      }
+    }
+  }
 }

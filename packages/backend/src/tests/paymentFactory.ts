@@ -1,6 +1,7 @@
 import { IocContract } from '@adonisjs/fold'
 import * as Pay from '@interledger/pay'
 import assert from 'assert'
+import { v4 as uuid } from 'uuid'
 
 import { randomAsset } from './asset'
 import { AppServices } from '../app'
@@ -14,28 +15,37 @@ export class PaymentFactory {
   public async build(
     options: Partial<CreateOutgoingPaymentOptions> = {}
   ): Promise<OutgoingPayment> {
-    const accountService = await this.deps.use('accountService')
-    const accountId =
-      options.accountId ||
-      (
-        await accountService.create({
-          asset: randomAsset()
-        })
-      ).id
-
     let paymentOptions: CreateOutgoingPaymentOptions
 
-    if (options.invoiceUrl) {
+    if (options.mandateId) {
+      const config = await this.deps.use('config')
       paymentOptions = {
-        accountId,
-        invoiceUrl: options.invoiceUrl
+        mandateId: options.mandateId,
+        invoiceUrl:
+          options.invoiceUrl || `${config.publicHost}/invoices/${uuid()}`
       }
     } else {
-      paymentOptions = {
-        accountId,
-        paymentPointer:
-          options.paymentPointer || 'http://wallet2.example/paymentpointer/bob',
-        amountToSend: options.amountToSend || BigInt(123)
+      const accountService = await this.deps.use('accountService')
+      const accountId =
+        options.accountId ||
+        (
+          await accountService.create({
+            asset: randomAsset()
+          })
+        ).id
+      if (options.invoiceUrl) {
+        paymentOptions = {
+          accountId,
+          invoiceUrl: options.invoiceUrl
+        }
+      } else {
+        paymentOptions = {
+          accountId,
+          paymentPointer:
+            options.paymentPointer ||
+            'http://wallet2.example/paymentpointer/bob',
+          amountToSend: options.amountToSend || BigInt(123)
+        }
       }
     }
 

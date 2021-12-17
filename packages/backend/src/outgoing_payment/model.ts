@@ -1,6 +1,7 @@
 import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
 import { Account } from '../open_payments/account/model'
+import { Mandate } from '../open_payments/mandate/model'
 import { BaseModel } from '../shared/baseModel'
 
 const fieldPrefixes = ['intent', 'quote', 'destinationAccount', 'outcome']
@@ -57,6 +58,10 @@ export class OutgoingPayment extends BaseModel {
   // Open payments account id of the sender
   public accountId!: string
   public account!: Account
+  public mandateId?: string
+  mandateExchangeRate?: number
+  mandateRefundDeadline?: Date | null
+  public mandate?: Mandate
   public destinationAccount!: {
     scale: number
     code: string
@@ -70,6 +75,14 @@ export class OutgoingPayment extends BaseModel {
       join: {
         from: 'outgoingPayments.accountId',
         to: 'accounts.id'
+      }
+    },
+    mandate: {
+      relation: Model.BelongsToOneRelation,
+      modelClass: Mandate,
+      join: {
+        from: 'outgoingPayments.mandateId',
+        to: 'mandates.id'
       }
     }
   }

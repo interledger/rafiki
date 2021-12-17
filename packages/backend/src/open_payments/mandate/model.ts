@@ -30,4 +30,12 @@ export class Mandate extends BaseModel {
   public balance!: bigint
   public revoked!: boolean
   public processAt?: Date | null
+
+  public isActive(): boolean {
+    return (
+      !this.revoked &&
+      (!this.startAt || this.startAt <= new Date()) &&
+      (!this.expiresAt || this.expiresAt > new Date())
+    )
+  }
 }

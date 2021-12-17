@@ -68,7 +68,7 @@ export async function getPendingPayment(
         .where('state', PaymentState.Funding)
         .andWhere('quoteActivationDeadline', '<', now)
     })
-    .withGraphFetched('account.asset')
+    .withGraphFetched('[account.asset, mandate]')
   return payments[0]
 }
 

@@ -1,6 +1,7 @@
 import * as Pay from '@interledger/pay'
 
 export enum CreateError {
+  InvalidMandate = 'InvalidMandate',
   UnknownAccount = 'UnknownAccount',
   UnknownMandate = 'UnknownMandate'
 }
@@ -22,6 +23,7 @@ export type PaymentError = LifecycleError | Pay.PaymentError
 
 export enum LifecycleError {
   QuoteExpired = 'QuoteExpired',
+  InsufficientMandate = 'InsufficientMandate',
   // Rate fetch failed.
   PricesUnavailable = 'PricesUnavailable',
   // Payment aborted via "cancel payment" API call.
@@ -31,6 +33,7 @@ export enum LifecycleError {
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
   MissingBalance = 'MissingBalance',
+  MissingMandate = 'MissingMandate',
   MissingQuote = 'MissingQuote',
   MissingInvoice = 'MissingInvoice',
   InvalidRatio = 'InvalidRatio'

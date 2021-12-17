@@ -331,6 +331,11 @@ export function paymentToGraphql(
 const createErrorToResponse: {
   [key in CreateError]: OutgoingPaymentResponse
 } = {
+  [CreateError.InvalidMandate]: {
+    code: '409',
+    message: 'Invalid mandate',
+    success: false
+  },
   [CreateError.UnknownAccount]: {
     code: '404',
     message: 'Unknown account',

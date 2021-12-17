@@ -1,5 +1,5 @@
 import { parse, end } from 'iso8601-duration'
-import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import { ForeignKeyViolationError, TransactionOrKnex, raw } from 'objection'
 
 import { CreateError, RevokeError } from './errors'
 import { Mandate } from './model'
@@ -26,6 +26,16 @@ export interface MandateService {
   ): Promise<Mandate[]>
   processNext(): Promise<string | undefined>
   revoke(id: string): Promise<Mandate | RevokeError>
+  charge(
+    id: string,
+    amount: bigint,
+    trx?: TransactionOrKnex
+  ): Promise<Mandate | undefined>
+  refund(
+    id: string,
+    amount: bigint,
+    trx?: TransactionOrKnex
+  ): Promise<Mandate | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -49,7 +59,9 @@ export async function createMandateService(
     getAccountMandatesPage: (accountId, pagination) =>
       getAccountMandatesPage(deps, accountId, pagination),
     processNext: () => processNextMandate(deps),
-    revoke: (id) => revokeMandate(deps, id)
+    revoke: (id) => revokeMandate(deps, id),
+    charge: (id, amount, trx) => chargeMandate(deps, id, amount, trx),
+    refund: (id, amount, trx) => refundMandate(deps, id, amount, trx)
   }
 }
 
@@ -170,6 +182,50 @@ async function revokeMandate(
       balance: BigInt(0)
     })
     return mandate
+  })
+}
+
+async function chargeMandate(
+  deps: ServiceDependencies,
+  id: string,
+  amount: bigint,
+  trx?: TransactionOrKnex
+): Promise<Mandate | undefined> {
+  return await Mandate.query(trx || deps.knex)
+    .forUpdate()
+    .where('id', id)
+    .andWhere('balance', '>=', amount.toString())
+    .patch({ balance: raw(`balance - ${amount.toString()}`) })
+    .returning('*')
+    .first()
+}
+
+async function refundMandate(
+  deps: ServiceDependencies,
+  id: string,
+  amount: bigint,
+  trx?: TransactionOrKnex
+): Promise<Mandate | undefined> {
+  const knex = trx || deps.knex
+  return await knex.transaction(async (trx) => {
+    const mandate = await Mandate.query(trx)
+      .findById(id)
+      .forUpdate()
+      .withGraphFetched('account.asset')
+    if (mandate) {
+      let newBalance = mandate.balance + amount
+      if (newBalance > mandate.amount) {
+        deps.logger.warn(
+          { mandate: mandate.id },
+          'refund exceeds mandate balance limit'
+        )
+        newBalance = mandate.amount
+      }
+      await mandate.$query(trx).patch({
+        balance: newBalance
+      })
+      return mandate
+    }
   })
 }
 

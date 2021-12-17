@@ -5,7 +5,7 @@ import * as Pay from '@interledger/pay'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
-import { OutgoingPaymentService } from './service'
+import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { IAppConfig, Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -25,7 +25,10 @@ import { isTransferError } from '../accounting/errors'
 import { AccountingService, TransferOptions } from '../accounting/service'
 import { AssetOptions } from '../asset/service'
 import { Invoice } from '../open_payments/invoice/model'
-import { RatesService } from '../rates/service'
+import { isCreateError as isCreateMandateError } from '../open_payments/mandate/errors'
+import { Mandate } from '../open_payments/mandate/model'
+import { MandateService } from '../open_payments/mandate/service'
+import { isRateError, RatesService } from '../rates/service'
 import { EventType } from '../webhook/service'
 
 describe('OutgoingPaymentService', (): void => {
@@ -34,6 +37,7 @@ describe('OutgoingPaymentService', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let ratesService: RatesService
   let accountingService: AccountingService
+  let mandateService: MandateService
   let paymentFactory: PaymentFactory
   let knex: Knex
   let accountId: string
@@ -190,12 +194,14 @@ describe('OutgoingPaymentService', (): void => {
         .get('/')
         .reply(200, () => ({
           USD: 1.0, // base
-          XRP: 2.0
+          XRP: 2.0,
+          EUR: 0.8 // for mandates
         }))
         .persist()
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       accountingService = await deps.use('accountingService')
+      mandateService = await deps.use('mandateService')
       ratesService = await deps.use('ratesService')
       paymentFactory = new PaymentFactory(deps)
 
@@ -264,6 +270,20 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe('create', (): void => {
+    let mandate: Mandate
+
+    beforeEach(
+      async (): Promise<void> => {
+        mandate = (await mandateService.create({
+          accountId,
+          amount: BigInt(100),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        })) as Mandate
+        assert.ok(!isCreateMandateError(mandate))
+      }
+    )
+
     it('creates an OutgoingPayment (FixedSend)', async () => {
       const payment = await outgoingPaymentService.create({
         accountId,
@@ -316,6 +336,25 @@ describe('OutgoingPaymentService', (): void => {
       expect(payment2.id).toEqual(payment.id)
     })
 
+    it('creates an OutgoingPayment (Mandate Charge)', async () => {
+      const payment = await outgoingPaymentService.create({
+        mandateId: mandate.id,
+        invoiceUrl
+      })
+      assert.ok(!isCreateError(payment))
+      expect(payment.state).toEqual(PaymentState.Quoting)
+      expect(payment.intent).toEqual({
+        invoiceUrl
+      })
+      expect(payment.accountId).toBe(accountId)
+      expect(payment.mandateId).toBe(mandate.id)
+      await expectOutcome(payment, { accountBalance: BigInt(0) })
+
+      await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
+        payment
+      )
+    })
+
     it('fails to create with nonexistent account', async () => {
       await expect(
         outgoingPaymentService.create({
@@ -324,6 +363,47 @@ describe('OutgoingPaymentService', (): void => {
           amountToSend: BigInt(123)
         })
       ).resolves.toEqual(CreateError.UnknownAccount)
+    })
+
+    it('fails to create with nonexistent mandate', async () => {
+      await expect(
+        outgoingPaymentService.create({
+          mandateId: uuid(),
+          invoiceUrl
+        })
+      ).resolves.toEqual(CreateError.UnknownMandate)
+    })
+
+    it('fails to create with revoked mandate', async () => {
+      await mandateService.revoke(mandate.id)
+      await expect(
+        outgoingPaymentService.create({
+          mandateId: mandate.id,
+          invoiceUrl
+        })
+      ).resolves.toEqual(CreateError.InvalidMandate)
+    })
+
+    it('fails to create with expired mandate', async () => {
+      await mandate.$query(knex).patch({ expiresAt: new Date(Date.now() - 1) })
+      await expect(
+        outgoingPaymentService.create({
+          mandateId: mandate.id,
+          invoiceUrl
+        })
+      ).resolves.toEqual(CreateError.InvalidMandate)
+    })
+
+    it('fails to create with inactive mandate', async () => {
+      await mandate
+        .$query(knex)
+        .patch({ startAt: new Date(Date.now() + 30_000) })
+      await expect(
+        outgoingPaymentService.create({
+          mandateId: mandate.id,
+          invoiceUrl
+        })
+      ).resolves.toEqual(CreateError.InvalidMandate)
     })
   })
 
@@ -386,6 +466,116 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(
           0.500000000001
         )
+      })
+
+      it('Funding (mandate charge, source asset)', async (): Promise<void> => {
+        const mandate = await mandateService.create({
+          accountId,
+          amount: BigInt(200),
+          assetCode: asset.code,
+          assetScale: asset.scale,
+          interval: 'P1M'
+        })
+        assert.ok(!isCreateMandateError(mandate))
+
+        const { id: paymentId } = await paymentFactory.build({
+          mandateId: mandate.id,
+          invoiceUrl
+        })
+        const payment = await processNext(paymentId, PaymentState.Funding)
+        expect(payment.mandateExchangeRate?.valueOf()).toBe(1.0)
+        expect(payment.mandateRefundDeadline).toStrictEqual(mandate.processAt)
+        assert.ok(payment.quote?.maxSourceAmount)
+        const expectedBalance = mandate.balance - payment.quote?.maxSourceAmount
+        expect(payment.mandate?.balance).toEqual(expectedBalance)
+        await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+          balance: expectedBalance
+        })
+      })
+
+      it('Funding (mandate charge, destination asset)', async (): Promise<void> => {
+        const mandate = await mandateService.create({
+          accountId,
+          amount: invoice.amount,
+          assetCode: invoice.account.asset.code,
+          assetScale: invoice.account.asset.scale,
+          interval: 'P1M'
+        })
+        assert.ok(!isCreateMandateError(mandate))
+
+        const { id: paymentId } = await paymentFactory.build({
+          mandateId: mandate.id,
+          invoiceUrl
+        })
+        const payment = await processNext(paymentId, PaymentState.Funding)
+        expect(payment.mandateExchangeRate?.valueOf()).toBe(1.0)
+        expect(payment.mandateRefundDeadline).toStrictEqual(mandate.processAt)
+        assert.ok(payment.quote?.minDeliveryAmount)
+        const expectedBalance =
+          mandate.balance - payment.quote?.minDeliveryAmount
+        expect(payment.mandate?.balance).toEqual(expectedBalance)
+        await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+          balance: expectedBalance
+        })
+      })
+
+      it('Funding (mandate charge, arbitrary asset)', async (): Promise<void> => {
+        const mandate = await mandateService.create({
+          accountId,
+          amount: BigInt(200),
+          assetCode: 'EUR',
+          assetScale: asset.scale,
+          interval: 'P1M'
+        })
+        assert.ok(!isCreateMandateError(mandate))
+
+        const { id: paymentId } = await paymentFactory.build({
+          mandateId: mandate.id,
+          invoiceUrl
+        })
+        const payment = await processNext(paymentId, PaymentState.Funding)
+        assert.ok(payment.quote?.maxSourceAmount)
+        const exchangeRate = await ratesService.getRate({
+          sourceAssetCode: asset.code,
+          destinationAssetCode: mandate.assetCode
+        })
+        assert.ok(!isRateError(exchangeRate))
+        expect(payment.mandateExchangeRate).toBe(exchangeRate)
+        expect(payment.mandateRefundDeadline).toStrictEqual(mandate.processAt)
+        const expectedBalance =
+          mandate.balance -
+          BigInt(Math.floor(+payment.quote.maxSourceAmount.toString() / 0.8))
+        expect(payment.mandate?.balance).toEqual(expectedBalance)
+        await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+          balance: expectedBalance
+        })
+      })
+
+      it('Cancelled (insufficient mandate balance)', async (): Promise<void> => {
+        const mandate = await mandateService.create({
+          accountId,
+          amount: invoice.amount - BigInt(1),
+          assetCode: invoice.account.asset.code,
+          assetScale: invoice.account.asset.scale,
+          interval: 'P1M'
+        })
+        assert.ok(!isCreateMandateError(mandate))
+
+        const { id: paymentId } = await paymentFactory.build({
+          mandateId: mandate.id,
+          invoiceUrl
+        })
+        const refundSpy = jest.spyOn(mandateService, 'refund')
+        const payment = await processNext(
+          paymentId,
+          PaymentState.Cancelled,
+          LifecycleError.InsufficientMandate
+        )
+        // Cancelling for insufficient mandate doesn't attempt to refund mandate
+        // because the mandate is not charged. (It also avoids a deadlock)
+        expect(refundSpy).not.toHaveBeenCalled()
+        expect(payment.mandate?.balance).toEqual(mandate.balance)
+        await expect(mandateService.get(mandate.id)).resolves.toEqual(mandate)
       })
 
       it('Quoting (rate service error)', async (): Promise<void> => {
@@ -521,10 +711,17 @@ describe('OutgoingPaymentService', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          const { id: paymentId } = await paymentFactory.build({
+          const mandate = await mandateService.create({
             accountId,
-            paymentPointer,
-            amountToSend: BigInt(123)
+            amount: invoice.amount,
+            assetCode: invoice.account.asset.code,
+            assetScale: invoice.account.asset.scale
+          })
+          assert.ok(!isCreateMandateError(mandate))
+
+          const { id: paymentId } = await paymentFactory.build({
+            invoiceUrl,
+            mandateId: mandate.id
           })
           payment = await processNext(paymentId, PaymentState.Funding)
         }
@@ -542,11 +739,25 @@ describe('OutgoingPaymentService', (): void => {
           })
         })
 
+        const refundSpy = jest.spyOn(mandateService, 'refund')
         await processNext(
           payment.id,
           PaymentState.Cancelled,
           LifecycleError.QuoteExpired
         )
+
+        assert.ok(payment.mandate && payment.quote)
+        expect(refundSpy).toHaveBeenCalledTimes(1)
+        expect(refundSpy).toHaveBeenCalledWith(
+          payment.mandate.id,
+          payment.quote.minDeliveryAmount,
+          expect.anything()
+        )
+        await expect(
+          mandateService.get(payment.mandate.id)
+        ).resolves.toMatchObject({
+          balance: payment.mandate.amount
+        })
       })
 
       it('Funding (waiting to send)', async (): Promise<void> => {
@@ -569,11 +780,24 @@ describe('OutgoingPaymentService', (): void => {
         }
       )
 
-      async function setup(opts: PaymentIntent): Promise<string> {
-        const { id: paymentId } = await paymentFactory.build({
-          accountId,
-          ...opts
-        })
+      async function setup(
+        opts: PaymentIntent,
+        mandateId?: string
+      ): Promise<string> {
+        let options: CreateOutgoingPaymentOptions
+        if (mandateId) {
+          assert.ok(opts.invoiceUrl)
+          options = {
+            mandateId,
+            ...opts
+          }
+        } else {
+          options = {
+            accountId,
+            ...opts
+          }
+        }
+        const { id: paymentId } = await paymentFactory.build(options)
 
         trackAmountDelivered(paymentId)
 
@@ -640,6 +864,36 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
+      it('Completed (mandate charge)', async (): Promise<void> => {
+        const mandate = await mandateService.create({
+          accountId,
+          amount: invoice.amount,
+          assetCode: invoice.account.asset.code,
+          assetScale: invoice.account.asset.scale
+        })
+        assert.ok(!isCreateMandateError(mandate))
+        const paymentId = await setup(
+          {
+            invoiceUrl
+          },
+          mandate.id
+        )
+        const payment = await processNext(paymentId, PaymentState.Completed)
+        if (!payment.quote) throw 'no quote'
+        const amountSent = invoice.amount * BigInt(2)
+        await expectOutcome(payment, {
+          accountBalance: payment.quote.maxSourceAmount - amountSent,
+          amountSent,
+          amountDelivered: invoice.amount,
+          invoiceReceived: invoice.amount
+        })
+        const expectedBalance = mandate.balance - invoice.amount
+        expect(payment.mandate?.balance).toEqual(expectedBalance)
+        await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+          balance: expectedBalance
+        })
+      })
+
       it('Sending (partial payment then retryable Pay error)', async (): Promise<void> => {
         mockPay(
           {
@@ -701,6 +955,125 @@ describe('OutgoingPaymentService', (): void => {
           accountBalance: BigInt(123 - 10),
           amountSent: BigInt(10),
           amountDelivered: BigInt(5)
+        })
+      })
+
+      it.each`
+        assetCode | refundAmount   | balanceDiff   | description
+        ${'USD'}  | ${BigInt(104)} | ${BigInt(10)} | ${'source asset'}
+        ${'XRP'}  | ${BigInt(51)}  | ${BigInt(5)}  | ${'destination asset'}
+        ${'EUR'}  | ${BigInt(130)} | ${BigInt(12)} | ${'arbitrary asset'}
+      `(
+        'Cancelled (mandate charge refunded, $description)',
+        async ({ assetCode, refundAmount, balanceDiff }): Promise<void> => {
+          const mandate = await mandateService.create({
+            accountId,
+            amount: BigInt(200),
+            assetCode,
+            assetScale: asset.scale
+          })
+          assert.ok(!isCreateMandateError(mandate))
+          const paymentId = await setup(
+            {
+              invoiceUrl
+            },
+            mandate.id
+          )
+          mockPay(
+            {
+              maxSourceAmount: BigInt(10),
+              minDeliveryAmount: BigInt(5)
+            },
+            Pay.PaymentError.ReceiverProtocolViolation
+          )
+          const refundSpy = jest.spyOn(mandateService, 'refund')
+          const payment = await processNext(
+            paymentId,
+            PaymentState.Cancelled,
+            Pay.PaymentError.ReceiverProtocolViolation
+          )
+          if (!payment.quote) throw 'no quote'
+          await expectOutcome(payment, {
+            accountBalance: payment.quote.maxSourceAmount - BigInt(10),
+            amountSent: BigInt(10),
+            amountDelivered: BigInt(5)
+          })
+          if (assetCode === asset.code) {
+            expect(refundAmount).toEqual(
+              payment.quote.maxSourceAmount - BigInt(10)
+            )
+          } else if (assetCode === invoice.account.asset.code) {
+            expect(refundAmount).toEqual(
+              payment.quote.minDeliveryAmount - BigInt(5)
+            )
+          } else {
+            expect(refundAmount).toEqual(
+              BigInt(
+                Math.floor(
+                  (+payment.quote.maxSourceAmount.toString() - 10) / 0.8
+                )
+              )
+            )
+            expect(balanceDiff).toEqual(BigInt(Math.floor(10 / 0.8)))
+          }
+          expect(refundSpy).toHaveBeenCalledTimes(1)
+          expect(refundSpy).toHaveBeenCalledWith(
+            mandate.id,
+            refundAmount,
+            expect.anything()
+          )
+          const expectedBalance = mandate.balance - balanceDiff
+          expect(payment.mandate?.balance).toEqual(expectedBalance)
+          await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+            balance: expectedBalance
+          })
+        }
+      )
+
+      it('Cancelled (mandate charge past refund deadline)', async (): Promise<void> => {
+        const mandate = await mandateService.create({
+          accountId,
+          amount: invoice.amount,
+          assetCode: invoice.account.asset.code,
+          assetScale: invoice.account.asset.scale,
+          interval: 'P1M'
+        })
+        assert.ok(!isCreateMandateError(mandate))
+        const paymentId = await setup(
+          {
+            invoiceUrl
+          },
+          mandate.id
+        )
+        mockPay(
+          {
+            maxSourceAmount: BigInt(10),
+            minDeliveryAmount: BigInt(5)
+          },
+          Pay.PaymentError.ReceiverProtocolViolation
+        )
+        const refundSpy = jest.spyOn(mandateService, 'refund')
+        await OutgoingPayment.query(knex)
+          .findById(paymentId)
+          .patch({ mandateRefundDeadline: new Date() })
+        const payment = await processNext(
+          paymentId,
+          PaymentState.Cancelled,
+          Pay.PaymentError.ReceiverProtocolViolation
+        )
+        if (!payment.quote) throw 'no quote'
+        await expectOutcome(payment, {
+          accountBalance: payment.quote.maxSourceAmount - BigInt(10),
+          amountSent: BigInt(10),
+          amountDelivered: BigInt(5)
+        })
+        expect(refundSpy).not.toHaveBeenCalled()
+        // Under normal circumstances, the mandate balance would have refilled at the start of the new interval
+        const expectedBalance =
+          mandate.balance - payment.quote.minDeliveryAmount
+        expect(payment.mandate?.balance).toEqual(expectedBalance)
+        await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+          balance: expectedBalance
         })
       })
 
@@ -929,17 +1302,6 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe('cancel', (): void => {
-    let payment: OutgoingPayment
-    beforeEach(
-      async (): Promise<void> => {
-        payment = await paymentFactory.build({
-          accountId,
-          paymentPointer,
-          amountToSend: BigInt(123)
-        })
-      }
-    )
-
     it('fails when no payment exists', async (): Promise<void> => {
       await expect(outgoingPaymentService.cancel(uuid())).resolves.toEqual(
         OutgoingPaymentError.UnknownPayment
@@ -947,6 +1309,11 @@ describe('OutgoingPaymentService', (): void => {
     })
 
     it('cancels a Funding payment', async (): Promise<void> => {
+      const payment = await paymentFactory.build({
+        accountId,
+        paymentPointer,
+        amountToSend: BigInt(123)
+      })
       await payment.$query().patch({ state: PaymentState.Funding })
       const scope = mockWebhookServer(payment.id, PaymentState.Cancelled)
       assert.ok(scope)
@@ -963,9 +1330,99 @@ describe('OutgoingPaymentService', (): void => {
       expect(after?.error).toBe('CancelledByAPI')
     })
 
+    it.each`
+      assetCode | refundAmount   | description
+      ${'USD'}  | ${BigInt(114)} | ${'source asset'}
+      ${'XRP'}  | ${BigInt(56)}  | ${'destination asset'}
+      ${'EUR'}  | ${BigInt(142)} | ${'arbitrary asset'}
+    `(
+      'refunds $description mandate charge',
+      async ({ assetCode, refundAmount }): Promise<void> => {
+        const mandate = await mandateService.create({
+          accountId,
+          amount: BigInt(200),
+          assetCode,
+          assetScale: asset.scale
+        })
+        assert.ok(!isCreateMandateError(mandate))
+        const payment = await paymentFactory.build({
+          mandateId: mandate.id,
+          invoiceUrl
+        })
+        await processNext(payment.id, PaymentState.Funding)
+
+        const refundSpy = jest.spyOn(mandateService, 'refund')
+        const scope = mockWebhookServer(payment.id, PaymentState.Cancelled)
+        assert.ok(scope)
+        await expect(
+          outgoingPaymentService.cancel(payment.id)
+        ).resolves.toMatchObject({
+          id: payment.id,
+          state: PaymentState.Cancelled,
+          error: LifecycleError.CancelledByAPI,
+          mandate: {
+            balance: mandate.amount
+          }
+        })
+        expect(scope.isDone()).toBe(true)
+        expect(refundSpy).toHaveBeenCalledTimes(1)
+        expect(refundSpy).toHaveBeenCalledWith(
+          mandate.id,
+          refundAmount,
+          expect.anything()
+        )
+        await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+          balance: mandate.amount
+        })
+      }
+    )
+
+    it("doesn't refund mandate past deadline", async (): Promise<void> => {
+      const mandate = await mandateService.create({
+        accountId,
+        amount: BigInt(200),
+        assetCode: invoice.account.asset.code,
+        assetScale: asset.scale,
+        interval: 'P1M'
+      })
+      assert.ok(!isCreateMandateError(mandate))
+      const { id: paymentId } = await paymentFactory.build({
+        mandateId: mandate.id,
+        invoiceUrl
+      })
+      const payment = await processNext(paymentId, PaymentState.Funding)
+      if (!payment.mandate) throw 'no mandate'
+      await payment.$query(knex).patch({ mandateRefundDeadline: new Date() })
+
+      const refundSpy = jest.spyOn(mandateService, 'refund')
+      const scope = mockWebhookServer(payment.id, PaymentState.Cancelled)
+      assert.ok(scope)
+      await expect(
+        outgoingPaymentService.cancel(payment.id)
+      ).resolves.toMatchObject({
+        id: payment.id,
+        state: PaymentState.Cancelled,
+        error: LifecycleError.CancelledByAPI,
+        mandate: {
+          balance: payment.mandate.balance
+        }
+      })
+      expect(scope.isDone()).toBe(true)
+      expect(refundSpy).toHaveBeenCalledTimes(0)
+      // Under normal circumstances, the mandate balance would have refilled at the start of the new interval
+      await expect(mandateService.get(mandate.id)).resolves.toMatchObject({
+        balance: payment.mandate.balance
+      })
+    })
+
     Object.values(PaymentState).forEach((startState) => {
       if (startState === PaymentState.Funding) return
       it(`does not cancel a ${startState} payment`, async (): Promise<void> => {
+        const payment = await paymentFactory.build({
+          accountId,
+          paymentPointer,
+          amountToSend: BigInt(123)
+        })
         await payment.$query().patch({ state: startState })
         await expect(
           outgoingPaymentService.cancel(payment.id)
