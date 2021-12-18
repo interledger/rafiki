@@ -35,6 +35,9 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
           }
         }
       }
+    },
+    handlePayment: async (_id: string) => {
+      return undefined
     }
   }))
   .attr('peers', ['accounting'], (accounting: MockAccountingService) => ({

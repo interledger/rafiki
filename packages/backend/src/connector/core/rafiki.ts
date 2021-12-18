@@ -39,6 +39,7 @@ export type OutgoingAccount = Account & {
   stream?: {
     enabled: boolean
   }
+  invoice?: boolean
 }
 
 export interface TransferOptions {

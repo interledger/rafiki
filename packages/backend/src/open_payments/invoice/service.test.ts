@@ -115,6 +115,61 @@ describe('Invoice Service', (): void => {
     })
   })
 
+  describe('handlePayment', (): void => {
+    let invoice: Invoice
+
+    beforeEach(
+      async (): Promise<void> => {
+        invoice = await invoiceService.create({
+          accountId,
+          description: 'Test invoice',
+          amount: BigInt(123),
+          expiresAt: new Date(Date.now() + 30_000)
+        })
+      }
+    )
+
+    test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
+      await expect(
+        accountingService.createTransfer({
+          sourceAccount: {
+            asset: {
+              unit: invoice.account.asset.unit,
+              account: AssetAccount.Settlement
+            }
+          },
+          destinationAccount: invoice,
+          amount: invoice.amount - BigInt(1)
+        })
+      ).resolves.toBeUndefined()
+
+      await invoiceService.handlePayment(invoice.id)
+      await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+        active: true
+      })
+    })
+
+    test('Deactivates fully paid invoice', async (): Promise<void> => {
+      await expect(
+        accountingService.createTransfer({
+          sourceAccount: {
+            asset: {
+              unit: invoice.account.asset.unit,
+              account: AssetAccount.Settlement
+            }
+          },
+          destinationAccount: invoice,
+          amount: invoice.amount
+        })
+      ).resolves.toBeUndefined()
+
+      await invoiceService.handlePayment(invoice.id)
+      await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+        active: false
+      })
+    })
+  })
+
   describe('deactivateNext', (): void => {
     test('Does not deactivate a not-expired invoice', async (): Promise<void> => {
       const invoiceId = (

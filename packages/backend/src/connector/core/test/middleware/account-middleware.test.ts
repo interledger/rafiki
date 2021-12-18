@@ -71,7 +71,8 @@ describe('Account Middleware', () => {
     expect(ctx.accounts.outgoing).toEqual({
       id: outgoingAccount.id,
       asset: outgoingAccount.asset,
-      stream: { enabled: true }
+      stream: { enabled: true },
+      invoice: true
     })
   })
 

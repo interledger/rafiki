@@ -22,6 +22,7 @@ export interface InvoiceService {
     accountId: string,
     pagination?: Pagination
   ): Promise<Invoice[]>
+  handlePayment(invoiceId: string): Promise<void>
   deactivateNext(): Promise<string | undefined>
 }
 
@@ -45,6 +46,7 @@ export async function createInvoiceService(
     create: (options, trx) => createInvoice(deps, options, trx),
     getAccountInvoicesPage: (accountId, pagination) =>
       getAccountInvoicesPage(deps, accountId, pagination),
+    handlePayment: (invoiceId) => handleInvoicePayment(deps, invoiceId),
     deactivateNext: () => deactivateNextInvoice(deps)
   }
 }
@@ -93,6 +95,25 @@ async function createInvoice(
       throw new Error('unable to create invoice, account does not exist')
     }
     throw err
+  }
+}
+
+async function handleInvoicePayment(
+  deps: ServiceDependencies,
+  invoiceId: string
+): Promise<void> {
+  const amountReceived = await deps.accountingService.getTotalReceived(
+    invoiceId
+  )
+  if (!amountReceived) {
+    return
+  }
+  const invoice = await Invoice.query(deps.knex).findById(invoiceId)
+  if (invoice.amount <= amountReceived) {
+    await invoice.$query(deps.knex).patch({
+      active: false
+    })
+    // Notify wallet
   }
 }
 

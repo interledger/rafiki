@@ -33,7 +33,8 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
             asset: invoice.account.asset,
             stream: {
               enabled: true
-            }
+            },
+            invoice: true
           }
         }
         // Open Payments SPSP fallback account

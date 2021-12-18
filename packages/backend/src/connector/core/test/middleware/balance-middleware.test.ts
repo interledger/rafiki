@@ -29,7 +29,7 @@ const ctx = createILPContext({
   },
   services
 })
-const { accounting, rates } = services
+const { accounting, invoices, rates } = services
 
 beforeEach(async () => {
   ctx.response.fulfill = undefined
@@ -53,6 +53,8 @@ describe('Balance Middleware', function () {
       ctx.response.fulfill = fulfill
     })
 
+    const spy = jest.spyOn(invoices, 'handlePayment')
+
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     const aliceBalance = await accounting.getBalance(aliceAccount.id)
@@ -60,6 +62,32 @@ describe('Balance Middleware', function () {
 
     const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(100))
+
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('fulfill response calls handlePayment for outgoing invoice', async () => {
+    const prepare = IlpPrepareFactory.build({ amount: '100' })
+    const fulfill = IlpFulfillFactory.build()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    const next = jest.fn().mockImplementation(() => {
+      ctx.response.fulfill = fulfill
+    })
+
+    bobAccount.invoice = true
+
+    const spy = jest.spyOn(invoices, 'handlePayment')
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
+    expect(aliceBalance).toEqual(BigInt(0))
+
+    const bobBalance = await accounting.getBalance(bobAccount.id)
+    expect(bobBalance).toEqual(BigInt(100))
+
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith(bobAccount.id)
   })
 
   it('converts prepare amount to destination asset', async () => {
