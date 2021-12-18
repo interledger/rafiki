@@ -1,12 +1,11 @@
 import {
-  AccountFlags,
   Client,
   CreateAccountError as CreateAccountErrorCode
 } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import {
-  AccountType as Type,
+  AccountType,
   calculateBalance,
   createAccounts,
   getAccounts
@@ -26,68 +25,19 @@ import { AccountIdOptions } from './utils'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 
-export enum AccountType {
-  Liquidity = 1,
-  Send,
-  Receive
-}
-
-export const RATE_PROBE_ACCOUNT_ID = AccountType.Liquidity.toString()
-
-export const SEND_ACCOUNT_ID = AccountType.Send.toString()
-
-export const RECEIVE_ACCOUNT_ID = AccountType.Receive.toString()
-
-export interface LiquidityAccount {
+export interface Account {
   id: string
+  balance: bigint
   asset: {
     unit: number
   }
-  balance: bigint
-  type: AccountType.Liquidity
 }
 
-export interface SendAccount {
-  id: string
-  asset?: never
-  totalSent: bigint
-  type: AccountType.Send
-}
-
-export interface ReceiveAccount {
-  id: string
-  asset?: never
-  totalReceived: bigint
-  receiveLimit?: bigint
-  type: AccountType.Receive
-}
-
-export type Account = LiquidityAccount | SendAccount | ReceiveAccount
-
-export type CreateOptions =
-  | Omit<LiquidityAccount, 'balance'>
-  | Omit<SendAccount, 'totalSent'>
-  | Omit<ReceiveAccount, 'totalReceived'>
+export type AccountOptions = Omit<Account, 'balance'>
 
 export enum AssetAccount {
   Liquidity = 1,
   Settlement
-}
-
-export interface AccountOptions {
-  id: string
-  asset: {
-    unit: number
-  }
-  type: AccountType
-}
-
-export interface SendReceiveOptions {
-  sourceAccount: AccountOptions
-  destinationAccount: AccountOptions
-  sourceAmount: bigint
-  destinationAmount?: bigint
-  timeout: bigint // nano-seconds
 }
 
 type Options = {
@@ -107,14 +57,21 @@ export type TwoPhaseTransfer = Required<Options> & {
 
 export type Transfer = AutoCommitTransfer | TwoPhaseTransfer
 
+export interface AccountTransferOptions {
+  sourceAccount: AccountOptions
+  destinationAccount: AccountOptions
+  sourceAmount: bigint
+  destinationAmount?: bigint
+  timeout: bigint // nano-seconds
+}
+
 export interface Transaction {
   commit: () => Promise<void | TransferError>
   rollback: () => Promise<void | TransferError>
 }
 
 export interface AccountingService {
-  boot(): Promise<void>
-  createAccount(options: CreateOptions): Promise<Account>
+  createAccount(options: AccountOptions): Promise<Account>
   createAssetAccounts(unit: number): Promise<void>
   getAccount(id: string): Promise<Account | undefined>
   getBalance(id: string): Promise<bigint | undefined>
@@ -124,8 +81,8 @@ export interface AccountingService {
     unit: number,
     account: AssetAccount
   ): Promise<bigint | undefined>
-  sendAndReceive(
-    options: SendReceiveOptions
+  transferFunds(
+    options: AccountTransferOptions
   ): Promise<Transaction | TransferError>
   createTransfer(transfer: Transfer): Promise<void | TransferError>
   commitTransfer(id: string): Promise<void | TransferError>
@@ -150,7 +107,6 @@ export function createAccountingService({
     tigerbeetle
   }
   return {
-    boot: () => boot(deps),
     createAccount: (options) => createAccount(deps, options),
     createAssetAccounts: (unit) => createAssetAccounts(deps, unit),
     getAccount: (id) => getAccount(deps, id),
@@ -159,97 +115,31 @@ export function createAccountingService({
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAssetAccountBalance: (unit, account) =>
       getAssetAccountBalance(deps, unit, account),
-    sendAndReceive: (options) => sendAndReceive(deps, options),
+    transferFunds: (options) => transferFunds(deps, options),
     createTransfer: (transfer) => createTransfer(deps, transfer),
     commitTransfer: (options) => commitTransfer(deps, options),
     rollbackTransfer: (options) => rollbackTransfer(deps, options)
   }
 }
 
-export async function boot(deps: ServiceDependencies): Promise<void> {
-  const accounts = [
-    {
-      id: RATE_PROBE_ACCOUNT_ID,
-      type: Type.Debit,
-      unit: AccountType.Send
-    },
-    {
-      id: SEND_ACCOUNT_ID,
-      type: Type.Credit,
-      unit: AccountType.Send
-    },
-    {
-      id: RECEIVE_ACCOUNT_ID,
-      type: Type.Debit,
-      unit: AccountType.Receive
-    }
-  ]
-
-  try {
-    await createAccounts(deps, accounts)
-  } catch (err) {
-    // Don't complain if accounts already exist.
-    if (
-      err instanceof CreateAccountError &&
-      err.code === CreateAccountErrorCode.exists
-    ) {
-      return
-    }
-    throw err
-  }
-}
-
 export async function createAccount(
   deps: ServiceDependencies,
-  options: CreateOptions
+  options: AccountOptions
 ): Promise<Account> {
   if (!validateId(options.id)) {
     throw new Error('unable to create account, invalid id')
   }
 
-  switch (options.type) {
-    case AccountType.Liquidity:
-      await createAccounts(deps, [
-        {
-          id: options.id,
-          type: Type.Credit,
-          unit: options.asset.unit
-        }
-      ])
-      return {
-        ...options,
-        balance: BigInt(0)
-      }
-    case AccountType.Send:
-      await createAccounts(deps, [
-        {
-          id: options.id,
-          type: Type.Debit,
-          unit: AccountType.Send
-        }
-      ])
-      return {
-        ...options,
-        totalSent: BigInt(0)
-      }
-    case AccountType.Receive:
-      // Receive accounts are initially debited by the receiveLimit, if present.
-      // Credits are restricted such that the invoice cannot receive more than that amount.
-      // The account balance represents the remaining receive limit.
-      await createAccounts(deps, [
-        {
-          id: options.id,
-          type: options.receiveLimit ? Type.Debit : Type.Credit,
-          unit: AccountType.Receive,
-          debits: options.receiveLimit
-        }
-      ])
-      return {
-        ...options,
-        totalReceived: BigInt(0)
-      }
-    default:
-      throw new Error('unknown account type')
+  await createAccounts(deps, [
+    {
+      id: options.id,
+      type: AccountType.Credit,
+      unit: options.asset.unit
+    }
+  ])
+  return {
+    ...options,
+    balance: BigInt(0)
   }
 }
 
@@ -263,7 +153,7 @@ export async function createAssetAccounts(
         unit,
         account: AssetAccount.Liquidity
       },
-      type: Type.Credit,
+      type: AccountType.Credit,
       unit
     },
     {
@@ -271,7 +161,7 @@ export async function createAssetAccounts(
         unit,
         account: AssetAccount.Settlement
       },
-      type: Type.Debit,
+      type: AccountType.Debit,
       unit
     }
   ]
@@ -303,33 +193,12 @@ export async function getAccount(
 
   if (accounts.length) {
     const account = accounts[0]
-
-    switch (account.unit) {
-      case AccountType.Send:
-        return {
-          id,
-          type: AccountType.Send,
-          totalSent: account.debits_accepted
-        }
-      case AccountType.Receive:
-        return {
-          id,
-          type: AccountType.Receive,
-          totalReceived: account.credits_accepted,
-          receiveLimit:
-            account.flags & AccountFlags.credits_must_not_exceed_debits
-              ? calculateBalance(account)
-              : undefined
-        }
-      default:
-        return {
-          id,
-          asset: {
-            unit: account.unit
-          },
-          type: AccountType.Liquidity,
-          balance: calculateBalance(account)
-        }
+    return {
+      id,
+      asset: {
+        unit: account.unit
+      },
+      balance: calculateBalance(account)
     }
   }
 }
@@ -339,12 +208,7 @@ export async function getAccountBalance(
   id: string
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [{ id }]))[0]
-
-  if (
-    account &&
-    account.unit !== AccountType.Send &&
-    account.unit !== AccountType.Receive
-  ) {
+  if (account) {
     return calculateBalance(account)
   }
 }
@@ -354,7 +218,7 @@ export async function getAccountTotalSent(
   id: string
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [{ id }]))[0]
-  if (account?.unit === AccountType.Send) {
+  if (account) {
     return account.debits_accepted
   }
 }
@@ -364,7 +228,7 @@ export async function getAccountTotalReceived(
   id: string
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [{ id }]))[0]
-  if (account?.unit === AccountType.Receive) {
+  if (account) {
     return account.credits_accepted
   }
 }
@@ -383,7 +247,7 @@ export async function getAssetAccountBalance(
   }
 }
 
-export async function sendAndReceive(
+export async function transferFunds(
   deps: ServiceDependencies,
   {
     sourceAccount,
@@ -391,13 +255,9 @@ export async function sendAndReceive(
     sourceAmount,
     destinationAmount,
     timeout
-  }: SendReceiveOptions
+  }: AccountTransferOptions
 ): Promise<Transaction | TransferError> {
-  if (
-    sourceAccount.id &&
-    destinationAccount.id &&
-    sourceAccount.id === destinationAccount.id
-  ) {
+  if (sourceAccount.id === destinationAccount.id) {
     return TransferError.SameAccounts
   }
   if (sourceAmount <= BigInt(0)) {
@@ -406,57 +266,27 @@ export async function sendAndReceive(
   if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
     return TransferError.InvalidDestinationAmount
   }
-
-  // Sending: send source account (from asset's settlement account)
-  // Receiving: receive destination account (to asset's settlement account)
-  // Intra-rafiki transfer: send source account && receive destination account
-  // Otherwise, forwarding between peers
-  const sourceLiquidity =
-    sourceAccount.type === AccountType.Send
-      ? {
-          asset: {
-            unit: sourceAccount.asset.unit,
-            account: AssetAccount.Settlement
-          }
-        }
-      : sourceAccount
-
-  const destinationLiquidity =
-    destinationAccount.type === AccountType.Receive
-      ? {
-          asset: {
-            unit: destinationAccount.asset.unit,
-            account: AssetAccount.Settlement
-          }
-        }
-      : destinationAccount
   const transfers: TwoPhaseTransfer[] = []
 
   // Same asset
   if (sourceAccount.asset.unit === destinationAccount.asset.unit) {
-    // Don't send from settlement account to itself
-    if (
-      sourceAccount.type !== AccountType.Send ||
-      destinationAccount.type !== AccountType.Receive
-    ) {
-      transfers.push({
-        id: uuid(),
-        sourceAccount: sourceLiquidity,
-        destinationAccount: destinationLiquidity,
-        amount:
-          destinationAmount && destinationAmount < sourceAmount
-            ? destinationAmount
-            : sourceAmount,
-        timeout
-      })
-    }
+    transfers.push({
+      id: uuid(),
+      sourceAccount,
+      destinationAccount,
+      amount:
+        destinationAmount && destinationAmount < sourceAmount
+          ? destinationAmount
+          : sourceAmount,
+      timeout
+    })
     // Same asset, different amounts
     if (destinationAmount && sourceAmount !== destinationAmount) {
       // Send excess source amount to liquidity account
       if (destinationAmount < sourceAmount) {
         transfers.push({
           id: uuid(),
-          sourceAccount: sourceLiquidity,
+          sourceAccount,
           destinationAccount: {
             asset: {
               unit: sourceAccount.asset.unit,
@@ -476,7 +306,7 @@ export async function sendAndReceive(
               account: AssetAccount.Liquidity
             }
           },
-          destinationAccount: destinationLiquidity,
+          destinationAccount,
           amount: destinationAmount - sourceAmount,
           timeout
         })
@@ -493,7 +323,7 @@ export async function sendAndReceive(
     transfers.push(
       {
         id: uuid(),
-        sourceAccount: sourceLiquidity,
+        sourceAccount,
         destinationAccount: {
           asset: {
             unit: sourceAccount.asset.unit,
@@ -511,33 +341,11 @@ export async function sendAndReceive(
             account: AssetAccount.Liquidity
           }
         },
-        destinationAccount: destinationLiquidity,
+        destinationAccount,
         amount: destinationAmount,
         timeout
       }
     )
-  }
-  if (sourceAccount.type === AccountType.Send) {
-    transfers.push({
-      id: uuid(),
-      sourceAccount,
-      destinationAccount: {
-        id: SEND_ACCOUNT_ID
-      },
-      amount: sourceAmount,
-      timeout
-    })
-  }
-  if (destinationAccount.type === AccountType.Receive) {
-    transfers.push({
-      id: uuid(),
-      sourceAccount: {
-        id: RECEIVE_ACCOUNT_ID
-      },
-      destinationAccount,
-      amount: destinationAmount || sourceAmount,
-      timeout
-    })
   }
   const error = await createTransfers(deps, transfers)
   if (error) {
@@ -554,14 +362,6 @@ export async function sendAndReceive(
           return TransferError.InsufficientLiquidity
         }
         return TransferError.InsufficientBalance
-      case TransferError.InsufficientDebitBalance:
-        if (
-          destinationAccount.type === AccountType.Receive &&
-          transfers[error.index].destinationAccount.id === destinationAccount.id
-        ) {
-          return TransferError.ReceiveLimitExceeded
-        }
-        throw new BalanceTransferError(error.error)
       default:
         throw new BalanceTransferError(error.error)
     }

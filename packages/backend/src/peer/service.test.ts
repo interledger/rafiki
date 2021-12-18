@@ -19,7 +19,6 @@ import { randomAsset } from '../tests/asset'
 import { PeerFactory } from '../tests/peerFactory'
 import { truncateTables } from '../tests/tableManager'
 import { Asset } from '../asset/model'
-import { AccountType } from '../accounting/service'
 
 describe('Peer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -138,8 +137,7 @@ describe('Peer Service', (): void => {
         asset: {
           unit: ((await assetService.get(options.asset)) as Asset).unit
         },
-        balance: BigInt(0),
-        type: AccountType.Liquidity
+        balance: BigInt(0)
       })
     })
 

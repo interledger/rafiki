@@ -89,7 +89,7 @@ export async function createTransfers(
       case CreateTransferErrorCode.exceeds_debits:
         return { index, error: TransferError.InsufficientDebitBalance }
       case CreateTransferErrorCode.accounts_have_different_units:
-        return { index, error: TransferError.DifferentUnits }
+        return { index, error: TransferError.DifferentAssets }
       default:
         throw new CreateTransferError(code)
     }

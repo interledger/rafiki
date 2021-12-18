@@ -6,7 +6,6 @@ import {
   ILPMiddleware
 } from '../rafiki'
 import { AuthState } from './auth'
-import { AccountType } from '../../../accounting/service'
 import { validateId } from '../../../shared/utils'
 
 const UUID_LENGTH = 36
@@ -32,7 +31,9 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           return {
             id: invoice.id,
             asset: invoice.account.asset,
-            type: AccountType.Receive
+            stream: {
+              enabled: true
+            }
           }
         }
         // Open Payments SPSP fallback account
@@ -41,7 +42,9 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           return {
             id: spspAccount.id,
             asset: spspAccount.asset,
-            type: AccountType.Receive
+            stream: {
+              enabled: true
+            }
           }
         }
         return undefined
@@ -51,7 +54,9 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
       if (peer) {
         return {
           ...peer,
-          type: AccountType.Liquidity
+          stream: {
+            enabled: false
+          }
         }
       }
       if (

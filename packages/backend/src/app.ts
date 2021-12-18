@@ -21,7 +21,7 @@ import {
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
-import { AccountOptions, AccountingService } from './accounting/service'
+import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
 import { AccountService } from './open_payments/account/service'
 import { RatesService } from './rates/service'
@@ -31,7 +31,7 @@ import { AccountRoutes } from './open_payments/account/routes'
 import { InvoiceService } from './open_payments/invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { OutgoingPaymentService } from './outgoing_payment/service'
-import { IlpPlugin } from './outgoing_payment/ilp_plugin'
+import { IlpPlugin, IlpPluginOptions } from './outgoing_payment/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
 import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
@@ -72,7 +72,7 @@ export interface AppServices {
   invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
   outgoingPaymentService: Promise<OutgoingPaymentService>
-  makeIlpPlugin: Promise<(sourceAccount: AccountOptions) => IlpPlugin>
+  makeIlpPlugin: Promise<(options: IlpPluginOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
@@ -142,9 +142,6 @@ export class App {
         process.nextTick(() => this.deactivateInvoice())
       }
     }
-
-    const accountingService = await this.container.use('accountingService')
-    await accountingService.boot()
   }
 
   public listen(port: number | string): void {

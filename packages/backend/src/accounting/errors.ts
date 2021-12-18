@@ -29,7 +29,7 @@ export class CommitTransferError extends Error {
 export enum TransferError {
   AlreadyCommitted = 'AlreadyCommitted',
   AlreadyRolledBack = 'AlreadyRolledBack',
-  DifferentUnits = 'DifferentUnits',
+  DifferentAssets = 'DifferentAssets',
   InsufficientBalance = 'InsufficientBalance',
   InsufficientDebitBalance = 'InsufficientDebitBalance',
   InsufficientLiquidity = 'InsufficientLiquidity',
@@ -37,7 +37,6 @@ export enum TransferError {
   InvalidId = 'InvalidId',
   InvalidSourceAmount = 'InvalidSourceAmount',
   InvalidDestinationAmount = 'InvalidDestinationAmount',
-  ReceiveLimitExceeded = 'ReceiveLimitExceeded',
   SameAccounts = 'SameAccounts',
   TransferExists = 'TransferExists',
   TransferExpired = 'TransferExpired',

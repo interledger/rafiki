@@ -1,5 +1,5 @@
 import { Invoice } from './model'
-import { AccountingService, AccountType } from '../../accounting/service'
+import { AccountingService } from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
 import assert from 'assert'
@@ -17,7 +17,6 @@ interface CreateOptions {
 
 export interface InvoiceService {
   get(id: string): Promise<Invoice | undefined>
-  getReceiveLimit(id: string): Promise<bigint | undefined>
   create(options: CreateOptions, trx?: Transaction): Promise<Invoice>
   getAccountInvoicesPage(
     accountId: string,
@@ -43,7 +42,6 @@ export async function createInvoiceService(
   }
   return {
     get: (id) => getInvoice(deps, id),
-    getReceiveLimit: (id) => getInvoiceReceiveLimit(deps, id),
     create: (options, trx) => createInvoice(deps, options, trx),
     getAccountInvoicesPage: (accountId, pagination) =>
       getAccountInvoicesPage(deps, accountId, pagination),
@@ -56,16 +54,6 @@ async function getInvoice(
   id: string
 ): Promise<Invoice | undefined> {
   return Invoice.query(deps.knex).findById(id).withGraphJoined('account.asset')
-}
-
-async function getInvoiceReceiveLimit(
-  deps: ServiceDependencies,
-  id: string
-): Promise<bigint | undefined> {
-  const account = await deps.accountingService.getAccount(id)
-  if (account?.type === AccountType.Receive) {
-    return account.receiveLimit
-  }
 }
 
 async function createInvoice(
@@ -90,9 +78,7 @@ async function createInvoice(
     // Credits are restricted such that the invoice cannot receive more than that amount.
     await deps.accountingService.createAccount({
       id: invoice.id,
-      type: AccountType.Receive,
-      // Allow a little extra, to be more forgiving about (favorable) exchange rate fluctuations.
-      receiveLimit: amount + POSITIVE_SLIPPAGE
+      asset: invoice.account.asset
     })
 
     if (!trx) {

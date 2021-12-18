@@ -2,7 +2,7 @@ import { TransactionOrKnex } from 'objection'
 
 import { Account } from './model'
 import { BaseService } from '../../shared/baseService'
-import { AccountingService, AccountType } from '../../accounting/service'
+import { AccountingService } from '../../accounting/service'
 import { AssetService, AssetOptions } from '../../asset/service'
 
 export interface CreateOptions {
@@ -56,7 +56,7 @@ async function createAccount(
     // SPSP fallback account
     await deps.accountingService.createAccount({
       id: account.id,
-      type: AccountType.Receive
+      asset: account.asset
     })
 
     return account

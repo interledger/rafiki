@@ -17,8 +17,7 @@ import { isTransferError } from '../accounting/errors'
 import {
   AssetAccount,
   AccountingService,
-  RECEIVE_ACCOUNT_ID,
-  SendReceiveOptions
+  AccountTransferOptions
 } from '../accounting/service'
 import { AssetOptions } from '../asset/service'
 import { Invoice } from '../open_payments/invoice/model'
@@ -79,10 +78,36 @@ describe('OutgoingPaymentService', (): void => {
       )
   }
 
+  async function fund(paymentId: string): Promise<void> {
+    const payment = await outgoingPaymentService.get(paymentId)
+    if (!payment) throw 'no payment'
+    if (!payment.quote) throw 'no quote'
+    await expect(
+      accountingService.createTransfer({
+        sourceAccount: {
+          asset: {
+            unit: payment.account.asset.unit,
+            account: AssetAccount.Settlement
+          }
+        },
+        destinationAccount: {
+          id: payment.id,
+          asset: payment.account.asset
+        },
+        amount: payment.quote.maxSourceAmount
+      })
+    ).resolves.toBeUndefined()
+  }
+
   async function payInvoice(amount: bigint): Promise<void> {
     await expect(
       accountingService.createTransfer({
-        sourceAccount: { id: RECEIVE_ACCOUNT_ID },
+        sourceAccount: {
+          asset: {
+            unit: invoice.account.asset.unit,
+            account: AssetAccount.Settlement
+          }
+        },
         destinationAccount: invoice,
         amount
       })
@@ -90,11 +115,11 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   function trackAmountDelivered(sourceAccountId: string): void {
-    const { sendAndReceive } = accountingService
+    const { transferFunds } = accountingService
     jest
-      .spyOn(accountingService, 'sendAndReceive')
-      .mockImplementation(async (options: SendReceiveOptions) => {
-        const trxOrError = await sendAndReceive(options)
+      .spyOn(accountingService, 'transferFunds')
+      .mockImplementation(async (options: AccountTransferOptions) => {
+        const trxOrError = await transferFunds(options)
         if (
           !isTransferError(trxOrError) &&
           options.sourceAccount.id === sourceAccountId
@@ -110,10 +135,12 @@ describe('OutgoingPaymentService', (): void => {
     {
       amountSent,
       amountDelivered,
+      accountBalance,
       invoiceReceived
     }: {
       amountSent?: bigint
       amountDelivered?: bigint
+      accountBalance?: bigint
       invoiceReceived?: bigint
     }
   ) {
@@ -124,6 +151,11 @@ describe('OutgoingPaymentService', (): void => {
     }
     if (amountDelivered !== undefined) {
       expect(amtDelivered).toEqual(amountDelivered)
+    }
+    if (accountBalance !== undefined) {
+      await expect(accountingService.getBalance(payment.id)).resolves.toEqual(
+        accountBalance
+      )
     }
     if (invoiceReceived !== undefined) {
       await expect(
@@ -169,9 +201,6 @@ describe('OutgoingPaymentService', (): void => {
       const destinationAccount = await accountService.create({
         asset: destinationAsset
       })
-      // If the destination asset liquidity account isn't well funded,
-      // Pay's rate probe will timeout due to backoffs after
-      // receiving T04_INSUFFICIENT_LIQUIDITY replies.
       await expect(
         accountingService.createTransfer({
           sourceAccount: {
@@ -186,7 +215,7 @@ describe('OutgoingPaymentService', (): void => {
               account: AssetAccount.Liquidity
             }
           },
-          amount: BigInt(10e12)
+          amount: BigInt(123)
         })
       ).resolves.toBeUndefined()
       accountUrl = `${config.publicHost}/pay/${destinationAccount.id}`
@@ -238,7 +267,7 @@ describe('OutgoingPaymentService', (): void => {
         autoApprove: false
       })
       expect(payment.accountId).toBe(accountId)
-      await expectOutcome(payment, { amountSent: BigInt(0) })
+      await expectOutcome(payment, { accountBalance: BigInt(0) })
       expect(payment.account.asset.code).toBe('USD')
       expect(payment.account.asset.scale).toBe(9)
       expect(payment.destinationAccount).toEqual({
@@ -264,7 +293,7 @@ describe('OutgoingPaymentService', (): void => {
         autoApprove: false
       })
       expect(payment.accountId).toBe(accountId)
-      await expectOutcome(payment, { amountSent: BigInt(0) })
+      await expectOutcome(payment, { accountBalance: BigInt(0) })
       expect(payment.account.asset.code).toBe('USD')
       expect(payment.account.asset.scale).toBe(9)
       expect(payment.destinationAccount).toEqual({
@@ -374,11 +403,8 @@ describe('OutgoingPaymentService', (): void => {
           0.5 * (1 - config.slippage)
         )
         expect(payment.quote.lowExchangeRateEstimate.valueOf()).toBe(0.5)
-        // This approaches 0.5 with higher invoice amounts.
-        // The invoice account's receive limit returns F08 for larger
-        // rate probe packet amounts.
         expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(
-          0.5087719298245614
+          0.500000000001
         )
       })
 
@@ -540,6 +566,7 @@ describe('OutgoingPaymentService', (): void => {
         trackAmountDelivered(paymentId)
 
         await processNext(paymentId, PaymentState.Ready)
+        await fund(paymentId)
         await expect(
           outgoingPaymentService.send(paymentId)
         ).resolves.toMatchObject({
@@ -557,6 +584,7 @@ describe('OutgoingPaymentService', (): void => {
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         await expectOutcome(payment, {
+          accountBalance: BigInt(0),
           amountSent: BigInt(123),
           amountDelivered: BigInt(Math.floor(123 / 2))
         })
@@ -571,6 +599,7 @@ describe('OutgoingPaymentService', (): void => {
         if (!payment.quote) throw 'no quote'
         const amountSent = invoice.amount * BigInt(2)
         await expectOutcome(payment, {
+          accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
           amountDelivered: invoice.amount,
           invoiceReceived: invoice.amount
@@ -588,6 +617,7 @@ describe('OutgoingPaymentService', (): void => {
         if (!payment.quote) throw 'no quote'
         const amountSent = (invoice.amount - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
+          accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
           amountDelivered: invoice.amount - amountAlreadyDelivered,
           invoiceReceived: invoice.amount
@@ -627,6 +657,7 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment.stateAttempts).toBe(0)
         // "mockPay" allows a small amount of money to be paid every attempt.
         await expectOutcome(payment, {
+          accountBalance: BigInt(123 - 10 * 5),
           amountSent: BigInt(10 * 5),
           amountDelivered: BigInt(5 * 5)
         })
@@ -651,6 +682,7 @@ describe('OutgoingPaymentService', (): void => {
           Pay.PaymentError.ReceiverProtocolViolation
         )
         await expectOutcome(payment, {
+          accountBalance: BigInt(123 - 10),
           amountSent: BigInt(10),
           amountDelivered: BigInt(5)
         })
@@ -674,6 +706,7 @@ describe('OutgoingPaymentService', (): void => {
         mockFn.mockRestore()
         fastForwardToAttempt(1)
         await expectOutcome(payment, {
+          accountBalance: BigInt(123 - 10),
           amountSent: BigInt(10),
           amountDelivered: BigInt(5)
         })
@@ -681,6 +714,7 @@ describe('OutgoingPaymentService', (): void => {
         // The next attempt is without the mock, so it succeeds.
         const payment2 = await processNext(paymentId, PaymentState.Completed)
         await expectOutcome(payment2, {
+          accountBalance: BigInt(0),
           amountSent: amountToSend,
           amountDelivered: amountToSend / BigInt(2)
         })
@@ -700,6 +734,7 @@ describe('OutgoingPaymentService', (): void => {
           .patch({ state: PaymentState.Sending })
         const payment = await processNext(paymentId, PaymentState.Completed)
         await expectOutcome(payment, {
+          accountBalance: BigInt(0),
           amountSent: BigInt(123),
           amountDelivered: BigInt(123) / BigInt(2)
         })
@@ -716,6 +751,7 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
         await expectOutcome(payment, {
+          accountBalance: payment.quote.maxSourceAmount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
           invoiceReceived: invoice.amount
@@ -810,6 +846,7 @@ describe('OutgoingPaymentService', (): void => {
         autoApprove: false
       })
       await processNext(payment.id, PaymentState.Ready)
+      await fund(payment.id)
     }, 10_000)
 
     it('fails when no payment exists', async (): Promise<void> => {

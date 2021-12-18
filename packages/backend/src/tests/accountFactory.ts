@@ -1,55 +1,30 @@
-import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 
 import {
   AccountingService,
-  AccountOptions,
-  AccountType,
+  Account,
   AssetAccount,
-  CreateOptions
+  AccountOptions
 } from '../accounting/service'
 import { randomUnit } from './asset'
 
-type BuildOptions = {
-  id?: string
-  asset?: {
-    unit: number
-  }
-  type?: AccountType
-  receiveLimit?: bigint
+type BuildOptions = Partial<AccountOptions> & {
   balance?: bigint
 }
 
 export class AccountFactory {
   public constructor(private accounts: AccountingService) {}
 
-  public async build(options: BuildOptions = {}): Promise<AccountOptions> {
-    const id = options.id || uuid()
-    const type =
-      options.receiveLimit !== undefined
-        ? AccountType.Receive
-        : options.type || AccountType.Liquidity
+  public async build(options: BuildOptions = {}): Promise<Account> {
     const unit = options.asset?.unit || randomUnit()
     await this.accounts.createAssetAccounts(unit)
-
-    let accountOptions: CreateOptions
-    if (type === AccountType.Liquidity) {
-      accountOptions = {
-        id,
-        asset: { unit },
-        type: AccountType.Liquidity
-      }
-    } else {
-      accountOptions = {
-        id,
-        receiveLimit: options.receiveLimit,
-        type
-      }
+    const accountOptions: AccountOptions = {
+      id: options.id || uuid(),
+      asset: { unit }
     }
     const account = await this.accounts.createAccount(accountOptions)
 
     if (options.balance) {
-      assert.ok(account.type === AccountType.Liquidity)
       await this.accounts.createTransfer({
         sourceAccount: {
           asset: {
@@ -62,9 +37,6 @@ export class AccountFactory {
       })
     }
 
-    return {
-      ...account,
-      asset: { unit }
-    }
+    return account
   }
 }

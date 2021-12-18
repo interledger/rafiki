@@ -4,7 +4,7 @@ import { isValidIlpAddress } from 'ilp-packet'
 
 import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
-import { AccountingService, AccountType } from '../accounting/service'
+import { AccountingService } from '../accounting/service'
 import { AssetService, AssetOptions } from '../asset/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
@@ -127,8 +127,7 @@ async function createPeer(
 
     await deps.accountingService.createAccount({
       id: peer.id,
-      asset,
-      type: AccountType.Liquidity
+      asset
     })
 
     if (!trx) {

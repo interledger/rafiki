@@ -1,17 +1,14 @@
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
+import { v4 as uuid } from 'uuid'
+
 import { BaseService } from '../shared/baseService'
 import { LifecycleError, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import {
-  AccountingService,
-  AccountType,
-  AccountOptions,
-  RATE_PROBE_ACCOUNT_ID
-} from '../accounting/service'
+import { AccountingService } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
-import { IlpPlugin } from './ilp_plugin'
+import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
 import * as worker from './worker'
 
 export interface OutgoingPaymentService {
@@ -39,7 +36,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   accountService: AccountService
   ratesService: RatesService
-  makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
+  makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
 }
 
 export async function createOutgoingPaymentService(
@@ -112,9 +109,11 @@ async function createOutgoingPayment(
         .withGraphFetched('account.asset')
 
       const plugin = deps.makeIlpPlugin({
-        id: RATE_PROBE_ACCOUNT_ID,
-        asset: payment.account.asset,
-        type: AccountType.Send
+        sourceAccount: {
+          id: uuid(),
+          asset: payment.account.asset
+        },
+        unfulfillable: true
       })
       await plugin.connect()
       const destination = await Pay.setupPayment({
@@ -137,7 +136,7 @@ async function createOutgoingPayment(
 
       await deps.accountingService.createAccount({
         id: payment.id,
-        type: AccountType.Send
+        asset: payment.account.asset
       })
 
       return payment

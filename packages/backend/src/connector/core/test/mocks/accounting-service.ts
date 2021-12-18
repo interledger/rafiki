@@ -4,13 +4,12 @@ import {
   OutgoingAccount
 } from '../../rafiki'
 
-import { AccountType, Transaction } from '../../../../accounting/service'
+import { Transaction } from '../../../../accounting/service'
 import { TransferError } from '../../../../accounting/errors'
 
 interface MockAccount {
   id: string
   balance: bigint
-  receiveLimit?: bigint
 }
 
 export type MockIncomingAccount = IncomingAccount &
@@ -20,6 +19,7 @@ export type MockIncomingAccount = IncomingAccount &
         authTokens: string[]
       }
     }
+    active?: never
   }
 
 export type MockOutgoingAccount = OutgoingAccount &
@@ -31,30 +31,21 @@ export type MockOutgoingAccount = OutgoingAccount &
 type MockIlpAccount = MockIncomingAccount | MockOutgoingAccount
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-const isIncomingPeer = (o: any): o is MockIncomingAccount =>
-  o.type === AccountType.Liquidity && o.http?.incoming
+const isIncomingPeer = (o: any): o is MockIncomingAccount => o.http?.incoming
 
 export class MockAccountingService implements AccountingService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
-  async _getInvoice(
-    invoiceId: string
-  ): Promise<MockOutgoingAccount | undefined> {
+  async _getInvoice(invoiceId: string): Promise<OutgoingAccount | undefined> {
     const invoice = this.find(
-      (account) =>
-        account.type === AccountType.Receive &&
-        account.receiveLimit !== undefined &&
-        account.id === invoiceId
+      (account) => account.id === invoiceId && account.active !== undefined
     )
-    return invoice as MockOutgoingAccount
+    return invoice as OutgoingAccount
   }
 
   async _getAccount(accountId: string): Promise<OutgoingAccount | undefined> {
     const account = this.find(
-      (account) =>
-        account.type === AccountType.Receive &&
-        account.receiveLimit === undefined &&
-        account.id === accountId
+      (account) => account.id === accountId && account.active === undefined
     )
     return account as OutgoingAccount
   }
@@ -63,8 +54,7 @@ export class MockAccountingService implements AccountingService {
     destinationAddress: string
   ): Promise<OutgoingAccount | undefined> {
     const account = this.find((account) => {
-      if (account.type !== AccountType.Liquidity || !account.staticIlpAddress)
-        return false
+      if (!account.staticIlpAddress) return false
       return destinationAddress.startsWith(account.staticIlpAddress)
     })
     return account as OutgoingAccount
@@ -93,7 +83,7 @@ export class MockAccountingService implements AccountingService {
     return account
   }
 
-  async sendAndReceive({
+  async transferFunds({
     sourceAccount,
     destinationAccount,
     sourceAmount,
@@ -108,19 +98,10 @@ export class MockAccountingService implements AccountingService {
     if (sourceAccount.balance < sourceAmount) {
       return TransferError.InsufficientBalance
     }
-    if (
-      destinationAccount.receiveLimit !== undefined &&
-      destinationAccount.receiveLimit < destinationAmount
-    ) {
-      return TransferError.ReceiveLimitExceeded
-    }
     sourceAccount.balance -= sourceAmount
     return {
       commit: async () => {
         destinationAccount.balance += destinationAmount
-        if (destinationAccount.receiveLimit !== undefined) {
-          destinationAccount.receiveLimit -= destinationAmount
-        }
       },
       rollback: async () => {
         sourceAccount.balance += sourceAmount

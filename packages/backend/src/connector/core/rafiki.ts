@@ -36,9 +36,12 @@ export type OutgoingAccount = Account & {
       endpoint: string
     }
   }
+  stream?: {
+    enabled: boolean
+  }
 }
 
-export interface SendReceiveOptions {
+export interface TransferOptions {
   sourceAccount: IncomingAccount
   destinationAccount: OutgoingAccount
   sourceAmount: bigint
@@ -47,9 +50,7 @@ export interface SendReceiveOptions {
 }
 
 export interface AccountingService {
-  sendAndReceive(
-    options: SendReceiveOptions
-  ): Promise<Transaction | TransferError>
+  transferFunds(options: TransferOptions): Promise<Transaction | TransferError>
 }
 
 export interface RafikiServices {
@@ -151,6 +152,7 @@ export class Rafiki<T = any> {
 
   async handleIlpData(
     sourceAccount: IncomingAccount,
+    unfulfillable: boolean,
     rawPrepare: Buffer
   ): Promise<Buffer> {
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
@@ -169,7 +171,10 @@ export class Rafiki<T = any> {
             throw new Error('outgoing account not available')
           }
         },
-        state: { incomingAccount: sourceAccount },
+        state: {
+          incomingAccount: sourceAccount,
+          unfulfillable
+        },
         throw: (_status: number, msg: string): never => {
           throw new Errors.BadRequestError(msg)
         }

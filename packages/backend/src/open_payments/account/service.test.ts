@@ -2,7 +2,6 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 
 import { AccountService } from './service'
-import { AccountType } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { randomAsset } from '../../tests/asset'
 import { resetGraphileDb } from '../../tests/graphileDb'
@@ -69,8 +68,10 @@ describe('Open Payments Account Service', (): void => {
       const accountingService = await deps.use('accountingService')
       await expect(accountingService.getAccount(account.id)).resolves.toEqual({
         id: account.id,
-        type: AccountType.Receive,
-        totalReceived: BigInt(0)
+        asset: {
+          unit: account.asset.unit
+        },
+        balance: BigInt(0)
       })
     })
   })

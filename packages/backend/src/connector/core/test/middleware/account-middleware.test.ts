@@ -9,7 +9,6 @@ import {
 } from '../../factories'
 import { createAccountMiddleware } from '../../middleware/account'
 import { ZeroCopyIlpPrepare } from '../..'
-import { AccountType } from '../../../../accounting/service'
 
 describe('Account Middleware', () => {
   const ADDRESS = 'test.rafiki'
@@ -72,7 +71,7 @@ describe('Account Middleware', () => {
     expect(ctx.accounts.outgoing).toEqual({
       id: outgoingAccount.id,
       asset: outgoingAccount.asset,
-      type: AccountType.Receive
+      stream: { enabled: true }
     })
   })
 
@@ -102,7 +101,7 @@ describe('Account Middleware', () => {
     expect(ctx.accounts.outgoing).toEqual({
       id: outgoingAccount.id,
       asset: outgoingAccount.asset,
-      type: AccountType.Receive
+      stream: { enabled: true }
     })
   })
 

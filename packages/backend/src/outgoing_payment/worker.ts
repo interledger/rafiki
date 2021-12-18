@@ -1,10 +1,11 @@
 import * as knex from 'knex'
+import { v4 as uuid } from 'uuid'
+
 import { ServiceDependencies } from './service'
 import { OutgoingPayment, PaymentState } from './model'
 import { canRetryError, PaymentError } from './errors'
 import * as lifecycle from './lifecycle'
 import { IlpPlugin } from './ilp_plugin'
-import { AccountType, RATE_PROBE_ACCOUNT_ID } from '../accounting/service'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -108,11 +109,12 @@ export async function handlePaymentLifecycle(
   let plugin: IlpPlugin
   switch (payment.state) {
     case PaymentState.Quoting:
-      // Use RATE_PROBE_ACCOUNT_ID to not be limited by liquidity when sending rate probe packets
       plugin = deps.makeIlpPlugin({
-        id: RATE_PROBE_ACCOUNT_ID,
-        asset: payment.account.asset,
-        type: AccountType.Send
+        sourceAccount: {
+          id: uuid(),
+          asset: payment.account.asset
+        },
+        unfulfillable: true
       })
       return plugin
         .connect()
@@ -130,9 +132,10 @@ export async function handlePaymentLifecycle(
       return lifecycle.handleReady(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin({
-        id: payment.id,
-        asset: payment.account.asset,
-        type: AccountType.Send
+        sourceAccount: {
+          id: payment.id,
+          asset: payment.account.asset
+        }
       })
       return plugin
         .connect()

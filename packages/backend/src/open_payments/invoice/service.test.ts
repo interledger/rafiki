@@ -2,12 +2,8 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { InvoiceService, POSITIVE_SLIPPAGE } from './service'
-import {
-  AccountingService,
-  AccountType,
-  RECEIVE_ACCOUNT_ID
-} from '../../accounting/service'
+import { InvoiceService } from './service'
+import { AccountingService, AssetAccount } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Invoice } from './model'
 import { resetGraphileDb } from '../../tests/graphileDb'
@@ -87,7 +83,7 @@ describe('Invoice Service', (): void => {
       expect(retrievedInvoice).toEqual(invoice)
     })
 
-    test('Creating an invoice creates receive account with receive limit', async (): Promise<void> => {
+    test('Creating an invoice creates a liquidity account', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
         description: 'Invoice',
@@ -96,9 +92,10 @@ describe('Invoice Service', (): void => {
       })
       await expect(accountingService.getAccount(invoice.id)).resolves.toEqual({
         id: invoice.id,
-        type: AccountType.Receive,
-        totalReceived: BigInt(0),
-        receiveLimit: invoice.amount + POSITIVE_SLIPPAGE
+        asset: {
+          unit: invoice.account.asset.unit
+        },
+        balance: BigInt(0)
       })
     })
 
@@ -144,7 +141,10 @@ describe('Invoice Service', (): void => {
       await expect(
         accountingService.createTransfer({
           sourceAccount: {
-            id: RECEIVE_ACCOUNT_ID
+            asset: {
+              unit: invoice.account.asset.unit,
+              account: AssetAccount.Settlement
+            }
           },
           destinationAccount: invoice,
           amount: BigInt(1)

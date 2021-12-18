@@ -23,7 +23,6 @@ export enum AccountType {
 export type CreateAccountOptions = AccountIdOptions & {
   type: AccountType
   unit: number
-  debits?: bigint
 }
 
 export async function createAccounts(
@@ -41,7 +40,7 @@ export async function createAccounts(
         account.type === AccountType.Debit
           ? AccountFlags.credits_must_not_exceed_debits
           : AccountFlags.debits_must_not_exceed_credits,
-      debits_accepted: account.debits || BigInt(0),
+      debits_accepted: BigInt(0),
       debits_reserved: BigInt(0),
       credits_accepted: BigInt(0),
       credits_reserved: BigInt(0),

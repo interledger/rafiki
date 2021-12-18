@@ -4,7 +4,6 @@ import {
   MockIncomingAccount,
   MockOutgoingAccount
 } from '../test/mocks/accounting-service'
-import { AccountType } from '../../../accounting/service'
 
 const assetCode = Faker.finance.currencyCode().toString().toUpperCase()
 const assetScale = Faker.datatype.number(6)
@@ -21,7 +20,12 @@ export const IncomingAccountFactory = Factory.define<MockIncomingAccount>(
 
 export const OutgoingAccountFactory = Factory.define<MockOutgoingAccount>(
   'OutgoingAccountFactory'
-).attrs(accountAttrs)
+).attrs({
+  ...accountAttrs,
+  stream: {
+    enabled: true
+  }
+})
 
 export const IncomingPeerFactory = Factory.define<MockIncomingAccount>(
   'IncomingPeerFactory'
@@ -33,8 +37,7 @@ export const IncomingPeerFactory = Factory.define<MockIncomingAccount>(
         authTokens: [Faker.datatype.string(32)]
       }
     }),
-    maxPacketAmount: BigInt(Faker.datatype.number()),
-    type: AccountType.Liquidity
+    maxPacketAmount: BigInt(Faker.datatype.number())
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`
@@ -51,7 +54,9 @@ export const OutgoingPeerFactory = Factory.define<MockOutgoingAccount>(
         endpoint: Faker.internet.url()
       }
     }),
-    type: AccountType.Liquidity
+    stream: {
+      enabled: false
+    }
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`
@@ -63,15 +68,9 @@ export const InvoiceAccountFactory = Factory.define<MockOutgoingAccount>(
   .extend(OutgoingAccountFactory)
   .option('amount', BigInt(0))
   .attrs({
-    active: true,
-    type: AccountType.Receive
+    active: true
   })
-  .attr('receiveLimit', ['amount'], (amount) => amount)
 
 export const AccountFactory = Factory.define<MockOutgoingAccount>(
   'AccountFactory'
-)
-  .extend(OutgoingAccountFactory)
-  .attrs({
-    type: AccountType.Receive
-  })
+).extend(OutgoingAccountFactory)
