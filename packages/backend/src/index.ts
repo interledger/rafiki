@@ -25,6 +25,8 @@ import { createInvoiceRoutes } from './open_payments/invoice/routes'
 import { createInvoiceService } from './open_payments/invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createConnectorService } from './connector'
+import { createSessionService } from './session/service'
+import { createApiKeyService } from './apiKey/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -221,6 +223,27 @@ export function initIocContainer(
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       accountService: await deps.use('accountService'),
       ratesService: await deps.use('ratesService')
+    })
+  })
+
+  container.singleton('sessionService', async (deps) => {
+    const logger = await deps.use('logger')
+    const redis = await deps.use('redis')
+    return await createSessionService({
+      logger: logger,
+      redis: redis,
+      sessionLength: config.sessionLength
+    })
+  })
+
+  container.singleton('apiKeyService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    const sessionService = await deps.use('sessionService')
+    return await createApiKeyService({
+      logger: logger,
+      knex: knex,
+      sessionService: sessionService
     })
   })
 

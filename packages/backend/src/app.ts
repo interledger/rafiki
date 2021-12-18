@@ -32,6 +32,10 @@ import { InvoiceService } from './open_payments/invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { OutgoingPaymentService } from './outgoing_payment/service'
 import { IlpPlugin } from './outgoing_payment/ilp_plugin'
+import { ApiKeyService } from './apiKey/service'
+import { SessionService } from './session/service'
+import { addDirectivesToSchema } from './graphql/directives'
+import { Session } from './session/util'
 
 export interface AppContextData {
   logger: Logger
@@ -45,6 +49,8 @@ export interface ApolloContext {
   messageProducer: MessageProducer
   container: IocContract<AppServices>
   logger: Logger
+  admin: boolean
+  session: Session | undefined
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
@@ -68,6 +74,8 @@ export interface AppServices {
   outgoingPaymentService: Promise<OutgoingPaymentService>
   makeIlpPlugin: Promise<(sourceAccount: AccountOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
+  apiKeyService: Promise<ApiKeyService>
+  sessionService: Promise<SessionService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -177,19 +185,43 @@ export class App {
       resolvers
     })
 
+    let schemaWithDirectives = schemaWithResolvers
+    // Add directives to schema
+    if (this.config.env !== 'test') {
+      schemaWithDirectives = addDirectivesToSchema(schemaWithResolvers)
+    }
+
     // Setup Apollo on graphql endpoint
     this.apolloServer = new ApolloServer({
-      schema: schemaWithResolvers,
-      context: async (): Promise<ApolloContext> => {
+      schema: schemaWithDirectives,
+      context: async ({ ctx }: Koa.Context): Promise<ApolloContext> => {
+        const admin = this._isAdmin(ctx)
+        const session = await this._getSession(ctx)
         return {
           messageProducer: this.messageProducer,
           container: this.container,
-          logger: await this.container.use('logger')
+          logger: await this.container.use('logger'),
+          admin,
+          session
         }
       }
     })
 
     this.koa.use(this.apolloServer.getMiddleware())
+  }
+
+  private _isAdmin(ctx: Koa.Context): boolean {
+    return ctx.request.header['x-api-key'] == this.config.adminKey
+  }
+
+  private async _getSession(ctx: Koa.Context): Promise<Session | undefined> {
+    const key = ctx.request.header.authorization || ''
+    if (key && key.length) {
+      const sessionService = await this.container.use('sessionService')
+      return await sessionService.get(key)
+    } else {
+      return undefined
+    }
   }
 
   private async _setupRoutes(): Promise<void> {

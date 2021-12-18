@@ -39,6 +39,8 @@ export const Config = {
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   coilApiGrpcUrl: envString('COIL_API_GRPC_URL', 'localhost:6000'),
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
+  adminKey: envString('ADMIN_KEY', 'qwertyuiop1234567890'),
+  sessionLength: envInt('SESSION_LENGTH', 30), // in minutes
 
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
   streamSecret: process.env.STREAM_SECRET
