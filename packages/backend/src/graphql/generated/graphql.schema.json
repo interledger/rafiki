@@ -1211,6 +1211,61 @@
         "possibleTypes": null
       },
       {
+        "kind": "INPUT_OBJECT",
+        "name": "FundOutgoingPaymentInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "description": "The id of the outgoing payment to add liquidity.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "amount",
+            "description": "Amount of liquidity to add.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UInt64",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "transferId",
+            "description": "The id of the transfer.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "Http",
         "description": null,
@@ -1802,18 +1857,18 @@
             "deprecationReason": null
           },
           {
-            "name": "sendOutgoingPayment",
-            "description": "Send a Ready payment.",
+            "name": "fundOutgoingPayment",
+            "description": "Add liquidity to a Funding payment.",
             "args": [
               {
-                "name": "paymentId",
+                "name": "input",
                 "description": null,
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
                   "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
+                    "kind": "INPUT_OBJECT",
+                    "name": "FundOutgoingPaymentInput",
                     "ofType": null
                   }
                 },
@@ -1836,7 +1891,7 @@
           },
           {
             "name": "cancelOutgoingPayment",
-            "description": "Cancel a Ready payment.",
+            "description": "Cancel a Funding payment.",
             "args": [
               {
                 "name": "paymentId",
@@ -3243,12 +3298,12 @@
         "enumValues": [
           {
             "name": "QUOTING",
-            "description": "Will transition to READY when quote is complete",
+            "description": "Will transition to FUNDING or SENDING (if already funded) when quote is complete",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "READY",
+            "name": "FUNDING",
             "description": "Will transition to SENDING once payment funds are reserved",
             "isDeprecated": false,
             "deprecationReason": null

@@ -12,7 +12,7 @@ export const RETRY_BACKOFF_SECONDS = 10
 
 const maxStateAttempts: { [key in PaymentState]: number } = {
   Quoting: 5, // quoting
-  Ready: Infinity, // waiting for activation
+  Funding: Infinity, // waiting for activation
   Sending: 5, // send money
   Cancelled: Infinity,
   Completed: Infinity
@@ -65,7 +65,7 @@ export async function getPendingPayment(
     })
     .orWhere((builder: knex.QueryBuilder) => {
       builder
-        .where('state', PaymentState.Ready)
+        .where('state', PaymentState.Funding)
         .andWhere('quoteActivationDeadline', '<', now)
     })
     .withGraphFetched('account.asset')
@@ -128,8 +128,8 @@ export async function handlePaymentLifecycle(
             )
           })
         })
-    case PaymentState.Ready:
-      return lifecycle.handleReady(deps, payment).catch(onError)
+    case PaymentState.Funding:
+      return lifecycle.handleFunding(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin({
         sourceAccount: {

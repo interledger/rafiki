@@ -126,12 +126,12 @@ export class OutgoingPayment extends BaseModel {
 
 export enum PaymentState {
   // Initial state. In this state, an empty trustline account is generated, and the payment is automatically resolved & quoted.
-  // On success, transition to `Ready`.
+  // On success, transition to `Funding` or `Sending` if already funded.
   // On failure, transition to `Cancelled`.
   Quoting = 'Quoting',
   // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
   // On success, transition to `Sending`.
-  Ready = 'Ready',
+  Funding = 'Funding',
   // Pay from the trustline account to the destination.
   // On success, transition to `Completed`.
   Sending = 'Sending',

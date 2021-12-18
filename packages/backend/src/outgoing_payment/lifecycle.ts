@@ -38,6 +38,7 @@ export async function handleQuoting(
     throw Pay.PaymentError.DestinationAssetConflict
   }
 
+  // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
   if (amountSent === undefined) {
     throw LifecycleError.MissingBalance
@@ -96,8 +97,16 @@ export async function handleQuoting(
     return
   }
 
+  const balance = await deps.accountingService.getBalance(payment.id)
+  if (balance === undefined) {
+    throw LifecycleError.MissingBalance
+  }
+
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Ready,
+    state:
+      balance < quote.maxSourceAmount
+        ? PaymentState.Funding
+        : PaymentState.Sending,
     quote: {
       timestamp: new Date(),
       activationDeadline: new Date(Date.now() + deps.quoteLifespan),
@@ -118,7 +127,7 @@ export async function handleQuoting(
 }
 
 // "payment" is locked by the "deps.knex" transaction.
-export async function handleReady(
+export async function handleFunding(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
@@ -133,7 +142,7 @@ export async function handleReady(
       activationDeadline: payment.quote.activationDeadline.getTime(),
       now: now.getTime()
     },
-    "handleReady for payment quote that isn't expired"
+    "handleFunding for payment quote that isn't expired"
   )
 }
 
@@ -165,6 +174,7 @@ export async function handleSending(
     throw Pay.PaymentError.DestinationAssetConflict
   }
 
+  // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
   if (amountSent === undefined) {
     throw LifecycleError.MissingBalance

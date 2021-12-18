@@ -130,7 +130,7 @@ export const requoteOutgoingPayment: MutationResolvers<ApolloContext>['requoteOu
     }))
 }
 
-export const sendOutgoingPayment: MutationResolvers<ApolloContext>['sendOutgoingPayment'] = async (
+export const fundOutgoingPayment: MutationResolvers<ApolloContext>['fundOutgoingPayment'] = async (
   parent,
   args,
   ctx
@@ -139,7 +139,11 @@ export const sendOutgoingPayment: MutationResolvers<ApolloContext>['sendOutgoing
     'outgoingPaymentService'
   )
   return outgoingPaymentService
-    .send(args.paymentId)
+    .fund({
+      id: args.input.id,
+      amount: args.input.amount,
+      transferId: args.input.transferId
+    })
     .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
       isOutgoingPaymentError(paymentOrErr)
         ? {

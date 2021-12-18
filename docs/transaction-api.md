@@ -10,13 +10,13 @@ If the payment destination cannot be resolved, no payment is created and the que
 
 ### Quoting
 
-To begin a payment attempt, an instance acquires a lock to setup and quote the payment, advancing it from `Quoting` to the `Ready` state.
+To begin a payment attempt, an instance acquires a lock to setup and quote the payment, advancing it from `Quoting` to the `Funding` state.
 
 First, the recipient Open Payments account or invoice is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
 
 Quotes can end in 3 states:
 
-1. Success. The STREAM sender successfully established a connection to the recipient, and discovered rates and the path capacity. This advances the state to `Ready`. The parameters of the quote are persisted so they may be resumed if the payment is funded. Rafiki also assigns a deadline based on the expected validity of its slippage parameters for the wallet to fund the payment.
+1. Success. The STREAM sender successfully established a connection to the recipient, and discovered rates and the path capacity. This advances the state to `Funding`. The parameters of the quote are persisted so they may be resumed if the payment is funded. Rafiki also assigns a deadline based on the expected validity of its slippage parameters for the wallet to fund the payment.
 2. Irrevocable failure. In cases such as if the payment pointer or account URL was semantically invalid, the invoice was already paid, a terminal ILP Reject was encountered, or the rate was insufficient, the payment is unlikely to ever succeed, or requires some manual intervention. These cases advance the state to `Cancelled`.
 3. Recoverable failure. In the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available, Rafiki may elect to automatically retry the quote. This returns the state to `Quoting`, but internally tracks that the quote failed and when to schedule another attempt.
 
@@ -24,17 +24,17 @@ After the quote ends and state advances, the lock on the payment is released.
 
 ### Authorization
 
-After quoting completes, Rafiki notifies the wallet operator via a webhook event. The wallet operator should reserve `maxSourceAmount` of the quote from the funding wallet account owned by the payer, reserving the maximum requisite funds for the payment attempt.
+After quoting completes, Rafiki notifies the wallet operator to add `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment, reserving the maximum requisite funds for the payment attempt.
 
-If the payment intent did not specify `autoApprove` of `true`, a client should manually approve the payment, based on the parameters of the quote, before the wallet reserves payment liquidity.
+If the payment intent did not specify `autoApprove` of `true`, a client should manually approve the payment, based on the parameters of the quote, before the wallet adds payment liquidity.
 
 This step is necessary so the end user can precisely know the maximum amount of source units that will leave their account. Typically, the payment application will present these parameters in the user interface before the user elects to approve the payment. This step is particularly important for invoices, to prevent an unbounded sum from leaving the user's account. During this step, the user may also be presented with additional information about the payment, such as details of the payment recipient, or how much is expected to be delivered.
 
 Authorization ends in two possible states:
 
-1. Approval. If the user approves the payment before its activation deadline, or `autoApprove` was `true`, the wallet reserves `maxSourceAmount` and calls `sendPayment` to advance the state to `Sending`.
+1. Approval. If the user approves the payment before its funding deadline, or `autoApprove` was `true`, the wallet funds the payment and the state advances to `Sending`.
 
-2. Cancellation. If the user explicitly cancels the quote, or the activation deadline is exceeded, the state advances to `Cancelled`. In the latter case, too much time has elapsed for the enforced exchange rate to remain accurate.
+2. Cancellation. If the user explicitly cancels the quote, or the funding deadline is exceeded, the state advances to `Cancelled`. In the latter case, too much time has elapsed for the enforced exchange rate to remain accurate.
 
 ### Payment execution
 
@@ -51,7 +51,7 @@ After the payment completes, the instance releases the lock on the payment and a
 
 3. Recoverable failure. In cases such as an idle timeout, Rafiki may elect to automatically retry the payment. The state remains `Sending`, but internally tracks that the payment failed and when to schedule another attempt.
 
-In the `Completed` and `Cancelled` cases, the wallet is notifed of the total amount sent via a webhook event. The wallet may return unused reserved funds to the payer's wallet account and/or collect a portion as fees.
+In the `Completed` and `Cancelled` cases, the wallet is notifed of any remaining funds in the Interledger account. Note: if the payment is retried, the same Interledger account is used for the subsequent attempt.
 
 ### Manual recovery
 
@@ -103,8 +103,8 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
 ### `PaymentState`
 
-- `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `READY`. On failure, transition to `Cancelled`.
-- `READY`: Awaiting the wallet to reserve funds. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. Calling `sendPayment` transitions to `Sending`. Otherwise, transitions to `Cancelled` when the quote expires.
+- `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING` or `SENDING` if already funded. On failure, transition to `Cancelled`.
+- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `Sending`. Otherwise, transitions to `Cancelled` when the quote expires.
 - `SENDING`: Stream payment from the payment account to the destination.
 - `CANCELLED`: The payment failed. (Though some money may have been delivered). Requoting transitions to `Quoting`.
 - `COMPLETED`: Successful completion.

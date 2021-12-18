@@ -163,6 +163,15 @@ export type DeletePeerMutationResponse = MutationResponse & {
   message: Scalars['String'];
 };
 
+export type FundOutgoingPaymentInput = {
+  /** The id of the outgoing payment to add liquidity. */
+  id: Scalars['String'];
+  /** Amount of liquidity to add. */
+  amount: Scalars['UInt64'];
+  /** The id of the transfer. */
+  transferId?: Maybe<Scalars['String']>;
+};
+
 export type Http = {
   __typename?: 'Http';
   outgoing: HttpOutgoing;
@@ -234,9 +243,9 @@ export type Mutation = {
   createOutgoingPayment: OutgoingPaymentResponse;
   /** Requote a Cancelled payment. */
   requoteOutgoingPayment: OutgoingPaymentResponse;
-  /** Send a Ready payment. */
-  sendOutgoingPayment: OutgoingPaymentResponse;
-  /** Cancel a Ready payment. */
+  /** Add liquidity to a Funding payment. */
+  fundOutgoingPayment: OutgoingPaymentResponse;
+  /** Cancel a Funding payment. */
   cancelOutgoingPayment: OutgoingPaymentResponse;
   createAccount: CreateAccountMutationResponse;
   /** Create peer */
@@ -282,8 +291,8 @@ export type MutationRequoteOutgoingPaymentArgs = {
 };
 
 
-export type MutationSendOutgoingPaymentArgs = {
-  paymentId: Scalars['String'];
+export type MutationFundOutgoingPaymentArgs = {
+  input: FundOutgoingPaymentInput;
 };
 
 
@@ -462,10 +471,10 @@ export type PaymentQuote = {
 };
 
 export enum PaymentState {
-  /** Will transition to READY when quote is complete */
+  /** Will transition to FUNDING or SENDING (if already funded) when quote is complete */
   Quoting = 'QUOTING',
   /** Will transition to SENDING once payment funds are reserved */
-  Ready = 'READY',
+  Funding = 'FUNDING',
   /** Paying, will transition to COMPLETED on success */
   Sending = 'SENDING',
   /** Payment aborted; can be requoted to QUOTING */
@@ -701,6 +710,7 @@ export type ResolversTypes = {
   DeleteAllApiKeysInput: ResolverTypeWrapper<Partial<DeleteAllApiKeysInput>>;
   DeleteAllApiKeysMutationResponse: ResolverTypeWrapper<Partial<DeleteAllApiKeysMutationResponse>>;
   DeletePeerMutationResponse: ResolverTypeWrapper<Partial<DeletePeerMutationResponse>>;
+  FundOutgoingPaymentInput: ResolverTypeWrapper<Partial<FundOutgoingPaymentInput>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
   HttpIncomingInput: ResolverTypeWrapper<Partial<HttpIncomingInput>>;
   HttpInput: ResolverTypeWrapper<Partial<HttpInput>>;
@@ -766,6 +776,7 @@ export type ResolversParentTypes = {
   DeleteAllApiKeysInput: Partial<DeleteAllApiKeysInput>;
   DeleteAllApiKeysMutationResponse: Partial<DeleteAllApiKeysMutationResponse>;
   DeletePeerMutationResponse: Partial<DeletePeerMutationResponse>;
+  FundOutgoingPaymentInput: Partial<FundOutgoingPaymentInput>;
   Http: Partial<Http>;
   HttpIncomingInput: Partial<HttpIncomingInput>;
   HttpInput: Partial<HttpInput>;
@@ -917,7 +928,7 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentArgs, 'input'>>;
   requoteOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationRequoteOutgoingPaymentArgs, 'paymentId'>>;
-  sendOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationSendOutgoingPaymentArgs, 'paymentId'>>;
+  fundOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationFundOutgoingPaymentArgs, 'input'>>;
   cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'paymentId'>>;
   createAccount?: Resolver<ResolversTypes['CreateAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAccountArgs, 'input'>>;
   createPeer?: Resolver<ResolversTypes['CreatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationCreatePeerArgs, 'input'>>;

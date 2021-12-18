@@ -24,9 +24,11 @@ type Mutation {
   ): OutgoingPaymentResponse!
   "Requote a Cancelled payment."
   requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
-  "Send a Ready payment."
-  sendOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
-  "Cancel a Ready payment."
+  "Add liquidity to a Funding payment."
+  fundOutgoingPayment(
+    input: FundOutgoingPaymentInput!
+  ): OutgoingPaymentResponse!
+  "Cancel a Funding payment."
   cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
 
   createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
@@ -148,6 +150,15 @@ input HttpOutgoingInput {
 input AssetInput {
   code: String!
   scale: Int!
+}
+
+input FundOutgoingPaymentInput {
+  "The id of the outgoing payment to add liquidity."
+  id: String!
+  "Amount of liquidity to add."
+  amount: UInt64!
+  "The id of the transfer."
+  transferId: String
 }
 
 input AddPeerLiquidityInput {
@@ -321,10 +332,10 @@ type PaymentIntent {
 }
 
 enum PaymentState {
-  "Will transition to READY when quote is complete"
+  "Will transition to FUNDING or SENDING (if already funded) when quote is complete"
   QUOTING
   "Will transition to SENDING once payment funds are reserved"
-  READY
+  FUNDING
   "Paying, will transition to COMPLETED on success"
   SENDING
   "Payment aborted; can be requoted to QUOTING"

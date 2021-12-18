@@ -1,3 +1,4 @@
+import assert from 'assert'
 import nock from 'nock'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
@@ -24,6 +25,7 @@ import { AccountService } from '../../open_payments/account/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
+  FundOutgoingPaymentInput,
   Account,
   PaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType
@@ -480,19 +482,27 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
   })
 
-  describe(`Mutation.sendOutgoingPayment`, (): void => {
+  describe(`Mutation.fundOutgoingPayment`, (): void => {
+    let input: FundOutgoingPaymentInput
+
+    beforeEach(
+      async (): Promise<void> => {
+        assert.ok(payment.quote)
+        input = {
+          id: payment.id,
+          amount: payment.quote.maxSourceAmount
+        }
+      }
+    )
     test('200', async (): Promise<void> => {
       const spy = jest
-        .spyOn(outgoingPaymentService, 'send')
-        .mockImplementation(async (id: string) => {
-          expect(id).toBe(payment.id)
-          return payment
-        })
+        .spyOn(outgoingPaymentService, 'fund')
+        .mockResolvedValueOnce(payment)
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            mutation SendOutgoingPayment($paymentId: String!) {
-              sendOutgoingPayment(paymentId: $paymentId) {
+            mutation FundOutgoingPayment($input: FundOutgoingPaymentInput!) {
+              fundOutgoingPayment(input: $input) {
                 code
                 success
                 message
@@ -502,12 +512,15 @@ describe('OutgoingPayment Resolvers', (): void => {
               }
             }
           `,
-          variables: { paymentId: payment.id }
+          variables: {
+            input
+          }
         })
         .then(
-          (query): OutgoingPaymentResponse => query.data?.sendOutgoingPayment
+          (query): OutgoingPaymentResponse => query.data?.fundOutgoingPayment
         )
       expect(spy).toHaveBeenCalledTimes(1)
+      expect(spy).toHaveBeenCalledWith(input)
       expect(query.code).toBe('200')
       expect(query.success).toBe(true)
       expect(query.message).toBeNull()
@@ -520,19 +533,18 @@ describe('OutgoingPayment Resolvers', (): void => {
     ])(
       '400 - %s',
       async (error): Promise<void> => {
-        const spy = jest.spyOn(outgoingPaymentService, 'send')
-
+        const spy = jest.spyOn(outgoingPaymentService, 'fund')
         if (error === OutgoingPaymentError.WrongState) {
-          spy.mockImplementation(async (id: string) => {
-            expect(id).toBe(payment.id)
-            return OutgoingPaymentError.WrongState
-          })
+          spy.mockResolvedValueOnce(OutgoingPaymentError.WrongState)
+        }
+        if (error === OutgoingPaymentError.UnknownPayment) {
+          input.id = uuid()
         }
         const query = await appContainer.apolloClient
           .query({
             query: gql`
-              mutation SendOutgoingPayment($paymentId: String!) {
-                sendOutgoingPayment(paymentId: $paymentId) {
+              mutation FundOutgoingPayment($input: FundOutgoingPaymentInput!) {
+                fundOutgoingPayment(input: $input) {
                   code
                   success
                   message
@@ -543,16 +555,14 @@ describe('OutgoingPayment Resolvers', (): void => {
               }
             `,
             variables: {
-              paymentId:
-                error === OutgoingPaymentError.UnknownPayment
-                  ? uuid()
-                  : payment.id
+              input
             }
           })
           .then(
-            (query): OutgoingPaymentResponse => query.data?.sendOutgoingPayment
+            (query): OutgoingPaymentResponse => query.data?.fundOutgoingPayment
           )
         expect(spy).toHaveBeenCalledTimes(1)
+        expect(spy).toHaveBeenCalledWith(input)
         expect(query.code).toBe('400')
         expect(query.success).toBe(false)
         expect(query.message).toBe(error)
@@ -562,16 +572,13 @@ describe('OutgoingPayment Resolvers', (): void => {
 
     test('500', async (): Promise<void> => {
       const spy = jest
-        .spyOn(outgoingPaymentService, 'send')
-        .mockImplementation(async (id: string) => {
-          expect(id).toBe(payment.id)
-          throw new Error('fail')
-        })
+        .spyOn(outgoingPaymentService, 'fund')
+        .mockRejectedValueOnce(new Error('fail'))
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            mutation SendOutgoingPayment($paymentId: String!) {
-              sendOutgoingPayment(paymentId: $paymentId) {
+            mutation FundOutgoingPayment($input: FundOutgoingPaymentInput!) {
+              fundOutgoingPayment(input: $input) {
                 code
                 success
                 message
@@ -581,12 +588,15 @@ describe('OutgoingPayment Resolvers', (): void => {
               }
             }
           `,
-          variables: { paymentId: payment.id }
+          variables: {
+            input
+          }
         })
         .then(
-          (query): OutgoingPaymentResponse => query.data?.sendOutgoingPayment
+          (query): OutgoingPaymentResponse => query.data?.fundOutgoingPayment
         )
       expect(spy).toHaveBeenCalledTimes(1)
+      expect(spy).toHaveBeenCalledWith(input)
       expect(query.code).toBe('500')
       expect(query.success).toBe(false)
       expect(query.message).toBe('fail')
