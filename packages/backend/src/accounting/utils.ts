@@ -1,6 +1,9 @@
-import { AssetAccount } from './service'
-
 const ASSET_ACCOUNTS_RESERVED = 8
+
+export enum AssetAccount {
+  Liquidity = 1,
+  Settlement
+}
 
 export interface AccountId {
   id: string

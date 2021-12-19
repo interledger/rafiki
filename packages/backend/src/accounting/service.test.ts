@@ -5,11 +5,10 @@ import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import {
-  Account,
   AccountingService,
   AccountOptions,
-  AssetAccount,
-  TwoPhaseTransfer
+  Deposit,
+  Withdrawal
 } from './service'
 import { CreateAccountError, TransferError, isTransferError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -34,29 +33,6 @@ describe('Accounting Service', (): void => {
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
-  }
-
-  async function addAssetLiquidity(
-    unit: number,
-    amount: bigint
-  ): Promise<void> {
-    await expect(
-      accountingService.createTransfer({
-        sourceAccount: {
-          asset: {
-            unit,
-            account: AssetAccount.Settlement
-          }
-        },
-        destinationAccount: {
-          asset: {
-            unit,
-            account: AssetAccount.Liquidity
-          }
-        },
-        amount
-      })
-    ).resolves.toBeUndefined()
   }
 
   beforeAll(
@@ -208,45 +184,52 @@ describe('Accounting Service', (): void => {
     test("Can create an asset's accounts", async (): Promise<void> => {
       const unit = randomUnit()
 
-      for (const account in AssetAccount) {
-        if (typeof account === 'number') {
-          await expect(
-            accountingService.getAssetAccountBalance(unit, account)
-          ).resolves.toBeUndefined()
-        }
-      }
+      await expect(
+        accountingService.getAssetLiquidityBalance(unit)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.getAssetSettlementBalance(unit)
+      ).resolves.toBeUndefined()
 
       await accountingService.createAssetAccounts(unit)
 
-      for (const account in AssetAccount) {
-        if (typeof account === 'number') {
-          await expect(
-            accountingService.getAssetAccountBalance(unit, account)
-          ).resolves.toEqual(BigInt(0))
-        }
-      }
+      await expect(
+        accountingService.getAssetLiquidityBalance(unit)
+      ).resolves.toEqual(BigInt(0))
+      await expect(
+        accountingService.getAssetSettlementBalance(unit)
+      ).resolves.toEqual(BigInt(0))
     })
   })
 
-  describe('Get Asset Account Balance', (): void => {
-    test("Can retrieve an asset accounts' balance", async (): Promise<void> => {
+  describe('Get Asset Liquidity Balance', (): void => {
+    test("Can retrieve an asset liquidity' balance", async (): Promise<void> => {
       const unit = randomUnit()
       await accountingService.createAssetAccounts(unit)
-      for (const account in AssetAccount) {
-        if (typeof account === 'number') {
-          await expect(
-            accountingService.getAssetAccountBalance(unit, account)
-          ).resolves.toEqual(BigInt(0))
-        }
-      }
+      await expect(
+        accountingService.getAssetLiquidityBalance(unit)
+      ).resolves.toEqual(BigInt(0))
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
-        accountingService.getAssetAccountBalance(
-          randomUnit(),
-          AssetAccount.Liquidity
-        )
+        accountingService.getAssetLiquidityBalance(randomUnit())
+      ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Get Asset Settlement Balance', (): void => {
+    test("Can retrieve an asset accounts' balance", async (): Promise<void> => {
+      const unit = randomUnit()
+      await accountingService.createAssetAccounts(unit)
+      await expect(
+        accountingService.getAssetSettlementBalance(unit)
+      ).resolves.toEqual(BigInt(0))
+    })
+
+    test('Returns undefined for nonexistent account', async (): Promise<void> => {
+      await expect(
+        accountingService.getAssetSettlementBalance(randomUnit())
       ).resolves.toBeUndefined()
     })
   })
@@ -270,10 +253,15 @@ describe('Accounting Service', (): void => {
           destinationAccount = await accountFactory.build({
             asset: sameAsset ? sourceAccount.asset : undefined
           })
-          await addAssetLiquidity(
-            destinationAccount.asset.unit,
-            startingDestinationLiquidity
-          )
+          await expect(
+            accountingService.createDeposit({
+              id: uuid(),
+              asset: {
+                unit: destinationAccount.asset.unit
+              },
+              amount: startingDestinationLiquidity
+            })
+          ).resolves.toBeUndefined()
         }
       )
 
@@ -306,9 +294,8 @@ describe('Accounting Service', (): void => {
 
             if (sameAsset) {
               await expect(
-                accountingService.getAssetAccountBalance(
-                  sourceAccount.asset.unit,
-                  AssetAccount.Liquidity
+                accountingService.getAssetLiquidityBalance(
+                  sourceAccount.asset.unit
                 )
               ).resolves.toEqual(
                 sourceAmount < destinationAmount
@@ -317,16 +304,14 @@ describe('Accounting Service', (): void => {
               )
             } else {
               await expect(
-                accountingService.getAssetAccountBalance(
-                  sourceAccount.asset.unit,
-                  AssetAccount.Liquidity
+                accountingService.getAssetLiquidityBalance(
+                  sourceAccount.asset.unit
                 )
               ).resolves.toEqual(BigInt(0))
 
               await expect(
-                accountingService.getAssetAccountBalance(
-                  destinationAccount.asset.unit,
-                  AssetAccount.Liquidity
+                accountingService.getAssetLiquidityBalance(
+                  destinationAccount.asset.unit
                 )
               ).resolves.toEqual(
                 startingDestinationLiquidity - destinationAmount
@@ -353,9 +338,8 @@ describe('Accounting Service', (): void => {
 
             if (sameAsset) {
               await expect(
-                accountingService.getAssetAccountBalance(
-                  sourceAccount.asset.unit,
-                  AssetAccount.Liquidity
+                accountingService.getAssetLiquidityBalance(
+                  sourceAccount.asset.unit
                 )
               ).resolves.toEqual(
                 commit
@@ -364,16 +348,14 @@ describe('Accounting Service', (): void => {
               )
             } else {
               await expect(
-                accountingService.getAssetAccountBalance(
-                  sourceAccount.asset.unit,
-                  AssetAccount.Liquidity
+                accountingService.getAssetLiquidityBalance(
+                  sourceAccount.asset.unit
                 )
               ).resolves.toEqual(commit ? sourceAmount : BigInt(0))
 
               await expect(
-                accountingService.getAssetAccountBalance(
-                  destinationAccount.asset.unit,
-                  AssetAccount.Liquidity
+                accountingService.getAssetLiquidityBalance(
+                  destinationAccount.asset.unit
                 )
               ).resolves.toEqual(
                 commit
@@ -488,365 +470,381 @@ describe('Accounting Service', (): void => {
     })
   })
 
-  describe('Create Transfer', (): void => {
-    let sourceAccount: AccountOptions
-    let destinationAccount: AccountOptions
-    const startingSourceBalance = BigInt(100)
+  describe.each`
+    asset    | description
+    ${true}  | ${'Asset Liquidity'}
+    ${false} | ${'Account'}
+  `(`Create $description Deposit`, (asset): void => {
+    let deposit: Deposit
+    let unit: number
 
     beforeEach(
       async (): Promise<void> => {
-        sourceAccount = await accountFactory.build({
-          balance: startingSourceBalance
-        })
-        destinationAccount = await accountFactory.build({
-          asset: sourceAccount.asset
-        })
-      }
-    )
-
-    test('A transfer can be created', async (): Promise<void> => {
-      const transfer = {
-        id: uuid(),
-        sourceAccount,
-        destinationAccount,
-        amount: BigInt(10),
-        timeout
-      }
-      await expect(
-        accountingService.createTransfer(transfer)
-      ).resolves.toBeUndefined()
-      await expect(
-        accountingService.getBalance(sourceAccount.id)
-      ).resolves.toEqual(startingSourceBalance - transfer.amount)
-      await expect(
-        accountingService.getBalance(destinationAccount.id)
-      ).resolves.toEqual(BigInt(0))
-    })
-
-    test('A transfer can be auto-committed', async (): Promise<void> => {
-      const transfer = {
-        sourceAccount,
-        destinationAccount,
-        amount: BigInt(10)
-      }
-      await expect(
-        accountingService.createTransfer(transfer)
-      ).resolves.toBeUndefined()
-      await expect(
-        accountingService.getBalance(sourceAccount.id)
-      ).resolves.toEqual(startingSourceBalance - transfer.amount)
-      await expect(
-        accountingService.getBalance(destinationAccount.id)
-      ).resolves.toEqual(transfer.amount)
-    })
-
-    test('Cannot create transfer with invalid id', async (): Promise<void> => {
-      await expect(
-        accountingService.createTransfer({
-          id: 'not a uuid',
-          sourceAccount,
-          destinationAccount,
-          amount: BigInt(10)
-        })
-      ).resolves.toEqual(TransferError.InvalidId)
-    })
-
-    test('Cannot create duplicate transfer', async (): Promise<void> => {
-      const transfer = {
-        id: uuid(),
-        sourceAccount,
-        destinationAccount,
-        amount: BigInt(10)
-      }
-      await expect(
-        accountingService.createTransfer(transfer)
-      ).resolves.toBeUndefined()
-
-      await expect(accountingService.createTransfer(transfer)).resolves.toEqual(
-        TransferError.TransferExists
-      )
-
-      await expect(
-        accountingService.createTransfer({
-          id: transfer.id,
-          sourceAccount: destinationAccount,
-          destinationAccount: sourceAccount,
-          amount: BigInt(5)
-        })
-      ).resolves.toEqual(TransferError.TransferExists)
-    })
-
-    test('Cannot transfer to same account', async (): Promise<void> => {
-      const transfer = {
-        sourceAccount,
-        destinationAccount: sourceAccount,
-        amount: BigInt(10)
-      }
-      await expect(accountingService.createTransfer(transfer)).resolves.toEqual(
-        TransferError.SameAccounts
-      )
-    })
-
-    test('Cannot transfer from unknown account', async (): Promise<void> => {
-      const transfer = {
-        sourceAccount: {
-          id: uuid()
-        },
-        destinationAccount,
-        amount: BigInt(10)
-      }
-      await expect(accountingService.createTransfer(transfer)).resolves.toEqual(
-        TransferError.UnknownSourceAccount
-      )
-    })
-
-    test('Cannot transfer to unknown account', async (): Promise<void> => {
-      const transfer = {
-        sourceAccount,
-        destinationAccount: {
-          id: uuid()
-        },
-        amount: BigInt(10)
-      }
-      await expect(accountingService.createTransfer(transfer)).resolves.toEqual(
-        TransferError.UnknownDestinationAccount
-      )
-    })
-
-    test('Cannot transfer zero', async (): Promise<void> => {
-      const transfer = {
-        sourceAccount,
-        destinationAccount: sourceAccount,
-        amount: BigInt(0)
-      }
-      await expect(accountingService.createTransfer(transfer)).resolves.toEqual(
-        TransferError.InvalidAmount
-      )
-    })
-
-    test('Cannot transfer negative amount', async (): Promise<void> => {
-      const transfer = {
-        sourceAccount,
-        destinationAccount: sourceAccount,
-        amount: -BigInt(10)
-      }
-      await expect(accountingService.createTransfer(transfer)).resolves.toEqual(
-        TransferError.InvalidAmount
-      )
-    })
-
-    test('Cannot transfer between accounts with different assets', async (): Promise<void> => {
-      const destinationAccount = await accountFactory.build({
-        asset: {
-          unit: randomUnit()
-        }
-      })
-
-      const transfer = {
-        sourceAccount,
-        destinationAccount,
-        amount: BigInt(10)
-      }
-      await expect(accountingService.createTransfer(transfer)).resolves.toEqual(
-        TransferError.DifferentAssets
-      )
-    })
-
-    test('Cannot create transfer exceeding source balance', async (): Promise<void> => {
-      const transfer = {
-        id: uuid(),
-        sourceAccount,
-        destinationAccount,
-        amount: startingSourceBalance + BigInt(1),
-        timeout
-      }
-      await expect(accountingService.createTransfer(transfer)).resolves.toEqual(
-        TransferError.InsufficientBalance
-      )
-    })
-  })
-
-  describe('Commit/Rollback Transfer', (): void => {
-    let transfer: TwoPhaseTransfer
-    let sourceAccount: Account
-    let destinationAccount: Account
-    const startingSourceBalance = BigInt(100)
-
-    beforeEach(
-      async (): Promise<void> => {
-        sourceAccount = await accountFactory.build({
-          balance: startingSourceBalance
-        })
-        destinationAccount = await accountFactory.build({
-          asset: sourceAccount.asset
-        })
-        transfer = {
-          id: uuid(),
-          sourceAccount,
-          destinationAccount,
-          amount: BigInt(10),
-          timeout
+        const account = await accountFactory.build()
+        unit = account.asset.unit
+        const id = uuid()
+        const amount = BigInt(10)
+        if (asset) {
+          deposit = {
+            id,
+            asset: { unit },
+            amount
+          }
+          await expect(
+            accountingService.getAssetLiquidityBalance(unit)
+          ).resolves.toEqual(BigInt(0))
+        } else {
+          deposit = {
+            id,
+            accountId: account.id,
+            amount
+          }
+          await expect(
+            accountingService.getBalance(account.id)
+          ).resolves.toEqual(BigInt(0))
         }
         await expect(
-          accountingService.createTransfer(transfer)
-        ).resolves.toBeUndefined()
-        await expect(
-          accountingService.getBalance(sourceAccount.id)
-        ).resolves.toEqual(startingSourceBalance - transfer.amount)
-        await expect(
-          accountingService.getBalance(destinationAccount.id)
+          accountingService.getAssetSettlementBalance(unit)
         ).resolves.toEqual(BigInt(0))
       }
     )
 
-    describe('Commit', (): void => {
-      test('A transfer can be committed', async (): Promise<void> => {
+    test('A deposit can be created', async (): Promise<void> => {
+      await expect(
+        accountingService.createDeposit(deposit)
+      ).resolves.toBeUndefined()
+      if (deposit.accountId) {
         await expect(
-          accountingService.commitTransfer(transfer.id)
+          accountingService.getBalance(deposit.accountId)
+        ).resolves.toEqual(deposit.amount)
+      } else {
+        await expect(
+          accountingService.getAssetLiquidityBalance(unit)
+        ).resolves.toEqual(deposit.amount)
+      }
+      await expect(
+        accountingService.getAssetSettlementBalance(unit)
+      ).resolves.toEqual(deposit.amount)
+    })
+
+    test('Cannot create deposit with invalid id', async (): Promise<void> => {
+      deposit.id = 'not a uuid'
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.InvalidId
+      )
+    })
+
+    test('Cannot create duplicate deposit', async (): Promise<void> => {
+      await expect(
+        accountingService.createDeposit(deposit)
+      ).resolves.toBeUndefined()
+
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.TransferExists
+      )
+
+      deposit.amount = BigInt(5)
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.TransferExists
+      )
+    })
+
+    test('Cannot deposit to unknown account', async (): Promise<void> => {
+      if (deposit.asset) {
+        deposit.asset.unit = randomUnit()
+      } else {
+        deposit.accountId = uuid()
+      }
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        asset
+          ? TransferError.UnknownSourceAccount
+          : TransferError.UnknownDestinationAccount
+      )
+    })
+
+    test('Cannot deposit zero', async (): Promise<void> => {
+      deposit.amount = BigInt(0)
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.InvalidAmount
+      )
+    })
+
+    test('Cannot deposit deposit amount', async (): Promise<void> => {
+      deposit.amount = -BigInt(10)
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.InvalidAmount
+      )
+    })
+  })
+
+  describe.each`
+    asset    | description
+    ${true}  | ${'Asset Liquidity'}
+    ${false} | ${'Account'}
+  `(`$description Withdrawal`, (asset): void => {
+    let withdrawal: Withdrawal
+    let unit: number
+    const startingBalance = BigInt(10)
+    beforeEach(
+      async (): Promise<void> => {
+        const account = await accountFactory.build({
+          balance: asset ? BigInt(0) : startingBalance
+        })
+        unit = account.asset.unit
+        const id = uuid()
+        const amount = BigInt(1)
+        if (asset) {
+          withdrawal = {
+            id,
+            asset: { unit },
+            amount,
+            timeout
+          }
+          await expect(
+            accountingService.createDeposit({
+              id: uuid(),
+              asset: { unit },
+              amount: startingBalance
+            })
+          ).resolves.toBeUndefined()
+          await expect(
+            accountingService.getAssetLiquidityBalance(unit)
+          ).resolves.toEqual(startingBalance)
+        } else {
+          withdrawal = {
+            id,
+            accountId: account.id,
+            amount,
+            timeout
+          }
+          await expect(
+            accountingService.getBalance(account.id)
+          ).resolves.toEqual(startingBalance)
+        }
+        await expect(
+          accountingService.getAssetSettlementBalance(unit)
+        ).resolves.toEqual(startingBalance)
+      }
+    )
+
+    describe('Create', (): void => {
+      test('A withdrawal can be created', async (): Promise<void> => {
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
         ).resolves.toBeUndefined()
+        if (withdrawal.accountId) {
+          await expect(
+            accountingService.getBalance(withdrawal.accountId)
+          ).resolves.toEqual(startingBalance - withdrawal.amount)
+        } else {
+          await expect(
+            accountingService.getAssetLiquidityBalance(unit)
+          ).resolves.toEqual(startingBalance - withdrawal.amount)
+        }
         await expect(
-          accountingService.getBalance(sourceAccount.id)
-        ).resolves.toEqual(startingSourceBalance - transfer.amount)
-        await expect(
-          accountingService.getBalance(destinationAccount.id)
-        ).resolves.toEqual(transfer.amount)
+          accountingService.getAssetSettlementBalance(unit)
+        ).resolves.toEqual(startingBalance)
       })
 
-      test('Cannot commit unknown transfer', async (): Promise<void> => {
-        await expect(accountingService.commitTransfer(uuid())).resolves.toEqual(
-          TransferError.UnknownTransfer
-        )
-      })
-
-      test('Cannot commit invalid transfer id', async (): Promise<void> => {
+      test('Cannot create withdrawal with invalid id', async (): Promise<void> => {
+        withdrawal.id = 'not a uuid'
         await expect(
-          accountingService.commitTransfer('not a uuid')
+          accountingService.createWithdrawal(withdrawal)
         ).resolves.toEqual(TransferError.InvalidId)
       })
 
-      test('Cannot commit committed transfer', async (): Promise<void> => {
+      test('Cannot create duplicate withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.commitTransfer(transfer.id)
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toBeUndefined()
+
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.TransferExists)
+
+        withdrawal.amount = BigInt(2)
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.TransferExists)
+      })
+
+      test('Cannot withdraw from unknown account', async (): Promise<void> => {
+        if (withdrawal.accountId) {
+          withdrawal.accountId = uuid()
+        } else {
+          withdrawal.asset = {
+            unit: randomUnit()
+          }
+        }
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.UnknownSourceAccount)
+      })
+
+      test('Cannot withdraw zero', async (): Promise<void> => {
+        withdrawal.amount = BigInt(0)
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.InvalidAmount)
+      })
+
+      test('Cannot withdraw negative amount', async (): Promise<void> => {
+        withdrawal.amount = -BigInt(10)
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.InvalidAmount)
+      })
+
+      test('Cannot create withdraw exceeding account balance', async (): Promise<void> => {
+        withdrawal.amount = startingBalance + BigInt(1)
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.InsufficientBalance)
+      })
+    })
+
+    describe('Commit', (): void => {
+      beforeEach(
+        async (): Promise<void> => {
+          await expect(
+            accountingService.createWithdrawal(withdrawal)
+          ).resolves.toBeUndefined()
+        }
+      )
+
+      test('A withdrawal can be committed', async (): Promise<void> => {
+        await expect(
+          accountingService.commitWithdrawal(withdrawal.id)
+        ).resolves.toBeUndefined()
+        if (withdrawal.accountId) {
+          await expect(
+            accountingService.getBalance(withdrawal.accountId)
+          ).resolves.toEqual(startingBalance - withdrawal.amount)
+        } else {
+          await expect(
+            accountingService.getAssetLiquidityBalance(unit)
+          ).resolves.toEqual(startingBalance - withdrawal.amount)
+        }
+        await expect(
+          accountingService.getAssetSettlementBalance(unit)
+        ).resolves.toEqual(startingBalance - withdrawal.amount)
+      })
+
+      test('Cannot commit unknown withdrawal', async (): Promise<void> => {
+        await expect(
+          accountingService.commitWithdrawal(uuid())
+        ).resolves.toEqual(TransferError.UnknownTransfer)
+      })
+
+      test('Cannot commit invalid withdrawal id', async (): Promise<void> => {
+        await expect(
+          accountingService.commitWithdrawal('not a uuid')
+        ).resolves.toEqual(TransferError.InvalidId)
+      })
+
+      test('Cannot commit committed withdrawal', async (): Promise<void> => {
+        await expect(
+          accountingService.commitWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
-          accountingService.commitTransfer(transfer.id)
+          accountingService.commitWithdrawal(withdrawal.id)
         ).resolves.toEqual(TransferError.AlreadyCommitted)
       })
 
-      test('Cannot commit rolled back transfer', async (): Promise<void> => {
+      test('Cannot commit rolled back withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackTransfer(transfer.id)
+          accountingService.rollbackWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
-          accountingService.commitTransfer(transfer.id)
+          accountingService.commitWithdrawal(withdrawal.id)
         ).resolves.toEqual(TransferError.AlreadyRolledBack)
       })
 
-      test('Cannot commit auto-committed transfer', async (): Promise<void> => {
-        const transfer = {
+      test('Cannot commit expired withdrawal', async (): Promise<void> => {
+        const expiringWithdrawal = {
+          ...withdrawal,
           id: uuid(),
-          sourceAccount,
-          destinationAccount,
-          amount: BigInt(10)
-        }
-        await expect(
-          accountingService.createTransfer(transfer)
-        ).resolves.toBeUndefined()
-        await expect(
-          accountingService.commitTransfer(transfer.id)
-        ).resolves.toEqual(TransferError.AlreadyCommitted)
-      })
-
-      test('Cannot commit expired transfer', async (): Promise<void> => {
-        const transfer = {
-          id: uuid(),
-          sourceAccount,
-          destinationAccount,
-          amount: BigInt(10),
           timeout: BigInt(1) // nano-second
         }
         await expect(
-          accountingService.createTransfer(transfer)
+          accountingService.createWithdrawal(expiringWithdrawal)
         ).resolves.toBeUndefined()
         await new Promise((resolve) => setImmediate(resolve))
         await expect(
-          accountingService.commitTransfer(transfer.id)
+          accountingService.commitWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)
       })
     })
 
     describe('Rollback', (): void => {
-      test('A transfer can be rolled back', async (): Promise<void> => {
+      beforeEach(
+        async (): Promise<void> => {
+          await expect(
+            accountingService.createWithdrawal(withdrawal)
+          ).resolves.toBeUndefined()
+        }
+      )
+
+      test('A withdrawal can be rolled back', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackTransfer(transfer.id)
+          accountingService.rollbackWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
+        if (withdrawal.accountId) {
+          await expect(
+            accountingService.getBalance(withdrawal.accountId)
+          ).resolves.toEqual(startingBalance)
+        } else {
+          await expect(
+            accountingService.getAssetLiquidityBalance(unit)
+          ).resolves.toEqual(startingBalance)
+        }
         await expect(
-          accountingService.getBalance(sourceAccount.id)
-        ).resolves.toEqual(startingSourceBalance)
-        await expect(
-          accountingService.getBalance(destinationAccount.id)
-        ).resolves.toEqual(BigInt(0))
+          accountingService.getAssetSettlementBalance(unit)
+        ).resolves.toEqual(startingBalance)
       })
 
-      test('Cannot rollback unknown transfer', async (): Promise<void> => {
+      test('Cannot rollback unknown withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackTransfer(uuid())
+          accountingService.rollbackWithdrawal(uuid())
         ).resolves.toEqual(TransferError.UnknownTransfer)
       })
 
-      test('Cannot commit invalid transfer id', async (): Promise<void> => {
+      test('Cannot commit invalid withdrawal id', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackTransfer('not a uuid')
+          accountingService.rollbackWithdrawal('not a uuid')
         ).resolves.toEqual(TransferError.InvalidId)
       })
 
-      test('Cannot rollback committed transfer', async (): Promise<void> => {
+      test('Cannot rollback committed withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.commitTransfer(transfer.id)
+          accountingService.commitWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
-          accountingService.rollbackTransfer(transfer.id)
+          accountingService.rollbackWithdrawal(withdrawal.id)
         ).resolves.toEqual(TransferError.AlreadyCommitted)
       })
 
-      test('Cannot rollback rolled back transfer', async (): Promise<void> => {
+      test('Cannot rollback rolled back withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackTransfer(transfer.id)
+          accountingService.rollbackWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
-          accountingService.rollbackTransfer(transfer.id)
+          accountingService.rollbackWithdrawal(withdrawal.id)
         ).resolves.toEqual(TransferError.AlreadyRolledBack)
       })
 
-      test('Cannot rollback auto-committed transfer', async (): Promise<void> => {
-        const transfer = {
+      test('Cannot rollback expired withdrawal', async (): Promise<void> => {
+        const expiringWithdrawal = {
+          ...withdrawal,
           id: uuid(),
-          sourceAccount,
-          destinationAccount,
-          amount: BigInt(10)
-        }
-        await expect(
-          accountingService.createTransfer(transfer)
-        ).resolves.toBeUndefined()
-        await expect(
-          accountingService.rollbackTransfer(transfer.id)
-        ).resolves.toEqual(TransferError.AlreadyCommitted)
-      })
-
-      test('Cannot rollback expired transfer', async (): Promise<void> => {
-        const transfer = {
-          id: uuid(),
-          sourceAccount,
-          destinationAccount,
-          amount: BigInt(10),
           timeout: BigInt(1) // nano-second
         }
         await expect(
-          accountingService.createTransfer(transfer)
+          accountingService.createWithdrawal(expiringWithdrawal)
         ).resolves.toBeUndefined()
         await new Promise((resolve) => setImmediate(resolve))
         await expect(
-          accountingService.rollbackTransfer(transfer.id)
+          accountingService.rollbackWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)
       })
     })

@@ -3,7 +3,6 @@ import { v4 as uuid } from 'uuid'
 import {
   AccountingService,
   Account,
-  AssetAccount,
   AccountOptions
 } from '../accounting/service'
 import { randomUnit } from './asset'
@@ -25,14 +24,9 @@ export class AccountFactory {
     const account = await this.accounts.createAccount(accountOptions)
 
     if (options.balance) {
-      await this.accounts.createTransfer({
-        sourceAccount: {
-          asset: {
-            unit,
-            account: AssetAccount.Settlement
-          }
-        },
-        destinationAccount: account,
+      await this.accounts.createDeposit({
+        id: uuid(),
+        accountId: account.id,
         amount: options.balance
       })
     }

@@ -158,7 +158,7 @@ input FundOutgoingPaymentInput {
   "Amount of liquidity to add."
   amount: UInt64!
   "The id of the transfer."
-  transferId: String
+  transferId: String!
 }
 
 input AddPeerLiquidityInput {
@@ -167,7 +167,7 @@ input AddPeerLiquidityInput {
   "Amount of liquidity to add."
   amount: UInt64!
   "The id of the transfer."
-  id: String
+  id: String!
 }
 
 input AddAssetLiquidityInput {
@@ -176,7 +176,7 @@ input AddAssetLiquidityInput {
   "Amount of liquidity to add."
   amount: UInt64!
   "The id of the transfer."
-  id: String
+  id: String!
 }
 
 input CreatePeerLiquidityWithdrawalInput {

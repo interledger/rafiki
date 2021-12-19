@@ -5,7 +5,7 @@ import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { InvoiceService } from './service'
-import { AccountingService, AssetAccount } from '../../accounting/service'
+import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Invoice } from './model'
 import { resetGraphileDb } from '../../tests/graphileDb'
@@ -146,14 +146,9 @@ describe('Invoice Service', (): void => {
 
     test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
       await expect(
-        accountingService.createTransfer({
-          sourceAccount: {
-            asset: {
-              unit: invoice.account.asset.unit,
-              account: AssetAccount.Settlement
-            }
-          },
-          destinationAccount: invoice,
+        accountingService.createDeposit({
+          id: uuid(),
+          accountId: invoice.id,
           amount: invoice.amount - BigInt(1)
         })
       ).resolves.toBeUndefined()
@@ -166,14 +161,9 @@ describe('Invoice Service', (): void => {
 
     test('Deactivates fully paid invoice', async (): Promise<void> => {
       await expect(
-        accountingService.createTransfer({
-          sourceAccount: {
-            asset: {
-              unit: invoice.account.asset.unit,
-              account: AssetAccount.Settlement
-            }
-          },
-          destinationAccount: invoice,
+        accountingService.createDeposit({
+          id: uuid(),
+          accountId: invoice.id,
           amount: invoice.amount
         })
       ).resolves.toBeUndefined()
@@ -211,14 +201,9 @@ describe('Invoice Service', (): void => {
         expiresAt: new Date(Date.now() - 40_000)
       })
       await expect(
-        accountingService.createTransfer({
-          sourceAccount: {
-            asset: {
-              unit: invoice.account.asset.unit,
-              account: AssetAccount.Settlement
-            }
-          },
-          destinationAccount: invoice,
+        accountingService.createDeposit({
+          id: uuid(),
+          accountId: invoice.id,
           amount: BigInt(1)
         })
       ).resolves.toBeUndefined()

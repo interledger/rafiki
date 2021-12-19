@@ -17,7 +17,6 @@ import { LifecycleError, OutgoingPaymentError } from './errors'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../accounting/errors'
 import {
-  AssetAccount,
   AccountingService,
   AccountTransferOptions
 } from '../accounting/service'
@@ -122,14 +121,9 @@ describe('OutgoingPaymentService', (): void => {
 
   async function payInvoice(amount: bigint): Promise<void> {
     await expect(
-      accountingService.createTransfer({
-        sourceAccount: {
-          asset: {
-            unit: invoice.account.asset.unit,
-            account: AssetAccount.Settlement
-          }
-        },
-        destinationAccount: invoice,
+      accountingService.createDeposit({
+        id: uuid(),
+        accountId: invoice.id,
         amount
       })
     ).resolves.toBeUndefined()
@@ -223,18 +217,10 @@ describe('OutgoingPaymentService', (): void => {
         asset: destinationAsset
       })
       await expect(
-        accountingService.createTransfer({
-          sourceAccount: {
-            asset: {
-              unit: destinationAccount.asset.unit,
-              account: AssetAccount.Settlement
-            }
-          },
-          destinationAccount: {
-            asset: {
-              unit: destinationAccount.asset.unit,
-              account: AssetAccount.Liquidity
-            }
+        accountingService.createDeposit({
+          id: uuid(),
+          asset: {
+            unit: destinationAccount.asset.unit
           },
           amount: BigInt(123)
         })
@@ -636,7 +622,8 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.fund({
             id: paymentId,
-            amount: payment.quote.maxSourceAmount
+            amount: payment.quote.maxSourceAmount,
+            transferId: uuid()
           })
         ).resolves.toMatchObject({
           state: PaymentState.Sending
@@ -925,7 +912,8 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.fund({
           id: uuid(),
-          amount: quoteAmount
+          amount: quoteAmount,
+          transferId: uuid()
         })
       ).resolves.toEqual(OutgoingPaymentError.UnknownPayment)
     })
@@ -934,7 +922,8 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.fund({
           id: payment.id,
-          amount: quoteAmount
+          amount: quoteAmount,
+          transferId: uuid()
         })
       ).resolves.toMatchObject({
         id: payment.id,
@@ -950,7 +939,8 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.fund({
           id: payment.id,
-          amount: quoteAmount - BigInt(1)
+          amount: quoteAmount - BigInt(1),
+          transferId: uuid()
         })
       ).resolves.toMatchObject({
         id: payment.id,
@@ -969,7 +959,8 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.fund({
             id: payment.id,
-            amount: quoteAmount
+            amount: quoteAmount,
+            transferId: uuid()
           })
         ).resolves.toEqual(OutgoingPaymentError.WrongState)
 

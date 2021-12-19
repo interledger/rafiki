@@ -5,7 +5,6 @@ import {
   LiquidityMutationResponse
 } from '../generated/graphql'
 import { TransferError } from '../../accounting/errors'
-import { AssetAccount } from '../../accounting/service'
 import { ApolloContext } from '../../app'
 
 export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] = async (
@@ -20,15 +19,9 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
       return responses[LiquidityError.UnknownPeer]
     }
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.createTransfer({
+    const error = await accountingService.createDeposit({
       id: args.input.id,
-      sourceAccount: {
-        asset: {
-          unit: peer.asset.unit,
-          account: AssetAccount.Settlement
-        }
-      },
-      destinationAccount: peer,
+      accountId: peer.id,
       amount: args.input.amount
     })
     if (error) {
@@ -67,19 +60,10 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
       return responses[LiquidityError.UnknownAsset]
     }
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.createTransfer({
+    const error = await accountingService.createDeposit({
       id: args.input.id,
-      sourceAccount: {
-        asset: {
-          unit: asset.unit,
-          account: AssetAccount.Settlement
-        }
-      },
-      destinationAccount: {
-        asset: {
-          unit: asset.unit,
-          account: AssetAccount.Liquidity
-        }
+      asset: {
+        unit: asset.unit
       },
       amount: args.input.amount
     })
@@ -119,15 +103,9 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
       return responses[LiquidityError.UnknownPeer]
     }
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.createTransfer({
+    const error = await accountingService.createWithdrawal({
       id: args.input.id,
-      sourceAccount: peer,
-      destinationAccount: {
-        asset: {
-          unit: peer.asset.unit,
-          account: AssetAccount.Settlement
-        }
-      },
+      accountId: peer.id,
       amount: args.input.amount,
       timeout: BigInt(60e9) // 1 minute
     })
@@ -167,19 +145,10 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
       return responses[LiquidityError.UnknownAsset]
     }
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.createTransfer({
+    const error = await accountingService.createWithdrawal({
       id: args.input.id,
-      sourceAccount: {
-        asset: {
-          unit: asset.unit,
-          account: AssetAccount.Liquidity
-        }
-      },
-      destinationAccount: {
-        asset: {
-          unit: asset.unit,
-          account: AssetAccount.Settlement
-        }
+      asset: {
+        unit: asset.unit
       },
       amount: args.input.amount,
       timeout: BigInt(60e9) // 1 minute
@@ -214,7 +183,7 @@ export const finalizeLiquidityWithdrawal: MutationResolvers<ApolloContext>['fina
   ctx
 ): ResolversTypes['LiquidityMutationResponse'] => {
   const accountingService = await ctx.container.use('accountingService')
-  const error = await accountingService.commitTransfer(args.withdrawalId)
+  const error = await accountingService.commitWithdrawal(args.withdrawalId)
   if (error) {
     return errorToResponse(error)
   }
@@ -231,7 +200,7 @@ export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['roll
   ctx
 ): ResolversTypes['LiquidityMutationResponse'] => {
   const accountingService = await ctx.container.use('accountingService')
-  const error = await accountingService.rollbackTransfer(args.withdrawalId)
+  const error = await accountingService.rollbackWithdrawal(args.withdrawalId)
   if (error) {
     return errorToResponse(error)
   }

@@ -8,10 +8,8 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { AccountingService, AssetAccount } from '../../accounting/service'
-import { AccountIdOptions } from '../../accounting/utils'
+import { AccountingService, Deposit } from '../../accounting/service'
 import { AssetService } from '../../asset/service'
-import { AccountFactory } from '../../tests/accountFactory'
 import { randomAsset, randomUnit } from '../../tests/asset'
 import { PeerFactory } from '../../tests/peerFactory'
 import { truncateTables } from '../../tests/tableManager'
@@ -20,61 +18,11 @@ import { LiquidityError, LiquidityMutationResponse } from '../generated/graphql'
 describe('Withdrawal Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let accountFactory: AccountFactory
   let accountingService: AccountingService
   let assetService: AssetService
   let peerFactory: PeerFactory
   let knex: Knex
   const timeout = BigInt(10e9) // 10 seconds
-
-  interface LiquidityOptions {
-    id?: string
-    account: AccountIdOptions
-    amount: bigint
-  }
-
-  async function addLiquidity({
-    id,
-    account,
-    amount
-  }: LiquidityOptions): Promise<void> {
-    assert.ok(account.asset)
-    await expect(
-      accountingService.createTransfer({
-        id,
-        sourceAccount: {
-          asset: {
-            unit: account.asset.unit,
-            account: AssetAccount.Settlement
-          }
-        },
-        destinationAccount: account,
-        amount
-      })
-    ).resolves.toBeUndefined()
-  }
-
-  async function createLiquidityWithdrawal({
-    id,
-    account,
-    amount
-  }: Required<LiquidityOptions>): Promise<void> {
-    assert.ok(account.asset)
-    await expect(
-      accountingService.createTransfer({
-        id,
-        sourceAccount: account,
-        destinationAccount: {
-          asset: {
-            unit: account.asset.unit,
-            account: AssetAccount.Settlement
-          }
-        },
-        amount,
-        timeout
-      })
-    ).resolves.toBeUndefined()
-  }
 
   beforeAll(
     async (): Promise<void> => {
@@ -83,7 +31,6 @@ describe('Withdrawal Resolvers', (): void => {
       knex = await deps.use('knex')
       accountingService = await deps.use('accountingService')
       assetService = await deps.use('assetService')
-      accountFactory = new AccountFactory(accountingService)
       const peerService = await deps.use('peerService')
       peerFactory = new PeerFactory(peerService)
     }
@@ -121,6 +68,7 @@ describe('Withdrawal Resolvers', (): void => {
           `,
           variables: {
             input: {
+              id: uuid(),
               peerId,
               amount: '100'
             }
@@ -193,6 +141,7 @@ describe('Withdrawal Resolvers', (): void => {
           `,
           variables: {
             input: {
+              id: uuid(),
               peerId: uuid(),
               amount: '100'
             }
@@ -215,13 +164,14 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
-      const account = await accountFactory.build()
       const id = uuid()
-      await addLiquidity({
-        id,
-        account,
-        amount: BigInt(100)
-      })
+      await expect(
+        accountingService.createDeposit({
+          id,
+          accountId: peerId,
+          amount: BigInt(100)
+        })
+      ).resolves.toBeUndefined()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -261,10 +211,13 @@ describe('Withdrawal Resolvers', (): void => {
 
   describe('Add asset liquidity', (): void => {
     let assetId: string
+    let unit: number
 
     beforeEach(
       async (): Promise<void> => {
-        assetId = (await assetService.getOrCreate(randomAsset())).id
+        const asset = await assetService.getOrCreate(randomAsset())
+        assetId = asset.id
+        unit = asset.unit
       }
     )
 
@@ -283,6 +236,7 @@ describe('Withdrawal Resolvers', (): void => {
           `,
           variables: {
             input: {
+              id: uuid(),
               assetId,
               amount: '100'
             }
@@ -355,6 +309,7 @@ describe('Withdrawal Resolvers', (): void => {
           `,
           variables: {
             input: {
+              id: uuid(),
               assetId: uuid(),
               amount: '100'
             }
@@ -377,13 +332,16 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
-      const account = await accountFactory.build()
       const id = uuid()
-      await addLiquidity({
-        id,
-        account,
-        amount: BigInt(100)
-      })
+      await expect(
+        accountingService.createDeposit({
+          id,
+          asset: {
+            unit
+          },
+          amount: BigInt(100)
+        })
+      ).resolves.toBeUndefined()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -428,10 +386,13 @@ describe('Withdrawal Resolvers', (): void => {
     beforeEach(
       async (): Promise<void> => {
         const peer = await peerFactory.build()
-        await addLiquidity({
-          account: peer,
-          amount: startingBalance
-        })
+        await expect(
+          accountingService.createDeposit({
+            id: uuid(),
+            accountId: peer.id,
+            amount: startingBalance
+          })
+        ).resolves.toBeUndefined()
         peerId = peer.id
       }
     )
@@ -553,13 +514,14 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
-      const account = await accountFactory.build()
       const id = uuid()
-      await addLiquidity({
-        id,
-        account,
-        amount: BigInt(10)
-      })
+      await expect(
+        accountingService.createDeposit({
+          id,
+          accountId: peerId,
+          amount: BigInt(10)
+        })
+      ).resolves.toBeUndefined()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -639,21 +601,23 @@ describe('Withdrawal Resolvers', (): void => {
 
   describe('Create asset liquidity withdrawal', (): void => {
     let assetId: string
+    let unit: number
     const startingBalance = BigInt(100)
 
     beforeEach(
       async (): Promise<void> => {
         const asset = await assetService.getOrCreate(randomAsset())
-        await addLiquidity({
-          account: {
+        await expect(
+          accountingService.createDeposit({
+            id: uuid(),
             asset: {
-              unit: asset.unit,
-              account: AssetAccount.Liquidity
-            }
-          },
-          amount: startingBalance
-        })
+              unit: asset.unit
+            },
+            amount: startingBalance
+          })
+        ).resolves.toBeUndefined()
         assetId = asset.id
+        unit = asset.unit
       }
     )
 
@@ -774,13 +738,16 @@ describe('Withdrawal Resolvers', (): void => {
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
-      const account = await accountFactory.build()
       const id = uuid()
-      await addLiquidity({
-        id,
-        account,
-        amount: BigInt(10)
-      })
+      await expect(
+        accountingService.createDeposit({
+          id,
+          asset: {
+            unit
+          },
+          amount: BigInt(10)
+        })
+      ).resolves.toBeUndefined()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -865,29 +832,36 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          let account: AccountIdOptions
+          let deposit: Deposit
           if (type === 'peer') {
-            account = await peerFactory.build()
+            const peer = await peerFactory.build()
+            deposit = {
+              id: uuid(),
+              accountId: peer.id,
+              amount: BigInt(100)
+            }
           } else {
             assert.equal(type, 'asset')
-            account = {
-              asset: {
-                unit: randomUnit(),
-                account: AssetAccount.Liquidity
-              }
+            const unit = randomUnit()
+            await accountingService.createAssetAccounts(unit)
+            deposit = {
+              id: uuid(),
+              asset: { unit },
+              amount: BigInt(100)
             }
-            await accountingService.createAssetAccounts(account.asset.unit)
           }
-          await addLiquidity({
-            account,
-            amount: BigInt(100)
-          })
+          await expect(
+            accountingService.createDeposit(deposit)
+          ).resolves.toBeUndefined()
           withdrawalId = uuid()
-          await createLiquidityWithdrawal({
-            id: withdrawalId,
-            account,
-            amount: BigInt(10)
-          })
+          await expect(
+            accountingService.createWithdrawal({
+              ...deposit,
+              id: withdrawalId,
+              amount: BigInt(10),
+              timeout
+            })
+          ).resolves.toBeUndefined()
         }
       )
 
@@ -991,7 +965,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       test("Can't finalize finalized withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.commitTransfer(withdrawalId)
+          accountingService.commitWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -1027,7 +1001,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.rollbackTransfer(withdrawalId)
+          accountingService.rollbackWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -1070,29 +1044,36 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          let account: AccountIdOptions
+          let deposit: Deposit
           if (type === 'peer') {
-            account = await peerFactory.build()
+            const peer = await peerFactory.build()
+            deposit = {
+              id: uuid(),
+              accountId: peer.id,
+              amount: BigInt(100)
+            }
           } else {
             assert.equal(type, 'asset')
-            account = {
-              asset: {
-                unit: randomUnit(),
-                account: AssetAccount.Liquidity
-              }
+            const unit = randomUnit()
+            await accountingService.createAssetAccounts(unit)
+            deposit = {
+              id: uuid(),
+              asset: { unit },
+              amount: BigInt(100)
             }
-            await accountingService.createAssetAccounts(account.asset.unit)
           }
-          await addLiquidity({
-            account,
-            amount: BigInt(100)
-          })
+          await expect(
+            accountingService.createDeposit(deposit)
+          ).resolves.toBeUndefined()
           withdrawalId = uuid()
-          await createLiquidityWithdrawal({
-            id: withdrawalId,
-            account,
-            amount: BigInt(10)
-          })
+          await expect(
+            accountingService.createWithdrawal({
+              ...deposit,
+              id: withdrawalId,
+              amount: BigInt(10),
+              timeout
+            })
+          ).resolves.toBeUndefined()
         }
       )
 
@@ -1196,7 +1177,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       test("Can't rollback finalized withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.commitTransfer(withdrawalId)
+          accountingService.commitWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -1232,7 +1213,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.rollbackTransfer(withdrawalId)
+          accountingService.rollbackWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({

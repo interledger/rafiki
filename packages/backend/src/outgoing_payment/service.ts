@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 import { BaseService } from '../shared/baseService'
 import { LifecycleError, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import { AccountingService, AssetAccount } from '../accounting/service'
+import { AccountingService } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
 import { WebhookService } from '../webhook/service'
@@ -172,7 +172,7 @@ function requotePayment(
 export interface FundOutgoingPaymentOptions {
   id: string
   amount: bigint
-  transferId?: string
+  transferId: string
 }
 
 async function fundPayment(
@@ -189,17 +189,9 @@ async function fundPayment(
       return OutgoingPaymentError.WrongState
     }
     if (!payment.quote) throw LifecycleError.MissingQuote
-    const error = await deps.accountingService.createTransfer({
+    const error = await deps.accountingService.createDeposit({
       id: transferId,
-      sourceAccount: {
-        asset: {
-          unit: payment.account.asset.unit,
-          account: AssetAccount.Settlement
-        }
-      },
-      destinationAccount: {
-        id: payment.id
-      },
+      accountId: payment.id,
       amount
     })
     if (error) {

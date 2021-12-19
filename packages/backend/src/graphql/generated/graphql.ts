@@ -46,7 +46,7 @@ export type AddAssetLiquidityInput = {
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64'];
   /** The id of the transfer. */
-  id?: Maybe<Scalars['String']>;
+  id: Scalars['String'];
 };
 
 export type AddPeerLiquidityInput = {
@@ -55,7 +55,7 @@ export type AddPeerLiquidityInput = {
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64'];
   /** The id of the transfer. */
-  id?: Maybe<Scalars['String']>;
+  id: Scalars['String'];
 };
 
 export type ApiKey = {
@@ -169,7 +169,7 @@ export type FundOutgoingPaymentInput = {
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64'];
   /** The id of the transfer. */
-  transferId?: Maybe<Scalars['String']>;
+  transferId: Scalars['String'];
 };
 
 export type Http = {
