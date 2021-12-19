@@ -16,10 +16,7 @@ import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { LifecycleError, OutgoingPaymentError } from './errors'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../accounting/errors'
-import {
-  AccountingService,
-  AccountTransferOptions
-} from '../accounting/service'
+import { AccountingService, TransferOptions } from '../accounting/service'
 import { AssetOptions } from '../asset/service'
 import { Invoice } from '../open_payments/invoice/model'
 import { RatesService } from '../rates/service'
@@ -130,11 +127,11 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   function trackAmountDelivered(sourceAccountId: string): void {
-    const { transferFunds } = accountingService
+    const { createTransfer } = accountingService
     jest
-      .spyOn(accountingService, 'transferFunds')
-      .mockImplementation(async (options: AccountTransferOptions) => {
-        const trxOrError = await transferFunds(options)
+      .spyOn(accountingService, 'createTransfer')
+      .mockImplementation(async (options: TransferOptions) => {
+        const trxOrError = await createTransfer(options)
         if (
           !isTransferError(trxOrError) &&
           options.sourceAccount.id === sourceAccountId

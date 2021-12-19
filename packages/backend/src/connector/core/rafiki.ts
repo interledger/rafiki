@@ -51,7 +51,7 @@ export interface TransferOptions {
 }
 
 export interface AccountingService {
-  transferFunds(options: TransferOptions): Promise<Transaction | TransferError>
+  createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
 }
 
 export interface RafikiServices {

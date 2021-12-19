@@ -58,7 +58,7 @@ export type Withdrawal = Deposit & {
   timeout: bigint
 }
 
-export interface AccountTransferOptions {
+export interface TransferOptions {
   sourceAccount: AccountOptions
   destinationAccount: AccountOptions
   sourceAmount: bigint
@@ -80,9 +80,7 @@ export interface AccountingService {
   getTotalReceived(id: string): Promise<bigint | undefined>
   getAssetLiquidityBalance(unit: number): Promise<bigint | undefined>
   getAssetSettlementBalance(unit: number): Promise<bigint | undefined>
-  transferFunds(
-    options: AccountTransferOptions
-  ): Promise<Transaction | TransferError>
+  createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(deposit: Deposit): Promise<void | TransferError>
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>
   commitWithdrawal(id: string): Promise<void | TransferError>
@@ -115,7 +113,7 @@ export function createAccountingService({
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAssetLiquidityBalance: (unit) => getAssetLiquidityBalance(deps, unit),
     getAssetSettlementBalance: (unit) => getAssetSettlementBalance(deps, unit),
-    transferFunds: (options) => transferFunds(deps, options),
+    createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     commitWithdrawal: (options) => commitAccountWithdrawal(deps, options),
@@ -264,7 +262,7 @@ export async function getAssetSettlementBalance(
   }
 }
 
-export async function transferFunds(
+export async function createTransfer(
   deps: ServiceDependencies,
   {
     sourceAccount,
@@ -272,7 +270,7 @@ export async function transferFunds(
     sourceAmount,
     destinationAmount,
     timeout
-  }: AccountTransferOptions
+  }: TransferOptions
 ): Promise<Transaction | TransferError> {
   if (sourceAccount.id === destinationAccount.id) {
     return TransferError.SameAccounts

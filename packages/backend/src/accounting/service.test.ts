@@ -278,7 +278,7 @@ describe('Accounting Service', (): void => {
         `(
           '$description',
           async ({ commit }): Promise<void> => {
-            const trxOrError = await accountingService.transferFunds({
+            const trxOrError = await accountingService.createTransfer({
               sourceAccount,
               destinationAccount,
               sourceAmount,
@@ -391,7 +391,7 @@ describe('Accounting Service', (): void => {
           timeout
         }
         await expect(
-          accountingService.transferFunds(transfer)
+          accountingService.createTransfer(transfer)
         ).resolves.toEqual(TransferError.InsufficientBalance)
         await expect(
           accountingService.getBalance(sourceAccount.id)
@@ -400,7 +400,7 @@ describe('Accounting Service', (): void => {
 
       test('Returns error for insufficient destination liquidity balance', async (): Promise<void> => {
         await expect(
-          accountingService.transferFunds({
+          accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
             sourceAmount: BigInt(1),
@@ -412,7 +412,7 @@ describe('Accounting Service', (): void => {
 
       test('Returns error for same accounts', async (): Promise<void> => {
         await expect(
-          accountingService.transferFunds({
+          accountingService.createTransfer({
             sourceAccount,
             destinationAccount: sourceAccount,
             sourceAmount: BigInt(5),
@@ -424,7 +424,7 @@ describe('Accounting Service', (): void => {
 
       test('Returns error for invalid source amount', async (): Promise<void> => {
         await expect(
-          accountingService.transferFunds({
+          accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
             sourceAmount: BigInt(0),
@@ -434,7 +434,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toEqual(TransferError.InvalidSourceAmount)
 
         await expect(
-          accountingService.transferFunds({
+          accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
             sourceAmount: BigInt(-1),
@@ -446,7 +446,7 @@ describe('Accounting Service', (): void => {
 
       test('Returns error for invalid destination amount', async (): Promise<void> => {
         await expect(
-          accountingService.transferFunds({
+          accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
             sourceAmount: BigInt(5),
@@ -456,7 +456,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toEqual(TransferError.InvalidDestinationAmount)
 
         await expect(
-          accountingService.transferFunds({
+          accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
             sourceAmount: BigInt(5),

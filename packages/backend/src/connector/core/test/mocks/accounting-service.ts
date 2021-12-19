@@ -83,7 +83,7 @@ export class MockAccountingService implements AccountingService {
     return account
   }
 
-  async transferFunds({
+  async createTransfer({
     sourceAccount,
     destinationAccount,
     sourceAmount,

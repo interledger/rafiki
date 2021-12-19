@@ -72,7 +72,7 @@ describe('Asset Service', (): void => {
       )
     })
 
-   test('Asset accounts are created', async (): Promise<void> => {
+    test('Asset accounts are created', async (): Promise<void> => {
       const accountingService = await deps.use('accountingService')
       const unit = 1
 
