@@ -12,7 +12,7 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTable, truncateTables } from '../tests/tableManager'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import { LifecycleError } from './lifecycle'
+import { LifecycleError, OutgoingPaymentError } from './errors'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../accounting/errors'
 import {
@@ -79,64 +79,17 @@ describe('OutgoingPaymentService', (): void => {
       )
   }
 
-  async function fund(paymentId: string): Promise<void> {
-    const payment = await outgoingPaymentService.get(paymentId)
-    if (!payment) throw 'no payment'
-    if (!payment.quote) throw 'no quote'
-    await expect(
-      accountingService.createTransfer({
-        sourceAccount: {
-          asset: {
-            unit: payment.account.asset.unit,
-            account: AssetAccount.Settlement
-          }
-        },
-        destinationAccount: {
-          id: payment.id,
-          asset: payment.account.asset
-        },
-        amount: payment.quote.maxSourceAmount
-      })
-    ).resolves.toBeUndefined()
-  }
-
   async function payInvoice(amount: bigint): Promise<void> {
-    const trxOrError = await accountingService.transferFunds({
-      sourceAccount: {
-        asset: {
-          unit: invoice.account.asset.unit,
-          account: AssetAccount.Settlement
-        }
-      },
-      destinationAccount: {
-        id: invoice.id,
-        asset: invoice.account.asset
-      },
-      sourceAmount: amount,
-      timeout: BigInt(10e9) // 10 seconds
-    })
-    assert.ok(!isTransferError(trxOrError))
-    await expect(trxOrError.commit()).resolves.toBeUndefined()
-  }
-
-  async function withdraw(paymentId: string): Promise<void> {
-    const payment = await outgoingPaymentService.get(paymentId)
-    if (!payment) throw 'no payment'
-    const balance = await accountingService.getBalance(payment.id)
-    if (balance === undefined) throw 'no balance'
     await expect(
       accountingService.createTransfer({
         sourceAccount: {
-          id: payment.id,
-          asset: payment.account.asset
-        },
-        destinationAccount: {
           asset: {
-            unit: payment.account.asset.unit,
+            unit: invoice.account.asset.unit,
             account: AssetAccount.Settlement
           }
         },
-        amount: balance
+        destinationAccount: invoice,
+        amount
       })
     ).resolves.toBeUndefined()
   }
@@ -185,9 +138,9 @@ describe('OutgoingPaymentService', (): void => {
       )
     }
     if (invoiceReceived !== undefined) {
-      await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
-        invoiceReceived
-      )
+      await expect(
+        accountingService.getTotalReceived(invoice.id)
+      ).resolves.toEqual(invoiceReceived)
     }
   }
 
@@ -228,9 +181,6 @@ describe('OutgoingPaymentService', (): void => {
       const destinationAccount = await accountService.create({
         asset: destinationAsset
       })
-      // If the destination asset liquidity account isn't well funded,
-      // Pay's rate probe will timeout due to backoffs after
-      // receiving T04_INSUFFICIENT_LIQUIDITY replies.
       await expect(
         accountingService.createTransfer({
           sourceAccount: {
@@ -245,7 +195,7 @@ describe('OutgoingPaymentService', (): void => {
               account: AssetAccount.Liquidity
             }
           },
-          amount: BigInt(10e12)
+          amount: BigInt(123)
         })
       ).resolves.toBeUndefined()
       accountUrl = `${config.publicHost}/pay/${destinationAccount.id}`
@@ -253,7 +203,7 @@ describe('OutgoingPaymentService', (): void => {
       const invoiceService = await deps.use('invoiceService')
       invoice = await invoiceService.create({
         accountId: destinationAccount.id,
-        amountToReceive: BigInt(56),
+        amount: BigInt(56),
         expiresAt: new Date(Date.now() + 60 * 1000),
         description: 'description!'
       })
@@ -433,11 +383,8 @@ describe('OutgoingPaymentService', (): void => {
           0.5 * (1 - config.slippage)
         )
         expect(payment.quote.lowExchangeRateEstimate.valueOf()).toBe(0.5)
-        // This approaches 0.5 with higher invoice amounts.
-        // The invoice account's receive limit returns F08 for larger
-        // rate probe packet amounts.
         expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(
-          0.5087719298245614
+          0.500000000001
         )
       })
 
@@ -487,6 +434,36 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123 - 89))
       })
 
+      // These mock Quoting→Sending, but for it to trigger for real, it would go from Sending→Quoting(retry)→Sending (when the original leftover amount was never withdrawn).
+      it('Sending (FixedSend, intent.amountToSend <= balance)', async (): Promise<void> => {
+        const { id: paymentId } = await outgoingPaymentService.create({
+          accountId,
+          paymentPointer,
+          amountToSend: BigInt(123),
+          autoApprove: false
+        })
+        const spy = jest
+          .spyOn(accountingService, 'getBalance')
+          .mockResolvedValueOnce(BigInt(123))
+        await processNext(paymentId, PaymentState.Sending)
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(spy).toHaveBeenCalledWith(paymentId)
+      })
+
+      it('Sending (FixedDelivery, quote.maxSourceAmount <= balance)', async (): Promise<void> => {
+        const { id: paymentId } = await outgoingPaymentService.create({
+          accountId,
+          invoiceUrl,
+          autoApprove: false
+        })
+        const spy = jest
+          .spyOn(accountingService, 'getBalance')
+          .mockResolvedValueOnce(BigInt(123))
+        await processNext(paymentId, PaymentState.Sending)
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(spy).toHaveBeenCalledWith(paymentId)
+      })
+
       // This mocks Quoting→Completed, but for it to trigger for real, it would go from Sending→Quoting(retry)→Completed (when the Sending→Completed transition failed to commit).
       it('Completed (FixedSend, intent.amountToSend===amountSent)', async (): Promise<void> => {
         const payment = await outgoingPaymentService.create({
@@ -513,8 +490,7 @@ describe('OutgoingPaymentService', (): void => {
             autoApprove: false
           })
         ).id
-        assert.ok(invoice.amountToReceive)
-        await payInvoice(invoice.amountToReceive)
+        await payInvoice(invoice.amount)
         await processNext(paymentId, PaymentState.Completed)
       })
 
@@ -575,17 +551,12 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
 
-      it('Funding (waiting for liquidity)', async (): Promise<void> => {
-        await processNext(paymentId, PaymentState.Funding)
-      })
-
-      it('Sending (money is reserved)', async (): Promise<void> => {
-        await fund(paymentId)
-        const payment = await processNext(paymentId, PaymentState.Sending)
-        if (!payment.quote) throw 'no quote'
-        await expectOutcome(payment, {
-          accountBalance: payment.quote.maxSourceAmount
-        })
+      it('Funding (waiting to send)', async (): Promise<void> => {
+        await expect(
+          outgoingPaymentService.processNext()
+        ).resolves.toBeUndefined()
+        const after = await outgoingPaymentService.get(paymentId)
+        expect(after?.state).toBe(PaymentState.Funding)
       })
     })
 
@@ -604,9 +575,17 @@ describe('OutgoingPaymentService', (): void => {
 
         trackAmountDelivered(paymentId)
 
-        await processNext(paymentId, PaymentState.Funding)
-        await fund(paymentId)
-        await processNext(paymentId, PaymentState.Sending)
+        const payment = await processNext(paymentId, PaymentState.Funding)
+        assert.ok(payment.quote)
+        await expect(
+          outgoingPaymentService.fund({
+            id: paymentId,
+            amount: payment.quote.maxSourceAmount
+          })
+        ).resolves.toMatchObject({
+          state: PaymentState.Sending
+        })
+
         return paymentId
       }
 
@@ -631,13 +610,12 @@ describe('OutgoingPaymentService', (): void => {
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
-        assert.ok(invoice.amountToReceive)
-        const amountSent = invoice.amountToReceive * BigInt(2)
+        const amountSent = invoice.amount * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
-          amountDelivered: invoice.amountToReceive,
-          invoiceReceived: invoice.amountToReceive
+          amountDelivered: invoice.amount,
+          invoiceReceived: invoice.amount
         })
       })
 
@@ -650,14 +628,12 @@ describe('OutgoingPaymentService', (): void => {
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
-        assert.ok(invoice.amountToReceive)
-        const amountSent =
-          (invoice.amountToReceive - amountAlreadyDelivered) * BigInt(2)
+        const amountSent = (invoice.amount - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
-          amountDelivered: invoice.amountToReceive - amountAlreadyDelivered,
-          invoiceReceived: invoice.amountToReceive
+          amountDelivered: invoice.amount - amountAlreadyDelivered,
+          invoiceReceived: invoice.amount
         })
       })
 
@@ -783,8 +759,7 @@ describe('OutgoingPaymentService', (): void => {
           invoiceUrl
         })
         // The quote thinks there's a full amount to pay, but actually sending will find the invoice has been paid (e.g. by another payment).
-        assert.ok(invoice.amountToReceive)
-        await payInvoice(invoice.amountToReceive)
+        await payInvoice(invoice.amount)
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
@@ -792,7 +767,7 @@ describe('OutgoingPaymentService', (): void => {
           accountBalance: payment.quote.maxSourceAmount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
-          invoiceReceived: invoice.amountToReceive
+          invoiceReceived: invoice.amount
         })
       })
 
@@ -818,110 +793,6 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
     })
-
-    describe.each([PaymentState.Cancelled, PaymentState.Completed])(
-      '%s',
-      (state): void => {
-        let paymentId: string
-        let amountDelivered: bigint
-        let amountSent: bigint
-
-        const error =
-          state === PaymentState.Cancelled
-            ? Pay.PaymentError.ReceiverProtocolViolation
-            : undefined
-
-        beforeEach(
-          async (): Promise<void> => {
-            {
-              const payment = await outgoingPaymentService.create({
-                accountId,
-                invoiceUrl,
-                autoApprove: true
-              })
-              paymentId = payment.id
-
-              trackAmountDelivered(payment.id)
-            }
-
-            if (state === PaymentState.Cancelled) {
-              jest
-                .spyOn(Pay, 'pay')
-                .mockImplementation(() =>
-                  Promise.reject(Pay.PaymentError.ReceiverProtocolViolation)
-                )
-            }
-            await processNext(paymentId, PaymentState.Funding)
-            await fund(paymentId)
-            await processNext(paymentId, PaymentState.Sending)
-            const payment = await processNext(paymentId, state, error)
-            expect(payment.withdrawLiquidity).toBe(true)
-
-            assert.ok(invoice.amountToReceive)
-            amountDelivered =
-              state === PaymentState.Cancelled
-                ? BigInt(0)
-                : invoice.amountToReceive
-            amountSent = amountDelivered * BigInt(2)
-          }
-        )
-
-        it('handles liquidity withdrawal', async (): Promise<void> => {
-          await withdraw(paymentId)
-          const payment = await processNext(paymentId, state, error)
-
-          await expectOutcome(payment, {
-            accountBalance: BigInt(0),
-            amountSent,
-            amountDelivered
-          })
-          expect(payment.withdrawLiquidity).toBe(false)
-        })
-
-        it('endlessly wait for liquidity withdrawal', async (): Promise<void> => {
-          // Even after many retries, it keeps retrying.
-          for (let i = 0; i < 10; i++) {
-            const payment = await processNext(paymentId, state, error)
-            expect(payment.stateAttempts).toBe(i + 1)
-            fastForwardToAttempt(payment.stateAttempts)
-          }
-
-          const payment = await outgoingPaymentService.get(paymentId)
-          if (!payment) throw 'unreachable'
-          if (!payment.quote) throw 'no quote'
-          expect(payment.state).toBe(state)
-          expect(payment.error).toEqual(error || null)
-          expect(payment.stateAttempts).toBe(10)
-          await expectOutcome(payment, {
-            accountBalance: payment.quote.maxSourceAmount - amountSent, // money not yet withdrawn
-            amountSent,
-            amountDelivered
-          })
-          expect(payment.withdrawLiquidity).toBe(true)
-        })
-
-        it('not enough time between attempts', async (): Promise<void> => {
-          await processNext(paymentId, state, error)
-          await withdraw(paymentId)
-          fastForwardToAttempt(0.9)
-          // Not enough time has passed before the attempt.
-          await expect(
-            outgoingPaymentService.processNext()
-          ).resolves.toBeUndefined()
-
-          const payment = await outgoingPaymentService.get(paymentId)
-          if (!payment) throw 'unreachable'
-          expect(payment.state).toBe(state)
-          expect(payment.stateAttempts).toBe(1)
-          expect(payment.withdrawLiquidity).toBe(true)
-          await expectOutcome(payment, {
-            accountBalance: BigInt(0),
-            amountSent,
-            amountDelivered
-          })
-        })
-      }
-    )
   })
 
   describe('requote', (): void => {
@@ -938,8 +809,8 @@ describe('OutgoingPaymentService', (): void => {
     )
 
     it('fails when no payment exists', async (): Promise<void> => {
-      await expect(outgoingPaymentService.requote(uuid())).rejects.toThrow(
-        'payment does not exist'
+      await expect(outgoingPaymentService.requote(uuid())).resolves.toEqual(
+        OutgoingPaymentError.UnknownPayment
       )
     })
 
@@ -969,11 +840,85 @@ describe('OutgoingPaymentService', (): void => {
         })
         await expect(
           outgoingPaymentService.requote(payment.id)
-        ).rejects.toThrow(`Cannot quote; payment is in state=${startState}`)
+        ).resolves.toEqual(OutgoingPaymentError.WrongState)
 
         const after = await outgoingPaymentService.get(payment.id)
         expect(after?.state).toBe(startState)
         expect(after?.error).toBe('Fail')
+      })
+    })
+  })
+
+  describe('fund', (): void => {
+    let payment: OutgoingPayment
+    let quoteAmount: bigint
+    beforeEach(async (): Promise<void> => {
+      const { id: paymentId } = await outgoingPaymentService.create({
+        accountId,
+        paymentPointer,
+        amountToSend: BigInt(123),
+        autoApprove: false
+      })
+      payment = await processNext(paymentId, PaymentState.Funding)
+      assert.ok(payment.quote)
+      quoteAmount = payment.quote.maxSourceAmount
+      await expectOutcome(payment, { accountBalance: BigInt(0) })
+    }, 10_000)
+
+    it('fails when no payment exists', async (): Promise<void> => {
+      await expect(
+        outgoingPaymentService.fund({
+          id: uuid(),
+          amount: quoteAmount
+        })
+      ).resolves.toEqual(OutgoingPaymentError.UnknownPayment)
+    })
+
+    it('transitions a Funding payment to Sending state', async (): Promise<void> => {
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: quoteAmount
+        })
+      ).resolves.toMatchObject({
+        id: payment.id,
+        state: PaymentState.Sending
+      })
+
+      const after = await outgoingPaymentService.get(payment.id)
+      expect(after?.state).toBe(PaymentState.Sending)
+      await expectOutcome(payment, { accountBalance: quoteAmount })
+    })
+
+    it('keeps Funding state after partial funding', async (): Promise<void> => {
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: quoteAmount - BigInt(1)
+        })
+      ).resolves.toMatchObject({
+        id: payment.id,
+        state: PaymentState.Funding
+      })
+
+      const after = await outgoingPaymentService.get(payment.id)
+      expect(after?.state).toBe(PaymentState.Funding)
+      await expectOutcome(payment, { accountBalance: quoteAmount - BigInt(1) })
+    })
+
+    Object.values(PaymentState).forEach((startState) => {
+      if (startState === PaymentState.Funding) return
+      it(`does not fund a ${startState} payment`, async (): Promise<void> => {
+        await payment.$query().patch({ state: startState })
+        await expect(
+          outgoingPaymentService.fund({
+            id: payment.id,
+            amount: quoteAmount
+          })
+        ).resolves.toEqual(OutgoingPaymentError.WrongState)
+
+        const after = await outgoingPaymentService.get(payment.id)
+        expect(after?.state).toBe(startState)
       })
     })
   })
@@ -992,8 +937,8 @@ describe('OutgoingPaymentService', (): void => {
     )
 
     it('fails when no payment exists', async (): Promise<void> => {
-      await expect(outgoingPaymentService.cancel(uuid())).rejects.toThrow(
-        'payment does not exist'
+      await expect(outgoingPaymentService.cancel(uuid())).resolves.toEqual(
+        OutgoingPaymentError.UnknownPayment
       )
     })
 
@@ -1015,9 +960,9 @@ describe('OutgoingPaymentService', (): void => {
       if (startState === PaymentState.Funding) return
       it(`does not cancel a ${startState} payment`, async (): Promise<void> => {
         await payment.$query().patch({ state: startState })
-        await expect(outgoingPaymentService.cancel(payment.id)).rejects.toThrow(
-          `Cannot cancel; payment is in state=${startState}`
-        )
+        await expect(
+          outgoingPaymentService.cancel(payment.id)
+        ).resolves.toEqual(OutgoingPaymentError.WrongState)
 
         const after = await outgoingPaymentService.get(payment.id)
         expect(after?.state).toBe(startState)

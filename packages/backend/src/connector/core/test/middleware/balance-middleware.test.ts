@@ -4,17 +4,17 @@ import { createILPContext } from '../../utils'
 import { ZeroCopyIlpPrepare } from '../..'
 import { createBalanceMiddleware } from '../../middleware'
 import {
-  AccountFactory,
+  IncomingAccountFactory,
+  OutgoingAccountFactory,
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory,
   RafikiServicesFactory
 } from '../../factories'
-import { Balance } from '../../../../accounting/service'
 
 // TODO: make one peer to many account relationship
-const aliceAccount = AccountFactory.build({ id: 'alice' })
-const bobAccount = AccountFactory.build({ id: 'bob' })
+const aliceAccount = IncomingAccountFactory.build({ id: 'alice' })
+const bobAccount = OutgoingAccountFactory.build({ id: 'bob' })
 assert.ok(aliceAccount.id)
 assert.ok(bobAccount.id)
 const services = RafikiServicesFactory.build({})
@@ -29,7 +29,7 @@ const ctx = createILPContext({
   },
   services
 })
-const { accounts, rates } = services
+const { accounting, invoices, rates } = services
 
 beforeEach(async () => {
   ctx.response.fulfill = undefined
@@ -38,8 +38,8 @@ beforeEach(async () => {
   aliceAccount.balance = 100n
   bobAccount.balance = 0n
 
-  await accounts.create(aliceAccount)
-  await accounts.create(bobAccount)
+  await accounting.create(aliceAccount)
+  await accounting.create(bobAccount)
 })
 
 describe('Balance Middleware', function () {
@@ -53,13 +53,41 @@ describe('Balance Middleware', function () {
       ctx.response.fulfill = fulfill
     })
 
+    const spy = jest.spyOn(invoices, 'handlePayment')
+
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(0))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(100))
+
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('fulfill response calls handlePayment for outgoing invoice', async () => {
+    const prepare = IlpPrepareFactory.build({ amount: '100' })
+    const fulfill = IlpFulfillFactory.build()
+    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    const next = jest.fn().mockImplementation(() => {
+      ctx.response.fulfill = fulfill
+    })
+
+    bobAccount.invoice = true
+
+    const spy = jest.spyOn(invoices, 'handlePayment')
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
+    expect(aliceBalance).toEqual(BigInt(0))
+
+    const bobBalance = await accounting.getBalance(bobAccount.id)
+    expect(bobBalance).toEqual(BigInt(100))
+
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith(bobAccount.id)
   })
 
   it('converts prepare amount to destination asset', async () => {
@@ -89,15 +117,15 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 
   test('ignores 0 amount packets', async () => {
-    const transferFundsSpy = jest.spyOn(accounts, 'transferFunds')
+    const transferFundsSpy = jest.spyOn(accounting, 'transferFunds')
     const prepare = IlpPrepareFactory.build({ amount: '0' })
     const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -107,10 +135,10 @@ describe('Balance Middleware', function () {
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
 
     expect(transferFundsSpy).toHaveBeenCalledTimes(0)
@@ -128,10 +156,10 @@ describe('Balance Middleware', function () {
       Errors.InsufficientLiquidityError
     )
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 
@@ -149,56 +177,31 @@ describe('Balance Middleware', function () {
 
     expect(next).toHaveBeenCalledTimes(0)
 
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
   })
 
-  test('receive limit already reached throws F07', async () => {
-    bobAccount.receiveLimit = BigInt(0)
-    bobAccount.withBalance = Balance.ReceiveLimit
+  test('does not adjust account balances for unfulfillable packets', async () => {
+    const transferFundsSpy = jest.spyOn(accounting, 'transferFunds')
     const prepare = IlpPrepareFactory.build({ amount: '100' })
-    const fulfill = IlpFulfillFactory.build()
+    const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    ctx.state.unfulfillable = true
     const next = jest.fn().mockImplementation(() => {
-      ctx.response.fulfill = fulfill
+      ctx.response.reject = reject
     })
 
-    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
-      Errors.CannotReceiveError
-    )
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    expect(next).toHaveBeenCalledTimes(0)
-
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
+    const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(100))
 
-    const bobBalance = await accounts.getBalance(bobAccount.id)
+    const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
-  })
 
-  test('receive limit exceeded throws F08', async () => {
-    bobAccount.receiveLimit = BigInt(10)
-    bobAccount.withBalance = Balance.ReceiveLimit
-    const prepare = IlpPrepareFactory.build({ amount: '100' })
-    const fulfill = IlpFulfillFactory.build()
-    ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    const next = jest.fn().mockImplementation(() => {
-      ctx.response.fulfill = fulfill
-    })
-
-    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
-      Errors.AmountTooLargeError
-    )
-
-    expect(next).toHaveBeenCalledTimes(0)
-
-    const aliceBalance = await accounts.getBalance(aliceAccount.id)
-    expect(aliceBalance).toEqual(BigInt(100))
-
-    const bobBalance = await accounts.getBalance(bobAccount.id)
-    expect(bobBalance).toEqual(BigInt(0))
+    expect(transferFundsSpy).toHaveBeenCalledTimes(0)
   })
 })

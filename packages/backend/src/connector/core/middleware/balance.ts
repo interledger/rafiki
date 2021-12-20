@@ -1,16 +1,18 @@
-import assert from 'assert'
 import { Errors } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 import { isTransferError, TransferError } from '../../../accounting/errors'
-const {
-  AmountTooLargeError,
-  CannotReceiveError,
-  InsufficientLiquidityError
-} = Errors
+const { CannotReceiveError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
   return async (
-    { request, response, services, accounts, throw: ctxThrow }: ILPContext,
+    {
+      request,
+      response,
+      services,
+      accounts,
+      state,
+      throw: ctxThrow
+    }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
     const { amount } = request.prepare
@@ -36,8 +38,13 @@ export function createBalanceMiddleware(): ILPMiddleware {
 
     request.prepare.amount = destinationAmountOrError.toString()
 
+    if (state.unfulfillable) {
+      await next()
+      return
+    }
+
     // Update balances on prepare
-    const trxOrError = await services.accounts.transferFunds({
+    const trxOrError = await services.accounting.transferFunds({
       sourceAccount: accounts.incoming,
       destinationAccount: accounts.outgoing,
       sourceAmount,
@@ -50,27 +57,8 @@ export function createBalanceMiddleware(): ILPMiddleware {
         case TransferError.InsufficientBalance:
         case TransferError.InsufficientLiquidity:
           throw new InsufficientLiquidityError(trxOrError)
-        case TransferError.ReceiveLimitExceeded: {
-          const receivedAmount = destinationAmountOrError.toString()
-          assert.ok(accounts.outgoing.id)
-          const receiveLimit = await services.accounts.getReceiveLimit(
-            accounts.outgoing.id
-          )
-          assert.ok(receiveLimit !== undefined)
-          if (receiveLimit === BigInt(0)) {
-            throw new CannotReceiveError('receive limit already reached')
-          }
-          const maximumAmount = receiveLimit.toString()
-          throw new AmountTooLargeError(
-            `amount too large. maxAmount=${maximumAmount} actualAmount=${receivedAmount}`,
-            {
-              receivedAmount,
-              maximumAmount
-            }
-          )
-        }
         default:
-          // TODO: map transfer errors to ILP errors or throw from transferFunds
+          // TODO: map transfer errors to ILP errors
           ctxThrow(500, destinationAmountOrError.toString())
       }
     } else {
@@ -78,6 +66,9 @@ export function createBalanceMiddleware(): ILPMiddleware {
 
       if (response.fulfill) {
         await trxOrError.commit()
+        if (accounts.outgoing.invoice) {
+          await services.invoices.handlePayment(accounts.outgoing.id)
+        }
       } else {
         await trxOrError.rollback()
       }

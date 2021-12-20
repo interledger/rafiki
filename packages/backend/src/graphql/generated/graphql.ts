@@ -163,6 +163,15 @@ export type DeletePeerMutationResponse = MutationResponse & {
   message: Scalars['String'];
 };
 
+export type FundOutgoingPaymentInput = {
+  /** The id of the outgoing payment to add liquidity. */
+  id: Scalars['String'];
+  /** Amount of liquidity to add. */
+  amount: Scalars['UInt64'];
+  /** The id of the transfer. */
+  transferId?: Maybe<Scalars['String']>;
+};
+
 export type Http = {
   __typename?: 'Http';
   outgoing: HttpOutgoing;
@@ -191,12 +200,11 @@ export type HttpOutgoingInput = {
 export type Invoice = {
   __typename?: 'Invoice';
   id: Scalars['ID'];
-  maximumAmount?: Maybe<Scalars['UInt64']>;
   active: Scalars['Boolean'];
   createdAt: Scalars['String'];
-  expiresAt?: Maybe<Scalars['String']>;
+  expiresAt: Scalars['String'];
   description?: Maybe<Scalars['String']>;
-  amountToReceive?: Maybe<Scalars['UInt64']>;
+  amount: Scalars['UInt64'];
 };
 
 export type InvoiceConnection = {
@@ -235,6 +243,8 @@ export type Mutation = {
   createOutgoingPayment: OutgoingPaymentResponse;
   /** Requote a Cancelled payment. */
   requoteOutgoingPayment: OutgoingPaymentResponse;
+  /** Add liquidity to a Funding payment. */
+  fundOutgoingPayment: OutgoingPaymentResponse;
   /** Cancel a Funding payment. */
   cancelOutgoingPayment: OutgoingPaymentResponse;
   createAccount: CreateAccountMutationResponse;
@@ -278,6 +288,11 @@ export type MutationCreateOutgoingPaymentArgs = {
 
 export type MutationRequoteOutgoingPaymentArgs = {
   paymentId: Scalars['String'];
+};
+
+
+export type MutationFundOutgoingPaymentArgs = {
+  input: FundOutgoingPaymentInput;
 };
 
 
@@ -379,6 +394,7 @@ export type MutationResponse = {
 export type OutgoingPayment = {
   __typename?: 'OutgoingPayment';
   id: Scalars['ID'];
+  accountId: Scalars['ID'];
   state: PaymentState;
   error?: Maybe<Scalars['String']>;
   stateAttempts: Scalars['Int'];
@@ -455,7 +471,7 @@ export type PaymentQuote = {
 };
 
 export enum PaymentState {
-  /** Will transition to FUNDING when quote is complete */
+  /** Will transition to FUNDING or SENDING (if already funded) when quote is complete */
   Quoting = 'QUOTING',
   /** Will transition to SENDING once payment funds are reserved */
   Funding = 'FUNDING',
@@ -694,6 +710,7 @@ export type ResolversTypes = {
   DeleteAllApiKeysInput: ResolverTypeWrapper<Partial<DeleteAllApiKeysInput>>;
   DeleteAllApiKeysMutationResponse: ResolverTypeWrapper<Partial<DeleteAllApiKeysMutationResponse>>;
   DeletePeerMutationResponse: ResolverTypeWrapper<Partial<DeletePeerMutationResponse>>;
+  FundOutgoingPaymentInput: ResolverTypeWrapper<Partial<FundOutgoingPaymentInput>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
   HttpIncomingInput: ResolverTypeWrapper<Partial<HttpIncomingInput>>;
   HttpInput: ResolverTypeWrapper<Partial<HttpInput>>;
@@ -759,6 +776,7 @@ export type ResolversParentTypes = {
   DeleteAllApiKeysInput: Partial<DeleteAllApiKeysInput>;
   DeleteAllApiKeysMutationResponse: Partial<DeleteAllApiKeysMutationResponse>;
   DeletePeerMutationResponse: Partial<DeletePeerMutationResponse>;
+  FundOutgoingPaymentInput: Partial<FundOutgoingPaymentInput>;
   Http: Partial<Http>;
   HttpIncomingInput: Partial<HttpIncomingInput>;
   HttpInput: Partial<HttpInput>;
@@ -879,12 +897,11 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 
 export type InvoiceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Invoice'] = ResolversParentTypes['Invoice']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  maximumAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  amountToReceive?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  amount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -911,6 +928,7 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentArgs, 'input'>>;
   requoteOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationRequoteOutgoingPaymentArgs, 'paymentId'>>;
+  fundOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationFundOutgoingPaymentArgs, 'input'>>;
   cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'paymentId'>>;
   createAccount?: Resolver<ResolversTypes['CreateAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAccountArgs, 'input'>>;
   createPeer?: Resolver<ResolversTypes['CreatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationCreatePeerArgs, 'input'>>;
@@ -939,6 +957,7 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
 
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  accountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['PaymentState'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;

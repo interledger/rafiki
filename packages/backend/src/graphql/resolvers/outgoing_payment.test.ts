@@ -1,3 +1,4 @@
+import assert from 'assert'
 import nock from 'nock'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
@@ -14,6 +15,7 @@ import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import { OutgoingPaymentService } from '../../outgoing_payment/service'
+import { OutgoingPaymentError } from '../../outgoing_payment/errors'
 import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
@@ -23,6 +25,7 @@ import { AccountService } from '../../open_payments/account/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
+  FundOutgoingPaymentInput,
   Account,
   PaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType
@@ -102,7 +105,8 @@ describe('OutgoingPayment Resolvers', (): void => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          highExchangeRateEstimate: Pay.Ratio.from(2.3)!
+          highExchangeRateEstimate: Pay.Ratio.from(2.3)!,
+          amountSent: BigInt(0)
         },
         accountId,
         destinationAccount: {
@@ -151,6 +155,7 @@ describe('OutgoingPayment Resolvers', (): void => {
               query OutgoingPayment($paymentId: String!) {
                 outgoingPayment(id: $paymentId) {
                   id
+                  accountId
                   state
                   error
                   stateAttempts
@@ -190,6 +195,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           .then((query): OutgoingPayment => query.data?.outgoingPayment)
 
         expect(query.id).toEqual(payment.id)
+        expect(query.accountId).toEqual(payment.accountId)
         expect(query.state).toEqual(SchemaPaymentState[state])
         expect(query.error).toEqual(error)
         expect(query.stateAttempts).toBe(0)
@@ -200,7 +206,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           __typename: 'PaymentIntent'
         })
         expect(query.quote).toEqual({
-          ...payment.quote,
           timestamp: payment.quote?.timestamp.toISOString(),
           activationDeadline: payment.quote?.activationDeadline.toISOString(),
           targetType: SchemaPaymentType.FixedSend,
@@ -396,6 +401,53 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.payment?.id).toBe(payment.id)
     })
 
+    test.each([
+      [OutgoingPaymentError.UnknownPayment],
+      [OutgoingPaymentError.WrongState]
+    ])(
+      '400 - %s',
+      async (error): Promise<void> => {
+        const spy = jest.spyOn(outgoingPaymentService, 'requote')
+
+        if (error === OutgoingPaymentError.WrongState) {
+          spy.mockImplementation(async (id: string) => {
+            expect(id).toBe(payment.id)
+            return OutgoingPaymentError.WrongState
+          })
+        }
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation RequoteOutgoingPayment($paymentId: String!) {
+                requoteOutgoingPayment(paymentId: $paymentId) {
+                  code
+                  success
+                  message
+                  payment {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              paymentId:
+                error === OutgoingPaymentError.UnknownPayment
+                  ? uuid()
+                  : payment.id
+            }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.requoteOutgoingPayment
+          )
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(query.code).toBe('400')
+        expect(query.success).toBe(false)
+        expect(query.message).toBe(error)
+        expect(query.payment).toBeNull()
+      }
+    )
+
     test('500', async (): Promise<void> => {
       const spy = jest
         .spyOn(outgoingPaymentService, 'requote')
@@ -423,6 +475,128 @@ describe('OutgoingPayment Resolvers', (): void => {
           (query): OutgoingPaymentResponse => query.data?.requoteOutgoingPayment
         )
       expect(spy).toHaveBeenCalledTimes(1)
+      expect(query.code).toBe('500')
+      expect(query.success).toBe(false)
+      expect(query.message).toBe('fail')
+      expect(query.payment).toBeNull()
+    })
+  })
+
+  describe(`Mutation.fundOutgoingPayment`, (): void => {
+    let input: FundOutgoingPaymentInput
+
+    beforeEach(
+      async (): Promise<void> => {
+        assert.ok(payment.quote)
+        input = {
+          id: payment.id,
+          amount: payment.quote.maxSourceAmount
+        }
+      }
+    )
+    test('200', async (): Promise<void> => {
+      const spy = jest
+        .spyOn(outgoingPaymentService, 'fund')
+        .mockResolvedValueOnce(payment)
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation FundOutgoingPayment($input: FundOutgoingPaymentInput!) {
+              fundOutgoingPayment(input: $input) {
+                code
+                success
+                message
+                payment {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input
+          }
+        })
+        .then(
+          (query): OutgoingPaymentResponse => query.data?.fundOutgoingPayment
+        )
+      expect(spy).toHaveBeenCalledTimes(1)
+      expect(spy).toHaveBeenCalledWith(input)
+      expect(query.code).toBe('200')
+      expect(query.success).toBe(true)
+      expect(query.message).toBeNull()
+      expect(query.payment?.id).toBe(payment.id)
+    })
+
+    test.each([
+      [OutgoingPaymentError.UnknownPayment],
+      [OutgoingPaymentError.WrongState]
+    ])(
+      '400 - %s',
+      async (error): Promise<void> => {
+        const spy = jest.spyOn(outgoingPaymentService, 'fund')
+        if (error === OutgoingPaymentError.WrongState) {
+          spy.mockResolvedValueOnce(OutgoingPaymentError.WrongState)
+        }
+        if (error === OutgoingPaymentError.UnknownPayment) {
+          input.id = uuid()
+        }
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation FundOutgoingPayment($input: FundOutgoingPaymentInput!) {
+                fundOutgoingPayment(input: $input) {
+                  code
+                  success
+                  message
+                  payment {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              input
+            }
+          })
+          .then(
+            (query): OutgoingPaymentResponse => query.data?.fundOutgoingPayment
+          )
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(spy).toHaveBeenCalledWith(input)
+        expect(query.code).toBe('400')
+        expect(query.success).toBe(false)
+        expect(query.message).toBe(error)
+        expect(query.payment).toBeNull()
+      }
+    )
+
+    test('500', async (): Promise<void> => {
+      const spy = jest
+        .spyOn(outgoingPaymentService, 'fund')
+        .mockRejectedValueOnce(new Error('fail'))
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation FundOutgoingPayment($input: FundOutgoingPaymentInput!) {
+              fundOutgoingPayment(input: $input) {
+                code
+                success
+                message
+                payment {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input
+          }
+        })
+        .then(
+          (query): OutgoingPaymentResponse => query.data?.fundOutgoingPayment
+        )
+      expect(spy).toHaveBeenCalledTimes(1)
+      expect(spy).toHaveBeenCalledWith(input)
       expect(query.code).toBe('500')
       expect(query.success).toBe(false)
       expect(query.message).toBe('fail')
@@ -463,6 +637,53 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.message).toBeNull()
       expect(query.payment?.id).toBe(payment.id)
     })
+
+    test.each([
+      [OutgoingPaymentError.UnknownPayment],
+      [OutgoingPaymentError.WrongState]
+    ])(
+      '400 - %s',
+      async (error): Promise<void> => {
+        const spy = jest.spyOn(outgoingPaymentService, 'cancel')
+
+        if (error === OutgoingPaymentError.WrongState) {
+          spy.mockImplementation(async (id: string) => {
+            expect(id).toBe(payment.id)
+            return OutgoingPaymentError.WrongState
+          })
+        }
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CancelOutgoingPayment($paymentId: String!) {
+                cancelOutgoingPayment(paymentId: $paymentId) {
+                  code
+                  success
+                  message
+                  payment {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              paymentId:
+                error === OutgoingPaymentError.UnknownPayment
+                  ? uuid()
+                  : payment.id
+            }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.cancelOutgoingPayment
+          )
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(query.code).toBe('400')
+        expect(query.success).toBe(false)
+        expect(query.message).toBe(error)
+        expect(query.payment).toBeNull()
+      }
+    )
 
     test('500', async (): Promise<void> => {
       const spy = jest
@@ -530,7 +751,8 @@ describe('OutgoingPayment Resolvers', (): void => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                highExchangeRateEstimate: Pay.Ratio.from(2.3)!
+                highExchangeRateEstimate: Pay.Ratio.from(2.3)!,
+                amountSent: BigInt(0)
               },
               accountId,
               destinationAccount: {

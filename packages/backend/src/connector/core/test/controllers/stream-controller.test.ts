@@ -10,8 +10,9 @@ import {
   streamReceivedKey
 } from '../../controllers/stream'
 import {
-  AccountFactory,
-  PeerAccountFactory,
+  InvoiceAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   IlpPrepareFactory,
   RafikiServicesFactory
 } from '../../factories'
@@ -23,7 +24,7 @@ const hmac = (key: Buffer, message: Buffer): Buffer =>
   crypto.createHmac('sha256', key).update(message).digest()
 
 describe('Stream Controller', function () {
-  const alice = PeerAccountFactory.build()
+  const alice = IncomingPeerFactory.build()
   const controller = createStreamController()
   const services = RafikiServicesFactory.build()
 
@@ -32,8 +33,8 @@ describe('Stream Controller', function () {
     await services.redis.disconnect()
   })
 
-  test('constructs a reply when "stream" is enabled', async () => {
-    const bob = AccountFactory.build()
+  test('constructs a reply for a receive account', async () => {
+    const bob = InvoiceAccountFactory.build()
     const {
       ilpAddress,
       sharedSecret
@@ -96,7 +97,7 @@ describe('Stream Controller', function () {
   })
 
   test("skips when the payment tag can't be decrypted", async () => {
-    const bob = AccountFactory.build()
+    const bob = InvoiceAccountFactory.build()
     const ctx = createILPContext({
       services,
       request: {
@@ -118,8 +119,8 @@ describe('Stream Controller', function () {
     expect(next).toHaveBeenCalledTimes(1)
   })
 
-  test('skips when "stream.enabled" is false', async () => {
-    const bob = PeerAccountFactory.build()
+  test('skips when not a receive account', async () => {
+    const bob = OutgoingPeerFactory.build()
     const ctx = createILPContext({
       services,
       accounts: {

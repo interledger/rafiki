@@ -1,31 +1,11 @@
 import * as Pay from '@interledger/pay'
 
+import { LifecycleError } from './errors'
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
 
 const MAX_INT64 = BigInt('9223372036854775807')
-
-export type PaymentError = LifecycleError | Pay.PaymentError
-export enum LifecycleError {
-  QuoteExpired = 'QuoteExpired',
-  // Rate fetch failed.
-  PricesUnavailable = 'PricesUnavailable',
-  // Payment aborted via "cancel payment" API call.
-  CancelledByAPI = 'CancelledByAPI',
-  // Payment needs to be funded.
-  Unfunded = 'Unfunded',
-  // Payment liquidity needs to be withdrawn.
-  LeftoverLiquidity = 'LeftoverLiquidity',
-  // Edge error due to retries, partial payment, and database write errors.
-  BadState = 'BadState',
-
-  // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
-  MissingBalance = 'MissingBalance',
-  MissingQuote = 'MissingQuote',
-  MissingInvoice = 'MissingInvoice',
-  InvalidRatio = 'InvalidRatio'
-}
 
 // Acquire a quote for the user to approve.
 // "payment" is locked by the "deps.knex" transaction.
@@ -58,13 +38,15 @@ export async function handleQuoting(
     throw Pay.PaymentError.DestinationAssetConflict
   }
 
+  // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
+  const amountSent = await deps.accountingService.getTotalSent(payment.id)
+  if (amountSent === undefined) {
+    throw LifecycleError.MissingBalance
+  }
+
   // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
   let amountToSend: bigint | undefined
   if (payment.intent.amountToSend) {
-    const amountSent = await deps.accountingService.getTotalSent(payment.id)
-    if (amountSent === undefined) {
-      throw LifecycleError.MissingBalance
-    }
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
       // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.
@@ -115,8 +97,16 @@ export async function handleQuoting(
     return
   }
 
+  const balance = await deps.accountingService.getBalance(payment.id)
+  if (balance === undefined) {
+    throw LifecycleError.MissingBalance
+  }
+
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Funding,
+    state:
+      balance < quote.maxSourceAmount
+        ? PaymentState.Funding
+        : PaymentState.Sending,
     quote: {
       timestamp: new Date(),
       activationDeadline: new Date(Date.now() + deps.quoteLifespan),
@@ -128,9 +118,12 @@ export async function handleQuoting(
         MAX_INT64 < quote.maxPacketAmount ? MAX_INT64 : quote.maxPacketAmount,
       minExchangeRate: quote.minExchangeRate,
       lowExchangeRateEstimate: quote.lowEstimatedExchangeRate,
-      highExchangeRateEstimate: quote.highEstimatedExchangeRate
+      highExchangeRateEstimate: quote.highEstimatedExchangeRate,
+      amountSent
     }
   })
+
+  // TODO: send the quote to the wallet in order for it to reserve sender liquidity
 }
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -139,21 +132,18 @@ export async function handleFunding(
   payment: OutgoingPayment
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
-  if (payment.quote.activationDeadline < new Date()) {
+  const now = new Date()
+  if (payment.quote.activationDeadline < now) {
     throw LifecycleError.QuoteExpired
   }
 
-  const balance = await deps.accountingService.getBalance(payment.id)
-  if (balance === undefined) {
-    throw LifecycleError.MissingBalance
-  }
-  if (balance < payment.quote.maxSourceAmount) {
-    // TODO: request payment liquidity from open payment account's wallet account
-
-    throw LifecycleError.Unfunded
-  }
-
-  await payment.$query(deps.knex).patch({ state: PaymentState.Sending })
+  deps.logger.error(
+    {
+      activationDeadline: payment.quote.activationDeadline.getTime(),
+      now: now.getTime()
+    },
+    "handleFunding for payment quote that isn't expired"
+  )
 }
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -184,14 +174,16 @@ export async function handleSending(
     throw Pay.PaymentError.DestinationAssetConflict
   }
 
-  const balance = await deps.accountingService.getBalance(payment.id)
-  if (balance === undefined) {
+  // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
+  const amountSent = await deps.accountingService.getTotalSent(payment.id)
+  if (amountSent === undefined) {
     throw LifecycleError.MissingBalance
   }
 
   // Due to Sending→Sending retries, the quote's amount parameters may need adjusting.
-  const amountSentSinceQuote = payment.quote.maxSourceAmount - balance
-  const newMaxSourceAmount = balance
+  const amountSentSinceQuote = amountSent - payment.quote.amountSent
+  const newMaxSourceAmount =
+    payment.quote.maxSourceAmount - amountSentSinceQuote
 
   let newMinDeliveryAmount
   switch (payment.quote.targetType) {
@@ -312,46 +304,6 @@ const sendingCompleted = async (
   payment: OutgoingPayment
 ): Promise<void> => {
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Completed,
-    withdrawLiquidity: true
+    state: PaymentState.Completed
   })
-}
-
-// "payment" is locked by the "deps.knex" transaction.
-export async function handleLiquidityWithdrawal(
-  deps: ServiceDependencies,
-  payment: OutgoingPayment
-): Promise<void> {
-  const balance = await deps.accountingService.getBalance(payment.id)
-  if (balance === undefined) {
-    throw LifecycleError.MissingBalance
-  }
-  // TODO: verify that the reserved balance is also zero / withdrawal is final
-  if (balance > BigInt(0)) {
-    // TODO: notify wallet to create & finalize payment liquidity withdrawal
-
-    throw LifecycleError.LeftoverLiquidity
-  }
-  await payment.$query(deps.knex).patch({
-    withdrawLiquidity: false
-  })
-}
-
-const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
-  // Lifecycle errors
-  PricesUnavailable: true,
-  Unfunded: true,
-  LeftoverLiquidity: true,
-  // From @interledger/pay's PaymentError:
-  QueryFailed: true,
-  ConnectorError: true,
-  EstablishmentFailed: true,
-  InsufficientExchangeRate: true,
-  RateProbeFailed: true,
-  IdleTimeout: true,
-  ClosedByReceiver: true
-}
-
-export function canRetryError(err: Error | PaymentError): boolean {
-  return err instanceof Error || !!retryablePaymentErrors[err]
 }

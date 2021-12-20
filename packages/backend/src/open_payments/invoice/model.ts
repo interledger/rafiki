@@ -23,6 +23,6 @@ export class Invoice extends BaseModel {
   public account!: Account
   public active!: boolean
   public description?: string
-  public expiresAt?: Date
-  public readonly amountToReceive?: bigint
+  public expiresAt!: Date
+  public readonly amount!: bigint
 }

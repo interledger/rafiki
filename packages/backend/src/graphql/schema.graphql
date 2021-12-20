@@ -24,6 +24,10 @@ type Mutation {
   ): OutgoingPaymentResponse!
   "Requote a Cancelled payment."
   requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
+  "Add liquidity to a Funding payment."
+  fundOutgoingPayment(
+    input: FundOutgoingPaymentInput!
+  ): OutgoingPaymentResponse!
   "Cancel a Funding payment."
   cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
 
@@ -146,6 +150,15 @@ input HttpOutgoingInput {
 input AssetInput {
   code: String!
   scale: Int!
+}
+
+input FundOutgoingPaymentInput {
+  "The id of the outgoing payment to add liquidity."
+  id: String!
+  "Amount of liquidity to add."
+  amount: UInt64!
+  "The id of the transfer."
+  transferId: String
 }
 
 input AddPeerLiquidityInput {
@@ -281,12 +294,11 @@ type InvoiceEdge {
 
 type Invoice {
   id: ID!
-  maximumAmount: UInt64
   active: Boolean!
   createdAt: String!
-  expiresAt: String
+  expiresAt: String!
   description: String
-  amountToReceive: UInt64
+  amount: UInt64!
 }
 
 type OutgoingPaymentConnection {
@@ -301,6 +313,7 @@ type OutgoingPaymentEdge {
 
 type OutgoingPayment {
   id: ID!
+  accountId: ID!
   state: PaymentState!
   error: String
   stateAttempts: Int!
@@ -319,7 +332,7 @@ type PaymentIntent {
 }
 
 enum PaymentState {
-  "Will transition to FUNDING when quote is complete"
+  "Will transition to FUNDING or SENDING (if already funded) when quote is complete"
   QUOTING
   "Will transition to SENDING once payment funds are reserved"
   FUNDING

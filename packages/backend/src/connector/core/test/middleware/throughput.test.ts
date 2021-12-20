@@ -2,7 +2,8 @@ import { Errors } from 'ilp-packet'
 import { ZeroCopyIlpPrepare } from '../..'
 import {
   IlpPrepareFactory,
-  PeerAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createILPContext, TokenBucket } from '../../utils'
@@ -15,10 +16,10 @@ const { InsufficientLiquidityError } = Errors
 
 describe('Incoming Throughput Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerAccountFactory.build({
+  const alice = IncomingPeerFactory.build({
     id: 'alice'
   })
-  const bob = PeerAccountFactory.build({ id: 'bob' })
+  const bob = OutgoingPeerFactory.build({ id: 'bob' })
   const ctx = createILPContext({
     services,
     accounts: {
@@ -82,12 +83,15 @@ describe('Incoming Throughput Middleware', function () {
     const prepare = IlpPrepareFactory.build({ amount: '10' })
     const next = jest.fn()
     const takeSpy = jest.spyOn(TokenBucket.prototype, 'take')
+    const fred = IncomingPeerFactory.build({
+      id: 'fred'
+    })
     ctx.accounts = {
       get incoming() {
-        return bob
+        return fred
       },
       get outgoing() {
-        return alice
+        return bob
       }
     }
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -101,8 +105,8 @@ describe('Incoming Throughput Middleware', function () {
 
 describe('Outgoing Throughput Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerAccountFactory.build({ id: 'alice' })
-  const bob = PeerAccountFactory.build({
+  const alice = IncomingPeerFactory.build({ id: 'alice' })
+  const bob = OutgoingPeerFactory.build({
     id: 'bob'
   })
   const ctx = createILPContext({
@@ -168,12 +172,15 @@ describe('Outgoing Throughput Middleware', function () {
     const prepare = IlpPrepareFactory.build({ amount: '10' })
     const next = jest.fn()
     const takeSpy = jest.spyOn(TokenBucket.prototype, 'take')
+    const fred = OutgoingPeerFactory.build({
+      id: 'fred'
+    })
     ctx.accounts = {
       get incoming() {
-        return bob
+        return alice
       },
       get outgoing() {
-        return alice
+        return fred
       }
     }
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)

@@ -70,7 +70,7 @@ describe('Invoice Routes', (): void => {
         accountId: account.id,
         description: 'text',
         expiresAt,
-        amountToReceive: BigInt(123)
+        amount: BigInt(123)
       })
     }
   )
@@ -191,9 +191,9 @@ describe('Invoice Routes', (): void => {
         { accountId: account.id }
       )
       ctx.request.body = {
-        amount: invoice.amountToReceive,
+        amount: invoice.amount,
         description: invoice.description,
-        expiresAt: invoice.expiresAt?.toISOString()
+        expiresAt: invoice.expiresAt.toISOString()
       }
       return ctx
     }
@@ -294,7 +294,7 @@ describe('Invoice Routes', (): void => {
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/invoices/${invoiceId}`,
         account: `${config.publicHost}/pay/${invoice.accountId}`,
-        amount: invoice.amountToReceive?.toString(),
+        amount: invoice.amount.toString(),
         assetCode: invoice.account.asset.code,
         assetScale: invoice.account.asset.scale,
         description: invoice.description,
@@ -319,7 +319,7 @@ describe('Invoice Routes', (): void => {
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/invoices/${invoiceId}`,
         account: `${config.publicHost}/pay/${invoice.accountId}`,
-        amount: invoice.amountToReceive?.toString(),
+        amount: invoice.amount.toString(),
         assetCode: invoice.account.asset.code,
         assetScale: invoice.account.asset.scale,
         description: null,

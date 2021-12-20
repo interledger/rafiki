@@ -10,6 +10,10 @@ import {
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
+import {
+  isOutgoingPaymentError,
+  OutgoingPaymentError
+} from '../../outgoing_payment/errors'
 import { OutgoingPayment } from '../../outgoing_payment/model'
 import { ApolloContext } from '../../app'
 
@@ -40,8 +44,7 @@ export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = as
 
   const accountingService = await ctx.container.use('accountingService')
   const totalSent = await accountingService.getTotalSent(payment.id)
-  if (totalSent === undefined)
-    throw new Error('account total sent does not exist')
+  if (totalSent === undefined) throw new Error('payment account does not exist')
   return {
     amountSent: totalSent
   }
@@ -107,11 +110,53 @@ export const requoteOutgoingPayment: MutationResolvers<ApolloContext>['requoteOu
   )
   return outgoingPaymentService
     .requote(args.paymentId)
-    .then((payment: OutgoingPayment) => ({
-      code: '200',
-      success: true,
-      payment: paymentToGraphql(payment)
+    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+      isOutgoingPaymentError(paymentOrErr)
+        ? {
+            code: '400',
+            success: false,
+            message: paymentOrErr
+          }
+        : {
+            code: '200',
+            success: true,
+            payment: paymentToGraphql(paymentOrErr)
+          }
+    )
+    .catch((err: Error) => ({
+      code: '500',
+      success: false,
+      message: err.message
     }))
+}
+
+export const fundOutgoingPayment: MutationResolvers<ApolloContext>['fundOutgoingPayment'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['OutgoingPaymentResponse'] => {
+  const outgoingPaymentService = await ctx.container.use(
+    'outgoingPaymentService'
+  )
+  return outgoingPaymentService
+    .fund({
+      id: args.input.id,
+      amount: args.input.amount,
+      transferId: args.input.transferId
+    })
+    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+      isOutgoingPaymentError(paymentOrErr)
+        ? {
+            code: '400',
+            success: false,
+            message: paymentOrErr
+          }
+        : {
+            code: '200',
+            success: true,
+            payment: paymentToGraphql(paymentOrErr)
+          }
+    )
     .catch((err: Error) => ({
       code: '500',
       success: false,
@@ -129,11 +174,19 @@ export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutg
   )
   return outgoingPaymentService
     .cancel(args.paymentId)
-    .then((payment: OutgoingPayment) => ({
-      code: '200',
-      success: true,
-      payment: paymentToGraphql(payment)
-    }))
+    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+      isOutgoingPaymentError(paymentOrErr)
+        ? {
+            code: '400',
+            success: false,
+            message: paymentOrErr
+          }
+        : {
+            code: '200',
+            success: true,
+            payment: paymentToGraphql(paymentOrErr)
+          }
+    )
     .catch((err: Error) => ({
       code: '500',
       success: false,
@@ -223,6 +276,7 @@ function paymentToGraphql(
 ): Omit<SchemaOutgoingPayment, 'outcome' | 'account'> {
   return {
     id: payment.id,
+    accountId: payment.accountId,
     state: SchemaPaymentState[payment.state],
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,

@@ -37,13 +37,12 @@ export enum TransferError {
   InvalidId = 'InvalidId',
   InvalidSourceAmount = 'InvalidSourceAmount',
   InvalidDestinationAmount = 'InvalidDestinationAmount',
-  ReceiveLimitExceeded = 'ReceiveLimitExceeded',
   SameAccounts = 'SameAccounts',
   TransferExists = 'TransferExists',
   TransferExpired = 'TransferExpired',
   UnknownTransfer = 'UnknownTransfer',
-  UnknownSourceBalance = 'UnknownSourceBalance',
-  UnknownDestinationBalance = 'UnknownDestinationBalance'
+  UnknownSourceAccount = 'UnknownSourceAccount',
+  UnknownDestinationAccount = 'UnknownDestinationAccount'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

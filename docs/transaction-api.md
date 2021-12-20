@@ -38,9 +38,9 @@ Authorization ends in two possible states:
 
 ### Payment execution
 
-An instance acquires a lock on a payment with a `Funding` state and advances it to `Sending`. The STREAM will use the quote parameters acquired during the `Quoting` state.
+To send, an instance acquires a lock on a payment with a `Sending` state.
 
-The instance connects to the Interledger account it created via ILP-over-HTTP, and sends the payment with STREAM.
+The instance sends the payment with STREAM, which uses the quote parameters acquired during the `Quoting` state.
 
 After the payment completes, the instance releases the lock on the payment and advances the state depending upon the outcome:
 
@@ -92,12 +92,7 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 | `quote.minExchangeRate`          | No       | `Float`         | Aggregate exchange rate the payment is guaranteed to meet, as a ratio of destination base units to source base units. Corresponds to the minimum exchange rate enforced on each packet (_except for the final packet_) to ensure sufficient money gets delivered. For strict bookkeeping, use `maxSourceAmount` instead. |
 | `quote.lowExchangeRateEstimate`  | No       | `Float`         | Lower bound of probed exchange rate over the path (inclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                     |
 | `quote.highExchangeRateEstimate` | No       | `Float`         | Upper bound of probed exchange rate over the path (exclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                     |
-| `paymentPointerId`               | No       | `String`        | Account id of the payment pointer owned by the payer.                                                                                                                                                                                                                                                                    |
-| `account`                        | No       | `Object`        |                                                                                                                                                                                                                                                                                                                          |
-| `account.id`                     | No       | `ID`            | Id of the payment's Interledger account                                                                                                                                                                                                                                                                                  |
-| `account.asset`                  | No       | `Object`        |                                                                                                                                                                                                                                                                                                                          |
-| `account.asset.scale`            | No       | `Integer`       |                                                                                                                                                                                                                                                                                                                          |
-| `account.asset.code`             | No       | `String`        |                                                                                                                                                                                                                                                                                                                          |
+| `accountId`                      | No       | `String`        | Id of the payer's Open Payments account.                                                                                                                                                                                                                                                                                 |
 | `destinationAccount`             | No       | `Object`        |                                                                                                                                                                                                                                                                                                                          |
 | `destinationAccount.scale`       | No       | `Integer`       |                                                                                                                                                                                                                                                                                                                          |
 | `destinationAccount.code`        | No       | `String`        |                                                                                                                                                                                                                                                                                                                          |
@@ -108,8 +103,8 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
 ### `PaymentState`
 
-- `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING`. On failure, transition to `Cancelled`.
-- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `Sending`.
+- `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING` or `SENDING` if already funded. On failure, transition to `Cancelled`.
+- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `Sending`. Otherwise, transitions to `Cancelled` when the quote expires.
 - `SENDING`: Stream payment from the payment account to the destination.
 - `CANCELLED`: The payment failed. (Though some money may have been delivered). Requoting transitions to `Quoting`.
 - `COMPLETED`: Successful completion.

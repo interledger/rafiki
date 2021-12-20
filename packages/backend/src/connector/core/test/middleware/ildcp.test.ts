@@ -1,10 +1,11 @@
 import { IlpPrepare, serializeIlpPrepare } from 'ilp-packet'
 import { deserializeIldcpResponse } from 'ilp-protocol-ildcp'
 import { createILPContext } from '../../utils'
-import { RafikiAccount, ILPContext } from '../../rafiki'
+import { ILPContext } from '../../rafiki'
 import {
-  AccountFactory,
-  PeerAccountFactory,
+  IncomingAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   IlpPrepareFactory,
   RafikiServicesFactory
 } from '../../factories'
@@ -12,8 +13,8 @@ import { createIldcpMiddleware } from '../../middleware/ildcp'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
 
 describe('ILDCP Middleware', function () {
-  const alice = PeerAccountFactory.build({ id: 'alice' })
-  const self = PeerAccountFactory.build({ id: 'self' })
+  const alice = IncomingPeerFactory.build({ id: 'alice' })
+  const self = OutgoingPeerFactory.build({ id: 'self' })
   const services = RafikiServicesFactory.build({})
   const middleware = createIldcpMiddleware('test.rafiki')
 
@@ -36,8 +37,8 @@ describe('ILDCP Middleware', function () {
   }
 
   beforeAll(async () => {
-    await services.accounts.create(self)
-    await services.accounts.create(alice)
+    await services.accounting.create(self)
+    await services.accounting.create(alice)
   })
 
   test('returns an ildcp response on success', async () => {
@@ -66,15 +67,15 @@ describe('ILDCP Middleware', function () {
   })
 
   test('returns an ildcp response if incoming account is not a peer', async () => {
-    const bob = await services.accounts.create(
-      AccountFactory.build({ id: 'bob' })
+    const bob = await services.accounting.create(
+      IncomingAccountFactory.build({ id: 'bob' })
     )
     const ctx = makeContext(
       IlpPrepareFactory.build({ destination: 'peer.config' })
     )
     ctx.accounts = {
       get incoming() {
-        return bob as RafikiAccount
+        return bob
       },
       get outgoing() {
         return self

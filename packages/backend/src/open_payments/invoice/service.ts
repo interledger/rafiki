@@ -1,16 +1,18 @@
 import { Invoice } from './model'
-import { AccountingService, AccountType } from '../../accounting/service'
+import { AccountingService } from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 
+export const POSITIVE_SLIPPAGE = BigInt(1)
+
 interface CreateOptions {
   accountId: string
   description?: string
-  expiresAt?: Date
-  amountToReceive?: bigint
+  expiresAt: Date
+  amount: bigint
 }
 
 export interface InvoiceService {
@@ -20,6 +22,7 @@ export interface InvoiceService {
     accountId: string,
     pagination?: Pagination
   ): Promise<Invoice[]>
+  handlePayment(invoiceId: string): Promise<void>
   deactivateNext(): Promise<string | undefined>
 }
 
@@ -43,6 +46,7 @@ export async function createInvoiceService(
     create: (options, trx) => createInvoice(deps, options, trx),
     getAccountInvoicesPage: (accountId, pagination) =>
       getAccountInvoicesPage(deps, accountId, pagination),
+    handlePayment: (invoiceId) => handleInvoicePayment(deps, invoiceId),
     deactivateNext: () => deactivateNextInvoice(deps)
   }
 }
@@ -56,7 +60,7 @@ async function getInvoice(
 
 async function createInvoice(
   deps: ServiceDependencies,
-  { accountId, description, expiresAt, amountToReceive }: CreateOptions,
+  { accountId, description, expiresAt, amount }: CreateOptions,
   trx?: Transaction
 ): Promise<Invoice> {
   const invTrx = trx || (await Invoice.startTransaction(deps.knex))
@@ -67,16 +71,16 @@ async function createInvoice(
         accountId,
         description,
         expiresAt,
-        amountToReceive,
+        amount,
         active: true
       })
       .withGraphFetched('account.asset')
 
+    // Invoice accounts are credited by the amounts received by the invoice.
+    // Credits are restricted such that the invoice cannot receive more than that amount.
     await deps.accountingService.createAccount({
       id: invoice.id,
-      asset: invoice.account.asset,
-      type: AccountType.Credit,
-      receiveLimit: amountToReceive
+      asset: invoice.account.asset
     })
 
     if (!trx) {
@@ -91,6 +95,27 @@ async function createInvoice(
       throw new Error('unable to create invoice, account does not exist')
     }
     throw err
+  }
+}
+
+async function handleInvoicePayment(
+  deps: ServiceDependencies,
+  invoiceId: string
+): Promise<void> {
+  const amountReceived = await deps.accountingService.getTotalReceived(
+    invoiceId
+  )
+  if (!amountReceived) {
+    return
+  }
+  const deactivated = await Invoice.query(deps.knex)
+    .patch({
+      active: false
+    })
+    .where('id', invoiceId)
+    .andWhere('amount', '<=', amountReceived.toString())
+  if (deactivated) {
+    // Notify wallet
   }
 }
 
@@ -114,8 +139,10 @@ async function deactivateNextInvoice(
     const invoice = invoices[0]
     if (!invoice) return
 
-    const balance = await deps.accountingService.getBalance(invoice.id)
-    if (balance) {
+    const amountReceived = await deps.accountingService.getTotalReceived(
+      invoice.id
+    )
+    if (amountReceived) {
       deps.logger.trace({ invoice: invoice.id }, 'deactivating expired invoice')
       await invoice.$query(trx).patch({ active: false })
     } else {

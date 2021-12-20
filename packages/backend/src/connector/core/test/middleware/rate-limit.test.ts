@@ -3,7 +3,8 @@ import { createILPContext, TokenBucket } from '../../utils'
 import { ZeroCopyIlpPrepare } from '../..'
 import {
   IlpPrepareFactory,
-  PeerAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createIncomingRateLimitMiddleware } from '../../middleware/rate-limit'
@@ -11,8 +12,8 @@ const { RateLimitedError } = Errors
 
 describe('Rate Limit Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerAccountFactory.build({ id: 'alice' })
-  const bob = PeerAccountFactory.build({ id: 'bob' })
+  const alice = IncomingPeerFactory.build({ id: 'alice' })
+  const bob = OutgoingPeerFactory.build({ id: 'bob' })
   const ctx = createILPContext({
     services,
     accounts: {

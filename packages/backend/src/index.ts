@@ -13,10 +13,14 @@ import { Config } from './config/app'
 import { GraphileProducer } from './messaging/graphileProducer'
 import { createRatesService } from './rates/service'
 import { createOutgoingPaymentService } from './outgoing_payment/service'
-import { createIlpPlugin, IlpPlugin } from './outgoing_payment/ilp_plugin'
+import {
+  createIlpPlugin,
+  IlpPlugin,
+  IlpPluginOptions
+} from './outgoing_payment/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
-import { AccountOptions, createAccountingService } from './accounting/service'
+import { createAccountingService } from './accounting/service'
 import { createPeerService } from './peer/service'
 import { createAccountService } from './open_payments/account/service'
 import { createSPSPRoutes } from './spsp/routes'
@@ -24,7 +28,6 @@ import { createAccountRoutes } from './open_payments/account/routes'
 import { createInvoiceRoutes } from './open_payments/invoice/routes'
 import { createInvoiceService } from './open_payments/invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
-import { createWebMonetizationService } from './webmonetization/service'
 import { createConnectorService } from './connector'
 import { createSessionService } from './session/service'
 import { createApiKeyService } from './apiKey/service'
@@ -156,6 +159,7 @@ export function initIocContainer(
     return await createAccountService({
       knex: await deps.use('knex'),
       logger: logger,
+      accountingService: await deps.use('accountingService'),
       assetService: assetService
     })
   })
@@ -163,11 +167,9 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
     const accountService = await deps.use('accountService')
-    const wmService = await deps.use('wmService')
     return await createSPSPRoutes({
       logger: logger,
       accountService: accountService,
-      wmService,
       streamServer: streamServer
     })
   })
@@ -194,17 +196,6 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('wmService', async (deps) => {
-    const logger = await deps.use('logger')
-    const knex = await deps.use('knex')
-    const invoiceService = await deps.use('invoiceService')
-    return createWebMonetizationService({
-      logger: logger,
-      knex: knex,
-      invoiceService
-    })
-  })
-
   container.singleton('ratesService', async (deps) => {
     const config = await deps.use('config')
     return createRatesService({
@@ -216,10 +207,13 @@ export function initIocContainer(
 
   container.singleton('makeIlpPlugin', async (deps) => {
     const connectorApp = await deps.use('connectorApp')
-    return (sourceAccount: AccountOptions): IlpPlugin => {
+    return ({
+      sourceAccount,
+      unfulfillable = false
+    }: IlpPluginOptions): IlpPlugin => {
       return createIlpPlugin(
         (data: Buffer): Promise<Buffer> => {
-          return connectorApp.handleIlpData(sourceAccount, data)
+          return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
         }
       )
     }
@@ -266,6 +260,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),
+      accountService: await deps.use('accountService'),
       invoiceService: await deps.use('invoiceService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),

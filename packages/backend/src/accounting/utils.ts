@@ -1,10 +1,9 @@
-import { AssetAccount, Balance } from './service'
+import { AssetAccount } from './service'
 
-const ASSET_ACCOUNTS_RESERVED = 32
+const ASSET_ACCOUNTS_RESERVED = 8
 
 export interface AccountId {
   id: string
-  asBalance?: Balance
   asset?: {
     unit: number
     account?: never
@@ -13,7 +12,6 @@ export interface AccountId {
 
 interface AssetAccountId {
   id?: never
-  asBalance?: never
   asset: {
     unit: number
     account: AssetAccount
@@ -29,15 +27,9 @@ function getAssetAccountId(unit: number, type: AssetAccount): bigint {
   return BigInt(unit * ASSET_ACCOUNTS_RESERVED + type)
 }
 
-function getBalanceId(accountId: string, type: Balance): bigint {
-  return uuidToBigInt(accountId) + BigInt(type)
-}
-
 export function getAccountId(options: AccountIdOptions): bigint {
   if (isAssetAccount(options)) {
     return getAssetAccountId(options.asset.unit, options.asset.account)
-  } else if (options.asBalance) {
-    return getBalanceId(options.id, options.asBalance)
   }
   return uuidToBigInt(options.id)
 }

@@ -1,7 +1,11 @@
 import { Errors } from 'ilp-packet'
-import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
+import {
+  IncomingAccount,
+  OutgoingAccount,
+  ILPContext,
+  ILPMiddleware
+} from '../rafiki'
 import { AuthState } from './auth'
-import { Balance } from '../../../accounting/service'
 import { validateId } from '../../../shared/utils'
 
 const UUID_LENGTH = 36
@@ -11,12 +15,12 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     ctx: ILPContext<AuthState & { streamDestination?: string }>,
     next: () => Promise<void>
   ): Promise<void> {
-    const { invoices, peers } = ctx.services
+    const { accounts, invoices, peers } = ctx.services
     const incomingAccount = ctx.state.incomingAccount
     if (!incomingAccount) ctx.throw(401, 'unauthorized')
 
     const getAccountByDestinationAddress = async (): Promise<
-      RafikiAccount | undefined
+      OutgoingAccount | undefined
     > => {
       if (ctx.state.streamDestination) {
         const invoice = await invoices.get(ctx.state.streamDestination)
@@ -27,10 +31,18 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           return {
             id: invoice.id,
             asset: invoice.account.asset,
-            withBalance:
-              invoice.amountToReceive != null
-                ? Balance.ReceiveLimit
-                : undefined,
+            stream: {
+              enabled: true
+            },
+            invoice: true
+          }
+        }
+        // Open Payments SPSP fallback account
+        const spspAccount = await accounts.get(ctx.state.streamDestination)
+        if (spspAccount) {
+          return {
+            id: spspAccount.id,
+            asset: spspAccount.asset,
             stream: {
               enabled: true
             }
@@ -78,11 +90,11 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
       throw new Errors.UnreachableError('unknown destination account')
     }
     ctx.accounts = {
-      get incoming(): RafikiAccount {
+      get incoming(): IncomingAccount {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return incomingAccount!
       },
-      get outgoing(): RafikiAccount {
+      get outgoing(): OutgoingAccount {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return outgoingAccount!
       }

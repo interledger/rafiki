@@ -3,7 +3,7 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { InvoiceService } from './service'
-import { AccountingService } from '../../accounting/service'
+import { AccountingService, AssetAccount } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Invoice } from './model'
 import { resetGraphileDb } from '../../tests/graphileDb'
@@ -14,7 +14,6 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { AccountFactory } from '../../tests/accountFactory'
 
 describe('Invoice Service', (): void => {
   let deps: IocContract<AppServices>
@@ -23,7 +22,6 @@ describe('Invoice Service', (): void => {
   let invoiceService: InvoiceService
   let knex: Knex
   let accountId: string
-  let accountFactory: AccountFactory
   let accountingService: AccountingService
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -39,7 +37,6 @@ describe('Invoice Service', (): void => {
         connectionString: appContainer.connectionUrl
       })
       accountingService = await deps.use('accountingService')
-      accountFactory = new AccountFactory(accountingService)
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
@@ -72,6 +69,8 @@ describe('Invoice Service', (): void => {
     test('An invoice can be created and fetched', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
+        amount: BigInt(123),
+        expiresAt: new Date(Date.now() + 30_000),
         description: 'Test invoice'
       })
       const accountService = await deps.use('accountService')
@@ -84,34 +83,28 @@ describe('Invoice Service', (): void => {
       expect(retrievedInvoice).toEqual(invoice)
     })
 
-    test('Creating an invoice creates an invoice account', async (): Promise<void> => {
-      const invoice = await invoiceService.create({
-        accountId,
-        description: 'Invoice'
-      })
-      const invoiceAccount = await accountingService.getAccount(invoice.id)
-
-      expect(invoiceAccount?.id).toEqual(invoice.id)
-      await expect(
-        accountingService.getReceiveLimit(invoice.id)
-      ).resolves.toBeUndefined()
-    })
-
-    test('Creating an invoice with amountToReceive sets up a "receive limit" balance', async (): Promise<void> => {
+    test('Creating an invoice creates a liquidity account', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
         description: 'Invoice',
-        amountToReceive: BigInt(123)
+        expiresAt: new Date(Date.now() + 30_000),
+        amount: BigInt(123)
       })
-      await expect(
-        accountingService.getReceiveLimit(invoice.id)
-      ).resolves.toEqual(BigInt(123 + 1))
+      await expect(accountingService.getAccount(invoice.id)).resolves.toEqual({
+        id: invoice.id,
+        asset: {
+          unit: invoice.account.asset.unit
+        },
+        balance: BigInt(0)
+      })
     })
 
     test('Cannot create invoice for nonexistent account', async (): Promise<void> => {
       await expect(
         invoiceService.create({
           accountId: uuid(),
+          amount: BigInt(123),
+          expiresAt: new Date(Date.now() + 30_000),
           description: 'Test invoice'
         })
       ).rejects.toThrow('unable to create invoice, account does not exist')
@@ -122,11 +115,67 @@ describe('Invoice Service', (): void => {
     })
   })
 
+  describe('handlePayment', (): void => {
+    let invoice: Invoice
+
+    beforeEach(
+      async (): Promise<void> => {
+        invoice = await invoiceService.create({
+          accountId,
+          description: 'Test invoice',
+          amount: BigInt(123),
+          expiresAt: new Date(Date.now() + 30_000)
+        })
+      }
+    )
+
+    test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
+      await expect(
+        accountingService.createTransfer({
+          sourceAccount: {
+            asset: {
+              unit: invoice.account.asset.unit,
+              account: AssetAccount.Settlement
+            }
+          },
+          destinationAccount: invoice,
+          amount: invoice.amount - BigInt(1)
+        })
+      ).resolves.toBeUndefined()
+
+      await invoiceService.handlePayment(invoice.id)
+      await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+        active: true
+      })
+    })
+
+    test('Deactivates fully paid invoice', async (): Promise<void> => {
+      await expect(
+        accountingService.createTransfer({
+          sourceAccount: {
+            asset: {
+              unit: invoice.account.asset.unit,
+              account: AssetAccount.Settlement
+            }
+          },
+          destinationAccount: invoice,
+          amount: invoice.amount
+        })
+      ).resolves.toBeUndefined()
+
+      await invoiceService.handlePayment(invoice.id)
+      await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+        active: false
+      })
+    })
+  })
+
   describe('deactivateNext', (): void => {
     test('Does not deactivate a not-expired invoice', async (): Promise<void> => {
       const invoiceId = (
         await invoiceService.create({
           accountId,
+          amount: BigInt(123),
           description: 'Test invoice',
           expiresAt: new Date(Date.now() + 30_000)
         })
@@ -140,20 +189,19 @@ describe('Invoice Service', (): void => {
     test('Deactivates an expired invoice with received money', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
+        amount: BigInt(123),
         description: 'Test invoice',
         expiresAt: new Date(Date.now() - 40_000)
       })
-      const sourceAccount = await accountFactory.build({
-        balance: BigInt(10),
-        asset: invoice.account.asset
-      })
       await expect(
         accountingService.createTransfer({
-          sourceAccount,
-          destinationAccount: {
-            id: invoice.id,
-            asset: invoice.account.asset
+          sourceAccount: {
+            asset: {
+              unit: invoice.account.asset.unit,
+              account: AssetAccount.Settlement
+            }
           },
+          destinationAccount: invoice,
           amount: BigInt(1)
         })
       ).resolves.toBeUndefined()
@@ -167,6 +215,7 @@ describe('Invoice Service', (): void => {
     test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
       const invoice = await invoiceService.create({
         accountId,
+        amount: BigInt(123),
         description: 'Test invoice',
         expiresAt: new Date(Date.now() - 40_000)
       })
@@ -185,6 +234,8 @@ describe('Invoice Service', (): void => {
           invoicesCreated.push(
             await invoiceService.create({
               accountId,
+              amount: BigInt(123),
+              expiresAt: new Date(Date.now() + 30_000),
               description: `Invoice ${i}`
             })
           )

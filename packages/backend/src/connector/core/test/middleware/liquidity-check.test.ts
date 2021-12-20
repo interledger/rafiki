@@ -3,7 +3,8 @@ import { createILPContext } from '../../utils'
 import {
   IlpRejectFactory,
   IlpFulfillFactory,
-  PeerAccountFactory,
+  IncomingPeerFactory,
+  OutgoingPeerFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { createOutgoingLiquidityCheckMiddleware } from '../../middleware/liquidity-check'
@@ -11,8 +12,8 @@ const { T04_INSUFFICIENT_LIQUIDITY } = Errors.codes
 
 describe('Liquidity Check Middleware', function () {
   const services = RafikiServicesFactory.build()
-  const alice = PeerAccountFactory.build({ id: 'alice' })
-  const bob = PeerAccountFactory.build({ id: 'bob' })
+  const alice = IncomingPeerFactory.build({ id: 'alice' })
+  const bob = OutgoingPeerFactory.build({ id: 'bob' })
   const ctx = createILPContext({
     services,
     accounts: {

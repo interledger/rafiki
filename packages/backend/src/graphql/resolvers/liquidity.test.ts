@@ -8,11 +8,8 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import {
-  AccountingService,
-  AccountOptions,
-  AssetAccount
-} from '../../accounting/service'
+import { AccountingService, AssetAccount } from '../../accounting/service'
+import { AccountIdOptions } from '../../accounting/utils'
 import { AssetService } from '../../asset/service'
 import { AccountFactory } from '../../tests/accountFactory'
 import { randomAsset, randomUnit } from '../../tests/asset'
@@ -32,7 +29,7 @@ describe('Withdrawal Resolvers', (): void => {
 
   interface LiquidityOptions {
     id?: string
-    account: AccountOptions
+    account: AccountIdOptions
     amount: bigint
   }
 
@@ -41,6 +38,7 @@ describe('Withdrawal Resolvers', (): void => {
     account,
     amount
   }: LiquidityOptions): Promise<void> {
+    assert.ok(account.asset)
     await expect(
       accountingService.createTransfer({
         id,
@@ -61,6 +59,7 @@ describe('Withdrawal Resolvers', (): void => {
     account,
     amount
   }: Required<LiquidityOptions>): Promise<void> {
+    assert.ok(account.asset)
     await expect(
       accountingService.createTransfer({
         id,
@@ -866,7 +865,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          let account: AccountOptions
+          let account: AccountIdOptions
           if (type === 'peer') {
             account = await peerFactory.build()
           } else {
@@ -1071,7 +1070,7 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          let account: AccountOptions
+          let account: AccountIdOptions
           if (type === 'peer') {
             account = await peerFactory.build()
           } else {

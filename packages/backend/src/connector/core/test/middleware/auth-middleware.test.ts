@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import Faker from 'faker'
 import { createContext } from '../../utils'
 import { createTokenAuthMiddleware } from '../../middleware'
-import { MockAccountsService } from '../mocks/accounts-service'
+import { MockAccountingService } from '../mocks/accounting-service'
 import { HttpContext } from '../../rafiki'
-import { PeerAccountFactory, RafikiServicesFactory } from '../../factories'
+import { IncomingPeerFactory, RafikiServicesFactory } from '../../factories'
 
 describe('Token Auth Middleware', function () {
   describe('default behaviour', function () {
@@ -38,7 +37,7 @@ describe('Token Auth Middleware', function () {
     })
 
     test('succeeds for valid token and binds data to context', async () => {
-      const accounts = new MockAccountsService()
+      const accounting = new MockAccountingService()
       const ctx = createContext<unknown, HttpContext>({
         req: {
           headers: {
@@ -46,21 +45,17 @@ describe('Token Auth Middleware', function () {
             authorization: 'Bearer asd123'
           }
         },
-        services: RafikiServicesFactory.build({ accounts })
+        services: RafikiServicesFactory.build({ accounting })
       })
-      const account = PeerAccountFactory.build({
+      const account = IncomingPeerFactory.build({
         id: 'alice',
         http: {
           incoming: {
             authTokens: ['asd123']
-          },
-          outgoing: {
-            authToken: Faker.datatype.string(32),
-            endpoint: Faker.internet.url()
           }
         }
       })
-      await accounts.create(account)
+      await accounting.create(account)
 
       await createTokenAuthMiddleware()(ctx, async () => {})
       expect(ctx.state.incomingAccount).toMatchObject(account)

@@ -21,7 +21,7 @@ import {
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
-import { AccountOptions, AccountingService } from './accounting/service'
+import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
 import { AccountService } from './open_payments/account/service'
 import { RatesService } from './rates/service'
@@ -30,9 +30,8 @@ import { InvoiceRoutes } from './open_payments/invoice/routes'
 import { AccountRoutes } from './open_payments/account/routes'
 import { InvoiceService } from './open_payments/invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
-import { WebMonetizationService } from './webmonetization/service'
 import { OutgoingPaymentService } from './outgoing_payment/service'
-import { IlpPlugin } from './outgoing_payment/ilp_plugin'
+import { IlpPlugin, IlpPluginOptions } from './outgoing_payment/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
 import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
@@ -72,9 +71,8 @@ export interface AppServices {
   accountRoutes: Promise<AccountRoutes>
   invoiceService: Promise<InvoiceService>
   streamServer: Promise<StreamServer>
-  wmService: Promise<WebMonetizationService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
-  makeIlpPlugin: Promise<(sourceAccount: AccountOptions) => IlpPlugin>
+  makeIlpPlugin: Promise<(options: IlpPluginOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>

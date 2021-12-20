@@ -4,17 +4,25 @@ import {
   CreateAccountError as CreateAccountErrorCode
 } from 'tigerbeetle-node'
 
-import { AccountType, ServiceDependencies } from './service'
+import { ServiceDependencies } from './service'
 import { CreateAccountError } from './errors'
 import { AccountIdOptions, getAccountId } from './utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 
+// Credit and debit accounts can both send and receive
+// but are restricted by their respective Tigerbeetle flags.
+// In Rafiki transfers:
+// - the source account's debits increase
+// - the destination account's credits increase
+export enum AccountType {
+  Credit = 'Credit', // debits_must_not_exceed_credits
+  Debit = 'Debit' // credits_must_not_exceed_debits
+}
+
 export type CreateAccountOptions = AccountIdOptions & {
-  asset: {
-    unit: number
-  }
   type: AccountType
+  unit: number
 }
 
 export async function createAccounts(
@@ -26,7 +34,7 @@ export async function createAccounts(
       id: getAccountId(account),
       user_data: BigInt(0),
       reserved: ACCOUNT_RESERVED,
-      unit: account.asset.unit,
+      unit: account.unit,
       code: 0,
       flags:
         account.type === AccountType.Debit

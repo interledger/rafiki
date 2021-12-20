@@ -1,9 +1,9 @@
 import * as Koa from 'koa'
 import { HttpMiddleware } from '../rafiki'
-import { RafikiAccount } from '../rafiki'
+import { IncomingAccount } from '../rafiki'
 
 export interface AuthState {
-  incomingAccount?: RafikiAccount
+  incomingAccount?: IncomingAccount
 }
 
 // TODO incomingTokens

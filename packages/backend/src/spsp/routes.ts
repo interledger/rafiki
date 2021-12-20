@@ -3,7 +3,6 @@ import { AppContext } from '../app'
 import { validateId } from '../shared/utils'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
-import { WebMonetizationService } from '../webmonetization/service'
 import { AccountService } from '../open_payments/account/service'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
@@ -14,14 +13,12 @@ export interface SPSPRoutes {
 
 interface ServiceDependencies extends Omit<BaseService, 'knex'> {
   accountService: AccountService
-  wmService: WebMonetizationService
   streamServer: StreamServer
 }
 
 export async function createSPSPRoutes({
   logger,
   accountService,
-  wmService,
   streamServer
 }: ServiceDependencies): Promise<SPSPRoutes> {
   const log = logger.child({
@@ -31,7 +28,6 @@ export async function createSPSPRoutes({
   const deps: ServiceDependencies = {
     logger: log,
     accountService,
-    wmService,
     streamServer
   }
   return {
@@ -72,9 +68,8 @@ async function getPay(
   }
 
   try {
-    const invoice = await deps.wmService.getInvoice(accountId)
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-      paymentTag: invoice.id,
+      paymentTag: accountId,
       receiptSetup:
         nonce && secret
           ? {

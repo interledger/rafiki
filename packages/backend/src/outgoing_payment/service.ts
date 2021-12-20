@@ -1,24 +1,24 @@
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
+import { v4 as uuid } from 'uuid'
+
 import { BaseService } from '../shared/baseService'
+import { LifecycleError, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import {
-  AccountingService,
-  AccountOptions,
-  AccountType,
-  AssetAccount
-} from '../accounting/service'
+import { AccountingService, AssetAccount } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
-import { IlpPlugin } from './ilp_plugin'
-import * as lifecycle from './lifecycle'
+import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
 import * as worker from './worker'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
   create(options: CreateOutgoingPaymentOptions): Promise<OutgoingPayment>
-  cancel(id: string): Promise<OutgoingPayment>
-  requote(id: string): Promise<OutgoingPayment>
+  fund(
+    options: FundOutgoingPaymentOptions
+  ): Promise<OutgoingPayment | OutgoingPaymentError>
+  cancel(id: string): Promise<OutgoingPayment | OutgoingPaymentError>
+  requote(id: string): Promise<OutgoingPayment | OutgoingPaymentError>
   processNext(): Promise<string | undefined>
   getAccountPage(
     accountId: string,
@@ -38,7 +38,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   accountService: AccountService
   ratesService: RatesService
-  makeIlpPlugin: (sourceAccount: AccountOptions) => IlpPlugin
+  makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
 }
 
 export async function createOutgoingPaymentService(
@@ -52,6 +52,7 @@ export async function createOutgoingPaymentService(
     get: (id) => getOutgoingPayment(deps, id),
     create: (options: CreateOutgoingPaymentOptions) =>
       createOutgoingPayment(deps, options),
+    fund: (options) => fundPayment(deps, options),
     cancel: (id) => cancelPayment(deps, id),
     requote: (id) => requotePayment(deps, id),
     processNext: () => worker.processPendingPayment(deps),
@@ -110,10 +111,11 @@ async function createOutgoingPayment(
         .withGraphFetched('account.asset')
 
       const plugin = deps.makeIlpPlugin({
-        asset: {
-          ...payment.account.asset,
-          account: AssetAccount.Sent
-        }
+        sourceAccount: {
+          id: uuid(),
+          asset: payment.account.asset
+        },
+        unfulfillable: true
       })
       await plugin.connect()
       const destination = await Pay.setupPayment({
@@ -136,9 +138,7 @@ async function createOutgoingPayment(
 
       await deps.accountingService.createAccount({
         id: payment.id,
-        asset: payment.account.asset,
-        type: AccountType.Credit,
-        sentBalance: true
+        asset: payment.account.asset
       })
 
       return payment
@@ -154,14 +154,61 @@ async function createOutgoingPayment(
 function requotePayment(
   deps: ServiceDependencies,
   id: string
-): Promise<OutgoingPayment> {
+): Promise<OutgoingPayment | OutgoingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
-    if (!payment) throw new Error('payment does not exist')
+    if (!payment) return OutgoingPaymentError.UnknownPayment
     if (payment.state !== PaymentState.Cancelled) {
-      throw new Error(`Cannot quote; payment is in state=${payment.state}`)
+      return OutgoingPaymentError.WrongState
     }
     await payment.$query(trx).patch({ state: PaymentState.Quoting })
+    return payment
+  })
+}
+
+export interface FundOutgoingPaymentOptions {
+  id: string
+  amount: bigint
+  transferId?: string
+}
+
+async function fundPayment(
+  deps: ServiceDependencies,
+  { id, amount, transferId }: FundOutgoingPaymentOptions
+): Promise<OutgoingPayment | OutgoingPaymentError> {
+  return deps.knex.transaction(async (trx) => {
+    const payment = await OutgoingPayment.query(trx)
+      .findById(id)
+      .forUpdate()
+      .withGraphFetched('account.asset')
+    if (!payment) return OutgoingPaymentError.UnknownPayment
+    if (payment.state !== PaymentState.Funding) {
+      return OutgoingPaymentError.WrongState
+    }
+    if (!payment.quote) throw LifecycleError.MissingQuote
+    const error = await deps.accountingService.createTransfer({
+      id: transferId,
+      sourceAccount: {
+        asset: {
+          unit: payment.account.asset.unit,
+          account: AssetAccount.Settlement
+        }
+      },
+      destinationAccount: {
+        id: payment.id
+      },
+      amount
+    })
+    if (error) {
+      throw new Error('Unable to fund payment. error=' + error)
+    }
+    const balance = await deps.accountingService.getBalance(payment.id)
+    if (balance === undefined) {
+      throw LifecycleError.MissingBalance
+    }
+    if (payment.quote.maxSourceAmount <= balance) {
+      await payment.$query(trx).patch({ state: PaymentState.Sending })
+    }
     return payment
   })
 }
@@ -169,17 +216,17 @@ function requotePayment(
 async function cancelPayment(
   deps: ServiceDependencies,
   id: string
-): Promise<OutgoingPayment> {
+): Promise<OutgoingPayment | OutgoingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
-    if (!payment) throw new Error('payment does not exist')
+    if (!payment) return OutgoingPaymentError.UnknownPayment
     if (payment.state !== PaymentState.Funding) {
-      throw new Error(`Cannot cancel; payment is in state=${payment.state}`)
+      return OutgoingPaymentError.WrongState
     }
+    // TODO: Notify wallet
     await payment.$query(trx).patch({
       state: PaymentState.Cancelled,
-      withdrawLiquidity: true,
-      error: lifecycle.LifecycleError.CancelledByAPI
+      error: LifecycleError.CancelledByAPI
     })
     return payment
   })

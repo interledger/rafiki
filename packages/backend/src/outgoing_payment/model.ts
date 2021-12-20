@@ -25,7 +25,6 @@ export class OutgoingPayment extends BaseModel {
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
-  public withdrawLiquidity!: boolean
 
   public intent!: PaymentIntent
 
@@ -41,6 +40,8 @@ export class OutgoingPayment extends BaseModel {
     // Note that the upper exchange rate bound is *exclusive*.
     // (Pay.PositiveRatio, but validated later)
     highExchangeRateEstimate: Pay.Ratio
+    // Amount already sent at the time of the quote
+    amountSent: bigint
   }
   // Open payments account id of the sender
   public accountId!: string
@@ -125,7 +126,7 @@ export class OutgoingPayment extends BaseModel {
 
 export enum PaymentState {
   // Initial state. In this state, an empty trustline account is generated, and the payment is automatically resolved & quoted.
-  // On success, transition to `Funding`.
+  // On success, transition to `Funding` or `Sending` if already funded.
   // On failure, transition to `Cancelled`.
   Quoting = 'Quoting',
   // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.

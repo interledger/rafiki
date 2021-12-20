@@ -1,5 +1,5 @@
 import Axios, { AxiosInstance } from 'axios'
-import { RafikiAccount, ILPContext, ILPMiddleware } from '../rafiki'
+import { OutgoingAccount, ILPContext, ILPMiddleware } from '../rafiki'
 import { modifySerializedIlpPrepare } from '../lib'
 //import { AxiosClient } from '../services/client/axios'
 import { sendToPeer as sendToPeerDefault } from '../services/client'
@@ -7,7 +7,7 @@ import { sendToPeer as sendToPeerDefault } from '../services/client'
 export interface ClientControllerOptions {
   sendToPeer?: (
     client: AxiosInstance,
-    account: RafikiAccount,
+    account: OutgoingAccount,
     prepare: Buffer
   ) => Promise<Buffer>
 }

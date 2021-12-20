@@ -16,7 +16,6 @@ import { v4 } from 'uuid'
 import { StreamServer } from '@interledger/stream-receiver'
 import { truncateTables } from '../tests/tableManager'
 import { AccountService } from '../open_payments/account/service'
-import { WebMonetizationService } from '../webmonetization/service'
 
 describe('SPSP Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -24,7 +23,6 @@ describe('SPSP Routes', (): void => {
   let knex: Knex
   let workerUtils: WorkerUtils
   let accountService: AccountService
-  let wmService: WebMonetizationService
   let spspRoutes: SPSPRoutes
   let streamServer: StreamServer
   const nonce = crypto.randomBytes(16).toString('base64')
@@ -53,7 +51,6 @@ describe('SPSP Routes', (): void => {
       spspRoutes = await deps.use('spspRoutes')
       streamServer = await deps.use('streamServer')
       accountService = await deps.use('accountService')
-      wmService = await deps.use('wmService')
     }
   )
 
@@ -188,9 +185,8 @@ describe('SPSP Routes', (): void => {
       const connectionDetails = await decryptConnectionDetails(
         res.destination_account
       )
-      const currentInvoice = await wmService.getInvoice(accountId)
       expect(connectionDetails).toEqual({
-        paymentTag: currentInvoice.id,
+        paymentTag: accountId,
         asset: {
           code: 'USD',
           scale: 6
@@ -222,9 +218,8 @@ describe('SPSP Routes', (): void => {
       const connectionDetails = await decryptConnectionDetails(
         res.destination_account
       )
-      const currentInvoice = await wmService.getInvoice(accountId)
       expect(connectionDetails).toEqual({
-        paymentTag: currentInvoice.id,
+        paymentTag: accountId,
         asset: {
           code: 'USD',
           scale: 6

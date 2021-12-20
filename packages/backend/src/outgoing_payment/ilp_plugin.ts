@@ -1,3 +1,5 @@
+import { AccountOptions } from '../accounting/service'
+
 // Maybe @interledger/pay should export this interface.
 export interface IlpPlugin {
   connect: () => Promise<void>
@@ -32,4 +34,9 @@ export class OutgoingIlpPlugin implements IlpPlugin {
   registerDataHandler(_handler: (data: Buffer) => Promise<Buffer>): void {}
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   deregisterDataHandler(): void {}
+}
+
+export interface IlpPluginOptions {
+  sourceAccount: AccountOptions
+  unfulfillable?: boolean
 }

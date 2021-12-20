@@ -14,15 +14,22 @@ import {
 import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
 import { TransferError } from '../../accounting/errors'
-import { AccountOptions, AccountTransfer } from '../../accounting/service'
+import { AccountOptions, Transaction } from '../../accounting/service'
+import { AssetOptions } from '../../asset/service'
+import { AccountService } from '../../open_payments/account/service'
 import { InvoiceService } from '../../open_payments/invoice/service'
 import { PeerService } from '../../peer/service'
 
-export type RafikiAccount = AccountOptions & {
-  asset: {
-    code: string
-    scale: number
-  }
+type Account = AccountOptions & {
+  asset: AssetOptions
+}
+
+export type IncomingAccount = Account & {
+  maxPacketAmount?: bigint
+  staticIlpAddress?: string
+}
+
+export type OutgoingAccount = Account & {
   http?: {
     outgoing: {
       authToken: string
@@ -32,27 +39,24 @@ export type RafikiAccount = AccountOptions & {
   stream?: {
     enabled: boolean
   }
-  staticIlpAddress?: string
-  maxPacketAmount?: bigint
+  invoice?: boolean
 }
 
 export interface TransferOptions {
-  sourceAccount: RafikiAccount
-  destinationAccount: RafikiAccount
+  sourceAccount: IncomingAccount
+  destinationAccount: OutgoingAccount
   sourceAmount: bigint
   destinationAmount?: bigint
   timeout: bigint // nano-seconds
 }
 
-export interface AccountService {
-  getReceiveLimit(id: string): Promise<bigint | undefined>
-  transferFunds(
-    options: TransferOptions
-  ): Promise<AccountTransfer | TransferError>
+export interface AccountingService {
+  transferFunds(options: TransferOptions): Promise<Transaction | TransferError>
 }
 
 export interface RafikiServices {
   //router: Router
+  accounting: AccountingService
   accounts: AccountService
   logger: Logger
   invoices: InvoiceService
@@ -65,8 +69,8 @@ export interface RafikiServices {
 export type HttpContextMixin = {
   services: RafikiServices
   accounts: {
-    readonly incoming: RafikiAccount
-    readonly outgoing: RafikiAccount
+    readonly incoming: IncomingAccount
+    readonly outgoing: OutgoingAccount
   }
 }
 
@@ -81,8 +85,8 @@ export type ILPMiddleware<T = any> = (
 export type ILPContext<T = any> = {
   services: RafikiServices
   accounts: {
-    readonly incoming: RafikiAccount
-    readonly outgoing: RafikiAccount
+    readonly incoming: IncomingAccount
+    readonly outgoing: OutgoingAccount
   }
   request: {
     prepare: ZeroCopyIlpPrepare
@@ -134,6 +138,9 @@ export class Rafiki<T = any> {
       get streamServer(): StreamServer {
         return streamServer
       },
+      get accounting(): AccountingService {
+        return config.accounting
+      },
       get accounts(): AccountService {
         return config.accounts
       },
@@ -145,7 +152,8 @@ export class Rafiki<T = any> {
   }
 
   async handleIlpData(
-    sourceAccount: RafikiAccount,
+    sourceAccount: IncomingAccount,
+    unfulfillable: boolean,
     rawPrepare: Buffer
   ): Promise<Buffer> {
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
@@ -157,14 +165,17 @@ export class Rafiki<T = any> {
         services: this.publicServer.context.services,
         accounts: {
           // These are populated up by the accounts middleware.
-          get incoming(): RafikiAccount {
+          get incoming(): IncomingAccount {
             throw new Error('incoming account not available')
           },
-          get outgoing(): RafikiAccount {
+          get outgoing(): OutgoingAccount {
             throw new Error('outgoing account not available')
           }
         },
-        state: { incomingAccount: sourceAccount },
+        state: {
+          incomingAccount: sourceAccount,
+          unfulfillable
+        },
         throw: (_status: number, msg: string): never => {
           throw new Errors.BadRequestError(msg)
         }
