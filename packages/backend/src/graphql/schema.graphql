@@ -68,10 +68,15 @@ type Mutation {
     input: CreateAssetLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
+  "Create liquidity withdrawal from invoice"
+  createInvoiceWithdrawal(
+    input: CreateInvoiceWithdrawalInput!
+  ): InvoiceWithdrawalMutationResponse
+
   "Create liquidity withdrawal from outgoing payment"
   createOutgoingPaymentWithdrawal(
     input: CreateOutgoingPaymentWithdrawalInput!
-  ): LiquidityMutationResponse
+  ): OutgoingPaymentWithdrawalMutationResponse
 
   "Finalize liquidity withdrawal"
   finalizeLiquidityWithdrawal(
@@ -202,6 +207,13 @@ input CreateAssetLiquidityWithdrawalInput {
   id: String!
 }
 
+input CreateInvoiceWithdrawalInput {
+  "The id of the invoice to create the withdrawal for."
+  invoiceId: String!
+  "The id of the withdrawal."
+  id: String!
+}
+
 input CreateOutgoingPaymentWithdrawalInput {
   "The id of the outgoing payment to create the withdrawal for."
   paymentId: String!
@@ -249,6 +261,7 @@ enum LiquidityError {
   InvalidId
   TransferExists
   UnknownAsset
+  UnknownInvoice
   UnknownPayment
   UnknownPeer
   UnknownTransfer
@@ -417,6 +430,12 @@ type Session {
   expiresAt: String!
 }
 
+type InvoiceWithdrawal {
+  id: ID!
+  amount: UInt64!
+  invoice: Invoice!
+}
+
 type OutgoingPaymentWithdrawal {
   id: ID!
   amount: UInt64!
@@ -457,6 +476,21 @@ type TransferMutationResponse implements MutationResponse {
 }
 
 type LiquidityMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: LiquidityError
+}
+
+type InvoiceWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: LiquidityError
+  withdrawal: InvoiceWithdrawal
+}
+
+type OutgoingPaymentWithdrawalMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!

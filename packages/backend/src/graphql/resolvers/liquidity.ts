@@ -3,7 +3,9 @@ import {
   ResolversTypes,
   MutationResolvers,
   LiquidityError,
-  LiquidityMutationResponse
+  LiquidityMutationResponse,
+  InvoiceWithdrawalMutationResponse,
+  OutgoingPaymentWithdrawalMutationResponse
 } from '../generated/graphql'
 import { TransferError } from '../../accounting/errors'
 import { ApolloContext } from '../../app'
@@ -190,18 +192,82 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
   }
 }
 
+export const createInvoiceWithdrawal: MutationResolvers<ApolloContext>['createInvoiceWithdrawal'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['InvoiceWithdrawalMutationResponse'] => {
+  try {
+    const invoiceService = await ctx.container.use('invoiceService')
+    const invoice = await invoiceService.get(args.input.invoiceId)
+    if (!invoice) {
+      return responses[
+        LiquidityError.UnknownInvoice
+      ] as InvoiceWithdrawalMutationResponse
+    }
+    const id = args.input.id
+    const accountingService = await ctx.container.use('accountingService')
+    const amount = await accountingService.getBalance(invoice.id)
+    if (amount === undefined) throw new Error('missing invoice account')
+    if (amount === BigInt(0)) {
+      return responses[
+        LiquidityError.AmountZero
+      ] as InvoiceWithdrawalMutationResponse
+    }
+    const error = await accountingService.createWithdrawal({
+      id,
+      accountId: invoice.id,
+      amount,
+      timeout: BigInt(60e9) // 1 minute
+    })
+
+    if (error) {
+      return errorToResponse(error) as InvoiceWithdrawalMutationResponse
+    }
+    return {
+      code: '200',
+      success: true,
+      message: 'Created invoice withdrawal',
+      withdrawal: {
+        id,
+        amount,
+        invoice: {
+          ...invoice,
+          expiresAt: invoice.expiresAt.toISOString(),
+          createdAt: invoice.createdAt?.toISOString()
+        }
+      }
+    }
+  } catch (error) {
+    ctx.logger.error(
+      {
+        input: args.input,
+        error
+      },
+      'error creating invoice withdrawal'
+    )
+    return {
+      code: '500',
+      message: 'Error trying to create invoice withdrawal',
+      success: false
+    }
+  }
+}
+
 export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['createOutgoingPaymentWithdrawal'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
+): ResolversTypes['OutgoingPaymentWithdrawalMutationResponse'] => {
   try {
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
     const payment = await outgoingPaymentService.get(args.input.paymentId)
     if (!payment) {
-      return responses[LiquidityError.UnknownPayment]
+      return responses[
+        LiquidityError.UnknownPayment
+      ] as OutgoingPaymentWithdrawalMutationResponse
     }
     const id = args.input.id
     const accountingService = await ctx.container.use('accountingService')
@@ -209,7 +275,9 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     if (amount === undefined)
       throw new Error('missing outgoing payment account')
     if (amount === BigInt(0)) {
-      return responses[LiquidityError.AmountZero]
+      return responses[
+        LiquidityError.AmountZero
+      ] as OutgoingPaymentWithdrawalMutationResponse
     }
     const error = await accountingService.createWithdrawal({
       id,
@@ -219,7 +287,7 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     })
 
     if (error) {
-      return errorToResponse(error)
+      return errorToResponse(error) as OutgoingPaymentWithdrawalMutationResponse
     }
     return {
       code: '200',
@@ -336,6 +404,12 @@ const responses: {
     message: 'Unknown asset',
     success: false,
     error: LiquidityError.UnknownAsset
+  },
+  [LiquidityError.UnknownInvoice]: {
+    code: '404',
+    message: 'Unknown invoice',
+    success: false,
+    error: LiquidityError.UnknownInvoice
   },
   [LiquidityError.UnknownPayment]: {
     code: '404',

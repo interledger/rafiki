@@ -25,6 +25,7 @@ import {
   addPeerLiquidity,
   createAssetLiquidityWithdrawal,
   createPeerLiquidityWithdrawal,
+  createInvoiceWithdrawal,
   createOutgoingPaymentWithdrawal,
   finalizeLiquidityWithdrawal,
   rollbackLiquidityWithdrawal
@@ -74,6 +75,7 @@ export const resolvers: Resolvers = {
     addPeerLiquidity: addPeerLiquidity,
     createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
+    createInvoiceWithdrawal,
     createOutgoingPaymentWithdrawal,
     finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
     rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal
