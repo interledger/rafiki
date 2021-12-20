@@ -68,6 +68,11 @@ type Mutation {
     input: CreateAssetLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
+  "Create liquidity withdrawal from Open Payments account"
+  createAccountWithdrawal(
+    input: CreateAccountWithdrawalInput!
+  ): AccountWithdrawalMutationResponse
+
   "Create liquidity withdrawal from invoice"
   createInvoiceWithdrawal(
     input: CreateInvoiceWithdrawalInput!
@@ -207,6 +212,13 @@ input CreateAssetLiquidityWithdrawalInput {
   id: String!
 }
 
+input CreateAccountWithdrawalInput {
+  "The id of the Open Payments account to create the withdrawal for."
+  accountId: String!
+  "The id of the withdrawal."
+  id: String!
+}
+
 input CreateInvoiceWithdrawalInput {
   "The id of the invoice to create the withdrawal for."
   invoiceId: String!
@@ -260,6 +272,7 @@ enum LiquidityError {
   InsufficientBalance
   InvalidId
   TransferExists
+  UnknownAccount
   UnknownAsset
   UnknownInvoice
   UnknownPayment
@@ -430,6 +443,12 @@ type Session {
   expiresAt: String!
 }
 
+type AccountWithdrawal {
+  id: ID!
+  amount: UInt64!
+  account: Account!
+}
+
 type InvoiceWithdrawal {
   id: ID!
   amount: UInt64!
@@ -480,6 +499,14 @@ type LiquidityMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   error: LiquidityError
+}
+
+type AccountWithdrawalMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  error: LiquidityError
+  withdrawal: AccountWithdrawal
 }
 
 type InvoiceWithdrawalMutationResponse implements MutationResponse {

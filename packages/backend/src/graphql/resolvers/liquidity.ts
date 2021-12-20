@@ -4,6 +4,7 @@ import {
   MutationResolvers,
   LiquidityError,
   LiquidityMutationResponse,
+  AccountWithdrawalMutationResponse,
   InvoiceWithdrawalMutationResponse,
   OutgoingPaymentWithdrawalMutationResponse
 } from '../generated/graphql'
@@ -187,6 +188,64 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     return {
       code: '400',
       message: 'Error trying to create asset liquidity withdrawal',
+      success: false
+    }
+  }
+}
+
+export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAccountWithdrawal'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['AccountWithdrawalMutationResponse'] => {
+  try {
+    const accountService = await ctx.container.use('accountService')
+    const account = await accountService.get(args.input.accountId)
+    if (!account) {
+      return responses[
+        LiquidityError.UnknownAccount
+      ] as AccountWithdrawalMutationResponse
+    }
+    const id = args.input.id
+    const accountingService = await ctx.container.use('accountingService')
+    const amount = await accountingService.getBalance(account.id)
+    if (amount === undefined) throw new Error('missing invoice account')
+    if (amount === BigInt(0)) {
+      return responses[
+        LiquidityError.AmountZero
+      ] as AccountWithdrawalMutationResponse
+    }
+    const error = await accountingService.createWithdrawal({
+      id,
+      accountId: account.id,
+      amount,
+      timeout: BigInt(60e9) // 1 minute
+    })
+
+    if (error) {
+      return errorToResponse(error) as AccountWithdrawalMutationResponse
+    }
+    return {
+      code: '200',
+      success: true,
+      message: 'Created account withdrawal',
+      withdrawal: {
+        id,
+        amount,
+        account
+      }
+    }
+  } catch (error) {
+    ctx.logger.error(
+      {
+        input: args.input,
+        error
+      },
+      'error creating account withdrawal'
+    )
+    return {
+      code: '500',
+      message: 'Error trying to create account withdrawal',
       success: false
     }
   }
@@ -398,6 +457,12 @@ const responses: {
     message: 'Transfer exists',
     success: false,
     error: LiquidityError.TransferExists
+  },
+  [LiquidityError.UnknownAccount]: {
+    code: '404',
+    message: 'Unknown account',
+    success: false,
+    error: LiquidityError.UnknownAccount
   },
   [LiquidityError.UnknownAsset]: {
     code: '404',
