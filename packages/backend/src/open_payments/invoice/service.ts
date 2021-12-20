@@ -108,13 +108,15 @@ async function handleInvoicePayment(
   if (!amountReceived) {
     return
   }
-  const invoice = await Invoice.query(deps.knex).findById(invoiceId)
-  if (invoice.amount <= amountReceived) {
-    await invoice.$query(deps.knex).patch({
-      active: false
-    })
-    // Notify wallet
-  }
+  return deps.knex.transaction(async (trx) => {
+    const invoice = await Invoice.query(trx).findById(invoiceId).forUpdate()
+    if (invoice.amount <= amountReceived) {
+      await invoice.$query(trx).patch({
+        active: false
+      })
+      // Notify wallet
+    }
+  })
 }
 
 // Deactivate expired invoices that have some money.
