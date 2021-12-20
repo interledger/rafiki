@@ -1,3 +1,4 @@
+import { paymentToGraphql } from './outgoing_payment'
 import {
   ResolversTypes,
   MutationResolvers,
@@ -13,6 +14,9 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
   ctx
 ): ResolversTypes['LiquidityMutationResponse'] => {
   try {
+    if (args.input.amount === BigInt(0)) {
+      return responses[LiquidityError.AmountZero]
+    }
     const peerService = await ctx.container.use('peerService')
     const peer = await peerService.get(args.input.peerId)
     if (!peer) {
@@ -54,6 +58,9 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
   ctx
 ): ResolversTypes['LiquidityMutationResponse'] => {
   try {
+    if (args.input.amount === BigInt(0)) {
+      return responses[LiquidityError.AmountZero]
+    }
     const assetService = await ctx.container.use('assetService')
     const asset = await assetService.getById(args.input.assetId)
     if (!asset) {
@@ -97,6 +104,9 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
   ctx
 ): ResolversTypes['LiquidityMutationResponse'] => {
   try {
+    if (args.input.amount === BigInt(0)) {
+      return responses[LiquidityError.AmountZero]
+    }
     const peerService = await ctx.container.use('peerService')
     const peer = await peerService.get(args.input.peerId)
     if (!peer) {
@@ -139,6 +149,9 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
   ctx
 ): ResolversTypes['LiquidityMutationResponse'] => {
   try {
+    if (args.input.amount === BigInt(0)) {
+      return responses[LiquidityError.AmountZero]
+    }
     const assetService = await ctx.container.use('assetService')
     const asset = await assetService.getById(args.input.assetId)
     if (!asset) {
@@ -172,6 +185,63 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     return {
       code: '400',
       message: 'Error trying to create asset liquidity withdrawal',
+      success: false
+    }
+  }
+}
+
+export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['createOutgoingPaymentWithdrawal'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['LiquidityMutationResponse'] => {
+  try {
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    const payment = await outgoingPaymentService.get(args.input.paymentId)
+    if (!payment) {
+      return responses[LiquidityError.UnknownPayment]
+    }
+    const id = args.input.id
+    const accountingService = await ctx.container.use('accountingService')
+    const amount = await accountingService.getBalance(payment.id)
+    if (amount === undefined)
+      throw new Error('missing outgoing payment account')
+    if (amount === BigInt(0)) {
+      return responses[LiquidityError.AmountZero]
+    }
+    const error = await accountingService.createWithdrawal({
+      id,
+      accountId: payment.id,
+      amount,
+      timeout: BigInt(60e9) // 1 minute
+    })
+
+    if (error) {
+      return errorToResponse(error)
+    }
+    return {
+      code: '200',
+      success: true,
+      message: 'Created outgoing payment withdrawal',
+      withdrawal: {
+        id,
+        amount,
+        payment: paymentToGraphql(payment)
+      }
+    }
+  } catch (error) {
+    ctx.logger.error(
+      {
+        input: args.input,
+        error
+      },
+      'error creating outgoing payment withdrawal'
+    )
+    return {
+      code: '500',
+      message: 'Error trying to create outgoing payment withdrawal',
       success: false
     }
   }
@@ -237,6 +307,12 @@ const responses: {
     success: false,
     error: LiquidityError.AlreadyRolledBack
   },
+  [LiquidityError.AmountZero]: {
+    code: '400',
+    message: 'Amount is zero',
+    success: false,
+    error: LiquidityError.AmountZero
+  },
   [LiquidityError.InsufficientBalance]: {
     code: '403',
     message: 'Insufficient balance',
@@ -260,6 +336,12 @@ const responses: {
     message: 'Unknown asset',
     success: false,
     error: LiquidityError.UnknownAsset
+  },
+  [LiquidityError.UnknownPayment]: {
+    code: '404',
+    message: 'Unknown outgoing payment',
+    success: false,
+    error: LiquidityError.UnknownPayment
   },
   [LiquidityError.UnknownPeer]: {
     code: '404',

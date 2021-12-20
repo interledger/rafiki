@@ -68,6 +68,11 @@ type Mutation {
     input: CreateAssetLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
+  "Create liquidity withdrawal from outgoing payment"
+  createOutgoingPaymentWithdrawal(
+    input: CreateOutgoingPaymentWithdrawalInput!
+  ): LiquidityMutationResponse
+
   "Finalize liquidity withdrawal"
   finalizeLiquidityWithdrawal(
     "The id of the liquidity withdrawal to finalize."
@@ -197,6 +202,13 @@ input CreateAssetLiquidityWithdrawalInput {
   id: String!
 }
 
+input CreateOutgoingPaymentWithdrawalInput {
+  "The id of the outgoing payment to create the withdrawal for."
+  paymentId: String!
+  "The id of the withdrawal."
+  id: String!
+}
+
 input CreateApiKeyInput {
   "Account API key is created for."
   accountId: String!
@@ -232,10 +244,12 @@ type Asset {
 enum LiquidityError {
   AlreadyCommitted
   AlreadyRolledBack
+  AmountZero
   InsufficientBalance
   InvalidId
   TransferExists
   UnknownAsset
+  UnknownPayment
   UnknownPeer
   UnknownTransfer
 }
@@ -403,6 +417,12 @@ type Session {
   expiresAt: String!
 }
 
+type OutgoingPaymentWithdrawal {
+  id: ID!
+  amount: UInt64!
+  payment: OutgoingPayment!
+}
+
 type CreateAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -441,6 +461,7 @@ type LiquidityMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   error: LiquidityError
+  withdrawal: OutgoingPaymentWithdrawal
 }
 
 type CreateApiKeyMutationResponse implements MutationResponse {

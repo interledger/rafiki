@@ -2,6 +2,7 @@ import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
+import * as Pay from '@interledger/pay'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -207,6 +208,43 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.message).toEqual('Transfer exists')
       expect(response.error).toEqual(LiquidityError.TransferExists)
     })
+
+    test('Returns an error for zero amount', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
+              addPeerLiquidity(input: $input) {
+                code
+                success
+                message
+                error
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: 'not a uuid v4',
+              peerId,
+              amount: '0'
+            }
+          }
+        })
+        .then(
+          (query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.addPeerLiquidity
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Amount is zero')
+      expect(response.error).toEqual(LiquidityError.AmountZero)
+    })
   })
 
   describe('Add asset liquidity', (): void => {
@@ -376,6 +414,43 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Transfer exists')
       expect(response.error).toEqual(LiquidityError.TransferExists)
+    })
+
+    test('Returns an error for zero amount', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
+              addAssetLiquidity(input: $input) {
+                code
+                success
+                message
+                error
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: uuid(),
+              assetId,
+              amount: '0'
+            }
+          }
+        })
+        .then(
+          (query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.addAssetLiquidity
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Amount is zero')
+      expect(response.error).toEqual(LiquidityError.AmountZero)
     })
   })
 
@@ -559,44 +634,51 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.error).toEqual(LiquidityError.TransferExists)
     })
 
-    test('Returns error for insufficient balance', async (): Promise<void> => {
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreatePeerLiquidityWithdrawal(
-              $input: CreatePeerLiquidityWithdrawalInput!
-            ) {
-              createPeerLiquidityWithdrawal(input: $input) {
-                code
-                success
-                message
-                error
+    test.each`
+      amount                         | code     | message                   | error
+      ${startingBalance + BigInt(1)} | ${'403'} | ${'Insufficient balance'} | ${LiquidityError.InsufficientBalance}
+      ${BigInt(0)}                   | ${'400'} | ${'Amount is zero'}       | ${LiquidityError.AmountZero}
+    `(
+      'Returns error for $error',
+      async ({ amount, code, message, error }): Promise<void> => {
+        const response = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreatePeerLiquidityWithdrawal(
+                $input: CreatePeerLiquidityWithdrawalInput!
+              ) {
+                createPeerLiquidityWithdrawal(input: $input) {
+                  code
+                  success
+                  message
+                  error
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: uuid(),
+                peerId,
+                amount: amount.toString()
               }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid(),
-              peerId,
-              amount: (startingBalance + BigInt(1)).toString()
+          })
+          .then(
+            (query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.createPeerLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
+              }
             }
-          }
-        })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.createPeerLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
+          )
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('403')
-      expect(response.message).toEqual('Insufficient balance')
-      expect(response.error).toEqual(LiquidityError.InsufficientBalance)
-    })
+        expect(response.success).toBe(false)
+        expect(response.code).toEqual(code)
+        expect(response.message).toEqual(message)
+        expect(response.error).toEqual(error)
+      }
+    )
   })
 
   describe('Create asset liquidity withdrawal', (): void => {
@@ -785,33 +867,186 @@ describe('Withdrawal Resolvers', (): void => {
       expect(response.error).toEqual(LiquidityError.TransferExists)
     })
 
-    test('Returns error for insufficient balance', async (): Promise<void> => {
+    test.each`
+      amount                         | code     | message                   | error
+      ${startingBalance + BigInt(1)} | ${'403'} | ${'Insufficient balance'} | ${LiquidityError.InsufficientBalance}
+      ${BigInt(0)}                   | ${'400'} | ${'Amount is zero'}       | ${LiquidityError.AmountZero}
+    `(
+      'Returns error for $error',
+      async ({ amount, code, message, error }): Promise<void> => {
+        const response = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateAssetLiquidityWithdrawal(
+                $input: CreateAssetLiquidityWithdrawalInput!
+              ) {
+                createAssetLiquidityWithdrawal(input: $input) {
+                  code
+                  success
+                  message
+                  error
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: uuid(),
+                assetId,
+                amount: amount.toString()
+              }
+            }
+          })
+          .then(
+            (query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.createAssetLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
+              }
+            }
+          )
+
+        expect(response.success).toBe(false)
+        expect(response.code).toEqual(code)
+        expect(response.message).toEqual(message)
+        expect(response.error).toEqual(error)
+      }
+    )
+  })
+
+  describe('Create outgoing payment withdrawal', (): void => {
+    let paymentId: string
+    const startingBalance = BigInt(100)
+
+    beforeEach(
+      async (): Promise<void> => {
+        const accountService = await deps.use('accountService')
+        const { id: accountId } = await accountService.create({
+          asset: randomAsset()
+        })
+
+        const streamServer = await deps.use('streamServer')
+        const {
+          ilpAddress: destinationAddress,
+          sharedSecret
+        } = streamServer.generateCredentials()
+        jest.spyOn(Pay, 'setupPayment').mockResolvedValueOnce({
+          destinationAsset: {
+            scale: 9,
+            code: 'XRP'
+          },
+          accountUrl: 'http://wallet2.example/paymentpointer/bob',
+          destinationAddress,
+          sharedSecret,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          requestCounter: Pay.Counter.from(0)!
+        })
+
+        const outgoingPaymentService = await deps.use('outgoingPaymentService')
+        paymentId = (
+          await outgoingPaymentService.create({
+            accountId,
+            paymentPointer: 'http://wallet2.example/paymentpointer/bob',
+            amountToSend: BigInt(123),
+            autoApprove: false
+          })
+        ).id
+
+        await expect(
+          accountingService.createDeposit({
+            id: uuid(),
+            accountId: paymentId,
+            amount: startingBalance
+          })
+        ).resolves.toBeUndefined()
+      }
+    )
+
+    afterEach((): void => {
+      jest.restoreAllMocks()
+    })
+
+    test('Can create withdrawal from outgoing payment', async (): Promise<void> => {
+      const id = uuid()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAssetLiquidityWithdrawal(
-              $input: CreateAssetLiquidityWithdrawalInput!
+            mutation CreateOutgoingPaymentWithdrawal(
+              $input: CreateOutgoingPaymentWithdrawalInput!
             ) {
-              createAssetLiquidityWithdrawal(input: $input) {
+              createOutgoingPaymentWithdrawal(input: $input) {
                 code
                 success
                 message
                 error
+                withdrawal {
+                  id
+                  amount
+                  payment {
+                    id
+                  }
+                }
               }
             }
           `,
           variables: {
             input: {
-              id: uuid(),
-              assetId,
-              amount: (startingBalance + BigInt(1)).toString()
+              id,
+              paymentId
             }
           }
         })
         .then(
           (query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.createAssetLiquidityWithdrawal
+              return query.data.createOutgoingPaymentWithdrawal
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+      expect(response.error).toBeNull()
+      expect(response.withdrawal).toMatchObject({
+        id,
+        amount: startingBalance.toString(),
+        payment: {
+          id: paymentId
+        }
+      })
+    })
+
+    test('Returns an error for unknown outgoing payment', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateOutgoingPaymentWithdrawal(
+              $input: CreateOutgoingPaymentWithdrawalInput!
+            ) {
+              createOutgoingPaymentWithdrawal(input: $input) {
+                code
+                success
+                message
+                error
+                withdrawal {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: uuid(),
+              paymentId: uuid()
+            }
+          }
+        })
+        .then(
+          (query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createOutgoingPaymentWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -819,9 +1054,150 @@ describe('Withdrawal Resolvers', (): void => {
         )
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual('403')
-      expect(response.message).toEqual('Insufficient balance')
-      expect(response.error).toEqual(LiquidityError.InsufficientBalance)
+      expect(response.code).toEqual('404')
+      expect(response.message).toEqual('Unknown outgoing payment')
+      expect(response.error).toEqual(LiquidityError.UnknownPayment)
+      expect(response.withdrawal).toBeNull()
+    })
+
+    test('Returns an error for invalid id', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateOutgoingPaymentWithdrawal(
+              $input: CreateOutgoingPaymentWithdrawalInput!
+            ) {
+              createOutgoingPaymentWithdrawal(input: $input) {
+                code
+                success
+                message
+                error
+                withdrawal {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: 'not a uuid',
+              paymentId
+            }
+          }
+        })
+        .then(
+          (query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createOutgoingPaymentWithdrawal
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Invalid id')
+      expect(response.error).toEqual(LiquidityError.InvalidId)
+      expect(response.withdrawal).toBeNull()
+    })
+
+    test('Returns an error for existing transfer', async (): Promise<void> => {
+      const id = uuid()
+      await expect(
+        accountingService.createDeposit({
+          id,
+          accountId: paymentId,
+          amount: BigInt(10)
+        })
+      ).resolves.toBeUndefined()
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateOutgoingPaymentWithdrawal(
+              $input: CreateOutgoingPaymentWithdrawalInput!
+            ) {
+              createOutgoingPaymentWithdrawal(input: $input) {
+                code
+                success
+                message
+                error
+                withdrawal {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id,
+              paymentId
+            }
+          }
+        })
+        .then(
+          (query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createOutgoingPaymentWithdrawal
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('409')
+      expect(response.message).toEqual('Transfer exists')
+      expect(response.error).toEqual(LiquidityError.TransferExists)
+      expect(response.withdrawal).toBeNull()
+    })
+
+    test('Returns an error for empty balance', async (): Promise<void> => {
+      await expect(
+        accountingService.createWithdrawal({
+          id: uuid(),
+          accountId: paymentId,
+          amount: startingBalance,
+          timeout
+        })
+      ).resolves.toBeUndefined()
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateOutgoingPaymentWithdrawal(
+              $input: CreateOutgoingPaymentWithdrawalInput!
+            ) {
+              createOutgoingPaymentWithdrawal(input: $input) {
+                code
+                success
+                message
+                error
+                withdrawal {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: uuid(),
+              paymentId
+            }
+          }
+        })
+        .then(
+          (query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createOutgoingPaymentWithdrawal
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Amount is zero')
+      expect(response.error).toEqual(LiquidityError.AmountZero)
+      expect(response.withdrawal).toBeNull()
     })
   })
 
