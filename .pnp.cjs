@@ -4640,6 +4640,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["@types/tmp", [
+        ["npm:0.2.3", {
+          "packageLocation": "./.yarn/cache/@types-tmp-npm-0.2.3-ca9c2eba00-0ca45e99b3.zip/node_modules/@types/tmp/",
+          "packageDependencies": [
+            ["@types/tmp", "npm:0.2.3"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["@types/uuid", [
         ["npm:8.3.0", {
           "packageLocation": "./.yarn/cache/@types-uuid-npm-8.3.0-60b441a3d7-0f46b15020.zip/node_modules/@types/uuid/",
@@ -6352,6 +6361,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/nock", "npm:11.1.0"],
             ["@types/pino", "npm:6.3.7"],
             ["@types/rosie", "npm:0.0.40"],
+            ["@types/tmp", "npm:0.2.3"],
             ["@types/uuid", "npm:8.3.0"],
             ["add", "npm:2.0.6"],
             ["ajv", "npm:8.6.3"],

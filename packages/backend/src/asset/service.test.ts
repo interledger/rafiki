@@ -1,5 +1,7 @@
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
+import tmp from 'tmp'
 import { v4 as uuid } from 'uuid'
 
 import { AssetService } from './service'
@@ -13,19 +15,58 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 
+const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
+const TIGERBEETLE_PORT = 3004
+
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let workerUtils: WorkerUtils
   let assetService: AssetService
   let knex: Knex
+  let tigerbeetleContainer: StartedTestContainer
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
   }
 
-  beforeAll(
+  beforeEach(
     async (): Promise<void> => {
+      const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
+
+      await new GenericContainer(
+        'ghcr.io/coilhq/tigerbeetle@sha256:0d8cd6b7a0a7f7ef678c6fc877f294071ead642698db2a438a6599a3ade8fb6f'
+      )
+        .withExposedPorts(TIGERBEETLE_PORT)
+        .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+        .withCmd([
+          'init',
+          '--cluster=' + Config.tigerbeetleClusterId,
+          '--replica=0',
+          '--directory=' + TIGERBEETLE_DIR
+        ])
+        .withWaitStrategy(Wait.forLogMessage(/initialized data file/))
+        .start()
+
+      tigerbeetleContainer = await new GenericContainer(
+        'ghcr.io/coilhq/tigerbeetle@sha256:0d8cd6b7a0a7f7ef678c6fc877f294071ead642698db2a438a6599a3ade8fb6f'
+      )
+        .withExposedPorts(TIGERBEETLE_PORT)
+        .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+        .withCmd([
+          'start',
+          '--cluster=' + Config.tigerbeetleClusterId,
+          '--replica=0',
+          '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
+          '--directory=' + TIGERBEETLE_DIR
+        ])
+        .withWaitStrategy(Wait.forLogMessage(/listening on/))
+        .start()
+
+      Config.tigerbeetleReplicaAddresses = [
+        tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
+      ]
+
       deps = await initIocContainer(Config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
@@ -41,12 +82,8 @@ describe('Asset Service', (): void => {
 
   afterEach(
     async (): Promise<void> => {
+      await tigerbeetleContainer.stop()
       await truncateTables(knex)
-    }
-  )
-
-  afterAll(
-    async (): Promise<void> => {
       await resetGraphileDb(knex)
       await appContainer.shutdown()
       await workerUtils.release()
