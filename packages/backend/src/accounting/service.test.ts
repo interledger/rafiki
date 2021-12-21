@@ -1,6 +1,7 @@
 import assert from 'assert'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
@@ -19,8 +20,11 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
+import {
+  startTigerbeetleContainer,
+  TIGERBEETLE_PORT
+} from '../tests/tigerbeetle'
 import { AccountFactory } from '../tests/accountFactory'
-import { randomUnit } from '../tests/asset'
 
 describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -29,14 +33,24 @@ describe('Accounting Service', (): void => {
   let workerUtils: WorkerUtils
   let accountingService: AccountingService
   let accountFactory: AccountFactory
+  let tigerbeetleContainer: StartedTestContainer
   const timeout = BigInt(10e9) // 10 seconds
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
   }
 
+  let unit = 1
+  function newUnit() {
+    return unit++
+  }
+
   beforeAll(
     async (): Promise<void> => {
+      tigerbeetleContainer = await startTigerbeetleContainer()
+      Config.tigerbeetleReplicaAddresses = [
+        tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
+      ]
       deps = await initIocContainer(Config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
@@ -46,13 +60,8 @@ describe('Accounting Service', (): void => {
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
-    }
-  )
-
-  beforeEach(
-    async (): Promise<void> => {
       accountingService = await deps.use('accountingService')
-      accountFactory = new AccountFactory(accountingService)
+      accountFactory = new AccountFactory(accountingService, newUnit)
     }
   )
 
@@ -67,6 +76,7 @@ describe('Accounting Service', (): void => {
       await resetGraphileDb(knex)
       await appContainer.shutdown()
       await workerUtils.release()
+      await tigerbeetleContainer.stop()
     }
   )
 
@@ -75,7 +85,7 @@ describe('Accounting Service', (): void => {
       const options: AccountOptions = {
         id: uuid(),
         asset: {
-          unit: randomUnit()
+          unit: newUnit()
         }
       }
       const account = await accountingService.createAccount(options)
@@ -93,7 +103,7 @@ describe('Accounting Service', (): void => {
         accountingService.createAccount({
           id: 'not a uuid',
           asset: {
-            unit: randomUnit()
+            unit: newUnit()
           }
         })
       ).rejects.toThrowError('unable to create account, invalid id')
@@ -112,7 +122,7 @@ describe('Accounting Service', (): void => {
         accountingService.createAccount({
           id: uuid(),
           asset: {
-            unit: randomUnit()
+            unit: newUnit()
           }
         })
       ).rejects.toThrowError(
@@ -182,7 +192,7 @@ describe('Accounting Service', (): void => {
 
   describe('Create Asset Accounts', (): void => {
     test("Can create an asset's accounts", async (): Promise<void> => {
-      const unit = randomUnit()
+      const unit = newUnit()
 
       await expect(
         accountingService.getAssetLiquidityBalance(unit)
@@ -204,7 +214,7 @@ describe('Accounting Service', (): void => {
 
   describe('Get Asset Liquidity Balance', (): void => {
     test("Can retrieve an asset liquidity' balance", async (): Promise<void> => {
-      const unit = randomUnit()
+      const unit = newUnit()
       await accountingService.createAssetAccounts(unit)
       await expect(
         accountingService.getAssetLiquidityBalance(unit)
@@ -213,14 +223,14 @@ describe('Accounting Service', (): void => {
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
-        accountingService.getAssetLiquidityBalance(randomUnit())
+        accountingService.getAssetLiquidityBalance(newUnit())
       ).resolves.toBeUndefined()
     })
   })
 
   describe('Get Asset Settlement Balance', (): void => {
     test("Can retrieve an asset accounts' balance", async (): Promise<void> => {
-      const unit = randomUnit()
+      const unit = newUnit()
       await accountingService.createAssetAccounts(unit)
       await expect(
         accountingService.getAssetSettlementBalance(unit)
@@ -229,7 +239,7 @@ describe('Accounting Service', (): void => {
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
-        accountingService.getAssetSettlementBalance(randomUnit())
+        accountingService.getAssetSettlementBalance(newUnit())
       ).resolves.toBeUndefined()
     })
   })
@@ -551,7 +561,7 @@ describe('Accounting Service', (): void => {
 
     test('Cannot deposit to unknown account', async (): Promise<void> => {
       if (deposit.asset) {
-        deposit.asset.unit = randomUnit()
+        deposit.asset.unit = newUnit()
       } else {
         deposit.accountId = uuid()
       }
@@ -673,7 +683,7 @@ describe('Accounting Service', (): void => {
           withdrawal.accountId = uuid()
         } else {
           withdrawal.asset = {
-            unit: randomUnit()
+            unit: newUnit()
           }
         }
         await expect(

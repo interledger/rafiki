@@ -12,10 +12,13 @@ type BuildOptions = Partial<AccountOptions> & {
 }
 
 export class AccountFactory {
-  public constructor(private accounts: AccountingService) {}
+  public constructor(
+    private accounts: AccountingService,
+    private unitGenerator: () => number = randomUnit
+  ) {}
 
   public async build(options: BuildOptions = {}): Promise<Account> {
-    const unit = options.asset?.unit || randomUnit()
+    const unit = options.asset?.unit || this.unitGenerator()
     await this.accounts.createAssetAccounts(unit)
     const accountOptions: AccountOptions = {
       id: options.id || uuid(),
