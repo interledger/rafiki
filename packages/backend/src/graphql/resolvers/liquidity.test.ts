@@ -1476,8 +1476,7 @@ describe('Withdrawal Resolvers', (): void => {
           await outgoingPaymentService.create({
             accountId,
             paymentPointer: 'http://wallet2.example/paymentpointer/bob',
-            amountToSend: BigInt(123),
-            autoApprove: false
+            amountToSend: BigInt(123)
           })
         ).id
 

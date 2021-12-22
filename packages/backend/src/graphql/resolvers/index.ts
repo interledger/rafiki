@@ -9,6 +9,7 @@ import {
 import {
   getOutgoingPayment,
   createOutgoingPayment,
+  createOutgoingInvoicePayment,
   requoteOutgoingPayment,
   fundOutgoingPayment,
   cancelOutgoingPayment,
@@ -70,6 +71,7 @@ export const resolvers: Resolvers = {
   Mutation: {
     createAccount,
     createOutgoingPayment,
+    createOutgoingInvoicePayment,
     requoteOutgoingPayment,
     fundOutgoingPayment,
     cancelOutgoingPayment,

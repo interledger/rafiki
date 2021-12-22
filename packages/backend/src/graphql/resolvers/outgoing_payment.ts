@@ -100,6 +100,28 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
     }))
 }
 
+export const createOutgoingInvoicePayment: MutationResolvers<ApolloContext>['createOutgoingInvoicePayment'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['OutgoingPaymentResponse'] => {
+  const outgoingPaymentService = await ctx.container.use(
+    'outgoingPaymentService'
+  )
+  return outgoingPaymentService
+    .create(args.input)
+    .then((payment: OutgoingPayment) => ({
+      code: '200',
+      success: true,
+      payment: paymentToGraphql(payment)
+    }))
+    .catch((err: Error | PaymentError) => ({
+      code: isPaymentError(err) && clientErrors[err] ? '400' : '500',
+      success: false,
+      message: typeof err === 'string' ? err : err.message
+    }))
+}
+
 export const requoteOutgoingPayment: MutationResolvers<ApolloContext>['requoteOutgoingPayment'] = async (
   parent,
   args,

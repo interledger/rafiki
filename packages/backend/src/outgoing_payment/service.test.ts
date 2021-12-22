@@ -260,14 +260,12 @@ describe('OutgoingPaymentService', (): void => {
       const payment = await outgoingPaymentService.create({
         accountId,
         paymentPointer,
-        amountToSend: BigInt(123),
-        autoApprove: false
+        amountToSend: BigInt(123)
       })
       expect(payment.state).toEqual(PaymentState.Quoting)
       expect(payment.intent).toEqual({
         paymentPointer,
-        amountToSend: BigInt(123),
-        autoApprove: false
+        amountToSend: BigInt(123)
       })
       expect(payment.accountId).toBe(accountId)
       await expectOutcome(payment, { accountBalance: BigInt(0) })
@@ -287,13 +285,11 @@ describe('OutgoingPaymentService', (): void => {
     it('creates an OutgoingPayment (FixedDelivery)', async () => {
       const payment = await outgoingPaymentService.create({
         accountId,
-        invoiceUrl,
-        autoApprove: false
+        invoiceUrl
       })
       expect(payment.state).toEqual(PaymentState.Quoting)
       expect(payment.intent).toEqual({
-        invoiceUrl,
-        autoApprove: false
+        invoiceUrl
       })
       expect(payment.accountId).toBe(accountId)
       await expectOutcome(payment, { accountBalance: BigInt(0) })
@@ -310,39 +306,12 @@ describe('OutgoingPaymentService', (): void => {
       expect(payment2.id).toEqual(payment.id)
     })
 
-    it('fails to create with both invoice and paymentPointer', async () => {
-      await expect(
-        outgoingPaymentService.create({
-          accountId,
-          invoiceUrl,
-          paymentPointer,
-          autoApprove: false
-        })
-      ).rejects.toThrow(
-        'invoiceUrl and (paymentPointer,amountToSend) are mutually exclusive'
-      )
-    })
-
-    it('fails to create with both invoice and amountToSend', async () => {
-      await expect(
-        outgoingPaymentService.create({
-          accountId,
-          invoiceUrl,
-          amountToSend: BigInt(123),
-          autoApprove: false
-        })
-      ).rejects.toThrow(
-        'invoiceUrl and (paymentPointer,amountToSend) are mutually exclusive'
-      )
-    })
-
     it('fails to create with nonexistent account', async () => {
       await expect(
         outgoingPaymentService.create({
           accountId: uuid(),
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         })
       ).rejects.toThrow('outgoing payment account does not exist')
     })
@@ -355,8 +324,7 @@ describe('OutgoingPaymentService', (): void => {
           await outgoingPaymentService.create({
             accountId,
             paymentPointer,
-            amountToSend: BigInt(123),
-            autoApprove: false
+            amountToSend: BigInt(123)
           })
         ).id
         const payment = await processNext(paymentId, PaymentState.Funding)
@@ -390,8 +358,7 @@ describe('OutgoingPaymentService', (): void => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
-            invoiceUrl,
-            autoApprove: false
+            invoiceUrl
           })
         ).id
         const payment = await processNext(paymentId, PaymentState.Funding)
@@ -419,8 +386,7 @@ describe('OutgoingPaymentService', (): void => {
           await outgoingPaymentService.create({
             accountId,
             paymentPointer,
-            amountToSend: BigInt(123),
-            autoApprove: false
+            amountToSend: BigInt(123)
           })
         ).id
         const payment = await processNext(paymentId, PaymentState.Quoting)
@@ -444,8 +410,7 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         })
         jest
           .spyOn(accountingService, 'getTotalSent')
@@ -462,8 +427,7 @@ describe('OutgoingPaymentService', (): void => {
         const { id: paymentId } = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         })
         const spy = jest
           .spyOn(accountingService, 'getBalance')
@@ -476,8 +440,7 @@ describe('OutgoingPaymentService', (): void => {
       it('Sending (FixedDelivery, quote.maxSourceAmount <= balance)', async (): Promise<void> => {
         const { id: paymentId } = await outgoingPaymentService.create({
           accountId,
-          invoiceUrl,
-          autoApprove: false
+          invoiceUrl
         })
         const spy = jest
           .spyOn(accountingService, 'getBalance')
@@ -492,8 +455,7 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         })
         jest
           .spyOn(accountingService, 'getTotalSent')
@@ -509,8 +471,7 @@ describe('OutgoingPaymentService', (): void => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
-            invoiceUrl,
-            autoApprove: false
+            invoiceUrl
           })
         ).id
         await payInvoice(invoice.amount)
@@ -521,8 +482,7 @@ describe('OutgoingPaymentService', (): void => {
         const originalPayment = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         })
         const paymentId = originalPayment.id
         // Pretend that the destination asset was initially different.
@@ -554,8 +514,7 @@ describe('OutgoingPaymentService', (): void => {
           const { id: paymentId } = await outgoingPaymentService.create({
             accountId,
             paymentPointer,
-            amountToSend: BigInt(123),
-            autoApprove: true
+            amountToSend: BigInt(123)
           })
           payment = await processNext(paymentId, PaymentState.Funding)
         }
@@ -600,15 +559,9 @@ describe('OutgoingPaymentService', (): void => {
         }
       )
 
-      async function setup(
-        opts: Pick<
-          PaymentIntent,
-          'amountToSend' | 'paymentPointer' | 'invoiceUrl'
-        >
-      ): Promise<string> {
+      async function setup(opts: PaymentIntent): Promise<string> {
         const { id: paymentId } = await outgoingPaymentService.create({
           accountId,
-          autoApprove: true,
           ...opts
         })
 
@@ -842,8 +795,7 @@ describe('OutgoingPaymentService', (): void => {
         payment = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         })
       }
     )
@@ -896,8 +848,7 @@ describe('OutgoingPaymentService', (): void => {
       const { id: paymentId } = await outgoingPaymentService.create({
         accountId,
         paymentPointer,
-        amountToSend: BigInt(123),
-        autoApprove: false
+        amountToSend: BigInt(123)
       })
       payment = await processNext(paymentId, PaymentState.Funding)
       assert.ok(payment.quote)
@@ -974,8 +925,7 @@ describe('OutgoingPaymentService', (): void => {
         payment = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         })
       }
     )
@@ -1027,8 +977,7 @@ describe('OutgoingPaymentService', (): void => {
           await outgoingPaymentService.create({
             accountId,
             paymentPointer,
-            amountToSend: BigInt(123),
-            autoApprove: false
+            amountToSend: BigInt(123)
           })
         )
       }

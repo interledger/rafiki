@@ -56,8 +56,7 @@ describe('Webhook Service', (): void => {
       const invoiceUrl = `${config.publicHost}/invoices/${invoice.id}`
       payment = await outgoingPaymentService.create({
         accountId,
-        invoiceUrl,
-        autoApprove: false
+        invoiceUrl
       })
       amountReceived = BigInt(5)
       amountSent = BigInt(10)

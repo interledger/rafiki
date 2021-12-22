@@ -11,12 +11,19 @@ const ratioFields = [
   'quoteHighExchangeRateEstimate'
 ]
 
-export type PaymentIntent = {
-  paymentPointer?: string
-  invoiceUrl?: string
-  amountToSend?: bigint
-  autoApprove: boolean
+export interface FixedSendIntent {
+  paymentPointer: string
+  invoiceUrl?: never
+  amountToSend: bigint
 }
+
+export interface InvoiceIntent {
+  paymentPointer?: never
+  invoiceUrl: string
+  amountToSend?: never
+}
+
+export type PaymentIntent = FixedSendIntent | InvoiceIntent
 
 export class OutgoingPayment extends BaseModel {
   public static readonly tableName = 'outgoingPayments'
@@ -26,7 +33,11 @@ export class OutgoingPayment extends BaseModel {
   public error?: string | null
   public stateAttempts!: number
 
-  public intent!: PaymentIntent
+  public intent!: {
+    paymentPointer?: string
+    invoiceUrl?: string
+    amountToSend?: bigint
+  }
 
   public quote?: {
     timestamp: Date

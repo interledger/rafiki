@@ -22,6 +22,9 @@ type Mutation {
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
+  createOutgoingInvoicePayment(
+    input: CreateOutgoingInvoicePaymentInput!
+  ): OutgoingPaymentResponse!
   "Requote a Cancelled payment."
   requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
   "Add liquidity to a Funding payment."
@@ -404,7 +407,6 @@ type PaymentIntent {
   paymentPointer: String
   amountToSend: UInt64
   invoiceUrl: String
-  autoApprove: Boolean!
 }
 
 enum PaymentState {
@@ -449,10 +451,13 @@ type OutgoingPaymentOutcome {
 
 input CreateOutgoingPaymentInput {
   accountId: String!
-  paymentPointer: String
-  amountToSend: UInt64
-  invoiceUrl: String
-  autoApprove: Boolean!
+  paymentPointer: String!
+  amountToSend: UInt64!
+}
+
+input CreateOutgoingInvoicePaymentInput {
+  accountId: String!
+  invoiceUrl: String!
 }
 
 type OutgoingPaymentResponse {

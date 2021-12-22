@@ -77,26 +77,11 @@ type CreateOutgoingPaymentOptions = PaymentIntent & {
   accountId: string
 }
 
-// TODO ensure this is idempotent/safe for autoApprove:true payments
+// TODO ensure this is idempotent/safe for fixed send payments
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment> {
-  if (
-    options.invoiceUrl &&
-    (options.paymentPointer || options.amountToSend !== undefined)
-  ) {
-    deps.logger.warn(
-      {
-        options
-      },
-      'createOutgoingPayment invalid parameters'
-    )
-    throw new Error(
-      'invoiceUrl and (paymentPointer,amountToSend) are mutually exclusive'
-    )
-  }
-
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const payment = await OutgoingPayment.query(trx)
@@ -105,8 +90,7 @@ async function createOutgoingPayment(
           intent: {
             paymentPointer: options.paymentPointer,
             invoiceUrl: options.invoiceUrl,
-            amountToSend: options.amountToSend,
-            autoApprove: options.autoApprove
+            amountToSend: options.amountToSend
           },
           accountId: options.accountId,
           destinationAccount: PLACEHOLDER_DESTINATION
