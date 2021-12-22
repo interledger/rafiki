@@ -103,11 +103,13 @@ export async function handleQuoting(
     throw LifecycleError.MissingBalance
   }
 
+  const state =
+    balance < quote.maxSourceAmount
+      ? PaymentState.Funding
+      : PaymentState.Sending
+
   await payment.$query(deps.knex).patch({
-    state:
-      balance < quote.maxSourceAmount
-        ? PaymentState.Funding
-        : PaymentState.Sending,
+    state,
     quote: {
       timestamp: new Date(),
       activationDeadline: new Date(Date.now() + deps.quoteLifespan),
@@ -124,11 +126,13 @@ export async function handleQuoting(
     }
   })
 
-  await deps.webhookService.send({
-    type: EventType.PaymentFunding,
-    payment,
-    amountSent
-  })
+  if (state === PaymentState.Funding) {
+    await deps.webhookService.send({
+      type: EventType.PaymentFunding,
+      payment,
+      amountSent
+    })
+  }
 }
 
 // "payment" is locked by the "deps.knex" transaction.
