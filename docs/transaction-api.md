@@ -85,18 +85,24 @@ An expired invoice that has never received money is deleted.
 
 Rafiki sends webhook events to notify the wallet of payment lifecycle states that require liquidity to be added or removed.
 
-The `outgoing_payment.funding` event should be handled idempotently. The `Rafiki-Signature` header may be used as an idempotency key, or the wallet may call `Query.getOutgoingPayment` to retrieve `quote.maxSourceAmount` before calling `Mutation.fundOutgoingPayment` with that `amount`.
+Webhook event handlers must be idempotent.
 
-(`Mutation.fundOutgoingPayment` will not succeed if the payment is not currently in the `Funding` state. Additionally, an overfunded payment will not send more than the quoted amount.)
-
-For all other webhook events, calls to `Mutation.createInvoiceWithdrawal` and `Mutation.createOutgoingPaymentWithdrawal` are idempotent.
+> **_NOTE:_**
+>
+> Calls to the following are idempotent:
+>
+> - `Mutation.createInvoiceWithdrawal`
+> - `Mutation.createOutgoingPaymentWithdrawal`
+> - `Mutation.requoteOutgoingPaymentWithdrawal`
+>
+> Calling `Mutation.fundOutgoingPayment` is not idempotent. However, it will not succeed if the payment is not currently in the `Funding` state. Additionally, an overfunded payment will not send more than the quoted amount.
 
 ### `EventType`
 
 - `invoice.expired`: Invoice has expired. Call `Mutation.createInvoiceWithdrawal`.
 - `invoice.paid`: Invoice has received its specified `amount`. Call `Mutation.createInvoiceWithdrawal`.
 - `outgoing_payment.funding`: Payment needs liquidity in order to send `quote.maxSourceAmount`. Call `Mutation.fundOutgoingPayment`.
-- `outgoing_payment.cancelled`: Payment was cancelled. Call `Mutation.createOutgoingPaymentWithdrawal`.
+- `outgoing_payment.cancelled`: Payment was cancelled. Call `Mutation.createOutgoingPaymentWithdrawal` and/or `Mutation.requoteOutgoingPaymentWithdrawal`.
 - `outgoing_payment.completed`: Payment completed. Call `Mutation.createOutgoingPaymentWithdrawal`.
 
 ### Webhook Event
