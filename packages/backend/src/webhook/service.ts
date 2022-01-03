@@ -152,6 +152,7 @@ async function sendWebhook(
   }
 
   await axios.post(deps.config.webhookUrl, event, {
+    timeout: deps.config.webhookTimeout,
     headers: requestHeaders
   })
 }

@@ -66,6 +66,8 @@ export const Config = {
 
   webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
   webhookSecret: process.env.WEBHOOK_SECRET, // optional
+  webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
+
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
   /** Frontend **/
