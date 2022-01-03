@@ -1,6 +1,6 @@
 # Transaction API
 
-## Lifecycle
+## Outgoing Payment Lifecycle
 
 ### Payment creation
 
@@ -24,7 +24,7 @@ After the quote ends and state advances, the lock on the payment is released.
 
 ### Authorization
 
-After quoting completes, Rafiki notifies the wallet operator via an `outgoing_payment.funding` to add `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment, reserving the maximum requisite funds for the payment attempt.
+After quoting completes, Rafiki notifies the wallet operator via an `outgoing_payment.funding` [webhook event](#webhooks) to add `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment, reserving the maximum requisite funds for the payment attempt.
 
 If the payment intent did not specify `autoApprove` of `true`, a client should manually approve the payment, based on the parameters of the quote, before the wallet adds payment liquidity.
 
@@ -51,7 +51,7 @@ After the payment completes, the instance releases the lock on the payment and a
 
 3. Recoverable failure. In cases such as an idle timeout, Rafiki may elect to automatically retry the payment. The state remains `Sending`, but internally tracks that the payment failed and when to schedule another attempt.
 
-In the `Completed` and `Cancelled` cases, the wallet is notifed of any remaining funds in the Interledger account via `outgoing_payment.completed` and `outgoing_payment.cancelled` webhook events. Note: if the payment is retried, the same Interledger account is used for the subsequent attempt.
+In the `Completed` and `Cancelled` cases, the wallet is notifed of any remaining funds in the payment account via `outgoing_payment.completed` and `outgoing_payment.cancelled` [webhook events](#webhooks). Note: if the payment is retried, the same payment account is used for the subsequent attempt.
 
 ### Manual recovery
 
@@ -59,6 +59,53 @@ A payment in the `Cancelled` state may be explicitly retried ("requoted") by the
 
 - A `FixedSend` payment will attempt to pay `intent.amountToSend - amountAlreadySent`.
 - A `FixedDelivery` payment will attempt to pay the remaining `invoice.amount - invoice.received` (according to the remote invoice state).
+
+## Incoming Payment Lifecycle
+
+### Invoice creation
+
+An invoice is created according to the [Open Payments](https://docs.openpayments.dev/invoices#create) specification. Rafiki creates a payment account for each invoice.
+
+### Receiving
+
+An invoice receives funds via Interledger as long as it is active.
+
+### Deactivation
+
+An invoice is deactivated when either:
+
+- it has received its specified `amount`
+- it has expired
+
+When the invoice is deactivated, Rafiki notifies the wallet of received funds via `invoice.paid` or `invoice.expired` [webhook events](#webhooks).
+
+An expired invoice that has never received money is deleted.
+
+## Webhooks
+
+Rafiki sends webhook events to notify the wallet of payment lifecycle states that require liquidity to be added or removed.
+
+The `outgoing_payment.funding` event should be handled idempotently. The `Rafiki-Signature` header may be used as an idempotency key, or the wallet may call `Query.getOutgoingPayment` to retrieve `quote.maxSourceAmount` before calling `Mutation.fundOutgoingPayment` with that `amount`.
+
+(`Mutation.fundOutgoingPayment` will not succeed if the payment is not currently in the `Funding` state. Additionally, an overfunded payment will not send more than the quoted amount.)
+
+For all other webhook events, calls to `Mutation.createInvoiceWithdrawal` and `Mutation.createOutgoingPaymentWithdrawal` are idempotent.
+
+### `EventType`
+
+- `invoice.expired`: Invoice has expired. Call `Mutation.createInvoiceWithdrawal`.
+- `invoice.paid`: Invoice has received its specified `amount`. Call `Mutation.createInvoiceWithdrawal`.
+- `outgoing_payment.funding`: Payment needs liquidity in order to send `quote.maxSourceAmount`. Call `Mutation.fundOutgoingPayment`.
+- `outgoing_payment.cancelled`: Payment was cancelled. Call `Mutation.createOutgoingPaymentWithdrawal`.
+- `outgoing_payment.completed`: Payment completed. Call `Mutation.createOutgoingPaymentWithdrawal`.
+
+### Webhook Event
+
+| Name   | Optional | Type                                                           | Description                                       |
+| :----- | :------- | :------------------------------------------------------------- | :------------------------------------------------ |
+| `id`   | No       | `ID`                                                           | Unique ID of the `data` object.                   |
+| `type` | No       | [`EventType`](#eventtype)                                      | Description of the event.                         |
+| `data` | No       | [`Invoice`](#invoice) or [`OutgoingPayment`](#outgoingpayment) | Object containing data associated with the event. |
 
 ## Resources
 
@@ -77,7 +124,7 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
 | Name                             | Optional | Type            | Description                                                                                                                                                                                                                                                                                                              |
 | :------------------------------- | :------- | :-------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                             | No       | `ID`            | Unique ID for this account, randomly generated by Rafiki.                                                                                                                                                                                                                                                                |
+| `id`                             | No       | `ID`            | Unique ID for this payment, randomly generated by Rafiki.                                                                                                                                                                                                                                                                |
 | `state`                          | No       | `PaymentState`  | See [`PaymentState`](#paymentstate).                                                                                                                                                                                                                                                                                     |
 | `error`                          | Yes      | `String`        | Failure reason.                                                                                                                                                                                                                                                                                                          |
 | `stateAttempts`                  | No       | `Integer`       | Retry number at current state.                                                                                                                                                                                                                                                                                           |
@@ -113,3 +160,16 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
 - `FIXED_SEND`: Fixed source amount.
 - `FIXED_DELIVERY`: Invoice payment, fixed delivery amount.
+
+### `Invoice`
+
+| Name          | Optional | Type      | Description                                                                                                                    |
+| :------------ | :------- | :-------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | No       | `ID`      | Unique ID for this invoice, randomly generated by Rafiki.                                                                      |
+| `accountId`   | No       | `String`  | Id of the recipient's Open Payments account.                                                                                   |
+| `amount`      | No       | `UInt64`  | The amount that must be paid at the time the invoice is created, in base units of the account asset.                           |
+| `received`    | No       | `UInt64`  | The total amount received, in base units of the account asset.                                                                 |
+| `active`      | No       | `Boolean` | If `true`, the invoice may receive funds. If `false`, the invoice is either expired or has already received `amount` of funds. |
+| `description` | Yes      | `String`  | Human readable description of the invoice.                                                                                     |
+| `createdAt`   | No       | `String`  |                                                                                                                                |
+| `expiresAt`   | No       | `String`  |                                                                                                                                |
