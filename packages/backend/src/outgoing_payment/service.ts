@@ -5,10 +5,12 @@ import { v4 as uuid } from 'uuid'
 import { BaseService } from '../shared/baseService'
 import { LifecycleError, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
-import { AccountingService, AssetAccount } from '../accounting/service'
+import { AccountingService } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
+import { WebhookService } from '../webhook/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
+import * as lifecycle from './lifecycle'
 import * as worker from './worker'
 
 export interface OutgoingPaymentService {
@@ -38,6 +40,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   accountService: AccountService
   ratesService: RatesService
+  webhookService: WebhookService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
 }
 
@@ -169,7 +172,7 @@ function requotePayment(
 export interface FundOutgoingPaymentOptions {
   id: string
   amount: bigint
-  transferId?: string
+  transferId: string
 }
 
 async function fundPayment(
@@ -186,17 +189,9 @@ async function fundPayment(
       return OutgoingPaymentError.WrongState
     }
     if (!payment.quote) throw LifecycleError.MissingQuote
-    const error = await deps.accountingService.createTransfer({
+    const error = await deps.accountingService.createDeposit({
       id: transferId,
-      sourceAccount: {
-        asset: {
-          unit: payment.account.asset.unit,
-          account: AssetAccount.Settlement
-        }
-      },
-      destinationAccount: {
-        id: payment.id
-      },
+      accountId: payment.id,
       amount
     })
     if (error) {
@@ -223,11 +218,14 @@ async function cancelPayment(
     if (payment.state !== PaymentState.Funding) {
       return OutgoingPaymentError.WrongState
     }
-    // TODO: Notify wallet
-    await payment.$query(trx).patch({
-      state: PaymentState.Cancelled,
-      error: LifecycleError.CancelledByAPI
-    })
+    await lifecycle.handleCancelled(
+      {
+        ...deps,
+        knex: trx
+      },
+      payment,
+      LifecycleError.CancelledByAPI
+    )
     return payment
   })
 }

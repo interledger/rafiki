@@ -1,9 +1,11 @@
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import nock from 'nock'
+import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { InvoiceService } from './service'
-import { AccountingService, AssetAccount } from '../../accounting/service'
+import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Invoice } from './model'
 import { resetGraphileDb } from '../../tests/graphileDb'
@@ -14,6 +16,7 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
+import { EventType } from '../../webhook/service'
 
 describe('Invoice Service', (): void => {
   let deps: IocContract<AppServices>
@@ -26,6 +29,18 @@ describe('Invoice Service', (): void => {
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
+  }
+  const webhookUrl = new URL(Config.webhookUrl)
+
+  function mockWebhookServer(invoiceId: string, type: EventType): nock.Scope {
+    return nock(webhookUrl.origin)
+      .post(webhookUrl.pathname, (body): boolean => {
+        expect(body.type).toEqual(type)
+        expect(body.data.invoice.id).toEqual(invoiceId)
+        expect(body.data.invoice.active).toEqual(false)
+        return true
+      })
+      .reply(200)
   }
 
   beforeAll(
@@ -131,14 +146,9 @@ describe('Invoice Service', (): void => {
 
     test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
       await expect(
-        accountingService.createTransfer({
-          sourceAccount: {
-            asset: {
-              unit: invoice.account.asset.unit,
-              account: AssetAccount.Settlement
-            }
-          },
-          destinationAccount: invoice,
+        accountingService.createDeposit({
+          id: uuid(),
+          accountId: invoice.id,
           amount: invoice.amount - BigInt(1)
         })
       ).resolves.toBeUndefined()
@@ -151,19 +161,16 @@ describe('Invoice Service', (): void => {
 
     test('Deactivates fully paid invoice', async (): Promise<void> => {
       await expect(
-        accountingService.createTransfer({
-          sourceAccount: {
-            asset: {
-              unit: invoice.account.asset.unit,
-              account: AssetAccount.Settlement
-            }
-          },
-          destinationAccount: invoice,
+        accountingService.createDeposit({
+          id: uuid(),
+          accountId: invoice.id,
           amount: invoice.amount
         })
       ).resolves.toBeUndefined()
 
+      const scope = mockWebhookServer(invoice.id, EventType.InvoicePaid)
       await invoiceService.handlePayment(invoice.id)
+      expect(scope.isDone()).toBe(true)
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: false
       })
@@ -194,19 +201,16 @@ describe('Invoice Service', (): void => {
         expiresAt: new Date(Date.now() - 40_000)
       })
       await expect(
-        accountingService.createTransfer({
-          sourceAccount: {
-            asset: {
-              unit: invoice.account.asset.unit,
-              account: AssetAccount.Settlement
-            }
-          },
-          destinationAccount: invoice,
+        accountingService.createDeposit({
+          id: uuid(),
+          accountId: invoice.id,
           amount: BigInt(1)
         })
       ).resolves.toBeUndefined()
 
+      const scope = mockWebhookServer(invoice.id, EventType.InvoiceExpired)
       await expect(invoiceService.deactivateNext()).resolves.toBe(invoice.id)
+      expect(scope.isDone()).toBe(true)
       const invoiceAfter = await invoiceService.get(invoice.id)
       if (!invoiceAfter) throw new Error('invoice was deleted')
       expect(invoiceAfter.active).toBe(false)

@@ -44,7 +44,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }
 
     // Update balances on prepare
-    const trxOrError = await services.accounting.transferFunds({
+    const trxOrError = await services.accounting.createTransfer({
       sourceAccount: accounts.incoming,
       destinationAccount: accounts.outgoing,
       sourceAmount,

@@ -490,7 +490,8 @@ describe('OutgoingPayment Resolvers', (): void => {
         assert.ok(payment.quote)
         input = {
           id: payment.id,
-          amount: payment.quote.maxSourceAmount
+          amount: payment.quote.maxSourceAmount,
+          transferId: uuid()
         }
       }
     )

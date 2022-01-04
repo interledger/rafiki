@@ -28,6 +28,7 @@ import { createAccountRoutes } from './open_payments/account/routes'
 import { createInvoiceRoutes } from './open_payments/invoice/routes'
 import { createInvoiceService } from './open_payments/invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
+import { createWebhookService } from './webhook/service'
 import { createConnectorService } from './connector'
 import { createSessionService } from './session/service'
 import { createApiKeyService } from './apiKey/service'
@@ -173,11 +174,18 @@ export function initIocContainer(
       streamServer: streamServer
     })
   })
+  container.singleton('webhookService', async (deps) => {
+    return createWebhookService({
+      config: await deps.use('config'),
+      logger: await deps.use('logger')
+    })
+  })
   container.singleton('invoiceService', async (deps) => {
     return await createInvoiceService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      accountingService: await deps.use('accountingService')
+      accountingService: await deps.use('accountingService'),
+      webhookService: await deps.use('webhookService')
     })
   })
   container.singleton('invoiceRoutes', async (deps) => {
@@ -229,7 +237,8 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       accountService: await deps.use('accountService'),
-      ratesService: await deps.use('ratesService')
+      ratesService: await deps.use('ratesService'),
+      webhookService: await deps.use('webhookService')
     })
   })
 

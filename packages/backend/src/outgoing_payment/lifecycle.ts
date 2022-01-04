@@ -4,6 +4,7 @@ import { LifecycleError } from './errors'
 import { OutgoingPayment, PaymentState } from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
+import { EventType } from '../webhook/service'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -59,7 +60,7 @@ export async function handleQuoting(
         },
         'quote amountToSend bounds error'
       )
-      await sendingCompleted(deps, payment)
+      await handleCompleted(deps, payment, amountSent)
       return
     }
   }
@@ -93,7 +94,7 @@ export async function handleQuoting(
   // InvoiceAlreadyPaid: the invoice was already paid, either by this payment (which retried due to a failed Sending→Completed transition commit) or another payment entirely.
   if (quote === null) {
     deps.logger.warn('quote invoice already paid')
-    await sendingCompleted(deps, payment)
+    await handleCompleted(deps, payment, amountSent)
     return
   }
 
@@ -102,11 +103,13 @@ export async function handleQuoting(
     throw LifecycleError.MissingBalance
   }
 
+  const state =
+    balance < quote.maxSourceAmount
+      ? PaymentState.Funding
+      : PaymentState.Sending
+
   await payment.$query(deps.knex).patch({
-    state:
-      balance < quote.maxSourceAmount
-        ? PaymentState.Funding
-        : PaymentState.Sending,
+    state,
     quote: {
       timestamp: new Date(),
       activationDeadline: new Date(Date.now() + deps.quoteLifespan),
@@ -123,7 +126,13 @@ export async function handleQuoting(
     }
   })
 
-  // TODO: send the quote to the wallet in order for it to reserve sender liquidity
+  if (state === PaymentState.Funding) {
+    await deps.webhookService.send({
+      type: EventType.PaymentFunding,
+      payment,
+      amountSent
+    })
+  }
 }
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -224,7 +233,7 @@ export async function handleSending(
       },
       'handleSending payment was already paid'
     )
-    await sendingCompleted(deps, payment)
+    await handleCompleted(deps, payment, amountSent)
     return
   } else if (
     newMaxSourceAmount <= BigInt(0) ||
@@ -296,14 +305,48 @@ export async function handleSending(
   )
 
   if (receipt.error) throw receipt.error
-  await sendingCompleted(deps, payment)
+
+  const totalAmountSent = await deps.accountingService.getTotalSent(payment.id)
+  if (totalAmountSent === undefined) {
+    throw LifecycleError.MissingBalance
+  }
+  await handleCompleted(deps, payment, totalAmountSent)
 }
 
-const sendingCompleted = async (
+export async function handleCancelled(
   deps: ServiceDependencies,
-  payment: OutgoingPayment
+  payment: OutgoingPayment,
+  error: string
+): Promise<void> {
+  await payment.$query(deps.knex).patch({
+    state: PaymentState.Cancelled,
+    error
+  })
+
+  const amountSent = await deps.accountingService.getTotalSent(payment.id)
+  if (amountSent === undefined) {
+    throw LifecycleError.MissingBalance
+  }
+
+  await deps.webhookService.send({
+    type: EventType.PaymentCancelled,
+    payment,
+    amountSent
+  })
+}
+
+const handleCompleted = async (
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  amountSent: bigint
 ): Promise<void> => {
   await payment.$query(deps.knex).patch({
     state: PaymentState.Completed
+  })
+
+  await deps.webhookService.send({
+    type: EventType.PaymentCompleted,
+    payment,
+    amountSent
   })
 }

@@ -3,7 +3,6 @@ import { v4 as uuid } from 'uuid'
 import {
   AccountingService,
   Account,
-  AssetAccount,
   AccountOptions
 } from '../accounting/service'
 import { randomUnit } from './asset'
@@ -13,10 +12,13 @@ type BuildOptions = Partial<AccountOptions> & {
 }
 
 export class AccountFactory {
-  public constructor(private accounts: AccountingService) {}
+  public constructor(
+    private accounts: AccountingService,
+    private unitGenerator: () => number = randomUnit
+  ) {}
 
   public async build(options: BuildOptions = {}): Promise<Account> {
-    const unit = options.asset?.unit || randomUnit()
+    const unit = options.asset?.unit || this.unitGenerator()
     await this.accounts.createAssetAccounts(unit)
     const accountOptions: AccountOptions = {
       id: options.id || uuid(),
@@ -25,14 +27,9 @@ export class AccountFactory {
     const account = await this.accounts.createAccount(accountOptions)
 
     if (options.balance) {
-      await this.accounts.createTransfer({
-        sourceAccount: {
-          asset: {
-            unit,
-            account: AssetAccount.Settlement
-          }
-        },
-        destinationAccount: account,
+      await this.accounts.createDeposit({
+        id: uuid(),
+        accountId: account.id,
         amount: options.balance
       })
     }

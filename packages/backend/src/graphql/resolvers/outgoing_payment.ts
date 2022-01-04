@@ -271,7 +271,7 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
   }
 }
 
-function paymentToGraphql(
+export function paymentToGraphql(
   payment: OutgoingPayment
 ): Omit<SchemaOutgoingPayment, 'outcome' | 'account'> {
   return {

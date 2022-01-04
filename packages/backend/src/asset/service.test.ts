@@ -1,13 +1,17 @@
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
 import { AssetService } from './service'
-import { AssetAccount } from '../accounting/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { randomAsset } from '../tests/asset'
 import { resetGraphileDb } from '../tests/graphileDb'
 import { truncateTables } from '../tests/tableManager'
+import {
+  startTigerbeetleContainer,
+  TIGERBEETLE_PORT
+} from '../tests/tigerbeetle'
 import { GraphileProducer } from '../messaging/graphileProducer'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -20,13 +24,19 @@ describe('Asset Service', (): void => {
   let workerUtils: WorkerUtils
   let assetService: AssetService
   let knex: Knex
+  let tigerbeetleContainer: StartedTestContainer
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
   }
 
-  beforeAll(
+  beforeEach(
     async (): Promise<void> => {
+      tigerbeetleContainer = await startTigerbeetleContainer()
+      Config.tigerbeetleReplicaAddresses = [
+        tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
+      ]
+
       deps = await initIocContainer(Config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
@@ -43,14 +53,10 @@ describe('Asset Service', (): void => {
   afterEach(
     async (): Promise<void> => {
       await truncateTables(knex)
-    }
-  )
-
-  afterAll(
-    async (): Promise<void> => {
       await resetGraphileDb(knex)
       await appContainer.shutdown()
       await workerUtils.release()
+      await tigerbeetleContainer.stop()
     }
   )
 
@@ -77,24 +83,22 @@ describe('Asset Service', (): void => {
       const accountingService = await deps.use('accountingService')
       const unit = 1
 
-      for (const account in AssetAccount) {
-        if (typeof account === 'number') {
-          await expect(
-            accountingService.getAssetAccountBalance(unit, account)
-          ).resolves.toBeUndefined()
-        }
-      }
+      await expect(
+        accountingService.getAssetLiquidityBalance(unit)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.getAssetSettlementBalance(unit)
+      ).resolves.toBeUndefined()
 
       const asset = await assetService.getOrCreate(randomAsset())
       expect(asset.unit).toEqual(unit)
 
-      for (const account in AssetAccount) {
-        if (typeof account === 'number') {
-          await expect(
-            accountingService.getAssetAccountBalance(asset.unit, account)
-          ).resolves.toEqual(BigInt(0))
-        }
-      }
+      await expect(
+        accountingService.getAssetLiquidityBalance(unit)
+      ).resolves.toEqual(BigInt(0))
+      await expect(
+        accountingService.getAssetSettlementBalance(unit)
+      ).resolves.toEqual(BigInt(0))
     })
 
     test('Can get asset by id', async (): Promise<void> => {

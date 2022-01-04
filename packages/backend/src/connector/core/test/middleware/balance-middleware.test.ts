@@ -125,7 +125,7 @@ describe('Balance Middleware', function () {
   })
 
   test('ignores 0 amount packets', async () => {
-    const transferFundsSpy = jest.spyOn(accounting, 'transferFunds')
+    const createTransferSpy = jest.spyOn(accounting, 'createTransfer')
     const prepare = IlpPrepareFactory.build({ amount: '0' })
     const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -141,7 +141,7 @@ describe('Balance Middleware', function () {
     const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
 
-    expect(transferFundsSpy).toHaveBeenCalledTimes(0)
+    expect(createTransferSpy).toHaveBeenCalledTimes(0)
   })
 
   test('insufficient balance does not adjust the account balances', async () => {
@@ -185,7 +185,7 @@ describe('Balance Middleware', function () {
   })
 
   test('does not adjust account balances for unfulfillable packets', async () => {
-    const transferFundsSpy = jest.spyOn(accounting, 'transferFunds')
+    const createTransferSpy = jest.spyOn(accounting, 'createTransfer')
     const prepare = IlpPrepareFactory.build({ amount: '100' })
     const reject = IlpRejectFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
@@ -202,6 +202,6 @@ describe('Balance Middleware', function () {
     const bobBalance = await accounting.getBalance(bobAccount.id)
     expect(bobBalance).toEqual(BigInt(0))
 
-    expect(transferFundsSpy).toHaveBeenCalledTimes(0)
+    expect(createTransferSpy).toHaveBeenCalledTimes(0)
   })
 })
