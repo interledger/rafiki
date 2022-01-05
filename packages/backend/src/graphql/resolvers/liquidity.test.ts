@@ -2,7 +2,6 @@ import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
-import * as Pay from '@interledger/pay'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -12,6 +11,7 @@ import { Config } from '../../config/app'
 import { AccountingService, Deposit } from '../../accounting/service'
 import { AssetService } from '../../asset/service'
 import { randomAsset, randomUnit } from '../../tests/asset'
+import { PaymentFactory } from '../../tests/paymentFactory'
 import { PeerFactory } from '../../tests/peerFactory'
 import { truncateTables } from '../../tests/tableManager'
 import {
@@ -1449,36 +1449,8 @@ describe('Withdrawal Resolvers', (): void => {
 
     beforeEach(
       async (): Promise<void> => {
-        const accountService = await deps.use('accountService')
-        const { id: accountId } = await accountService.create({
-          asset: randomAsset()
-        })
-
-        const streamServer = await deps.use('streamServer')
-        const {
-          ilpAddress: destinationAddress,
-          sharedSecret
-        } = streamServer.generateCredentials()
-        jest.spyOn(Pay, 'setupPayment').mockResolvedValueOnce({
-          destinationAsset: {
-            scale: 9,
-            code: 'XRP'
-          },
-          accountUrl: 'http://wallet2.example/paymentpointer/bob',
-          destinationAddress,
-          sharedSecret,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          requestCounter: Pay.Counter.from(0)!
-        })
-
-        const outgoingPaymentService = await deps.use('outgoingPaymentService')
-        paymentId = (
-          await outgoingPaymentService.create({
-            accountId,
-            paymentPointer: 'http://wallet2.example/paymentpointer/bob',
-            amountToSend: BigInt(123)
-          })
-        ).id
+        const paymentFactory = new PaymentFactory(deps)
+        paymentId = (await paymentFactory.build()).id
 
         await expect(
           accountingService.createDeposit({
