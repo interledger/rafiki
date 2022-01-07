@@ -1,6 +1,6 @@
 import Koa from 'koa'
 
-import { RatesService, ConvertError } from './service'
+import { RatesService, RateError } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -115,28 +115,28 @@ describe('Rates service', function () {
           sourceAsset: { code: 'MISSING', scale: 9 },
           destinationAsset: { code: 'USD', scale: 9 }
         })
-      ).resolves.toBe(ConvertError.MissingSourceAsset)
+      ).resolves.toBe(RateError.MissingSourceAsset)
       await expect(
         service.convert({
           sourceAmount: 1234n,
           sourceAsset: { code: 'USD', scale: 9 },
           destinationAsset: { code: 'MISSING', scale: 9 }
         })
-      ).resolves.toBe(ConvertError.MissingDestinationAsset)
+      ).resolves.toBe(RateError.MissingDestinationAsset)
       await expect(
         service.convert({
           sourceAmount: 1234n,
           sourceAsset: { code: 'NEGATIVE', scale: 9 },
           destinationAsset: { code: 'USD', scale: 9 }
         })
-      ).resolves.toBe(ConvertError.InvalidSourcePrice)
+      ).resolves.toBe(RateError.InvalidSourcePrice)
       await expect(
         service.convert({
           sourceAmount: 1234n,
           sourceAsset: { code: 'USD', scale: 9 },
           destinationAsset: { code: 'STRING', scale: 9 }
         })
-      ).resolves.toBe(ConvertError.InvalidDestinationPrice)
+      ).resolves.toBe(RateError.InvalidDestinationPrice)
     })
 
     describe('caching', function () {
@@ -186,6 +186,60 @@ describe('Rates service', function () {
         expect(service['prefetchRequest']).toBeUndefined()
         expect(requestCount).toBe(2)
       })
+    })
+  })
+
+  describe('getRate', function () {
+    it('returns 1.0 when assets are alike', async () => {
+      await expect(
+        service.getRate({
+          sourceAssetCode: 'USD',
+          destinationAssetCode: 'USD'
+        })
+      ).resolves.toBe(1.0)
+      expect(requestCount).toBe(0)
+    })
+
+    it('returns rate when assets are different', async () => {
+      await expect(
+        service.getRate({
+          sourceAssetCode: 'USD',
+          destinationAssetCode: 'XRP'
+        })
+      ).resolves.toBe(2.0)
+      await expect(
+        service.getRate({
+          sourceAssetCode: 'XRP',
+          destinationAssetCode: 'USD'
+        })
+      ).resolves.toBe(0.5)
+    })
+
+    it('returns an error when an asset price is invalid', async () => {
+      await expect(
+        service.getRate({
+          sourceAssetCode: 'MISSING',
+          destinationAssetCode: 'USD'
+        })
+      ).resolves.toBe(RateError.MissingSourceAsset)
+      await expect(
+        service.getRate({
+          sourceAssetCode: 'USD',
+          destinationAssetCode: 'MISSING'
+        })
+      ).resolves.toBe(RateError.MissingDestinationAsset)
+      await expect(
+        service.getRate({
+          sourceAssetCode: 'NEGATIVE',
+          destinationAssetCode: 'USD'
+        })
+      ).resolves.toBe(RateError.InvalidSourcePrice)
+      await expect(
+        service.getRate({
+          sourceAssetCode: 'USD',
+          destinationAssetCode: 'STRING'
+        })
+      ).resolves.toBe(RateError.InvalidDestinationPrice)
     })
   })
 })

@@ -50,7 +50,8 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
     convert: async (opts) => opts.sourceAmount,
     prices: () => {
       throw new Error('unimplemented')
-    }
+    },
+    getRate: async (_opts) => 1.0
   })
   .attr(
     'redis',

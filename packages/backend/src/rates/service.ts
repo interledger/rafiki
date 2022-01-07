@@ -8,7 +8,8 @@ export interface RatesService {
   prices(): Promise<Prices>
   convert(
     opts: Omit<ConvertOptions, 'exchangeRate'>
-  ): Promise<bigint | ConvertError>
+  ): Promise<bigint | RateError>
+  getRate(opts: RateOptions): Promise<number | RateError>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -22,12 +23,21 @@ interface Prices {
   [currency: string]: number
 }
 
-export enum ConvertError {
+interface RateOptions {
+  sourceAssetCode: string
+  destinationAssetCode: string
+}
+
+export enum RateError {
   MissingSourceAsset = 'MissingSourceAsset',
   MissingDestinationAsset = 'MissingDestinationAsset',
   InvalidSourcePrice = 'InvalidSourcePrice',
   InvalidDestinationPrice = 'InvalidDestinationPrice'
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isRateError = (o: any): o is RateError =>
+  Object.values(RateError).includes(o)
 
 export function createRatesService(deps: ServiceDependencies): RatesService {
   return new RatesServiceImpl(deps)
@@ -48,28 +58,41 @@ class RatesServiceImpl implements RatesService {
 
   async convert(
     opts: Omit<ConvertOptions, 'exchangeRate'>
-  ): Promise<bigint | ConvertError> {
+  ): Promise<bigint | RateError> {
     const sameCode = opts.sourceAsset.code === opts.destinationAsset.code
     const sameScale = opts.sourceAsset.scale === opts.destinationAsset.scale
     if (sameCode && sameScale) return opts.sourceAmount
     if (sameCode) return convert({ exchangeRate: 1.0, ...opts })
 
-    const prices = await this.sharedLoad()
-    const sourcePrice = prices[opts.sourceAsset.code]
-    if (!sourcePrice) return ConvertError.MissingSourceAsset
-    if (!isValidPrice(sourcePrice)) return ConvertError.InvalidSourcePrice
-    const destinationPrice = prices[opts.destinationAsset.code]
-    if (!destinationPrice) return ConvertError.MissingDestinationAsset
-    if (!isValidPrice(destinationPrice))
-      return ConvertError.InvalidDestinationPrice
-
-    // source asset → base currency → destination asset
-    const exchangeRate = sourcePrice / destinationPrice
+    const exchangeRate = await this.getRate({
+      sourceAssetCode: opts.sourceAsset.code,
+      destinationAssetCode: opts.destinationAsset.code
+    })
+    if (isRateError(exchangeRate)) return exchangeRate
     return convert({ exchangeRate, ...opts })
   }
 
   async prices(): Promise<Prices> {
     return this.sharedLoad()
+  }
+
+  async getRate({
+    sourceAssetCode,
+    destinationAssetCode
+  }: RateOptions): Promise<number | RateError> {
+    if (sourceAssetCode === destinationAssetCode) return 1.0
+
+    const prices = await this.sharedLoad()
+    const sourcePrice = prices[sourceAssetCode]
+    if (!sourcePrice) return RateError.MissingSourceAsset
+    if (!isValidPrice(sourcePrice)) return RateError.InvalidSourcePrice
+    const destinationPrice = prices[destinationAssetCode]
+    if (!destinationPrice) return RateError.MissingDestinationAsset
+    if (!isValidPrice(destinationPrice))
+      return RateError.InvalidDestinationPrice
+
+    // source asset → base currency → destination asset
+    return sourcePrice / destinationPrice
   }
 
   private sharedLoad(): Promise<Prices> {

@@ -1,6 +1,7 @@
 import { Errors } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 import { isTransferError, TransferError } from '../../../accounting/errors'
+import { isRateError } from '../../../rates/service'
 const { CannotReceiveError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
@@ -29,8 +30,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
       sourceAsset: accounts.incoming.asset,
       destinationAsset: accounts.outgoing.asset
     })
-    if (typeof destinationAmountOrError !== 'bigint') {
-      // ConvertError
+    if (isRateError(destinationAmountOrError)) {
       throw new CannotReceiveError(
         `Exchange rate error: ${destinationAmountOrError}`
       )
