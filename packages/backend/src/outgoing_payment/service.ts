@@ -3,24 +3,17 @@ import * as Pay from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 
 import { BaseService } from '../shared/baseService'
-import { LifecycleError, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
 import { AccountingService } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
 import { RatesService } from '../rates/service'
 import { WebhookService } from '../webhook/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
-import * as lifecycle from './lifecycle'
 import * as worker from './worker'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
   create(options: CreateOutgoingPaymentOptions): Promise<OutgoingPayment>
-  fund(
-    options: FundOutgoingPaymentOptions
-  ): Promise<OutgoingPayment | OutgoingPaymentError>
-  cancel(id: string): Promise<OutgoingPayment | OutgoingPaymentError>
-  requote(id: string): Promise<OutgoingPayment | OutgoingPaymentError>
   processNext(): Promise<string | undefined>
   getAccountPage(
     accountId: string,
@@ -55,9 +48,6 @@ export async function createOutgoingPaymentService(
     get: (id) => getOutgoingPayment(deps, id),
     create: (options: CreateOutgoingPaymentOptions) =>
       createOutgoingPayment(deps, options),
-    fund: (options) => fundPayment(deps, options),
-    cancel: (id) => cancelPayment(deps, id),
-    requote: (id) => requotePayment(deps, id),
     processNext: () => worker.processPendingPayment(deps),
     getAccountPage: (accountId, pagination) =>
       getAccountPage(deps, accountId, pagination)
@@ -152,82 +142,6 @@ async function createOutgoingPayment(
     }
     throw err
   }
-}
-
-function requotePayment(
-  deps: ServiceDependencies,
-  id: string
-): Promise<OutgoingPayment | OutgoingPaymentError> {
-  return deps.knex.transaction(async (trx) => {
-    const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
-    if (!payment) return OutgoingPaymentError.UnknownPayment
-    if (payment.state !== PaymentState.Cancelled) {
-      return OutgoingPaymentError.WrongState
-    }
-    await payment.$query(trx).patch({ state: PaymentState.Quoting })
-    return payment
-  })
-}
-
-export interface FundOutgoingPaymentOptions {
-  id: string
-  amount: bigint
-  transferId: string
-}
-
-async function fundPayment(
-  deps: ServiceDependencies,
-  { id, amount, transferId }: FundOutgoingPaymentOptions
-): Promise<OutgoingPayment | OutgoingPaymentError> {
-  return deps.knex.transaction(async (trx) => {
-    const payment = await OutgoingPayment.query(trx)
-      .findById(id)
-      .forUpdate()
-      .withGraphFetched('account.asset')
-    if (!payment) return OutgoingPaymentError.UnknownPayment
-    if (payment.state !== PaymentState.Funding) {
-      return OutgoingPaymentError.WrongState
-    }
-    if (!payment.quote) throw LifecycleError.MissingQuote
-    const error = await deps.accountingService.createDeposit({
-      id: transferId,
-      accountId: payment.id,
-      amount
-    })
-    if (error) {
-      throw new Error('Unable to fund payment. error=' + error)
-    }
-    const balance = await deps.accountingService.getBalance(payment.id)
-    if (balance === undefined) {
-      throw LifecycleError.MissingBalance
-    }
-    if (payment.quote.maxSourceAmount <= balance) {
-      await payment.$query(trx).patch({ state: PaymentState.Sending })
-    }
-    return payment
-  })
-}
-
-async function cancelPayment(
-  deps: ServiceDependencies,
-  id: string
-): Promise<OutgoingPayment | OutgoingPaymentError> {
-  return deps.knex.transaction(async (trx) => {
-    const payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
-    if (!payment) return OutgoingPaymentError.UnknownPayment
-    if (payment.state !== PaymentState.Funding) {
-      return OutgoingPaymentError.WrongState
-    }
-    await lifecycle.handleCancelled(
-      {
-        ...deps,
-        knex: trx
-      },
-      payment,
-      LifecycleError.CancelledByAPI
-    )
-    return payment
-  })
 }
 
 interface Pagination {

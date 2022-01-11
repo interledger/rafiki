@@ -1,12 +1,10 @@
-import { paymentToGraphql } from './outgoing_payment'
 import {
   ResolversTypes,
   MutationResolvers,
   LiquidityError,
   LiquidityMutationResponse,
   AccountWithdrawalMutationResponse,
-  InvoiceWithdrawalMutationResponse,
-  OutgoingPaymentWithdrawalMutationResponse
+  InvoiceWithdrawalMutationResponse
 } from '../generated/graphql'
 import { TransferError } from '../../accounting/errors'
 import { ApolloContext } from '../../app'
@@ -308,67 +306,6 @@ export const createInvoiceWithdrawal: MutationResolvers<ApolloContext>['createIn
     return {
       code: '500',
       message: 'Error trying to create invoice withdrawal',
-      success: false
-    }
-  }
-}
-
-export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['createOutgoingPaymentWithdrawal'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['OutgoingPaymentWithdrawalMutationResponse'] => {
-  try {
-    const outgoingPaymentService = await ctx.container.use(
-      'outgoingPaymentService'
-    )
-    const payment = await outgoingPaymentService.get(args.input.paymentId)
-    if (!payment) {
-      return responses[
-        LiquidityError.UnknownPayment
-      ] as OutgoingPaymentWithdrawalMutationResponse
-    }
-    const id = args.input.id
-    const accountingService = await ctx.container.use('accountingService')
-    const amount = await accountingService.getBalance(payment.id)
-    if (amount === undefined)
-      throw new Error('missing outgoing payment account')
-    if (amount === BigInt(0)) {
-      return responses[
-        LiquidityError.AmountZero
-      ] as OutgoingPaymentWithdrawalMutationResponse
-    }
-    const error = await accountingService.createWithdrawal({
-      id,
-      accountId: payment.id,
-      amount,
-      timeout: BigInt(60e9) // 1 minute
-    })
-
-    if (error) {
-      return errorToResponse(error) as OutgoingPaymentWithdrawalMutationResponse
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Created outgoing payment withdrawal',
-      withdrawal: {
-        id,
-        amount,
-        payment: paymentToGraphql(payment)
-      }
-    }
-  } catch (error) {
-    ctx.logger.error(
-      {
-        input: args.input,
-        error
-      },
-      'error creating outgoing payment withdrawal'
-    )
-    return {
-      code: '500',
-      message: 'Error trying to create outgoing payment withdrawal',
       success: false
     }
   }

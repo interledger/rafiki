@@ -4,9 +4,6 @@ import { getAccountInvoices, getPageInfo } from './invoice'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
-  requoteOutgoingPayment,
-  fundOutgoingPayment,
-  cancelOutgoingPayment,
   getOutcome,
   getAccountOutgoingPayments,
   getOutgoingPaymentPageInfo
@@ -27,7 +24,6 @@ import {
   createPeerLiquidityWithdrawal,
   createAccountWithdrawal,
   createInvoiceWithdrawal,
-  createOutgoingPaymentWithdrawal,
   finalizeLiquidityWithdrawal,
   rollbackLiquidityWithdrawal
 } from './liquidity'
@@ -61,9 +57,6 @@ export const resolvers: Resolvers = {
   Mutation: {
     createAccount,
     createOutgoingPayment,
-    requoteOutgoingPayment,
-    fundOutgoingPayment,
-    cancelOutgoingPayment,
     createApiKey: createApiKey,
     redeemApiKey: redeemApiKey,
     deleteAllApiKeys: deleteAllApiKeys,
@@ -78,7 +71,6 @@ export const resolvers: Resolvers = {
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
     createAccountWithdrawal,
     createInvoiceWithdrawal,
-    createOutgoingPaymentWithdrawal,
     finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
     rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal
   }

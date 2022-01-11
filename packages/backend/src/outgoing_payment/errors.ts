@@ -1,22 +1,13 @@
 import * as Pay from '@interledger/pay'
 
-export enum OutgoingPaymentError {
-  UnknownPayment = 'UnknownPayment',
-  WrongState = 'WrongState'
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isOutgoingPaymentError = (o: any): o is OutgoingPaymentError =>
-  Object.values(OutgoingPaymentError).includes(o)
-
 export type PaymentError = LifecycleError | Pay.PaymentError
 
 export enum LifecycleError {
   QuoteExpired = 'QuoteExpired',
   // Rate fetch failed.
   PricesUnavailable = 'PricesUnavailable',
-  // Payment aborted via "cancel payment" API call.
-  CancelledByAPI = 'CancelledByAPI',
+  // Payment aborted via outgoing_payment.funding webhook response.
+  CancelledByWebhook = 'CancelledByWebhook',
   // Edge error due to retries, partial payment, and database write errors.
   BadState = 'BadState',
 
@@ -24,6 +15,7 @@ export enum LifecycleError {
   MissingBalance = 'MissingBalance',
   MissingQuote = 'MissingQuote',
   MissingInvoice = 'MissingInvoice',
+  MissingWebhook = 'MissingWebhook',
   InvalidRatio = 'InvalidRatio'
 }
 

@@ -30,6 +30,7 @@ describe('Webhook Service', (): void => {
   let payment: OutgoingPayment
   let amountReceived: bigint
   let amountSent: bigint
+  let balance: bigint
   let webhookUrl: URL
   const WEBHOOK_SECRET = 'test secret'
 
@@ -61,6 +62,7 @@ describe('Webhook Service', (): void => {
       })
       amountReceived = BigInt(5)
       amountSent = BigInt(10)
+      balance = BigInt(0)
       webhookUrl = new URL(config.webhookUrl)
     }
   )
@@ -89,7 +91,9 @@ describe('Webhook Service', (): void => {
             ).toEqual(signature)
             expect(body.type).toEqual(type)
             if (isPaymentEventType(type)) {
-              expect(body.data).toEqual(paymentToData(payment, amountSent))
+              expect(body.data).toEqual(
+                paymentToData(payment, amountSent, balance)
+              )
             } else {
               expect(body.data).toEqual(invoiceToData(invoice, amountReceived))
             }
@@ -101,7 +105,8 @@ describe('Webhook Service', (): void => {
           await webhookService.send({
             type,
             payment,
-            amountSent
+            amountSent,
+            balance
           })
         } else {
           await webhookService.send({

@@ -1,5 +1,6 @@
 import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
+import { v4 as uuid } from 'uuid'
 import { Account } from '../open_payments/account/model'
 import { BaseModel } from '../shared/baseModel'
 
@@ -25,6 +26,8 @@ export class OutgoingPayment extends BaseModel {
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
+  // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the webhookId. If `$beforeUpdate` set `webhookId = undefined`, the patch would ignore the modification.
+  public webhookId?: string | null
 
   public intent!: PaymentIntent
 
@@ -71,6 +74,15 @@ export class OutgoingPayment extends BaseModel {
       }
       if (opts.old['state'] !== this.state) {
         this.stateAttempts = 0
+        switch (this.state) {
+          case PaymentState.Funding:
+          case PaymentState.Cancelled:
+          case PaymentState.Completed:
+            this.webhookId = uuid()
+            break
+          default:
+            this.webhookId = null
+        }
       }
     }
   }

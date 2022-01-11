@@ -53,7 +53,11 @@ export async function getPendingPayment(
     .forUpdate()
     // Don't wait for a payment that is already being processed.
     .skipLocked()
-    .whereIn('state', [PaymentState.Quoting, PaymentState.Sending])
+    .where((builder: knex.QueryBuilder) => {
+      builder
+        .whereIn('state', [PaymentState.Quoting, PaymentState.Sending])
+        .orWhereNotNull('webhookId')
+    })
     // Back off between retries.
     .andWhere((builder: knex.QueryBuilder) => {
       builder
@@ -97,7 +101,10 @@ export async function handlePaymentLifecycle(
         { state: payment.state, error, stateAttempts },
         'payment lifecycle failed; cancelling'
       )
-      await lifecycle.handleCancelled(deps, payment, error)
+      await payment.$query(deps.knex).patch({
+        state: PaymentState.Cancelled,
+        error
+      })
     }
   }
 
@@ -145,6 +152,9 @@ export async function handlePaymentLifecycle(
             )
           })
         })
+    case PaymentState.Cancelled:
+    case PaymentState.Completed:
+      return lifecycle.handleCancelledOrCompleted(deps, payment).catch(onError)
     default:
       deps.logger.warn('unexpected payment in lifecycle')
       break

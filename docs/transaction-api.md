@@ -51,9 +51,11 @@ After the payment completes, the instance releases the lock on the payment and a
 
 3. Recoverable failure. In cases such as an idle timeout, Rafiki may elect to automatically retry the payment. The state remains `Sending`, but internally tracks that the payment failed and when to schedule another attempt.
 
+### Payment resolution
+
 In the `Completed` and `Cancelled` cases, the wallet is notifed of any remaining funds in the payment account via `outgoing_payment.completed` and `outgoing_payment.cancelled` [webhook events](#webhooks). Note: if the payment is retried, the same payment account is used for the subsequent attempt.
 
-### Manual recovery
+#### Manual recovery
 
 A payment in the `Cancelled` state may be explicitly retried ("requoted") by the user. The retry will quote (and eventually attempt to send) the remainder of the payment:
 
@@ -87,23 +89,39 @@ Rafiki sends webhook events to notify the wallet of payment lifecycle states tha
 
 Webhook event handlers must be idempotent.
 
-> **_NOTE:_**
->
-> Calls to the following are idempotent:
->
-> - `Mutation.createInvoiceWithdrawal`
-> - `Mutation.createOutgoingPaymentWithdrawal`
-> - `Mutation.requoteOutgoingPaymentWithdrawal`
->
-> Calling `Mutation.fundOutgoingPayment` is not idempotent. However, it will not succeed if the payment is not currently in the `Funding` state. Additionally, an overfunded payment will not send more than the quoted amount.
-
 ### `EventType`
 
-- `invoice.expired`: Invoice has expired. Call `Mutation.createInvoiceWithdrawal`.
-- `invoice.paid`: Invoice has received its specified `amount`. Call `Mutation.createInvoiceWithdrawal`.
-- `outgoing_payment.funding`: Payment needs liquidity in order to send `quote.maxSourceAmount`. Call `Mutation.fundOutgoingPayment`.
-- `outgoing_payment.cancelled`: Payment was cancelled. Call `Mutation.createOutgoingPaymentWithdrawal` and/or `Mutation.requoteOutgoingPaymentWithdrawal`.
-- `outgoing_payment.completed`: Payment completed. Call `Mutation.createOutgoingPaymentWithdrawal`.
+#### `invoice.expired`
+
+Invoice has expired.
+
+Credit `invoice.received` to the wallet balance for `invoice.accountId` and return `200`.
+
+#### `invoice.paid`
+
+Invoice has received its specified `amount`.
+
+Credit `invoice.received` to the wallet balance for `invoice.accountId` and return `200`.
+
+#### `outgoing_payment.funding`
+
+Payment needs liquidity in order to send quoted amount.
+
+To fund the payment, deduct `quote.maxSourceAmount` from the wallet balance for `payment.accountId` and return `200`.
+
+To cancel the payment, return `403`.
+
+#### `outgoing_payment.cancelled`
+
+Payment was cancelled.
+
+Credit `payment.balance` to the wallet balance for `payment.accountId` and return `200` or `205` to retry the payment.
+
+#### `outgoing_payment.completed`
+
+Payment completed sending the quoted amount.
+
+Credit `payment.balance` to the wallet balance for `payment.accountId` and return `200`.
 
 ### Webhook Event
 
@@ -156,8 +174,8 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
 ### `PaymentState`
 
-- `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING` or `SENDING` if already funded. On failure, transition to `Cancelled`.
-- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `Sending`. Otherwise, transitions to `Cancelled` when the quote expires.
+- `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING`. On failure, transition to `Cancelled`.
+- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `Sending`. Otherwise, transitions to `Cancelled` if cancelled by the user or when the quote expires.
 - `SENDING`: Stream payment from the payment account to the destination.
 - `CANCELLED`: The payment failed. (Though some money may have been delivered). Requoting transitions to `Quoting`.
 - `COMPLETED`: Successful completion.
