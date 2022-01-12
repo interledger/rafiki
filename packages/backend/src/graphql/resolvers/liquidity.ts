@@ -3,8 +3,7 @@ import {
   MutationResolvers,
   LiquidityError,
   LiquidityMutationResponse,
-  AccountWithdrawalMutationResponse,
-  InvoiceWithdrawalMutationResponse
+  AccountWithdrawalMutationResponse
 } from '../generated/graphql'
 import { TransferError } from '../../accounting/errors'
 import { ApolloContext } from '../../app'
@@ -244,68 +243,6 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
     return {
       code: '500',
       message: 'Error trying to create account withdrawal',
-      success: false
-    }
-  }
-}
-
-export const createInvoiceWithdrawal: MutationResolvers<ApolloContext>['createInvoiceWithdrawal'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['InvoiceWithdrawalMutationResponse'] => {
-  try {
-    const invoiceService = await ctx.container.use('invoiceService')
-    const invoice = await invoiceService.get(args.input.invoiceId)
-    if (!invoice) {
-      return responses[
-        LiquidityError.UnknownInvoice
-      ] as InvoiceWithdrawalMutationResponse
-    }
-    const id = args.input.id
-    const accountingService = await ctx.container.use('accountingService')
-    const amount = await accountingService.getBalance(invoice.id)
-    if (amount === undefined) throw new Error('missing invoice account')
-    if (amount === BigInt(0)) {
-      return responses[
-        LiquidityError.AmountZero
-      ] as InvoiceWithdrawalMutationResponse
-    }
-    const error = await accountingService.createWithdrawal({
-      id,
-      accountId: invoice.id,
-      amount,
-      timeout: BigInt(60e9) // 1 minute
-    })
-
-    if (error) {
-      return errorToResponse(error) as InvoiceWithdrawalMutationResponse
-    }
-    return {
-      code: '200',
-      success: true,
-      message: 'Created invoice withdrawal',
-      withdrawal: {
-        id,
-        amount,
-        invoice: {
-          ...invoice,
-          expiresAt: invoice.expiresAt.toISOString(),
-          createdAt: invoice.createdAt?.toISOString()
-        }
-      }
-    }
-  } catch (error) {
-    ctx.logger.error(
-      {
-        input: args.input,
-        error
-      },
-      'error creating invoice withdrawal'
-    )
-    return {
-      code: '500',
-      message: 'Error trying to create invoice withdrawal',
       success: false
     }
   }

@@ -2,7 +2,6 @@ import { createHmac } from 'crypto'
 import axios, { AxiosResponse } from 'axios'
 import { PaymentType } from '@interledger/pay'
 import { Logger } from 'pino'
-import { v4 as uuid } from 'uuid'
 
 import { IAppConfig } from '../config/app'
 import { Invoice } from '../open_payments/invoice/model'
@@ -27,7 +26,7 @@ export const isPaymentEventType = (type: any): type is PaymentEventType =>
   Object.values(PaymentEventType).includes(type)
 
 interface InvoiceEvent {
-  id?: string
+  id: string
   type: InvoiceEventType
   invoice: Invoice
   payment?: never
@@ -37,7 +36,7 @@ interface InvoiceEvent {
 }
 
 interface PaymentEvent {
-  id?: string
+  id: string
   type: PaymentEventType
   invoice?: never
   payment: OutgoingPayment
@@ -139,7 +138,7 @@ async function sendWebhook(
   options: EventOptions
 ): Promise<AxiosResponse> {
   const event = {
-    id: options.id || uuid(),
+    id: options.id,
     type: options.type,
     data: isPaymentEvent(options)
       ? paymentToData(options.payment, options.amountSent, options.balance)

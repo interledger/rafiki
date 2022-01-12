@@ -4,10 +4,13 @@ import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
 import { EventType, WebhookService } from '../../webhook/service'
 import assert from 'assert'
-import { Transaction } from 'knex'
+import { QueryBuilder, Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import { v4 as uuid } from 'uuid'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
+// First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
+export const RETRY_BACKOFF_SECONDS = 10
 
 interface CreateOptions {
   accountId: string
@@ -24,7 +27,7 @@ export interface InvoiceService {
     pagination?: Pagination
   ): Promise<Invoice[]>
   handlePayment(invoiceId: string): Promise<void>
-  deactivateNext(): Promise<string | undefined>
+  processNext(): Promise<string | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -49,7 +52,7 @@ export async function createInvoiceService(
     getAccountInvoicesPage: (accountId, pagination) =>
       getAccountInvoicesPage(deps, accountId, pagination),
     handlePayment: (invoiceId) => handleInvoicePayment(deps, invoiceId),
-    deactivateNext: () => deactivateNextInvoice(deps)
+    processNext: () => processNextInvoice(deps)
   }
 }
 
@@ -110,60 +113,144 @@ async function handleInvoicePayment(
   if (!amountReceived) {
     return
   }
-  const invoice = await Invoice.query(deps.knex)
+  await Invoice.query(deps.knex)
     .patch({
-      active: false
+      active: false,
+      webhookId: uuid()
     })
     .where('id', invoiceId)
     .andWhere('amount', '<=', amountReceived.toString())
-    .returning('*')
-    .first()
-  if (invoice) {
-    await deps.webhookService.send({
-      type: EventType.InvoicePaid,
-      invoice,
-      amountReceived
-    })
-  }
 }
 
-// Deactivate expired invoices that have some money.
-// Delete expired invoices that have never received money.
+// Fetch (and lock) an invoice for work.
 // Returns the id of the processed invoice (if any).
-async function deactivateNextInvoice(
-  deps: ServiceDependencies
+async function processNextInvoice(
+  deps_: ServiceDependencies
 ): Promise<string | undefined> {
-  return deps.knex.transaction(async (trx) => {
+  return deps_.knex.transaction(async (trx) => {
+    const now = new Date(Date.now()).toISOString()
     // 30 seconds backwards to allow a prepared (but not yet fulfilled/rejected) packet to finish before being deactivated.
-    const now = new Date(Date.now() - 30_000).toISOString()
+    const delayedNow = new Date(Date.now() - 30_000).toISOString()
     const invoices = await Invoice.query(trx)
       .limit(1)
       // Ensure the invoices cannot be processed concurrently by multiple workers.
       .forUpdate()
       // If an invoice is locked, don't wait — just come back for it later.
       .skipLocked()
-      .where('active', true)
-      .andWhere('expiresAt', '<', now)
+      .where((builder: QueryBuilder) => {
+        builder.where('active', true).andWhere('expiresAt', '<', delayedNow)
+      })
+      .orWhere((builder: QueryBuilder) => {
+        builder.whereNotNull('webhookId').andWhere((builder: QueryBuilder) => {
+          builder
+            .where('webhookAttempts', 0)
+            // Back off between retries.
+            .orWhereRaw(
+              '"updatedAt" + LEAST("webhookAttempts", 6) * ? * interval \'1 seconds\' < ?',
+              [RETRY_BACKOFF_SECONDS, now]
+            )
+        })
+      })
+
     const invoice = invoices[0]
     if (!invoice) return
 
-    const amountReceived = await deps.accountingService.getTotalReceived(
-      invoice.id
-    )
-    if (amountReceived) {
-      deps.logger.trace({ invoice: invoice.id }, 'deactivating expired invoice')
-      await invoice.$query(trx).patch({ active: false })
-      await deps.webhookService.send({
-        type: EventType.InvoiceExpired,
-        invoice,
-        amountReceived
+    const deps = {
+      ...deps_,
+      knex: trx,
+      logger: deps_.logger.child({
+        invoice: invoice.id
       })
+    }
+    if (!invoice.active) {
+      try {
+        await handleDeactivated(deps, invoice)
+      } catch (err) {
+        await invoice.$query(trx).patch({
+          webhookAttempts: invoice.webhookAttempts + 1
+        })
+      }
     } else {
-      deps.logger.debug({ invoice: invoice.id }, 'deleting expired invoice')
-      await invoice.$query(trx).delete()
+      await handleExpired(deps, invoice)
     }
     return invoice.id
   })
+}
+
+// Deactivate expired invoices that have some money.
+// Delete expired invoices that have never received money.
+async function handleExpired(
+  deps: ServiceDependencies,
+  invoice: Invoice
+): Promise<void> {
+  const amountReceived = await deps.accountingService.getTotalReceived(
+    invoice.id
+  )
+  if (amountReceived) {
+    deps.logger.trace({ amountReceived }, 'deactivating expired invoice')
+    await invoice.$query(deps.knex).patch({ active: false })
+  } else {
+    deps.logger.debug({ amountReceived }, 'deleting expired invoice')
+    await invoice.$query(deps.knex).delete()
+  }
+}
+
+// Withdraw deactivated invoices' liquidity.
+async function handleDeactivated(
+  deps: ServiceDependencies,
+  invoice: Invoice
+): Promise<void> {
+  assert.ok(invoice.webhookId)
+  const amountReceived = await deps.accountingService.getTotalReceived(
+    invoice.id
+  )
+  if (!amountReceived) {
+    deps.logger.warn(
+      { amountReceived },
+      'invoice with webhook id and empty balance'
+    )
+    await invoice.$query(deps.knex).patch({ webhookId: null })
+    return
+  }
+
+  deps.logger.trace(
+    { amountReceived },
+    'withdrawing deactivated invoice balance'
+  )
+  const error = await deps.accountingService.createWithdrawal({
+    id: invoice.webhookId,
+    accountId: invoice.id,
+    amount: amountReceived,
+    timeout: BigInt(deps.webhookService.timeout) * BigInt(1e9) // ms -> ns
+  })
+  if (error) throw error
+
+  try {
+    const { status } = await deps.webhookService.send({
+      id: invoice.webhookId,
+      type:
+        amountReceived < invoice.amount
+          ? EventType.InvoiceExpired
+          : EventType.InvoicePaid,
+      invoice,
+      amountReceived
+    })
+    if (status === 200 || status === 205) {
+      const error = await deps.accountingService.commitWithdrawal(
+        invoice.webhookId
+      )
+      if (error) throw error
+      if (status === 200) {
+        await invoice.$query(deps.knex).patch({
+          webhookId: null
+        })
+      }
+    }
+  } catch (error) {
+    await deps.accountingService.rollbackWithdrawal(invoice.webhookId)
+    throw error
+  }
+  await invoice.$query(deps.knex).patch({ webhookId: null })
 }
 
 /** TODO: Base64 encode/decode the cursors

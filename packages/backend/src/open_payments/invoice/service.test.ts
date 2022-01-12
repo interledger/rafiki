@@ -32,7 +32,11 @@ describe('Invoice Service', (): void => {
   }
   const webhookUrl = new URL(Config.webhookUrl)
 
-  function mockWebhookServer(invoiceId: string, type: EventType): nock.Scope {
+  function mockWebhookServer(
+    invoiceId: string,
+    type: EventType,
+    status = 200
+  ): nock.Scope {
     return nock(webhookUrl.origin)
       .post(webhookUrl.pathname, (body): boolean => {
         expect(body.type).toEqual(type)
@@ -40,7 +44,7 @@ describe('Invoice Service', (): void => {
         expect(body.data.invoice.active).toEqual(false)
         return true
       })
-      .reply(200)
+      .reply(status)
   }
 
   beforeAll(
@@ -168,64 +172,146 @@ describe('Invoice Service', (): void => {
         })
       ).resolves.toBeUndefined()
 
-      const scope = mockWebhookServer(invoice.id, EventType.InvoicePaid)
       await invoiceService.handlePayment(invoice.id)
-      expect(scope.isDone()).toBe(true)
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: false
       })
     })
   })
 
-  describe('deactivateNext', (): void => {
-    test('Does not deactivate a not-expired invoice', async (): Promise<void> => {
-      const invoiceId = (
-        await invoiceService.create({
+  describe('processNext', (): void => {
+    test('Does not process not-expired/deactivated invoice', async (): Promise<void> => {
+      const { id: invoiceId } = await invoiceService.create({
+        accountId,
+        amount: BigInt(123),
+        description: 'Test invoice',
+        expiresAt: new Date(Date.now() + 30_000)
+      })
+      await expect(invoiceService.processNext()).resolves.toBeUndefined()
+      await expect(invoiceService.get(invoiceId)).resolves.toMatchObject({
+        active: true
+      })
+    })
+
+    describe('handleExpired', (): void => {
+      test('Deactivates an expired invoice with received money', async (): Promise<void> => {
+        const invoice = await invoiceService.create({
           accountId,
           amount: BigInt(123),
           description: 'Test invoice',
-          expiresAt: new Date(Date.now() + 30_000)
+          expiresAt: new Date(Date.now() - 40_000)
         })
-      ).id
-      await expect(invoiceService.deactivateNext()).resolves.toBeUndefined()
-      const invoice = await invoiceService.get(invoiceId)
-      if (!invoice) throw new Error('invoice was deleted')
-      expect(invoice.active).toBe(true)
-    })
+        await expect(
+          accountingService.createDeposit({
+            id: uuid(),
+            accountId: invoice.id,
+            amount: BigInt(1)
+          })
+        ).resolves.toBeUndefined()
 
-    test('Deactivates an expired invoice with received money', async (): Promise<void> => {
-      const invoice = await invoiceService.create({
-        accountId,
-        amount: BigInt(123),
-        description: 'Test invoice',
-        expiresAt: new Date(Date.now() - 40_000)
+        await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
+        const invoiceAfter = await invoiceService.get(invoice.id)
+        if (!invoiceAfter) throw new Error('invoice was deleted')
+        expect(invoiceAfter.active).toBe(false)
       })
-      await expect(
-        accountingService.createDeposit({
-          id: uuid(),
-          accountId: invoice.id,
-          amount: BigInt(1)
+
+      test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
+        const invoice = await invoiceService.create({
+          accountId,
+          amount: BigInt(123),
+          description: 'Test invoice',
+          expiresAt: new Date(Date.now() - 40_000)
         })
-      ).resolves.toBeUndefined()
-
-      const scope = mockWebhookServer(invoice.id, EventType.InvoiceExpired)
-      await expect(invoiceService.deactivateNext()).resolves.toBe(invoice.id)
-      expect(scope.isDone()).toBe(true)
-      const invoiceAfter = await invoiceService.get(invoice.id)
-      if (!invoiceAfter) throw new Error('invoice was deleted')
-      expect(invoiceAfter.active).toBe(false)
-    })
-
-    test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
-      const invoice = await invoiceService.create({
-        accountId,
-        amount: BigInt(123),
-        description: 'Test invoice',
-        expiresAt: new Date(Date.now() - 40_000)
+        await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
+        expect(await invoiceService.get(invoice.id)).toBeUndefined()
       })
-      await expect(invoiceService.deactivateNext()).resolves.toBe(invoice.id)
-      expect(await invoiceService.get(invoice.id)).toBeUndefined()
     })
+
+    describe.each`
+      event                       | expiresAt  | amountReceived
+      ${EventType.InvoiceExpired} | ${-40_000} | ${BigInt(1)}
+      ${EventType.InvoicePaid}    | ${30_000}  | ${BigInt(123)}
+    `(
+      'handleDeactivated ($event)',
+      ({ event, expiresAt, amountReceived }): void => {
+        let invoice: Invoice
+
+        beforeEach(
+          async (): Promise<void> => {
+            invoice = await invoiceService.create({
+              accountId,
+              amount: BigInt(123),
+              expiresAt: new Date(Date.now() + expiresAt),
+              description: 'Test invoice'
+            })
+            await expect(
+              accountingService.createDeposit({
+                id: uuid(),
+                accountId: invoice.id,
+                amount: amountReceived
+              })
+            ).resolves.toBeUndefined()
+            if (event === EventType.InvoiceExpired) {
+              await expect(invoiceService.processNext()).resolves.toBe(
+                invoice.id
+              )
+            } else {
+              await invoiceService.handlePayment(invoice.id)
+            }
+            invoice = (await invoiceService.get(invoice.id)) as Invoice
+            expect(invoice.active).toBe(false)
+            expect(invoice.webhookId).not.toBeNull()
+            await expect(
+              accountingService.getTotalReceived(invoice.id)
+            ).resolves.toEqual(amountReceived)
+            await expect(
+              accountingService.getBalance(invoice.id)
+            ).resolves.toEqual(amountReceived)
+          }
+        )
+
+        test('Withdraws invoice liquidity', async (): Promise<void> => {
+          const scope = mockWebhookServer(invoice.id, event)
+          await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
+          expect(scope.isDone()).toBe(true)
+          await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+            webhookId: null
+          })
+          await expect(
+            accountingService.getBalance(invoice.id)
+          ).resolves.toEqual(BigInt(0))
+        })
+
+        test("Doesn't withdraw on webhook error", async (): Promise<void> => {
+          const scope = mockWebhookServer(invoice.id, event, 504)
+          await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
+          expect(scope.isDone()).toBe(true)
+          await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+            webhookId: invoice.webhookId,
+            webhookAttempts: 1
+          })
+          await expect(
+            accountingService.getBalance(invoice.id)
+          ).resolves.toEqual(amountReceived)
+        })
+
+        test("Doesn't withdraw on webhook timeout", async (): Promise<void> => {
+          const scope = nock(webhookUrl.origin)
+            .post(webhookUrl.pathname)
+            .delayConnection(Config.webhookTimeout + 1)
+            .reply(200)
+          await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
+          expect(scope.isDone()).toBe(true)
+          await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+            webhookId: invoice.webhookId,
+            webhookAttempts: 1
+          })
+          await expect(
+            accountingService.getBalance(invoice.id)
+          ).resolves.toEqual(amountReceived)
+        })
+      }
+    )
   })
 
   describe('Invoice pagination', (): void => {
