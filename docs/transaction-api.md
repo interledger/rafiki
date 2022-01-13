@@ -175,7 +175,7 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 ### `PaymentState`
 
 - `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING`. On failure, transition to `Cancelled`.
-- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `Sending`. Otherwise, transitions to `Cancelled` if cancelled by the user or when the quote expires.
+- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `SENDING`. Otherwise, transitions to `CANCELLED` if cancelled by the user or when the quote expires.
 - `SENDING`: Stream payment from the payment account to the destination.
 - `CANCELLED`: The payment failed. (Though some money may have been delivered). Requoting transitions to `Quoting`.
 - `COMPLETED`: Successful completion.
