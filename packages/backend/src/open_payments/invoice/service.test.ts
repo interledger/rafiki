@@ -1,3 +1,4 @@
+import assert from 'assert'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import nock from 'nock'
@@ -72,6 +73,7 @@ describe('Invoice Service', (): void => {
 
   afterEach(
     async (): Promise<void> => {
+      jest.useRealTimers()
       await truncateTables(knex)
     }
   )
@@ -95,7 +97,8 @@ describe('Invoice Service', (): void => {
       const accountService = await deps.use('accountService')
       expect(invoice).toMatchObject({
         id: invoice.id,
-        account: await accountService.get(accountId)
+        account: await accountService.get(accountId),
+        processAt: new Date(invoice.expiresAt.getTime() + 30_000)
       })
       const retrievedInvoice = await invoiceService.get(invoice.id)
       if (!retrievedInvoice) throw new Error('invoice not found')
@@ -172,15 +175,19 @@ describe('Invoice Service', (): void => {
         })
       ).resolves.toBeUndefined()
 
+      const now = new Date()
+      jest.useFakeTimers('modern')
+      jest.setSystemTime(now)
       await invoiceService.handlePayment(invoice.id)
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-        active: false
+        active: false,
+        processAt: now
       })
     })
   })
 
   describe('processNext', (): void => {
-    test('Does not process not-expired/deactivated invoice', async (): Promise<void> => {
+    test('Does not process not-expired active invoice', async (): Promise<void> => {
       const { id: invoiceId } = await invoiceService.create({
         accountId,
         amount: BigInt(123),
@@ -209,10 +216,14 @@ describe('Invoice Service', (): void => {
           })
         ).resolves.toBeUndefined()
 
+        const now = new Date()
+        jest.useFakeTimers('modern')
+        jest.setSystemTime(now)
         await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-        const invoiceAfter = await invoiceService.get(invoice.id)
-        if (!invoiceAfter) throw new Error('invoice was deleted')
-        expect(invoiceAfter.active).toBe(false)
+        await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+          active: false,
+          processAt: now
+        })
       })
 
       test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
@@ -260,7 +271,7 @@ describe('Invoice Service', (): void => {
             }
             invoice = (await invoiceService.get(invoice.id)) as Invoice
             expect(invoice.active).toBe(false)
-            expect(invoice.webhookId).not.toBeNull()
+            expect(invoice.processAt).not.toBeNull()
             await expect(
               accountingService.getTotalReceived(invoice.id)
             ).resolves.toEqual(amountReceived)
@@ -275,7 +286,8 @@ describe('Invoice Service', (): void => {
           await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
           expect(scope.isDone()).toBe(true)
           await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            webhookId: null
+            processAt: null,
+            webhookAttempts: 0
           })
           await expect(
             accountingService.getBalance(invoice.id)
@@ -283,11 +295,12 @@ describe('Invoice Service', (): void => {
         })
 
         test("Doesn't withdraw on webhook error", async (): Promise<void> => {
+          assert.ok(invoice.processAt)
           const scope = mockWebhookServer(invoice.id, event, 504)
           await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
           expect(scope.isDone()).toBe(true)
           await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            webhookId: invoice.webhookId,
+            processAt: new Date(invoice.processAt.getTime() + 10_000),
             webhookAttempts: 1
           })
           await expect(
@@ -296,6 +309,7 @@ describe('Invoice Service', (): void => {
         })
 
         test("Doesn't withdraw on webhook timeout", async (): Promise<void> => {
+          assert.ok(invoice.processAt)
           const scope = nock(webhookUrl.origin)
             .post(webhookUrl.pathname)
             .delayConnection(Config.webhookTimeout + 1)
@@ -303,7 +317,7 @@ describe('Invoice Service', (): void => {
           await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
           expect(scope.isDone()).toBe(true)
           await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            webhookId: invoice.webhookId,
+            processAt: new Date(invoice.processAt.getTime() + 10_000),
             webhookAttempts: 1
           })
           await expect(
