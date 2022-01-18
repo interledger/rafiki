@@ -207,7 +207,7 @@ async function handleDeactivated(
       id: invoice.id,
       accountId: invoice.id,
       amount: amountReceived,
-      timeout: BigInt(deps.webhookService.timeout) * BigInt(1e9) // ms -> ns
+      timeout: BigInt(deps.webhookService.timeout) * BigInt(1e6) // ms -> ns
     })
     if (error) throw error
 

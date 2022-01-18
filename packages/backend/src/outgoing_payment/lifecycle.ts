@@ -357,7 +357,7 @@ export async function handleCancelledOrCompleted(
       id: payment.webhookId,
       accountId: payment.id,
       amount: balance,
-      timeout: BigInt(deps.webhookService.timeout) * BigInt(1e9) // ms -> ns
+      timeout: BigInt(deps.webhookService.timeout) * BigInt(1e6) // ms -> ns
     })
     if (error) throw error
   }
