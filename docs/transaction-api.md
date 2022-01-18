@@ -4,21 +4,21 @@
 
 ### Payment creation
 
-A user creates a payment by passing a `PaymentIntent` to `Mutation.createOutgoingPayment`. If the payment destination (the payment pointer or invoice URL) is successfully resolved, the payment is created in the `Quoting` state.
+A user creates a payment by passing a `PaymentIntent` to `Mutation.createOutgoingPayment`. If the payment destination (the payment pointer or invoice URL) is successfully resolved, the payment is created in the `QUOTING` state.
 
 If the payment destination cannot be resolved, no payment is created and the query returns an error.
 
-### Quoting
+### QUOTING
 
-To begin a payment attempt, an instance acquires a lock to setup and quote the payment, advancing it from `Quoting` to the `Funding` state.
+To begin a payment attempt, an instance acquires a lock to setup and quote the payment, advancing it from `QUOTING` to the `FUNDING` state.
 
 First, the recipient Open Payments account or invoice is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
 
 Quotes can end in 3 states:
 
-1. Success. The STREAM sender successfully established a connection to the recipient, and discovered rates and the path capacity. This advances the state to `Funding`. The parameters of the quote are persisted so they may be resumed if the payment is funded. Rafiki also assigns a deadline based on the expected validity of its slippage parameters for the wallet to fund the payment.
-2. Irrevocable failure. In cases such as if the payment pointer or account URL was semantically invalid, the invoice was already paid, a terminal ILP Reject was encountered, or the rate was insufficient, the payment is unlikely to ever succeed, or requires some manual intervention. These cases advance the state to `Cancelled`.
-3. Recoverable failure. In the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available, Rafiki may elect to automatically retry the quote. This returns the state to `Quoting`, but internally tracks that the quote failed and when to schedule another attempt.
+1. Success. The STREAM sender successfully established a connection to the recipient, and discovered rates and the path capacity. This advances the state to `FUNDING`. The parameters of the quote are persisted so they may be resumed if the payment is funded. Rafiki also assigns a deadline based on the expected validity of its slippage parameters for the wallet to fund the payment.
+2. Irrevocable failure. In cases such as if the payment pointer or account URL was semantically invalid, the invoice was already paid, a terminal ILP Reject was encountered, or the rate was insufficient, the payment is unlikely to ever succeed, or requires some manual intervention. These cases advance the state to `CANCELLED`.
+3. Recoverable failure. In the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available, Rafiki may elect to automatically retry the quote. This returns the state to `QUOTING`, but internally tracks that the quote failed and when to schedule another attempt.
 
 After the quote ends and state advances, the lock on the payment is released.
 
@@ -32,30 +32,32 @@ This step is necessary so the end user can precisely know the maximum amount of 
 
 Authorization ends in two possible states:
 
-1. Approval. If the user approves the payment before its funding deadline, or `autoApprove` was `true`, the wallet funds the payment and the state advances to `Sending`.
+1. Approval. If the user approves the payment before its funding deadline, or `autoApprove` was `true`, the wallet funds the payment and the state advances to `SENDING`.
 
-2. Cancellation. If the user explicitly cancels the quote, or the funding deadline is exceeded, the state advances to `Cancelled`. In the latter case, too much time has elapsed for the enforced exchange rate to remain accurate.
+2. Cancellation. If the user explicitly cancels the quote, or the funding deadline is exceeded, the state advances to `CANCELLED`. In the latter case, too much time has elapsed for the enforced exchange rate to remain accurate.
 
 ### Payment execution
 
-To send, an instance acquires a lock on a payment with a `Sending` state.
+To send, an instance acquires a lock on a payment with a `SENDING` state.
 
-The instance sends the payment with STREAM, which uses the quote parameters acquired during the `Quoting` state.
+The instance sends the payment with STREAM, which uses the quote parameters acquired during the `QUOTING` state.
 
 After the payment completes, the instance releases the lock on the payment and advances the state depending upon the outcome:
 
-1. Success. If the STREAM sender successfully fulfilled the completion criteria of the payment, sending or delivering the requisite amount, the payment is complete. The instance advances the state to `Completed`, the final state of the payment.
-2. Irrevocable failure. In cases such as if the exchange rate changed (the payment cannot be completed within the parameters of the quote), the receiver closed the connection, or a terminal ILP Reject was encountered, the payment failed permanently. Manual intervention is required to quote and retry the payment, so the state advances to `Cancelled`.
+1. Success. If the STREAM sender successfully fulfilled the completion criteria of the payment, sending or delivering the requisite amount, the payment is complete. The instance advances the state to `COMPLETED`, the final state of the payment.
+2. Irrevocable failure. In cases such as if the exchange rate changed (the payment cannot be completed within the parameters of the quote), the receiver closed the connection, or a terminal ILP Reject was encountered, the payment failed permanently. Manual intervention is required to quote and retry the payment, so the state advances to `CANCELLED`.
 
-   After too many recoverable failures and attempts, Rafiki may also consider a payment permanently failed, advancing the state to `Cancelled`.
+   After too many recoverable failures and attempts, Rafiki may also consider a payment permanently failed, advancing the state to `CANCELLED`.
 
-3. Recoverable failure. In cases such as an idle timeout, Rafiki may elect to automatically retry the payment. The state remains `Sending`, but internally tracks that the payment failed and when to schedule another attempt.
+3. Recoverable failure. In cases such as an idle timeout, Rafiki may elect to automatically retry the payment. The state remains `SENDING`, but internally tracks that the payment failed and when to schedule another attempt.
 
-In the `Completed` and `Cancelled` cases, the wallet is notifed of any remaining funds in the payment account via `outgoing_payment.completed` and `outgoing_payment.cancelled` [webhook events](#webhooks). Note: if the payment is retried, the same payment account is used for the subsequent attempt.
+### Payment resolution
 
-### Manual recovery
+In the `COMPLETED` and `CANCELLED` cases, the wallet is notifed of any remaining funds in the payment account via `outgoing_payment.completed` and `outgoing_payment.cancelled` [webhook events](#webhooks). Note: if the payment is retried, the same payment account is used for the subsequent attempt.
 
-A payment in the `Cancelled` state may be explicitly retried ("requoted") by the user. The retry will quote (and eventually attempt to send) the remainder of the payment:
+#### Manual recovery
+
+A payment in the `CANCELLED` state may be explicitly retried ("requoted") by the user. The retry will quote (and eventually attempt to send) the remainder of the payment:
 
 - A `FixedSend` payment will attempt to pay `intent.amountToSend - amountAlreadySent`.
 - A `FixedDelivery` payment will attempt to pay the remaining `invoice.amount - invoice.received` (according to the remote invoice state).
@@ -87,23 +89,39 @@ Rafiki sends webhook events to notify the wallet of payment lifecycle states tha
 
 Webhook event handlers must be idempotent.
 
-> **_NOTE:_**
->
-> Calls to the following are idempotent:
->
-> - `Mutation.createInvoiceWithdrawal`
-> - `Mutation.createOutgoingPaymentWithdrawal`
-> - `Mutation.requoteOutgoingPaymentWithdrawal`
->
-> Calling `Mutation.fundOutgoingPayment` is not idempotent. However, it will not succeed if the payment is not currently in the `Funding` state. Additionally, an overfunded payment will not send more than the quoted amount.
-
 ### `EventType`
 
-- `invoice.expired`: Invoice has expired. Call `Mutation.createInvoiceWithdrawal`.
-- `invoice.paid`: Invoice has received its specified `amount`. Call `Mutation.createInvoiceWithdrawal`.
-- `outgoing_payment.funding`: Payment needs liquidity in order to send `quote.maxSourceAmount`. Call `Mutation.fundOutgoingPayment`.
-- `outgoing_payment.cancelled`: Payment was cancelled. Call `Mutation.createOutgoingPaymentWithdrawal` and/or `Mutation.requoteOutgoingPaymentWithdrawal`.
-- `outgoing_payment.completed`: Payment completed. Call `Mutation.createOutgoingPaymentWithdrawal`.
+#### `invoice.expired`
+
+Invoice has expired.
+
+Credit `invoice.received` to the wallet balance for `invoice.accountId` and return `200`.
+
+#### `invoice.paid`
+
+Invoice has received its specified `amount`.
+
+Credit `invoice.received` to the wallet balance for `invoice.accountId` and return `200`.
+
+#### `outgoing_payment.funding`
+
+Payment needs liquidity in order to send quoted amount.
+
+To fund the payment, deduct `quote.maxSourceAmount` from the wallet balance for `payment.accountId` and return `200`.
+
+To cancel the payment, return `403`.
+
+#### `outgoing_payment.cancelled`
+
+Payment was cancelled.
+
+Credit `payment.balance` to the wallet balance for `payment.accountId` and return `200` or `205` to retry the payment.
+
+#### `outgoing_payment.completed`
+
+Payment completed sending the quoted amount.
+
+Credit `payment.balance` to the wallet balance for `payment.accountId` and return `200`.
 
 ### Webhook Event
 
@@ -156,10 +174,10 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 
 ### `PaymentState`
 
-- `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING` or `SENDING` if already funded. On failure, transition to `Cancelled`.
-- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `Sending`. Otherwise, transitions to `Cancelled` when the quote expires.
+- `QUOTING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING`. On failure, transition to `CANCELLED`.
+- `FUNDING`: Awaiting the wallet to add payment liquidity. If `intent.autoApprove` is not set, the wallet gets user approval before reserving money from the user's wallet account. On success, transition to `SENDING`. Otherwise, transitions to `CANCELLED` if cancelled by the user or when the quote expires.
 - `SENDING`: Stream payment from the payment account to the destination.
-- `CANCELLED`: The payment failed. (Though some money may have been delivered). Requoting transitions to `Quoting`.
+- `CANCELLED`: The payment failed. (Though some money may have been delivered). Requoting transitions to `QUOTING`.
 - `COMPLETED`: Successful completion.
 
 ### `PaymentType`

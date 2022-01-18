@@ -2,6 +2,7 @@ import assert from 'assert'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import Knex from 'knex'
+import { v4 as uuid } from 'uuid'
 
 import {
   EventType,
@@ -30,6 +31,7 @@ describe('Webhook Service', (): void => {
   let payment: OutgoingPayment
   let amountReceived: bigint
   let amountSent: bigint
+  let balance: bigint
   let webhookUrl: URL
   const WEBHOOK_SECRET = 'test secret'
 
@@ -61,6 +63,7 @@ describe('Webhook Service', (): void => {
       })
       amountReceived = BigInt(5)
       amountSent = BigInt(10)
+      balance = BigInt(0)
       webhookUrl = new URL(config.webhookUrl)
     }
   )
@@ -76,6 +79,7 @@ describe('Webhook Service', (): void => {
     it.each(Object.values(EventType).map((type) => [type]))(
       '%s',
       async (type): Promise<void> => {
+        const id = uuid()
         nock(webhookUrl.origin)
           .post(webhookUrl.pathname, function (this: Definition, body) {
             assert.ok(this.headers)
@@ -87,9 +91,12 @@ describe('Webhook Service', (): void => {
                 Config.signatureVersion
               )
             ).toEqual(signature)
+            expect(body.id).toEqual(id)
             expect(body.type).toEqual(type)
             if (isPaymentEventType(type)) {
-              expect(body.data).toEqual(paymentToData(payment, amountSent))
+              expect(body.data).toEqual(
+                paymentToData(payment, amountSent, balance)
+              )
             } else {
               expect(body.data).toEqual(invoiceToData(invoice, amountReceived))
             }
@@ -99,12 +106,15 @@ describe('Webhook Service', (): void => {
 
         if (isPaymentEventType(type)) {
           await webhookService.send({
+            id,
             type,
             payment,
-            amountSent
+            amountSent,
+            balance
           })
         } else {
           await webhookService.send({
+            id,
             type,
             invoice,
             amountReceived
@@ -118,6 +128,7 @@ describe('Webhook Service', (): void => {
 
       await expect(
         webhookService.send({
+          id: uuid(),
           type: EventType.InvoicePaid,
           invoice,
           amountReceived

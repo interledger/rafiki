@@ -4,16 +4,11 @@ import {
   OutgoingPayment as SchemaOutgoingPayment,
   OutgoingPaymentResolvers,
   OutgoingPaymentConnectionResolvers,
-  PaymentState as SchemaPaymentState,
   AccountResolvers,
   PaymentType as SchemaPaymentType,
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
-import {
-  isOutgoingPaymentError,
-  OutgoingPaymentError
-} from '../../outgoing_payment/errors'
 import { OutgoingPayment } from '../../outgoing_payment/model'
 import { ApolloContext } from '../../app'
 
@@ -100,100 +95,6 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
     }))
 }
 
-export const requoteOutgoingPayment: MutationResolvers<ApolloContext>['requoteOutgoingPayment'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['OutgoingPaymentResponse'] => {
-  const outgoingPaymentService = await ctx.container.use(
-    'outgoingPaymentService'
-  )
-  return outgoingPaymentService
-    .requote(args.paymentId)
-    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
-      isOutgoingPaymentError(paymentOrErr)
-        ? {
-            code: '400',
-            success: false,
-            message: paymentOrErr
-          }
-        : {
-            code: '200',
-            success: true,
-            payment: paymentToGraphql(paymentOrErr)
-          }
-    )
-    .catch((err: Error) => ({
-      code: '500',
-      success: false,
-      message: err.message
-    }))
-}
-
-export const fundOutgoingPayment: MutationResolvers<ApolloContext>['fundOutgoingPayment'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['OutgoingPaymentResponse'] => {
-  const outgoingPaymentService = await ctx.container.use(
-    'outgoingPaymentService'
-  )
-  return outgoingPaymentService
-    .fund({
-      id: args.input.id,
-      amount: args.input.amount,
-      transferId: args.input.transferId
-    })
-    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
-      isOutgoingPaymentError(paymentOrErr)
-        ? {
-            code: '400',
-            success: false,
-            message: paymentOrErr
-          }
-        : {
-            code: '200',
-            success: true,
-            payment: paymentToGraphql(paymentOrErr)
-          }
-    )
-    .catch((err: Error) => ({
-      code: '500',
-      success: false,
-      message: err.message
-    }))
-}
-
-export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutgoingPayment'] = async (
-  parent,
-  args,
-  ctx
-): ResolversTypes['OutgoingPaymentResponse'] => {
-  const outgoingPaymentService = await ctx.container.use(
-    'outgoingPaymentService'
-  )
-  return outgoingPaymentService
-    .cancel(args.paymentId)
-    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
-      isOutgoingPaymentError(paymentOrErr)
-        ? {
-            code: '400',
-            success: false,
-            message: paymentOrErr
-          }
-        : {
-            code: '200',
-            success: true,
-            payment: paymentToGraphql(paymentOrErr)
-          }
-    )
-    .catch((err: Error) => ({
-      code: '500',
-      success: false,
-      message: err.message
-    }))
-}
-
 export const getAccountOutgoingPayments: AccountResolvers<ApolloContext>['outgoingPayments'] = async (
   parent,
   args,
@@ -277,7 +178,7 @@ export function paymentToGraphql(
   return {
     id: payment.id,
     accountId: payment.accountId,
-    state: SchemaPaymentState[payment.state],
+    state: payment.state,
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
     intent: payment.intent,

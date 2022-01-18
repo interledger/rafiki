@@ -1,5 +1,6 @@
 import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
+import { v4 as uuid } from 'uuid'
 import { Account } from '../open_payments/account/model'
 import { BaseModel } from '../shared/baseModel'
 
@@ -25,6 +26,8 @@ export class OutgoingPayment extends BaseModel {
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
+  // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the webhookId. If `$beforeUpdate` set `webhookId = undefined`, the patch would ignore the modification.
+  public webhookId?: string | null
 
   public intent!: PaymentIntent
 
@@ -71,6 +74,15 @@ export class OutgoingPayment extends BaseModel {
       }
       if (opts.old['state'] !== this.state) {
         this.stateAttempts = 0
+        switch (this.state) {
+          case PaymentState.Funding:
+          case PaymentState.Cancelled:
+          case PaymentState.Completed:
+            this.webhookId = uuid()
+            break
+          default:
+            this.webhookId = null
+        }
       }
     }
   }
@@ -126,19 +138,19 @@ export class OutgoingPayment extends BaseModel {
 
 export enum PaymentState {
   // Initial state. In this state, an empty trustline account is generated, and the payment is automatically resolved & quoted.
-  // On success, transition to `Funding` or `Sending` if already funded.
-  // On failure, transition to `Cancelled`.
-  Quoting = 'Quoting',
+  // On success, transition to `FUNDING` or `SENDING` if already funded.
+  // On failure, transition to `CANCELLED`.
+  Quoting = 'QUOTING',
   // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
-  // On success, transition to `Sending`.
-  Funding = 'Funding',
+  // On success, transition to `SENDING`.
+  Funding = 'FUNDING',
   // Pay from the trustline account to the destination.
-  // On success, transition to `Completed`.
-  Sending = 'Sending',
+  // On success, transition to `COMPLETED`.
+  Sending = 'SENDING',
 
   // The payment failed. (Though some money may have been delivered).
-  // Requoting transitions to `Quoting`.
-  Cancelled = 'Cancelled',
+  // Requoting transitions to `QUOTING`.
+  Cancelled = 'CANCELLED',
   // Successful completion.
-  Completed = 'Completed'
+  Completed = 'COMPLETED'
 }

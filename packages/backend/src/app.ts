@@ -140,8 +140,8 @@ export class App {
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
         process.nextTick(() => this.processOutgoingPayment())
       }
-      for (let i = 0; i < this.config.deactivateInvoiceWorkers; i++) {
-        process.nextTick(() => this.deactivateInvoice())
+      for (let i = 0; i < this.config.invoiceWorkers; i++) {
+        process.nextTick(() => this.processInvoice())
       }
     }
   }
@@ -271,20 +271,20 @@ export class App {
       })
   }
 
-  private async deactivateInvoice(): Promise<void> {
+  private async processInvoice(): Promise<void> {
     const invoiceService = await this.container.use('invoiceService')
     return invoiceService
-      .deactivateNext()
+      .processNext()
       .catch((err) => {
-        this.logger.warn({ error: err.message }, 'deactivateInvoice error')
+        this.logger.warn({ error: err.message }, 'processInvoice error')
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.deactivateInvoice())
+        if (hasMoreWork) process.nextTick(() => this.processInvoice())
         else
           setTimeout(
-            () => this.deactivateInvoice(),
-            this.config.deactivateInvoiceWorkerIdle
+            () => this.processInvoice(),
+            this.config.invoiceWorkerIdle
           ).unref()
       })
   }

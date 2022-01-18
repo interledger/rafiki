@@ -50,8 +50,8 @@ export async function handleQuoting(
   if (payment.intent.amountToSend) {
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
-      // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.
-      // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the Completed state.
+      // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=COMPLETED didn't commit. Then the payment retried and ended up here.
+      // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the COMPLETED state.
       deps.logger.error(
         {
           amountToSend,
@@ -60,7 +60,9 @@ export async function handleQuoting(
         },
         'quote amountToSend bounds error'
       )
-      await handleCompleted(deps, payment, amountSent)
+      await payment.$query(deps.knex).patch({
+        state: PaymentState.Completed
+      })
       return
     }
   }
@@ -91,10 +93,12 @@ export async function handleQuoting(
       if (err === Pay.PaymentError.InvoiceAlreadyPaid) return null
       throw err
     })
-  // InvoiceAlreadyPaid: the invoice was already paid, either by this payment (which retried due to a failed Sending→Completed transition commit) or another payment entirely.
+  // InvoiceAlreadyPaid: the invoice was already paid, either by this payment (which retried due to a failed SENDING→COMPLETED transition commit) or another payment entirely.
   if (quote === null) {
     deps.logger.warn('quote invoice already paid')
-    await handleCompleted(deps, payment, amountSent)
+    await payment.$query(deps.knex).patch({
+      state: PaymentState.Completed
+    })
     return
   }
 
@@ -125,14 +129,6 @@ export async function handleQuoting(
       amountSent
     }
   })
-
-  if (state === PaymentState.Funding) {
-    await deps.webhookService.send({
-      type: EventType.PaymentFunding,
-      payment,
-      amountSent
-    })
-  }
 }
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -146,13 +142,44 @@ export async function handleFunding(
     throw LifecycleError.QuoteExpired
   }
 
-  deps.logger.error(
-    {
-      activationDeadline: payment.quote.activationDeadline.getTime(),
-      now: now.getTime()
-    },
-    "handleFunding for payment quote that isn't expired"
-  )
+  if (!payment.webhookId) throw LifecycleError.MissingWebhook
+
+  const amountSent = await deps.accountingService.getTotalSent(payment.id)
+  const balance = await deps.accountingService.getBalance(payment.id)
+  if (amountSent === undefined || balance === undefined) {
+    throw LifecycleError.MissingBalance
+  }
+
+  try {
+    const { status } = await deps.webhookService.send({
+      id: payment.webhookId,
+      type: EventType.PaymentFunding,
+      payment,
+      amountSent,
+      balance
+    })
+
+    if (status === 200) {
+      const error = await deps.accountingService.createDeposit({
+        id: payment.webhookId,
+        accountId: payment.id,
+        amount: payment.quote.maxSourceAmount
+      })
+      if (error) {
+        throw new Error('Unable to fund payment. error=' + error)
+      }
+      await payment.$query(deps.knex).patch({ state: PaymentState.Sending })
+    }
+  } catch (err) {
+    if (err.isAxiosError && err.response.status === 403) {
+      await payment.$query(deps.knex).patch({
+        state: PaymentState.Cancelled,
+        error: LifecycleError.CancelledByWebhook
+      })
+    } else {
+      throw err
+    }
+  }
 }
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -189,7 +216,7 @@ export async function handleSending(
     throw LifecycleError.MissingBalance
   }
 
-  // Due to Sending→Sending retries, the quote's amount parameters may need adjusting.
+  // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
   const amountSentSinceQuote = amountSent - payment.quote.amountSent
   const newMaxSourceAmount =
     payment.quote.maxSourceAmount - amountSentSinceQuote
@@ -233,7 +260,9 @@ export async function handleSending(
       },
       'handleSending payment was already paid'
     )
-    await handleCompleted(deps, payment, amountSent)
+    await payment.$query(deps.knex).patch({
+      state: PaymentState.Completed
+    })
     return
   } else if (
     newMaxSourceAmount <= BigInt(0) ||
@@ -306,47 +335,65 @@ export async function handleSending(
 
   if (receipt.error) throw receipt.error
 
-  const totalAmountSent = await deps.accountingService.getTotalSent(payment.id)
-  if (totalAmountSent === undefined) {
-    throw LifecycleError.MissingBalance
-  }
-  await handleCompleted(deps, payment, totalAmountSent)
-}
-
-export async function handleCancelled(
-  deps: ServiceDependencies,
-  payment: OutgoingPayment,
-  error: string
-): Promise<void> {
-  await payment.$query(deps.knex).patch({
-    state: PaymentState.Cancelled,
-    error
-  })
-
-  const amountSent = await deps.accountingService.getTotalSent(payment.id)
-  if (amountSent === undefined) {
-    throw LifecycleError.MissingBalance
-  }
-
-  await deps.webhookService.send({
-    type: EventType.PaymentCancelled,
-    payment,
-    amountSent
-  })
-}
-
-const handleCompleted = async (
-  deps: ServiceDependencies,
-  payment: OutgoingPayment,
-  amountSent: bigint
-): Promise<void> => {
   await payment.$query(deps.knex).patch({
     state: PaymentState.Completed
   })
+}
 
-  await deps.webhookService.send({
-    type: EventType.PaymentCompleted,
-    payment,
-    amountSent
-  })
+export async function handleCancelledOrCompleted(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment
+): Promise<void> {
+  const amountSent = await deps.accountingService.getTotalSent(payment.id)
+  const balance = await deps.accountingService.getBalance(payment.id)
+  if (amountSent === undefined || balance === undefined) {
+    throw LifecycleError.MissingBalance
+  }
+
+  if (!payment.webhookId) throw LifecycleError.MissingWebhook
+
+  if (balance) {
+    const error = await deps.accountingService.createWithdrawal({
+      id: payment.webhookId,
+      accountId: payment.id,
+      amount: balance,
+      timeout: BigInt(deps.webhookService.timeout) * BigInt(1e6) // ms -> ns
+    })
+    if (error) throw error
+  }
+
+  try {
+    const { status } = await deps.webhookService.send({
+      id: payment.webhookId,
+      type:
+        payment.state === PaymentState.Cancelled
+          ? EventType.PaymentCancelled
+          : EventType.PaymentCompleted,
+      payment,
+      amountSent,
+      balance
+    })
+    if (status === 200 || status === 205) {
+      if (balance) {
+        const error = await deps.accountingService.commitWithdrawal(
+          payment.webhookId
+        )
+        if (error) throw error
+      }
+      if (status === 200) {
+        await payment.$query(deps.knex).patch({
+          webhookId: null
+        })
+      } else if (payment.state === PaymentState.Cancelled) {
+        await payment.$query(deps.knex).patch({
+          state: PaymentState.Quoting
+        })
+      }
+    }
+  } catch (error) {
+    if (balance) {
+      await deps.accountingService.rollbackWithdrawal(payment.webhookId)
+    }
+    throw error
+  }
 }

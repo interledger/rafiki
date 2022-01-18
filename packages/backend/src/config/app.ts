@@ -61,8 +61,8 @@ export const Config = {
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 200), // milliseconds
 
-  deactivateInvoiceWorkers: envInt('DEACTIVATE_INVOICE_WORKERS', 1),
-  deactivateInvoiceWorkerIdle: envInt('DEACTIVATE_INVOICE_WORKER_IDLE', 200), // milliseconds
+  invoiceWorkers: envInt('INVOICE_WORKERS', 1),
+  invoiceWorkerIdle: envInt('INVOICE_WORKER_IDLE', 200), // milliseconds
 
   webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
   webhookSecret: process.env.WEBHOOK_SECRET, // optional

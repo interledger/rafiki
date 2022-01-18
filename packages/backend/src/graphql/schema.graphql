@@ -22,14 +22,6 @@ type Mutation {
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
-  "Requote a Cancelled payment."
-  requoteOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
-  "Add liquidity to a Funding payment."
-  fundOutgoingPayment(
-    input: FundOutgoingPaymentInput!
-  ): OutgoingPaymentResponse!
-  "Cancel a Funding payment."
-  cancelOutgoingPayment(paymentId: String!): OutgoingPaymentResponse!
 
   createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
 
@@ -72,16 +64,6 @@ type Mutation {
   createAccountWithdrawal(
     input: CreateAccountWithdrawalInput!
   ): AccountWithdrawalMutationResponse
-
-  "Create liquidity withdrawal from invoice"
-  createInvoiceWithdrawal(
-    input: CreateInvoiceWithdrawalInput!
-  ): InvoiceWithdrawalMutationResponse
-
-  "Create liquidity withdrawal from outgoing payment"
-  createOutgoingPaymentWithdrawal(
-    input: CreateOutgoingPaymentWithdrawalInput!
-  ): OutgoingPaymentWithdrawalMutationResponse
 
   "Finalize liquidity withdrawal"
   finalizeLiquidityWithdrawal(
@@ -167,15 +149,6 @@ input AssetInput {
   scale: Int!
 }
 
-input FundOutgoingPaymentInput {
-  "The id of the outgoing payment to add liquidity."
-  id: String!
-  "Amount of liquidity to add."
-  amount: UInt64!
-  "The id of the transfer."
-  transferId: String!
-}
-
 input AddPeerLiquidityInput {
   "The id of the peer to add liquidity."
   peerId: String!
@@ -215,20 +188,6 @@ input CreateAssetLiquidityWithdrawalInput {
 input CreateAccountWithdrawalInput {
   "The id of the Open Payments account to create the withdrawal for."
   accountId: String!
-  "The id of the withdrawal."
-  id: String!
-}
-
-input CreateInvoiceWithdrawalInput {
-  "The id of the invoice to create the withdrawal for."
-  invoiceId: String!
-  "The id of the withdrawal."
-  id: String!
-}
-
-input CreateOutgoingPaymentWithdrawalInput {
-  "The id of the outgoing payment to create the withdrawal for."
-  paymentId: String!
   "The id of the withdrawal."
   id: String!
 }
@@ -449,18 +408,6 @@ type AccountWithdrawal {
   account: Account!
 }
 
-type InvoiceWithdrawal {
-  id: ID!
-  amount: UInt64!
-  invoice: Invoice!
-}
-
-type OutgoingPaymentWithdrawal {
-  id: ID!
-  amount: UInt64!
-  payment: OutgoingPayment!
-}
-
 type CreateAccountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
@@ -507,22 +454,6 @@ type AccountWithdrawalMutationResponse implements MutationResponse {
   message: String!
   error: LiquidityError
   withdrawal: AccountWithdrawal
-}
-
-type InvoiceWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: LiquidityError
-  withdrawal: InvoiceWithdrawal
-}
-
-type OutgoingPaymentWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: LiquidityError
-  withdrawal: OutgoingPaymentWithdrawal
 }
 
 type CreateApiKeyMutationResponse implements MutationResponse {

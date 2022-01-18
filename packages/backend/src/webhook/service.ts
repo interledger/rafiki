@@ -1,8 +1,7 @@
 import { createHmac } from 'crypto'
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import { PaymentType } from '@interledger/pay'
 import { Logger } from 'pino'
-import { v4 as uuid } from 'uuid'
 
 import { IAppConfig } from '../config/app'
 import { Invoice } from '../open_payments/invoice/model'
@@ -27,19 +26,23 @@ export const isPaymentEventType = (type: any): type is PaymentEventType =>
   Object.values(PaymentEventType).includes(type)
 
 interface InvoiceEvent {
+  id: string
   type: InvoiceEventType
   invoice: Invoice
   payment?: never
   amountReceived: bigint
   amountSent?: never
+  balance?: never
 }
 
 interface PaymentEvent {
+  id: string
   type: PaymentEventType
   invoice?: never
   payment: OutgoingPayment
   amountReceived?: never
   amountSent: bigint
+  balance: bigint
 }
 
 export type EventOptions = InvoiceEvent | PaymentEvent
@@ -93,6 +96,7 @@ interface PaymentData {
     outcome: {
       amountSent: string
     }
+    balance: string
   }
 }
 
@@ -107,7 +111,8 @@ export const isPaymentEvent = (event: any): event is PaymentEvent =>
   Object.values(PaymentEventType).includes(event.type)
 
 export interface WebhookService {
-  send(options: EventOptions): Promise<void>
+  send(options: EventOptions): Promise<AxiosResponse>
+  readonly timeout: number
 }
 
 interface ServiceDependencies {
@@ -123,19 +128,20 @@ export async function createWebhookService(
   })
   const deps = { ...deps_, logger }
   return {
-    send: (options) => sendWebhook(deps, options)
+    send: (options) => sendWebhook(deps, options),
+    timeout: deps.config.webhookTimeout
   }
 }
 
 async function sendWebhook(
   deps: ServiceDependencies,
   options: EventOptions
-): Promise<void> {
+): Promise<AxiosResponse> {
   const event = {
-    id: uuid(),
+    id: options.id,
     type: options.type,
     data: isPaymentEvent(options)
-      ? paymentToData(options.payment, options.amountSent)
+      ? paymentToData(options.payment, options.amountSent, options.balance)
       : invoiceToData(options.invoice, options.amountReceived)
   }
 
@@ -151,7 +157,7 @@ async function sendWebhook(
     )
   }
 
-  await axios.post(deps.config.webhookUrl, event, {
+  return await axios.post(deps.config.webhookUrl, event, {
     timeout: deps.config.webhookTimeout,
     headers: requestHeaders
   })
@@ -192,7 +198,8 @@ export function invoiceToData(
 
 export function paymentToData(
   payment: OutgoingPayment,
-  amountSent: bigint
+  amountSent: bigint,
+  balance: bigint
 ): PaymentData {
   return {
     payment: {
@@ -220,7 +227,8 @@ export function paymentToData(
       createdAt: new Date(+payment.createdAt).toISOString(),
       outcome: {
         amountSent: amountSent.toString()
-      }
+      },
+      balance: balance.toString()
     }
   }
 }

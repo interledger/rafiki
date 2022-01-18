@@ -25,4 +25,8 @@ export class Invoice extends BaseModel {
   public description?: string
   public expiresAt!: Date
   public readonly amount!: bigint
+
+  public processAt!: Date | null
+
+  public webhookAttempts!: number
 }
