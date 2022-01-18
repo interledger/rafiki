@@ -345,8 +345,8 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe('processNext', (): void => {
-    describe('Quoting→', (): void => {
-      it('Funding (FixedSend)', async (): Promise<void> => {
+    describe('QUOTING→', (): void => {
+      it('FUNDING (FixedSend)', async (): Promise<void> => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
@@ -382,7 +382,7 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
 
-      it('Funding (FixedDelivery)', async (): Promise<void> => {
+      it('FUNDING (FixedDelivery)', async (): Promise<void> => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
@@ -407,7 +407,7 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
 
-      it('Quoting (rate service error)', async (): Promise<void> => {
+      it('QUOTING (rate service error)', async (): Promise<void> => {
         const mockFn = jest
           .spyOn(ratesService, 'prices')
           .mockImplementation(() => Promise.reject(new Error('fail')))
@@ -435,8 +435,8 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123))
       })
 
-      // This mocks Quoting→Funding, but for it to trigger for real, it would go from Sending→Quoting(retry)→Funding (when the sending partially failed).
-      it('Funding (FixedSend, 0<intent.amountToSend<amountSent)', async (): Promise<void> => {
+      // This mocks QUOTING→FUNDING, but for it to trigger for real, it would go from SENDING→QUOTING(retry)→FUNDING (when the sending partially failed).
+      it('FUNDING (FixedSend, 0<intent.amountToSend<amountSent)', async (): Promise<void> => {
         const payment = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
@@ -453,8 +453,8 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123 - 89))
       })
 
-      // This mocks Quoting→Completed, but for it to trigger for real, it would go from Sending→Quoting(retry)→Completed (when the Sending→Completed transition failed to commit).
-      it('Completed (FixedSend, intent.amountToSend===amountSent)', async (): Promise<void> => {
+      // This mocks QUOTING→COMPLETED, but for it to trigger for real, it would go from SENDING→QUOTING(retry)→COMPLETED (when the SENDING→COMPLETED transition failed to commit).
+      it('COMPLETED (FixedSend, intent.amountToSend===amountSent)', async (): Promise<void> => {
         const payment = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
@@ -470,8 +470,8 @@ describe('OutgoingPaymentService', (): void => {
         await processNext(payment.id, PaymentState.Completed)
       })
 
-      // Maybe another person or payment paid the invoice already. Or it could be like the FixedSend case, where the Sending→Completed transition failed to commit, and this is a retry.
-      it('Completed (FixedDelivery, invoice was already full paid)', async (): Promise<void> => {
+      // Maybe another person or payment paid the invoice already. Or it could be like the FixedSend case, where the SENDING→COMPLETED transition failed to commit, and this is a retry.
+      it('COMPLETED (FixedDelivery, invoice was already full paid)', async (): Promise<void> => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
@@ -483,7 +483,7 @@ describe('OutgoingPaymentService', (): void => {
         await processNext(paymentId, PaymentState.Completed)
       })
 
-      it('Cancelled (destination asset changed)', async (): Promise<void> => {
+      it('CANCELLED (destination asset changed)', async (): Promise<void> => {
         const originalPayment = await outgoingPaymentService.create({
           accountId,
           paymentPointer,
@@ -512,7 +512,7 @@ describe('OutgoingPaymentService', (): void => {
       })
     })
 
-    describe('Funding→', (): void => {
+    describe('FUNDING→', (): void => {
       let payment: OutgoingPayment
 
       beforeEach(
@@ -528,7 +528,7 @@ describe('OutgoingPaymentService', (): void => {
         }
       )
 
-      it('Cancelled (quote expired)', async (): Promise<void> => {
+      it('CANCELLED (quote expired)', async (): Promise<void> => {
         // nock doesn't work with 'modern' fake timers
         // https://github.com/nock/nock/issues/2200
         // jest.useFakeTimers('modern')
@@ -547,7 +547,7 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
 
-      it('Cancelled (wallet cancelled)', async (): Promise<void> => {
+      it('CANCELLED (wallet cancelled)', async (): Promise<void> => {
         const scope = mockWebhookServer(payment.id, PaymentState.Funding, 403)
         await processNext(
           payment.id,
@@ -557,7 +557,7 @@ describe('OutgoingPaymentService', (): void => {
         expect(scope.isDone()).toBe(true)
       })
 
-      it('Sending (payment funded)', async (): Promise<void> => {
+      it('SENDING (payment funded)', async (): Promise<void> => {
         const scope = mockWebhookServer(payment.id, PaymentState.Funding)
         await processNext(payment.id, PaymentState.Sending)
         expect(scope.isDone()).toBe(true)
@@ -568,13 +568,13 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Funding (webhook error)', async (): Promise<void> => {
+      it('FUNDING (webhook error)', async (): Promise<void> => {
         const scope = mockWebhookServer(payment.id, PaymentState.Funding, 504)
         await processNext(payment.id, PaymentState.Funding)
         expect(scope.isDone()).toBe(true)
       })
 
-      it('Funding (webhook timeout)', async (): Promise<void> => {
+      it('FUNDING (webhook timeout)', async (): Promise<void> => {
         const scope = nock(webhookUrl.origin)
           .post(webhookUrl.pathname)
           .delayConnection(Config.webhookTimeout + 1)
@@ -584,7 +584,7 @@ describe('OutgoingPaymentService', (): void => {
       })
     })
 
-    describe('Sending→', (): void => {
+    describe('SENDING→', (): void => {
       beforeEach(
         async (): Promise<void> => {
           // Don't send invoice.paid webhook events
@@ -617,7 +617,7 @@ describe('OutgoingPaymentService', (): void => {
         return paymentId
       }
 
-      it('Completed (FixedSend)', async (): Promise<void> => {
+      it('COMPLETED (FixedSend)', async (): Promise<void> => {
         const paymentId = await setup({
           paymentPointer,
           amountToSend: BigInt(123)
@@ -631,7 +631,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Completed (FixedDelivery)', async (): Promise<void> => {
+      it('COMPLETED (FixedDelivery)', async (): Promise<void> => {
         const paymentId = await setup({
           invoiceUrl
         })
@@ -647,7 +647,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Completed (FixedDelivery, with invoice initially partially paid)', async (): Promise<void> => {
+      it('COMPLETED (FixedDelivery, with invoice initially partially paid)', async (): Promise<void> => {
         const amountAlreadyDelivered = BigInt(34)
         await payInvoice(amountAlreadyDelivered)
         const paymentId = await setup({
@@ -665,7 +665,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Sending (partial payment then retryable Pay error)', async (): Promise<void> => {
+      it('SENDING (partial payment then retryable Pay error)', async (): Promise<void> => {
         mockPay(
           {
             maxSourceAmount: BigInt(10),
@@ -704,7 +704,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Cancelled (non-retryable Pay error)', async (): Promise<void> => {
+      it('CANCELLED (non-retryable Pay error)', async (): Promise<void> => {
         mockPay(
           {
             maxSourceAmount: BigInt(10),
@@ -729,7 +729,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Sending→Completed (partial payment, resume, complete)', async (): Promise<void> => {
+      it('SENDING→COMPLETED (partial payment, resume, complete)', async (): Promise<void> => {
         const mockFn = mockPay(
           {
             maxSourceAmount: BigInt(10),
@@ -761,8 +761,8 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      // Caused by retry after failed Sending→Completed transition commit.
-      it('Completed (FixedSend, already fully paid)', async (): Promise<void> => {
+      // Caused by retry after failed SENDING→COMPLETED transition commit.
+      it('COMPLETED (FixedSend, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
           paymentPointer,
           amountToSend: BigInt(123)
@@ -781,8 +781,8 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      // Caused by retry after failed Sending→Completed transition commit.
-      it('Completed (FixedDelivery, already fully paid)', async (): Promise<void> => {
+      // Caused by retry after failed SENDING→COMPLETED transition commit.
+      it('COMPLETED (FixedDelivery, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
           invoiceUrl
         })
@@ -799,7 +799,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('Cancelled (destination asset changed)', async (): Promise<void> => {
+      it('CANCELLED (destination asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
           invoiceUrl
         })
@@ -934,7 +934,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       if (state === PaymentState.Cancelled) {
-        it('Quoting (withdraw + requote)', async (): Promise<void> => {
+        it('QUOTING (withdraw + requote)', async (): Promise<void> => {
           const scope = mockWebhookServer(paymentId, state, 205)
           await processNext(paymentId, PaymentState.Quoting)
           expect(scope.isDone()).toBe(true)

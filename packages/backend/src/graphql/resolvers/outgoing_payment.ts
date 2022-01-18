@@ -4,7 +4,6 @@ import {
   OutgoingPayment as SchemaOutgoingPayment,
   OutgoingPaymentResolvers,
   OutgoingPaymentConnectionResolvers,
-  PaymentState as SchemaPaymentState,
   AccountResolvers,
   PaymentType as SchemaPaymentType,
   QueryResolvers,
@@ -179,7 +178,7 @@ export function paymentToGraphql(
   return {
     id: payment.id,
     accountId: payment.accountId,
-    state: SchemaPaymentState[payment.state],
+    state: payment.state,
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
     intent: payment.intent,

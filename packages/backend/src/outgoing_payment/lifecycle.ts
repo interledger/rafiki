@@ -50,8 +50,8 @@ export async function handleQuoting(
   if (payment.intent.amountToSend) {
     amountToSend = payment.intent.amountToSend - amountSent
     if (amountToSend <= BigInt(0)) {
-      // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=Completed didn't commit. Then the payment retried and ended up here.
-      // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the Completed state.
+      // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=COMPLETED didn't commit. Then the payment retried and ended up here.
+      // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the COMPLETED state.
       deps.logger.error(
         {
           amountToSend,
@@ -93,7 +93,7 @@ export async function handleQuoting(
       if (err === Pay.PaymentError.InvoiceAlreadyPaid) return null
       throw err
     })
-  // InvoiceAlreadyPaid: the invoice was already paid, either by this payment (which retried due to a failed Sending→Completed transition commit) or another payment entirely.
+  // InvoiceAlreadyPaid: the invoice was already paid, either by this payment (which retried due to a failed SENDING→COMPLETED transition commit) or another payment entirely.
   if (quote === null) {
     deps.logger.warn('quote invoice already paid')
     await payment.$query(deps.knex).patch({
@@ -216,7 +216,7 @@ export async function handleSending(
     throw LifecycleError.MissingBalance
   }
 
-  // Due to Sending→Sending retries, the quote's amount parameters may need adjusting.
+  // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
   const amountSentSinceQuote = amountSent - payment.quote.amountSent
   const newMaxSourceAmount =
     payment.quote.maxSourceAmount - amountSentSinceQuote

@@ -11,11 +11,11 @@ import { IlpPlugin } from './ilp_plugin'
 export const RETRY_BACKOFF_SECONDS = 10
 
 const maxStateAttempts: { [key in PaymentState]: number } = {
-  Quoting: 5, // quoting
-  Funding: Infinity, // waiting for activation
-  Sending: 5, // send money
-  Cancelled: Infinity,
-  Completed: Infinity
+  QUOTING: 5, // quoting
+  FUNDING: Infinity, // waiting for activation
+  SENDING: 5, // send money
+  CANCELLED: Infinity,
+  COMPLETED: Infinity
 }
 
 // Returns the id of the processed payment (if any).

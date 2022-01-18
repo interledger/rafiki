@@ -193,7 +193,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
         expect(query.id).toEqual(payment.id)
         expect(query.accountId).toEqual(payment.accountId)
-        expect(query.state).toEqual(SchemaPaymentState[state])
+        expect(query.state).toEqual(state)
         expect(query.error).toEqual(error)
         expect(query.stateAttempts).toBe(0)
         expect(query.intent).toEqual({
