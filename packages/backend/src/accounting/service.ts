@@ -25,6 +25,18 @@ import {
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 
+// Model classes that have a corresponding Tigerbeetle liquidity
+// account SHOULD implement this Account interface and call
+// createAccount for each model instance.
+// The Tigerbeetle account id will be the model id.
+// Such models include:
+//   ../asset/model
+//   ../open_payments/account/model
+//   ../open_payments/invoice/model
+//   ../outgoing_payment/model
+//   ../peer/model
+// Asset settlement Tigerbeetle accounts are the only exception.
+// Their account id is the corresponding asset's unit value.
 export interface Account {
   id: string
   asset: {
