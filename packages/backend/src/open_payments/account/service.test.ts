@@ -66,13 +66,9 @@ describe('Open Payments Account Service', (): void => {
       const account = await accountService.create({ asset: randomAsset() })
 
       const accountingService = await deps.use('accountingService')
-      await expect(accountingService.getAccount(account.id)).resolves.toEqual({
-        id: account.id,
-        asset: {
-          unit: account.asset.unit
-        },
-        balance: BigInt(0)
-      })
+      await expect(accountingService.getBalance(account.id)).resolves.toEqual(
+        BigInt(0)
+      )
     })
   })
 })

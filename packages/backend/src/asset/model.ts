@@ -10,4 +10,8 @@ export class Asset extends BaseModel {
 
   // TigerBeetle account 2 byte unit field representing account's asset
   public readonly unit!: number
+
+  public get asset(): Asset {
+    return this
+  }
 }

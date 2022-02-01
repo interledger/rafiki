@@ -84,20 +84,17 @@ describe('Asset Service', (): void => {
       const unit = 1
 
       await expect(
-        accountingService.getAssetLiquidityBalance(unit)
-      ).resolves.toBeUndefined()
-      await expect(
-        accountingService.getAssetSettlementBalance(unit)
+        accountingService.getSettlementBalance(unit)
       ).resolves.toBeUndefined()
 
       const asset = await assetService.getOrCreate(randomAsset())
       expect(asset.unit).toEqual(unit)
 
+      await expect(accountingService.getBalance(asset.id)).resolves.toEqual(
+        BigInt(0)
+      )
       await expect(
-        accountingService.getAssetLiquidityBalance(unit)
-      ).resolves.toEqual(BigInt(0))
-      await expect(
-        accountingService.getAssetSettlementBalance(unit)
+        accountingService.getSettlementBalance(unit)
       ).resolves.toEqual(BigInt(0))
     })
 

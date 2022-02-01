@@ -25,7 +25,7 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
     const accountingService = await ctx.container.use('accountingService')
     const error = await accountingService.createDeposit({
       id: args.input.id,
-      accountId: peer.id,
+      account: peer,
       amount: args.input.amount
     })
     if (error) {
@@ -69,9 +69,7 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
     const accountingService = await ctx.container.use('accountingService')
     const error = await accountingService.createDeposit({
       id: args.input.id,
-      asset: {
-        unit: asset.unit
-      },
+      account: asset,
       amount: args.input.amount
     })
     if (error) {
@@ -115,7 +113,7 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
     const accountingService = await ctx.container.use('accountingService')
     const error = await accountingService.createWithdrawal({
       id: args.input.id,
-      accountId: peer.id,
+      account: peer,
       amount: args.input.amount,
       timeout: BigInt(60e9) // 1 minute
     })
@@ -160,9 +158,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     const accountingService = await ctx.container.use('accountingService')
     const error = await accountingService.createWithdrawal({
       id: args.input.id,
-      asset: {
-        unit: asset.unit
-      },
+      account: asset,
       amount: args.input.amount,
       timeout: BigInt(60e9) // 1 minute
     })
@@ -214,7 +210,7 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
     }
     const error = await accountingService.createWithdrawal({
       id,
-      accountId: account.id,
+      account: account,
       amount,
       timeout: BigInt(60e9) // 1 minute
     })

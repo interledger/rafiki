@@ -1,5 +1,6 @@
 import { Model } from 'objection'
 import { Account } from '../account/model'
+import { Asset } from '../../asset/model'
 import { BaseModel } from '../../shared/baseModel'
 
 export class Invoice extends BaseModel {
@@ -29,4 +30,8 @@ export class Invoice extends BaseModel {
   public processAt!: Date | null
 
   public webhookAttempts!: number
+
+  public get asset(): Asset {
+    return this.account.asset
+  }
 }

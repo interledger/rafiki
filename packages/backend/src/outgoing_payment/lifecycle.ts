@@ -162,7 +162,7 @@ export async function handleFunding(
     if (status === 200) {
       const error = await deps.accountingService.createDeposit({
         id: payment.webhookId,
-        accountId: payment.id,
+        account: payment,
         amount: payment.quote.maxSourceAmount
       })
       if (error) {
@@ -355,7 +355,7 @@ export async function handleCancelledOrCompleted(
   if (balance) {
     const error = await deps.accountingService.createWithdrawal({
       id: payment.webhookId,
-      accountId: payment.id,
+      account: payment,
       amount: balance,
       timeout: BigInt(deps.webhookService.timeout) * BigInt(1e6) // ms -> ns
     })

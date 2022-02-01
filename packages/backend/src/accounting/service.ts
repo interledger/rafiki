@@ -1,4 +1,3 @@
-import assert from 'assert'
 import {
   Client,
   CreateAccountError as CreateAccountErrorCode
@@ -23,7 +22,6 @@ import {
   commitTransfers,
   rollbackTransfers
 } from './transfers'
-import { AccountIdOptions, AssetAccount } from './utils'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 
@@ -31,30 +29,20 @@ export interface Account {
   id: string
   balance: bigint
   asset: {
+    id: string
     unit: number
   }
 }
 
 export type AccountOptions = Omit<Account, 'balance'>
 
-interface AccountOption {
-  accountId: string
-  asset?: never
-}
-
-interface AssetOption {
-  accountId?: never
-  asset: {
-    unit: number
-  }
-}
-
-export type Deposit = (AccountOption | AssetOption) & {
+export interface Deposit {
   id: string
+  account: AccountOptions
   amount: bigint
 }
 
-export type Withdrawal = Deposit & {
+export interface Withdrawal extends Deposit {
   timeout: bigint
 }
 
@@ -73,13 +61,11 @@ export interface Transaction {
 
 export interface AccountingService {
   createAccount(options: AccountOptions): Promise<Account>
-  createAssetAccounts(unit: number): Promise<void>
-  getAccount(id: string): Promise<Account | undefined>
+  createSettlementAccount(unit: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getTotalReceived(id: string): Promise<bigint | undefined>
-  getAssetLiquidityBalance(unit: number): Promise<bigint | undefined>
-  getAssetSettlementBalance(unit: number): Promise<bigint | undefined>
+  getSettlementBalance(unit: number): Promise<bigint | undefined>
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(deposit: Deposit): Promise<void | TransferError>
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>
@@ -106,13 +92,11 @@ export function createAccountingService({
   }
   return {
     createAccount: (options) => createAccount(deps, options),
-    createAssetAccounts: (unit) => createAssetAccounts(deps, unit),
-    getAccount: (id) => getAccount(deps, id),
+    createSettlementAccount: (unit) => createSettlementAccount(deps, unit),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
-    getAssetLiquidityBalance: (unit) => getAssetLiquidityBalance(deps, unit),
-    getAssetSettlementBalance: (unit) => getAssetSettlementBalance(deps, unit),
+    getSettlementBalance: (unit) => getSettlementBalance(deps, unit),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
@@ -142,33 +126,20 @@ export async function createAccount(
   }
 }
 
-export async function createAssetAccounts(
+export async function createSettlementAccount(
   deps: ServiceDependencies,
   unit: number
 ): Promise<void> {
-  const accounts = [
-    {
-      asset: {
-        unit,
-        account: AssetAccount.Liquidity
-      },
-      type: AccountType.Credit,
-      unit
-    },
-    {
-      asset: {
-        unit,
-        account: AssetAccount.Settlement
-      },
-      type: AccountType.Debit,
-      unit
-    }
-  ]
-
   try {
-    await createAccounts(deps, accounts)
+    await createAccounts(deps, [
+      {
+        id: unit,
+        type: AccountType.Debit,
+        unit
+      }
+    ])
   } catch (err) {
-    // Don't complain if asset accounts already exist.
+    // Don't complain if asset settlement account already exists.
     // This could change if TigerBeetle could be reset between tests.
     if (
       err instanceof CreateAccountError &&
@@ -180,33 +151,11 @@ export async function createAssetAccounts(
   }
 }
 
-export async function getAccount(
-  deps: ServiceDependencies,
-  id: string
-): Promise<Account | undefined> {
-  const accounts = await getAccounts(deps, [
-    {
-      id
-    }
-  ])
-
-  if (accounts.length) {
-    const account = accounts[0]
-    return {
-      id,
-      asset: {
-        unit: account.unit
-      },
-      balance: calculateBalance(account)
-    }
-  }
-}
-
 export async function getAccountBalance(
   deps: ServiceDependencies,
   id: string
 ): Promise<bigint | undefined> {
-  const account = (await getAccounts(deps, [{ id }]))[0]
+  const account = (await getAccounts(deps, [id]))[0]
   if (account) {
     return calculateBalance(account)
   }
@@ -216,7 +165,7 @@ export async function getAccountTotalSent(
   deps: ServiceDependencies,
   id: string
 ): Promise<bigint | undefined> {
-  const account = (await getAccounts(deps, [{ id }]))[0]
+  const account = (await getAccounts(deps, [id]))[0]
   if (account) {
     return account.debits_accepted
   }
@@ -226,36 +175,17 @@ export async function getAccountTotalReceived(
   deps: ServiceDependencies,
   id: string
 ): Promise<bigint | undefined> {
-  const account = (await getAccounts(deps, [{ id }]))[0]
+  const account = (await getAccounts(deps, [id]))[0]
   if (account) {
     return account.credits_accepted
   }
 }
 
-export async function getAssetLiquidityBalance(
+export async function getSettlementBalance(
   deps: ServiceDependencies,
   unit: number
 ): Promise<bigint | undefined> {
-  const assetAccount = (
-    await getAccounts(deps, [
-      { asset: { unit, account: AssetAccount.Liquidity } }
-    ])
-  )[0]
-
-  if (assetAccount) {
-    return calculateBalance(assetAccount)
-  }
-}
-
-export async function getAssetSettlementBalance(
-  deps: ServiceDependencies,
-  unit: number
-): Promise<bigint | undefined> {
-  const assetAccount = (
-    await getAccounts(deps, [
-      { asset: { unit, account: AssetAccount.Settlement } }
-    ])
-  )[0]
+  const assetAccount = (await getAccounts(deps, [unit]))[0]
 
   if (assetAccount) {
     return calculateBalance(assetAccount)
@@ -287,8 +217,8 @@ export async function createTransfer(
   if (sourceAccount.asset.unit === destinationAccount.asset.unit) {
     transfers.push({
       id: uuid(),
-      sourceAccount,
-      destinationAccount,
+      sourceAccountId: sourceAccount.id,
+      destinationAccountId: destinationAccount.id,
       amount:
         destinationAmount && destinationAmount < sourceAmount
           ? destinationAmount
@@ -301,13 +231,8 @@ export async function createTransfer(
       if (destinationAmount < sourceAmount) {
         transfers.push({
           id: uuid(),
-          sourceAccount,
-          destinationAccount: {
-            asset: {
-              unit: sourceAccount.asset.unit,
-              account: AssetAccount.Liquidity
-            }
-          },
+          sourceAccountId: sourceAccount.id,
+          destinationAccountId: sourceAccount.asset.id,
           amount: sourceAmount - destinationAmount,
           timeout
         })
@@ -315,13 +240,8 @@ export async function createTransfer(
       } else {
         transfers.push({
           id: uuid(),
-          sourceAccount: {
-            asset: {
-              unit: destinationAccount.asset.unit,
-              account: AssetAccount.Liquidity
-            }
-          },
-          destinationAccount,
+          sourceAccountId: destinationAccount.asset.id,
+          destinationAccountId: destinationAccount.id,
           amount: destinationAmount - sourceAmount,
           timeout
         })
@@ -338,25 +258,15 @@ export async function createTransfer(
     transfers.push(
       {
         id: uuid(),
-        sourceAccount,
-        destinationAccount: {
-          asset: {
-            unit: sourceAccount.asset.unit,
-            account: AssetAccount.Liquidity
-          }
-        },
+        sourceAccountId: sourceAccount.id,
+        destinationAccountId: sourceAccount.asset.id,
         amount: sourceAmount,
         timeout
       },
       {
         id: uuid(),
-        sourceAccount: {
-          asset: {
-            unit: destinationAccount.asset.unit,
-            account: AssetAccount.Liquidity
-          }
-        },
-        destinationAccount,
+        sourceAccountId: destinationAccount.asset.id,
+        destinationAccountId: destinationAccount.id,
         amount: destinationAmount,
         timeout
       }
@@ -366,13 +276,14 @@ export async function createTransfer(
   if (error) {
     switch (error.error) {
       case TransferError.UnknownSourceAccount:
-        throw new UnknownAccountError(transfers[error.index].sourceAccount)
+        throw new UnknownAccountError(transfers[error.index].sourceAccountId)
       case TransferError.UnknownDestinationAccount:
-        throw new UnknownAccountError(transfers[error.index].destinationAccount)
+        throw new UnknownAccountError(
+          transfers[error.index].destinationAccountId
+        )
       case TransferError.InsufficientBalance:
         if (
-          transfers[error.index].sourceAccount.asset?.account ===
-          AssetAccount.Liquidity
+          transfers[error.index].sourceAccountId === destinationAccount.asset.id
         ) {
           return TransferError.InsufficientLiquidity
         }
@@ -407,40 +318,16 @@ export async function createTransfer(
 
 async function createAccountDeposit(
   deps: ServiceDependencies,
-  { id, accountId, asset, amount }: Deposit
+  { id, account, amount }: Deposit
 ): Promise<void | TransferError> {
   if (!validateId(id)) {
     return TransferError.InvalidId
   }
-  let destinationAccount: AccountIdOptions
-  let unit: number
-  if (accountId) {
-    const account = await getAccount(deps, accountId)
-    if (!account) {
-      return TransferError.UnknownDestinationAccount
-    }
-    destinationAccount = account
-    unit = account.asset.unit
-  } else {
-    assert.ok(asset)
-    destinationAccount = {
-      asset: {
-        unit: asset.unit,
-        account: AssetAccount.Liquidity
-      }
-    }
-    unit = asset.unit
-  }
   const error = await createTransfers(deps, [
     {
       id,
-      sourceAccount: {
-        asset: {
-          unit,
-          account: AssetAccount.Settlement
-        }
-      },
-      destinationAccount,
+      sourceAccountId: account.asset.unit,
+      destinationAccountId: account.id,
       amount
     }
   ])
@@ -451,40 +338,16 @@ async function createAccountDeposit(
 
 async function createAccountWithdrawal(
   deps: ServiceDependencies,
-  { id, accountId, asset, amount, timeout }: Withdrawal
+  { id, account, amount, timeout }: Withdrawal
 ): Promise<void | TransferError> {
   if (!validateId(id)) {
     return TransferError.InvalidId
   }
-  let sourceAccount: AccountIdOptions
-  let unit: number
-  if (accountId) {
-    const account = await getAccount(deps, accountId)
-    if (!account) {
-      return TransferError.UnknownDestinationAccount
-    }
-    sourceAccount = account
-    unit = account.asset.unit
-  } else {
-    assert.ok(asset)
-    sourceAccount = {
-      asset: {
-        unit: asset.unit,
-        account: AssetAccount.Liquidity
-      }
-    }
-    unit = asset.unit
-  }
   const error = await createTransfers(deps, [
     {
       id,
-      sourceAccount,
-      destinationAccount: {
-        asset: {
-          unit,
-          account: AssetAccount.Settlement
-        }
-      },
+      sourceAccountId: account.id,
+      destinationAccountId: account.asset.unit,
       amount,
       timeout
     }

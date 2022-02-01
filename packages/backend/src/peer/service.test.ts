@@ -18,7 +18,6 @@ import { Pagination } from '../shared/pagination'
 import { randomAsset } from '../tests/asset'
 import { PeerFactory } from '../tests/peerFactory'
 import { truncateTables } from '../tests/tableManager'
-import { Asset } from '../asset/model'
 
 describe('Peer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -131,14 +130,9 @@ describe('Peer Service', (): void => {
       const accountingService = await deps.use('accountingService')
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
-      const assetService = await deps.use('assetService')
-      await expect(accountingService.getAccount(peer.id)).resolves.toEqual({
-        id: peer.id,
-        asset: {
-          unit: ((await assetService.get(options.asset)) as Asset).unit
-        },
-        balance: BigInt(0)
-      })
+      await expect(accountingService.getBalance(peer.id)).resolves.toEqual(
+        BigInt(0)
+      )
     })
 
     test('Auto-creates corresponding asset', async (): Promise<void> => {

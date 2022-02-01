@@ -6,7 +6,7 @@ import {
 
 import { ServiceDependencies } from './service'
 import { CreateAccountError } from './errors'
-import { AccountIdOptions, getAccountId } from './utils'
+import { AccountId, toTigerbeetleId } from './utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 
@@ -20,7 +20,8 @@ export enum AccountType {
   Debit = 'Debit' // credits_must_not_exceed_debits
 }
 
-export type CreateAccountOptions = AccountIdOptions & {
+export interface CreateAccountOptions {
+  id: AccountId
   type: AccountType
   unit: number
 }
@@ -31,7 +32,7 @@ export async function createAccounts(
 ): Promise<void> {
   const errors = await deps.tigerbeetle.createAccounts(
     accounts.map((account) => ({
-      id: getAccountId(account),
+      id: toTigerbeetleId(account.id),
       user_data: BigInt(0),
       reserved: ACCOUNT_RESERVED,
       unit: account.unit,
@@ -56,10 +57,10 @@ export async function createAccounts(
 
 export async function getAccounts(
   deps: ServiceDependencies,
-  accounts: AccountIdOptions[]
+  accountIds: AccountId[]
 ): Promise<Account[]> {
   return await deps.tigerbeetle.lookupAccounts(
-    accounts.map((account) => getAccountId(account))
+    accountIds.map((id) => toTigerbeetleId(id))
   )
 }
 

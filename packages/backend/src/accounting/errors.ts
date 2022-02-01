@@ -3,7 +3,7 @@ import {
   CreateTransferError as CreateTransferErrorCode
 } from 'tigerbeetle-node'
 
-import { AccountIdOptions } from './utils'
+import { AccountId } from './utils'
 
 export class CreateAccountError extends Error {
   constructor(public code: number) {
@@ -57,8 +57,8 @@ export class BalanceTransferError extends Error {
 }
 
 export class UnknownAccountError extends Error {
-  constructor(account: AccountIdOptions) {
-    super('Account not found. account=' + JSON.stringify(account))
+  constructor(accountId: AccountId) {
+    super('Account not found. account=' + accountId)
     this.name = 'UnknownAccountError'
   }
 }
