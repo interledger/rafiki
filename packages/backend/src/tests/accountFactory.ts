@@ -1,13 +1,9 @@
 import { v4 as uuid } from 'uuid'
 
-import {
-  AccountingService,
-  Account,
-  AccountOptions
-} from '../accounting/service'
+import { AccountingService, Account } from '../accounting/service'
 import { randomUnit } from './asset'
 
-type BuildOptions = Partial<AccountOptions> & {
+type BuildOptions = Partial<Account> & {
   balance?: bigint
 }
 
@@ -43,11 +39,11 @@ export class AccountFactory {
       await this.accounts.createSettlementAccount(asset.unit)
       await this.accounts.createAccount(asset)
     }
-    const accountOptions: AccountOptions = {
+    const account = {
       id: options.id || uuid(),
       asset
     }
-    const account = await this.accounts.createAccount(accountOptions)
+    await this.accounts.createAccount(account)
 
     if (options.balance) {
       await this.accounts.createDeposit({
@@ -57,9 +53,6 @@ export class AccountFactory {
       })
     }
 
-    return {
-      ...account,
-      asset
-    }
+    return account
   }
 }

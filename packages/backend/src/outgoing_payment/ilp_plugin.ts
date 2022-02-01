@@ -1,4 +1,4 @@
-import { AccountOptions } from '../accounting/service'
+import { Account } from '../accounting/service'
 
 // Maybe @interledger/pay should export this interface.
 export interface IlpPlugin {
@@ -37,6 +37,6 @@ export class OutgoingIlpPlugin implements IlpPlugin {
 }
 
 export interface IlpPluginOptions {
-  sourceAccount: AccountOptions
+  sourceAccount: Account
   unfulfillable?: boolean
 }

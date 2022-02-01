@@ -5,12 +5,7 @@ import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import {
-  AccountingService,
-  AccountOptions,
-  Deposit,
-  Withdrawal
-} from './service'
+import { AccountingService, Account, Deposit, Withdrawal } from './service'
 import { CreateAccountError, TransferError, isTransferError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -82,18 +77,16 @@ describe('Accounting Service', (): void => {
 
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {
-      const options: AccountOptions = {
+      const account: Account = {
         id: uuid(),
         asset: {
           id: uuid(),
           unit: newUnit()
         }
       }
-      const account = await accountingService.createAccount(options)
-      expect(account).toEqual({
-        ...options,
-        balance: BigInt(0)
-      })
+      await expect(accountingService.createAccount(account)).resolves.toEqual(
+        account
+      )
       await expect(accountingService.getBalance(account.id)).resolves.toEqual(
         BigInt(0)
       )
@@ -216,7 +209,7 @@ describe('Accounting Service', (): void => {
       ${true}   | ${'same asset'}
       ${false}  | ${'cross-currency'}
     `('$description', ({ sameAsset }): void => {
-      let sourceAccount: AccountOptions
+      let sourceAccount: Account
       let destinationAccount: FactoryAccount
       const startingSourceBalance = BigInt(10)
       const startingDestinationLiquidity = BigInt(100)

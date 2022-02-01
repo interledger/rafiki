@@ -1,9 +1,10 @@
 import { Model } from 'objection'
 import { Account } from '../account/model'
+import { Account as BaseAccount } from '../../accounting/service'
 import { Asset } from '../../asset/model'
 import { BaseModel } from '../../shared/baseModel'
 
-export class Invoice extends BaseModel {
+export class Invoice extends BaseModel implements BaseAccount {
   public static get tableName(): string {
     return 'invoices'
   }

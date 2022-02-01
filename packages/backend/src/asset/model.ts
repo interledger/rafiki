@@ -1,6 +1,7 @@
+import { Account } from '../accounting/service'
 import { BaseModel } from '../shared/baseModel'
 
-export class Asset extends BaseModel {
+export class Asset extends BaseModel implements Account {
   public static get tableName(): string {
     return 'assets'
   }

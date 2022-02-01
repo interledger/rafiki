@@ -27,18 +27,15 @@ import { validateId } from '../shared/utils'
 
 export interface Account {
   id: string
-  balance: bigint
   asset: {
     id: string
     unit: number
   }
 }
 
-export type AccountOptions = Omit<Account, 'balance'>
-
 export interface Deposit {
   id: string
-  account: AccountOptions
+  account: Account
   amount: bigint
 }
 
@@ -47,8 +44,8 @@ export interface Withdrawal extends Deposit {
 }
 
 export interface TransferOptions {
-  sourceAccount: AccountOptions
-  destinationAccount: AccountOptions
+  sourceAccount: Account
+  destinationAccount: Account
   sourceAmount: bigint
   destinationAmount?: bigint
   timeout: bigint // nano-seconds
@@ -60,7 +57,7 @@ export interface Transaction {
 }
 
 export interface AccountingService {
-  createAccount(options: AccountOptions): Promise<Account>
+  createAccount(account: Account): Promise<Account>
   createSettlementAccount(unit: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
@@ -107,23 +104,20 @@ export function createAccountingService({
 
 export async function createAccount(
   deps: ServiceDependencies,
-  options: AccountOptions
+  account: Account
 ): Promise<Account> {
-  if (!validateId(options.id)) {
+  if (!validateId(account.id)) {
     throw new Error('unable to create account, invalid id')
   }
 
   await createAccounts(deps, [
     {
-      id: options.id,
+      id: account.id,
       type: AccountType.Credit,
-      unit: options.asset.unit
+      unit: account.asset.unit
     }
   ])
-  return {
-    ...options,
-    balance: BigInt(0)
-  }
+  return account
 }
 
 export async function createSettlementAccount(
