@@ -1,10 +1,13 @@
 import { Model } from 'objection'
 import { Account } from '../account/model'
-import { Account as BaseAccount } from '../../accounting/service'
 import { Asset } from '../../asset/model'
+import { Account as TigerbeetleAccount } from '../../accounting/service'
+import { ConnectorAccount } from '../../connector/core/rafiki'
 import { BaseModel } from '../../shared/baseModel'
 
-export class Invoice extends BaseModel implements BaseAccount {
+export class Invoice
+  extends BaseModel
+  implements ConnectorAccount, TigerbeetleAccount {
   public static get tableName(): string {
     return 'invoices'
   }

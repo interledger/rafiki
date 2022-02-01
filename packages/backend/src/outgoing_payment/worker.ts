@@ -1,5 +1,4 @@
 import * as knex from 'knex'
-import { v4 as uuid } from 'uuid'
 
 import { ServiceDependencies } from './service'
 import { OutgoingPayment, PaymentState } from './model'
@@ -113,10 +112,7 @@ export async function handlePaymentLifecycle(
   switch (payment.state) {
     case PaymentState.Quoting:
       plugin = deps.makeIlpPlugin({
-        sourceAccount: {
-          id: uuid(),
-          asset: payment.account.asset
-        },
+        sourceAccount: payment,
         unfulfillable: true
       })
       return plugin
@@ -135,10 +131,7 @@ export async function handlePaymentLifecycle(
       return lifecycle.handleFunding(deps, payment).catch(onError)
     case PaymentState.Sending:
       plugin = deps.makeIlpPlugin({
-        sourceAccount: {
-          id: payment.id,
-          asset: payment.account.asset
-        }
+        sourceAccount: payment
       })
       return plugin
         .connect()

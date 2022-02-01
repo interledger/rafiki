@@ -20,26 +20,29 @@ import { AccountService } from '../../open_payments/account/service'
 import { InvoiceService } from '../../open_payments/invoice/service'
 import { PeerService } from '../../peer/service'
 
-type RafikiAccount = Account & {
-  asset: AssetOptions
+// Model classes that represent an Interledger sender, receiver, or
+// connector SHOULD implement this ConnectorAccount interface.
+// Such models include:
+//   ../../open_payments/account/model
+//   ../../open_payments/invoice/model
+//   ../../outgoing_payment/model
+//   ../../peer/model
+export interface ConnectorAccount extends Account {
+  asset: Account['asset'] & AssetOptions
 }
 
-export type IncomingAccount = RafikiAccount & {
+export interface IncomingAccount extends ConnectorAccount {
   maxPacketAmount?: bigint
   staticIlpAddress?: string
 }
 
-export type OutgoingAccount = RafikiAccount & {
+export interface OutgoingAccount extends ConnectorAccount {
   http?: {
     outgoing: {
       authToken: string
       endpoint: string
     }
   }
-  stream?: {
-    enabled: boolean
-  }
-  invoice?: boolean
 }
 
 export interface TransferOptions {

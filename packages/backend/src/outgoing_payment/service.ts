@@ -1,6 +1,5 @@
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
-import { v4 as uuid } from 'uuid'
 
 import { BaseService } from '../shared/baseService'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
@@ -104,10 +103,7 @@ async function createOutgoingPayment(
         .withGraphFetched('account.asset')
 
       const plugin = deps.makeIlpPlugin({
-        sourceAccount: {
-          id: uuid(),
-          asset: payment.account.asset
-        },
+        sourceAccount: payment,
         unfulfillable: true
       })
       await plugin.connect()

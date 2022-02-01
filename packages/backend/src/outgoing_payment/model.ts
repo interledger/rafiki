@@ -2,8 +2,9 @@ import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 
-import { Account as BaseAccount } from '../accounting/service'
+import { Account as TigerbeetleAccount } from '../accounting/service'
 import { Asset } from '../asset/model'
+import { ConnectorAccount } from '../connector/core/rafiki'
 import { Account } from '../open_payments/account/model'
 import { BaseModel } from '../shared/baseModel'
 
@@ -22,7 +23,9 @@ export type PaymentIntent = {
   autoApprove: boolean
 }
 
-export class OutgoingPayment extends BaseModel implements BaseAccount {
+export class OutgoingPayment
+  extends BaseModel
+  implements ConnectorAccount, TigerbeetleAccount {
   public static readonly tableName = 'outgoingPayments'
 
   public state!: PaymentState
