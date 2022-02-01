@@ -116,7 +116,7 @@ describe('OutgoingPaymentService', (): void => {
     await expect(
       accountingService.createDeposit({
         id: uuid(),
-        accountId: invoice.id,
+        account: invoice,
         amount
       })
     ).resolves.toBeUndefined()
@@ -212,9 +212,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         accountingService.createDeposit({
           id: uuid(),
-          asset: {
-            unit: destinationAccount.asset.unit
-          },
+          account: destinationAccount.asset,
           amount: BigInt(123)
         })
       ).resolves.toBeUndefined()

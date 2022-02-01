@@ -14,22 +14,22 @@ import {
 import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
 import { TransferError } from '../../accounting/errors'
-import { AccountOptions, Transaction } from '../../accounting/service'
+import { Account, Transaction } from '../../accounting/service'
 import { AssetOptions } from '../../asset/service'
 import { AccountService } from '../../open_payments/account/service'
 import { InvoiceService } from '../../open_payments/invoice/service'
 import { PeerService } from '../../peer/service'
 
-type Account = AccountOptions & {
+type RafikiAccount = Account & {
   asset: AssetOptions
 }
 
-export type IncomingAccount = Account & {
+export type IncomingAccount = RafikiAccount & {
   maxPacketAmount?: bigint
   staticIlpAddress?: string
 }
 
-export type OutgoingAccount = Account & {
+export type OutgoingAccount = RafikiAccount & {
   http?: {
     outgoing: {
       authToken: string

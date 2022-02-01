@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
@@ -8,9 +7,12 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { AccountingService, Deposit } from '../../accounting/service'
+import { AccountingService } from '../../accounting/service'
+import { Asset } from '../../asset/model'
 import { AssetService } from '../../asset/service'
-import { randomAsset, randomUnit } from '../../tests/asset'
+import { Account } from '../../open_payments/account/model'
+import { Peer } from '../../peer/model'
+import { randomAsset } from '../../tests/asset'
 import { PeerFactory } from '../../tests/peerFactory'
 import { truncateTables } from '../../tests/tableManager'
 import {
@@ -49,11 +51,11 @@ describe('Withdrawal Resolvers', (): void => {
   )
 
   describe('Add peer liquidity', (): void => {
-    let peerId: string
+    let peer: Peer
 
     beforeEach(
       async (): Promise<void> => {
-        peerId = (await peerFactory.build()).id
+        peer = await peerFactory.build()
       }
     )
 
@@ -73,7 +75,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              peerId,
+              peerId: peer.id,
               amount: '100'
             }
           }
@@ -109,7 +111,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid v4',
-              peerId,
+              peerId: peer.id,
               amount: '100'
             }
           }
@@ -172,7 +174,7 @@ describe('Withdrawal Resolvers', (): void => {
       await expect(
         accountingService.createDeposit({
           id,
-          accountId: peerId,
+          account: peer,
           amount: BigInt(100)
         })
       ).resolves.toBeUndefined()
@@ -191,7 +193,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id,
-              peerId,
+              peerId: peer.id,
               amount: '100'
             }
           }
@@ -228,7 +230,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid v4',
-              peerId,
+              peerId: peer.id,
               amount: '0'
             }
           }
@@ -251,14 +253,11 @@ describe('Withdrawal Resolvers', (): void => {
   })
 
   describe('Add asset liquidity', (): void => {
-    let assetId: string
-    let unit: number
+    let asset: Asset
 
     beforeEach(
       async (): Promise<void> => {
-        const asset = await assetService.getOrCreate(randomAsset())
-        assetId = asset.id
-        unit = asset.unit
+        asset = await assetService.getOrCreate(randomAsset())
       }
     )
 
@@ -278,7 +277,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              assetId,
+              assetId: asset.id,
               amount: '100'
             }
           }
@@ -314,7 +313,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid',
-              assetId,
+              assetId: asset.id,
               amount: '100'
             }
           }
@@ -377,9 +376,7 @@ describe('Withdrawal Resolvers', (): void => {
       await expect(
         accountingService.createDeposit({
           id,
-          asset: {
-            unit
-          },
+          account: asset,
           amount: BigInt(100)
         })
       ).resolves.toBeUndefined()
@@ -398,7 +395,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id,
-              assetId,
+              assetId: asset.id,
               amount: '100'
             }
           }
@@ -435,7 +432,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              assetId,
+              assetId: asset.id,
               amount: '0'
             }
           }
@@ -458,20 +455,19 @@ describe('Withdrawal Resolvers', (): void => {
   })
 
   describe('Create peer liquidity withdrawal', (): void => {
-    let peerId: string
+    let peer: Peer
     const startingBalance = BigInt(100)
 
     beforeEach(
       async (): Promise<void> => {
-        const peer = await peerFactory.build()
+        peer = await peerFactory.build()
         await expect(
           accountingService.createDeposit({
             id: uuid(),
-            accountId: peer.id,
+            account: peer,
             amount: startingBalance
           })
         ).resolves.toBeUndefined()
-        peerId = peer.id
       }
     )
 
@@ -493,7 +489,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              peerId,
+              peerId: peer.id,
               amount: startingBalance.toString()
             }
           }
@@ -570,7 +566,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid',
-              peerId,
+              peerId: peer.id,
               amount: startingBalance.toString()
             }
           }
@@ -596,7 +592,7 @@ describe('Withdrawal Resolvers', (): void => {
       await expect(
         accountingService.createDeposit({
           id,
-          accountId: peerId,
+          account: peer,
           amount: BigInt(10)
         })
       ).resolves.toBeUndefined()
@@ -617,7 +613,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id,
-              peerId,
+              peerId: peer.id,
               amount: startingBalance.toString()
             }
           }
@@ -661,7 +657,7 @@ describe('Withdrawal Resolvers', (): void => {
             variables: {
               input: {
                 id: uuid(),
-                peerId,
+                peerId: peer.id,
                 amount: amount.toString()
               }
             }
@@ -685,24 +681,19 @@ describe('Withdrawal Resolvers', (): void => {
   })
 
   describe('Create asset liquidity withdrawal', (): void => {
-    let assetId: string
-    let unit: number
+    let asset: Asset
     const startingBalance = BigInt(100)
 
     beforeEach(
       async (): Promise<void> => {
-        const asset = await assetService.getOrCreate(randomAsset())
+        asset = await assetService.getOrCreate(randomAsset())
         await expect(
           accountingService.createDeposit({
             id: uuid(),
-            asset: {
-              unit: asset.unit
-            },
+            account: asset,
             amount: startingBalance
           })
         ).resolves.toBeUndefined()
-        assetId = asset.id
-        unit = asset.unit
       }
     )
 
@@ -724,7 +715,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              assetId,
+              assetId: asset.id,
               amount: startingBalance.toString()
             }
           }
@@ -801,7 +792,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid',
-              assetId,
+              assetId: asset.id,
               amount: startingBalance.toString()
             }
           }
@@ -827,9 +818,7 @@ describe('Withdrawal Resolvers', (): void => {
       await expect(
         accountingService.createDeposit({
           id,
-          asset: {
-            unit
-          },
+          account: asset,
           amount: BigInt(10)
         })
       ).resolves.toBeUndefined()
@@ -850,7 +839,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id,
-              assetId,
+              assetId: asset.id,
               amount: startingBalance.toString()
             }
           }
@@ -894,7 +883,7 @@ describe('Withdrawal Resolvers', (): void => {
             variables: {
               input: {
                 id: uuid(),
-                assetId,
+                assetId: asset.id,
                 amount: amount.toString()
               }
             }
@@ -918,22 +907,20 @@ describe('Withdrawal Resolvers', (): void => {
   })
 
   describe('Create account withdrawal', (): void => {
-    let accountId: string
+    let account: Account
     const amount = BigInt(100)
 
     beforeEach(
       async (): Promise<void> => {
         const accountService = await deps.use('accountService')
-        accountId = (
-          await accountService.create({
-            asset: randomAsset()
-          })
-        ).id
+        account = await accountService.create({
+          asset: randomAsset()
+        })
 
         await expect(
           accountingService.createDeposit({
             id: uuid(),
-            accountId,
+            account,
             amount
           })
         ).resolves.toBeUndefined()
@@ -966,7 +953,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id,
-              accountId
+              accountId: account.id
             }
           }
         })
@@ -987,7 +974,7 @@ describe('Withdrawal Resolvers', (): void => {
         id,
         amount: amount.toString(),
         account: {
-          id: accountId
+          id: account.id
         }
       })
     })
@@ -1055,7 +1042,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid',
-              accountId
+              accountId: account.id
             }
           }
         })
@@ -1081,7 +1068,7 @@ describe('Withdrawal Resolvers', (): void => {
       await expect(
         accountingService.createDeposit({
           id,
-          accountId,
+          account,
           amount: BigInt(10)
         })
       ).resolves.toBeUndefined()
@@ -1105,7 +1092,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id,
-              accountId
+              accountId: account.id
             }
           }
         })
@@ -1129,7 +1116,7 @@ describe('Withdrawal Resolvers', (): void => {
       await expect(
         accountingService.createWithdrawal({
           id: uuid(),
-          accountId,
+          account,
           amount,
           timeout
         })
@@ -1154,7 +1141,7 @@ describe('Withdrawal Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              accountId
+              accountId: account.id
             }
           }
         })
@@ -1182,23 +1169,11 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          let deposit: Deposit
-          if (type === 'peer') {
-            const peer = await peerFactory.build()
-            deposit = {
-              id: uuid(),
-              accountId: peer.id,
-              amount: BigInt(100)
-            }
-          } else {
-            assert.equal(type, 'asset')
-            const unit = randomUnit()
-            await accountingService.createAssetAccounts(unit)
-            deposit = {
-              id: uuid(),
-              asset: { unit },
-              amount: BigInt(100)
-            }
+          const peer = await peerFactory.build()
+          const deposit = {
+            id: uuid(),
+            account: type === 'peer' ? peer : peer.asset,
+            amount: BigInt(100)
           }
           await expect(
             accountingService.createDeposit(deposit)
@@ -1394,23 +1369,11 @@ describe('Withdrawal Resolvers', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          let deposit: Deposit
-          if (type === 'peer') {
-            const peer = await peerFactory.build()
-            deposit = {
-              id: uuid(),
-              accountId: peer.id,
-              amount: BigInt(100)
-            }
-          } else {
-            assert.equal(type, 'asset')
-            const unit = randomUnit()
-            await accountingService.createAssetAccounts(unit)
-            deposit = {
-              id: uuid(),
-              asset: { unit },
-              amount: BigInt(100)
-            }
+          const peer = await peerFactory.build()
+          const deposit = {
+            id: uuid(),
+            account: type === 'peer' ? peer : peer.asset,
+            amount: BigInt(100)
           }
           await expect(
             accountingService.createDeposit(deposit)

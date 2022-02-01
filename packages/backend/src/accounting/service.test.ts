@@ -5,12 +5,7 @@ import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import {
-  AccountingService,
-  AccountOptions,
-  Deposit,
-  Withdrawal
-} from './service'
+import { AccountingService, Account, Deposit, Withdrawal } from './service'
 import { CreateAccountError, TransferError, isTransferError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -24,7 +19,7 @@ import {
   startTigerbeetleContainer,
   TIGERBEETLE_PORT
 } from '../tests/tigerbeetle'
-import { AccountFactory } from '../tests/accountFactory'
+import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
 
 describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -82,19 +77,18 @@ describe('Accounting Service', (): void => {
 
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {
-      const options: AccountOptions = {
+      const account: Account = {
         id: uuid(),
         asset: {
+          id: uuid(),
           unit: newUnit()
         }
       }
-      const account = await accountingService.createAccount(options)
-      expect(account).toEqual({
-        ...options,
-        balance: BigInt(0)
-      })
-      await expect(accountingService.getAccount(account.id)).resolves.toEqual(
+      await expect(accountingService.createAccount(account)).resolves.toEqual(
         account
+      )
+      await expect(accountingService.getBalance(account.id)).resolves.toEqual(
+        BigInt(0)
       )
     })
 
@@ -103,6 +97,7 @@ describe('Accounting Service', (): void => {
         accountingService.createAccount({
           id: 'not a uuid',
           asset: {
+            id: uuid(),
             unit: newUnit()
           }
         })
@@ -122,27 +117,13 @@ describe('Accounting Service', (): void => {
         accountingService.createAccount({
           id: uuid(),
           asset: {
+            id: uuid(),
             unit: newUnit()
           }
         })
       ).rejects.toThrowError(
         new CreateAccountError(CreateTbAccountError.exists_with_different_unit)
       )
-    })
-  })
-
-  describe('Get Account', (): void => {
-    test('Can get an account', async (): Promise<void> => {
-      const account = await accountFactory.build()
-      await expect(accountingService.getAccount(account.id)).resolves.toEqual(
-        account
-      )
-    })
-
-    test('Returns undefined for nonexistent account', async (): Promise<void> => {
-      await expect(
-        accountingService.getAccount(uuid())
-      ).resolves.toBeUndefined()
     })
   })
 
@@ -190,56 +171,34 @@ describe('Accounting Service', (): void => {
     })
   })
 
-  describe('Create Asset Accounts', (): void => {
-    test("Can create an asset's accounts", async (): Promise<void> => {
+  describe('Create Settlement Account', (): void => {
+    test("Can create an asset's settlement account", async (): Promise<void> => {
       const unit = newUnit()
 
       await expect(
-        accountingService.getAssetLiquidityBalance(unit)
-      ).resolves.toBeUndefined()
-      await expect(
-        accountingService.getAssetSettlementBalance(unit)
+        accountingService.getSettlementBalance(unit)
       ).resolves.toBeUndefined()
 
-      await accountingService.createAssetAccounts(unit)
+      await accountingService.createSettlementAccount(unit)
 
       await expect(
-        accountingService.getAssetLiquidityBalance(unit)
-      ).resolves.toEqual(BigInt(0))
-      await expect(
-        accountingService.getAssetSettlementBalance(unit)
+        accountingService.getSettlementBalance(unit)
       ).resolves.toEqual(BigInt(0))
     })
   })
 
-  describe('Get Asset Liquidity Balance', (): void => {
-    test("Can retrieve an asset liquidity' balance", async (): Promise<void> => {
+  describe('Get Settlement Balance', (): void => {
+    test("Can retrieve an asset's settlement account balance", async (): Promise<void> => {
       const unit = newUnit()
-      await accountingService.createAssetAccounts(unit)
+      await accountingService.createSettlementAccount(unit)
       await expect(
-        accountingService.getAssetLiquidityBalance(unit)
+        accountingService.getSettlementBalance(unit)
       ).resolves.toEqual(BigInt(0))
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
-        accountingService.getAssetLiquidityBalance(newUnit())
-      ).resolves.toBeUndefined()
-    })
-  })
-
-  describe('Get Asset Settlement Balance', (): void => {
-    test("Can retrieve an asset accounts' balance", async (): Promise<void> => {
-      const unit = newUnit()
-      await accountingService.createAssetAccounts(unit)
-      await expect(
-        accountingService.getAssetSettlementBalance(unit)
-      ).resolves.toEqual(BigInt(0))
-    })
-
-    test('Returns undefined for nonexistent account', async (): Promise<void> => {
-      await expect(
-        accountingService.getAssetSettlementBalance(newUnit())
+        accountingService.getSettlementBalance(newUnit())
       ).resolves.toBeUndefined()
     })
   })
@@ -250,8 +209,8 @@ describe('Accounting Service', (): void => {
       ${true}   | ${'same asset'}
       ${false}  | ${'cross-currency'}
     `('$description', ({ sameAsset }): void => {
-      let sourceAccount: AccountOptions
-      let destinationAccount: AccountOptions
+      let sourceAccount: Account
+      let destinationAccount: FactoryAccount
       const startingSourceBalance = BigInt(10)
       const startingDestinationLiquidity = BigInt(100)
 
@@ -266,9 +225,7 @@ describe('Accounting Service', (): void => {
           await expect(
             accountingService.createDeposit({
               id: uuid(),
-              asset: {
-                unit: destinationAccount.asset.unit
-              },
+              account: destinationAccount.asset,
               amount: startingDestinationLiquidity
             })
           ).resolves.toBeUndefined()
@@ -304,9 +261,7 @@ describe('Accounting Service', (): void => {
 
             if (sameAsset) {
               await expect(
-                accountingService.getAssetLiquidityBalance(
-                  sourceAccount.asset.unit
-                )
+                accountingService.getBalance(sourceAccount.asset.id)
               ).resolves.toEqual(
                 sourceAmount < destinationAmount
                   ? startingDestinationLiquidity - amountDiff
@@ -314,15 +269,11 @@ describe('Accounting Service', (): void => {
               )
             } else {
               await expect(
-                accountingService.getAssetLiquidityBalance(
-                  sourceAccount.asset.unit
-                )
+                accountingService.getBalance(sourceAccount.asset.id)
               ).resolves.toEqual(BigInt(0))
 
               await expect(
-                accountingService.getAssetLiquidityBalance(
-                  destinationAccount.asset.unit
-                )
+                accountingService.getBalance(destinationAccount.asset.id)
               ).resolves.toEqual(
                 startingDestinationLiquidity - destinationAmount
               )
@@ -348,9 +299,7 @@ describe('Accounting Service', (): void => {
 
             if (sameAsset) {
               await expect(
-                accountingService.getAssetLiquidityBalance(
-                  sourceAccount.asset.unit
-                )
+                accountingService.getBalance(sourceAccount.asset.id)
               ).resolves.toEqual(
                 commit
                   ? startingDestinationLiquidity - amountDiff
@@ -358,15 +307,11 @@ describe('Accounting Service', (): void => {
               )
             } else {
               await expect(
-                accountingService.getAssetLiquidityBalance(
-                  sourceAccount.asset.unit
-                )
+                accountingService.getBalance(sourceAccount.asset.id)
               ).resolves.toEqual(commit ? sourceAmount : BigInt(0))
 
               await expect(
-                accountingService.getAssetLiquidityBalance(
-                  destinationAccount.asset.unit
-                )
+                accountingService.getBalance(destinationAccount.asset.id)
               ).resolves.toEqual(
                 commit
                   ? startingDestinationLiquidity - destinationAmount
@@ -480,41 +425,22 @@ describe('Accounting Service', (): void => {
     })
   })
 
-  describe.each`
-    asset    | description
-    ${true}  | ${'Asset Liquidity'}
-    ${false} | ${'Account'}
-  `(`Create $description Deposit`, (asset): void => {
+  describe('Create deposit', (): void => {
     let deposit: Deposit
-    let unit: number
 
     beforeEach(
       async (): Promise<void> => {
         const account = await accountFactory.build()
-        unit = account.asset.unit
-        const id = uuid()
-        const amount = BigInt(10)
-        if (asset) {
-          deposit = {
-            id,
-            asset: { unit },
-            amount
-          }
-          await expect(
-            accountingService.getAssetLiquidityBalance(unit)
-          ).resolves.toEqual(BigInt(0))
-        } else {
-          deposit = {
-            id,
-            accountId: account.id,
-            amount
-          }
-          await expect(
-            accountingService.getBalance(account.id)
-          ).resolves.toEqual(BigInt(0))
+        deposit = {
+          id: uuid(),
+          account,
+          amount: BigInt(10)
         }
+        await expect(accountingService.getBalance(account.id)).resolves.toEqual(
+          BigInt(0)
+        )
         await expect(
-          accountingService.getAssetSettlementBalance(unit)
+          accountingService.getSettlementBalance(account.asset.unit)
         ).resolves.toEqual(BigInt(0))
       }
     )
@@ -523,17 +449,11 @@ describe('Accounting Service', (): void => {
       await expect(
         accountingService.createDeposit(deposit)
       ).resolves.toBeUndefined()
-      if (deposit.accountId) {
-        await expect(
-          accountingService.getBalance(deposit.accountId)
-        ).resolves.toEqual(deposit.amount)
-      } else {
-        await expect(
-          accountingService.getAssetLiquidityBalance(unit)
-        ).resolves.toEqual(deposit.amount)
-      }
       await expect(
-        accountingService.getAssetSettlementBalance(unit)
+        accountingService.getBalance(deposit.account.id)
+      ).resolves.toEqual(deposit.amount)
+      await expect(
+        accountingService.getSettlementBalance(deposit.account.asset.unit)
       ).resolves.toEqual(deposit.amount)
     })
 
@@ -560,15 +480,9 @@ describe('Accounting Service', (): void => {
     })
 
     test('Cannot deposit to unknown account', async (): Promise<void> => {
-      if (deposit.asset) {
-        deposit.asset.unit = newUnit()
-      } else {
-        deposit.accountId = uuid()
-      }
+      deposit.account.id = uuid()
       await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
-        asset
-          ? TransferError.UnknownSourceAccount
-          : TransferError.UnknownDestinationAccount
+        TransferError.UnknownDestinationAccount
       )
     })
 
@@ -587,52 +501,26 @@ describe('Accounting Service', (): void => {
     })
   })
 
-  describe.each`
-    asset    | description
-    ${true}  | ${'Asset Liquidity'}
-    ${false} | ${'Account'}
-  `(`$description Withdrawal`, (asset): void => {
+  describe('Withdrawal', (): void => {
     let withdrawal: Withdrawal
-    let unit: number
     const startingBalance = BigInt(10)
+
     beforeEach(
       async (): Promise<void> => {
         const account = await accountFactory.build({
-          balance: asset ? BigInt(0) : startingBalance
+          balance: startingBalance
         })
-        unit = account.asset.unit
-        const id = uuid()
-        const amount = BigInt(1)
-        if (asset) {
-          withdrawal = {
-            id,
-            asset: { unit },
-            amount,
-            timeout
-          }
-          await expect(
-            accountingService.createDeposit({
-              id: uuid(),
-              asset: { unit },
-              amount: startingBalance
-            })
-          ).resolves.toBeUndefined()
-          await expect(
-            accountingService.getAssetLiquidityBalance(unit)
-          ).resolves.toEqual(startingBalance)
-        } else {
-          withdrawal = {
-            id,
-            accountId: account.id,
-            amount,
-            timeout
-          }
-          await expect(
-            accountingService.getBalance(account.id)
-          ).resolves.toEqual(startingBalance)
+        withdrawal = {
+          id: uuid(),
+          account,
+          amount: BigInt(1),
+          timeout
         }
+        await expect(accountingService.getBalance(account.id)).resolves.toEqual(
+          startingBalance
+        )
         await expect(
-          accountingService.getAssetSettlementBalance(unit)
+          accountingService.getSettlementBalance(account.asset.unit)
         ).resolves.toEqual(startingBalance)
       }
     )
@@ -642,17 +530,11 @@ describe('Accounting Service', (): void => {
         await expect(
           accountingService.createWithdrawal(withdrawal)
         ).resolves.toBeUndefined()
-        if (withdrawal.accountId) {
-          await expect(
-            accountingService.getBalance(withdrawal.accountId)
-          ).resolves.toEqual(startingBalance - withdrawal.amount)
-        } else {
-          await expect(
-            accountingService.getAssetLiquidityBalance(unit)
-          ).resolves.toEqual(startingBalance - withdrawal.amount)
-        }
         await expect(
-          accountingService.getAssetSettlementBalance(unit)
+          accountingService.getBalance(withdrawal.account.id)
+        ).resolves.toEqual(startingBalance - withdrawal.amount)
+        await expect(
+          accountingService.getSettlementBalance(withdrawal.account.asset.unit)
         ).resolves.toEqual(startingBalance)
       })
 
@@ -679,13 +561,7 @@ describe('Accounting Service', (): void => {
       })
 
       test('Cannot withdraw from unknown account', async (): Promise<void> => {
-        if (withdrawal.accountId) {
-          withdrawal.accountId = uuid()
-        } else {
-          withdrawal.asset = {
-            unit: newUnit()
-          }
-        }
+        withdrawal.account.id = uuid()
         await expect(
           accountingService.createWithdrawal(withdrawal)
         ).resolves.toEqual(TransferError.UnknownSourceAccount)
@@ -726,17 +602,11 @@ describe('Accounting Service', (): void => {
         await expect(
           accountingService.commitWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
-        if (withdrawal.accountId) {
-          await expect(
-            accountingService.getBalance(withdrawal.accountId)
-          ).resolves.toEqual(startingBalance - withdrawal.amount)
-        } else {
-          await expect(
-            accountingService.getAssetLiquidityBalance(unit)
-          ).resolves.toEqual(startingBalance - withdrawal.amount)
-        }
         await expect(
-          accountingService.getAssetSettlementBalance(unit)
+          accountingService.getBalance(withdrawal.account.id)
+        ).resolves.toEqual(startingBalance - withdrawal.amount)
+        await expect(
+          accountingService.getSettlementBalance(withdrawal.account.asset.unit)
         ).resolves.toEqual(startingBalance - withdrawal.amount)
       })
 
@@ -799,17 +669,11 @@ describe('Accounting Service', (): void => {
         await expect(
           accountingService.rollbackWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
-        if (withdrawal.accountId) {
-          await expect(
-            accountingService.getBalance(withdrawal.accountId)
-          ).resolves.toEqual(startingBalance)
-        } else {
-          await expect(
-            accountingService.getAssetLiquidityBalance(unit)
-          ).resolves.toEqual(startingBalance)
-        }
         await expect(
-          accountingService.getAssetSettlementBalance(unit)
+          accountingService.getBalance(withdrawal.account.id)
+        ).resolves.toEqual(startingBalance)
+        await expect(
+          accountingService.getSettlementBalance(withdrawal.account.asset.unit)
         ).resolves.toEqual(startingBalance)
       })
 

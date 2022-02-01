@@ -112,13 +112,9 @@ describe('Invoice Service', (): void => {
         expiresAt: new Date(Date.now() + 30_000),
         amount: BigInt(123)
       })
-      await expect(accountingService.getAccount(invoice.id)).resolves.toEqual({
-        id: invoice.id,
-        asset: {
-          unit: invoice.account.asset.unit
-        },
-        balance: BigInt(0)
-      })
+      await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
+        BigInt(0)
+      )
     })
 
     test('Cannot create invoice for nonexistent account', async (): Promise<void> => {
@@ -155,7 +151,7 @@ describe('Invoice Service', (): void => {
       await expect(
         accountingService.createDeposit({
           id: uuid(),
-          accountId: invoice.id,
+          account: invoice,
           amount: invoice.amount - BigInt(1)
         })
       ).resolves.toBeUndefined()
@@ -170,7 +166,7 @@ describe('Invoice Service', (): void => {
       await expect(
         accountingService.createDeposit({
           id: uuid(),
-          accountId: invoice.id,
+          account: invoice,
           amount: invoice.amount
         })
       ).resolves.toBeUndefined()
@@ -211,7 +207,7 @@ describe('Invoice Service', (): void => {
         await expect(
           accountingService.createDeposit({
             id: uuid(),
-            accountId: invoice.id,
+            account: invoice,
             amount: BigInt(1)
           })
         ).resolves.toBeUndefined()
@@ -258,7 +254,7 @@ describe('Invoice Service', (): void => {
             await expect(
               accountingService.createDeposit({
                 id: uuid(),
-                accountId: invoice.id,
+                account: invoice,
                 amount: amountReceived
               })
             ).resolves.toBeUndefined()

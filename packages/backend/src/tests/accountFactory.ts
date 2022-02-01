@@ -1,14 +1,21 @@
 import { v4 as uuid } from 'uuid'
 
-import {
-  AccountingService,
-  Account,
-  AccountOptions
-} from '../accounting/service'
+import { AccountingService, Account } from '../accounting/service'
 import { randomUnit } from './asset'
 
-type BuildOptions = Partial<AccountOptions> & {
+type BuildOptions = Partial<Account> & {
   balance?: bigint
+}
+
+export type FactoryAccount = Omit<Account, 'asset'> & {
+  asset: {
+    id: string
+    unit: number
+    asset: {
+      id: string
+      unit: number
+    }
+  }
 }
 
 export class AccountFactory {
@@ -17,19 +24,31 @@ export class AccountFactory {
     private unitGenerator: () => number = randomUnit
   ) {}
 
-  public async build(options: BuildOptions = {}): Promise<Account> {
+  public async build(options: BuildOptions = {}): Promise<FactoryAccount> {
+    const assetId = options.asset?.id || uuid()
     const unit = options.asset?.unit || this.unitGenerator()
-    await this.accounts.createAssetAccounts(unit)
-    const accountOptions: AccountOptions = {
-      id: options.id || uuid(),
-      asset: { unit }
+    const asset = {
+      id: assetId,
+      unit,
+      asset: {
+        id: assetId,
+        unit
+      }
     }
-    const account = await this.accounts.createAccount(accountOptions)
+    if (!options.asset) {
+      await this.accounts.createSettlementAccount(asset.unit)
+      await this.accounts.createAccount(asset)
+    }
+    const account = {
+      id: options.id || uuid(),
+      asset
+    }
+    await this.accounts.createAccount(account)
 
     if (options.balance) {
       await this.accounts.createDeposit({
         id: uuid(),
-        accountId: account.id,
+        account,
         amount: options.balance
       })
     }

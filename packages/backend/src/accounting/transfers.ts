@@ -14,7 +14,7 @@ import {
   TransferError
 } from './errors'
 import { ServiceDependencies } from './service'
-import { AccountIdOptions, getAccountId, uuidToBigInt } from './utils'
+import { AccountId, toTigerbeetleId } from './utils'
 
 const TRANSFER_RESERVED = Buffer.alloc(32)
 
@@ -25,8 +25,8 @@ type TransfersError = {
 
 export interface CreateTransferOptions {
   id?: string
-  sourceAccount: AccountIdOptions
-  destinationAccount: AccountIdOptions
+  sourceAccountId: AccountId
+  destinationAccountId: AccountId
   amount: bigint
   timeout?: bigint // nano-seconds
 }
@@ -49,9 +49,9 @@ export async function createTransfers(
       flags |= TransferFlags.linked
     }
     tbTransfers.push({
-      id: uuidToBigInt(transfers[i].id || uuid()),
-      debit_account_id: getAccountId(transfer.sourceAccount),
-      credit_account_id: getAccountId(transfer.destinationAccount),
+      id: toTigerbeetleId(transfers[i].id || uuid()),
+      debit_account_id: toTigerbeetleId(transfer.sourceAccountId),
+      credit_account_id: toTigerbeetleId(transfer.destinationAccountId),
       amount: transfer.amount,
       user_data: BigInt(0),
       reserved: TRANSFER_RESERVED,
@@ -104,7 +104,7 @@ export async function commitTransfers(
     deps,
     commits: transferIds.map((id, idx) => {
       return {
-        id: uuidToBigInt(id),
+        id: toTigerbeetleId(id),
         flags: idx < transferIds.length - 1 ? 0 | CommitFlags.linked : 0,
         reserved: TRANSFER_RESERVED,
         code: 0,
@@ -123,7 +123,7 @@ export async function rollbackTransfers(
     commits: transferIds.map((id, idx) => {
       const flags = idx < transferIds.length - 1 ? 0 | CommitFlags.linked : 0
       return {
-        id: uuidToBigInt(id),
+        id: toTigerbeetleId(id),
         flags: flags | CommitFlags.reject,
         reserved: TRANSFER_RESERVED,
         code: 0,

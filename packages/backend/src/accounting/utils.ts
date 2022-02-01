@@ -1,40 +1,15 @@
-const ASSET_ACCOUNTS_RESERVED = 8
+import assert from 'assert'
 
-export enum AssetAccount {
-  Liquidity = 1,
-  Settlement
-}
+import { validateId } from '../shared/utils'
 
-export interface AccountId {
-  id: string
-  asset?: {
-    unit: number
-    account?: never
+export type AccountId = string | number
+
+export function toTigerbeetleId(id: AccountId): bigint {
+  if (typeof id === 'number') {
+    return BigInt(id)
   }
-}
-
-interface AssetAccountId {
-  id?: never
-  asset: {
-    unit: number
-    account: AssetAccount
-  }
-}
-
-export type AccountIdOptions = AccountId | AssetAccountId
-
-const isAssetAccount = (o: AccountIdOptions): o is AssetAccountId =>
-  !!o.asset?.account
-
-function getAssetAccountId(unit: number, type: AssetAccount): bigint {
-  return BigInt(unit * ASSET_ACCOUNTS_RESERVED + type)
-}
-
-export function getAccountId(options: AccountIdOptions): bigint {
-  if (isAssetAccount(options)) {
-    return getAssetAccountId(options.asset.unit, options.asset.account)
-  }
-  return uuidToBigInt(options.id)
+  assert.ok(validateId(id))
+  return uuidToBigInt(id)
 }
 
 export function uuidToBigInt(id: string): bigint {

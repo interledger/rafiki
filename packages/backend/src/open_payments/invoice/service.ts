@@ -86,10 +86,7 @@ async function createInvoice(
 
     // Invoice accounts are credited by the amounts received by the invoice.
     // Credits are restricted such that the invoice cannot receive more than that amount.
-    await deps.accountingService.createAccount({
-      id: invoice.id,
-      asset: invoice.account.asset
-    })
+    await deps.accountingService.createAccount(invoice)
 
     if (!trx) {
       await invTrx.commit()
@@ -139,6 +136,7 @@ async function processNextInvoice(
       // If an invoice is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<', now)
+      .withGraphFetched('account.asset')
 
     const invoice = invoices[0]
     if (!invoice) return
@@ -205,7 +203,7 @@ async function handleDeactivated(
     )
     const error = await deps.accountingService.createWithdrawal({
       id: invoice.id,
-      accountId: invoice.id,
+      account: invoice,
       amount: amountReceived,
       timeout: BigInt(deps.webhookService.timeout) * BigInt(1e6) // ms -> ns
     })

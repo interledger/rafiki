@@ -10,7 +10,12 @@ const assetScale = Faker.datatype.number(6)
 
 const accountAttrs = {
   id: Faker.datatype.uuid,
-  asset: { code: assetCode, scale: assetScale, unit: Faker.datatype.number() },
+  asset: {
+    id: Faker.datatype.uuid(),
+    code: assetCode,
+    scale: assetScale,
+    unit: Faker.datatype.number()
+  },
   balance: 0n
 }
 
