@@ -5,7 +5,12 @@ import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { AccountingService, Account, Deposit, Withdrawal } from './service'
+import {
+  AccountingService,
+  LiquidityAccount,
+  Deposit,
+  Withdrawal
+} from './service'
 import { CreateAccountError, TransferError, isTransferError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -75,18 +80,18 @@ describe('Accounting Service', (): void => {
     }
   )
 
-  describe('Create Account', (): void => {
-    test('Can create an account', async (): Promise<void> => {
-      const account: Account = {
+  describe('Create Liquidity Account', (): void => {
+    test('Can create a liquidity account', async (): Promise<void> => {
+      const account: LiquidityAccount = {
         id: uuid(),
         asset: {
           id: uuid(),
           unit: newUnit()
         }
       }
-      await expect(accountingService.createAccount(account)).resolves.toEqual(
-        account
-      )
+      await expect(
+        accountingService.createLiquidityAccount(account)
+      ).resolves.toEqual(account)
       await expect(accountingService.getBalance(account.id)).resolves.toEqual(
         BigInt(0)
       )
@@ -94,7 +99,7 @@ describe('Accounting Service', (): void => {
 
     test('Create throws on invalid id', async (): Promise<void> => {
       await expect(
-        accountingService.createAccount({
+        accountingService.createLiquidityAccount({
           id: 'not a uuid',
           asset: {
             id: uuid(),
@@ -114,7 +119,7 @@ describe('Accounting Service', (): void => {
       ])
 
       await expect(
-        accountingService.createAccount({
+        accountingService.createLiquidityAccount({
           id: uuid(),
           asset: {
             id: uuid(),
@@ -209,7 +214,7 @@ describe('Accounting Service', (): void => {
       ${true}   | ${'same asset'}
       ${false}  | ${'cross-currency'}
     `('$description', ({ sameAsset }): void => {
-      let sourceAccount: Account
+      let sourceAccount: LiquidityAccount
       let destinationAccount: FactoryAccount
       const startingSourceBalance = BigInt(10)
       const startingDestinationLiquidity = BigInt(100)

@@ -14,7 +14,7 @@ import {
 import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
 import { TransferError } from '../../accounting/errors'
-import { Account, Transaction } from '../../accounting/service'
+import { LiquidityAccount, Transaction } from '../../accounting/service'
 import { AssetOptions } from '../../asset/service'
 import { AccountService } from '../../open_payments/account/service'
 import { InvoiceService } from '../../open_payments/invoice/service'
@@ -27,8 +27,8 @@ import { PeerService } from '../../peer/service'
 //   ../../open_payments/invoice/model
 //   ../../outgoing_payment/model
 //   ../../peer/model
-export interface ConnectorAccount extends Account {
-  asset: Account['asset'] & AssetOptions
+export interface ConnectorAccount extends LiquidityAccount {
+  asset: LiquidityAccount['asset'] & AssetOptions
 }
 
 export interface IncomingAccount extends ConnectorAccount {

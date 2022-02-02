@@ -86,7 +86,7 @@ async function createInvoice(
 
     // Invoice accounts are credited by the amounts received by the invoice.
     // Credits are restricted such that the invoice cannot receive more than that amount.
-    await deps.accountingService.createAccount(invoice)
+    await deps.accountingService.createLiquidityAccount(invoice)
 
     if (!trx) {
       await invTrx.commit()

@@ -2,7 +2,7 @@ import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 
-import { Account as TigerbeetleAccount } from '../accounting/service'
+import { LiquidityAccount } from '../accounting/service'
 import { Asset } from '../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
 import { Account } from '../open_payments/account/model'
@@ -25,7 +25,7 @@ export type PaymentIntent = {
 
 export class OutgoingPayment
   extends BaseModel
-  implements ConnectorAccount, TigerbeetleAccount {
+  implements ConnectorAccount, LiquidityAccount {
   public static readonly tableName = 'outgoingPayments'
 
   public state!: PaymentState

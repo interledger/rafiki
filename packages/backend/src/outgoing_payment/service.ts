@@ -125,7 +125,7 @@ async function createOutgoingPayment(
         }
       })
 
-      await deps.accountingService.createAccount({
+      await deps.accountingService.createLiquidityAccount({
         id: payment.id,
         asset: payment.account.asset
       })
