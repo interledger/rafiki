@@ -1,10 +1,13 @@
 import { Model, Pojo } from 'objection'
-import { Account } from '../accounting/service'
+import { LiquidityAccount } from '../accounting/service'
 import { Asset } from '../asset/model'
+import { ConnectorAccount } from '../connector/core/rafiki'
 import { HttpToken } from '../httpToken/model'
 import { BaseModel } from '../shared/baseModel'
 
-export class Peer extends BaseModel implements Account {
+export class Peer
+  extends BaseModel
+  implements ConnectorAccount, LiquidityAccount {
   public static get tableName(): string {
     return 'peers'
   }

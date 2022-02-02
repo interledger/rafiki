@@ -54,7 +54,7 @@ async function createAccount(
       .withGraphFetched('asset')
 
     // SPSP fallback account
-    await deps.accountingService.createAccount({
+    await deps.accountingService.createLiquidityAccount({
       id: account.id,
       asset: account.asset
     })

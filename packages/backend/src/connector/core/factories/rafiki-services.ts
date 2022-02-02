@@ -25,17 +25,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
     get: async (id: string) => await accounting._getAccount(id)
   }))
   .attr('invoices', ['accounting'], (accounting: MockAccountingService) => ({
-    get: async (id: string) => {
-      const invoice = await accounting._getInvoice(id)
-      if (invoice) {
-        return {
-          ...invoice,
-          account: {
-            asset: invoice.asset
-          }
-        }
-      }
-    },
+    get: async (id: string) => await accounting._getInvoice(id),
     handlePayment: async (_id: string) => {
       return undefined
     }

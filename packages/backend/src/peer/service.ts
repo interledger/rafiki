@@ -125,7 +125,7 @@ async function createPeer(
       }
     }
 
-    await deps.accountingService.createAccount({
+    await deps.accountingService.createLiquidityAccount({
       id: peer.id,
       asset
     })

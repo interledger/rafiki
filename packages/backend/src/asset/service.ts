@@ -65,7 +65,7 @@ async function getOrCreateAsset(
         code,
         scale
       })
-      await deps.accountingService.createAccount(asset)
+      await deps.accountingService.createLiquidityAccount(asset)
       await deps.accountingService.createSettlementAccount(asset.unit)
 
       return asset

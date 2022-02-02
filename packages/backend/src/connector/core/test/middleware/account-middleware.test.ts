@@ -68,12 +68,7 @@ describe('Account Middleware', () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.accounts.incoming).toEqual(incomingAccount)
-    expect(ctx.accounts.outgoing).toEqual({
-      id: outgoingAccount.id,
-      asset: outgoingAccount.asset,
-      stream: { enabled: true },
-      invoice: true
-    })
+    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
   })
 
   test('set the accounts according to state and streamDestination SPSP fallback', async () => {
@@ -99,11 +94,7 @@ describe('Account Middleware', () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(ctx.accounts.incoming).toEqual(incomingAccount)
-    expect(ctx.accounts.outgoing).toEqual({
-      id: outgoingAccount.id,
-      asset: outgoingAccount.asset,
-      stream: { enabled: true }
-    })
+    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
   })
 
   test('return an error when the destination account is disabled', async () => {

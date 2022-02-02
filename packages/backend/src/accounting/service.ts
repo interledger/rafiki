@@ -26,8 +26,8 @@ import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 
 // Model classes that have a corresponding Tigerbeetle liquidity
-// account SHOULD implement this Account interface and call
-// createAccount for each model instance.
+// account SHOULD implement this LiquidityAccount interface and call
+// createLiquidityAccount for each model instance.
 // The Tigerbeetle account id will be the model id.
 // Such models include:
 //   ../asset/model
@@ -37,7 +37,7 @@ import { validateId } from '../shared/utils'
 //   ../peer/model
 // Asset settlement Tigerbeetle accounts are the only exception.
 // Their account id is the corresponding asset's unit value.
-export interface Account {
+export interface LiquidityAccount {
   id: string
   asset: {
     id: string
@@ -47,7 +47,7 @@ export interface Account {
 
 export interface Deposit {
   id: string
-  account: Account
+  account: LiquidityAccount
   amount: bigint
 }
 
@@ -56,8 +56,8 @@ export interface Withdrawal extends Deposit {
 }
 
 export interface TransferOptions {
-  sourceAccount: Account
-  destinationAccount: Account
+  sourceAccount: LiquidityAccount
+  destinationAccount: LiquidityAccount
   sourceAmount: bigint
   destinationAmount?: bigint
   timeout: bigint // nano-seconds
@@ -69,7 +69,7 @@ export interface Transaction {
 }
 
 export interface AccountingService {
-  createAccount(account: Account): Promise<Account>
+  createLiquidityAccount(account: LiquidityAccount): Promise<LiquidityAccount>
   createSettlementAccount(unit: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
@@ -100,7 +100,7 @@ export function createAccountingService({
     tigerbeetle
   }
   return {
-    createAccount: (options) => createAccount(deps, options),
+    createLiquidityAccount: (options) => createLiquidityAccount(deps, options),
     createSettlementAccount: (unit) => createSettlementAccount(deps, unit),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
@@ -114,10 +114,10 @@ export function createAccountingService({
   }
 }
 
-export async function createAccount(
+export async function createLiquidityAccount(
   deps: ServiceDependencies,
-  account: Account
-): Promise<Account> {
+  account: LiquidityAccount
+): Promise<LiquidityAccount> {
   if (!validateId(account.id)) {
     throw new Error('unable to create account, invalid id')
   }

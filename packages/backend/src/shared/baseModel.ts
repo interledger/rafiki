@@ -2,7 +2,7 @@ import { Model, ModelOptions, QueryContext } from 'objection'
 import { DbErrors } from 'objection-db-errors'
 import { v4 as uuid } from 'uuid'
 
-export class BaseModel extends DbErrors(Model) {
+export abstract class BaseModel extends DbErrors(Model) {
   public static get modelPaths(): string[] {
     return [__dirname]
   }

@@ -25,12 +25,7 @@ export const IncomingAccountFactory = Factory.define<MockIncomingAccount>(
 
 export const OutgoingAccountFactory = Factory.define<MockOutgoingAccount>(
   'OutgoingAccountFactory'
-).attrs({
-  ...accountAttrs,
-  stream: {
-    enabled: true
-  }
-})
+).attrs(accountAttrs)
 
 export const IncomingPeerFactory = Factory.define<MockIncomingAccount>(
   'IncomingPeerFactory'
@@ -58,10 +53,7 @@ export const OutgoingPeerFactory = Factory.define<MockOutgoingAccount>(
         authToken: Faker.datatype.string(32),
         endpoint: Faker.internet.url()
       }
-    }),
-    stream: {
-      enabled: false
-    }
+    })
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`

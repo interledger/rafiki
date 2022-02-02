@@ -15,10 +15,8 @@ export function createStreamController(): ILPMiddleware {
     const { logger, redis, streamServer } = ctx.services
     const { request, response } = ctx
 
-    const { stream } = ctx.accounts.outgoing
     if (
-      !stream ||
-      !stream.enabled ||
+      ctx.accounts.outgoing.http ||
       !streamServer.decodePaymentTag(request.prepare.destination) // XXX mark this earlier in the middleware pipeline
     ) {
       await next()
