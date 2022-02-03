@@ -33,8 +33,6 @@ export class Invoice
 
   public processAt!: Date | null
 
-  public webhookAttempts!: number
-
   public get asset(): Asset {
     return this.account.asset
   }

@@ -2,10 +2,12 @@ import { Invoice } from './model'
 import { AccountingService } from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
-import { EventType, WebhookService } from '../../webhook/service'
+import { EventType } from '../../webhook/model'
+import { WebhookService, RETRY_LIMIT_MS } from '../../webhook/service'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import { v4 as uuid } from 'uuid'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -184,66 +186,47 @@ async function handleDeactivated(
   invoice: Invoice
 ): Promise<void> {
   assert.ok(invoice.processAt)
-  try {
-    const amountReceived = await deps.accountingService.getTotalReceived(
-      invoice.id
-    )
-    if (!amountReceived) {
-      deps.logger.warn(
-        { amountReceived },
-        'invoice with processAt and empty balance'
-      )
-      await invoice.$query(deps.knex).patch({ processAt: null })
-      return
-    }
-
-    deps.logger.trace(
+  const amountReceived = await deps.accountingService.getTotalReceived(
+    invoice.id
+  )
+  if (!amountReceived) {
+    deps.logger.warn(
       { amountReceived },
-      'withdrawing deactivated invoice balance'
+      'invoice with processAt and empty balance'
     )
-    const error = await deps.accountingService.createWithdrawal({
-      id: invoice.id,
-      account: invoice,
-      amount: amountReceived,
-      timeout: BigInt(deps.webhookService.timeout) * BigInt(1e6) // ms -> ns
-    })
-    if (error) throw error
+    await invoice.$query(deps.knex).patch({ processAt: null })
+    return
+  }
 
-    const { status } = await deps.webhookService.send({
-      id: invoice.id,
+  deps.logger.trace(
+    { amountReceived },
+    'withdrawing deactivated invoice balance'
+  )
+
+  await invoice.$query(deps.knex).patch({
+    processAt: null
+  })
+
+  const id = uuid()
+  await deps.webhookService.createEvent(
+    {
+      id,
+      invoice,
       type:
         amountReceived < invoice.amount
           ? EventType.InvoiceExpired
           : EventType.InvoicePaid,
-      invoice,
       amountReceived
-    })
-    if (status === 200 || status === 205) {
-      const error = await deps.accountingService.commitWithdrawal(invoice.id)
-      if (error) throw error
-      if (status === 200) {
-        await invoice.$query(deps.knex).patch({
-          processAt: null
-        })
-      }
-    }
-  } catch (error) {
-    const webhookAttempts = invoice.webhookAttempts + 1
-    deps.logger.warn(
-      { error, webhookAttempts },
-      'webhook attempt failed; retrying'
-    )
-    await deps.accountingService.rollbackWithdrawal(invoice.id)
-
-    const processAt = new Date(
-      invoice.processAt.getTime() +
-        Math.min(webhookAttempts, 6) * RETRY_BACKOFF_MS
-    )
-    await invoice.$query(deps.knex).patch({
-      processAt,
-      webhookAttempts
-    })
-  }
+    },
+    deps.knex as Transaction
+  )
+  const error = await deps.accountingService.createWithdrawal({
+    id,
+    account: invoice,
+    amount: amountReceived,
+    timeout: BigInt(RETRY_LIMIT_MS) * BigInt(1e6) // ms -> ns
+  })
+  if (error) throw new Error(error)
 }
 
 /** TODO: Base64 encode/decode the cursors

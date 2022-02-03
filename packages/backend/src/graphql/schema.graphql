@@ -77,6 +77,12 @@ type Mutation {
     withdrawalId: String!
   ): LiquidityMutationResponse
 
+  "Deposit webhook event liquidity"
+  depositEventLiquidity(eventId: String!): LiquidityMutationResponse
+
+  "Withdraw webhook event liquidity"
+  withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
+
   "Create API Key"
   createApiKey(input: CreateApiKeyInput!): CreateApiKeyMutationResponse
 

@@ -282,6 +282,10 @@ export type Mutation = {
   finalizeLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Rollback liquidity withdrawal */
   rollbackLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
+  /** Deposit webhook event liquidity */
+  depositEventLiquidity?: Maybe<LiquidityMutationResponse>;
+  /** Withdraw webhook event liquidity */
+  withdrawEventLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Create API Key */
   createApiKey?: Maybe<CreateApiKeyMutationResponse>;
   /** Delete all API Keys */
@@ -362,6 +366,16 @@ export type MutationFinalizeLiquidityWithdrawalArgs = {
 
 export type MutationRollbackLiquidityWithdrawalArgs = {
   withdrawalId: Scalars['String'];
+};
+
+
+export type MutationDepositEventLiquidityArgs = {
+  eventId: Scalars['String'];
+};
+
+
+export type MutationWithdrawEventLiquidityArgs = {
+  eventId: Scalars['String'];
 };
 
 
@@ -963,6 +977,8 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createAccountWithdrawal?: Resolver<Maybe<ResolversTypes['AccountWithdrawalMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAccountWithdrawalArgs, 'input'>>;
   finalizeLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationFinalizeLiquidityWithdrawalArgs, 'withdrawalId'>>;
   rollbackLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationRollbackLiquidityWithdrawalArgs, 'withdrawalId'>>;
+  depositEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositEventLiquidityArgs, 'eventId'>>;
+  withdrawEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationWithdrawEventLiquidityArgs, 'eventId'>>;
   createApiKey?: Resolver<Maybe<ResolversTypes['CreateApiKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateApiKeyArgs, 'input'>>;
   deleteAllApiKeys?: Resolver<Maybe<ResolversTypes['DeleteAllApiKeysMutationResponse']>, ParentType, ContextType, RequireFields<MutationDeleteAllApiKeysArgs, 'input'>>;
   redeemApiKey?: Resolver<Maybe<ResolversTypes['RedeemApiKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationRedeemApiKeyArgs, 'input'>>;

@@ -1,8 +1,6 @@
 import assert from 'assert'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
-import nock from 'nock'
-import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { InvoiceService } from './service'
@@ -17,7 +15,7 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { EventType } from '../../webhook/service'
+import { WebhookEvent, EventType } from '../../webhook/model'
 
 describe('Invoice Service', (): void => {
   let deps: IocContract<AppServices>
@@ -30,22 +28,6 @@ describe('Invoice Service', (): void => {
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
-  }
-  const webhookUrl = new URL(Config.webhookUrl)
-
-  function mockWebhookServer(
-    invoiceId: string,
-    type: EventType,
-    status = 200
-  ): nock.Scope {
-    return nock(webhookUrl.origin)
-      .post(webhookUrl.pathname, (body): boolean => {
-        expect(body.type).toEqual(type)
-        expect(body.data.invoice.id).toEqual(invoiceId)
-        expect(body.data.invoice.active).toEqual(false)
-        return true
-      })
-      .reply(status)
   }
 
   beforeAll(
@@ -235,12 +217,12 @@ describe('Invoice Service', (): void => {
     })
 
     describe.each`
-      event                       | expiresAt  | amountReceived
+      type                        | expiresAt  | amountReceived
       ${EventType.InvoiceExpired} | ${-40_000} | ${BigInt(1)}
       ${EventType.InvoicePaid}    | ${30_000}  | ${BigInt(123)}
     `(
-      'handleDeactivated ($event)',
-      ({ event, expiresAt, amountReceived }): void => {
+      'handleDeactivated ($type)',
+      ({ type, expiresAt, amountReceived }): void => {
         let invoice: Invoice
 
         beforeEach(
@@ -258,7 +240,7 @@ describe('Invoice Service', (): void => {
                 amount: amountReceived
               })
             ).resolves.toBeUndefined()
-            if (event === EventType.InvoiceExpired) {
+            if (type === EventType.InvoiceExpired) {
               await expect(invoiceService.processNext()).resolves.toBe(
                 invoice.id
               )
@@ -277,44 +259,31 @@ describe('Invoice Service', (): void => {
           }
         )
 
-        test('Withdraws invoice liquidity', async (): Promise<void> => {
-          const scope = mockWebhookServer(invoice.id, event)
+        test('Creates liquidity withdrawal and webhook event', async (): Promise<void> => {
+          await expect(
+            WebhookEvent.query(knex).where({ type })
+          ).resolves.toHaveLength(0)
           await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-          expect(scope.isDone()).toBe(true)
+          await expect(
+            WebhookEvent.query(knex)
+              .whereJsonSupersetOf('data:invoice', {
+                id: invoice.id
+              })
+              .where({ type })
+          ).resolves.toHaveLength(1)
           await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            processAt: null,
-            webhookAttempts: 0
+            processAt: null
           })
           await expect(
             accountingService.getBalance(invoice.id)
           ).resolves.toEqual(BigInt(0))
         })
 
-        test("Doesn't withdraw on webhook error", async (): Promise<void> => {
+        test.skip("Doesn't withdraw on webhook error", async (): Promise<void> => {
           assert.ok(invoice.processAt)
-          const scope = mockWebhookServer(invoice.id, event, 504)
           await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-          expect(scope.isDone()).toBe(true)
           await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            processAt: new Date(invoice.processAt.getTime() + 10_000),
-            webhookAttempts: 1
-          })
-          await expect(
-            accountingService.getBalance(invoice.id)
-          ).resolves.toEqual(amountReceived)
-        })
-
-        test("Doesn't withdraw on webhook timeout", async (): Promise<void> => {
-          assert.ok(invoice.processAt)
-          const scope = nock(webhookUrl.origin)
-            .post(webhookUrl.pathname)
-            .delayConnection(Config.webhookTimeout + 1)
-            .reply(200)
-          await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-          expect(scope.isDone()).toBe(true)
-          await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            processAt: new Date(invoice.processAt.getTime() + 10_000),
-            webhookAttempts: 1
+            processAt: invoice.processAt
           })
           await expect(
             accountingService.getBalance(invoice.id)
