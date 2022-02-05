@@ -1,13 +1,11 @@
-import { Invoice } from './model'
+import { Invoice, InvoiceEvent, InvoiceEventType } from './model'
 import { AccountingService } from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
-import { EventType } from '../../webhook/model'
 import { WebhookService, RETRY_LIMIT_MS } from '../../webhook/service'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
-import { v4 as uuid } from 'uuid'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -207,21 +205,18 @@ async function handleDeactivated(
     processAt: null
   })
 
-  const id = uuid()
-  await deps.webhookService.createEvent(
-    {
-      id,
-      invoice,
-      type:
-        amountReceived < invoice.amount
-          ? EventType.InvoiceExpired
-          : EventType.InvoicePaid,
-      amountReceived
-    },
-    deps.knex as Transaction
-  )
+  const event = await InvoiceEvent.query(deps.knex).insertAndFetch({
+    type:
+      amountReceived < invoice.amount
+        ? InvoiceEventType.InvoiceExpired
+        : InvoiceEventType.InvoicePaid,
+    data: invoice.toData(amountReceived),
+    // TODO:
+    // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before being deactivated.
+    processAt: new Date()
+  })
   const error = await deps.accountingService.createWithdrawal({
-    id,
+    id: event.id,
     account: invoice,
     amount: amountReceived,
     timeout: BigInt(RETRY_LIMIT_MS) * BigInt(1e6) // ms -> ns

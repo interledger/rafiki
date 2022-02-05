@@ -12,7 +12,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTable, truncateTables } from '../tests/tableManager'
-import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
+import {
+  OutgoingPayment,
+  PaymentIntent,
+  PaymentState,
+  PaymentEvent,
+  PaymentEventType
+} from './model'
 import { LifecycleError } from './errors'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../accounting/errors'
@@ -21,7 +27,6 @@ import { uuidToBigInt } from '../accounting/utils'
 import { AssetOptions } from '../asset/service'
 import { Invoice } from '../open_payments/invoice/model'
 import { RatesService } from '../rates/service'
-import { WebhookEvent, EventType } from '../webhook/model'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -40,13 +45,13 @@ describe('OutgoingPaymentService', (): void => {
   let config: IAppConfig
 
   const webhookTypes: {
-    [key in PaymentState]: EventType | undefined
+    [key in PaymentState]: PaymentEventType | undefined
   } = {
     [PaymentState.Quoting]: undefined,
-    [PaymentState.Funding]: EventType.PaymentFunding,
+    [PaymentState.Funding]: PaymentEventType.PaymentFunding,
     [PaymentState.Sending]: undefined,
-    [PaymentState.Cancelled]: EventType.PaymentCancelled,
-    [PaymentState.Completed]: EventType.PaymentCompleted
+    [PaymentState.Cancelled]: PaymentEventType.PaymentCancelled,
+    [PaymentState.Completed]: PaymentEventType.PaymentCompleted
   }
 
   async function processNext(
@@ -62,7 +67,7 @@ describe('OutgoingPaymentService', (): void => {
     const type = webhookTypes[payment.state]
     if (type) {
       await expect(
-        WebhookEvent.query(knex)
+        PaymentEvent.query(knex)
           .whereJsonSupersetOf('data:payment', {
             id: payment.id
           })

@@ -7,8 +7,13 @@ import {
   AccountWithdrawalMutationResponse
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
+import { InvoiceEventType } from '../../open_payments/invoice/model'
 import { FundingError, isFundingError } from '../../outgoing_payment/errors'
-import { DepositEventType, WithdrawEventType } from '../../webhook/model'
+import {
+  isPaymentEvent,
+  PaymentDepositType,
+  PaymentWithdrawType
+} from '../../outgoing_payment/model'
 
 export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] = async (
   parent,
@@ -280,6 +285,9 @@ export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['roll
   }
 }
 
+export const DepositEventType = PaymentDepositType
+export type DepositEventType = PaymentDepositType
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isDepositEventType = (o: any): o is DepositEventType =>
   Object.values(DepositEventType).includes(o)
@@ -292,7 +300,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
   try {
     const webhookService = await ctx.container.use('webhookService')
     const event = await webhookService.getEvent(args.eventId)
-    if (!event || !isDepositEventType(event.type)) {
+    if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
       return responses[LiquidityError.InvalidId]
     }
     assert.ok(event.data.payment?.quote?.maxSourceAmount)
@@ -328,6 +336,9 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
   }
 }
 
+export const WithdrawEventType = { ...InvoiceEventType, ...PaymentWithdrawType }
+export type WithdrawEventType = InvoiceEventType | PaymentWithdrawType
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isWithdrawEventType = (o: any): o is WithdrawEventType =>
   Object.values(WithdrawEventType).includes(o)
@@ -339,6 +350,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
 ): ResolversTypes['LiquidityMutationResponse'] => {
   try {
     const webhookService = await ctx.container.use('webhookService')
+    // TODO: remove event lookup when commitWithdrawal can verify transfer code
     const event = await webhookService.getEvent(args.eventId)
     if (!event || !isWithdrawEventType(event.type)) {
       return responses[LiquidityError.InvalidId]

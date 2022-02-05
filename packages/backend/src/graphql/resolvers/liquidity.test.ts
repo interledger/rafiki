@@ -3,6 +3,7 @@ import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
 
+import { DepositEventType, WithdrawEventType } from './liquidity'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
@@ -13,13 +14,17 @@ import { Asset } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { Account } from '../../open_payments/account/model'
 import { Invoice } from '../../open_payments/invoice/model'
-import { OutgoingPayment, PaymentState } from '../../outgoing_payment/model'
+import {
+  OutgoingPayment,
+  PaymentState,
+  PaymentEvent,
+  isPaymentEventType
+} from '../../outgoing_payment/model'
 import { Peer } from '../../peer/model'
 import { randomAsset } from '../../tests/asset'
 import { PeerFactory } from '../../tests/peerFactory'
 import { truncateTables } from '../../tests/tableManager'
-import { DepositEventType, WithdrawEventType } from '../../webhook/model'
-import { EventOptions, isPaymentEventType } from '../../webhook/service'
+import { WebhookEvent } from '../../webhook/model'
 import {
   LiquidityError,
   LiquidityMutationResponse,
@@ -1623,13 +1628,14 @@ describe('Liquidity Resolvers', (): void => {
           beforeEach(
             async (): Promise<void> => {
               eventId = uuid()
-              const webhookService = await deps.use('webhookService')
-              await webhookService.createEvent({
+              await PaymentEvent.query(knex).insertAndFetch({
                 id: eventId,
                 type,
-                payment,
-                amountSent: BigInt(0),
-                balance: BigInt(0)
+                data: payment.toData({
+                  amountSent: BigInt(0),
+                  balance: BigInt(0)
+                }),
+                processAt: new Date()
               })
             }
           )
@@ -1750,29 +1756,28 @@ describe('Liquidity Resolvers', (): void => {
 
           beforeEach(
             async (): Promise<void> => {
-              const webhookService = await deps.use('webhookService')
-
               eventId = uuid()
               const amount = BigInt(10)
               let account: LiquidityAccount
-              let options: EventOptions
               if (isPaymentEventType(type)) {
                 account = payment
-                options = {
+                await WebhookEvent.query(knex).insertAndFetch({
                   id: eventId,
                   type,
-                  payment,
-                  amountSent: BigInt(0),
-                  balance: amount
-                }
+                  data: payment.toData({
+                    amountSent: BigInt(0),
+                    balance: amount
+                  }),
+                  processAt: new Date()
+                })
               } else {
                 account = invoice
-                options = {
+                await WebhookEvent.query(knex).insertAndFetch({
                   id: eventId,
                   type,
-                  invoice,
-                  amountReceived: amount
-                }
+                  data: invoice.toData(amount),
+                  processAt: new Date()
+                })
               }
               await expect(
                 accountingService.createDeposit({
@@ -1792,7 +1797,6 @@ describe('Liquidity Resolvers', (): void => {
               await expect(
                 accountingService.getBalance(account.id)
               ).resolves.toEqual(BigInt(0))
-              await webhookService.createEvent(options)
             }
           )
 

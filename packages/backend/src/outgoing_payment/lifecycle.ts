@@ -1,13 +1,15 @@
 import * as Pay from '@interledger/pay'
 import assert from 'assert'
-import { Transaction } from 'knex'
-import { v4 as uuid } from 'uuid'
 
 import { LifecycleError } from './errors'
-import { OutgoingPayment, PaymentState } from './model'
+import {
+  OutgoingPayment,
+  PaymentState,
+  PaymentEvent,
+  PaymentEventType
+} from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
-import { PaymentEventType } from '../webhook/model'
 import { RETRY_LIMIT_MS } from '../webhook/service'
 
 const MAX_INT64 = BigInt('9223372036854775807')
@@ -342,23 +344,16 @@ const sendWebhookEvent = async (
     throw LifecycleError.MissingBalance
   }
 
-  const id = uuid()
-
-  await deps.webhookService.createEvent(
-    {
-      id,
-      payment,
-      type,
-      amountSent,
-      balance
-    },
-    deps.knex as Transaction
-  )
+  const event = await PaymentEvent.query(deps.knex).insertAndFetch({
+    type,
+    data: payment.toData({ amountSent, balance }),
+    processAt: new Date()
+  })
 
   if (balance) {
     assert.ok(type !== PaymentEventType.PaymentFunding)
     const error = await deps.accountingService.createWithdrawal({
-      id,
+      id: event.id,
       account: payment,
       amount: balance,
       timeout: BigInt(RETRY_LIMIT_MS) * BigInt(1e6) // ms -> ns

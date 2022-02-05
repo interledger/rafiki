@@ -6,13 +6,10 @@ import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
 
-import { EventType, WebhookEvent } from './model'
+import { WebhookEvent } from './model'
 import {
-  isPaymentEventType,
   WebhookService,
   generateWebhookSignature,
-  invoiceToData,
-  paymentToData,
   RETENTION_LIMIT_MS,
   RETRY_BACKOFF_MS,
   RETRY_LIMIT_MS
@@ -24,8 +21,16 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { Invoice } from '../open_payments/invoice/model'
-import { OutgoingPayment, PaymentState } from '../outgoing_payment/model'
+import { Invoice, InvoiceEventType } from '../open_payments/invoice/model'
+import {
+  OutgoingPayment,
+  PaymentState,
+  PaymentEventType,
+  isPaymentEventType
+} from '../outgoing_payment/model'
+
+export const EventType = { ...InvoiceEventType, ...PaymentEventType }
+export type EventType = InvoiceEventType | PaymentEventType
 
 describe('Webhook Service', (): void => {
   let deps: IocContract<AppServices>
@@ -108,38 +113,23 @@ describe('Webhook Service', (): void => {
   describe.each(Object.values(EventType).map((type) => [type]))(
     '%s',
     (type): void => {
-      describe('Create/Get Webhook Event', (): void => {
-        test('A webhook event can be created and fetched', async (): Promise<void> => {
-          const id = uuid()
-          const options = isPaymentEventType(type)
-            ? {
-                id,
-                type,
-                payment,
-                amountSent,
-                balance
-              }
-            : {
-                id,
-                type,
-                invoice,
-                amountReceived
-              }
-          const now = new Date()
-          jest.useFakeTimers('modern')
-          jest.setSystemTime(now)
+      let event: WebhookEvent
 
-          const event = await webhookService.createEvent(options)
-          expect(event).toMatchObject({
-            id,
+      beforeEach(
+        async (): Promise<void> => {
+          event = await WebhookEvent.query(knex).insertAndFetch({
+            id: uuid(),
             type,
             data: isPaymentEventType(type)
-              ? paymentToData(payment, amountSent, balance)
-              : invoiceToData(invoice, amountReceived),
-            error: null,
-            attempts: 0,
-            processAt: now
+              ? payment.toData({ amountSent, balance })
+              : invoice.toData(amountReceived),
+            processAt: new Date()
           })
+        }
+      )
+
+      describe('Get Webhook Event', (): void => {
+        test('A webhook event can be fetched', async (): Promise<void> => {
           await expect(webhookService.getEvent(event.id)).resolves.toEqual(
             event
           )
@@ -151,29 +141,6 @@ describe('Webhook Service', (): void => {
       })
 
       describe('processNext', (): void => {
-        let event: WebhookEvent
-
-        beforeEach(
-          async (): Promise<void> => {
-            event = await webhookService.createEvent(
-              isPaymentEventType(type)
-                ? {
-                    id: uuid(),
-                    type,
-                    payment,
-                    amountSent,
-                    balance
-                  }
-                : {
-                    id: uuid(),
-                    type,
-                    invoice,
-                    amountReceived
-                  }
-            )
-          }
-        )
-
         function mockWebhookServer(status = 200): nock.Scope {
           return nock(webhookUrl.origin)
             .post(webhookUrl.pathname, function (this: Definition, body) {
@@ -190,12 +157,10 @@ describe('Webhook Service', (): void => {
               expect(body.type).toEqual(type)
               if (isPaymentEventType(type)) {
                 expect(body.data).toEqual(
-                  paymentToData(payment, amountSent, balance)
+                  payment.toData({ amountSent, balance })
                 )
               } else {
-                expect(body.data).toEqual(
-                  invoiceToData(invoice, amountReceived)
-                )
+                expect(body.data).toEqual(invoice.toData(amountReceived))
               }
               return true
             })

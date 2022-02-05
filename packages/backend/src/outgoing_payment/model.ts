@@ -6,6 +6,7 @@ import { Asset } from '../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
 import { Account } from '../open_payments/account/model'
 import { BaseModel } from '../shared/baseModel'
+import { WebhookEvent } from '../webhook/model'
 
 const fieldPrefixes = ['intent', 'quote', 'destinationAccount', 'outcome']
 
@@ -132,6 +133,59 @@ export class OutgoingPayment
     }
     return json
   }
+
+  public toData({
+    amountSent,
+    balance
+  }: {
+    amountSent: bigint
+    balance: bigint
+  }): PaymentData {
+    const data: PaymentData = {
+      payment: {
+        id: this.id,
+        accountId: this.accountId,
+        state: this.state,
+        stateAttempts: this.stateAttempts,
+        intent: {
+          autoApprove: this.intent.autoApprove
+        },
+        destinationAccount: this.destinationAccount,
+        createdAt: new Date(+this.createdAt).toISOString(),
+        outcome: {
+          amountSent: amountSent.toString()
+        },
+        balance: balance.toString()
+      }
+    }
+    if (this.intent.paymentPointer) {
+      data.payment.intent.paymentPointer = this.intent.paymentPointer
+    }
+    if (this.intent.invoiceUrl) {
+      data.payment.intent.invoiceUrl = this.intent.invoiceUrl
+    }
+    if (this.intent.amountToSend) {
+      data.payment.intent.amountToSend = this.intent.amountToSend.toString()
+    }
+    if (this.error) {
+      data.payment.error = this.error
+    }
+    if (this.quote) {
+      data.payment.quote = {
+        ...this.quote,
+        timestamp: this.quote.timestamp.toISOString(),
+        activationDeadline: this.quote.activationDeadline.toISOString(),
+        minDeliveryAmount: this.quote.minDeliveryAmount.toString(),
+        maxSourceAmount: this.quote.maxSourceAmount.toString(),
+        maxPacketAmount: this.quote.maxPacketAmount.toString(),
+        minExchangeRate: this.quote.minExchangeRate.valueOf(),
+        lowExchangeRateEstimate: this.quote.lowExchangeRateEstimate.valueOf(),
+        highExchangeRateEstimate: this.quote.highExchangeRateEstimate.valueOf(),
+        amountSent: this.quote.amountSent.toString()
+      }
+    }
+    return data
+  }
 }
 
 export enum PaymentState {
@@ -151,4 +205,71 @@ export enum PaymentState {
   Cancelled = 'CANCELLED',
   // Successful completion.
   Completed = 'COMPLETED'
+}
+
+export enum PaymentDepositType {
+  PaymentFunding = 'outgoing_payment.funding'
+}
+
+export enum PaymentWithdrawType {
+  PaymentCancelled = 'outgoing_payment.cancelled',
+  PaymentCompleted = 'outgoing_payment.completed'
+}
+
+export const PaymentEventType = {
+  ...PaymentDepositType,
+  ...PaymentWithdrawType
+}
+export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
+
+export type PaymentData = {
+  invoice?: never
+  payment: {
+    id: string
+    accountId: string
+    createdAt: string
+    state: PaymentState
+    error?: string
+    stateAttempts: number
+    intent: {
+      paymentPointer?: string
+      invoiceUrl?: string
+      amountToSend?: string
+      autoApprove: boolean
+    }
+    quote?: {
+      timestamp: string
+      activationDeadline: string
+      targetType: Pay.PaymentType
+      minDeliveryAmount: string
+      maxSourceAmount: string
+      maxPacketAmount: string
+      minExchangeRate: number
+      lowExchangeRateEstimate: number
+      highExchangeRateEstimate: number
+      amountSent: string
+    }
+    destinationAccount: {
+      scale: number
+      code: string
+      url?: string
+    }
+    outcome: {
+      amountSent: string
+    }
+    balance: string
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isPaymentEventType = (o: any): o is PaymentEventType =>
+  Object.values(PaymentEventType).includes(o)
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isPaymentEvent = (o: any): o is PaymentEvent =>
+  o instanceof WebhookEvent && isPaymentEventType(o.type)
+
+export class PaymentEvent extends WebhookEvent {
+  public type!: PaymentEventType
+  public data!: PaymentData
 }

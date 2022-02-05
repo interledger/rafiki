@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid'
 import { InvoiceService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Invoice } from './model'
+import { Invoice, InvoiceEvent, InvoiceEventType } from './model'
 import { resetGraphileDb } from '../../tests/graphileDb'
 import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config } from '../../config/app'
@@ -15,7 +15,6 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { WebhookEvent, EventType } from '../../webhook/model'
 
 describe('Invoice Service', (): void => {
   let deps: IocContract<AppServices>
@@ -217,9 +216,9 @@ describe('Invoice Service', (): void => {
     })
 
     describe.each`
-      type                        | expiresAt  | amountReceived
-      ${EventType.InvoiceExpired} | ${-40_000} | ${BigInt(1)}
-      ${EventType.InvoicePaid}    | ${30_000}  | ${BigInt(123)}
+      type                               | expiresAt  | amountReceived
+      ${InvoiceEventType.InvoiceExpired} | ${-40_000} | ${BigInt(1)}
+      ${InvoiceEventType.InvoicePaid}    | ${30_000}  | ${BigInt(123)}
     `(
       'handleDeactivated ($type)',
       ({ type, expiresAt, amountReceived }): void => {
@@ -240,7 +239,7 @@ describe('Invoice Service', (): void => {
                 amount: amountReceived
               })
             ).resolves.toBeUndefined()
-            if (type === EventType.InvoiceExpired) {
+            if (type === InvoiceEventType.InvoiceExpired) {
               await expect(invoiceService.processNext()).resolves.toBe(
                 invoice.id
               )
@@ -261,11 +260,11 @@ describe('Invoice Service', (): void => {
 
         test('Creates liquidity withdrawal and webhook event', async (): Promise<void> => {
           await expect(
-            WebhookEvent.query(knex).where({ type })
+            InvoiceEvent.query(knex).where({ type })
           ).resolves.toHaveLength(0)
           await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
           await expect(
-            WebhookEvent.query(knex)
+            InvoiceEvent.query(knex)
               .whereJsonSupersetOf('data:invoice', {
                 id: invoice.id
               })
