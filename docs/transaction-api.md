@@ -87,7 +87,7 @@ An expired invoice that has never received money is deleted.
 
 Rafiki sends webhook events to notify the wallet of payment lifecycle states that require liquidity to be added or removed.
 
-Webhook event handlers must be idempotent.
+Webhook event handlers must be idempotent and return `200`.
 
 ### `EventType`
 
@@ -95,39 +95,37 @@ Webhook event handlers must be idempotent.
 
 Invoice has expired.
 
-Credit `invoice.received` to the wallet balance for `invoice.accountId` and return `200`.
+Credit `invoice.received` to the wallet balance for `invoice.accountId`, and call `Mutation.withdrawLiquidity` with the event id.
 
 #### `invoice.paid`
 
 Invoice has received its specified `amount`.
 
-Credit `invoice.received` to the wallet balance for `invoice.accountId` and return `200`.
+Credit `invoice.received` to the wallet balance for `invoice.accountId`, and call `Mutation.withdrawLiquidity` with the event id.
 
 #### `outgoing_payment.funding`
 
 Payment needs liquidity in order to send quoted amount.
 
-To fund the payment, deduct `quote.maxSourceAmount` from the wallet balance for `payment.accountId` and return `200`.
-
-To cancel the payment, return `403`.
+To fund the payment, deduct `quote.maxSourceAmount` from the wallet balance for `payment.accountId` and call `Mutation.depositLiquidity` with the event id.
 
 #### `outgoing_payment.cancelled`
 
 Payment was cancelled.
 
-Credit `payment.balance` to the wallet balance for `payment.accountId` and return `200` or `205` to retry the payment.
+Credit `payment.balance` to the wallet balance for `payment.accountId`, and call `Mutation.withdrawLiquidity` with the event id.
 
 #### `outgoing_payment.completed`
 
 Payment completed sending the quoted amount.
 
-Credit `payment.balance` to the wallet balance for `payment.accountId` and return `200`.
+Credit `payment.balance` to the wallet balance for `payment.accountId`, and call `Mutation.withdrawLiquidity` with the event id.
 
 ### Webhook Event
 
 | Name   | Optional | Type                                                           | Description                                       |
 | :----- | :------- | :------------------------------------------------------------- | :------------------------------------------------ |
-| `id`   | No       | `ID`                                                           | Unique ID of the `data` object.                   |
+| `id`   | No       | `ID`                                                           | Unique ID of the webhook event.                   |
 | `type` | No       | [`EventType`](#eventtype)                                      | Description of the event.                         |
 | `data` | No       | [`Invoice`](#invoice) or [`OutgoingPayment`](#outgoingpayment) | Object containing data associated with the event. |
 
