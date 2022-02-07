@@ -552,9 +552,8 @@ describe('OutgoingPaymentService', (): void => {
       beforeEach(
         async (): Promise<void> => {
           // Don't send invoice.paid webhook events
-          const invoiceService = await deps.use('invoiceService')
           jest
-            .spyOn(invoiceService, 'handlePayment')
+            .spyOn(invoice, 'onCredit')
             .mockImplementation(() => Promise.resolve())
         }
       )

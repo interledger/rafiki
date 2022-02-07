@@ -1,21 +1,14 @@
 import { v4 as uuid } from 'uuid'
 
-import { AccountingService, LiquidityAccount } from '../accounting/service'
+import {
+  AccountingService,
+  LiquidityAccount,
+  TransferAccount
+} from '../accounting/service'
 import { randomUnit } from './asset'
 
 type BuildOptions = Partial<LiquidityAccount> & {
   balance?: bigint
-}
-
-export type FactoryAccount = Omit<LiquidityAccount, 'asset'> & {
-  asset: {
-    id: string
-    unit: number
-    asset: {
-      id: string
-      unit: number
-    }
-  }
 }
 
 export class AccountFactory {
@@ -24,7 +17,7 @@ export class AccountFactory {
     private unitGenerator: () => number = randomUnit
   ) {}
 
-  public async build(options: BuildOptions = {}): Promise<FactoryAccount> {
+  public async build(options: BuildOptions = {}): Promise<TransferAccount> {
     const assetId = options.asset?.id || uuid()
     const unit = options.asset?.unit || this.unitGenerator()
     const asset = {

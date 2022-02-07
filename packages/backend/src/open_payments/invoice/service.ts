@@ -27,7 +27,6 @@ export interface InvoiceService {
     accountId: string,
     pagination?: Pagination
   ): Promise<Invoice[]>
-  handlePayment(invoiceId: string): Promise<void>
   processNext(): Promise<string | undefined>
 }
 
@@ -52,7 +51,6 @@ export async function createInvoiceService(
     create: (options, trx) => createInvoice(deps, options, trx),
     getAccountInvoicesPage: (accountId, pagination) =>
       getAccountInvoicesPage(deps, accountId, pagination),
-    handlePayment: (invoiceId) => handleInvoicePayment(deps, invoiceId),
     processNext: () => processNextInvoice(deps)
   }
 }
@@ -78,9 +76,7 @@ async function createInvoice(
         description,
         expiresAt,
         amount,
-        active: true,
-        // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before being deactivated.
-        processAt: new Date(expiresAt.getTime() + 30_000)
+        active: true
       })
       .withGraphFetched('account.asset')
 
@@ -103,39 +99,22 @@ async function createInvoice(
   }
 }
 
-async function handleInvoicePayment(
-  deps: ServiceDependencies,
-  invoiceId: string
-): Promise<void> {
-  const amountReceived = await deps.accountingService.getTotalReceived(
-    invoiceId
-  )
-  if (!amountReceived) {
-    return
-  }
-  await Invoice.query(deps.knex)
-    .patch({
-      active: false,
-      processAt: new Date()
-    })
-    .where('id', invoiceId)
-    .andWhere('amount', '<=', amountReceived.toString())
-}
-
 // Fetch (and lock) an invoice for work.
 // Returns the id of the processed invoice (if any).
 async function processNextInvoice(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
   return deps_.knex.transaction(async (trx) => {
-    const now = new Date(Date.now()).toISOString()
+    // 30 seconds backwards to allow a prepared (but not yet fulfilled/rejected) packet to finish before being deactivated.
+    const now = new Date(Date.now() - 30_000).toISOString()
     const invoices = await Invoice.query(trx)
       .limit(1)
       // Ensure the invoices cannot be processed concurrently by multiple workers.
       .forUpdate()
       // If an invoice is locked, don't wait — just come back for it later.
       .skipLocked()
-      .where('processAt', '<', now)
+      .where('active', true)
+      .andWhere('expiresAt', '<', now)
       .withGraphFetched('account.asset')
 
     const invoice = invoices[0]
@@ -148,11 +127,8 @@ async function processNextInvoice(
         invoice: invoice.id
       })
     }
-    if (!invoice.active) {
-      await handleDeactivated(deps, invoice)
-    } else {
-      await handleExpired(deps, invoice)
-    }
+    await handleExpired(deps, invoice)
+
     return invoice.id
   })
 }
@@ -169,59 +145,27 @@ async function handleExpired(
   if (amountReceived) {
     deps.logger.trace({ amountReceived }, 'deactivating expired invoice')
     await invoice.$query(deps.knex).patch({
-      active: false,
+      active: false
+    })
+
+    deps.logger.trace({ amountReceived }, 'withdrawing expired invoice balance')
+
+    const event = await InvoiceEvent.query(deps.knex).insertAndFetch({
+      type: InvoiceEventType.InvoiceExpired,
+      data: invoice.toData(amountReceived),
       processAt: new Date()
     })
+    const error = await deps.accountingService.createWithdrawal({
+      id: event.id,
+      account: invoice,
+      amount: amountReceived,
+      timeout: BigInt(RETRY_LIMIT_MS) * BigInt(1e6) // ms -> ns
+    })
+    if (error) throw new Error(error)
   } else {
     deps.logger.debug({ amountReceived }, 'deleting expired invoice')
     await invoice.$query(deps.knex).delete()
   }
-}
-
-// Withdraw deactivated invoices' liquidity.
-async function handleDeactivated(
-  deps: ServiceDependencies,
-  invoice: Invoice
-): Promise<void> {
-  assert.ok(invoice.processAt)
-  const amountReceived = await deps.accountingService.getTotalReceived(
-    invoice.id
-  )
-  if (!amountReceived) {
-    deps.logger.warn(
-      { amountReceived },
-      'invoice with processAt and empty balance'
-    )
-    await invoice.$query(deps.knex).patch({ processAt: null })
-    return
-  }
-
-  deps.logger.trace(
-    { amountReceived },
-    'withdrawing deactivated invoice balance'
-  )
-
-  await invoice.$query(deps.knex).patch({
-    processAt: null
-  })
-
-  const event = await InvoiceEvent.query(deps.knex).insertAndFetch({
-    type:
-      amountReceived < invoice.amount
-        ? InvoiceEventType.InvoiceExpired
-        : InvoiceEventType.InvoicePaid,
-    data: invoice.toData(amountReceived),
-    // TODO:
-    // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before being deactivated.
-    processAt: new Date()
-  })
-  const error = await deps.accountingService.createWithdrawal({
-    id: event.id,
-    account: invoice,
-    amount: amountReceived,
-    timeout: BigInt(RETRY_LIMIT_MS) * BigInt(1e6) // ms -> ns
-  })
-  if (error) throw new Error(error)
 }
 
 /** TODO: Base64 encode/decode the cursors

@@ -66,8 +66,6 @@ export function createBalanceMiddleware(): ILPMiddleware {
 
       if (response.fulfill) {
         await trxOrError.commit()
-        // TODO: move handlePayment inside accountingServices's trxOrError.commit()
-        await services.invoices.handlePayment(accounts.outgoing.id)
       } else {
         await trxOrError.rollback()
       }

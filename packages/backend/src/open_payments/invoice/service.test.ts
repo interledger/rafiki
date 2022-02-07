@@ -1,4 +1,3 @@
-import assert from 'assert'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
@@ -78,8 +77,7 @@ describe('Invoice Service', (): void => {
       const accountService = await deps.use('accountService')
       expect(invoice).toMatchObject({
         id: invoice.id,
-        account: await accountService.get(accountId),
-        processAt: new Date(invoice.expiresAt.getTime() + 30_000)
+        account: await accountService.get(accountId)
       })
       const retrievedInvoice = await invoiceService.get(invoice.id)
       if (!retrievedInvoice) throw new Error('invoice not found')
@@ -114,7 +112,7 @@ describe('Invoice Service', (): void => {
     })
   })
 
-  describe('handlePayment', (): void => {
+  describe('onCredit', (): void => {
     let invoice: Invoice
 
     beforeEach(
@@ -129,37 +127,37 @@ describe('Invoice Service', (): void => {
     )
 
     test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
-      await expect(
-        accountingService.createDeposit({
-          id: uuid(),
-          account: invoice,
-          amount: invoice.amount - BigInt(1)
-        })
-      ).resolves.toBeUndefined()
-
-      await invoiceService.handlePayment(invoice.id)
+      const createWithdrawal = jest.fn()
+      await invoice.onCredit({
+        balance: invoice.amount - BigInt(1),
+        createWithdrawal
+      })
+      expect(createWithdrawal).not.toHaveBeenCalled()
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: true
       })
     })
 
-    test('Deactivates fully paid invoice', async (): Promise<void> => {
-      await expect(
-        accountingService.createDeposit({
-          id: uuid(),
-          account: invoice,
-          amount: invoice.amount
-        })
-      ).resolves.toBeUndefined()
-
-      const now = new Date()
-      jest.useFakeTimers('modern')
-      jest.setSystemTime(now)
-      await invoiceService.handlePayment(invoice.id)
-      await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-        active: false,
-        processAt: now
+    test('Deactivates fully paid invoice, creates withdrawal & webhook event', async (): Promise<void> => {
+      const createWithdrawal = jest.fn()
+      await invoice.onCredit({
+        balance: invoice.amount,
+        createWithdrawal
       })
+      expect(createWithdrawal).toHaveBeenCalledTimes(1)
+      await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+        active: false
+      })
+
+      await expect(
+        InvoiceEvent.query(knex)
+          .whereJsonSupersetOf('data:invoice', {
+            id: invoice.id
+          })
+          .where({
+            type: InvoiceEventType.InvoicePaid
+          })
+      ).resolves.toHaveLength(1)
     })
   })
 
@@ -177,8 +175,19 @@ describe('Invoice Service', (): void => {
       })
     })
 
+    test('Does not process inactive, expired invoice', async (): Promise<void> => {
+      const invoice = await invoiceService.create({
+        accountId,
+        amount: BigInt(123),
+        description: 'Test invoice',
+        expiresAt: new Date(Date.now() - 40_000)
+      })
+      await invoice.$query(knex).patch({ active: false })
+      await expect(invoiceService.processNext()).resolves.toBeUndefined()
+    })
+
     describe('handleExpired', (): void => {
-      test('Deactivates an expired invoice with received money', async (): Promise<void> => {
+      test('Deactivates an expired invoice with received money, creates withdrawal & webhook event', async (): Promise<void> => {
         const invoice = await invoiceService.create({
           accountId,
           amount: BigInt(123),
@@ -192,15 +201,29 @@ describe('Invoice Service', (): void => {
             amount: BigInt(1)
           })
         ).resolves.toBeUndefined()
+        await expect(
+          InvoiceEvent.query(knex).where({
+            type: InvoiceEventType.InvoiceExpired
+          })
+        ).resolves.toHaveLength(0)
 
-        const now = new Date()
-        jest.useFakeTimers('modern')
-        jest.setSystemTime(now)
         await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
         await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-          active: false,
-          processAt: now
+          active: false
         })
+
+        await expect(
+          InvoiceEvent.query(knex)
+            .whereJsonSupersetOf('data:invoice', {
+              id: invoice.id
+            })
+            .where({
+              type: InvoiceEventType.InvoiceExpired
+            })
+        ).resolves.toHaveLength(1)
+        await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
+          BigInt(0)
+        )
       })
 
       test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
@@ -214,82 +237,6 @@ describe('Invoice Service', (): void => {
         expect(await invoiceService.get(invoice.id)).toBeUndefined()
       })
     })
-
-    describe.each`
-      type                               | expiresAt  | amountReceived
-      ${InvoiceEventType.InvoiceExpired} | ${-40_000} | ${BigInt(1)}
-      ${InvoiceEventType.InvoicePaid}    | ${30_000}  | ${BigInt(123)}
-    `(
-      'handleDeactivated ($type)',
-      ({ type, expiresAt, amountReceived }): void => {
-        let invoice: Invoice
-
-        beforeEach(
-          async (): Promise<void> => {
-            invoice = await invoiceService.create({
-              accountId,
-              amount: BigInt(123),
-              expiresAt: new Date(Date.now() + expiresAt),
-              description: 'Test invoice'
-            })
-            await expect(
-              accountingService.createDeposit({
-                id: uuid(),
-                account: invoice,
-                amount: amountReceived
-              })
-            ).resolves.toBeUndefined()
-            if (type === InvoiceEventType.InvoiceExpired) {
-              await expect(invoiceService.processNext()).resolves.toBe(
-                invoice.id
-              )
-            } else {
-              await invoiceService.handlePayment(invoice.id)
-            }
-            invoice = (await invoiceService.get(invoice.id)) as Invoice
-            expect(invoice.active).toBe(false)
-            expect(invoice.processAt).not.toBeNull()
-            await expect(
-              accountingService.getTotalReceived(invoice.id)
-            ).resolves.toEqual(amountReceived)
-            await expect(
-              accountingService.getBalance(invoice.id)
-            ).resolves.toEqual(amountReceived)
-          }
-        )
-
-        test('Creates liquidity withdrawal and webhook event', async (): Promise<void> => {
-          await expect(
-            InvoiceEvent.query(knex).where({ type })
-          ).resolves.toHaveLength(0)
-          await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-          await expect(
-            InvoiceEvent.query(knex)
-              .whereJsonSupersetOf('data:invoice', {
-                id: invoice.id
-              })
-              .where({ type })
-          ).resolves.toHaveLength(1)
-          await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            processAt: null
-          })
-          await expect(
-            accountingService.getBalance(invoice.id)
-          ).resolves.toEqual(BigInt(0))
-        })
-
-        test.skip("Doesn't withdraw on webhook error", async (): Promise<void> => {
-          assert.ok(invoice.processAt)
-          await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-          await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            processAt: invoice.processAt
-          })
-          await expect(
-            accountingService.getBalance(invoice.id)
-          ).resolves.toEqual(amountReceived)
-        })
-      }
-    )
   })
 
   describe('Invoice pagination', (): void => {
