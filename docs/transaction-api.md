@@ -95,31 +95,31 @@ Webhook event handlers must be idempotent and return `200`.
 
 Invoice has expired.
 
-Credit `invoice.received` to the wallet balance for `invoice.accountId`, and call `Mutation.withdrawLiquidity` with the event id.
+Credit `invoice.received` to the wallet balance for `invoice.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
 #### `invoice.paid`
 
 Invoice has received its specified `amount`.
 
-Credit `invoice.received` to the wallet balance for `invoice.accountId`, and call `Mutation.withdrawLiquidity` with the event id.
+Credit `invoice.received` to the wallet balance for `invoice.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
 #### `outgoing_payment.funding`
 
 Payment needs liquidity in order to send quoted amount.
 
-To fund the payment, deduct `quote.maxSourceAmount` from the wallet balance for `payment.accountId` and call `Mutation.depositLiquidity` with the event id.
+To fund the payment, deduct `quote.maxSourceAmount` from the wallet balance for `payment.accountId` and call `Mutation.depositEventLiquidity` with the event id.
 
 #### `outgoing_payment.cancelled`
 
 Payment was cancelled.
 
-Credit `payment.balance` to the wallet balance for `payment.accountId`, and call `Mutation.withdrawLiquidity` with the event id.
+Credit `payment.balance` to the wallet balance for `payment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
 #### `outgoing_payment.completed`
 
 Payment completed sending the quoted amount.
 
-Credit `payment.balance` to the wallet balance for `payment.accountId`, and call `Mutation.withdrawLiquidity` with the event id.
+Credit `payment.balance` to the wallet balance for `payment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
 ### Webhook Event
 
