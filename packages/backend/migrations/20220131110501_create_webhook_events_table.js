@@ -7,6 +7,11 @@ exports.up = function (knex) {
     table.integer('attempts').notNullable().defaultTo(0)
     table.string('error').nullable()
 
+    table.uuid('withdrawalAccountId').nullable()
+    table.uuid('withdrawalAssetId').nullable()
+    table.foreign('withdrawalAssetId').references('assets.id')
+    table.bigInteger('withdrawalAmount').nullable()
+
     table.timestamp('processAt').notNullable()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())

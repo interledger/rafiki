@@ -44,17 +44,8 @@ export interface LiquidityAccount {
     id: string
     unit: number
   }
-  onCredit?: (options: onCreditOptions) => Promise<void>
-  onDebit?: (options: onDebitOptions) => Promise<void>
-}
-
-export interface onCreditOptions {
-  balance: bigint
-  createWithdrawal: AccountingService['createWithdrawal']
-}
-
-interface onDebitOptions {
-  balance: bigint
+  onCredit?: (balance: bigint) => Promise<void>
+  onDebit?: (balance: bigint) => Promise<void>
 }
 
 export interface Deposit {
@@ -340,20 +331,14 @@ export async function createTransfer(
         if (account.onDebit) {
           const balance = await getAccountBalance(deps, account.id)
           assert.ok(balance !== undefined)
-          await account.onDebit({
-            balance
-          })
+          await account.onDebit(balance)
         }
       }
       for (const account of destinationAccounts) {
         if (account.onCredit) {
           const balance = await getAccountBalance(deps, account.id)
           assert.ok(balance !== undefined)
-          await account.onCredit({
-            balance,
-            createWithdrawal: (withdrawal: Withdrawal) =>
-              createAccountWithdrawal(deps, withdrawal)
-          })
+          await account.onCredit(balance)
         }
       }
     },

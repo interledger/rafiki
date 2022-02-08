@@ -178,15 +178,15 @@ export function initIocContainer(
     return createWebhookService({
       config: await deps.use('config'),
       knex: await deps.use('knex'),
-      logger: await deps.use('logger')
+      logger: await deps.use('logger'),
+      accountingService: await deps.use('accountingService')
     })
   })
   container.singleton('invoiceService', async (deps) => {
     return await createInvoiceService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      accountingService: await deps.use('accountingService'),
-      webhookService: await deps.use('webhookService')
+      accountingService: await deps.use('accountingService')
     })
   })
   container.singleton('invoiceRoutes', async (deps) => {
@@ -238,8 +238,7 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       accountService: await deps.use('accountService'),
-      ratesService: await deps.use('ratesService'),
-      webhookService: await deps.use('webhookService')
+      ratesService: await deps.use('ratesService')
     })
   })
 

@@ -3,6 +3,9 @@ import axios from 'axios'
 import { createHmac } from 'crypto'
 
 import { WebhookEvent } from './model'
+import { TransferError } from '../accounting/errors'
+import { AccountingService } from '../accounting/service'
+import { Asset } from '../asset/model'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 
@@ -18,6 +21,7 @@ export interface WebhookService {
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig
+  accountingService: AccountingService
 }
 
 export async function createWebhookService(
@@ -82,6 +86,28 @@ async function sendWebhookEvent(
   event: WebhookEvent
 ): Promise<void> {
   try {
+    if (event.withdrawal) {
+      const asset = (await WebhookEvent.relatedQuery(
+        'withdrawalAsset',
+        deps.knex
+      )
+        .for(event.id)
+        .first()) as Asset
+      assert.ok(asset)
+      const error = await deps.accountingService.createWithdrawal({
+        id: event.id,
+        account: {
+          id: event.withdrawal.accountId,
+          asset
+        },
+        amount: event.withdrawal.amount,
+        timeout: BigInt(RETRY_LIMIT_MS) * BigInt(1e6) // ms -> ns
+      })
+      if (error && error !== TransferError.TransferExists) {
+        throw new Error(error)
+      }
+    }
+
     const requestHeaders = {
       'Content-Type': 'application/json'
     }

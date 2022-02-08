@@ -127,28 +127,26 @@ describe('Invoice Service', (): void => {
     )
 
     test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
-      const createWithdrawal = jest.fn()
-      await invoice.onCredit({
-        balance: invoice.amount - BigInt(1),
-        createWithdrawal
-      })
-      expect(createWithdrawal).not.toHaveBeenCalled()
+      await invoice.onCredit(invoice.amount - BigInt(1))
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: true
       })
     })
 
-    test('Deactivates fully paid invoice, creates withdrawal & webhook event', async (): Promise<void> => {
-      const createWithdrawal = jest.fn()
-      await invoice.onCredit({
-        balance: invoice.amount,
-        createWithdrawal
-      })
-      expect(createWithdrawal).toHaveBeenCalledTimes(1)
+    test('Deactivates fully paid invoice', async (): Promise<void> => {
+      await invoice.onCredit(invoice.amount)
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: false
       })
+    })
 
+    test('Creates invoice.paid webhook event', async (): Promise<void> => {
+      await expect(
+        InvoiceEvent.query(knex).where({
+          type: InvoiceEventType.InvoicePaid
+        })
+      ).resolves.toHaveLength(0)
+      await invoice.onCredit(invoice.amount)
       await expect(
         InvoiceEvent.query(knex)
           .whereJsonSupersetOf('data:invoice', {

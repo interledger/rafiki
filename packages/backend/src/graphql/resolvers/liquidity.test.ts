@@ -3,7 +3,7 @@ import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
 
-import { DepositEventType, WithdrawEventType } from './liquidity'
+import { DepositEventType } from './liquidity'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
@@ -13,11 +13,12 @@ import { AccountingService, LiquidityAccount } from '../../accounting/service'
 import { Asset } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { Account } from '../../open_payments/account/model'
-import { Invoice } from '../../open_payments/invoice/model'
+import { Invoice, InvoiceEventType } from '../../open_payments/invoice/model'
 import {
   OutgoingPayment,
   PaymentState,
   PaymentEvent,
+  PaymentWithdrawType,
   isPaymentEventType
 } from '../../outgoing_payment/model'
 import { Peer } from '../../peer/model'
@@ -1748,6 +1749,9 @@ describe('Liquidity Resolvers', (): void => {
       )
     })
 
+    const WithdrawEventType = { ...InvoiceEventType, ...PaymentWithdrawType }
+    type WithdrawEventType = InvoiceEventType | PaymentWithdrawType
+
     describe('withdrawEventLiquidity', (): void => {
       describe.each(Object.values(WithdrawEventType).map((type) => [type]))(
         '%s',
@@ -1759,26 +1763,28 @@ describe('Liquidity Resolvers', (): void => {
               eventId = uuid()
               const amount = BigInt(10)
               let account: LiquidityAccount
+              let data: Record<string, unknown>
               if (isPaymentEventType(type)) {
                 account = payment
-                await WebhookEvent.query(knex).insertAndFetch({
-                  id: eventId,
-                  type,
-                  data: payment.toData({
-                    amountSent: BigInt(0),
-                    balance: amount
-                  }),
-                  processAt: new Date()
+                data = payment.toData({
+                  amountSent: BigInt(0),
+                  balance: amount
                 })
               } else {
                 account = invoice
-                await WebhookEvent.query(knex).insertAndFetch({
-                  id: eventId,
-                  type,
-                  data: invoice.toData(amount),
-                  processAt: new Date()
-                })
+                data = invoice.toData(amount)
               }
+              await WebhookEvent.query(knex).insertAndFetch({
+                id: eventId,
+                type,
+                data,
+                processAt: new Date(),
+                withdrawal: {
+                  accountId: account.id,
+                  assetId: account.asset.id,
+                  amount
+                }
+              })
               await expect(
                 accountingService.createDeposit({
                   id: uuid(),
@@ -1847,6 +1853,48 @@ describe('Liquidity Resolvers', (): void => {
                 `,
                 variables: {
                   eventId: uuid()
+                }
+              })
+              .then(
+                (query): LiquidityMutationResponse => {
+                  if (query.data) {
+                    return query.data.withdrawEventLiquidity
+                  } else {
+                    throw new Error('Data was empty')
+                  }
+                }
+              )
+
+            expect(response.success).toBe(false)
+            expect(response.code).toEqual('400')
+            expect(response.message).toEqual('Invalid id')
+            expect(response.error).toEqual(LiquidityError.InvalidId)
+          })
+
+          test('Returns error for non-existent webhook event withdrawal', async (): Promise<void> => {
+            const webhookService = await deps.use('webhookService')
+            const { type, data, processAt } = (await webhookService.getEvent(
+              eventId
+            )) as WebhookEvent
+            const event = await WebhookEvent.query(knex).insertAndFetch({
+              type,
+              data,
+              processAt
+            })
+            const response = await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation WithdrawLiquidity($eventId: String!) {
+                    withdrawEventLiquidity(eventId: $eventId) {
+                      code
+                      success
+                      message
+                      error
+                    }
+                  }
+                `,
+                variables: {
+                  eventId: event.id
                 }
               })
               .then(

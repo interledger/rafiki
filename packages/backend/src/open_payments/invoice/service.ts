@@ -2,7 +2,7 @@ import { Invoice, InvoiceEvent, InvoiceEventType } from './model'
 import { AccountingService } from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
-import { WebhookService, RETRY_LIMIT_MS } from '../../webhook/service'
+import { RETRY_LIMIT_MS } from '../../webhook/service'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
@@ -33,7 +33,6 @@ export interface InvoiceService {
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
-  webhookService: WebhookService
 }
 
 export async function createInvoiceService(
