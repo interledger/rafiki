@@ -3,7 +3,7 @@ exports.up = function (knex) {
     table.uuid('id').notNullable().primary()
 
     table.string('type').notNullable()
-    table.jsonb('data').notNullable()
+    table.json('data').notNullable()
     table.integer('attempts').notNullable().defaultTo(0)
     table.string('error').nullable()
 
@@ -12,7 +12,7 @@ exports.up = function (knex) {
     table.foreign('withdrawalAssetId').references('assets.id')
     table.bigInteger('withdrawalAmount').nullable()
 
-    table.timestamp('processAt').notNullable()
+    table.timestamp('processAt').notNullable().defaultTo(knex.fn.now())
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())

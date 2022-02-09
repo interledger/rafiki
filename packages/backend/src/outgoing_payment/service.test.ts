@@ -23,7 +23,6 @@ import { LifecycleError } from './errors'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../accounting/errors'
 import { AccountingService, TransferOptions } from '../accounting/service'
-import { uuidToBigInt } from '../accounting/utils'
 import { AssetOptions } from '../asset/service'
 import { Invoice } from '../open_payments/invoice/model'
 import { RatesService } from '../rates/service'
@@ -67,11 +66,9 @@ describe('OutgoingPaymentService', (): void => {
     const type = webhookTypes[payment.state]
     if (type) {
       await expect(
-        PaymentEvent.query(knex)
-          .whereJsonSupersetOf('data:payment', {
-            id: payment.id
-          })
-          .andWhere({ type })
+        PaymentEvent.query(knex).where({
+          type
+        })
       ).resolves.not.toHaveLength(0)
     }
     return payment
@@ -164,14 +161,12 @@ describe('OutgoingPaymentService', (): void => {
       ).resolves.toEqual(invoiceReceived)
     }
     if (withdrawAmount !== undefined) {
-      const tigerbeetle = await deps.use('tigerbeetle')
       await expect(
-        tigerbeetle.lookupAccounts([uuidToBigInt(payment.id)])
-      ).resolves.toMatchObject([
-        {
-          debits_reserved: withdrawAmount
-        }
-      ])
+        PaymentEvent.query(knex).where({
+          withdrawalAccountId: payment.id,
+          withdrawalAmount: withdrawAmount
+        })
+      ).resolves.toHaveLength(1)
     }
   }
 
@@ -549,15 +544,6 @@ describe('OutgoingPaymentService', (): void => {
     })
 
     describe('SENDING→', (): void => {
-      beforeEach(
-        async (): Promise<void> => {
-          // Don't send invoice.paid webhook events
-          jest
-            .spyOn(invoice, 'onCredit')
-            .mockImplementation(() => Promise.resolve())
-        }
-      )
-
       async function setup(
         opts: Pick<
           PaymentIntent,
@@ -610,7 +596,7 @@ describe('OutgoingPaymentService', (): void => {
         if (!payment.quote) throw 'no quote'
         const amountSent = invoice.amount * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: BigInt(0),
+          accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
           amountDelivered: invoice.amount,
           invoiceReceived: invoice.amount,
@@ -629,7 +615,7 @@ describe('OutgoingPaymentService', (): void => {
         if (!payment.quote) throw 'no quote'
         const amountSent = (invoice.amount - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: BigInt(0),
+          accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
           amountDelivered: invoice.amount - amountAlreadyDelivered,
           invoiceReceived: invoice.amount,
@@ -670,7 +656,7 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment.stateAttempts).toBe(0)
         // "mockPay" allows a small amount of money to be paid every attempt.
         await expectOutcome(payment, {
-          accountBalance: BigInt(0),
+          accountBalance: BigInt(123 - 10 * 5),
           amountSent: BigInt(10 * 5),
           amountDelivered: BigInt(5 * 5),
           withdrawAmount: BigInt(123 - 10 * 5)
@@ -696,7 +682,7 @@ describe('OutgoingPaymentService', (): void => {
           Pay.PaymentError.ReceiverProtocolViolation
         )
         await expectOutcome(payment, {
-          accountBalance: BigInt(0),
+          accountBalance: BigInt(123 - 10),
           amountSent: BigInt(10),
           amountDelivered: BigInt(5),
           withdrawAmount: BigInt(123 - 10)
@@ -766,7 +752,7 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
         await expectOutcome(payment, {
-          accountBalance: BigInt(0),
+          accountBalance: payment.quote.maxSourceAmount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
           invoiceReceived: invoice.amount,

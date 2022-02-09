@@ -44,8 +44,8 @@ export interface LiquidityAccount {
     id: string
     unit: number
   }
-  onCredit?: (balance: bigint) => Promise<void>
-  onDebit?: (balance: bigint) => Promise<void>
+  onCredit?: (balance: bigint) => Promise<LiquidityAccount>
+  onDebit?: (balance: bigint) => Promise<LiquidityAccount>
 }
 
 export interface Deposit {

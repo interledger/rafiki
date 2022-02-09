@@ -9,6 +9,8 @@ exports.up = function (knex) {
     table.string('description').nullable()
     table.timestamp('expiresAt').notNullable()
     table.bigInteger('amount').notNullable()
+    table.uuid('eventId').nullable()
+    table.foreign('eventId').references('webhookEvents.id')
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())

@@ -1,3 +1,4 @@
+import assert from 'assert'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
@@ -127,35 +128,84 @@ describe('Invoice Service', (): void => {
     )
 
     test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
-      await invoice.onCredit(invoice.amount - BigInt(1))
+      await expect(
+        invoice.onCredit(invoice.amount - BigInt(1))
+      ).resolves.toEqual(invoice)
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: true
       })
     })
 
     test('Deactivates fully paid invoice', async (): Promise<void> => {
-      await invoice.onCredit(invoice.amount)
+      await expect(invoice.onCredit(invoice.amount)).resolves.toMatchObject({
+        id: invoice.id,
+        active: false
+      })
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: false
       })
     })
 
     test('Creates invoice.paid webhook event', async (): Promise<void> => {
-      await expect(
-        InvoiceEvent.query(knex).where({
-          type: InvoiceEventType.InvoicePaid
-        })
-      ).resolves.toHaveLength(0)
-      await invoice.onCredit(invoice.amount)
-      await expect(
-        InvoiceEvent.query(knex)
-          .whereJsonSupersetOf('data:invoice', {
-            id: invoice.id
-          })
-          .where({
-            type: InvoiceEventType.InvoicePaid
-          })
-      ).resolves.toHaveLength(1)
+      jest.useFakeTimers('modern')
+      const now = Date.now()
+      jest.setSystemTime(new Date(now))
+      expect(invoice.eventId).toBeNull()
+      await expect(invoice.onCredit(invoice.amount)).resolves.toMatchObject({
+        event: {
+          type: InvoiceEventType.InvoicePaid,
+          data: invoice.toData(invoice.amount),
+          processAt: new Date(now + 30_000),
+          withdrawal: {
+            accountId: invoice.id,
+            assetId: invoice.account.assetId,
+            amount: invoice.amount
+          }
+        }
+      })
+    })
+
+    test('Updates invoice.paid webhook event withdrawal amount', async (): Promise<void> => {
+      const { eventId } = await invoice.onCredit(invoice.amount)
+      const amount = invoice.amount + BigInt(2)
+      jest.useFakeTimers('modern')
+      const now = Date.now()
+      jest.setSystemTime(new Date(now))
+      await expect(invoice.onCredit(amount)).resolves.toMatchObject({
+        event: {
+          id: eventId,
+          type: InvoiceEventType.InvoicePaid,
+          data: invoice.toData(amount),
+          processAt: new Date(now + 30_000),
+          withdrawal: {
+            accountId: invoice.id,
+            assetId: invoice.account.assetId,
+            amount
+          }
+        }
+      })
+    })
+
+    test('Creates subsequent invoice.paid webhook event for leftover amount', async (): Promise<void> => {
+      invoice = await invoice.onCredit(invoice.amount)
+      assert.ok(invoice.event)
+      await invoice.event.$query(knex).patch({ attempts: 1 })
+      const amount = BigInt(1)
+      jest.useFakeTimers('modern')
+      const now = Date.now()
+      jest.setSystemTime(new Date(now))
+      await expect(invoice.onCredit(amount)).resolves.toMatchObject({
+        event: {
+          type: InvoiceEventType.InvoicePaid,
+          data: invoice.toData(amount),
+          processAt: new Date(now + 30_000),
+          withdrawal: {
+            accountId: invoice.id,
+            assetId: invoice.account.assetId,
+            amount
+          }
+        }
+      })
     })
   })
 

@@ -72,8 +72,7 @@ describe('Webhook Service', (): void => {
           account: {
             id: uuid()
           }
-        },
-        processAt: new Date()
+        }
       })
     }
   )
@@ -165,7 +164,7 @@ describe('Webhook Service', (): void => {
       await expect(webhookService.processNext()).resolves.toEqual(event.id)
       expect(scope.isDone()).toBe(true)
       await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
-        attempts: 0,
+        attempts: 1,
         error: null,
         processAt: new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
       })

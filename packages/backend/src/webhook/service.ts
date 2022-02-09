@@ -132,6 +132,7 @@ async function sendWebhookEvent(
     })
 
     await event.$query(deps.knex).patch({
+      attempts: event.attempts + 1,
       error: null,
       processAt: new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
     })

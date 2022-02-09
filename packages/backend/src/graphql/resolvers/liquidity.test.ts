@@ -1635,8 +1635,7 @@ describe('Liquidity Resolvers', (): void => {
                 data: payment.toData({
                   amountSent: BigInt(0),
                   balance: BigInt(0)
-                }),
-                processAt: new Date()
+                })
               })
             }
           )
@@ -1778,7 +1777,6 @@ describe('Liquidity Resolvers', (): void => {
                 id: eventId,
                 type,
                 data,
-                processAt: new Date(),
                 withdrawal: {
                   accountId: account.id,
                   assetId: account.asset.id,
@@ -1873,13 +1871,12 @@ describe('Liquidity Resolvers', (): void => {
 
           test('Returns error for non-existent webhook event withdrawal', async (): Promise<void> => {
             const webhookService = await deps.use('webhookService')
-            const { type, data, processAt } = (await webhookService.getEvent(
+            const { type, data } = (await webhookService.getEvent(
               eventId
             )) as WebhookEvent
             const event = await WebhookEvent.query(knex).insertAndFetch({
               type,
-              data,
-              processAt
+              data
             })
             const response = await appContainer.apolloClient
               .mutate({
