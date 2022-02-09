@@ -45,7 +45,6 @@ export interface LiquidityAccount {
     unit: number
   }
   onCredit?: (balance: bigint) => Promise<LiquidityAccount>
-  onDebit?: (balance: bigint) => Promise<LiquidityAccount>
 }
 
 export interface Deposit {
@@ -58,15 +57,9 @@ export interface Withdrawal extends Deposit {
   timeout: bigint
 }
 
-export interface TransferAccount extends LiquidityAccount {
-  asset: LiquidityAccount['asset'] & {
-    asset: LiquidityAccount['asset']
-  }
-}
-
 export interface TransferOptions {
-  sourceAccount: TransferAccount
-  destinationAccount: TransferAccount
+  sourceAccount: LiquidityAccount
+  destinationAccount: LiquidityAccount
   sourceAmount: bigint
   destinationAmount?: bigint
   timeout: bigint // nano-seconds
@@ -227,34 +220,30 @@ export async function createTransfer(
     return TransferError.InvalidDestinationAmount
   }
   const transfers: Required<CreateTransferOptions>[] = []
-  const sourceAccounts: LiquidityAccount[] = []
-  const destinationAccounts: LiquidityAccount[] = []
 
   const addTransfer = ({
-    sourceAccount,
-    destinationAccount,
+    sourceAccountId,
+    destinationAccountId,
     amount
   }: {
-    sourceAccount: LiquidityAccount
-    destinationAccount: LiquidityAccount
+    sourceAccountId: string
+    destinationAccountId: string
     amount: bigint
   }) => {
     transfers.push({
       id: uuid(),
-      sourceAccountId: sourceAccount.id,
-      destinationAccountId: destinationAccount.id,
+      sourceAccountId,
+      destinationAccountId,
       amount,
       timeout
     })
-    sourceAccounts.push(sourceAccount)
-    destinationAccounts.push(destinationAccount)
   }
 
   // Same asset
   if (sourceAccount.asset.unit === destinationAccount.asset.unit) {
     addTransfer({
-      sourceAccount,
-      destinationAccount,
+      sourceAccountId: sourceAccount.id,
+      destinationAccountId: destinationAccount.id,
       amount:
         destinationAmount && destinationAmount < sourceAmount
           ? destinationAmount
@@ -265,15 +254,15 @@ export async function createTransfer(
       // Send excess source amount to liquidity account
       if (destinationAmount < sourceAmount) {
         addTransfer({
-          sourceAccount,
-          destinationAccount: sourceAccount.asset,
+          sourceAccountId: sourceAccount.id,
+          destinationAccountId: sourceAccount.asset.id,
           amount: sourceAmount - destinationAmount
         })
         // Deliver excess destination amount from liquidity account
       } else {
         addTransfer({
-          sourceAccount: destinationAccount.asset,
-          destinationAccount,
+          sourceAccountId: destinationAccount.asset.id,
+          destinationAccountId: destinationAccount.id,
           amount: destinationAmount - sourceAmount
         })
       }
@@ -287,13 +276,13 @@ export async function createTransfer(
     // Send to source liquidity account
     // Deliver from destination liquidity account
     addTransfer({
-      sourceAccount,
-      destinationAccount: sourceAccount.asset,
+      sourceAccountId: sourceAccount.id,
+      destinationAccountId: sourceAccount.asset.id,
       amount: sourceAmount
     })
     addTransfer({
-      sourceAccount: destinationAccount.asset,
-      destinationAccount,
+      sourceAccountId: destinationAccount.asset.id,
+      destinationAccountId: destinationAccount.id,
       amount: destinationAmount
     })
   }
@@ -327,19 +316,10 @@ export async function createTransfer(
       if (error) {
         return error.error
       }
-      for (const account of sourceAccounts) {
-        if (account.onDebit) {
-          const balance = await getAccountBalance(deps, account.id)
-          assert.ok(balance !== undefined)
-          await account.onDebit(balance)
-        }
-      }
-      for (const account of destinationAccounts) {
-        if (account.onCredit) {
-          const balance = await getAccountBalance(deps, account.id)
-          assert.ok(balance !== undefined)
-          await account.onCredit(balance)
-        }
+      if (destinationAccount.onCredit) {
+        const balance = await getAccountBalance(deps, destinationAccount.id)
+        assert.ok(balance !== undefined)
+        await destinationAccount.onCredit(balance)
       }
     },
     rollback: async (): Promise<void | TransferError> => {

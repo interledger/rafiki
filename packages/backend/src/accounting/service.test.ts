@@ -8,7 +8,6 @@ import { v4 as uuid } from 'uuid'
 import {
   AccountingService,
   LiquidityAccount,
-  TransferAccount,
   Deposit,
   Withdrawal
 } from './service'
@@ -25,7 +24,7 @@ import {
   startTigerbeetleContainer,
   TIGERBEETLE_PORT
 } from '../tests/tigerbeetle'
-import { AccountFactory } from '../tests/accountFactory'
+import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
 
 describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -215,8 +214,8 @@ describe('Accounting Service', (): void => {
       ${true}   | ${'same asset'}
       ${false}  | ${'cross-currency'}
     `('$description', ({ sameAsset }): void => {
-      let sourceAccount: TransferAccount
-      let destinationAccount: TransferAccount
+      let sourceAccount: LiquidityAccount
+      let destinationAccount: FactoryAccount
       const startingSourceBalance = BigInt(10)
       const startingDestinationLiquidity = BigInt(100)
 

@@ -17,7 +17,7 @@ exports.up = function (knex) {
 
     table.index(['accountId', 'createdAt', 'id'])
 
-    table.index('expiresAt')
+    table.index(['active', 'expiresAt'])
     /*
     TODO: The latest version of knex supports "partial indexes", which would be more efficient for the deactivateInvoice use case. Unfortunately, the only version of 'objection' that supports this version of knex is still in alpha.
     // This is a 'partial index' -- expiresAt is only indexed when active=true.
