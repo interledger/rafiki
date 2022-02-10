@@ -142,7 +142,8 @@ export function initIocContainer(
     return await createAccountingService({
       logger: logger,
       knex: knex,
-      tigerbeetle
+      tigerbeetle,
+      withdrawalCron: config.webMonetizationWithdrawalCron
     })
   })
   container.singleton('peerService', async (deps) => {

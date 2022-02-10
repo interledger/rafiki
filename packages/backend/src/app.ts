@@ -137,6 +137,9 @@ export class App {
 
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
+      for (let i = 0; i < this.config.accountWorkers; i++) {
+        process.nextTick(() => this.processAccount())
+      }
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
         process.nextTick(() => this.processOutgoingPayment())
       }
@@ -251,6 +254,24 @@ export class App {
     this.publicRouter.post('/pay/:accountId/invoices', invoiceRoutes.create)
 
     this.koa.use(this.publicRouter.middleware())
+  }
+
+  private async processAccount(): Promise<void> {
+    const accountService = await this.container.use('accountService')
+    return accountService
+      .processNext()
+      .catch((err) => {
+        this.logger.warn({ error: err.message }, 'processAccount error')
+        return true
+      })
+      .then((hasMoreWork) => {
+        if (hasMoreWork) process.nextTick(() => this.processAccount())
+        else
+          setTimeout(
+            () => this.processAccount(),
+            this.config.accountWorkerIdle
+          ).unref()
+      })
   }
 
   private async processOutgoingPayment(): Promise<void> {

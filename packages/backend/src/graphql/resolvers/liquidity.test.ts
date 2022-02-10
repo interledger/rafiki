@@ -17,7 +17,7 @@ import {
 } from '../../accounting/service'
 import { Asset } from '../../asset/model'
 import { AssetService } from '../../asset/service'
-import { Account } from '../../open_payments/account/model'
+import { Account, AccountEventType } from '../../open_payments/account/model'
 import { Invoice, InvoiceEventType } from '../../open_payments/invoice/model'
 import {
   OutgoingPayment,
@@ -1579,15 +1579,17 @@ describe('Liquidity Resolvers', (): void => {
   )
 
   {
+    let account: Account
     let invoice: Invoice
     let payment: OutgoingPayment
 
     beforeEach(
       async (): Promise<void> => {
         const accountService = await deps.use('accountService')
-        const { id: accountId } = await accountService.create({
+        account = await accountService.create({
           asset: randomAsset()
         })
+        const accountId = account.id
         const invoiceService = await deps.use('invoiceService')
         invoice = await invoiceService.create({
           accountId,
@@ -1766,8 +1768,19 @@ describe('Liquidity Resolvers', (): void => {
       )
     })
 
-    const WithdrawEventType = { ...InvoiceEventType, ...PaymentWithdrawType }
-    type WithdrawEventType = InvoiceEventType | PaymentWithdrawType
+    const WithdrawEventType = {
+      ...AccountEventType,
+      ...InvoiceEventType,
+      ...PaymentWithdrawType
+    }
+    type WithdrawEventType =
+      | AccountEventType
+      | InvoiceEventType
+      | PaymentWithdrawType
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    const isInvoiceEventType = (o: any): o is InvoiceEventType =>
+      Object.values(InvoiceEventType).includes(o)
 
     describe('withdrawEventLiquidity', (): void => {
       describe.each(Object.values(WithdrawEventType).map((type) => [type]))(
@@ -1780,41 +1793,44 @@ describe('Liquidity Resolvers', (): void => {
             async (): Promise<void> => {
               eventId = uuid()
               const amount = BigInt(10)
-              let account: LiquidityAccount
+              let liquidityAccount: LiquidityAccount
               let data: Record<string, unknown>
               if (isPaymentEventType(type)) {
-                account = payment
+                liquidityAccount = payment
                 data = payment.toData({
                   amountSent: BigInt(0),
                   balance: amount
                 })
-              } else {
-                account = invoice
+              } else if (isInvoiceEventType(type)) {
+                liquidityAccount = invoice
                 data = invoice.toData(amount)
+              } else {
+                liquidityAccount = account
+                data = account.toData(amount)
               }
               await WebhookEvent.query(knex).insertAndFetch({
                 id: eventId,
                 type,
                 data,
                 withdrawal: {
-                  accountId: account.id,
-                  assetId: account.asset.id,
+                  accountId: liquidityAccount.id,
+                  assetId: liquidityAccount.asset.id,
                   amount
                 }
               })
               await expect(
                 accountingService.createDeposit({
                   id: uuid(),
-                  account,
+                  account: liquidityAccount,
                   amount
                 })
               ).resolves.toBeUndefined()
               await expect(
-                accountingService.getBalance(account.id)
+                accountingService.getBalance(liquidityAccount.id)
               ).resolves.toEqual(amount)
               withdrawal = {
                 id: eventId,
-                account,
+                account: liquidityAccount,
                 amount
               }
             }

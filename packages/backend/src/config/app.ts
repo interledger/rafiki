@@ -58,6 +58,9 @@ export const Config = {
   slippage: envFloat('SLIPPAGE', 0.01),
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
 
+  accountWorkers: envInt('ACCOUNT_WORKERS', 1),
+  accountWorkerIdle: envInt('ACCOUNT_WORKER_IDLE', 200), // milliseconds
+
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 200), // milliseconds
 
@@ -69,6 +72,8 @@ export const Config = {
   webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
   webhookSecret: process.env.WEBHOOK_SECRET, // optional
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
+
+  webMonetizationWithdrawalCron: process.env.WEB_MONETIZATION_WITHDRAWAL_CRON, // optional
 
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
