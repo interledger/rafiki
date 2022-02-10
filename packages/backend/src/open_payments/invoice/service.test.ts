@@ -186,27 +186,37 @@ describe('Invoice Service', (): void => {
       })
     })
 
-    test('Creates subsequent invoice.paid webhook event for leftover amount', async (): Promise<void> => {
-      invoice = await invoice.onCredit(invoice.amount)
-      assert.ok(invoice.event)
-      await invoice.event.$query(knex).patch({ attempts: 1 })
-      const amount = BigInt(1)
-      jest.useFakeTimers('modern')
-      const now = Date.now()
-      jest.setSystemTime(new Date(now))
-      await expect(invoice.onCredit(amount)).resolves.toMatchObject({
-        event: {
-          type: InvoiceEventType.InvoicePaid,
-          data: invoice.toData(amount),
-          processAt: new Date(now + 30_000),
-          withdrawal: {
-            accountId: invoice.id,
-            assetId: invoice.account.assetId,
-            amount
+    test.each`
+      attempts | processAt
+      ${1}     | ${undefined}
+      ${0}     | ${new Date()}
+    `(
+      'Creates subsequent invoice.paid webhook event for leftover amount',
+      async ({ attempts, processAt }): Promise<void> => {
+        invoice = await invoice.onCredit(invoice.amount)
+        assert.ok(invoice.event)
+        await invoice.event.$query(knex).patch({
+          attempts,
+          processAt
+        })
+        const amount = BigInt(1)
+        jest.useFakeTimers('modern')
+        const now = Date.now()
+        jest.setSystemTime(new Date(now))
+        await expect(invoice.onCredit(amount)).resolves.toMatchObject({
+          event: {
+            type: InvoiceEventType.InvoicePaid,
+            data: invoice.toData(amount),
+            processAt: new Date(now + 30_000),
+            withdrawal: {
+              accountId: invoice.id,
+              assetId: invoice.account.assetId,
+              amount
+            }
           }
-        }
-      })
-    })
+        })
+      }
+    )
   })
 
   describe('processNext', (): void => {

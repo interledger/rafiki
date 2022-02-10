@@ -80,7 +80,11 @@ export class Invoice
         // Ensure the event cannot be processed concurrently.
         .forUpdate()
         .first()
-      if (!this.event || this.event.attempts) {
+      if (
+        !this.event ||
+        this.event.attempts ||
+        this.event.processAt.getTime() <= Date.now()
+      ) {
         this.event = await InvoiceEvent.query(trx).insertAndFetch({
           type: InvoiceEventType.InvoicePaid,
           data: this.toData(balance),
