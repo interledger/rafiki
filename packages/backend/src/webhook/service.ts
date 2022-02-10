@@ -128,12 +128,13 @@ async function sendWebhookEvent(
 
     await axios.post(deps.config.webhookUrl, body, {
       timeout: deps.config.webhookTimeout,
-      headers: requestHeaders
+      headers: requestHeaders,
+      validateStatus: (status) => status === 200
     })
 
     await event.$query(deps.knex).patch({
       attempts: event.attempts + 1,
-      error: null,
+      statusCode: 200,
       processAt: new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
     })
   } catch (err) {
@@ -155,7 +156,7 @@ async function sendWebhookEvent(
 
     await event.$query(deps.knex).patch({
       attempts,
-      error,
+      statusCode: err.isAxiosError && err.response?.status,
       processAt
     })
   }

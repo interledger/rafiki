@@ -5,6 +5,7 @@ exports.up = function (knex) {
     table.string('type').notNullable()
     table.json('data').notNullable()
     table.integer('attempts').notNullable().defaultTo(0)
+    table.integer('statusCode').nullable()
     table.string('error').nullable()
 
     table.uuid('withdrawalAccountId').nullable()

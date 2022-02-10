@@ -170,21 +170,23 @@ describe('Webhook Service', (): void => {
       })
     })
 
-    test('Schedules retry if request fails', async (): Promise<void> => {
-      const status = 504
-      const scope = mockWebhookServer(status)
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      expect(scope.isDone()).toBe(true)
-      const updatedEvent = await webhookService.getEvent(event.id)
-      assert.ok(updatedEvent)
-      expect(updatedEvent).toMatchObject({
-        attempts: 1,
-        error: `Request failed with status code ${status}`
-      })
-      expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
-        event.createdAt.getTime() + RETRY_BACKOFF_MS
-      )
-    })
+    test.each([[201], [400], [504]])(
+      'Schedules retry if request fails (%i)',
+      async (status): Promise<void> => {
+        const scope = mockWebhookServer(status)
+        await expect(webhookService.processNext()).resolves.toEqual(event.id)
+        expect(scope.isDone()).toBe(true)
+        const updatedEvent = await webhookService.getEvent(event.id)
+        assert.ok(updatedEvent)
+        expect(updatedEvent).toMatchObject({
+          attempts: 1,
+          statusCode: status
+        })
+        expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
+          event.createdAt.getTime() + RETRY_BACKOFF_MS
+        )
+      }
+    )
 
     test('Schedules retry if request times out', async (): Promise<void> => {
       const scope = nock(webhookUrl.origin)
@@ -197,7 +199,7 @@ describe('Webhook Service', (): void => {
       assert.ok(updatedEvent)
       expect(updatedEvent).toMatchObject({
         attempts: 1,
-        error: 'timeout of 2000ms exceeded'
+        statusCode: null
       })
       expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
         event.createdAt.getTime() + RETRY_BACKOFF_MS
@@ -210,15 +212,14 @@ describe('Webhook Service', (): void => {
         new Date(event.createdAt.getTime() + RETRY_LIMIT_MS - 1)
       )
 
-      const error = 'last try'
       const mockPost = jest
         .spyOn(axios, 'post')
-        .mockRejectedValueOnce(new Error(error))
+        .mockRejectedValueOnce(new Error('last try'))
       await expect(webhookService.processNext()).resolves.toEqual(event.id)
       expect(mockPost).toHaveBeenCalledTimes(1)
       await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
         attempts: 1,
-        error,
+        statusCode: null,
         processAt: new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
       })
     })
