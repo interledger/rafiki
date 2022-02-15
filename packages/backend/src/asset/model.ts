@@ -12,6 +12,8 @@ export class Asset extends BaseModel implements LiquidityAccount {
   // TigerBeetle account 2 byte unit field representing account's asset
   public readonly unit!: number
 
+  public readonly withdrawalThreshold!: bigint | null
+
   public get asset(): LiquidityAccount['asset'] {
     return {
       id: this.id,

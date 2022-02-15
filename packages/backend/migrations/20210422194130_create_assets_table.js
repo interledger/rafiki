@@ -7,6 +7,8 @@ exports.up = function (knex) {
     table.string('code').notNullable()
     table.integer('scale').notNullable()
 
+    table.bigInteger('withdrawalThreshold').nullable()
+
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
