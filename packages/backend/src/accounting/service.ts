@@ -54,7 +54,7 @@ export interface Deposit {
 }
 
 export interface Withdrawal extends Deposit {
-  timeout: bigint
+  timeout?: bigint
 }
 
 export interface TransferOptions {

@@ -9,7 +9,11 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { AccountingService, LiquidityAccount } from '../../accounting/service'
+import {
+  AccountingService,
+  LiquidityAccount,
+  Withdrawal
+} from '../../accounting/service'
 import { Asset } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { Account } from '../../open_payments/account/model'
@@ -1756,6 +1760,7 @@ describe('Liquidity Resolvers', (): void => {
         '%s',
         (type): void => {
           let eventId: string
+          let withdrawal: Withdrawal
 
           beforeEach(
             async (): Promise<void> => {
@@ -1791,16 +1796,13 @@ describe('Liquidity Resolvers', (): void => {
                 })
               ).resolves.toBeUndefined()
               await expect(
-                accountingService.createWithdrawal({
-                  id: eventId,
-                  account,
-                  amount,
-                  timeout
-                })
-              ).resolves.toBeUndefined()
-              await expect(
                 accountingService.getBalance(account.id)
-              ).resolves.toEqual(BigInt(0))
+              ).resolves.toEqual(amount)
+              withdrawal = {
+                id: eventId,
+                account,
+                amount
+              }
             }
           )
 
@@ -1869,50 +1871,9 @@ describe('Liquidity Resolvers', (): void => {
             expect(response.error).toEqual(LiquidityError.InvalidId)
           })
 
-          test('Returns error for non-existent webhook event withdrawal', async (): Promise<void> => {
-            const webhookService = await deps.use('webhookService')
-            const { type, data } = (await webhookService.getEvent(
-              eventId
-            )) as WebhookEvent
-            const event = await WebhookEvent.query(knex).insertAndFetch({
-              type,
-              data
-            })
-            const response = await appContainer.apolloClient
-              .mutate({
-                mutation: gql`
-                  mutation WithdrawLiquidity($eventId: String!) {
-                    withdrawEventLiquidity(eventId: $eventId) {
-                      code
-                      success
-                      message
-                      error
-                    }
-                  }
-                `,
-                variables: {
-                  eventId: event.id
-                }
-              })
-              .then(
-                (query): LiquidityMutationResponse => {
-                  if (query.data) {
-                    return query.data.withdrawEventLiquidity
-                  } else {
-                    throw new Error('Data was empty')
-                  }
-                }
-              )
-
-            expect(response.success).toBe(false)
-            expect(response.code).toEqual('400')
-            expect(response.message).toEqual('Invalid id')
-            expect(response.error).toEqual(LiquidityError.InvalidId)
-          })
-
-          test('Returns error for finalized withdrawal', async (): Promise<void> => {
+          test('Returns error for already completed withdrawal', async (): Promise<void> => {
             await expect(
-              accountingService.commitWithdrawal(eventId)
+              accountingService.createWithdrawal(withdrawal)
             ).resolves.toBeUndefined()
             const response = await appContainer.apolloClient
               .mutate({
@@ -1941,45 +1902,9 @@ describe('Liquidity Resolvers', (): void => {
               )
 
             expect(response.success).toBe(false)
-            expect(response.code).toEqual('409')
-            expect(response.message).toEqual('Withdrawal already finalized')
-            expect(response.error).toEqual(LiquidityError.AlreadyCommitted)
-          })
-
-          test('Returns error for rolled back withdrawal', async (): Promise<void> => {
-            await expect(
-              accountingService.rollbackWithdrawal(eventId)
-            ).resolves.toBeUndefined()
-            const response = await appContainer.apolloClient
-              .mutate({
-                mutation: gql`
-                  mutation WithdrawLiquidity($eventId: String!) {
-                    withdrawEventLiquidity(eventId: $eventId) {
-                      code
-                      success
-                      message
-                      error
-                    }
-                  }
-                `,
-                variables: {
-                  eventId
-                }
-              })
-              .then(
-                (query): LiquidityMutationResponse => {
-                  if (query.data) {
-                    return query.data.withdrawEventLiquidity
-                  } else {
-                    throw new Error('Data was empty')
-                  }
-                }
-              )
-
-            expect(response.success).toBe(false)
-            expect(response.code).toEqual('409')
-            expect(response.message).toEqual('Withdrawal already rolled back')
-            expect(response.error).toEqual(LiquidityError.AlreadyRolledBack)
+            expect(response.code).toEqual('403')
+            expect(response.message).toEqual('Insufficient balance')
+            expect(response.error).toEqual(LiquidityError.InsufficientBalance)
           })
         }
       )

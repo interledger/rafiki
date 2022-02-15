@@ -137,35 +137,13 @@ describe('Webhook Service', (): void => {
       await expect(webhookService.processNext()).resolves.toBeUndefined()
     })
 
-    test('Creates webhook event withdrawal', async (): Promise<void> => {
-      await makeWithdrawalEvent(event)
-      assert.ok(event.withdrawal)
-      const asset = await WebhookEvent.relatedQuery('withdrawalAsset', knex)
-        .for(event.id)
-        .first()
-      assert.ok(asset)
-      const withdrawalSpy = jest.spyOn(accountingService, 'createWithdrawal')
-      const scope = mockWebhookServer()
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      expect(scope.isDone()).toBe(true)
-      expect(withdrawalSpy).toHaveBeenCalledWith({
-        id: event.id,
-        account: {
-          id: event.withdrawal.accountId,
-          asset
-        },
-        amount: event.withdrawal.amount,
-        timeout: BigInt(RETRY_LIMIT_MS) * BigInt(1e6)
-      })
-    })
-
     test('Sends webhook event', async (): Promise<void> => {
       const scope = mockWebhookServer()
       await expect(webhookService.processNext()).resolves.toEqual(event.id)
       expect(scope.isDone()).toBe(true)
       await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
         attempts: 1,
-        error: null,
+        statusCode: 200,
         processAt: new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
       })
     })

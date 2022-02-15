@@ -530,7 +530,15 @@ describe('Accounting Service', (): void => {
       }
     )
 
-    describe('Create', (): void => {
+    describe.each`
+      timeout      | description
+      ${undefined} | ${'single-phase'}
+      ${timeout}   | ${'two-phase'}
+    `('Create ($description)', ({ timeout }): void => {
+      beforeEach((): void => {
+        withdrawal.timeout = timeout
+      })
+
       test('A withdrawal can be created', async (): Promise<void> => {
         await expect(
           accountingService.createWithdrawal(withdrawal)
@@ -540,7 +548,9 @@ describe('Accounting Service', (): void => {
         ).resolves.toEqual(startingBalance - withdrawal.amount)
         await expect(
           accountingService.getSettlementBalance(withdrawal.account.asset.unit)
-        ).resolves.toEqual(startingBalance)
+        ).resolves.toEqual(
+          timeout ? startingBalance : startingBalance - withdrawal.amount
+        )
       })
 
       test('Cannot create withdrawal with invalid id', async (): Promise<void> => {

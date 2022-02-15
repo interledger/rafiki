@@ -341,13 +341,22 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
 ): ResolversTypes['LiquidityMutationResponse'] => {
   try {
     const webhookService = await ctx.container.use('webhookService')
-    // TODO: remove event lookup when commitWithdrawal can verify transfer code
     const event = await webhookService.getEvent(args.eventId)
     if (!event || !event.withdrawal) {
       return responses[LiquidityError.InvalidId]
     }
+    const assetService = await ctx.container.use('assetService')
+    const asset = await assetService.getById(event.withdrawal.assetId)
+    assert.ok(asset)
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.commitWithdrawal(args.eventId)
+    const error = await accountingService.createWithdrawal({
+      id: event.id,
+      account: {
+        id: event.withdrawal.accountId,
+        asset
+      },
+      amount: event.withdrawal.amount
+    })
     if (error) {
       return errorToResponse(error)
     }
