@@ -2,7 +2,6 @@ import { Invoice, InvoiceEvent, InvoiceEventType } from './model'
 import { AccountingService } from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
-import { RETRY_LIMIT_MS } from '../../webhook/service'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
@@ -75,7 +74,8 @@ async function createInvoice(
         description,
         expiresAt,
         amount,
-        active: true
+        active: true,
+        processAt: new Date(expiresAt.getTime())
       })
       .withGraphFetched('account.asset')
 
@@ -104,16 +104,14 @@ async function processNextInvoice(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
   return deps_.knex.transaction(async (trx) => {
-    // 30 seconds backwards to allow a prepared (but not yet fulfilled/rejected) packet to finish before being deactivated.
-    const now = new Date(Date.now() - 30_000).toISOString()
+    const now = new Date(Date.now()).toISOString()
     const invoices = await Invoice.query(trx)
       .limit(1)
       // Ensure the invoices cannot be processed concurrently by multiple workers.
       .forUpdate()
       // If an invoice is locked, don't wait — just come back for it later.
       .skipLocked()
-      .where('active', true)
-      .andWhere('expiresAt', '<', now)
+      .where('processAt', '<=', now)
       .withGraphFetched('account.asset')
 
     const invoice = invoices[0]
@@ -126,8 +124,11 @@ async function processNextInvoice(
         invoice: invoice.id
       })
     }
-    await handleExpired(deps, invoice)
-
+    if (!invoice.active) {
+      await handleDeactivated(deps, invoice)
+    } else {
+      await handleExpired(deps, invoice)
+    }
     return invoice.id
   })
 }
@@ -144,26 +145,56 @@ async function handleExpired(
   if (amountReceived) {
     deps.logger.trace({ amountReceived }, 'deactivating expired invoice')
     await invoice.$query(deps.knex).patch({
-      active: false
+      active: false,
+      // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
+      processAt: new Date(Date.now() + 30_000)
     })
-
-    deps.logger.trace({ amountReceived }, 'withdrawing expired invoice balance')
-
-    const event = await InvoiceEvent.query(deps.knex).insertAndFetch({
-      type: InvoiceEventType.InvoiceExpired,
-      data: invoice.toData(amountReceived),
-      processAt: new Date()
-    })
-    const error = await deps.accountingService.createWithdrawal({
-      id: event.id,
-      account: invoice,
-      amount: amountReceived,
-      timeout: BigInt(RETRY_LIMIT_MS) * BigInt(1e6) // ms -> ns
-    })
-    if (error) throw new Error(error)
   } else {
     deps.logger.debug({ amountReceived }, 'deleting expired invoice')
     await invoice.$query(deps.knex).delete()
+  }
+}
+
+// Create webhook event to withdraw deactivated invoices' liquidity.
+async function handleDeactivated(
+  deps: ServiceDependencies,
+  invoice: Invoice
+): Promise<void> {
+  assert.ok(invoice.processAt)
+  try {
+    const amountReceived = await deps.accountingService.getTotalReceived(
+      invoice.id
+    )
+    if (!amountReceived) {
+      deps.logger.warn(
+        { amountReceived },
+        'deactivated invoice and empty balance'
+      )
+      await invoice.$query(deps.knex).patch({ processAt: null })
+      return
+    }
+
+    const type =
+      amountReceived < invoice.amount
+        ? InvoiceEventType.InvoiceExpired
+        : InvoiceEventType.InvoicePaid
+    deps.logger.trace({ type }, 'creating invoice webhook event')
+
+    await InvoiceEvent.query(deps.knex).insertAndFetch({
+      type,
+      data: invoice.toData(amountReceived),
+      withdrawal: {
+        accountId: invoice.id,
+        assetId: invoice.account.assetId,
+        amount: amountReceived
+      }
+    })
+
+    await invoice.$query(deps.knex).patch({
+      processAt: null
+    })
+  } catch (error) {
+    deps.logger.warn({ error }, 'webhook event creation failed; retrying')
   }
 }
 

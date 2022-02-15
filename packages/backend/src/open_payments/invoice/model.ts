@@ -44,14 +44,6 @@ export class Invoice
         from: 'invoices.accountId',
         to: 'accounts.id'
       }
-    },
-    event: {
-      relation: Model.HasOneRelation,
-      modelClass: InvoiceEvent,
-      join: {
-        from: 'invoices.eventId',
-        to: 'webhookEvents.id'
-      }
     }
   }
 
@@ -62,8 +54,6 @@ export class Invoice
   public description?: string
   public expiresAt!: Date
   public readonly amount!: bigint
-  public eventId?: string
-  public event?: InvoiceEvent
 
   public processAt!: Date | null
 
@@ -72,49 +62,22 @@ export class Invoice
   }
 
   public async onCredit(balance: bigint): Promise<Invoice> {
-    if (this.active && balance < this.amount) {
-      return this
-    }
-    return await Invoice.transaction(async (trx) => {
-      this.event = await this.$relatedQuery('event', trx)
-        // Ensure the event cannot be processed concurrently.
-        .forUpdate()
-        .first()
-      if (
-        !this.event ||
-        this.event.attempts ||
-        this.event.processAt.getTime() <= Date.now()
-      ) {
-        this.event = await InvoiceEvent.query(trx).insertAndFetch({
-          type: InvoiceEventType.InvoicePaid,
-          data: this.toData(balance),
-          // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before creating withdrawal.
-          processAt: new Date(Date.now() + 30_000),
-          withdrawal: {
-            accountId: this.id,
-            assetId: this.account.assetId,
-            amount: balance
-          }
-        })
-        await this.$query(trx).patch({
+    if (this.amount <= balance) {
+      const invoice = await this.$query()
+        .patchAndFetch({
           active: false,
-          eventId: this.event.id
+          // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
+          processAt: new Date(Date.now() + 30_000)
         })
-      } else {
-        // Update the event withdrawal amount if the withdrawal hasn't been created (event.attempts === 0).
-        await this.event.$query(trx).patchAndFetch({
-          data: this.toData(balance),
-          // Add 30 seconds to allow additional prepared packets to finish before creating withdrawal.
-          processAt: new Date(Date.now() + 30_000),
-          withdrawal: {
-            accountId: this.id,
-            assetId: this.account.assetId,
-            amount: balance
-          }
+        .where({
+          id: this.id,
+          active: true
         })
+      if (invoice) {
+        return invoice
       }
-      return this
-    })
+    }
+    return this
   }
 
   public toData(amountReceived: bigint): InvoiceData {
