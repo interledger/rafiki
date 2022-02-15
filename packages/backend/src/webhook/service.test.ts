@@ -1,5 +1,4 @@
 import assert from 'assert'
-import axios from 'axios'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import Knex from 'knex'
@@ -9,9 +8,7 @@ import { WebhookEvent } from './model'
 import {
   WebhookService,
   generateWebhookSignature,
-  RETENTION_LIMIT_MS,
-  RETRY_BACKOFF_MS,
-  RETRY_LIMIT_MS
+  RETRY_BACKOFF_MS
 } from './service'
 import { AccountingService } from '../accounting/service'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -144,7 +141,7 @@ describe('Webhook Service', (): void => {
       await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
         attempts: 1,
         statusCode: 200,
-        processAt: new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
+        processAt: null
       })
     })
 
@@ -155,7 +152,7 @@ describe('Webhook Service', (): void => {
         await expect(webhookService.processNext()).resolves.toEqual(event.id)
         expect(scope.isDone()).toBe(true)
         const updatedEvent = await webhookService.getEvent(event.id)
-        assert.ok(updatedEvent)
+        assert.ok(updatedEvent?.processAt)
         expect(updatedEvent).toMatchObject({
           attempts: 1,
           statusCode: status
@@ -174,7 +171,7 @@ describe('Webhook Service', (): void => {
       await expect(webhookService.processNext()).resolves.toEqual(event.id)
       expect(scope.isDone()).toBe(true)
       const updatedEvent = await webhookService.getEvent(event.id)
-      assert.ok(updatedEvent)
+      assert.ok(updatedEvent?.processAt)
       expect(updatedEvent).toMatchObject({
         attempts: 1,
         statusCode: null
@@ -182,34 +179,6 @@ describe('Webhook Service', (): void => {
       expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
         event.createdAt.getTime() + RETRY_BACKOFF_MS
       )
-    })
-
-    test('Stops retrying after limit', async (): Promise<void> => {
-      jest.useFakeTimers('modern')
-      jest.setSystemTime(
-        new Date(event.createdAt.getTime() + RETRY_LIMIT_MS - 1)
-      )
-
-      const mockPost = jest
-        .spyOn(axios, 'post')
-        .mockRejectedValueOnce(new Error('last try'))
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      expect(mockPost).toHaveBeenCalledTimes(1)
-      await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
-        attempts: 1,
-        statusCode: null,
-        processAt: new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
-      })
-    })
-
-    test('Deletes event after retention period', async (): Promise<void> => {
-      jest.useFakeTimers('modern')
-      jest.setSystemTime(
-        new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
-      )
-
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      await expect(webhookService.getEvent(event.id)).resolves.toBeUndefined()
     })
   })
 })

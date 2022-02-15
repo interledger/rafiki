@@ -6,10 +6,10 @@ import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 
-// First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
+// First retry waits 10 seconds
+// Second retry waits 20 (more) seconds
+// Third retry waits 30 (more) seconds, etc. up to 60 seconds
 export const RETRY_BACKOFF_MS = 10_000
-export const RETRY_LIMIT_MS = 60_000 * 60 * 24 // 1 day
-export const RETENTION_LIMIT_MS = 60_000 * 60 * 24 * 30 // 30 days
 
 export interface WebhookService {
   getEvent(id: string): Promise<WebhookEvent | undefined>
@@ -67,11 +67,7 @@ async function processNextWebhookEvent(
       })
     }
 
-    if (now >= event.createdAt.getTime() + RETENTION_LIMIT_MS) {
-      await event.$query(deps.knex).delete()
-    } else {
-      await sendWebhookEvent(deps, event)
-    }
+    await sendWebhookEvent(deps, event)
 
     return event.id
   })
@@ -109,7 +105,7 @@ async function sendWebhookEvent(
     await event.$query(deps.knex).patch({
       attempts: event.attempts + 1,
       statusCode: 200,
-      processAt: new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
+      processAt: null
     })
   } catch (err) {
     const attempts = event.attempts + 1
@@ -122,16 +118,10 @@ async function sendWebhookEvent(
       'webhook request failed'
     )
 
-    const retryAt = Date.now() + Math.min(attempts, 6) * RETRY_BACKOFF_MS
-    const processAt =
-      retryAt < event.createdAt.getTime() + RETRY_LIMIT_MS
-        ? new Date(retryAt)
-        : new Date(event.createdAt.getTime() + RETENTION_LIMIT_MS)
-
     await event.$query(deps.knex).patch({
       attempts,
       statusCode: err.isAxiosError && err.response?.status,
-      processAt
+      processAt: new Date(Date.now() + Math.min(attempts, 6) * RETRY_BACKOFF_MS)
     })
   }
 }

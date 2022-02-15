@@ -12,7 +12,7 @@ exports.up = function (knex) {
     table.foreign('withdrawalAssetId').references('assets.id')
     table.bigInteger('withdrawalAmount').nullable()
 
-    table.timestamp('processAt').notNullable().defaultTo(knex.fn.now())
+    table.timestamp('processAt').nullable().defaultTo(knex.fn.now())
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())

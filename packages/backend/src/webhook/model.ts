@@ -14,7 +14,7 @@ export class WebhookEvent extends BaseModel {
   public data!: Record<string, unknown>
   public attempts!: number
   public statusCode?: number
-  public processAt!: Date
+  public processAt!: Date | null
 
   public withdrawal?: {
     accountId: string
