@@ -34,7 +34,7 @@ describe('Accounting Service', (): void => {
   let accountingService: AccountingService
   let accountFactory: AccountFactory
   let tigerbeetleContainer: StartedTestContainer
-  const timeout = BigInt(10e9) // 10 seconds
+  const timeout = BigInt(10_000) // 10 seconds
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -659,7 +659,7 @@ describe('Accounting Service', (): void => {
         const expiringWithdrawal = {
           ...withdrawal,
           id: uuid(),
-          timeout: BigInt(1) // nano-second
+          timeout: BigInt(1)
         }
         await expect(
           accountingService.createWithdrawal(expiringWithdrawal)
@@ -726,7 +726,7 @@ describe('Accounting Service', (): void => {
         const expiringWithdrawal = {
           ...withdrawal,
           id: uuid(),
-          timeout: BigInt(1) // nano-second
+          timeout: BigInt(1)
         }
         await expect(
           accountingService.createWithdrawal(expiringWithdrawal)

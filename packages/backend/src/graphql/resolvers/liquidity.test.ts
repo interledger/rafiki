@@ -44,7 +44,7 @@ describe('Liquidity Resolvers', (): void => {
   let assetService: AssetService
   let peerFactory: PeerFactory
   let knex: Knex
-  const timeout = BigInt(10e9) // 10 seconds
+  const timeout = BigInt(10_000) // 10 seconds
 
   beforeAll(
     async (): Promise<void> => {

@@ -62,7 +62,7 @@ export interface TransferOptions {
   destinationAccount: LiquidityAccount
   sourceAmount: bigint
   destinationAmount?: bigint
-  timeout: bigint // nano-seconds
+  timeout: bigint
 }
 
 export interface Transaction {
