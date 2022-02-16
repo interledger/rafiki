@@ -1,9 +1,12 @@
+import { assetToGraphql } from './asset'
 import {
   QueryResolvers,
   ResolversTypes,
+  Account as SchemaAccount,
   MutationResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
+import { Account } from '../../open_payments/account/model'
 
 export const getAccount: QueryResolvers<ApolloContext>['account'] = async (
   parent,
@@ -15,7 +18,7 @@ export const getAccount: QueryResolvers<ApolloContext>['account'] = async (
   if (!account) {
     throw new Error('No account')
   }
-  return account
+  return accountToGraphql(account)
 }
 
 export const createAccount: MutationResolvers<ApolloContext>['createAccount'] = async (
@@ -30,7 +33,7 @@ export const createAccount: MutationResolvers<ApolloContext>['createAccount'] = 
       code: '200',
       success: true,
       message: 'Created Account',
-      account
+      account: accountToGraphql(account)
     }
   } catch (error) {
     ctx.logger.error(
@@ -47,3 +50,9 @@ export const createAccount: MutationResolvers<ApolloContext>['createAccount'] = 
     }
   }
 }
+
+export const accountToGraphql = (account: Account): SchemaAccount => ({
+  id: account.id,
+  asset: assetToGraphql(account.asset),
+  createdAt: new Date(+account.createdAt).toISOString()
+})

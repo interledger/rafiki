@@ -6,6 +6,7 @@ import { AssetError, isAssetError } from './errors'
 import { Asset } from './model'
 import { BaseService } from '../shared/baseService'
 import { AccountingService } from '../accounting/service'
+import { Pagination } from '../shared/pagination'
 
 export interface AssetOptions {
   code: string
@@ -27,6 +28,7 @@ export interface AssetService {
   get(asset: AssetOptions, trx?: Transaction): Promise<void | Asset>
   getOrCreate(asset: AssetOptions): Promise<Asset>
   getById(id: string, trx?: Transaction): Promise<void | Asset>
+  getPage(pagination?: Pagination): Promise<Asset[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -51,7 +53,8 @@ export async function createAssetService({
     update: (options) => updateAsset(deps, options),
     get: (asset, trx) => getAsset(deps, asset, trx),
     getOrCreate: (asset) => getOrCreateAsset(deps, asset),
-    getById: (id, trx) => getAssetById(deps, id, trx)
+    getById: (id, trx) => getAssetById(deps, id, trx),
+    getPage: (pagination?) => getAssetsPage(deps, pagination)
   }
 }
 
@@ -130,4 +133,77 @@ async function getAssetById(
   trx?: Transaction
 ): Promise<void | Asset> {
   return await Asset.query(trx || deps.knex).findById(id)
+}
+
+/** TODO: Base64 encode/decode the cursors
+ * Buffer.from("Hello World").toString('base64')
+ * Buffer.from("SGVsbG8gV29ybGQ=", 'base64').toString('ascii')
+ */
+
+/** getAssetsPage
+ * The pagination algorithm is based on the Relay connection specification.
+ * Please read the spec before changing things:
+ * https://relay.dev/graphql/connections.htm
+ * @param pagination Pagination - cursors and limits.
+ * @returns Asset[] An array of assets that form a page.
+ */
+async function getAssetsPage(
+  deps: ServiceDependencies,
+  pagination?: Pagination
+): Promise<Asset[]> {
+  if (
+    typeof pagination?.before === 'undefined' &&
+    typeof pagination?.last === 'number'
+  )
+    throw new Error("Can't paginate backwards from the start.")
+
+  const first = pagination?.first || 20
+  if (first < 0 || first > 100) throw new Error('Pagination index error')
+  const last = pagination?.last || 20
+  if (last < 0 || last > 100) throw new Error('Pagination index error')
+
+  /**
+   * Forward pagination
+   */
+  if (typeof pagination?.after === 'string') {
+    const assets = await Asset.query(deps.knex)
+      .whereRaw(
+        '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "assets" where "id" = ?)',
+        [pagination.after]
+      )
+      .orderBy([
+        { column: 'createdAt', order: 'asc' },
+        { column: 'id', order: 'asc' }
+      ])
+      .limit(first)
+    return assets
+  }
+
+  /**
+   * Backward pagination
+   */
+  if (typeof pagination?.before === 'string') {
+    const assets = await Asset.query(deps.knex)
+      .whereRaw(
+        '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "assets" where "id" = ?)',
+        [pagination.before]
+      )
+      .orderBy([
+        { column: 'createdAt', order: 'desc' },
+        { column: 'id', order: 'desc' }
+      ])
+      .limit(last)
+      .then((resp) => {
+        return resp.reverse()
+      })
+    return assets
+  }
+
+  const assets = await Asset.query(deps.knex)
+    .orderBy([
+      { column: 'createdAt', order: 'asc' },
+      { column: 'id', order: 'asc' }
+    ])
+    .limit(first)
+  return assets
 }

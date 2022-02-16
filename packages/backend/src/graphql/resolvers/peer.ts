@@ -1,6 +1,8 @@
+import { assetToGraphql } from './asset'
 import {
   QueryResolvers,
   ResolversTypes,
+  Peer as SchemaPeer,
   PeerEdge,
   MutationResolvers,
   PeersConnectionResolvers
@@ -20,7 +22,7 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   return {
     edges: peers.map((peer: Peer) => ({
       cursor: peer.id,
-      node: peer
+      node: peerToGraphql(peer)
     }))
   }
 }
@@ -35,7 +37,7 @@ export const getPeer: QueryResolvers<ApolloContext>['peer'] = async (
   if (!peer) {
     throw new Error('No peer')
   }
-  return peer
+  return peerToGraphql(peer)
 }
 
 export const createPeer: MutationResolvers<ApolloContext>['createPeer'] = async (
@@ -68,7 +70,7 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] = async 
       code: '200',
       success: true,
       message: 'Created ILP Peer',
-      peer: peerOrError
+      peer: peerToGraphql(peerOrError)
     }
   } catch (error) {
     ctx.logger.error(
@@ -116,7 +118,7 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] = async 
       code: '200',
       success: true,
       message: 'Updated ILP Peer',
-      peer: peerOrError
+      peer: peerToGraphql(peerOrError)
     }
   } catch (error) {
     ctx.logger.error(
@@ -196,3 +198,12 @@ const getPageInfo = async ({
     startCursor: firstEdge
   }
 }
+
+export const peerToGraphql = (peer: Peer): SchemaPeer => ({
+  id: peer.id,
+  maxPacketAmount: peer.maxPacketAmount,
+  http: peer.http,
+  asset: assetToGraphql(peer.asset),
+  staticIlpAddress: peer.staticIlpAddress,
+  createdAt: new Date(+peer.createdAt).toISOString()
+})

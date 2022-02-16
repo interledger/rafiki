@@ -13,6 +13,8 @@ exports.up = function (knex) {
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
     table.unique(['code', 'scale'])
+
+    table.index(['createdAt', 'id'])
   })
 }
 

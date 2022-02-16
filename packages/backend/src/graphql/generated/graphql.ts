@@ -22,6 +22,7 @@ export type Account = {
   asset: Asset;
   invoices?: Maybe<InvoiceConnection>;
   outgoingPayments?: Maybe<OutgoingPaymentConnection>;
+  createdAt: Scalars['String'];
 };
 
 
@@ -85,13 +86,36 @@ export type ApiKey = {
 
 export type Asset = {
   __typename?: 'Asset';
+  id: Scalars['String'];
   code: Scalars['String'];
   scale: Scalars['Int'];
+  withdrawalThreshold?: Maybe<Scalars['UInt64']>;
+  createdAt: Scalars['String'];
+};
+
+export type AssetEdge = {
+  __typename?: 'AssetEdge';
+  node: Asset;
+  cursor: Scalars['String'];
 };
 
 export type AssetInput = {
   code: Scalars['String'];
   scale: Scalars['Int'];
+};
+
+export type AssetMutationResponse = MutationResponse & {
+  __typename?: 'AssetMutationResponse';
+  code: Scalars['String'];
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+  asset?: Maybe<Asset>;
+};
+
+export type AssetsConnection = {
+  __typename?: 'AssetsConnection';
+  pageInfo: PageInfo;
+  edges: Array<AssetEdge>;
 };
 
 export type CreateAccountInput = {
@@ -124,6 +148,12 @@ export type CreateApiKeyMutationResponse = MutationResponse & {
   success: Scalars['Boolean'];
   message: Scalars['String'];
   apiKey?: Maybe<ApiKey>;
+};
+
+export type CreateAssetInput = {
+  code: Scalars['String'];
+  scale: Scalars['Int'];
+  withdrawalThreshold?: Maybe<Scalars['UInt64']>;
 };
 
 export type CreateAssetLiquidityWithdrawalInput = {
@@ -260,6 +290,10 @@ export type Mutation = {
   __typename?: 'Mutation';
   createOutgoingPayment: OutgoingPaymentResponse;
   createAccount: CreateAccountMutationResponse;
+  /** Create asset */
+  createAsset: AssetMutationResponse;
+  /** Update asset withdrawal threshold */
+  updateAssetWithdrawalThreshold: AssetMutationResponse;
   /** Create peer */
   createPeer: CreatePeerMutationResponse;
   /** Update peer */
@@ -306,6 +340,16 @@ export type MutationCreateOutgoingPaymentArgs = {
 
 export type MutationCreateAccountArgs = {
   input: CreateAccountInput;
+};
+
+
+export type MutationCreateAssetArgs = {
+  input: CreateAssetInput;
+};
+
+
+export type MutationUpdateAssetWithdrawalThresholdArgs = {
+  input: UpdateAssetInput;
 };
 
 
@@ -513,6 +557,7 @@ export type Peer = {
   http: Http;
   asset: Asset;
   staticIlpAddress: Scalars['String'];
+  createdAt: Scalars['String'];
 };
 
 export type PeerEdge = {
@@ -531,6 +576,9 @@ export type Query = {
   __typename?: 'Query';
   outgoingPayment?: Maybe<OutgoingPayment>;
   account?: Maybe<Account>;
+  asset?: Maybe<Asset>;
+  /** Fetch a page of assets. */
+  assets: AssetsConnection;
   peer?: Maybe<Peer>;
   /** Fetch a page of peers. */
   peers: PeersConnection;
@@ -544,6 +592,19 @@ export type QueryOutgoingPaymentArgs = {
 
 export type QueryAccountArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryAssetArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryAssetsArgs = {
+  after?: Maybe<Scalars['String']>;
+  before?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  last?: Maybe<Scalars['Int']>;
 };
 
 
@@ -612,6 +673,11 @@ export type TransferMutationResponse = MutationResponse & {
   message: Scalars['String'];
 };
 
+
+export type UpdateAssetInput = {
+  id: Scalars['String'];
+  withdrawalThreshold?: Maybe<Scalars['UInt64']>;
+};
 
 export type UpdatePeerInput = {
   id: Scalars['String'];
@@ -717,12 +783,16 @@ export type ResolversTypes = {
   AddPeerLiquidityInput: ResolverTypeWrapper<Partial<AddPeerLiquidityInput>>;
   ApiKey: ResolverTypeWrapper<Partial<ApiKey>>;
   Asset: ResolverTypeWrapper<Partial<Asset>>;
+  AssetEdge: ResolverTypeWrapper<Partial<AssetEdge>>;
   AssetInput: ResolverTypeWrapper<Partial<AssetInput>>;
+  AssetMutationResponse: ResolverTypeWrapper<Partial<AssetMutationResponse>>;
+  AssetsConnection: ResolverTypeWrapper<Partial<AssetsConnection>>;
   CreateAccountInput: ResolverTypeWrapper<Partial<CreateAccountInput>>;
   CreateAccountMutationResponse: ResolverTypeWrapper<Partial<CreateAccountMutationResponse>>;
   CreateAccountWithdrawalInput: ResolverTypeWrapper<Partial<CreateAccountWithdrawalInput>>;
   CreateApiKeyInput: ResolverTypeWrapper<Partial<CreateApiKeyInput>>;
   CreateApiKeyMutationResponse: ResolverTypeWrapper<Partial<CreateApiKeyMutationResponse>>;
+  CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateOutgoingPaymentInput: ResolverTypeWrapper<Partial<CreateOutgoingPaymentInput>>;
   CreatePeerInput: ResolverTypeWrapper<Partial<CreatePeerInput>>;
@@ -742,7 +812,7 @@ export type ResolversTypes = {
   LiquidityError: ResolverTypeWrapper<Partial<LiquidityError>>;
   LiquidityMutationResponse: ResolverTypeWrapper<Partial<LiquidityMutationResponse>>;
   Mutation: ResolverTypeWrapper<{}>;
-  MutationResponse: ResolversTypes['AccountWithdrawalMutationResponse'] | ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateApiKeyMutationResponse'] | ResolversTypes['CreatePeerMutationResponse'] | ResolversTypes['DeleteAllApiKeysMutationResponse'] | ResolversTypes['DeletePeerMutationResponse'] | ResolversTypes['LiquidityMutationResponse'] | ResolversTypes['RedeemApiKeyMutationResponse'] | ResolversTypes['RefreshSessionMutationResponse'] | ResolversTypes['RevokeSessionMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdatePeerMutationResponse'];
+  MutationResponse: ResolversTypes['AccountWithdrawalMutationResponse'] | ResolversTypes['AssetMutationResponse'] | ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateApiKeyMutationResponse'] | ResolversTypes['CreatePeerMutationResponse'] | ResolversTypes['DeleteAllApiKeysMutationResponse'] | ResolversTypes['DeletePeerMutationResponse'] | ResolversTypes['LiquidityMutationResponse'] | ResolversTypes['RedeemApiKeyMutationResponse'] | ResolversTypes['RefreshSessionMutationResponse'] | ResolversTypes['RevokeSessionMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['UpdatePeerMutationResponse'];
   OutgoingPayment: ResolverTypeWrapper<Partial<OutgoingPayment>>;
   OutgoingPaymentConnection: ResolverTypeWrapper<Partial<OutgoingPaymentConnection>>;
   OutgoingPaymentEdge: ResolverTypeWrapper<Partial<OutgoingPaymentEdge>>;
@@ -768,6 +838,7 @@ export type ResolversTypes = {
   Session: ResolverTypeWrapper<Partial<Session>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
+  UpdateAssetInput: ResolverTypeWrapper<Partial<UpdateAssetInput>>;
   UpdatePeerInput: ResolverTypeWrapper<Partial<UpdatePeerInput>>;
   UpdatePeerMutationResponse: ResolverTypeWrapper<Partial<UpdatePeerMutationResponse>>;
 };
@@ -785,12 +856,16 @@ export type ResolversParentTypes = {
   AddPeerLiquidityInput: Partial<AddPeerLiquidityInput>;
   ApiKey: Partial<ApiKey>;
   Asset: Partial<Asset>;
+  AssetEdge: Partial<AssetEdge>;
   AssetInput: Partial<AssetInput>;
+  AssetMutationResponse: Partial<AssetMutationResponse>;
+  AssetsConnection: Partial<AssetsConnection>;
   CreateAccountInput: Partial<CreateAccountInput>;
   CreateAccountMutationResponse: Partial<CreateAccountMutationResponse>;
   CreateAccountWithdrawalInput: Partial<CreateAccountWithdrawalInput>;
   CreateApiKeyInput: Partial<CreateApiKeyInput>;
   CreateApiKeyMutationResponse: Partial<CreateApiKeyMutationResponse>;
+  CreateAssetInput: Partial<CreateAssetInput>;
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
   CreateOutgoingPaymentInput: Partial<CreateOutgoingPaymentInput>;
   CreatePeerInput: Partial<CreatePeerInput>;
@@ -809,7 +884,7 @@ export type ResolversParentTypes = {
   InvoiceEdge: Partial<InvoiceEdge>;
   LiquidityMutationResponse: Partial<LiquidityMutationResponse>;
   Mutation: {};
-  MutationResponse: ResolversParentTypes['AccountWithdrawalMutationResponse'] | ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateApiKeyMutationResponse'] | ResolversParentTypes['CreatePeerMutationResponse'] | ResolversParentTypes['DeleteAllApiKeysMutationResponse'] | ResolversParentTypes['DeletePeerMutationResponse'] | ResolversParentTypes['LiquidityMutationResponse'] | ResolversParentTypes['RedeemApiKeyMutationResponse'] | ResolversParentTypes['RefreshSessionMutationResponse'] | ResolversParentTypes['RevokeSessionMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdatePeerMutationResponse'];
+  MutationResponse: ResolversParentTypes['AccountWithdrawalMutationResponse'] | ResolversParentTypes['AssetMutationResponse'] | ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateApiKeyMutationResponse'] | ResolversParentTypes['CreatePeerMutationResponse'] | ResolversParentTypes['DeleteAllApiKeysMutationResponse'] | ResolversParentTypes['DeletePeerMutationResponse'] | ResolversParentTypes['LiquidityMutationResponse'] | ResolversParentTypes['RedeemApiKeyMutationResponse'] | ResolversParentTypes['RefreshSessionMutationResponse'] | ResolversParentTypes['RevokeSessionMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['UpdatePeerMutationResponse'];
   OutgoingPayment: Partial<OutgoingPayment>;
   OutgoingPaymentConnection: Partial<OutgoingPaymentConnection>;
   OutgoingPaymentEdge: Partial<OutgoingPaymentEdge>;
@@ -833,6 +908,7 @@ export type ResolversParentTypes = {
   Session: Partial<Session>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
   UInt64: Partial<Scalars['UInt64']>;
+  UpdateAssetInput: Partial<UpdateAssetInput>;
   UpdatePeerInput: Partial<UpdatePeerInput>;
   UpdatePeerMutationResponse: Partial<UpdatePeerMutationResponse>;
 };
@@ -850,6 +926,7 @@ export type AccountResolvers<ContextType = any, ParentType extends ResolversPare
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   invoices?: Resolver<Maybe<ResolversTypes['InvoiceConnection']>, ParentType, ContextType, RequireFields<AccountInvoicesArgs, never>>;
   outgoingPayments?: Resolver<Maybe<ResolversTypes['OutgoingPaymentConnection']>, ParentType, ContextType, RequireFields<AccountOutgoingPaymentsArgs, never>>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -879,8 +956,31 @@ export type ApiKeyResolvers<ContextType = any, ParentType extends ResolversParen
 };
 
 export type AssetResolvers<ContextType = any, ParentType extends ResolversParentTypes['Asset'] = ResolversParentTypes['Asset']> = {
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AssetEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['AssetEdge'] = ResolversParentTypes['AssetEdge']> = {
+  node?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AssetMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['AssetMutationResponse'] = ResolversParentTypes['AssetMutationResponse']> = {
+  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AssetsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['AssetsConnection'] = ResolversParentTypes['AssetsConnection']> = {
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  edges?: Resolver<Array<ResolversTypes['AssetEdge']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -966,6 +1066,8 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentArgs, 'input'>>;
   createAccount?: Resolver<ResolversTypes['CreateAccountMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAccountArgs, 'input'>>;
+  createAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAssetArgs, 'input'>>;
+  updateAssetWithdrawalThreshold?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateAssetWithdrawalThresholdArgs, 'input'>>;
   createPeer?: Resolver<ResolversTypes['CreatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationCreatePeerArgs, 'input'>>;
   updatePeer?: Resolver<ResolversTypes['UpdatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePeerArgs, 'input'>>;
   deletePeer?: Resolver<ResolversTypes['DeletePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationDeletePeerArgs, 'id'>>;
@@ -987,7 +1089,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {
-  __resolveType: TypeResolveFn<'AccountWithdrawalMutationResponse' | 'CreateAccountMutationResponse' | 'CreateApiKeyMutationResponse' | 'CreatePeerMutationResponse' | 'DeleteAllApiKeysMutationResponse' | 'DeletePeerMutationResponse' | 'LiquidityMutationResponse' | 'RedeemApiKeyMutationResponse' | 'RefreshSessionMutationResponse' | 'RevokeSessionMutationResponse' | 'TransferMutationResponse' | 'UpdatePeerMutationResponse', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'AccountWithdrawalMutationResponse' | 'AssetMutationResponse' | 'CreateAccountMutationResponse' | 'CreateApiKeyMutationResponse' | 'CreatePeerMutationResponse' | 'DeleteAllApiKeysMutationResponse' | 'DeletePeerMutationResponse' | 'LiquidityMutationResponse' | 'RedeemApiKeyMutationResponse' | 'RefreshSessionMutationResponse' | 'RevokeSessionMutationResponse' | 'TransferMutationResponse' | 'UpdatePeerMutationResponse', ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1074,6 +1176,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1092,6 +1195,8 @@ export type PeersConnectionResolvers<ContextType = any, ParentType extends Resol
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   outgoingPayment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType, RequireFields<QueryOutgoingPaymentArgs, 'id'>>;
   account?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType, RequireFields<QueryAccountArgs, 'id'>>;
+  asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
+  assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, RequireFields<QueryAssetsArgs, never>>;
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, RequireFields<QueryPeersArgs, never>>;
 };
@@ -1150,6 +1255,9 @@ export type Resolvers<ContextType = any> = {
   AccountWithdrawalMutationResponse?: AccountWithdrawalMutationResponseResolvers<ContextType>;
   ApiKey?: ApiKeyResolvers<ContextType>;
   Asset?: AssetResolvers<ContextType>;
+  AssetEdge?: AssetEdgeResolvers<ContextType>;
+  AssetMutationResponse?: AssetMutationResponseResolvers<ContextType>;
+  AssetsConnection?: AssetsConnectionResolvers<ContextType>;
   CreateAccountMutationResponse?: CreateAccountMutationResponseResolvers<ContextType>;
   CreateApiKeyMutationResponse?: CreateApiKeyMutationResponseResolvers<ContextType>;
   CreatePeerMutationResponse?: CreatePeerMutationResponseResolvers<ContextType>;
