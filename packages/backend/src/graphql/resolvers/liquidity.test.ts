@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
@@ -1621,6 +1622,9 @@ describe('Liquidity Resolvers', (): void => {
             amountSent: BigInt(0)
           }
         })
+        await expect(accountingService.getBalance(payment.id)).resolves.toEqual(
+          BigInt(0)
+        )
       }
     )
 
@@ -1645,6 +1649,7 @@ describe('Liquidity Resolvers', (): void => {
           )
 
           test('Can deposit account liquidity', async (): Promise<void> => {
+            const depositSpy = jest.spyOn(accountingService, 'createDeposit')
             const response = await appContainer.apolloClient
               .mutate({
                 mutation: gql`
@@ -1674,6 +1679,15 @@ describe('Liquidity Resolvers', (): void => {
             expect(response.success).toBe(true)
             expect(response.code).toEqual('200')
             expect(response.error).toBeNull()
+            assert.ok(payment.quote)
+            await expect(depositSpy).toHaveBeenCalledWith({
+              id: eventId,
+              account: expect.any(OutgoingPayment),
+              amount: payment.quote.maxSourceAmount
+            })
+            await expect(
+              accountingService.getBalance(payment.id)
+            ).resolves.toEqual(payment.quote.maxSourceAmount)
           })
 
           test("Can't deposit for non-existent webhook event id", async (): Promise<void> => {
