@@ -1,123 +1,23 @@
+import assert from 'assert'
+import axios from 'axios'
 import { createHmac } from 'crypto'
-import axios, { AxiosResponse } from 'axios'
-import { PaymentType } from '@interledger/pay'
-import { Logger } from 'pino'
 
+import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
-import { Invoice } from '../open_payments/invoice/model'
-import { OutgoingPayment, PaymentState } from '../outgoing_payment/model'
+import { BaseService } from '../shared/baseService'
 
-enum InvoiceEventType {
-  InvoiceExpired = 'invoice.expired',
-  InvoicePaid = 'invoice.paid'
-}
-
-enum PaymentEventType {
-  PaymentFunding = 'outgoing_payment.funding',
-  PaymentCancelled = 'outgoing_payment.cancelled',
-  PaymentCompleted = 'outgoing_payment.completed'
-}
-
-export const EventType = { ...InvoiceEventType, ...PaymentEventType }
-export type EventType = InvoiceEventType | PaymentEventType
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isPaymentEventType = (type: any): type is PaymentEventType =>
-  Object.values(PaymentEventType).includes(type)
-
-interface InvoiceEvent {
-  id: string
-  type: InvoiceEventType
-  invoice: Invoice
-  payment?: never
-  amountReceived: bigint
-  amountSent?: never
-  balance?: never
-}
-
-interface PaymentEvent {
-  id: string
-  type: PaymentEventType
-  invoice?: never
-  payment: OutgoingPayment
-  amountReceived?: never
-  amountSent: bigint
-  balance: bigint
-}
-
-export type EventOptions = InvoiceEvent | PaymentEvent
-
-interface InvoiceData {
-  invoice: {
-    id: string
-    accountId: string
-    active: boolean
-    description?: string
-    createdAt: string
-    expiresAt: string
-    amount: string
-    received: string
-  }
-  payment?: never
-}
-
-interface PaymentData {
-  invoice?: never
-  payment: {
-    id: string
-    accountId: string
-    createdAt: string
-    state: PaymentState
-    error?: string
-    stateAttempts: number
-    intent: {
-      paymentPointer?: string
-      invoiceUrl?: string
-      amountToSend?: string
-      autoApprove: boolean
-    }
-
-    quote?: {
-      timestamp: string
-      activationDeadline: string
-      targetType: PaymentType
-      minDeliveryAmount: string
-      maxSourceAmount: string
-      maxPacketAmount: string
-      minExchangeRate: number
-      lowExchangeRateEstimate: number
-      highExchangeRateEstimate: number
-    }
-    destinationAccount: {
-      scale: number
-      code: string
-      url?: string
-    }
-    outcome: {
-      amountSent: string
-    }
-    balance: string
-  }
-}
-
-interface WebhookEvent {
-  id: string
-  type: EventType
-  data: InvoiceData | PaymentData
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isPaymentEvent = (event: any): event is PaymentEvent =>
-  Object.values(PaymentEventType).includes(event.type)
+// First retry waits 10 seconds
+// Second retry waits 20 (more) seconds
+// Third retry waits 30 (more) seconds, etc. up to 60 seconds
+export const RETRY_BACKOFF_MS = 10_000
 
 export interface WebhookService {
-  send(options: EventOptions): Promise<AxiosResponse>
-  readonly timeout: number
+  getEvent(id: string): Promise<WebhookEvent | undefined>
+  processNext(): Promise<string | undefined>
 }
 
-interface ServiceDependencies {
+interface ServiceDependencies extends BaseService {
   config: IAppConfig
-  logger: Logger
 }
 
 export async function createWebhookService(
@@ -128,39 +28,102 @@ export async function createWebhookService(
   })
   const deps = { ...deps_, logger }
   return {
-    send: (options) => sendWebhook(deps, options),
-    timeout: deps.config.webhookTimeout
+    getEvent: (id) => getWebhookEvent(deps, id),
+    processNext: () => processNextWebhookEvent(deps)
   }
 }
 
-async function sendWebhook(
+async function getWebhookEvent(
   deps: ServiceDependencies,
-  options: EventOptions
-): Promise<AxiosResponse> {
-  const event = {
-    id: options.id,
-    type: options.type,
-    data: isPaymentEvent(options)
-      ? paymentToData(options.payment, options.amountSent, options.balance)
-      : invoiceToData(options.invoice, options.amountReceived)
-  }
+  id: string
+): Promise<WebhookEvent | undefined> {
+  return WebhookEvent.query(deps.knex).findById(id)
+}
 
-  const requestHeaders = {
-    'Content-Type': 'application/json'
-  }
+// Fetch (and lock) a webhook event for work.
+// Returns the id of the processed event (if any).
+async function processNextWebhookEvent(
+  deps_: ServiceDependencies
+): Promise<string | undefined> {
+  assert.ok(deps_.knex, 'Knex undefined')
+  return deps_.knex.transaction(async (trx) => {
+    const now = Date.now()
+    const events = await WebhookEvent.query(trx)
+      .limit(1)
+      // Ensure the webhook event cannot be processed concurrently by multiple workers.
+      .forUpdate()
+      // If a webhook event is locked, don't wait — just come back for it later.
+      .skipLocked()
+      .where('processAt', '<=', new Date(now).toISOString())
 
-  if (deps.config.webhookSecret) {
-    requestHeaders['Rafiki-Signature'] = generateWebhookSignature(
-      event,
-      deps.config.webhookSecret,
-      deps.config.signatureVersion
-    )
-  }
+    const event = events[0]
+    if (!event) return
 
-  return await axios.post(deps.config.webhookUrl, event, {
-    timeout: deps.config.webhookTimeout,
-    headers: requestHeaders
+    const deps = {
+      ...deps_,
+      knex: trx,
+      logger: deps_.logger.child({
+        event: event.id
+      })
+    }
+
+    await sendWebhookEvent(deps, event)
+
+    return event.id
   })
+}
+
+async function sendWebhookEvent(
+  deps: ServiceDependencies,
+  event: WebhookEvent
+): Promise<void> {
+  try {
+    const requestHeaders = {
+      'Content-Type': 'application/json'
+    }
+
+    if (deps.config.webhookSecret) {
+      requestHeaders['Rafiki-Signature'] = generateWebhookSignature(
+        event,
+        deps.config.webhookSecret,
+        deps.config.signatureVersion
+      )
+    }
+
+    const body = {
+      id: event.id,
+      type: event.type,
+      data: event.data
+    }
+
+    await axios.post(deps.config.webhookUrl, body, {
+      timeout: deps.config.webhookTimeout,
+      headers: requestHeaders,
+      validateStatus: (status) => status === 200
+    })
+
+    await event.$query(deps.knex).patch({
+      attempts: event.attempts + 1,
+      statusCode: 200,
+      processAt: null
+    })
+  } catch (err) {
+    const attempts = event.attempts + 1
+    const error = err.message
+    deps.logger.warn(
+      {
+        attempts,
+        error
+      },
+      'webhook request failed'
+    )
+
+    await event.$query(deps.knex).patch({
+      attempts,
+      statusCode: err.isAxiosError && err.response?.status,
+      processAt: new Date(Date.now() + Math.min(attempts, 6) * RETRY_BACKOFF_MS)
+    })
+  }
 }
 
 export function generateWebhookSignature(
@@ -176,59 +139,4 @@ export function generateWebhookSignature(
   const digest = hmac.digest('hex')
 
   return `t=${timestamp}, v${version}=${digest}`
-}
-
-export function invoiceToData(
-  invoice: Invoice,
-  amountReceived: bigint
-): InvoiceData {
-  return {
-    invoice: {
-      id: invoice.id,
-      accountId: invoice.accountId,
-      active: invoice.active,
-      amount: invoice.amount.toString(),
-      description: invoice.description,
-      expiresAt: invoice.expiresAt.toISOString(),
-      createdAt: new Date(+invoice.createdAt).toISOString(),
-      received: amountReceived.toString()
-    }
-  }
-}
-
-export function paymentToData(
-  payment: OutgoingPayment,
-  amountSent: bigint,
-  balance: bigint
-): PaymentData {
-  return {
-    payment: {
-      id: payment.id,
-      accountId: payment.accountId,
-      state: payment.state,
-      error: payment.error || undefined,
-      stateAttempts: payment.stateAttempts,
-      intent: {
-        ...payment.intent,
-        amountToSend: payment.intent.amountToSend?.toString()
-      },
-      quote: payment.quote && {
-        ...payment.quote,
-        timestamp: payment.quote.timestamp.toISOString(),
-        activationDeadline: payment.quote.activationDeadline.toISOString(),
-        minDeliveryAmount: payment.quote.minDeliveryAmount.toString(),
-        maxSourceAmount: payment.quote.maxSourceAmount.toString(),
-        maxPacketAmount: payment.quote.maxPacketAmount.toString(),
-        minExchangeRate: payment.quote.minExchangeRate.valueOf(),
-        lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
-        highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
-      },
-      destinationAccount: payment.destinationAccount,
-      createdAt: new Date(+payment.createdAt).toISOString(),
-      outcome: {
-        amountSent: amountSent.toString()
-      },
-      balance: balance.toString()
-    }
-  }
 }

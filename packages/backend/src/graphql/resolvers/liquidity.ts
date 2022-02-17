@@ -1,3 +1,4 @@
+import assert from 'assert'
 import {
   ResolversTypes,
   MutationResolvers,
@@ -5,8 +6,12 @@ import {
   LiquidityMutationResponse,
   AccountWithdrawalMutationResponse
 } from '../generated/graphql'
-import { TransferError } from '../../accounting/errors'
 import { ApolloContext } from '../../app'
+import { FundingError, isFundingError } from '../../outgoing_payment/errors'
+import {
+  isPaymentEvent,
+  PaymentDepositType
+} from '../../outgoing_payment/model'
 
 export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] = async (
   parent,
@@ -278,11 +283,110 @@ export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['roll
   }
 }
 
+export const DepositEventType = PaymentDepositType
+export type DepositEventType = PaymentDepositType
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+const isDepositEventType = (o: any): o is DepositEventType =>
+  Object.values(DepositEventType).includes(o)
+
+export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEventLiquidity'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['LiquidityMutationResponse'] => {
+  try {
+    const webhookService = await ctx.container.use('webhookService')
+    const event = await webhookService.getEvent(args.eventId)
+    if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
+      return responses[LiquidityError.InvalidId]
+    }
+    assert.ok(event.data.payment?.quote?.maxSourceAmount)
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    const paymentOrErr = await outgoingPaymentService.fund({
+      id: event.data.payment.id,
+      amount: BigInt(event.data.payment.quote.maxSourceAmount),
+      transferId: event.id
+    })
+    if (isFundingError(paymentOrErr)) {
+      return errorToResponse(paymentOrErr)
+    }
+    return {
+      code: '200',
+      success: true,
+      message: 'Deposited liquidity'
+    }
+  } catch (error) {
+    ctx.logger.error(
+      {
+        eventId: args.eventId,
+        error
+      },
+      'error depositing liquidity'
+    )
+    return {
+      code: '400',
+      message: 'Error trying to deposit liquidity',
+      success: false
+    }
+  }
+}
+
+export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawEventLiquidity'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['LiquidityMutationResponse'] => {
+  try {
+    const webhookService = await ctx.container.use('webhookService')
+    const event = await webhookService.getEvent(args.eventId)
+    if (!event || !event.withdrawal) {
+      return responses[LiquidityError.InvalidId]
+    }
+    const assetService = await ctx.container.use('assetService')
+    const asset = await assetService.getById(event.withdrawal.assetId)
+    assert.ok(asset)
+    const accountingService = await ctx.container.use('accountingService')
+    const error = await accountingService.createWithdrawal({
+      id: event.id,
+      account: {
+        id: event.withdrawal.accountId,
+        asset
+      },
+      amount: event.withdrawal.amount
+    })
+    if (error) {
+      return errorToResponse(error)
+    }
+    // TODO: check for and handle leftover invoice or payment balance
+    return {
+      code: '200',
+      success: true,
+      message: 'Withdrew liquidity'
+    }
+  } catch (error) {
+    ctx.logger.error(
+      {
+        eventId: args.eventId,
+        error
+      },
+      'error withdrawing liquidity'
+    )
+    return {
+      code: '400',
+      message: 'Error trying to withdraw liquidity',
+      success: false
+    }
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isLiquidityError = (o: any): o is LiquidityError =>
   Object.values(LiquidityError).includes(o)
 
-const errorToResponse = (error: TransferError): LiquidityMutationResponse => {
+const errorToResponse = (error: FundingError): LiquidityMutationResponse => {
   if (!isLiquidityError(error)) {
     throw new Error(error)
   }

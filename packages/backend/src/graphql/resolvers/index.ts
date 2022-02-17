@@ -24,7 +24,9 @@ import {
   createPeerLiquidityWithdrawal,
   createAccountWithdrawal,
   finalizeLiquidityWithdrawal,
-  rollbackLiquidityWithdrawal
+  rollbackLiquidityWithdrawal,
+  depositEventLiquidity,
+  withdrawEventLiquidity
 } from './liquidity'
 import { GraphQLBigInt } from '../scalars'
 import { refreshSession, revokeSession } from './session'
@@ -70,6 +72,8 @@ export const resolvers: Resolvers = {
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
     createAccountWithdrawal,
     finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
-    rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal
+    rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal,
+    depositEventLiquidity,
+    withdrawEventLiquidity
   }
 }

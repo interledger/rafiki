@@ -1,10 +1,14 @@
 import * as Pay from '@interledger/pay'
 
 import { LifecycleError } from './errors'
-import { OutgoingPayment, PaymentState } from './model'
+import {
+  OutgoingPayment,
+  PaymentState,
+  PaymentEvent,
+  PaymentEventType
+} from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from './ilp_plugin'
-import { EventType } from '../webhook/service'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -60,9 +64,7 @@ export async function handleQuoting(
         },
         'quote amountToSend bounds error'
       )
-      await payment.$query(deps.knex).patch({
-        state: PaymentState.Completed
-      })
+      await handleCompleted(deps, payment)
       return
     }
   }
@@ -96,9 +98,7 @@ export async function handleQuoting(
   // InvoiceAlreadyPaid: the invoice was already paid, either by this payment (which retried due to a failed SENDING→COMPLETED transition commit) or another payment entirely.
   if (quote === null) {
     deps.logger.warn('quote invoice already paid')
-    await payment.$query(deps.knex).patch({
-      state: PaymentState.Completed
-    })
+    await handleCompleted(deps, payment)
     return
   }
 
@@ -129,6 +129,10 @@ export async function handleQuoting(
       amountSent
     }
   })
+
+  if (state === PaymentState.Funding) {
+    await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFunding)
+  }
 }
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -142,44 +146,13 @@ export async function handleFunding(
     throw LifecycleError.QuoteExpired
   }
 
-  if (!payment.webhookId) throw LifecycleError.MissingWebhook
-
-  const amountSent = await deps.accountingService.getTotalSent(payment.id)
-  const balance = await deps.accountingService.getBalance(payment.id)
-  if (amountSent === undefined || balance === undefined) {
-    throw LifecycleError.MissingBalance
-  }
-
-  try {
-    const { status } = await deps.webhookService.send({
-      id: payment.webhookId,
-      type: EventType.PaymentFunding,
-      payment,
-      amountSent,
-      balance
-    })
-
-    if (status === 200) {
-      const error = await deps.accountingService.createDeposit({
-        id: payment.webhookId,
-        account: payment,
-        amount: payment.quote.maxSourceAmount
-      })
-      if (error) {
-        throw new Error('Unable to fund payment. error=' + error)
-      }
-      await payment.$query(deps.knex).patch({ state: PaymentState.Sending })
-    }
-  } catch (err) {
-    if (err.isAxiosError && err.response.status === 403) {
-      await payment.$query(deps.knex).patch({
-        state: PaymentState.Cancelled,
-        error: LifecycleError.CancelledByWebhook
-      })
-    } else {
-      throw err
-    }
-  }
+  deps.logger.error(
+    {
+      activationDeadline: payment.quote.activationDeadline.getTime(),
+      now: now.getTime()
+    },
+    "handleFunding for payment quote that isn't expired"
+  )
 }
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -260,9 +233,7 @@ export async function handleSending(
       },
       'handleSending payment was already paid'
     )
-    await payment.$query(deps.knex).patch({
-      state: PaymentState.Completed
-    })
+    await handleCompleted(deps, payment)
     return
   } else if (
     newMaxSourceAmount <= BigInt(0) ||
@@ -335,65 +306,52 @@ export async function handleSending(
 
   if (receipt.error) throw receipt.error
 
+  await handleCompleted(deps, payment)
+}
+
+export async function handleCancelled(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  error: string
+): Promise<void> {
+  await payment.$query(deps.knex).patch({
+    state: PaymentState.Cancelled,
+    error
+  })
+  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCancelled)
+}
+
+const handleCompleted = async (
+  deps: ServiceDependencies,
+  payment: OutgoingPayment
+): Promise<void> => {
   await payment.$query(deps.knex).patch({
     state: PaymentState.Completed
   })
+  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCompleted)
 }
 
-export async function handleCancelledOrCompleted(
+const sendWebhookEvent = async (
   deps: ServiceDependencies,
-  payment: OutgoingPayment
-): Promise<void> {
+  payment: OutgoingPayment,
+  type: PaymentEventType
+): Promise<void> => {
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
   const balance = await deps.accountingService.getBalance(payment.id)
   if (amountSent === undefined || balance === undefined) {
     throw LifecycleError.MissingBalance
   }
 
-  if (!payment.webhookId) throw LifecycleError.MissingWebhook
-
-  if (balance) {
-    const error = await deps.accountingService.createWithdrawal({
-      id: payment.webhookId,
-      account: payment,
-      amount: balance,
-      timeout: BigInt(deps.webhookService.timeout) * BigInt(1e6) // ms -> ns
-    })
-    if (error) throw error
-  }
-
-  try {
-    const { status } = await deps.webhookService.send({
-      id: payment.webhookId,
-      type:
-        payment.state === PaymentState.Cancelled
-          ? EventType.PaymentCancelled
-          : EventType.PaymentCompleted,
-      payment,
-      amountSent,
-      balance
-    })
-    if (status === 200 || status === 205) {
-      if (balance) {
-        const error = await deps.accountingService.commitWithdrawal(
-          payment.webhookId
-        )
-        if (error) throw error
+  const withdrawal = balance
+    ? {
+        accountId: payment.id,
+        assetId: payment.account.assetId,
+        amount: balance
       }
-      if (status === 200) {
-        await payment.$query(deps.knex).patch({
-          webhookId: null
-        })
-      } else if (payment.state === PaymentState.Cancelled) {
-        await payment.$query(deps.knex).patch({
-          state: PaymentState.Quoting
-        })
-      }
-    }
-  } catch (error) {
-    if (balance) {
-      await deps.accountingService.rollbackWithdrawal(payment.webhookId)
-    }
-    throw error
-  }
+    : undefined
+  await PaymentEvent.query(deps.knex).insertAndFetch({
+    type,
+    data: payment.toData({ amountSent, balance }),
+    withdrawal
+  })
 }

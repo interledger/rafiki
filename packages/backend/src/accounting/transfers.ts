@@ -28,7 +28,7 @@ export interface CreateTransferOptions {
   sourceAccountId: AccountId
   destinationAccountId: AccountId
   amount: bigint
-  timeout?: bigint // nano-seconds
+  timeout?: bigint
 }
 
 export async function createTransfers(
@@ -57,7 +57,7 @@ export async function createTransfers(
       reserved: TRANSFER_RESERVED,
       code: 0,
       flags,
-      timeout: transfer.timeout || BigInt(0),
+      timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : BigInt(0), // ms -> ns
       timestamp: BigInt(0)
     })
   }

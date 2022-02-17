@@ -1,8 +1,7 @@
-import { Invoice } from './model'
+import { Invoice, InvoiceEvent, InvoiceEventType } from './model'
 import { AccountingService } from '../../accounting/service'
 import { BaseService } from '../../shared/baseService'
 import { Pagination } from '../../shared/pagination'
-import { EventType, WebhookService } from '../../webhook/service'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
@@ -27,14 +26,12 @@ export interface InvoiceService {
     accountId: string,
     pagination?: Pagination
   ): Promise<Invoice[]>
-  handlePayment(invoiceId: string): Promise<void>
   processNext(): Promise<string | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
-  webhookService: WebhookService
 }
 
 export async function createInvoiceService(
@@ -52,7 +49,6 @@ export async function createInvoiceService(
     create: (options, trx) => createInvoice(deps, options, trx),
     getAccountInvoicesPage: (accountId, pagination) =>
       getAccountInvoicesPage(deps, accountId, pagination),
-    handlePayment: (invoiceId) => handleInvoicePayment(deps, invoiceId),
     processNext: () => processNextInvoice(deps)
   }
 }
@@ -79,8 +75,7 @@ async function createInvoice(
         expiresAt,
         amount,
         active: true,
-        // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before being deactivated.
-        processAt: new Date(expiresAt.getTime() + 30_000)
+        processAt: new Date(expiresAt.getTime())
       })
       .withGraphFetched('account.asset')
 
@@ -103,25 +98,6 @@ async function createInvoice(
   }
 }
 
-async function handleInvoicePayment(
-  deps: ServiceDependencies,
-  invoiceId: string
-): Promise<void> {
-  const amountReceived = await deps.accountingService.getTotalReceived(
-    invoiceId
-  )
-  if (!amountReceived) {
-    return
-  }
-  await Invoice.query(deps.knex)
-    .patch({
-      active: false,
-      processAt: new Date()
-    })
-    .where('id', invoiceId)
-    .andWhere('amount', '<=', amountReceived.toString())
-}
-
 // Fetch (and lock) an invoice for work.
 // Returns the id of the processed invoice (if any).
 async function processNextInvoice(
@@ -135,7 +111,7 @@ async function processNextInvoice(
       .forUpdate()
       // If an invoice is locked, don't wait — just come back for it later.
       .skipLocked()
-      .where('processAt', '<', now)
+      .where('processAt', '<=', now)
       .withGraphFetched('account.asset')
 
     const invoice = invoices[0]
@@ -170,7 +146,8 @@ async function handleExpired(
     deps.logger.trace({ amountReceived }, 'deactivating expired invoice')
     await invoice.$query(deps.knex).patch({
       active: false,
-      processAt: new Date()
+      // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
+      processAt: new Date(Date.now() + 30_000)
     })
   } else {
     deps.logger.debug({ amountReceived }, 'deleting expired invoice')
@@ -178,7 +155,7 @@ async function handleExpired(
   }
 }
 
-// Withdraw deactivated invoices' liquidity.
+// Create webhook event to withdraw deactivated invoices' liquidity.
 async function handleDeactivated(
   deps: ServiceDependencies,
   invoice: Invoice
@@ -191,58 +168,33 @@ async function handleDeactivated(
     if (!amountReceived) {
       deps.logger.warn(
         { amountReceived },
-        'invoice with processAt and empty balance'
+        'deactivated invoice and empty balance'
       )
       await invoice.$query(deps.knex).patch({ processAt: null })
       return
     }
 
-    deps.logger.trace(
-      { amountReceived },
-      'withdrawing deactivated invoice balance'
-    )
-    const error = await deps.accountingService.createWithdrawal({
-      id: invoice.id,
-      account: invoice,
-      amount: amountReceived,
-      timeout: BigInt(deps.webhookService.timeout) * BigInt(1e6) // ms -> ns
-    })
-    if (error) throw error
+    const type =
+      amountReceived < invoice.amount
+        ? InvoiceEventType.InvoiceExpired
+        : InvoiceEventType.InvoicePaid
+    deps.logger.trace({ type }, 'creating invoice webhook event')
 
-    const { status } = await deps.webhookService.send({
-      id: invoice.id,
-      type:
-        amountReceived < invoice.amount
-          ? EventType.InvoiceExpired
-          : EventType.InvoicePaid,
-      invoice,
-      amountReceived
-    })
-    if (status === 200 || status === 205) {
-      const error = await deps.accountingService.commitWithdrawal(invoice.id)
-      if (error) throw error
-      if (status === 200) {
-        await invoice.$query(deps.knex).patch({
-          processAt: null
-        })
+    await InvoiceEvent.query(deps.knex).insertAndFetch({
+      type,
+      data: invoice.toData(amountReceived),
+      withdrawal: {
+        accountId: invoice.id,
+        assetId: invoice.account.assetId,
+        amount: amountReceived
       }
-    }
-  } catch (error) {
-    const webhookAttempts = invoice.webhookAttempts + 1
-    deps.logger.warn(
-      { error, webhookAttempts },
-      'webhook attempt failed; retrying'
-    )
-    await deps.accountingService.rollbackWithdrawal(invoice.id)
-
-    const processAt = new Date(
-      invoice.processAt.getTime() +
-        Math.min(webhookAttempts, 6) * RETRY_BACKOFF_MS
-    )
-    await invoice.$query(deps.knex).patch({
-      processAt,
-      webhookAttempts
     })
+
+    await invoice.$query(deps.knex).patch({
+      processAt: null
+    })
+  } catch (error) {
+    deps.logger.warn({ error }, 'webhook event creation failed; retrying')
   }
 }
 

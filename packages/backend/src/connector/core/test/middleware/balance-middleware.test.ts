@@ -30,7 +30,7 @@ const ctx = createILPContext({
   },
   services
 })
-const { accounting, invoices, rates } = services
+const { accounting, rates } = services
 
 beforeEach(async () => {
   ctx.response.fulfill = undefined
@@ -53,12 +53,10 @@ describe('Balance Middleware', function () {
     const next = jest.fn().mockImplementation(() => {
       ctx.response.fulfill = fulfill
     })
-    const handlePaymentSpy = jest.spyOn(invoices, 'handlePayment')
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
     expect(next).toHaveBeenCalledTimes(1)
-    expect(handlePaymentSpy).toHaveBeenCalledTimes(1)
 
     const aliceBalance = await accounting.getBalance(aliceAccount.id)
     expect(aliceBalance).toEqual(BigInt(0))
@@ -102,7 +100,6 @@ describe('Balance Middleware', function () {
       })
 
       const createTransferSpy = jest.spyOn(accounting, 'createTransfer')
-      const handlePaymentSpy = jest.spyOn(invoices, 'handlePayment')
 
       if (error) {
         await expect(middleware(ctx, next)).rejects.toBeInstanceOf(error)
@@ -113,7 +110,6 @@ describe('Balance Middleware', function () {
       }
 
       expect(createTransferSpy).toHaveBeenCalledTimes(createTransfer ? 1 : 0)
-      expect(handlePaymentSpy).not.toHaveBeenCalled()
 
       const aliceBalance = await accounting.getBalance(aliceAccount.id)
       expect(aliceBalance).toEqual(BigInt(100))

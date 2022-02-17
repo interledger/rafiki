@@ -2,9 +2,9 @@ import assert from 'assert'
 import nock from 'nock'
 import Knex from 'knex'
 import * as Pay from '@interledger/pay'
-import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
+import { FundingError } from './errors'
 import { OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { IAppConfig, Config } from '../config/app'
@@ -12,7 +12,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTable, truncateTables } from '../tests/tableManager'
-import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
+import {
+  OutgoingPayment,
+  PaymentIntent,
+  PaymentState,
+  PaymentEvent,
+  PaymentEventType
+} from './model'
 import { LifecycleError } from './errors'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../accounting/errors'
@@ -20,7 +26,6 @@ import { AccountingService, TransferOptions } from '../accounting/service'
 import { AssetOptions } from '../asset/service'
 import { Invoice } from '../open_payments/invoice/model'
 import { RatesService } from '../rates/service'
-import { EventType } from '../webhook/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -38,39 +43,14 @@ describe('OutgoingPaymentService', (): void => {
   let amtDelivered: bigint
   let config: IAppConfig
 
-  const webhookUrl = new URL(Config.webhookUrl)
-
-  enum WebhookState {
-    Funding = PaymentState.Funding,
-    Cancelled = PaymentState.Cancelled,
-    Completed = PaymentState.Completed
-  }
-
-  const isWebhookState = (state: PaymentState): boolean =>
-    Object.values(WebhookState).includes(state)
-
   const webhookTypes: {
-    [key in WebhookState]: EventType
+    [key in PaymentState]: PaymentEventType | undefined
   } = {
-    [WebhookState.Funding]: EventType.PaymentFunding,
-    [WebhookState.Cancelled]: EventType.PaymentCancelled,
-    [WebhookState.Completed]: EventType.PaymentCompleted
-  }
-
-  function mockWebhookServer(
-    paymentId: string,
-    state: PaymentState,
-    status = 200
-  ): nock.Scope {
-    assert.ok(isWebhookState(state))
-    return nock(webhookUrl.origin)
-      .post(webhookUrl.pathname, (body): boolean => {
-        expect(body.type).toEqual(webhookTypes[state])
-        expect(body.data.payment.id).toEqual(paymentId)
-        expect(body.data.payment.state).toEqual(state)
-        return true
-      })
-      .reply(status)
+    [PaymentState.Quoting]: undefined,
+    [PaymentState.Funding]: PaymentEventType.PaymentFunding,
+    [PaymentState.Sending]: undefined,
+    [PaymentState.Cancelled]: PaymentEventType.PaymentCancelled,
+    [PaymentState.Completed]: PaymentEventType.PaymentCompleted
   }
 
   async function processNext(
@@ -83,6 +63,14 @@ describe('OutgoingPaymentService', (): void => {
     if (!payment) throw 'no payment'
     if (expectState) expect(payment.state).toBe(expectState)
     expect(payment.error).toEqual(expectedError || null)
+    const type = webhookTypes[payment.state]
+    if (type) {
+      await expect(
+        PaymentEvent.query(knex).where({
+          type
+        })
+      ).resolves.not.toHaveLength(0)
+    }
     return payment
   }
 
@@ -144,12 +132,14 @@ describe('OutgoingPaymentService', (): void => {
       amountSent,
       amountDelivered,
       accountBalance,
-      invoiceReceived
+      invoiceReceived,
+      withdrawAmount
     }: {
       amountSent?: bigint
       amountDelivered?: bigint
       accountBalance?: bigint
       invoiceReceived?: bigint
+      withdrawAmount?: bigint
     }
   ) {
     if (amountSent !== undefined) {
@@ -169,6 +159,14 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         accountingService.getTotalReceived(invoice.id)
       ).resolves.toEqual(invoiceReceived)
+    }
+    if (withdrawAmount !== undefined) {
+      await expect(
+        PaymentEvent.query(knex).where({
+          withdrawalAccountId: payment.id,
+          withdrawalAmount: withdrawAmount
+        })
+      ).resolves.toHaveLength(1)
     }
   }
 
@@ -522,7 +520,6 @@ describe('OutgoingPaymentService', (): void => {
             autoApprove: true
           })
           payment = await processNext(paymentId, PaymentState.Funding)
-          expect(payment.webhookId).not.toBeNull()
         }
       )
 
@@ -544,55 +541,9 @@ describe('OutgoingPaymentService', (): void => {
           LifecycleError.QuoteExpired
         )
       })
-
-      it('CANCELLED (wallet cancelled)', async (): Promise<void> => {
-        const scope = mockWebhookServer(payment.id, PaymentState.Funding, 403)
-        await processNext(
-          payment.id,
-          PaymentState.Cancelled,
-          LifecycleError.CancelledByWebhook
-        )
-        expect(scope.isDone()).toBe(true)
-      })
-
-      it('SENDING (payment funded)', async (): Promise<void> => {
-        const scope = mockWebhookServer(payment.id, PaymentState.Funding)
-        await processNext(payment.id, PaymentState.Sending)
-        expect(scope.isDone()).toBe(true)
-        await expectOutcome(payment, {
-          accountBalance: BigInt(123),
-          amountSent: BigInt(0),
-          amountDelivered: BigInt(0)
-        })
-      })
-
-      it('FUNDING (webhook error)', async (): Promise<void> => {
-        const scope = mockWebhookServer(payment.id, PaymentState.Funding, 504)
-        await processNext(payment.id, PaymentState.Funding)
-        expect(scope.isDone()).toBe(true)
-      })
-
-      it('FUNDING (webhook timeout)', async (): Promise<void> => {
-        const scope = nock(webhookUrl.origin)
-          .post(webhookUrl.pathname)
-          .delayConnection(Config.webhookTimeout + 1)
-          .reply(200)
-        await processNext(payment.id, PaymentState.Funding)
-        expect(scope.isDone()).toBe(true)
-      })
     })
 
     describe('SENDING→', (): void => {
-      beforeEach(
-        async (): Promise<void> => {
-          // Don't send invoice.paid webhook events
-          const invoiceService = await deps.use('invoiceService')
-          jest
-            .spyOn(invoiceService, 'handlePayment')
-            .mockImplementation(() => Promise.resolve())
-        }
-      )
-
       async function setup(
         opts: Pick<
           PaymentIntent,
@@ -607,10 +558,17 @@ describe('OutgoingPaymentService', (): void => {
 
         trackAmountDelivered(paymentId)
 
-        await processNext(paymentId, PaymentState.Funding)
-        const scope = mockWebhookServer(paymentId, PaymentState.Funding)
-        await processNext(paymentId, PaymentState.Sending)
-        expect(scope.isDone()).toBe(true)
+        const payment = await processNext(paymentId, PaymentState.Funding)
+        assert.ok(payment.quote)
+        await expect(
+          outgoingPaymentService.fund({
+            id: paymentId,
+            amount: payment.quote.maxSourceAmount,
+            transferId: uuid()
+          })
+        ).resolves.toMatchObject({
+          state: PaymentState.Sending
+        })
 
         return paymentId
       }
@@ -641,7 +599,8 @@ describe('OutgoingPaymentService', (): void => {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
           amountDelivered: invoice.amount,
-          invoiceReceived: invoice.amount
+          invoiceReceived: invoice.amount,
+          withdrawAmount: payment.quote.maxSourceAmount - amountSent
         })
       })
 
@@ -659,7 +618,8 @@ describe('OutgoingPaymentService', (): void => {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
           amountDelivered: invoice.amount - amountAlreadyDelivered,
-          invoiceReceived: invoice.amount
+          invoiceReceived: invoice.amount,
+          withdrawAmount: payment.quote.maxSourceAmount - amountSent
         })
       })
 
@@ -698,7 +658,8 @@ describe('OutgoingPaymentService', (): void => {
         await expectOutcome(payment, {
           accountBalance: BigInt(123 - 10 * 5),
           amountSent: BigInt(10 * 5),
-          amountDelivered: BigInt(5 * 5)
+          amountDelivered: BigInt(5 * 5),
+          withdrawAmount: BigInt(123 - 10 * 5)
         })
       })
 
@@ -723,7 +684,8 @@ describe('OutgoingPaymentService', (): void => {
         await expectOutcome(payment, {
           accountBalance: BigInt(123 - 10),
           amountSent: BigInt(10),
-          amountDelivered: BigInt(5)
+          amountDelivered: BigInt(5),
+          withdrawAmount: BigInt(123 - 10)
         })
       })
 
@@ -793,7 +755,8 @@ describe('OutgoingPaymentService', (): void => {
           accountBalance: payment.quote.maxSourceAmount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
-          invoiceReceived: invoice.amount
+          invoiceReceived: invoice.amount,
+          withdrawAmount: payment.quote.maxSourceAmount
         })
       })
 
@@ -819,128 +782,81 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
     })
+  })
 
-    describe.each`
-      state                     | error
-      ${PaymentState.Cancelled} | ${Pay.PaymentError.ReceiverProtocolViolation}
-      ${PaymentState.Completed} | ${undefined}
-    `('$state→', ({ state, error }): void => {
-      let paymentId: string
-      let accountBalance: bigint
+  describe('fund', (): void => {
+    let payment: OutgoingPayment
+    let quoteAmount: bigint
 
-      beforeEach(
-        async (): Promise<void> => {
-          // Don't send invoice.paid webhook events
-          const invoiceService = await deps.use('invoiceService')
-          jest
-            .spyOn(invoiceService, 'handlePayment')
-            .mockImplementation(() => Promise.resolve())
-
-          paymentId = (
-            await outgoingPaymentService.create({
-              accountId,
-              invoiceUrl,
-              autoApprove: true
-            })
-          ).id
-
-          trackAmountDelivered(paymentId)
-
-          await processNext(paymentId, PaymentState.Funding)
-          const scope = mockWebhookServer(paymentId, PaymentState.Funding)
-          await processNext(paymentId, PaymentState.Sending)
-          expect(scope.isDone()).toBe(true)
-
-          if (error) {
-            jest.spyOn(Pay, 'pay').mockRejectedValueOnce(error)
-          }
-          const payment = await processNext(paymentId, state, error)
-          if (!payment.quote) throw 'no quote'
-          expect(payment.webhookId).not.toBeNull()
-
-          if (state === PaymentState.Cancelled) {
-            accountBalance = payment.quote?.maxSourceAmount
-            await expectOutcome(payment, {
-              accountBalance,
-              amountSent: BigInt(0),
-              amountDelivered: BigInt(0)
-            })
-          } else {
-            const amountSent = invoice.amount * BigInt(2)
-            accountBalance = payment.quote?.maxSourceAmount - amountSent
-            await expectOutcome(payment, {
-              accountBalance,
-              amountSent,
-              amountDelivered: invoice.amount
-            })
-          }
-        }
-      )
-
-      it(`${state} (liquidity withdrawal)`, async (): Promise<void> => {
-        const scope = mockWebhookServer(paymentId, state)
-        const payment = await processNext(paymentId, state, error)
-        expect(scope.isDone()).toBe(true)
-        expect(payment.webhookId).toBeNull()
-        await expect(accountingService.getBalance(paymentId)).resolves.toEqual(
-          BigInt(0)
-        )
-        // Payment is done being processed
-        await expect(
-          outgoingPaymentService.processNext()
-        ).resolves.toBeUndefined()
+    beforeEach(async (): Promise<void> => {
+      const { id: paymentId } = await outgoingPaymentService.create({
+        accountId,
+        paymentPointer,
+        amountToSend: BigInt(123),
+        autoApprove: false
       })
+      payment = await processNext(paymentId, PaymentState.Funding)
+      assert.ok(payment.quote)
+      quoteAmount = payment.quote.maxSourceAmount
+      await expectOutcome(payment, { accountBalance: BigInt(0) })
+    }, 10_000)
 
-      it(`${state} (webhook with empty balance)`, async (): Promise<void> => {
-        jest
-          .spyOn(accountingService, 'getBalance')
-          .mockResolvedValueOnce(BigInt(0))
-        const withdrawSpy = jest.spyOn(accountingService, 'createWithdrawal')
-        const scope = mockWebhookServer(paymentId, state)
-        const payment = await processNext(paymentId, state, error)
-        expect(scope.isDone()).toBe(true)
-        expect(withdrawSpy).not.toHaveBeenCalled()
-        expect(payment.webhookId).toBeNull()
-
-        // Payment is done being processed
-        await expect(
-          outgoingPaymentService.processNext()
-        ).resolves.toBeUndefined()
-      })
-
-      it(`${state} (webhook error)`, async (): Promise<void> => {
-        const scope = mockWebhookServer(paymentId, state, 504)
-        const payment = await processNext(paymentId, state, error)
-        expect(scope.isDone()).toBe(true)
-        expect(payment.webhookId).not.toBeNull()
-        await expect(accountingService.getBalance(paymentId)).resolves.toEqual(
-          accountBalance
-        )
-      })
-
-      it(`${state} (webhook timeout)`, async (): Promise<void> => {
-        const scope = nock(webhookUrl.origin)
-          .post(webhookUrl.pathname)
-          .delayConnection(Config.webhookTimeout + 1)
-          .reply(200)
-        const payment = await processNext(paymentId, state, error)
-        expect(scope.isDone()).toBe(true)
-        expect(payment.webhookId).not.toBeNull()
-        await expect(accountingService.getBalance(paymentId)).resolves.toEqual(
-          accountBalance
-        )
-      })
-
-      if (state === PaymentState.Cancelled) {
-        it('QUOTING (withdraw + requote)', async (): Promise<void> => {
-          const scope = mockWebhookServer(paymentId, state, 205)
-          await processNext(paymentId, PaymentState.Quoting)
-          expect(scope.isDone()).toBe(true)
-          await expect(
-            accountingService.getBalance(paymentId)
-          ).resolves.toEqual(BigInt(0))
+    it('fails when no payment exists', async (): Promise<void> => {
+      await expect(
+        outgoingPaymentService.fund({
+          id: uuid(),
+          amount: quoteAmount,
+          transferId: uuid()
         })
-      }
+      ).resolves.toEqual(FundingError.UnknownPayment)
+    })
+
+    it('transitions a Funding payment to Sending state', async (): Promise<void> => {
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: quoteAmount,
+          transferId: uuid()
+        })
+      ).resolves.toMatchObject({
+        id: payment.id,
+        state: PaymentState.Sending
+      })
+
+      const after = await outgoingPaymentService.get(payment.id)
+      expect(after?.state).toBe(PaymentState.Sending)
+      await expectOutcome(payment, { accountBalance: quoteAmount })
+    })
+
+    it('fails for invalid funding amount', async (): Promise<void> => {
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: quoteAmount - BigInt(1),
+          transferId: uuid()
+        })
+      ).resolves.toEqual(FundingError.InvalidAmount)
+
+      const after = await outgoingPaymentService.get(payment.id)
+      expect(after?.state).toBe(PaymentState.Funding)
+      await expectOutcome(payment, { accountBalance: BigInt(0) })
+    })
+
+    Object.values(PaymentState).forEach((startState) => {
+      if (startState === PaymentState.Funding) return
+      it(`does not fund a ${startState} payment`, async (): Promise<void> => {
+        await payment.$query().patch({ state: startState })
+        await expect(
+          outgoingPaymentService.fund({
+            id: payment.id,
+            amount: quoteAmount,
+            transferId: uuid()
+          })
+        ).resolves.toEqual(FundingError.WrongState)
+
+        const after = await outgoingPaymentService.get(payment.id)
+        expect(after?.state).toBe(startState)
+      })
     })
   })
 

@@ -1,14 +1,12 @@
 import assert from 'assert'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
-import nock from 'nock'
-import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { InvoiceService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Invoice } from './model'
+import { Invoice, InvoiceEvent, InvoiceEventType } from './model'
 import { resetGraphileDb } from '../../tests/graphileDb'
 import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config } from '../../config/app'
@@ -17,7 +15,6 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { EventType } from '../../webhook/service'
 
 describe('Invoice Service', (): void => {
   let deps: IocContract<AppServices>
@@ -30,22 +27,6 @@ describe('Invoice Service', (): void => {
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
-  }
-  const webhookUrl = new URL(Config.webhookUrl)
-
-  function mockWebhookServer(
-    invoiceId: string,
-    type: EventType,
-    status = 200
-  ): nock.Scope {
-    return nock(webhookUrl.origin)
-      .post(webhookUrl.pathname, (body): boolean => {
-        expect(body.type).toEqual(type)
-        expect(body.data.invoice.id).toEqual(invoiceId)
-        expect(body.data.invoice.active).toEqual(false)
-        return true
-      })
-      .reply(status)
   }
 
   beforeAll(
@@ -98,7 +79,7 @@ describe('Invoice Service', (): void => {
       expect(invoice).toMatchObject({
         id: invoice.id,
         account: await accountService.get(accountId),
-        processAt: new Date(invoice.expiresAt.getTime() + 30_000)
+        processAt: new Date(invoice.expiresAt.getTime())
       })
       const retrievedInvoice = await invoiceService.get(invoice.id)
       if (!retrievedInvoice) throw new Error('invoice not found')
@@ -133,7 +114,7 @@ describe('Invoice Service', (): void => {
     })
   })
 
-  describe('handlePayment', (): void => {
+  describe('onCredit', (): void => {
     let invoice: Invoice
 
     beforeEach(
@@ -149,35 +130,26 @@ describe('Invoice Service', (): void => {
 
     test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
       await expect(
-        accountingService.createDeposit({
-          id: uuid(),
-          account: invoice,
-          amount: invoice.amount - BigInt(1)
-        })
-      ).resolves.toBeUndefined()
-
-      await invoiceService.handlePayment(invoice.id)
+        invoice.onCredit(invoice.amount - BigInt(1))
+      ).resolves.toEqual(invoice)
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-        active: true
+        active: true,
+        processAt: new Date(invoice.expiresAt.getTime())
       })
     })
 
     test('Deactivates fully paid invoice', async (): Promise<void> => {
-      await expect(
-        accountingService.createDeposit({
-          id: uuid(),
-          account: invoice,
-          amount: invoice.amount
-        })
-      ).resolves.toBeUndefined()
-
       const now = new Date()
       jest.useFakeTimers('modern')
       jest.setSystemTime(now)
-      await invoiceService.handlePayment(invoice.id)
+      await expect(invoice.onCredit(invoice.amount)).resolves.toMatchObject({
+        id: invoice.id,
+        active: false,
+        processAt: new Date(now.getTime() + 30_000)
+      })
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: false,
-        processAt: now
+        processAt: new Date(now.getTime() + 30_000)
       })
     })
   })
@@ -218,7 +190,7 @@ describe('Invoice Service', (): void => {
         await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
         await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
           active: false,
-          processAt: now
+          processAt: new Date(now.getTime() + 30_000)
         })
       })
 
@@ -235,12 +207,12 @@ describe('Invoice Service', (): void => {
     })
 
     describe.each`
-      event                       | expiresAt  | amountReceived
-      ${EventType.InvoiceExpired} | ${-40_000} | ${BigInt(1)}
-      ${EventType.InvoicePaid}    | ${30_000}  | ${BigInt(123)}
+      eventType                          | expiresAt  | amountReceived
+      ${InvoiceEventType.InvoiceExpired} | ${-40_000} | ${BigInt(1)}
+      ${InvoiceEventType.InvoicePaid}    | ${30_000}  | ${BigInt(123)}
     `(
-      'handleDeactivated ($event)',
-      ({ event, expiresAt, amountReceived }): void => {
+      'handleDeactivated ($eventType)',
+      ({ eventType, expiresAt, amountReceived }): void => {
         let invoice: Invoice
 
         beforeEach(
@@ -258,12 +230,12 @@ describe('Invoice Service', (): void => {
                 amount: amountReceived
               })
             ).resolves.toBeUndefined()
-            if (event === EventType.InvoiceExpired) {
+            if (eventType === InvoiceEventType.InvoiceExpired) {
               await expect(invoiceService.processNext()).resolves.toBe(
                 invoice.id
               )
             } else {
-              await invoiceService.handlePayment(invoice.id)
+              await invoice.onCredit(invoice.amount)
             }
             invoice = (await invoiceService.get(invoice.id)) as Invoice
             expect(invoice.active).toBe(false)
@@ -277,48 +249,26 @@ describe('Invoice Service', (): void => {
           }
         )
 
-        test('Withdraws invoice liquidity', async (): Promise<void> => {
-          const scope = mockWebhookServer(invoice.id, event)
-          await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-          expect(scope.isDone()).toBe(true)
-          await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            processAt: null,
-            webhookAttempts: 0
-          })
+        test('Creates webhook event', async (): Promise<void> => {
           await expect(
-            accountingService.getBalance(invoice.id)
-          ).resolves.toEqual(BigInt(0))
-        })
-
-        test("Doesn't withdraw on webhook error", async (): Promise<void> => {
+            InvoiceEvent.query(knex).where({
+              type: eventType
+            })
+          ).resolves.toHaveLength(0)
           assert.ok(invoice.processAt)
-          const scope = mockWebhookServer(invoice.id, event, 504)
+          jest.useFakeTimers('modern')
+          jest.setSystemTime(invoice.processAt)
           await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-          expect(scope.isDone()).toBe(true)
-          await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            processAt: new Date(invoice.processAt.getTime() + 10_000),
-            webhookAttempts: 1
-          })
           await expect(
-            accountingService.getBalance(invoice.id)
-          ).resolves.toEqual(amountReceived)
-        })
-
-        test("Doesn't withdraw on webhook timeout", async (): Promise<void> => {
-          assert.ok(invoice.processAt)
-          const scope = nock(webhookUrl.origin)
-            .post(webhookUrl.pathname)
-            .delayConnection(Config.webhookTimeout + 1)
-            .reply(200)
-          await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-          expect(scope.isDone()).toBe(true)
+            InvoiceEvent.query(knex).where({
+              type: eventType,
+              withdrawalAccountId: invoice.id,
+              withdrawalAmount: amountReceived
+            })
+          ).resolves.toHaveLength(1)
           await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
-            processAt: new Date(invoice.processAt.getTime() + 10_000),
-            webhookAttempts: 1
+            processAt: null
           })
-          await expect(
-            accountingService.getBalance(invoice.id)
-          ).resolves.toEqual(amountReceived)
         })
       }
     )

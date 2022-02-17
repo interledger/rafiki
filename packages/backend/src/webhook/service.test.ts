@@ -4,36 +4,49 @@ import { URL } from 'url'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 
+import { WebhookEvent } from './model'
 import {
-  EventType,
-  isPaymentEventType,
   WebhookService,
   generateWebhookSignature,
-  invoiceToData,
-  paymentToData
+  RETRY_BACKOFF_MS
 } from './service'
+import { AccountingService } from '../accounting/service'
 import { createTestApp, TestContainer } from '../tests/app'
+import { AccountFactory } from '../tests/accountFactory'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { Invoice } from '../open_payments/invoice/model'
-import { OutgoingPayment } from '../outgoing_payment/model'
 
 describe('Webhook Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let webhookService: WebhookService
+  let accountingService: AccountingService
   let knex: Knex
-  let invoice: Invoice
-  let payment: OutgoingPayment
-  let amountReceived: bigint
-  let amountSent: bigint
-  let balance: bigint
   let webhookUrl: URL
+  let event: WebhookEvent
   const WEBHOOK_SECRET = 'test secret'
+
+  async function makeWithdrawalEvent(event: WebhookEvent): Promise<void> {
+    const assetService = await deps.use('assetService')
+    const accountFactory = new AccountFactory(accountingService)
+    const asset = await assetService.getOrCreate(randomAsset())
+    const amount = BigInt(10)
+    const account = await accountFactory.build({
+      asset,
+      balance: amount
+    })
+    await event.$query(knex).patch({
+      withdrawal: {
+        accountId: account.id,
+        assetId: account.asset.id,
+        amount
+      }
+    })
+  }
 
   beforeAll(
     async (): Promise<void> => {
@@ -42,100 +55,130 @@ describe('Webhook Service', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       webhookService = await deps.use('webhookService')
-      const accountService = await deps.use('accountService')
-      const { id: accountId } = await accountService.create({
-        asset: randomAsset()
+      accountingService = await deps.use('accountingService')
+      webhookUrl = new URL(Config.webhookUrl)
+    }
+  )
+
+  beforeEach(
+    async (): Promise<void> => {
+      event = await WebhookEvent.query(knex).insertAndFetch({
+        id: uuid(),
+        type: 'account.test_event',
+        data: {
+          account: {
+            id: uuid()
+          }
+        }
       })
-      const invoiceService = await deps.use('invoiceService')
-      invoice = await invoiceService.create({
-        accountId,
-        amount: BigInt(56),
-        expiresAt: new Date(Date.now() + 60 * 1000),
-        description: 'description!'
-      })
-      const outgoingPaymentService = await deps.use('outgoingPaymentService')
-      const config = await deps.use('config')
-      const invoiceUrl = `${config.publicHost}/invoices/${invoice.id}`
-      payment = await outgoingPaymentService.create({
-        accountId,
-        invoiceUrl,
-        autoApprove: false
-      })
-      amountReceived = BigInt(5)
-      amountSent = BigInt(10)
-      balance = BigInt(0)
-      webhookUrl = new URL(config.webhookUrl)
+    }
+  )
+
+  afterEach(
+    async (): Promise<void> => {
+      jest.useRealTimers()
+      await truncateTables(knex)
     }
   )
 
   afterAll(
     async (): Promise<void> => {
       await appContainer.shutdown()
-      await truncateTables(knex)
     }
   )
 
-  describe('Send Event', (): void => {
-    it.each(Object.values(EventType).map((type) => [type]))(
-      '%s',
-      async (type): Promise<void> => {
-        const id = uuid()
-        nock(webhookUrl.origin)
-          .post(webhookUrl.pathname, function (this: Definition, body) {
-            assert.ok(this.headers)
-            const signature = this.headers['rafiki-signature']
-            expect(
-              generateWebhookSignature(
-                body,
-                WEBHOOK_SECRET,
-                Config.signatureVersion
-              )
-            ).toEqual(signature)
-            expect(body.id).toEqual(id)
-            expect(body.type).toEqual(type)
-            if (isPaymentEventType(type)) {
-              expect(body.data).toEqual(
-                paymentToData(payment, amountSent, balance)
-              )
-            } else {
-              expect(body.data).toEqual(invoiceToData(invoice, amountReceived))
-            }
-            return true
-          })
-          .reply(200)
+  describe('Get Webhook Event', (): void => {
+    test('A webhook event can be fetched', async (): Promise<void> => {
+      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
+    })
 
-        if (isPaymentEventType(type)) {
-          await webhookService.send({
-            id,
-            type,
-            payment,
-            amountSent,
-            balance
+    test('A withdrawal webhook event can be fetched', async (): Promise<void> => {
+      await makeWithdrawalEvent(event)
+      assert.ok(event.withdrawal)
+      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
+    })
+
+    test('Cannot fetch a bogus webhook event', async (): Promise<void> => {
+      await expect(webhookService.getEvent(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('processNext', (): void => {
+    function mockWebhookServer(status = 200): nock.Scope {
+      return nock(webhookUrl.origin)
+        .post(webhookUrl.pathname, function (this: Definition, body) {
+          assert.ok(this.headers)
+          const signature = this.headers['rafiki-signature']
+          expect(
+            generateWebhookSignature(
+              body,
+              WEBHOOK_SECRET,
+              Config.signatureVersion
+            )
+          ).toEqual(signature)
+          expect(body).toMatchObject({
+            id: event.id,
+            type: event.type,
+            data: event.data
           })
-        } else {
-          await webhookService.send({
-            id,
-            type,
-            invoice,
-            amountReceived
-          })
-        }
+          return true
+        })
+        .reply(status)
+    }
+
+    test('Does not process events not scheduled to be sent', async (): Promise<void> => {
+      await event.$query(knex).patch({
+        processAt: new Date(Date.now() + 30_000)
+      })
+      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
+      await expect(webhookService.processNext()).resolves.toBeUndefined()
+    })
+
+    test('Sends webhook event', async (): Promise<void> => {
+      const scope = mockWebhookServer()
+      await expect(webhookService.processNext()).resolves.toEqual(event.id)
+      expect(scope.isDone()).toBe(true)
+      await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
+        attempts: 1,
+        statusCode: 200,
+        processAt: null
+      })
+    })
+
+    test.each([[201], [400], [504]])(
+      'Schedules retry if request fails (%i)',
+      async (status): Promise<void> => {
+        const scope = mockWebhookServer(status)
+        await expect(webhookService.processNext()).resolves.toEqual(event.id)
+        expect(scope.isDone()).toBe(true)
+        const updatedEvent = await webhookService.getEvent(event.id)
+        assert.ok(updatedEvent?.processAt)
+        expect(updatedEvent).toMatchObject({
+          attempts: 1,
+          statusCode: status
+        })
+        expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
+          event.createdAt.getTime() + RETRY_BACKOFF_MS
+        )
       }
     )
 
-    it('throws for failed request', async (): Promise<void> => {
-      const scope = nock(webhookUrl.origin).post(webhookUrl.pathname).reply(500)
-
-      await expect(
-        webhookService.send({
-          id: uuid(),
-          type: EventType.InvoicePaid,
-          invoice,
-          amountReceived
-        })
-      ).rejects.toThrowError('Request failed with status code 500')
-
+    test('Schedules retry if request times out', async (): Promise<void> => {
+      const scope = nock(webhookUrl.origin)
+        .post(webhookUrl.pathname)
+        .delayConnection(Config.webhookTimeout + 1)
+        .reply(200)
+      await expect(webhookService.processNext()).resolves.toEqual(event.id)
       expect(scope.isDone()).toBe(true)
+      const updatedEvent = await webhookService.getEvent(event.id)
+      assert.ok(updatedEvent?.processAt)
+      expect(updatedEvent).toMatchObject({
+        attempts: 1,
+        statusCode: null
+      })
+      expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
+        event.createdAt.getTime() + RETRY_BACKOFF_MS
+      )
     })
   })
 })

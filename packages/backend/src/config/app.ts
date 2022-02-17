@@ -64,6 +64,8 @@ export const Config = {
   invoiceWorkers: envInt('INVOICE_WORKERS', 1),
   invoiceWorkerIdle: envInt('INVOICE_WORKER_IDLE', 200), // milliseconds
 
+  webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
+  webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
   webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
   webhookSecret: process.env.WEBHOOK_SECRET, // optional
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds

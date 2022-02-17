@@ -1,3 +1,4 @@
+import assert from 'assert'
 import {
   Client,
   CreateAccountError as CreateAccountErrorCode
@@ -43,6 +44,7 @@ export interface LiquidityAccount {
     id: string
     unit: number
   }
+  onCredit?: (balance: bigint) => Promise<LiquidityAccount>
 }
 
 export interface Deposit {
@@ -52,7 +54,7 @@ export interface Deposit {
 }
 
 export interface Withdrawal extends Deposit {
-  timeout: bigint
+  timeout?: bigint
 }
 
 export interface TransferOptions {
@@ -60,7 +62,7 @@ export interface TransferOptions {
   destinationAccount: LiquidityAccount
   sourceAmount: bigint
   destinationAmount?: bigint
-  timeout: bigint // nano-seconds
+  timeout: bigint
 }
 
 export interface Transaction {
@@ -219,37 +221,49 @@ export async function createTransfer(
   }
   const transfers: Required<CreateTransferOptions>[] = []
 
-  // Same asset
-  if (sourceAccount.asset.unit === destinationAccount.asset.unit) {
+  const addTransfer = ({
+    sourceAccountId,
+    destinationAccountId,
+    amount
+  }: {
+    sourceAccountId: string
+    destinationAccountId: string
+    amount: bigint
+  }) => {
     transfers.push({
       id: uuid(),
+      sourceAccountId,
+      destinationAccountId,
+      amount,
+      timeout
+    })
+  }
+
+  // Same asset
+  if (sourceAccount.asset.unit === destinationAccount.asset.unit) {
+    addTransfer({
       sourceAccountId: sourceAccount.id,
       destinationAccountId: destinationAccount.id,
       amount:
         destinationAmount && destinationAmount < sourceAmount
           ? destinationAmount
-          : sourceAmount,
-      timeout
+          : sourceAmount
     })
     // Same asset, different amounts
     if (destinationAmount && sourceAmount !== destinationAmount) {
       // Send excess source amount to liquidity account
       if (destinationAmount < sourceAmount) {
-        transfers.push({
-          id: uuid(),
+        addTransfer({
           sourceAccountId: sourceAccount.id,
           destinationAccountId: sourceAccount.asset.id,
-          amount: sourceAmount - destinationAmount,
-          timeout
+          amount: sourceAmount - destinationAmount
         })
         // Deliver excess destination amount from liquidity account
       } else {
-        transfers.push({
-          id: uuid(),
+        addTransfer({
           sourceAccountId: destinationAccount.asset.id,
           destinationAccountId: destinationAccount.id,
-          amount: destinationAmount - sourceAmount,
-          timeout
+          amount: destinationAmount - sourceAmount
         })
       }
     }
@@ -261,22 +275,16 @@ export async function createTransfer(
     }
     // Send to source liquidity account
     // Deliver from destination liquidity account
-    transfers.push(
-      {
-        id: uuid(),
-        sourceAccountId: sourceAccount.id,
-        destinationAccountId: sourceAccount.asset.id,
-        amount: sourceAmount,
-        timeout
-      },
-      {
-        id: uuid(),
-        sourceAccountId: destinationAccount.asset.id,
-        destinationAccountId: destinationAccount.id,
-        amount: destinationAmount,
-        timeout
-      }
-    )
+    addTransfer({
+      sourceAccountId: sourceAccount.id,
+      destinationAccountId: sourceAccount.asset.id,
+      amount: sourceAmount
+    })
+    addTransfer({
+      sourceAccountId: destinationAccount.asset.id,
+      destinationAccountId: destinationAccount.id,
+      amount: destinationAmount
+    })
   }
   const error = await createTransfers(deps, transfers)
   if (error) {
@@ -307,6 +315,11 @@ export async function createTransfer(
       )
       if (error) {
         return error.error
+      }
+      if (destinationAccount.onCredit) {
+        const balance = await getAccountBalance(deps, destinationAccount.id)
+        assert.ok(balance !== undefined)
+        await destinationAccount.onCredit(balance)
       }
     },
     rollback: async (): Promise<void | TransferError> => {
