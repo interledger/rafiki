@@ -28,6 +28,10 @@ export class Account
   public readonly assetId!: string
   public asset!: Asset
 
+  // The proportion of the account's total received amount for which
+  // there are `account.web_monetization` webhook events.
+  // The value should be equivalent to the following query:
+  // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `account.id`
   public totalEventsAmount!: bigint
   public processAt!: Date | null
 
