@@ -8,8 +8,8 @@ import { AccountingService } from '../accounting/service'
 import { AssetService, AssetOptions } from '../asset/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
+import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
-import { Pagination } from '../shared/pagination'
 
 export interface HttpOptions {
   incoming?: {
@@ -274,62 +274,7 @@ async function getPeersPage(
   deps: ServiceDependencies,
   pagination?: Pagination
 ): Promise<Peer[]> {
-  if (
-    typeof pagination?.before === 'undefined' &&
-    typeof pagination?.last === 'number'
-  )
-    throw new Error("Can't paginate backwards from the start.")
-
-  const first = pagination?.first || 20
-  if (first < 0 || first > 100) throw new Error('Pagination index error')
-  const last = pagination?.last || 20
-  if (last < 0 || last > 100) throw new Error('Pagination index error')
-
-  /**
-   * Forward pagination
-   */
-  if (typeof pagination?.after === 'string') {
-    const peers = await Peer.query(deps.knex)
-      .withGraphFetched('asset')
-      .whereRaw(
-        '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "peers" where "id" = ?)',
-        [pagination.after]
-      )
-      .orderBy([
-        { column: 'createdAt', order: 'asc' },
-        { column: 'id', order: 'asc' }
-      ])
-      .limit(first)
-    return peers
-  }
-
-  /**
-   * Backward pagination
-   */
-  if (typeof pagination?.before === 'string') {
-    const peers = await Peer.query(deps.knex)
-      .withGraphFetched('asset')
-      .whereRaw(
-        '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "peers" where "id" = ?)',
-        [pagination.before]
-      )
-      .orderBy([
-        { column: 'createdAt', order: 'desc' },
-        { column: 'id', order: 'desc' }
-      ])
-      .limit(last)
-      .then((resp) => {
-        return resp.reverse()
-      })
-    return peers
-  }
-
-  const peers = await Peer.query(deps.knex)
+  return await Peer.query(deps.knex)
+    .getPage(pagination)
     .withGraphFetched('asset')
-    .orderBy([
-      { column: 'createdAt', order: 'asc' },
-      { column: 'id', order: 'asc' }
-    ])
-    .limit(first)
-  return peers
 }
