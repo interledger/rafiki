@@ -5,9 +5,9 @@ import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
 import { AssetError, isAssetError } from './errors'
-import { Asset } from './model'
 import { AssetService } from './service'
 import { Pagination } from '../shared/baseModel'
+import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { randomAsset } from '../tests/asset'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -239,133 +239,9 @@ describe('Asset Service', (): void => {
   })
 
   describe('getPage', (): void => {
-    let assetsCreated: Asset[]
-
-    beforeEach(
-      async (): Promise<void> => {
-        assetsCreated = []
-        for (let i = 0; i < 40; i++) {
-          assetsCreated.push(await assetService.getOrCreate(randomAsset()))
-        }
-      }
-    )
-
-    test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const assets = await assetService.getPage()
-      expect(assets).toHaveLength(20)
-      expect(assets[0].id).toEqual(assetsCreated[0].id)
-      expect(assets[19].id).toEqual(assetsCreated[19].id)
-      expect(assets[20]).toBeUndefined()
-    })
-
-    test('Can change forward pagination limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 10
-      }
-      const assets = await assetService.getPage(pagination)
-      expect(assets).toHaveLength(10)
-      expect(assets[0].id).toEqual(assetsCreated[0].id)
-      expect(assets[9].id).toEqual(assetsCreated[9].id)
-      expect(assets[10]).toBeUndefined()
-    }, 10_000)
-
-    test('Can paginate forwards from a cursor', async (): Promise<void> => {
-      const pagination: Pagination = {
-        after: assetsCreated[19].id
-      }
-      const assets = await assetService.getPage(pagination)
-      expect(assets).toHaveLength(20)
-      expect(assets[0].id).toEqual(assetsCreated[20].id)
-      expect(assets[19].id).toEqual(assetsCreated[39].id)
-      expect(assets[20]).toBeUndefined()
-    })
-
-    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 10,
-        after: assetsCreated[9].id
-      }
-      const assets = await assetService.getPage(pagination)
-      expect(assets).toHaveLength(10)
-      expect(assets[0].id).toEqual(assetsCreated[10].id)
-      expect(assets[9].id).toEqual(assetsCreated[19].id)
-      expect(assets[10]).toBeUndefined()
-    })
-
-    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
-      const pagination: Pagination = {
-        last: 10
-      }
-      const assets = assetService.getPage(pagination)
-      await expect(assets).rejects.toThrow(
-        "Can't paginate backwards from the start."
-      )
-    })
-
-    test('Can paginate backwards from a cursor', async (): Promise<void> => {
-      const pagination: Pagination = {
-        before: assetsCreated[20].id
-      }
-      const assets = await assetService.getPage(pagination)
-      expect(assets).toHaveLength(20)
-      expect(assets[0].id).toEqual(assetsCreated[0].id)
-      expect(assets[19].id).toEqual(assetsCreated[19].id)
-      expect(assets[20]).toBeUndefined()
-    })
-
-    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        last: 5,
-        before: assetsCreated[10].id
-      }
-      const assets = await assetService.getPage(pagination)
-      expect(assets).toHaveLength(5)
-      expect(assets[0].id).toEqual(assetsCreated[5].id)
-      expect(assets[4].id).toEqual(assetsCreated[9].id)
-      expect(assets[5]).toBeUndefined()
-    })
-
-    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
-      const paginationForwards = {
-        first: 10
-      }
-      const assetsForwards = await assetService.getPage(paginationForwards)
-      const paginationBackwards = {
-        last: 10,
-        before: assetsCreated[10].id
-      }
-      const assetsBackwards = await assetService.getPage(paginationBackwards)
-      expect(assetsForwards).toHaveLength(10)
-      expect(assetsBackwards).toHaveLength(10)
-      expect(assetsForwards).toEqual(assetsBackwards)
-    })
-
-    test('Providing before and after results in forward pagination', async (): Promise<void> => {
-      const pagination: Pagination = {
-        after: assetsCreated[19].id,
-        before: assetsCreated[19].id
-      }
-      const assets = await assetService.getPage(pagination)
-      expect(assets).toHaveLength(20)
-      expect(assets[0].id).toEqual(assetsCreated[20].id)
-      expect(assets[19].id).toEqual(assetsCreated[39].id)
-      expect(assets[20]).toBeUndefined()
-    })
-
-    test("Can't request less than 0 assets", async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: -1
-      }
-      const assets = assetService.getPage(pagination)
-      await expect(assets).rejects.toThrow('Pagination index error')
-    })
-
-    test("Can't request more than 100 assets", async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 101
-      }
-      const assets = assetService.getPage(pagination)
-      await expect(assets).rejects.toThrow('Pagination index error')
+    getPageTests({
+      createModel: () => assetService.getOrCreate(randomAsset()),
+      getPage: (pagination: Pagination) => assetService.getPage(pagination)
     })
   })
 })
