@@ -73,7 +73,10 @@ export const Config = {
   webhookSecret: process.env.WEBHOOK_SECRET, // optional
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
 
-  webMonetizationWithdrawalCron: process.env.WEB_MONETIZATION_WITHDRAWAL_CRON, // optional
+  withdrawalThrottleDelay:
+    process.env.WITHDRAWAL_THROTTLE_DELAY == null
+      ? undefined
+      : +process.env.WITHDRAWAL_THROTTLE_DELAY, // optional
 
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 

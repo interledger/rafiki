@@ -4631,7 +4631,6 @@ __metadata:
     axios: ^0.21.4
     base64url: ^3.0.1
     bcrypt: ^5.0.1
-    cron-parser: ^4.2.1
     cross-fetch: ^3.1.4
     extensible-error: ^1.0.2
     faker: ^5.5.3
@@ -5744,15 +5743,6 @@ __metadata:
   version: 1.1.1
   resolution: "create-require@npm:1.1.1"
   checksum: a9a1503d4390d8b59ad86f4607de7870b39cad43d929813599a23714831e81c520bddf61bcdd1f8e30f05fd3a2b71ae8538e946eb2786dc65c2bbc520f692eff
-  languageName: node
-  linkType: hard
-
-"cron-parser@npm:^4.2.1":
-  version: 4.2.1
-  resolution: "cron-parser@npm:4.2.1"
-  dependencies:
-    luxon: ^1.28.0
-  checksum: 2128a791a557c731fb6ed6813c08fea4768ba344181dfe3de11fd9672ca585a066977323ce3e16b2abf49d61b4bdf3ae28d431e7ceaaa835625dfd2497d8b06e
   languageName: node
   linkType: hard
 
@@ -10432,13 +10422,6 @@ __metadata:
   dependencies:
     yallist: ^4.0.0
   checksum: f97f499f898f23e4585742138a22f22526254fdba6d75d41a1c2526b3b6cc5747ef59c5612ba7375f42aca4f8461950e925ba08c991ead0651b4918b7c978297
-  languageName: node
-  linkType: hard
-
-"luxon@npm:^1.28.0":
-  version: 1.28.0
-  resolution: "luxon@npm:1.28.0"
-  checksum: 5250cb9f138b6048eeb0b3a9044a4ac994d0058f680c72a0da4b6aeaec8612460385639cba2b1052ef6d5564879e9ed144d686f26d9d97b38ab920d82e18281c
   languageName: node
   linkType: hard
 

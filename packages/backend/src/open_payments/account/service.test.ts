@@ -1,4 +1,3 @@
-import parser from 'cron-parser'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
@@ -91,109 +90,120 @@ describe('Open Payments Account Service', (): void => {
     )
 
     describe.each`
-      withdrawalThreshold
-      ${null}
-      ${BigInt(0)}
-      ${BigInt(10)}
+      withdrawalThrottleDelay
+      ${undefined}
+      ${0}
+      ${60_000}
     `(
-      'withdrawalThreshold: $withdrawalThreshold',
-      ({ withdrawalThreshold }): void => {
-        beforeEach(
-          async (): Promise<void> => {
-            await account.asset.$query(knex).patch({
-              withdrawalThreshold
-            })
+      'withdrawalThrottleDelay: $withdrawalThrottleDelay',
+      ({ withdrawalThrottleDelay }): void => {
+        let delayProcessAt: Date | null = null
+
+        beforeEach((): void => {
+          jest.useFakeTimers('modern')
+          jest.setSystemTime(new Date())
+          if (withdrawalThrottleDelay !== undefined) {
+            delayProcessAt = new Date(Date.now() + withdrawalThrottleDelay)
+          }
+        })
+
+        describe.each`
+          withdrawalThreshold
+          ${null}
+          ${BigInt(0)}
+          ${BigInt(10)}
+        `(
+          'withdrawalThreshold: $withdrawalThreshold',
+          ({ withdrawalThreshold }): void => {
+            let thresholdProcessAt: Date | null = null
+
+            beforeEach(
+              async (): Promise<void> => {
+                await account.asset.$query(knex).patch({
+                  withdrawalThreshold
+                })
+                if (withdrawalThreshold !== null) {
+                  thresholdProcessAt = new Date()
+                }
+              }
+            )
+
+            describe.each`
+              startingProcessAt
+              ${null}
+              ${new Date(Date.now() + 30_000)}
+            `(
+              'startingProcessAt: $startingProcessAt',
+              ({ startingProcessAt }): void => {
+                beforeEach(
+                  async (): Promise<void> => {
+                    await account.$query(knex).patch({
+                      processAt: startingProcessAt
+                    })
+                  }
+                )
+
+                describe.each`
+                  totalEventsAmount
+                  ${BigInt(0)}
+                  ${BigInt(10)}
+                `(
+                  'totalEventsAmount: $totalEventsAmount',
+                  ({ totalEventsAmount }): void => {
+                    beforeEach(
+                      async (): Promise<void> => {
+                        await account.$query(knex).patch({
+                          totalEventsAmount
+                        })
+                      }
+                    )
+                    if (withdrawalThreshold !== BigInt(0)) {
+                      test("Balance doesn't meet withdrawal threshold", async (): Promise<void> => {
+                        await expect(
+                          account.onCredit({
+                            totalReceived: totalEventsAmount + BigInt(1),
+                            withdrawalThrottleDelay
+                          })
+                        ).resolves.toMatchObject({
+                          processAt: startingProcessAt || delayProcessAt
+                        })
+                        await expect(
+                          accountService.get(account.id)
+                        ).resolves.toMatchObject({
+                          processAt: startingProcessAt || delayProcessAt
+                        })
+                      })
+                    }
+
+                    if (withdrawalThreshold !== null) {
+                      test.each`
+                        totalReceived                                          | description
+                        ${totalEventsAmount + withdrawalThreshold}             | ${'meets'}
+                        ${totalEventsAmount + withdrawalThreshold + BigInt(1)} | ${'exceeds'}
+                      `(
+                        'Balance $description withdrawal threshold',
+                        async ({ totalReceived }): Promise<void> => {
+                          await expect(
+                            account.onCredit({
+                              totalReceived
+                            })
+                          ).resolves.toMatchObject({
+                            processAt: thresholdProcessAt
+                          })
+                          await expect(
+                            accountService.get(account.id)
+                          ).resolves.toMatchObject({
+                            processAt: thresholdProcessAt
+                          })
+                        }
+                      )
+                    }
+                  }
+                )
+              }
+            )
           }
         )
-
-        if (withdrawalThreshold) {
-          test.each`
-            totalReceived | totalEventsAmount
-            ${BigInt(9)}  | ${BigInt(0)}
-            ${BigInt(11)} | ${BigInt(10)}
-          `(
-            'Does nothing if balance is below withdrawal threshold',
-            async ({ totalReceived, totalEventsAmount }): Promise<void> => {
-              await account.$query(knex).patch({
-                totalEventsAmount
-              })
-              await expect(
-                account.onCredit({
-                  totalReceived
-                })
-              ).resolves.toEqual(account)
-              await expect(accountService.get(account.id)).resolves.toEqual(
-                account
-              )
-            }
-          )
-        }
-
-        if (withdrawalThreshold !== null) {
-          test.each`
-            totalReceived | totalEventsAmount | description
-            ${BigInt(10)} | ${BigInt(0)}      | ${'meets'}
-            ${BigInt(11)} | ${BigInt(0)}      | ${'exceeds'}
-            ${BigInt(15)} | ${BigInt(5)}      | ${'meets'}
-            ${BigInt(16)} | ${BigInt(5)}      | ${'exceeds'}
-          `(
-            'Schedules withdrawal if balance $description withdrawal threshold',
-            async ({ totalReceived, totalEventsAmount }): Promise<void> => {
-              await account.$query(knex).patch({
-                totalEventsAmount
-              })
-              const now = new Date()
-              jest.useFakeTimers('modern')
-              jest.setSystemTime(now)
-              await expect(
-                account.onCredit({
-                  totalReceived
-                })
-              ).resolves.toMatchObject({
-                processAt: now
-              })
-              await expect(
-                accountService.get(account.id)
-              ).resolves.toMatchObject({
-                processAt: now
-              })
-            }
-          )
-        }
-
-        if (withdrawalThreshold !== BigInt(0)) {
-          test('Schedules withdrawal based on configured cron', async (): Promise<void> => {
-            const withdrawalCron = '*/2 * * * *'
-            const processAt = parser
-              .parseExpression(withdrawalCron)
-              .next()
-              .toDate()
-            await expect(
-              account.onCredit({
-                totalReceived: BigInt(1),
-                withdrawalCron
-              })
-            ).resolves.toMatchObject({ processAt })
-            await expect(
-              accountService.get(account.id)
-            ).resolves.toMatchObject({ processAt })
-          })
-
-          test('Does not schedule cron if withdrawal is already scheduled', async (): Promise<void> => {
-            await account.$query(knex).patch({
-              processAt: new Date()
-            })
-            await expect(
-              account.onCredit({
-                totalReceived: BigInt(1),
-                withdrawalCron: '*/2 * * * *'
-              })
-            ).resolves.toEqual(account)
-            await expect(accountService.get(account.id)).resolves.toEqual(
-              account
-            )
-          })
-        }
       }
     )
   })

@@ -109,6 +109,7 @@ async function processNextAccount(
   })
 }
 
+// "account" must have been fetched with the "deps.knex" transaction.
 async function createWithdrawalEvent(
   deps: ServiceDependencies,
   account: Account
@@ -136,7 +137,7 @@ async function createWithdrawalEvent(
 
   deps.logger.trace({ amount }, 'creating webhook withdrawal event')
 
-  await AccountEvent.query(deps.knex).insertAndFetch({
+  await AccountEvent.query(deps.knex).insert({
     type: AccountEventType.AccountWebMonetization,
     data: account.toData(amount),
     withdrawal: {

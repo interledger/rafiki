@@ -143,7 +143,7 @@ export function initIocContainer(
       logger: logger,
       knex: knex,
       tigerbeetle,
-      withdrawalCron: config.webMonetizationWithdrawalCron
+      withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
   })
   container.singleton('peerService', async (deps) => {

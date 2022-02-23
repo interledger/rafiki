@@ -4,8 +4,8 @@ exports.up = function (knex) {
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
 
-    // The proportion of the account's total received amount for which
-    // there are `account.web_monetization` webhook events.
+    // The cumulative received amount tracked by
+    // `account.web_monetization` webhook events.
     // The value should be equivalent to the following query:
     // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `account.id`
     table.bigInteger('totalEventsAmount').notNullable().defaultTo(0)

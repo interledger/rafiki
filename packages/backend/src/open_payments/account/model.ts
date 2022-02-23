@@ -1,5 +1,4 @@
 import { Model } from 'objection'
-import parser from 'cron-parser'
 
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../connector/core/rafiki'
@@ -28,8 +27,8 @@ export class Account
   public readonly assetId!: string
   public asset!: Asset
 
-  // The proportion of the account's total received amount for which
-  // there are `account.web_monetization` webhook events.
+  // The cumulative received amount tracked by
+  // `account.web_monetization` webhook events.
   // The value should be equivalent to the following query:
   // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `account.id`
   public totalEventsAmount!: bigint
@@ -37,7 +36,7 @@ export class Account
 
   public async onCredit({
     totalReceived,
-    withdrawalCron
+    withdrawalThrottleDelay
   }: OnCreditOptions): Promise<Account> {
     if (this.asset.withdrawalThreshold !== null) {
       const account = await Account.query()
@@ -53,9 +52,9 @@ export class Account
         return account
       }
     }
-    if (withdrawalCron && !this.processAt) {
+    if (withdrawalThrottleDelay !== undefined && !this.processAt) {
       await this.$query().patch({
-        processAt: parser.parseExpression(withdrawalCron).next().toDate()
+        processAt: new Date(Date.now() + withdrawalThrottleDelay)
       })
     }
     return this

@@ -49,7 +49,7 @@ export interface LiquidityAccount {
 
 export interface OnCreditOptions {
   totalReceived: bigint
-  withdrawalCron?: string
+  withdrawalThrottleDelay?: number
 }
 
 export interface Deposit {
@@ -91,7 +91,7 @@ export interface AccountingService {
 
 export interface ServiceDependencies extends BaseService {
   tigerbeetle: Client
-  withdrawalCron?: string
+  withdrawalThrottleDelay?: number
 }
 
 export function createAccountingService(
@@ -324,7 +324,7 @@ export async function createTransfer(
         assert.ok(totalReceived !== undefined)
         await destinationAccount.onCredit({
           totalReceived,
-          withdrawalCron: deps.withdrawalCron
+          withdrawalThrottleDelay: deps.withdrawalThrottleDelay
         })
       }
     },
