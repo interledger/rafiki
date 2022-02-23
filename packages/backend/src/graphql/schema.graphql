@@ -269,7 +269,7 @@ input RevokeSessionInput {
 }
 
 type Asset {
-  id: String!
+  id: ID!
   code: String!
   scale: Int!
   withdrawalThreshold: UInt64

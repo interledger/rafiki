@@ -86,7 +86,7 @@ export type ApiKey = {
 
 export type Asset = {
   __typename?: 'Asset';
-  id: Scalars['String'];
+  id: Scalars['ID'];
   code: Scalars['String'];
   scale: Scalars['Int'];
   withdrawalThreshold?: Maybe<Scalars['UInt64']>;
@@ -956,7 +956,7 @@ export type ApiKeyResolvers<ContextType = any, ParentType extends ResolversParen
 };
 
 export type AssetResolvers<ContextType = any, ParentType extends ResolversParentTypes['Asset'] = ResolversParentTypes['Asset']> = {
-  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
