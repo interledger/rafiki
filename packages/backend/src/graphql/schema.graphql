@@ -270,7 +270,7 @@ input RevokeSessionInput {
   key: String!
 }
 
-type Asset {
+type Asset implements Model {
   id: ID!
   code: String!
   scale: Int!
@@ -293,7 +293,7 @@ enum LiquidityError {
   UnknownTransfer
 }
 
-type Peer {
+type Peer implements Model {
   id: ID!
   maxPacketAmount: UInt64
   http: Http!
@@ -311,7 +311,7 @@ type HttpOutgoing {
   endpoint: String!
 }
 
-type Account {
+type Account implements Model {
   id: ID!
   asset: Asset!
   invoices(
@@ -347,7 +347,7 @@ type InvoiceEdge {
   cursor: String!
 }
 
-type Invoice {
+type Invoice implements Model {
   id: ID!
   active: Boolean!
   createdAt: String!
@@ -366,7 +366,7 @@ type OutgoingPaymentEdge {
   cursor: String!
 }
 
-type OutgoingPayment {
+type OutgoingPayment implements Model {
   id: ID!
   accountId: ID!
   state: PaymentState!
@@ -445,7 +445,7 @@ input CreateAccountInput {
   asset: AssetInput!
 }
 
-type ApiKey {
+type ApiKey implements Model {
   id: ID!
   accountId: String!
   key: String!
@@ -462,6 +462,11 @@ type AccountWithdrawal {
   id: ID!
   amount: UInt64!
   account: Account!
+}
+
+interface Model {
+  id: ID!
+  createdAt: String!
 }
 
 type CreateAccountMutationResponse implements MutationResponse {
