@@ -13,6 +13,7 @@ export interface AccountService {
   create(options: CreateOptions): Promise<Account>
   get(id: string): Promise<Account | undefined>
   processNext(): Promise<string | undefined>
+  triggerEvents(limit: number): Promise<number>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -39,7 +40,8 @@ export async function createAccountService({
   return {
     create: (options) => createAccount(deps, options),
     get: (id) => getAccount(deps, id),
-    processNext: () => processNextAccount(deps)
+    processNext: () => processNextAccount(deps),
+    triggerEvents: (limit) => triggerAccountEvents(deps, limit)
   }
 }
 
@@ -72,15 +74,32 @@ async function getAccount(
   return await Account.query(deps.knex).findById(id).withGraphJoined('asset')
 }
 
-// Fetch (and lock) an account for work.
 // Returns the id of the processed account (if any).
 async function processNextAccount(
-  deps_: ServiceDependencies
+  deps: ServiceDependencies
 ): Promise<string | undefined> {
+  const accounts = await processNextAccounts(deps, 1)
+  return accounts[0]?.id
+}
+
+async function triggerAccountEvents(
+  deps: ServiceDependencies,
+  limit: number
+): Promise<number> {
+  const accounts = await processNextAccounts(deps, limit)
+  return accounts.length
+}
+
+// Fetch (and lock) accounts for work.
+// Returns the processed accounts (if any).
+async function processNextAccounts(
+  deps_: ServiceDependencies,
+  limit: number
+): Promise<Account[]> {
   return deps_.knex.transaction(async (trx) => {
     const now = new Date(Date.now()).toISOString()
     const accounts = await Account.query(trx)
-      .limit(1)
+      .limit(limit)
       // Ensure the accounts cannot be processed concurrently by multiple workers.
       .forUpdate()
       // If an account is locked, don't wait — just come back for it later.
@@ -88,24 +107,22 @@ async function processNextAccount(
       .where('processAt', '<=', now)
       .withGraphFetched('asset')
 
-    const account = accounts[0]
-    if (!account) return
-
     const deps = {
       ...deps_,
-      knex: trx,
-      logger: deps_.logger.child({
+      knex: trx
+    }
+
+    for (const account of accounts) {
+      deps.logger = deps_.logger.child({
         account: account.id
+      })
+      await createWithdrawalEvent(deps, account)
+      await account.$query(deps.knex).patch({
+        processAt: null
       })
     }
 
-    await createWithdrawalEvent(deps, account)
-
-    await account.$query(deps.knex).patch({
-      processAt: null
-    })
-
-    return account.id
+    return accounts
   })
 }
 

@@ -51,6 +51,36 @@ export const createAccount: MutationResolvers<ApolloContext>['createAccount'] = 
   }
 }
 
+export const triggerAccountEvents: MutationResolvers<ApolloContext>['triggerAccountEvents'] = async (
+  parent,
+  args,
+  ctx
+): ResolversTypes['TriggerAccountEventsMutationResponse'] => {
+  try {
+    const accountService = await ctx.container.use('accountService')
+    const count = await accountService.triggerEvents(args.limit)
+    return {
+      code: '200',
+      success: true,
+      message: 'Triggered Account Events',
+      count
+    }
+  } catch (error) {
+    ctx.logger.error(
+      {
+        options: args.limit,
+        error
+      },
+      'error triggering account events'
+    )
+    return {
+      code: '500',
+      message: 'Error trying to trigger account events',
+      success: false
+    }
+  }
+}
+
 export const accountToGraphql = (account: Account): SchemaAccount => ({
   id: account.id,
   asset: assetToGraphql(account.asset),

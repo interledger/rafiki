@@ -39,6 +39,8 @@ type Mutation {
 
   createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
 
+  triggerAccountEvents(limit: Int!): TriggerAccountEventsMutationResponse!
+
   "Create asset"
   createAsset(input: CreateAssetInput!): AssetMutationResponse!
 
@@ -467,6 +469,13 @@ type CreateAccountMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   account: Account
+}
+
+type TriggerAccountEventsMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  count: Int
 }
 
 type AssetMutationResponse implements MutationResponse {

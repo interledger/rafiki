@@ -270,4 +270,75 @@ describe('Open Payments Account Service', (): void => {
       }
     )
   })
+
+  describe('triggerEvents', (): void => {
+    let accounts: Account[]
+    const asset = randomAsset()
+
+    beforeEach(
+      async (): Promise<void> => {
+        accounts = []
+        for (let i = 0; i < 5; i++) {
+          accounts.push(await accountService.create({ asset }))
+        }
+      }
+    )
+
+    test.each`
+      processAt                        | description
+      ${null}                          | ${'not scheduled'}
+      ${new Date(Date.now() + 30_000)} | ${'not ready'}
+    `(
+      'Does not process account $description for withdrawal',
+      async ({ processAt }): Promise<void> => {
+        for (let i = 1; i < accounts.length; i++) {
+          await accounts[i].$query(knex).patch({ processAt })
+        }
+        await expect(accountService.triggerEvents(10)).resolves.toEqual(0)
+      }
+    )
+
+    test.each`
+      limit | count
+      ${1}  | ${1}
+      ${4}  | ${4}
+      ${10} | ${4}
+    `(
+      'Creates withdrawal webhook event(s) (limit: $limit)',
+      async ({ limit, count }): Promise<void> => {
+        const withdrawalAmount = BigInt(10)
+        for (let i = 1; i < accounts.length; i++) {
+          await expect(
+            accountingService.createDeposit({
+              id: uuid(),
+              account: accounts[i],
+              amount: withdrawalAmount
+            })
+          ).resolves.toBeUndefined()
+          await accounts[i].$query(knex).patch({
+            processAt: new Date()
+          })
+        }
+        await expect(accountService.triggerEvents(limit)).resolves.toBe(count)
+        await expect(
+          AccountEvent.query(knex).where({
+            type: AccountEventType.AccountWebMonetization
+          })
+        ).resolves.toHaveLength(count)
+        for (let i = 1; i <= count; i++) {
+          await expect(
+            accountService.get(accounts[i].id)
+          ).resolves.toMatchObject({
+            processAt: null,
+            totalEventsAmount: withdrawalAmount
+          })
+        }
+        for (let i = count + 1; i < accounts.length; i++) {
+          await expect(accountService.get(accounts[i].id)).resolves.toEqual(
+            accounts[i]
+          )
+        }
+      }
+    )
+  })
 })

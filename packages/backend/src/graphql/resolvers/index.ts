@@ -1,5 +1,5 @@
 import { Resolvers } from '../generated/graphql'
-import { getAccount, createAccount } from './account'
+import { getAccount, createAccount, triggerAccountEvents } from './account'
 import {
   getAsset,
   getAssets,
@@ -69,6 +69,7 @@ export const resolvers: Resolvers = {
   },
   Mutation: {
     createAccount,
+    triggerAccountEvents,
     createAsset,
     updateAssetWithdrawalThreshold,
     createOutgoingPayment,
