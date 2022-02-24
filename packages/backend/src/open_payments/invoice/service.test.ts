@@ -130,7 +130,9 @@ describe('Invoice Service', (): void => {
 
     test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
       await expect(
-        invoice.onCredit(invoice.amount - BigInt(1))
+        invoice.onCredit({
+          totalReceived: invoice.amount - BigInt(1)
+        })
       ).resolves.toEqual(invoice)
       await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
         active: true,
@@ -142,7 +144,11 @@ describe('Invoice Service', (): void => {
       const now = new Date()
       jest.useFakeTimers('modern')
       jest.setSystemTime(now)
-      await expect(invoice.onCredit(invoice.amount)).resolves.toMatchObject({
+      await expect(
+        invoice.onCredit({
+          totalReceived: invoice.amount
+        })
+      ).resolves.toMatchObject({
         id: invoice.id,
         active: false,
         processAt: new Date(now.getTime() + 30_000)
@@ -235,7 +241,9 @@ describe('Invoice Service', (): void => {
                 invoice.id
               )
             } else {
-              await invoice.onCredit(invoice.amount)
+              await invoice.onCredit({
+                totalReceived: invoice.amount
+              })
             }
             invoice = (await invoiceService.get(invoice.id)) as Invoice
             expect(invoice.active).toBe(false)

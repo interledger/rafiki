@@ -10,11 +10,17 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
+import {
+  Account as AccountModel,
+  AccountEvent,
+  AccountEventType
+} from '../../open_payments/account/model'
 import { AccountService } from '../../open_payments/account/service'
 import { randomAsset } from '../../tests/asset'
 import {
   CreateAccountInput,
   CreateAccountMutationResponse,
+  TriggerAccountEventsMutationResponse,
   Account
 } from '../generated/graphql'
 
@@ -219,6 +225,115 @@ describe('Account Resolvers', (): void => {
         )
 
       await expect(gqlQuery).rejects.toThrow(ApolloError)
+    })
+  })
+
+  describe('Trigger Account Events', (): void => {
+    test.each`
+      limit | count
+      ${1}  | ${1}
+      ${5}  | ${2}
+    `(
+      'Can trigger account events (limit: $limit)',
+      async ({ limit, count }): Promise<void> => {
+        const accountingService = await deps.use('accountingService')
+        const accounts: AccountModel[] = []
+        const asset = randomAsset()
+        const withdrawalAmount = BigInt(10)
+        for (let i = 0; i < 3; i++) {
+          const account = await accountService.create({ asset })
+          if (i) {
+            await expect(
+              accountingService.createDeposit({
+                id: uuid(),
+                account,
+                amount: withdrawalAmount
+              })
+            ).resolves.toBeUndefined()
+            await account.$query(knex).patch({
+              processAt: new Date()
+            })
+          }
+          accounts.push(account)
+        }
+        const response = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation TriggerAccountEvents($limit: Int!) {
+                triggerAccountEvents(limit: $limit) {
+                  code
+                  success
+                  message
+                  count
+                }
+              }
+            `,
+            variables: {
+              limit
+            }
+          })
+          .then(
+            (query): TriggerAccountEventsMutationResponse => {
+              if (query.data) {
+                return query.data.triggerAccountEvents
+              } else {
+                throw new Error('Data was empty')
+              }
+            }
+          )
+
+        expect(response.success).toBe(true)
+        expect(response.code).toEqual('200')
+        expect(response.count).toEqual(count)
+        await expect(
+          AccountEvent.query(knex).where({
+            type: AccountEventType.AccountWebMonetization
+          })
+        ).resolves.toHaveLength(count)
+        for (let i = 1; i <= count; i++) {
+          await expect(
+            accountService.get(accounts[i].id)
+          ).resolves.toMatchObject({
+            processAt: null,
+            totalEventsAmount: withdrawalAmount
+          })
+        }
+      }
+    )
+
+    test('500', async (): Promise<void> => {
+      jest
+        .spyOn(accountService, 'triggerEvents')
+        .mockRejectedValueOnce(new Error('unexpected'))
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation TriggerAccountEvents($limit: Int!) {
+              triggerAccountEvents(limit: $limit) {
+                code
+                success
+                message
+                count
+              }
+            }
+          `,
+          variables: {
+            limit: 1
+          }
+        })
+        .then(
+          (query): TriggerAccountEventsMutationResponse => {
+            if (query.data) {
+              return query.data.triggerAccountEvents
+            } else {
+              throw new Error('Data was empty')
+            }
+          }
+        )
+      expect(response.code).toBe('500')
+      expect(response.success).toBe(false)
+      expect(response.message).toBe('Error trying to trigger account events')
+      expect(response.count).toBeNull()
     })
   })
 })

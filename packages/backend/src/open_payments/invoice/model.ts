@@ -1,7 +1,7 @@
 import { Model } from 'objection'
 import { Account } from '../account/model'
 import { Asset } from '../../asset/model'
-import { LiquidityAccount } from '../../accounting/service'
+import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../connector/core/rafiki'
 import { BaseModel } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
@@ -21,7 +21,6 @@ export type InvoiceData = {
     amount: string
     received: string
   }
-  payment?: never
 }
 
 export class InvoiceEvent extends WebhookEvent {
@@ -61,16 +60,15 @@ export class Invoice
     return this.account.asset
   }
 
-  public async onCredit(balance: bigint): Promise<Invoice> {
-    if (this.amount <= balance) {
-      const invoice = await this.$query()
-        .patchAndFetch({
+  public async onCredit({ totalReceived }: OnCreditOptions): Promise<Invoice> {
+    if (this.amount <= totalReceived) {
+      const invoice = await Invoice.query()
+        .patchAndFetchById(this.id, {
           active: false,
           // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
           processAt: new Date(Date.now() + 30_000)
         })
         .where({
-          id: this.id,
           active: true
         })
       if (invoice) {

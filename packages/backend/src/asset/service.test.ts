@@ -1,9 +1,13 @@
+import assert from 'assert'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
+import { AssetError, isAssetError } from './errors'
+import { Asset } from './model'
 import { AssetService } from './service'
+import { Pagination } from '../shared/pagination'
 import { createTestApp, TestContainer } from '../tests/app'
 import { randomAsset } from '../tests/asset'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -30,7 +34,7 @@ describe('Asset Service', (): void => {
     send: jest.fn()
   }
 
-  beforeEach(
+  beforeAll(
     async (): Promise<void> => {
       tigerbeetleContainer = await startTigerbeetleContainer()
       Config.tigerbeetleReplicaAddresses = [
@@ -53,6 +57,11 @@ describe('Asset Service', (): void => {
   afterEach(
     async (): Promise<void> => {
       await truncateTables(knex)
+    }
+  )
+
+  afterAll(
+    async (): Promise<void> => {
       await resetGraphileDb(knex)
       await appContainer.shutdown()
       await workerUtils.release()
@@ -60,52 +69,303 @@ describe('Asset Service', (): void => {
     }
   )
 
-  describe('Create or Get Asset', (): void => {
-    test('Asset can be created or fetched', async (): Promise<void> => {
-      const asset = randomAsset()
-      await expect(assetService.get(asset)).resolves.toBeUndefined()
-      const newAsset = await assetService.getOrCreate(asset)
-      const expectedAsset = {
-        ...asset,
-        id: newAsset.id,
-        unit: newAsset.unit
+  describe('create', (): void => {
+    test.each`
+      withdrawalThreshold
+      ${undefined}
+      ${BigInt(5)}
+    `(
+      'Asset can be created and fetched',
+      async ({ withdrawalThreshold }): Promise<void> => {
+        const options = {
+          ...randomAsset(),
+          withdrawalThreshold
+        }
+        await expect(assetService.get(options)).resolves.toBeUndefined()
+        const asset = await assetService.create(options)
+        assert.ok(!isAssetError(asset))
+        await expect(asset).toMatchObject({
+          ...options,
+          id: asset.id,
+          unit: asset.unit,
+          withdrawalThreshold: withdrawalThreshold || null
+        })
+        await expect(assetService.get(asset)).resolves.toEqual(asset)
+        await expect(assetService.getOrCreate(asset)).resolves.toEqual(asset)
       }
-      await expect(newAsset).toMatchObject(expectedAsset)
-      await expect(assetService.get(asset)).resolves.toMatchObject(
-        expectedAsset
-      )
-      await expect(assetService.getOrCreate(asset)).resolves.toMatchObject(
-        expectedAsset
-      )
-    })
+    )
 
     test('Asset accounts are created', async (): Promise<void> => {
       const accountingService = await deps.use('accountingService')
-      const unit = 1
+      const liquiditySpy = jest.spyOn(
+        accountingService,
+        'createLiquidityAccount'
+      )
+      const settlementSpy = jest.spyOn(
+        accountingService,
+        'createSettlementAccount'
+      )
 
-      await expect(
-        accountingService.getSettlementBalance(unit)
-      ).resolves.toBeUndefined()
+      const asset = await assetService.create(randomAsset())
+      assert.ok(!isAssetError(asset))
 
-      const asset = await assetService.getOrCreate(randomAsset())
-      expect(asset.unit).toEqual(unit)
+      expect(liquiditySpy).toHaveBeenCalledWith(asset)
+      expect(settlementSpy).toHaveBeenCalledWith(asset.unit)
 
       await expect(accountingService.getBalance(asset.id)).resolves.toEqual(
         BigInt(0)
       )
       await expect(
-        accountingService.getSettlementBalance(unit)
+        accountingService.getSettlementBalance(asset.unit)
       ).resolves.toEqual(BigInt(0))
     })
 
-    test('Can get asset by id', async (): Promise<void> => {
-      const asset = await assetService.getOrCreate({
-        code: 'EUR',
-        scale: 2
+    test('Asset can be created with minimum account withdrawal amount', async (): Promise<void> => {
+      const options = {
+        ...randomAsset(),
+        withdrawalThreshold: BigInt(10)
+      }
+      const asset = await assetService.getOrCreate(options)
+      assert.ok(!isAssetError(asset))
+      await expect(asset).toMatchObject({
+        ...options,
+        id: asset.id,
+        unit: asset.unit
       })
-      await expect(assetService.getById(asset.id)).resolves.toEqual(asset)
+      await expect(assetService.get(asset)).resolves.toEqual(asset)
+      await expect(assetService.getOrCreate(asset)).resolves.toEqual(asset)
+    })
 
+    test('Cannot create duplicate asset', async (): Promise<void> => {
+      const options = randomAsset()
+      await expect(assetService.create(options)).resolves.toMatchObject(options)
+      await expect(assetService.create(options)).resolves.toEqual(
+        AssetError.DuplicateAsset
+      )
+    })
+  })
+
+  describe('getOrCreate', (): void => {
+    test('Asset can be created or fetched', async (): Promise<void> => {
+      const options = randomAsset()
+      await expect(assetService.get(options)).resolves.toBeUndefined()
+      const asset = await assetService.getOrCreate(options)
+      assert.ok(!isAssetError(asset))
+      await expect(asset).toMatchObject({
+        ...options,
+        id: asset.id,
+        unit: asset.unit
+      })
+      await expect(assetService.get(asset)).resolves.toEqual(asset)
+      await expect(assetService.getOrCreate(asset)).resolves.toEqual(asset)
+    })
+  })
+
+  describe('get', (): void => {
+    test('Can get asset', async (): Promise<void> => {
+      const options = randomAsset()
+      const asset = await assetService.create(options)
+      await expect(assetService.get(options)).resolves.toEqual(asset)
+    })
+
+    test('Cannot get unknown asset', async (): Promise<void> => {
+      await expect(assetService.get(randomAsset())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('getById', (): void => {
+    test('Can get asset by id', async (): Promise<void> => {
+      const asset = await assetService.create(randomAsset())
+      assert.ok(!isAssetError(asset))
+      await expect(assetService.getById(asset.id)).resolves.toEqual(asset)
+    })
+
+    test('Cannot get unknown asset', async (): Promise<void> => {
       await expect(assetService.getById(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('update', (): void => {
+    describe.each`
+      withdrawalThreshold
+      ${null}
+      ${BigInt(0)}
+      ${BigInt(5)}
+    `(
+      "Asset's withdrawal threshold can be updated from $withdrawalThreshold",
+      ({ withdrawalThreshold }): void => {
+        let assetId: string
+
+        beforeEach(
+          async (): Promise<void> => {
+            const asset = await assetService.create({
+              ...randomAsset(),
+              withdrawalThreshold
+            })
+            assert.ok(!isAssetError(asset))
+            await expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
+            assetId = asset.id
+          }
+        )
+
+        test.each`
+          withdrawalThreshold
+          ${null}
+          ${BigInt(0)}
+          ${BigInt(5)}
+        `(
+          'to $withdrawalThreshold',
+          async ({ withdrawalThreshold }): Promise<void> => {
+            const asset = await assetService.update({
+              id: assetId,
+              withdrawalThreshold
+            })
+            assert.ok(!isAssetError(asset))
+            expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
+            await expect(assetService.getById(assetId)).resolves.toEqual(asset)
+          }
+        )
+      }
+    )
+
+    test('Cannot update unknown asset', async (): Promise<void> => {
+      await expect(
+        assetService.update({
+          id: uuid(),
+          withdrawalThreshold: BigInt(10)
+        })
+      ).resolves.toEqual(AssetError.UnknownAsset)
+    })
+  })
+
+  describe('getPage', (): void => {
+    let assetsCreated: Asset[]
+
+    beforeEach(
+      async (): Promise<void> => {
+        assetsCreated = []
+        for (let i = 0; i < 40; i++) {
+          assetsCreated.push(await assetService.getOrCreate(randomAsset()))
+        }
+      }
+    )
+
+    test('Defaults to fetching first 20 items', async (): Promise<void> => {
+      const assets = await assetService.getPage()
+      expect(assets).toHaveLength(20)
+      expect(assets[0].id).toEqual(assetsCreated[0].id)
+      expect(assets[19].id).toEqual(assetsCreated[19].id)
+      expect(assets[20]).toBeUndefined()
+    })
+
+    test('Can change forward pagination limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 10
+      }
+      const assets = await assetService.getPage(pagination)
+      expect(assets).toHaveLength(10)
+      expect(assets[0].id).toEqual(assetsCreated[0].id)
+      expect(assets[9].id).toEqual(assetsCreated[9].id)
+      expect(assets[10]).toBeUndefined()
+    }, 10_000)
+
+    test('Can paginate forwards from a cursor', async (): Promise<void> => {
+      const pagination: Pagination = {
+        after: assetsCreated[19].id
+      }
+      const assets = await assetService.getPage(pagination)
+      expect(assets).toHaveLength(20)
+      expect(assets[0].id).toEqual(assetsCreated[20].id)
+      expect(assets[19].id).toEqual(assetsCreated[39].id)
+      expect(assets[20]).toBeUndefined()
+    })
+
+    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 10,
+        after: assetsCreated[9].id
+      }
+      const assets = await assetService.getPage(pagination)
+      expect(assets).toHaveLength(10)
+      expect(assets[0].id).toEqual(assetsCreated[10].id)
+      expect(assets[9].id).toEqual(assetsCreated[19].id)
+      expect(assets[10]).toBeUndefined()
+    })
+
+    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
+      const pagination: Pagination = {
+        last: 10
+      }
+      const assets = assetService.getPage(pagination)
+      await expect(assets).rejects.toThrow(
+        "Can't paginate backwards from the start."
+      )
+    })
+
+    test('Can paginate backwards from a cursor', async (): Promise<void> => {
+      const pagination: Pagination = {
+        before: assetsCreated[20].id
+      }
+      const assets = await assetService.getPage(pagination)
+      expect(assets).toHaveLength(20)
+      expect(assets[0].id).toEqual(assetsCreated[0].id)
+      expect(assets[19].id).toEqual(assetsCreated[19].id)
+      expect(assets[20]).toBeUndefined()
+    })
+
+    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
+      const pagination: Pagination = {
+        last: 5,
+        before: assetsCreated[10].id
+      }
+      const assets = await assetService.getPage(pagination)
+      expect(assets).toHaveLength(5)
+      expect(assets[0].id).toEqual(assetsCreated[5].id)
+      expect(assets[4].id).toEqual(assetsCreated[9].id)
+      expect(assets[5]).toBeUndefined()
+    })
+
+    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
+      const paginationForwards = {
+        first: 10
+      }
+      const assetsForwards = await assetService.getPage(paginationForwards)
+      const paginationBackwards = {
+        last: 10,
+        before: assetsCreated[10].id
+      }
+      const assetsBackwards = await assetService.getPage(paginationBackwards)
+      expect(assetsForwards).toHaveLength(10)
+      expect(assetsBackwards).toHaveLength(10)
+      expect(assetsForwards).toEqual(assetsBackwards)
+    })
+
+    test('Providing before and after results in forward pagination', async (): Promise<void> => {
+      const pagination: Pagination = {
+        after: assetsCreated[19].id,
+        before: assetsCreated[19].id
+      }
+      const assets = await assetService.getPage(pagination)
+      expect(assets).toHaveLength(20)
+      expect(assets[0].id).toEqual(assetsCreated[20].id)
+      expect(assets[19].id).toEqual(assetsCreated[39].id)
+      expect(assets[20]).toBeUndefined()
+    })
+
+    test("Can't request less than 0 assets", async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: -1
+      }
+      const assets = assetService.getPage(pagination)
+      await expect(assets).rejects.toThrow('Pagination index error')
+    })
+
+    test("Can't request more than 100 assets", async (): Promise<void> => {
+      const pagination: Pagination = {
+        first: 101
+      }
+      const assets = assetService.getPage(pagination)
+      await expect(assets).rejects.toThrow('Pagination index error')
     })
   })
 })

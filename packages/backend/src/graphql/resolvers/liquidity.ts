@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { accountToGraphql } from './account'
 import {
   ResolversTypes,
   MutationResolvers,
@@ -230,7 +231,7 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
       withdrawal: {
         id,
         amount,
-        account
+        account: accountToGraphql(account)
       }
     }
   } catch (error) {

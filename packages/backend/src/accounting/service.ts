@@ -44,7 +44,12 @@ export interface LiquidityAccount {
     id: string
     unit: number
   }
-  onCredit?: (balance: bigint) => Promise<LiquidityAccount>
+  onCredit?: (options: OnCreditOptions) => Promise<LiquidityAccount>
+}
+
+export interface OnCreditOptions {
+  totalReceived: bigint
+  withdrawalThrottleDelay?: number
 }
 
 export interface Deposit {
@@ -86,20 +91,15 @@ export interface AccountingService {
 
 export interface ServiceDependencies extends BaseService {
   tigerbeetle: Client
+  withdrawalThrottleDelay?: number
 }
 
-export function createAccountingService({
-  logger,
-  knex,
-  tigerbeetle
-}: ServiceDependencies): AccountingService {
-  const log = logger.child({
-    service: 'AccountingService'
-  })
-  const deps: ServiceDependencies = {
-    logger: log,
-    knex: knex,
-    tigerbeetle
+export function createAccountingService(
+  deps_: ServiceDependencies
+): AccountingService {
+  const deps = {
+    ...deps_,
+    logger: deps_.logger.child({ service: 'AccountingService' })
   }
   return {
     createLiquidityAccount: (options) => createLiquidityAccount(deps, options),
@@ -317,9 +317,15 @@ export async function createTransfer(
         return error.error
       }
       if (destinationAccount.onCredit) {
-        const balance = await getAccountBalance(deps, destinationAccount.id)
-        assert.ok(balance !== undefined)
-        await destinationAccount.onCredit(balance)
+        const totalReceived = await getAccountTotalReceived(
+          deps,
+          destinationAccount.id
+        )
+        assert.ok(totalReceived !== undefined)
+        await destinationAccount.onCredit({
+          totalReceived,
+          withdrawalThrottleDelay: deps.withdrawalThrottleDelay
+        })
       }
     },
     rollback: async (): Promise<void | TransferError> => {

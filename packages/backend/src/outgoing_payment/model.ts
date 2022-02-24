@@ -223,7 +223,6 @@ export const PaymentEventType = {
 export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
 export type PaymentData = {
-  invoice?: never
   payment: {
     id: string
     accountId: string

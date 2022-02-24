@@ -142,7 +142,8 @@ export function initIocContainer(
     return await createAccountingService({
       logger: logger,
       knex: knex,
-      tigerbeetle
+      tigerbeetle,
+      withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
   })
   container.singleton('peerService', async (deps) => {
