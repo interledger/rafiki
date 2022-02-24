@@ -1,4 +1,8 @@
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import {
+  ApolloClient,
+  NormalizedCacheObject,
+  ApolloQueryResult
+} from '@apollo/client'
 import { gql } from 'apollo-server-koa'
 
 import { Model, PageInfo } from '../generated/graphql'
@@ -8,6 +12,12 @@ interface PageTestsOptions<Type> {
   getClient: () => ApolloClient<NormalizedCacheObject>
   createModel: () => Promise<Type>
   pagedQuery: string
+  parent?: ParentModel
+}
+
+interface ParentModel {
+  query: string
+  getId: () => string
 }
 
 interface Connection<Type> {
@@ -20,11 +30,41 @@ interface Edge<Type> {
   cursor: string
 }
 
+const queryFields = `edges {
+    node {
+      id
+    }
+    cursor
+  }
+  pageInfo {
+    endCursor
+    hasNextPage
+    hasPreviousPage
+    startCursor
+  }`
+
 export const getPageTests = <T extends Model, M extends BaseModel>({
   getClient,
   createModel,
-  pagedQuery
+  pagedQuery,
+  parent
 }: PageTestsOptions<M>): void => {
+  const toConnection = (query: ApolloQueryResult<T>): Connection<T> => {
+    if (query.data) {
+      if (parent) {
+        if (query.data[parent.query]) {
+          return query.data[parent.query][pagedQuery]
+        } else {
+          throw new Error(`Parent ${parent.query} was empty`)
+        }
+      } else {
+        return query.data[pagedQuery]
+      }
+    } else {
+      throw new Error('Data was empty')
+    }
+  }
+
   describe('Common query resolver pagination', (): void => {
     let apolloClient: ApolloClient<NormalizedCacheObject>
 
@@ -44,34 +84,27 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       const models = await createModels()
       const query = await apolloClient
         .query({
-          query: gql`
-            query Page {
-              ${pagedQuery} {
-                edges {
-                  node {
-                    id
+          query: parent
+            ? gql`
+              query Page($id: String!) {
+                ${parent.query}(id: $id) {
+                  ${pagedQuery} {
+                    ${queryFields}
                   }
-                  cursor
                 }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
+              }`
+            : gql`
+              query Page {
+                ${pagedQuery} {
+                  ${queryFields}
                 }
               }
-            }
-          `
-        })
-        .then(
-          (query): Connection<T> => {
-            if (query.data) {
-              return query.data[pagedQuery]
-            } else {
-              throw new Error('Data was empty')
-            }
+            `,
+          variables: {
+            id: parent?.getId()
           }
-        )
+        })
+        .then(toConnection)
       expect(query.edges).toHaveLength(20)
       expect(query.pageInfo.hasNextPage).toBeTruthy()
       expect(query.pageInfo.hasPreviousPage).toBeFalsy()
@@ -82,34 +115,27 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
     test('No models, but models requested', async (): Promise<void> => {
       const query = await apolloClient
         .query({
-          query: gql`
-            query Page {
-              ${pagedQuery} {
-                edges {
-                  node {
-                    id
+          query: parent
+            ? gql`
+              query Page($id: String!) {
+                ${parent.query}(id: $id) {
+                  ${pagedQuery} {
+                    ${queryFields}
                   }
-                  cursor
                 }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
+              }`
+            : gql`
+              query Page {
+                ${pagedQuery} {
+                  ${queryFields}
                 }
               }
-            }
-          `
-        })
-        .then(
-          (query): Connection<T> => {
-            if (query.data) {
-              return query.data[pagedQuery]
-            } else {
-              throw new Error('Data was empty')
-            }
+            `,
+          variables: {
+            id: parent?.getId()
           }
-        )
+        })
+        .then(toConnection)
       expect(query.edges).toHaveLength(0)
       expect(query.pageInfo.hasNextPage).toBeFalsy()
       expect(query.pageInfo.hasPreviousPage).toBeFalsy()
@@ -121,34 +147,27 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       const models = await createModels()
       const query = await apolloClient
         .query({
-          query: gql`
-            query Page {
-              ${pagedQuery}(first: 10) {
-                edges {
-                  node {
-                    id
+          query: parent
+            ? gql`
+              query Page($id: String!) {
+                ${parent.query}(id: $id) {
+                  ${pagedQuery}(first: 10) {
+                    ${queryFields}
                   }
-                  cursor
                 }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
+              }`
+            : gql`
+              query Page {
+                ${pagedQuery}(first: 10) {
+                  ${queryFields}
                 }
               }
-            }
-          `
-        })
-        .then(
-          (query): Connection<T> => {
-            if (query.data) {
-              return query.data[pagedQuery]
-            } else {
-              throw new Error('Data was empty')
-            }
+            `,
+          variables: {
+            id: parent?.getId()
           }
-        )
+        })
+        .then(toConnection)
       expect(query.edges).toHaveLength(10)
       expect(query.pageInfo.hasNextPage).toBeTruthy()
       expect(query.pageInfo.hasPreviousPage).toBeFalsy()
@@ -160,37 +179,28 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       const models = await createModels()
       const query = await apolloClient
         .query({
-          query: gql`
-            query Page($after: String!) {
-              ${pagedQuery}(after: $after) {
-                edges {
-                  node {
-                    id
+          query: parent
+            ? gql`
+              query Page($id: String!, $after: String!) {
+                ${parent.query}(id: $id) {
+                  ${pagedQuery}(after: $after) {
+                    ${queryFields}
                   }
-                  cursor
                 }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
+              }`
+            : gql`
+              query Page($after: String!) {
+                ${pagedQuery}(after: $after) {
+                  ${queryFields}
                 }
               }
-            }
-          `,
+            `,
           variables: {
+            id: parent?.getId(),
             after: models[19].id
           }
         })
-        .then(
-          (query): Connection<T> => {
-            if (query.data) {
-              return query.data[pagedQuery]
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
+        .then(toConnection)
       expect(query.edges).toHaveLength(20)
       expect(query.pageInfo.hasNextPage).toBeTruthy()
       expect(query.pageInfo.hasPreviousPage).toBeTruthy()
@@ -202,37 +212,28 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       const models = await createModels()
       const query = await apolloClient
         .query({
-          query: gql`
-            query page($after: String!) {
-              ${pagedQuery}(after: $after, first: 10) {
-                edges {
-                  node {
-                    id
+          query: parent
+            ? gql`
+              query Page($id: String!, $after: String!) {
+                ${parent.query}(id: $id) {
+                  ${pagedQuery}(after: $after, first: 10) {
+                    ${queryFields}
                   }
-                  cursor
                 }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
+              }`
+            : gql`
+              query Page($after: String!) {
+                ${pagedQuery}(after: $after, first: 10) {
+                  ${queryFields}
                 }
               }
-            }
-          `,
+            `,
           variables: {
+            id: parent?.getId(),
             after: models[44].id
           }
         })
-        .then(
-          (query): Connection<T> => {
-            if (query.data) {
-              return query.data[pagedQuery]
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
+        .then(toConnection)
       expect(query.edges).toHaveLength(5)
       expect(query.pageInfo.hasNextPage).toBeFalsy()
       expect(query.pageInfo.hasPreviousPage).toBeTruthy()
