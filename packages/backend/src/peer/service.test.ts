@@ -5,7 +5,6 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { isPeerError, PeerError } from './errors'
-import { Peer } from './model'
 import { CreateOptions, PeerService, UpdateOptions } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { resetGraphileDb } from '../tests/graphileDb'
@@ -14,7 +13,8 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { Pagination } from '../shared/pagination'
+import { Pagination } from '../shared/baseModel'
+import { getPageTests } from '../shared/baseModel.test'
 import { randomAsset } from '../tests/asset'
 import { PeerFactory } from '../tests/peerFactory'
 import { truncateTables } from '../tests/tableManager'
@@ -345,134 +345,10 @@ describe('Peer Service', (): void => {
   })
 
   describe('Peer pagination', (): void => {
-    let peersCreated: Peer[]
-
-    beforeEach(
-      async (): Promise<void> => {
-        peersCreated = []
-        const asset = randomAsset()
-        for (let i = 0; i < 40; i++) {
-          peersCreated.push(await peerFactory.build({ asset }))
-        }
-      }
-    )
-
-    test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const peers = await peerService.getPage()
-      expect(peers).toHaveLength(20)
-      expect(peers[0].id).toEqual(peersCreated[0].id)
-      expect(peers[19].id).toEqual(peersCreated[19].id)
-      expect(peers[20]).toBeUndefined()
-    })
-
-    test('Can change forward pagination limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 10
-      }
-      const peers = await peerService.getPage(pagination)
-      expect(peers).toHaveLength(10)
-      expect(peers[0].id).toEqual(peersCreated[0].id)
-      expect(peers[9].id).toEqual(peersCreated[9].id)
-      expect(peers[10]).toBeUndefined()
-    }, 10_000)
-
-    test('Can paginate forwards from a cursor', async (): Promise<void> => {
-      const pagination: Pagination = {
-        after: peersCreated[19].id
-      }
-      const peers = await peerService.getPage(pagination)
-      expect(peers).toHaveLength(20)
-      expect(peers[0].id).toEqual(peersCreated[20].id)
-      expect(peers[19].id).toEqual(peersCreated[39].id)
-      expect(peers[20]).toBeUndefined()
-    })
-
-    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 10,
-        after: peersCreated[9].id
-      }
-      const peers = await peerService.getPage(pagination)
-      expect(peers).toHaveLength(10)
-      expect(peers[0].id).toEqual(peersCreated[10].id)
-      expect(peers[9].id).toEqual(peersCreated[19].id)
-      expect(peers[10]).toBeUndefined()
-    })
-
-    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
-      const pagination: Pagination = {
-        last: 10
-      }
-      const peers = peerService.getPage(pagination)
-      await expect(peers).rejects.toThrow(
-        "Can't paginate backwards from the start."
-      )
-    })
-
-    test('Can paginate backwards from a cursor', async (): Promise<void> => {
-      const pagination: Pagination = {
-        before: peersCreated[20].id
-      }
-      const peers = await peerService.getPage(pagination)
-      expect(peers).toHaveLength(20)
-      expect(peers[0].id).toEqual(peersCreated[0].id)
-      expect(peers[19].id).toEqual(peersCreated[19].id)
-      expect(peers[20]).toBeUndefined()
-    })
-
-    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination: Pagination = {
-        last: 5,
-        before: peersCreated[10].id
-      }
-      const peers = await peerService.getPage(pagination)
-      expect(peers).toHaveLength(5)
-      expect(peers[0].id).toEqual(peersCreated[5].id)
-      expect(peers[4].id).toEqual(peersCreated[9].id)
-      expect(peers[5]).toBeUndefined()
-    })
-
-    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
-      const paginationForwards = {
-        first: 10
-      }
-      const peersForwards = await peerService.getPage(paginationForwards)
-      const paginationBackwards = {
-        last: 10,
-        before: peersCreated[10].id
-      }
-      const peersBackwards = await peerService.getPage(paginationBackwards)
-      expect(peersForwards).toHaveLength(10)
-      expect(peersBackwards).toHaveLength(10)
-      expect(peersForwards).toEqual(peersBackwards)
-    })
-
-    test('Providing before and after results in forward pagination', async (): Promise<void> => {
-      const pagination: Pagination = {
-        after: peersCreated[19].id,
-        before: peersCreated[19].id
-      }
-      const peers = await peerService.getPage(pagination)
-      expect(peers).toHaveLength(20)
-      expect(peers[0].id).toEqual(peersCreated[20].id)
-      expect(peers[19].id).toEqual(peersCreated[39].id)
-      expect(peers[20]).toBeUndefined()
-    })
-
-    test("Can't request less than 0 peers", async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: -1
-      }
-      const peers = peerService.getPage(pagination)
-      await expect(peers).rejects.toThrow('Pagination index error')
-    })
-
-    test("Can't request more than 100 peers", async (): Promise<void> => {
-      const pagination: Pagination = {
-        first: 101
-      }
-      const peers = peerService.getPage(pagination)
-      await expect(peers).rejects.toThrow('Pagination index error')
+    const asset = randomAsset()
+    getPageTests({
+      createModel: () => peerFactory.build({ asset }),
+      getPage: (pagination: Pagination) => peerService.getPage(pagination)
     })
   })
 })

@@ -13,6 +13,8 @@ import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
+import { Pagination } from '../../shared/baseModel'
+import { getPageTests } from '../../shared/baseModel.test'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 
@@ -283,173 +285,16 @@ describe('Invoice Service', (): void => {
   })
 
   describe('Invoice pagination', (): void => {
-    let invoicesCreated: Invoice[]
-
-    beforeEach(
-      async (): Promise<void> => {
-        invoicesCreated = []
-        for (let i = 0; i < 40; i++) {
-          invoicesCreated.push(
-            await invoiceService.create({
-              accountId,
-              amount: BigInt(123),
-              expiresAt: new Date(Date.now() + 30_000),
-              description: `Invoice ${i}`
-            })
-          )
-        }
-      }
-    )
-
-    test('Defaults to fetching first 20 items', async (): Promise<void> => {
-      const invoices = await invoiceService.getAccountInvoicesPage(accountId)
-      expect(invoices).toHaveLength(20)
-      expect(invoices[0].id).toEqual(invoicesCreated[0].id)
-      expect(invoices[19].id).toEqual(invoicesCreated[19].id)
-      expect(invoices[20]).toBeUndefined()
-    })
-
-    test('Can change forward pagination limit', async (): Promise<void> => {
-      const pagination = {
-        first: 10
-      }
-      const invoices = await invoiceService.getAccountInvoicesPage(
-        accountId,
-        pagination
-      )
-      expect(invoices).toHaveLength(10)
-      expect(invoices[0].id).toEqual(invoicesCreated[0].id)
-      expect(invoices[9].id).toEqual(invoicesCreated[9].id)
-      expect(invoices[10]).toBeUndefined()
-    })
-
-    test('Can paginate forwards from a cursor', async (): Promise<void> => {
-      const pagination = {
-        after: invoicesCreated[19].id
-      }
-      const invoices = await invoiceService.getAccountInvoicesPage(
-        accountId,
-        pagination
-      )
-      expect(invoices).toHaveLength(20)
-      expect(invoices[0].id).toEqual(invoicesCreated[20].id)
-      expect(invoices[19].id).toEqual(invoicesCreated[39].id)
-      expect(invoices[20]).toBeUndefined()
-    })
-
-    test('Can paginate forwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination = {
-        first: 10,
-        after: invoicesCreated[9].id
-      }
-      const invoices = await invoiceService.getAccountInvoicesPage(
-        accountId,
-        pagination
-      )
-      expect(invoices).toHaveLength(10)
-      expect(invoices[0].id).toEqual(invoicesCreated[10].id)
-      expect(invoices[9].id).toEqual(invoicesCreated[19].id)
-      expect(invoices[10]).toBeUndefined()
-    })
-
-    test("Can't change backward pagination limit on it's own.", async (): Promise<void> => {
-      const pagination = {
-        last: 10
-      }
-      const invoices = invoiceService.getAccountInvoicesPage(
-        accountId,
-        pagination
-      )
-      await expect(invoices).rejects.toThrow(
-        "Can't paginate backwards from the start."
-      )
-    })
-
-    test('Can paginate backwards from a cursor', async (): Promise<void> => {
-      const pagination = {
-        before: invoicesCreated[20].id
-      }
-      const invoices = await invoiceService.getAccountInvoicesPage(
-        accountId,
-        pagination
-      )
-      expect(invoices).toHaveLength(20)
-      expect(invoices[0].id).toEqual(invoicesCreated[0].id)
-      expect(invoices[19].id).toEqual(invoicesCreated[19].id)
-      expect(invoices[20]).toBeUndefined()
-    })
-
-    test('Can paginate backwards from a cursor with a limit', async (): Promise<void> => {
-      const pagination = {
-        last: 5,
-        before: invoicesCreated[10].id
-      }
-      const invoices = await invoiceService.getAccountInvoicesPage(
-        accountId,
-        pagination
-      )
-      expect(invoices).toHaveLength(5)
-      expect(invoices[0].id).toEqual(invoicesCreated[5].id)
-      expect(invoices[4].id).toEqual(invoicesCreated[9].id)
-      expect(invoices[5]).toBeUndefined()
-    })
-
-    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
-      const paginationForwards = {
-        first: 10
-      }
-      const invoicesForwards = await invoiceService.getAccountInvoicesPage(
-        accountId,
-        paginationForwards
-      )
-      const paginationBackwards = {
-        last: 10,
-        before: invoicesCreated[10].id
-      }
-      const invoicesBackwards = await invoiceService.getAccountInvoicesPage(
-        accountId,
-        paginationBackwards
-      )
-      expect(invoicesForwards).toHaveLength(10)
-      expect(invoicesBackwards).toHaveLength(10)
-      expect(invoicesForwards).toEqual(invoicesBackwards)
-    })
-
-    test('Providing before and after results in forward pagination', async (): Promise<void> => {
-      const pagination = {
-        after: invoicesCreated[19].id,
-        before: invoicesCreated[19].id
-      }
-      const invoices = await invoiceService.getAccountInvoicesPage(
-        accountId,
-        pagination
-      )
-      expect(invoices).toHaveLength(20)
-      expect(invoices[0].id).toEqual(invoicesCreated[20].id)
-      expect(invoices[19].id).toEqual(invoicesCreated[39].id)
-      expect(invoices[20]).toBeUndefined()
-    })
-
-    test("Can't request less than 0 invoices", async (): Promise<void> => {
-      const pagination = {
-        first: -1
-      }
-      const invoices = invoiceService.getAccountInvoicesPage(
-        accountId,
-        pagination
-      )
-      await expect(invoices).rejects.toThrow('Pagination index error')
-    })
-
-    test("Can't request more than 100 invoices", async (): Promise<void> => {
-      const pagination = {
-        first: 101
-      }
-      const invoices = invoiceService.getAccountInvoicesPage(
-        accountId,
-        pagination
-      )
-      await expect(invoices).rejects.toThrow('Pagination index error')
+    getPageTests({
+      createModel: () =>
+        invoiceService.create({
+          accountId,
+          amount: BigInt(123),
+          expiresAt: new Date(Date.now() + 30_000),
+          description: 'Invoice'
+        }),
+      getPage: (pagination: Pagination) =>
+        invoiceService.getAccountInvoicesPage(accountId, pagination)
     })
   })
 })

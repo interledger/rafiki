@@ -1,6 +1,7 @@
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 
+import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 import { FundingError, LifecycleError } from './errors'
 import { OutgoingPayment, PaymentIntent, PaymentState } from './model'
@@ -178,81 +179,12 @@ async function fundPayment(
   })
 }
 
-interface Pagination {
-  after?: string // Forward pagination: cursor.
-  before?: string // Backward pagination: cursor.
-  first?: number // Forward pagination: limit.
-  last?: number // Backward pagination: limit.
-}
-
-/**
- * The pagination algorithm is based on the Relay connection specification.
- * Please read the spec before changing things:
- * https://relay.dev/graphql/connections.htm
- * @param deps ServiceDependencies.
- * @param accountId The accountId of the payments' sending user.
- * @param pagination Pagination - cursors and limits.
- * @returns OutgoingPayment[] An array of payments that form a page.
- */
 async function getAccountPage(
   deps: ServiceDependencies,
   accountId: string,
   pagination?: Pagination
 ): Promise<OutgoingPayment[]> {
-  if (
-    typeof pagination?.before === 'undefined' &&
-    typeof pagination?.last === 'number'
-  ) {
-    throw new Error("Can't paginate backwards from the start.")
-  }
-
-  const first = pagination?.first || 20
-  if (first < 0 || first > 100) throw new Error('Pagination index error')
-  const last = pagination?.last || 20
-  if (last < 0 || last > 100) throw new Error('Pagination index error')
-
-  /**
-   * Forward pagination
-   */
-  if (typeof pagination?.after === 'string') {
-    return OutgoingPayment.query(deps.knex)
-      .where({ accountId })
-      .andWhereRaw(
-        '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from "outgoingPayments" where "id" = ?)',
-        [pagination.after]
-      )
-      .orderBy([
-        { column: 'createdAt', order: 'asc' },
-        { column: 'id', order: 'asc' }
-      ])
-      .limit(first)
-  }
-
-  /**
-   * Backward pagination
-   */
-  if (typeof pagination?.before === 'string') {
-    return OutgoingPayment.query(deps.knex)
-      .where({ accountId })
-      .andWhereRaw(
-        '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from "outgoingPayments" where "id" = ?)',
-        [pagination.before]
-      )
-      .orderBy([
-        { column: 'createdAt', order: 'desc' },
-        { column: 'id', order: 'desc' }
-      ])
-      .limit(last)
-      .then((resp) => {
-        return resp.reverse()
-      })
-  }
-
-  return OutgoingPayment.query(deps.knex)
+  return await OutgoingPayment.query(deps.knex)
+    .getPage(pagination)
     .where({ accountId })
-    .orderBy([
-      { column: 'createdAt', order: 'asc' },
-      { column: 'id', order: 'asc' }
-    ])
-    .limit(first)
 }

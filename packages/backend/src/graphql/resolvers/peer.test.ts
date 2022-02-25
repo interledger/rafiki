@@ -5,6 +5,7 @@ import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
 
+import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
@@ -336,14 +337,13 @@ describe('Peer Resolvers', (): void => {
   })
 
   describe('Peers Queries', (): void => {
-    async function createPeers(): Promise<PeerModel[]> {
-      const peers = []
-      const asset = randomAsset()
-      for (let i = 0; i < 50; i++) {
-        peers.push(await peerFactory.build({ asset }))
-      }
-      return peers
-    }
+    const asset = randomAsset()
+
+    getPageTests({
+      getClient: () => appContainer.apolloClient,
+      createModel: () => peerFactory.build({ asset }),
+      pagedQuery: 'peers'
+    })
 
     test('Can get peers', async (): Promise<void> => {
       const peers: PeerModel[] = []
@@ -411,206 +411,6 @@ describe('Peer Resolvers', (): void => {
         })
       })
     })
-
-    test('pageInfo is correct on default query without params', async (): Promise<void> => {
-      const peers = await createPeers()
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Peers {
-              peers {
-                edges {
-                  node {
-                    id
-                  }
-                  cursor
-                }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
-                }
-              }
-            }
-          `
-        })
-        .then(
-          (query): PeersConnection => {
-            if (query.data) {
-              return query.data.peers
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-      expect(query.edges).toHaveLength(20)
-      expect(query.pageInfo.hasNextPage).toBeTruthy()
-      expect(query.pageInfo.hasPreviousPage).toBeFalsy()
-      expect(query.pageInfo.startCursor).toEqual(peers[0].id)
-      expect(query.pageInfo.endCursor).toEqual(peers[19].id)
-    }, 10_000)
-
-    test('No peers, but peers requested', async (): Promise<void> => {
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Peers {
-              peers {
-                edges {
-                  node {
-                    id
-                  }
-                  cursor
-                }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
-                }
-              }
-            }
-          `
-        })
-        .then(
-          (query): PeersConnection => {
-            if (query.data) {
-              return query.data.peers
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-      expect(query.edges).toHaveLength(0)
-      expect(query.pageInfo.hasNextPage).toBeFalsy()
-      expect(query.pageInfo.hasPreviousPage).toBeFalsy()
-      expect(query.pageInfo.startCursor).toBeNull()
-      expect(query.pageInfo.endCursor).toBeNull()
-    })
-
-    test('pageInfo is correct on pagination from start', async (): Promise<void> => {
-      const peers = await createPeers()
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Peers {
-              peers(first: 10) {
-                edges {
-                  node {
-                    id
-                  }
-                  cursor
-                }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
-                }
-              }
-            }
-          `
-        })
-        .then(
-          (query): PeersConnection => {
-            if (query.data) {
-              return query.data.peers
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-      expect(query.edges).toHaveLength(10)
-      expect(query.pageInfo.hasNextPage).toBeTruthy()
-      expect(query.pageInfo.hasPreviousPage).toBeFalsy()
-      expect(query.pageInfo.startCursor).toEqual(peers[0].id)
-      expect(query.pageInfo.endCursor).toEqual(peers[9].id)
-    }, 10_000)
-
-    test('pageInfo is correct on pagination from middle', async (): Promise<void> => {
-      const peers = await createPeers()
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Peers($after: String!) {
-              peers(after: $after) {
-                edges {
-                  node {
-                    id
-                  }
-                  cursor
-                }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
-                }
-              }
-            }
-          `,
-          variables: {
-            after: peers[19].id
-          }
-        })
-        .then(
-          (query): PeersConnection => {
-            if (query.data) {
-              return query.data.peers
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-      expect(query.edges).toHaveLength(20)
-      expect(query.pageInfo.hasNextPage).toBeTruthy()
-      expect(query.pageInfo.hasPreviousPage).toBeTruthy()
-      expect(query.pageInfo.startCursor).toEqual(peers[20].id)
-      expect(query.pageInfo.endCursor).toEqual(peers[39].id)
-    }, 10_000)
-
-    test('pageInfo is correct on pagination near end', async (): Promise<void> => {
-      const peers = await createPeers()
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Peers($after: String!) {
-              peers(after: $after, first: 10) {
-                edges {
-                  node {
-                    id
-                  }
-                  cursor
-                }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                  hasPreviousPage
-                  startCursor
-                }
-              }
-            }
-          `,
-          variables: {
-            after: peers[44].id
-          }
-        })
-        .then(
-          (query): PeersConnection => {
-            if (query.data) {
-              return query.data.peers
-            } else {
-              throw new Error('Data was empty')
-            }
-          }
-        )
-      expect(query.edges).toHaveLength(5)
-      expect(query.pageInfo.hasNextPage).toBeFalsy()
-      expect(query.pageInfo.hasPreviousPage).toBeTruthy()
-      expect(query.pageInfo.startCursor).toEqual(peers[45].id)
-      expect(query.pageInfo.endCursor).toEqual(peers[49].id)
-    }, 10_000)
   })
 
   describe('Update Peer', (): void => {
