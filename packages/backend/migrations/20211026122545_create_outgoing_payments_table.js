@@ -7,7 +7,7 @@ exports.up = function (knex) {
     table.integer('stateAttempts').notNullable().defaultTo(0)
 
     table.string('intentPaymentPointer').nullable()
-    table.string('intentInvoiceUrl').nullable()
+    table.string('intentIncomingPaymentUrl').nullable()
     table.bigInteger('intentAmountToSend').nullable()
     table.boolean('intentAutoApprove').notNullable()
 

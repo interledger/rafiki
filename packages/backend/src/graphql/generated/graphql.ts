@@ -20,13 +20,13 @@ export type Account = Model & {
   __typename?: 'Account';
   id: Scalars['ID'];
   asset: Asset;
-  invoices?: Maybe<InvoiceConnection>;
+  incomingPayments?: Maybe<IncomingPaymentConnection>;
   outgoingPayments?: Maybe<OutgoingPaymentConnection>;
   createdAt: Scalars['String'];
 };
 
 
-export type AccountInvoicesArgs = {
+export type AccountIncomingPaymentsArgs = {
   after?: Maybe<Scalars['String']>;
   before?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
@@ -169,7 +169,7 @@ export type CreateOutgoingPaymentInput = {
   accountId: Scalars['String'];
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
-  invoiceUrl?: Maybe<Scalars['String']>;
+  incomingPaymentUrl?: Maybe<Scalars['String']>;
   autoApprove: Scalars['Boolean'];
 };
 
@@ -241,8 +241,8 @@ export type HttpOutgoingInput = {
   endpoint: Scalars['String'];
 };
 
-export type Invoice = Model & {
-  __typename?: 'Invoice';
+export type IncomingPayment = Model & {
+  __typename?: 'IncomingPayment';
   id: Scalars['ID'];
   active: Scalars['Boolean'];
   createdAt: Scalars['String'];
@@ -251,15 +251,15 @@ export type Invoice = Model & {
   amount: Scalars['UInt64'];
 };
 
-export type InvoiceConnection = {
-  __typename?: 'InvoiceConnection';
+export type IncomingPaymentConnection = {
+  __typename?: 'IncomingPaymentConnection';
   pageInfo: PageInfo;
-  edges: Array<InvoiceEdge>;
+  edges: Array<IncomingPaymentEdge>;
 };
 
-export type InvoiceEdge = {
-  __typename?: 'InvoiceEdge';
-  node: Invoice;
+export type IncomingPaymentEdge = {
+  __typename?: 'IncomingPaymentEdge';
+  node: IncomingPayment;
   cursor: Scalars['String'];
 };
 
@@ -272,7 +272,7 @@ export enum LiquidityError {
   TransferExists = 'TransferExists',
   UnknownAccount = 'UnknownAccount',
   UnknownAsset = 'UnknownAsset',
-  UnknownInvoice = 'UnknownInvoice',
+  UnknownIncomingPayment = 'UnknownIncomingPayment',
   UnknownPayment = 'UnknownPayment',
   UnknownPeer = 'UnknownPeer',
   UnknownTransfer = 'UnknownTransfer'
@@ -526,7 +526,7 @@ export type PaymentIntent = {
   __typename?: 'PaymentIntent';
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
-  invoiceUrl?: Maybe<Scalars['String']>;
+  incomingPaymentUrl?: Maybe<Scalars['String']>;
   autoApprove: Scalars['Boolean'];
 };
 
@@ -825,12 +825,12 @@ export type ResolversTypes = {
   HttpInput: ResolverTypeWrapper<Partial<HttpInput>>;
   HttpOutgoing: ResolverTypeWrapper<Partial<HttpOutgoing>>;
   HttpOutgoingInput: ResolverTypeWrapper<Partial<HttpOutgoingInput>>;
-  Invoice: ResolverTypeWrapper<Partial<Invoice>>;
-  InvoiceConnection: ResolverTypeWrapper<Partial<InvoiceConnection>>;
-  InvoiceEdge: ResolverTypeWrapper<Partial<InvoiceEdge>>;
+  IncomingPayment: ResolverTypeWrapper<Partial<IncomingPayment>>;
+  IncomingPaymentConnection: ResolverTypeWrapper<Partial<IncomingPaymentConnection>>;
+  IncomingPaymentEdge: ResolverTypeWrapper<Partial<IncomingPaymentEdge>>;
   LiquidityError: ResolverTypeWrapper<Partial<LiquidityError>>;
   LiquidityMutationResponse: ResolverTypeWrapper<Partial<LiquidityMutationResponse>>;
-  Model: ResolversTypes['Account'] | ResolversTypes['ApiKey'] | ResolversTypes['Asset'] | ResolversTypes['Invoice'] | ResolversTypes['OutgoingPayment'] | ResolversTypes['Peer'];
+  Model: ResolversTypes['Account'] | ResolversTypes['ApiKey'] | ResolversTypes['Asset'] | ResolversTypes['IncomingPayment'] | ResolversTypes['OutgoingPayment'] | ResolversTypes['Peer'];
   Mutation: ResolverTypeWrapper<{}>;
   MutationResponse: ResolversTypes['AccountWithdrawalMutationResponse'] | ResolversTypes['AssetMutationResponse'] | ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateApiKeyMutationResponse'] | ResolversTypes['CreatePeerMutationResponse'] | ResolversTypes['DeleteAllApiKeysMutationResponse'] | ResolversTypes['DeletePeerMutationResponse'] | ResolversTypes['LiquidityMutationResponse'] | ResolversTypes['RedeemApiKeyMutationResponse'] | ResolversTypes['RefreshSessionMutationResponse'] | ResolversTypes['RevokeSessionMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['TriggerAccountEventsMutationResponse'] | ResolversTypes['UpdatePeerMutationResponse'];
   OutgoingPayment: ResolverTypeWrapper<Partial<OutgoingPayment>>;
@@ -900,11 +900,11 @@ export type ResolversParentTypes = {
   HttpInput: Partial<HttpInput>;
   HttpOutgoing: Partial<HttpOutgoing>;
   HttpOutgoingInput: Partial<HttpOutgoingInput>;
-  Invoice: Partial<Invoice>;
-  InvoiceConnection: Partial<InvoiceConnection>;
-  InvoiceEdge: Partial<InvoiceEdge>;
+  IncomingPayment: Partial<IncomingPayment>;
+  IncomingPaymentConnection: Partial<IncomingPaymentConnection>;
+  IncomingPaymentEdge: Partial<IncomingPaymentEdge>;
   LiquidityMutationResponse: Partial<LiquidityMutationResponse>;
-  Model: ResolversParentTypes['Account'] | ResolversParentTypes['ApiKey'] | ResolversParentTypes['Asset'] | ResolversParentTypes['Invoice'] | ResolversParentTypes['OutgoingPayment'] | ResolversParentTypes['Peer'];
+  Model: ResolversParentTypes['Account'] | ResolversParentTypes['ApiKey'] | ResolversParentTypes['Asset'] | ResolversParentTypes['IncomingPayment'] | ResolversParentTypes['OutgoingPayment'] | ResolversParentTypes['Peer'];
   Mutation: {};
   MutationResponse: ResolversParentTypes['AccountWithdrawalMutationResponse'] | ResolversParentTypes['AssetMutationResponse'] | ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateApiKeyMutationResponse'] | ResolversParentTypes['CreatePeerMutationResponse'] | ResolversParentTypes['DeleteAllApiKeysMutationResponse'] | ResolversParentTypes['DeletePeerMutationResponse'] | ResolversParentTypes['LiquidityMutationResponse'] | ResolversParentTypes['RedeemApiKeyMutationResponse'] | ResolversParentTypes['RefreshSessionMutationResponse'] | ResolversParentTypes['RevokeSessionMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['TriggerAccountEventsMutationResponse'] | ResolversParentTypes['UpdatePeerMutationResponse'];
   OutgoingPayment: Partial<OutgoingPayment>;
@@ -947,7 +947,7 @@ export type IsAdminDirectiveResolver<Result, Parent, ContextType = any, Args = I
 export type AccountResolvers<ContextType = any, ParentType extends ResolversParentTypes['Account'] = ResolversParentTypes['Account']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
-  invoices?: Resolver<Maybe<ResolversTypes['InvoiceConnection']>, ParentType, ContextType, RequireFields<AccountInvoicesArgs, never>>;
+  incomingPayments?: Resolver<Maybe<ResolversTypes['IncomingPaymentConnection']>, ParentType, ContextType, RequireFields<AccountIncomingPaymentsArgs, never>>;
   outgoingPayments?: Resolver<Maybe<ResolversTypes['OutgoingPaymentConnection']>, ParentType, ContextType, RequireFields<AccountOutgoingPaymentsArgs, never>>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1056,7 +1056,7 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type InvoiceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Invoice'] = ResolversParentTypes['Invoice']> = {
+export type IncomingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPayment'] = ResolversParentTypes['IncomingPayment']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1066,14 +1066,14 @@ export type InvoiceResolvers<ContextType = any, ParentType extends ResolversPare
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type InvoiceConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['InvoiceConnection'] = ResolversParentTypes['InvoiceConnection']> = {
+export type IncomingPaymentConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPaymentConnection'] = ResolversParentTypes['IncomingPaymentConnection']> = {
   pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  edges?: Resolver<Array<ResolversTypes['InvoiceEdge']>, ParentType, ContextType>;
+  edges?: Resolver<Array<ResolversTypes['IncomingPaymentEdge']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type InvoiceEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['InvoiceEdge'] = ResolversParentTypes['InvoiceEdge']> = {
-  node?: Resolver<ResolversTypes['Invoice'], ParentType, ContextType>;
+export type IncomingPaymentEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPaymentEdge'] = ResolversParentTypes['IncomingPaymentEdge']> = {
+  node?: Resolver<ResolversTypes['IncomingPayment'], ParentType, ContextType>;
   cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -1087,7 +1087,7 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 };
 
 export type ModelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Model'] = ResolversParentTypes['Model']> = {
-  __resolveType: TypeResolveFn<'Account' | 'ApiKey' | 'Asset' | 'Invoice' | 'OutgoingPayment' | 'Peer', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Account' | 'ApiKey' | 'Asset' | 'IncomingPayment' | 'OutgoingPayment' | 'Peer', ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
@@ -1182,7 +1182,7 @@ export type PaymentDestinationAccountResolvers<ContextType = any, ParentType ext
 export type PaymentIntentResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentIntent'] = ResolversParentTypes['PaymentIntent']> = {
   paymentPointer?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   amountToSend?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
-  invoiceUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  incomingPaymentUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   autoApprove?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -1303,9 +1303,9 @@ export type Resolvers<ContextType = any> = {
   DeletePeerMutationResponse?: DeletePeerMutationResponseResolvers<ContextType>;
   Http?: HttpResolvers<ContextType>;
   HttpOutgoing?: HttpOutgoingResolvers<ContextType>;
-  Invoice?: InvoiceResolvers<ContextType>;
-  InvoiceConnection?: InvoiceConnectionResolvers<ContextType>;
-  InvoiceEdge?: InvoiceEdgeResolvers<ContextType>;
+  IncomingPayment?: IncomingPaymentResolvers<ContextType>;
+  IncomingPaymentConnection?: IncomingPaymentConnectionResolvers<ContextType>;
+  IncomingPaymentEdge?: IncomingPaymentEdgeResolvers<ContextType>;
   LiquidityMutationResponse?: LiquidityMutationResponseResolvers<ContextType>;
   Model?: ModelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;

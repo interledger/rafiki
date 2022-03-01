@@ -6,13 +6,13 @@ import { ConnectorAccount } from '../../connector/core/rafiki'
 import { BaseModel } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 
-export enum InvoiceEventType {
-  InvoiceExpired = 'invoice.expired',
-  InvoicePaid = 'invoice.paid'
+export enum IncomingPaymentEventType {
+  IncomingPaymentExpired = 'incomingPayment.expired',
+  IncomingPaymentPaid = 'incomingPayment.paid'
 }
 
-export type InvoiceData = {
-  invoice: {
+export type IncomingPaymentData = {
+  incomingPayment: {
     id: string
     accountId: string
     description?: string
@@ -23,16 +23,16 @@ export type InvoiceData = {
   }
 }
 
-export class InvoiceEvent extends WebhookEvent {
-  public type!: InvoiceEventType
-  public data!: InvoiceData
+export class IncomingPaymentEvent extends WebhookEvent {
+  public type!: IncomingPaymentEventType
+  public data!: IncomingPaymentData
 }
 
-export class Invoice
+export class IncomingPayment
   extends BaseModel
   implements ConnectorAccount, LiquidityAccount {
   public static get tableName(): string {
-    return 'invoices'
+    return 'incomingPayments'
   }
 
   static relationMappings = {
@@ -40,13 +40,13 @@ export class Invoice
       relation: Model.HasOneRelation,
       modelClass: Account,
       join: {
-        from: 'invoices.accountId',
+        from: 'incomingPayments.accountId',
         to: 'accounts.id'
       }
     }
   }
 
-  // Open payments account id this invoice is for
+  // Open payments account id this incoming payment is for
   public accountId!: string
   public account!: Account
   public active!: boolean
@@ -60,9 +60,11 @@ export class Invoice
     return this.account.asset
   }
 
-  public async onCredit({ totalReceived }: OnCreditOptions): Promise<Invoice> {
+  public async onCredit({
+    totalReceived
+  }: OnCreditOptions): Promise<IncomingPayment> {
     if (this.amount <= totalReceived) {
-      const invoice = await Invoice.query()
+      const incomingPayment = await IncomingPayment.query()
         .patchAndFetchById(this.id, {
           active: false,
           // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
@@ -71,16 +73,16 @@ export class Invoice
         .where({
           active: true
         })
-      if (invoice) {
-        return invoice
+      if (incomingPayment) {
+        return incomingPayment
       }
     }
     return this
   }
 
-  public toData(amountReceived: bigint): InvoiceData {
+  public toData(amountReceived: bigint): IncomingPaymentData {
     return {
-      invoice: {
+      incomingPayment: {
         id: this.id,
         accountId: this.accountId,
         amount: this.amount.toString(),

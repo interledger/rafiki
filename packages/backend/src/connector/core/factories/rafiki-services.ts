@@ -24,12 +24,16 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   .attr('accounts', ['accounting'], (accounting: MockAccountingService) => ({
     get: async (id: string) => await accounting._getAccount(id)
   }))
-  .attr('invoices', ['accounting'], (accounting: MockAccountingService) => ({
-    get: async (id: string) => await accounting._getInvoice(id),
-    handlePayment: async (_id: string) => {
-      return undefined
-    }
-  }))
+  .attr(
+    'incomingPayments',
+    ['accounting'],
+    (accounting: MockAccountingService) => ({
+      get: async (id: string) => await accounting._getIncomingPayment(id),
+      handlePayment: async (_id: string) => {
+        return undefined
+      }
+    })
+  )
   .attr('peers', ['accounting'], (accounting: MockAccountingService) => ({
     getByDestinationAddress: async (address: string) =>
       await accounting._getByDestinationAddress(address),

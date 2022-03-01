@@ -46,7 +46,7 @@
             "deprecationReason": null
           },
           {
-            "name": "invoices",
+            "name": "incomingPayments",
             "description": null,
             "args": [
               {
@@ -100,7 +100,7 @@
             ],
             "type": {
               "kind": "OBJECT",
-              "name": "InvoiceConnection",
+              "name": "IncomingPaymentConnection",
               "ofType": null
             },
             "isDeprecated": false,
@@ -1317,7 +1317,7 @@
             "deprecationReason": null
           },
           {
-            "name": "invoiceUrl",
+            "name": "incomingPaymentUrl",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -1902,7 +1902,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "Invoice",
+        "name": "IncomingPayment",
         "description": null,
         "fields": [
           {
@@ -2011,7 +2011,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "InvoiceConnection",
+        "name": "IncomingPaymentConnection",
         "description": null,
         "fields": [
           {
@@ -2045,7 +2045,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "OBJECT",
-                    "name": "InvoiceEdge",
+                    "name": "IncomingPaymentEdge",
                     "ofType": null
                   }
                 }
@@ -2062,7 +2062,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "InvoiceEdge",
+        "name": "IncomingPaymentEdge",
         "description": null,
         "fields": [
           {
@@ -2074,7 +2074,7 @@
               "name": null,
               "ofType": {
                 "kind": "OBJECT",
-                "name": "Invoice",
+                "name": "IncomingPayment",
                 "ofType": null
               }
             },
@@ -2160,7 +2160,7 @@
             "deprecationReason": null
           },
           {
-            "name": "UnknownInvoice",
+            "name": "UnknownIncomingPayment",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
@@ -2322,7 +2322,7 @@
           },
           {
             "kind": "OBJECT",
-            "name": "Invoice",
+            "name": "IncomingPayment",
             "ofType": null
           },
           {
@@ -3750,7 +3750,7 @@
             "deprecationReason": null
           },
           {
-            "name": "invoiceUrl",
+            "name": "incomingPaymentUrl",
             "description": null,
             "args": [],
             "type": {

@@ -76,7 +76,7 @@ async function createOutgoingPayment(
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment> {
   if (
-    options.invoiceUrl &&
+    options.incomingPaymentUrl &&
     (options.paymentPointer || options.amountToSend !== undefined)
   ) {
     deps.logger.warn(
@@ -86,7 +86,7 @@ async function createOutgoingPayment(
       'createOutgoingPayment invalid parameters'
     )
     throw new Error(
-      'invoiceUrl and (paymentPointer,amountToSend) are mutually exclusive'
+      'incomingPaymentUrl and (paymentPointer,amountToSend) are mutually exclusive'
     )
   }
 
@@ -97,7 +97,7 @@ async function createOutgoingPayment(
           state: PaymentState.Quoting,
           intent: {
             paymentPointer: options.paymentPointer,
-            invoiceUrl: options.invoiceUrl,
+            incomingPaymentUrl: options.incomingPaymentUrl,
             amountToSend: options.amountToSend,
             autoApprove: options.autoApprove
           },
@@ -114,7 +114,7 @@ async function createOutgoingPayment(
       const destination = await Pay.setupPayment({
         plugin,
         paymentPointer: options.paymentPointer,
-        invoiceUrl: options.invoiceUrl
+        invoiceUrl: options.incomingPaymentUrl
       }).finally(() => {
         plugin.disconnect().catch((err) => {
           deps.logger.warn({ error: err.message }, 'error disconnecting plugin')

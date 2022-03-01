@@ -26,9 +26,9 @@ import { PeerService } from './peer/service'
 import { AccountService } from './open_payments/account/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
-import { InvoiceRoutes } from './open_payments/invoice/routes'
+import { IncomingPaymentRoutes } from './open_payments/invoice/routes'
 import { AccountRoutes } from './open_payments/account/routes'
-import { InvoiceService } from './open_payments/invoice/service'
+import { IncomingPaymentService } from './open_payments/invoice/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
 import { OutgoingPaymentService } from './outgoing_payment/service'
@@ -68,9 +68,9 @@ export interface AppServices {
   peerService: Promise<PeerService>
   accountService: Promise<AccountService>
   spspRoutes: Promise<SPSPRoutes>
-  invoiceRoutes: Promise<InvoiceRoutes>
+  IncomingPaymentRoutes: Promise<IncomingPaymentRoutes>
   accountRoutes: Promise<AccountRoutes>
-  invoiceService: Promise<InvoiceService>
+  IncomingPaymentService: Promise<IncomingPaymentService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
@@ -143,8 +143,8 @@ export class App {
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
         process.nextTick(() => this.processOutgoingPayment())
       }
-      for (let i = 0; i < this.config.invoiceWorkers; i++) {
-        process.nextTick(() => this.processInvoice())
+      for (let i = 0; i < this.config.incomingPaymentWorkers; i++) {
+        process.nextTick(() => this.processIncomingPayment())
       }
       for (let i = 0; i < this.config.webhookWorkers; i++) {
         process.nextTick(() => this.processWebhook())
@@ -237,7 +237,9 @@ export class App {
 
     const spspRoutes = await this.container.use('spspRoutes')
     const accountRoutes = await this.container.use('accountRoutes')
-    const invoiceRoutes = await this.container.use('invoiceRoutes')
+    const incomingPaymentRoutes = await this.container.use(
+      'incomingPaymentRoutes'
+    )
     this.publicRouter.get(
       '/pay/:accountId',
       async (ctx: AppContext): Promise<void> => {
@@ -250,8 +252,14 @@ export class App {
       }
     )
 
-    this.publicRouter.get('/invoices/:invoiceId', invoiceRoutes.get)
-    this.publicRouter.post('/pay/:accountId/invoices', invoiceRoutes.create)
+    this.publicRouter.get(
+      '/incoming-payments/:incomingPaymentId',
+      incomingPaymentRoutes.get
+    )
+    this.publicRouter.post(
+      '/pay/:accountId/incoming-payments',
+      incomingPaymentRoutes.create
+    )
 
     this.koa.use(this.publicRouter.middleware())
   }
@@ -295,20 +303,22 @@ export class App {
       })
   }
 
-  private async processInvoice(): Promise<void> {
-    const invoiceService = await this.container.use('invoiceService')
-    return invoiceService
+  private async processIncomingPayment(): Promise<void> {
+    const incomingPaymentService = await this.container.use(
+      'incomingPaymentService'
+    )
+    return incomingPaymentService
       .processNext()
       .catch((err) => {
-        this.logger.warn({ error: err.message }, 'processInvoice error')
+        this.logger.warn({ error: err.message }, 'processIncomingPayment error')
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processInvoice())
+        if (hasMoreWork) process.nextTick(() => this.processIncomingPayment())
         else
           setTimeout(
-            () => this.processInvoice(),
-            this.config.invoiceWorkerIdle
+            () => this.processIncomingPayment(),
+            this.config.incomingPaymentWorkerIdle
           ).unref()
       })
   }

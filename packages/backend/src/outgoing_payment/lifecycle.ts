@@ -26,7 +26,7 @@ export async function handleQuoting(
   const destination = await Pay.setupPayment({
     plugin,
     paymentPointer: payment.intent.paymentPointer,
-    invoiceUrl: payment.intent.invoiceUrl
+    invoiceUrl: payment.intent.incomingPaymentUrl
   })
 
   if (
@@ -95,9 +95,9 @@ export async function handleQuoting(
       if (err === Pay.PaymentError.InvoiceAlreadyPaid) return null
       throw err
     })
-  // InvoiceAlreadyPaid: the invoice was already paid, either by this payment (which retried due to a failed SENDING→COMPLETED transition commit) or another payment entirely.
+  // InvoiceAlreadyPaid: the incoming payment was already paid, either by this payment (which retried due to a failed SENDING→COMPLETED transition commit) or another payment entirely.
   if (quote === null) {
-    deps.logger.warn('quote invoice already paid')
+    deps.logger.warn('quote incoming payment already paid')
     await handleCompleted(deps, payment)
     return
   }
@@ -166,7 +166,7 @@ export async function handleSending(
   const destination = await Pay.setupPayment({
     plugin,
     paymentPointer: payment.intent.paymentPointer,
-    invoiceUrl: payment.intent.invoiceUrl
+    invoiceUrl: payment.intent.incomingPaymentUrl
   })
 
   if (
@@ -209,7 +209,7 @@ export async function handleSending(
         payment.quote.minDeliveryAmount - amountDeliveredSinceQuote
       break
     case Pay.PaymentType.FixedDelivery:
-      if (!destination.invoice) throw LifecycleError.MissingInvoice
+      if (!destination.invoice) throw LifecycleError.MissingIncomingPayment
       newMinDeliveryAmount =
         destination.invoice.amountToDeliver -
         destination.invoice.amountDelivered
@@ -229,7 +229,7 @@ export async function handleSending(
         newMinDeliveryAmount,
         paymentType: payment.quote.targetType,
         amountSentSinceQuote,
-        invoice: destination.invoice
+        incomingPayment: destination.invoice
       },
       'handleSending payment was already paid'
     )

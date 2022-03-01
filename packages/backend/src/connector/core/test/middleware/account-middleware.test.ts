@@ -2,7 +2,7 @@ import { createILPContext } from '../../utils'
 import {
   AccountFactory,
   IlpPrepareFactory,
-  InvoiceAccountFactory,
+  IncomingPaymentAccountFactory,
   IncomingPeerFactory,
   OutgoingPeerFactory,
   RafikiServicesFactory
@@ -45,9 +45,9 @@ describe('Account Middleware', () => {
     expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
   })
 
-  test('set the accounts according to state and streamDestination invoice', async () => {
-    const outgoingAccount = InvoiceAccountFactory.build({
-      id: 'outgoingInvoice'
+  test('set the accounts according to state and streamDestination incoming payment', async () => {
+    const outgoingAccount = IncomingPaymentAccountFactory.build({
+      id: 'outgoingIncomingPayment'
     })
     await rafikiServices.accounting.create(outgoingAccount)
     const middleware = createAccountMiddleware(ADDRESS)
@@ -98,8 +98,8 @@ describe('Account Middleware', () => {
   })
 
   test('return an error when the destination account is disabled', async () => {
-    const outgoingAccount = InvoiceAccountFactory.build({
-      id: 'deactivatedInvoice',
+    const outgoingAccount = IncomingPaymentAccountFactory.build({
+      id: 'deactivatedIncomingPayment',
       active: false
     })
     await rafikiServices.accounting.create(outgoingAccount)

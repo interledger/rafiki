@@ -1,39 +1,46 @@
 import {
   ResolversTypes,
-  InvoiceConnectionResolvers,
+  IncomingPaymentConnectionResolvers,
   AccountResolvers
 } from '../generated/graphql'
-import { Invoice } from '../../open_payments/invoice/model'
+import { IncomingPayment } from '../../open_payments/invoice/model'
 import { ApolloContext } from '../../app'
 
-export const getAccountInvoices: AccountResolvers<ApolloContext>['invoices'] = async (
+export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomingPayments'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['InvoiceConnection'] => {
+): ResolversTypes['IncomingPaymentConnection'] => {
   if (!parent.id) throw new Error('missing account id')
-  const invoiceService = await ctx.container.use('invoiceService')
-  const invoices = await invoiceService.getAccountInvoicesPage(parent.id, args)
+  const incomingPaymentService = await ctx.container.use(
+    'incomingPaymentService'
+  )
+  const incomingPayments = await incomingPaymentService.getAccountIncomingPaymentsPage(
+    parent.id,
+    args
+  )
 
   return {
-    edges: invoices.map((invoice: Invoice) => ({
-      cursor: invoice.id,
+    edges: incomingPayments.map((incomingPayment: IncomingPayment) => ({
+      cursor: incomingPayment.id,
       node: {
-        ...invoice,
-        expiresAt: invoice.expiresAt.toISOString(),
-        createdAt: invoice.createdAt?.toISOString()
+        ...incomingPayment,
+        expiresAt: incomingPayment.expiresAt.toISOString(),
+        createdAt: incomingPayment.createdAt?.toISOString()
       }
     }))
   }
 }
 
-export const getPageInfo: InvoiceConnectionResolvers<ApolloContext>['pageInfo'] = async (
+export const getPageInfo: IncomingPaymentConnectionResolvers<ApolloContext>['pageInfo'] = async (
   parent,
   args,
   ctx
 ): ResolversTypes['PageInfo'] => {
   const logger = await ctx.container.use('logger')
-  const invoiceService = await ctx.container.use('invoiceService')
+  const incomingPaymentService = await ctx.container.use(
+    'incomingPaymentService'
+  )
 
   logger.info({ edges: parent.edges }, 'getPageInfo parent edges')
 
@@ -47,37 +54,39 @@ export const getPageInfo: InvoiceConnectionResolvers<ApolloContext>['pageInfo'] 
   const firstEdge = edges[0].cursor
   const lastEdge = edges[edges.length - 1].cursor
 
-  const firstInvoice = await invoiceService.get(edges[0].node.id)
-  if (!firstInvoice) throw new Error('invoice not found')
+  const firstIncomingPayment = await incomingPaymentService.get(
+    edges[0].node.id
+  )
+  if (!firstIncomingPayment) throw new Error('incomingPayment not found')
 
-  let hasNextPageInvoices, hasPreviousPageInvoices
+  let hasNextPageIncomingPayments, hasPreviousPageIncomingPayments
   try {
-    hasNextPageInvoices = await invoiceService.getAccountInvoicesPage(
-      firstInvoice.accountId,
+    hasNextPageIncomingPayments = await incomingPaymentService.getAccountIncomingPaymentsPage(
+      firstIncomingPayment.accountId,
       {
         after: lastEdge,
         first: 1
       }
     )
   } catch (e) {
-    hasNextPageInvoices = []
+    hasNextPageIncomingPayments = []
   }
   try {
-    hasPreviousPageInvoices = await invoiceService.getAccountInvoicesPage(
-      firstInvoice.accountId,
+    hasPreviousPageIncomingPayments = await incomingPaymentService.getAccountIncomingPaymentsPage(
+      firstIncomingPayment.accountId,
       {
         before: firstEdge,
         last: 1
       }
     )
   } catch (e) {
-    hasPreviousPageInvoices = []
+    hasPreviousPageIncomingPayments = []
   }
 
   return {
     endCursor: lastEdge,
-    hasNextPage: hasNextPageInvoices.length == 1,
-    hasPreviousPage: hasPreviousPageInvoices.length == 1,
+    hasNextPage: hasNextPageIncomingPayments.length == 1,
+    hasPreviousPage: hasPreviousPageIncomingPayments.length == 1,
     startCursor: firstEdge
   }
 }

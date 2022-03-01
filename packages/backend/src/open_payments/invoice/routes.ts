@@ -5,10 +5,10 @@ import { validateId } from '../../shared/utils'
 import { AppContext } from '../../app'
 import { IAppConfig } from '../../config/app'
 import { AccountingService } from '../../accounting/service'
-import { InvoiceService } from './service'
-import { Invoice } from './model'
+import { IncomingPaymentService } from './service'
+import { IncomingPayment } from './model'
 
-// Don't allow creating an invoice too far out. Invoices with no payments before they expire are cleaned up, since invoice creation is unauthenticated.
+// Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
 export const MAX_EXPIRY = 24 * 60 * 60 * 1000 // milliseconds
 
@@ -16,55 +16,61 @@ interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   accountingService: AccountingService
-  invoiceService: InvoiceService
+  incomingPaymentService: IncomingPaymentService
   streamServer: StreamServer
 }
 
-export interface InvoiceRoutes {
+export interface IncomingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
 }
 
-export function createInvoiceRoutes(deps_: ServiceDependencies): InvoiceRoutes {
+export function createIncomingPaymentRoutes(
+  deps_: ServiceDependencies
+): IncomingPaymentRoutes {
   const logger = deps_.logger.child({
-    service: 'InvoiceRoutes'
+    service: 'IncomingPaymentRoutes'
   })
   const deps = { ...deps_, logger }
   return {
-    get: (ctx: AppContext) => getInvoice(deps, ctx),
-    create: (ctx: AppContext) => createInvoice(deps, ctx)
+    get: (ctx: AppContext) => getIncomingPayment(deps, ctx),
+    create: (ctx: AppContext) => createIncomingPayment(deps, ctx)
   }
 }
 
-// Spec: https://docs.openpayments.dev/invoices#get
-async function getInvoice(
+async function getIncomingPayment(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { invoiceId } = ctx.params
-  ctx.assert(validateId(invoiceId), 400, 'invalid id')
+  const { incomingPaymentId: incomingPaymentId } = ctx.params
+  ctx.assert(validateId(incomingPaymentId), 400, 'invalid id')
   const acceptJSON = ctx.accepts('application/json')
   const acceptStream = ctx.accepts('application/ilp-stream+json')
   ctx.assert(acceptJSON || acceptStream, 406)
 
-  const invoice = await deps.invoiceService.get(invoiceId)
-  if (!invoice) return ctx.throw(404)
+  const incomingPayment = await deps.incomingPaymentService.get(
+    incomingPaymentId
+  )
+  if (!incomingPayment) return ctx.throw(404)
 
   const amountReceived = await deps.accountingService.getTotalReceived(
-    invoice.id
+    incomingPayment.id
   )
   if (amountReceived === undefined) {
-    deps.logger.error({ invoice: invoice.id }, 'account not found')
+    deps.logger.error(
+      { incomingPayment: incomingPayment.id },
+      'account not found'
+    )
     return ctx.throw(500)
   }
 
-  const body = invoiceToBody(deps, invoice, amountReceived)
+  const body = incomingPaymentToBody(deps, incomingPayment, amountReceived)
   ctx.body = body
   if (!acceptStream) return
 
   const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-    paymentTag: invoice.id,
-    // TODO receipt support on invoices?
+    paymentTag: incomingPayment.id,
+    // TODO receipt support on incoming payments?
     //receiptSetup:
     //  nonce && secret
     //    ? {
@@ -73,8 +79,8 @@ async function getInvoice(
     //      }
     //    : undefined,
     asset: {
-      code: invoice.account.asset.code,
-      scale: invoice.account.asset.scale
+      code: incomingPayment.account.asset.code,
+      scale: incomingPayment.account.asset.scale
     }
   })
 
@@ -82,8 +88,7 @@ async function getInvoice(
   body['sharedSecret'] = base64url(sharedSecret)
 }
 
-// Spec: https://docs.openpayments.dev/invoices#create
-async function createInvoice(
+async function createIncomingPayment(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
@@ -108,7 +113,7 @@ async function createInvoice(
     return ctx.throw(400, 'expiry too high')
   if (expiresAt < Date.now()) return ctx.throw(400, 'already expired')
 
-  const invoice = await deps.invoiceService.create({
+  const incomingPayment = await deps.incomingPaymentService.create({
     accountId,
     description: body.description,
     expiresAt: new Date(expiresAt),
@@ -116,25 +121,25 @@ async function createInvoice(
   })
 
   ctx.status = 201
-  const res = invoiceToBody(deps, invoice, BigInt(0))
+  const res = incomingPaymentToBody(deps, incomingPayment, BigInt(0))
   ctx.body = res
   ctx.set('Location', res.id)
 }
 
-function invoiceToBody(
+function incomingPaymentToBody(
   deps: ServiceDependencies,
-  invoice: Invoice,
+  incomingPayment: IncomingPayment,
   received: bigint
 ) {
-  const location = `${deps.config.publicHost}/invoices/${invoice.id}`
+  const location = `${deps.config.publicHost}/incoming-payments/${incomingPayment.id}`
   return {
     id: location,
-    account: `${deps.config.publicHost}/pay/${invoice.accountId}`,
-    amount: invoice.amount.toString(),
-    assetCode: invoice.account.asset.code,
-    assetScale: invoice.account.asset.scale,
-    description: invoice.description,
-    expiresAt: invoice.expiresAt.toISOString(),
+    account: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
+    amount: incomingPayment.amount.toString(),
+    assetCode: incomingPayment.account.asset.code,
+    assetScale: incomingPayment.account.asset.scale,
+    description: incomingPayment.description,
+    expiresAt: incomingPayment.expiresAt.toISOString(),
     received: received.toString()
   }
 }

@@ -8,13 +8,13 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { InvoiceService } from '../../open_payments/invoice/service'
+import { IncomingPaymentService } from '../../open_payments/invoice/service'
 import { AccountService } from '../../open_payments/account/service'
 
-describe('Invoice Resolver', (): void => {
+describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let invoiceService: InvoiceService
+  let incomingPaymentService: IncomingPaymentService
   let accountService: AccountService
   let knex: Knex
   let accountId: string
@@ -23,7 +23,7 @@ describe('Invoice Resolver', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    invoiceService = await deps.use('invoiceService')
+    incomingPaymentService = await deps.use('incomingPaymentService')
     accountService = await deps.use('accountService')
   }, 10_000)
 
@@ -35,7 +35,7 @@ describe('Invoice Resolver', (): void => {
     }
   )
 
-  describe('Account invoices', (): void => {
+  describe('Account incoming payments', (): void => {
     beforeEach(
       async (): Promise<void> => {
         accountId = (await accountService.create({ asset: randomAsset() })).id
@@ -45,13 +45,13 @@ describe('Invoice Resolver', (): void => {
     getPageTests({
       getClient: () => appContainer.apolloClient,
       createModel: () =>
-        invoiceService.create({
+        incomingPaymentService.create({
           accountId,
           amount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000),
-          description: `Invoice`
+          description: `IncomingPayment`
         }),
-      pagedQuery: 'invoices',
+      pagedQuery: 'incomingPayments',
       parent: {
         query: 'account',
         getId: () => accountId

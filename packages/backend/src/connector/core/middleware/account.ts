@@ -15,7 +15,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     ctx: ILPContext<AuthState & { streamDestination?: string }>,
     next: () => Promise<void>
   ): Promise<void> {
-    const { accounts, invoices, peers } = ctx.services
+    const { accounts, incomingPayments, peers } = ctx.services
     const incomingAccount = ctx.state.incomingAccount
     if (!incomingAccount) ctx.throw(401, 'unauthorized')
 
@@ -23,12 +23,14 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
       OutgoingAccount | undefined
     > => {
       if (ctx.state.streamDestination) {
-        const invoice = await invoices.get(ctx.state.streamDestination)
-        if (invoice) {
-          if (!invoice.active) {
+        const incomingPayment = await incomingPayments.get(
+          ctx.state.streamDestination
+        )
+        if (incomingPayment) {
+          if (!incomingPayment.active) {
             throw new Errors.UnreachableError('destination account is disabled')
           }
-          return invoice
+          return incomingPayment
         }
         // Open Payments SPSP fallback account
         return await accounts.get(ctx.state.streamDestination)

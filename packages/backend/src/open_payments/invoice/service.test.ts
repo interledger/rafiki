@@ -3,10 +3,14 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { InvoiceService } from './service'
+import { IncomingPaymentService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Invoice, InvoiceEvent, InvoiceEventType } from './model'
+import {
+  IncomingPayment,
+  IncomingPaymentEvent,
+  IncomingPaymentEventType
+} from './model'
 import { resetGraphileDb } from '../../tests/graphileDb'
 import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config } from '../../config/app'
@@ -18,11 +22,11 @@ import { getPageTests } from '../../shared/baseModel.test'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 
-describe('Invoice Service', (): void => {
+describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let workerUtils: WorkerUtils
-  let invoiceService: InvoiceService
+  let incomingPaymentService: IncomingPaymentService
   let knex: Knex
   let accountId: string
   let accountingService: AccountingService
@@ -48,7 +52,7 @@ describe('Invoice Service', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      invoiceService = await deps.use('invoiceService')
+      incomingPaymentService = await deps.use('incomingPaymentService')
       const accountService = await deps.use('accountService')
       accountId = (await accountService.create({ asset: randomAsset() })).id
     }
@@ -69,93 +73,102 @@ describe('Invoice Service', (): void => {
     }
   )
 
-  describe('Create/Get Invoice', (): void => {
-    test('An invoice can be created and fetched', async (): Promise<void> => {
-      const invoice = await invoiceService.create({
+  describe('Create/Get IncomingPayment', (): void => {
+    test('An incoming payment can be created and fetched', async (): Promise<void> => {
+      const incomingPayment = await incomingPaymentService.create({
         accountId,
         amount: BigInt(123),
         expiresAt: new Date(Date.now() + 30_000),
-        description: 'Test invoice'
+        description: 'Test incoming payment'
       })
       const accountService = await deps.use('accountService')
-      expect(invoice).toMatchObject({
-        id: invoice.id,
+      expect(incomingPayment).toMatchObject({
+        id: incomingPayment.id,
         account: await accountService.get(accountId),
-        processAt: new Date(invoice.expiresAt.getTime())
+        processAt: new Date(incomingPayment.expiresAt.getTime())
       })
-      const retrievedInvoice = await invoiceService.get(invoice.id)
-      if (!retrievedInvoice) throw new Error('invoice not found')
-      expect(retrievedInvoice).toEqual(invoice)
+      const retrievedIncomingPayment = await incomingPaymentService.get(
+        incomingPayment.id
+      )
+      if (!retrievedIncomingPayment)
+        throw new Error('incoming payment not found')
+      expect(retrievedIncomingPayment).toEqual(incomingPayment)
     })
 
-    test('Creating an invoice creates a liquidity account', async (): Promise<void> => {
-      const invoice = await invoiceService.create({
+    test('Creating an incoming payment creates a liquidity account', async (): Promise<void> => {
+      const incomingPayment = await incomingPaymentService.create({
         accountId,
-        description: 'Invoice',
+        description: 'IncomingPayment',
         expiresAt: new Date(Date.now() + 30_000),
         amount: BigInt(123)
       })
-      await expect(accountingService.getBalance(invoice.id)).resolves.toEqual(
-        BigInt(0)
-      )
+      await expect(
+        accountingService.getBalance(incomingPayment.id)
+      ).resolves.toEqual(BigInt(0))
     })
 
-    test('Cannot create invoice for nonexistent account', async (): Promise<void> => {
+    test('Cannot create incoming payment for nonexistent account', async (): Promise<void> => {
       await expect(
-        invoiceService.create({
+        incomingPaymentService.create({
           accountId: uuid(),
           amount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Test invoice'
+          description: 'Test incoming payment'
         })
-      ).rejects.toThrow('unable to create invoice, account does not exist')
+      ).rejects.toThrow(
+        'unable to create incoming payment, account does not exist'
+      )
     })
 
-    test('Cannot fetch a bogus invoice', async (): Promise<void> => {
-      await expect(invoiceService.get(uuid())).resolves.toBeUndefined()
+    test('Cannot fetch a bogus incoming payment', async (): Promise<void> => {
+      await expect(incomingPaymentService.get(uuid())).resolves.toBeUndefined()
     })
   })
 
   describe('onCredit', (): void => {
-    let invoice: Invoice
+    let incomingPayment: IncomingPayment
 
     beforeEach(
       async (): Promise<void> => {
-        invoice = await invoiceService.create({
+        incomingPayment = await incomingPaymentService.create({
           accountId,
-          description: 'Test invoice',
+          description: 'Test incoming payment',
           amount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000)
         })
       }
     )
 
-    test('Does not deactivate a partially paid invoice', async (): Promise<void> => {
+    test('Does not deactivate a partially paid incoming payment', async (): Promise<void> => {
       await expect(
-        invoice.onCredit({
-          totalReceived: invoice.amount - BigInt(1)
+        incomingPayment.onCredit({
+          totalReceived: incomingPayment.amount - BigInt(1)
         })
-      ).resolves.toEqual(invoice)
-      await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+      ).resolves.toEqual(incomingPayment)
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).resolves.toMatchObject({
         active: true,
-        processAt: new Date(invoice.expiresAt.getTime())
+        processAt: new Date(incomingPayment.expiresAt.getTime())
       })
     })
 
-    test('Deactivates fully paid invoice', async (): Promise<void> => {
+    test('Deactivates fully paid incoming payment', async (): Promise<void> => {
       const now = new Date()
       jest.useFakeTimers('modern')
       jest.setSystemTime(now)
       await expect(
-        invoice.onCredit({
-          totalReceived: invoice.amount
+        incomingPayment.onCredit({
+          totalReceived: incomingPayment.amount
         })
       ).resolves.toMatchObject({
-        id: invoice.id,
+        id: incomingPayment.id,
         active: false,
         processAt: new Date(now.getTime() + 30_000)
       })
-      await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).resolves.toMatchObject({
         active: false,
         processAt: new Date(now.getTime() + 30_000)
       })
@@ -163,31 +176,35 @@ describe('Invoice Service', (): void => {
   })
 
   describe('processNext', (): void => {
-    test('Does not process not-expired active invoice', async (): Promise<void> => {
-      const { id: invoiceId } = await invoiceService.create({
+    test('Does not process not-expired active incoming payment', async (): Promise<void> => {
+      const { id: incomingPaymentId } = await incomingPaymentService.create({
         accountId,
         amount: BigInt(123),
-        description: 'Test invoice',
+        description: 'Test incoming payment',
         expiresAt: new Date(Date.now() + 30_000)
       })
-      await expect(invoiceService.processNext()).resolves.toBeUndefined()
-      await expect(invoiceService.get(invoiceId)).resolves.toMatchObject({
+      await expect(
+        incomingPaymentService.processNext()
+      ).resolves.toBeUndefined()
+      await expect(
+        incomingPaymentService.get(incomingPaymentId)
+      ).resolves.toMatchObject({
         active: true
       })
     })
 
     describe('handleExpired', (): void => {
-      test('Deactivates an expired invoice with received money', async (): Promise<void> => {
-        const invoice = await invoiceService.create({
+      test('Deactivates an expired incoming payment with received money', async (): Promise<void> => {
+        const incomingPayment = await incomingPaymentService.create({
           accountId,
           amount: BigInt(123),
-          description: 'Test invoice',
+          description: 'Test incoming payment',
           expiresAt: new Date(Date.now() - 40_000)
         })
         await expect(
           accountingService.createDeposit({
             id: uuid(),
-            account: invoice,
+            account: incomingPayment,
             amount: BigInt(1)
           })
         ).resolves.toBeUndefined()
@@ -195,88 +212,102 @@ describe('Invoice Service', (): void => {
         const now = new Date()
         jest.useFakeTimers('modern')
         jest.setSystemTime(now)
-        await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-        await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+        await expect(incomingPaymentService.processNext()).resolves.toBe(
+          incomingPayment.id
+        )
+        await expect(
+          incomingPaymentService.get(incomingPayment.id)
+        ).resolves.toMatchObject({
           active: false,
           processAt: new Date(now.getTime() + 30_000)
         })
       })
 
-      test('Deletes an expired invoice (and account) with no money', async (): Promise<void> => {
-        const invoice = await invoiceService.create({
+      test('Deletes an expired incoming payment (and account) with no money', async (): Promise<void> => {
+        const incomingPayment = await incomingPaymentService.create({
           accountId,
           amount: BigInt(123),
-          description: 'Test invoice',
+          description: 'Test incoming payment',
           expiresAt: new Date(Date.now() - 40_000)
         })
-        await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
-        expect(await invoiceService.get(invoice.id)).toBeUndefined()
+        await expect(incomingPaymentService.processNext()).resolves.toBe(
+          incomingPayment.id
+        )
+        expect(
+          await incomingPaymentService.get(incomingPayment.id)
+        ).toBeUndefined()
       })
     })
 
     describe.each`
-      eventType                          | expiresAt  | amountReceived
-      ${InvoiceEventType.InvoiceExpired} | ${-40_000} | ${BigInt(1)}
-      ${InvoiceEventType.InvoicePaid}    | ${30_000}  | ${BigInt(123)}
+      eventType                                          | expiresAt  | amountReceived
+      ${IncomingPaymentEventType.IncomingPaymentExpired} | ${-40_000} | ${BigInt(1)}
+      ${IncomingPaymentEventType.IncomingPaymentPaid}    | ${30_000}  | ${BigInt(123)}
     `(
       'handleDeactivated ($eventType)',
       ({ eventType, expiresAt, amountReceived }): void => {
-        let invoice: Invoice
+        let incomingPayment: IncomingPayment
 
         beforeEach(
           async (): Promise<void> => {
-            invoice = await invoiceService.create({
+            incomingPayment = await incomingPaymentService.create({
               accountId,
               amount: BigInt(123),
               expiresAt: new Date(Date.now() + expiresAt),
-              description: 'Test invoice'
+              description: 'Test incoming payment'
             })
             await expect(
               accountingService.createDeposit({
                 id: uuid(),
-                account: invoice,
+                account: incomingPayment,
                 amount: amountReceived
               })
             ).resolves.toBeUndefined()
-            if (eventType === InvoiceEventType.InvoiceExpired) {
-              await expect(invoiceService.processNext()).resolves.toBe(
-                invoice.id
+            if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
+              await expect(incomingPaymentService.processNext()).resolves.toBe(
+                incomingPayment.id
               )
             } else {
-              await invoice.onCredit({
-                totalReceived: invoice.amount
+              await incomingPayment.onCredit({
+                totalReceived: incomingPayment.amount
               })
             }
-            invoice = (await invoiceService.get(invoice.id)) as Invoice
-            expect(invoice.active).toBe(false)
-            expect(invoice.processAt).not.toBeNull()
+            incomingPayment = (await incomingPaymentService.get(
+              incomingPayment.id
+            )) as IncomingPayment
+            expect(incomingPayment.active).toBe(false)
+            expect(incomingPayment.processAt).not.toBeNull()
             await expect(
-              accountingService.getTotalReceived(invoice.id)
+              accountingService.getTotalReceived(incomingPayment.id)
             ).resolves.toEqual(amountReceived)
             await expect(
-              accountingService.getBalance(invoice.id)
+              accountingService.getBalance(incomingPayment.id)
             ).resolves.toEqual(amountReceived)
           }
         )
 
         test('Creates webhook event', async (): Promise<void> => {
           await expect(
-            InvoiceEvent.query(knex).where({
+            IncomingPaymentEvent.query(knex).where({
               type: eventType
             })
           ).resolves.toHaveLength(0)
-          assert.ok(invoice.processAt)
+          assert.ok(incomingPayment.processAt)
           jest.useFakeTimers('modern')
-          jest.setSystemTime(invoice.processAt)
-          await expect(invoiceService.processNext()).resolves.toBe(invoice.id)
+          jest.setSystemTime(incomingPayment.processAt)
+          await expect(incomingPaymentService.processNext()).resolves.toBe(
+            incomingPayment.id
+          )
           await expect(
-            InvoiceEvent.query(knex).where({
+            IncomingPaymentEvent.query(knex).where({
               type: eventType,
-              withdrawalAccountId: invoice.id,
+              withdrawalAccountId: incomingPayment.id,
               withdrawalAmount: amountReceived
             })
           ).resolves.toHaveLength(1)
-          await expect(invoiceService.get(invoice.id)).resolves.toMatchObject({
+          await expect(
+            incomingPaymentService.get(incomingPayment.id)
+          ).resolves.toMatchObject({
             processAt: null
           })
         })
@@ -284,17 +315,20 @@ describe('Invoice Service', (): void => {
     )
   })
 
-  describe('Invoice pagination', (): void => {
+  describe('Incoming payment pagination', (): void => {
     getPageTests({
       createModel: () =>
-        invoiceService.create({
+        incomingPaymentService.create({
           accountId,
           amount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Invoice'
+          description: 'IncomingPayment'
         }),
       getPage: (pagination: Pagination) =>
-        invoiceService.getAccountInvoicesPage(accountId, pagination)
+        incomingPaymentService.getAccountIncomingPaymentsPage(
+          accountId,
+          pagination
+        )
     })
   })
 })

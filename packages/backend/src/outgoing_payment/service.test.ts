@@ -24,7 +24,7 @@ import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../accounting/errors'
 import { AccountingService, TransferOptions } from '../accounting/service'
 import { AssetOptions } from '../asset/service'
-import { Invoice } from '../open_payments/invoice/model'
+import { IncomingPayment } from '../open_payments/invoice/model'
 import { RatesService } from '../rates/service'
 import { Pagination } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
@@ -38,8 +38,8 @@ describe('OutgoingPaymentService', (): void => {
   let knex: Knex
   let accountId: string
   let asset: AssetOptions
-  let invoice: Invoice
-  let invoiceUrl: string
+  let incomingPayment: IncomingPayment
+  let incomingPaymentUrl: string
   let accountUrl: string
   let paymentPointer: string
   let amtDelivered: bigint
@@ -102,11 +102,11 @@ describe('OutgoingPaymentService', (): void => {
       )
   }
 
-  async function payInvoice(amount: bigint): Promise<void> {
+  async function payIncomingPayment(amount: bigint): Promise<void> {
     await expect(
       accountingService.createDeposit({
         id: uuid(),
-        account: invoice,
+        account: incomingPayment,
         amount
       })
     ).resolves.toBeUndefined()
@@ -134,13 +134,13 @@ describe('OutgoingPaymentService', (): void => {
       amountSent,
       amountDelivered,
       accountBalance,
-      invoiceReceived,
+      incomingPaymentReceived,
       withdrawAmount
     }: {
       amountSent?: bigint
       amountDelivered?: bigint
       accountBalance?: bigint
-      invoiceReceived?: bigint
+      incomingPaymentReceived?: bigint
       withdrawAmount?: bigint
     }
   ) {
@@ -157,10 +157,10 @@ describe('OutgoingPaymentService', (): void => {
         accountBalance
       )
     }
-    if (invoiceReceived !== undefined) {
+    if (incomingPaymentReceived !== undefined) {
       await expect(
-        accountingService.getTotalReceived(invoice.id)
-      ).resolves.toEqual(invoiceReceived)
+        accountingService.getTotalReceived(incomingPayment.id)
+      ).resolves.toEqual(incomingPaymentReceived)
     }
     if (withdrawAmount !== undefined) {
       await expect(
@@ -218,14 +218,14 @@ describe('OutgoingPaymentService', (): void => {
       ).resolves.toBeUndefined()
       accountUrl = `${config.publicHost}/pay/${destinationAccount.id}`
       paymentPointer = accountUrl.replace('https://', '$')
-      const invoiceService = await deps.use('invoiceService')
-      invoice = await invoiceService.create({
+      const incomingPaymentService = await deps.use('incomingPaymentService')
+      incomingPayment = await incomingPaymentService.create({
         accountId: destinationAccount.id,
         amount: BigInt(56),
         expiresAt: new Date(Date.now() + 60 * 1000),
         description: 'description!'
       })
-      invoiceUrl = `${config.publicHost}/invoices/${invoice.id}`
+      incomingPaymentUrl = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
       amtDelivered = BigInt(0)
     }
   )
@@ -281,12 +281,12 @@ describe('OutgoingPaymentService', (): void => {
     it('creates an OutgoingPayment (FixedDelivery)', async () => {
       const payment = await outgoingPaymentService.create({
         accountId,
-        invoiceUrl,
+        incomingPaymentUrl,
         autoApprove: false
       })
       expect(payment.state).toEqual(PaymentState.Quoting)
       expect(payment.intent).toEqual({
-        invoiceUrl,
+        incomingPaymentUrl,
         autoApprove: false
       })
       expect(payment.accountId).toBe(accountId)
@@ -294,8 +294,8 @@ describe('OutgoingPaymentService', (): void => {
       expect(payment.account.asset.code).toBe('USD')
       expect(payment.account.asset.scale).toBe(9)
       expect(payment.destinationAccount).toEqual({
-        scale: invoice.account.asset.scale,
-        code: invoice.account.asset.code,
+        scale: incomingPayment.account.asset.scale,
+        code: incomingPayment.account.asset.code,
         url: accountUrl
       })
 
@@ -304,29 +304,29 @@ describe('OutgoingPaymentService', (): void => {
       expect(payment2.id).toEqual(payment.id)
     })
 
-    it('fails to create with both invoice and paymentPointer', async () => {
+    it('fails to create with both incomingPayment and paymentPointer', async () => {
       await expect(
         outgoingPaymentService.create({
           accountId,
-          invoiceUrl,
+          incomingPaymentUrl,
           paymentPointer,
           autoApprove: false
         })
       ).rejects.toThrow(
-        'invoiceUrl and (paymentPointer,amountToSend) are mutually exclusive'
+        'incomingPaymentUrl and (paymentPointer,amountToSend) are mutually exclusive'
       )
     })
 
-    it('fails to create with both invoice and amountToSend', async () => {
+    it('fails to create with both incomingPayment and amountToSend', async () => {
       await expect(
         outgoingPaymentService.create({
           accountId,
-          invoiceUrl,
+          incomingPaymentUrl,
           amountToSend: BigInt(123),
           autoApprove: false
         })
       ).rejects.toThrow(
-        'invoiceUrl and (paymentPointer,amountToSend) are mutually exclusive'
+        'incomingPaymentUrl and (paymentPointer,amountToSend) are mutually exclusive'
       )
     })
 
@@ -384,7 +384,7 @@ describe('OutgoingPaymentService', (): void => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
-            invoiceUrl,
+            incomingPaymentUrl: incomingPaymentUrl,
             autoApprove: false
           })
         ).id
@@ -468,16 +468,16 @@ describe('OutgoingPaymentService', (): void => {
         await processNext(payment.id, PaymentState.Completed)
       })
 
-      // Maybe another person or payment paid the invoice already. Or it could be like the FixedSend case, where the SENDING→COMPLETED transition failed to commit, and this is a retry.
-      it('COMPLETED (FixedDelivery, invoice was already full paid)', async (): Promise<void> => {
+      // Maybe another person or payment paid the incoming payment already. Or it could be like the FixedSend case, where the SENDING→COMPLETED transition failed to commit, and this is a retry.
+      it('COMPLETED (FixedDelivery, incoming payment was already full paid)', async (): Promise<void> => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
-            invoiceUrl,
+            incomingPaymentUrl: incomingPaymentUrl,
             autoApprove: false
           })
         ).id
-        await payInvoice(invoice.amount)
+        await payIncomingPayment(incomingPayment.amount)
         await processNext(paymentId, PaymentState.Completed)
       })
 
@@ -549,7 +549,7 @@ describe('OutgoingPaymentService', (): void => {
       async function setup(
         opts: Pick<
           PaymentIntent,
-          'amountToSend' | 'paymentPointer' | 'invoiceUrl'
+          'amountToSend' | 'paymentPointer' | 'incomingPaymentUrl'
         >
       ): Promise<string> {
         const { id: paymentId } = await outgoingPaymentService.create({
@@ -591,36 +591,37 @@ describe('OutgoingPaymentService', (): void => {
 
       it('COMPLETED (FixedDelivery)', async (): Promise<void> => {
         const paymentId = await setup({
-          invoiceUrl
+          incomingPaymentUrl: incomingPaymentUrl
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
-        const amountSent = invoice.amount * BigInt(2)
+        const amountSent = incomingPayment.amount * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
-          amountDelivered: invoice.amount,
-          invoiceReceived: invoice.amount,
+          amountDelivered: incomingPayment.amount,
+          incomingPaymentReceived: incomingPayment.amount,
           withdrawAmount: payment.quote.maxSourceAmount - amountSent
         })
       })
 
-      it('COMPLETED (FixedDelivery, with invoice initially partially paid)', async (): Promise<void> => {
+      it('COMPLETED (FixedDelivery, with incoming payment initially partially paid)', async (): Promise<void> => {
         const amountAlreadyDelivered = BigInt(34)
-        await payInvoice(amountAlreadyDelivered)
+        await payIncomingPayment(amountAlreadyDelivered)
         const paymentId = await setup({
-          invoiceUrl
+          incomingPaymentUrl: incomingPaymentUrl
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
-        const amountSent = (invoice.amount - amountAlreadyDelivered) * BigInt(2)
+        const amountSent =
+          (incomingPayment.amount - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
-          amountDelivered: invoice.amount - amountAlreadyDelivered,
-          invoiceReceived: invoice.amount,
+          amountDelivered: incomingPayment.amount - amountAlreadyDelivered,
+          incomingPaymentReceived: incomingPayment.amount,
           withdrawAmount: payment.quote.maxSourceAmount - amountSent
         })
       })
@@ -746,10 +747,10 @@ describe('OutgoingPaymentService', (): void => {
       // Caused by retry after failed SENDING→COMPLETED transition commit.
       it('COMPLETED (FixedDelivery, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
-          invoiceUrl
+          incomingPaymentUrl: incomingPaymentUrl
         })
-        // The quote thinks there's a full amount to pay, but actually sending will find the invoice has been paid (e.g. by another payment).
-        await payInvoice(invoice.amount)
+        // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
+        await payIncomingPayment(incomingPayment.amount)
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
@@ -757,14 +758,14 @@ describe('OutgoingPaymentService', (): void => {
           accountBalance: payment.quote.maxSourceAmount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
-          invoiceReceived: invoice.amount,
+          incomingPaymentReceived: incomingPayment.amount,
           withdrawAmount: payment.quote.maxSourceAmount
         })
       })
 
       it('CANCELLED (destination asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
-          invoiceUrl
+          incomingPaymentUrl: incomingPaymentUrl
         })
         // Pretend that the destination asset was initially different.
         await OutgoingPayment.query(knex)
@@ -772,7 +773,7 @@ describe('OutgoingPaymentService', (): void => {
           .patch({
             destinationAccount: {
               url: accountUrl,
-              code: invoice.account.asset.code,
+              code: incomingPayment.account.asset.code,
               scale: 55
             }
           })

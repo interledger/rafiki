@@ -23,7 +23,7 @@ import {
 } from './core'
 import { AccountingService } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
-import { InvoiceService } from '../open_payments/invoice/service'
+import { IncomingPaymentService } from '../open_payments/invoice/service'
 import { PeerService } from '../peer/service'
 import { RatesService } from '../rates/service'
 import { BaseService } from '../shared/baseService'
@@ -33,7 +33,7 @@ interface ServiceDependencies extends BaseService {
   ratesService: RatesService
   accountingService: AccountingService
   accountService: AccountService
-  invoiceService: InvoiceService
+  incomingPaymentService: IncomingPaymentService
   peerService: PeerService
   streamServer: StreamServer
   ilpAddress: string
@@ -45,7 +45,7 @@ export async function createConnectorService({
   ratesService,
   accountingService,
   accountService,
-  invoiceService,
+  incomingPaymentService,
   peerService,
   streamServer,
   ilpAddress
@@ -58,7 +58,7 @@ export async function createConnectorService({
       }),
       accounting: accountingService,
       accounts: accountService,
-      invoices: invoiceService,
+      incomingPayments: incomingPaymentService,
       peers: peerService,
       redis,
       rates: ratesService,

@@ -56,7 +56,7 @@ const clientErrors: { [key in PaymentError]: boolean } = {
   UnenforceableDelivery: true,
   InvalidQuote: false,
 
-  // QueryFailed can be either a client or server error: an invalid invoice URL, or failed query.
+  // QueryFailed can be either a client or server error: an invalid incoming payment URL, or failed query.
   QueryFailed: true,
   InvoiceAlreadyPaid: false,
   ConnectorError: false,

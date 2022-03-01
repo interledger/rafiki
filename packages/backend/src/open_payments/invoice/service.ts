@@ -1,4 +1,8 @@
-import { Invoice, InvoiceEvent, InvoiceEventType } from './model'
+import {
+  IncomingPayment,
+  IncomingPaymentEvent,
+  IncomingPaymentEventType
+} from './model'
 import { AccountingService } from '../../accounting/service'
 import { Pagination } from '../../shared/baseModel'
 import { BaseService } from '../../shared/baseService'
@@ -19,13 +23,13 @@ interface CreateOptions {
   amount: bigint
 }
 
-export interface InvoiceService {
-  get(id: string): Promise<Invoice | undefined>
-  create(options: CreateOptions, trx?: Transaction): Promise<Invoice>
-  getAccountInvoicesPage(
+export interface IncomingPaymentService {
+  get(id: string): Promise<IncomingPayment | undefined>
+  create(options: CreateOptions, trx?: Transaction): Promise<IncomingPayment>
+  getAccountIncomingPaymentsPage(
     accountId: string,
     pagination?: Pagination
-  ): Promise<Invoice[]>
+  ): Promise<IncomingPayment[]>
   processNext(): Promise<string | undefined>
 }
 
@@ -34,41 +38,43 @@ interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
 }
 
-export async function createInvoiceService(
+export async function createIncomingPaymentService(
   deps_: ServiceDependencies
-): Promise<InvoiceService> {
+): Promise<IncomingPaymentService> {
   const log = deps_.logger.child({
-    service: 'InvoiceService'
+    service: 'IncomingPaymentService'
   })
   const deps: ServiceDependencies = {
     ...deps_,
     logger: log
   }
   return {
-    get: (id) => getInvoice(deps, id),
-    create: (options, trx) => createInvoice(deps, options, trx),
-    getAccountInvoicesPage: (accountId, pagination) =>
-      getAccountInvoicesPage(deps, accountId, pagination),
-    processNext: () => processNextInvoice(deps)
+    get: (id) => getIncomingPayment(deps, id),
+    create: (options, trx) => createIncomingPayment(deps, options, trx),
+    getAccountIncomingPaymentsPage: (accountId, pagination) =>
+      getAccountIncomingPaymentsPage(deps, accountId, pagination),
+    processNext: () => processNextIncomingPayment(deps)
   }
 }
 
-async function getInvoice(
+async function getIncomingPayment(
   deps: ServiceDependencies,
   id: string
-): Promise<Invoice | undefined> {
-  return Invoice.query(deps.knex).findById(id).withGraphJoined('account.asset')
+): Promise<IncomingPayment | undefined> {
+  return IncomingPayment.query(deps.knex)
+    .findById(id)
+    .withGraphJoined('account.asset')
 }
 
-async function createInvoice(
+async function createIncomingPayment(
   deps: ServiceDependencies,
   { accountId, description, expiresAt, amount }: CreateOptions,
   trx?: Transaction
-): Promise<Invoice> {
-  const invTrx = trx || (await Invoice.startTransaction(deps.knex))
+): Promise<IncomingPayment> {
+  const invTrx = trx || (await IncomingPayment.startTransaction(deps.knex))
 
   try {
-    const invoice = await Invoice.query(invTrx)
+    const incomingPayment = await IncomingPayment.query(invTrx)
       .insertAndFetch({
         accountId,
         description,
@@ -79,118 +85,123 @@ async function createInvoice(
       })
       .withGraphFetched('account.asset')
 
-    // Invoice accounts are credited by the amounts received by the invoice.
-    // Credits are restricted such that the invoice cannot receive more than that amount.
-    await deps.accountingService.createLiquidityAccount(invoice)
+    // Incoming payment accounts are credited by the amounts received by the incoming payment.
+    // Credits are restricted such that the incoming payments cannot receive more than that amount.
+    await deps.accountingService.createLiquidityAccount(incomingPayment)
 
     if (!trx) {
       await invTrx.commit()
     }
-    return invoice
+    return incomingPayment
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()
     }
     if (err instanceof ForeignKeyViolationError) {
-      throw new Error('unable to create invoice, account does not exist')
+      throw new Error(
+        'unable to create incoming payment, account does not exist'
+      )
     }
     throw err
   }
 }
 
-// Fetch (and lock) an invoice for work.
-// Returns the id of the processed invoice (if any).
-async function processNextInvoice(
+// Fetch (and lock) an incoming payment for work.
+// Returns the id of the processed incoming payment (if any).
+async function processNextIncomingPayment(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
   return deps_.knex.transaction(async (trx) => {
     const now = new Date(Date.now()).toISOString()
-    const invoices = await Invoice.query(trx)
+    const incomingPayments = await IncomingPayment.query(trx)
       .limit(1)
-      // Ensure the invoices cannot be processed concurrently by multiple workers.
+      // Ensure the incoming payments cannot be processed concurrently by multiple workers.
       .forUpdate()
-      // If an invoice is locked, don't wait — just come back for it later.
+      // If an incoming payment is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
       .withGraphFetched('account.asset')
 
-    const invoice = invoices[0]
-    if (!invoice) return
+    const incomingPayment = incomingPayments[0]
+    if (!incomingPayment) return
 
     const deps = {
       ...deps_,
       knex: trx,
       logger: deps_.logger.child({
-        invoice: invoice.id
+        incomingPayment: incomingPayment.id
       })
     }
-    if (!invoice.active) {
-      await handleDeactivated(deps, invoice)
+    if (!incomingPayment.active) {
+      await handleDeactivated(deps, incomingPayment)
     } else {
-      await handleExpired(deps, invoice)
+      await handleExpired(deps, incomingPayment)
     }
-    return invoice.id
+    return incomingPayment.id
   })
 }
 
-// Deactivate expired invoices that have some money.
-// Delete expired invoices that have never received money.
+// Deactivate expired incoming payments that have some money.
+// Delete expired incoming payments that have never received money.
 async function handleExpired(
   deps: ServiceDependencies,
-  invoice: Invoice
+  incomingPayment: IncomingPayment
 ): Promise<void> {
   const amountReceived = await deps.accountingService.getTotalReceived(
-    invoice.id
+    incomingPayment.id
   )
   if (amountReceived) {
-    deps.logger.trace({ amountReceived }, 'deactivating expired invoice')
-    await invoice.$query(deps.knex).patch({
+    deps.logger.trace(
+      { amountReceived },
+      'deactivating expired incoming payment'
+    )
+    await incomingPayment.$query(deps.knex).patch({
       active: false,
       // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
       processAt: new Date(Date.now() + 30_000)
     })
   } else {
-    deps.logger.debug({ amountReceived }, 'deleting expired invoice')
-    await invoice.$query(deps.knex).delete()
+    deps.logger.debug({ amountReceived }, 'deleting expired incoming payment')
+    await incomingPayment.$query(deps.knex).delete()
   }
 }
 
-// Create webhook event to withdraw deactivated invoices' liquidity.
+// Create webhook event to withdraw deactivated incoming payments' liquidity.
 async function handleDeactivated(
   deps: ServiceDependencies,
-  invoice: Invoice
+  incomingPayment: IncomingPayment
 ): Promise<void> {
-  assert.ok(invoice.processAt)
+  assert.ok(incomingPayment.processAt)
   try {
     const amountReceived = await deps.accountingService.getTotalReceived(
-      invoice.id
+      incomingPayment.id
     )
     if (!amountReceived) {
       deps.logger.warn(
         { amountReceived },
-        'deactivated invoice and empty balance'
+        'deactivated incoming payment and empty balance'
       )
-      await invoice.$query(deps.knex).patch({ processAt: null })
+      await incomingPayment.$query(deps.knex).patch({ processAt: null })
       return
     }
 
     const type =
-      amountReceived < invoice.amount
-        ? InvoiceEventType.InvoiceExpired
-        : InvoiceEventType.InvoicePaid
-    deps.logger.trace({ type }, 'creating invoice webhook event')
+      amountReceived < incomingPayment.amount
+        ? IncomingPaymentEventType.IncomingPaymentExpired
+        : IncomingPaymentEventType.IncomingPaymentPaid
+    deps.logger.trace({ type }, 'creating incoming payment webhook event')
 
-    await InvoiceEvent.query(deps.knex).insertAndFetch({
+    await IncomingPaymentEvent.query(deps.knex).insertAndFetch({
       type,
-      data: invoice.toData(amountReceived),
+      data: incomingPayment.toData(amountReceived),
       withdrawal: {
-        accountId: invoice.id,
-        assetId: invoice.account.assetId,
+        accountId: incomingPayment.id,
+        assetId: incomingPayment.account.assetId,
         amount: amountReceived
       }
     })
 
-    await invoice.$query(deps.knex).patch({
+    await incomingPayment.$query(deps.knex).patch({
       processAt: null
     })
   } catch (error) {
@@ -198,14 +209,14 @@ async function handleDeactivated(
   }
 }
 
-async function getAccountInvoicesPage(
+async function getAccountIncomingPaymentsPage(
   deps: ServiceDependencies,
   accountId: string,
   pagination?: Pagination
-): Promise<Invoice[]> {
+): Promise<IncomingPayment[]> {
   assert.ok(deps.knex, 'Knex undefined')
 
-  return await Invoice.query(deps.knex).getPage(pagination).where({
+  return await IncomingPayment.query(deps.knex).getPage(pagination).where({
     accountId: accountId
   })
 }
