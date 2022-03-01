@@ -222,7 +222,7 @@ describe('Open Payments Account Service', (): void => {
     test.each`
       processAt                        | description
       ${null}                          | ${'not scheduled'}
-      ${new Date(Date.now() + 30_000)} | ${'not ready'}
+      ${new Date(Date.now() + 60_000)} | ${'not ready'}
     `(
       'Does not process account $description for withdrawal',
       async ({ processAt }): Promise<void> => {
@@ -287,7 +287,7 @@ describe('Open Payments Account Service', (): void => {
     test.each`
       processAt                        | description
       ${null}                          | ${'not scheduled'}
-      ${new Date(Date.now() + 30_000)} | ${'not ready'}
+      ${new Date(Date.now() + 60_000)} | ${'not ready'}
     `(
       'Does not process account $description for withdrawal',
       async ({ processAt }): Promise<void> => {
