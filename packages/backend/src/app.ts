@@ -309,11 +309,11 @@ export class App {
     )
     return incomingPaymentService
       .processNext()
-      .catch((err) => {
+      .catch((err: Error) => {
         this.logger.warn({ error: err.message }, 'processIncomingPayment error')
         return true
       })
-      .then((hasMoreWork) => {
+      .then((hasMoreWork: boolean) => {
         if (hasMoreWork) process.nextTick(() => this.processIncomingPayment())
         else
           setTimeout(
