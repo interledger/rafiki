@@ -24,7 +24,7 @@ import { PeerService } from '../../peer/service'
 // connector SHOULD implement this ConnectorAccount interface.
 // Such models include:
 //   ../../open_payments/account/model
-//   ../../open_payments/invoice/model
+//   ../../open_payments/payment/incoming/model
 //   ../../outgoing_payment/model
 //   ../../peer/model
 export interface ConnectorAccount extends LiquidityAccount {

@@ -33,7 +33,7 @@ import { validateId } from '../shared/utils'
 // Such models include:
 //   ../asset/model
 //   ../open_payments/account/model
-//   ../open_payments/invoice/model
+//   ../open_payments/payment/incoming/model
 //   ../outgoing_payment/model
 //   ../peer/model
 // Asset settlement Tigerbeetle accounts are the only exception.
