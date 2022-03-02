@@ -1,10 +1,10 @@
 import { Model } from 'objection'
-import { Account } from '../account/model'
-import { Asset } from '../../asset/model'
-import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
-import { ConnectorAccount } from '../../connector/core/rafiki'
-import { BaseModel } from '../../shared/baseModel'
-import { WebhookEvent } from '../../webhook/model'
+import { Account } from '../../account/model'
+import { Asset } from '../../../asset/model'
+import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
+import { ConnectorAccount } from '../../../connector/core/rafiki'
+import { BaseModel } from '../../../shared/baseModel'
+import { WebhookEvent } from '../../../webhook/model'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incomingPayment.expired',

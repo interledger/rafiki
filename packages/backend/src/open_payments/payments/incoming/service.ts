@@ -3,9 +3,9 @@ import {
   IncomingPaymentEvent,
   IncomingPaymentEventType
 } from './model'
-import { AccountingService } from '../../accounting/service'
-import { Pagination } from '../../shared/baseModel'
-import { BaseService } from '../../shared/baseService'
+import { AccountingService } from '../../../accounting/service'
+import { Pagination } from '../../../shared/baseModel'
+import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
 import { Transaction } from 'knex'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'

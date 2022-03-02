@@ -4,23 +4,23 @@ import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { IncomingPaymentService } from './service'
-import { AccountingService } from '../../accounting/service'
-import { createTestApp, TestContainer } from '../../tests/app'
+import { AccountingService } from '../../../accounting/service'
+import { createTestApp, TestContainer } from '../../../tests/app'
 import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType
 } from './model'
-import { resetGraphileDb } from '../../tests/graphileDb'
-import { GraphileProducer } from '../../messaging/graphileProducer'
-import { Config } from '../../config/app'
+import { resetGraphileDb } from '../../../tests/graphileDb'
+import { GraphileProducer } from '../../../messaging/graphileProducer'
+import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../..'
-import { AppServices } from '../../app'
-import { Pagination } from '../../shared/baseModel'
-import { getPageTests } from '../../shared/baseModel.test'
-import { randomAsset } from '../../tests/asset'
-import { truncateTables } from '../../tests/tableManager'
+import { initIocContainer } from '../../..'
+import { AppServices } from '../../../app'
+import { Pagination } from '../../../shared/baseModel'
+import { getPageTests } from '../../../shared/baseModel.test'
+import { randomAsset } from '../../../tests/asset'
+import { truncateTables } from '../../../tests/tableManager'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>

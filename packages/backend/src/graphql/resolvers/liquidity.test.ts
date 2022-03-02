@@ -21,7 +21,7 @@ import { Account, AccountEventType } from '../../open_payments/account/model'
 import {
   IncomingPayment,
   IncomingPaymentEventType
-} from '../../open_payments/incoming/model'
+} from '../../open_payments/payments/incoming/model'
 import {
   OutgoingPayment,
   PaymentState,

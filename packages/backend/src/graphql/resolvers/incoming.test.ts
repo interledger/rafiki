@@ -8,7 +8,7 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { IncomingPaymentService } from '../../open_payments/incoming/service'
+import { IncomingPaymentService } from '../../open_payments/payments/incoming/service'
 import { AccountService } from '../../open_payments/account/service'
 
 describe('Incoming Payment Resolver', (): void => {
