@@ -29,18 +29,28 @@ export async function handleQuoting(
     invoiceUrl: payment.intent.incomingPaymentUrl
   })
 
-  if (
-    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
-    payment.destinationAccount.code !== destination.destinationAsset.code
-  ) {
-    deps.logger.warn(
-      {
-        oldAsset: payment.destinationAccount,
-        newAsset: destination.destinationAsset
-      },
-      'asset changed'
-    )
-    throw Pay.PaymentError.DestinationAssetConflict
+  if (payment.destinationAccount) {
+    if (
+      payment.destinationAccount.scale !== destination.destinationAsset.scale ||
+      payment.destinationAccount.code !== destination.destinationAsset.code
+    ) {
+      deps.logger.warn(
+        {
+          oldAsset: payment.destinationAccount,
+          newAsset: destination.destinationAsset
+        },
+        'asset changed'
+      )
+      throw Pay.PaymentError.DestinationAssetConflict
+    }
+  } else {
+    await payment.$query(deps.knex).patch({
+      destinationAccount: {
+        scale: destination.destinationAsset.scale,
+        code: destination.destinationAsset.code,
+        url: destination.accountUrl
+      }
+    })
   }
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
@@ -161,6 +171,7 @@ export async function handleSending(
   payment: OutgoingPayment,
   plugin: IlpPlugin
 ): Promise<void> {
+  if (!payment.destinationAccount) throw LifecycleError.MissingDestination
   if (!payment.quote) throw LifecycleError.MissingQuote
 
   const destination = await Pay.setupPayment({

@@ -374,7 +374,7 @@ type OutgoingPayment implements Model {
   stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
-  destinationAccount: PaymentDestinationAccount!
+  destinationAccount: PaymentDestinationAccount
   outcome: OutgoingPaymentOutcome
   createdAt: String!
 }

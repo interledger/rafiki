@@ -26,6 +26,7 @@ export enum LifecycleError {
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
   MissingBalance = 'MissingBalance',
+  MissingDestination = 'MissingDestination',
   MissingQuote = 'MissingQuote',
   MissingIncomingPayment = 'MissingIncomingPayment',
   InvalidRatio = 'InvalidRatio'

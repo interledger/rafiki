@@ -1,5 +1,4 @@
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
-import * as Pay from '@interledger/pay'
 
 import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
@@ -22,11 +21,6 @@ export interface OutgoingPaymentService {
     accountId: string,
     pagination?: Pagination
   ): Promise<OutgoingPayment[]>
-}
-
-const PLACEHOLDER_DESTINATION = {
-  code: 'TMP',
-  scale: 2
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -101,33 +95,9 @@ async function createOutgoingPayment(
             amountToSend: options.amountToSend,
             autoApprove: options.autoApprove
           },
-          accountId: options.accountId,
-          destinationAccount: PLACEHOLDER_DESTINATION
+          accountId: options.accountId
         })
         .withGraphFetched('account.asset')
-
-      const plugin = deps.makeIlpPlugin({
-        sourceAccount: payment,
-        unfulfillable: true
-      })
-      await plugin.connect()
-      const destination = await Pay.setupPayment({
-        plugin,
-        paymentPointer: options.paymentPointer,
-        invoiceUrl: options.incomingPaymentUrl
-      }).finally(() => {
-        plugin.disconnect().catch((err) => {
-          deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
-        })
-      })
-
-      await payment.$query(trx).patch({
-        destinationAccount: {
-          scale: destination.destinationAsset.scale,
-          code: destination.destinationAsset.code,
-          url: destination.accountUrl
-        }
-      })
 
       await deps.accountingService.createLiquidityAccount({
         id: payment.id,

@@ -53,7 +53,7 @@ export class OutgoingPayment
   // Open payments account id of the sender
   public accountId!: string
   public account!: Account
-  public destinationAccount!: {
+  public destinationAccount?: {
     scale: number
     code: string
     url?: string
@@ -248,7 +248,7 @@ export type PaymentData = {
       highExchangeRateEstimate: number
       amountSent: string
     }
-    destinationAccount: {
+    destinationAccount?: {
       scale: number
       code: string
       url?: string

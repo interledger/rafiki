@@ -267,11 +267,6 @@ describe('OutgoingPaymentService', (): void => {
       await expectOutcome(payment, { accountBalance: BigInt(0) })
       expect(payment.account.asset.code).toBe('USD')
       expect(payment.account.asset.scale).toBe(9)
-      expect(payment.destinationAccount).toEqual({
-        scale: 9,
-        code: 'XRP',
-        url: accountUrl
-      })
 
       const payment2 = await outgoingPaymentService.get(payment.id)
       if (!payment2) throw 'no payment'
@@ -293,11 +288,6 @@ describe('OutgoingPaymentService', (): void => {
       await expectOutcome(payment, { accountBalance: BigInt(0) })
       expect(payment.account.asset.code).toBe('USD')
       expect(payment.account.asset.scale).toBe(9)
-      expect(payment.destinationAccount).toEqual({
-        scale: incomingPayment.account.asset.scale,
-        code: incomingPayment.account.asset.code,
-        url: accountUrl
-      })
 
       const payment2 = await outgoingPaymentService.get(payment.id)
       if (!payment2) throw 'no payment'
@@ -354,6 +344,11 @@ describe('OutgoingPaymentService', (): void => {
           })
         ).id
         const payment = await processNext(paymentId, PaymentState.Funding)
+        expect(payment.destinationAccount).toEqual({
+          scale: 9,
+          code: 'XRP',
+          url: accountUrl
+        })
         if (!payment.quote) throw 'no quote'
 
         expect(payment.quote.timestamp).toBeInstanceOf(Date)
@@ -389,6 +384,11 @@ describe('OutgoingPaymentService', (): void => {
           })
         ).id
         const payment = await processNext(paymentId, PaymentState.Funding)
+        expect(payment.destinationAccount).toEqual({
+          scale: incomingPayment.account.asset.scale,
+          code: incomingPayment.account.asset.code,
+          url: accountUrl
+        })
         if (!payment.quote) throw 'no quote'
 
         expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedDelivery)

@@ -473,7 +473,7 @@ export type OutgoingPayment = Model & {
   stateAttempts: Scalars['Int'];
   intent?: Maybe<PaymentIntent>;
   quote?: Maybe<PaymentQuote>;
-  destinationAccount: PaymentDestinationAccount;
+  destinationAccount?: Maybe<PaymentDestinationAccount>;
   outcome?: Maybe<OutgoingPaymentOutcome>;
   createdAt: Scalars['String'];
 };
@@ -1133,7 +1133,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
-  destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
+  destinationAccount?: Resolver<Maybe<ResolversTypes['PaymentDestinationAccount']>, ParentType, ContextType>;
   outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
