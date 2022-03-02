@@ -7,7 +7,7 @@ import {
   createAsset,
   updateAssetWithdrawalThreshold
 } from './asset'
-import { getAccountIncomingPayments, getPageInfo } from './incoming'
+import { getAccountIncomingPayments, getPageInfo } from './incoming_payment'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
