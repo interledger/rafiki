@@ -23,7 +23,7 @@ import {
 } from './core'
 import { AccountingService } from '../accounting/service'
 import { AccountService } from '../open_payments/account/service'
-import { IncomingPaymentService } from '../open_payments/payments/incoming/service'
+import { IncomingPaymentService } from '../open_payments/payment/incoming/service'
 import { PeerService } from '../peer/service'
 import { RatesService } from '../rates/service'
 import { BaseService } from '../shared/baseService'
