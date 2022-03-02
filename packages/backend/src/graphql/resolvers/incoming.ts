@@ -3,7 +3,7 @@ import {
   IncomingPaymentConnectionResolvers,
   AccountResolvers
 } from '../generated/graphql'
-import { IncomingPayment } from '../../open_payments/invoice/model'
+import { IncomingPayment } from '../../open_payments/incoming/model'
 import { ApolloContext } from '../../app'
 
 export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomingPayments'] = async (

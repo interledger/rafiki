@@ -17,7 +17,7 @@ import { TransferError } from '../../accounting/errors'
 import { LiquidityAccount, Transaction } from '../../accounting/service'
 import { AssetOptions } from '../../asset/service'
 import { AccountService } from '../../open_payments/account/service'
-import { IncomingPaymentService } from '../../open_payments/invoice/service'
+import { IncomingPaymentService } from '../../open_payments/incoming/service'
 import { PeerService } from '../../peer/service'
 
 // Model classes that represent an Interledger sender, receiver, or
