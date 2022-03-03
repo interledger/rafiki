@@ -179,6 +179,7 @@ export function paymentToGraphql(
     id: payment.id,
     accountId: payment.accountId,
     state: payment.state,
+    authorized: payment.authorized,
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
     intent: payment.intent,

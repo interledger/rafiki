@@ -29,6 +29,7 @@ export class OutgoingPayment
   public static readonly tableName = 'outgoingPayments'
 
   public state!: PaymentState
+  public authorized!: boolean
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
@@ -77,10 +78,7 @@ export class OutgoingPayment
   $beforeUpdate(opts: ModelOptions, queryContext: QueryContext): void {
     super.$beforeUpdate(opts, queryContext)
     if (opts.old && this.state) {
-      if (opts.old['error'] && this.state !== PaymentState.Cancelled) {
-        this.error = null
-      }
-      if (opts.old['state'] !== this.state) {
+      if (!this.stateAttempts) {
         this.stateAttempts = 0
       }
     }
@@ -146,6 +144,7 @@ export class OutgoingPayment
         id: this.id,
         accountId: this.accountId,
         state: this.state,
+        authorized: this.authorized,
         stateAttempts: this.stateAttempts,
         intent: {
           autoApprove: this.intent.autoApprove
@@ -189,20 +188,25 @@ export class OutgoingPayment
 }
 
 export enum PaymentState {
-  // Initial state. In this state, an empty trustline account is generated, and the payment is automatically resolved & quoted.
-  // On success, transition to `FUNDING` or `SENDING` if already funded.
-  // On failure, transition to `CANCELLED`.
-  Quoting = 'QUOTING',
+  // Initial state. In this state, an empty account is generated, and the payment is automatically resolved & quoted.
+  // On success, transition to `PREPARED` or `FUNDING` if already authorized.
+  // On failure, transition to `FAILED`.
+  Pending = 'PENDING',
+  // Awaiting authorization.
+  // On authorization, transition to `FUNDING`.
+  // On quote expiration, transition to `EXPIRED`.
+  Prepared = 'PREPARED',
   // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
   // On success, transition to `SENDING`.
   Funding = 'FUNDING',
-  // Pay from the trustline account to the destination.
+  // Pay from the account to the destination.
   // On success, transition to `COMPLETED`.
   Sending = 'SENDING',
-
+  // The payment quote expired.
+  // Requoting transitions to `PENDING`.
+  Expired = 'EXPIRED',
   // The payment failed. (Though some money may have been delivered).
-  // Requoting transitions to `QUOTING`.
-  Cancelled = 'CANCELLED',
+  Failed = 'FAILED',
   // Successful completion.
   Completed = 'COMPLETED'
 }
@@ -212,7 +216,7 @@ export enum PaymentDepositType {
 }
 
 export enum PaymentWithdrawType {
-  PaymentCancelled = 'outgoing_payment.cancelled',
+  PaymentFailed = 'outgoing_payment.failed',
   PaymentCompleted = 'outgoing_payment.completed'
 }
 
@@ -228,6 +232,7 @@ export type PaymentData = {
     accountId: string
     createdAt: string
     state: PaymentState
+    authorized: boolean
     error?: string
     stateAttempts: number
     intent: {

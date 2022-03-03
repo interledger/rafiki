@@ -2,7 +2,7 @@ import * as Pay from '@interledger/pay'
 
 import { TransferError } from '../accounting/errors'
 
-enum OutgoingPaymentError {
+export enum OutgoingPaymentError {
   UnknownPayment = 'UnknownPayment',
   WrongState = 'WrongState',
   InvalidAmount = 'InvalidAmount'
@@ -18,7 +18,6 @@ export const isFundingError = (o: any): o is FundingError =>
 export type PaymentError = LifecycleError | Pay.PaymentError
 
 export enum LifecycleError {
-  QuoteExpired = 'QuoteExpired',
   // Rate fetch failed.
   PricesUnavailable = 'PricesUnavailable',
   // Edge error due to retries, partial payment, and database write errors.
@@ -29,7 +28,8 @@ export enum LifecycleError {
   MissingDestination = 'MissingDestination',
   MissingQuote = 'MissingQuote',
   MissingIncomingPayment = 'MissingIncomingPayment',
-  InvalidRatio = 'InvalidRatio'
+  InvalidRatio = 'InvalidRatio',
+  Unauthorized = 'Unauthorized'
 }
 
 const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {

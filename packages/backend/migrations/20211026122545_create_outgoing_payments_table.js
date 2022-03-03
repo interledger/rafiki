@@ -5,6 +5,7 @@ exports.up = function (knex) {
     table.string('state').notNullable().index() // PaymentState
     table.string('error').nullable()
     table.integer('stateAttempts').notNullable().defaultTo(0)
+    table.boolean('authorized').notNullable().defaultTo(false)
 
     table.string('intentPaymentPointer').nullable()
     table.string('intentIncomingPaymentUrl').nullable()

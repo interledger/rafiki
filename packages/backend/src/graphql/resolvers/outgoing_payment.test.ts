@@ -86,7 +86,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     accountId: string
   ): Promise<OutgoingPaymentModel> =>
     OutgoingPaymentModel.query(knex).insertAndFetch({
-      state: PaymentState.Quoting,
+      state: PaymentState.Pending,
       intent: {
         paymentPointer: 'http://wallet2.example/paymentpointer/bob',
         amountToSend: BigInt(123),
@@ -161,6 +161,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                   id
                   accountId
                   state
+                  authorized
                   error
                   stateAttempts
                   intent {
@@ -201,6 +202,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         expect(query.id).toEqual(payment.id)
         expect(query.accountId).toEqual(payment.accountId)
         expect(query.state).toEqual(state)
+        expect(query.authorized).toEqual(payment.authorized)
         expect(query.error).toEqual(error)
         expect(query.stateAttempts).toBe(0)
         expect(query.intent).toEqual({
@@ -302,7 +304,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.code).toBe('200')
       expect(query.success).toBe(true)
       expect(query.payment?.id).toBe(payment.id)
-      expect(query.payment?.state).toBe(SchemaPaymentState.Quoting)
+      expect(query.payment?.state).toBe(SchemaPaymentState.Pending)
     })
 
     test('400', async (): Promise<void> => {
