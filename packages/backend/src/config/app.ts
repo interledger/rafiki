@@ -64,8 +64,8 @@ export const Config = {
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 200), // milliseconds
 
-  invoiceWorkers: envInt('INVOICE_WORKERS', 1),
-  invoiceWorkerIdle: envInt('INVOICE_WORKER_IDLE', 200), // milliseconds
+  incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
+  incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
 
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds

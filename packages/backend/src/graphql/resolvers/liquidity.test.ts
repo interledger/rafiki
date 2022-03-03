@@ -18,7 +18,10 @@ import {
 import { Asset } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { Account, AccountEventType } from '../../open_payments/account/model'
-import { Invoice, InvoiceEventType } from '../../open_payments/invoice/model'
+import {
+  IncomingPayment,
+  IncomingPaymentEventType
+} from '../../open_payments/payment/incoming/model'
 import {
   OutgoingPayment,
   PaymentState,
@@ -1580,7 +1583,7 @@ describe('Liquidity Resolvers', (): void => {
 
   {
     let account: Account
-    let invoice: Invoice
+    let incomingPayment: IncomingPayment
     let payment: OutgoingPayment
 
     beforeEach(
@@ -1590,8 +1593,8 @@ describe('Liquidity Resolvers', (): void => {
           asset: randomAsset()
         })
         const accountId = account.id
-        const invoiceService = await deps.use('invoiceService')
-        invoice = await invoiceService.create({
+        const incomingPaymentService = await deps.use('incomingPaymentService')
+        incomingPayment = await incomingPaymentService.create({
           accountId,
           amount: BigInt(56),
           expiresAt: new Date(Date.now() + 60 * 1000),
@@ -1599,11 +1602,11 @@ describe('Liquidity Resolvers', (): void => {
         })
         const outgoingPaymentService = await deps.use('outgoingPaymentService')
         const config = await deps.use('config')
-        const invoiceUrl = `${config.publicHost}/invoices/${invoice.id}`
+        const incomingPaymentUrl = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
         // create and then patch quote
         payment = await outgoingPaymentService.create({
           accountId,
-          invoiceUrl,
+          incomingPaymentUrl,
           autoApprove: false
         })
         await payment.$query(knex).patch({
@@ -1729,7 +1732,7 @@ describe('Liquidity Resolvers', (): void => {
             await expect(
               accountingService.createDeposit({
                 id: eventId,
-                account: invoice,
+                account: incomingPayment,
                 amount: BigInt(100)
               })
             ).resolves.toBeUndefined()
@@ -1770,17 +1773,19 @@ describe('Liquidity Resolvers', (): void => {
 
     const WithdrawEventType = {
       ...AccountEventType,
-      ...InvoiceEventType,
+      ...IncomingPaymentEventType,
       ...PaymentWithdrawType
     }
     type WithdrawEventType =
       | AccountEventType
-      | InvoiceEventType
+      | IncomingPaymentEventType
       | PaymentWithdrawType
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-    const isInvoiceEventType = (o: any): o is InvoiceEventType =>
-      Object.values(InvoiceEventType).includes(o)
+    const isIncomingPaymentEventType = (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+      o: any
+    ): o is IncomingPaymentEventType =>
+      Object.values(IncomingPaymentEventType).includes(o)
 
     describe('withdrawEventLiquidity', (): void => {
       describe.each(Object.values(WithdrawEventType).map((type) => [type]))(
@@ -1801,9 +1806,9 @@ describe('Liquidity Resolvers', (): void => {
                   amountSent: BigInt(0),
                   balance: amount
                 })
-              } else if (isInvoiceEventType(type)) {
-                liquidityAccount = invoice
-                data = invoice.toData(amount)
+              } else if (isIncomingPaymentEventType(type)) {
+                liquidityAccount = incomingPayment
+                data = incomingPayment.toData(amount)
               } else {
                 liquidityAccount = account
                 data = account.toData(amount)

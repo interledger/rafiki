@@ -17,14 +17,14 @@ import { TransferError } from '../../accounting/errors'
 import { LiquidityAccount, Transaction } from '../../accounting/service'
 import { AssetOptions } from '../../asset/service'
 import { AccountService } from '../../open_payments/account/service'
-import { InvoiceService } from '../../open_payments/invoice/service'
+import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import { PeerService } from '../../peer/service'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
 // Such models include:
 //   ../../open_payments/account/model
-//   ../../open_payments/invoice/model
+//   ../../open_payments/payment/incoming/model
 //   ../../outgoing_payment/model
 //   ../../peer/model
 export interface ConnectorAccount extends LiquidityAccount {
@@ -62,7 +62,7 @@ export interface RafikiServices {
   accounting: AccountingService
   accounts: AccountService
   logger: Logger
-  invoices: InvoiceService
+  incomingPayments: IncomingPaymentService
   peers: PeerService
   rates: RatesService
   redis: Redis
@@ -126,8 +126,8 @@ export class Rafiki<T = any> {
       //get router(): Router {
       //  return routerOrThrow()
       //},
-      get invoices(): InvoiceService {
-        return config.invoices
+      get incomingPayments(): IncomingPaymentService {
+        return config.incomingPayments
       },
       get peers(): PeerService {
         return config.peers

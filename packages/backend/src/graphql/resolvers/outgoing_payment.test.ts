@@ -165,7 +165,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                   stateAttempts
                   intent {
                     paymentPointer
-                    invoiceUrl
+                    incomingPaymentUrl
                     amountToSend
                     autoApprove
                   }
@@ -206,7 +206,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         expect(query.intent).toEqual({
           ...payment.intent,
           amountToSend: payment.intent?.amountToSend?.toString(),
-          invoiceUrl: null,
+          incomingPaymentUrl: null,
           __typename: 'PaymentIntent'
         })
         expect(query.quote).toEqual({

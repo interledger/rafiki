@@ -1,5 +1,5 @@
 exports.up = function (knex) {
-  return knex.schema.createTable('invoices', function (table) {
+  return knex.schema.createTable('incomingPayments', function (table) {
     table.uuid('id').notNullable().primary()
 
     // Open payments account id
@@ -22,5 +22,5 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('invoices')
+  return knex.schema.dropTableIfExists('incomingPayments')
 }

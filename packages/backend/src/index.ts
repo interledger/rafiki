@@ -25,8 +25,8 @@ import { createPeerService } from './peer/service'
 import { createAccountService } from './open_payments/account/service'
 import { createSPSPRoutes } from './spsp/routes'
 import { createAccountRoutes } from './open_payments/account/routes'
-import { createInvoiceRoutes } from './open_payments/invoice/routes'
-import { createInvoiceService } from './open_payments/invoice/service'
+import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
+import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebhookService } from './webhook/service'
 import { createConnectorService } from './connector'
@@ -182,19 +182,19 @@ export function initIocContainer(
       logger: await deps.use('logger')
     })
   })
-  container.singleton('invoiceService', async (deps) => {
-    return await createInvoiceService({
+  container.singleton('incomingPaymentService', async (deps) => {
+    return await createIncomingPaymentService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService')
     })
   })
-  container.singleton('invoiceRoutes', async (deps) => {
-    return createInvoiceRoutes({
+  container.singleton('incomingPaymentRoutes', async (deps) => {
+    return createIncomingPaymentRoutes({
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       accountingService: await deps.use('accountingService'),
-      invoiceService: await deps.use('invoiceService'),
+      incomingPaymentService: await deps.use('incomingPaymentService'),
       streamServer: await deps.use('streamServer')
     })
   })
@@ -270,7 +270,7 @@ export function initIocContainer(
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),
       accountService: await deps.use('accountService'),
-      invoiceService: await deps.use('invoiceService'),
+      incomingPaymentService: await deps.use('incomingPaymentService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),

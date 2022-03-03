@@ -208,7 +208,8 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
     const id = args.input.id
     const accountingService = await ctx.container.use('accountingService')
     const amount = await accountingService.getBalance(account.id)
-    if (amount === undefined) throw new Error('missing invoice account')
+    if (amount === undefined)
+      throw new Error('missing incoming payment account')
     if (amount === BigInt(0)) {
       return responses[
         LiquidityError.AmountZero
@@ -361,7 +362,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
     if (error) {
       return errorToResponse(error)
     }
-    // TODO: check for and handle leftover invoice or payment balance
+    // TODO: check for and handle leftover incoming payment or payment balance
     return {
       code: '200',
       success: true,
@@ -445,11 +446,11 @@ const responses: {
     success: false,
     error: LiquidityError.UnknownAsset
   },
-  [LiquidityError.UnknownInvoice]: {
+  [LiquidityError.UnknownIncomingPayment]: {
     code: '404',
-    message: 'Unknown invoice',
+    message: 'Unknown incoming payment',
     success: false,
-    error: LiquidityError.UnknownInvoice
+    error: LiquidityError.UnknownIncomingPayment
   },
   [LiquidityError.UnknownPayment]: {
     code: '404',

@@ -36,11 +36,14 @@ const isIncomingPeer = (o: any): o is MockIncomingAccount => o.http?.incoming
 export class MockAccountingService implements AccountingService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
-  async _getInvoice(invoiceId: string): Promise<OutgoingAccount | undefined> {
-    const invoice = this.find(
-      (account) => account.id === invoiceId && account.active !== undefined
+  async _getIncomingPayment(
+    incomingPaymentId: string
+  ): Promise<OutgoingAccount | undefined> {
+    const incomingPayment = this.find(
+      (account) =>
+        account.id === incomingPaymentId && account.active !== undefined
     )
-    return invoice as OutgoingAccount
+    return incomingPayment as OutgoingAccount
   }
 
   async _getAccount(accountId: string): Promise<OutgoingAccount | undefined> {
