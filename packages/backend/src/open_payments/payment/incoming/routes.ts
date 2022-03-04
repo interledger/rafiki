@@ -103,12 +103,14 @@ async function createIncomingPayment(
 
   const { body } = ctx.request
   if (typeof body !== 'object') return ctx.throw(400, 'json body required')
-  const amount = tryParseAmount(body['amount'])
-  if (!amount) return ctx.throw(400, 'invalid amount')
+  const incomingAmount = tryParseAmount(body['incomingAmount'])
+  if (incomingAmount === null) return ctx.throw(400, 'invalid incomingAmount')
   const expiresAt = Date.parse(body['expiresAt'] as string)
   if (!expiresAt) return ctx.throw(400, 'invalid expiresAt')
   if (body.description !== undefined && typeof body.description !== 'string')
     return ctx.throw(400, 'invalid description')
+  if (body.externalRef !== undefined && typeof body.externalRef !== 'string')
+    return ctx.throw(400, 'invalid externalRef')
   if (Date.now() + MAX_EXPIRY < expiresAt)
     return ctx.throw(400, 'expiry too high')
   if (expiresAt < Date.now()) return ctx.throw(400, 'already expired')
@@ -116,8 +118,9 @@ async function createIncomingPayment(
   const incomingPayment = await deps.incomingPaymentService.create({
     accountId,
     description: body.description,
+    externalRef: body.externalRef,
     expiresAt: new Date(expiresAt),
-    amount
+    incomingAmount
   })
 
   ctx.status = 201
@@ -135,18 +138,23 @@ function incomingPaymentToBody(
   return {
     id: location,
     account: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
-    amount: incomingPayment.amount.toString(),
+    state: incomingPayment.state,
+    amount: incomingPayment.incomingAmount
+      ? incomingPayment.incomingAmount.toString()
+      : null,
     assetCode: incomingPayment.account.asset.code,
     assetScale: incomingPayment.account.asset.scale,
     description: incomingPayment.description,
+    externalRef: incomingPayment.externalRef,
     expiresAt: incomingPayment.expiresAt.toISOString(),
     received: received.toString()
   }
 }
 
-function tryParseAmount(amount: unknown): bigint | null {
+function tryParseAmount(incomingAmount: unknown): bigint | undefined | null {
+  if (incomingAmount == undefined) return undefined
   try {
-    return BigInt(amount)
+    return BigInt(incomingAmount)
   } catch (_) {
     return null
   }

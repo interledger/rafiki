@@ -221,7 +221,7 @@ describe('OutgoingPaymentService', (): void => {
       const incomingPaymentService = await deps.use('incomingPaymentService')
       incomingPayment = await incomingPaymentService.create({
         accountId: destinationAccount.id,
-        amount: BigInt(56),
+        incomingAmount: BigInt(56),
         expiresAt: new Date(Date.now() + 60 * 1000),
         description: 'description!'
       })
@@ -384,7 +384,7 @@ describe('OutgoingPaymentService', (): void => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
-            incomingPaymentUrl: incomingPaymentUrl,
+            incomingPaymentUrl,
             autoApprove: false
           })
         ).id
@@ -473,11 +473,12 @@ describe('OutgoingPaymentService', (): void => {
         const paymentId = (
           await outgoingPaymentService.create({
             accountId,
-            incomingPaymentUrl: incomingPaymentUrl,
+            incomingPaymentUrl,
             autoApprove: false
           })
         ).id
-        await payIncomingPayment(incomingPayment.amount)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        await payIncomingPayment(incomingPayment.incomingAmount!)
         await processNext(paymentId, PaymentState.Completed)
       })
 
@@ -591,17 +592,18 @@ describe('OutgoingPaymentService', (): void => {
 
       it('COMPLETED (FixedDelivery)', async (): Promise<void> => {
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          incomingPaymentUrl
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
-        const amountSent = incomingPayment.amount * BigInt(2)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const amountSent = incomingPayment.incomingAmount! * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
-          amountDelivered: incomingPayment.amount,
-          incomingPaymentReceived: incomingPayment.amount,
+          amountDelivered: incomingPayment.incomingAmount,
+          incomingPaymentReceived: incomingPayment.incomingAmount,
           withdrawAmount: payment.quote.maxSourceAmount - amountSent
         })
       })
@@ -610,18 +612,21 @@ describe('OutgoingPaymentService', (): void => {
         const amountAlreadyDelivered = BigInt(34)
         await payIncomingPayment(amountAlreadyDelivered)
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          incomingPaymentUrl
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
         const amountSent =
-          (incomingPayment.amount - amountAlreadyDelivered) * BigInt(2)
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          (incomingPayment.incomingAmount! - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
-          amountDelivered: incomingPayment.amount - amountAlreadyDelivered,
-          incomingPaymentReceived: incomingPayment.amount,
+          amountDelivered:
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            incomingPayment.incomingAmount! - amountAlreadyDelivered,
+          incomingPaymentReceived: incomingPayment.incomingAmount,
           withdrawAmount: payment.quote.maxSourceAmount - amountSent
         })
       })
@@ -747,10 +752,11 @@ describe('OutgoingPaymentService', (): void => {
       // Caused by retry after failed SENDING→COMPLETED transition commit.
       it('COMPLETED (FixedDelivery, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          incomingPaymentUrl
         })
         // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
-        await payIncomingPayment(incomingPayment.amount)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        await payIncomingPayment(incomingPayment.incomingAmount!)
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
@@ -758,14 +764,14 @@ describe('OutgoingPaymentService', (): void => {
           accountBalance: payment.quote.maxSourceAmount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
-          incomingPaymentReceived: incomingPayment.amount,
+          incomingPaymentReceived: incomingPayment.incomingAmount,
           withdrawAmount: payment.quote.maxSourceAmount
         })
       })
 
       it('CANCELLED (destination asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          incomingPaymentUrl
         })
         // Pretend that the destination asset was initially different.
         await OutgoingPayment.query(knex)

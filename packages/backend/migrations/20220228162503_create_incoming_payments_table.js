@@ -8,7 +8,9 @@ exports.up = function (knex) {
     table.boolean('active').notNullable()
     table.string('description').nullable()
     table.timestamp('expiresAt').notNullable()
-    table.bigInteger('amount').notNullable()
+    table.bigInteger('incomingAmount').nullable()
+    table.string('state').notNullable()
+    table.string('externalRef').nullable()
 
     table.timestamp('processAt').nullable()
 

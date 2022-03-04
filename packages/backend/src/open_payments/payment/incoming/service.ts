@@ -1,7 +1,8 @@
 import {
   IncomingPayment,
   IncomingPaymentEvent,
-  IncomingPaymentEventType
+  IncomingPaymentEventType,
+  IncomingPaymentState
 } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { Pagination } from '../../../shared/baseModel'
@@ -15,12 +16,15 @@ export const POSITIVE_SLIPPAGE = BigInt(1)
 // Second retry waits 20 (more) seconds
 // Third retry waits 30 (more) seconds, etc. up to 60 seconds
 export const RETRY_BACKOFF_MS = 10_000
+// TODO: make expiry date configurable
+export const EXPIRY = new Date(new Date().setDate(90)) // 90 days in future
 
 interface CreateOptions {
   accountId: string
   description?: string
-  expiresAt: Date
-  amount: bigint
+  expiresAt?: Date
+  incomingAmount?: bigint
+  externalRef?: string
 }
 
 export interface IncomingPaymentService {
@@ -68,7 +72,13 @@ async function getIncomingPayment(
 
 async function createIncomingPayment(
   deps: ServiceDependencies,
-  { accountId, description, expiresAt, amount }: CreateOptions,
+  {
+    accountId,
+    description,
+    expiresAt,
+    incomingAmount,
+    externalRef
+  }: CreateOptions,
   trx?: Transaction
 ): Promise<IncomingPayment> {
   const invTrx = trx || (await IncomingPayment.startTransaction(deps.knex))
@@ -78,10 +88,14 @@ async function createIncomingPayment(
       .insertAndFetch({
         accountId,
         description,
-        expiresAt,
-        amount,
+        expiresAt: expiresAt || EXPIRY,
+        incomingAmount,
         active: true,
-        processAt: new Date(expiresAt.getTime())
+        externalRef,
+        state: IncomingPaymentState.Pending,
+        processAt: expiresAt
+          ? new Date(expiresAt.getTime())
+          : new Date(EXPIRY.getTime())
       })
       .withGraphFetched('account.asset')
 
@@ -157,6 +171,7 @@ async function handleExpired(
     )
     await incomingPayment.$query(deps.knex).patch({
       active: false,
+      state: IncomingPaymentState.Expired,
       // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
       processAt: new Date(Date.now() + 30_000)
     })
@@ -186,7 +201,7 @@ async function handleDeactivated(
     }
 
     const type =
-      amountReceived < incomingPayment.amount
+      incomingPayment.state == IncomingPaymentState.Expired
         ? IncomingPaymentEventType.IncomingPaymentExpired
         : IncomingPaymentEventType.IncomingPaymentPaid
     deps.logger.trace({ type }, 'creating incoming payment webhook event')

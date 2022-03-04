@@ -1596,7 +1596,7 @@ describe('Liquidity Resolvers', (): void => {
         const incomingPaymentService = await deps.use('incomingPaymentService')
         incomingPayment = await incomingPaymentService.create({
           accountId,
-          amount: BigInt(56),
+          incomingAmount: BigInt(56),
           expiresAt: new Date(Date.now() + 60 * 1000),
           description: 'description!'
         })

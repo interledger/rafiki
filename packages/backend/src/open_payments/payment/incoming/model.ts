@@ -11,6 +11,19 @@ export enum IncomingPaymentEventType {
   IncomingPaymentPaid = 'incomingPayment.paid'
 }
 
+export enum IncomingPaymentState {
+  // The payment has a state of Pending when it is initially created.
+  Pending = 'PENDING',
+  // As soon as payment has started (funds have cleared into the account) the state moves to `PROCESSING`.
+  Processing = 'PROCESSING',
+  // The payment is either auto-competed once the received amount equals the expected amount `amount`,
+  // or it is completed manually via an API call.
+  Completed = 'COMPLETED',
+  // If the payment expires before it is completed then the state will move to `EXPIRED`
+  // and no further payments will be accepted.
+  Expired = 'EXPIRED'
+}
+
 export type IncomingPaymentData = {
   incomingPayment: {
     id: string
@@ -18,8 +31,10 @@ export type IncomingPaymentData = {
     description?: string
     createdAt: string
     expiresAt: string
-    amount: string
-    received: string
+    incomingAmount?: string
+    receivedAmount: string
+    externalRef?: string
+    state: string
   }
 }
 
@@ -52,7 +67,9 @@ export class IncomingPayment
   public active!: boolean
   public description?: string
   public expiresAt!: Date
-  public readonly amount!: bigint
+  public state!: IncomingPaymentState
+  public readonly incomingAmount?: bigint
+  public externalRef?: string
 
   public processAt!: Date | null
 
@@ -63,19 +80,29 @@ export class IncomingPayment
   public async onCredit({
     totalReceived
   }: OnCreditOptions): Promise<IncomingPayment> {
-    if (this.amount <= totalReceived) {
-      const incomingPayment = await IncomingPayment.query()
+    let incomingPayment
+    if (this.incomingAmount && this.incomingAmount <= totalReceived) {
+      incomingPayment = await IncomingPayment.query()
         .patchAndFetchById(this.id, {
           active: false,
+          state: IncomingPaymentState.Completed,
           // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
           processAt: new Date(Date.now() + 30_000)
         })
         .where({
           active: true
         })
-      if (incomingPayment) {
-        return incomingPayment
-      }
+    } else {
+      incomingPayment = await IncomingPayment.query()
+        .patchAndFetchById(this.id, {
+          state: IncomingPaymentState.Processing
+        })
+        .where({
+          active: true
+        })
+    }
+    if (incomingPayment) {
+      return incomingPayment
     }
     return this
   }
@@ -85,11 +112,15 @@ export class IncomingPayment
       incomingPayment: {
         id: this.id,
         accountId: this.accountId,
-        amount: this.amount.toString(),
+        incomingAmount: this.incomingAmount
+          ? this.incomingAmount.toString()
+          : '',
         description: this.description,
         expiresAt: this.expiresAt.toISOString(),
         createdAt: new Date(+this.createdAt).toISOString(),
-        received: amountReceived.toString()
+        receivedAmount: amountReceived.toString(),
+        externalRef: this.externalRef ? this.externalRef.toString() : '',
+        state: this.state
       }
     }
   }

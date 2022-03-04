@@ -47,7 +47,7 @@ describe('Incoming Payment Resolver', (): void => {
       createModel: () =>
         incomingPaymentService.create({
           accountId,
-          amount: BigInt(123),
+          incomingAmount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000),
           description: `IncomingPayment`
         }),

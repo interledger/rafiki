@@ -9,7 +9,8 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import {
   IncomingPayment,
   IncomingPaymentEvent,
-  IncomingPaymentEventType
+  IncomingPaymentEventType,
+  IncomingPaymentState
 } from './model'
 import { resetGraphileDb } from '../../../tests/graphileDb'
 import { GraphileProducer } from '../../../messaging/graphileProducer'
@@ -77,9 +78,10 @@ describe('Incoming Payment Service', (): void => {
     test('An incoming payment can be created and fetched', async (): Promise<void> => {
       const incomingPayment = await incomingPaymentService.create({
         accountId,
-        amount: BigInt(123),
+        incomingAmount: BigInt(123),
         expiresAt: new Date(Date.now() + 30_000),
-        description: 'Test incoming payment'
+        description: 'Test incoming payment',
+        externalRef: '#123'
       })
       const accountService = await deps.use('accountService')
       expect(incomingPayment).toMatchObject({
@@ -100,7 +102,8 @@ describe('Incoming Payment Service', (): void => {
         accountId,
         description: 'IncomingPayment',
         expiresAt: new Date(Date.now() + 30_000),
-        amount: BigInt(123)
+        incomingAmount: BigInt(123),
+        externalRef: '#123'
       })
       await expect(
         accountingService.getBalance(incomingPayment.id)
@@ -111,9 +114,10 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           accountId: uuid(),
-          amount: BigInt(123),
+          incomingAmount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Test incoming payment'
+          description: 'Test incoming payment',
+          externalRef: '#123'
         })
       ).rejects.toThrow(
         'unable to create incoming payment, account does not exist'
@@ -133,8 +137,9 @@ describe('Incoming Payment Service', (): void => {
         incomingPayment = await incomingPaymentService.create({
           accountId,
           description: 'Test incoming payment',
-          amount: BigInt(123),
-          expiresAt: new Date(Date.now() + 30_000)
+          incomingAmount: BigInt(123),
+          expiresAt: new Date(Date.now() + 30_000),
+          externalRef: '#123'
         })
       }
     )
@@ -142,13 +147,19 @@ describe('Incoming Payment Service', (): void => {
     test('Does not deactivate a partially paid incoming payment', async (): Promise<void> => {
       await expect(
         incomingPayment.onCredit({
-          totalReceived: incomingPayment.amount - BigInt(1)
+          totalReceived: BigInt(100)
         })
-      ).resolves.toEqual(incomingPayment)
+      ).resolves.toMatchObject({
+        id: incomingPayment.id,
+        active: true,
+        state: IncomingPaymentState.Processing,
+        processAt: new Date(incomingPayment.expiresAt.getTime())
+      })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
         active: true,
+        state: IncomingPaymentState.Processing,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
     })
@@ -159,17 +170,20 @@ describe('Incoming Payment Service', (): void => {
       jest.setSystemTime(now)
       await expect(
         incomingPayment.onCredit({
-          totalReceived: incomingPayment.amount
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          totalReceived: incomingPayment.incomingAmount!
         })
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         active: false,
+        state: IncomingPaymentState.Completed,
         processAt: new Date(now.getTime() + 30_000)
       })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
         active: false,
+        state: IncomingPaymentState.Completed,
         processAt: new Date(now.getTime() + 30_000)
       })
     })
@@ -179,9 +193,10 @@ describe('Incoming Payment Service', (): void => {
     test('Does not process not-expired active incoming payment', async (): Promise<void> => {
       const { id: incomingPaymentId } = await incomingPaymentService.create({
         accountId,
-        amount: BigInt(123),
+        incomingAmount: BigInt(123),
         description: 'Test incoming payment',
-        expiresAt: new Date(Date.now() + 30_000)
+        expiresAt: new Date(Date.now() + 30_000),
+        externalRef: '#123'
       })
       await expect(
         incomingPaymentService.processNext()
@@ -197,9 +212,10 @@ describe('Incoming Payment Service', (): void => {
       test('Deactivates an expired incoming payment with received money', async (): Promise<void> => {
         const incomingPayment = await incomingPaymentService.create({
           accountId,
-          amount: BigInt(123),
+          incomingAmount: BigInt(123),
           description: 'Test incoming payment',
-          expiresAt: new Date(Date.now() - 40_000)
+          expiresAt: new Date(Date.now() - 40_000),
+          externalRef: '#123'
         })
         await expect(
           accountingService.createDeposit({
@@ -219,6 +235,7 @@ describe('Incoming Payment Service', (): void => {
           incomingPaymentService.get(incomingPayment.id)
         ).resolves.toMatchObject({
           active: false,
+          state: IncomingPaymentState.Expired,
           processAt: new Date(now.getTime() + 30_000)
         })
       })
@@ -226,9 +243,10 @@ describe('Incoming Payment Service', (): void => {
       test('Deletes an expired incoming payment (and account) with no money', async (): Promise<void> => {
         const incomingPayment = await incomingPaymentService.create({
           accountId,
-          amount: BigInt(123),
+          incomingAmount: BigInt(123),
           description: 'Test incoming payment',
-          expiresAt: new Date(Date.now() - 40_000)
+          expiresAt: new Date(Date.now() - 40_000),
+          externalRef: '#123'
         })
         await expect(incomingPaymentService.processNext()).resolves.toBe(
           incomingPayment.id
@@ -252,9 +270,10 @@ describe('Incoming Payment Service', (): void => {
           async (): Promise<void> => {
             incomingPayment = await incomingPaymentService.create({
               accountId,
-              amount: BigInt(123),
+              incomingAmount: BigInt(123),
               expiresAt: new Date(Date.now() + expiresAt),
-              description: 'Test incoming payment'
+              description: 'Test incoming payment',
+              externalRef: '#123'
             })
             await expect(
               accountingService.createDeposit({
@@ -269,7 +288,8 @@ describe('Incoming Payment Service', (): void => {
               )
             } else {
               await incomingPayment.onCredit({
-                totalReceived: incomingPayment.amount
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                totalReceived: incomingPayment.incomingAmount!
               })
             }
             incomingPayment = (await incomingPaymentService.get(
@@ -277,6 +297,11 @@ describe('Incoming Payment Service', (): void => {
             )) as IncomingPayment
             expect(incomingPayment.active).toBe(false)
             expect(incomingPayment.processAt).not.toBeNull()
+            if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
+              expect(incomingPayment.state).toBe(IncomingPaymentState.Expired)
+            } else {
+              expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
+            }
             await expect(
               accountingService.getTotalReceived(incomingPayment.id)
             ).resolves.toEqual(amountReceived)
@@ -320,9 +345,10 @@ describe('Incoming Payment Service', (): void => {
       createModel: () =>
         incomingPaymentService.create({
           accountId,
-          amount: BigInt(123),
+          incomingAmount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'IncomingPayment'
+          description: 'IncomingPayment',
+          externalRef: '#123'
         }),
       getPage: (pagination: Pagination) =>
         incomingPaymentService.getAccountIncomingPaymentsPage(

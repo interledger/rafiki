@@ -17,7 +17,7 @@ import { AppServices } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment } from './model'
+import { IncomingPayment, IncomingPaymentState } from './model'
 import { IncomingPaymentRoutes, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
 
@@ -70,7 +70,8 @@ describe('Incoming Payment Routes', (): void => {
         accountId: account.id,
         description: 'text',
         expiresAt,
-        amount: BigInt(123)
+        incomingAmount: BigInt(123),
+        externalRef: '#123'
       })
     }
   )
@@ -150,7 +151,9 @@ describe('Incoming Payment Routes', (): void => {
         assetScale: asset.scale,
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
-        received: '0'
+        received: '0',
+        externalRef: '#123',
+        state: IncomingPaymentState.Pending
       })
     })
 
@@ -174,6 +177,8 @@ describe('Incoming Payment Routes', (): void => {
         description: incomingPayment.description,
         received: '0',
         expiresAt: expiresAt.toISOString(),
+        externalRef: '#123',
+        state: IncomingPaymentState.Pending,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -197,8 +202,9 @@ describe('Incoming Payment Routes', (): void => {
         { accountId: account.id }
       )
       ctx.request.body = {
-        amount: incomingPayment.amount,
+        incomingAmount: incomingPayment.incomingAmount,
         description: incomingPayment.description,
+        externalRef: incomingPayment.externalRef,
         expiresAt: incomingPayment.expiresAt.toISOString()
       }
       return ctx
@@ -229,21 +235,12 @@ describe('Incoming Payment Routes', (): void => {
       )
     })
 
-    test('returns error on missing amount', async (): Promise<void> => {
+    test('returns error on invalid incomingAmount', async (): Promise<void> => {
       const ctx = setup({})
-      ctx.request.body['amount'] = undefined
+      ctx.request.body['incomingAmount'] = 'fail'
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
-        'invalid amount'
-      )
-    })
-
-    test('returns error on invalid amount', async (): Promise<void> => {
-      const ctx = setup({})
-      ctx.request.body['amount'] = 'fail'
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid amount'
+        'invalid incomingAmount'
       )
     })
 
@@ -253,6 +250,15 @@ describe('Incoming Payment Routes', (): void => {
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
         'invalid description'
+      )
+    })
+
+    test('returns error on invalid externalRef', async (): Promise<void> => {
+      const ctx = setup({})
+      ctx.request.body['externalRef'] = 123
+      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
+        'message',
+        'invalid externalRef'
       )
     })
 
@@ -300,15 +306,45 @@ describe('Incoming Payment Routes', (): void => {
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         account: `${config.publicHost}/pay/${incomingPayment.accountId}`,
-        amount: incomingPayment.amount.toString(),
+        amount: incomingPayment.incomingAmount
+          ? incomingPayment.incomingAmount.toString()
+          : null,
         assetCode: incomingPayment.account.asset.code,
         assetScale: incomingPayment.account.asset.scale,
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
-        received: '0'
+        received: '0',
+        externalRef: '#123',
+        state: IncomingPaymentState.Pending
       })
     })
 
+    test('returns the incoming payment on undefined incomingAmount', async (): Promise<void> => {
+      const ctx = setup({})
+      ctx.request.body['incomingAmount'] = undefined
+      await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
+      expect(ctx.response.status).toBe(201)
+      const incomingPaymentId = ((ctx.response.body as Record<string, unknown>)[
+        'id'
+      ] as string)
+        .split('/')
+        .pop()
+      expect(ctx.response.headers['location']).toBe(
+        `${config.publicHost}/incoming-payments/${incomingPaymentId}`
+      )
+      expect(ctx.response.body).toEqual({
+        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
+        account: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        amount: null,
+        assetCode: incomingPayment.account.asset.code,
+        assetScale: incomingPayment.account.asset.scale,
+        description: incomingPayment.description,
+        expiresAt: expiresAt.toISOString(),
+        received: '0',
+        externalRef: incomingPayment.externalRef,
+        state: incomingPayment.state
+      })
+    })
     test('returns the incoming payment on undefined description', async (): Promise<void> => {
       const ctx = setup({})
       ctx.request.body['description'] = undefined
@@ -325,12 +361,45 @@ describe('Incoming Payment Routes', (): void => {
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         account: `${config.publicHost}/pay/${incomingPayment.accountId}`,
-        amount: incomingPayment.amount.toString(),
+        amount: incomingPayment.incomingAmount
+          ? incomingPayment.incomingAmount.toString()
+          : null,
         assetCode: incomingPayment.account.asset.code,
         assetScale: incomingPayment.account.asset.scale,
         description: null,
         expiresAt: expiresAt.toISOString(),
-        received: '0'
+        received: '0',
+        externalRef: incomingPayment.externalRef,
+        state: incomingPayment.state
+      })
+    })
+
+    test('returns the incoming payment on undefined externalRef', async (): Promise<void> => {
+      const ctx = setup({})
+      ctx.request.body['externalRef'] = undefined
+      await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
+      expect(ctx.response.status).toBe(201)
+      const incomingPaymentId = ((ctx.response.body as Record<string, unknown>)[
+        'id'
+      ] as string)
+        .split('/')
+        .pop()
+      expect(ctx.response.headers['location']).toBe(
+        `${config.publicHost}/incoming-payments/${incomingPaymentId}`
+      )
+      expect(ctx.response.body).toEqual({
+        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
+        account: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        amount: incomingPayment.incomingAmount
+          ? incomingPayment.incomingAmount.toString()
+          : null,
+        assetCode: incomingPayment.account.asset.code,
+        assetScale: incomingPayment.account.asset.scale,
+        externalRef: null,
+        expiresAt: expiresAt.toISOString(),
+        received: '0',
+        description: incomingPayment.description,
+        state: incomingPayment.state
       })
     })
   })
