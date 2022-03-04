@@ -170,7 +170,7 @@ export type CreateOutgoingPaymentInput = {
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
   incomingPaymentUrl?: Maybe<Scalars['String']>;
-  autoApprove: Scalars['Boolean'];
+  authorized: Scalars['Boolean'];
 };
 
 export type CreatePeerInput = {
@@ -528,7 +528,6 @@ export type PaymentIntent = {
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
   incomingPaymentUrl?: Maybe<Scalars['String']>;
-  autoApprove: Scalars['Boolean'];
 };
 
 export type PaymentQuote = {
@@ -1189,7 +1188,6 @@ export type PaymentIntentResolvers<ContextType = any, ParentType extends Resolve
   paymentPointer?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   amountToSend?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   incomingPaymentUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  autoApprove?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

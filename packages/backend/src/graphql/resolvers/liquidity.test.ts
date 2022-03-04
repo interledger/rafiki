@@ -1606,8 +1606,7 @@ describe('Liquidity Resolvers', (): void => {
         // create and then patch quote
         payment = await outgoingPaymentService.create({
           accountId,
-          incomingPaymentUrl,
-          autoApprove: false
+          incomingPaymentUrl
         })
         await payment.$query(knex).patch({
           state: PaymentState.Funding,

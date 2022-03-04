@@ -20,7 +20,6 @@ export type PaymentIntent = {
   paymentPointer?: string
   incomingPaymentUrl?: string
   amountToSend?: bigint
-  autoApprove: boolean
 }
 
 export class OutgoingPayment
@@ -146,9 +145,7 @@ export class OutgoingPayment
         state: this.state,
         authorized: this.authorized,
         stateAttempts: this.stateAttempts,
-        intent: {
-          autoApprove: this.intent.autoApprove
-        },
+        intent: {},
         destinationAccount: this.destinationAccount,
         createdAt: new Date(+this.createdAt).toISOString(),
         outcome: {
@@ -239,7 +236,6 @@ export type PaymentData = {
       paymentPointer?: string
       incomingPaymentUrl?: string
       amountToSend?: string
-      autoApprove: boolean
     }
     quote?: {
       timestamp: string

@@ -262,15 +262,13 @@ describe('OutgoingPaymentService', (): void => {
           accountId,
           paymentPointer,
           amountToSend: BigInt(123),
-          autoApprove: false,
           authorized
         })
         expect(payment.state).toEqual(PaymentState.Pending)
         expect(payment.authorized).toEqual(expectedAuthorized)
         expect(payment.intent).toEqual({
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         })
         expect(payment.accountId).toBe(accountId)
         await expectOutcome(payment, { accountBalance: BigInt(0) })
@@ -286,14 +284,12 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await outgoingPaymentService.create({
           accountId,
           incomingPaymentUrl,
-          autoApprove: false,
           authorized
         })
         expect(payment.state).toEqual(PaymentState.Pending)
         expect(payment.authorized).toEqual(expectedAuthorized)
         expect(payment.intent).toEqual({
-          incomingPaymentUrl,
-          autoApprove: false
+          incomingPaymentUrl
         })
         expect(payment.accountId).toBe(accountId)
         await expectOutcome(payment, { accountBalance: BigInt(0) })
@@ -311,7 +307,6 @@ describe('OutgoingPaymentService', (): void => {
             accountId,
             incomingPaymentUrl,
             paymentPointer,
-            autoApprove: false,
             authorized
           })
         ).rejects.toThrow(
@@ -325,7 +320,6 @@ describe('OutgoingPaymentService', (): void => {
             accountId,
             incomingPaymentUrl,
             amountToSend: BigInt(123),
-            autoApprove: false,
             authorized
           })
         ).rejects.toThrow(
@@ -339,7 +333,6 @@ describe('OutgoingPaymentService', (): void => {
             accountId: uuid(),
             paymentPointer,
             amountToSend: BigInt(123),
-            autoApprove: false,
             authorized
           })
         ).rejects.toThrow('outgoing payment account does not exist')
@@ -361,7 +354,6 @@ describe('OutgoingPaymentService', (): void => {
               accountId,
               paymentPointer,
               amountToSend: BigInt(123),
-              autoApprove: false,
               authorized
             })
           ).id
@@ -402,7 +394,6 @@ describe('OutgoingPaymentService', (): void => {
             await outgoingPaymentService.create({
               accountId,
               incomingPaymentUrl: incomingPaymentUrl,
-              autoApprove: false,
               authorized
             })
           ).id
@@ -436,8 +427,7 @@ describe('OutgoingPaymentService', (): void => {
             await outgoingPaymentService.create({
               accountId,
               paymentPointer,
-              amountToSend: BigInt(123),
-              autoApprove: false
+              amountToSend: BigInt(123)
             })
           ).id
           const payment = await processNext(paymentId, PaymentState.Pending)
@@ -461,8 +451,7 @@ describe('OutgoingPaymentService', (): void => {
           const paymentId = (
             await outgoingPaymentService.create({
               accountId,
-              incomingPaymentUrl: incomingPaymentUrl,
-              autoApprove: false
+              incomingPaymentUrl: incomingPaymentUrl
             })
           ).id
           await payIncomingPayment(incomingPayment.amount)
@@ -477,8 +466,7 @@ describe('OutgoingPaymentService', (): void => {
           const originalPayment = await outgoingPaymentService.create({
             accountId,
             paymentPointer,
-            amountToSend: BigInt(123),
-            autoApprove: false
+            amountToSend: BigInt(123)
           })
           const paymentId = originalPayment.id
           // Pretend that the destination asset was initially different.
@@ -511,8 +499,7 @@ describe('OutgoingPaymentService', (): void => {
           const { id: paymentId } = await outgoingPaymentService.create({
             accountId,
             paymentPointer,
-            amountToSend: BigInt(123),
-            autoApprove: true
+            amountToSend: BigInt(123)
           })
           payment = await processNext(paymentId, PaymentState.Prepared)
         }
@@ -543,7 +530,6 @@ describe('OutgoingPaymentService', (): void => {
       ): Promise<string> {
         const { id: paymentId } = await outgoingPaymentService.create({
           accountId,
-          autoApprove: true,
           authorized: true,
           ...opts
         })
@@ -785,8 +771,7 @@ describe('OutgoingPaymentService', (): void => {
         await outgoingPaymentService.create({
           accountId,
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         })
       ).id
     }, 10_000)
@@ -863,7 +848,6 @@ describe('OutgoingPaymentService', (): void => {
         accountId,
         paymentPointer,
         amountToSend: BigInt(123),
-        autoApprove: false,
         authorized: true
       })
       payment = await processNext(paymentId, PaymentState.Funding)
@@ -937,8 +921,7 @@ describe('OutgoingPaymentService', (): void => {
         outgoingPaymentService.create({
           accountId,
           paymentPointer,
-          amountToSend: BigInt(123),
-          autoApprove: false
+          amountToSend: BigInt(123)
         }),
       getPage: (pagination: Pagination) =>
         outgoingPaymentService.getAccountPage(accountId, pagination)

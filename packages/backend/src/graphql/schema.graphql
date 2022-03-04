@@ -384,7 +384,6 @@ type PaymentIntent {
   paymentPointer: String
   amountToSend: UInt64
   incomingPaymentUrl: String
-  autoApprove: Boolean!
 }
 
 enum PaymentState {
@@ -436,7 +435,7 @@ input CreateOutgoingPaymentInput {
   paymentPointer: String
   amountToSend: UInt64
   incomingPaymentUrl: String
-  autoApprove: Boolean!
+  authorized: Boolean!
 }
 
 type OutgoingPaymentResponse {

@@ -89,8 +89,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       state: PaymentState.Pending,
       intent: {
         paymentPointer: 'http://wallet2.example/paymentpointer/bob',
-        amountToSend: BigInt(123),
-        autoApprove: false
+        amountToSend: BigInt(123)
       },
       quote: {
         timestamp: new Date(),
@@ -168,7 +167,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                     paymentPointer
                     incomingPaymentUrl
                     amountToSend
-                    autoApprove
                   }
                   quote {
                     timestamp
@@ -260,7 +258,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       accountId: uuid(),
       paymentPointer: 'http://wallet2.example/paymentpointer/bob',
       amountToSend: '123',
-      autoApprove: false
+      authorized: false
     }
 
     test('200', async (): Promise<void> => {

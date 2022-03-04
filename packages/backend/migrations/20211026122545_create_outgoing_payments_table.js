@@ -10,7 +10,6 @@ exports.up = function (knex) {
     table.string('intentPaymentPointer').nullable()
     table.string('intentIncomingPaymentUrl').nullable()
     table.bigInteger('intentAmountToSend').nullable()
-    table.boolean('intentAutoApprove').notNullable()
 
     table.timestamp('quoteTimestamp').nullable()
     table.timestamp('quoteActivationDeadline').nullable()

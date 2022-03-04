@@ -73,7 +73,6 @@ type CreateOutgoingPaymentOptions = PaymentIntent & {
   authorized?: boolean
 }
 
-// TODO ensure this is idempotent/safe for autoApprove:true payments
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
@@ -101,8 +100,7 @@ async function createOutgoingPayment(
           intent: {
             paymentPointer: options.paymentPointer,
             incomingPaymentUrl: options.incomingPaymentUrl,
-            amountToSend: options.amountToSend,
-            autoApprove: options.autoApprove
+            amountToSend: options.amountToSend
           },
           accountId: options.accountId,
           authorized: options.authorized
