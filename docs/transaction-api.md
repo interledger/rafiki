@@ -4,18 +4,18 @@
 
 ### Payment creation
 
-A user creates a payment by passing a `PaymentIntent` to `Mutation.createOutgoingPayment`. If the payment destination (the payment pointer or invoice URL) is successfully resolved, the payment is created in the `PENDING` state.
+A user creates a payment by passing a `PaymentIntent` to `Mutation.createOutgoingPayment`. If the payment destination (the payment pointer or incoming payment URL) is successfully resolved, the payment is created in the `PENDING` state.
 
 ### Quoting
 
 To begin a payment attempt, an instance acquires a lock to setup and quote the payment, advancing it from `PENDING` to the `PREPARED` state.
 
-First, the recipient Open Payments account or invoice is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
+First, the recipient Open Payments account or incoming payment is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
 
 Quotes can end in 3 states:
 
 1. Success. The STREAM sender successfully established a connection to the recipient, and discovered rates and the path capacity. This advances the state to `PREPARED`. The parameters of the quote are persisted so they may be resumed if the payment is funded. Rafiki also assigns a deadline based on the expected validity of its slippage parameters for the wallet to fund the payment.
-2. Irrevocable failure. In cases such as if the payment pointer or account URL was semantically invalid, the invoice was already paid, a terminal ILP Reject was encountered, or the rate was insufficient, the payment is unlikely to ever succeed, or requires some manual intervention. These cases advance the state to `FAILED`.
+2. Irrevocable failure. In cases such as if the payment pointer or account URL was semantically invalid, the incoming payment was already paid, a terminal ILP Reject was encountered, or the rate was insufficient, the payment is unlikely to ever succeed, or requires some manual intervention. These cases advance the state to `FAILED`.
 3. Recoverable failure. In the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available, Rafiki may elect to automatically retry the quote. This returns the state to `PENDING`, but internally tracks that the quote failed and when to schedule another attempt.
 
 After the quote ends and state advances, the lock on the payment is released.
@@ -24,7 +24,7 @@ After the quote ends and state advances, the lock on the payment is released.
 
 If the payment was not created with `authorized` set to `true`, a client should manually authorize the payment, based on the parameters of the quote, before the payment can be processed.
 
-This step is necessary so the end user can precisely know the maximum amount of source units that will leave their account. Typically, the payment application will present these parameters in the user interface before the user elects to approve the payment. This step is particularly important for invoices, to prevent an unbounded sum from leaving the user's account. During this step, the user may also be presented with additional information about the payment, such as details of the payment recipient, or how much is expected to be delivered.
+This step is necessary so the end user can precisely know the maximum amount of source units that will leave their account. Typically, the payment application will present these parameters in the user interface before the user elects to approve the payment. This step is particularly important for incoming payments, to prevent an unbounded sum from leaving the user's account. During this step, the user may also be presented with additional information about the payment, such as details of the payment recipient, or how much is expected to be delivered.
 
 Authorization ends in two possible states:
 
@@ -63,24 +63,24 @@ A payment in the `EXPIRED` state may be explicitly retried ("requoted") by the u
 
 ## Incoming Payment Lifecycle
 
-### Invoice creation
+### Incoming payment creation
 
-An invoice is created according to the [Open Payments](https://docs.openpayments.dev/invoices#create) specification. Rafiki creates a payment account for each invoice.
+An incoming payment is created according to the [Open Payments](https://docs.openpayments.dev/invoices#create) specification. Rafiki creates a payment account for each incoming payment.
 
 ### Receiving
 
-An invoice receives funds via Interledger as long as it is active.
+An incoming payment receives funds via Interledger as long as it is active.
 
 ### Deactivation
 
-An invoice is deactivated when either:
+An incoming payment is deactivated when either:
 
 - it has received its specified `amount`
 - it has expired
 
-When the invoice is deactivated, Rafiki notifies the wallet of received funds via `invoice.paid` or `invoice.expired` [webhook events](#webhooks).
+When the incoming payment is deactivated, Rafiki notifies the wallet of received funds via `incoming_payment.paid` or `incoming_payment.expired` [webhook events](#webhooks).
 
-An expired invoice that has never received money is deleted.
+An expired incoming payment that has never received money is deleted.
 
 ## Webhooks
 
@@ -96,17 +96,17 @@ Account has web monetization balance to be withdrawn.
 
 Credit `account.received` to the wallet balance for `account.id`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
-#### `invoice.expired`
+#### `incoming_payment.expired`
 
-Invoice has expired.
+Incoming payment has expired.
 
-Credit `invoice.received` to the wallet balance for `invoice.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
+Credit `incomingPayment.received` to the wallet balance for `incomingPayment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
-#### `invoice.paid`
+#### `incoming_payment.paid`
 
-Invoice has received its specified `amount`.
+Incoming payment has received its specified `amount`.
 
-Credit `invoice.received` to the wallet balance for `invoice.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
+Credit `incomingPayment.received` to the wallet balance for `incomingPayment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
 #### `outgoing_payment.funding`
 
@@ -128,23 +128,23 @@ Credit `payment.balance` to the wallet balance for `payment.accountId`, and call
 
 ### Webhook Event
 
-| Name   | Optional | Type                                                                                  | Description                                       |
-| :----- | :------- | :------------------------------------------------------------------------------------ | :------------------------------------------------ |
-| `id`   | No       | `ID`                                                                                  | Unique ID of the webhook event.                   |
-| `type` | No       | [`EventType`](#eventtype)                                                             | Description of the event.                         |
-| `data` | No       | [`Account`](#account), [`Invoice`](#invoice) or [`OutgoingPayment`](#outgoingpayment) | Object containing data associated with the event. |
+| Name   | Optional | Type                                                                                                  | Description                                       |
+| :----- | :------- | :---------------------------------------------------------------------------------------------------- | :------------------------------------------------ |
+| `id`   | No       | `ID`                                                                                                  | Unique ID of the webhook event.                   |
+| `type` | No       | [`EventType`](#eventtype)                                                                             | Description of the event.                         |
+| `data` | No       | [`Account`](#account), [`IncomingPayment`](#incomingpayment) or [`OutgoingPayment`](#outgoingpayment) | Object containing data associated with the event. |
 
 ## Resources
 
 ### `PaymentIntent`
 
-The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
+The intent must include `incomingPaymentUrl` xor (`paymentPointer` and `amountToSend`).
 
-| Name             | Optional | Type     | Description                                                                                           |
-| :--------------- | :------- | :------- | :---------------------------------------------------------------------------------------------------- |
-| `paymentPointer` | Yes      | `String` | Payment pointer or URL of the destination Open Payments or SPSP account. Requires `amountToSend`.     |
-| `invoiceUrl`     | Yes      | `String` | URL of an Open Payments invoice, for a fixed-delivery payment.                                        |
-| `amountToSend`   | Yes      | `String` | Fixed amount to send to the recipient, in base units of the sending asset. Requires `paymentPointer`. |
+| Name                 | Optional | Type     | Description                                                                                           |
+| :------------------- | :------- | :------- | :---------------------------------------------------------------------------------------------------- |
+| `paymentPointer`     | Yes      | `String` | Payment pointer or URL of the destination Open Payments or SPSP account. Requires `amountToSend`.     |
+| `incomingPaymentUrl` | Yes      | `String` | URL of an Open Payments incoming payment, for a fixed-delivery payment.                               |
+| `amountToSend`       | Yes      | `String` | Fixed amount to send to the recipient, in base units of the sending asset. Requires `paymentPointer`. |
 
 ### `OutgoingPayment`
 
@@ -160,7 +160,7 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 | `quote.timestamp`                | No       | `String`        | Timestamp when the most recent quote for this transaction finished.                                                                                                                                                                                                                                                      |
 | `quote.activationDeadline`       | No       | `String`        | Time when this quote expires.                                                                                                                                                                                                                                                                                            |
 | `quote.targetType`               | No       | `PaymentType`   | See [`PaymentType`](#paymenttype).                                                                                                                                                                                                                                                                                       |
-| `quote.minDeliveryAmount`        | No       | `UInt64`        | Minimum amount that will be delivered if the payment completes, in the base unit and asset of the receiving account. For fixed delivery payments, this will be the remaining amount of the invoice.                                                                                                                      |
+| `quote.minDeliveryAmount`        | No       | `UInt64`        | Minimum amount that will be delivered if the payment completes, in the base unit and asset of the receiving account. For fixed delivery payments, this will be the remaining amount of the incoming payment.                                                                                                             |
 | `quote.maxSourceAmount`          | No       | `UInt64`        | Maximum amount that will be sent in the base unit and asset of the sending account. This is intended to be presented to the user or agent before authorizing a fixed delivery payment. For fixed source amount payments, this will be the provided `amountToSend`.                                                       |
 | `quote.maxPacketAmount`          | No       | `UInt64`        | Discovered maximum packet amount allowed over this payment path.                                                                                                                                                                                                                                                         |
 | `quote.minExchangeRate`          | No       | `Float`         | Aggregate exchange rate the payment is guaranteed to meet, as a ratio of destination base units to source base units. Corresponds to the minimum exchange rate enforced on each packet (_except for the final packet_) to ensure sufficient money gets delivered. For strict bookkeeping, use `maxSourceAmount` instead. |
@@ -188,19 +188,19 @@ The intent must include `invoiceUrl` xor (`paymentPointer` and `amountToSend`).
 ### `PaymentType`
 
 - `FIXED_SEND`: Fixed source amount.
-- `FIXED_DELIVERY`: Invoice payment, fixed delivery amount.
+- `FIXED_DELIVERY`: Incoming payment, fixed delivery amount.
 
-### `Invoice`
+### `Incoming Payment`
 
-| Name          | Optional | Type     | Description                                                                                          |
-| :------------ | :------- | :------- | :--------------------------------------------------------------------------------------------------- |
-| `id`          | No       | `ID`     | Unique ID for this invoice, randomly generated by Rafiki.                                            |
-| `accountId`   | No       | `String` | Id of the recipient's Open Payments account.                                                         |
-| `amount`      | No       | `UInt64` | The amount that must be paid at the time the invoice is created, in base units of the account asset. |
-| `received`    | No       | `UInt64` | The total amount received, in base units of the account asset.                                       |
-| `description` | Yes      | `String` | Human readable description of the invoice.                                                           |
-| `createdAt`   | No       | `String` |                                                                                                      |
-| `expiresAt`   | No       | `String` |                                                                                                      |
+| Name          | Optional | Type     | Description                                                                                                   |
+| :------------ | :------- | :------- | :------------------------------------------------------------------------------------------------------------ |
+| `id`          | No       | `ID`     | Unique ID for this incoming payment, randomly generated by Rafiki.                                            |
+| `accountId`   | No       | `String` | Id of the recipient's Open Payments account.                                                                  |
+| `amount`      | No       | `UInt64` | The amount that must be paid at the time the incoming payment is created, in base units of the account asset. |
+| `received`    | No       | `UInt64` | The total amount received, in base units of the account asset.                                                |
+| `description` | Yes      | `String` | Human readable description of the incoming payment.                                                           |
+| `createdAt`   | No       | `String` |                                                                                                               |
+| `expiresAt`   | No       | `String` |                                                                                                               |
 
 ### `Account`
 
