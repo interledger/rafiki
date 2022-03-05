@@ -6,12 +6,12 @@ import { v4 as uuid } from 'uuid'
 
 import { FundingError, OutgoingPaymentError } from './errors'
 import { OutgoingPaymentService } from './service'
-import { createTestApp, TestContainer } from '../tests/app'
-import { IAppConfig, Config } from '../config/app'
+import { createTestApp, TestContainer } from '../../../tests/app'
+import { IAppConfig, Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppServices } from '../app'
-import { truncateTables } from '../tests/tableManager'
+import { initIocContainer } from '../../../'
+import { AppServices } from '../../../app'
+import { truncateTables } from '../../../tests/tableManager'
 import {
   OutgoingPayment,
   PaymentIntent,
@@ -20,13 +20,13 @@ import {
   PaymentEventType
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
-import { isTransferError } from '../accounting/errors'
-import { AccountingService, TransferOptions } from '../accounting/service'
-import { AssetOptions } from '../asset/service'
-import { IncomingPayment } from '../open_payments/payment/incoming/model'
-import { RatesService } from '../rates/service'
-import { Pagination } from '../shared/baseModel'
-import { getPageTests } from '../shared/baseModel.test'
+import { isTransferError } from '../../../accounting/errors'
+import { AccountingService, TransferOptions } from '../../../accounting/service'
+import { AssetOptions } from '../../../asset/service'
+import { IncomingPayment } from '../incoming/model'
+import { RatesService } from '../../../rates/service'
+import { Pagination } from '../../../shared/baseModel'
+import { getPageTests } from '../../../shared/baseModel.test'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>

@@ -1,6 +1,6 @@
 import * as Pay from '@interledger/pay'
 
-import { TransferError } from '../accounting/errors'
+import { TransferError } from '../../../accounting/errors'
 
 export enum OutgoingPaymentError {
   UnknownPayment = 'UnknownPayment',

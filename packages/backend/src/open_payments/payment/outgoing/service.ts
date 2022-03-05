@@ -1,7 +1,7 @@
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 
-import { Pagination } from '../shared/baseModel'
-import { BaseService } from '../shared/baseService'
+import { Pagination } from '../../../shared/baseModel'
+import { BaseService } from '../../../shared/baseService'
 import { FundingError, LifecycleError, OutgoingPaymentError } from './errors'
 import { sendWebhookEvent } from './lifecycle'
 import {
@@ -10,9 +10,9 @@ import {
   PaymentState,
   PaymentEventType
 } from './model'
-import { AccountingService } from '../accounting/service'
-import { AccountService } from '../open_payments/account/service'
-import { RatesService } from '../rates/service'
+import { AccountingService } from '../../../accounting/service'
+import { AccountService } from '../../account/service'
+import { RatesService } from '../../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
 import * as worker from './worker'
 

@@ -1,4 +1,4 @@
-import { LiquidityAccount } from '../accounting/service'
+import { LiquidityAccount } from '../../../accounting/service'
 
 // Maybe @interledger/pay should export this interface.
 export interface IlpPlugin {

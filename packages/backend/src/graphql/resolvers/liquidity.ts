@@ -8,11 +8,14 @@ import {
   AccountWithdrawalMutationResponse
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
-import { FundingError, isFundingError } from '../../outgoing_payment/errors'
+import {
+  FundingError,
+  isFundingError
+} from '../../open_payments/payment/outgoing/errors'
 import {
   isPaymentEvent,
   PaymentDepositType
-} from '../../outgoing_payment/model'
+} from '../../open_payments/payment/outgoing/model'
 
 export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] = async (
   parent,

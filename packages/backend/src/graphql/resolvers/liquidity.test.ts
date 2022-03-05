@@ -28,7 +28,7 @@ import {
   PaymentEvent,
   PaymentWithdrawType,
   isPaymentEventType
-} from '../../outgoing_payment/model'
+} from '../../open_payments/payment/outgoing/model'
 import { Peer } from '../../peer/model'
 import { randomAsset } from '../../tests/asset'
 import { PeerFactory } from '../../tests/peerFactory'

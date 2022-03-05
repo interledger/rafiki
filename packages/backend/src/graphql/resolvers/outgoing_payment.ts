@@ -9,7 +9,7 @@ import {
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
-import { OutgoingPayment } from '../../outgoing_payment/model'
+import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
 
 export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'] = async (

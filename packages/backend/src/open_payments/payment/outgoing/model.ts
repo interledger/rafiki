@@ -1,12 +1,12 @@
 import { Pojo, Model, ModelOptions, QueryContext } from 'objection'
 import * as Pay from '@interledger/pay'
 
-import { LiquidityAccount } from '../accounting/service'
-import { Asset } from '../asset/model'
-import { ConnectorAccount } from '../connector/core/rafiki'
-import { Account } from '../open_payments/account/model'
-import { BaseModel } from '../shared/baseModel'
-import { WebhookEvent } from '../webhook/model'
+import { LiquidityAccount } from '../../../accounting/service'
+import { Asset } from '../../../asset/model'
+import { ConnectorAccount } from '../../../connector/core/rafiki'
+import { Account } from '../../account/model'
+import { BaseModel } from '../../../shared/baseModel'
+import { WebhookEvent } from '../../../webhook/model'
 
 const fieldPrefixes = ['intent', 'quote', 'destinationAccount', 'outcome']
 

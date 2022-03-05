@@ -14,11 +14,11 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { OutgoingPaymentService } from '../../outgoing_payment/service'
+import { OutgoingPaymentService } from '../../open_payments/payment/outgoing/service'
 import {
   OutgoingPayment as OutgoingPaymentModel,
   PaymentState
-} from '../../outgoing_payment/model'
+} from '../../open_payments/payment/outgoing/model'
 import { AccountingService } from '../../accounting/service'
 import { AccountService } from '../../open_payments/account/service'
 import {
