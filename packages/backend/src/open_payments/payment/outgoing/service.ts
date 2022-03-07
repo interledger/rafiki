@@ -83,11 +83,11 @@ async function createOutgoingPayment(
     if (options.receivingAccount) {
       return OutgoingPaymentError.InvalidDestination
     }
-    if (options.amountToSend !== undefined) {
+    if (options.sendAmount !== undefined) {
       return OutgoingPaymentError.InvalidAmount
     }
   } else if (options.receivingAccount) {
-    if (!options.amountToSend) {
+    if (!options.sendAmount) {
       return OutgoingPaymentError.InvalidAmount
     }
   } else {
@@ -102,7 +102,7 @@ async function createOutgoingPayment(
           intent: {
             receivingAccount: options.receivingAccount,
             receivingPayment: options.receivingPayment,
-            amountToSend: options.amountToSend
+            sendAmount: options.sendAmount
           },
           accountId: options.accountId,
           authorized: options.authorized

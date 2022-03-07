@@ -382,7 +382,7 @@ type OutgoingPayment implements Model {
 
 type PaymentIntent {
   receivingAccount: String
-  amountToSend: UInt64
+  sendAmount: UInt64
   receivingPayment: String
 }
 
@@ -433,7 +433,7 @@ type OutgoingPaymentOutcome {
 input CreateOutgoingPaymentInput {
   accountId: String!
   receivingAccount: String
-  amountToSend: UInt64
+  sendAmount: UInt64
   receivingPayment: String
   authorized: Boolean
 }

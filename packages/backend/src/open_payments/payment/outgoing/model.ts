@@ -19,7 +19,7 @@ const ratioFields = [
 export type PaymentIntent = {
   receivingAccount?: string
   receivingPayment?: string
-  amountToSend?: bigint
+  sendAmount?: bigint
 }
 
 export class OutgoingPayment
@@ -160,8 +160,8 @@ export class OutgoingPayment
     if (this.intent.receivingPayment) {
       data.payment.intent.receivingPayment = this.intent.receivingPayment
     }
-    if (this.intent.amountToSend) {
-      data.payment.intent.amountToSend = this.intent.amountToSend.toString()
+    if (this.intent.sendAmount) {
+      data.payment.intent.sendAmount = this.intent.sendAmount.toString()
     }
     if (this.error) {
       data.payment.error = this.error
@@ -235,7 +235,7 @@ export type PaymentData = {
     intent: {
       receivingAccount?: string
       receivingPayment?: string
-      amountToSend?: string
+      sendAmount?: string
     }
     quote?: {
       timestamp: string

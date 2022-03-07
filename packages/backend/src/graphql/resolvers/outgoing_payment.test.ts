@@ -69,7 +69,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   const createPayment = async ({
     accountId,
     receivingAccount,
-    amountToSend,
+    sendAmount,
     receivingPayment,
     authorized
   }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
@@ -77,7 +77,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       state: PaymentState.Pending,
       intent: {
         receivingAccount,
-        amountToSend,
+        sendAmount,
         receivingPayment
       },
       quote: {
@@ -108,14 +108,14 @@ describe('OutgoingPayment Resolvers', (): void => {
     let payment: OutgoingPaymentModel
 
     describe.each`
-      receivingAccount    | amountToSend   | receivingPayment    | authorized | description
+      receivingAccount    | sendAmount     | receivingPayment    | authorized | description
       ${receivingAccount} | ${BigInt(123)} | ${null}             | ${true}    | ${'fixed send'}
       ${null}             | ${null}        | ${receivingPayment} | ${false}   | ${'incoming payment'}
     `(
       '$description',
       ({
         receivingAccount,
-        amountToSend,
+        sendAmount,
         receivingPayment,
         authorized
       }): void => {
@@ -127,7 +127,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             payment = await createPayment({
               accountId,
               receivingAccount,
-              amountToSend,
+              sendAmount,
               receivingPayment,
               authorized
             })
@@ -174,7 +174,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                       intent {
                         receivingAccount
                         receivingPayment
-                        amountToSend
+                        sendAmount
                       }
                       quote {
                         timestamp
@@ -213,7 +213,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.stateAttempts).toBe(0)
             expect(query.intent).toEqual({
               receivingAccount,
-              amountToSend: amountToSend?.toString() || null,
+              sendAmount: sendAmount?.toString() || null,
               receivingPayment,
               __typename: 'PaymentIntent'
             })
@@ -267,11 +267,11 @@ describe('OutgoingPayment Resolvers', (): void => {
     const input = {
       accountId: uuid(),
       receivingAccount,
-      amountToSend: BigInt(123)
+      sendAmount: BigInt(123)
     }
 
     test.each`
-      receivingAccount    | amountToSend   | receivingPayment    | authorized   | description
+      receivingAccount    | sendAmount     | receivingPayment    | authorized   | description
       ${receivingAccount} | ${BigInt(123)} | ${null}             | ${true}      | ${'fixed send (authorized)'}
       ${receivingAccount} | ${BigInt(123)} | ${null}             | ${false}     | ${'fixed send'}
       ${null}             | ${null}        | ${receivingPayment} | ${undefined} | ${'incoming payment'}
@@ -279,7 +279,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       '200 ($description)',
       async ({
         receivingAccount,
-        amountToSend,
+        sendAmount,
         receivingPayment,
         authorized
       }): Promise<void> => {
@@ -289,7 +289,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         const input = {
           accountId,
           receivingAccount,
-          amountToSend,
+          sendAmount,
           receivingPayment,
           authorized
         }
@@ -413,7 +413,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         createPayment({
           accountId,
           receivingAccount,
-          amountToSend: BigInt(123)
+          sendAmount: BigInt(123)
         }),
       pagedQuery: 'outgoingPayments',
       parent: {

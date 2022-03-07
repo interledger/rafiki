@@ -59,17 +59,17 @@ export async function handlePending(
     throw LifecycleError.MissingBalance
   }
 
-  // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
+  // This is the amount of money *remaining* to send, which may be less than the payment intent's sendAmount due to retries (FixedSend payments only).
   let amountToSend: bigint | undefined
-  if (payment.intent.amountToSend) {
-    amountToSend = payment.intent.amountToSend - amountSent
+  if (payment.intent.sendAmount) {
+    amountToSend = payment.intent.sendAmount - amountSent
     if (amountToSend <= BigInt(0)) {
       // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=COMPLETED didn't commit. Then the payment retried and ended up here.
       // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the COMPLETED state.
       deps.logger.error(
         {
           amountToSend,
-          intentAmountToSend: payment.intent.amountToSend,
+          intentSendAmount: payment.intent.sendAmount,
           amountSent
         },
         'quote amountToSend bounds error'

@@ -1305,7 +1305,7 @@
             "deprecationReason": null
           },
           {
-            "name": "amountToSend",
+            "name": "sendAmount",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -3746,7 +3746,7 @@
             "deprecationReason": null
           },
           {
-            "name": "amountToSend",
+            "name": "sendAmount",
             "description": null,
             "args": [],
             "type": {

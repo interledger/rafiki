@@ -168,7 +168,7 @@ export type CreateAssetLiquidityWithdrawalInput = {
 export type CreateOutgoingPaymentInput = {
   accountId: Scalars['String'];
   receivingAccount?: Maybe<Scalars['String']>;
-  amountToSend?: Maybe<Scalars['UInt64']>;
+  sendAmount?: Maybe<Scalars['UInt64']>;
   receivingPayment?: Maybe<Scalars['String']>;
   authorized?: Maybe<Scalars['Boolean']>;
 };
@@ -526,7 +526,7 @@ export type PaymentDestinationAccount = {
 export type PaymentIntent = {
   __typename?: 'PaymentIntent';
   receivingAccount?: Maybe<Scalars['String']>;
-  amountToSend?: Maybe<Scalars['UInt64']>;
+  sendAmount?: Maybe<Scalars['UInt64']>;
   receivingPayment?: Maybe<Scalars['String']>;
 };
 
@@ -1186,7 +1186,7 @@ export type PaymentDestinationAccountResolvers<ContextType = any, ParentType ext
 
 export type PaymentIntentResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentIntent'] = ResolversParentTypes['PaymentIntent']> = {
   receivingAccount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  amountToSend?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  sendAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   receivingPayment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

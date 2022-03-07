@@ -273,7 +273,7 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await outgoingPaymentService.create({
           accountId,
           receivingAccount,
-          amountToSend: BigInt(123),
+          sendAmount: BigInt(123),
           authorized
         })
         assert.ok(!isOutgoingPaymentError(payment))
@@ -281,7 +281,7 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment.authorized).toEqual(expectedAuthorized)
         expect(payment.intent).toEqual({
           receivingAccount,
-          amountToSend: BigInt(123)
+          sendAmount: BigInt(123)
         })
         expect(payment.accountId).toBe(accountId)
         await expectOutcome(payment, { accountBalance: BigInt(0) })
@@ -318,17 +318,17 @@ describe('OutgoingPaymentService', (): void => {
       // receivingPayment and receivingAccount are defined in `beforeEach`
       // and unavailable in the `test.each` table
       test.each`
-        toPayment | toAccount | hasAmountToSend | error                                      | description
-        ${false}  | ${false}  | ${true}         | ${OutgoingPaymentError.InvalidDestination} | ${'without a destination'}
-        ${true}   | ${true}   | ${true}         | ${OutgoingPaymentError.InvalidDestination} | ${'with multiple destinations'}
-        ${true}   | ${false}  | ${true}         | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid amount'}
-        ${false}  | ${true}   | ${false}        | ${OutgoingPaymentError.InvalidAmount}      | ${'with missing amount'}
+        toPayment | toAccount | hasSendAmount | error                                      | description
+        ${false}  | ${false}  | ${true}       | ${OutgoingPaymentError.InvalidDestination} | ${'without a destination'}
+        ${true}   | ${true}   | ${true}       | ${OutgoingPaymentError.InvalidDestination} | ${'with multiple destinations'}
+        ${true}   | ${false}  | ${true}       | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid amount'}
+        ${false}  | ${true}   | ${false}      | ${OutgoingPaymentError.InvalidAmount}      | ${'with missing amount'}
       `(
         'fails to create $description',
         async ({
           toPayment,
           toAccount,
-          hasAmountToSend,
+          hasSendAmount,
           error
         }): Promise<void> => {
           await expect(
@@ -336,7 +336,7 @@ describe('OutgoingPaymentService', (): void => {
               accountId,
               receivingPayment: toPayment ? receivingPayment : undefined,
               receivingAccount: toAccount ? receivingAccount : undefined,
-              amountToSend: hasAmountToSend ? BigInt(123) : undefined,
+              sendAmount: hasSendAmount ? BigInt(123) : undefined,
               authorized
             })
           ).resolves.toEqual(error)
@@ -358,7 +358,7 @@ describe('OutgoingPaymentService', (): void => {
             await createPayment({
               accountId,
               receivingAccount,
-              amountToSend: BigInt(123),
+              sendAmount: BigInt(123),
               authorized
             })
           ).id
@@ -432,7 +432,7 @@ describe('OutgoingPaymentService', (): void => {
             await createPayment({
               accountId,
               receivingAccount,
-              amountToSend: BigInt(123)
+              sendAmount: BigInt(123)
             })
           ).id
           const payment = await processNext(paymentId, PaymentState.Pending)
@@ -471,7 +471,7 @@ describe('OutgoingPaymentService', (): void => {
           const originalPayment = await createPayment({
             accountId,
             receivingAccount,
-            amountToSend: BigInt(123)
+            sendAmount: BigInt(123)
           })
           const paymentId = originalPayment.id
           // Pretend that the destination asset was initially different.
@@ -504,7 +504,7 @@ describe('OutgoingPaymentService', (): void => {
           const { id: paymentId } = await createPayment({
             accountId,
             receivingAccount,
-            amountToSend: BigInt(123)
+            sendAmount: BigInt(123)
           })
           payment = await processNext(paymentId, PaymentState.Prepared)
         }
@@ -530,7 +530,7 @@ describe('OutgoingPaymentService', (): void => {
       async function setup(
         opts: Pick<
           PaymentIntent,
-          'amountToSend' | 'receivingAccount' | 'receivingPayment'
+          'sendAmount' | 'receivingAccount' | 'receivingPayment'
         >
       ): Promise<string> {
         const { id: paymentId } = await createPayment({
@@ -559,7 +559,7 @@ describe('OutgoingPaymentService', (): void => {
       it('COMPLETED (FixedSend)', async (): Promise<void> => {
         const paymentId = await setup({
           receivingAccount,
-          amountToSend: BigInt(123)
+          sendAmount: BigInt(123)
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
@@ -618,7 +618,7 @@ describe('OutgoingPaymentService', (): void => {
 
         const paymentId = await setup({
           receivingAccount,
-          amountToSend: BigInt(123)
+          sendAmount: BigInt(123)
         })
 
         for (let i = 0; i < 4; i++) {
@@ -657,7 +657,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         const paymentId = await setup({
           receivingAccount,
-          amountToSend: BigInt(123)
+          sendAmount: BigInt(123)
         })
 
         const payment = await processNext(
@@ -681,10 +681,10 @@ describe('OutgoingPaymentService', (): void => {
           },
           Pay.PaymentError.ClosedByReceiver
         )
-        const amountToSend = BigInt(123)
+        const sendAmount = BigInt(123)
         const paymentId = await setup({
           receivingAccount,
-          amountToSend
+          sendAmount
         })
 
         const payment = await processNext(paymentId, PaymentState.Sending)
@@ -700,8 +700,8 @@ describe('OutgoingPaymentService', (): void => {
         const payment2 = await processNext(paymentId, PaymentState.Completed)
         await expectOutcome(payment2, {
           accountBalance: BigInt(0),
-          amountSent: amountToSend,
-          amountDelivered: amountToSend / BigInt(2)
+          amountSent: sendAmount,
+          amountDelivered: sendAmount / BigInt(2)
         })
       })
 
@@ -709,7 +709,7 @@ describe('OutgoingPaymentService', (): void => {
       it('COMPLETED (FixedSend, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
           receivingAccount,
-          amountToSend: BigInt(123)
+          sendAmount: BigInt(123)
         })
 
         await processNext(paymentId, PaymentState.Completed)
@@ -776,7 +776,7 @@ describe('OutgoingPaymentService', (): void => {
         await createPayment({
           accountId,
           receivingAccount,
-          amountToSend: BigInt(123)
+          sendAmount: BigInt(123)
         })
       ).id
     }, 10_000)
@@ -852,7 +852,7 @@ describe('OutgoingPaymentService', (): void => {
       const { id: paymentId } = await createPayment({
         accountId,
         receivingAccount,
-        amountToSend: BigInt(123),
+        sendAmount: BigInt(123),
         authorized: true
       })
       payment = await processNext(paymentId, PaymentState.Funding)
@@ -926,7 +926,7 @@ describe('OutgoingPaymentService', (): void => {
         createPayment({
           accountId,
           receivingAccount,
-          amountToSend: BigInt(123)
+          sendAmount: BigInt(123)
         }),
       getPage: (pagination: Pagination) =>
         outgoingPaymentService.getAccountPage(accountId, pagination)
