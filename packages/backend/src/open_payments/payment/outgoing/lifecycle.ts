@@ -142,6 +142,7 @@ export async function handlePrepared(
   const now = new Date()
   if (payment.quote.activationDeadline < now) {
     await payment.$query(deps.knex).patch({ state: PaymentState.Expired })
+    return
   }
 
   deps.logger.error(
