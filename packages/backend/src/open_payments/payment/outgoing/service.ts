@@ -80,13 +80,13 @@ async function createOutgoingPayment(
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
   if (options.incomingPaymentUrl) {
-    if (options.paymentPointer) {
+    if (options.receivingAccount) {
       return OutgoingPaymentError.InvalidDestination
     }
     if (options.amountToSend !== undefined) {
       return OutgoingPaymentError.InvalidAmount
     }
-  } else if (options.paymentPointer) {
+  } else if (options.receivingAccount) {
     if (!options.amountToSend) {
       return OutgoingPaymentError.InvalidAmount
     }
@@ -100,7 +100,7 @@ async function createOutgoingPayment(
         .insertAndFetch({
           state: PaymentState.Pending,
           intent: {
-            paymentPointer: options.paymentPointer,
+            receivingAccount: options.receivingAccount,
             incomingPaymentUrl: options.incomingPaymentUrl,
             amountToSend: options.amountToSend
           },

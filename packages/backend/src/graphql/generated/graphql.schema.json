@@ -1293,7 +1293,7 @@
             "deprecationReason": null
           },
           {
-            "name": "paymentPointer",
+            "name": "receivingAccount",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -3734,7 +3734,7 @@
         "description": null,
         "fields": [
           {
-            "name": "paymentPointer",
+            "name": "receivingAccount",
             "description": null,
             "args": [],
             "type": {

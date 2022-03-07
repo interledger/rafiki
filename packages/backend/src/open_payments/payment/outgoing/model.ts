@@ -17,7 +17,7 @@ const ratioFields = [
 ]
 
 export type PaymentIntent = {
-  paymentPointer?: string
+  receivingAccount?: string
   incomingPaymentUrl?: string
   amountToSend?: bigint
 }
@@ -154,8 +154,8 @@ export class OutgoingPayment
         balance: balance.toString()
       }
     }
-    if (this.intent.paymentPointer) {
-      data.payment.intent.paymentPointer = this.intent.paymentPointer
+    if (this.intent.receivingAccount) {
+      data.payment.intent.receivingAccount = this.intent.receivingAccount
     }
     if (this.intent.incomingPaymentUrl) {
       data.payment.intent.incomingPaymentUrl = this.intent.incomingPaymentUrl
@@ -233,7 +233,7 @@ export type PaymentData = {
     error?: string
     stateAttempts: number
     intent: {
-      paymentPointer?: string
+      receivingAccount?: string
       incomingPaymentUrl?: string
       amountToSend?: string
     }

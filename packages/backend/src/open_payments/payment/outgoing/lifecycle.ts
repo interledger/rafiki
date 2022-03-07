@@ -25,7 +25,7 @@ export async function handlePending(
 
   const destination = await Pay.setupPayment({
     plugin,
-    paymentPointer: payment.intent.paymentPointer,
+    paymentPointer: payment.intent.receivingAccount,
     invoiceUrl: payment.intent.incomingPaymentUrl
   })
 
@@ -166,7 +166,7 @@ export async function handleSending(
 
   const destination = await Pay.setupPayment({
     plugin,
-    paymentPointer: payment.intent.paymentPointer,
+    paymentPointer: payment.intent.receivingAccount,
     invoiceUrl: payment.intent.incomingPaymentUrl
   })
 

@@ -38,7 +38,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let accountService: AccountService
 
-  const paymentPointer = 'http://wallet2.example/pay/bob'
+  const receivingAccount = 'http://wallet2.example/pay/bob'
   const incomingPaymentUrl = 'http://wallet2.example/incoming/123'
 
   beforeAll(
@@ -68,7 +68,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   const createPayment = async ({
     accountId,
-    paymentPointer,
+    receivingAccount,
     amountToSend,
     incomingPaymentUrl,
     authorized
@@ -76,7 +76,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     OutgoingPaymentModel.query(knex).insertAndFetch({
       state: PaymentState.Pending,
       intent: {
-        paymentPointer,
+        receivingAccount,
         amountToSend,
         incomingPaymentUrl
       },
@@ -108,13 +108,13 @@ describe('OutgoingPayment Resolvers', (): void => {
     let payment: OutgoingPaymentModel
 
     describe.each`
-      paymentPointer    | amountToSend   | incomingPaymentUrl    | authorized | description
-      ${paymentPointer} | ${BigInt(123)} | ${null}               | ${true}    | ${'fixed send'}
-      ${null}           | ${null}        | ${incomingPaymentUrl} | ${false}   | ${'incoming payment'}
+      receivingAccount    | amountToSend   | incomingPaymentUrl    | authorized | description
+      ${receivingAccount} | ${BigInt(123)} | ${null}               | ${true}    | ${'fixed send'}
+      ${null}             | ${null}        | ${incomingPaymentUrl} | ${false}   | ${'incoming payment'}
     `(
       '$description',
       ({
-        paymentPointer,
+        receivingAccount,
         amountToSend,
         incomingPaymentUrl,
         authorized
@@ -126,7 +126,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             })
             payment = await createPayment({
               accountId,
-              paymentPointer,
+              receivingAccount,
               amountToSend,
               incomingPaymentUrl,
               authorized
@@ -172,7 +172,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                       error
                       stateAttempts
                       intent {
-                        paymentPointer
+                        receivingAccount
                         incomingPaymentUrl
                         amountToSend
                       }
@@ -212,7 +212,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.error).toEqual(error)
             expect(query.stateAttempts).toBe(0)
             expect(query.intent).toEqual({
-              paymentPointer,
+              receivingAccount,
               amountToSend: amountToSend?.toString() || null,
               incomingPaymentUrl,
               __typename: 'PaymentIntent'
@@ -266,19 +266,19 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Mutation.createOutgoingPayment', (): void => {
     const input = {
       accountId: uuid(),
-      paymentPointer,
+      receivingAccount,
       amountToSend: BigInt(123)
     }
 
     test.each`
-      paymentPointer    | amountToSend   | incomingPaymentUrl    | authorized   | description
-      ${paymentPointer} | ${BigInt(123)} | ${null}               | ${true}      | ${'fixed send (authorized)'}
-      ${paymentPointer} | ${BigInt(123)} | ${null}               | ${false}     | ${'fixed send'}
-      ${null}           | ${null}        | ${incomingPaymentUrl} | ${undefined} | ${'incoming payment'}
+      receivingAccount    | amountToSend   | incomingPaymentUrl    | authorized   | description
+      ${receivingAccount} | ${BigInt(123)} | ${null}               | ${true}      | ${'fixed send (authorized)'}
+      ${receivingAccount} | ${BigInt(123)} | ${null}               | ${false}     | ${'fixed send'}
+      ${null}             | ${null}        | ${incomingPaymentUrl} | ${undefined} | ${'incoming payment'}
     `(
       '200 ($description)',
       async ({
-        paymentPointer,
+        receivingAccount,
         amountToSend,
         incomingPaymentUrl,
         authorized
@@ -288,7 +288,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         })
         const input = {
           accountId,
-          paymentPointer,
+          receivingAccount,
           amountToSend,
           incomingPaymentUrl,
           authorized
@@ -412,7 +412,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       createModel: () =>
         createPayment({
           accountId,
-          paymentPointer,
+          receivingAccount,
           amountToSend: BigInt(123)
         }),
       pagedQuery: 'outgoingPayments',
