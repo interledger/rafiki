@@ -22,7 +22,7 @@ After the quote ends and state advances, the lock on the payment is released.
 
 ### Authorization
 
-If the payment was not created with `authorized` set to `true`, a client should manually authorize the payment, based on the parameters of the quote, before the payment can be processed.
+If the payment was not created with `authorized` set to `true`, a client must manually authorize the payment, based on the parameters of the quote, before the payment can be processed.
 
 This step is necessary so the end user can precisely know the maximum amount of source units that will leave their account. Typically, the payment application will present these parameters in the user interface before the user elects to approve the payment. This step is particularly important for incoming payments, to prevent an unbounded sum from leaving the user's account. During this step, the user may also be presented with additional information about the payment, such as details of the payment recipient, or how much is expected to be delivered.
 
