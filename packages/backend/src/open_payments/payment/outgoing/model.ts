@@ -8,19 +8,13 @@ import { Account } from '../../account/model'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
 
-const fieldPrefixes = ['intent', 'quote', 'destinationAccount', 'outcome']
+const fieldPrefixes = ['quote', 'destinationAccount', 'outcome']
 
 const ratioFields = [
   'quoteMinExchangeRate',
   'quoteLowExchangeRateEstimate',
   'quoteHighExchangeRateEstimate'
 ]
-
-export type PaymentIntent = {
-  receivingAccount?: string
-  receivingPayment?: string
-  sendAmount?: bigint
-}
 
 export class OutgoingPayment
   extends BaseModel
@@ -33,7 +27,9 @@ export class OutgoingPayment
   public error?: string | null
   public stateAttempts!: number
 
-  public intent!: PaymentIntent
+  receivingAccount?: string
+  receivingPayment?: string
+  sendAmount?: bigint
 
   public quote?: {
     timestamp: Date
@@ -145,7 +141,6 @@ export class OutgoingPayment
         state: this.state,
         authorized: this.authorized,
         stateAttempts: this.stateAttempts,
-        intent: {},
         destinationAccount: this.destinationAccount,
         createdAt: new Date(+this.createdAt).toISOString(),
         outcome: {
@@ -154,14 +149,14 @@ export class OutgoingPayment
         balance: balance.toString()
       }
     }
-    if (this.intent.receivingAccount) {
-      data.payment.intent.receivingAccount = this.intent.receivingAccount
+    if (this.receivingAccount) {
+      data.payment.receivingAccount = this.receivingAccount
     }
-    if (this.intent.receivingPayment) {
-      data.payment.intent.receivingPayment = this.intent.receivingPayment
+    if (this.receivingPayment) {
+      data.payment.receivingPayment = this.receivingPayment
     }
-    if (this.intent.sendAmount) {
-      data.payment.intent.sendAmount = this.intent.sendAmount.toString()
+    if (this.sendAmount) {
+      data.payment.sendAmount = this.sendAmount.toString()
     }
     if (this.error) {
       data.payment.error = this.error
@@ -232,11 +227,9 @@ export type PaymentData = {
     authorized: boolean
     error?: string
     stateAttempts: number
-    intent: {
-      receivingAccount?: string
-      receivingPayment?: string
-      sendAmount?: string
-    }
+    receivingAccount?: string
+    receivingPayment?: string
+    sendAmount?: string
     quote?: {
       timestamp: string
       activationDeadline: string

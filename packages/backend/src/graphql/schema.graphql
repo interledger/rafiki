@@ -373,17 +373,13 @@ type OutgoingPayment implements Model {
   authorized: Boolean!
   error: String
   stateAttempts: Int!
-  intent: PaymentIntent
+  receivingAccount: String
+  sendAmount: UInt64
+  receivingPayment: String
   quote: PaymentQuote
   destinationAccount: PaymentDestinationAccount
   outcome: OutgoingPaymentOutcome
   createdAt: String!
-}
-
-type PaymentIntent {
-  receivingAccount: String
-  sendAmount: UInt64
-  receivingPayment: String
 }
 
 enum PaymentState {

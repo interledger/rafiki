@@ -75,11 +75,9 @@ describe('OutgoingPayment Resolvers', (): void => {
   }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
     OutgoingPaymentModel.query(knex).insertAndFetch({
       state: PaymentState.Pending,
-      intent: {
-        receivingAccount,
-        sendAmount,
-        receivingPayment
-      },
+      receivingAccount,
+      sendAmount,
+      receivingPayment,
       quote: {
         timestamp: new Date(),
         activationDeadline: new Date(Date.now() + 1000),
@@ -171,11 +169,9 @@ describe('OutgoingPayment Resolvers', (): void => {
                       authorized
                       error
                       stateAttempts
-                      intent {
-                        receivingAccount
-                        receivingPayment
-                        sendAmount
-                      }
+                      receivingAccount
+                      receivingPayment
+                      sendAmount
                       quote {
                         timestamp
                         activationDeadline
@@ -211,12 +207,11 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.authorized).toEqual(payment.authorized)
             expect(query.error).toEqual(error)
             expect(query.stateAttempts).toBe(0)
-            expect(query.intent).toEqual({
-              receivingAccount,
-              sendAmount: sendAmount?.toString() || null,
-              receivingPayment,
-              __typename: 'PaymentIntent'
-            })
+            expect(query.receivingAccount).toEqual(receivingAccount)
+            expect(query.sendAmount).toEqual(
+              payment.sendAmount?.toString() || null
+            )
+            expect(query.receivingPayment).toEqual(receivingPayment)
             expect(query.quote).toEqual({
               timestamp: payment.quote?.timestamp.toISOString(),
               activationDeadline: payment.quote?.activationDeadline.toISOString(),

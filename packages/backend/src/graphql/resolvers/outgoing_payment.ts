@@ -165,7 +165,9 @@ export function paymentToGraphql(
     authorized: payment.authorized,
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
-    intent: payment.intent,
+    receivingAccount: payment.receivingAccount,
+    receivingPayment: payment.receivingPayment,
+    sendAmount: payment.sendAmount,
     quote: payment.quote && {
       ...payment.quote,
       targetType: SchemaPaymentType[payment.quote.targetType],

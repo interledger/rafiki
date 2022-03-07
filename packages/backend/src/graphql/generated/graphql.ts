@@ -472,7 +472,9 @@ export type OutgoingPayment = Model & {
   authorized: Scalars['Boolean'];
   error?: Maybe<Scalars['String']>;
   stateAttempts: Scalars['Int'];
-  intent?: Maybe<PaymentIntent>;
+  receivingAccount?: Maybe<Scalars['String']>;
+  sendAmount?: Maybe<Scalars['UInt64']>;
+  receivingPayment?: Maybe<Scalars['String']>;
   quote?: Maybe<PaymentQuote>;
   destinationAccount?: Maybe<PaymentDestinationAccount>;
   outcome?: Maybe<OutgoingPaymentOutcome>;
@@ -521,13 +523,6 @@ export type PaymentDestinationAccount = {
   scale: Scalars['Int'];
   code: Scalars['String'];
   url?: Maybe<Scalars['String']>;
-};
-
-export type PaymentIntent = {
-  __typename?: 'PaymentIntent';
-  receivingAccount?: Maybe<Scalars['String']>;
-  sendAmount?: Maybe<Scalars['UInt64']>;
-  receivingPayment?: Maybe<Scalars['String']>;
 };
 
 export type PaymentQuote = {
@@ -844,7 +839,6 @@ export type ResolversTypes = {
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   PaymentDestinationAccount: ResolverTypeWrapper<Partial<PaymentDestinationAccount>>;
-  PaymentIntent: ResolverTypeWrapper<Partial<PaymentIntent>>;
   PaymentQuote: ResolverTypeWrapper<Partial<PaymentQuote>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']>>;
   PaymentState: ResolverTypeWrapper<Partial<PaymentState>>;
@@ -918,7 +912,6 @@ export type ResolversParentTypes = {
   OutgoingPaymentResponse: Partial<OutgoingPaymentResponse>;
   PageInfo: Partial<PageInfo>;
   PaymentDestinationAccount: Partial<PaymentDestinationAccount>;
-  PaymentIntent: Partial<PaymentIntent>;
   PaymentQuote: Partial<PaymentQuote>;
   Float: Partial<Scalars['Float']>;
   Peer: Partial<Peer>;
@@ -1136,7 +1129,9 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   authorized?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
+  receivingAccount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  sendAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  receivingPayment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
   destinationAccount?: Resolver<Maybe<ResolversTypes['PaymentDestinationAccount']>, ParentType, ContextType>;
   outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
@@ -1181,13 +1176,6 @@ export type PaymentDestinationAccountResolvers<ContextType = any, ParentType ext
   scale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PaymentIntentResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentIntent'] = ResolversParentTypes['PaymentIntent']> = {
-  receivingAccount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  sendAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
-  receivingPayment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1321,7 +1309,6 @@ export type Resolvers<ContextType = any> = {
   OutgoingPaymentResponse?: OutgoingPaymentResponseResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
   PaymentDestinationAccount?: PaymentDestinationAccountResolvers<ContextType>;
-  PaymentIntent?: PaymentIntentResolvers<ContextType>;
   PaymentQuote?: PaymentQuoteResolvers<ContextType>;
   Peer?: PeerResolvers<ContextType>;
   PeerEdge?: PeerEdgeResolvers<ContextType>;

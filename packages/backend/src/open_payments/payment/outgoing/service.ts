@@ -4,12 +4,7 @@ import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import { FundingError, LifecycleError, OutgoingPaymentError } from './errors'
 import { sendWebhookEvent } from './lifecycle'
-import {
-  OutgoingPayment,
-  PaymentIntent,
-  PaymentState,
-  PaymentEventType
-} from './model'
+import { OutgoingPayment, PaymentState, PaymentEventType } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { AccountService } from '../../account/service'
 import { RatesService } from '../../../rates/service'
@@ -70,9 +65,12 @@ async function getOutgoingPayment(
     .withGraphJoined('account.asset')
 }
 
-export type CreateOutgoingPaymentOptions = PaymentIntent & {
+export interface CreateOutgoingPaymentOptions {
   accountId: string
   authorized?: boolean
+  sendAmount?: bigint
+  receivingAccount?: string
+  receivingPayment?: string
 }
 
 async function createOutgoingPayment(
@@ -99,11 +97,9 @@ async function createOutgoingPayment(
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           state: PaymentState.Pending,
-          intent: {
-            receivingAccount: options.receivingAccount,
-            receivingPayment: options.receivingPayment,
-            sendAmount: options.sendAmount
-          },
+          receivingAccount: options.receivingAccount,
+          receivingPayment: options.receivingPayment,
+          sendAmount: options.sendAmount,
           accountId: options.accountId,
           authorized: options.authorized
         })

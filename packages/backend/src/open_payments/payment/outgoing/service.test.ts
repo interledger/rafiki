@@ -18,7 +18,6 @@ import { AppServices } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import {
   OutgoingPayment,
-  PaymentIntent,
   PaymentState,
   PaymentEvent,
   PaymentEventType
@@ -279,10 +278,8 @@ describe('OutgoingPaymentService', (): void => {
         assert.ok(!isOutgoingPaymentError(payment))
         expect(payment.state).toEqual(PaymentState.Pending)
         expect(payment.authorized).toEqual(expectedAuthorized)
-        expect(payment.intent).toEqual({
-          receivingAccount,
-          sendAmount: BigInt(123)
-        })
+        expect(payment.authorized).toEqual(expectedAuthorized)
+        expect(payment.sendAmount).toEqual(BigInt(123))
         expect(payment.accountId).toBe(accountId)
         await expectOutcome(payment, { accountBalance: BigInt(0) })
         expect(payment.account.asset.code).toBe('USD')
@@ -302,9 +299,7 @@ describe('OutgoingPaymentService', (): void => {
         assert.ok(!isOutgoingPaymentError(payment))
         expect(payment.state).toEqual(PaymentState.Pending)
         expect(payment.authorized).toEqual(expectedAuthorized)
-        expect(payment.intent).toEqual({
-          receivingPayment
-        })
+        expect(payment.receivingPayment).toEqual(receivingPayment)
         expect(payment.accountId).toBe(accountId)
         await expectOutcome(payment, { accountBalance: BigInt(0) })
         expect(payment.account.asset.code).toBe('USD')
@@ -529,7 +524,7 @@ describe('OutgoingPaymentService', (): void => {
     describe('SENDING→', (): void => {
       async function setup(
         opts: Pick<
-          PaymentIntent,
+          CreateOutgoingPaymentOptions,
           'sendAmount' | 'receivingAccount' | 'receivingPayment'
         >
       ): Promise<string> {
