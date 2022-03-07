@@ -34,7 +34,7 @@ Authorization ends in two possible states:
 
 ### Funding
 
-After quoting completes and the payment is authorized, Rafiki notifies the wallet operator via an `outgoing_payment.funding` [webhook event](#webhooks) to add `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment, reserving the maximum requisite funds for the payment attempt.
+After quoting completes and the payment is authorized, Rafiki notifies the wallet operator via an `outgoing_payment.funding` [webhook event](#webhooks) to reserve the maximum requisite funds for the payment attempt by moving `maxSourceAmount` of the quote from the funding wallet account owned by the payer to the payment account.
 
 If the wallet funds the payment, the state advances to `SENDING`.
 
