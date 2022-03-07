@@ -39,7 +39,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let accountService: AccountService
 
   const receivingAccount = 'http://wallet2.example/pay/bob'
-  const incomingPaymentUrl = 'http://wallet2.example/incoming/123'
+  const receivingPayment = 'http://wallet2.example/incoming/123'
 
   beforeAll(
     async (): Promise<void> => {
@@ -70,7 +70,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     accountId,
     receivingAccount,
     amountToSend,
-    incomingPaymentUrl,
+    receivingPayment,
     authorized
   }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
     OutgoingPaymentModel.query(knex).insertAndFetch({
@@ -78,7 +78,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       intent: {
         receivingAccount,
         amountToSend,
-        incomingPaymentUrl
+        receivingPayment
       },
       quote: {
         timestamp: new Date(),
@@ -108,15 +108,15 @@ describe('OutgoingPayment Resolvers', (): void => {
     let payment: OutgoingPaymentModel
 
     describe.each`
-      receivingAccount    | amountToSend   | incomingPaymentUrl    | authorized | description
-      ${receivingAccount} | ${BigInt(123)} | ${null}               | ${true}    | ${'fixed send'}
-      ${null}             | ${null}        | ${incomingPaymentUrl} | ${false}   | ${'incoming payment'}
+      receivingAccount    | amountToSend   | receivingPayment    | authorized | description
+      ${receivingAccount} | ${BigInt(123)} | ${null}             | ${true}    | ${'fixed send'}
+      ${null}             | ${null}        | ${receivingPayment} | ${false}   | ${'incoming payment'}
     `(
       '$description',
       ({
         receivingAccount,
         amountToSend,
-        incomingPaymentUrl,
+        receivingPayment,
         authorized
       }): void => {
         beforeEach(
@@ -128,7 +128,7 @@ describe('OutgoingPayment Resolvers', (): void => {
               accountId,
               receivingAccount,
               amountToSend,
-              incomingPaymentUrl,
+              receivingPayment,
               authorized
             })
           }
@@ -173,7 +173,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                       stateAttempts
                       intent {
                         receivingAccount
-                        incomingPaymentUrl
+                        receivingPayment
                         amountToSend
                       }
                       quote {
@@ -214,7 +214,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.intent).toEqual({
               receivingAccount,
               amountToSend: amountToSend?.toString() || null,
-              incomingPaymentUrl,
+              receivingPayment,
               __typename: 'PaymentIntent'
             })
             expect(query.quote).toEqual({
@@ -271,16 +271,16 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
 
     test.each`
-      receivingAccount    | amountToSend   | incomingPaymentUrl    | authorized   | description
-      ${receivingAccount} | ${BigInt(123)} | ${null}               | ${true}      | ${'fixed send (authorized)'}
-      ${receivingAccount} | ${BigInt(123)} | ${null}               | ${false}     | ${'fixed send'}
-      ${null}             | ${null}        | ${incomingPaymentUrl} | ${undefined} | ${'incoming payment'}
+      receivingAccount    | amountToSend   | receivingPayment    | authorized   | description
+      ${receivingAccount} | ${BigInt(123)} | ${null}             | ${true}      | ${'fixed send (authorized)'}
+      ${receivingAccount} | ${BigInt(123)} | ${null}             | ${false}     | ${'fixed send'}
+      ${null}             | ${null}        | ${receivingPayment} | ${undefined} | ${'incoming payment'}
     `(
       '200 ($description)',
       async ({
         receivingAccount,
         amountToSend,
-        incomingPaymentUrl,
+        receivingPayment,
         authorized
       }): Promise<void> => {
         const { id: accountId } = await accountService.create({
@@ -290,7 +290,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           accountId,
           receivingAccount,
           amountToSend,
-          incomingPaymentUrl,
+          receivingPayment,
           authorized
         }
         const payment = await createPayment(input)

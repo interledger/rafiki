@@ -1317,7 +1317,7 @@
             "deprecationReason": null
           },
           {
-            "name": "incomingPaymentUrl",
+            "name": "receivingPayment",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -3758,7 +3758,7 @@
             "deprecationReason": null
           },
           {
-            "name": "incomingPaymentUrl",
+            "name": "receivingPayment",
             "description": null,
             "args": [],
             "type": {

@@ -79,7 +79,7 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
-  if (options.incomingPaymentUrl) {
+  if (options.receivingPayment) {
     if (options.receivingAccount) {
       return OutgoingPaymentError.InvalidDestination
     }
@@ -101,7 +101,7 @@ async function createOutgoingPayment(
           state: PaymentState.Pending,
           intent: {
             receivingAccount: options.receivingAccount,
-            incomingPaymentUrl: options.incomingPaymentUrl,
+            receivingPayment: options.receivingPayment,
             amountToSend: options.amountToSend
           },
           accountId: options.accountId,

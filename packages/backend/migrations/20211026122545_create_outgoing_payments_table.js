@@ -8,7 +8,7 @@ exports.up = function (knex) {
     table.boolean('authorized').notNullable().defaultTo(false)
 
     table.string('intentReceivingAccount').nullable()
-    table.string('intentIncomingPaymentUrl').nullable()
+    table.string('intentReceivingPayment').nullable()
     table.bigInteger('intentAmountToSend').nullable()
 
     table.timestamp('quoteTimestamp').nullable()

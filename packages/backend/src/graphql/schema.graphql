@@ -383,7 +383,7 @@ type OutgoingPayment implements Model {
 type PaymentIntent {
   receivingAccount: String
   amountToSend: UInt64
-  incomingPaymentUrl: String
+  receivingPayment: String
 }
 
 enum PaymentState {
@@ -434,7 +434,7 @@ input CreateOutgoingPaymentInput {
   accountId: String!
   receivingAccount: String
   amountToSend: UInt64
-  incomingPaymentUrl: String
+  receivingPayment: String
   authorized: Boolean
 }
 

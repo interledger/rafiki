@@ -42,7 +42,7 @@ describe('OutgoingPaymentService', (): void => {
   let accountId: string
   let asset: AssetOptions
   let incomingPayment: IncomingPayment
-  let incomingPaymentUrl: string
+  let receivingPayment: string
   let accountUrl: string
   let receivingAccount: string
   let amtDelivered: bigint
@@ -238,7 +238,7 @@ describe('OutgoingPaymentService', (): void => {
         expiresAt: new Date(Date.now() + 60 * 1000),
         description: 'description!'
       })
-      incomingPaymentUrl = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
+      receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
       amtDelivered = BigInt(0)
     }
   )
@@ -296,14 +296,14 @@ describe('OutgoingPaymentService', (): void => {
       it('creates an OutgoingPayment (FixedDelivery)', async () => {
         const payment = await outgoingPaymentService.create({
           accountId,
-          incomingPaymentUrl,
+          receivingPayment,
           authorized
         })
         assert.ok(!isOutgoingPaymentError(payment))
         expect(payment.state).toEqual(PaymentState.Pending)
         expect(payment.authorized).toEqual(expectedAuthorized)
         expect(payment.intent).toEqual({
-          incomingPaymentUrl
+          receivingPayment
         })
         expect(payment.accountId).toBe(accountId)
         await expectOutcome(payment, { accountBalance: BigInt(0) })
@@ -315,7 +315,7 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment2.id).toEqual(payment.id)
       })
 
-      // incomingPaymentUrl and receivingAccount are defined in `beforeEach`
+      // receivingPayment and receivingAccount are defined in `beforeEach`
       // and unavailable in the `test.each` table
       test.each`
         toPayment | toAccount | hasAmountToSend | error                                      | description
@@ -334,7 +334,7 @@ describe('OutgoingPaymentService', (): void => {
           await expect(
             outgoingPaymentService.create({
               accountId,
-              incomingPaymentUrl: toPayment ? incomingPaymentUrl : undefined,
+              receivingPayment: toPayment ? receivingPayment : undefined,
               receivingAccount: toAccount ? receivingAccount : undefined,
               amountToSend: hasAmountToSend ? BigInt(123) : undefined,
               authorized
@@ -398,7 +398,7 @@ describe('OutgoingPaymentService', (): void => {
           const paymentId = (
             await createPayment({
               accountId,
-              incomingPaymentUrl: incomingPaymentUrl,
+              receivingPayment: receivingPayment,
               authorized
             })
           ).id
@@ -456,7 +456,7 @@ describe('OutgoingPaymentService', (): void => {
           const paymentId = (
             await createPayment({
               accountId,
-              incomingPaymentUrl: incomingPaymentUrl
+              receivingPayment: receivingPayment
             })
           ).id
           await payIncomingPayment(incomingPayment.amount)
@@ -530,7 +530,7 @@ describe('OutgoingPaymentService', (): void => {
       async function setup(
         opts: Pick<
           PaymentIntent,
-          'amountToSend' | 'receivingAccount' | 'incomingPaymentUrl'
+          'amountToSend' | 'receivingAccount' | 'receivingPayment'
         >
       ): Promise<string> {
         const { id: paymentId } = await createPayment({
@@ -572,7 +572,7 @@ describe('OutgoingPaymentService', (): void => {
 
       it('COMPLETED (FixedDelivery)', async (): Promise<void> => {
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          receivingPayment: receivingPayment
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
@@ -591,7 +591,7 @@ describe('OutgoingPaymentService', (): void => {
         const amountAlreadyDelivered = BigInt(34)
         await payIncomingPayment(amountAlreadyDelivered)
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          receivingPayment: receivingPayment
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
@@ -728,7 +728,7 @@ describe('OutgoingPaymentService', (): void => {
       // Caused by retry after failed SENDING→COMPLETED transition commit.
       it('COMPLETED (FixedDelivery, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          receivingPayment: receivingPayment
         })
         // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
         await payIncomingPayment(incomingPayment.amount)
@@ -746,7 +746,7 @@ describe('OutgoingPaymentService', (): void => {
 
       it('FAILED (destination asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          receivingPayment: receivingPayment
         })
         // Pretend that the destination asset was initially different.
         await OutgoingPayment.query(knex)

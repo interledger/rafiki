@@ -1602,11 +1602,11 @@ describe('Liquidity Resolvers', (): void => {
         })
         const outgoingPaymentService = await deps.use('outgoingPaymentService')
         const config = await deps.use('config')
-        const incomingPaymentUrl = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
+        const receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
         // create and then patch quote
         payment = (await outgoingPaymentService.create({
           accountId,
-          incomingPaymentUrl
+          receivingPayment
         })) as OutgoingPayment
         await payment.$query(knex).patch({
           state: PaymentState.Funding,
