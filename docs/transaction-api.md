@@ -161,7 +161,7 @@ The intent must include `incomingPaymentUrl` xor (`paymentPointer` and `amountTo
 | `intent`                         | No       | `PaymentIntent` | See [`PaymentIntent`](#paymentintent).                                                                                                                                                                                                                                                                                   |
 | `quote`                          | Yes      | `Object`        | Parameters of payment execution and the projected outcome of a payment.                                                                                                                                                                                                                                                  |
 | `quote.timestamp`                | No       | `String`        | Timestamp when the most recent quote for this transaction finished.                                                                                                                                                                                                                                                      |
-| `quote.activationDeadline`       | No       | `String`        | Time when this quote expires.                                                                                                                                                                                                                                                                                            |
+| `quote.activationDeadline`       | No       | `String`        | Time when this quote expires. ISO 8601 format.                                                                                                                                                                                                                                                                           |
 | `quote.targetType`               | No       | `PaymentType`   | See [`PaymentType`](#paymenttype).                                                                                                                                                                                                                                                                                       |
 | `quote.minDeliveryAmount`        | No       | `UInt64`        | Minimum amount that will be delivered if the payment completes, in the base unit and asset of the receiving account. For fixed delivery payments, this will be the remaining amount of the incoming payment.                                                                                                             |
 | `quote.maxSourceAmount`          | No       | `UInt64`        | Maximum amount that will be sent in the base unit and asset of the sending account. This is intended to be presented to the user or agent before authorizing a fixed delivery payment. For fixed source amount payments, this will be the provided `amountToSend`.                                                       |
@@ -176,7 +176,7 @@ The intent must include `incomingPaymentUrl` xor (`paymentPointer` and `amountTo
 | `destinationAccount.url`         | No       | `String`        | URL of the recipient Open Payments/SPSP account (with well-known path, and stripped trailing slash). Each payment pointer and its corresponding account URL identifies a unique payment recipient.                                                                                                                       |
 | `outcome`                        | No       | `Object`        | Only set once a payment reaches the sending state. Subsequent attempts add to the totals, and the outcome persists even if a payment attempt fails.                                                                                                                                                                      |
 | `outcome.amountSent`             | No       | `UInt64`        | Total amount sent and fulfilled, across all payment attempts, in base units of the source asset.                                                                                                                                                                                                                         |
-| `createdAt`                      | No       | `String`        |                                                                                                                                                                                                                                                                                                                          |
+| `createdAt`                      | No       | `String`        | ISO 8601 format.                                                                                                                                                                                                                                                                                                         |
 
 ### `PaymentState`
 
@@ -202,8 +202,8 @@ The intent must include `incomingPaymentUrl` xor (`paymentPointer` and `amountTo
 | `amount`      | No       | `UInt64` | The amount that must be paid at the time the incoming payment is created, in base units of the account asset. |
 | `received`    | No       | `UInt64` | The total amount received, in base units of the account asset.                                                |
 | `description` | Yes      | `String` | Human readable description of the incoming payment.                                                           |
-| `createdAt`   | No       | `String` |                                                                                                               |
-| `expiresAt`   | No       | `String` |                                                                                                               |
+| `createdAt`   | No       | `String` | ISO 8601 format.                                                                                              |
+| `expiresAt`   | No       | `String` | ISO 8601 format.                                                                                              |
 
 ### `Account`
 
@@ -211,4 +211,4 @@ The intent must include `incomingPaymentUrl` xor (`paymentPointer` and `amountTo
 | :---------- | :------- | :------- | :-------------------------------------------------------- |
 | `id`        | No       | `ID`     | Unique ID for this account, randomly generated by Rafiki. |
 | `received`  | No       | `UInt64` | The amount received, in base units of the account asset.  |
-| `createdAt` | No       | `String` |                                                           |
+| `createdAt` | No       | `String` | ISO 8601 format.                                          |
