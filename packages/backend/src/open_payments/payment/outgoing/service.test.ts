@@ -4,8 +4,12 @@ import Knex from 'knex'
 import * as Pay from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 
-import { FundingError, OutgoingPaymentError } from './errors'
-import { OutgoingPaymentService } from './service'
+import {
+  FundingError,
+  OutgoingPaymentError,
+  isOutgoingPaymentError
+} from './errors'
+import { OutgoingPaymentService, CreateOutgoingPaymentOptions } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { IAppConfig, Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -54,6 +58,14 @@ describe('OutgoingPaymentService', (): void => {
     [PaymentState.Expired]: undefined,
     [PaymentState.Failed]: PaymentEventType.PaymentFailed,
     [PaymentState.Completed]: PaymentEventType.PaymentCompleted
+  }
+
+  async function createPayment(
+    options: CreateOutgoingPaymentOptions
+  ): Promise<OutgoingPayment> {
+    const payment = await outgoingPaymentService.create(options)
+    assert.ok(!isOutgoingPaymentError(payment))
+    return payment
   }
 
   async function processNext(
@@ -264,6 +276,7 @@ describe('OutgoingPaymentService', (): void => {
           amountToSend: BigInt(123),
           authorized
         })
+        assert.ok(!isOutgoingPaymentError(payment))
         expect(payment.state).toEqual(PaymentState.Pending)
         expect(payment.authorized).toEqual(expectedAuthorized)
         expect(payment.intent).toEqual({
@@ -286,6 +299,7 @@ describe('OutgoingPaymentService', (): void => {
           incomingPaymentUrl,
           authorized
         })
+        assert.ok(!isOutgoingPaymentError(payment))
         expect(payment.state).toEqual(PaymentState.Pending)
         expect(payment.authorized).toEqual(expectedAuthorized)
         expect(payment.intent).toEqual({
@@ -309,9 +323,7 @@ describe('OutgoingPaymentService', (): void => {
             paymentPointer,
             authorized
           })
-        ).rejects.toThrow(
-          'incomingPaymentUrl and (paymentPointer,amountToSend) are mutually exclusive'
-        )
+        ).resolves.toEqual(OutgoingPaymentError.InvalidAmount)
       })
 
       it('fails to create with both incomingPayment and amountToSend', async () => {
@@ -322,9 +334,7 @@ describe('OutgoingPaymentService', (): void => {
             amountToSend: BigInt(123),
             authorized
           })
-        ).rejects.toThrow(
-          'incomingPaymentUrl and (paymentPointer,amountToSend) are mutually exclusive'
-        )
+        ).resolves.toEqual(OutgoingPaymentError.InvalidAmount)
       })
 
       it('fails to create with nonexistent account', async () => {
@@ -335,7 +345,7 @@ describe('OutgoingPaymentService', (): void => {
             amountToSend: BigInt(123),
             authorized
           })
-        ).rejects.toThrow('outgoing payment account does not exist')
+        ).resolves.toEqual(OutgoingPaymentError.UnknownAccount)
       })
     }
   )
@@ -350,7 +360,7 @@ describe('OutgoingPaymentService', (): void => {
       ({ authorized, nextState }): void => {
         it(`${nextState} (FixedSend)`, async (): Promise<void> => {
           const paymentId = (
-            await outgoingPaymentService.create({
+            await createPayment({
               accountId,
               paymentPointer,
               amountToSend: BigInt(123),
@@ -391,7 +401,7 @@ describe('OutgoingPaymentService', (): void => {
 
         it(`${nextState} (FixedDelivery)`, async (): Promise<void> => {
           const paymentId = (
-            await outgoingPaymentService.create({
+            await createPayment({
               accountId,
               incomingPaymentUrl: incomingPaymentUrl,
               authorized
@@ -424,7 +434,7 @@ describe('OutgoingPaymentService', (): void => {
             .spyOn(ratesService, 'prices')
             .mockImplementation(() => Promise.reject(new Error('fail')))
           const paymentId = (
-            await outgoingPaymentService.create({
+            await createPayment({
               accountId,
               paymentPointer,
               amountToSend: BigInt(123)
@@ -449,7 +459,7 @@ describe('OutgoingPaymentService', (): void => {
         // Maybe another person or payment paid the incoming payment already.
         it('FAILED (FixedDelivery, incoming payment was already full paid)', async (): Promise<void> => {
           const paymentId = (
-            await outgoingPaymentService.create({
+            await createPayment({
               accountId,
               incomingPaymentUrl: incomingPaymentUrl
             })
@@ -463,7 +473,7 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         it('FAILED (destination asset changed)', async (): Promise<void> => {
-          const originalPayment = await outgoingPaymentService.create({
+          const originalPayment = await createPayment({
             accountId,
             paymentPointer,
             amountToSend: BigInt(123)
@@ -496,7 +506,7 @@ describe('OutgoingPaymentService', (): void => {
 
       beforeEach(
         async (): Promise<void> => {
-          const { id: paymentId } = await outgoingPaymentService.create({
+          const { id: paymentId } = await createPayment({
             accountId,
             paymentPointer,
             amountToSend: BigInt(123)
@@ -528,7 +538,7 @@ describe('OutgoingPaymentService', (): void => {
           'amountToSend' | 'paymentPointer' | 'incomingPaymentUrl'
         >
       ): Promise<string> {
-        const { id: paymentId } = await outgoingPaymentService.create({
+        const { id: paymentId } = await createPayment({
           accountId,
           authorized: true,
           ...opts
@@ -768,7 +778,7 @@ describe('OutgoingPaymentService', (): void => {
 
     beforeEach(async (): Promise<void> => {
       paymentId = (
-        await outgoingPaymentService.create({
+        await createPayment({
           accountId,
           paymentPointer,
           amountToSend: BigInt(123)
@@ -844,7 +854,7 @@ describe('OutgoingPaymentService', (): void => {
     let quoteAmount: bigint
 
     beforeEach(async (): Promise<void> => {
-      const { id: paymentId } = await outgoingPaymentService.create({
+      const { id: paymentId } = await createPayment({
         accountId,
         paymentPointer,
         amountToSend: BigInt(123),
@@ -918,7 +928,7 @@ describe('OutgoingPaymentService', (): void => {
   describe('getAccountPage', (): void => {
     getPageTests({
       createModel: () =>
-        outgoingPaymentService.create({
+        createPayment({
           accountId,
           paymentPointer,
           amountToSend: BigInt(123)

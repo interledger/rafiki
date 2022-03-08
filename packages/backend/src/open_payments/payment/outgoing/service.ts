@@ -18,7 +18,9 @@ import * as worker from './worker'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
-  create(options: CreateOutgoingPaymentOptions): Promise<OutgoingPayment>
+  create(
+    options: CreateOutgoingPaymentOptions
+  ): Promise<OutgoingPayment | OutgoingPaymentError>
   authorize(id: string): Promise<OutgoingPayment | OutgoingPaymentError>
   fund(
     options: FundOutgoingPaymentOptions
@@ -68,7 +70,7 @@ async function getOutgoingPayment(
     .withGraphJoined('account.asset')
 }
 
-type CreateOutgoingPaymentOptions = PaymentIntent & {
+export type CreateOutgoingPaymentOptions = PaymentIntent & {
   accountId: string
   authorized?: boolean
 }
@@ -76,7 +78,7 @@ type CreateOutgoingPaymentOptions = PaymentIntent & {
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
-): Promise<OutgoingPayment> {
+): Promise<OutgoingPayment | OutgoingPaymentError> {
   if (
     options.incomingPaymentUrl &&
     (options.paymentPointer || options.amountToSend !== undefined)
@@ -87,9 +89,7 @@ async function createOutgoingPayment(
       },
       'createOutgoingPayment invalid parameters'
     )
-    throw new Error(
-      'incomingPaymentUrl and (paymentPointer,amountToSend) are mutually exclusive'
-    )
+    return OutgoingPaymentError.InvalidAmount
   }
 
   try {
@@ -116,7 +116,7 @@ async function createOutgoingPayment(
     })
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
-      throw new Error('outgoing payment account does not exist')
+      return OutgoingPaymentError.UnknownAccount
     }
     throw err
   }

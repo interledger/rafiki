@@ -3,10 +3,15 @@ import * as Pay from '@interledger/pay'
 import { TransferError } from '../../../accounting/errors'
 
 export enum OutgoingPaymentError {
+  UnknownAccount = 'UnknownAccount',
   UnknownPayment = 'UnknownPayment',
   WrongState = 'WrongState',
   InvalidAmount = 'InvalidAmount'
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isOutgoingPaymentError = (o: any): o is OutgoingPaymentError =>
+  Object.values(OutgoingPaymentError).includes(o)
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }
 export type FundingError = OutgoingPaymentError | TransferError

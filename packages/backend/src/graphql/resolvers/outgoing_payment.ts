@@ -1,4 +1,3 @@
-import { isPaymentError, PaymentError } from '@interledger/pay'
 import {
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
@@ -9,6 +8,10 @@ import {
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
+import {
+  OutgoingPaymentError,
+  isOutgoingPaymentError
+} from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
 
@@ -45,34 +48,6 @@ export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = as
   }
 }
 
-const clientErrors: { [key in PaymentError]: boolean } = {
-  InvalidPaymentPointer: true,
-  InvalidCredentials: true,
-  InvalidSlippage: false,
-  UnknownSourceAsset: true,
-  UnknownPaymentTarget: true,
-  InvalidSourceAmount: true,
-  InvalidDestinationAmount: true,
-  UnenforceableDelivery: true,
-  InvalidQuote: false,
-
-  // QueryFailed can be either a client or server error: an invalid incoming payment URL, or failed query.
-  QueryFailed: true,
-  InvoiceAlreadyPaid: false,
-  ConnectorError: false,
-  EstablishmentFailed: false,
-  UnknownDestinationAsset: false,
-  DestinationAssetConflict: false,
-  ExternalRateUnavailable: false,
-  RateProbeFailed: false,
-  InsufficientExchangeRate: false,
-  IdleTimeout: false,
-  ClosedByReceiver: false,
-  IncompatibleReceiveMax: false,
-  ReceiverProtocolViolation: false,
-  MaxSafeEncryptionLimit: false
-}
-
 export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutgoingPayment'] = async (
   parent,
   args,
@@ -83,15 +58,23 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
   )
   return outgoingPaymentService
     .create(args.input)
-    .then((payment: OutgoingPayment) => ({
-      code: '200',
-      success: true,
-      payment: paymentToGraphql(payment)
-    }))
-    .catch((err: Error | PaymentError) => ({
-      code: isPaymentError(err) && clientErrors[err] ? '400' : '500',
+    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+      isOutgoingPaymentError(paymentOrErr)
+        ? {
+            code: '400',
+            success: false,
+            message: paymentOrErr
+          }
+        : {
+            code: '200',
+            success: true,
+            payment: paymentToGraphql(paymentOrErr)
+          }
+    )
+    .catch(() => ({
+      code: '500',
       success: false,
-      message: typeof err === 'string' ? err : err.message
+      message: 'Error trying to create outgoing payment'
     }))
 }
 

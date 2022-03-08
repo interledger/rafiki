@@ -170,7 +170,7 @@ export type CreateOutgoingPaymentInput = {
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
   incomingPaymentUrl?: Maybe<Scalars['String']>;
-  authorized: Scalars['Boolean'];
+  authorized?: Maybe<Scalars['Boolean']>;
 };
 
 export type CreatePeerInput = {
