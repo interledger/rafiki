@@ -73,9 +73,8 @@ async function getOutgoingPayment(
 export interface CreateOutgoingPaymentOptions {
   accountId: string
   authorized?: boolean
-  sendAmount?: Partial<PaymentAmount> & {
-    amount: bigint
-  }
+  sendAmount?: PaymentAmount
+  receiveAmount?: PaymentAmount
   receivingAccount?: string
   receivingPayment?: string
 }
@@ -88,11 +87,11 @@ async function createOutgoingPayment(
     if (options.receivingAccount) {
       return OutgoingPaymentError.InvalidDestination
     }
-    if (options.sendAmount !== undefined) {
+    if (options.sendAmount || options.receiveAmount) {
       return OutgoingPaymentError.InvalidAmount
     }
   } else if (options.receivingAccount) {
-    if (!options.sendAmount) {
+    if (!options.sendAmount === !options.receiveAmount) {
       return OutgoingPaymentError.InvalidAmount
     }
   } else {
@@ -104,7 +103,6 @@ async function createOutgoingPayment(
     if (!account) {
       return OutgoingPaymentError.UnknownAccount
     }
-    let sendAmount: PaymentAmount | undefined
     if (options.sendAmount) {
       if (options.sendAmount.assetCode || options.sendAmount.assetScale) {
         if (
@@ -114,11 +112,8 @@ async function createOutgoingPayment(
           return OutgoingPaymentError.InvalidAmount
         }
       }
-      sendAmount = {
-        amount: options.sendAmount.amount,
-        assetCode: account.asset.code,
-        assetScale: account.asset.scale
-      }
+      ;(options.sendAmount.assetCode = account.asset.code),
+        (options.sendAmount.assetScale = account.asset.scale)
     }
 
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
@@ -127,7 +122,8 @@ async function createOutgoingPayment(
           state: PaymentState.Pending,
           receivingAccount: options.receivingAccount,
           receivingPayment: options.receivingPayment,
-          sendAmount,
+          sendAmount: options.sendAmount,
+          receiveAmount: options.receiveAmount,
           accountId: options.accountId,
           authorized: options.authorized
         })

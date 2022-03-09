@@ -29,29 +29,7 @@ export async function handlePending(
     invoiceUrl: payment.receivingPayment
   })
 
-  if (payment.destinationAccount) {
-    if (
-      payment.destinationAccount.scale !== destination.destinationAsset.scale ||
-      payment.destinationAccount.code !== destination.destinationAsset.code
-    ) {
-      deps.logger.warn(
-        {
-          oldAsset: payment.destinationAccount,
-          newAsset: destination.destinationAsset
-        },
-        'asset changed'
-      )
-      throw Pay.PaymentError.DestinationAssetConflict
-    }
-  } else {
-    await payment.$query(deps.knex).patch({
-      destinationAccount: {
-        scale: destination.destinationAsset.scale,
-        code: destination.destinationAsset.code,
-        url: destination.accountUrl
-      }
-    })
-  }
+  validateAssets(deps, payment, destination)
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
@@ -87,6 +65,7 @@ export async function handlePending(
       code: payment.account.asset.code
     },
     amountToSend,
+    amountToDeliver: payment.receiveAmount?.amount,
     slippage: deps.slippage,
     prices
   }).finally(() => {
@@ -117,11 +96,15 @@ export async function handlePending(
       assetCode: payment.account.asset.code,
       assetScale: payment.account.asset.scale
     },
+    receiveAmount: {
+      amount: payment.receiveAmount?.amount || quote.minDeliveryAmount,
+      assetCode: destination.destinationAsset.code,
+      assetScale: destination.destinationAsset.scale
+    },
     quote: {
       timestamp: new Date(),
       activationDeadline: new Date(Date.now() + deps.quoteLifespan),
       targetType: quote.paymentType,
-      minDeliveryAmount: quote.minDeliveryAmount,
       // Cap at MAX_INT64 because of postgres type limits.
       maxPacketAmount:
         MAX_INT64 < quote.maxPacketAmount ? MAX_INT64 : quote.maxPacketAmount,
@@ -164,9 +147,9 @@ export async function handleSending(
   payment: OutgoingPayment,
   plugin: IlpPlugin
 ): Promise<void> {
-  if (!payment.destinationAccount) throw LifecycleError.MissingDestination
   if (!payment.quote) throw LifecycleError.MissingQuote
   if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
+  if (!payment.receiveAmount) throw LifecycleError.MissingReceiveAmount
   if (!payment.authorized) throw LifecycleError.Unauthorized
 
   const destination = await Pay.setupPayment({
@@ -175,19 +158,7 @@ export async function handleSending(
     invoiceUrl: payment.receivingPayment
   })
 
-  if (
-    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
-    payment.destinationAccount.code !== destination.destinationAsset.code
-  ) {
-    deps.logger.warn(
-      {
-        oldAsset: payment.destinationAccount,
-        newAsset: destination.destinationAsset
-      },
-      'asset changed'
-    )
-    throw Pay.PaymentError.DestinationAssetConflict
-  }
+  validateAssets(deps, payment, destination)
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
@@ -200,25 +171,21 @@ export async function handleSending(
   const newMaxSourceAmount = payment.sendAmount.amount - amountSentSinceQuote
 
   let newMinDeliveryAmount
-  switch (payment.quote.targetType) {
-    case Pay.PaymentType.FixedSend:
-      // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
-      // eslint-disable-next-line no-case-declarations
-      const amountDeliveredSinceQuote = BigInt(
-        Math.ceil(
-          +amountSentSinceQuote.toString() *
-            payment.quote.minExchangeRate.valueOf()
-        )
+  if (payment.receivingAccount) {
+    // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
+    // eslint-disable-next-line no-case-declarations
+    const amountDeliveredSinceQuote = BigInt(
+      Math.ceil(
+        +amountSentSinceQuote.toString() *
+          payment.quote.minExchangeRate.valueOf()
       )
-      newMinDeliveryAmount =
-        payment.quote.minDeliveryAmount - amountDeliveredSinceQuote
-      break
-    case Pay.PaymentType.FixedDelivery:
-      if (!destination.invoice) throw LifecycleError.MissingIncomingPayment
-      newMinDeliveryAmount =
-        destination.invoice.amountToDeliver -
-        destination.invoice.amountDelivered
-      break
+    )
+    newMinDeliveryAmount =
+      payment.receiveAmount.amount - amountDeliveredSinceQuote
+  } else {
+    if (!destination.invoice) throw LifecycleError.MissingIncomingPayment
+    newMinDeliveryAmount =
+      destination.invoice.amountToDeliver - destination.invoice.amountDelivered
   }
 
   if (
@@ -359,4 +326,37 @@ export const sendWebhookEvent = async (
     data: payment.toData({ amountSent, balance }),
     withdrawal
   })
+}
+
+const validateAssets = (
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  destination: Pay.ResolvedPayment
+): void => {
+  if (payment.sendAmount) {
+    if (
+      payment.sendAmount.assetCode !== payment.account.asset.code ||
+      payment.sendAmount.assetScale !== payment.account.asset.scale
+    ) {
+      throw LifecycleError.SourceAssetConflict
+    }
+  }
+  if (payment.receiveAmount) {
+    if (payment.receiveAmount.assetCode || payment.receiveAmount.assetScale) {
+      if (
+        payment.receiveAmount.assetScale !==
+          destination.destinationAsset.scale ||
+        payment.receiveAmount.assetCode !== destination.destinationAsset.code
+      ) {
+        deps.logger.warn(
+          {
+            oldAsset: payment.receiveAmount,
+            newAsset: destination.destinationAsset
+          },
+          'destination asset changed'
+        )
+        throw Pay.PaymentError.DestinationAssetConflict
+      }
+    }
+  }
 }

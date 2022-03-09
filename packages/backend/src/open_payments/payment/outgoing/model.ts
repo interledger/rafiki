@@ -8,7 +8,7 @@ import { Account } from '../../account/model'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
 
-const fieldPrefixes = ['sendAmount', 'quote', 'destinationAccount', 'outcome']
+const fieldPrefixes = ['sendAmount', 'receiveAmount', 'quote', 'outcome']
 
 const ratioFields = [
   'quoteMinExchangeRate',
@@ -30,12 +30,12 @@ export class OutgoingPayment
   receivingAccount?: string
   receivingPayment?: string
   sendAmount?: PaymentAmount
+  receiveAmount?: PaymentAmount
 
   public quote?: {
     timestamp: Date
     activationDeadline: Date
     targetType: Pay.PaymentType
-    minDeliveryAmount: bigint
     maxPacketAmount: bigint
     minExchangeRate: Pay.Ratio
     lowExchangeRateEstimate: Pay.Ratio
@@ -48,11 +48,6 @@ export class OutgoingPayment
   // Open payments account id of the sender
   public accountId!: string
   public account!: Account
-  public destinationAccount?: {
-    scale: number
-    code: string
-    url?: string
-  }
 
   public get asset(): Asset {
     return this.account.asset
@@ -112,9 +107,12 @@ export class OutgoingPayment
       delete json[ratioField + 'Numerator']
       delete json[ratioField + 'Denominator']
     })
+    for (const prefix of fieldPrefixes) {
+      json[prefix] = null
+    }
     for (const key in json) {
       const prefix = fieldPrefixes.find((prefix) => key.startsWith(prefix))
-      if (!prefix) continue
+      if (!prefix || key === prefix) continue
       if (json[key] !== null) {
         if (!json[prefix]) json[prefix] = {}
         json[prefix][
@@ -140,7 +138,6 @@ export class OutgoingPayment
         state: this.state,
         authorized: this.authorized,
         stateAttempts: this.stateAttempts,
-        destinationAccount: this.destinationAccount,
         createdAt: new Date(+this.createdAt).toISOString(),
         outcome: {
           amountSent: amountSent.toString()
@@ -161,6 +158,13 @@ export class OutgoingPayment
         assetScale: this.sendAmount.assetScale
       }
     }
+    if (this.receiveAmount) {
+      data.payment.receiveAmount = {
+        amount: this.receiveAmount.amount.toString(),
+        assetCode: this.receiveAmount.assetCode,
+        assetScale: this.receiveAmount.assetScale
+      }
+    }
     if (this.error) {
       data.payment.error = this.error
     }
@@ -169,7 +173,6 @@ export class OutgoingPayment
         ...this.quote,
         timestamp: this.quote.timestamp.toISOString(),
         activationDeadline: this.quote.activationDeadline.toISOString(),
-        minDeliveryAmount: this.quote.minDeliveryAmount.toString(),
         maxPacketAmount: this.quote.maxPacketAmount.toString(),
         minExchangeRate: this.quote.minExchangeRate.valueOf(),
         lowExchangeRateEstimate: this.quote.lowExchangeRateEstimate.valueOf(),
@@ -183,8 +186,8 @@ export class OutgoingPayment
 
 export interface PaymentAmount {
   amount: bigint
-  assetCode: string
-  assetScale: number
+  assetCode?: string
+  assetScale?: number
 }
 
 export enum PaymentState {
@@ -226,6 +229,12 @@ export const PaymentEventType = {
 }
 export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
+interface AmountData {
+  amount: string
+  assetCode?: string
+  assetScale?: number
+}
+
 export type PaymentData = {
   payment: {
     id: string
@@ -237,26 +246,17 @@ export type PaymentData = {
     stateAttempts: number
     receivingAccount?: string
     receivingPayment?: string
-    sendAmount?: {
-      amount: string
-      assetCode: string
-      assetScale: number
-    }
+    sendAmount?: AmountData
+    receiveAmount?: AmountData
     quote?: {
       timestamp: string
       activationDeadline: string
       targetType: Pay.PaymentType
-      minDeliveryAmount: string
       maxPacketAmount: string
       minExchangeRate: number
       lowExchangeRateEstimate: number
       highExchangeRateEstimate: number
       amountSent: string
-    }
-    destinationAccount?: {
-      scale: number
-      code: string
-      url?: string
     }
     outcome: {
       amountSent: string

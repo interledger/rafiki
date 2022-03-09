@@ -45,6 +45,11 @@ describe('OutgoingPayment Resolvers', (): void => {
     assetCode: randomAsset().code,
     assetScale: randomAsset().scale
   }
+  const receiveAmount = {
+    amount: BigInt(56),
+    assetCode: 'XRP',
+    assetScale: 9
+  }
 
   beforeAll(
     async (): Promise<void> => {
@@ -75,6 +80,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     accountId,
     receivingAccount,
     sendAmount: sendAmountOpts,
+    receiveAmount: receiveAmountOpts,
     receivingPayment,
     authorized
   }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
@@ -88,12 +94,18 @@ describe('OutgoingPayment Resolvers', (): void => {
             assetScale: sendAmount.assetScale
           }
         : undefined,
+      receiveAmount: receiveAmountOpts
+        ? {
+            amount: receiveAmountOpts.amount,
+            assetCode: receiveAmount.assetCode,
+            assetScale: receiveAmount.assetScale
+          }
+        : undefined,
       receivingPayment,
       quote: {
         timestamp: new Date(),
         activationDeadline: new Date(Date.now() + 1000),
         targetType: PaymentType.FixedSend,
-        minDeliveryAmount: BigInt(123),
         maxPacketAmount: BigInt(789),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         minExchangeRate: Pay.Ratio.from(1.23)!,
@@ -104,26 +116,23 @@ describe('OutgoingPayment Resolvers', (): void => {
         amountSent: BigInt(0)
       },
       accountId,
-      authorized,
-      destinationAccount: {
-        scale: 9,
-        code: 'XRP',
-        url: 'http://wallet2.example/paymentpointer/bob'
-      }
+      authorized
     })
 
   describe('Query.outgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
 
     describe.each`
-      receivingAccount    | sendAmount    | receivingPayment    | authorized | description
-      ${receivingAccount} | ${sendAmount} | ${null}             | ${true}    | ${'fixed send'}
-      ${null}             | ${null}       | ${receivingPayment} | ${false}   | ${'incoming payment'}
+      receivingAccount    | sendAmount    | receiveAmount    | receivingPayment    | authorized | description
+      ${receivingAccount} | ${sendAmount} | ${null}          | ${null}             | ${true}    | ${'fixed send'}
+      ${receivingAccount} | ${sendAmount} | ${receiveAmount} | ${null}             | ${true}    | ${'fixed receive'}
+      ${null}             | ${null}       | ${null}          | ${receivingPayment} | ${false}   | ${'incoming payment'}
     `(
       '$description',
       ({
         receivingAccount,
         sendAmount,
+        receiveAmount,
         receivingPayment,
         authorized
       }): void => {
@@ -141,6 +150,7 @@ describe('OutgoingPayment Resolvers', (): void => {
               accountId,
               receivingAccount,
               sendAmount,
+              receiveAmount,
               receivingPayment,
               authorized
             })
@@ -191,20 +201,19 @@ describe('OutgoingPayment Resolvers', (): void => {
                         assetCode
                         assetScale
                       }
+                      receiveAmount {
+                        amount
+                        assetCode
+                        assetScale
+                      }
                       quote {
                         timestamp
                         activationDeadline
                         targetType
-                        minDeliveryAmount
                         maxPacketAmount
                         minExchangeRate
                         lowExchangeRateEstimate
                         highExchangeRateEstimate
-                      }
-                      destinationAccount {
-                        scale
-                        code
-                        url
                       }
                       outcome {
                         amountSent
@@ -236,21 +245,26 @@ describe('OutgoingPayment Resolvers', (): void => {
                   }
                 : null
             )
+            expect(query.receiveAmount).toEqual(
+              receiveAmount
+                ? {
+                    amount: receiveAmount.amount.toString() || null,
+                    assetCode: receiveAmount.assetCode,
+                    assetScale: receiveAmount.assetScale,
+                    __typename: 'PaymentAmount'
+                  }
+                : null
+            )
             expect(query.receivingPayment).toEqual(receivingPayment)
             expect(query.quote).toEqual({
               timestamp: payment.quote?.timestamp.toISOString(),
               activationDeadline: payment.quote?.activationDeadline.toISOString(),
               targetType: SchemaPaymentType.FixedSend,
-              minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
               maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
               minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
               lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
               highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
               __typename: 'PaymentQuote'
-            })
-            expect(query.destinationAccount).toEqual({
-              ...payment.destinationAccount,
-              __typename: 'PaymentDestinationAccount'
             })
             expect(query.outcome).toEqual({
               amountSent: amountSent.toString(),

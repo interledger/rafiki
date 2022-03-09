@@ -168,6 +168,7 @@ export function paymentToGraphql(
     receivingAccount: payment.receivingAccount,
     receivingPayment: payment.receivingPayment,
     sendAmount: payment.sendAmount,
+    receiveAmount: payment.receiveAmount,
     quote: payment.quote && {
       ...payment.quote,
       targetType: SchemaPaymentType[payment.quote.targetType],
@@ -177,7 +178,6 @@ export function paymentToGraphql(
       lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
       highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
-    destinationAccount: payment.destinationAccount,
     createdAt: new Date(+payment.createdAt).toISOString()
   }
 }

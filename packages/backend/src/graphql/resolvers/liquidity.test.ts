@@ -1619,7 +1619,6 @@ describe('Liquidity Resolvers', (): void => {
             timestamp: new Date(),
             activationDeadline: new Date(Date.now() + 1000),
             targetType: Pay.PaymentType.FixedSend,
-            minDeliveryAmount: BigInt(123),
             maxPacketAmount: BigInt(789),
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             minExchangeRate: Pay.Ratio.from(1.23)!,

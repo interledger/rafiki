@@ -375,17 +375,17 @@ type OutgoingPayment implements Model {
   stateAttempts: Int!
   receivingAccount: String
   sendAmount: PaymentAmount
+  receiveAmount: PaymentAmount
   receivingPayment: String
   quote: PaymentQuote
-  destinationAccount: PaymentDestinationAccount
   outcome: OutgoingPaymentOutcome
   createdAt: String!
 }
 
 type PaymentAmount {
   amount: UInt64!
-  assetCode: String!
-  assetScale: Int!
+  assetCode: String
+  assetScale: Int
 }
 
 enum PaymentState {
@@ -414,17 +414,10 @@ type PaymentQuote {
   timestamp: String!
   activationDeadline: String!
   targetType: PaymentType!
-  minDeliveryAmount: UInt64!
   maxPacketAmount: UInt64!
   minExchangeRate: Float!
   lowExchangeRateEstimate: Float!
   highExchangeRateEstimate: Float!
-}
-
-type PaymentDestinationAccount {
-  scale: Int!
-  code: String!
-  url: String
 }
 
 type OutgoingPaymentOutcome {
