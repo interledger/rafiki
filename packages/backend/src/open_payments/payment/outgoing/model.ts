@@ -36,7 +36,6 @@ export class OutgoingPayment
     activationDeadline: Date
     targetType: Pay.PaymentType
     minDeliveryAmount: bigint
-    maxSourceAmount: bigint
     maxPacketAmount: bigint
     minExchangeRate: Pay.Ratio
     lowExchangeRateEstimate: Pay.Ratio
@@ -171,7 +170,6 @@ export class OutgoingPayment
         timestamp: this.quote.timestamp.toISOString(),
         activationDeadline: this.quote.activationDeadline.toISOString(),
         minDeliveryAmount: this.quote.minDeliveryAmount.toString(),
-        maxSourceAmount: this.quote.maxSourceAmount.toString(),
         maxPacketAmount: this.quote.maxPacketAmount.toString(),
         minExchangeRate: this.quote.minExchangeRate.valueOf(),
         lowExchangeRateEstimate: this.quote.lowExchangeRateEstimate.valueOf(),
@@ -249,7 +247,6 @@ export type PaymentData = {
       activationDeadline: string
       targetType: Pay.PaymentType
       minDeliveryAmount: string
-      maxSourceAmount: string
       maxPacketAmount: string
       minExchangeRate: number
       lowExchangeRateEstimate: number

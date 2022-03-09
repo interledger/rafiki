@@ -193,9 +193,8 @@ async function fundPayment(
     if (payment.state !== PaymentState.Funding) {
       return FundingError.WrongState
     }
-    if (!payment.quote) throw LifecycleError.MissingQuote
-    if (amount !== payment.quote.maxSourceAmount)
-      return FundingError.InvalidAmount
+    if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
+    if (amount !== payment.sendAmount.amount) return FundingError.InvalidAmount
     const error = await deps.accountingService.createDeposit({
       id: transferId,
       account: payment,

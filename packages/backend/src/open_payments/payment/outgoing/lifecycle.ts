@@ -112,12 +112,16 @@ export async function handlePending(
 
   await payment.$query(deps.knex).patch({
     state,
+    sendAmount: payment.sendAmount || {
+      amount: quote.maxSourceAmount,
+      assetCode: payment.account.asset.code,
+      assetScale: payment.account.asset.scale
+    },
     quote: {
       timestamp: new Date(),
       activationDeadline: new Date(Date.now() + deps.quoteLifespan),
       targetType: quote.paymentType,
       minDeliveryAmount: quote.minDeliveryAmount,
-      maxSourceAmount: quote.maxSourceAmount,
       // Cap at MAX_INT64 because of postgres type limits.
       maxPacketAmount:
         MAX_INT64 < quote.maxPacketAmount ? MAX_INT64 : quote.maxPacketAmount,
@@ -162,6 +166,7 @@ export async function handleSending(
 ): Promise<void> {
   if (!payment.destinationAccount) throw LifecycleError.MissingDestination
   if (!payment.quote) throw LifecycleError.MissingQuote
+  if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
   if (!payment.authorized) throw LifecycleError.Unauthorized
 
   const destination = await Pay.setupPayment({
@@ -192,8 +197,7 @@ export async function handleSending(
 
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
   const amountSentSinceQuote = amountSent - payment.quote.amountSent
-  const newMaxSourceAmount =
-    payment.quote.maxSourceAmount - amountSentSinceQuote
+  const newMaxSourceAmount = payment.sendAmount.amount - amountSentSinceQuote
 
   let newMinDeliveryAmount
   switch (payment.quote.targetType) {

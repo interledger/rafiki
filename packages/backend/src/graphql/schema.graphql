@@ -415,7 +415,6 @@ type PaymentQuote {
   activationDeadline: String!
   targetType: PaymentType!
   minDeliveryAmount: UInt64!
-  maxSourceAmount: UInt64!
   maxPacketAmount: UInt64!
   minExchangeRate: Float!
   lowExchangeRateEstimate: Float!

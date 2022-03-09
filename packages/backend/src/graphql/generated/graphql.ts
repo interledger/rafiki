@@ -544,7 +544,6 @@ export type PaymentQuote = {
   activationDeadline: Scalars['String'];
   targetType: PaymentType;
   minDeliveryAmount: Scalars['UInt64'];
-  maxSourceAmount: Scalars['UInt64'];
   maxPacketAmount: Scalars['UInt64'];
   minExchangeRate: Scalars['Float'];
   lowExchangeRateEstimate: Scalars['Float'];
@@ -1208,7 +1207,6 @@ export type PaymentQuoteResolvers<ContextType = any, ParentType extends Resolver
   activationDeadline?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   targetType?: Resolver<ResolversTypes['PaymentType'], ParentType, ContextType>;
   minDeliveryAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
-  maxSourceAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   maxPacketAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   minExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   lowExchangeRateEstimate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;

@@ -94,7 +94,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         activationDeadline: new Date(Date.now() + 1000),
         targetType: PaymentType.FixedSend,
         minDeliveryAmount: BigInt(123),
-        maxSourceAmount: BigInt(456),
         maxPacketAmount: BigInt(789),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         minExchangeRate: Pay.Ratio.from(1.23)!,
@@ -197,7 +196,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                         activationDeadline
                         targetType
                         minDeliveryAmount
-                        maxSourceAmount
                         maxPacketAmount
                         minExchangeRate
                         lowExchangeRateEstimate
@@ -244,7 +242,6 @@ describe('OutgoingPayment Resolvers', (): void => {
               activationDeadline: payment.quote?.activationDeadline.toISOString(),
               targetType: SchemaPaymentType.FixedSend,
               minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
-              maxSourceAmount: payment.quote?.maxSourceAmount.toString(),
               maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
               minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
               lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),

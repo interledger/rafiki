@@ -394,7 +394,6 @@ describe('OutgoingPaymentService', (): void => {
           expect(payment.quote.minDeliveryAmount).toBe(
             BigInt(Math.ceil(123 * payment.quote.minExchangeRate.valueOf()))
           )
-          expect(payment.quote.maxSourceAmount).toBe(BigInt(123))
           expect(payment.quote.maxPacketAmount).toBe(
             BigInt('9223372036854775807')
           )
@@ -421,13 +420,17 @@ describe('OutgoingPaymentService', (): void => {
             code: incomingPayment.account.asset.code,
             url: accountUrl
           })
+          if (!payment.sendAmount) throw 'no sendAmount'
+          expect(payment.sendAmount).toEqual({
+            amount: BigInt(Math.ceil(56 * 2 * (1 + config.slippage))),
+            assetCode: payment.account.asset.code,
+            assetScale: payment.account.asset.scale
+          })
+
           if (!payment.quote) throw 'no quote'
 
           expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedDelivery)
           expect(payment.quote.minDeliveryAmount).toBe(BigInt(56))
-          expect(payment.quote.maxSourceAmount).toBe(
-            BigInt(Math.ceil(56 * 2 * (1 + config.slippage)))
-          )
           expect(payment.quote.minExchangeRate.valueOf()).toBe(
             0.5 * (1 - config.slippage)
           )
@@ -461,7 +464,7 @@ describe('OutgoingPaymentService', (): void => {
             .mockReturnValueOnce(Date.now() + 1 * RETRY_BACKOFF_SECONDS * 1000)
 
           const payment2 = await processNext(paymentId, PaymentState.Prepared)
-          expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123))
+          expect(payment2.quote).toBeDefined()
         })
 
         // Maybe another person or payment paid the incoming payment already.
@@ -555,11 +558,11 @@ describe('OutgoingPaymentService', (): void => {
         trackAmountDelivered(paymentId)
 
         const payment = await processNext(paymentId, PaymentState.Funding)
-        assert.ok(payment.quote)
+        assert.ok(payment.sendAmount)
         await expect(
           outgoingPaymentService.fund({
             id: paymentId,
-            amount: payment.quote.maxSourceAmount,
+            amount: payment.sendAmount.amount,
             transferId: uuid()
           })
         ).resolves.toMatchObject({
@@ -589,14 +592,14 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
-        if (!payment.quote) throw 'no quote'
+        if (!payment.sendAmount) throw 'no sendAmount'
         const amountSent = incomingPayment.amount * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.quote.maxSourceAmount - amountSent,
+          accountBalance: payment.sendAmount.amount - amountSent,
           amountSent,
           amountDelivered: incomingPayment.amount,
           incomingPaymentReceived: incomingPayment.amount,
-          withdrawAmount: payment.quote.maxSourceAmount - amountSent
+          withdrawAmount: payment.sendAmount.amount - amountSent
         })
       })
 
@@ -608,15 +611,15 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
-        if (!payment.quote) throw 'no quote'
+        if (!payment.sendAmount) throw 'no sendAmount'
         const amountSent =
           (incomingPayment.amount - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.quote.maxSourceAmount - amountSent,
+          accountBalance: payment.sendAmount.amount - amountSent,
           amountSent,
           amountDelivered: incomingPayment.amount - amountAlreadyDelivered,
           incomingPaymentReceived: incomingPayment.amount,
-          withdrawAmount: payment.quote.maxSourceAmount - amountSent
+          withdrawAmount: payment.sendAmount.amount - amountSent
         })
       })
 
@@ -746,13 +749,13 @@ describe('OutgoingPaymentService', (): void => {
         await payIncomingPayment(incomingPayment.amount)
 
         const payment = await processNext(paymentId, PaymentState.Completed)
-        if (!payment.quote) throw 'no quote'
+        if (!payment.sendAmount) throw 'no sendAmount'
         await expectOutcome(payment, {
-          accountBalance: payment.quote.maxSourceAmount,
+          accountBalance: payment.sendAmount.amount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
           incomingPaymentReceived: incomingPayment.amount,
-          withdrawAmount: payment.quote.maxSourceAmount
+          withdrawAmount: payment.sendAmount.amount
         })
       })
 
@@ -868,8 +871,8 @@ describe('OutgoingPaymentService', (): void => {
         authorized: true
       })
       payment = await processNext(paymentId, PaymentState.Funding)
-      assert.ok(payment.quote)
-      quoteAmount = payment.quote.maxSourceAmount
+      assert.ok(payment.sendAmount)
+      quoteAmount = payment.sendAmount.amount
       await expectOutcome(payment, { accountBalance: BigInt(0) })
     }, 10_000)
 

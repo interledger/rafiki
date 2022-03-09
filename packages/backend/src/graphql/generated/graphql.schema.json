@@ -3932,22 +3932,6 @@
             "deprecationReason": null
           },
           {
-            "name": "maxSourceAmount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "maxPacketAmount",
             "description": null,
             "args": [],

@@ -17,7 +17,6 @@ exports.up = function (knex) {
     table.timestamp('quoteActivationDeadline').nullable()
     table.string('quoteTargetType').nullable() // 'FixedSend' | 'FixedDelivery'
     table.bigInteger('quoteMinDeliveryAmount').nullable()
-    table.bigInteger('quoteMaxSourceAmount').nullable()
     table.bigInteger('quoteMaxPacketAmount').nullable()
 
     table.bigInteger('quoteMinExchangeRateNumerator').nullable()
