@@ -315,38 +315,35 @@ describe('OutgoingPaymentService', (): void => {
         expect(payment2.id).toEqual(payment.id)
       })
 
-      it('fails to create with both incomingPayment and paymentPointer', async () => {
-        await expect(
-          outgoingPaymentService.create({
-            accountId,
-            incomingPaymentUrl,
-            paymentPointer,
-            authorized
-          })
-        ).resolves.toEqual(OutgoingPaymentError.InvalidAmount)
-      })
-
-      it('fails to create with both incomingPayment and amountToSend', async () => {
-        await expect(
-          outgoingPaymentService.create({
-            accountId,
-            incomingPaymentUrl,
-            amountToSend: BigInt(123),
-            authorized
-          })
-        ).resolves.toEqual(OutgoingPaymentError.InvalidAmount)
-      })
-
-      it('fails to create with nonexistent account', async () => {
-        await expect(
-          outgoingPaymentService.create({
-            accountId: uuid(),
-            paymentPointer,
-            amountToSend: BigInt(123),
-            authorized
-          })
-        ).resolves.toEqual(OutgoingPaymentError.UnknownAccount)
-      })
+      // incomingPaymentUrl and paymentPointer are defined in `beforeEach`
+      // and unavailable in the `test.each` table
+      test.each`
+        hasIncomingPaymentUrl | hasPaymentPointer | hasAmountToSend | error                                      | description
+        ${false}              | ${false}          | ${true}         | ${OutgoingPaymentError.InvalidDestination} | ${'without a destination'}
+        ${true}               | ${true}           | ${true}         | ${OutgoingPaymentError.InvalidDestination} | ${'with multiple destinations'}
+        ${true}               | ${false}          | ${true}         | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid amount'}
+        ${false}              | ${true}           | ${false}        | ${OutgoingPaymentError.InvalidAmount}      | ${'with missing amount'}
+      `(
+        'fails to create $description',
+        async ({
+          hasIncomingPaymentUrl,
+          hasPaymentPointer,
+          hasAmountToSend,
+          error
+        }): Promise<void> => {
+          await expect(
+            outgoingPaymentService.create({
+              accountId,
+              incomingPaymentUrl: hasIncomingPaymentUrl
+                ? incomingPaymentUrl
+                : undefined,
+              paymentPointer: hasPaymentPointer ? paymentPointer : undefined,
+              amountToSend: hasAmountToSend ? BigInt(123) : undefined,
+              authorized
+            })
+          ).resolves.toEqual(error)
+        }
+      )
     }
   )
 

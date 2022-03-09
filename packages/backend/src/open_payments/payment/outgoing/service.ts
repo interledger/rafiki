@@ -79,17 +79,19 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
-  if (
-    options.incomingPaymentUrl &&
-    (options.paymentPointer || options.amountToSend !== undefined)
-  ) {
-    deps.logger.warn(
-      {
-        options
-      },
-      'createOutgoingPayment invalid parameters'
-    )
-    return OutgoingPaymentError.InvalidAmount
+  if (options.incomingPaymentUrl) {
+    if (options.paymentPointer) {
+      return OutgoingPaymentError.InvalidDestination
+    }
+    if (options.amountToSend !== undefined) {
+      return OutgoingPaymentError.InvalidAmount
+    }
+  } else if (options.paymentPointer) {
+    if (!options.amountToSend) {
+      return OutgoingPaymentError.InvalidAmount
+    }
+  } else {
+    return OutgoingPaymentError.InvalidDestination
   }
 
   try {

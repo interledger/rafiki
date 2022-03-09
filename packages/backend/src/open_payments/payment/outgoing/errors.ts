@@ -6,7 +6,8 @@ export enum OutgoingPaymentError {
   UnknownAccount = 'UnknownAccount',
   UnknownPayment = 'UnknownPayment',
   WrongState = 'WrongState',
-  InvalidAmount = 'InvalidAmount'
+  InvalidAmount = 'InvalidAmount',
+  InvalidDestination = 'InvalidDestination'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
