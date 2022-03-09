@@ -3949,43 +3949,43 @@
         "interfaces": null,
         "enumValues": [
           {
-            "name": "PENDING",
-            "description": "Will transition to PREPARED or FUNDING (if already authorized) when quote is complete",
+            "name": "pending",
+            "description": "Will transition to `prepared` or `funding` (if already authorized) when quote is complete",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "PREPARED",
-            "description": "Will transition to FUNDING once authorized",
+            "name": "prepared",
+            "description": "Will transition to `funding` once authorized",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "FUNDING",
-            "description": "Will transition to SENDING once payment funds are reserved",
+            "name": "funding",
+            "description": "Will transition to `sending` once payment funds are reserved",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "SENDING",
-            "description": "Paying, will transition to COMPLETED on success",
+            "name": "sending",
+            "description": "Paying, will transition to `completed` on success",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "COMPLETED",
+            "name": "completed",
             "description": "Successful completion",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "EXPIRED",
-            "description": "Payment quote expired; can be requoted to PENDING",
+            "name": "expired",
+            "description": "Payment quote expired; can be requoted to `pending`",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "FAILED",
+            "name": "failed",
             "description": "Payment failed",
             "isDeprecated": false,
             "deprecationReason": null

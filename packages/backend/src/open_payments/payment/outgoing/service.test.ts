@@ -353,7 +353,7 @@ describe('OutgoingPaymentService', (): void => {
       ${true}    | ${PaymentState.Funding}
       ${false}   | ${PaymentState.Prepared}
     `(
-      'PENDING (authorized: $authorized)→',
+      'pending (authorized: $authorized)→',
       ({ authorized, nextState }): void => {
         it(`${nextState} (FixedSend)`, async (): Promise<void> => {
           const paymentId = (
@@ -426,7 +426,7 @@ describe('OutgoingPaymentService', (): void => {
           )
         })
 
-        it('PENDING (rate service error)', async (): Promise<void> => {
+        it('pending (rate service error)', async (): Promise<void> => {
           const mockFn = jest
             .spyOn(ratesService, 'prices')
             .mockImplementation(() => Promise.reject(new Error('fail')))
@@ -454,7 +454,7 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         // Maybe another person or payment paid the incoming payment already.
-        it('FAILED (FixedDelivery, incoming payment was already full paid)', async (): Promise<void> => {
+        it('failed (FixedDelivery, incoming payment was already full paid)', async (): Promise<void> => {
           const paymentId = (
             await createPayment({
               accountId,
@@ -469,7 +469,7 @@ describe('OutgoingPaymentService', (): void => {
           )
         })
 
-        it('FAILED (destination asset changed)', async (): Promise<void> => {
+        it('failed (destination asset changed)', async (): Promise<void> => {
           const originalPayment = await createPayment({
             accountId,
             paymentPointer,
@@ -498,7 +498,7 @@ describe('OutgoingPaymentService', (): void => {
       }
     )
 
-    describe('PREPARED→', (): void => {
+    describe('prepared→', (): void => {
       let payment: OutgoingPayment
 
       beforeEach(
@@ -512,7 +512,7 @@ describe('OutgoingPaymentService', (): void => {
         }
       )
 
-      it('EXPIRED', async (): Promise<void> => {
+      it('expired', async (): Promise<void> => {
         // nock doesn't work with 'modern' fake timers
         // https://github.com/nock/nock/issues/2200
         // jest.useFakeTimers('modern')
@@ -528,7 +528,7 @@ describe('OutgoingPaymentService', (): void => {
       })
     })
 
-    describe('SENDING→', (): void => {
+    describe('sending→', (): void => {
       async function setup(
         opts: Pick<
           PaymentIntent,
@@ -558,7 +558,7 @@ describe('OutgoingPaymentService', (): void => {
         return paymentId
       }
 
-      it('COMPLETED (FixedSend)', async (): Promise<void> => {
+      it('completed (FixedSend)', async (): Promise<void> => {
         const paymentId = await setup({
           paymentPointer,
           amountToSend: BigInt(123)
@@ -572,7 +572,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('COMPLETED (FixedDelivery)', async (): Promise<void> => {
+      it('completed (FixedDelivery)', async (): Promise<void> => {
         const paymentId = await setup({
           incomingPaymentUrl: incomingPaymentUrl
         })
@@ -589,7 +589,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('COMPLETED (FixedDelivery, with incoming payment initially partially paid)', async (): Promise<void> => {
+      it('completed (FixedDelivery, with incoming payment initially partially paid)', async (): Promise<void> => {
         const amountAlreadyDelivered = BigInt(34)
         await payIncomingPayment(amountAlreadyDelivered)
         const paymentId = await setup({
@@ -609,7 +609,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('SENDING (partial payment then retryable Pay error)', async (): Promise<void> => {
+      it('sending (partial payment then retryable Pay error)', async (): Promise<void> => {
         mockPay(
           {
             maxSourceAmount: BigInt(10),
@@ -649,7 +649,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('FAILED (non-retryable Pay error)', async (): Promise<void> => {
+      it('failed (non-retryable Pay error)', async (): Promise<void> => {
         mockPay(
           {
             maxSourceAmount: BigInt(10),
@@ -675,7 +675,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('SENDING→COMPLETED (partial payment, resume, complete)', async (): Promise<void> => {
+      it('sending→completed (partial payment, resume, complete)', async (): Promise<void> => {
         const mockFn = mockPay(
           {
             maxSourceAmount: BigInt(10),
@@ -707,8 +707,8 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      // Caused by retry after failed SENDING→COMPLETED transition commit.
-      it('COMPLETED (FixedSend, already fully paid)', async (): Promise<void> => {
+      // Caused by retry after failed sending→completed transition commit.
+      it('completed (FixedSend, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
           paymentPointer,
           amountToSend: BigInt(123)
@@ -727,8 +727,8 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      // Caused by retry after failed SENDING→COMPLETED transition commit.
-      it('COMPLETED (FixedDelivery, already fully paid)', async (): Promise<void> => {
+      // Caused by retry after failed sending→completed transition commit.
+      it('completed (FixedDelivery, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
           incomingPaymentUrl: incomingPaymentUrl
         })
@@ -746,7 +746,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      it('FAILED (destination asset changed)', async (): Promise<void> => {
+      it('failed (destination asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
           incomingPaymentUrl: incomingPaymentUrl
         })
@@ -827,7 +827,7 @@ describe('OutgoingPaymentService', (): void => {
     Object.values(PaymentState).forEach((state) => {
       if (state === PaymentState.Prepared) return
       it(`does not authorize a(n) ${
-        state === PaymentState.Pending ? 'authorized PENDING' : state
+        state === PaymentState.Pending ? 'authorized pending' : state
       } payment`, async (): Promise<void> => {
         await OutgoingPayment.query()
           .patch({

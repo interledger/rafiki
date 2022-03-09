@@ -186,26 +186,26 @@ export class OutgoingPayment
 
 export enum PaymentState {
   // Initial state. In this state, an empty account is generated, and the payment is automatically resolved & quoted.
-  // On success, transition to `PREPARED` or `FUNDING` if already authorized.
-  // On failure, transition to `FAILED`.
-  Pending = 'PENDING',
+  // On success, transition to `prepared` or `funding` if already authorized.
+  // On failure, transition to `failed`.
+  Pending = 'pending',
   // Awaiting authorization.
-  // On authorization, transition to `FUNDING`.
-  // On quote expiration, transition to `EXPIRED`.
-  Prepared = 'PREPARED',
+  // On authorization, transition to `funding`.
+  // On quote expiration, transition to `expired`.
+  Prepared = 'prepared',
   // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
-  // On success, transition to `SENDING`.
-  Funding = 'FUNDING',
+  // On success, transition to `sending`.
+  Funding = 'funding',
   // Pay from the account to the destination.
-  // On success, transition to `COMPLETED`.
-  Sending = 'SENDING',
+  // On success, transition to `completed`.
+  Sending = 'sending',
   // The payment quote expired.
-  // Requoting transitions to `PENDING`.
-  Expired = 'EXPIRED',
+  // Requoting transitions to `pending`.
+  Expired = 'expired',
   // The payment failed. (Though some money may have been delivered).
-  Failed = 'FAILED',
+  Failed = 'failed',
   // Successful completion.
-  Completed = 'COMPLETED'
+  Completed = 'completed'
 }
 
 export enum PaymentDepositType {
