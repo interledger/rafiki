@@ -374,12 +374,18 @@ type OutgoingPayment implements Model {
   error: String
   stateAttempts: Int!
   receivingAccount: String
-  sendAmount: UInt64
+  sendAmount: PaymentAmount
   receivingPayment: String
   quote: PaymentQuote
   destinationAccount: PaymentDestinationAccount
   outcome: OutgoingPaymentOutcome
   createdAt: String!
+}
+
+type PaymentAmount {
+  amount: UInt64!
+  assetCode: String!
+  assetScale: Int!
 }
 
 enum PaymentState {
@@ -426,10 +432,16 @@ type OutgoingPaymentOutcome {
   amountSent: UInt64!
 }
 
+input OutgoingPaymentAmountInput {
+  amount: UInt64!
+  assetCode: String
+  assetScale: Int
+}
+
 input CreateOutgoingPaymentInput {
   accountId: String!
   receivingAccount: String
-  sendAmount: UInt64
+  sendAmount: OutgoingPaymentAmountInput
   receivingPayment: String
   authorized: Boolean
 }

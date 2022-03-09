@@ -4,7 +4,12 @@ import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import { FundingError, LifecycleError, OutgoingPaymentError } from './errors'
 import { sendWebhookEvent } from './lifecycle'
-import { OutgoingPayment, PaymentState, PaymentEventType } from './model'
+import {
+  OutgoingPayment,
+  PaymentAmount,
+  PaymentState,
+  PaymentEventType
+} from './model'
 import { AccountingService } from '../../../accounting/service'
 import { AccountService } from '../../account/service'
 import { RatesService } from '../../../rates/service'
@@ -68,7 +73,9 @@ async function getOutgoingPayment(
 export interface CreateOutgoingPaymentOptions {
   accountId: string
   authorized?: boolean
-  sendAmount?: bigint
+  sendAmount?: Partial<PaymentAmount> & {
+    amount: bigint
+  }
   receivingAccount?: string
   receivingPayment?: string
 }
@@ -93,13 +100,34 @@ async function createOutgoingPayment(
   }
 
   try {
+    const account = await deps.accountService.get(options.accountId)
+    if (!account) {
+      return OutgoingPaymentError.UnknownAccount
+    }
+    let sendAmount: PaymentAmount | undefined
+    if (options.sendAmount) {
+      if (options.sendAmount.assetCode || options.sendAmount.assetScale) {
+        if (
+          options.sendAmount.assetCode !== account.asset.code ||
+          options.sendAmount.assetScale !== account.asset.scale
+        ) {
+          return OutgoingPaymentError.InvalidAmount
+        }
+      }
+      sendAmount = {
+        amount: options.sendAmount.amount,
+        assetCode: account.asset.code,
+        assetScale: account.asset.scale
+      }
+    }
+
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           state: PaymentState.Pending,
           receivingAccount: options.receivingAccount,
           receivingPayment: options.receivingPayment,
-          sendAmount: options.sendAmount,
+          sendAmount,
           accountId: options.accountId,
           authorized: options.authorized
         })

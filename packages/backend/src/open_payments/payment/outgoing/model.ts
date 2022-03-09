@@ -8,7 +8,7 @@ import { Account } from '../../account/model'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
 
-const fieldPrefixes = ['quote', 'destinationAccount', 'outcome']
+const fieldPrefixes = ['sendAmount', 'quote', 'destinationAccount', 'outcome']
 
 const ratioFields = [
   'quoteMinExchangeRate',
@@ -29,7 +29,7 @@ export class OutgoingPayment
 
   receivingAccount?: string
   receivingPayment?: string
-  sendAmount?: bigint
+  sendAmount?: PaymentAmount
 
   public quote?: {
     timestamp: Date
@@ -156,7 +156,11 @@ export class OutgoingPayment
       data.payment.receivingPayment = this.receivingPayment
     }
     if (this.sendAmount) {
-      data.payment.sendAmount = this.sendAmount.toString()
+      data.payment.sendAmount = {
+        amount: this.sendAmount.amount.toString(),
+        assetCode: this.sendAmount.assetCode,
+        assetScale: this.sendAmount.assetScale
+      }
     }
     if (this.error) {
       data.payment.error = this.error
@@ -177,6 +181,12 @@ export class OutgoingPayment
     }
     return data
   }
+}
+
+export interface PaymentAmount {
+  amount: bigint
+  assetCode: string
+  assetScale: number
 }
 
 export enum PaymentState {
@@ -229,7 +239,11 @@ export type PaymentData = {
     stateAttempts: number
     receivingAccount?: string
     receivingPayment?: string
-    sendAmount?: string
+    sendAmount?: {
+      amount: string
+      assetCode: string
+      assetScale: number
+    }
     quote?: {
       timestamp: string
       activationDeadline: string

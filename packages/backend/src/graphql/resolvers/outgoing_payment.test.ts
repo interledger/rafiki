@@ -40,6 +40,11 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   const receivingAccount = 'http://wallet2.example/pay/bob'
   const receivingPayment = 'http://wallet2.example/incoming/123'
+  const sendAmount = {
+    amount: BigInt(123),
+    assetCode: randomAsset().code,
+    assetScale: randomAsset().scale
+  }
 
   beforeAll(
     async (): Promise<void> => {
@@ -69,14 +74,20 @@ describe('OutgoingPayment Resolvers', (): void => {
   const createPayment = async ({
     accountId,
     receivingAccount,
-    sendAmount,
+    sendAmount: sendAmountOpts,
     receivingPayment,
     authorized
   }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
     OutgoingPaymentModel.query(knex).insertAndFetch({
       state: PaymentState.Pending,
       receivingAccount,
-      sendAmount,
+      sendAmount: sendAmountOpts
+        ? {
+            amount: sendAmountOpts.amount,
+            assetCode: sendAmount.assetCode,
+            assetScale: sendAmount.assetScale
+          }
+        : undefined,
       receivingPayment,
       quote: {
         timestamp: new Date(),
@@ -106,9 +117,9 @@ describe('OutgoingPayment Resolvers', (): void => {
     let payment: OutgoingPaymentModel
 
     describe.each`
-      receivingAccount    | sendAmount     | receivingPayment    | authorized | description
-      ${receivingAccount} | ${BigInt(123)} | ${null}             | ${true}    | ${'fixed send'}
-      ${null}             | ${null}        | ${receivingPayment} | ${false}   | ${'incoming payment'}
+      receivingAccount    | sendAmount    | receivingPayment    | authorized | description
+      ${receivingAccount} | ${sendAmount} | ${null}             | ${true}    | ${'fixed send'}
+      ${null}             | ${null}       | ${receivingPayment} | ${false}   | ${'incoming payment'}
     `(
       '$description',
       ({
@@ -120,7 +131,12 @@ describe('OutgoingPayment Resolvers', (): void => {
         beforeEach(
           async (): Promise<void> => {
             const { id: accountId } = await accountService.create({
-              asset: randomAsset()
+              asset: sendAmount
+                ? {
+                    code: sendAmount.assetCode,
+                    scale: sendAmount.assetScale
+                  }
+                : randomAsset()
             })
             payment = await createPayment({
               accountId,
@@ -171,7 +187,11 @@ describe('OutgoingPayment Resolvers', (): void => {
                       stateAttempts
                       receivingAccount
                       receivingPayment
-                      sendAmount
+                      sendAmount {
+                        amount
+                        assetCode
+                        assetScale
+                      }
                       quote {
                         timestamp
                         activationDeadline
@@ -209,7 +229,14 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.stateAttempts).toBe(0)
             expect(query.receivingAccount).toEqual(receivingAccount)
             expect(query.sendAmount).toEqual(
-              payment.sendAmount?.toString() || null
+              sendAmount
+                ? {
+                    amount: sendAmount.amount.toString() || null,
+                    assetCode: sendAmount.assetCode,
+                    assetScale: sendAmount.assetScale,
+                    __typename: 'PaymentAmount'
+                  }
+                : null
             )
             expect(query.receivingPayment).toEqual(receivingPayment)
             expect(query.quote).toEqual({
@@ -262,14 +289,14 @@ describe('OutgoingPayment Resolvers', (): void => {
     const input = {
       accountId: uuid(),
       receivingAccount,
-      sendAmount: BigInt(123)
+      sendAmount
     }
 
     test.each`
-      receivingAccount    | sendAmount     | receivingPayment    | authorized   | description
-      ${receivingAccount} | ${BigInt(123)} | ${null}             | ${true}      | ${'fixed send (authorized)'}
-      ${receivingAccount} | ${BigInt(123)} | ${null}             | ${false}     | ${'fixed send'}
-      ${null}             | ${null}        | ${receivingPayment} | ${undefined} | ${'incoming payment'}
+      receivingAccount    | sendAmount                       | receivingPayment    | authorized   | description
+      ${receivingAccount} | ${sendAmount}                    | ${null}             | ${true}      | ${'fixed send (authorized)'}
+      ${receivingAccount} | ${{ amount: sendAmount.amount }} | ${null}             | ${false}     | ${'fixed send'}
+      ${null}             | ${null}                          | ${receivingPayment} | ${undefined} | ${'incoming payment'}
     `(
       '200 ($description)',
       async ({
@@ -408,7 +435,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         createPayment({
           accountId,
           receivingAccount,
-          sendAmount: BigInt(123)
+          sendAmount
         }),
       pagedQuery: 'outgoingPayments',
       parent: {
