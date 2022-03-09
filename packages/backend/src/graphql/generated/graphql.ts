@@ -170,7 +170,7 @@ export type CreateOutgoingPaymentInput = {
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
   incomingPaymentUrl?: Maybe<Scalars['String']>;
-  autoApprove: Scalars['Boolean'];
+  authorized?: Maybe<Scalars['Boolean']>;
 };
 
 export type CreatePeerInput = {
@@ -469,11 +469,12 @@ export type OutgoingPayment = Model & {
   id: Scalars['ID'];
   accountId: Scalars['ID'];
   state: PaymentState;
+  authorized: Scalars['Boolean'];
   error?: Maybe<Scalars['String']>;
   stateAttempts: Scalars['Int'];
   intent?: Maybe<PaymentIntent>;
   quote?: Maybe<PaymentQuote>;
-  destinationAccount: PaymentDestinationAccount;
+  destinationAccount?: Maybe<PaymentDestinationAccount>;
   outcome?: Maybe<OutgoingPaymentOutcome>;
   createdAt: Scalars['String'];
 };
@@ -527,7 +528,6 @@ export type PaymentIntent = {
   paymentPointer?: Maybe<Scalars['String']>;
   amountToSend?: Maybe<Scalars['UInt64']>;
   incomingPaymentUrl?: Maybe<Scalars['String']>;
-  autoApprove: Scalars['Boolean'];
 };
 
 export type PaymentQuote = {
@@ -544,16 +544,20 @@ export type PaymentQuote = {
 };
 
 export enum PaymentState {
-  /** Will transition to FUNDING or SENDING (if already funded) when quote is complete */
-  Quoting = 'QUOTING',
+  /** Will transition to PREPARED or FUNDING (if already authorized) when quote is complete */
+  Pending = 'PENDING',
+  /** Will transition to FUNDING once authorized */
+  Prepared = 'PREPARED',
   /** Will transition to SENDING once payment funds are reserved */
   Funding = 'FUNDING',
   /** Paying, will transition to COMPLETED on success */
   Sending = 'SENDING',
-  /** Payment aborted; can be requoted to QUOTING */
-  Cancelled = 'CANCELLED',
-  /** Successfuly completion */
-  Completed = 'COMPLETED'
+  /** Successful completion */
+  Completed = 'COMPLETED',
+  /** Payment quote expired; can be requoted to PENDING */
+  Expired = 'EXPIRED',
+  /** Payment failed */
+  Failed = 'FAILED'
 }
 
 export enum PaymentType {
@@ -1129,11 +1133,12 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   accountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['PaymentState'], ParentType, ContextType>;
+  authorized?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   intent?: Resolver<Maybe<ResolversTypes['PaymentIntent']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
-  destinationAccount?: Resolver<ResolversTypes['PaymentDestinationAccount'], ParentType, ContextType>;
+  destinationAccount?: Resolver<Maybe<ResolversTypes['PaymentDestinationAccount']>, ParentType, ContextType>;
   outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1183,7 +1188,6 @@ export type PaymentIntentResolvers<ContextType = any, ParentType extends Resolve
   paymentPointer?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   amountToSend?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   incomingPaymentUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  autoApprove?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

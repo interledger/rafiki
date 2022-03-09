@@ -370,11 +370,12 @@ type OutgoingPayment implements Model {
   id: ID!
   accountId: ID!
   state: PaymentState!
+  authorized: Boolean!
   error: String
   stateAttempts: Int!
   intent: PaymentIntent
   quote: PaymentQuote
-  destinationAccount: PaymentDestinationAccount!
+  destinationAccount: PaymentDestinationAccount
   outcome: OutgoingPaymentOutcome
   createdAt: String!
 }
@@ -383,20 +384,23 @@ type PaymentIntent {
   paymentPointer: String
   amountToSend: UInt64
   incomingPaymentUrl: String
-  autoApprove: Boolean!
 }
 
 enum PaymentState {
-  "Will transition to FUNDING or SENDING (if already funded) when quote is complete"
-  QUOTING
+  "Will transition to PREPARED or FUNDING (if already authorized) when quote is complete"
+  PENDING
+  "Will transition to FUNDING once authorized"
+  PREPARED
   "Will transition to SENDING once payment funds are reserved"
   FUNDING
   "Paying, will transition to COMPLETED on success"
   SENDING
-  "Payment aborted; can be requoted to QUOTING"
-  CANCELLED
-  "Successfuly completion"
+  "Successful completion"
   COMPLETED
+  "Payment quote expired; can be requoted to PENDING"
+  EXPIRED
+  "Payment failed"
+  FAILED
 }
 
 enum PaymentType {
@@ -431,7 +435,7 @@ input CreateOutgoingPaymentInput {
   paymentPointer: String
   amountToSend: UInt64
   incomingPaymentUrl: String
-  autoApprove: Boolean!
+  authorized: Boolean
 }
 
 type OutgoingPaymentResponse {

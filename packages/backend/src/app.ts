@@ -31,8 +31,11 @@ import { AccountRoutes } from './open_payments/account/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
-import { OutgoingPaymentService } from './outgoing_payment/service'
-import { IlpPlugin, IlpPluginOptions } from './outgoing_payment/ilp_plugin'
+import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
+import {
+  IlpPlugin,
+  IlpPluginOptions
+} from './open_payments/payment/outgoing/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
 import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'

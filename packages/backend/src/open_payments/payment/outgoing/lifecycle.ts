@@ -14,7 +14,7 @@ const MAX_INT64 = BigInt('9223372036854775807')
 
 // Acquire a quote for the user to approve.
 // "payment" is locked by the "deps.knex" transaction.
-export async function handleQuoting(
+export async function handlePending(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   plugin: IlpPlugin
@@ -29,18 +29,28 @@ export async function handleQuoting(
     invoiceUrl: payment.intent.incomingPaymentUrl
   })
 
-  if (
-    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
-    payment.destinationAccount.code !== destination.destinationAsset.code
-  ) {
-    deps.logger.warn(
-      {
-        oldAsset: payment.destinationAccount,
-        newAsset: destination.destinationAsset
-      },
-      'asset changed'
-    )
-    throw Pay.PaymentError.DestinationAssetConflict
+  if (payment.destinationAccount) {
+    if (
+      payment.destinationAccount.scale !== destination.destinationAsset.scale ||
+      payment.destinationAccount.code !== destination.destinationAsset.code
+    ) {
+      deps.logger.warn(
+        {
+          oldAsset: payment.destinationAccount,
+          newAsset: destination.destinationAsset
+        },
+        'asset changed'
+      )
+      throw Pay.PaymentError.DestinationAssetConflict
+    }
+  } else {
+    await payment.$query(deps.knex).patch({
+      destinationAccount: {
+        scale: destination.destinationAsset.scale,
+        code: destination.destinationAsset.code,
+        url: destination.accountUrl
+      }
+    })
   }
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
@@ -79,38 +89,26 @@ export async function handleQuoting(
     amountToSend,
     slippage: deps.slippage,
     prices
+  }).finally(() => {
+    return Pay.closeConnection(plugin, destination).catch((err) => {
+      deps.logger.warn(
+        {
+          destination: destination.destinationAddress,
+          error: err.message
+        },
+        'close quote connection failed'
+      )
+    })
   })
-    .finally(() => {
-      return Pay.closeConnection(plugin, destination).catch((err) => {
-        deps.logger.warn(
-          {
-            destination: destination.destinationAddress,
-            error: err.message
-          },
-          'close quote connection failed'
-        )
-      })
-    })
-    .catch(async (err) => {
-      if (err === Pay.PaymentError.InvoiceAlreadyPaid) return null
-      throw err
-    })
-  // InvoiceAlreadyPaid: the incoming payment was already paid, either by this payment (which retried due to a failed SENDING→COMPLETED transition commit) or another payment entirely.
-  if (quote === null) {
-    deps.logger.warn('quote incoming payment already paid')
-    await handleCompleted(deps, payment)
-    return
-  }
 
   const balance = await deps.accountingService.getBalance(payment.id)
   if (balance === undefined) {
     throw LifecycleError.MissingBalance
   }
 
-  const state =
-    balance < quote.maxSourceAmount
-      ? PaymentState.Funding
-      : PaymentState.Sending
+  const state = payment.authorized
+    ? PaymentState.Funding
+    : PaymentState.Prepared
 
   await payment.$query(deps.knex).patch({
     state,
@@ -136,14 +134,15 @@ export async function handleQuoting(
 }
 
 // "payment" is locked by the "deps.knex" transaction.
-export async function handleFunding(
+export async function handlePrepared(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
   const now = new Date()
   if (payment.quote.activationDeadline < now) {
-    throw LifecycleError.QuoteExpired
+    await payment.$query(deps.knex).patch({ state: PaymentState.Expired })
+    return
   }
 
   deps.logger.error(
@@ -151,7 +150,7 @@ export async function handleFunding(
       activationDeadline: payment.quote.activationDeadline.getTime(),
       now: now.getTime()
     },
-    "handleFunding for payment quote that isn't expired"
+    "handlePrepared for payment quote that isn't expired"
   )
 }
 
@@ -161,7 +160,9 @@ export async function handleSending(
   payment: OutgoingPayment,
   plugin: IlpPlugin
 ): Promise<void> {
+  if (!payment.destinationAccount) throw LifecycleError.MissingDestination
   if (!payment.quote) throw LifecycleError.MissingQuote
+  if (!payment.authorized) throw LifecycleError.Unauthorized
 
   const destination = await Pay.setupPayment({
     plugin,
@@ -309,16 +310,16 @@ export async function handleSending(
   await handleCompleted(deps, payment)
 }
 
-export async function handleCancelled(
+export async function handleFailed(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   error: string
 ): Promise<void> {
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Cancelled,
+    state: PaymentState.Failed,
     error
   })
-  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCancelled)
+  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFailed)
 }
 
 const handleCompleted = async (
@@ -331,7 +332,7 @@ const handleCompleted = async (
   await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCompleted)
 }
 
-const sendWebhookEvent = async (
+export const sendWebhookEvent = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   type: PaymentEventType

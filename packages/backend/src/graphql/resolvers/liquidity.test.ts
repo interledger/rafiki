@@ -28,7 +28,7 @@ import {
   PaymentEvent,
   PaymentWithdrawType,
   isPaymentEventType
-} from '../../outgoing_payment/model'
+} from '../../open_payments/payment/outgoing/model'
 import { Peer } from '../../peer/model'
 import { randomAsset } from '../../tests/asset'
 import { PeerFactory } from '../../tests/peerFactory'
@@ -1604,11 +1604,10 @@ describe('Liquidity Resolvers', (): void => {
         const config = await deps.use('config')
         const incomingPaymentUrl = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
         // create and then patch quote
-        payment = await outgoingPaymentService.create({
+        payment = (await outgoingPaymentService.create({
           accountId,
-          incomingPaymentUrl,
-          autoApprove: false
-        })
+          incomingPaymentUrl
+        })) as OutgoingPayment
         await payment.$query(knex).patch({
           state: PaymentState.Funding,
           quote: {

@@ -1,12 +1,18 @@
 import * as Pay from '@interledger/pay'
 
-import { TransferError } from '../accounting/errors'
+import { TransferError } from '../../../accounting/errors'
 
-enum OutgoingPaymentError {
+export enum OutgoingPaymentError {
+  UnknownAccount = 'UnknownAccount',
   UnknownPayment = 'UnknownPayment',
   WrongState = 'WrongState',
-  InvalidAmount = 'InvalidAmount'
+  InvalidAmount = 'InvalidAmount',
+  InvalidDestination = 'InvalidDestination'
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isOutgoingPaymentError = (o: any): o is OutgoingPaymentError =>
+  Object.values(OutgoingPaymentError).includes(o)
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }
 export type FundingError = OutgoingPaymentError | TransferError
@@ -18,7 +24,6 @@ export const isFundingError = (o: any): o is FundingError =>
 export type PaymentError = LifecycleError | Pay.PaymentError
 
 export enum LifecycleError {
-  QuoteExpired = 'QuoteExpired',
   // Rate fetch failed.
   PricesUnavailable = 'PricesUnavailable',
   // Edge error due to retries, partial payment, and database write errors.
@@ -26,9 +31,11 @@ export enum LifecycleError {
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
   MissingBalance = 'MissingBalance',
+  MissingDestination = 'MissingDestination',
   MissingQuote = 'MissingQuote',
   MissingIncomingPayment = 'MissingIncomingPayment',
-  InvalidRatio = 'InvalidRatio'
+  InvalidRatio = 'InvalidRatio',
+  Unauthorized = 'Unauthorized'
 }
 
 const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
