@@ -77,6 +77,8 @@ export interface CreateOutgoingPaymentOptions {
   receiveAmount?: PaymentAmount
   receivingAccount?: string
   receivingPayment?: string
+  description?: string
+  externalRef?: string
 }
 
 async function createOutgoingPayment(
@@ -119,13 +121,8 @@ async function createOutgoingPayment(
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
-          state: PaymentState.Pending,
-          receivingAccount: options.receivingAccount,
-          receivingPayment: options.receivingPayment,
-          sendAmount: options.sendAmount,
-          receiveAmount: options.receiveAmount,
-          accountId: options.accountId,
-          authorized: options.authorized
+          ...options,
+          state: PaymentState.Pending
         })
         .withGraphFetched('account.asset')
 

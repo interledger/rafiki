@@ -169,6 +169,8 @@ export function paymentToGraphql(
     receivingPayment: payment.receivingPayment,
     sendAmount: payment.sendAmount,
     receiveAmount: payment.receiveAmount,
+    description: payment.description,
+    externalRef: payment.externalRef,
     quote: payment.quote && {
       ...payment.quote,
       targetType: SchemaPaymentType[payment.quote.targetType],

@@ -283,12 +283,12 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe.each`
-    authorized   | expectedAuthorized
-    ${true}      | ${true}
-    ${undefined} | ${false}
+    description  | externalRef  | authorized   | expectedAuthorized
+    ${'rent'}    | ${'202201'}  | ${true}      | ${true}
+    ${undefined} | ${undefined} | ${undefined} | ${false}
   `(
     'create (authorized: $authorized)',
-    ({ authorized, expectedAuthorized }): void => {
+    ({ description, externalRef, authorized, expectedAuthorized }): void => {
       it.each`
         assetCode               | assetScale
         ${sendAmount.assetCode} | ${sendAmount.assetScale}
@@ -296,7 +296,7 @@ describe('OutgoingPaymentService', (): void => {
       `(
         'creates an OutgoingPayment to account (FixedSend)',
         async ({ assetCode, assetScale }): Promise<void> => {
-          const payment = await outgoingPaymentService.create({
+          const options = {
             accountId,
             receivingAccount,
             sendAmount: {
@@ -304,17 +304,20 @@ describe('OutgoingPaymentService', (): void => {
               assetCode,
               assetScale
             },
-            authorized
-          })
+            authorized,
+            description,
+            externalRef
+          }
+          const payment = await outgoingPaymentService.create(options)
           assert.ok(!isOutgoingPaymentError(payment))
           expect(payment).toMatchObject({
+            ...options,
             state: PaymentState.Pending,
-            authorized: expectedAuthorized,
-            receivingAccount,
-            sendAmount,
             receiveAmount: null,
             receivingPayment: null,
-            accountId,
+            authorized: expectedAuthorized,
+            description: description || null,
+            externalRef: externalRef || null,
             account: {
               asset
             }
@@ -341,21 +344,24 @@ describe('OutgoingPaymentService', (): void => {
             receiveAmount.assetCode = receiveAsset.code
             receiveAmount.assetScale = receiveAsset.scale
           }
-          const payment = await outgoingPaymentService.create({
+          const options = {
             accountId,
             receivingAccount,
             receiveAmount,
-            authorized
-          })
+            authorized,
+            description,
+            externalRef
+          }
+          const payment = await outgoingPaymentService.create(options)
           assert.ok(!isOutgoingPaymentError(payment))
           expect(payment).toMatchObject({
+            ...options,
             state: PaymentState.Pending,
-            authorized: expectedAuthorized,
-            receivingAccount,
             sendAmount: null,
-            receiveAmount,
             receivingPayment: null,
-            accountId,
+            authorized: expectedAuthorized,
+            description: description || null,
+            externalRef: externalRef || null,
             account: {
               asset
             }
@@ -369,20 +375,24 @@ describe('OutgoingPaymentService', (): void => {
       )
 
       it('creates an OutgoingPayment to incoming payment (FixedDelivery)', async () => {
-        const payment = await outgoingPaymentService.create({
+        const options = {
           accountId,
           receivingPayment,
-          authorized
-        })
+          authorized,
+          description,
+          externalRef
+        }
+        const payment = await outgoingPaymentService.create(options)
         assert.ok(!isOutgoingPaymentError(payment))
         expect(payment).toMatchObject({
+          ...options,
           state: PaymentState.Pending,
           authorized: expectedAuthorized,
           receivingAccount: null,
           sendAmount: null,
           receiveAmount: null,
-          receivingPayment,
-          accountId,
+          description: description || null,
+          externalRef: externalRef || null,
           account: {
             asset
           }

@@ -82,7 +82,8 @@ describe('OutgoingPayment Resolvers', (): void => {
     sendAmount: sendAmountOpts,
     receiveAmount: receiveAmountOpts,
     receivingPayment,
-    authorized
+    authorized,
+    description
   }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
     OutgoingPaymentModel.query(knex).insertAndFetch({
       state: PaymentState.Pending,
@@ -116,7 +117,8 @@ describe('OutgoingPayment Resolvers', (): void => {
         amountSent: BigInt(0)
       },
       accountId,
-      authorized
+      authorized,
+      description
     })
 
   describe('Query.outgoingPayment', (): void => {
@@ -134,7 +136,8 @@ describe('OutgoingPayment Resolvers', (): void => {
         sendAmount,
         receiveAmount,
         receivingPayment,
-        authorized
+        authorized,
+        description
       }): void => {
         beforeEach(
           async (): Promise<void> => {
@@ -152,7 +155,8 @@ describe('OutgoingPayment Resolvers', (): void => {
               sendAmount,
               receiveAmount,
               receivingPayment,
-              authorized
+              authorized,
+              description
             })
           }
         )
@@ -206,6 +210,8 @@ describe('OutgoingPayment Resolvers', (): void => {
                         assetCode
                         assetScale
                       }
+                      description
+                      externalRef
                       quote {
                         timestamp
                         activationDeadline
@@ -256,6 +262,8 @@ describe('OutgoingPayment Resolvers', (): void => {
                 : null
             )
             expect(query.receivingPayment).toEqual(receivingPayment)
+            expect(query.description).toEqual(description)
+            expect(query.externalRef).toBeNull()
             expect(query.quote).toEqual({
               timestamp: payment.quote?.timestamp.toISOString(),
               activationDeadline: payment.quote?.activationDeadline.toISOString(),

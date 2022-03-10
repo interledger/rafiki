@@ -377,6 +377,8 @@ type OutgoingPayment implements Model {
   sendAmount: PaymentAmount
   receiveAmount: PaymentAmount
   receivingPayment: String
+  description: String
+  externalRef: String
   quote: PaymentQuote
   outcome: OutgoingPaymentOutcome
   createdAt: String!

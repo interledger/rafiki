@@ -27,10 +27,13 @@ export class OutgoingPayment
   public error?: string | null
   public stateAttempts!: number
 
-  receivingAccount?: string
-  receivingPayment?: string
-  sendAmount?: PaymentAmount
-  receiveAmount?: PaymentAmount
+  public receivingAccount?: string
+  public receivingPayment?: string
+  public sendAmount?: PaymentAmount
+  public receiveAmount?: PaymentAmount
+
+  public description?: string
+  public externalRef?: string
 
   public quote?: {
     timestamp: Date
@@ -165,6 +168,12 @@ export class OutgoingPayment
         assetScale: this.receiveAmount.assetScale
       }
     }
+    if (this.description) {
+      data.payment.description = this.description
+    }
+    if (this.externalRef) {
+      data.payment.externalRef = this.externalRef
+    }
     if (this.error) {
       data.payment.error = this.error
     }
@@ -248,6 +257,8 @@ export type PaymentData = {
     receivingPayment?: string
     sendAmount?: AmountData
     receiveAmount?: AmountData
+    description?: string
+    externalRef?: string
     quote?: {
       timestamp: string
       activationDeadline: string

@@ -6,6 +6,8 @@ exports.up = function (knex) {
     table.string('error').nullable()
     table.integer('stateAttempts').notNullable().defaultTo(0)
     table.boolean('authorized').notNullable().defaultTo(false)
+    table.string('description').nullable()
+    table.string('externalRef').nullable()
 
     table.string('receivingAccount').nullable()
     table.string('receivingPayment').nullable()
