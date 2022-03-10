@@ -312,17 +312,22 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
 
     test.each`
-      receivingAccount    | sendAmount                       | receivingPayment    | authorized   | description
-      ${receivingAccount} | ${sendAmount}                    | ${null}             | ${true}      | ${'fixed send (authorized)'}
-      ${receivingAccount} | ${{ amount: sendAmount.amount }} | ${null}             | ${false}     | ${'fixed send'}
-      ${null}             | ${null}                          | ${receivingPayment} | ${undefined} | ${'incoming payment'}
+      receivingAccount    | sendAmount                       | receiveAmount                       | receivingPayment    | authorized   | description  | externalRef  | type
+      ${receivingAccount} | ${sendAmount}                    | ${undefined}                        | ${undefined}        | ${true}      | ${'rent'}    | ${'202201'}  | ${'fixed send (authorized)'}
+      ${receivingAccount} | ${{ amount: sendAmount.amount }} | ${undefined}                        | ${undefined}        | ${false}     | ${undefined} | ${undefined} | ${'fixed send'}
+      ${receivingAccount} | ${undefined}                     | ${receiveAmount}                    | ${undefined}        | ${true}      | ${'rent'}    | ${'202201'}  | ${'fixed receive (authorized)'}
+      ${receivingAccount} | ${undefined}                     | ${{ amount: receiveAmount.amount }} | ${undefined}        | ${false}     | ${undefined} | ${undefined} | ${'fixed receive'}
+      ${undefined}        | ${undefined}                     | ${undefined}                        | ${receivingPayment} | ${undefined} | ${undefined} | ${undefined} | ${'incoming payment'}
     `(
-      '200 ($description)',
+      '200 ($type)',
       async ({
         receivingAccount,
         sendAmount,
+        receiveAmount,
         receivingPayment,
-        authorized
+        authorized,
+        description,
+        externalRef
       }): Promise<void> => {
         const { id: accountId } = await accountService.create({
           asset: randomAsset()
@@ -331,8 +336,11 @@ describe('OutgoingPayment Resolvers', (): void => {
           accountId,
           receivingAccount,
           sendAmount,
+          receiveAmount,
           receivingPayment,
-          authorized
+          authorized,
+          description,
+          externalRef
         }
         const payment = await createPayment(input)
 

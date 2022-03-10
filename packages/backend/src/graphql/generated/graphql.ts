@@ -168,9 +168,12 @@ export type CreateAssetLiquidityWithdrawalInput = {
 export type CreateOutgoingPaymentInput = {
   accountId: Scalars['String'];
   receivingAccount?: Maybe<Scalars['String']>;
-  sendAmount?: Maybe<OutgoingPaymentAmountInput>;
+  sendAmount?: Maybe<PaymentAmountInput>;
+  receiveAmount?: Maybe<PaymentAmountInput>;
   receivingPayment?: Maybe<Scalars['String']>;
   authorized?: Maybe<Scalars['Boolean']>;
+  description?: Maybe<Scalars['String']>;
+  externalRef?: Maybe<Scalars['String']>;
 };
 
 export type CreatePeerInput = {
@@ -484,12 +487,6 @@ export type OutgoingPayment = Model & {
   createdAt: Scalars['String'];
 };
 
-export type OutgoingPaymentAmountInput = {
-  amount: Scalars['UInt64'];
-  assetCode?: Maybe<Scalars['String']>;
-  assetScale?: Maybe<Scalars['Int']>;
-};
-
 export type OutgoingPaymentConnection = {
   __typename?: 'OutgoingPaymentConnection';
   pageInfo: PageInfo;
@@ -529,6 +526,12 @@ export type PageInfo = {
 
 export type PaymentAmount = {
   __typename?: 'PaymentAmount';
+  amount: Scalars['UInt64'];
+  assetCode?: Maybe<Scalars['String']>;
+  assetScale?: Maybe<Scalars['Int']>;
+};
+
+export type PaymentAmountInput = {
   amount: Scalars['UInt64'];
   assetCode?: Maybe<Scalars['String']>;
   assetScale?: Maybe<Scalars['Int']>;
@@ -839,13 +842,13 @@ export type ResolversTypes = {
   Mutation: ResolverTypeWrapper<{}>;
   MutationResponse: ResolversTypes['AccountWithdrawalMutationResponse'] | ResolversTypes['AssetMutationResponse'] | ResolversTypes['CreateAccountMutationResponse'] | ResolversTypes['CreateApiKeyMutationResponse'] | ResolversTypes['CreatePeerMutationResponse'] | ResolversTypes['DeleteAllApiKeysMutationResponse'] | ResolversTypes['DeletePeerMutationResponse'] | ResolversTypes['LiquidityMutationResponse'] | ResolversTypes['RedeemApiKeyMutationResponse'] | ResolversTypes['RefreshSessionMutationResponse'] | ResolversTypes['RevokeSessionMutationResponse'] | ResolversTypes['TransferMutationResponse'] | ResolversTypes['TriggerAccountEventsMutationResponse'] | ResolversTypes['UpdatePeerMutationResponse'];
   OutgoingPayment: ResolverTypeWrapper<Partial<OutgoingPayment>>;
-  OutgoingPaymentAmountInput: ResolverTypeWrapper<Partial<OutgoingPaymentAmountInput>>;
   OutgoingPaymentConnection: ResolverTypeWrapper<Partial<OutgoingPaymentConnection>>;
   OutgoingPaymentEdge: ResolverTypeWrapper<Partial<OutgoingPaymentEdge>>;
   OutgoingPaymentOutcome: ResolverTypeWrapper<Partial<OutgoingPaymentOutcome>>;
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   PaymentAmount: ResolverTypeWrapper<Partial<PaymentAmount>>;
+  PaymentAmountInput: ResolverTypeWrapper<Partial<PaymentAmountInput>>;
   PaymentQuote: ResolverTypeWrapper<Partial<PaymentQuote>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']>>;
   PaymentState: ResolverTypeWrapper<Partial<PaymentState>>;
@@ -913,13 +916,13 @@ export type ResolversParentTypes = {
   Mutation: {};
   MutationResponse: ResolversParentTypes['AccountWithdrawalMutationResponse'] | ResolversParentTypes['AssetMutationResponse'] | ResolversParentTypes['CreateAccountMutationResponse'] | ResolversParentTypes['CreateApiKeyMutationResponse'] | ResolversParentTypes['CreatePeerMutationResponse'] | ResolversParentTypes['DeleteAllApiKeysMutationResponse'] | ResolversParentTypes['DeletePeerMutationResponse'] | ResolversParentTypes['LiquidityMutationResponse'] | ResolversParentTypes['RedeemApiKeyMutationResponse'] | ResolversParentTypes['RefreshSessionMutationResponse'] | ResolversParentTypes['RevokeSessionMutationResponse'] | ResolversParentTypes['TransferMutationResponse'] | ResolversParentTypes['TriggerAccountEventsMutationResponse'] | ResolversParentTypes['UpdatePeerMutationResponse'];
   OutgoingPayment: Partial<OutgoingPayment>;
-  OutgoingPaymentAmountInput: Partial<OutgoingPaymentAmountInput>;
   OutgoingPaymentConnection: Partial<OutgoingPaymentConnection>;
   OutgoingPaymentEdge: Partial<OutgoingPaymentEdge>;
   OutgoingPaymentOutcome: Partial<OutgoingPaymentOutcome>;
   OutgoingPaymentResponse: Partial<OutgoingPaymentResponse>;
   PageInfo: Partial<PageInfo>;
   PaymentAmount: Partial<PaymentAmount>;
+  PaymentAmountInput: Partial<PaymentAmountInput>;
   PaymentQuote: Partial<PaymentQuote>;
   Float: Partial<Scalars['Float']>;
   Peer: Partial<Peer>;

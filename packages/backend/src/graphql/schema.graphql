@@ -426,7 +426,7 @@ type OutgoingPaymentOutcome {
   amountSent: UInt64!
 }
 
-input OutgoingPaymentAmountInput {
+input PaymentAmountInput {
   amount: UInt64!
   assetCode: String
   assetScale: Int
@@ -435,9 +435,12 @@ input OutgoingPaymentAmountInput {
 input CreateOutgoingPaymentInput {
   accountId: String!
   receivingAccount: String
-  sendAmount: OutgoingPaymentAmountInput
+  sendAmount: PaymentAmountInput
+  receiveAmount: PaymentAmountInput
   receivingPayment: String
   authorized: Boolean
+  description: String
+  externalRef: String
 }
 
 type OutgoingPaymentResponse {
