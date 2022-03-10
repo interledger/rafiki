@@ -171,11 +171,11 @@ export function paymentToGraphql(
     receiveAmount: payment.receiveAmount,
     description: payment.description,
     externalRef: payment.externalRef,
+    expiresAt: payment.expiresAt?.toISOString(),
     quote: payment.quote && {
       ...payment.quote,
       targetType: SchemaPaymentType[payment.quote.targetType],
       timestamp: payment.quote.timestamp.toISOString(),
-      activationDeadline: payment.quote.activationDeadline.toISOString(),
       minExchangeRate: payment.quote.minExchangeRate.valueOf(),
       lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
       highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()

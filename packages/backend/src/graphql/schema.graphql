@@ -379,6 +379,7 @@ type OutgoingPayment implements Model {
   receivingPayment: String
   description: String
   externalRef: String
+  expiresAt: String
   quote: PaymentQuote
   outcome: OutgoingPaymentOutcome
   createdAt: String!
@@ -414,7 +415,6 @@ enum PaymentType {
 
 type PaymentQuote {
   timestamp: String!
-  activationDeadline: String!
   targetType: PaymentType!
   maxPacketAmount: UInt64!
   minExchangeRate: Float!

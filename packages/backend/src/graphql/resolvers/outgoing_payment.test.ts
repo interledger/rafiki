@@ -103,9 +103,9 @@ describe('OutgoingPayment Resolvers', (): void => {
           }
         : undefined,
       receivingPayment,
+      expiresAt: new Date(Date.now() + 1000),
       quote: {
         timestamp: new Date(),
-        activationDeadline: new Date(Date.now() + 1000),
         targetType: PaymentType.FixedSend,
         maxPacketAmount: BigInt(789),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -212,9 +212,9 @@ describe('OutgoingPayment Resolvers', (): void => {
                       }
                       description
                       externalRef
+                      expiresAt
                       quote {
                         timestamp
-                        activationDeadline
                         targetType
                         maxPacketAmount
                         minExchangeRate
@@ -264,9 +264,9 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.receivingPayment).toEqual(receivingPayment)
             expect(query.description).toEqual(description)
             expect(query.externalRef).toBeNull()
+            expect(query.expiresAt).toEqual(payment.expiresAt?.toISOString())
             expect(query.quote).toEqual({
               timestamp: payment.quote?.timestamp.toISOString(),
-              activationDeadline: payment.quote?.activationDeadline.toISOString(),
               targetType: SchemaPaymentType.FixedSend,
               maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
               minExchangeRate: payment.quote?.minExchangeRate.valueOf(),

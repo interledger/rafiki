@@ -18,8 +18,8 @@ exports.up = function (knex) {
     table.string('receiveAmountAssetCode').nullable()
     table.integer('receiveAmountAssetScale').nullable()
 
+    table.timestamp('expiresAt').nullable()
     table.timestamp('quoteTimestamp').nullable()
-    table.timestamp('quoteActivationDeadline').nullable()
     table.string('quoteTargetType').nullable() // 'FixedSend' | 'FixedDelivery'
     table.bigInteger('quoteMaxPacketAmount').nullable()
 

@@ -1615,9 +1615,9 @@ describe('Liquidity Resolvers', (): void => {
             assetCode: account.asset.code,
             assetScale: account.asset.scale
           },
+          expiresAt: new Date(Date.now() + 1000),
           quote: {
             timestamp: new Date(),
-            activationDeadline: new Date(Date.now() + 1000),
             targetType: Pay.PaymentType.FixedSend,
             maxPacketAmount: BigInt(789),
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

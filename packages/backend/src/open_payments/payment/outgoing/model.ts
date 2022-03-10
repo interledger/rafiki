@@ -26,6 +26,7 @@ export class OutgoingPayment
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
+  public expiresAt?: Date
 
   public receivingAccount?: string
   public receivingPayment?: string
@@ -37,7 +38,6 @@ export class OutgoingPayment
 
   public quote?: {
     timestamp: Date
-    activationDeadline: Date
     targetType: Pay.PaymentType
     maxPacketAmount: bigint
     minExchangeRate: Pay.Ratio
@@ -177,11 +177,13 @@ export class OutgoingPayment
     if (this.error) {
       data.payment.error = this.error
     }
+    if (this.expiresAt) {
+      data.payment.expiresAt = this.expiresAt.toISOString()
+    }
     if (this.quote) {
       data.payment.quote = {
         ...this.quote,
         timestamp: this.quote.timestamp.toISOString(),
-        activationDeadline: this.quote.activationDeadline.toISOString(),
         maxPacketAmount: this.quote.maxPacketAmount.toString(),
         minExchangeRate: this.quote.minExchangeRate.valueOf(),
         lowExchangeRateEstimate: this.quote.lowExchangeRateEstimate.valueOf(),
@@ -259,9 +261,9 @@ export type PaymentData = {
     receiveAmount?: AmountData
     description?: string
     externalRef?: string
+    expiresAt?: string
     quote?: {
       timestamp: string
-      activationDeadline: string
       targetType: Pay.PaymentType
       maxPacketAmount: string
       minExchangeRate: number

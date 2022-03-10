@@ -458,14 +458,13 @@ describe('OutgoingPaymentService', (): void => {
           ).id
           const payment = await processNext(paymentId, nextState)
           if (!payment.quote) throw 'no quote'
+          if (!payment.expiresAt) throw 'no expiresAt'
 
           expect(payment.quote.timestamp).toBeInstanceOf(Date)
-          expect(
-            payment.quote.activationDeadline.getTime() - Date.now()
-          ).toBeGreaterThan(0)
-          expect(
-            payment.quote.activationDeadline.getTime() - Date.now()
-          ).toBeLessThanOrEqual(config.quoteLifespan)
+          expect(payment.expiresAt.getTime() - Date.now()).toBeGreaterThan(0)
+          expect(payment.expiresAt.getTime() - Date.now()).toBeLessThanOrEqual(
+            config.quoteLifespan
+          )
           expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedSend)
           expect(payment.quote.maxPacketAmount).toBe(
             BigInt('9223372036854775807')
@@ -508,13 +507,12 @@ describe('OutgoingPaymentService', (): void => {
             ).id
             const payment = await processNext(paymentId, nextState)
             if (!payment.quote) throw 'no quote'
+            if (!payment.expiresAt) throw 'no expiresAt'
 
             expect(payment.quote.timestamp).toBeInstanceOf(Date)
+            expect(payment.expiresAt.getTime() - Date.now()).toBeGreaterThan(0)
             expect(
-              payment.quote.activationDeadline.getTime() - Date.now()
-            ).toBeGreaterThan(0)
-            expect(
-              payment.quote.activationDeadline.getTime() - Date.now()
+              payment.expiresAt.getTime() - Date.now()
             ).toBeLessThanOrEqual(config.quoteLifespan)
             expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedDelivery)
             expect(payment.quote.maxPacketAmount).toBe(
@@ -676,9 +674,7 @@ describe('OutgoingPaymentService', (): void => {
         // jest.advanceTimersByTime(config.quoteLifespan + 1)
 
         await payment.$query(knex).patch({
-          quote: Object.assign({}, payment.quote, {
-            activationDeadline: new Date(Date.now() - config.quoteLifespan - 1)
-          })
+          expiresAt: new Date(Date.now() - config.quoteLifespan - 1)
         })
 
         await processNext(payment.id, PaymentState.Expired)

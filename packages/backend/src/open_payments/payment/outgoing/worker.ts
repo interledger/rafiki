@@ -59,7 +59,7 @@ export async function getPendingPayment(
     .orWhere((builder: knex.QueryBuilder) => {
       builder
         .where('state', PaymentState.Prepared)
-        .andWhere('quoteActivationDeadline', '<', now)
+        .andWhere('expiresAt', '<', now)
     })
     .withGraphFetched('account.asset')
   return payments[0]

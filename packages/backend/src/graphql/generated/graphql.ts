@@ -478,6 +478,7 @@ export type OutgoingPayment = Model & {
   receivingPayment?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
   externalRef?: Maybe<Scalars['String']>;
+  expiresAt?: Maybe<Scalars['String']>;
   quote?: Maybe<PaymentQuote>;
   outcome?: Maybe<OutgoingPaymentOutcome>;
   createdAt: Scalars['String'];
@@ -536,7 +537,6 @@ export type PaymentAmount = {
 export type PaymentQuote = {
   __typename?: 'PaymentQuote';
   timestamp: Scalars['String'];
-  activationDeadline: Scalars['String'];
   targetType: PaymentType;
   maxPacketAmount: Scalars['UInt64'];
   minExchangeRate: Scalars['Float'];
@@ -1143,6 +1143,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   receivingPayment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
   outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1191,7 +1192,6 @@ export type PaymentAmountResolvers<ContextType = any, ParentType extends Resolve
 
 export type PaymentQuoteResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentQuote'] = ResolversParentTypes['PaymentQuote']> = {
   timestamp?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  activationDeadline?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   targetType?: Resolver<ResolversTypes['PaymentType'], ParentType, ContextType>;
   maxPacketAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   minExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;

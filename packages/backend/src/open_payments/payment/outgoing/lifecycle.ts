@@ -101,9 +101,9 @@ export async function handlePending(
       assetCode: destination.destinationAsset.code,
       assetScale: destination.destinationAsset.scale
     },
+    expiresAt: new Date(Date.now() + deps.quoteLifespan),
     quote: {
       timestamp: new Date(),
-      activationDeadline: new Date(Date.now() + deps.quoteLifespan),
       targetType: quote.paymentType,
       // Cap at MAX_INT64 because of postgres type limits.
       maxPacketAmount:
@@ -125,16 +125,16 @@ export async function handlePrepared(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  if (!payment.quote) throw LifecycleError.MissingQuote
+  if (!payment.expiresAt) throw LifecycleError.MissingExpiration
   const now = new Date()
-  if (payment.quote.activationDeadline < now) {
+  if (payment.expiresAt < now) {
     await payment.$query(deps.knex).patch({ state: PaymentState.Expired })
     return
   }
 
   deps.logger.error(
     {
-      activationDeadline: payment.quote.activationDeadline.getTime(),
+      expiresAt: payment.expiresAt.getTime(),
       now: now.getTime()
     },
     "handlePrepared for payment quote that isn't expired"
