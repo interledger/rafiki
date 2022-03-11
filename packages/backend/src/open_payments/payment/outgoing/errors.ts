@@ -14,6 +14,16 @@ export enum OutgoingPaymentError {
 export const isOutgoingPaymentError = (o: any): o is OutgoingPaymentError =>
   Object.values(OutgoingPaymentError).includes(o)
 
+export const errorToMessage: {
+  [key in OutgoingPaymentError]: string
+} = {
+  [OutgoingPaymentError.UnknownAccount]: 'unknown account',
+  [OutgoingPaymentError.UnknownPayment]: 'unknown payment',
+  [OutgoingPaymentError.WrongState]: 'wrong state',
+  [OutgoingPaymentError.InvalidAmount]: 'invalid amount',
+  [OutgoingPaymentError.InvalidDestination]: 'invalid destination'
+}
+
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }
 export type FundingError = OutgoingPaymentError | TransferError
 

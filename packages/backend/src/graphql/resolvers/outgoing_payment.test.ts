@@ -12,7 +12,10 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { OutgoingPaymentError } from '../../open_payments/payment/outgoing/errors'
+import {
+  OutgoingPaymentError,
+  errorToMessage
+} from '../../open_payments/payment/outgoing/errors'
 import {
   OutgoingPaymentService,
   CreateOutgoingPaymentOptions
@@ -404,7 +407,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
       expect(query.code).toBe('400')
       expect(query.success).toBe(false)
-      expect(query.message).toBe(OutgoingPaymentError.UnknownAccount)
+      expect(query.message).toBe(
+        errorToMessage[OutgoingPaymentError.UnknownAccount]
+      )
       expect(query.payment).toBeNull()
     })
 

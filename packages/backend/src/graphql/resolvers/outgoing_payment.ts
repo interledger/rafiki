@@ -10,7 +10,8 @@ import {
 } from '../generated/graphql'
 import {
   OutgoingPaymentError,
-  isOutgoingPaymentError
+  isOutgoingPaymentError,
+  errorToMessage
 } from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
@@ -63,7 +64,7 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
         ? {
             code: '400',
             success: false,
-            message: paymentOrErr
+            message: errorToMessage[paymentOrErr]
           }
         : {
             code: '200',
