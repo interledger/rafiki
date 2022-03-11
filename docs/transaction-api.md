@@ -141,7 +141,7 @@ Credit `payment.balance` to the wallet balance for `payment.accountId`, and call
 
 ### `OutgoingPayment`
 
-The payment must be created with `receivingPayment` xor (`receivingAccount` and `sendAmount` or `receiveAmount`).
+The payment must be created with `receivingPayment` xor (`receivingAccount` and (`sendAmount` xor `receiveAmount`)).
 
 | Name                             | Optional | Type           | Description                                                                                                                                                                                                                                                                                                                |
 | :------------------------------- | :------- | :------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
