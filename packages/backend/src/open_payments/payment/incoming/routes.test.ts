@@ -153,7 +153,7 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt: expiresAt.toISOString(),
         received: '0',
         externalRef: '#123',
-        state: IncomingPaymentState.Pending
+        state: IncomingPaymentState.Pending.toLowerCase()
       })
     })
 
@@ -178,7 +178,7 @@ describe('Incoming Payment Routes', (): void => {
         received: '0',
         expiresAt: expiresAt.toISOString(),
         externalRef: '#123',
-        state: IncomingPaymentState.Pending,
+        state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -315,7 +315,7 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt: expiresAt.toISOString(),
         received: '0',
         externalRef: '#123',
-        state: IncomingPaymentState.Pending
+        state: IncomingPaymentState.Pending.toLowerCase()
       })
     })
 
@@ -342,7 +342,7 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt: expiresAt.toISOString(),
         received: '0',
         externalRef: incomingPayment.externalRef,
-        state: incomingPayment.state
+        state: incomingPayment.state.toLowerCase()
       })
     })
     test('returns the incoming payment on undefined description', async (): Promise<void> => {
@@ -370,7 +370,7 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt: expiresAt.toISOString(),
         received: '0',
         externalRef: incomingPayment.externalRef,
-        state: incomingPayment.state
+        state: incomingPayment.state.toLowerCase()
       })
     })
 
@@ -399,7 +399,7 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt: expiresAt.toISOString(),
         received: '0',
         description: incomingPayment.description,
-        state: incomingPayment.state
+        state: incomingPayment.state.toLowerCase()
       })
     })
   })

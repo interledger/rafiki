@@ -12,7 +12,7 @@ export enum IncomingPaymentEventType {
 }
 
 export enum IncomingPaymentState {
-  // The payment has a state of Pending when it is initially created.
+  // The payment has a state of `PENDING` when it is initially created.
   Pending = 'PENDING',
   // As soon as payment has started (funds have cleared into the account) the state moves to `PROCESSING`.
   Processing = 'PROCESSING',

@@ -138,7 +138,7 @@ function incomingPaymentToBody(
   return {
     id: location,
     account: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
-    state: incomingPayment.state,
+    state: incomingPayment.state.toLowerCase(),
     amount: incomingPayment.incomingAmount
       ? incomingPayment.incomingAmount.toString()
       : null,
