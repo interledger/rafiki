@@ -962,7 +962,7 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
-  describe('authorize', (): void => {
+  describe('update', (): void => {
     let paymentId: string
 
     beforeEach(async (): Promise<void> => {
@@ -976,14 +976,20 @@ describe('OutgoingPaymentService', (): void => {
     }, 10_000)
 
     it('fails when no payment exists', async (): Promise<void> => {
-      await expect(outgoingPaymentService.authorize(uuid())).resolves.toEqual(
-        OutgoingPaymentError.UnknownPayment
-      )
+      await expect(
+        outgoingPaymentService.update({
+          id: uuid(),
+          authorized: true
+        })
+      ).resolves.toEqual(OutgoingPaymentError.UnknownPayment)
     })
 
     it('authorizes a Pending payment', async (): Promise<void> => {
       await expect(
-        outgoingPaymentService.authorize(paymentId)
+        outgoingPaymentService.update({
+          id: paymentId,
+          authorized: true
+        })
       ).resolves.toMatchObject({
         id: paymentId,
         authorized: true,
@@ -1001,7 +1007,10 @@ describe('OutgoingPaymentService', (): void => {
     it('transitions a Prepared payment to Funding state', async (): Promise<void> => {
       await processNext(paymentId, PaymentState.Prepared)
       await expect(
-        outgoingPaymentService.authorize(paymentId)
+        outgoingPaymentService.update({
+          id: paymentId,
+          authorized: true
+        })
       ).resolves.toMatchObject({
         id: paymentId,
         authorized: true,
@@ -1016,26 +1025,218 @@ describe('OutgoingPaymentService', (): void => {
       })
     })
 
-    Object.values(PaymentState).forEach((state) => {
-      if (state === PaymentState.Prepared) return
-      it(`does not authorize a(n) ${
-        state === PaymentState.Pending ? 'authorized PENDING' : state
-      } payment`, async (): Promise<void> => {
-        await OutgoingPayment.query()
-          .patch({
-            authorized: true,
-            state
-          })
-          .findById(paymentId)
-        await expect(
-          outgoingPaymentService.authorize(paymentId)
-        ).resolves.toEqual(OutgoingPaymentError.WrongState)
+    describe.each`
+      state
+      ${PaymentState.Pending}
+      ${PaymentState.Prepared}
+      ${PaymentState.Expired}
+    `(`$state → ${PaymentState.Pending}`, ({ state }): void => {
+      beforeEach(
+        async (): Promise<void> => {
+          if (state !== PaymentState.Pending) {
+            await processNext(paymentId, PaymentState.Prepared)
+            if (state === PaymentState.Expired) {
+              await OutgoingPayment.query(knex)
+                .patch({
+                  expiresAt: new Date(Date.now() - config.quoteLifespan - 1)
+                })
+                .findById(paymentId)
+              await processNext(paymentId, PaymentState.Expired)
+            }
+          }
+        }
+      )
 
-        await expect(
-          outgoingPaymentService.get(paymentId)
-        ).resolves.toMatchObject({ state })
+      describe.each`
+        authorized
+        ${undefined}
+        ${true}
+      `('authorized: $authorized', ({ authorized }): void => {
+        describe.each`
+          state
+          ${undefined}
+          ${PaymentState.Pending}
+        `('state: $state', ({ state }): void => {
+          it.each`
+            assetCode               | assetScale
+            ${sendAmount.assetCode} | ${sendAmount.assetScale}
+            ${undefined}            | ${undefined}
+          `(
+            'updates sendAmount (FixedSend)',
+            async ({ assetCode, assetScale }): Promise<void> => {
+              const sendAmount = {
+                amount: BigInt(1),
+                assetCode,
+                assetScale
+              }
+              const payment = await outgoingPaymentService.update({
+                id: paymentId,
+                authorized,
+                state,
+                sendAmount
+              })
+              assert.ok(!isOutgoingPaymentError(payment))
+              expect(payment).toMatchObject({
+                state: PaymentState.Pending,
+                authorized: !!authorized
+              })
+              expect(payment.sendAmount).toEqual({
+                amount: sendAmount.amount,
+                assetCode: asset.code,
+                assetScale: asset.scale
+              })
+              expect(payment.receiveAmount).toBeNull()
+              await expect(
+                outgoingPaymentService.get(paymentId)
+              ).resolves.toMatchObject({ state: PaymentState.Pending })
+            }
+          )
+
+          it.each`
+            assetCode                  | assetScale
+            ${receiveAmount.assetCode} | ${receiveAmount.assetScale}
+            ${undefined}               | ${undefined}
+          `(
+            'updates receiveAmount (FixedDelivery)',
+            async ({ assetCode, assetScale }): Promise<void> => {
+              const receiveAmount = {
+                amount: BigInt(1),
+                assetCode,
+                assetScale
+              }
+              const payment = await outgoingPaymentService.update({
+                id: paymentId,
+                authorized,
+                state,
+                receiveAmount
+              })
+              assert.ok(!isOutgoingPaymentError(payment))
+              expect(payment).toMatchObject({
+                state: PaymentState.Pending,
+                authorized: !!authorized
+              })
+              expect(payment.receiveAmount).toEqual(receiveAmount)
+              expect(payment.sendAmount).toBeNull()
+              await expect(
+                outgoingPaymentService.get(paymentId)
+              ).resolves.toMatchObject({ state: PaymentState.Pending })
+            }
+          )
+        })
       })
     })
+
+    it.each`
+      authorized   | state                   | sendAmount    | receiveAmount    | error
+      ${undefined} | ${undefined}            | ${undefined}  | ${undefined}     | ${OutgoingPaymentError.InvalidAmount}
+      ${undefined} | ${undefined}            | ${sendAmount} | ${receiveAmount} | ${OutgoingPaymentError.InvalidAmount}
+      ${true}      | ${PaymentState.Pending} | ${undefined}  | ${undefined}     | ${OutgoingPaymentError.InvalidState}
+      ${false}     | ${undefined}            | ${sendAmount} | ${undefined}     | ${OutgoingPaymentError.InvalidAuthorized}
+    `(
+      '$error',
+      async ({
+        authorized,
+        state,
+        sendAmount,
+        receiveAmount,
+        error
+      }): Promise<void> => {
+        await expect(
+          outgoingPaymentService.update({
+            id: paymentId,
+            authorized,
+            state,
+            sendAmount,
+            receiveAmount
+          })
+        ).resolves.toEqual(error)
+        await expect(
+          outgoingPaymentService.get(paymentId)
+        ).resolves.toMatchObject({ state: PaymentState.Pending })
+      }
+    )
+
+    describe.each(Object.values(PaymentState).map((state) => [state]))(
+      '%s payment',
+      (state): void => {
+        beforeEach(
+          async (): Promise<void> => {
+            await OutgoingPayment.query(knex)
+              .patch({
+                state
+              })
+              .findById(paymentId)
+          }
+        )
+
+        afterEach(
+          async (): Promise<void> => {
+            await expect(
+              outgoingPaymentService.get(paymentId)
+            ).resolves.toMatchObject({ state })
+          }
+        )
+
+        if (state !== PaymentState.Prepared) {
+          it(`does not authorize a(n) ${
+            state === PaymentState.Pending ? 'authorized PENDING' : state
+          } payment`, async (): Promise<void> => {
+            await OutgoingPayment.query(knex)
+              .patch({
+                authorized: state === PaymentState.Pending,
+                state
+              })
+              .findById(paymentId)
+            await expect(
+              outgoingPaymentService.update({
+                id: paymentId,
+                authorized: true
+              })
+            ).resolves.toEqual(OutgoingPaymentError.WrongState)
+          })
+        }
+
+        if (
+          [
+            PaymentState.Pending,
+            PaymentState.Prepared,
+            PaymentState.Expired
+          ].includes(state)
+        ) {
+          Object.values(PaymentState).forEach((state) => {
+            if (state !== PaymentState.Pending) {
+              it(`does not update payment to ${state}`, async (): Promise<void> => {
+                await expect(
+                  outgoingPaymentService.update({
+                    id: paymentId,
+                    state,
+                    sendAmount
+                  })
+                ).resolves.toEqual(OutgoingPaymentError.InvalidState)
+              })
+            }
+          })
+        } else {
+          it(`does not update sendAmount of ${state} payment`, async (): Promise<void> => {
+            await expect(
+              outgoingPaymentService.update({
+                id: paymentId,
+                sendAmount
+              })
+            ).resolves.toEqual(OutgoingPaymentError.WrongState)
+          })
+
+          it(`does not update receiveAmount of ${state} payment`, async (): Promise<void> => {
+            await expect(
+              outgoingPaymentService.update({
+                id: paymentId,
+                receiveAmount
+              })
+            ).resolves.toEqual(OutgoingPaymentError.WrongState)
+          })
+        }
+      }
+    )
   })
 
   describe('fund', (): void => {

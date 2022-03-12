@@ -141,13 +141,48 @@ async function updateOutgoingPayment(
 
   const { body } = ctx.request
   if (typeof body !== 'object') return ctx.throw(400, 'json body required')
-  if (!body.authorized || body.authorized !== 'true') {
-    return ctx.throw(400, 'invalid authorized')
+
+  let authorized: boolean | undefined
+  if (body.authorized) {
+    if (body.authorized === 'true') {
+      authorized = true
+    } else {
+      return ctx.throw(400, 'invalid authorized')
+    }
   }
 
-  const paymentOrErr = await deps.outgoingPaymentService.authorize(
-    outgoingPaymentId
-  )
+  let state: PaymentState | undefined
+  if (body.state) {
+    if (body.state !== PaymentState.Pending) {
+      return ctx.throw(400, 'invalid state')
+    }
+    state = body.state
+  }
+
+  let sendAmount: PaymentAmount | undefined
+  if (body.sendAmount) {
+    try {
+      sendAmount = parseAmount(body.sendAmount)
+    } catch (_) {
+      return ctx.throw(400, 'invalid sendAmount')
+    }
+  }
+  let receiveAmount: PaymentAmount | undefined
+  if (body.receiveAmount) {
+    try {
+      receiveAmount = parseAmount(body.receiveAmount)
+    } catch (_) {
+      return ctx.throw(400, 'invalid receiveAmount')
+    }
+  }
+
+  const paymentOrErr = await deps.outgoingPaymentService.update({
+    id: outgoingPaymentId,
+    authorized,
+    state,
+    sendAmount,
+    receiveAmount
+  })
 
   if (isOutgoingPaymentError(paymentOrErr)) {
     return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])

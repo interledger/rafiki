@@ -542,9 +542,13 @@ describe('Outgoing Payment Routes', (): void => {
     })
 
     test.each`
-      field           | invalidValue
-      ${'authorized'} | ${123}
-      ${'authorized'} | ${'false'}
+      field              | invalidValue
+      ${'sendAmount'}    | ${123}
+      ${'receiveAmount'} | ${123}
+      ${'authorized'}    | ${123}
+      ${'authorized'}    | ${'false'}
+      ${'state'}         | ${123}
+      ${'state'}         | ${PaymentState.Completed}
     `(
       'returns error on invalid $field',
       async ({ field, invalidValue }): Promise<void> => {
@@ -582,6 +586,91 @@ describe('Outgoing Payment Routes', (): void => {
       })
     })
 
+    describe('returns re-quoted outgoing payment on success', (): void => {
+      let ctx: AppContext
+      beforeEach(
+        async (): Promise<void> => {
+          const outgoingPayment = await outgoingPaymentService.create({
+            accountId,
+            receivingPayment
+          })
+          assert.ok(!isOutgoingPaymentError(outgoingPayment))
+          ctx = setup({})
+          ctx.params.outgoingPaymentId = outgoingPayment.id
+        }
+      )
+
+      describe.each`
+        state
+        ${undefined}
+        ${PaymentState.Pending}
+      `('state: $state', ({ state }): void => {
+        beforeEach(
+          async (): Promise<void> => {
+            if (state) {
+              ctx.request.body['state'] = state
+            }
+          }
+        )
+
+        describe.each`
+          sendAmount   | receiveAmount | description
+          ${'120'}     | ${undefined}  | ${'fixed-send'}
+          ${undefined} | ${'60'}       | ${'fixed-receive'}
+        `('$description', ({ sendAmount, receiveAmount }): void => {
+          test.each`
+            amountAsset
+            ${true}
+            ${false}
+          `(
+            'specify amount asset: $amountAsset',
+            async ({ amountAsset }): Promise<void> => {
+              if (sendAmount) {
+                ctx.request.body['sendAmount'] = {
+                  amount: sendAmount
+                }
+                if (amountAsset) {
+                  ctx.request.body['sendAmount'].assetCode = asset.code
+                  ctx.request.body['sendAmount'].assetScale = asset.scale
+                }
+              } else {
+                ctx.request.body['receiveAmount'] = {
+                  amount: receiveAmount
+                }
+                if (amountAsset) {
+                  ctx.request.body['receiveAmount'].assetCode = asset.code
+                  ctx.request.body['receiveAmount'].assetScale = asset.scale
+                }
+              }
+              await expect(
+                outgoingPaymentRoutes.update(ctx)
+              ).resolves.toBeUndefined()
+              expect(ctx.response.status).toBe(200)
+              const outgoingPaymentId = ((ctx.response.body as Record<
+                string,
+                unknown
+              >)['id'] as string)
+                .split('/')
+                .pop()
+              expect(ctx.response.body).toEqual({
+                id: `${config.publicHost}/outgoing-payments/${outgoingPaymentId}`,
+                account: `${config.publicHost}/pay/${accountId}`,
+                receivingPayment,
+                sendAmount: sendAmount && {
+                  amount: sendAmount,
+                  assetCode: asset.code,
+                  assetScale: asset.scale
+                },
+                receiveAmount: ctx.request.body['receiveAmount'],
+                authorized: false,
+                state: PaymentState.Pending.toLowerCase()
+              })
+            }
+          )
+        })
+      })
+    })
+
     test.each`
       state                   | authorized   | description
       ${undefined}            | ${true}      | ${'authorized'}
@@ -604,6 +693,32 @@ describe('Outgoing Payment Routes', (): void => {
         await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
           message: 'wrong state',
           status: 409
+        })
+      }
+    )
+
+    it.each`
+      authorized   | state                   | sendAmount         | receiveAmount      | error
+      ${undefined} | ${undefined}            | ${undefined}       | ${undefined}       | ${'invalid amount'}
+      ${undefined} | ${undefined}            | ${{ amount: '1' }} | ${{ amount: '1' }} | ${'invalid amount'}
+      ${'true'}    | ${PaymentState.Pending} | ${undefined}       | ${undefined}       | ${'invalid state'}
+    `(
+      '$error',
+      async ({
+        authorized,
+        state,
+        sendAmount,
+        receiveAmount,
+        error
+      }): Promise<void> => {
+        const ctx = setup({})
+        ctx.request.body['authorized'] = authorized
+        ctx.request.body['state'] = state
+        ctx.request.body['sendAmount'] = sendAmount
+        ctx.request.body['receiveAmount'] = receiveAmount
+        await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
+          message: error,
+          status: 400
         })
       }
     )
