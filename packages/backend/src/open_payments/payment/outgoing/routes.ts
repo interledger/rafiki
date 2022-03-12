@@ -3,7 +3,7 @@ import { validateId } from '../../../shared/utils'
 import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
-import { isOutgoingPaymentError, errorToMessage } from './errors'
+import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment, PaymentAmount, PaymentState } from './model'
 
 interface ServiceDependencies {
@@ -15,6 +15,7 @@ interface ServiceDependencies {
 export interface OutgoingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
+  update(ctx: AppContext): Promise<void>
 }
 
 export function createOutgoingPaymentRoutes(
@@ -26,7 +27,8 @@ export function createOutgoingPaymentRoutes(
   const deps = { ...deps_, logger }
   return {
     get: (ctx: AppContext) => getOutgoingPayment(deps, ctx),
-    create: (ctx: AppContext) => createOutgoingPayment(deps, ctx)
+    create: (ctx: AppContext) => createOutgoingPayment(deps, ctx),
+    update: (ctx: AppContext) => updateOutgoingPayment(deps, ctx)
   }
 }
 
@@ -116,10 +118,42 @@ async function createOutgoingPayment(
   })
 
   if (isOutgoingPaymentError(paymentOrErr)) {
-    return ctx.throw(400, errorToMessage[paymentOrErr])
+    return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])
   }
 
   ctx.status = 201
+  const res = outgoingPaymentToBody(deps, paymentOrErr)
+  ctx.body = res
+}
+
+async function updateOutgoingPayment(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  const { outgoingPaymentId } = ctx.params
+  ctx.assert(validateId(outgoingPaymentId), 400, 'invalid outgoing payment id')
+  ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
+  ctx.assert(
+    ctx.get('Content-Type') === 'application/json',
+    400,
+    'must send json body'
+  )
+
+  const { body } = ctx.request
+  if (typeof body !== 'object') return ctx.throw(400, 'json body required')
+  if (!body.authorized || body.authorized !== 'true') {
+    return ctx.throw(400, 'invalid authorized')
+  }
+
+  const paymentOrErr = await deps.outgoingPaymentService.authorize(
+    outgoingPaymentId
+  )
+
+  if (isOutgoingPaymentError(paymentOrErr)) {
+    return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])
+  }
+
+  ctx.status = 200
   const res = outgoingPaymentToBody(deps, paymentOrErr)
   ctx.body = res
 }

@@ -11,6 +11,7 @@ import {
 import {
   OutgoingPaymentError,
   isOutgoingPaymentError,
+  errorToCode,
   errorToMessage
 } from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
@@ -62,7 +63,7 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
     .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
       isOutgoingPaymentError(paymentOrErr)
         ? {
-            code: '400',
+            code: errorToCode[paymentOrErr].toString(),
             success: false,
             message: errorToMessage[paymentOrErr]
           }

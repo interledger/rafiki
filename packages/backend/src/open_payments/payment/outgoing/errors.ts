@@ -14,6 +14,16 @@ export enum OutgoingPaymentError {
 export const isOutgoingPaymentError = (o: any): o is OutgoingPaymentError =>
   Object.values(OutgoingPaymentError).includes(o)
 
+export const errorToCode: {
+  [key in OutgoingPaymentError]: number
+} = {
+  [OutgoingPaymentError.UnknownAccount]: 404,
+  [OutgoingPaymentError.UnknownPayment]: 404,
+  [OutgoingPaymentError.WrongState]: 409,
+  [OutgoingPaymentError.InvalidAmount]: 400,
+  [OutgoingPaymentError.InvalidDestination]: 400
+}
+
 export const errorToMessage: {
   [key in OutgoingPaymentError]: string
 } = {

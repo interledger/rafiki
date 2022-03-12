@@ -405,7 +405,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .then(
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
-      expect(query.code).toBe('400')
+      expect(query.code).toBe('404')
       expect(query.success).toBe(false)
       expect(query.message).toBe(
         errorToMessage[OutgoingPaymentError.UnknownAccount]

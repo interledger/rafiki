@@ -293,26 +293,26 @@ describe('Outgoing Payment Routes', (): void => {
     test('returns error on invalid id', async (): Promise<void> => {
       const ctx = setup({})
       ctx.params.accountId = 'not_a_uuid'
-      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid account id'
-      )
+      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+        message: 'invalid account id',
+        status: 400
+      })
     })
 
     test('returns 406 on invalid Accept', async (): Promise<void> => {
       const ctx = setup({ headers: { Accept: 'text/plain' } })
-      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'status',
-        406
-      )
+      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+        message: 'must accept json',
+        status: 406
+      })
     })
 
     test('returns error on invalid Content-Type', async (): Promise<void> => {
       const ctx = setup({ headers: { 'Content-Type': 'text/plain' } })
-      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'must send json body'
-      )
+      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+        message: 'must send json body',
+        status: 400
+      })
     })
 
     test.each`
@@ -329,10 +329,10 @@ describe('Outgoing Payment Routes', (): void => {
       async ({ field, invalidValue }): Promise<void> => {
         const ctx = setup({})
         ctx.request.body[field] = invalidValue
-        await expect(outgoingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-          'message',
-          `invalid ${field}`
-        )
+        await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+          message: `invalid ${field}`,
+          status: 400
+        })
       }
     )
 
@@ -348,10 +348,10 @@ describe('Outgoing Payment Routes', (): void => {
           receivingPayment
         }
         const ctx = setup({})
-        await expect(outgoingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-          'message',
-          'invalid destination'
-        )
+        await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+          message: 'invalid destination',
+          status: 400
+        })
       }
     )
 
@@ -376,10 +376,10 @@ describe('Outgoing Payment Routes', (): void => {
           receiveAmount: receiveAmount ? { amount: receiveAmount } : undefined
         }
         const ctx = setup({})
-        await expect(outgoingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-          'message',
-          'invalid amount'
-        )
+        await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+          message: 'invalid amount',
+          status: 400
+        })
       }
     )
 
@@ -392,10 +392,10 @@ describe('Outgoing Payment Routes', (): void => {
         }
       }
       const ctx = setup({})
-      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid amount'
-      )
+      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+        message: 'invalid amount',
+        status: 400
+      })
     })
 
     describe('returns the outgoing payment on success', (): void => {
@@ -488,5 +488,124 @@ describe('Outgoing Payment Routes', (): void => {
         })
       })
     })
+  })
+
+  describe('update', (): void => {
+    function setup(
+      reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
+    ): AppContext {
+      const ctx = createContext(
+        {
+          headers: Object.assign(
+            { Accept: 'application/json', 'Content-Type': 'application/json' },
+            reqOpts.headers
+          )
+        },
+        { outgoingPaymentId: uuid() }
+      )
+      ctx.request.body = {}
+      return ctx
+    }
+
+    test('returns error on invalid id', async (): Promise<void> => {
+      const ctx = setup({})
+      ctx.params.outgoingPaymentId = 'not_a_uuid'
+      await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
+        message: 'invalid outgoing payment id',
+        status: 400
+      })
+    })
+
+    test('returns error on unknown outgoing payment', async (): Promise<void> => {
+      const ctx = setup({})
+      ctx.request.body['authorized'] = 'true'
+      await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
+        message: 'unknown payment',
+        status: 404
+      })
+    })
+
+    test('returns 406 on invalid Accept', async (): Promise<void> => {
+      const ctx = setup({ headers: { Accept: 'text/plain' } })
+      await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
+        message: 'must accept json',
+        status: 406
+      })
+    })
+
+    test('returns error on invalid Content-Type', async (): Promise<void> => {
+      const ctx = setup({ headers: { 'Content-Type': 'text/plain' } })
+      await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
+        message: 'must send json body',
+        status: 400
+      })
+    })
+
+    test.each`
+      field           | invalidValue
+      ${'authorized'} | ${123}
+      ${'authorized'} | ${'false'}
+    `(
+      'returns error on invalid $field',
+      async ({ field, invalidValue }): Promise<void> => {
+        const ctx = setup({})
+        ctx.request.body[field] = invalidValue
+        await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
+          message: `invalid ${field}`,
+          status: 400
+        })
+      }
+    )
+
+    test('returns the authorized outgoing payment on success', async (): Promise<void> => {
+      const outgoingPayment = await outgoingPaymentService.create({
+        accountId,
+        receivingPayment
+      })
+      assert.ok(!isOutgoingPaymentError(outgoingPayment))
+      const ctx = setup({})
+      ctx.params.outgoingPaymentId = outgoingPayment.id
+      ctx.request.body['authorized'] = 'true'
+      await expect(outgoingPaymentRoutes.update(ctx)).resolves.toBeUndefined()
+      expect(ctx.response.status).toBe(200)
+      const outgoingPaymentId = ((ctx.response.body as Record<string, unknown>)[
+        'id'
+      ] as string)
+        .split('/')
+        .pop()
+      expect(ctx.response.body).toEqual({
+        id: `${config.publicHost}/outgoing-payments/${outgoingPaymentId}`,
+        account: `${config.publicHost}/pay/${accountId}`,
+        receivingPayment,
+        authorized: true,
+        state: PaymentState.Pending.toLowerCase()
+      })
+    })
+
+    test.each`
+      state                   | authorized   | description
+      ${undefined}            | ${true}      | ${'authorized'}
+      ${PaymentState.Sending} | ${undefined} | ${'state'}
+    `(
+      'returns error on conflicting $description',
+      async ({ state, authorized }): Promise<void> => {
+        const outgoingPayment = await outgoingPaymentService.create({
+          accountId,
+          receivingPayment
+        })
+        assert.ok(!isOutgoingPaymentError(outgoingPayment))
+        await outgoingPayment.$query(knex).patch({
+          authorized,
+          state
+        })
+        const ctx = setup({})
+        ctx.params.outgoingPaymentId = outgoingPayment.id
+        ctx.request.body['authorized'] = 'true'
+        await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
+          message: 'wrong state',
+          status: 409
+        })
+      }
+    )
   })
 })
