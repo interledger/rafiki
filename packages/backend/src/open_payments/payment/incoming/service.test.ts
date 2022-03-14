@@ -81,7 +81,8 @@ describe('Incoming Payment Service', (): void => {
         incomingAmount: BigInt(123),
         expiresAt: new Date(Date.now() + 30_000),
         description: 'Test incoming payment',
-        externalRef: '#123'
+        externalRef: '#123',
+        receiptsEnabled: false
       })
       const accountService = await deps.use('accountService')
       expect(incomingPayment).toMatchObject({
@@ -103,7 +104,8 @@ describe('Incoming Payment Service', (): void => {
         description: 'IncomingPayment',
         expiresAt: new Date(Date.now() + 30_000),
         incomingAmount: BigInt(123),
-        externalRef: '#123'
+        externalRef: '#123',
+        receiptsEnabled: false
       })
       await expect(
         accountingService.getBalance(incomingPayment.id)
@@ -117,7 +119,8 @@ describe('Incoming Payment Service', (): void => {
           incomingAmount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000),
           description: 'Test incoming payment',
-          externalRef: '#123'
+          externalRef: '#123',
+          receiptsEnabled: false
         })
       ).rejects.toThrow(
         'unable to create incoming payment, account does not exist'
@@ -139,7 +142,8 @@ describe('Incoming Payment Service', (): void => {
           description: 'Test incoming payment',
           incomingAmount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000),
-          externalRef: '#123'
+          externalRef: '#123',
+          receiptsEnabled: false
         })
       }
     )
@@ -196,7 +200,8 @@ describe('Incoming Payment Service', (): void => {
         incomingAmount: BigInt(123),
         description: 'Test incoming payment',
         expiresAt: new Date(Date.now() + 30_000),
-        externalRef: '#123'
+        externalRef: '#123',
+        receiptsEnabled: false
       })
       await expect(
         incomingPaymentService.processNext()
@@ -215,7 +220,8 @@ describe('Incoming Payment Service', (): void => {
           incomingAmount: BigInt(123),
           description: 'Test incoming payment',
           expiresAt: new Date(Date.now() - 40_000),
-          externalRef: '#123'
+          externalRef: '#123',
+          receiptsEnabled: false
         })
         await expect(
           accountingService.createDeposit({
@@ -246,7 +252,8 @@ describe('Incoming Payment Service', (): void => {
           incomingAmount: BigInt(123),
           description: 'Test incoming payment',
           expiresAt: new Date(Date.now() - 40_000),
-          externalRef: '#123'
+          externalRef: '#123',
+          receiptsEnabled: false
         })
         await expect(incomingPaymentService.processNext()).resolves.toBe(
           incomingPayment.id
@@ -273,7 +280,8 @@ describe('Incoming Payment Service', (): void => {
               incomingAmount: BigInt(123),
               expiresAt: new Date(Date.now() + expiresAt),
               description: 'Test incoming payment',
-              externalRef: '#123'
+              externalRef: '#123',
+              receiptsEnabled: false
             })
             await expect(
               accountingService.createDeposit({
@@ -348,7 +356,8 @@ describe('Incoming Payment Service', (): void => {
           incomingAmount: BigInt(123),
           expiresAt: new Date(Date.now() + 30_000),
           description: 'IncomingPayment',
-          externalRef: '#123'
+          externalRef: '#123',
+          receiptsEnabled: false
         }),
       getPage: (pagination: Pagination) =>
         incomingPaymentService.getAccountIncomingPaymentsPage(

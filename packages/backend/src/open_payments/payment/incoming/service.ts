@@ -25,6 +25,7 @@ interface CreateOptions {
   expiresAt?: Date
   incomingAmount?: bigint
   externalRef?: string
+  receiptsEnabled: boolean
 }
 
 export interface IncomingPaymentService {
@@ -77,7 +78,8 @@ async function createIncomingPayment(
     description,
     expiresAt,
     incomingAmount,
-    externalRef
+    externalRef,
+    receiptsEnabled
   }: CreateOptions,
   trx?: Transaction
 ): Promise<IncomingPayment> {
@@ -93,6 +95,7 @@ async function createIncomingPayment(
         active: true,
         externalRef,
         state: IncomingPaymentState.Pending,
+        receiptsEnabled,
         processAt: expiresAt
           ? new Date(expiresAt.getTime())
           : new Date(EXPIRY.getTime())

@@ -71,7 +71,8 @@ describe('Incoming Payment Routes', (): void => {
         description: 'text',
         expiresAt,
         incomingAmount: BigInt(123),
-        externalRef: '#123'
+        externalRef: '#123',
+        receiptsEnabled: false
       })
     }
   )
@@ -145,15 +146,22 @@ describe('Incoming Payment Routes', (): void => {
 
       expect(ctx.body).toEqual({
         id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
-        account: `https://wallet.example/pay/${account.id}`,
-        amount: '123',
-        assetCode: asset.code,
-        assetScale: asset.scale,
+        accountId: `https://wallet.example/pay/${account.id}`,
+        incomingAmount: {
+          amount: '123',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
-        received: '0',
+        receivedAmount: {
+          amount: '0',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
         externalRef: '#123',
-        state: IncomingPaymentState.Pending.toLowerCase()
+        state: IncomingPaymentState.Pending.toLowerCase(),
+        receiptsEnabled: incomingPayment.receiptsEnabled
       })
     })
 
@@ -170,15 +178,22 @@ describe('Incoming Payment Routes', (): void => {
       ]
       expect(ctx.body).toEqual({
         id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
-        account: `https://wallet.example/pay/${account.id}`,
-        amount: '123',
-        assetCode: asset.code,
-        assetScale: asset.scale,
+        accountId: `https://wallet.example/pay/${account.id}`,
+        incomingAmount: {
+          amount: '123',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
         description: incomingPayment.description,
-        received: '0',
+        receivedAmount: {
+          amount: '0',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
         expiresAt: expiresAt.toISOString(),
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
+        receiptsEnabled: incomingPayment.receiptsEnabled,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -262,6 +277,15 @@ describe('Incoming Payment Routes', (): void => {
       )
     })
 
+    test('returns error on invalid receiptsEnabled flag', async (): Promise<void> => {
+      const ctx = setup({})
+      ctx.request.body['receiptsEnabled'] = 'yes'
+      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
+        'message',
+        'invalid receiptsEnabled flag'
+      )
+    })
+
     test('returns error on invalid expiresAt', async (): Promise<void> => {
       const ctx = setup({})
       ctx.request.body['expiresAt'] = 'fail'
@@ -305,17 +329,24 @@ describe('Incoming Payment Routes', (): void => {
       )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        account: `${config.publicHost}/pay/${incomingPayment.accountId}`,
-        amount: incomingPayment.incomingAmount
-          ? incomingPayment.incomingAmount.toString()
-          : null,
-        assetCode: incomingPayment.account.asset.code,
-        assetScale: incomingPayment.account.asset.scale,
+        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        incomingAmount: {
+          amount: incomingPayment.incomingAmount
+            ? incomingPayment.incomingAmount.toString()
+            : null,
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
-        received: '0',
+        receivedAmount: {
+          amount: '0',
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        },
         externalRef: '#123',
-        state: IncomingPaymentState.Pending.toLowerCase()
+        state: IncomingPaymentState.Pending.toLowerCase(),
+        receiptsEnabled: incomingPayment.receiptsEnabled
       })
     })
 
@@ -334,15 +365,18 @@ describe('Incoming Payment Routes', (): void => {
       )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        account: `${config.publicHost}/pay/${incomingPayment.accountId}`,
-        amount: null,
-        assetCode: incomingPayment.account.asset.code,
-        assetScale: incomingPayment.account.asset.scale,
+        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        incomingAmount: null,
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
-        received: '0',
-        externalRef: incomingPayment.externalRef,
-        state: incomingPayment.state.toLowerCase()
+        receivedAmount: {
+          amount: '0',
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        },
+        externalRef: '#123',
+        state: IncomingPaymentState.Pending.toLowerCase(),
+        receiptsEnabled: incomingPayment.receiptsEnabled
       })
     })
     test('returns the incoming payment on undefined description', async (): Promise<void> => {
@@ -360,17 +394,24 @@ describe('Incoming Payment Routes', (): void => {
       )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        account: `${config.publicHost}/pay/${incomingPayment.accountId}`,
-        amount: incomingPayment.incomingAmount
-          ? incomingPayment.incomingAmount.toString()
-          : null,
-        assetCode: incomingPayment.account.asset.code,
-        assetScale: incomingPayment.account.asset.scale,
+        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        incomingAmount: {
+          amount: incomingPayment.incomingAmount
+            ? incomingPayment.incomingAmount.toString()
+            : null,
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        },
         description: null,
         expiresAt: expiresAt.toISOString(),
-        received: '0',
-        externalRef: incomingPayment.externalRef,
-        state: incomingPayment.state.toLowerCase()
+        receivedAmount: {
+          amount: '0',
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        },
+        externalRef: '#123',
+        state: IncomingPaymentState.Pending.toLowerCase(),
+        receiptsEnabled: incomingPayment.receiptsEnabled
       })
     })
 
@@ -389,17 +430,60 @@ describe('Incoming Payment Routes', (): void => {
       )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        account: `${config.publicHost}/pay/${incomingPayment.accountId}`,
-        amount: incomingPayment.incomingAmount
-          ? incomingPayment.incomingAmount.toString()
-          : null,
-        assetCode: incomingPayment.account.asset.code,
-        assetScale: incomingPayment.account.asset.scale,
-        externalRef: null,
-        expiresAt: expiresAt.toISOString(),
-        received: '0',
+        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        incomingAmount: {
+          amount: incomingPayment.incomingAmount
+            ? incomingPayment.incomingAmount.toString()
+            : null,
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        },
         description: incomingPayment.description,
-        state: incomingPayment.state.toLowerCase()
+        expiresAt: expiresAt.toISOString(),
+        receivedAmount: {
+          amount: '0',
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        },
+        externalRef: null,
+        state: IncomingPaymentState.Pending.toLowerCase(),
+        receiptsEnabled: incomingPayment.receiptsEnabled
+      })
+    })
+
+    test('returns the incoming payment on undefined receiptsEnabled flag', async (): Promise<void> => {
+      const ctx = setup({})
+      ctx.request.body['receiptsEnabled'] = undefined
+      await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
+      expect(ctx.response.status).toBe(201)
+      const incomingPaymentId = ((ctx.response.body as Record<string, unknown>)[
+        'id'
+      ] as string)
+        .split('/')
+        .pop()
+      expect(ctx.response.headers['location']).toBe(
+        `${config.publicHost}/incoming-payments/${incomingPaymentId}`
+      )
+      expect(ctx.response.body).toEqual({
+        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
+        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        incomingAmount: {
+          amount: incomingPayment.incomingAmount
+            ? incomingPayment.incomingAmount.toString()
+            : null,
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        },
+        description: incomingPayment.description,
+        expiresAt: expiresAt.toISOString(),
+        receivedAmount: {
+          amount: '0',
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        },
+        externalRef: '#123',
+        state: IncomingPaymentState.Pending.toLowerCase(),
+        receiptsEnabled: false
       })
     })
   })

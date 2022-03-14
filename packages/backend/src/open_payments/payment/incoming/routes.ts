@@ -114,13 +114,20 @@ async function createIncomingPayment(
   if (Date.now() + MAX_EXPIRY < expiresAt)
     return ctx.throw(400, 'expiry too high')
   if (expiresAt < Date.now()) return ctx.throw(400, 'already expired')
+  if (
+    body.receiptsEnabled !== undefined &&
+    typeof body.receiptsEnabled !== 'boolean'
+  )
+    return ctx.throw(400, 'invalid receiptsEnabled flag')
+  const receiptsEnabled = Boolean(body.receiptsEnabled)
 
   const incomingPayment = await deps.incomingPaymentService.create({
     accountId,
     description: body.description,
     externalRef: body.externalRef,
     expiresAt: new Date(expiresAt),
-    incomingAmount
+    incomingAmount,
+    receiptsEnabled
   })
 
   ctx.status = 201
@@ -137,17 +144,24 @@ function incomingPaymentToBody(
   const location = `${deps.config.publicHost}/incoming-payments/${incomingPayment.id}`
   return {
     id: location,
-    account: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
+    accountId: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
     state: incomingPayment.state.toLowerCase(),
-    amount: incomingPayment.incomingAmount
-      ? incomingPayment.incomingAmount.toString()
+    incomingAmount: incomingPayment.incomingAmount
+      ? {
+          amount: incomingPayment.incomingAmount.toString(),
+          assetCode: incomingPayment.account.asset.code,
+          assetScale: incomingPayment.account.asset.scale
+        }
       : null,
-    assetCode: incomingPayment.account.asset.code,
-    assetScale: incomingPayment.account.asset.scale,
+    receivedAmount: {
+      amount: received.toString(),
+      assetCode: incomingPayment.account.asset.code,
+      assetScale: incomingPayment.account.asset.scale
+    },
     description: incomingPayment.description,
     externalRef: incomingPayment.externalRef,
     expiresAt: incomingPayment.expiresAt.toISOString(),
-    received: received.toString()
+    receiptsEnabled: incomingPayment.receiptsEnabled
   }
 }
 

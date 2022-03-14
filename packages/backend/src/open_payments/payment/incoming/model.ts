@@ -35,6 +35,7 @@ export type IncomingPaymentData = {
     receivedAmount: string
     externalRef?: string
     state: string
+    receiptsEnabled: boolean
   }
 }
 
@@ -70,6 +71,7 @@ export class IncomingPayment
   public state!: IncomingPaymentState
   public readonly incomingAmount?: bigint
   public externalRef?: string
+  public receiptsEnabled!: boolean
 
   public processAt!: Date | null
 
@@ -120,7 +122,8 @@ export class IncomingPayment
         createdAt: new Date(+this.createdAt).toISOString(),
         receivedAmount: amountReceived.toString(),
         externalRef: this.externalRef ? this.externalRef.toString() : '',
-        state: this.state
+        state: this.state,
+        receiptsEnabled: this.receiptsEnabled
       }
     }
   }

@@ -11,6 +11,7 @@ exports.up = function (knex) {
     table.bigInteger('incomingAmount').nullable()
     table.string('state').notNullable()
     table.string('externalRef').nullable()
+    table.boolean('receiptsEnabled').notNullable()
 
     table.timestamp('processAt').nullable()
 
