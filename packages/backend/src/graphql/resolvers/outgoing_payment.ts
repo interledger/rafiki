@@ -169,19 +169,21 @@ export function paymentToGraphql(
     stateAttempts: payment.stateAttempts,
     receivingAccount: payment.receivingAccount,
     receivingPayment: payment.receivingPayment,
-    sendAmount: payment.sendAmount,
-    receiveAmount: payment.receiveAmount,
+    sendAmount: payment.sendAmount ?? undefined,
+    receiveAmount: payment.receiveAmount ?? undefined,
     description: payment.description,
     externalRef: payment.externalRef,
-    expiresAt: payment.expiresAt?.toISOString(),
-    quote: payment.quote && {
-      ...payment.quote,
-      targetType: SchemaPaymentType[payment.quote.targetType],
-      timestamp: payment.quote.timestamp.toISOString(),
-      minExchangeRate: payment.quote.minExchangeRate.valueOf(),
-      lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
-      highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
-    },
+    expiresAt: payment.expiresAt?.toISOString() ?? undefined,
+    quote: payment.quote
+      ? {
+          ...payment.quote,
+          targetType: SchemaPaymentType[payment.quote.targetType],
+          timestamp: payment.quote.timestamp.toISOString(),
+          minExchangeRate: payment.quote.minExchangeRate.valueOf(),
+          lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
+          highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
+        }
+      : undefined,
     createdAt: new Date(+payment.createdAt).toISOString()
   }
 }
