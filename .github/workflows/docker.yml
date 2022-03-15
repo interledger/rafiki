@@ -1,0 +1,37 @@
+on:
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+
+name: Release Docker Image
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: yarn install --immutable --immutable-cache
+
+      - name: Build Docker Image
+        run: yarn docker build backend -t ghcr.io/${{ github.repository_owner }}/rafiki-backend:${{ github.sha }} -t ghcr.io/${{ github.repository_owner }}/rafiki-backend:latest
+        
+      - name: Tag Docker Image with Tag Name
+        if: github.ref_type == 'tag'
+        run: docker tag ghcr.io/${{ github.repository_owner }}/rafiki-backend:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/rafiki-backend:${{ github.ref_name }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Docker Image to GHCR
+        run: docker image push --all-tags ghcr.io/${{ github.repository_owner }}/rafiki-backend
