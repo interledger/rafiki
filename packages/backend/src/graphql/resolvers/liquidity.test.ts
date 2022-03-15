@@ -1602,20 +1602,23 @@ describe('Liquidity Resolvers', (): void => {
         })
         const outgoingPaymentService = await deps.use('outgoingPaymentService')
         const config = await deps.use('config')
-        const incomingPaymentUrl = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
+        const receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
         // create and then patch quote
         payment = (await outgoingPaymentService.create({
           accountId,
-          incomingPaymentUrl
+          receivingPayment
         })) as OutgoingPayment
         await payment.$query(knex).patch({
           state: PaymentState.Funding,
+          sendAmount: {
+            amount: BigInt(456),
+            assetCode: account.asset.code,
+            assetScale: account.asset.scale
+          },
+          expiresAt: new Date(Date.now() + 1000),
           quote: {
             timestamp: new Date(),
-            activationDeadline: new Date(Date.now() + 1000),
             targetType: Pay.PaymentType.FixedSend,
-            minDeliveryAmount: BigInt(123),
-            maxSourceAmount: BigInt(456),
             maxPacketAmount: BigInt(789),
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             minExchangeRate: Pay.Ratio.from(1.23)!,
@@ -1683,15 +1686,15 @@ describe('Liquidity Resolvers', (): void => {
             expect(response.success).toBe(true)
             expect(response.code).toEqual('200')
             expect(response.error).toBeNull()
-            assert.ok(payment.quote)
+            assert.ok(payment.sendAmount)
             await expect(depositSpy).toHaveBeenCalledWith({
               id: eventId,
               account: expect.any(OutgoingPayment),
-              amount: payment.quote.maxSourceAmount
+              amount: payment.sendAmount.amount
             })
             await expect(
               accountingService.getBalance(payment.id)
-            ).resolves.toEqual(payment.quote.maxSourceAmount)
+            ).resolves.toEqual(payment.sendAmount.amount)
           })
 
           test("Can't deposit for non-existent webhook event id", async (): Promise<void> => {

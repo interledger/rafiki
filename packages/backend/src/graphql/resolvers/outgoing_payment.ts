@@ -165,17 +165,21 @@ export function paymentToGraphql(
     authorized: payment.authorized,
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
-    intent: payment.intent,
+    receivingAccount: payment.receivingAccount,
+    receivingPayment: payment.receivingPayment,
+    sendAmount: payment.sendAmount,
+    receiveAmount: payment.receiveAmount,
+    description: payment.description,
+    externalRef: payment.externalRef,
+    expiresAt: payment.expiresAt?.toISOString(),
     quote: payment.quote && {
       ...payment.quote,
       targetType: SchemaPaymentType[payment.quote.targetType],
       timestamp: payment.quote.timestamp.toISOString(),
-      activationDeadline: payment.quote.activationDeadline.toISOString(),
       minExchangeRate: payment.quote.minExchangeRate.valueOf(),
       lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
       highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
     },
-    destinationAccount: payment.destinationAccount,
     createdAt: new Date(+payment.createdAt).toISOString()
   }
 }

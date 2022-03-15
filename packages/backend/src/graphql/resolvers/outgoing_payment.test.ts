@@ -38,8 +38,18 @@ describe('OutgoingPayment Resolvers', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let accountService: AccountService
 
-  const paymentPointer = 'http://wallet2.example/pay/bob'
-  const incomingPaymentUrl = 'http://wallet2.example/incoming/123'
+  const receivingAccount = 'http://wallet2.example/pay/bob'
+  const receivingPayment = 'http://wallet2.example/incoming/123'
+  const sendAmount = {
+    amount: BigInt(123),
+    assetCode: randomAsset().code,
+    assetScale: randomAsset().scale
+  }
+  const receiveAmount = {
+    amount: BigInt(56),
+    assetCode: 'XRP',
+    assetScale: 9
+  }
 
   beforeAll(
     async (): Promise<void> => {
@@ -68,24 +78,35 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   const createPayment = async ({
     accountId,
-    paymentPointer,
-    amountToSend,
-    incomingPaymentUrl,
-    authorized
+    receivingAccount,
+    sendAmount: sendAmountOpts,
+    receiveAmount: receiveAmountOpts,
+    receivingPayment,
+    authorized,
+    description
   }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
     OutgoingPaymentModel.query(knex).insertAndFetch({
       state: PaymentState.Pending,
-      intent: {
-        paymentPointer,
-        amountToSend,
-        incomingPaymentUrl
-      },
+      receivingAccount,
+      sendAmount: sendAmountOpts
+        ? {
+            amount: sendAmountOpts.amount,
+            assetCode: sendAmount.assetCode,
+            assetScale: sendAmount.assetScale
+          }
+        : undefined,
+      receiveAmount: receiveAmountOpts
+        ? {
+            amount: receiveAmountOpts.amount,
+            assetCode: receiveAmount.assetCode,
+            assetScale: receiveAmount.assetScale
+          }
+        : undefined,
+      receivingPayment,
+      expiresAt: new Date(Date.now() + 1000),
       quote: {
         timestamp: new Date(),
-        activationDeadline: new Date(Date.now() + 1000),
         targetType: PaymentType.FixedSend,
-        minDeliveryAmount: BigInt(123),
-        maxSourceAmount: BigInt(456),
         maxPacketAmount: BigInt(789),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         minExchangeRate: Pay.Ratio.from(1.23)!,
@@ -97,39 +118,45 @@ describe('OutgoingPayment Resolvers', (): void => {
       },
       accountId,
       authorized,
-      destinationAccount: {
-        scale: 9,
-        code: 'XRP',
-        url: 'http://wallet2.example/paymentpointer/bob'
-      }
+      description
     })
 
   describe('Query.outgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
 
     describe.each`
-      paymentPointer    | amountToSend   | incomingPaymentUrl    | authorized | description
-      ${paymentPointer} | ${BigInt(123)} | ${null}               | ${true}    | ${'fixed send'}
-      ${null}           | ${null}        | ${incomingPaymentUrl} | ${false}   | ${'incoming payment'}
+      receivingAccount    | sendAmount    | receiveAmount    | receivingPayment    | authorized | description
+      ${receivingAccount} | ${sendAmount} | ${null}          | ${null}             | ${true}    | ${'fixed send'}
+      ${receivingAccount} | ${sendAmount} | ${receiveAmount} | ${null}             | ${true}    | ${'fixed receive'}
+      ${null}             | ${null}       | ${null}          | ${receivingPayment} | ${false}   | ${'incoming payment'}
     `(
       '$description',
       ({
-        paymentPointer,
-        amountToSend,
-        incomingPaymentUrl,
-        authorized
+        receivingAccount,
+        sendAmount,
+        receiveAmount,
+        receivingPayment,
+        authorized,
+        description
       }): void => {
         beforeEach(
           async (): Promise<void> => {
             const { id: accountId } = await accountService.create({
-              asset: randomAsset()
+              asset: sendAmount
+                ? {
+                    code: sendAmount.assetCode,
+                    scale: sendAmount.assetScale
+                  }
+                : randomAsset()
             })
             payment = await createPayment({
               accountId,
-              paymentPointer,
-              amountToSend,
-              incomingPaymentUrl,
-              authorized
+              receivingAccount,
+              sendAmount,
+              receiveAmount,
+              receivingPayment,
+              authorized,
+              description
             })
           }
         )
@@ -171,26 +198,28 @@ describe('OutgoingPayment Resolvers', (): void => {
                       authorized
                       error
                       stateAttempts
-                      intent {
-                        paymentPointer
-                        incomingPaymentUrl
-                        amountToSend
+                      receivingAccount
+                      receivingPayment
+                      sendAmount {
+                        amount
+                        assetCode
+                        assetScale
                       }
+                      receiveAmount {
+                        amount
+                        assetCode
+                        assetScale
+                      }
+                      description
+                      externalRef
+                      expiresAt
                       quote {
                         timestamp
-                        activationDeadline
                         targetType
-                        minDeliveryAmount
-                        maxSourceAmount
                         maxPacketAmount
                         minExchangeRate
                         lowExchangeRateEstimate
                         highExchangeRateEstimate
-                      }
-                      destinationAccount {
-                        scale
-                        code
-                        url
                       }
                       outcome {
                         amountSent
@@ -211,27 +240,39 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.authorized).toEqual(payment.authorized)
             expect(query.error).toEqual(error)
             expect(query.stateAttempts).toBe(0)
-            expect(query.intent).toEqual({
-              paymentPointer,
-              amountToSend: amountToSend?.toString() || null,
-              incomingPaymentUrl,
-              __typename: 'PaymentIntent'
-            })
+            expect(query.receivingAccount).toEqual(receivingAccount)
+            expect(query.sendAmount).toEqual(
+              sendAmount
+                ? {
+                    amount: sendAmount.amount.toString() || null,
+                    assetCode: sendAmount.assetCode,
+                    assetScale: sendAmount.assetScale,
+                    __typename: 'PaymentAmount'
+                  }
+                : null
+            )
+            expect(query.receiveAmount).toEqual(
+              receiveAmount
+                ? {
+                    amount: receiveAmount.amount.toString() || null,
+                    assetCode: receiveAmount.assetCode,
+                    assetScale: receiveAmount.assetScale,
+                    __typename: 'PaymentAmount'
+                  }
+                : null
+            )
+            expect(query.receivingPayment).toEqual(receivingPayment)
+            expect(query.description).toEqual(description)
+            expect(query.externalRef).toBeNull()
+            expect(query.expiresAt).toEqual(payment.expiresAt?.toISOString())
             expect(query.quote).toEqual({
               timestamp: payment.quote?.timestamp.toISOString(),
-              activationDeadline: payment.quote?.activationDeadline.toISOString(),
               targetType: SchemaPaymentType.FixedSend,
-              minDeliveryAmount: payment.quote?.minDeliveryAmount.toString(),
-              maxSourceAmount: payment.quote?.maxSourceAmount.toString(),
               maxPacketAmount: payment.quote?.maxPacketAmount.toString(),
               minExchangeRate: payment.quote?.minExchangeRate.valueOf(),
               lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
               highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
               __typename: 'PaymentQuote'
-            })
-            expect(query.destinationAccount).toEqual({
-              ...payment.destinationAccount,
-              __typename: 'PaymentDestinationAccount'
             })
             expect(query.outcome).toEqual({
               amountSent: amountSent.toString(),
@@ -266,32 +307,40 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Mutation.createOutgoingPayment', (): void => {
     const input = {
       accountId: uuid(),
-      paymentPointer,
-      amountToSend: BigInt(123)
+      receivingAccount,
+      sendAmount
     }
 
     test.each`
-      paymentPointer    | amountToSend   | incomingPaymentUrl    | authorized   | description
-      ${paymentPointer} | ${BigInt(123)} | ${null}               | ${true}      | ${'fixed send (authorized)'}
-      ${paymentPointer} | ${BigInt(123)} | ${null}               | ${false}     | ${'fixed send'}
-      ${null}           | ${null}        | ${incomingPaymentUrl} | ${undefined} | ${'incoming payment'}
+      receivingAccount    | sendAmount                       | receiveAmount                       | receivingPayment    | authorized   | description  | externalRef  | type
+      ${receivingAccount} | ${sendAmount}                    | ${undefined}                        | ${undefined}        | ${true}      | ${'rent'}    | ${'202201'}  | ${'fixed send (authorized)'}
+      ${receivingAccount} | ${{ amount: sendAmount.amount }} | ${undefined}                        | ${undefined}        | ${false}     | ${undefined} | ${undefined} | ${'fixed send'}
+      ${receivingAccount} | ${undefined}                     | ${receiveAmount}                    | ${undefined}        | ${true}      | ${'rent'}    | ${'202201'}  | ${'fixed receive (authorized)'}
+      ${receivingAccount} | ${undefined}                     | ${{ amount: receiveAmount.amount }} | ${undefined}        | ${false}     | ${undefined} | ${undefined} | ${'fixed receive'}
+      ${undefined}        | ${undefined}                     | ${undefined}                        | ${receivingPayment} | ${undefined} | ${undefined} | ${undefined} | ${'incoming payment'}
     `(
-      '200 ($description)',
+      '200 ($type)',
       async ({
-        paymentPointer,
-        amountToSend,
-        incomingPaymentUrl,
-        authorized
+        receivingAccount,
+        sendAmount,
+        receiveAmount,
+        receivingPayment,
+        authorized,
+        description,
+        externalRef
       }): Promise<void> => {
         const { id: accountId } = await accountService.create({
           asset: randomAsset()
         })
         const input = {
           accountId,
-          paymentPointer,
-          amountToSend,
-          incomingPaymentUrl,
-          authorized
+          receivingAccount,
+          sendAmount,
+          receiveAmount,
+          receivingPayment,
+          authorized,
+          description,
+          externalRef
         }
         const payment = await createPayment(input)
 
@@ -412,8 +461,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       createModel: () =>
         createPayment({
           accountId,
-          paymentPointer,
-          amountToSend: BigInt(123)
+          receivingAccount,
+          sendAmount
         }),
       pagedQuery: 'outgoingPayments',
       parent: {

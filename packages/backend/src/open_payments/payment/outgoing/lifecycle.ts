@@ -25,33 +25,11 @@ export async function handlePending(
 
   const destination = await Pay.setupPayment({
     plugin,
-    paymentPointer: payment.intent.paymentPointer,
-    invoiceUrl: payment.intent.incomingPaymentUrl
+    paymentPointer: payment.receivingAccount,
+    invoiceUrl: payment.receivingPayment
   })
 
-  if (payment.destinationAccount) {
-    if (
-      payment.destinationAccount.scale !== destination.destinationAsset.scale ||
-      payment.destinationAccount.code !== destination.destinationAsset.code
-    ) {
-      deps.logger.warn(
-        {
-          oldAsset: payment.destinationAccount,
-          newAsset: destination.destinationAsset
-        },
-        'asset changed'
-      )
-      throw Pay.PaymentError.DestinationAssetConflict
-    }
-  } else {
-    await payment.$query(deps.knex).patch({
-      destinationAccount: {
-        scale: destination.destinationAsset.scale,
-        code: destination.destinationAsset.code,
-        url: destination.accountUrl
-      }
-    })
-  }
+  validateAssets(deps, payment, destination)
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
@@ -59,17 +37,17 @@ export async function handlePending(
     throw LifecycleError.MissingBalance
   }
 
-  // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
+  // This is the amount of money *remaining* to send, which may be less than the payment's sendAmount due to retries (FixedSend payments only).
   let amountToSend: bigint | undefined
-  if (payment.intent.amountToSend) {
-    amountToSend = payment.intent.amountToSend - amountSent
+  if (payment.sendAmount) {
+    amountToSend = payment.sendAmount.amount - amountSent
     if (amountToSend <= BigInt(0)) {
       // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=COMPLETED didn't commit. Then the payment retried and ended up here.
       // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the COMPLETED state.
       deps.logger.error(
         {
           amountToSend,
-          intentAmountToSend: payment.intent.amountToSend,
+          sendAmount: payment.sendAmount.amount,
           amountSent
         },
         'quote amountToSend bounds error'
@@ -87,6 +65,7 @@ export async function handlePending(
       code: payment.account.asset.code
     },
     amountToSend,
+    amountToDeliver: payment.receiveAmount?.amount,
     slippage: deps.slippage,
     prices
   }).finally(() => {
@@ -112,12 +91,20 @@ export async function handlePending(
 
   await payment.$query(deps.knex).patch({
     state,
+    sendAmount: payment.sendAmount || {
+      amount: quote.maxSourceAmount,
+      assetCode: payment.account.asset.code,
+      assetScale: payment.account.asset.scale
+    },
+    receiveAmount: {
+      amount: payment.receiveAmount?.amount || quote.minDeliveryAmount,
+      assetCode: destination.destinationAsset.code,
+      assetScale: destination.destinationAsset.scale
+    },
+    expiresAt: new Date(Date.now() + deps.quoteLifespan),
     quote: {
       timestamp: new Date(),
-      activationDeadline: new Date(Date.now() + deps.quoteLifespan),
       targetType: quote.paymentType,
-      minDeliveryAmount: quote.minDeliveryAmount,
-      maxSourceAmount: quote.maxSourceAmount,
       // Cap at MAX_INT64 because of postgres type limits.
       maxPacketAmount:
         MAX_INT64 < quote.maxPacketAmount ? MAX_INT64 : quote.maxPacketAmount,
@@ -138,16 +125,16 @@ export async function handlePrepared(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  if (!payment.quote) throw LifecycleError.MissingQuote
+  if (!payment.expiresAt) throw LifecycleError.MissingExpiration
   const now = new Date()
-  if (payment.quote.activationDeadline < now) {
+  if (payment.expiresAt < now) {
     await payment.$query(deps.knex).patch({ state: PaymentState.Expired })
     return
   }
 
   deps.logger.error(
     {
-      activationDeadline: payment.quote.activationDeadline.getTime(),
+      expiresAt: payment.expiresAt.getTime(),
       now: now.getTime()
     },
     "handlePrepared for payment quote that isn't expired"
@@ -160,29 +147,18 @@ export async function handleSending(
   payment: OutgoingPayment,
   plugin: IlpPlugin
 ): Promise<void> {
-  if (!payment.destinationAccount) throw LifecycleError.MissingDestination
   if (!payment.quote) throw LifecycleError.MissingQuote
+  if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
+  if (!payment.receiveAmount) throw LifecycleError.MissingReceiveAmount
   if (!payment.authorized) throw LifecycleError.Unauthorized
 
   const destination = await Pay.setupPayment({
     plugin,
-    paymentPointer: payment.intent.paymentPointer,
-    invoiceUrl: payment.intent.incomingPaymentUrl
+    paymentPointer: payment.receivingAccount,
+    invoiceUrl: payment.receivingPayment
   })
 
-  if (
-    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
-    payment.destinationAccount.code !== destination.destinationAsset.code
-  ) {
-    deps.logger.warn(
-      {
-        oldAsset: payment.destinationAccount,
-        newAsset: destination.destinationAsset
-      },
-      'asset changed'
-    )
-    throw Pay.PaymentError.DestinationAssetConflict
-  }
+  validateAssets(deps, payment, destination)
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
@@ -192,29 +168,24 @@ export async function handleSending(
 
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
   const amountSentSinceQuote = amountSent - payment.quote.amountSent
-  const newMaxSourceAmount =
-    payment.quote.maxSourceAmount - amountSentSinceQuote
+  const newMaxSourceAmount = payment.sendAmount.amount - amountSentSinceQuote
 
   let newMinDeliveryAmount
-  switch (payment.quote.targetType) {
-    case Pay.PaymentType.FixedSend:
-      // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
-      // eslint-disable-next-line no-case-declarations
-      const amountDeliveredSinceQuote = BigInt(
-        Math.ceil(
-          +amountSentSinceQuote.toString() *
-            payment.quote.minExchangeRate.valueOf()
-        )
+  if (payment.receivingAccount) {
+    // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
+    // eslint-disable-next-line no-case-declarations
+    const amountDeliveredSinceQuote = BigInt(
+      Math.ceil(
+        +amountSentSinceQuote.toString() *
+          payment.quote.minExchangeRate.valueOf()
       )
-      newMinDeliveryAmount =
-        payment.quote.minDeliveryAmount - amountDeliveredSinceQuote
-      break
-    case Pay.PaymentType.FixedDelivery:
-      if (!destination.invoice) throw LifecycleError.MissingIncomingPayment
-      newMinDeliveryAmount =
-        destination.invoice.amountToDeliver -
-        destination.invoice.amountDelivered
-      break
+    )
+    newMinDeliveryAmount =
+      payment.receiveAmount.amount - amountDeliveredSinceQuote
+  } else {
+    if (!destination.invoice) throw LifecycleError.MissingIncomingPayment
+    newMinDeliveryAmount =
+      destination.invoice.amountToDeliver - destination.invoice.amountDelivered
   }
 
   if (
@@ -355,4 +326,37 @@ export const sendWebhookEvent = async (
     data: payment.toData({ amountSent, balance }),
     withdrawal
   })
+}
+
+const validateAssets = (
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  destination: Pay.ResolvedPayment
+): void => {
+  if (payment.sendAmount) {
+    if (
+      payment.sendAmount.assetCode !== payment.account.asset.code ||
+      payment.sendAmount.assetScale !== payment.account.asset.scale
+    ) {
+      throw LifecycleError.SourceAssetConflict
+    }
+  }
+  if (payment.receiveAmount) {
+    if (payment.receiveAmount.assetCode || payment.receiveAmount.assetScale) {
+      if (
+        payment.receiveAmount.assetScale !==
+          destination.destinationAsset.scale ||
+        payment.receiveAmount.assetCode !== destination.destinationAsset.code
+      ) {
+        deps.logger.warn(
+          {
+            oldAsset: payment.receiveAmount,
+            newAsset: destination.destinationAsset
+          },
+          'destination asset changed'
+        )
+        throw Pay.PaymentError.DestinationAssetConflict
+      }
+    }
+  }
 }

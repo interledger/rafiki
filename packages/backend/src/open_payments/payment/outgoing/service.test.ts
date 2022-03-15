@@ -6,6 +6,7 @@ import { v4 as uuid } from 'uuid'
 
 import {
   FundingError,
+  LifecycleError,
   OutgoingPaymentError,
   isOutgoingPaymentError
 } from './errors'
@@ -18,7 +19,7 @@ import { AppServices } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import {
   OutgoingPayment,
-  PaymentIntent,
+  PaymentAmount,
   PaymentState,
   PaymentEvent,
   PaymentEventType
@@ -40,13 +41,34 @@ describe('OutgoingPaymentService', (): void => {
   let accountingService: AccountingService
   let knex: Knex
   let accountId: string
-  let asset: AssetOptions
   let incomingPayment: IncomingPayment
-  let incomingPaymentUrl: string
+  let receivingPayment: string
   let accountUrl: string
-  let paymentPointer: string
+  let receivingAccount: string
   let amtDelivered: bigint
   let config: IAppConfig
+
+  const asset: AssetOptions = {
+    scale: 9,
+    code: 'USD'
+  }
+
+  const sendAmount = {
+    amount: BigInt(123),
+    assetCode: asset.code,
+    assetScale: asset.scale
+  }
+
+  const destinationAsset = {
+    scale: 9,
+    code: 'XRP'
+  }
+
+  const receiveAmount = {
+    amount: BigInt(56),
+    assetCode: destinationAsset.code,
+    assetScale: destinationAsset.scale
+  }
 
   const webhookTypes: {
     [key in PaymentState]: PaymentEventType | undefined
@@ -200,11 +222,6 @@ describe('OutgoingPaymentService', (): void => {
       accountingService = await deps.use('accountingService')
       ratesService = await deps.use('ratesService')
 
-      asset = {
-        scale: 9,
-        code: 'USD'
-      }
-
       knex = await deps.use('knex')
       config = await deps.use('config')
     }
@@ -214,11 +231,14 @@ describe('OutgoingPaymentService', (): void => {
     async (): Promise<void> => {
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       const accountService = await deps.use('accountService')
-      accountId = (await accountService.create({ asset })).id
-      const destinationAsset = {
-        scale: 9,
-        code: 'XRP'
-      }
+      accountId = (
+        await accountService.create({
+          asset: {
+            code: sendAmount.assetCode,
+            scale: sendAmount.assetScale
+          }
+        })
+      ).id
       const destinationAccount = await accountService.create({
         asset: destinationAsset
       })
@@ -230,7 +250,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toBeUndefined()
       accountUrl = `${config.publicHost}/pay/${destinationAccount.id}`
-      paymentPointer = accountUrl.replace('https://', '$')
+      receivingAccount = accountUrl.replace('https://', '$')
       const incomingPaymentService = await deps.use('incomingPaymentService')
       incomingPayment = await incomingPaymentService.create({
         accountId: destinationAccount.id,
@@ -238,7 +258,7 @@ describe('OutgoingPaymentService', (): void => {
         expiresAt: new Date(Date.now() + 60 * 1000),
         description: 'description!'
       })
-      incomingPaymentUrl = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
+      receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
       amtDelivered = BigInt(0)
     }
   )
@@ -263,82 +283,154 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe.each`
-    authorized   | expectedAuthorized
-    ${true}      | ${true}
-    ${undefined} | ${false}
+    description  | externalRef  | authorized   | expectedAuthorized
+    ${'rent'}    | ${'202201'}  | ${true}      | ${true}
+    ${undefined} | ${undefined} | ${undefined} | ${false}
   `(
     'create (authorized: $authorized)',
-    ({ authorized, expectedAuthorized }): void => {
-      it('creates an OutgoingPayment (FixedSend)', async () => {
-        const payment = await outgoingPaymentService.create({
-          accountId,
-          paymentPointer,
-          amountToSend: BigInt(123),
-          authorized
-        })
-        assert.ok(!isOutgoingPaymentError(payment))
-        expect(payment.state).toEqual(PaymentState.Pending)
-        expect(payment.authorized).toEqual(expectedAuthorized)
-        expect(payment.intent).toEqual({
-          paymentPointer,
-          amountToSend: BigInt(123)
-        })
-        expect(payment.accountId).toBe(accountId)
-        await expectOutcome(payment, { accountBalance: BigInt(0) })
-        expect(payment.account.asset.code).toBe('USD')
-        expect(payment.account.asset.scale).toBe(9)
+    ({ description, externalRef, authorized, expectedAuthorized }): void => {
+      it.each`
+        assetCode               | assetScale
+        ${sendAmount.assetCode} | ${sendAmount.assetScale}
+        ${undefined}            | ${undefined}
+      `(
+        'creates an OutgoingPayment to account (FixedSend)',
+        async ({ assetCode, assetScale }): Promise<void> => {
+          const options = {
+            accountId,
+            receivingAccount,
+            sendAmount: {
+              amount: sendAmount.amount,
+              assetCode,
+              assetScale
+            },
+            authorized,
+            description,
+            externalRef
+          }
+          const payment = await outgoingPaymentService.create(options)
+          assert.ok(!isOutgoingPaymentError(payment))
+          expect(payment).toMatchObject({
+            ...options,
+            state: PaymentState.Pending,
+            receiveAmount: null,
+            receivingPayment: null,
+            authorized: expectedAuthorized,
+            description: description || null,
+            externalRef: externalRef || null,
+            account: {
+              asset
+            }
+          })
+          await expectOutcome(payment, { accountBalance: BigInt(0) })
 
-        const payment2 = await outgoingPaymentService.get(payment.id)
-        if (!payment2) throw 'no payment'
-        expect(payment2.id).toEqual(payment.id)
+          await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
+            payment
+          )
+        }
+      )
+
+      it.each`
+        receiveAsset
+        ${destinationAsset}
+        ${undefined}
+      `(
+        'creates an OutgoingPayment to account (FixedDelivery)',
+        async ({ receiveAsset }): Promise<void> => {
+          const receiveAmount: PaymentAmount = {
+            amount: BigInt(56)
+          }
+          if (receiveAsset) {
+            receiveAmount.assetCode = receiveAsset.code
+            receiveAmount.assetScale = receiveAsset.scale
+          }
+          const options = {
+            accountId,
+            receivingAccount,
+            receiveAmount,
+            authorized,
+            description,
+            externalRef
+          }
+          const payment = await outgoingPaymentService.create(options)
+          assert.ok(!isOutgoingPaymentError(payment))
+          expect(payment).toMatchObject({
+            ...options,
+            state: PaymentState.Pending,
+            sendAmount: null,
+            receivingPayment: null,
+            authorized: expectedAuthorized,
+            description: description || null,
+            externalRef: externalRef || null,
+            account: {
+              asset
+            }
+          })
+          await expectOutcome(payment, { accountBalance: BigInt(0) })
+
+          await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
+            payment
+          )
+        }
+      )
+
+      it('creates an OutgoingPayment to incoming payment (FixedDelivery)', async () => {
+        const options = {
+          accountId,
+          receivingPayment,
+          authorized,
+          description,
+          externalRef
+        }
+        const payment = await outgoingPaymentService.create(options)
+        assert.ok(!isOutgoingPaymentError(payment))
+        expect(payment).toMatchObject({
+          ...options,
+          state: PaymentState.Pending,
+          authorized: expectedAuthorized,
+          receivingAccount: null,
+          sendAmount: null,
+          receiveAmount: null,
+          description: description || null,
+          externalRef: externalRef || null,
+          account: {
+            asset
+          }
+        })
+
+        await expectOutcome(payment, { accountBalance: BigInt(0) })
+
+        await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
+          payment
+        )
       })
 
-      it('creates an OutgoingPayment (FixedDelivery)', async () => {
-        const payment = await outgoingPaymentService.create({
-          accountId,
-          incomingPaymentUrl,
-          authorized
-        })
-        assert.ok(!isOutgoingPaymentError(payment))
-        expect(payment.state).toEqual(PaymentState.Pending)
-        expect(payment.authorized).toEqual(expectedAuthorized)
-        expect(payment.intent).toEqual({
-          incomingPaymentUrl
-        })
-        expect(payment.accountId).toBe(accountId)
-        await expectOutcome(payment, { accountBalance: BigInt(0) })
-        expect(payment.account.asset.code).toBe('USD')
-        expect(payment.account.asset.scale).toBe(9)
-
-        const payment2 = await outgoingPaymentService.get(payment.id)
-        if (!payment2) throw 'no payment'
-        expect(payment2.id).toEqual(payment.id)
-      })
-
-      // incomingPaymentUrl and paymentPointer are defined in `beforeEach`
+      // receivingPayment and receivingAccount are defined in `beforeEach`
       // and unavailable in the `test.each` table
       test.each`
-        hasIncomingPaymentUrl | hasPaymentPointer | hasAmountToSend | error                                      | description
-        ${false}              | ${false}          | ${true}         | ${OutgoingPaymentError.InvalidDestination} | ${'without a destination'}
-        ${true}               | ${true}           | ${true}         | ${OutgoingPaymentError.InvalidDestination} | ${'with multiple destinations'}
-        ${true}               | ${false}          | ${true}         | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid amount'}
-        ${false}              | ${true}           | ${false}        | ${OutgoingPaymentError.InvalidAmount}      | ${'with missing amount'}
+        toPayment | toAccount | sendAmount    | receiveAmount    | error                                      | description
+        ${false}  | ${false}  | ${sendAmount} | ${undefined}     | ${OutgoingPaymentError.InvalidDestination} | ${'without a destination'}
+        ${true}   | ${true}   | ${sendAmount} | ${undefined}     | ${OutgoingPaymentError.InvalidDestination} | ${'with multiple destinations'}
+        ${true}   | ${false}  | ${sendAmount} | ${undefined}     | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid sendAmount'}
+        ${true}   | ${false}  | ${undefined}  | ${receiveAmount} | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid receiveAmount'}
+        ${false}  | ${true}   | ${undefined}  | ${undefined}     | ${OutgoingPaymentError.InvalidAmount}      | ${'with missing amount'}
+        ${true}   | ${false}  | ${sendAmount} | ${receiveAmount} | ${OutgoingPaymentError.InvalidAmount}      | ${'with multiple amounts'}
       `(
         'fails to create $description',
         async ({
-          hasIncomingPaymentUrl,
-          hasPaymentPointer,
-          hasAmountToSend,
+          toPayment,
+          toAccount,
+          sendAmount,
+          receiveAmount,
           error
         }): Promise<void> => {
           await expect(
             outgoingPaymentService.create({
               accountId,
-              incomingPaymentUrl: hasIncomingPaymentUrl
-                ? incomingPaymentUrl
-                : undefined,
-              paymentPointer: hasPaymentPointer ? paymentPointer : undefined,
-              amountToSend: hasAmountToSend ? BigInt(123) : undefined,
+              receivingPayment: toPayment ? receivingPayment : undefined,
+              receivingAccount: toAccount ? receivingAccount : undefined,
+              sendAmount,
+              receiveAmount,
               authorized
             })
           ).resolves.toEqual(error)
@@ -359,31 +451,21 @@ describe('OutgoingPaymentService', (): void => {
           const paymentId = (
             await createPayment({
               accountId,
-              paymentPointer,
-              amountToSend: BigInt(123),
+              receivingAccount,
+              sendAmount,
               authorized
             })
           ).id
           const payment = await processNext(paymentId, nextState)
-          expect(payment.destinationAccount).toEqual({
-            scale: 9,
-            code: 'XRP',
-            url: accountUrl
-          })
           if (!payment.quote) throw 'no quote'
+          if (!payment.expiresAt) throw 'no expiresAt'
 
           expect(payment.quote.timestamp).toBeInstanceOf(Date)
-          expect(
-            payment.quote.activationDeadline.getTime() - Date.now()
-          ).toBeGreaterThan(0)
-          expect(
-            payment.quote.activationDeadline.getTime() - Date.now()
-          ).toBeLessThanOrEqual(config.quoteLifespan)
-          expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedSend)
-          expect(payment.quote.minDeliveryAmount).toBe(
-            BigInt(Math.ceil(123 * payment.quote.minExchangeRate.valueOf()))
+          expect(payment.expiresAt.getTime() - Date.now()).toBeGreaterThan(0)
+          expect(payment.expiresAt.getTime() - Date.now()).toBeLessThanOrEqual(
+            config.quoteLifespan
           )
-          expect(payment.quote.maxSourceAmount).toBe(BigInt(123))
+          expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedSend)
           expect(payment.quote.maxPacketAmount).toBe(
             BigInt('9223372036854775807')
           )
@@ -394,29 +476,90 @@ describe('OutgoingPaymentService', (): void => {
           expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(
             0.500000000001
           )
+
+          expect(payment.receiveAmount).toEqual({
+            amount: BigInt(
+              Math.ceil(123 * payment.quote.minExchangeRate.valueOf())
+            ),
+            assetCode: destinationAsset.code,
+            assetScale: destinationAsset.scale
+          })
         })
 
-        it(`${nextState} (FixedDelivery)`, async (): Promise<void> => {
+        it.each`
+          receiveAsset
+          ${destinationAsset}
+          ${undefined}
+        `(
+          `${nextState} (FixedDelivery)`,
+          async ({ receiveAsset }): Promise<void> => {
+            const paymentId = (
+              await createPayment({
+                accountId,
+                receivingAccount,
+                receiveAmount: {
+                  amount: receiveAmount.amount,
+                  assetCode: receiveAsset?.code,
+                  assetScale: receiveAsset?.scale
+                },
+                authorized
+              })
+            ).id
+            const payment = await processNext(paymentId, nextState)
+            if (!payment.quote) throw 'no quote'
+            if (!payment.expiresAt) throw 'no expiresAt'
+
+            expect(payment.quote.timestamp).toBeInstanceOf(Date)
+            expect(payment.expiresAt.getTime() - Date.now()).toBeGreaterThan(0)
+            expect(
+              payment.expiresAt.getTime() - Date.now()
+            ).toBeLessThanOrEqual(config.quoteLifespan)
+            expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedDelivery)
+            expect(payment.quote.maxPacketAmount).toBe(
+              BigInt('9223372036854775807')
+            )
+            expect(payment.quote.minExchangeRate.valueOf()).toBe(
+              0.5 * (1 - config.slippage)
+            )
+            expect(payment.quote.lowExchangeRateEstimate.valueOf()).toBe(0.5)
+            expect(payment.quote.highExchangeRateEstimate.valueOf()).toBe(
+              0.500000000001
+            )
+
+            expect(payment.receiveAmount).toEqual(receiveAmount)
+            if (!payment.sendAmount) throw 'no sendAmount'
+            expect(payment.sendAmount).toEqual({
+              amount: BigInt(Math.ceil(56 * 2 * (1 + config.slippage))),
+              assetCode: payment.account.asset.code,
+              assetScale: payment.account.asset.scale
+            })
+          }
+        )
+
+        it(`${nextState} (IncomingPayment)`, async (): Promise<void> => {
           const paymentId = (
             await createPayment({
               accountId,
-              incomingPaymentUrl: incomingPaymentUrl,
+              receivingPayment: receivingPayment,
               authorized
             })
           ).id
           const payment = await processNext(paymentId, nextState)
-          expect(payment.destinationAccount).toEqual({
-            scale: incomingPayment.account.asset.scale,
-            code: incomingPayment.account.asset.code,
-            url: accountUrl
+          expect(payment.receiveAmount).toEqual({
+            amount: BigInt(56),
+            assetScale: incomingPayment.account.asset.scale,
+            assetCode: incomingPayment.account.asset.code
           })
+          if (!payment.sendAmount) throw 'no sendAmount'
+          expect(payment.sendAmount).toEqual({
+            amount: BigInt(Math.ceil(56 * 2 * (1 + config.slippage))),
+            assetCode: payment.account.asset.code,
+            assetScale: payment.account.asset.scale
+          })
+
           if (!payment.quote) throw 'no quote'
 
           expect(payment.quote.targetType).toBe(Pay.PaymentType.FixedDelivery)
-          expect(payment.quote.minDeliveryAmount).toBe(BigInt(56))
-          expect(payment.quote.maxSourceAmount).toBe(
-            BigInt(Math.ceil(56 * 2 * (1 + config.slippage)))
-          )
           expect(payment.quote.minExchangeRate.valueOf()).toBe(
             0.5 * (1 - config.slippage)
           )
@@ -433,14 +576,14 @@ describe('OutgoingPaymentService', (): void => {
           const paymentId = (
             await createPayment({
               accountId,
-              paymentPointer,
-              amountToSend: BigInt(123)
+              receivingAccount,
+              sendAmount
             })
           ).id
           const payment = await processNext(paymentId, PaymentState.Pending)
 
           expect(payment.stateAttempts).toBe(1)
-          expect(payment.quote).toBeUndefined()
+          expect(payment.quote).toBeNull()
 
           mockFn.mockRestore()
           // Fast forward to next attempt.
@@ -450,7 +593,7 @@ describe('OutgoingPaymentService', (): void => {
             .mockReturnValueOnce(Date.now() + 1 * RETRY_BACKOFF_SECONDS * 1000)
 
           const payment2 = await processNext(paymentId, PaymentState.Prepared)
-          expect(payment2.quote?.maxSourceAmount).toBe(BigInt(123))
+          expect(payment2.quote).toBeDefined()
         })
 
         // Maybe another person or payment paid the incoming payment already.
@@ -458,7 +601,7 @@ describe('OutgoingPaymentService', (): void => {
           const paymentId = (
             await createPayment({
               accountId,
-              incomingPaymentUrl: incomingPaymentUrl
+              receivingPayment: receivingPayment
             })
           ).id
           await payIncomingPayment(incomingPayment.amount)
@@ -469,26 +612,38 @@ describe('OutgoingPaymentService', (): void => {
           )
         })
 
-        it('FAILED (destination asset changed)', async (): Promise<void> => {
-          const originalPayment = await createPayment({
+        it('FAILED (source asset changed)', async (): Promise<void> => {
+          const { id: paymentId } = await createPayment({
             accountId,
-            paymentPointer,
-            amountToSend: BigInt(123)
+            receivingAccount,
+            sendAmount
           })
-          const paymentId = originalPayment.id
-          // Pretend that the destination asset was initially different.
-          await OutgoingPayment.query(knex)
-            .findById(paymentId)
-            .patch({
-              destinationAccount: Object.assign(
-                {},
-                originalPayment.destinationAccount,
-                {
-                  scale: 55
-                }
-              )
-            })
+          const assetService = await deps.use('assetService')
+          const { id: assetId } = await assetService.getOrCreate({
+            code: asset.code,
+            scale: asset.scale + 1
+          })
+          await OutgoingPayment.relatedQuery('account').for(paymentId).patch({
+            assetId
+          })
 
+          await processNext(
+            paymentId,
+            PaymentState.Failed,
+            LifecycleError.SourceAssetConflict
+          )
+        })
+
+        it('FAILED (invalid destination asset)', async (): Promise<void> => {
+          const { id: paymentId } = await createPayment({
+            accountId,
+            receivingAccount,
+            receiveAmount: {
+              amount: BigInt(56),
+              assetCode: destinationAsset.code,
+              assetScale: destinationAsset.scale + 1
+            }
+          })
           await processNext(
             paymentId,
             PaymentState.Failed,
@@ -505,8 +660,8 @@ describe('OutgoingPaymentService', (): void => {
         async (): Promise<void> => {
           const { id: paymentId } = await createPayment({
             accountId,
-            paymentPointer,
-            amountToSend: BigInt(123)
+            receivingAccount,
+            sendAmount
           })
           payment = await processNext(paymentId, PaymentState.Prepared)
         }
@@ -519,9 +674,7 @@ describe('OutgoingPaymentService', (): void => {
         // jest.advanceTimersByTime(config.quoteLifespan + 1)
 
         await payment.$query(knex).patch({
-          quote: Object.assign({}, payment.quote, {
-            activationDeadline: new Date(Date.now() - config.quoteLifespan - 1)
-          })
+          expiresAt: new Date(Date.now() - config.quoteLifespan - 1)
         })
 
         await processNext(payment.id, PaymentState.Expired)
@@ -531,8 +684,11 @@ describe('OutgoingPaymentService', (): void => {
     describe('SENDING→', (): void => {
       async function setup(
         opts: Pick<
-          PaymentIntent,
-          'amountToSend' | 'paymentPointer' | 'incomingPaymentUrl'
+          CreateOutgoingPaymentOptions,
+          | 'sendAmount'
+          | 'receivingAccount'
+          | 'receivingPayment'
+          | 'receiveAmount'
         >
       ): Promise<string> {
         const { id: paymentId } = await createPayment({
@@ -544,11 +700,11 @@ describe('OutgoingPaymentService', (): void => {
         trackAmountDelivered(paymentId)
 
         const payment = await processNext(paymentId, PaymentState.Funding)
-        assert.ok(payment.quote)
+        assert.ok(payment.sendAmount)
         await expect(
           outgoingPaymentService.fund({
             id: paymentId,
-            amount: payment.quote.maxSourceAmount,
+            amount: payment.sendAmount.amount,
             transferId: uuid()
           })
         ).resolves.toMatchObject({
@@ -560,8 +716,8 @@ describe('OutgoingPaymentService', (): void => {
 
       it('COMPLETED (FixedSend)', async (): Promise<void> => {
         const paymentId = await setup({
-          paymentPointer,
-          amountToSend: BigInt(123)
+          receivingAccount,
+          sendAmount
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
@@ -574,18 +730,35 @@ describe('OutgoingPaymentService', (): void => {
 
       it('COMPLETED (FixedDelivery)', async (): Promise<void> => {
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          receivingAccount,
+          receiveAmount
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
-        if (!payment.quote) throw 'no quote'
+        if (!payment.sendAmount) throw 'no sendAmount'
+        const amountSent = receiveAmount.amount * BigInt(2)
+        await expectOutcome(payment, {
+          accountBalance: payment.sendAmount.amount - amountSent,
+          amountSent,
+          amountDelivered: receiveAmount.amount,
+          withdrawAmount: payment.sendAmount.amount - amountSent
+        })
+      })
+
+      it('COMPLETED (IncomingPayment)', async (): Promise<void> => {
+        const paymentId = await setup({
+          receivingPayment: receivingPayment
+        })
+
+        const payment = await processNext(paymentId, PaymentState.Completed)
+        if (!payment.sendAmount) throw 'no sendAmount'
         const amountSent = incomingPayment.amount * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.quote.maxSourceAmount - amountSent,
+          accountBalance: payment.sendAmount.amount - amountSent,
           amountSent,
           amountDelivered: incomingPayment.amount,
           incomingPaymentReceived: incomingPayment.amount,
-          withdrawAmount: payment.quote.maxSourceAmount - amountSent
+          withdrawAmount: payment.sendAmount.amount - amountSent
         })
       })
 
@@ -593,19 +766,19 @@ describe('OutgoingPaymentService', (): void => {
         const amountAlreadyDelivered = BigInt(34)
         await payIncomingPayment(amountAlreadyDelivered)
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          receivingPayment: receivingPayment
         })
 
         const payment = await processNext(paymentId, PaymentState.Completed)
-        if (!payment.quote) throw 'no quote'
+        if (!payment.sendAmount) throw 'no sendAmount'
         const amountSent =
           (incomingPayment.amount - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.quote.maxSourceAmount - amountSent,
+          accountBalance: payment.sendAmount.amount - amountSent,
           amountSent,
           amountDelivered: incomingPayment.amount - amountAlreadyDelivered,
           incomingPaymentReceived: incomingPayment.amount,
-          withdrawAmount: payment.quote.maxSourceAmount - amountSent
+          withdrawAmount: payment.sendAmount.amount - amountSent
         })
       })
 
@@ -619,8 +792,8 @@ describe('OutgoingPaymentService', (): void => {
         )
 
         const paymentId = await setup({
-          paymentPointer,
-          amountToSend: BigInt(123)
+          receivingAccount,
+          sendAmount
         })
 
         for (let i = 0; i < 4; i++) {
@@ -658,8 +831,8 @@ describe('OutgoingPaymentService', (): void => {
           Pay.PaymentError.ReceiverProtocolViolation
         )
         const paymentId = await setup({
-          paymentPointer,
-          amountToSend: BigInt(123)
+          receivingAccount,
+          sendAmount
         })
 
         const payment = await processNext(
@@ -683,10 +856,9 @@ describe('OutgoingPaymentService', (): void => {
           },
           Pay.PaymentError.ClosedByReceiver
         )
-        const amountToSend = BigInt(123)
         const paymentId = await setup({
-          paymentPointer,
-          amountToSend
+          receivingAccount,
+          sendAmount
         })
 
         const payment = await processNext(paymentId, PaymentState.Sending)
@@ -702,16 +874,16 @@ describe('OutgoingPaymentService', (): void => {
         const payment2 = await processNext(paymentId, PaymentState.Completed)
         await expectOutcome(payment2, {
           accountBalance: BigInt(0),
-          amountSent: amountToSend,
-          amountDelivered: amountToSend / BigInt(2)
+          amountSent: sendAmount.amount,
+          amountDelivered: sendAmount.amount / BigInt(2)
         })
       })
 
       // Caused by retry after failed SENDING→COMPLETED transition commit.
       it('COMPLETED (FixedSend, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
-          paymentPointer,
-          amountToSend: BigInt(123)
+          receivingAccount,
+          sendAmount
         })
 
         await processNext(paymentId, PaymentState.Completed)
@@ -730,34 +902,54 @@ describe('OutgoingPaymentService', (): void => {
       // Caused by retry after failed SENDING→COMPLETED transition commit.
       it('COMPLETED (FixedDelivery, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          receivingPayment: receivingPayment
         })
         // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
         await payIncomingPayment(incomingPayment.amount)
 
         const payment = await processNext(paymentId, PaymentState.Completed)
-        if (!payment.quote) throw 'no quote'
+        if (!payment.sendAmount) throw 'no sendAmount'
         await expectOutcome(payment, {
-          accountBalance: payment.quote.maxSourceAmount,
+          accountBalance: payment.sendAmount.amount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
           incomingPaymentReceived: incomingPayment.amount,
-          withdrawAmount: payment.quote.maxSourceAmount
+          withdrawAmount: payment.sendAmount.amount
         })
+      })
+
+      it('FAILED (source asset changed)', async (): Promise<void> => {
+        const paymentId = await setup({
+          receivingPayment: receivingPayment
+        })
+        const assetService = await deps.use('assetService')
+        const { id: assetId } = await assetService.getOrCreate({
+          code: asset.code,
+          scale: asset.scale + 1
+        })
+        await OutgoingPayment.relatedQuery('account').for(paymentId).patch({
+          assetId
+        })
+
+        await processNext(
+          paymentId,
+          PaymentState.Failed,
+          LifecycleError.SourceAssetConflict
+        )
       })
 
       it('FAILED (destination asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
-          incomingPaymentUrl: incomingPaymentUrl
+          receivingPayment: receivingPayment
         })
         // Pretend that the destination asset was initially different.
         await OutgoingPayment.query(knex)
           .findById(paymentId)
           .patch({
-            destinationAccount: {
-              url: accountUrl,
-              code: incomingPayment.account.asset.code,
-              scale: 55
+            receiveAmount: {
+              amount: BigInt(56),
+              assetCode: incomingPayment.account.asset.code,
+              assetScale: 55
             }
           })
 
@@ -777,8 +969,8 @@ describe('OutgoingPaymentService', (): void => {
       paymentId = (
         await createPayment({
           accountId,
-          paymentPointer,
-          amountToSend: BigInt(123)
+          receivingAccount,
+          sendAmount
         })
       ).id
     }, 10_000)
@@ -853,13 +1045,13 @@ describe('OutgoingPaymentService', (): void => {
     beforeEach(async (): Promise<void> => {
       const { id: paymentId } = await createPayment({
         accountId,
-        paymentPointer,
-        amountToSend: BigInt(123),
+        receivingAccount,
+        sendAmount,
         authorized: true
       })
       payment = await processNext(paymentId, PaymentState.Funding)
-      assert.ok(payment.quote)
-      quoteAmount = payment.quote.maxSourceAmount
+      assert.ok(payment.sendAmount)
+      quoteAmount = payment.sendAmount.amount
       await expectOutcome(payment, { accountBalance: BigInt(0) })
     }, 10_000)
 
@@ -927,8 +1119,8 @@ describe('OutgoingPaymentService', (): void => {
       createModel: () =>
         createPayment({
           accountId,
-          paymentPointer,
-          amountToSend: BigInt(123)
+          receivingAccount,
+          sendAmount
         }),
       getPage: (pagination: Pagination) =>
         outgoingPaymentService.getAccountPage(accountId, pagination)

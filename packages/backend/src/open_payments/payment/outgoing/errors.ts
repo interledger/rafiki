@@ -28,11 +28,15 @@ export enum LifecycleError {
   PricesUnavailable = 'PricesUnavailable',
   // Edge error due to retries, partial payment, and database write errors.
   BadState = 'BadState',
+  // Account asset conflicts with sendAmount asset
+  SourceAssetConflict = 'SourceAssetConflict',
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
   MissingBalance = 'MissingBalance',
-  MissingDestination = 'MissingDestination',
   MissingQuote = 'MissingQuote',
+  MissingExpiration = 'MissingExpiration',
+  MissingSendAmount = 'MissingSendAmount',
+  MissingReceiveAmount = 'MissingReceiveAmount',
   MissingIncomingPayment = 'MissingIncomingPayment',
   InvalidRatio = 'InvalidRatio',
   Unauthorized = 'Unauthorized'

@@ -8,19 +8,13 @@ import { Account } from '../../account/model'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
 
-const fieldPrefixes = ['intent', 'quote', 'destinationAccount', 'outcome']
+const fieldPrefixes = ['sendAmount', 'receiveAmount', 'quote', 'outcome']
 
 const ratioFields = [
   'quoteMinExchangeRate',
   'quoteLowExchangeRateEstimate',
   'quoteHighExchangeRateEstimate'
 ]
-
-export type PaymentIntent = {
-  paymentPointer?: string
-  incomingPaymentUrl?: string
-  amountToSend?: bigint
-}
 
 export class OutgoingPayment
   extends BaseModel
@@ -32,15 +26,19 @@ export class OutgoingPayment
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
+  public expiresAt?: Date
 
-  public intent!: PaymentIntent
+  public receivingAccount?: string
+  public receivingPayment?: string
+  public sendAmount?: PaymentAmount
+  public receiveAmount?: PaymentAmount
+
+  public description?: string
+  public externalRef?: string
 
   public quote?: {
     timestamp: Date
-    activationDeadline: Date
     targetType: Pay.PaymentType
-    minDeliveryAmount: bigint
-    maxSourceAmount: bigint
     maxPacketAmount: bigint
     minExchangeRate: Pay.Ratio
     lowExchangeRateEstimate: Pay.Ratio
@@ -53,11 +51,6 @@ export class OutgoingPayment
   // Open payments account id of the sender
   public accountId!: string
   public account!: Account
-  public destinationAccount?: {
-    scale: number
-    code: string
-    url?: string
-  }
 
   public get asset(): Asset {
     return this.account.asset
@@ -117,9 +110,12 @@ export class OutgoingPayment
       delete json[ratioField + 'Numerator']
       delete json[ratioField + 'Denominator']
     })
+    for (const prefix of fieldPrefixes) {
+      json[prefix] = null
+    }
     for (const key in json) {
       const prefix = fieldPrefixes.find((prefix) => key.startsWith(prefix))
-      if (!prefix) continue
+      if (!prefix || key === prefix) continue
       if (json[key] !== null) {
         if (!json[prefix]) json[prefix] = {}
         json[prefix][
@@ -145,8 +141,6 @@ export class OutgoingPayment
         state: this.state,
         authorized: this.authorized,
         stateAttempts: this.stateAttempts,
-        intent: {},
-        destinationAccount: this.destinationAccount,
         createdAt: new Date(+this.createdAt).toISOString(),
         outcome: {
           amountSent: amountSent.toString()
@@ -154,25 +148,42 @@ export class OutgoingPayment
         balance: balance.toString()
       }
     }
-    if (this.intent.paymentPointer) {
-      data.payment.intent.paymentPointer = this.intent.paymentPointer
+    if (this.receivingAccount) {
+      data.payment.receivingAccount = this.receivingAccount
     }
-    if (this.intent.incomingPaymentUrl) {
-      data.payment.intent.incomingPaymentUrl = this.intent.incomingPaymentUrl
+    if (this.receivingPayment) {
+      data.payment.receivingPayment = this.receivingPayment
     }
-    if (this.intent.amountToSend) {
-      data.payment.intent.amountToSend = this.intent.amountToSend.toString()
+    if (this.sendAmount) {
+      data.payment.sendAmount = {
+        amount: this.sendAmount.amount.toString(),
+        assetCode: this.sendAmount.assetCode,
+        assetScale: this.sendAmount.assetScale
+      }
+    }
+    if (this.receiveAmount) {
+      data.payment.receiveAmount = {
+        amount: this.receiveAmount.amount.toString(),
+        assetCode: this.receiveAmount.assetCode,
+        assetScale: this.receiveAmount.assetScale
+      }
+    }
+    if (this.description) {
+      data.payment.description = this.description
+    }
+    if (this.externalRef) {
+      data.payment.externalRef = this.externalRef
     }
     if (this.error) {
       data.payment.error = this.error
+    }
+    if (this.expiresAt) {
+      data.payment.expiresAt = this.expiresAt.toISOString()
     }
     if (this.quote) {
       data.payment.quote = {
         ...this.quote,
         timestamp: this.quote.timestamp.toISOString(),
-        activationDeadline: this.quote.activationDeadline.toISOString(),
-        minDeliveryAmount: this.quote.minDeliveryAmount.toString(),
-        maxSourceAmount: this.quote.maxSourceAmount.toString(),
         maxPacketAmount: this.quote.maxPacketAmount.toString(),
         minExchangeRate: this.quote.minExchangeRate.valueOf(),
         lowExchangeRateEstimate: this.quote.lowExchangeRateEstimate.valueOf(),
@@ -182,6 +193,12 @@ export class OutgoingPayment
     }
     return data
   }
+}
+
+export interface PaymentAmount {
+  amount: bigint
+  assetCode?: string
+  assetScale?: number
 }
 
 export enum PaymentState {
@@ -223,6 +240,12 @@ export const PaymentEventType = {
 }
 export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
+interface AmountData {
+  amount: string
+  assetCode?: string
+  assetScale?: number
+}
+
 export type PaymentData = {
   payment: {
     id: string
@@ -232,27 +255,21 @@ export type PaymentData = {
     authorized: boolean
     error?: string
     stateAttempts: number
-    intent: {
-      paymentPointer?: string
-      incomingPaymentUrl?: string
-      amountToSend?: string
-    }
+    receivingAccount?: string
+    receivingPayment?: string
+    sendAmount?: AmountData
+    receiveAmount?: AmountData
+    description?: string
+    externalRef?: string
+    expiresAt?: string
     quote?: {
       timestamp: string
-      activationDeadline: string
       targetType: Pay.PaymentType
-      minDeliveryAmount: string
-      maxSourceAmount: string
       maxPacketAmount: string
       minExchangeRate: number
       lowExchangeRateEstimate: number
       highExchangeRateEstimate: number
       amountSent: string
-    }
-    destinationAccount?: {
-      scale: number
-      code: string
-      url?: string
     }
     outcome: {
       amountSent: string

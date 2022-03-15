@@ -6,7 +6,7 @@ import { FundingError, LifecycleError, OutgoingPaymentError } from './errors'
 import { sendWebhookEvent } from './lifecycle'
 import {
   OutgoingPayment,
-  PaymentIntent,
+  PaymentAmount,
   PaymentState,
   PaymentEventType
 } from './model'
@@ -70,24 +70,30 @@ async function getOutgoingPayment(
     .withGraphJoined('account.asset')
 }
 
-export type CreateOutgoingPaymentOptions = PaymentIntent & {
+export interface CreateOutgoingPaymentOptions {
   accountId: string
   authorized?: boolean
+  sendAmount?: PaymentAmount
+  receiveAmount?: PaymentAmount
+  receivingAccount?: string
+  receivingPayment?: string
+  description?: string
+  externalRef?: string
 }
 
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
-  if (options.incomingPaymentUrl) {
-    if (options.paymentPointer) {
+  if (options.receivingPayment) {
+    if (options.receivingAccount) {
       return OutgoingPaymentError.InvalidDestination
     }
-    if (options.amountToSend !== undefined) {
+    if (options.sendAmount || options.receiveAmount) {
       return OutgoingPaymentError.InvalidAmount
     }
-  } else if (options.paymentPointer) {
-    if (!options.amountToSend) {
+  } else if (options.receivingAccount) {
+    if (!options.sendAmount === !options.receiveAmount) {
       return OutgoingPaymentError.InvalidAmount
     }
   } else {
@@ -95,17 +101,28 @@ async function createOutgoingPayment(
   }
 
   try {
+    const account = await deps.accountService.get(options.accountId)
+    if (!account) {
+      return OutgoingPaymentError.UnknownAccount
+    }
+    if (options.sendAmount) {
+      if (options.sendAmount.assetCode || options.sendAmount.assetScale) {
+        if (
+          options.sendAmount.assetCode !== account.asset.code ||
+          options.sendAmount.assetScale !== account.asset.scale
+        ) {
+          return OutgoingPaymentError.InvalidAmount
+        }
+      }
+      ;(options.sendAmount.assetCode = account.asset.code),
+        (options.sendAmount.assetScale = account.asset.scale)
+    }
+
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
-          state: PaymentState.Pending,
-          intent: {
-            paymentPointer: options.paymentPointer,
-            incomingPaymentUrl: options.incomingPaymentUrl,
-            amountToSend: options.amountToSend
-          },
-          accountId: options.accountId,
-          authorized: options.authorized
+          ...options,
+          state: PaymentState.Pending
         })
         .withGraphFetched('account.asset')
 
@@ -169,9 +186,8 @@ async function fundPayment(
     if (payment.state !== PaymentState.Funding) {
       return FundingError.WrongState
     }
-    if (!payment.quote) throw LifecycleError.MissingQuote
-    if (amount !== payment.quote.maxSourceAmount)
-      return FundingError.InvalidAmount
+    if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
+    if (amount !== payment.sendAmount.amount) return FundingError.InvalidAmount
     const error = await deps.accountingService.createDeposit({
       id: transferId,
       account: payment,
