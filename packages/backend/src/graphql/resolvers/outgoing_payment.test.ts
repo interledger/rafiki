@@ -116,8 +116,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        highExchangeRateEstimate: Pay.Ratio.from(2.3)!,
-        amountSent: BigInt(0)
+        highExchangeRateEstimate: Pay.Ratio.from(2.3)!
       },
       accountId,
       authorized,

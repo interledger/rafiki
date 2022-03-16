@@ -30,9 +30,6 @@ exports.up = function (knex) {
     table.bigInteger('quoteHighExchangeRateEstimateNumerator').nullable()
     table.bigInteger('quoteHighExchangeRateEstimateDenominator').nullable()
 
-    // Amount already sent at the time of the quote
-    table.bigInteger('quoteAmountSent').nullable()
-
     // Open payments account corresponding to wallet account
     // from which to request funds for payment
     table.uuid('accountId').notNullable()

@@ -81,7 +81,6 @@ export class OutgoingPayment
   private quoteLowExchangeRateEstimateDenominator?: bigint | null
   private quoteHighExchangeRateEstimateNumerator?: bigint | null
   private quoteHighExchangeRateEstimateDenominator?: bigint | null
-  private quoteAmountSent?: bigint | null
 
   public get quote(): PaymentQuote | null {
     if (
@@ -93,8 +92,7 @@ export class OutgoingPayment
       !this.quoteLowExchangeRateEstimateNumerator ||
       !this.quoteLowExchangeRateEstimateDenominator ||
       !this.quoteHighExchangeRateEstimateNumerator ||
-      !this.quoteHighExchangeRateEstimateDenominator ||
-      this.quoteAmountSent == null
+      !this.quoteHighExchangeRateEstimateDenominator
     )
       return null
 
@@ -121,8 +119,7 @@ export class OutgoingPayment
         Pay.Int.from(
           this.quoteHighExchangeRateEstimateDenominator
         ) as Pay.PositiveInt
-      ),
-      amountSent: this.quoteAmountSent
+      )
     }
   }
 
@@ -141,7 +138,6 @@ export class OutgoingPayment
       value?.highExchangeRateEstimate.a.value ?? null
     this.quoteHighExchangeRateEstimateDenominator =
       value?.highExchangeRateEstimate.b.value ?? null
-    this.quoteAmountSent = value?.amountSent ?? null
   }
 
   // Open payments account id of the sender
@@ -232,8 +228,7 @@ export class OutgoingPayment
         maxPacketAmount: this.quote.maxPacketAmount.toString(),
         minExchangeRate: this.quote.minExchangeRate.valueOf(),
         lowExchangeRateEstimate: this.quote.lowExchangeRateEstimate.valueOf(),
-        highExchangeRateEstimate: this.quote.highExchangeRateEstimate.valueOf(),
-        amountSent: this.quote.amountSent.toString()
+        highExchangeRateEstimate: this.quote.highExchangeRateEstimate.valueOf()
       }
     }
     return data
@@ -255,8 +250,6 @@ interface PaymentQuote {
   // Note that the upper exchange rate bound is *exclusive*.
   // (Pay.PositiveRatio, but validated later)
   highExchangeRateEstimate: Pay.Ratio
-  // Amount already sent at the time of the quote
-  amountSent: bigint
 }
 
 export enum PaymentState {
@@ -327,7 +320,6 @@ export type PaymentData = {
       minExchangeRate: number
       lowExchangeRateEstimate: number
       highExchangeRateEstimate: number
-      amountSent: string
     }
     outcome: {
       amountSent: string
