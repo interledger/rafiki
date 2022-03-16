@@ -18,9 +18,9 @@ account.
 
 ### New to interledger?
 
-Never heard of interledger before, or you would like to learn more? Here are some good places to start:
+Never heard of Interledger before, or you would like to learn more? Here are some good places to start:
 
-- [Good first issues](https://github.com/coilhq/rafiki/contribute)
+- [Good first issues](https://github.com/interledger/rafiki/contribute)
 - [Interledger](https://interledger.org/)
 - [Payment pointers](https://paymentpointers.org/)
 - [Web monetization](https://webmonetization.org/)
