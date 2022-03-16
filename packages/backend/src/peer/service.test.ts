@@ -1,5 +1,5 @@
 import assert from 'assert'
-import Faker from 'faker'
+import { faker } from '@faker-js/faker'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
@@ -35,11 +35,11 @@ describe('Peer Service', (): void => {
     asset: randomAsset(),
     http: {
       incoming: {
-        authTokens: [Faker.datatype.string(32)]
+        authTokens: [faker.datatype.string(32)]
       },
       outgoing: {
-        authToken: Faker.datatype.string(32),
-        endpoint: Faker.internet.url()
+        authToken: faker.datatype.string(32),
+        endpoint: faker.internet.url()
       }
     },
     maxPacketAmount: BigInt(100),
@@ -84,8 +84,8 @@ describe('Peer Service', (): void => {
         asset: randomAsset(),
         http: {
           outgoing: {
-            authToken: Faker.datatype.string(32),
-            endpoint: Faker.internet.url()
+            authToken: faker.datatype.string(32),
+            endpoint: faker.internet.url()
           }
         },
         staticIlpAddress: 'test.' + uuid()
@@ -151,7 +151,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Cannot create a peer with duplicate incoming tokens', async (): Promise<void> => {
-      const incomingToken = Faker.datatype.string(32)
+      const incomingToken = faker.datatype.string(32)
 
       const options = randomPeer()
       assert.ok(options.http.incoming)
@@ -162,7 +162,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Cannot create a peer with duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = Faker.datatype.string(32)
+      const incomingToken = faker.datatype.string(32)
 
       {
         const options = randomPeer()
@@ -230,7 +230,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Returns error for duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = Faker.datatype.string(32)
+      const incomingToken = faker.datatype.string(32)
       await peerFactory.build({
         http: {
           incoming: {
@@ -257,7 +257,7 @@ describe('Peer Service', (): void => {
 
     test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
       const peer = await peerFactory.build()
-      const incomingToken = Faker.datatype.string(32)
+      const incomingToken = faker.datatype.string(32)
       const updateOptions: UpdateOptions = {
         id: peer.id,
         http: {
@@ -321,7 +321,7 @@ describe('Peer Service', (): void => {
 
   describe('Get Peer by Incoming Token', (): void => {
     test('Can retrieve peer by incoming token', async (): Promise<void> => {
-      const incomingToken = Faker.datatype.string(32)
+      const incomingToken = faker.datatype.string(32)
       const peer = await peerFactory.build({
         http: {
           incoming: {

@@ -1,23 +1,23 @@
 import { Factory } from 'rosie'
-import Faker from 'faker'
+import { faker } from '@faker-js/faker'
 import {
   MockIncomingAccount,
   MockOutgoingAccount
 } from '../test/mocks/accounting-service'
 
-const assetCode = Faker.finance.currencyCode().toString().toUpperCase()
-const assetScale = Faker.datatype.number(6)
+const assetCode = faker.finance.currencyCode().toString().toUpperCase()
+const assetScale = faker.datatype.number(6)
 
 const accountAttrs = {
-  id: Faker.datatype.uuid,
+  id: faker.datatype.uuid,
   asset: {
-    id: Faker.datatype.uuid(),
+    id: faker.datatype.uuid(),
     code: assetCode,
     scale: assetScale,
-    unit: Faker.datatype.number(),
+    unit: faker.datatype.number(),
     asset: {
-      id: Faker.datatype.uuid(),
-      unit: Faker.datatype.number()
+      id: faker.datatype.uuid(),
+      unit: faker.datatype.number()
     }
   },
   balance: 0n
@@ -38,10 +38,10 @@ export const IncomingPeerFactory = Factory.define<MockIncomingAccount>(
   .attrs({
     http: () => ({
       incoming: {
-        authTokens: [Faker.datatype.string(32)]
+        authTokens: [faker.datatype.string(32)]
       }
     }),
-    maxPacketAmount: BigInt(Faker.datatype.number())
+    maxPacketAmount: BigInt(faker.datatype.number())
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`
@@ -54,8 +54,8 @@ export const OutgoingPeerFactory = Factory.define<MockOutgoingAccount>(
   .attrs({
     http: () => ({
       outgoing: {
-        authToken: Faker.datatype.string(32),
-        endpoint: Faker.internet.url()
+        authToken: faker.datatype.string(32),
+        endpoint: faker.internet.url()
       }
     })
   })

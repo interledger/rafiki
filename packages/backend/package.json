@@ -17,7 +17,6 @@
     "@graphql-codegen/introspection": "1.18.2",
     "@graphql-codegen/typescript": "1.22.2",
     "@graphql-codegen/typescript-resolvers": "1.19.3",
-    "@types/faker": "^5.5.8",
     "@types/ioredis": "^4.22.3",
     "@types/jest": "^26.0.22",
     "@types/koa": "^2.13.1",
@@ -46,6 +45,7 @@
   "dependencies": {
     "@adonisjs/fold": "^8.1.0",
     "@apollo/client": "^3.3.20",
+    "@faker-js/faker": "^6.0.0",
     "@graphql-tools/graphql-file-loader": "^7.0.6",
     "@graphql-tools/load": "^7.1.9",
     "@graphql-tools/schema": "^8.1.2",
@@ -62,7 +62,6 @@
     "base64url": "^3.0.1",
     "bcrypt": "^5.0.1",
     "extensible-error": "^1.0.2",
-    "faker": "^5.5.3",
     "fishery": "^1.2.0",
     "got": "^11.8.2",
     "graphile-scheduler": "^0.8.0",

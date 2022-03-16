@@ -1385,6 +1385,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@faker-js/faker@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "@faker-js/faker@npm:6.0.0"
+  checksum: 099f712ad6c323847ffe10cd522861eccd81c80812b59ae5e0011ee2fa4881a50ff1183686e9c1bb043fd0b2ff4fac291c776093ccab7a38c4baafa71fa39198
+  languageName: node
+  linkType: hard
+
 "@graphql-codegen/cli@npm:1.21.5":
   version: 1.21.5
   resolution: "@graphql-codegen/cli@npm:1.21.5"
@@ -2797,13 +2804,6 @@ __metadata:
     "@types/qs": "*"
     "@types/serve-static": "*"
   checksum: 12a2a0e6c4b993fc0854bec665906788aea0d8ee4392389d7a98a5de1eefdd33c9e1e40a91f3afd274011119c506f7b4126acb97fae62ae20b654974d44cba12
-  languageName: node
-  linkType: hard
-
-"@types/faker@npm:^5.5.8":
-  version: 5.5.8
-  resolution: "@types/faker@npm:5.5.8"
-  checksum: eb642cac279cbaca46001d301284d51f4b9ca90f48b4b8edb9bbf4335edf70e0216ad921690edb2feec6502eb1bc9ed1fe3e3a27efc49f168ece88acfe2e68ac
   languageName: node
   linkType: hard
 
@@ -4597,6 +4597,7 @@ __metadata:
   dependencies:
     "@adonisjs/fold": ^8.1.0
     "@apollo/client": ^3.3.20
+    "@faker-js/faker": ^6.0.0
     "@graphql-codegen/cli": 1.21.5
     "@graphql-codegen/introspection": 1.18.2
     "@graphql-codegen/typescript": 1.22.2
@@ -4610,7 +4611,6 @@ __metadata:
     "@koa/cors": ^3.1.0
     "@koa/router": ^10.0.0
     "@types/bcrypt": ^5.0.0
-    "@types/faker": ^5.5.8
     "@types/ioredis": ^4.22.3
     "@types/jest": ^26.0.22
     "@types/koa": ^2.13.1
@@ -4633,7 +4633,6 @@ __metadata:
     bcrypt: ^5.0.1
     cross-fetch: ^3.1.4
     extensible-error: ^1.0.2
-    faker: ^5.5.3
     fishery: ^1.2.0
     got: ^11.8.2
     graphile-scheduler: ^0.8.0
@@ -6934,13 +6933,6 @@ __metadata:
   version: 1.4.0
   resolution: "extsprintf@npm:1.4.0"
   checksum: 184dc8a413eb4b1ff16bdce797340e7ded4d28511d56a1c9afa5a95bcff6ace154063823eaf0206dbbb0d14059d74f382a15c34b7c0636fa74a7e681295eb67e
-  languageName: node
-  linkType: hard
-
-"faker@npm:^5.5.3":
-  version: 5.5.3
-  resolution: "faker@npm:5.5.3"
-  checksum: 684fd64c8d3897e54248f95b4f6319f75d97691b8500cd13adf4af2c28f9204f766c1d1aaa6b41338f0beaaa87256c3132f8708a1a8f189d122b92f6b98081c3
   languageName: node
   linkType: hard
 
