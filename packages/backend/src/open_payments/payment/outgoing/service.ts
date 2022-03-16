@@ -99,7 +99,14 @@ async function createOutgoingPayment(
       return OutgoingPaymentError.InvalidAmount
     }
   } else if (options.receivingAccount) {
-    if (!options.sendAmount === !options.receiveAmount) {
+    if (options.sendAmount) {
+      if (options.receiveAmount || options.sendAmount.amount <= BigInt(0)) {
+        return OutgoingPaymentError.InvalidAmount
+      }
+    } else if (
+      !options.receiveAmount ||
+      options.receiveAmount.amount <= BigInt(0)
+    ) {
       return OutgoingPaymentError.InvalidAmount
     }
   } else {

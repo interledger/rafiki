@@ -1,4 +1,5 @@
 import * as Pay from '@interledger/pay'
+import assert from 'assert'
 
 import { LifecycleError } from './errors'
 import {
@@ -88,6 +89,13 @@ export async function handlePending(
   const state = payment.authorized
     ? PaymentState.Funding
     : PaymentState.Prepared
+
+  // Pay.startQuote should return PaymentError.InvalidSourceAmount or
+  // PaymentError.InvalidDestinationAmount for non-positive amounts.
+  // Outgoing payments' sendAmount or receiveAmount should never be
+  // zero or negative.
+  assert.ok(quote.maxSourceAmount > BigInt(0))
+  assert.ok(quote.minDeliveryAmount > BigInt(0))
 
   await payment.$query(deps.knex).patch({
     state,

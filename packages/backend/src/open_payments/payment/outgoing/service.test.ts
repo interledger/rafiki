@@ -408,13 +408,17 @@ describe('OutgoingPaymentService', (): void => {
       // receivingPayment and receivingAccount are defined in `beforeEach`
       // and unavailable in the `test.each` table
       test.each`
-        toPayment | toAccount | sendAmount    | receiveAmount    | error                                      | description
-        ${false}  | ${false}  | ${sendAmount} | ${undefined}     | ${OutgoingPaymentError.InvalidDestination} | ${'without a destination'}
-        ${true}   | ${true}   | ${sendAmount} | ${undefined}     | ${OutgoingPaymentError.InvalidDestination} | ${'with multiple destinations'}
-        ${true}   | ${false}  | ${sendAmount} | ${undefined}     | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid sendAmount'}
-        ${true}   | ${false}  | ${undefined}  | ${receiveAmount} | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid receiveAmount'}
-        ${false}  | ${true}   | ${undefined}  | ${undefined}     | ${OutgoingPaymentError.InvalidAmount}      | ${'with missing amount'}
-        ${true}   | ${false}  | ${sendAmount} | ${receiveAmount} | ${OutgoingPaymentError.InvalidAmount}      | ${'with multiple amounts'}
+        toPayment | toAccount | sendAmount                | receiveAmount             | error                                      | description
+        ${false}  | ${false}  | ${sendAmount}             | ${undefined}              | ${OutgoingPaymentError.InvalidDestination} | ${'without a destination'}
+        ${true}   | ${true}   | ${sendAmount}             | ${undefined}              | ${OutgoingPaymentError.InvalidDestination} | ${'with multiple destinations'}
+        ${true}   | ${false}  | ${sendAmount}             | ${undefined}              | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid sendAmount'}
+        ${true}   | ${false}  | ${undefined}              | ${receiveAmount}          | ${OutgoingPaymentError.InvalidAmount}      | ${'with invalid receiveAmount'}
+        ${false}  | ${true}   | ${undefined}              | ${undefined}              | ${OutgoingPaymentError.InvalidAmount}      | ${'with missing amount'}
+        ${true}   | ${false}  | ${sendAmount}             | ${receiveAmount}          | ${OutgoingPaymentError.InvalidAmount}      | ${'with multiple amounts'}
+        ${false}  | ${true}   | ${{ amount: BigInt(0) }}  | ${undefined}              | ${OutgoingPaymentError.InvalidAmount}      | ${'sendAmount of zero'}
+        ${false}  | ${true}   | ${{ amount: BigInt(-1) }} | ${undefined}              | ${OutgoingPaymentError.InvalidAmount}      | ${'negative sendAmount'}
+        ${false}  | ${true}   | ${undefined}              | ${{ amount: BigInt(0) }}  | ${OutgoingPaymentError.InvalidAmount}      | ${'receiveAmount of zero'}
+        ${false}  | ${true}   | ${undefined}              | ${{ amount: BigInt(-1) }} | ${OutgoingPaymentError.InvalidAmount}      | ${'negative receiveAmount'}
       `(
         'fails to create $description',
         async ({
