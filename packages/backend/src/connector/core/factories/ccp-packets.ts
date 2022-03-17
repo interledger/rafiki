@@ -5,18 +5,18 @@ import {
   CcpRouteControlRequest,
   serializeCcpRouteControlRequest
 } from 'ilp-protocol-ccp'
-import Faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { deserializeIlpPrepare, IlpPrepare } from 'ilp-packet'
 
 export const RouteUpdateRequestFactory = Factory.define<CcpRouteUpdateRequest>(
   'RouteUpdateRequest'
 ).attrs({
-  speaker: 'test.rafiki.' + Faker.name.firstName(),
-  routingTableId: Faker.datatype.uuid,
-  currentEpochIndex: Faker.datatype.number({ min: 0, max: 5 }),
-  fromEpochIndex: Faker.datatype.number({ min: 0, max: 5 }),
-  toEpochIndex: Faker.datatype.number({ min: 0, max: 10 }),
-  holdDownTime: Faker.datatype.number({ min: 30000, max: 45000 }),
+  speaker: 'test.rafiki.' + faker.name.firstName(),
+  routingTableId: faker.datatype.uuid,
+  currentEpochIndex: faker.datatype.number({ min: 0, max: 5 }),
+  fromEpochIndex: faker.datatype.number({ min: 0, max: 5 }),
+  toEpochIndex: faker.datatype.number({ min: 0, max: 10 }),
+  holdDownTime: faker.datatype.number({ min: 30000, max: 45000 }),
   newRoutes: [],
   withdrawnRoutes: new Array<string>()
 })
@@ -33,8 +33,8 @@ export const RouteControlRequestFactory = Factory.define<CcpRouteControlRequest>
 ).attrs({
   features: new Array<string>(),
   lastKnownEpoch: 0,
-  lastKnownRoutingTableId: Faker.datatype.uuid,
-  mode: Faker.datatype.number({ min: 0, max: 1 })
+  lastKnownRoutingTableId: faker.datatype.uuid,
+  mode: faker.datatype.number({ min: 0, max: 1 })
 })
 
 export const RouteControlPreparePacketFactory = {
