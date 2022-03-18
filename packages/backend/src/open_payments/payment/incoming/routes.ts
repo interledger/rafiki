@@ -46,8 +46,7 @@ async function getIncomingPayment(
   const { incomingPaymentId: incomingPaymentId } = ctx.params
   ctx.assert(validateId(incomingPaymentId), 400, 'invalid id')
   const acceptJSON = ctx.accepts('application/json')
-  const acceptStream = ctx.accepts('application/ilp-stream+json')
-  ctx.assert(acceptJSON || acceptStream, 406)
+  ctx.assert(acceptJSON, 406, 'must accept json')
 
   const incomingPayment = await deps.incomingPaymentService.get(
     incomingPaymentId
@@ -66,27 +65,13 @@ async function getIncomingPayment(
   }
 
   const body = incomingPaymentToBody(deps, incomingPayment, amountReceived)
-  ctx.body = body
-  if (!acceptStream) return
-
-  const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-    paymentTag: incomingPayment.id,
-    // TODO receipt support on incoming payments?
-    //receiptSetup:
-    //  nonce && secret
-    //    ? {
-    //        nonce: Buffer.from(nonce.toString(), 'base64'),
-    //        secret: Buffer.from(secret.toString(), 'base64')
-    //      }
-    //    : undefined,
-    asset: {
-      code: incomingPayment.account.asset.code,
-      scale: incomingPayment.account.asset.scale
-    }
-  })
-
+  const { ilpAddress, sharedSecret } = getStreamCredentials(
+    deps,
+    incomingPayment
+  )
   body['ilpAddress'] = ilpAddress
   body['sharedSecret'] = base64url(sharedSecret)
+  ctx.body = body
 }
 
 async function createIncomingPayment(
@@ -144,6 +129,12 @@ async function createIncomingPayment(
 
   ctx.status = 201
   const res = incomingPaymentToBody(deps, incomingPaymentOrError, BigInt(0))
+  const { ilpAddress, sharedSecret } = getStreamCredentials(
+    deps,
+    incomingPaymentOrError
+  )
+  res['ilpAddress'] = ilpAddress
+  res['sharedSecret'] = base64url(sharedSecret)
   ctx.body = res
   ctx.set('Location', res.id)
 }
@@ -197,4 +188,25 @@ function parseAmount(amount: unknown): Amount | undefined {
     assetCode: amount['assetCode'],
     assetScale: amount['assetScale']
   }
+}
+
+function getStreamCredentials(
+  deps: ServiceDependencies,
+  incomingPayment: IncomingPayment
+) {
+  return deps.streamServer.generateCredentials({
+    paymentTag: incomingPayment.id,
+    // TODO receipt support on incoming payments?
+    //receiptSetup:
+    //  nonce && secret
+    //    ? {
+    //        nonce: Buffer.from(nonce.toString(), 'base64'),
+    //        secret: Buffer.from(secret.toString(), 'base64')
+    //      }
+    //    : undefined,
+    asset: {
+      code: incomingPayment.account.asset.code,
+      scale: incomingPayment.account.asset.scale
+    }
+  })
 }

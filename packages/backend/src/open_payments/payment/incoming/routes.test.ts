@@ -152,38 +152,10 @@ describe('Incoming Payment Routes', (): void => {
         'application/json; charset=utf-8'
       )
 
-      expect(ctx.body).toEqual({
-        id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
-        accountId: `https://wallet.example/pay/${account.id}`,
-        incomingAmount: {
-          amount: '123',
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        description: incomingPayment.description,
-        expiresAt: expiresAt.toISOString(),
-        receivedAmount: {
-          amount: '0',
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        externalRef: '#123',
-        state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled
-      })
-    })
-
-    test('returns the incoming payment with ilpAddress/sharedSecret when stream is requested', async (): Promise<void> => {
-      const ctx = createContext(
-        { headers: { Accept: 'application/ilp-stream+json' } },
-        { incomingPaymentId: incomingPayment.id }
-      )
-      await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.response.status).toBe(200)
-
       const sharedSecret = (ctx.response.body as Record<string, unknown>)[
         'sharedSecret'
       ]
+
       expect(ctx.body).toEqual({
         id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
         accountId: `https://wallet.example/pay/${account.id}`,
@@ -193,12 +165,12 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         description: incomingPayment.description,
+        expiresAt: expiresAt.toISOString(),
         receivedAmount: {
           amount: '0',
           assetCode: asset.code,
           assetScale: asset.scale
         },
-        expiresAt: expiresAt.toISOString(),
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         receiptsEnabled: incomingPayment.receiptsEnabled,
@@ -210,7 +182,6 @@ describe('Incoming Payment Routes', (): void => {
       expect(sharedSecret).toEqual(base64url(sharedSecretBuffer))
     })
   })
-
   describe('create', (): void => {
     function setup(
       reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
@@ -327,6 +298,9 @@ describe('Incoming Payment Routes', (): void => {
       const ctx = setup({})
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
+      const sharedSecret = (ctx.response.body as Record<string, unknown>)[
+        'sharedSecret'
+      ]
       const incomingPaymentId = ((ctx.response.body as Record<string, unknown>)[
         'id'
       ] as string)
@@ -352,7 +326,9 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled
+        receiptsEnabled: incomingPayment.receiptsEnabled,
+        ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
+        sharedSecret
       })
     })
 
@@ -361,6 +337,9 @@ describe('Incoming Payment Routes', (): void => {
       ctx.request.body['incomingAmount'] = undefined
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
+      const sharedSecret = (ctx.response.body as Record<string, unknown>)[
+        'sharedSecret'
+      ]
       const incomingPaymentId = ((ctx.response.body as Record<string, unknown>)[
         'id'
       ] as string)
@@ -381,7 +360,9 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled
+        receiptsEnabled: incomingPayment.receiptsEnabled,
+        ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
+        sharedSecret
       })
     })
     test('returns the incoming payment on undefined description', async (): Promise<void> => {
@@ -389,6 +370,9 @@ describe('Incoming Payment Routes', (): void => {
       ctx.request.body['description'] = undefined
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
+      const sharedSecret = (ctx.response.body as Record<string, unknown>)[
+        'sharedSecret'
+      ]
       const incomingPaymentId = ((ctx.response.body as Record<string, unknown>)[
         'id'
       ] as string)
@@ -413,7 +397,9 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled
+        receiptsEnabled: incomingPayment.receiptsEnabled,
+        ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
+        sharedSecret
       })
     })
 
@@ -422,6 +408,9 @@ describe('Incoming Payment Routes', (): void => {
       ctx.request.body['externalRef'] = undefined
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
+      const sharedSecret = (ctx.response.body as Record<string, unknown>)[
+        'sharedSecret'
+      ]
       const incomingPaymentId = ((ctx.response.body as Record<string, unknown>)[
         'id'
       ] as string)
@@ -446,7 +435,9 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: incomingPayment.account.asset.scale
         },
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled
+        receiptsEnabled: incomingPayment.receiptsEnabled,
+        ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
+        sharedSecret
       })
     })
 
@@ -455,6 +446,9 @@ describe('Incoming Payment Routes', (): void => {
       ctx.request.body['receiptsEnabled'] = undefined
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
+      const sharedSecret = (ctx.response.body as Record<string, unknown>)[
+        'sharedSecret'
+      ]
       const incomingPaymentId = ((ctx.response.body as Record<string, unknown>)[
         'id'
       ] as string)
@@ -480,7 +474,9 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: false
+        receiptsEnabled: false,
+        ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
+        sharedSecret
       })
     })
   })
