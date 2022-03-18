@@ -1,4 +1,5 @@
 import * as Pay from '@interledger/pay'
+import assert from 'assert'
 
 import { LifecycleError } from './errors'
 import {
@@ -31,32 +32,6 @@ export async function handlePending(
 
   validateAssets(deps, payment, destination)
 
-  // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
-  const amountSent = await deps.accountingService.getTotalSent(payment.id)
-  if (amountSent === undefined) {
-    throw LifecycleError.MissingBalance
-  }
-
-  // This is the amount of money *remaining* to send, which may be less than the payment's sendAmount due to retries (FixedSend payments only).
-  let amountToSend: bigint | undefined
-  if (payment.sendAmount) {
-    amountToSend = payment.sendAmount.amount - amountSent
-    if (amountToSend <= BigInt(0)) {
-      // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=COMPLETED didn't commit. Then the payment retried and ended up here.
-      // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the COMPLETED state.
-      deps.logger.error(
-        {
-          amountToSend,
-          sendAmount: payment.sendAmount.amount,
-          amountSent
-        },
-        'quote amountToSend bounds error'
-      )
-      await handleCompleted(deps, payment)
-      return
-    }
-  }
-
   const quote = await Pay.startQuote({
     plugin,
     destination,
@@ -64,7 +39,7 @@ export async function handlePending(
       scale: payment.account.asset.scale,
       code: payment.account.asset.code
     },
-    amountToSend,
+    amountToSend: payment.sendAmount?.amount,
     amountToDeliver: payment.receiveAmount?.amount,
     slippage: deps.slippage,
     prices
@@ -80,14 +55,16 @@ export async function handlePending(
     })
   })
 
-  const balance = await deps.accountingService.getBalance(payment.id)
-  if (balance === undefined) {
-    throw LifecycleError.MissingBalance
-  }
-
   const state = payment.authorized
     ? PaymentState.Funding
     : PaymentState.Prepared
+
+  // Pay.startQuote should return PaymentError.InvalidSourceAmount or
+  // PaymentError.InvalidDestinationAmount for non-positive amounts.
+  // Outgoing payments' sendAmount or receiveAmount should never be
+  // zero or negative.
+  assert.ok(quote.maxSourceAmount > BigInt(0))
+  assert.ok(quote.minDeliveryAmount > BigInt(0))
 
   await payment.$query(deps.knex).patch({
     state,
@@ -110,8 +87,7 @@ export async function handlePending(
         MAX_INT64 < quote.maxPacketAmount ? MAX_INT64 : quote.maxPacketAmount,
       minExchangeRate: quote.minExchangeRate,
       lowExchangeRateEstimate: quote.lowEstimatedExchangeRate,
-      highExchangeRateEstimate: quote.highEstimatedExchangeRate,
-      amountSent
+      highExchangeRateEstimate: quote.highEstimatedExchangeRate
     }
   })
 
@@ -167,21 +143,18 @@ export async function handleSending(
   }
 
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
-  const amountSentSinceQuote = amountSent - payment.quote.amountSent
-  const newMaxSourceAmount = payment.sendAmount.amount - amountSentSinceQuote
+  const newMaxSourceAmount = payment.sendAmount.amount - amountSent
 
   let newMinDeliveryAmount
   if (payment.receivingAccount) {
     // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
     // eslint-disable-next-line no-case-declarations
-    const amountDeliveredSinceQuote = BigInt(
+    const amountDelivered = BigInt(
       Math.ceil(
-        +amountSentSinceQuote.toString() *
-          payment.quote.minExchangeRate.valueOf()
+        +amountSent.toString() * payment.quote.minExchangeRate.valueOf()
       )
     )
-    newMinDeliveryAmount =
-      payment.receiveAmount.amount - amountDeliveredSinceQuote
+    newMinDeliveryAmount = payment.receiveAmount.amount - amountDelivered
   } else {
     if (!destination.invoice) throw LifecycleError.MissingIncomingPayment
     newMinDeliveryAmount =
@@ -200,7 +173,7 @@ export async function handleSending(
         newMaxSourceAmount,
         newMinDeliveryAmount,
         paymentType: payment.quote.targetType,
-        amountSentSinceQuote,
+        amountSent,
         incomingPayment: destination.invoice
       },
       'handleSending payment was already paid'

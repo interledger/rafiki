@@ -10,7 +10,9 @@ import {
 } from '../generated/graphql'
 import {
   OutgoingPaymentError,
-  isOutgoingPaymentError
+  isOutgoingPaymentError,
+  errorToCode,
+  errorToMessage
 } from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
@@ -61,9 +63,9 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
     .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
       isOutgoingPaymentError(paymentOrErr)
         ? {
-            code: '400',
+            code: errorToCode[paymentOrErr].toString(),
             success: false,
-            message: paymentOrErr
+            message: errorToMessage[paymentOrErr]
           }
         : {
             code: '200',
@@ -167,19 +169,21 @@ export function paymentToGraphql(
     stateAttempts: payment.stateAttempts,
     receivingAccount: payment.receivingAccount,
     receivingPayment: payment.receivingPayment,
-    sendAmount: payment.sendAmount,
-    receiveAmount: payment.receiveAmount,
+    sendAmount: payment.sendAmount ?? undefined,
+    receiveAmount: payment.receiveAmount ?? undefined,
     description: payment.description,
     externalRef: payment.externalRef,
-    expiresAt: payment.expiresAt?.toISOString(),
-    quote: payment.quote && {
-      ...payment.quote,
-      targetType: SchemaPaymentType[payment.quote.targetType],
-      timestamp: payment.quote.timestamp.toISOString(),
-      minExchangeRate: payment.quote.minExchangeRate.valueOf(),
-      lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
-      highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
-    },
+    expiresAt: payment.expiresAt?.toISOString() ?? undefined,
+    quote: payment.quote
+      ? {
+          ...payment.quote,
+          targetType: SchemaPaymentType[payment.quote.targetType],
+          timestamp: payment.quote.timestamp.toISOString(),
+          minExchangeRate: payment.quote.minExchangeRate.valueOf(),
+          lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
+          highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
+        }
+      : undefined,
     createdAt: new Date(+payment.createdAt).toISOString()
   }
 }

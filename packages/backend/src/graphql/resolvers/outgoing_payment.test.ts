@@ -12,7 +12,10 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { OutgoingPaymentError } from '../../open_payments/payment/outgoing/errors'
+import {
+  OutgoingPaymentError,
+  errorToMessage
+} from '../../open_payments/payment/outgoing/errors'
 import {
   OutgoingPaymentService,
   CreateOutgoingPaymentOptions
@@ -113,8 +116,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        highExchangeRateEstimate: Pay.Ratio.from(2.3)!,
-        amountSent: BigInt(0)
+        highExchangeRateEstimate: Pay.Ratio.from(2.3)!
       },
       accountId,
       authorized,
@@ -402,9 +404,11 @@ describe('OutgoingPayment Resolvers', (): void => {
         .then(
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
-      expect(query.code).toBe('400')
+      expect(query.code).toBe('404')
       expect(query.success).toBe(false)
-      expect(query.message).toBe(OutgoingPaymentError.UnknownAccount)
+      expect(query.message).toBe(
+        errorToMessage[OutgoingPaymentError.UnknownAccount]
+      )
       expect(query.payment).toBeNull()
     })
 

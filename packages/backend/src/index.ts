@@ -12,6 +12,7 @@ import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { GraphileProducer } from './messaging/graphileProducer'
 import { createRatesService } from './rates/service'
+import { createOutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
 import { createOutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import {
   createIlpPlugin,
@@ -239,6 +240,13 @@ export function initIocContainer(
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       accountService: await deps.use('accountService'),
       ratesService: await deps.use('ratesService')
+    })
+  })
+  container.singleton('outgoingPaymentRoutes', async (deps) => {
+    return createOutgoingPaymentRoutes({
+      config: await deps.use('config'),
+      logger: await deps.use('logger'),
+      outgoingPaymentService: await deps.use('outgoingPaymentService')
     })
   })
 

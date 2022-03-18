@@ -243,6 +243,9 @@ export class App {
     const incomingPaymentRoutes = await this.container.use(
       'incomingPaymentRoutes'
     )
+    const outgoingPaymentRoutes = await this.container.use(
+      'outgoingPaymentRoutes'
+    )
     this.publicRouter.get(
       '/pay/:accountId',
       async (ctx: AppContext): Promise<void> => {
@@ -262,6 +265,20 @@ export class App {
     this.publicRouter.post(
       '/pay/:accountId/incoming-payments',
       incomingPaymentRoutes.create
+    )
+
+    this.publicRouter.get(
+      '/outgoing-payments/:outgoingPaymentId',
+      outgoingPaymentRoutes.get
+    )
+    this.publicRouter.post(
+      '/pay/:accountId/outgoing-payments',
+      outgoingPaymentRoutes.create
+    )
+
+    this.publicRouter.put(
+      '/pay/:accountId/outgoing-payments',
+      outgoingPaymentRoutes.update
     )
 
     this.koa.use(this.publicRouter.middleware())
