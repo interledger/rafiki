@@ -22,7 +22,7 @@ export const RETRY_BACKOFF_MS = 10_000
 // TODO: make expiry date configurable
 export const EXPIRY = new Date(new Date().setDate(90)) // 90 days in future
 
-interface CreateOptions {
+export interface CreateIncomingPaymentOptions {
   accountId: string
   description?: string
   expiresAt?: Date
@@ -34,7 +34,7 @@ interface CreateOptions {
 export interface IncomingPaymentService {
   get(id: string): Promise<IncomingPayment | undefined>
   create(
-    options: CreateOptions,
+    options: CreateIncomingPaymentOptions,
     trx?: Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
   getAccountIncomingPaymentsPage(
@@ -87,7 +87,7 @@ async function createIncomingPayment(
     incomingAmount,
     externalRef,
     receiptsEnabled
-  }: CreateOptions,
+  }: CreateIncomingPaymentOptions,
   trx?: Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
   const account = await deps.accountService.get(accountId)
