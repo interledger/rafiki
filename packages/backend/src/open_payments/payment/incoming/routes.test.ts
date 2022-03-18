@@ -20,6 +20,7 @@ import { IncomingPaymentService } from './service'
 import { IncomingPayment, IncomingPaymentState } from './model'
 import { IncomingPaymentRoutes, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
+import { isIncomingPaymentError } from './errors'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -66,14 +67,21 @@ describe('Incoming Payment Routes', (): void => {
       asset = randomAsset()
       expiresAt = new Date(Date.now() + 30_000)
       account = await accountService.create({ asset })
-      incomingPayment = await incomingPaymentService.create({
+      const incomingPaymentOrError = await incomingPaymentService.create({
         accountId: account.id,
         description: 'text',
         expiresAt,
-        incomingAmount: BigInt(123),
+        incomingAmount: {
+          amount: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
         externalRef: '#123',
         receiptsEnabled: false
       })
+      if (!isIncomingPaymentError(incomingPaymentOrError)) {
+        incomingPayment = incomingPaymentOrError
+      }
     }
   )
 
@@ -331,11 +339,9 @@ describe('Incoming Payment Routes', (): void => {
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount
-            ? incomingPayment.incomingAmount.toString()
-            : null,
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          amount: incomingPayment.incomingAmount?.amount.toString(),
+          assetCode: incomingPayment.incomingAmount?.assetCode,
+          assetScale: incomingPayment.incomingAmount?.assetScale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
@@ -366,7 +372,6 @@ describe('Incoming Payment Routes', (): void => {
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
-        incomingAmount: null,
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
@@ -396,13 +401,10 @@ describe('Incoming Payment Routes', (): void => {
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount
-            ? incomingPayment.incomingAmount.toString()
-            : null,
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          amount: incomingPayment.incomingAmount?.amount.toString(),
+          assetCode: incomingPayment.incomingAmount?.assetCode,
+          assetScale: incomingPayment.incomingAmount?.assetScale
         },
-        description: null,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
           amount: '0',
@@ -432,11 +434,9 @@ describe('Incoming Payment Routes', (): void => {
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount
-            ? incomingPayment.incomingAmount.toString()
-            : null,
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          amount: incomingPayment.incomingAmount?.amount.toString(),
+          assetCode: incomingPayment.incomingAmount?.assetCode,
+          assetScale: incomingPayment.incomingAmount?.assetScale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
@@ -445,7 +445,6 @@ describe('Incoming Payment Routes', (): void => {
           assetCode: incomingPayment.account.asset.code,
           assetScale: incomingPayment.account.asset.scale
         },
-        externalRef: null,
         state: IncomingPaymentState.Pending.toLowerCase(),
         receiptsEnabled: incomingPayment.receiptsEnabled
       })
@@ -468,11 +467,9 @@ describe('Incoming Payment Routes', (): void => {
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount
-            ? incomingPayment.incomingAmount.toString()
-            : null,
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          amount: incomingPayment.incomingAmount?.amount.toString(),
+          assetCode: incomingPayment.incomingAmount?.assetCode,
+          assetScale: incomingPayment.incomingAmount?.assetScale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),

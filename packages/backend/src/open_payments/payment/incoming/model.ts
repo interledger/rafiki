@@ -31,12 +31,18 @@ export type IncomingPaymentData = {
     description?: string
     createdAt: string
     expiresAt: string
-    incomingAmount?: string
-    receivedAmount: string
+    incomingAmount?: Amount
+    receivedAmount: Amount
     externalRef?: string
     state: string
     receiptsEnabled: boolean
   }
+}
+
+export interface Amount {
+  amount: bigint
+  assetCode: string
+  assetScale: number
 }
 
 export class IncomingPaymentEvent extends WebhookEvent {
@@ -69,11 +75,35 @@ export class IncomingPayment
   public description?: string
   public expiresAt!: Date
   public state!: IncomingPaymentState
-  public readonly incomingAmount?: bigint
   public externalRef?: string
   public receiptsEnabled!: boolean
 
   public processAt!: Date | null
+
+  private incomingAmountAmount?: bigint | null
+  private incomingAmountAssetCode?: string | null
+  private incomingAmountAssetScale?: number | null
+
+  public get incomingAmount(): Amount | undefined {
+    if (
+      this.incomingAmountAmount &&
+      this.incomingAmountAssetCode &&
+      this.incomingAmountAssetScale
+    ) {
+      return {
+        amount: this.incomingAmountAmount,
+        assetCode: this.incomingAmountAssetCode,
+        assetScale: this.incomingAmountAssetScale
+      }
+    }
+    return undefined
+  }
+
+  public set incomingAmount(value: Amount | undefined) {
+    this.incomingAmountAmount = value?.amount ?? null
+    this.incomingAmountAssetCode = value?.assetCode ?? null
+    this.incomingAmountAssetScale = value?.assetScale ?? null
+  }
 
   public get asset(): Asset {
     return this.account.asset
@@ -83,7 +113,7 @@ export class IncomingPayment
     totalReceived
   }: OnCreditOptions): Promise<IncomingPayment> {
     let incomingPayment
-    if (this.incomingAmount && this.incomingAmount <= totalReceived) {
+    if (this.incomingAmount && this.incomingAmount.amount <= totalReceived) {
       incomingPayment = await IncomingPayment.query()
         .patchAndFetchById(this.id, {
           active: false,
@@ -110,21 +140,32 @@ export class IncomingPayment
   }
 
   public toData(amountReceived: bigint): IncomingPaymentData {
-    return {
+    const data: IncomingPaymentData = {
       incomingPayment: {
         id: this.id,
         accountId: this.accountId,
-        incomingAmount: this.incomingAmount
-          ? this.incomingAmount.toString()
-          : '',
-        description: this.description,
-        expiresAt: this.expiresAt.toISOString(),
         createdAt: new Date(+this.createdAt).toISOString(),
-        receivedAmount: amountReceived.toString(),
-        externalRef: this.externalRef ? this.externalRef.toString() : '',
+        expiresAt: this.expiresAt.toISOString(),
+        receivedAmount: {
+          amount: amountReceived,
+          assetCode: this.asset.code,
+          assetScale: this.asset.scale
+        },
         state: this.state,
         receiptsEnabled: this.receiptsEnabled
       }
     }
+
+    if (this.incomingAmount) {
+      data.incomingPayment.incomingAmount = this.incomingAmount
+    }
+    if (this.description) {
+      data.incomingPayment.description = this.description
+    }
+    if (this.externalRef) {
+      data.incomingPayment.externalRef = this.externalRef
+    }
+
+    return data
   }
 }

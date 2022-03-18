@@ -6,7 +6,8 @@ import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { AccountingService } from '../../../accounting/service'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment } from './model'
+import { Amount, IncomingPayment } from './model'
+import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -103,8 +104,12 @@ async function createIncomingPayment(
 
   const { body } = ctx.request
   if (typeof body !== 'object') return ctx.throw(400, 'json body required')
-  const incomingAmount = tryParseAmount(body['incomingAmount'])
-  if (incomingAmount === null) return ctx.throw(400, 'invalid incomingAmount')
+  let incomingAmount: Amount | undefined
+  try {
+    incomingAmount = parseAmount(body['incomingAmount'])
+  } catch (_) {
+    return ctx.throw(400, 'invalid incomingAmount')
+  }
   const expiresAt = Date.parse(body['expiresAt'] as string)
   if (!expiresAt) return ctx.throw(400, 'invalid expiresAt')
   if (body.description !== undefined && typeof body.description !== 'string')
@@ -121,7 +126,7 @@ async function createIncomingPayment(
     return ctx.throw(400, 'invalid receiptsEnabled flag')
   const receiptsEnabled = Boolean(body.receiptsEnabled)
 
-  const incomingPayment = await deps.incomingPaymentService.create({
+  const incomingPaymentOrError = await deps.incomingPaymentService.create({
     accountId,
     description: body.description,
     externalRef: body.externalRef,
@@ -130,8 +135,15 @@ async function createIncomingPayment(
     receiptsEnabled
   })
 
+  if (isIncomingPaymentError(incomingPaymentOrError)) {
+    return ctx.throw(
+      errorToCode[incomingPaymentOrError],
+      errorToMessage[incomingPaymentOrError]
+    )
+  }
+
   ctx.status = 201
-  const res = incomingPaymentToBody(deps, incomingPayment, BigInt(0))
+  const res = incomingPaymentToBody(deps, incomingPaymentOrError, BigInt(0))
   ctx.body = res
   ctx.set('Location', res.id)
 }
@@ -142,34 +154,47 @@ function incomingPaymentToBody(
   received: bigint
 ) {
   const location = `${deps.config.publicHost}/incoming-payments/${incomingPayment.id}`
-  return {
+  const body = {
     id: location,
     accountId: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
     state: incomingPayment.state.toLowerCase(),
-    incomingAmount: incomingPayment.incomingAmount
-      ? {
-          amount: incomingPayment.incomingAmount.toString(),
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
-        }
-      : null,
     receivedAmount: {
       amount: received.toString(),
       assetCode: incomingPayment.account.asset.code,
       assetScale: incomingPayment.account.asset.scale
     },
-    description: incomingPayment.description,
-    externalRef: incomingPayment.externalRef,
     expiresAt: incomingPayment.expiresAt.toISOString(),
     receiptsEnabled: incomingPayment.receiptsEnabled
   }
+
+  if (incomingPayment.incomingAmount) {
+    body['incomingAmount'] = {
+      amount: incomingPayment.incomingAmount.amount.toString(),
+      assetCode: incomingPayment.incomingAmount.assetCode,
+      assetScale: incomingPayment.incomingAmount.assetScale
+    }
+  }
+  if (incomingPayment.description)
+    body['description'] = incomingPayment.description
+  if (incomingPayment.externalRef)
+    body['externalRef'] = incomingPayment.externalRef
+  return body
 }
 
-function tryParseAmount(incomingAmount: unknown): bigint | undefined | null {
-  if (incomingAmount == undefined) return undefined
-  try {
-    return BigInt(incomingAmount)
-  } catch (_) {
-    return null
+function parseAmount(amount: unknown): Amount | undefined {
+  if (amount === undefined) return amount
+  if (
+    typeof amount !== 'object' ||
+    amount === null ||
+    (amount['assetCode'] && typeof amount['assetCode'] !== 'string') ||
+    (amount['assetScale'] !== undefined &&
+      typeof amount['assetScale'] !== 'number')
+  ) {
+    throw new Error('invalid amount')
+  }
+  return {
+    amount: BigInt(amount['amount']),
+    assetCode: amount['assetCode'],
+    assetScale: amount['assetScale']
   }
 }

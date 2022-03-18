@@ -1,4 +1,5 @@
 import {
+  Amount,
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
@@ -9,7 +10,9 @@ import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
 import { Transaction } from 'knex'
-import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import { TransactionOrKnex } from 'objection'
+import { AccountService } from '../../account/service'
+import { IncomingPaymentError } from './errors'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -23,14 +26,17 @@ interface CreateOptions {
   accountId: string
   description?: string
   expiresAt?: Date
-  incomingAmount?: bigint
+  incomingAmount?: Amount
   externalRef?: string
   receiptsEnabled: boolean
 }
 
 export interface IncomingPaymentService {
   get(id: string): Promise<IncomingPayment | undefined>
-  create(options: CreateOptions, trx?: Transaction): Promise<IncomingPayment>
+  create(
+    options: CreateOptions,
+    trx?: Transaction
+  ): Promise<IncomingPayment | IncomingPaymentError>
   getAccountIncomingPaymentsPage(
     accountId: string,
     pagination?: Pagination
@@ -41,6 +47,7 @@ export interface IncomingPaymentService {
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
+  accountService: AccountService
 }
 
 export async function createIncomingPaymentService(
@@ -82,9 +89,24 @@ async function createIncomingPayment(
     receiptsEnabled
   }: CreateOptions,
   trx?: Transaction
-): Promise<IncomingPayment> {
+): Promise<IncomingPayment | IncomingPaymentError> {
+  const account = await deps.accountService.get(accountId)
+  if (!account) {
+    return IncomingPaymentError.UnknownAccount
+  }
+  if (incomingAmount) {
+    if (incomingAmount.assetCode || incomingAmount.assetScale) {
+      if (
+        incomingAmount.assetCode !== account.asset.code ||
+        incomingAmount.assetScale !== account.asset.scale
+      ) {
+        return IncomingPaymentError.InvalidAmount
+      }
+    }
+    ;(incomingAmount.assetCode = account.asset.code),
+      (incomingAmount.assetScale = account.asset.scale)
+  }
   const invTrx = trx || (await IncomingPayment.startTransaction(deps.knex))
-
   try {
     const incomingPayment = await IncomingPayment.query(invTrx)
       .insertAndFetch({
@@ -113,11 +135,6 @@ async function createIncomingPayment(
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()
-    }
-    if (err instanceof ForeignKeyViolationError) {
-      throw new Error(
-        'unable to create incoming payment, account does not exist'
-      )
     }
     throw err
   }
