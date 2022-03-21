@@ -452,4 +452,145 @@ describe('Incoming Payment Service', (): void => {
         )
     })
   })
+
+  describe('update', (): void => {
+    let incomingPayment: IncomingPayment
+
+    beforeEach(
+      async (): Promise<void> => {
+        const incomingPaymentOrError = await incomingPaymentService.create({
+          accountId,
+          description: 'Test incoming payment',
+          incomingAmount: {
+            amount: BigInt(123),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() + 30_000),
+          externalRef: '#123',
+          receiptsEnabled: false
+        })
+        assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
+        incomingPayment = incomingPaymentOrError
+      }
+    )
+    beforeEach
+    test('updates state of pending incoming payment to complete', async (): Promise<void> => {
+      await expect(
+        incomingPaymentService.update({
+          id: incomingPayment.id,
+          state: IncomingPaymentState.Completed
+        })
+      ).resolves.toMatchObject({
+        id: incomingPayment.id,
+        active: false,
+        state: IncomingPaymentState.Completed,
+        processAt: new Date(incomingPayment.expiresAt.getTime())
+      })
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).resolves.toMatchObject({
+        active: false,
+        state: IncomingPaymentState.Completed,
+        processAt: new Date(incomingPayment.expiresAt.getTime())
+      })
+    })
+
+    test('fails to update state of unknown payment', async (): Promise<void> => {
+      await expect(
+        incomingPaymentService.update({
+          id: uuid(),
+          state: IncomingPaymentState.Completed
+        })
+      ).resolves.toEqual(IncomingPaymentError.UnknownPayment)
+    })
+
+    test('updates state of processing incoming payment to complete', async (): Promise<void> => {
+      await incomingPayment.onCredit({
+        totalReceived: BigInt(100)
+      })
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).resolves.toMatchObject({
+        active: true,
+        state: IncomingPaymentState.Processing
+      })
+      await expect(
+        incomingPaymentService.update({
+          id: incomingPayment.id,
+          state: IncomingPaymentState.Completed
+        })
+      ).resolves.toMatchObject({
+        id: incomingPayment.id,
+        active: false,
+        state: IncomingPaymentState.Completed,
+        processAt: new Date(incomingPayment.expiresAt.getTime())
+      })
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).resolves.toMatchObject({
+        active: false,
+        state: IncomingPaymentState.Completed,
+        processAt: new Date(incomingPayment.expiresAt.getTime())
+      })
+    })
+
+    test('fails to update state of expired incoming payment', async (): Promise<void> => {
+      await expect(
+        accountingService.createDeposit({
+          id: uuid(),
+          account: incomingPayment,
+          amount: BigInt(1)
+        })
+      ).resolves.toBeUndefined()
+      const future = new Date(Date.now() + 40_000)
+      jest.useFakeTimers('modern')
+      jest.setSystemTime(future)
+      await expect(incomingPaymentService.processNext()).resolves.toBe(
+        incomingPayment.id
+      )
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).resolves.toMatchObject({
+        active: false,
+        state: IncomingPaymentState.Expired
+      })
+      await expect(
+        incomingPaymentService.update({
+          id: incomingPayment.id,
+          state: IncomingPaymentState.Completed
+        })
+      ).resolves.toBe(IncomingPaymentError.InvalidState)
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).resolves.toMatchObject({
+        active: false,
+        state: IncomingPaymentState.Expired
+      })
+    })
+
+    test('fails to updates state of completed incoming payment', async (): Promise<void> => {
+      await incomingPayment.onCredit({
+        totalReceived: BigInt(123)
+      })
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).resolves.toMatchObject({
+        active: false,
+        state: IncomingPaymentState.Completed
+      })
+      await expect(
+        incomingPaymentService.update({
+          id: incomingPayment.id,
+          state: IncomingPaymentState.Completed
+        })
+      ).resolves.toBe(IncomingPaymentError.InvalidState)
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).resolves.toMatchObject({
+        active: false,
+        state: IncomingPaymentState.Completed
+      })
+    })
+  })
 })

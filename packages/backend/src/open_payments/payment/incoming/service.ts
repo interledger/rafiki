@@ -10,7 +10,7 @@ import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
 import { Transaction } from 'knex'
-import { TransactionOrKnex } from 'objection'
+import { PartialModelObject, TransactionOrKnex } from 'objection'
 import { AccountService } from '../../account/service'
 import { IncomingPaymentError } from './errors'
 
@@ -31,11 +31,19 @@ export interface CreateIncomingPaymentOptions {
   receiptsEnabled: boolean
 }
 
+interface UpdateIncomingPaymentOptions {
+  id: string
+  state: IncomingPaymentState
+}
+
 export interface IncomingPaymentService {
   get(id: string): Promise<IncomingPayment | undefined>
   create(
     options: CreateIncomingPaymentOptions,
     trx?: Transaction
+  ): Promise<IncomingPayment | IncomingPaymentError>
+  update(
+    options: UpdateIncomingPaymentOptions
   ): Promise<IncomingPayment | IncomingPaymentError>
   getAccountIncomingPaymentsPage(
     accountId: string,
@@ -63,6 +71,7 @@ export async function createIncomingPaymentService(
   return {
     get: (id) => getIncomingPayment(deps, id),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
+    update: (options) => updateIncomingPayment(deps, options),
     getAccountIncomingPaymentsPage: (accountId, pagination) =>
       getAccountIncomingPaymentsPage(deps, accountId, pagination),
     processNext: () => processNextIncomingPayment(deps)
@@ -253,5 +262,35 @@ async function getAccountIncomingPaymentsPage(
 
   return await IncomingPayment.query(deps.knex).getPage(pagination).where({
     accountId: accountId
+  })
+}
+
+async function updateIncomingPayment(
+  deps: ServiceDependencies,
+  { id, state }: UpdateIncomingPaymentOptions
+): Promise<IncomingPayment | IncomingPaymentError> {
+  return deps.knex.transaction(async (trx) => {
+    const payment = await IncomingPayment.query(trx)
+      .findById(id)
+      .forUpdate()
+      .withGraphFetched('account.asset')
+    if (!payment) return IncomingPaymentError.UnknownPayment
+    const update: PartialModelObject<IncomingPayment> = {}
+    if (state === IncomingPaymentState.Completed) {
+      switch (payment.state) {
+        case IncomingPaymentState.Pending:
+        case IncomingPaymentState.Processing:
+          update.state = state
+          update.active = false
+          break
+        default:
+          return IncomingPaymentError.InvalidState
+      }
+    } else {
+      return IncomingPaymentError.InvalidState
+    }
+
+    await payment.$query(trx).patch(update)
+    return payment
   })
 }
