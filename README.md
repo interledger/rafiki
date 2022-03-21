@@ -18,9 +18,9 @@ account.
 
 ### New to interledger?
 
-Never heard of interledger before, or you would like to learn more? Here are some good places to start:
+Never heard of Interledger before, or you would like to learn more? Here are some good places to start:
 
-- [Good first issues](https://github.com/coilhq/rafiki/contribute)
+- [Good first issues](https://github.com/interledger/rafiki/contribute)
 - [Interledger](https://interledger.org/)
 - [Payment pointers](https://paymentpointers.org/)
 - [Web monetization](https://webmonetization.org/)
@@ -29,3 +29,14 @@ Never heard of interledger before, or you would like to learn more? Here are som
 ## Contributing
 
 Please read the [contribution guidelines](.github/contributing.md) before submitting contributions. All contributions must adhere to our [code of conduct](.github/code_of_conduct.md).
+
+## Planning Calls
+
+Our planning calls are open to our community. We have them every Monday at 17:00 GMT, via Google Meet.
+
+**Google Meet joining info**
+Video call link: https://meet.google.com/rdx-xoqn-iiq
+Or dial: ‪(US) +1 408-831-2432‬ PIN: ‪472 676 485‬#
+More phone numbers: https://tel.meet/rdx-xoqn-iiq?pin=3263008843276
+
+[Add to Google Calendar](https://calendar.google.com/event?action=TEMPLATE&tmeid=NXVsMWhsb3NnbG9hbDFkazE0dTBhZGZ1Z25fMjAyMjAzMjFUMTcwMDAwWiBjX2NqMDI3Z21oc3VqazkxZXZpMjRkOXB2bXQ0QGc&tmsrc=c_cj027gmhsujk91evi24d9pvmt4%40group.calendar.google.com&scp=ALL)

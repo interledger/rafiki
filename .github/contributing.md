@@ -6,7 +6,7 @@ Thank you for contributing to Rafiki :tada:
 
 Before you begin:
 - Have you read the [code of conduct](code_of_conduct.md)?
-- Check out the [existing issues](https://github.com/coilhq/rafiki/issues) & see if we [accept contributions](#types-of-contributions) for your type of issue.
+- Check out the [existing issues](https://github.com/interledger/rafiki/issues) & see if we [accept contributions](#types-of-contributions) for your type of issue.
 
 ### Table of Contents <!-- omit in toc -->
 
@@ -31,7 +31,7 @@ You can contribute to Rafiki in several ways.
 ### :mega: Discussions
 Discussions are where we have conversations about Rafiki.
 
-If you would like to discuss topics about the broader ecosystem, have a new idea, or want to show off your work - join us in [discussions](https://github.com/coilhq/rafiki/discussions).
+If you would like to discuss topics about the broader ecosystem, have a new idea, or want to show off your work - join us in [discussions](https://github.com/interledger/rafiki/discussions).
 
 ### :beetle: Issues
 We use Github issues to track tasks that contributors can help with. We haven't finalised labels yet for contributors to tackle. If you want to help with work related to an issue, please comment on the issue before starting work on it.
@@ -54,7 +54,7 @@ that are checked in CI.
 
 ```shell
 # Clone with SSH
-git clone git@github.com:coilhq/rafiki.git
+git clone git@github.com:interledger/rafiki.git
 
 # Build dependencies with install scripts
 yarn install --immutable --immutable-cache
