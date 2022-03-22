@@ -133,7 +133,9 @@ describe('Incoming Payment Routes', (): void => {
     `(
       'returns $status on $description',
       async ({ id, headers, status }): Promise<void> => {
-        const params = id ? { id } : { id: incomingPayment.id }
+        const params = id
+          ? { incomingPaymentId: id }
+          : { incomingPaymentId: incomingPayment.id }
         const ctx = setup({ headers }, params)
         await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
           'status',
@@ -147,7 +149,7 @@ describe('Incoming Payment Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { id: incomingPayment.id }
+        { incomingPaymentId: incomingPayment.id }
       )
       await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(200)
@@ -419,7 +421,9 @@ describe('Incoming Payment Routes', (): void => {
     `(
       'returns $status on $description',
       async ({ id, headers, body, status }): Promise<void> => {
-        const params = id ? { id } : { id: incomingPayment.id }
+        const params = id
+          ? { incomingPaymentId: id }
+          : { incomingPaymentId: incomingPayment.id }
         const ctx = setup({ headers, body }, params)
         await expect(incomingPaymentRoutes.update(ctx)).rejects.toHaveProperty(
           'status',
@@ -434,7 +438,7 @@ describe('Incoming Payment Routes', (): void => {
           headers: { Accept: 'application/json' },
           body: { state: 'completed' }
         },
-        { id: incomingPayment.id }
+        { incomingPaymentId: incomingPayment.id }
       )
       await expect(incomingPaymentRoutes.update(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(200)

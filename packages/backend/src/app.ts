@@ -261,6 +261,11 @@ export class App {
       incomingPaymentRoutes.create
     )
 
+    this.publicRouter.put(
+      '/incoming-payments/:incomingPaymentId',
+      incomingPaymentRoutes.update
+    )
+
     this.koa.use(this.publicRouter.middleware())
   }
 
