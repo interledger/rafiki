@@ -25,8 +25,8 @@ export async function handleQuoting(
 
   const destination = await Pay.setupPayment({
     plugin,
-    paymentPointer: payment.intent.paymentPointer,
-    invoiceUrl: payment.intent.incomingPaymentUrl
+    destinationAccount: payment.intent.paymentPointer,
+    destinationPayment: payment.intent.incomingPaymentUrl
   })
 
   if (
@@ -92,7 +92,7 @@ export async function handleQuoting(
       })
     })
     .catch(async (err) => {
-      if (err === Pay.PaymentError.InvoiceAlreadyPaid) return null
+      if (err === Pay.PaymentError.IncomingPaymentCompleted) return null
       throw err
     })
   // InvoiceAlreadyPaid: the incoming payment was already paid, either by this payment (which retried due to a failed SENDING→COMPLETED transition commit) or another payment entirely.
@@ -165,8 +165,8 @@ export async function handleSending(
 
   const destination = await Pay.setupPayment({
     plugin,
-    paymentPointer: payment.intent.paymentPointer,
-    invoiceUrl: payment.intent.incomingPaymentUrl
+    destinationAccount: payment.intent.paymentPointer,
+    destinationPayment: payment.intent.incomingPaymentUrl
   })
 
   if (
@@ -209,10 +209,12 @@ export async function handleSending(
         payment.quote.minDeliveryAmount - amountDeliveredSinceQuote
       break
     case Pay.PaymentType.FixedDelivery:
-      if (!destination.invoice) throw LifecycleError.MissingIncomingPayment
+      if (!destination.destinationPaymentDetails)
+        throw LifecycleError.MissingIncomingPayment
       newMinDeliveryAmount =
-        destination.invoice.amountToDeliver -
-        destination.invoice.amountDelivered
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        destination.destinationPaymentDetails.incomingAmount!.amount -
+        destination.destinationPaymentDetails.receivedAmount.amount
       break
   }
 
@@ -229,7 +231,7 @@ export async function handleSending(
         newMinDeliveryAmount,
         paymentType: payment.quote.targetType,
         amountSentSinceQuote,
-        incomingPayment: destination.invoice
+        incomingPayment: destination.destinationPaymentDetails
       },
       'handleSending payment was already paid'
     )

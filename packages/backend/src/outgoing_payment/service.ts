@@ -113,8 +113,8 @@ async function createOutgoingPayment(
       await plugin.connect()
       const destination = await Pay.setupPayment({
         plugin,
-        paymentPointer: options.paymentPointer,
-        invoiceUrl: options.incomingPaymentUrl
+        destinationAccount: options.paymentPointer,
+        destinationPayment: options.incomingPaymentUrl
       }).finally(() => {
         plugin.disconnect().catch((err) => {
           deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
