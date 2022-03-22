@@ -2061,9 +2061,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@interledger/pay@npm:^0.3.3":
-  version: 0.3.3
-  resolution: "@interledger/pay@npm:0.3.3"
+"@interledger/pay@npm:^0.4.0-alpha.0":
+  version: 0.4.0-alpha.0
+  resolution: "@interledger/pay@npm:0.4.0-alpha.0"
   dependencies:
     abort-controller: ^3.0.0
     ilp-logger: ^1.4.4
@@ -2071,7 +2071,7 @@ __metadata:
     ilp-protocol-stream: ^2.6.4
     long: ^4.0.0
     node-fetch: 2.6.1
-  checksum: c8c819695a87d76b16408037d3d774da5ee33756f18a9488a99a33ac4508cb047bff7573ce2bb9aab9db1c875ec821e23baa58ff3f21487e458e56919e28105b
+  checksum: 70bb37bb81b9519612040149a9d5499c0cbad919297c30b7a993ee6587294ce8c22b66a40f4a8159dc09b44c9e60cae8e5fb92284c509613b395f55ccab66a33
   languageName: node
   linkType: hard
 
@@ -4605,7 +4605,7 @@ __metadata:
     "@graphql-tools/load": ^7.1.9
     "@graphql-tools/schema": ^8.1.2
     "@graphql-tools/utils": ^8.5.3
-    "@interledger/pay": ^0.3.3
+    "@interledger/pay": ^0.4.0-alpha.0
     "@interledger/stream-receiver": ^0.2.2
     "@koa/cors": ^3.1.0
     "@koa/router": ^10.0.0
