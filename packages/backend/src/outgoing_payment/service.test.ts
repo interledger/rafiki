@@ -28,6 +28,7 @@ import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { RatesService } from '../rates/service'
 import { Pagination } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
+import { isIncomingPaymentError } from '../open_payments/payment/incoming/errors'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -221,10 +222,16 @@ describe('OutgoingPaymentService', (): void => {
       const incomingPaymentService = await deps.use('incomingPaymentService')
       incomingPayment = await incomingPaymentService.create({
         accountId: destinationAccount.id,
-        incomingAmount: BigInt(56),
+        incomingAmount: {
+          amount: BigInt(56),
+          assetCode: destinationAsset.code,
+          assetScale: destinationAsset.scale
+        },
         expiresAt: new Date(Date.now() + 60 * 1000),
-        description: 'description!'
+        description: 'description!',
+        receiptsEnabled: false
       })
+      assert.ok(!isIncomingPaymentError(incomingPayment))
       incomingPaymentUrl = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
       amtDelivered = BigInt(0)
     }
@@ -478,7 +485,7 @@ describe('OutgoingPaymentService', (): void => {
           })
         ).id
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        await payIncomingPayment(incomingPayment.incomingAmount!)
+        await payIncomingPayment(incomingPayment.incomingAmount!.amount)
         await processNext(paymentId, PaymentState.Completed)
       })
 
@@ -598,12 +605,14 @@ describe('OutgoingPaymentService', (): void => {
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const amountSent = incomingPayment.incomingAmount! * BigInt(2)
+        const amountSent = incomingPayment.incomingAmount!.amount * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
-          amountDelivered: incomingPayment.incomingAmount,
-          incomingPaymentReceived: incomingPayment.incomingAmount,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          amountDelivered: incomingPayment.incomingAmount!.amount,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          incomingPaymentReceived: incomingPayment.incomingAmount!.amount,
           withdrawAmount: payment.quote.maxSourceAmount - amountSent
         })
       })
@@ -619,14 +628,16 @@ describe('OutgoingPaymentService', (): void => {
         if (!payment.quote) throw 'no quote'
         const amountSent =
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          (incomingPayment.incomingAmount! - amountAlreadyDelivered) * BigInt(2)
+          (incomingPayment.incomingAmount!.amount - amountAlreadyDelivered) *
+          BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.quote.maxSourceAmount - amountSent,
           amountSent,
           amountDelivered:
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            incomingPayment.incomingAmount! - amountAlreadyDelivered,
-          incomingPaymentReceived: incomingPayment.incomingAmount,
+            incomingPayment.incomingAmount!.amount - amountAlreadyDelivered,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          incomingPaymentReceived: incomingPayment.incomingAmount!.amount,
           withdrawAmount: payment.quote.maxSourceAmount - amountSent
         })
       })
@@ -756,7 +767,7 @@ describe('OutgoingPaymentService', (): void => {
         })
         // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        await payIncomingPayment(incomingPayment.incomingAmount!)
+        await payIncomingPayment(incomingPayment.incomingAmount!.amount)
 
         const payment = await processNext(paymentId, PaymentState.Completed)
         if (!payment.quote) throw 'no quote'
@@ -764,7 +775,8 @@ describe('OutgoingPaymentService', (): void => {
           accountBalance: payment.quote.maxSourceAmount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
-          incomingPaymentReceived: incomingPayment.incomingAmount,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          incomingPaymentReceived: incomingPayment.incomingAmount!.amount,
           withdrawAmount: payment.quote.maxSourceAmount
         })
       })

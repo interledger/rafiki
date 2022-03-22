@@ -1596,10 +1596,16 @@ describe('Liquidity Resolvers', (): void => {
         const incomingPaymentService = await deps.use('incomingPaymentService')
         incomingPayment = await incomingPaymentService.create({
           accountId,
-          incomingAmount: BigInt(56),
+          incomingAmount: {
+            amount: BigInt(56),
+            assetCode: account.asset.code,
+            assetScale: account.asset.scale
+          },
           expiresAt: new Date(Date.now() + 60 * 1000),
-          description: 'description!'
+          description: 'description!',
+          receiptsEnabled: false
         })
+        assert.ok(!isIncomingPaymentEventType(incomingPayment))
         const outgoingPaymentService = await deps.use('outgoingPaymentService')
         const config = await deps.use('config')
         const incomingPaymentUrl = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
