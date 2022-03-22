@@ -6,7 +6,7 @@ import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { AccountingService } from '../../../accounting/service'
 import { IncomingPaymentService } from './service'
-import { Amount, IncomingPayment } from './model'
+import { Amount, IncomingPayment, IncomingPaymentState } from './model'
 import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
@@ -24,6 +24,7 @@ interface ServiceDependencies {
 export interface IncomingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
+  update(ctx: AppContext): Promise<void>
 }
 
 export function createIncomingPaymentRoutes(
@@ -35,7 +36,8 @@ export function createIncomingPaymentRoutes(
   const deps = { ...deps_, logger }
   return {
     get: (ctx: AppContext) => getIncomingPayment(deps, ctx),
-    create: (ctx: AppContext) => createIncomingPayment(deps, ctx)
+    create: (ctx: AppContext) => createIncomingPayment(deps, ctx),
+    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx)
   }
 }
 
@@ -137,6 +139,55 @@ async function createIncomingPayment(
   res['sharedSecret'] = base64url(sharedSecret)
   ctx.body = res
   ctx.set('Location', res.id)
+}
+
+async function updateIncomingPayment(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  const { id: incomingPaymentId } = ctx.params
+  ctx.assert(validateId(incomingPaymentId), 400, 'invalid id')
+  const acceptJSON = ctx.accepts('application/json')
+  ctx.assert(acceptJSON, 406, 'must accept json')
+  ctx.assert(
+    ctx.get('Content-Type') === 'application/json',
+    400,
+    'must send json body'
+  )
+
+  const { body } = ctx.request
+  if (typeof body !== 'object') return ctx.throw(400, 'json body required')
+  if (body['state'] !== 'completed') return ctx.throw(400, 'invalid state')
+
+  const incomingPaymentOrError = await deps.incomingPaymentService.update({
+    id: incomingPaymentId,
+    state: IncomingPaymentState.Completed
+  })
+
+  if (isIncomingPaymentError(incomingPaymentOrError)) {
+    return ctx.throw(
+      errorToCode[incomingPaymentOrError],
+      errorToMessage[incomingPaymentOrError]
+    )
+  }
+
+  const amountReceived = await deps.accountingService.getTotalReceived(
+    incomingPaymentOrError.id
+  )
+  if (amountReceived === undefined) {
+    deps.logger.error(
+      { incomingPayment: incomingPaymentOrError.id },
+      'account not found'
+    )
+    return ctx.throw(500)
+  }
+
+  const res = incomingPaymentToBody(
+    deps,
+    incomingPaymentOrError,
+    amountReceived
+  )
+  ctx.body = res
 }
 
 function incomingPaymentToBody(

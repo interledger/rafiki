@@ -36,6 +36,31 @@ describe('Incoming Payment Routes', (): void => {
     send: jest.fn()
   }
 
+  const setup = (
+    reqOpts: httpMocks.RequestOptions,
+    params: Record<string, unknown>
+  ): AppContext => {
+    const ctx = createContext(
+      {
+        headers: Object.assign(
+          { Accept: 'application/json', 'Content-Type': 'application/json' },
+          reqOpts.headers
+        )
+      },
+      params
+    )
+    ctx.request.body = Object.assign(
+      {
+        incomingAmount: incomingPayment.incomingAmount,
+        description: incomingPayment.description,
+        externalRef: incomingPayment.externalRef,
+        expiresAt: incomingPayment.expiresAt.toISOString()
+      },
+      reqOpts.body
+    )
+    return ctx
+  }
+
   beforeAll(
     async (): Promise<void> => {
       config = Config
@@ -183,29 +208,8 @@ describe('Incoming Payment Routes', (): void => {
     })
   })
   describe('create', (): void => {
-    function setup(
-      reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
-    ): AppContext {
-      const ctx = createContext(
-        {
-          headers: Object.assign(
-            { Accept: 'application/json', 'Content-Type': 'application/json' },
-            reqOpts.headers
-          )
-        },
-        { accountId: account.id }
-      )
-      ctx.request.body = {
-        incomingAmount: incomingPayment.incomingAmount,
-        description: incomingPayment.description,
-        externalRef: incomingPayment.externalRef,
-        expiresAt: incomingPayment.expiresAt.toISOString()
-      }
-      return ctx
-    }
-
     test('returns error on invalid id', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.params.accountId = 'not_a_uuid'
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
@@ -214,7 +218,10 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns 406 on invalid Accept', async (): Promise<void> => {
-      const ctx = setup({ headers: { Accept: 'text/plain' } })
+      const ctx = setup(
+        { headers: { Accept: 'text/plain' } },
+        { accountId: account.id }
+      )
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'status',
         406
@@ -222,7 +229,10 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns error on invalid Content-Type', async (): Promise<void> => {
-      const ctx = setup({ headers: { 'Content-Type': 'text/plain' } })
+      const ctx = setup(
+        { headers: { 'Content-Type': 'text/plain' } },
+        { accountId: account.id }
+      )
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
         'must send json body'
@@ -230,7 +240,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns error on invalid incomingAmount', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['incomingAmount'] = 'fail'
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
@@ -239,7 +249,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns error on invalid description', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['description'] = 123
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
@@ -248,7 +258,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns error on invalid externalRef', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['externalRef'] = 123
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
@@ -257,7 +267,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns error on invalid receiptsEnabled flag', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['receiptsEnabled'] = 'yes'
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
@@ -266,7 +276,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns error on invalid expiresAt', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['expiresAt'] = 'fail'
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
@@ -275,7 +285,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['expiresAt'] = new Date(
         Date.now() + MAX_EXPIRY + 1000
       ).toISOString()
@@ -286,7 +296,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns error on already-expired expiresAt', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['expiresAt'] = new Date(Date.now() - 1).toISOString()
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
@@ -295,7 +305,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns the incoming payment on success', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
       const sharedSecret = (ctx.response.body as Record<string, unknown>)[
@@ -333,7 +343,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns the incoming payment on undefined incomingAmount', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['incomingAmount'] = undefined
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
@@ -366,7 +376,7 @@ describe('Incoming Payment Routes', (): void => {
       })
     })
     test('returns the incoming payment on undefined description', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['description'] = undefined
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
@@ -404,7 +414,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns the incoming payment on undefined externalRef', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['externalRef'] = undefined
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
@@ -442,7 +452,7 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test('returns the incoming payment on undefined receiptsEnabled flag', async (): Promise<void> => {
-      const ctx = setup({})
+      const ctx = setup({}, { accountId: account.id })
       ctx.request.body['receiptsEnabled'] = undefined
       await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response.status).toBe(201)
@@ -477,6 +487,61 @@ describe('Incoming Payment Routes', (): void => {
         receiptsEnabled: false,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
+      })
+    })
+  })
+
+  describe('update', (): void => {
+    test.each`
+      id              | headers                             | body                      | status | description
+      ${'not_a_uuid'} | ${null}                             | ${{ state: 'completed' }} | ${400} | ${'invalid incoming payment id'}
+      ${null}         | ${{ Accept: 'text/plain' }}         | ${{ state: 'completed' }} | ${406} | ${'invalid Accept header'}
+      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${{ state: 'completed' }} | ${400} | ${'invalid Content-Type header'}
+      ${null}         | ${null}                             | ${{ state: 'expired' }}   | ${400} | ${'invalid state'}
+      ${uuid()}       | ${null}                             | ${{ state: 'completed' }} | ${404} | ${'unknown incoming payment'}
+    `(
+      'returns $status on $description',
+      async ({ id, headers, body, status }): Promise<void> => {
+        const params = id ? { id } : { id: incomingPayment.id }
+        const ctx = setup({ headers, body }, params)
+        await expect(incomingPaymentRoutes.update(ctx)).rejects.toHaveProperty(
+          'status',
+          status
+        )
+      }
+    )
+
+    test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
+      const ctx = setup(
+        {
+          headers: { Accept: 'application/json' },
+          body: { state: 'completed' }
+        },
+        { id: incomingPayment.id }
+      )
+      await expect(incomingPaymentRoutes.update(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+      expect(ctx.body).toEqual({
+        id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
+        accountId: `https://wallet.example/pay/${account.id}`,
+        incomingAmount: {
+          amount: '123',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        description: incomingPayment.description,
+        expiresAt: expiresAt.toISOString(),
+        receivedAmount: {
+          amount: '0',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        externalRef: '#123',
+        state: IncomingPaymentState.Completed.toLowerCase(),
+        receiptsEnabled: incomingPayment.receiptsEnabled
       })
     })
   })
