@@ -474,7 +474,6 @@ describe('Incoming Payment Service', (): void => {
         incomingPayment = incomingPaymentOrError
       }
     )
-    beforeEach
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
       await expect(
         incomingPaymentService.update({
