@@ -125,44 +125,22 @@ describe('Incoming Payment Routes', (): void => {
   )
 
   describe('get', (): void => {
-    test('returns error on invalid id', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { id: 'not_a_uuid' }
-      )
-      await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid id'
-      )
-    })
-
-    test('returns 406 for wrong Accept', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'test/plain' }
-        },
-        { id: uuid() }
-      )
-      await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
-        'status',
-        406
-      )
-    })
-
-    test('returns 404 for nonexistent incoming payment', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { id: uuid() }
-      )
-      await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
-        'status',
-        404
-      )
-    })
+    test.each`
+      id              | headers                     | status | description
+      ${'not_a_uuid'} | ${null}                     | ${400} | ${'invalid incoming payment id'}
+      ${null}         | ${{ Accept: 'text/plain' }} | ${406} | ${'invalid Accept header'}
+      ${uuid()}       | ${null}                     | ${404} | ${'unknown incoming payment'}
+    `(
+      'returns $status on $description',
+      async ({ id, headers, status }): Promise<void> => {
+        const params = id ? { id } : { id: incomingPayment.id }
+        const ctx = setup({ headers }, params)
+        await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
+          'status',
+          status
+        )
+      }
+    )
 
     test('returns 200 with an open payments incoming payment', async (): Promise<void> => {
       const ctx = createContext(
@@ -208,81 +186,29 @@ describe('Incoming Payment Routes', (): void => {
     })
   })
   describe('create', (): void => {
-    test('returns error on invalid id', async (): Promise<void> => {
-      const ctx = setup({}, { accountId: account.id })
-      ctx.params.accountId = 'not_a_uuid'
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid account id'
-      )
-    })
-
-    test('returns 406 on invalid Accept', async (): Promise<void> => {
-      const ctx = setup(
-        { headers: { Accept: 'text/plain' } },
-        { accountId: account.id }
-      )
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'status',
-        406
-      )
-    })
-
-    test('returns error on invalid Content-Type', async (): Promise<void> => {
-      const ctx = setup(
-        { headers: { 'Content-Type': 'text/plain' } },
-        { accountId: account.id }
-      )
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'must send json body'
-      )
-    })
-
-    test('returns error on invalid incomingAmount', async (): Promise<void> => {
-      const ctx = setup({}, { accountId: account.id })
-      ctx.request.body['incomingAmount'] = 'fail'
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid incomingAmount'
-      )
-    })
-
-    test('returns error on invalid description', async (): Promise<void> => {
-      const ctx = setup({}, { accountId: account.id })
-      ctx.request.body['description'] = 123
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid description'
-      )
-    })
-
-    test('returns error on invalid externalRef', async (): Promise<void> => {
-      const ctx = setup({}, { accountId: account.id })
-      ctx.request.body['externalRef'] = 123
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid externalRef'
-      )
-    })
-
-    test('returns error on invalid receiptsEnabled flag', async (): Promise<void> => {
-      const ctx = setup({}, { accountId: account.id })
-      ctx.request.body['receiptsEnabled'] = 'yes'
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid receiptsEnabled flag'
-      )
-    })
-
-    test('returns error on invalid expiresAt', async (): Promise<void> => {
-      const ctx = setup({}, { accountId: account.id })
-      ctx.request.body['expiresAt'] = 'fail'
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid expiresAt'
-      )
-    })
+    test.each`
+      id              | headers                             | body                                                     | status | description
+      ${'not_a_uuid'} | ${null}                             | ${null}                                                  | ${400} | ${'invalid account id'}
+      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                  | ${406} | ${'invalid Accept header'}
+      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                  | ${400} | ${'invalid Content-Type header'}
+      ${uuid()}       | ${null}                             | ${null}                                                  | ${404} | ${'unknown account'}
+      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                            | ${400} | ${'invalid incomingAmount'}
+      ${null}         | ${null}                             | ${{ description: 123 }}                                  | ${400} | ${'invalid description'}
+      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                  | ${400} | ${'invalid externalRef'}
+      ${null}         | ${null}                             | ${{ receiptsEnabled: 'yes' }}                            | ${400} | ${'invalid receiptsEnabled'}
+      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                 | ${400} | ${'invalid expiresAt'}
+      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }} | ${400} | ${'already expired expiresAt'}
+    `(
+      'returns $status on $description',
+      async ({ id, headers, body, status }): Promise<void> => {
+        const params = id ? { accountId: id } : { accountId: account.id }
+        const ctx = setup({ headers, body }, params)
+        await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
+          'status',
+          status
+        )
+      }
+    )
 
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
       const ctx = setup({}, { accountId: account.id })
@@ -292,15 +218,6 @@ describe('Incoming Payment Routes', (): void => {
       await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
         'message',
         'expiry too high'
-      )
-    })
-
-    test('returns error on already-expired expiresAt', async (): Promise<void> => {
-      const ctx = setup({}, { accountId: account.id })
-      ctx.request.body['expiresAt'] = new Date(Date.now() - 1).toISOString()
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'already expired'
       )
     })
 
