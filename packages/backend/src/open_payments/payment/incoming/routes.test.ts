@@ -130,7 +130,7 @@ describe('Incoming Payment Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { incomingPaymentId: 'not_a_uuid' }
+        { id: 'not_a_uuid' }
       )
       await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
         'message',
@@ -143,7 +143,7 @@ describe('Incoming Payment Routes', (): void => {
         {
           headers: { Accept: 'test/plain' }
         },
-        { incomingPaymentId: uuid() }
+        { id: uuid() }
       )
       await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
         'status',
@@ -156,7 +156,7 @@ describe('Incoming Payment Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { incomingPaymentId: uuid() }
+        { id: uuid() }
       )
       await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
         'status',
@@ -169,7 +169,7 @@ describe('Incoming Payment Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { incomingPaymentId: incomingPayment.id }
+        { id: incomingPayment.id }
       )
       await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(200)

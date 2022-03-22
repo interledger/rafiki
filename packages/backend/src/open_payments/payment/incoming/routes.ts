@@ -45,7 +45,7 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { incomingPaymentId: incomingPaymentId } = ctx.params
+  const { id: incomingPaymentId } = ctx.params
   ctx.assert(validateId(incomingPaymentId), 400, 'invalid id')
   const acceptJSON = ctx.accepts('application/json')
   ctx.assert(acceptJSON, 406, 'must accept json')
