@@ -61,6 +61,8 @@ export const Config = {
   accountWorkers: envInt('ACCOUNT_WORKERS', 1),
   accountWorkerIdle: envInt('ACCOUNT_WORKER_IDLE', 200), // milliseconds
 
+  authServer: envString('AUTH_SERVER', 'http://127.0.0.1:3006'),
+
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 200), // milliseconds
 
