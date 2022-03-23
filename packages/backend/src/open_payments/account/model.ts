@@ -24,6 +24,8 @@ export class Account
     }
   }
 
+  public displayName?: string
+
   public readonly assetId!: string
   public asset!: Asset
 

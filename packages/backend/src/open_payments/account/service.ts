@@ -7,6 +7,7 @@ import { AssetService, AssetOptions } from '../../asset/service'
 
 export interface CreateOptions {
   asset: AssetOptions
+  displayName?: string
 }
 
 export interface AccountService {
@@ -53,6 +54,7 @@ async function createAccount(
   return await Account.transaction(deps.knex, async (trx) => {
     const account = await Account.query(trx)
       .insertAndFetch({
+        displayName: options.displayName,
         assetId: asset.id
       })
       .withGraphFetched('asset')
