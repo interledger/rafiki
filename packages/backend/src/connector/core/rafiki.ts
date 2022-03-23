@@ -25,7 +25,7 @@ import { PeerService } from '../../peer/service'
 // Such models include:
 //   ../../open_payments/account/model
 //   ../../open_payments/payment/incoming/model
-//   ../../outgoing_payment/model
+//   ../../open_payments/payment/outgoing/model
 //   ../../peer/model
 export interface ConnectorAccount extends LiquidityAccount {
   asset: LiquidityAccount['asset'] & AssetOptions

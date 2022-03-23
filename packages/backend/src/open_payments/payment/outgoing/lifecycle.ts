@@ -1,4 +1,5 @@
 import * as Pay from '@interledger/pay'
+import assert from 'assert'
 
 import { LifecycleError } from './errors'
 import {
@@ -14,7 +15,7 @@ const MAX_INT64 = BigInt('9223372036854775807')
 
 // Acquire a quote for the user to approve.
 // "payment" is locked by the "deps.knex" transaction.
-export async function handleQuoting(
+export async function handlePending(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   plugin: IlpPlugin
@@ -25,49 +26,11 @@ export async function handleQuoting(
 
   const destination = await Pay.setupPayment({
     plugin,
-    destinationAccount: payment.intent.paymentPointer,
-    destinationPayment: payment.intent.incomingPaymentUrl
+    destinationAccount: payment.receivingAccount,
+    destinationPayment: payment.receivingPayment
   })
 
-  if (
-    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
-    payment.destinationAccount.code !== destination.destinationAsset.code
-  ) {
-    deps.logger.warn(
-      {
-        oldAsset: payment.destinationAccount,
-        newAsset: destination.destinationAsset
-      },
-      'asset changed'
-    )
-    throw Pay.PaymentError.DestinationAssetConflict
-  }
-
-  // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
-  const amountSent = await deps.accountingService.getTotalSent(payment.id)
-  if (amountSent === undefined) {
-    throw LifecycleError.MissingBalance
-  }
-
-  // This is the amount of money *remaining* to send, which may be less than the payment intent's amountToSend due to retries (FixedSend payments only).
-  let amountToSend: bigint | undefined
-  if (payment.intent.amountToSend) {
-    amountToSend = payment.intent.amountToSend - amountSent
-    if (amountToSend <= BigInt(0)) {
-      // The FixedSend payment completed (in Tigerbeetle) but the backend's update to state=COMPLETED didn't commit. Then the payment retried and ended up here.
-      // This error is extremely unlikely to happen, but it can recover gracefully(ish) by shortcutting to the COMPLETED state.
-      deps.logger.error(
-        {
-          amountToSend,
-          intentAmountToSend: payment.intent.amountToSend,
-          amountSent
-        },
-        'quote amountToSend bounds error'
-      )
-      await handleCompleted(deps, payment)
-      return
-    }
-  }
+  validateAssets(deps, payment, destination)
 
   const quote = await Pay.startQuote({
     plugin,
@@ -76,57 +39,55 @@ export async function handleQuoting(
       scale: payment.account.asset.scale,
       code: payment.account.asset.code
     },
-    amountToSend,
+    amountToSend: payment.sendAmount?.amount,
+    amountToDeliver: payment.receiveAmount?.amount,
     slippage: deps.slippage,
     prices
+  }).finally(() => {
+    return Pay.closeConnection(plugin, destination).catch((err) => {
+      deps.logger.warn(
+        {
+          destination: destination.destinationAddress,
+          error: err.message
+        },
+        'close quote connection failed'
+      )
+    })
   })
-    .finally(() => {
-      return Pay.closeConnection(plugin, destination).catch((err) => {
-        deps.logger.warn(
-          {
-            destination: destination.destinationAddress,
-            error: err.message
-          },
-          'close quote connection failed'
-        )
-      })
-    })
-    .catch(async (err) => {
-      if (err === Pay.PaymentError.IncomingPaymentCompleted) return null
-      throw err
-    })
-  // InvoiceAlreadyPaid: the incoming payment was already paid, either by this payment (which retried due to a failed SENDING→COMPLETED transition commit) or another payment entirely.
-  if (quote === null) {
-    deps.logger.warn('quote incoming payment already paid')
-    await handleCompleted(deps, payment)
-    return
-  }
 
-  const balance = await deps.accountingService.getBalance(payment.id)
-  if (balance === undefined) {
-    throw LifecycleError.MissingBalance
-  }
+  const state = payment.authorized
+    ? PaymentState.Funding
+    : PaymentState.Prepared
 
-  const state =
-    balance < quote.maxSourceAmount
-      ? PaymentState.Funding
-      : PaymentState.Sending
+  // Pay.startQuote should return PaymentError.InvalidSourceAmount or
+  // PaymentError.InvalidDestinationAmount for non-positive amounts.
+  // Outgoing payments' sendAmount or receiveAmount should never be
+  // zero or negative.
+  assert.ok(quote.maxSourceAmount > BigInt(0))
+  assert.ok(quote.minDeliveryAmount > BigInt(0))
 
   await payment.$query(deps.knex).patch({
     state,
+    sendAmount: payment.sendAmount || {
+      amount: quote.maxSourceAmount,
+      assetCode: payment.account.asset.code,
+      assetScale: payment.account.asset.scale
+    },
+    receiveAmount: {
+      amount: payment.receiveAmount?.amount || quote.minDeliveryAmount,
+      assetCode: destination.destinationAsset.code,
+      assetScale: destination.destinationAsset.scale
+    },
+    expiresAt: new Date(Date.now() + deps.quoteLifespan),
     quote: {
       timestamp: new Date(),
-      activationDeadline: new Date(Date.now() + deps.quoteLifespan),
       targetType: quote.paymentType,
-      minDeliveryAmount: quote.minDeliveryAmount,
-      maxSourceAmount: quote.maxSourceAmount,
       // Cap at MAX_INT64 because of postgres type limits.
       maxPacketAmount:
         MAX_INT64 < quote.maxPacketAmount ? MAX_INT64 : quote.maxPacketAmount,
       minExchangeRate: quote.minExchangeRate,
       lowExchangeRateEstimate: quote.lowEstimatedExchangeRate,
-      highExchangeRateEstimate: quote.highEstimatedExchangeRate,
-      amountSent
+      highExchangeRateEstimate: quote.highEstimatedExchangeRate
     }
   })
 
@@ -136,22 +97,23 @@ export async function handleQuoting(
 }
 
 // "payment" is locked by the "deps.knex" transaction.
-export async function handleFunding(
+export async function handlePrepared(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  if (!payment.quote) throw LifecycleError.MissingQuote
+  if (!payment.expiresAt) throw LifecycleError.MissingExpiration
   const now = new Date()
-  if (payment.quote.activationDeadline < now) {
-    throw LifecycleError.QuoteExpired
+  if (payment.expiresAt < now) {
+    await payment.$query(deps.knex).patch({ state: PaymentState.Expired })
+    return
   }
 
   deps.logger.error(
     {
-      activationDeadline: payment.quote.activationDeadline.getTime(),
+      expiresAt: payment.expiresAt.getTime(),
       now: now.getTime()
     },
-    "handleFunding for payment quote that isn't expired"
+    "handlePrepared for payment quote that isn't expired"
   )
 }
 
@@ -162,26 +124,17 @@ export async function handleSending(
   plugin: IlpPlugin
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
+  if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
+  if (!payment.receiveAmount) throw LifecycleError.MissingReceiveAmount
+  if (!payment.authorized) throw LifecycleError.Unauthorized
 
   const destination = await Pay.setupPayment({
     plugin,
-    destinationAccount: payment.intent.paymentPointer,
-    destinationPayment: payment.intent.incomingPaymentUrl
+    destinationAccount: payment.receivingAccount,
+    destinationPayment: payment.receivingPayment
   })
 
-  if (
-    payment.destinationAccount.scale !== destination.destinationAsset.scale ||
-    payment.destinationAccount.code !== destination.destinationAsset.code
-  ) {
-    deps.logger.warn(
-      {
-        oldAsset: payment.destinationAccount,
-        newAsset: destination.destinationAsset
-      },
-      'asset changed'
-    )
-    throw Pay.PaymentError.DestinationAssetConflict
-  }
+  validateAssets(deps, payment, destination)
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
@@ -190,32 +143,25 @@ export async function handleSending(
   }
 
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
-  const amountSentSinceQuote = amountSent - payment.quote.amountSent
-  const newMaxSourceAmount =
-    payment.quote.maxSourceAmount - amountSentSinceQuote
+  const newMaxSourceAmount = payment.sendAmount.amount - amountSent
 
   let newMinDeliveryAmount
-  switch (payment.quote.targetType) {
-    case Pay.PaymentType.FixedSend:
-      // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
-      // eslint-disable-next-line no-case-declarations
-      const amountDeliveredSinceQuote = BigInt(
-        Math.ceil(
-          +amountSentSinceQuote.toString() *
-            payment.quote.minExchangeRate.valueOf()
-        )
+  if (payment.receivingAccount) {
+    // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
+    // eslint-disable-next-line no-case-declarations
+    const amountDelivered = BigInt(
+      Math.ceil(
+        +amountSent.toString() * payment.quote.minExchangeRate.valueOf()
       )
-      newMinDeliveryAmount =
-        payment.quote.minDeliveryAmount - amountDeliveredSinceQuote
-      break
-    case Pay.PaymentType.FixedDelivery:
-      if (!destination.destinationPaymentDetails)
-        throw LifecycleError.MissingIncomingPayment
-      newMinDeliveryAmount =
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        destination.destinationPaymentDetails.incomingAmount!.amount -
-        destination.destinationPaymentDetails.receivedAmount.amount
-      break
+    )
+    newMinDeliveryAmount = payment.receiveAmount.amount - amountDelivered
+  } else {
+    if (!destination.destinationPaymentDetails)
+      throw LifecycleError.MissingIncomingPayment
+    newMinDeliveryAmount =
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      destination.destinationPaymentDetails.incomingAmount!.amount -
+      destination.destinationPaymentDetails.receivedAmount.amount
   }
 
   if (
@@ -230,7 +176,7 @@ export async function handleSending(
         newMaxSourceAmount,
         newMinDeliveryAmount,
         paymentType: payment.quote.targetType,
-        amountSentSinceQuote,
+        amountSent,
         incomingPayment: destination.destinationPaymentDetails
       },
       'handleSending payment was already paid'
@@ -311,16 +257,16 @@ export async function handleSending(
   await handleCompleted(deps, payment)
 }
 
-export async function handleCancelled(
+export async function handleFailed(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   error: string
 ): Promise<void> {
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Cancelled,
+    state: PaymentState.Failed,
     error
   })
-  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCancelled)
+  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFailed)
 }
 
 const handleCompleted = async (
@@ -333,7 +279,7 @@ const handleCompleted = async (
   await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCompleted)
 }
 
-const sendWebhookEvent = async (
+export const sendWebhookEvent = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   type: PaymentEventType
@@ -356,4 +302,37 @@ const sendWebhookEvent = async (
     data: payment.toData({ amountSent, balance }),
     withdrawal
   })
+}
+
+const validateAssets = (
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  destination: Pay.ResolvedPayment
+): void => {
+  if (payment.sendAmount) {
+    if (
+      payment.sendAmount.assetCode !== payment.account.asset.code ||
+      payment.sendAmount.assetScale !== payment.account.asset.scale
+    ) {
+      throw LifecycleError.SourceAssetConflict
+    }
+  }
+  if (payment.receiveAmount) {
+    if (payment.receiveAmount.assetCode || payment.receiveAmount.assetScale) {
+      if (
+        payment.receiveAmount.assetScale !==
+          destination.destinationAsset.scale ||
+        payment.receiveAmount.assetCode !== destination.destinationAsset.code
+      ) {
+        deps.logger.warn(
+          {
+            oldAsset: payment.receiveAmount,
+            newAsset: destination.destinationAsset
+          },
+          'destination asset changed'
+        )
+        throw Pay.PaymentError.DestinationAssetConflict
+      }
+    }
+  }
 }

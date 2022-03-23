@@ -1,4 +1,3 @@
-import { isPaymentError, PaymentError } from '@interledger/pay'
 import {
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
@@ -9,7 +8,13 @@ import {
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
-import { OutgoingPayment } from '../../outgoing_payment/model'
+import {
+  OutgoingPaymentError,
+  isOutgoingPaymentError,
+  errorToCode,
+  errorToMessage
+} from '../../open_payments/payment/outgoing/errors'
+import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
 
 export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'] = async (
@@ -45,34 +50,6 @@ export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = as
   }
 }
 
-const clientErrors: { [key in PaymentError]: boolean } = {
-  InvalidPaymentPointer: true,
-  InvalidCredentials: true,
-  InvalidSlippage: false,
-  UnknownSourceAsset: true,
-  UnknownPaymentTarget: true,
-  InvalidSourceAmount: true,
-  InvalidDestinationAmount: true,
-  UnenforceableDelivery: true,
-  InvalidQuote: false,
-
-  // QueryFailed can be either a client or server error: an invalid incoming payment URL, or failed query.
-  QueryFailed: true,
-  InvoiceAlreadyPaid: false,
-  ConnectorError: false,
-  EstablishmentFailed: false,
-  UnknownDestinationAsset: false,
-  DestinationAssetConflict: false,
-  ExternalRateUnavailable: false,
-  RateProbeFailed: false,
-  InsufficientExchangeRate: false,
-  IdleTimeout: false,
-  ClosedByReceiver: false,
-  IncompatibleReceiveMax: false,
-  ReceiverProtocolViolation: false,
-  MaxSafeEncryptionLimit: false
-}
-
 export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutgoingPayment'] = async (
   parent,
   args,
@@ -83,15 +60,23 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
   )
   return outgoingPaymentService
     .create(args.input)
-    .then((payment: OutgoingPayment) => ({
-      code: '200',
-      success: true,
-      payment: paymentToGraphql(payment)
-    }))
-    .catch((err: Error | PaymentError) => ({
-      code: isPaymentError(err) && clientErrors[err] ? '400' : '500',
+    .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+      isOutgoingPaymentError(paymentOrErr)
+        ? {
+            code: errorToCode[paymentOrErr].toString(),
+            success: false,
+            message: errorToMessage[paymentOrErr]
+          }
+        : {
+            code: '200',
+            success: true,
+            payment: paymentToGraphql(paymentOrErr)
+          }
+    )
+    .catch(() => ({
+      code: '500',
       success: false,
-      message: typeof err === 'string' ? err : err.message
+      message: 'Error trying to create outgoing payment'
     }))
 }
 
@@ -179,19 +164,26 @@ export function paymentToGraphql(
     id: payment.id,
     accountId: payment.accountId,
     state: payment.state,
+    authorized: payment.authorized,
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
-    intent: payment.intent,
-    quote: payment.quote && {
-      ...payment.quote,
-      targetType: SchemaPaymentType[payment.quote.targetType],
-      timestamp: payment.quote.timestamp.toISOString(),
-      activationDeadline: payment.quote.activationDeadline.toISOString(),
-      minExchangeRate: payment.quote.minExchangeRate.valueOf(),
-      lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
-      highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
-    },
-    destinationAccount: payment.destinationAccount,
+    receivingAccount: payment.receivingAccount,
+    receivingPayment: payment.receivingPayment,
+    sendAmount: payment.sendAmount ?? undefined,
+    receiveAmount: payment.receiveAmount ?? undefined,
+    description: payment.description,
+    externalRef: payment.externalRef,
+    expiresAt: payment.expiresAt?.toISOString() ?? undefined,
+    quote: payment.quote
+      ? {
+          ...payment.quote,
+          targetType: SchemaPaymentType[payment.quote.targetType],
+          timestamp: payment.quote.timestamp.toISOString(),
+          minExchangeRate: payment.quote.minExchangeRate.valueOf(),
+          lowExchangeRateEstimate: payment.quote.lowExchangeRateEstimate.valueOf(),
+          highExchangeRateEstimate: payment.quote.highExchangeRateEstimate.valueOf()
+        }
+      : undefined,
     createdAt: new Date(+payment.createdAt).toISOString()
   }
 }

@@ -370,33 +370,42 @@ type OutgoingPayment implements Model {
   id: ID!
   accountId: ID!
   state: PaymentState!
+  authorized: Boolean!
   error: String
   stateAttempts: Int!
-  intent: PaymentIntent
+  receivingAccount: String
+  sendAmount: PaymentAmount
+  receiveAmount: PaymentAmount
+  receivingPayment: String
+  description: String
+  externalRef: String
+  expiresAt: String
   quote: PaymentQuote
-  destinationAccount: PaymentDestinationAccount!
   outcome: OutgoingPaymentOutcome
   createdAt: String!
 }
 
-type PaymentIntent {
-  paymentPointer: String
-  amountToSend: UInt64
-  incomingPaymentUrl: String
-  autoApprove: Boolean!
+type PaymentAmount {
+  amount: UInt64!
+  assetCode: String
+  assetScale: Int
 }
 
 enum PaymentState {
-  "Will transition to FUNDING or SENDING (if already funded) when quote is complete"
-  QUOTING
+  "Will transition to PREPARED or FUNDING (if already authorized) when quote is complete"
+  PENDING
+  "Will transition to FUNDING once authorized"
+  PREPARED
   "Will transition to SENDING once payment funds are reserved"
   FUNDING
   "Paying, will transition to COMPLETED on success"
   SENDING
-  "Payment aborted; can be requoted to QUOTING"
-  CANCELLED
-  "Successfuly completion"
+  "Successful completion"
   COMPLETED
+  "Payment quote expired; can be requoted to PENDING"
+  EXPIRED
+  "Payment failed"
+  FAILED
 }
 
 enum PaymentType {
@@ -406,32 +415,32 @@ enum PaymentType {
 
 type PaymentQuote {
   timestamp: String!
-  activationDeadline: String!
   targetType: PaymentType!
-  minDeliveryAmount: UInt64!
-  maxSourceAmount: UInt64!
   maxPacketAmount: UInt64!
   minExchangeRate: Float!
   lowExchangeRateEstimate: Float!
   highExchangeRateEstimate: Float!
 }
 
-type PaymentDestinationAccount {
-  scale: Int!
-  code: String!
-  url: String
-}
-
 type OutgoingPaymentOutcome {
   amountSent: UInt64!
 }
 
+input PaymentAmountInput {
+  amount: UInt64!
+  assetCode: String
+  assetScale: Int
+}
+
 input CreateOutgoingPaymentInput {
   accountId: String!
-  paymentPointer: String
-  amountToSend: UInt64
-  incomingPaymentUrl: String
-  autoApprove: Boolean!
+  receivingAccount: String
+  sendAmount: PaymentAmountInput
+  receiveAmount: PaymentAmountInput
+  receivingPayment: String
+  authorized: Boolean
+  description: String
+  externalRef: String
 }
 
 type OutgoingPaymentResponse {

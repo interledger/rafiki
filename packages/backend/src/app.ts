@@ -31,8 +31,11 @@ import { AccountRoutes } from './open_payments/account/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
-import { OutgoingPaymentService } from './outgoing_payment/service'
-import { IlpPlugin, IlpPluginOptions } from './outgoing_payment/ilp_plugin'
+import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
+import {
+  IlpPlugin,
+  IlpPluginOptions
+} from './open_payments/payment/outgoing/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
 import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
@@ -240,6 +243,9 @@ export class App {
     const incomingPaymentRoutes = await this.container.use(
       'incomingPaymentRoutes'
     )
+    const outgoingPaymentRoutes = await this.container.use(
+      'outgoingPaymentRoutes'
+    )
     this.publicRouter.get(
       '/pay/:accountId',
       async (ctx: AppContext): Promise<void> => {
@@ -260,10 +266,22 @@ export class App {
       '/pay/:accountId/incoming-payments',
       incomingPaymentRoutes.create
     )
-
     this.publicRouter.put(
       '/incoming-payments/:incomingPaymentId',
       incomingPaymentRoutes.update
+    )
+
+    this.publicRouter.get(
+      '/outgoing-payments/:outgoingPaymentId',
+      outgoingPaymentRoutes.get
+    )
+    this.publicRouter.post(
+      '/pay/:accountId/outgoing-payments',
+      outgoingPaymentRoutes.create
+    )
+    this.publicRouter.put(
+      '/pay/:accountId/outgoing-payments',
+      outgoingPaymentRoutes.update
     )
 
     this.koa.use(this.publicRouter.middleware())

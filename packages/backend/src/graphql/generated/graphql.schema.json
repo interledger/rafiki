@@ -1293,7 +1293,7 @@
             "deprecationReason": null
           },
           {
-            "name": "paymentPointer",
+            "name": "receivingAccount",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -1305,11 +1305,11 @@
             "deprecationReason": null
           },
           {
-            "name": "amountToSend",
+            "name": "sendAmount",
             "description": null,
             "type": {
-              "kind": "SCALAR",
-              "name": "UInt64",
+              "kind": "INPUT_OBJECT",
+              "name": "PaymentAmountInput",
               "ofType": null
             },
             "defaultValue": null,
@@ -1317,7 +1317,19 @@
             "deprecationReason": null
           },
           {
-            "name": "incomingPaymentUrl",
+            "name": "receiveAmount",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "PaymentAmountInput",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "receivingPayment",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -1329,16 +1341,36 @@
             "deprecationReason": null
           },
           {
-            "name": "autoApprove",
+            "name": "authorized",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Boolean",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "description",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "externalRef",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -3303,6 +3335,22 @@
             "deprecationReason": null
           },
           {
+            "name": "authorized",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "error",
             "description": null,
             "args": [],
@@ -3331,12 +3379,84 @@
             "deprecationReason": null
           },
           {
-            "name": "intent",
+            "name": "receivingAccount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sendAmount",
             "description": null,
             "args": [],
             "type": {
               "kind": "OBJECT",
-              "name": "PaymentIntent",
+              "name": "PaymentAmount",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "receiveAmount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PaymentAmount",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "receivingPayment",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "externalRef",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "expiresAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3350,22 +3470,6 @@
               "kind": "OBJECT",
               "name": "PaymentQuote",
               "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "destinationAccount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "PaymentDestinationAccount",
-                "ofType": null
-              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -3667,11 +3771,11 @@
       },
       {
         "kind": "OBJECT",
-        "name": "PaymentDestinationAccount",
+        "name": "PaymentAmount",
         "description": null,
         "fields": [
           {
-            "name": "scale",
+            "name": "amount",
             "description": null,
             "args": [],
             "type": {
@@ -3679,7 +3783,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -3687,28 +3791,24 @@
             "deprecationReason": null
           },
           {
-            "name": "code",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "url",
+            "name": "assetCode",
             "description": null,
             "args": [],
             "type": {
               "kind": "SCALAR",
               "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetScale",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3721,65 +3821,53 @@
         "possibleTypes": null
       },
       {
-        "kind": "OBJECT",
-        "name": "PaymentIntent",
+        "kind": "INPUT_OBJECT",
+        "name": "PaymentAmountInput",
         "description": null,
-        "fields": [
+        "fields": null,
+        "inputFields": [
           {
-            "name": "paymentPointer",
+            "name": "amount",
             "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "amountToSend",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "UInt64",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "incomingPaymentUrl",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "autoApprove",
-            "description": null,
-            "args": [],
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Boolean",
+                "name": "UInt64",
                 "ofType": null
               }
             },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetCode",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetScale",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "defaultValue": null,
             "isDeprecated": false,
             "deprecationReason": null
           }
         ],
-        "inputFields": null,
-        "interfaces": [],
+        "interfaces": null,
         "enumValues": null,
         "possibleTypes": null
       },
@@ -3805,22 +3893,6 @@
             "deprecationReason": null
           },
           {
-            "name": "activationDeadline",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "targetType",
             "description": null,
             "args": [],
@@ -3830,38 +3902,6 @@
               "ofType": {
                 "kind": "ENUM",
                 "name": "PaymentType",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "minDeliveryAmount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "maxSourceAmount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
                 "ofType": null
               }
             },
@@ -3957,8 +3997,14 @@
         "interfaces": null,
         "enumValues": [
           {
-            "name": "QUOTING",
-            "description": "Will transition to FUNDING or SENDING (if already funded) when quote is complete",
+            "name": "PENDING",
+            "description": "Will transition to PREPARED or FUNDING (if already authorized) when quote is complete",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PREPARED",
+            "description": "Will transition to FUNDING once authorized",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -3975,14 +4021,20 @@
             "deprecationReason": null
           },
           {
-            "name": "CANCELLED",
-            "description": "Payment aborted; can be requoted to QUOTING",
+            "name": "COMPLETED",
+            "description": "Successful completion",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "COMPLETED",
-            "description": "Successfuly completion",
+            "name": "EXPIRED",
+            "description": "Payment quote expired; can be requoted to PENDING",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "FAILED",
+            "description": "Payment failed",
             "isDeprecated": false,
             "deprecationReason": null
           }

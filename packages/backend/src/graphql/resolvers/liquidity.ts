@@ -8,11 +8,14 @@ import {
   AccountWithdrawalMutationResponse
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
-import { FundingError, isFundingError } from '../../outgoing_payment/errors'
+import {
+  FundingError,
+  isFundingError
+} from '../../open_payments/payment/outgoing/errors'
 import {
   isPaymentEvent,
   PaymentDepositType
-} from '../../outgoing_payment/model'
+} from '../../open_payments/payment/outgoing/model'
 
 export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] = async (
   parent,
@@ -303,13 +306,13 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
       return responses[LiquidityError.InvalidId]
     }
-    assert.ok(event.data.payment?.quote?.maxSourceAmount)
+    assert.ok(event.data.payment?.sendAmount)
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
     const paymentOrErr = await outgoingPaymentService.fund({
       id: event.data.payment.id,
-      amount: BigInt(event.data.payment.quote.maxSourceAmount),
+      amount: BigInt(event.data.payment.sendAmount.amount),
       transferId: event.id
     })
     if (isFundingError(paymentOrErr)) {

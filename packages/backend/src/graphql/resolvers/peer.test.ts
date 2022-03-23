@@ -1,4 +1,4 @@
-import Faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { gql } from 'apollo-server-koa'
 import assert from 'assert'
 import Knex from 'knex'
@@ -36,11 +36,11 @@ describe('Peer Resolvers', (): void => {
     asset: randomAsset(),
     http: {
       incoming: {
-        authTokens: [Faker.datatype.string(32)]
+        authTokens: [faker.datatype.string(32)]
       },
       outgoing: {
-        authToken: Faker.datatype.string(32),
-        endpoint: Faker.internet.url()
+        authToken: faker.datatype.string(32),
+        endpoint: faker.internet.url()
       }
     },
     maxPacketAmount: BigInt(100),
@@ -126,7 +126,7 @@ describe('Peer Resolvers', (): void => {
     })
 
     test('Returns error for duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = Faker.datatype.string(32)
+      const incomingToken = faker.datatype.string(32)
       await peerFactory.build({
         http: {
           incoming: {
@@ -428,11 +428,11 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: '100',
         http: {
           incoming: {
-            authTokens: [Faker.datatype.string(32)]
+            authTokens: [faker.datatype.string(32)]
           },
           outgoing: {
-            authToken: Faker.datatype.string(32),
-            endpoint: Faker.internet.url()
+            authToken: faker.datatype.string(32),
+            endpoint: faker.internet.url()
           }
         },
         staticIlpAddress: 'g.rafiki.' + peer.id
@@ -536,7 +536,7 @@ describe('Peer Resolvers', (): void => {
     })
 
     test('Returns error for duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = Faker.datatype.string(32)
+      const incomingToken = faker.datatype.string(32)
       const updateOptions: UpdatePeerInput = {
         id: peer.id,
         http: randomPeer().http

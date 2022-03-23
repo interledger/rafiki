@@ -34,7 +34,7 @@ import { validateId } from '../shared/utils'
 //   ../asset/model
 //   ../open_payments/account/model
 //   ../open_payments/payment/incoming/model
-//   ../outgoing_payment/model
+//   ../open_payments/payment/outgoing/model
 //   ../peer/model
 // Asset settlement Tigerbeetle accounts are the only exception.
 // Their account id is the corresponding asset's unit value.

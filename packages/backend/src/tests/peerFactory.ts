@@ -1,4 +1,4 @@
-import Faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { v4 as uuid } from 'uuid'
 
 import { isPeerError } from '../peer/errors'
@@ -18,8 +18,8 @@ export class PeerFactory {
       asset: options.asset || randomAsset(),
       http: {
         outgoing: options.http?.outgoing || {
-          authToken: Faker.datatype.string(32),
-          endpoint: Faker.internet.url()
+          authToken: faker.datatype.string(32),
+          endpoint: faker.internet.url()
         }
       },
       staticIlpAddress: options.staticIlpAddress || 'test.' + uuid()

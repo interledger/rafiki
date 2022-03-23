@@ -2034,6 +2034,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["@faker-js/faker", [
+        ["npm:6.0.0", {
+          "packageLocation": "./.yarn/cache/@faker-js-faker-npm-6.0.0-934adf72a2-099f712ad6.zip/node_modules/@faker-js/faker/",
+          "packageDependencies": [
+            ["@faker-js/faker", "npm:6.0.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["@graphql-codegen/cli", [
         ["npm:1.21.5", {
           "packageLocation": "./.yarn/cache/@graphql-codegen-cli-npm-1.21.5-bfdd1d52b2-c3a97e04cf.zip/node_modules/@graphql-codegen/cli/",
@@ -4025,15 +4034,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/node", "npm:14.14.39"],
             ["@types/qs", "npm:6.9.6"],
             ["@types/range-parser", "npm:1.2.3"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
-      ["@types/faker", [
-        ["npm:5.5.8", {
-          "packageLocation": "./.yarn/cache/@types-faker-npm-5.5.8-2a7f5f5744-eb642cac27.zip/node_modules/@types/faker/",
-          "packageDependencies": [
-            ["@types/faker", "npm:5.5.8"]
           ],
           "linkType": "HARD",
         }]
@@ -6336,6 +6336,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["backend", "workspace:packages/backend"],
             ["@adonisjs/fold", "npm:8.1.0"],
             ["@apollo/client", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:3.3.20"],
+            ["@faker-js/faker", "npm:6.0.0"],
             ["@graphql-codegen/cli", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.21.5"],
             ["@graphql-codegen/introspection", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.18.2"],
             ["@graphql-codegen/typescript", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.22.2"],
@@ -6349,7 +6350,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@koa/cors", "npm:3.1.0"],
             ["@koa/router", "npm:10.0.0"],
             ["@types/bcrypt", "npm:5.0.0"],
-            ["@types/faker", "npm:5.5.8"],
             ["@types/ioredis", "npm:4.22.3"],
             ["@types/jest", "npm:26.0.22"],
             ["@types/koa", "npm:2.13.1"],
@@ -6372,7 +6372,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["bcrypt", "npm:5.0.1"],
             ["cross-fetch", "npm:3.1.4"],
             ["extensible-error", "npm:1.0.2"],
-            ["faker", "npm:5.5.3"],
             ["fishery", "npm:1.2.0"],
             ["got", "npm:11.8.2"],
             ["graphile-scheduler", "npm:0.8.0"],
@@ -8999,15 +8998,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/extsprintf-npm-1.4.0-2b015bcaab-184dc8a413.zip/node_modules/extsprintf/",
           "packageDependencies": [
             ["extsprintf", "npm:1.4.0"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
-      ["faker", [
-        ["npm:5.5.3", {
-          "packageLocation": "./.yarn/cache/faker-npm-5.5.3-541ce97798-684fd64c8d.zip/node_modules/faker/",
-          "packageDependencies": [
-            ["faker", "npm:5.5.3"]
           ],
           "linkType": "HARD",
         }]
