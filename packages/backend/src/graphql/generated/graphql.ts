@@ -120,6 +120,7 @@ export type AssetsConnection = {
 
 export type CreateAccountInput = {
   asset: AssetInput;
+  displayName?: Maybe<Scalars['String']>;
 };
 
 export type CreateAccountMutationResponse = MutationResponse & {
