@@ -14,6 +14,7 @@ import { AppServices } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { randomAsset } from '../../tests/asset'
 import { AccountRoutes } from './routes'
+import { faker } from '@faker-js/faker'
 
 describe('Account Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -32,6 +33,7 @@ describe('Account Routes', (): void => {
     async (): Promise<void> => {
       config = Config
       config.publicHost = 'https://wallet.example'
+      config.authServer = 'https://auth.wallet.example/authorize'
       deps = await initIocContainer(config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
@@ -99,7 +101,12 @@ describe('Account Routes', (): void => {
 
     test('returns 200 with an open payments account', async (): Promise<void> => {
       const asset = randomAsset()
-      const account = await accountService.create({ asset })
+      const displayName = faker.name.firstName()
+      const account = await accountService.create({
+        displayName: displayName,
+        asset: asset
+      })
+
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' }
@@ -114,9 +121,10 @@ describe('Account Routes', (): void => {
 
       expect(ctx.body).toEqual({
         id: `https://wallet.example/accounts/${account.id}`,
-        accountServicer: 'https://wallet.example',
+        publicName: account.displayName,
         assetCode: asset.code,
-        assetScale: asset.scale
+        assetScale: asset.scale,
+        authServer: 'https://auth.wallet.example/authorize'
       })
     })
   })

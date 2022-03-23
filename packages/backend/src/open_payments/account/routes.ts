@@ -36,8 +36,9 @@ export async function getAccount(
   const config = await deps.config
   ctx.body = {
     id: `${config.publicHost}/accounts/${encodeURIComponent(accountId)}`,
-    accountServicer: config.publicHost,
+    publicName: account.displayName,
     assetCode: account.asset.code,
-    assetScale: account.asset.scale
+    assetScale: account.asset.scale,
+    authServer: config.authServer
   }
 }
