@@ -126,13 +126,13 @@ describe('Incoming Payment Routes', (): void => {
 
   describe('get', (): void => {
     test.each`
-      id              | headers                     | status | description
-      ${'not_a_uuid'} | ${null}                     | ${400} | ${'invalid incoming payment id'}
-      ${null}         | ${{ Accept: 'text/plain' }} | ${406} | ${'invalid Accept header'}
-      ${uuid()}       | ${null}                     | ${404} | ${'unknown incoming payment'}
+      id              | headers                     | status | message               | description
+      ${'not_a_uuid'} | ${null}                     | ${400} | ${'invalid id'}       | ${'invalid incoming payment id'}
+      ${null}         | ${{ Accept: 'text/plain' }} | ${406} | ${'must accept json'} | ${'invalid Accept header'}
+      ${uuid()}       | ${null}                     | ${404} | ${'Not Found'}        | ${'unknown incoming payment'}
     `(
       'returns $status on $description',
-      async ({ id, headers, status }): Promise<void> => {
+      async ({ id, headers, status, message }): Promise<void> => {
         const params = id
           ? { incomingPaymentId: id }
           : { incomingPaymentId: incomingPayment.id }
@@ -140,6 +140,10 @@ describe('Incoming Payment Routes', (): void => {
         await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
           'status',
           status
+        )
+        await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
+          'message',
+          message
         )
       }
     )
@@ -189,25 +193,29 @@ describe('Incoming Payment Routes', (): void => {
   })
   describe('create', (): void => {
     test.each`
-      id              | headers                             | body                                                     | status | description
-      ${'not_a_uuid'} | ${null}                             | ${null}                                                  | ${400} | ${'invalid account id'}
-      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                  | ${406} | ${'invalid Accept header'}
-      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                  | ${400} | ${'invalid Content-Type header'}
-      ${uuid()}       | ${null}                             | ${null}                                                  | ${404} | ${'unknown account'}
-      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                            | ${400} | ${'invalid incomingAmount'}
-      ${null}         | ${null}                             | ${{ description: 123 }}                                  | ${400} | ${'invalid description'}
-      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                  | ${400} | ${'invalid externalRef'}
-      ${null}         | ${null}                             | ${{ receiptsEnabled: 'yes' }}                            | ${400} | ${'invalid receiptsEnabled'}
-      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                 | ${400} | ${'invalid expiresAt'}
-      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }} | ${400} | ${'already expired expiresAt'}
+      id              | headers                             | body                                                     | status | message                           | description
+      ${'not_a_uuid'} | ${null}                             | ${null}                                                  | ${400} | ${'invalid account id'}           | ${'invalid account id'}
+      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                  | ${406} | ${'must accept json'}             | ${'invalid Accept header'}
+      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                  | ${400} | ${'must send json body'}          | ${'invalid Content-Type header'}
+      ${uuid()}       | ${null}                             | ${null}                                                  | ${404} | ${'unknown account'}              | ${'unknown account'}
+      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                            | ${400} | ${'invalid incomingAmount'}       | ${'invalid incomingAmount'}
+      ${null}         | ${null}                             | ${{ description: 123 }}                                  | ${400} | ${'invalid description'}          | ${'invalid description'}
+      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                  | ${400} | ${'invalid externalRef'}          | ${'invalid externalRef'}
+      ${null}         | ${null}                             | ${{ receiptsEnabled: 'yes' }}                            | ${400} | ${'invalid receiptsEnabled flag'} | ${'invalid receiptsEnabled flag'}
+      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                 | ${400} | ${'invalid expiresAt'}            | ${'invalid expiresAt'}
+      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }} | ${400} | ${'already expired'}              | ${'already expired expiresAt'}
     `(
       'returns $status on $description',
-      async ({ id, headers, body, status }): Promise<void> => {
+      async ({ id, headers, body, status, message }): Promise<void> => {
         const params = id ? { accountId: id } : { accountId: account.id }
         const ctx = setup({ headers, body }, params)
         await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
           'status',
           status
+        )
+        await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
+          'message',
+          message
         )
       }
     )
@@ -412,15 +420,15 @@ describe('Incoming Payment Routes', (): void => {
 
   describe('update', (): void => {
     test.each`
-      id              | headers                             | body                      | status | description
-      ${'not_a_uuid'} | ${null}                             | ${{ state: 'completed' }} | ${400} | ${'invalid incoming payment id'}
-      ${null}         | ${{ Accept: 'text/plain' }}         | ${{ state: 'completed' }} | ${406} | ${'invalid Accept header'}
-      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${{ state: 'completed' }} | ${400} | ${'invalid Content-Type header'}
-      ${null}         | ${null}                             | ${{ state: 'expired' }}   | ${400} | ${'invalid state'}
-      ${uuid()}       | ${null}                             | ${{ state: 'completed' }} | ${404} | ${'unknown incoming payment'}
+      id              | headers                             | body                      | status | message                  | description
+      ${'not_a_uuid'} | ${null}                             | ${{ state: 'completed' }} | ${400} | ${'invalid id'}          | ${'invalid incoming payment id'}
+      ${null}         | ${{ Accept: 'text/plain' }}         | ${{ state: 'completed' }} | ${406} | ${'must accept json'}    | ${'invalid Accept header'}
+      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${{ state: 'completed' }} | ${400} | ${'must send json body'} | ${'invalid Content-Type header'}
+      ${null}         | ${null}                             | ${{ state: 'expired' }}   | ${400} | ${'invalid state'}       | ${'invalid state'}
+      ${uuid()}       | ${null}                             | ${{ state: 'completed' }} | ${404} | ${'unknown payment'}     | ${'unknown incoming payment'}
     `(
       'returns $status on $description',
-      async ({ id, headers, body, status }): Promise<void> => {
+      async ({ id, headers, body, status, message }): Promise<void> => {
         const params = id
           ? { incomingPaymentId: id }
           : { incomingPaymentId: incomingPayment.id }
@@ -428,6 +436,10 @@ describe('Incoming Payment Routes', (): void => {
         await expect(incomingPaymentRoutes.update(ctx)).rejects.toHaveProperty(
           'status',
           status
+        )
+        await expect(incomingPaymentRoutes.update(ctx)).rejects.toHaveProperty(
+          'message',
+          message
         )
       }
     )
