@@ -284,10 +284,10 @@ async function updateIncomingPayment(
           update.active = false
           break
         default:
-          return IncomingPaymentError.InvalidState
+          return IncomingPaymentError.WrongState
       }
     } else {
-      return IncomingPaymentError.WrongState
+      return IncomingPaymentError.InvalidState
     }
     update.processAt = new Date(Date.now() + 30_000)
     await payment.$query(trx).patch(update)
