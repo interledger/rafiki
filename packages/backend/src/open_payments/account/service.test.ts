@@ -14,6 +14,7 @@ import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
+import faker from '@faker-js/faker'
 
 describe('Open Payments Account Service', (): void => {
   let deps: IocContract<AppServices>
@@ -63,6 +64,19 @@ describe('Open Payments Account Service', (): void => {
       const options = {
         asset: randomAsset()
       }
+      const account = await accountService.create(options)
+      await expect(account).toMatchObject(options)
+      await expect(accountService.get(account.id)).resolves.toEqual(account)
+    })
+
+    test('Account with a public name can be created or fetched', async (): Promise<void> => {
+      const publicName = faker.name.firstName()
+
+      const options = {
+        publicName: publicName,
+        asset: randomAsset()
+      }
+
       const account = await accountService.create(options)
       await expect(account).toMatchObject(options)
       await expect(accountService.get(account.id)).resolves.toEqual(account)
