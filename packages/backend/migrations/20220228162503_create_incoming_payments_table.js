@@ -5,7 +5,6 @@ exports.up = function (knex) {
     // Open payments account id
     table.uuid('accountId').notNullable()
     table.foreign('accountId').references('accounts.id')
-    table.boolean('active').notNullable()
     table.string('description').nullable()
     table.timestamp('expiresAt').notNullable()
     table.bigInteger('incomingAmountAmount').nullable()

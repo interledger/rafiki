@@ -208,27 +208,25 @@ describe('Incoming Payment Service', (): void => {
       }
     )
 
-    test('Does not deactivate a partially paid incoming payment', async (): Promise<void> => {
+    test('Sets state of partially paid incoming payment to "processing"', async (): Promise<void> => {
       await expect(
         incomingPayment.onCredit({
           totalReceived: BigInt(100)
         })
       ).resolves.toMatchObject({
         id: incomingPayment.id,
-        active: true,
         state: IncomingPaymentState.Processing,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        active: true,
         state: IncomingPaymentState.Processing,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
     })
 
-    test('Deactivates fully paid incoming payment', async (): Promise<void> => {
+    test('Sets state of fully paid incoming payment to "completed"', async (): Promise<void> => {
       const now = new Date()
       jest.useFakeTimers('modern')
       jest.setSystemTime(now)
@@ -239,14 +237,12 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toMatchObject({
         id: incomingPayment.id,
-        active: false,
         state: IncomingPaymentState.Completed,
         processAt: new Date(now.getTime() + 30_000)
       })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        active: false,
         state: IncomingPaymentState.Completed,
         processAt: new Date(now.getTime() + 30_000)
       })
@@ -254,7 +250,7 @@ describe('Incoming Payment Service', (): void => {
   })
 
   describe('processNext', (): void => {
-    test('Does not process not-expired active incoming payment', async (): Promise<void> => {
+    test('Does not process not-expired pending incoming payment', async (): Promise<void> => {
       const incomingPaymentOrError = await incomingPaymentService.create({
         accountId,
         incomingAmount: {
@@ -275,7 +271,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.get(incomingPaymentId)
       ).resolves.toMatchObject({
-        active: true
+        state: IncomingPaymentState.Pending
       })
     })
 
@@ -311,7 +307,6 @@ describe('Incoming Payment Service', (): void => {
         await expect(
           incomingPaymentService.get(incomingPaymentOrError.id)
         ).resolves.toMatchObject({
-          active: false,
           state: IncomingPaymentState.Expired,
           processAt: new Date(now.getTime() + 30_000)
         })
@@ -385,7 +380,6 @@ describe('Incoming Payment Service', (): void => {
             incomingPayment = (await incomingPaymentService.get(
               incomingPayment.id
             )) as IncomingPayment
-            expect(incomingPayment.active).toBe(false)
             expect(incomingPayment.processAt).not.toBeNull()
             if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
               expect(incomingPayment.state).toBe(IncomingPaymentState.Expired)
@@ -476,7 +470,7 @@ describe('Incoming Payment Service', (): void => {
     )
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
       const now = new Date()
-      jest.spyOn(global.Date, 'now').mockImplementationOnce(() => now.valueOf())
+      jest.spyOn(global.Date, 'now').mockImplementation(() => now.valueOf())
       await expect(
         incomingPaymentService.update({
           id: incomingPayment.id,
@@ -484,14 +478,12 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toMatchObject({
         id: incomingPayment.id,
-        active: false,
         state: IncomingPaymentState.Completed,
         processAt: new Date(now.getTime() + 30_000)
       })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        active: false,
         state: IncomingPaymentState.Completed,
         processAt: new Date(now.getTime() + 30_000)
       })
@@ -513,7 +505,6 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        active: true,
         state: IncomingPaymentState.Processing
       })
       await expect(
@@ -523,14 +514,12 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toMatchObject({
         id: incomingPayment.id,
-        active: false,
         state: IncomingPaymentState.Completed,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        active: false,
         state: IncomingPaymentState.Completed,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
@@ -553,7 +542,6 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        active: false,
         state: IncomingPaymentState.Expired
       })
       await expect(
@@ -561,11 +549,10 @@ describe('Incoming Payment Service', (): void => {
           id: incomingPayment.id,
           state: IncomingPaymentState.Completed
         })
-      ).resolves.toBe(IncomingPaymentError.InvalidState)
+      ).resolves.toBe(IncomingPaymentError.WrongState)
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        active: false,
         state: IncomingPaymentState.Expired
       })
     })
@@ -577,7 +564,6 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        active: false,
         state: IncomingPaymentState.Completed
       })
       await expect(
@@ -585,11 +571,10 @@ describe('Incoming Payment Service', (): void => {
           id: incomingPayment.id,
           state: IncomingPaymentState.Completed
         })
-      ).resolves.toBe(IncomingPaymentError.InvalidState)
+      ).resolves.toBe(IncomingPaymentError.WrongState)
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        active: false,
         state: IncomingPaymentState.Completed
       })
     })

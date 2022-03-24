@@ -123,7 +123,6 @@ async function createIncomingPayment(
         description,
         expiresAt: expiresAt || EXPIRY,
         incomingAmount,
-        active: true,
         externalRef,
         state: IncomingPaymentState.Pending,
         receiptsEnabled,
@@ -175,7 +174,10 @@ async function processNextIncomingPayment(
         incomingPayment: incomingPayment.id
       })
     }
-    if (!incomingPayment.active) {
+    if (
+      incomingPayment.state === IncomingPaymentState.Expired ||
+      incomingPayment.state === IncomingPaymentState.Completed
+    ) {
       await handleDeactivated(deps, incomingPayment)
     } else {
       await handleExpired(deps, incomingPayment)
@@ -199,7 +201,6 @@ async function handleExpired(
       'deactivating expired incoming payment'
     )
     await incomingPayment.$query(deps.knex).patch({
-      active: false,
       state: IncomingPaymentState.Expired,
       // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
       processAt: new Date(Date.now() + 30_000)
@@ -281,7 +282,6 @@ async function updateIncomingPayment(
         case IncomingPaymentState.Pending:
         case IncomingPaymentState.Processing:
           update.state = state
-          update.active = false
           break
         default:
           return IncomingPaymentError.WrongState

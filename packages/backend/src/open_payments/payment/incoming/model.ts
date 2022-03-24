@@ -75,7 +75,6 @@ export class IncomingPayment
   // Open payments account id this incoming payment is for
   public accountId!: string
   public account!: Account
-  public active!: boolean
   public description?: string
   public expiresAt!: Date
   public state!: IncomingPaymentState
@@ -120,22 +119,23 @@ export class IncomingPayment
     if (this.incomingAmount && this.incomingAmount.amount <= totalReceived) {
       incomingPayment = await IncomingPayment.query()
         .patchAndFetchById(this.id, {
-          active: false,
           state: IncomingPaymentState.Completed,
           // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
           processAt: new Date(Date.now() + 30_000)
         })
-        .where({
-          active: true
-        })
+        .whereNotIn('state', [
+          IncomingPaymentState.Expired,
+          IncomingPaymentState.Completed
+        ])
     } else {
       incomingPayment = await IncomingPayment.query()
         .patchAndFetchById(this.id, {
           state: IncomingPaymentState.Processing
         })
-        .where({
-          active: true
-        })
+        .whereNotIn('state', [
+          IncomingPaymentState.Expired,
+          IncomingPaymentState.Completed
+        ])
     }
     if (incomingPayment) {
       return incomingPayment
