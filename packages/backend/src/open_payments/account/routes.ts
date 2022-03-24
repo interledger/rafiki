@@ -39,6 +39,6 @@ export async function getAccount(
     publicName: account.displayName,
     assetCode: account.asset.code,
     assetScale: account.asset.scale,
-    authServer: config.authServer
+    authServer: config.authServerGrantUrl
   }
 }
