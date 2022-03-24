@@ -18,7 +18,7 @@ export function createAccountRoutes(deps: ServiceDependencies): AccountRoutes {
   }
 }
 
-// Spec: https://docs.openpayments.dev/accounts#get
+// Spec: https://docs.openpayments.guide/reference/get-public-account
 export async function getAccount(
   deps: ServiceDependencies,
   ctx: AppContext
