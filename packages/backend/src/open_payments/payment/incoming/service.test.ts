@@ -568,7 +568,7 @@ describe('Incoming Payment Service', (): void => {
       })
     })
 
-    test('fails to updates state of completed incoming payment', async (): Promise<void> => {
+    test('fails to update state of completed incoming payment', async (): Promise<void> => {
       await incomingPayment.onCredit({
         totalReceived: BigInt(123)
       })
