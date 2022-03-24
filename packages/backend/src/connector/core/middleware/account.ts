@@ -7,6 +7,7 @@ import {
 } from '../rafiki'
 import { AuthState } from './auth'
 import { validateId } from '../../../shared/utils'
+import { IncomingPaymentState } from '../../../open_payments/payment/incoming/model'
 
 const UUID_LENGTH = 36
 
@@ -27,7 +28,10 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           ctx.state.streamDestination
         )
         if (incomingPayment) {
-          if (!incomingPayment.active) {
+          if (
+            incomingPayment.state === IncomingPaymentState.Completed ||
+            incomingPayment.state === IncomingPaymentState.Expired
+          ) {
             throw new Errors.UnreachableError('destination account is disabled')
           }
           return incomingPayment
