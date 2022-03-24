@@ -17,7 +17,7 @@ export const errorToCode: {
   [IncomingPaymentError.InvalidAmount]: 400,
   [IncomingPaymentError.UnknownPayment]: 404,
   [IncomingPaymentError.InvalidState]: 400,
-  [IncomingPaymentError.WrongState]: 400
+  [IncomingPaymentError.WrongState]: 409
 }
 
 export const errorToMessage: {

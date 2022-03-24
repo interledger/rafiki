@@ -277,7 +277,7 @@ async function updateIncomingPayment(
       .withGraphFetched('account.asset')
     if (!payment) return IncomingPaymentError.UnknownPayment
     const update: PartialModelObject<IncomingPayment> = {}
-    if (state === IncomingPaymentState.Completed) {
+    if (state == IncomingPaymentState.Completed) {
       switch (payment.state) {
         case IncomingPaymentState.Pending:
         case IncomingPaymentState.Processing:

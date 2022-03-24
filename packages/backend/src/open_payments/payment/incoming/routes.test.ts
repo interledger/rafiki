@@ -137,14 +137,10 @@ describe('Incoming Payment Routes', (): void => {
           ? { incomingPaymentId: id }
           : { incomingPaymentId: incomingPayment.id }
         const ctx = setup({ headers }, params)
-        await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
-          'status',
-          status
-        )
-        await expect(incomingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
-          'message',
+        await expect(incomingPaymentRoutes.get(ctx)).rejects.toMatchObject({
+          status,
           message
-        )
+        })
       }
     )
 
@@ -209,14 +205,10 @@ describe('Incoming Payment Routes', (): void => {
       async ({ id, headers, body, status, message }): Promise<void> => {
         const params = id ? { accountId: id } : { accountId: account.id }
         const ctx = setup({ headers, body }, params)
-        await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-          'status',
-          status
-        )
-        await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-          'message',
+        await expect(incomingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+          status,
           message
-        )
+        })
       }
     )
 
@@ -435,14 +427,10 @@ describe('Incoming Payment Routes', (): void => {
           ? { incomingPaymentId: id }
           : { incomingPaymentId: incomingPayment.id }
         const ctx = setup({ headers, body }, params)
-        await expect(incomingPaymentRoutes.update(ctx)).rejects.toHaveProperty(
-          'status',
-          status
-        )
-        await expect(incomingPaymentRoutes.update(ctx)).rejects.toHaveProperty(
-          'message',
+        await expect(incomingPaymentRoutes.update(ctx)).rejects.toMatchObject({
+          status,
           message
-        )
+        })
       }
     )
 
