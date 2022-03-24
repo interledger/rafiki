@@ -146,7 +146,10 @@ export async function handleSending(
   const newMaxSourceAmount = payment.sendAmount.amount - amountSent
 
   let newMinDeliveryAmount
-  if (payment.receivingAccount) {
+  if (
+    payment.receivingAccount ||
+    !destination.destinationPaymentDetails?.incomingAmount
+  ) {
     // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
     // eslint-disable-next-line no-case-declarations
     const amountDelivered = BigInt(
@@ -159,8 +162,7 @@ export async function handleSending(
     if (!destination.destinationPaymentDetails)
       throw LifecycleError.MissingIncomingPayment
     newMinDeliveryAmount =
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      destination.destinationPaymentDetails.incomingAmount!.amount -
+      destination.destinationPaymentDetails.incomingAmount.amount -
       destination.destinationPaymentDetails.receivedAmount.amount
   }
 
