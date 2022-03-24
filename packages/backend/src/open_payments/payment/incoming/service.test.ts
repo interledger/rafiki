@@ -475,6 +475,8 @@ describe('Incoming Payment Service', (): void => {
       }
     )
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
+      const now = new Date()
+      jest.spyOn(global.Date, 'now').mockImplementationOnce(() => now.valueOf())
       await expect(
         incomingPaymentService.update({
           id: incomingPayment.id,
@@ -484,14 +486,14 @@ describe('Incoming Payment Service', (): void => {
         id: incomingPayment.id,
         active: false,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
+        processAt: new Date(now.getTime() + 30_000)
       })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
         active: false,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
+        processAt: new Date(now.getTime() + 30_000)
       })
     })
 
