@@ -4,7 +4,7 @@ exports.up = function (knex) {
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
 
-    table.string('displayName').nullable()
+    table.string('publicName').nullable()
 
     // The cumulative received amount tracked by
     // `account.web_monetization` webhook events.

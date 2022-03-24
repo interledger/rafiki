@@ -928,7 +928,7 @@
             "deprecationReason": null
           },
           {
-            "name": "displayName",
+            "name": "publicName",
             "description": null,
             "type": {
               "kind": "SCALAR",

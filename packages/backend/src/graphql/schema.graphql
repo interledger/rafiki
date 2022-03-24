@@ -452,7 +452,7 @@ type OutgoingPaymentResponse {
 
 input CreateAccountInput {
   asset: AssetInput!
-  displayName: String
+  publicName: String
 }
 
 type ApiKey implements Model {

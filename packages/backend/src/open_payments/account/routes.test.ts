@@ -101,9 +101,9 @@ describe('Account Routes', (): void => {
 
     test('returns 200 with an open payments account', async (): Promise<void> => {
       const asset = randomAsset()
-      const displayName = faker.name.firstName()
+      const publicName = faker.name.firstName()
       const account = await accountService.create({
-        displayName: displayName,
+        publicName: publicName,
         asset: asset
       })
 
@@ -121,7 +121,7 @@ describe('Account Routes', (): void => {
 
       expect(ctx.body).toEqual({
         id: `https://wallet.example/accounts/${account.id}`,
-        publicName: account.displayName,
+        publicName: account.publicName,
         assetCode: asset.code,
         assetScale: asset.scale,
         authServer: 'https://auth.wallet.example/authorize'
