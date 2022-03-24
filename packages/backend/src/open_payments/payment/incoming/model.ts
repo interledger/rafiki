@@ -57,6 +57,10 @@ export class IncomingPayment
     return 'incomingPayments'
   }
 
+  static get virtualAttributes(): string[] {
+    return ['incomingAmount']
+  }
+
   static relationMappings = {
     account: {
       relation: Model.HasOneRelation,
