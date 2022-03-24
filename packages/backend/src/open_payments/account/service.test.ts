@@ -14,7 +14,7 @@ import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
-import faker from '@faker-js/faker'
+import { faker } from '@faker-js/faker'
 
 describe('Open Payments Account Service', (): void => {
   let deps: IocContract<AppServices>
