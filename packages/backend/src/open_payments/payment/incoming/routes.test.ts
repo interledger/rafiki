@@ -424,7 +424,9 @@ describe('Incoming Payment Routes', (): void => {
       ${'not_a_uuid'} | ${null}                             | ${{ state: 'completed' }} | ${400} | ${'invalid id'}          | ${'invalid incoming payment id'}
       ${null}         | ${{ Accept: 'text/plain' }}         | ${{ state: 'completed' }} | ${406} | ${'must accept json'}    | ${'invalid Accept header'}
       ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${{ state: 'completed' }} | ${400} | ${'must send json body'} | ${'invalid Content-Type header'}
-      ${null}         | ${null}                             | ${{ state: 'expired' }}   | ${400} | ${'invalid state'}       | ${'invalid state'}
+      ${null}         | ${null}                             | ${{ state: 123 }}         | ${400} | ${'invalid state'}       | ${'invalid state'}
+      ${null}         | ${null}                             | ${{ state: 'expired' }}   | ${400} | ${'wrong state'}         | ${'wrong state'}
+      ${null}         | ${null}                             | ${{ state: 'foo' }}       | ${400} | ${'wrong state'}         | ${'wrong state'}
       ${uuid()}       | ${null}                             | ${{ state: 'completed' }} | ${404} | ${'unknown payment'}     | ${'unknown incoming payment'}
     `(
       'returns $status on $description',

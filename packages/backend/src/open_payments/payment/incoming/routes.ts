@@ -157,11 +157,11 @@ async function updateIncomingPayment(
 
   const { body } = ctx.request
   if (typeof body !== 'object') return ctx.throw(400, 'json body required')
-  if (body['state'] !== 'completed') return ctx.throw(400, 'invalid state')
+  if (typeof body['state'] !== 'string') return ctx.throw(400, 'invalid state')
 
   const incomingPaymentOrError = await deps.incomingPaymentService.update({
     id: incomingPaymentId,
-    state: IncomingPaymentState.Completed
+    state: IncomingPaymentState[body.state]
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
