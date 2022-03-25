@@ -18,7 +18,7 @@ export function createAccountRoutes(deps: ServiceDependencies): AccountRoutes {
   }
 }
 
-// Spec: https://docs.openpayments.dev/accounts#get
+// Spec: https://docs.openpayments.guide/reference/get-public-account
 export async function getAccount(
   deps: ServiceDependencies,
   ctx: AppContext
@@ -36,8 +36,9 @@ export async function getAccount(
   const config = await deps.config
   ctx.body = {
     id: `${config.publicHost}/accounts/${encodeURIComponent(accountId)}`,
-    accountServicer: config.publicHost,
+    publicName: account.publicName,
     assetCode: account.asset.code,
-    assetScale: account.asset.scale
+    assetScale: account.asset.scale,
+    authServer: config.authServerGrantUrl
   }
 }
