@@ -13,6 +13,7 @@ import { Transaction } from 'knex'
 import { PartialModelObject, TransactionOrKnex } from 'objection'
 import { AccountService } from '../../account/service'
 import { IncomingPaymentError } from './errors'
+import { parse, end, toSeconds } from 'iso8601-duration'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -20,7 +21,7 @@ export const POSITIVE_SLIPPAGE = BigInt(1)
 // Third retry waits 30 (more) seconds, etc. up to 60 seconds
 export const RETRY_BACKOFF_MS = 10_000
 // TODO: make expiry date configurable
-export const EXPIRY = new Date(new Date().setDate(90)) // 90 days in future
+export const EXPIRY = parse('P90D') // 90 days in future
 
 export interface CreateIncomingPaymentOptions {
   accountId: string
@@ -121,14 +122,14 @@ async function createIncomingPayment(
       .insertAndFetch({
         accountId,
         description,
-        expiresAt: expiresAt || EXPIRY,
+        expiresAt: expiresAt || end(EXPIRY),
         incomingAmount,
         externalRef,
         state: IncomingPaymentState.Pending,
         receiptsEnabled,
         processAt: expiresAt
           ? new Date(expiresAt.getTime())
-          : new Date(EXPIRY.getTime())
+          : new Date(toSeconds(EXPIRY))
       })
       .withGraphFetched('account.asset')
 

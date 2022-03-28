@@ -6384,6 +6384,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ilp-protocol-ildcp", "npm:2.2.2"],
             ["ilp-protocol-stream", "npm:2.7.0"],
             ["ioredis", "npm:4.26.0"],
+            ["iso8601-duration", "npm:1.3.0"],
             ["knex", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:0.21.19"],
             ["koa", "npm:2.13.1"],
             ["koa-bodyparser", "npm:4.3.0"],
@@ -11341,6 +11342,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/isexe-npm-2.0.0-b58870bd2e-26bf6c5480.zip/node_modules/isexe/",
           "packageDependencies": [
             ["isexe", "npm:2.0.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["iso8601-duration", [
+        ["npm:1.3.0", {
+          "packageLocation": "./.yarn/cache/iso8601-duration-npm-1.3.0-d04d4298de-22a0d23bde.zip/node_modules/iso8601-duration/",
+          "packageDependencies": [
+            ["iso8601-duration", "npm:1.3.0"]
           ],
           "linkType": "HARD",
         }]
