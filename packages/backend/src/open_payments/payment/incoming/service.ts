@@ -13,8 +13,7 @@ import { Transaction } from 'knex'
 import { PartialModelObject, TransactionOrKnex } from 'objection'
 import { AccountService } from '../../account/service'
 import { IncomingPaymentError } from './errors'
-import { parse, end, toSeconds } from 'iso8601-duration'
-import { AssetService } from '../../../asset/service'
+import { parse, end } from 'iso8601-duration'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -58,7 +57,6 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   accountService: AccountService
-  assetService: AssetService
 }
 
 export async function createIncomingPaymentService(
@@ -116,22 +114,19 @@ async function createIncomingPayment(
       }
     }
   }
-  const asset = await deps.assetService.getOrCreate(account.asset)
   const invTrx = trx || (await IncomingPayment.startTransaction(deps.knex))
   try {
     const incomingPayment = await IncomingPayment.query(invTrx)
       .insertAndFetch({
         accountId,
-        assetId: asset.id,
+        assetId: account.asset.id,
         description,
         expiresAt: expiresAt || end(EXPIRY),
         incomingAmount,
         externalRef,
         state: IncomingPaymentState.Pending,
         receiptsEnabled,
-        processAt: expiresAt
-          ? new Date(expiresAt.getTime())
-          : new Date(toSeconds(EXPIRY))
+        processAt: expiresAt ?? end(EXPIRY)
       })
       .withGraphFetched('[account.asset, asset]')
 
