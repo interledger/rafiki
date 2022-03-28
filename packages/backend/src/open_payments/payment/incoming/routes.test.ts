@@ -198,6 +198,7 @@ describe('Incoming Payment Routes', (): void => {
       ${null}         | ${null}                             | ${{ description: 123 }}                                  | ${400} | ${'invalid description'}          | ${'invalid description'}
       ${null}         | ${null}                             | ${{ externalRef: 123 }}                                  | ${400} | ${'invalid externalRef'}          | ${'invalid externalRef'}
       ${null}         | ${null}                             | ${{ receiptsEnabled: 'yes' }}                            | ${400} | ${'invalid receiptsEnabled flag'} | ${'invalid receiptsEnabled flag'}
+      ${null}         | ${null}                             | ${{ receiptsEnabled: true }}                             | ${400} | ${'receipts not supported yet'}   | ${'receiptsEnabled = true'}
       ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                 | ${400} | ${'invalid expiresAt'}            | ${'invalid expiresAt'}
       ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }} | ${400} | ${'already expired'}              | ${'already expired expiresAt'}
     `(

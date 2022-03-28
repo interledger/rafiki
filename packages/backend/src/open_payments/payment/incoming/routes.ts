@@ -112,6 +112,9 @@ async function createIncomingPayment(
   )
     return ctx.throw(400, 'invalid receiptsEnabled flag')
   const receiptsEnabled = Boolean(body.receiptsEnabled)
+  if (receiptsEnabled === true) {
+    return ctx.throw(400, 'receipts not supported yet')
+  }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     accountId,
