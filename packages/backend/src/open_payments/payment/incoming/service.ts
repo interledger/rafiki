@@ -14,6 +14,7 @@ import { PartialModelObject, TransactionOrKnex } from 'objection'
 import { AccountService } from '../../account/service'
 import { IncomingPaymentError } from './errors'
 import { parse, end, toSeconds } from 'iso8601-duration'
+import { AssetService } from '../../../asset/service'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -57,6 +58,7 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   accountService: AccountService
+  assetService: AssetService
 }
 
 export async function createIncomingPaymentService(
@@ -85,7 +87,7 @@ async function getIncomingPayment(
 ): Promise<IncomingPayment | undefined> {
   return IncomingPayment.query(deps.knex)
     .findById(id)
-    .withGraphJoined('account.asset')
+    .withGraphFetched('[account.asset, asset]')
 }
 
 async function createIncomingPayment(
@@ -113,14 +115,14 @@ async function createIncomingPayment(
         return IncomingPaymentError.InvalidAmount
       }
     }
-    ;(incomingAmount.assetCode = account.asset.code),
-      (incomingAmount.assetScale = account.asset.scale)
   }
+  const asset = await deps.assetService.getOrCreate(account.asset)
   const invTrx = trx || (await IncomingPayment.startTransaction(deps.knex))
   try {
     const incomingPayment = await IncomingPayment.query(invTrx)
       .insertAndFetch({
         accountId,
+        assetId: asset.id,
         description,
         expiresAt: expiresAt || end(EXPIRY),
         incomingAmount,
@@ -131,7 +133,7 @@ async function createIncomingPayment(
           ? new Date(expiresAt.getTime())
           : new Date(toSeconds(EXPIRY))
       })
-      .withGraphFetched('account.asset')
+      .withGraphFetched('[account.asset, asset]')
 
     // Incoming payment accounts are credited by the amounts received by the incoming payment.
     // Credits are restricted such that the incoming payments cannot receive more than that amount.
@@ -163,7 +165,7 @@ async function processNextIncomingPayment(
       // If an incoming payment is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-      .withGraphFetched('account.asset')
+      .withGraphFetched('[account.asset, asset]')
 
     const incomingPayment = incomingPayments[0]
     if (!incomingPayment) return
@@ -275,7 +277,7 @@ async function updateIncomingPayment(
     const payment = await IncomingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('account.asset')
+      .withGraphFetched('[account.asset, asset]')
     if (!payment) return IncomingPaymentError.UnknownPayment
     const update: PartialModelObject<IncomingPayment> = {}
     if (state == IncomingPaymentState.Completed) {

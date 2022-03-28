@@ -69,6 +69,14 @@ export class IncomingPayment
         from: 'incomingPayments.accountId',
         to: 'accounts.id'
       }
+    },
+    asset: {
+      relation: Model.HasOneRelation,
+      modelClass: Asset,
+      join: {
+        from: 'incomingPayments.assetId',
+        to: 'assets.id'
+      }
     }
   }
 
@@ -83,33 +91,24 @@ export class IncomingPayment
 
   public processAt!: Date | null
 
-  private incomingAmountAmount?: bigint | null
-  private incomingAmountAssetCode?: string | null
-  private incomingAmountAssetScale?: number | null
+  public readonly assetId!: string
+  public asset!: Asset
+
+  private incomingAmountValue?: bigint | null
 
   public get incomingAmount(): Amount | undefined {
-    if (
-      this.incomingAmountAmount &&
-      this.incomingAmountAssetCode &&
-      this.incomingAmountAssetScale
-    ) {
+    if (this.incomingAmountValue) {
       return {
-        amount: this.incomingAmountAmount,
-        assetCode: this.incomingAmountAssetCode,
-        assetScale: this.incomingAmountAssetScale
+        amount: this.incomingAmountValue,
+        assetCode: this.asset.code,
+        assetScale: this.asset.scale
       }
     }
     return undefined
   }
 
   public set incomingAmount(value: Amount | undefined) {
-    this.incomingAmountAmount = value?.amount ?? null
-    this.incomingAmountAssetCode = value?.assetCode ?? null
-    this.incomingAmountAssetScale = value?.assetScale ?? null
-  }
-
-  public get asset(): Asset {
-    return this.account.asset
+    this.incomingAmountValue = value?.amount ?? null
   }
 
   public async onCredit({
