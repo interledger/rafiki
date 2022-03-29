@@ -35,8 +35,11 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 Our planning calls are open to our community. We have them every Monday at 17:00 GMT, via Google Meet.
 
 **Google Meet joining info**
+
 Video call link: https://meet.google.com/rdx-xoqn-iiq
+
 Or dial: ‪(US) +1 408-831-2432‬ PIN: ‪472 676 485‬#
+
 More phone numbers: https://tel.meet/rdx-xoqn-iiq?pin=3263008843276
 
 [Add to Google Calendar](https://calendar.google.com/event?action=TEMPLATE&tmeid=NXVsMWhsb3NnbG9hbDFkazE0dTBhZGZ1Z25fMjAyMjAzMjFUMTcwMDAwWiBjX2NqMDI3Z21oc3VqazkxZXZpMjRkOXB2bXQ0QGc&tmsrc=c_cj027gmhsujk91evi24d9pvmt4%40group.calendar.google.com&scp=ALL)
