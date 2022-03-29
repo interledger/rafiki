@@ -247,11 +247,15 @@ export type HttpOutgoingInput = {
 export type IncomingPayment = Model & {
   __typename?: 'IncomingPayment';
   id: Scalars['ID'];
-  active: Scalars['Boolean'];
-  createdAt: Scalars['String'];
+  accountId: Scalars['ID'];
+  state: IncomingPaymentState;
   expiresAt: Scalars['String'];
+  incomingAmount?: Maybe<PaymentAmount>;
+  receivedAmount: PaymentAmount;
   description?: Maybe<Scalars['String']>;
-  amount: Scalars['UInt64'];
+  externalRef?: Maybe<Scalars['String']>;
+  receiptsEnabled: Scalars['Boolean'];
+  createdAt: Scalars['String'];
 };
 
 export type IncomingPaymentConnection = {
@@ -265,6 +269,17 @@ export type IncomingPaymentEdge = {
   node: IncomingPayment;
   cursor: Scalars['String'];
 };
+
+export enum IncomingPaymentState {
+  /** The payment has a state of `PENDING` when it is initially created. */
+  Pending = 'PENDING',
+  /** As soon as payment has started (funds have cleared into the account) the state moves to `PROCESSING` */
+  Processing = 'PROCESSING',
+  /** The payment is either auto-completed once the received amount equals the expected amount `amount`, or it is completed manually via an API call. */
+  Completed = 'COMPLETED',
+  /** If the payment expires before it is completed then the state will move to `EXPIRED` and no further payments will be accepted. */
+  Expired = 'EXPIRED'
+}
 
 export enum LiquidityError {
   AlreadyCommitted = 'AlreadyCommitted',
@@ -471,7 +486,7 @@ export type OutgoingPayment = Model & {
   __typename?: 'OutgoingPayment';
   id: Scalars['ID'];
   accountId: Scalars['ID'];
-  state: PaymentState;
+  state: OutgoingPaymentState;
   authorized: Scalars['Boolean'];
   error?: Maybe<Scalars['String']>;
   stateAttempts: Scalars['Int'];
@@ -512,6 +527,23 @@ export type OutgoingPaymentResponse = {
   payment?: Maybe<OutgoingPayment>;
 };
 
+export enum OutgoingPaymentState {
+  /** Will transition to PREPARED or FUNDING (if already authorized) when quote is complete */
+  Pending = 'PENDING',
+  /** Will transition to FUNDING once authorized */
+  Prepared = 'PREPARED',
+  /** Will transition to SENDING once payment funds are reserved */
+  Funding = 'FUNDING',
+  /** Paying, will transition to COMPLETED on success */
+  Sending = 'SENDING',
+  /** Successful completion */
+  Completed = 'COMPLETED',
+  /** Payment quote expired; can be requoted to PENDING */
+  Expired = 'EXPIRED',
+  /** Payment failed */
+  Failed = 'FAILED'
+}
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   /** Paginating forwards: the cursor to continue. */
@@ -546,23 +578,6 @@ export type PaymentQuote = {
   lowExchangeRateEstimate: Scalars['Float'];
   highExchangeRateEstimate: Scalars['Float'];
 };
-
-export enum PaymentState {
-  /** Will transition to PREPARED or FUNDING (if already authorized) when quote is complete */
-  Pending = 'PENDING',
-  /** Will transition to FUNDING once authorized */
-  Prepared = 'PREPARED',
-  /** Will transition to SENDING once payment funds are reserved */
-  Funding = 'FUNDING',
-  /** Paying, will transition to COMPLETED on success */
-  Sending = 'SENDING',
-  /** Successful completion */
-  Completed = 'COMPLETED',
-  /** Payment quote expired; can be requoted to PENDING */
-  Expired = 'EXPIRED',
-  /** Payment failed */
-  Failed = 'FAILED'
-}
 
 export enum PaymentType {
   FixedSend = 'FIXED_SEND',
@@ -836,6 +851,7 @@ export type ResolversTypes = {
   IncomingPayment: ResolverTypeWrapper<Partial<IncomingPayment>>;
   IncomingPaymentConnection: ResolverTypeWrapper<Partial<IncomingPaymentConnection>>;
   IncomingPaymentEdge: ResolverTypeWrapper<Partial<IncomingPaymentEdge>>;
+  IncomingPaymentState: ResolverTypeWrapper<Partial<IncomingPaymentState>>;
   LiquidityError: ResolverTypeWrapper<Partial<LiquidityError>>;
   LiquidityMutationResponse: ResolverTypeWrapper<Partial<LiquidityMutationResponse>>;
   Model: ResolversTypes['Account'] | ResolversTypes['ApiKey'] | ResolversTypes['Asset'] | ResolversTypes['IncomingPayment'] | ResolversTypes['OutgoingPayment'] | ResolversTypes['Peer'];
@@ -846,12 +862,12 @@ export type ResolversTypes = {
   OutgoingPaymentEdge: ResolverTypeWrapper<Partial<OutgoingPaymentEdge>>;
   OutgoingPaymentOutcome: ResolverTypeWrapper<Partial<OutgoingPaymentOutcome>>;
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
+  OutgoingPaymentState: ResolverTypeWrapper<Partial<OutgoingPaymentState>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   PaymentAmount: ResolverTypeWrapper<Partial<PaymentAmount>>;
   PaymentAmountInput: ResolverTypeWrapper<Partial<PaymentAmountInput>>;
   PaymentQuote: ResolverTypeWrapper<Partial<PaymentQuote>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']>>;
-  PaymentState: ResolverTypeWrapper<Partial<PaymentState>>;
   PaymentType: ResolverTypeWrapper<Partial<PaymentType>>;
   Peer: ResolverTypeWrapper<Partial<Peer>>;
   PeerEdge: ResolverTypeWrapper<Partial<PeerEdge>>;
@@ -1066,11 +1082,15 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 
 export type IncomingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPayment'] = ResolversParentTypes['IncomingPayment']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  accountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  incomingAmount?: Resolver<Maybe<ResolversTypes['PaymentAmount']>, ParentType, ContextType>;
+  receivedAmount?: Resolver<ResolversTypes['PaymentAmount'], ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  amount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  receiptsEnabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1136,7 +1156,7 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   accountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  state?: Resolver<ResolversTypes['PaymentState'], ParentType, ContextType>;
+  state?: Resolver<ResolversTypes['OutgoingPaymentState'], ParentType, ContextType>;
   authorized?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;

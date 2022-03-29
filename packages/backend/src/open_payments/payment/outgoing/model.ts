@@ -17,7 +17,7 @@ export class OutgoingPayment
     return ['sendAmount', 'receiveAmount', 'quote']
   }
 
-  public state!: PaymentState
+  public state!: OutgoingPaymentState
   public authorized!: boolean
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
@@ -252,7 +252,7 @@ interface PaymentQuote {
   highExchangeRateEstimate: Pay.Ratio
 }
 
-export enum PaymentState {
+export enum OutgoingPaymentState {
   // Initial state. In this state, an empty account is generated, and the payment is automatically resolved & quoted.
   // On success, transition to `PREPARED` or `FUNDING` if already authorized.
   // On failure, transition to `FAILED`.
@@ -302,7 +302,7 @@ export type PaymentData = {
     id: string
     accountId: string
     createdAt: string
-    state: PaymentState
+    state: OutgoingPaymentState
     authorized: boolean
     error?: string
     stateAttempts: number

@@ -24,7 +24,7 @@ import {
 } from '../../open_payments/payment/incoming/model'
 import {
   OutgoingPayment,
-  PaymentState,
+  OutgoingPaymentState,
   PaymentEvent,
   PaymentWithdrawType,
   isPaymentEventType
@@ -1615,7 +1615,7 @@ describe('Liquidity Resolvers', (): void => {
           receivingPayment
         })) as OutgoingPayment
         await payment.$query(knex).patch({
-          state: PaymentState.Funding,
+          state: OutgoingPaymentState.Funding,
           sendAmount: {
             amount: BigInt(456),
             assetCode: account.asset.code,

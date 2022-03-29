@@ -4,7 +4,7 @@ import assert from 'assert'
 import { LifecycleError } from './errors'
 import {
   OutgoingPayment,
-  PaymentState,
+  OutgoingPaymentState,
   PaymentEvent,
   PaymentEventType
 } from './model'
@@ -56,8 +56,8 @@ export async function handlePending(
   })
 
   const state = payment.authorized
-    ? PaymentState.Funding
-    : PaymentState.Prepared
+    ? OutgoingPaymentState.Funding
+    : OutgoingPaymentState.Prepared
 
   // Pay.startQuote should return PaymentError.InvalidSourceAmount or
   // PaymentError.InvalidDestinationAmount for non-positive amounts.
@@ -91,7 +91,7 @@ export async function handlePending(
     }
   })
 
-  if (state === PaymentState.Funding) {
+  if (state === OutgoingPaymentState.Funding) {
     await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFunding)
   }
 }
@@ -104,7 +104,9 @@ export async function handlePrepared(
   if (!payment.expiresAt) throw LifecycleError.MissingExpiration
   const now = new Date()
   if (payment.expiresAt < now) {
-    await payment.$query(deps.knex).patch({ state: PaymentState.Expired })
+    await payment
+      .$query(deps.knex)
+      .patch({ state: OutgoingPaymentState.Expired })
     return
   }
 
@@ -271,7 +273,7 @@ export async function handleFailed(
   error: string
 ): Promise<void> {
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Failed,
+    state: OutgoingPaymentState.Failed,
     error
   })
   await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFailed)
@@ -282,7 +284,7 @@ const handleCompleted = async (
   payment: OutgoingPayment
 ): Promise<void> => {
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Completed
+    state: OutgoingPaymentState.Completed
   })
   await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCompleted)
 }

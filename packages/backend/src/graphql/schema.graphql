@@ -349,11 +349,26 @@ type IncomingPaymentEdge {
 
 type IncomingPayment implements Model {
   id: ID!
-  active: Boolean!
-  createdAt: String!
+  accountId: ID!
+  state: IncomingPaymentState!
   expiresAt: String!
+  incomingAmount: PaymentAmount
+  receivedAmount: PaymentAmount!
   description: String
-  amount: UInt64!
+  externalRef: String
+  receiptsEnabled: Boolean!
+  createdAt: String!
+}
+
+enum IncomingPaymentState {
+  "The payment has a state of `PENDING` when it is initially created."
+  PENDING
+  "As soon as payment has started (funds have cleared into the account) the state moves to `PROCESSING`"
+  PROCESSING
+  "The payment is either auto-completed once the received amount equals the expected amount `amount`, or it is completed manually via an API call."
+  COMPLETED
+  "If the payment expires before it is completed then the state will move to `EXPIRED` and no further payments will be accepted."
+  EXPIRED
 }
 
 type OutgoingPaymentConnection {
@@ -369,7 +384,7 @@ type OutgoingPaymentEdge {
 type OutgoingPayment implements Model {
   id: ID!
   accountId: ID!
-  state: PaymentState!
+  state: OutgoingPaymentState!
   authorized: Boolean!
   error: String
   stateAttempts: Int!
@@ -391,7 +406,7 @@ type PaymentAmount {
   assetScale: Int
 }
 
-enum PaymentState {
+enum OutgoingPaymentState {
   "Will transition to PREPARED or FUNDING (if already authorized) when quote is complete"
   PENDING
   "Will transition to FUNDING once authorized"
