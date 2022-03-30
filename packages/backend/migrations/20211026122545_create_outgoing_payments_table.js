@@ -2,7 +2,7 @@ exports.up = function (knex) {
   return knex.schema.createTable('outgoingPayments', function (table) {
     table.uuid('id').notNullable().primary()
 
-    table.string('state').notNullable().index() // PaymentState
+    table.string('state').notNullable().index() // OutgoingPaymentState
     table.string('error').nullable()
     table.integer('stateAttempts').notNullable().defaultTo(0)
     table.boolean('authorized').notNullable().defaultTo(false)
