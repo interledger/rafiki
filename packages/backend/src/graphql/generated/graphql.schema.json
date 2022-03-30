@@ -2201,25 +2201,25 @@
         "enumValues": [
           {
             "name": "PENDING",
-            "description": "The payment has a state of `PENDING` when it is initially created.",
+            "description": "The payment has a state of PENDING when it is initially created.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "PROCESSING",
-            "description": "As soon as payment has started (funds have cleared into the account) the state moves to `PROCESSING`",
+            "description": "As soon as payment has started (funds have cleared into the account) the state moves to PROCESSING",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "COMPLETED",
-            "description": "The payment is either auto-completed once the received amount equals the expected amount `amount`, or it is completed manually via an API call.",
+            "description": "The payment is either auto-completed once the received amount equals the expected amount `incomingAmount.amount`, or it is completed manually via an API call.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "EXPIRED",
-            "description": "If the payment expires before it is completed then the state will move to `EXPIRED` and no further payments will be accepted.",
+            "description": "If the payment expires before it is completed then the state will move to EXPIRED and no further payments will be accepted.",
             "isDeprecated": false,
             "deprecationReason": null
           }
