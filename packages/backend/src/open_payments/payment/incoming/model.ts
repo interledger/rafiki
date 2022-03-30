@@ -8,7 +8,7 @@ import { WebhookEvent } from '../../../webhook/model'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incoming_payment.expired',
-  IncomingPaymentPaid = 'incoming_payment.paid'
+  IncomingPaymentCompleted = 'incoming_payment.completed'
 }
 
 export enum IncomingPaymentState {

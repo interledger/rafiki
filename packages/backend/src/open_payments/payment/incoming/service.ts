@@ -231,7 +231,7 @@ async function handleDeactivated(
     const type =
       incomingPayment.state == IncomingPaymentState.Expired
         ? IncomingPaymentEventType.IncomingPaymentExpired
-        : IncomingPaymentEventType.IncomingPaymentPaid
+        : IncomingPaymentEventType.IncomingPaymentCompleted
     deps.logger.trace({ type }, 'creating incoming payment webhook event')
 
     await IncomingPaymentEvent.query(deps.knex).insertAndFetch({
