@@ -1602,8 +1602,7 @@ describe('Liquidity Resolvers', (): void => {
             assetScale: account.asset.scale
           },
           expiresAt: new Date(Date.now() + 60 * 1000),
-          description: 'description!',
-          receiptsEnabled: false
+          description: 'description!'
         })
         assert.ok(!isIncomingPaymentEventType(incomingPayment))
         const outgoingPaymentService = await deps.use('outgoingPaymentService')

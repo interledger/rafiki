@@ -97,8 +97,7 @@ describe('Incoming Payment Service', (): void => {
         },
         expiresAt: new Date(Date.now() + 30_000),
         description: 'Test incoming payment',
-        externalRef: '#123',
-        receiptsEnabled: false
+        externalRef: '#123'
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
@@ -124,8 +123,7 @@ describe('Incoming Payment Service', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale
         },
-        externalRef: '#123',
-        receiptsEnabled: false
+        externalRef: '#123'
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       await expect(
@@ -144,8 +142,7 @@ describe('Incoming Payment Service', (): void => {
           },
           expiresAt: new Date(Date.now() + 30_000),
           description: 'Test incoming payment',
-          externalRef: '#123',
-          receiptsEnabled: false
+          externalRef: '#123'
         })
       ).resolves.toBe(IncomingPaymentError.UnknownAccount)
     })
@@ -161,8 +158,7 @@ describe('Incoming Payment Service', (): void => {
           },
           expiresAt: new Date(Date.now() + 30_000),
           description: 'Test incoming payment',
-          externalRef: '#123',
-          receiptsEnabled: false
+          externalRef: '#123'
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
       await expect(
@@ -175,8 +171,7 @@ describe('Incoming Payment Service', (): void => {
           },
           expiresAt: new Date(Date.now() + 30_000),
           description: 'Test incoming payment',
-          externalRef: '#123',
-          receiptsEnabled: false
+          externalRef: '#123'
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
     })
@@ -200,8 +195,7 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
-          externalRef: '#123',
-          receiptsEnabled: false
+          externalRef: '#123'
         })
         assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
         incomingPayment = incomingPaymentOrError
@@ -260,8 +254,7 @@ describe('Incoming Payment Service', (): void => {
         },
         description: 'Test incoming payment',
         expiresAt: new Date(Date.now() + 30_000),
-        externalRef: '#123',
-        receiptsEnabled: false
+        externalRef: '#123'
       })
       assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
       const incomingPaymentId = incomingPaymentOrError.id
@@ -286,8 +279,7 @@ describe('Incoming Payment Service', (): void => {
           },
           description: 'Test incoming payment',
           expiresAt: new Date(Date.now() - 40_000),
-          externalRef: '#123',
-          receiptsEnabled: false
+          externalRef: '#123'
         })
         assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
         await expect(
@@ -322,8 +314,7 @@ describe('Incoming Payment Service', (): void => {
           },
           description: 'Test incoming payment',
           expiresAt: new Date(Date.now() - 40_000),
-          externalRef: '#123',
-          receiptsEnabled: false
+          externalRef: '#123'
         })
         assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
         await expect(incomingPaymentService.processNext()).resolves.toBe(
@@ -355,8 +346,7 @@ describe('Incoming Payment Service', (): void => {
               },
               expiresAt: new Date(Date.now() + expiresAt),
               description: 'Test incoming payment',
-              externalRef: '#123',
-              receiptsEnabled: false
+              externalRef: '#123'
             })
             assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
             incomingPayment = incomingPaymentOrError
@@ -436,8 +426,7 @@ describe('Incoming Payment Service', (): void => {
           },
           expiresAt: new Date(Date.now() + 30_000),
           description: 'IncomingPayment',
-          externalRef: '#123',
-          receiptsEnabled: false
+          externalRef: '#123'
         }),
       getPage: (pagination: Pagination) =>
         incomingPaymentService.getAccountIncomingPaymentsPage(
@@ -461,8 +450,7 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
-          externalRef: '#123',
-          receiptsEnabled: false
+          externalRef: '#123'
         })
         assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
         incomingPayment = incomingPaymentOrError

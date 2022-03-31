@@ -106,23 +106,13 @@ async function createIncomingPayment(
   if (Date.now() + MAX_EXPIRY < expiresAt)
     return ctx.throw(400, 'expiry too high')
   if (expiresAt < Date.now()) return ctx.throw(400, 'already expired')
-  if (
-    body.receiptsEnabled !== undefined &&
-    typeof body.receiptsEnabled !== 'boolean'
-  )
-    return ctx.throw(400, 'invalid receiptsEnabled flag')
-  const receiptsEnabled = Boolean(body.receiptsEnabled)
-  if (receiptsEnabled === true) {
-    return ctx.throw(400, 'receipts not supported yet')
-  }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     accountId,
     description: body.description,
     externalRef: body.externalRef,
     expiresAt: new Date(expiresAt),
-    incomingAmount,
-    receiptsEnabled
+    incomingAmount
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -211,8 +201,7 @@ function incomingPaymentToBody(
       assetCode: incomingPayment.account.asset.code,
       assetScale: incomingPayment.account.asset.scale
     },
-    expiresAt: incomingPayment.expiresAt.toISOString(),
-    receiptsEnabled: incomingPayment.receiptsEnabled
+    expiresAt: incomingPayment.expiresAt.toISOString()
   }
 
   if (incomingPayment.incomingAmount) {
@@ -253,14 +242,6 @@ function getStreamCredentials(
 ) {
   return deps.streamServer.generateCredentials({
     paymentTag: incomingPayment.id,
-    // TODO receipt support on incoming payments?
-    //receiptSetup:
-    //  nonce && secret
-    //    ? {
-    //        nonce: Buffer.from(nonce.toString(), 'base64'),
-    //        secret: Buffer.from(secret.toString(), 'base64')
-    //      }
-    //    : undefined,
     asset: {
       code: incomingPayment.account.asset.code,
       scale: incomingPayment.account.asset.scale

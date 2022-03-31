@@ -101,8 +101,7 @@ describe('Incoming Payment Routes', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale
         },
-        externalRef: '#123',
-        receiptsEnabled: false
+        externalRef: '#123'
       })
       if (!isIncomingPaymentError(incomingPaymentOrError)) {
         incomingPayment = incomingPaymentOrError
@@ -178,7 +177,6 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -189,18 +187,16 @@ describe('Incoming Payment Routes', (): void => {
   })
   describe('create', (): void => {
     test.each`
-      id              | headers                             | body                                                     | status | message                           | description
-      ${'not_a_uuid'} | ${null}                             | ${null}                                                  | ${400} | ${'invalid account id'}           | ${'invalid account id'}
-      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                  | ${406} | ${'must accept json'}             | ${'invalid Accept header'}
-      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                  | ${400} | ${'must send json body'}          | ${'invalid Content-Type header'}
-      ${uuid()}       | ${null}                             | ${null}                                                  | ${404} | ${'unknown account'}              | ${'unknown account'}
-      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                            | ${400} | ${'invalid incomingAmount'}       | ${'invalid incomingAmount'}
-      ${null}         | ${null}                             | ${{ description: 123 }}                                  | ${400} | ${'invalid description'}          | ${'invalid description'}
-      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                  | ${400} | ${'invalid externalRef'}          | ${'invalid externalRef'}
-      ${null}         | ${null}                             | ${{ receiptsEnabled: 'yes' }}                            | ${400} | ${'invalid receiptsEnabled flag'} | ${'invalid receiptsEnabled flag'}
-      ${null}         | ${null}                             | ${{ receiptsEnabled: true }}                             | ${400} | ${'receipts not supported yet'}   | ${'receiptsEnabled = true'}
-      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                 | ${400} | ${'invalid expiresAt'}            | ${'invalid expiresAt'}
-      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }} | ${400} | ${'already expired'}              | ${'already expired expiresAt'}
+      id              | headers                             | body                                                     | status | message                     | description
+      ${'not_a_uuid'} | ${null}                             | ${null}                                                  | ${400} | ${'invalid account id'}     | ${'invalid account id'}
+      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                  | ${406} | ${'must accept json'}       | ${'invalid Accept header'}
+      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                  | ${400} | ${'must send json body'}    | ${'invalid Content-Type header'}
+      ${uuid()}       | ${null}                             | ${null}                                                  | ${404} | ${'unknown account'}        | ${'unknown account'}
+      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                            | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount'}
+      ${null}         | ${null}                             | ${{ description: 123 }}                                  | ${400} | ${'invalid description'}    | ${'invalid description'}
+      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                  | ${400} | ${'invalid externalRef'}    | ${'invalid externalRef'}
+      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                 | ${400} | ${'invalid expiresAt'}      | ${'invalid expiresAt'}
+      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }} | ${400} | ${'already expired'}        | ${'already expired expiresAt'}
     `(
       'returns $status on $description',
       async ({ id, headers, body, status, message }): Promise<void> => {
@@ -253,7 +249,6 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -284,7 +279,6 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -318,7 +312,6 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -353,43 +346,6 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: incomingPayment.account.asset.scale
         },
         state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled,
-        ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret
-      })
-    })
-
-    test('returns the incoming payment on undefined receiptsEnabled flag', async (): Promise<void> => {
-      const ctx = setup({}, { accountId: account.id })
-      ctx.request.body['receiptsEnabled'] = undefined
-      await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.response.status).toBe(201)
-      const sharedSecret = (ctx.response.body as Record<string, unknown>)[
-        'sharedSecret'
-      ]
-      const incomingPaymentId = ((ctx.response.body as Record<string, unknown>)[
-        'id'
-      ] as string)
-        .split('/')
-        .pop()
-      expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
-        incomingAmount: {
-          amount: incomingPayment.incomingAmount?.amount.toString(),
-          assetCode: incomingPayment.incomingAmount?.assetCode,
-          assetScale: incomingPayment.incomingAmount?.assetScale
-        },
-        description: incomingPayment.description,
-        expiresAt: expiresAt.toISOString(),
-        receivedAmount: {
-          amount: '0',
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
-        },
-        externalRef: '#123',
-        state: IncomingPaymentState.Pending.toLowerCase(),
-        receiptsEnabled: false,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -449,8 +405,7 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
-        state: IncomingPaymentState.Completed.toLowerCase(),
-        receiptsEnabled: incomingPayment.receiptsEnabled
+        state: IncomingPaymentState.Completed.toLowerCase()
       })
     })
   })

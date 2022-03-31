@@ -70,8 +70,7 @@ describe('Incoming Payment Resolver', (): void => {
           },
           expiresAt: new Date(Date.now() + 30_000),
           description: `IncomingPayment`,
-          externalRef: '#123',
-          receiptsEnabled: false
+          externalRef: '#123'
         }),
       pagedQuery: 'incomingPayments',
       parent: {

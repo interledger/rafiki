@@ -356,7 +356,6 @@ type IncomingPayment implements Model {
   receivedAmount: PaymentAmount!
   description: String
   externalRef: String
-  receiptsEnabled: Boolean!
   createdAt: String!
 }
 

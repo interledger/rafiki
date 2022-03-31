@@ -35,7 +35,6 @@ export type IncomingPaymentData = {
     receivedAmount: Amount
     externalRef?: string
     state: string
-    receiptsEnabled: boolean
   }
 }
 
@@ -87,7 +86,6 @@ export class IncomingPayment
   public expiresAt!: Date
   public state!: IncomingPaymentState
   public externalRef?: string
-  public receiptsEnabled!: boolean
 
   public processAt!: Date | null
 
@@ -154,8 +152,7 @@ export class IncomingPayment
           assetCode: this.asset.code,
           assetScale: this.asset.scale
         },
-        state: this.state,
-        receiptsEnabled: this.receiptsEnabled
+        state: this.state
       }
     }
 

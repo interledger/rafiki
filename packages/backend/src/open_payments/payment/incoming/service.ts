@@ -29,7 +29,6 @@ export interface CreateIncomingPaymentOptions {
   expiresAt?: Date
   incomingAmount?: Amount
   externalRef?: string
-  receiptsEnabled: boolean
 }
 
 interface UpdateIncomingPaymentOptions {
@@ -95,8 +94,7 @@ async function createIncomingPayment(
     description,
     expiresAt,
     incomingAmount,
-    externalRef,
-    receiptsEnabled
+    externalRef
   }: CreateIncomingPaymentOptions,
   trx?: Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -125,7 +123,6 @@ async function createIncomingPayment(
         incomingAmount,
         externalRef,
         state: IncomingPaymentState.Pending,
-        receiptsEnabled,
         processAt: expiresAt ?? end(EXPIRY)
       })
       .withGraphFetched('[account.asset, asset]')

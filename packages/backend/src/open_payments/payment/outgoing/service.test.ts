@@ -261,8 +261,7 @@ describe('OutgoingPaymentService', (): void => {
           assetScale: destinationAsset.scale
         },
         expiresAt: new Date(Date.now() + 60 * 1000),
-        description: 'description!',
-        receiptsEnabled: false
+        description: 'description!'
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
