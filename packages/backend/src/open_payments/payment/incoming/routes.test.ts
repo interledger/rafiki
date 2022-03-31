@@ -236,9 +236,6 @@ describe('Incoming Payment Routes', (): void => {
       ] as string)
         .split('/')
         .pop()
-      expect(ctx.response.headers['location']).toBe(
-        `${config.publicHost}/incoming-payments/${incomingPaymentId}`
-      )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
@@ -275,9 +272,6 @@ describe('Incoming Payment Routes', (): void => {
       ] as string)
         .split('/')
         .pop()
-      expect(ctx.response.headers['location']).toBe(
-        `${config.publicHost}/incoming-payments/${incomingPaymentId}`
-      )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
@@ -308,9 +302,6 @@ describe('Incoming Payment Routes', (): void => {
       ] as string)
         .split('/')
         .pop()
-      expect(ctx.response.headers['location']).toBe(
-        `${config.publicHost}/incoming-payments/${incomingPaymentId}`
-      )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
@@ -346,9 +337,6 @@ describe('Incoming Payment Routes', (): void => {
       ] as string)
         .split('/')
         .pop()
-      expect(ctx.response.headers['location']).toBe(
-        `${config.publicHost}/incoming-payments/${incomingPaymentId}`
-      )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
@@ -384,9 +372,6 @@ describe('Incoming Payment Routes', (): void => {
       ] as string)
         .split('/')
         .pop()
-      expect(ctx.response.headers['location']).toBe(
-        `${config.publicHost}/incoming-payments/${incomingPaymentId}`
-      )
       expect(ctx.response.body).toEqual({
         id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
         accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,

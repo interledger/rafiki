@@ -141,7 +141,6 @@ async function createIncomingPayment(
   res['ilpAddress'] = ilpAddress
   res['sharedSecret'] = base64url(sharedSecret)
   ctx.body = res
-  ctx.set('Location', res.id)
 }
 
 async function updateIncomingPayment(
