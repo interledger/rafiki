@@ -275,7 +275,7 @@ export enum IncomingPaymentState {
   Pending = 'PENDING',
   /** As soon as payment has started (funds have cleared into the account) the state moves to PROCESSING */
   Processing = 'PROCESSING',
-  /** The payment is either auto-completed once the received amount equals the expected amount `incomingAmount.amount`, or it is completed manually via an API call. */
+  /** The payment is either auto-completed once the received amount equals the expected `incomingAmount.amount`, or it is completed manually via an API call. */
   Completed = 'COMPLETED',
   /** If the payment expires before it is completed then the state will move to EXPIRED and no further payments will be accepted. */
   Expired = 'EXPIRED'

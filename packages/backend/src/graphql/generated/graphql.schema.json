@@ -2213,7 +2213,7 @@
           },
           {
             "name": "COMPLETED",
-            "description": "The payment is either auto-completed once the received amount equals the expected amount `incomingAmount.amount`, or it is completed manually via an API call.",
+            "description": "The payment is either auto-completed once the received amount equals the expected `incomingAmount.amount`, or it is completed manually via an API call.",
             "isDeprecated": false,
             "deprecationReason": null
           },
