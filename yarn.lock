@@ -2068,7 +2068,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@interledger/pay@npm:^0.4.0-alpha.0":
+"@interledger/pay@npm:0.4.0-alpha.0":
   version: 0.4.0-alpha.0
   resolution: "@interledger/pay@npm:0.4.0-alpha.0"
   dependencies:
@@ -4606,7 +4606,7 @@ __metadata:
     "@graphql-tools/load": ^7.1.9
     "@graphql-tools/schema": ^8.1.2
     "@graphql-tools/utils": ^8.5.3
-    "@interledger/pay": ^0.4.0-alpha.0
+    "@interledger/pay": 0.4.0-alpha.0
     "@interledger/stream-receiver": ^0.2.2
     "@koa/cors": ^3.1.0
     "@koa/router": ^10.0.0
