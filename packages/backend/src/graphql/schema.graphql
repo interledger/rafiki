@@ -352,8 +352,8 @@ type IncomingPayment implements Model {
   accountId: ID!
   state: IncomingPaymentState!
   expiresAt: String!
-  incomingAmount: PaymentAmount
-  receivedAmount: PaymentAmount!
+  incomingAmount: IncomingPaymentAmount
+  receivedAmount: IncomingPaymentAmount!
   description: String
   externalRef: String
   createdAt: String!
@@ -368,6 +368,12 @@ enum IncomingPaymentState {
   COMPLETED
   "If the payment expires before it is completed then the state will move to EXPIRED and no further payments will be accepted."
   EXPIRED
+}
+
+type IncomingPaymentAmount {
+  amount: UInt64!
+  assetCode: String!
+  assetScale: Int!
 }
 
 type OutgoingPaymentConnection {
@@ -388,8 +394,8 @@ type OutgoingPayment implements Model {
   error: String
   stateAttempts: Int!
   receivingAccount: String
-  sendAmount: PaymentAmount
-  receiveAmount: PaymentAmount
+  sendAmount: OutgoingPaymentAmount
+  receiveAmount: OutgoingPaymentAmount
   receivingPayment: String
   description: String
   externalRef: String
@@ -399,7 +405,7 @@ type OutgoingPayment implements Model {
   createdAt: String!
 }
 
-type PaymentAmount {
+type OutgoingPaymentAmount {
   amount: UInt64!
   assetCode: String
   assetScale: Int

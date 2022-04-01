@@ -250,7 +250,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     amount: sendAmount.amount.toString() || null,
                     assetCode: sendAmount.assetCode,
                     assetScale: sendAmount.assetScale,
-                    __typename: 'PaymentAmount'
+                    __typename: 'OutgoingPaymentAmount'
                   }
                 : null
             )
@@ -260,7 +260,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     amount: receiveAmount.amount.toString() || null,
                     assetCode: receiveAmount.assetCode,
                     assetScale: receiveAmount.assetScale,
-                    __typename: 'PaymentAmount'
+                    __typename: 'OutgoingPaymentAmount'
                   }
                 : null
             )
