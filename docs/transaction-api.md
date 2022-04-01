@@ -72,7 +72,7 @@ An incoming payment is created according to the [Open Payments](https://docs.ope
 
 ### Receiving
 
-An incoming payment receives funds via Interledger as long as it has not expired or has been completed.
+An incoming payment receives funds via Interledger as long as it is not complete or expired.
 
 ### Expiry and Completion
 
