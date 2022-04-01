@@ -178,7 +178,8 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret
+        sharedSecret,
+        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
       })
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
@@ -250,7 +251,8 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret
+        sharedSecret,
+        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
       })
     })
 
@@ -280,7 +282,8 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret
+        sharedSecret,
+        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
       })
     })
     test('returns the incoming payment on undefined description', async (): Promise<void> => {
@@ -313,7 +316,8 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret
+        sharedSecret,
+        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
       })
     })
 
@@ -347,7 +351,8 @@ describe('Incoming Payment Routes', (): void => {
         },
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret
+        sharedSecret,
+        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
       })
     })
   })
@@ -405,7 +410,8 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
-        state: IncomingPaymentState.Completed.toLowerCase()
+        state: IncomingPaymentState.Completed.toLowerCase(),
+        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
       })
     })
   })

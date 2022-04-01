@@ -215,6 +215,8 @@ function incomingPaymentToBody(
     body['description'] = incomingPayment.description
   if (incomingPayment.externalRef)
     body['externalRef'] = incomingPayment.externalRef
+  // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+  body['receiptsEnabled'] = false
   return body
 }
 
