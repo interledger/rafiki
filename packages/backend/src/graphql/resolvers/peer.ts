@@ -16,7 +16,7 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['PeersConnection'] => {
+): Promise<ResolversTypes['PeersConnection']> => {
   const peerService = await ctx.container.use('peerService')
   const peers = await peerService.getPage(args)
   return {
@@ -31,7 +31,7 @@ export const getPeer: QueryResolvers<ApolloContext>['peer'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['Peer'] => {
+): Promise<ResolversTypes['Peer']> => {
   const peerService = await ctx.container.use('peerService')
   const peer = await peerService.get(args.id)
   if (!peer) {
@@ -44,7 +44,7 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] = async 
   parent,
   args,
   ctx
-): ResolversTypes['CreatePeerMutationResponse'] => {
+): Promise<ResolversTypes['CreatePeerMutationResponse']> => {
   try {
     const peerService = await ctx.container.use('peerService')
     const peerOrError = await peerService.create(args.input)
@@ -92,7 +92,7 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] = async 
   parent,
   args,
   ctx
-): ResolversTypes['UpdatePeerMutationResponse'] => {
+): Promise<ResolversTypes['UpdatePeerMutationResponse']> => {
   try {
     const peerService = await ctx.container.use('peerService')
     const peerOrError = await peerService.update(args.input)
@@ -140,7 +140,7 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] = async 
   parent,
   args,
   ctx
-): ResolversTypes['DeletePeerMutationResponse'] => {
+): Promise<ResolversTypes['DeletePeerMutationResponse']> => {
   // TODO:
   console.log(ctx) // temporary to pass linting
   return {}
@@ -150,7 +150,7 @@ export const getPeersConnectionPageInfo: PeersConnectionResolvers<ApolloContext>
   parent,
   args,
   ctx
-): ResolversTypes['PageInfo'] => {
+): Promise<ResolversTypes['PageInfo']> => {
   const edges = parent.edges
   if (edges == null || typeof edges == 'undefined' || edges.length == 0)
     return {
@@ -169,7 +169,7 @@ const getPageInfo = async ({
 }: {
   peerService: PeerService
   edges: PeerEdge[]
-}): ResolversTypes['PageInfo'] => {
+}): Promise<ResolversTypes['PageInfo']> => {
   const firstEdge = edges[0].cursor
   const lastEdge = edges[edges.length - 1].cursor
 

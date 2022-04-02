@@ -259,9 +259,12 @@ async function getAccountIncomingPaymentsPage(
 ): Promise<IncomingPayment[]> {
   assert.ok(deps.knex, 'Knex undefined')
 
-  return await IncomingPayment.query(deps.knex).getPage(pagination).where({
-    accountId: accountId
-  })
+  return await IncomingPayment.query(deps.knex)
+    .getPage(pagination)
+    .where({
+      accountId: accountId
+    })
+    .withGraphFetched('asset')
 }
 
 async function updateIncomingPayment(

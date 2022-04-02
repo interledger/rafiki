@@ -1,6 +1,7 @@
 import {
   ResolversTypes,
   IncomingPaymentConnectionResolvers,
+  IncomingPaymentResolvers,
   AccountResolvers
 } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
@@ -10,7 +11,7 @@ export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomi
   parent,
   args,
   ctx
-): ResolversTypes['IncomingPaymentConnection'] => {
+): Promise<ResolversTypes['IncomingPaymentConnection']> => {
   if (!parent.id) throw new Error('missing account id')
   const incomingPaymentService = await ctx.container.use(
     'incomingPaymentService'
@@ -25,6 +26,10 @@ export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomi
       cursor: incomingPayment.id,
       node: {
         ...incomingPayment,
+        receivedAmount: {
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
+        },
         expiresAt: incomingPayment.expiresAt.toISOString(),
         createdAt: incomingPayment.createdAt?.toISOString()
       }
@@ -36,7 +41,7 @@ export const getPageInfo: IncomingPaymentConnectionResolvers<ApolloContext>['pag
   parent,
   args,
   ctx
-): ResolversTypes['PageInfo'] => {
+): Promise<ResolversTypes['PageInfo']> => {
   const logger = await ctx.container.use('logger')
   const incomingPaymentService = await ctx.container.use(
     'incomingPaymentService'
@@ -45,7 +50,12 @@ export const getPageInfo: IncomingPaymentConnectionResolvers<ApolloContext>['pag
   logger.info({ edges: parent.edges }, 'getPageInfo parent edges')
 
   const edges = parent.edges
-  if (edges == null || typeof edges == 'undefined' || edges.length == 0)
+  if (
+    edges == null ||
+    typeof edges == 'undefined' ||
+    edges.length == 0 ||
+    !edges[0].node
+  )
     return {
       hasPreviousPage: false,
       hasNextPage: false
@@ -88,5 +98,23 @@ export const getPageInfo: IncomingPaymentConnectionResolvers<ApolloContext>['pag
     hasNextPage: hasNextPageIncomingPayments.length == 1,
     hasPreviousPage: hasPreviousPageIncomingPayments.length == 1,
     startCursor: firstEdge
+  }
+}
+
+export const getReceivedAmount: IncomingPaymentResolvers<ApolloContext>['receivedAmount'] = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['IncomingPaymentAmount']> => {
+  if (!parent.id) throw new Error('missing id')
+
+  const accountingService = await ctx.container.use('accountingService')
+  const totalReceived = await accountingService.getTotalReceived(parent.id)
+  if (totalReceived === undefined)
+    throw new Error('payment account does not exist')
+  return {
+    amount: totalReceived,
+    assetCode: parent.receivedAmount.assetCode,
+    assetScale: parent.receivedAmount.assetScale
   }
 }
