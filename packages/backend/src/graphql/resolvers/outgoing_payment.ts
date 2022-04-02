@@ -21,7 +21,7 @@ export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'
   parent,
   args,
   ctx
-): ResolversTypes['OutgoingPayment'] => {
+): Promise<ResolversTypes['OutgoingPayment']> => {
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
@@ -34,7 +34,7 @@ export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = as
   parent,
   args,
   ctx
-): ResolversTypes['OutgoingPaymentOutcome'] => {
+): Promise<ResolversTypes['OutgoingPaymentOutcome']> => {
   if (!parent.id) throw new Error('missing id')
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
@@ -54,7 +54,7 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
   parent,
   args,
   ctx
-): ResolversTypes['OutgoingPaymentResponse'] => {
+): Promise<ResolversTypes['OutgoingPaymentResponse']> => {
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
@@ -84,7 +84,7 @@ export const getAccountOutgoingPayments: AccountResolvers<ApolloContext>['outgoi
   parent,
   args,
   ctx
-): ResolversTypes['OutgoingPaymentConnection'] => {
+): Promise<ResolversTypes['OutgoingPaymentConnection']> => {
   if (!parent.id) throw new Error('missing account id')
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
@@ -105,7 +105,7 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
   parent,
   args,
   ctx
-): ResolversTypes['PageInfo'] => {
+): Promise<ResolversTypes['PageInfo']> => {
   const logger = await ctx.container.use('logger')
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
@@ -159,7 +159,7 @@ export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<Apol
 
 export function paymentToGraphql(
   payment: OutgoingPayment
-): Omit<SchemaOutgoingPayment, 'outcome' | 'account'> {
+): Omit<SchemaOutgoingPayment, 'outcome'> {
   return {
     id: payment.id,
     accountId: payment.accountId,

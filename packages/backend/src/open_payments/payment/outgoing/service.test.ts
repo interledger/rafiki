@@ -253,7 +253,7 @@ describe('OutgoingPaymentService', (): void => {
       accountUrl = `${config.publicHost}/pay/${destinationAccount.id}`
       receivingAccount = accountUrl.replace('https://', '$')
       const incomingPaymentService = await deps.use('incomingPaymentService')
-      incomingPayment = await incomingPaymentService.create({
+      incomingPayment = (await incomingPaymentService.create({
         accountId: destinationAccount.id,
         incomingAmount: {
           amount: BigInt(56),
@@ -262,7 +262,7 @@ describe('OutgoingPaymentService', (): void => {
         },
         expiresAt: new Date(Date.now() + 60 * 1000),
         description: 'description!'
-      })
+      })) as IncomingPayment
       assert.ok(!isIncomingPaymentError(incomingPayment))
       receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
       amtDelivered = BigInt(0)

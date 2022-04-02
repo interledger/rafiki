@@ -12,7 +12,7 @@ export const getAccount: QueryResolvers<ApolloContext>['account'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['Account'] => {
+): Promise<ResolversTypes['Account']> => {
   const accountService = await ctx.container.use('accountService')
   const account = await accountService.get(args.id)
   if (!account) {
@@ -25,7 +25,7 @@ export const createAccount: MutationResolvers<ApolloContext>['createAccount'] = 
   parent,
   args,
   ctx
-): ResolversTypes['CreateAccountMutationResponse'] => {
+): Promise<ResolversTypes['CreateAccountMutationResponse']> => {
   try {
     const accountService = await ctx.container.use('accountService')
     const account = await accountService.create(args.input)
@@ -55,7 +55,7 @@ export const triggerAccountEvents: MutationResolvers<ApolloContext>['triggerAcco
   parent,
   args,
   ctx
-): ResolversTypes['TriggerAccountEventsMutationResponse'] => {
+): Promise<ResolversTypes['TriggerAccountEventsMutationResponse']> => {
   try {
     const accountService = await ctx.container.use('accountService')
     const count = await accountService.triggerEvents(args.limit)

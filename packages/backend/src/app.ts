@@ -71,9 +71,9 @@ export interface AppServices {
   peerService: Promise<PeerService>
   accountService: Promise<AccountService>
   spspRoutes: Promise<SPSPRoutes>
-  IncomingPaymentRoutes: Promise<IncomingPaymentRoutes>
+  incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
   accountRoutes: Promise<AccountRoutes>
-  IncomingPaymentService: Promise<IncomingPaymentService>
+  incomingPaymentService: Promise<IncomingPaymentService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
@@ -336,7 +336,7 @@ export class App {
         this.logger.warn({ error: err.message }, 'processIncomingPayment error')
         return true
       })
-      .then((hasMoreWork: boolean) => {
+      .then((hasMoreWork) => {
         if (hasMoreWork) process.nextTick(() => this.processIncomingPayment())
         else
           setTimeout(
