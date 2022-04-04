@@ -103,6 +103,9 @@ async function createIncomingPayment(
     return IncomingPaymentError.UnknownAccount
   }
   if (incomingAmount) {
+    if (incomingAmount.amount <= 0) {
+      return IncomingPaymentError.InvalidAmount
+    }
     if (incomingAmount.assetCode || incomingAmount.assetScale) {
       if (
         incomingAmount.assetCode !== account.asset.code ||

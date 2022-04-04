@@ -176,6 +176,35 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
     })
 
+    test('Cannot create incoming payment with non-positive amount', async (): Promise<void> => {
+      await expect(
+        incomingPaymentService.create({
+          accountId,
+          incomingAmount: {
+            amount: BigInt(0),
+            assetCode: 'ABC',
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() + 30_000),
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        })
+      ).resolves.toBe(IncomingPaymentError.InvalidAmount)
+      await expect(
+        incomingPaymentService.create({
+          accountId,
+          incomingAmount: {
+            amount: BigInt(-13),
+            assetCode: 'ABC',
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() + 30_000),
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        })
+      ).resolves.toBe(IncomingPaymentError.InvalidAmount)
+    })
+
     test('Cannot fetch a bogus incoming payment', async (): Promise<void> => {
       await expect(incomingPaymentService.get(uuid())).resolves.toBeUndefined()
     })

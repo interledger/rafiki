@@ -195,19 +195,19 @@ describe('Incoming Payment Routes', (): void => {
   })
   describe('create', (): void => {
     test.each`
-      id              | headers                             | body                                                                   | status | message                     | description
-      ${'not_a_uuid'} | ${null}                             | ${null}                                                                | ${400} | ${'invalid account id'}     | ${'invalid account id'}
-      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                                | ${406} | ${'must accept json'}       | ${'invalid Accept header'}
-      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                                | ${400} | ${'must send json body'}    | ${'invalid Content-Type header'}
-      ${uuid()}       | ${null}                             | ${null}                                                                | ${404} | ${'unknown account'}        | ${'unknown account'}
-      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                                          | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount'}
-      ${null}         | ${null}                             | ${{ incomingAmount: { amount: -2, assetCode: 'USD', assetScale: 2 } }} | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount'}
-      ${null}         | ${null}                             | ${{ incomingAmount: { amount: 2, assetCode: 4, assetScale: 2 } }}      | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount'}
-      ${null}         | ${null}                             | ${{ incomingAmount: { amount: 2, assetCode: 'USD', assetScale: -2 } }} | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount'}
-      ${null}         | ${null}                             | ${{ description: 123 }}                                                | ${400} | ${'invalid description'}    | ${'invalid description'}
-      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                                | ${400} | ${'invalid externalRef'}    | ${'invalid externalRef'}
-      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                               | ${400} | ${'invalid expiresAt'}      | ${'invalid expiresAt'}
-      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }}               | ${400} | ${'already expired'}        | ${'already expired expiresAt'}
+      id              | headers                             | body                                                                     | status | message                     | description
+      ${'not_a_uuid'} | ${null}                             | ${null}                                                                  | ${400} | ${'invalid account id'}     | ${'invalid account id'}
+      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                                  | ${406} | ${'must accept json'}       | ${'invalid Accept header'}
+      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                                  | ${400} | ${'must send json body'}    | ${'invalid Content-Type header'}
+      ${uuid()}       | ${null}                             | ${null}                                                                  | ${404} | ${'unknown account'}        | ${'unknown account'}
+      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                                            | ${400} | ${'invalid incomingAmount'} | ${'non-object incomingAmount'}
+      ${null}         | ${null}                             | ${{ incomingAmount: { amount: '-2', assetCode: 'USD', assetScale: 2 } }} | ${400} | ${'invalid amount'}         | ${'invalid incomingAmount, amount non-positive'}
+      ${null}         | ${null}                             | ${{ incomingAmount: { amount: '2', assetCode: 4, assetScale: 2 } }}      | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetCode not string'}
+      ${null}         | ${null}                             | ${{ incomingAmount: { amount: '2', assetCode: 'USD', assetScale: -2 } }} | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetScale negative'}
+      ${null}         | ${null}                             | ${{ description: 123 }}                                                  | ${400} | ${'invalid description'}    | ${'invalid description'}
+      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                                  | ${400} | ${'invalid externalRef'}    | ${'invalid externalRef'}
+      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                                 | ${400} | ${'invalid expiresAt'}      | ${'invalid expiresAt'}
+      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }}                 | ${400} | ${'already expired'}        | ${'already expired expiresAt'}
     `(
       'returns $status on $description',
       async ({ id, headers, body, status, message }): Promise<void> => {

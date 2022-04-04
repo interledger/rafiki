@@ -225,8 +225,6 @@ function parseAmount(amount: unknown): Amount | undefined {
   if (
     typeof amount !== 'object' ||
     amount === null ||
-    typeof amount['amount'] !== 'number' ||
-    amount['amount'] <= 0 ||
     (amount['assetCode'] && typeof amount['assetCode'] !== 'string') ||
     (amount['assetScale'] !== undefined &&
       typeof amount['assetScale'] !== 'number') ||
