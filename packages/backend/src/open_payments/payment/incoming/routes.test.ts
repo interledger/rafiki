@@ -55,7 +55,7 @@ describe('Incoming Payment Routes', (): void => {
           incomingPayment.incomingAmount === undefined
             ? undefined
             : {
-                amount: Number(incomingPayment.incomingAmount.amount),
+                amount: incomingPayment.incomingAmount.amount.toString(),
                 assetScale: incomingPayment.incomingAmount.assetScale,
                 assetCode: incomingPayment.incomingAmount.assetCode
               },
