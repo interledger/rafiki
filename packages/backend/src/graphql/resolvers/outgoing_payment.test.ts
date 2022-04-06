@@ -85,7 +85,6 @@ describe('OutgoingPayment Resolvers', (): void => {
     sendAmount: sendAmountOpts,
     receiveAmount: receiveAmountOpts,
     receivingPayment,
-    authorized,
     description
   }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
     OutgoingPaymentModel.query(knex).insertAndFetch({
@@ -106,7 +105,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           }
         : undefined,
       receivingPayment,
-      expiresAt: new Date(Date.now() + 1000),
       quote: {
         timestamp: new Date(),
         targetType: PaymentType.FixedSend,
@@ -119,7 +117,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         highExchangeRateEstimate: Pay.Ratio.from(2.3)!
       },
       accountId,
-      authorized,
       description
     })
 
@@ -127,10 +124,10 @@ describe('OutgoingPayment Resolvers', (): void => {
     let payment: OutgoingPaymentModel
 
     describe.each`
-      receivingAccount    | sendAmount    | receiveAmount    | receivingPayment    | authorized | description
-      ${receivingAccount} | ${sendAmount} | ${null}          | ${null}             | ${true}    | ${'fixed send'}
-      ${receivingAccount} | ${sendAmount} | ${receiveAmount} | ${null}             | ${true}    | ${'fixed receive'}
-      ${null}             | ${null}       | ${null}          | ${receivingPayment} | ${false}   | ${'incoming payment'}
+      receivingAccount    | sendAmount    | receiveAmount    | receivingPayment    | description
+      ${receivingAccount} | ${sendAmount} | ${null}          | ${null}             | ${'fixed send'}
+      ${receivingAccount} | ${sendAmount} | ${receiveAmount} | ${null}             | ${'fixed receive'}
+      ${null}             | ${null}       | ${null}          | ${receivingPayment} | ${'incoming payment'}
     `(
       '$description',
       ({
@@ -138,7 +135,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         sendAmount,
         receiveAmount,
         receivingPayment,
-        authorized,
         description
       }): void => {
         beforeEach(
@@ -157,7 +153,6 @@ describe('OutgoingPayment Resolvers', (): void => {
               sendAmount,
               receiveAmount,
               receivingPayment,
-              authorized,
               description
             })
           }
@@ -198,7 +193,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                       id
                       accountId
                       state
-                      authorized
                       error
                       stateAttempts
                       receivingAccount
@@ -215,7 +209,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                       }
                       description
                       externalRef
-                      expiresAt
                       quote {
                         timestamp
                         targetType
@@ -240,7 +233,6 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.id).toEqual(payment.id)
             expect(query.accountId).toEqual(payment.accountId)
             expect(query.state).toEqual(state)
-            expect(query.authorized).toEqual(payment.authorized)
             expect(query.error).toEqual(error)
             expect(query.stateAttempts).toBe(0)
             expect(query.receivingAccount).toEqual(receivingAccount)
@@ -267,7 +259,6 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.receivingPayment).toEqual(receivingPayment)
             expect(query.description).toEqual(description)
             expect(query.externalRef).toBeNull()
-            expect(query.expiresAt).toEqual(payment.expiresAt?.toISOString())
             expect(query.quote).toEqual({
               timestamp: payment.quote?.timestamp.toISOString(),
               targetType: SchemaPaymentType.FixedSend,
@@ -315,12 +306,10 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
 
     test.each`
-      receivingAccount    | sendAmount                       | receiveAmount                       | receivingPayment    | authorized   | description  | externalRef  | type
-      ${receivingAccount} | ${sendAmount}                    | ${undefined}                        | ${undefined}        | ${true}      | ${'rent'}    | ${'202201'}  | ${'fixed send (authorized)'}
-      ${receivingAccount} | ${{ amount: sendAmount.amount }} | ${undefined}                        | ${undefined}        | ${false}     | ${undefined} | ${undefined} | ${'fixed send'}
-      ${receivingAccount} | ${undefined}                     | ${receiveAmount}                    | ${undefined}        | ${true}      | ${'rent'}    | ${'202201'}  | ${'fixed receive (authorized)'}
-      ${receivingAccount} | ${undefined}                     | ${{ amount: receiveAmount.amount }} | ${undefined}        | ${false}     | ${undefined} | ${undefined} | ${'fixed receive'}
-      ${undefined}        | ${undefined}                     | ${undefined}                        | ${receivingPayment} | ${undefined} | ${undefined} | ${undefined} | ${'incoming payment'}
+      receivingAccount    | sendAmount                       | receiveAmount                       | receivingPayment    | description  | externalRef  | type
+      ${receivingAccount} | ${{ amount: sendAmount.amount }} | ${undefined}                        | ${undefined}        | ${'rent'}    | ${'202201'}  | ${'fixed send'}
+      ${receivingAccount} | ${undefined}                     | ${{ amount: receiveAmount.amount }} | ${undefined}        | ${undefined} | ${undefined} | ${'fixed receive'}
+      ${undefined}        | ${undefined}                     | ${undefined}                        | ${receivingPayment} | ${undefined} | ${undefined} | ${'incoming payment'}
     `(
       '200 ($type)',
       async ({
@@ -328,7 +317,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         sendAmount,
         receiveAmount,
         receivingPayment,
-        authorized,
         description,
         externalRef
       }): Promise<void> => {
@@ -341,7 +329,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           sendAmount,
           receiveAmount,
           receivingPayment,
-          authorized,
           description,
           externalRef
         }

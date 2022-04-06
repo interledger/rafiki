@@ -390,7 +390,6 @@ type OutgoingPayment implements Model {
   id: ID!
   accountId: ID!
   state: OutgoingPaymentState!
-  authorized: Boolean!
   error: String
   stateAttempts: Int!
   receivingAccount: String
@@ -399,7 +398,6 @@ type OutgoingPayment implements Model {
   receivingPayment: String
   description: String
   externalRef: String
-  expiresAt: String
   quote: PaymentQuote
   outcome: OutgoingPaymentOutcome
   createdAt: String!
@@ -412,18 +410,14 @@ type OutgoingPaymentAmount {
 }
 
 enum OutgoingPaymentState {
-  "Will transition to PREPARED or FUNDING (if already authorized) when quote is complete"
+  "Will transition to FUNDING when quote is complete"
   PENDING
-  "Will transition to FUNDING once authorized"
-  PREPARED
   "Will transition to SENDING once payment funds are reserved"
   FUNDING
   "Paying, will transition to COMPLETED on success"
   SENDING
   "Successful completion"
   COMPLETED
-  "Payment quote expired; can be requoted to PENDING"
-  EXPIRED
   "Payment failed"
   FAILED
 }

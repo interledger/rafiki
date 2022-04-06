@@ -165,8 +165,7 @@ describe('Outgoing Payment Routes', (): void => {
             assetScale: asset.scale
           },
           receiveAmount: receiveAmount && { amount: receiveAmount.toString() },
-          state: OutgoingPaymentState.Pending.toLowerCase(),
-          authorized: false
+          state: OutgoingPaymentState.Pending.toLowerCase()
         })
       }
     )
@@ -175,7 +174,6 @@ describe('Outgoing Payment Routes', (): void => {
       const outgoingPayment = await outgoingPaymentService.create({
         accountId,
         receivingPayment,
-        authorized: true,
         description: 'rent',
         externalRef: '202201'
       })
@@ -184,7 +182,6 @@ describe('Outgoing Payment Routes', (): void => {
         state: OutgoingPaymentState.Funding,
         sendAmount,
         receiveAmount,
-        expiresAt: new Date(Date.now() + 1000),
         quote: {
           timestamp: new Date(),
           targetType: Pay.PaymentType.FixedSend,
@@ -209,7 +206,6 @@ describe('Outgoing Payment Routes', (): void => {
         'application/json; charset=utf-8'
       )
 
-      assert.ok(outgoingPayment.expiresAt)
       expect(ctx.body).toEqual({
         id: `https://wallet.example/outgoing-payments/${outgoingPayment.id}`,
         account: `https://wallet.example/pay/${accountId}`,
@@ -223,10 +219,8 @@ describe('Outgoing Payment Routes', (): void => {
           amount: receiveAmount.amount.toString()
         },
         state: 'processing',
-        authorized: outgoingPayment.authorized,
         description: outgoingPayment.description,
-        externalRef: outgoingPayment.externalRef,
-        expiresAt: outgoingPayment.expiresAt.toISOString()
+        externalRef: outgoingPayment.externalRef
       })
     })
 
@@ -255,20 +249,14 @@ describe('Outgoing Payment Routes', (): void => {
             OutgoingPaymentState.Sending
           ].includes(state)
             ? 'processing'
-            : state.toLowerCase(),
-          authorized: false
+            : state.toLowerCase()
         })
       })
     })
   })
 
   describe('create', (): void => {
-    let options: Omit<
-      CreateOutgoingPaymentOptions,
-      'accountId' | 'authorized'
-    > & {
-      authorized?: string
-    }
+    let options: Omit<CreateOutgoingPaymentOptions, 'accountId'>
 
     beforeEach(() => {
       options = {
@@ -323,7 +311,6 @@ describe('Outgoing Payment Routes', (): void => {
       ${'sendAmount'}       | ${123}
       ${'receiveAmount'}    | ${123}
       ${'receivingPayment'} | ${123}
-      ${'authorized'}       | ${123}
       ${'description'}      | ${123}
       ${'externalRef'}      | ${123}
     `(
@@ -456,7 +443,6 @@ describe('Outgoing Payment Routes', (): void => {
                 assetScale: asset.scale
               },
               receiveAmount: options.receiveAmount,
-              authorized: false,
               state: OutgoingPaymentState.Pending.toLowerCase()
             })
           }
@@ -466,7 +452,6 @@ describe('Outgoing Payment Routes', (): void => {
       test('IncomingPayment', async (): Promise<void> => {
         options = {
           receivingPayment,
-          authorized: 'true',
           description: 'rent',
           externalRef: '202201'
         }
@@ -483,246 +468,11 @@ describe('Outgoing Payment Routes', (): void => {
           id: `${config.publicHost}/outgoing-payments/${outgoingPaymentId}`,
           account: `${config.publicHost}/pay/${accountId}`,
           receivingPayment,
-          authorized: true,
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Pending.toLowerCase()
         })
       })
     })
-  })
-
-  describe('update', (): void => {
-    function setup(
-      reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
-    ): AppContext {
-      const ctx = createContext(
-        {
-          headers: Object.assign(
-            { Accept: 'application/json', 'Content-Type': 'application/json' },
-            reqOpts.headers
-          )
-        },
-        { outgoingPaymentId: uuid() }
-      )
-      ctx.request.body = {}
-      return ctx
-    }
-
-    test('returns error on invalid id', async (): Promise<void> => {
-      const ctx = setup({})
-      ctx.params.outgoingPaymentId = 'not_a_uuid'
-      await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
-        message: 'invalid outgoing payment id',
-        status: 400
-      })
-    })
-
-    test('returns error on unknown outgoing payment', async (): Promise<void> => {
-      const ctx = setup({})
-      ctx.request.body['authorized'] = 'true'
-      await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
-        message: 'unknown payment',
-        status: 404
-      })
-    })
-
-    test('returns 406 on invalid Accept', async (): Promise<void> => {
-      const ctx = setup({ headers: { Accept: 'text/plain' } })
-      await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
-        message: 'must accept json',
-        status: 406
-      })
-    })
-
-    test('returns error on invalid Content-Type', async (): Promise<void> => {
-      const ctx = setup({ headers: { 'Content-Type': 'text/plain' } })
-      await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
-        message: 'must send json body',
-        status: 400
-      })
-    })
-
-    test.each`
-      field              | invalidValue
-      ${'sendAmount'}    | ${123}
-      ${'receiveAmount'} | ${123}
-      ${'authorized'}    | ${123}
-      ${'authorized'}    | ${'false'}
-      ${'state'}         | ${123}
-      ${'state'}         | ${OutgoingPaymentState.Completed}
-    `(
-      'returns error on invalid $field',
-      async ({ field, invalidValue }): Promise<void> => {
-        const ctx = setup({})
-        ctx.request.body[field] = invalidValue
-        await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
-          message: `invalid ${field}`,
-          status: 400
-        })
-      }
-    )
-
-    test('returns the authorized outgoing payment on success', async (): Promise<void> => {
-      const outgoingPayment = await outgoingPaymentService.create({
-        accountId,
-        receivingPayment
-      })
-      assert.ok(!isOutgoingPaymentError(outgoingPayment))
-      const ctx = setup({})
-      ctx.params.outgoingPaymentId = outgoingPayment.id
-      ctx.request.body['authorized'] = 'true'
-      await expect(outgoingPaymentRoutes.update(ctx)).resolves.toBeUndefined()
-      expect(ctx.response.status).toBe(200)
-      const outgoingPaymentId = ((ctx.response.body as Record<string, unknown>)[
-        'id'
-      ] as string)
-        .split('/')
-        .pop()
-      expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/outgoing-payments/${outgoingPaymentId}`,
-        account: `${config.publicHost}/pay/${accountId}`,
-        receivingPayment,
-        authorized: true,
-        state: OutgoingPaymentState.Pending.toLowerCase()
-      })
-    })
-
-    describe('returns re-quoted outgoing payment on success', (): void => {
-      let ctx: AppContext
-      beforeEach(
-        async (): Promise<void> => {
-          const outgoingPayment = await outgoingPaymentService.create({
-            accountId,
-            receivingPayment
-          })
-          assert.ok(!isOutgoingPaymentError(outgoingPayment))
-          ctx = setup({})
-          ctx.params.outgoingPaymentId = outgoingPayment.id
-        }
-      )
-
-      describe.each`
-        state
-        ${undefined}
-        ${OutgoingPaymentState.Pending}
-      `('state: $state', ({ state }): void => {
-        beforeEach(
-          async (): Promise<void> => {
-            if (state) {
-              ctx.request.body['state'] = state
-            }
-          }
-        )
-
-        describe.each`
-          sendAmount   | receiveAmount | description
-          ${'120'}     | ${undefined}  | ${'fixed-send'}
-          ${undefined} | ${'60'}       | ${'fixed-receive'}
-        `('$description', ({ sendAmount, receiveAmount }): void => {
-          test.each`
-            amountAsset
-            ${true}
-            ${false}
-          `(
-            'specify amount asset: $amountAsset',
-            async ({ amountAsset }): Promise<void> => {
-              if (sendAmount) {
-                ctx.request.body['sendAmount'] = {
-                  amount: sendAmount
-                }
-                if (amountAsset) {
-                  ctx.request.body['sendAmount'].assetCode = asset.code
-                  ctx.request.body['sendAmount'].assetScale = asset.scale
-                }
-              } else {
-                ctx.request.body['receiveAmount'] = {
-                  amount: receiveAmount
-                }
-                if (amountAsset) {
-                  ctx.request.body['receiveAmount'].assetCode = asset.code
-                  ctx.request.body['receiveAmount'].assetScale = asset.scale
-                }
-              }
-              await expect(
-                outgoingPaymentRoutes.update(ctx)
-              ).resolves.toBeUndefined()
-              expect(ctx.response.status).toBe(200)
-              const outgoingPaymentId = ((ctx.response.body as Record<
-                string,
-                unknown
-              >)['id'] as string)
-                .split('/')
-                .pop()
-              expect(ctx.response.body).toEqual({
-                id: `${config.publicHost}/outgoing-payments/${outgoingPaymentId}`,
-                account: `${config.publicHost}/pay/${accountId}`,
-                receivingPayment,
-                sendAmount: sendAmount && {
-                  amount: sendAmount,
-                  assetCode: asset.code,
-                  assetScale: asset.scale
-                },
-                receiveAmount: ctx.request.body['receiveAmount'],
-                authorized: false,
-                state: OutgoingPaymentState.Pending.toLowerCase()
-              })
-            }
-          )
-        })
-      })
-    })
-
-    test.each`
-      state                           | authorized   | description
-      ${undefined}                    | ${true}      | ${'authorized'}
-      ${OutgoingPaymentState.Sending} | ${undefined} | ${'state'}
-    `(
-      'returns error on conflicting $description',
-      async ({ state, authorized }): Promise<void> => {
-        const outgoingPayment = await outgoingPaymentService.create({
-          accountId,
-          receivingPayment
-        })
-        assert.ok(!isOutgoingPaymentError(outgoingPayment))
-        await outgoingPayment.$query(knex).patch({
-          authorized,
-          state
-        })
-        const ctx = setup({})
-        ctx.params.outgoingPaymentId = outgoingPayment.id
-        ctx.request.body['authorized'] = 'true'
-        await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
-          message: 'wrong state',
-          status: 409
-        })
-      }
-    )
-
-    it.each`
-      authorized   | state                           | sendAmount         | receiveAmount      | error
-      ${undefined} | ${undefined}                    | ${undefined}       | ${undefined}       | ${'invalid amount'}
-      ${undefined} | ${undefined}                    | ${{ amount: '1' }} | ${{ amount: '1' }} | ${'invalid amount'}
-      ${'true'}    | ${OutgoingPaymentState.Pending} | ${undefined}       | ${undefined}       | ${'invalid state'}
-    `(
-      '$error',
-      async ({
-        authorized,
-        state,
-        sendAmount,
-        receiveAmount,
-        error
-      }): Promise<void> => {
-        const ctx = setup({})
-        ctx.request.body['authorized'] = authorized
-        ctx.request.body['state'] = state
-        ctx.request.body['sendAmount'] = sendAmount
-        ctx.request.body['receiveAmount'] = receiveAmount
-        await expect(outgoingPaymentRoutes.update(ctx)).rejects.toMatchObject({
-          message: error,
-          status: 400
-        })
-      }
-    )
   })
 })

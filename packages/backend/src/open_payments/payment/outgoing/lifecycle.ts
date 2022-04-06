@@ -55,10 +55,6 @@ export async function handlePending(
     })
   })
 
-  const state = payment.authorized
-    ? OutgoingPaymentState.Funding
-    : OutgoingPaymentState.Prepared
-
   // Pay.startQuote should return PaymentError.InvalidSourceAmount or
   // PaymentError.InvalidDestinationAmount for non-positive amounts.
   // Outgoing payments' sendAmount or receiveAmount should never be
@@ -67,7 +63,7 @@ export async function handlePending(
   assert.ok(quote.minDeliveryAmount > BigInt(0))
 
   await payment.$query(deps.knex).patch({
-    state,
+    state: OutgoingPaymentState.Funding,
     sendAmount: payment.sendAmount || {
       amount: quote.maxSourceAmount,
       assetCode: payment.account.asset.code,
@@ -78,7 +74,6 @@ export async function handlePending(
       assetCode: destination.destinationAsset.code,
       assetScale: destination.destinationAsset.scale
     },
-    expiresAt: new Date(Date.now() + deps.quoteLifespan),
     quote: {
       timestamp: new Date(),
       targetType: quote.paymentType,
@@ -91,32 +86,7 @@ export async function handlePending(
     }
   })
 
-  if (state === OutgoingPaymentState.Funding) {
-    await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFunding)
-  }
-}
-
-// "payment" is locked by the "deps.knex" transaction.
-export async function handlePrepared(
-  deps: ServiceDependencies,
-  payment: OutgoingPayment
-): Promise<void> {
-  if (!payment.expiresAt) throw LifecycleError.MissingExpiration
-  const now = new Date()
-  if (payment.expiresAt < now) {
-    await payment
-      .$query(deps.knex)
-      .patch({ state: OutgoingPaymentState.Expired })
-    return
-  }
-
-  deps.logger.error(
-    {
-      expiresAt: payment.expiresAt.getTime(),
-      now: now.getTime()
-    },
-    "handlePrepared for payment quote that isn't expired"
-  )
+  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFunding)
 }
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -128,7 +98,6 @@ export async function handleSending(
   if (!payment.quote) throw LifecycleError.MissingQuote
   if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
   if (!payment.receiveAmount) throw LifecycleError.MissingReceiveAmount
-  if (!payment.authorized) throw LifecycleError.Unauthorized
 
   const destination = await Pay.setupPayment({
     plugin,

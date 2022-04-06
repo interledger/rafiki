@@ -5,7 +5,6 @@ exports.up = function (knex) {
     table.string('state').notNullable().index() // OutgoingPaymentState
     table.string('error').nullable()
     table.integer('stateAttempts').notNullable().defaultTo(0)
-    table.boolean('authorized').notNullable().defaultTo(false)
     table.string('description').nullable()
     table.string('externalRef').nullable()
 
@@ -18,7 +17,6 @@ exports.up = function (knex) {
     table.string('receiveAmountAssetCode').nullable()
     table.integer('receiveAmountAssetScale').nullable()
 
-    table.timestamp('expiresAt').nullable()
     table.timestamp('quoteTimestamp').nullable()
     table.string('quoteTargetType').nullable() // 'FixedSend' | 'FixedDelivery'
     table.bigInteger('quoteMaxPacketAmount').nullable()
