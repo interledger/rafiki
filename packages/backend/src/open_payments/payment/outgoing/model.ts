@@ -1,11 +1,11 @@
 import { Model, ModelOptions, QueryContext } from 'objection'
-import * as Pay from '@interledger/pay'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
 import { Account } from '../../account/model'
-import { Amount } from '../amount'
+import { Quote } from '../../quote/model'
+import { Amount, AmountJSON } from '../../amount'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
 
@@ -14,139 +14,39 @@ export class OutgoingPayment
   implements ConnectorAccount, LiquidityAccount {
   public static readonly tableName = 'outgoingPayments'
 
-  static get virtualAttributes(): string[] {
-    return ['sendAmount', 'receiveAmount', 'quote']
-  }
-
   public state!: OutgoingPaymentState
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
 
-  public receivingAccount?: string
-  public receivingPayment?: string
-
-  private sendAmountValue?: bigint | null
-  private sendAmountAssetCode?: string | null
-  private sendAmountAssetScale?: number | null
-
-  public get sendAmount(): Amount | null {
-    if (this.sendAmountValue) {
-      return {
-        value: this.sendAmountValue,
-        assetCode: this.asset.code,
-        assetScale: this.asset.scale
-      }
-    }
-    return null
+  public get receivingPayment(): string {
+    return this.quote.receivingPayment
   }
 
-  public set sendAmount(amount: Amount | null) {
-    this.sendAmountValue = amount?.value ?? null
+  public get sendAmount(): Amount {
+    return this.quote.sendAmount
   }
 
-  private receiveAmountValue?: bigint | null
-  private receiveAmountAssetCode?: string | null
-  private receiveAmountAssetScale?: number | null
-
-  public get receiveAmount(): Amount | null {
-    if (
-      this.receiveAmountValue &&
-      this.receiveAmountAssetCode &&
-      this.receiveAmountAssetScale
-    ) {
-      return {
-        value: this.receiveAmountValue,
-        assetCode: this.receiveAmountAssetCode,
-        assetScale: this.receiveAmountAssetScale
-      }
-    }
-    return null
-  }
-
-  public set receiveAmount(amount: Amount | null) {
-    this.receiveAmountValue = amount?.value ?? null
-    this.receiveAmountAssetCode = amount?.assetCode ?? null
-    this.receiveAmountAssetScale = amount?.assetScale ?? null
+  public get receiveAmount(): Amount {
+    return this.quote.receiveAmount
   }
 
   public description?: string
   public externalRef?: string
 
-  private quoteTimestamp?: Date | null
-  private quoteTargetType?: Pay.PaymentType | null
-  private quoteMaxPacketAmount?: bigint | null
-  private quoteMinExchangeRateNumerator?: bigint | null
-  private quoteMinExchangeRateDenominator?: bigint | null
-  private quoteLowExchangeRateEstimateNumerator?: bigint | null
-  private quoteLowExchangeRateEstimateDenominator?: bigint | null
-  private quoteHighExchangeRateEstimateNumerator?: bigint | null
-  private quoteHighExchangeRateEstimateDenominator?: bigint | null
-
-  public get quote(): PaymentQuote | null {
-    if (
-      !this.quoteTimestamp ||
-      !this.quoteTargetType ||
-      !this.quoteMaxPacketAmount ||
-      !this.quoteMinExchangeRateNumerator ||
-      !this.quoteMinExchangeRateDenominator ||
-      !this.quoteLowExchangeRateEstimateNumerator ||
-      !this.quoteLowExchangeRateEstimateDenominator ||
-      !this.quoteHighExchangeRateEstimateNumerator ||
-      !this.quoteHighExchangeRateEstimateDenominator
-    )
-      return null
-
-    return {
-      timestamp: this.quoteTimestamp,
-      targetType: this.quoteTargetType,
-      maxPacketAmount: this.quoteMaxPacketAmount,
-      minExchangeRate: Pay.Ratio.of(
-        Pay.Int.from(this.quoteMinExchangeRateNumerator) as Pay.PositiveInt,
-        Pay.Int.from(this.quoteMinExchangeRateDenominator) as Pay.PositiveInt
-      ),
-      lowExchangeRateEstimate: Pay.Ratio.of(
-        Pay.Int.from(
-          this.quoteLowExchangeRateEstimateNumerator
-        ) as Pay.PositiveInt,
-        Pay.Int.from(
-          this.quoteLowExchangeRateEstimateDenominator
-        ) as Pay.PositiveInt
-      ),
-      highExchangeRateEstimate: Pay.Ratio.of(
-        Pay.Int.from(
-          this.quoteHighExchangeRateEstimateNumerator
-        ) as Pay.PositiveInt,
-        Pay.Int.from(
-          this.quoteHighExchangeRateEstimateDenominator
-        ) as Pay.PositiveInt
-      )
-    }
-  }
-
-  public set quote(value: PaymentQuote | null) {
-    this.quoteTimestamp = value?.timestamp ?? null
-    this.quoteTargetType = value?.targetType ?? null
-    this.quoteMaxPacketAmount = value?.maxPacketAmount ?? null
-    this.quoteMinExchangeRateNumerator = value?.minExchangeRate.a.value ?? null
-    this.quoteMinExchangeRateDenominator =
-      value?.minExchangeRate.b.value ?? null
-    this.quoteLowExchangeRateEstimateNumerator =
-      value?.lowExchangeRateEstimate.a.value ?? null
-    this.quoteLowExchangeRateEstimateDenominator =
-      value?.lowExchangeRateEstimate.b.value ?? null
-    this.quoteHighExchangeRateEstimateNumerator =
-      value?.highExchangeRateEstimate.a.value ?? null
-    this.quoteHighExchangeRateEstimateDenominator =
-      value?.highExchangeRateEstimate.b.value ?? null
-  }
-
   // Open payments account id of the sender
   public accountId!: string
   public account?: Account
 
-  public readonly assetId!: string
-  public asset!: Asset
+  public quote!: Quote
+
+  public get assetId(): string {
+    return this.quote.assetId
+  }
+
+  public get asset(): Asset {
+    return this.quote.asset
+  }
 
   static relationMappings = {
     account: {
@@ -157,12 +57,12 @@ export class OutgoingPayment
         to: 'accounts.id'
       }
     },
-    asset: {
+    quote: {
       relation: Model.HasOneRelation,
-      modelClass: Asset,
+      modelClass: Quote,
       join: {
-        from: 'outgoingPayments.assetId',
-        to: 'assets.id'
+        from: 'outgoingPayments.id',
+        to: 'quotes.id'
       }
     }
   }
@@ -188,32 +88,21 @@ export class OutgoingPayment
         id: this.id,
         accountId: this.accountId,
         state: this.state,
+        receivingPayment: this.receivingPayment,
+        sendAmount: {
+          ...this.sendAmount,
+          value: this.sendAmount.value.toString()
+        },
+        receiveAmount: {
+          ...this.receiveAmount,
+          value: this.receiveAmount.value.toString()
+        },
         stateAttempts: this.stateAttempts,
         createdAt: new Date(+this.createdAt).toISOString(),
         outcome: {
           amountSent: amountSent.toString()
         },
         balance: balance.toString()
-      }
-    }
-    if (this.receivingAccount) {
-      data.payment.receivingAccount = this.receivingAccount
-    }
-    if (this.receivingPayment) {
-      data.payment.receivingPayment = this.receivingPayment
-    }
-    if (this.sendAmount) {
-      data.payment.sendAmount = {
-        value: this.sendAmount.value.toString(),
-        assetCode: this.sendAmount.assetCode,
-        assetScale: this.sendAmount.assetScale
-      }
-    }
-    if (this.receiveAmount) {
-      data.payment.receiveAmount = {
-        value: this.receiveAmount.value.toString(),
-        assetCode: this.receiveAmount.assetCode,
-        assetScale: this.receiveAmount.assetScale
       }
     }
     if (this.description) {
@@ -225,38 +114,15 @@ export class OutgoingPayment
     if (this.error) {
       data.payment.error = this.error
     }
-    if (this.quote) {
-      data.payment.quote = {
-        ...this.quote,
-        timestamp: this.quote.timestamp.toISOString(),
-        maxPacketAmount: this.quote.maxPacketAmount.toString(),
-        minExchangeRate: this.quote.minExchangeRate.valueOf(),
-        lowExchangeRateEstimate: this.quote.lowExchangeRateEstimate.valueOf(),
-        highExchangeRateEstimate: this.quote.highExchangeRateEstimate.valueOf()
-      }
-    }
     return data
   }
 }
 
-interface PaymentQuote {
-  timestamp: Date
-  targetType: Pay.PaymentType
-  maxPacketAmount: bigint
-  minExchangeRate: Pay.Ratio
-  lowExchangeRateEstimate: Pay.Ratio
-  // Note that the upper exchange rate bound is *exclusive*.
-  // (Pay.PositiveRatio, but validated later)
-  highExchangeRateEstimate: Pay.Ratio
-}
-
 export enum OutgoingPaymentState {
-  // Initial state. In this state, an empty account is generated, and the payment is automatically resolved & quoted.
-  // On success, transition to `FUNDING`.
-  // On failure, transition to `FAILED`.
-  Pending = 'PENDING',
+  // Initial state.
   // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
   // On success, transition to `SENDING`.
+  // On failure, transition to `FAILED`.
   Funding = 'FUNDING',
   // Pay from the account to the destination.
   // On success, transition to `COMPLETED`.
@@ -268,7 +134,7 @@ export enum OutgoingPaymentState {
 }
 
 export enum PaymentDepositType {
-  PaymentFunding = 'outgoing_payment.funding'
+  PaymentCreated = 'outgoing_payment.created'
 }
 
 export enum PaymentWithdrawType {
@@ -282,12 +148,6 @@ export const PaymentEventType = {
 }
 export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
-interface AmountData {
-  value: string
-  assetCode: string
-  assetScale: number
-}
-
 export type PaymentData = {
   payment: {
     id: string
@@ -298,18 +158,10 @@ export type PaymentData = {
     stateAttempts: number
     receivingAccount?: string
     receivingPayment?: string
-    sendAmount?: AmountData
-    receiveAmount?: AmountData
+    sendAmount?: AmountJSON
+    receiveAmount?: AmountJSON
     description?: string
     externalRef?: string
-    quote?: {
-      timestamp: string
-      targetType: Pay.PaymentType
-      maxPacketAmount: string
-      minExchangeRate: number
-      lowExchangeRateEstimate: number
-      highExchangeRateEstimate: number
-    }
     outcome: {
       amountSent: string
     }

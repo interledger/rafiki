@@ -2,7 +2,6 @@ import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
-import * as Pay from '@interledger/pay'
 
 import { DepositEventType } from './liquidity'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -24,13 +23,14 @@ import {
 } from '../../open_payments/payment/incoming/model'
 import {
   OutgoingPayment,
-  OutgoingPaymentState,
   PaymentEvent,
   PaymentWithdrawType,
   isPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
 import { Peer } from '../../peer/model'
 import { randomAsset } from '../../tests/asset'
+import { createIncomingPayment } from '../../tests/incomingPayment'
+import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { PeerFactory } from '../../tests/peerFactory'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEvent } from '../../webhook/model'
@@ -1593,8 +1593,7 @@ describe('Liquidity Resolvers', (): void => {
           asset: randomAsset()
         })
         const accountId = account.id
-        const incomingPaymentService = await deps.use('incomingPaymentService')
-        incomingPayment = (await incomingPaymentService.create({
+        incomingPayment = await createIncomingPayment(deps, {
           accountId,
           incomingAmount: {
             value: BigInt(56),
@@ -1603,34 +1602,20 @@ describe('Liquidity Resolvers', (): void => {
           },
           expiresAt: new Date(Date.now() + 60 * 1000),
           description: 'description!'
-        })) as IncomingPayment
-        assert.ok(!isIncomingPaymentEventType(incomingPayment))
-        const outgoingPaymentService = await deps.use('outgoingPaymentService')
+        })
+        const { id: receivingAccountId } = await accountService.create({
+          asset: account.asset
+        })
         const config = await deps.use('config')
-        const receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
-        // create and then patch quote
-        payment = (await outgoingPaymentService.create({
+        payment = await createOutgoingPayment(deps, {
           accountId,
-          receivingPayment
-        })) as OutgoingPayment
-        await payment.$query(knex).patch({
-          state: OutgoingPaymentState.Funding,
+          receivingAccount: `${config.publicHost}/${receivingAccountId}`,
           sendAmount: {
             value: BigInt(456),
             assetCode: account.asset.code,
             assetScale: account.asset.scale
           },
-          quote: {
-            timestamp: new Date(),
-            targetType: Pay.PaymentType.FixedSend,
-            maxPacketAmount: BigInt(789),
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            minExchangeRate: Pay.Ratio.from(1.23)!,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            highExchangeRateEstimate: Pay.Ratio.from(2.3)!
-          }
+          validDestination: false
         })
         await expect(accountingService.getBalance(payment.id)).resolves.toEqual(
           BigInt(0)

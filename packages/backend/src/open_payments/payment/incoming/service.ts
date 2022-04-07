@@ -11,7 +11,7 @@ import assert from 'assert'
 import { Transaction } from 'knex'
 import { PartialModelObject, TransactionOrKnex } from 'objection'
 import { AccountService } from '../../account/service'
-import { Amount } from '../amount'
+import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { parse, end } from 'iso8601-duration'
 

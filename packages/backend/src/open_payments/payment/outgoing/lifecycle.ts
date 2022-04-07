@@ -1,5 +1,5 @@
+import axios from 'axios'
 import * as Pay from '@interledger/pay'
-import assert from 'assert'
 
 import { LifecycleError } from './errors'
 import {
@@ -9,105 +9,8 @@ import {
   PaymentEventType
 } from './model'
 import { ServiceDependencies } from './service'
-import { IlpPlugin } from './ilp_plugin'
-
-const MAX_INT64 = BigInt('9223372036854775807')
-
-// Acquire a quote for the user to approve.
-// "payment" is locked by the "deps.knex" transaction.
-export async function handlePending(
-  deps: ServiceDependencies,
-  payment: OutgoingPayment,
-  plugin: IlpPlugin
-): Promise<void> {
-  const prices = await deps.ratesService.prices().catch((_err: Error) => {
-    throw LifecycleError.PricesUnavailable
-  })
-
-  const options: Pay.SetupOptions = { plugin }
-  if (payment.receivingPayment) {
-    options.destinationPayment = payment.receivingPayment
-  } else {
-    options.destinationAccount = payment.receivingAccount
-    if (payment.receiveAmount) {
-      assert.ok(payment.receiveAmount.assetCode)
-      assert.ok(payment.receiveAmount.assetScale)
-      options.amountToDeliver = {
-        value: payment.receiveAmount.value,
-        assetCode: payment.receiveAmount.assetCode,
-        assetScale: payment.receiveAmount.assetScale
-      }
-    }
-  }
-  const destination = await Pay.setupPayment(options)
-
-  if (!payment.receivingPayment) {
-    if (!destination.destinationPaymentDetails) {
-      throw LifecycleError.MissingIncomingPayment
-    }
-    await payment.$query(deps.knex).patch({
-      receivingPayment: destination.destinationPaymentDetails.id
-    })
-  }
-
-  validateAssets(deps, payment, destination)
-
-  const quote = await Pay.startQuote({
-    plugin,
-    destination,
-    sourceAsset: {
-      scale: payment.asset.scale,
-      code: payment.asset.code
-    },
-    amountToSend: payment.sendAmount?.value,
-    amountToDeliver: payment.receiveAmount?.value,
-    slippage: deps.slippage,
-    prices
-  }).finally(() => {
-    return Pay.closeConnection(plugin, destination).catch((err) => {
-      deps.logger.warn(
-        {
-          destination: destination.destinationAddress,
-          error: err.message
-        },
-        'close quote connection failed'
-      )
-    })
-  })
-
-  // Pay.startQuote should return PaymentError.InvalidSourceAmount or
-  // PaymentError.InvalidDestinationAmount for non-positive amounts.
-  // Outgoing payments' sendAmount or receiveAmount should never be
-  // zero or negative.
-  assert.ok(quote.maxSourceAmount > BigInt(0))
-  assert.ok(quote.minDeliveryAmount > BigInt(0))
-
-  await payment.$query(deps.knex).patch({
-    state: OutgoingPaymentState.Funding,
-    sendAmount: payment.sendAmount || {
-      value: quote.maxSourceAmount,
-      assetCode: payment.asset.code,
-      assetScale: payment.asset.scale
-    },
-    receiveAmount: {
-      value: payment.receiveAmount?.value || quote.minDeliveryAmount,
-      assetCode: destination.destinationAsset.code,
-      assetScale: destination.destinationAsset.scale
-    },
-    quote: {
-      timestamp: new Date(),
-      targetType: quote.paymentType,
-      // Cap at MAX_INT64 because of postgres type limits.
-      maxPacketAmount:
-        MAX_INT64 < quote.maxPacketAmount ? MAX_INT64 : quote.maxPacketAmount,
-      minExchangeRate: quote.minExchangeRate,
-      lowExchangeRateEstimate: quote.lowEstimatedExchangeRate,
-      highExchangeRateEstimate: quote.highEstimatedExchangeRate
-    }
-  })
-
-  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFunding)
-}
+import { IncomingPaymentState } from '../incoming/model'
+import { IlpPlugin } from '../../../shared/ilp_plugin'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -116,14 +19,15 @@ export async function handleSending(
   plugin: IlpPlugin
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
-  if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
-  if (!payment.receiveAmount) throw LifecycleError.MissingReceiveAmount
 
   const destination = await Pay.setupPayment({
     plugin,
-    destinationAccount: payment.receivingAccount,
     destinationPayment: payment.receivingPayment
   })
+
+  if (!destination.destinationPaymentDetails) {
+    throw LifecycleError.MissingIncomingPayment
+  }
 
   validateAssets(deps, payment, destination)
 
@@ -137,11 +41,11 @@ export async function handleSending(
   const newMaxSourceAmount = payment.sendAmount.value - amountSent
 
   let newMinDeliveryAmount
-  if (
-    payment.receivingAccount ||
-    (destination.destinationPaymentDetails &&
-      !destination.destinationPaymentDetails.incomingAmount)
-  ) {
+  if (destination.destinationPaymentDetails.incomingAmount) {
+    newMinDeliveryAmount =
+      destination.destinationPaymentDetails.incomingAmount.value -
+      destination.destinationPaymentDetails.receivedAmount.value
+  } else {
     // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
     // eslint-disable-next-line no-case-declarations
     const amountDelivered = BigInt(
@@ -150,31 +54,14 @@ export async function handleSending(
       )
     )
     newMinDeliveryAmount = payment.receiveAmount.value - amountDelivered
-  } else {
-    if (
-      destination.destinationPaymentDetails &&
-      destination.destinationPaymentDetails.incomingAmount
-    ) {
-      newMinDeliveryAmount =
-        destination.destinationPaymentDetails.incomingAmount.value -
-        destination.destinationPaymentDetails.receivedAmount.value
-    } else {
-      throw LifecycleError.MissingIncomingPayment
-    }
   }
 
-  if (
-    (payment.quote.targetType === Pay.PaymentType.FixedSend &&
-      newMaxSourceAmount <= BigInt(0)) ||
-    (payment.quote.targetType === Pay.PaymentType.FixedDelivery &&
-      newMinDeliveryAmount <= BigInt(0))
-  ) {
+  if (newMinDeliveryAmount <= BigInt(0)) {
     // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the invoice could have been paid by a totally different payment in the time since the quote.
     deps.logger.warn(
       {
         newMaxSourceAmount,
         newMinDeliveryAmount,
-        paymentType: payment.quote.targetType,
         amountSent,
         incomingPayment: destination.destinationPaymentDetails
       },
@@ -191,35 +78,22 @@ export async function handleSending(
     deps.logger.error(
       {
         newMaxSourceAmount,
-        newMinDeliveryAmount,
-        paymentType: payment.quote.targetType
+        newMinDeliveryAmount
       },
       'handleSending bad retry state'
     )
     throw LifecycleError.BadState
   }
 
-  const lowEstimatedExchangeRate = payment.quote.lowExchangeRateEstimate
-  const highEstimatedExchangeRate = payment.quote.highExchangeRateEstimate
+  const lowEstimatedExchangeRate = payment.quote.lowEstimatedExchangeRate
+  const highEstimatedExchangeRate = payment.quote.highEstimatedExchangeRate
   const minExchangeRate = payment.quote.minExchangeRate
-  if (!highEstimatedExchangeRate.isPositive()) {
-    // This shouldn't ever happen, since the rate is correct when they are stored during the quoting stage.
-    deps.logger.error(
-      {
-        lowEstimatedExchangeRate,
-        highEstimatedExchangeRate,
-        minExchangeRate
-      },
-      'invalid estimated rate'
-    )
-    throw LifecycleError.InvalidRatio
-  }
-  const quote = {
-    paymentType: payment.quote.targetType,
+  const quote: Pay.Quote = {
+    ...payment.quote,
+    paymentType: Pay.PaymentType.FixedDelivery,
     // Adjust quoted amounts to account for prior partial payment.
     maxSourceAmount: newMaxSourceAmount,
     minDeliveryAmount: newMinDeliveryAmount,
-    maxPacketAmount: payment.quote.maxPacketAmount,
     lowEstimatedExchangeRate,
     highEstimatedExchangeRate,
     minExchangeRate
@@ -242,7 +116,6 @@ export async function handleSending(
     {
       destination: destination.destinationAddress,
       error: receipt.error,
-      paymentType: payment.quote.targetType,
       newMaxSourceAmount,
       newMinDeliveryAmount,
       receiptAmountSent: receipt.amountSent,
@@ -272,6 +145,20 @@ const handleCompleted = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> => {
+  if (payment.quote.completeReceivingPayment) {
+    await axios.put(
+      payment.receivingPayment,
+      {
+        state: IncomingPaymentState.Completed.toLowerCase()
+      },
+      {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+  }
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })

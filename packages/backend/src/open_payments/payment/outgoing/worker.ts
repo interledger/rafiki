@@ -4,7 +4,7 @@ import { ServiceDependencies } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { canRetryError, PaymentError } from './errors'
 import * as lifecycle from './lifecycle'
-import { IlpPlugin } from './ilp_plugin'
+import { IlpPlugin } from '../../../shared/ilp_plugin'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -46,10 +46,7 @@ export async function getPendingPayment(
     .forUpdate()
     // Don't wait for a payment that is already being processed.
     .skipLocked()
-    .whereIn('state', [
-      OutgoingPaymentState.Pending,
-      OutgoingPaymentState.Sending
-    ])
+    .whereIn('state', [OutgoingPaymentState.Sending])
     // Back off between retries.
     .andWhere((builder: knex.QueryBuilder) => {
       builder
@@ -59,7 +56,7 @@ export async function getPendingPayment(
           [RETRY_BACKOFF_SECONDS, now]
         )
     })
-    .withGraphFetched('[account, asset]')
+    .withGraphFetched('[account, quote.asset]')
   return payments[0]
 }
 
@@ -91,23 +88,6 @@ export async function handlePaymentLifecycle(
   // Plugins are cleaned up in `finally` to avoid leaking http2 connections.
   let plugin: IlpPlugin
   switch (payment.state) {
-    case OutgoingPaymentState.Pending:
-      plugin = deps.makeIlpPlugin({
-        sourceAccount: payment,
-        unfulfillable: true
-      })
-      return plugin
-        .connect()
-        .then(() => lifecycle.handlePending(deps, payment, plugin))
-        .catch(onError)
-        .finally(() => {
-          return plugin.disconnect().catch((err: Error) => {
-            deps.logger.warn(
-              { error: err.message },
-              'error disconnecting plugin'
-            )
-          })
-        })
     case OutgoingPaymentState.Sending:
       plugin = deps.makeIlpPlugin({
         sourceAccount: payment

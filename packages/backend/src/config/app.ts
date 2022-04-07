@@ -76,10 +76,11 @@ export const Config = {
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
 
+  quoteUrl: envString('QUOTE_URL', 'http://127.0.0.1:4001/quote'),
+
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
   webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
-  webhookSecret: process.env.WEBHOOK_SECRET, // optional
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
 
   withdrawalThrottleDelay:
@@ -87,6 +88,7 @@ export const Config = {
       ? undefined
       : +process.env.WITHDRAWAL_THROTTLE_DELAY, // optional
 
+  signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
   /** Frontend **/

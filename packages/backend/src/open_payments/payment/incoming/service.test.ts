@@ -3,7 +3,7 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { CreateIncomingPaymentOptions, IncomingPaymentService } from './service'
+import { IncomingPaymentService } from './service'
 import { AccountingService } from '../../../accounting/service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import {
@@ -21,6 +21,7 @@ import { AppServices } from '../../../app'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { randomAsset } from '../../../tests/asset'
+import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
 import { AccountService } from '../../account/service'
@@ -39,14 +40,6 @@ describe('Incoming Payment Service', (): void => {
     send: jest.fn()
   }
   const asset = randomAsset()
-
-  async function createPayment(
-    options: CreateIncomingPaymentOptions
-  ): Promise<IncomingPayment> {
-    const payment = await incomingPaymentService.create(options)
-    assert.ok(!isIncomingPaymentError(payment))
-    return payment
-  }
 
   beforeAll(
     async (): Promise<void> => {
@@ -446,7 +439,7 @@ describe('Incoming Payment Service', (): void => {
   describe('Incoming payment pagination', (): void => {
     getPageTests({
       createModel: () =>
-        createPayment({
+        createIncomingPayment(deps, {
           accountId,
           incomingAmount: {
             value: BigInt(123),

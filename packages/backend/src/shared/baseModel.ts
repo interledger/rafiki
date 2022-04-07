@@ -2,6 +2,7 @@ import {
   Model,
   ModelOptions,
   Page,
+  Pojo,
   QueryBuilder,
   QueryContext
 } from 'objection'
@@ -108,6 +109,15 @@ export abstract class BaseModel extends DbErrors(Model) {
 
   public $beforeUpdate(_opts: ModelOptions, _queryContext: QueryContext): void {
     this.updatedAt = new Date()
+  }
+
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      ...json,
+      createdAt: json.createdAt.toISOString(),
+      updatedAt: json.updatedAt.toISOString()
+    }
   }
 
   QueryBuilderType!: PaginationQueryBuilder<this>

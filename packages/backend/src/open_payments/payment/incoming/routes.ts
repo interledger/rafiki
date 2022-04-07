@@ -8,7 +8,7 @@ import { AccountingService } from '../../../accounting/service'
 import { IncomingPaymentService } from './service'
 import { IncomingPayment, IncomingPaymentState } from './model'
 import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
-import { Amount } from '../amount'
+import { Amount, parseAmount } from '../../amount'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -93,10 +93,12 @@ async function createIncomingPayment(
   const { body } = ctx.request
   if (typeof body !== 'object') return ctx.throw(400, 'json body required')
   let incomingAmount: Amount | undefined
-  try {
-    incomingAmount = parseAmount(body['incomingAmount'])
-  } catch (_) {
-    return ctx.throw(400, 'invalid incomingAmount')
+  if (body['incomingAmount']) {
+    try {
+      incomingAmount = parseAmount(body['incomingAmount'])
+    } catch (_) {
+      return ctx.throw(400, 'invalid incomingAmount')
+    }
   }
   let expiresAt: Date | undefined
   if (body.expiresAt !== undefined) {
@@ -221,25 +223,6 @@ function incomingPaymentToBody(
   if (incomingPayment.externalRef)
     body['externalRef'] = incomingPayment.externalRef
   return body
-}
-
-function parseAmount(amount: unknown): Amount | undefined {
-  if (amount === undefined) return amount
-  if (
-    typeof amount !== 'object' ||
-    amount === null ||
-    (amount['assetCode'] && typeof amount['assetCode'] !== 'string') ||
-    (amount['assetScale'] !== undefined &&
-      typeof amount['assetScale'] !== 'number') ||
-    amount['assetScale'] < 0
-  ) {
-    throw new Error('invalid amount')
-  }
-  return {
-    value: BigInt(amount['value']),
-    assetCode: amount['assetCode'],
-    assetScale: amount['assetScale']
-  }
 }
 
 function getStreamCredentials(

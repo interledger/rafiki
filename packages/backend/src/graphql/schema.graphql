@@ -1,6 +1,4 @@
 type Query {
-  outgoingPayment(id: String!): OutgoingPayment
-
   account(id: String!): Account
 
   asset(id: String!): Asset
@@ -30,13 +28,12 @@ type Query {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): PeersConnection!
+
+  quote(id: String!): Quote
+  outgoingPayment(id: String!): OutgoingPayment
 }
 
 type Mutation {
-  createOutgoingPayment(
-    input: CreateOutgoingPaymentInput!
-  ): OutgoingPaymentResponse!
-
   createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
 
   triggerAccountEvents(limit: Int!): TriggerAccountEventsMutationResponse!
@@ -57,16 +54,6 @@ type Mutation {
 
   "Delete peer"
   deletePeer(id: String!): DeletePeerMutationResponse!
-
-  "Transfer between accounts"
-  transfer(
-    sourceAmount: UInt64!
-    sourceAccountId: ID!
-    destinationAccountId: ID!
-    destinationAmount: UInt64
-    autoCommit: Boolean
-    idempotencyKey: ID!
-  ): TransferMutationResponse
 
   "Add peer liquidity"
   addPeerLiquidity(input: AddPeerLiquidityInput!): LiquidityMutationResponse
@@ -100,6 +87,12 @@ type Mutation {
     "The id of the liquidity withdrawal to rollback."
     withdrawalId: String!
   ): LiquidityMutationResponse
+
+  createQuote(input: CreateQuoteInput!): QuoteResponse!
+
+  createOutgoingPayment(
+    input: CreateOutgoingPaymentInput!
+  ): OutgoingPaymentResponse!
 
   "Deposit webhook event liquidity"
   depositEventLiquidity(eventId: String!): LiquidityMutationResponse
@@ -324,6 +317,16 @@ type Account implements Model {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): IncomingPaymentConnection
+  quotes(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): QuoteConnection
   outgoingPayments(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -392,20 +395,17 @@ type OutgoingPayment implements Model {
   state: OutgoingPaymentState!
   error: String
   stateAttempts: Int!
-  receivingAccount: String
-  sendAmount: Amount
-  receiveAmount: Amount
+  sendAmount: Amount!
+  receiveAmount: Amount!
   receivingPayment: String
   description: String
   externalRef: String
-  quote: PaymentQuote
+  quote: Quote
   outcome: OutgoingPaymentOutcome
   createdAt: String!
 }
 
 enum OutgoingPaymentState {
-  "Will transition to FUNDING when quote is complete"
-  PENDING
   "Will transition to SENDING once payment funds are reserved"
   FUNDING
   "Paying, will transition to COMPLETED on success"
@@ -416,18 +416,28 @@ enum OutgoingPaymentState {
   FAILED
 }
 
-enum PaymentType {
-  FIXED_SEND
-  FIXED_DELIVERY
+type QuoteConnection {
+  pageInfo: PageInfo!
+  edges: [QuoteEdge!]!
 }
 
-type PaymentQuote {
-  timestamp: String!
-  targetType: PaymentType!
+type QuoteEdge {
+  node: Quote!
+  cursor: String!
+}
+
+type Quote {
+  id: ID!
+  accountId: ID!
+  receivingPayment: String!
+  sendAmount: Amount!
+  receiveAmount: Amount!
   maxPacketAmount: UInt64!
   minExchangeRate: Float!
-  lowExchangeRateEstimate: Float!
-  highExchangeRateEstimate: Float!
+  lowEstimatedExchangeRate: Float!
+  highEstimatedExchangeRate: Float!
+  createdAt: String!
+  expiresAt: String!
 }
 
 type OutgoingPaymentOutcome {
@@ -440,13 +450,24 @@ input AmountInput {
   assetScale: Int!
 }
 
-input CreateOutgoingPaymentInput {
+input CreateQuoteInput {
   accountId: String!
   receivingAccount: String
   sendAmount: AmountInput
   receiveAmount: AmountInput
   receivingPayment: String
-  authorized: Boolean
+}
+
+type QuoteResponse {
+  code: String!
+  success: Boolean!
+  message: String
+  quote: Quote
+}
+
+input CreateOutgoingPaymentInput {
+  accountId: String!
+  quoteId: String!
   description: String
   externalRef: String
 }

@@ -50,7 +50,7 @@ describe('Webhook Service', (): void => {
 
   beforeAll(
     async (): Promise<void> => {
-      Config.webhookSecret = WEBHOOK_SECRET
+      Config.signatureSecret = WEBHOOK_SECRET
       deps = await initIocContainer(Config)
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')

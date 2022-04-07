@@ -1,4 +1,4 @@
-import { Amount } from '../../open_payments/payment/amount'
+import { Amount } from '../../open_payments/amount'
 import { IncomingPaymentState } from '../../open_payments/payment/incoming/model'
 
 export interface IncomingPaymentModel {
