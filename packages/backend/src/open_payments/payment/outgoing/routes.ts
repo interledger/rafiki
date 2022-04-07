@@ -4,7 +4,7 @@ import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
-import { OutgoingPayment, PaymentAmount, PaymentState } from './model'
+import { OutgoingPayment, PaymentAmount, OutgoingPaymentState } from './model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -151,9 +151,9 @@ async function updateOutgoingPayment(
     }
   }
 
-  let state: PaymentState | undefined
+  let state: OutgoingPaymentState | undefined
   if (body.state) {
-    if (body.state !== PaymentState.Pending) {
+    if (body.state !== OutgoingPaymentState.Pending) {
       return ctx.throw(400, 'invalid state')
     }
     state = body.state
@@ -201,9 +201,10 @@ function outgoingPaymentToBody(
   return {
     id: location,
     account: `${deps.config.publicHost}/pay/${outgoingPayment.accountId}`,
-    state: [PaymentState.Funding, PaymentState.Sending].includes(
-      outgoingPayment.state
-    )
+    state: [
+      OutgoingPaymentState.Funding,
+      OutgoingPaymentState.Sending
+    ].includes(outgoingPayment.state)
       ? 'processing'
       : outgoingPayment.state.toLowerCase(),
     authorized: outgoingPayment.authorized,

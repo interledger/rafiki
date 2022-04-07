@@ -4,7 +4,7 @@ import assert from 'assert'
 import { LifecycleError } from './errors'
 import {
   OutgoingPayment,
-  PaymentState,
+  OutgoingPaymentState,
   PaymentEvent,
   PaymentEventType
 } from './model'
@@ -26,8 +26,8 @@ export async function handlePending(
 
   const destination = await Pay.setupPayment({
     plugin,
-    paymentPointer: payment.receivingAccount,
-    invoiceUrl: payment.receivingPayment
+    destinationAccount: payment.receivingAccount,
+    destinationPayment: payment.receivingPayment
   })
 
   validateAssets(deps, payment, destination)
@@ -56,8 +56,8 @@ export async function handlePending(
   })
 
   const state = payment.authorized
-    ? PaymentState.Funding
-    : PaymentState.Prepared
+    ? OutgoingPaymentState.Funding
+    : OutgoingPaymentState.Prepared
 
   // Pay.startQuote should return PaymentError.InvalidSourceAmount or
   // PaymentError.InvalidDestinationAmount for non-positive amounts.
@@ -91,7 +91,7 @@ export async function handlePending(
     }
   })
 
-  if (state === PaymentState.Funding) {
+  if (state === OutgoingPaymentState.Funding) {
     await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFunding)
   }
 }
@@ -104,7 +104,9 @@ export async function handlePrepared(
   if (!payment.expiresAt) throw LifecycleError.MissingExpiration
   const now = new Date()
   if (payment.expiresAt < now) {
-    await payment.$query(deps.knex).patch({ state: PaymentState.Expired })
+    await payment
+      .$query(deps.knex)
+      .patch({ state: OutgoingPaymentState.Expired })
     return
   }
 
@@ -130,8 +132,8 @@ export async function handleSending(
 
   const destination = await Pay.setupPayment({
     plugin,
-    paymentPointer: payment.receivingAccount,
-    invoiceUrl: payment.receivingPayment
+    destinationAccount: payment.receivingAccount,
+    destinationPayment: payment.receivingPayment
   })
 
   validateAssets(deps, payment, destination)
@@ -146,7 +148,11 @@ export async function handleSending(
   const newMaxSourceAmount = payment.sendAmount.amount - amountSent
 
   let newMinDeliveryAmount
-  if (payment.receivingAccount) {
+  if (
+    payment.receivingAccount ||
+    (destination.destinationPaymentDetails &&
+      !destination.destinationPaymentDetails.incomingAmount)
+  ) {
     // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
     // eslint-disable-next-line no-case-declarations
     const amountDelivered = BigInt(
@@ -156,9 +162,16 @@ export async function handleSending(
     )
     newMinDeliveryAmount = payment.receiveAmount.amount - amountDelivered
   } else {
-    if (!destination.invoice) throw LifecycleError.MissingIncomingPayment
-    newMinDeliveryAmount =
-      destination.invoice.amountToDeliver - destination.invoice.amountDelivered
+    if (
+      destination.destinationPaymentDetails &&
+      destination.destinationPaymentDetails.incomingAmount
+    ) {
+      newMinDeliveryAmount =
+        destination.destinationPaymentDetails.incomingAmount.amount -
+        destination.destinationPaymentDetails.receivedAmount.amount
+    } else {
+      throw LifecycleError.MissingIncomingPayment
+    }
   }
 
   if (
@@ -174,7 +187,7 @@ export async function handleSending(
         newMinDeliveryAmount,
         paymentType: payment.quote.targetType,
         amountSent,
-        incomingPayment: destination.invoice
+        incomingPayment: destination.destinationPaymentDetails
       },
       'handleSending payment was already paid'
     )
@@ -260,7 +273,7 @@ export async function handleFailed(
   error: string
 ): Promise<void> {
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Failed,
+    state: OutgoingPaymentState.Failed,
     error
   })
   await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFailed)
@@ -271,7 +284,7 @@ const handleCompleted = async (
   payment: OutgoingPayment
 ): Promise<void> => {
   await payment.$query(deps.knex).patch({
-    state: PaymentState.Completed
+    state: OutgoingPaymentState.Completed
   })
   await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCompleted)
 }

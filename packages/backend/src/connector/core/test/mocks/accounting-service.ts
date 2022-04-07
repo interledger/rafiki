@@ -19,12 +19,12 @@ export type MockIncomingAccount = IncomingAccount &
         authTokens: string[]
       }
     }
-    active?: never
+    state?: never
   }
 
 export type MockOutgoingAccount = OutgoingAccount &
   MockAccount & {
-    active?: boolean
+    state?: string
     staticIlpAddress?: string
   }
 
@@ -41,14 +41,14 @@ export class MockAccountingService implements AccountingService {
   ): Promise<OutgoingAccount | undefined> {
     const incomingPayment = this.find(
       (account) =>
-        account.id === incomingPaymentId && account.active !== undefined
+        account.id === incomingPaymentId && account.state !== undefined
     )
     return incomingPayment as OutgoingAccount
   }
 
   async _getAccount(accountId: string): Promise<OutgoingAccount | undefined> {
     const account = this.find(
-      (account) => account.id === accountId && account.active === undefined
+      (account) => account.id === accountId && account.state === undefined
     )
     return account as OutgoingAccount
   }

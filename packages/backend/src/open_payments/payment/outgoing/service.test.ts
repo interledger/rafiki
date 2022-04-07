@@ -20,7 +20,7 @@ import { truncateTables } from '../../../tests/tableManager'
 import {
   OutgoingPayment,
   PaymentAmount,
-  PaymentState,
+  OutgoingPaymentState,
   PaymentEvent,
   PaymentEventType
 } from './model'
@@ -32,6 +32,7 @@ import { IncomingPayment } from '../incoming/model'
 import { RatesService } from '../../../rates/service'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
+import { isIncomingPaymentError } from '../incoming/errors'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -71,15 +72,15 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   const webhookTypes: {
-    [key in PaymentState]: PaymentEventType | undefined
+    [key in OutgoingPaymentState]: PaymentEventType | undefined
   } = {
-    [PaymentState.Pending]: undefined,
-    [PaymentState.Prepared]: undefined,
-    [PaymentState.Funding]: PaymentEventType.PaymentFunding,
-    [PaymentState.Sending]: undefined,
-    [PaymentState.Expired]: undefined,
-    [PaymentState.Failed]: PaymentEventType.PaymentFailed,
-    [PaymentState.Completed]: PaymentEventType.PaymentCompleted
+    [OutgoingPaymentState.Pending]: undefined,
+    [OutgoingPaymentState.Prepared]: undefined,
+    [OutgoingPaymentState.Funding]: PaymentEventType.PaymentFunding,
+    [OutgoingPaymentState.Sending]: undefined,
+    [OutgoingPaymentState.Expired]: undefined,
+    [OutgoingPaymentState.Failed]: PaymentEventType.PaymentFailed,
+    [OutgoingPaymentState.Completed]: PaymentEventType.PaymentCompleted
   }
 
   async function createPayment(
@@ -92,7 +93,7 @@ describe('OutgoingPaymentService', (): void => {
 
   async function processNext(
     paymentId: string,
-    expectState: PaymentState,
+    expectState: OutgoingPaymentState,
     expectedError?: string
   ): Promise<OutgoingPayment> {
     await expect(outgoingPaymentService.processNext()).resolves.toBe(paymentId)
@@ -254,10 +255,15 @@ describe('OutgoingPaymentService', (): void => {
       const incomingPaymentService = await deps.use('incomingPaymentService')
       incomingPayment = await incomingPaymentService.create({
         accountId: destinationAccount.id,
-        amount: BigInt(56),
+        incomingAmount: {
+          amount: BigInt(56),
+          assetCode: destinationAsset.code,
+          assetScale: destinationAsset.scale
+        },
         expiresAt: new Date(Date.now() + 60 * 1000),
         description: 'description!'
       })
+      assert.ok(!isIncomingPaymentError(incomingPayment))
       receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
       amtDelivered = BigInt(0)
     }
@@ -312,7 +318,7 @@ describe('OutgoingPaymentService', (): void => {
           assert.ok(!isOutgoingPaymentError(payment))
           expect(payment).toMatchObject({
             ...options,
-            state: PaymentState.Pending,
+            state: OutgoingPaymentState.Pending,
             receiveAmount: null,
             receivingPayment: null,
             authorized: expectedAuthorized,
@@ -356,7 +362,7 @@ describe('OutgoingPaymentService', (): void => {
           assert.ok(!isOutgoingPaymentError(payment))
           expect(payment).toMatchObject({
             ...options,
-            state: PaymentState.Pending,
+            state: OutgoingPaymentState.Pending,
             sendAmount: null,
             receivingPayment: null,
             authorized: expectedAuthorized,
@@ -386,7 +392,7 @@ describe('OutgoingPaymentService', (): void => {
         assert.ok(!isOutgoingPaymentError(payment))
         expect(payment).toMatchObject({
           ...options,
-          state: PaymentState.Pending,
+          state: OutgoingPaymentState.Pending,
           authorized: expectedAuthorized,
           receivingAccount: null,
           sendAmount: null,
@@ -446,8 +452,8 @@ describe('OutgoingPaymentService', (): void => {
   describe('processNext', (): void => {
     describe.each`
       authorized | nextState
-      ${true}    | ${PaymentState.Funding}
-      ${false}   | ${PaymentState.Prepared}
+      ${true}    | ${OutgoingPaymentState.Funding}
+      ${false}   | ${OutgoingPaymentState.Prepared}
     `(
       'PENDING (authorized: $authorized)→',
       ({ authorized, nextState }): void => {
@@ -584,7 +590,10 @@ describe('OutgoingPaymentService', (): void => {
               sendAmount
             })
           ).id
-          const payment = await processNext(paymentId, PaymentState.Pending)
+          const payment = await processNext(
+            paymentId,
+            OutgoingPaymentState.Pending
+          )
 
           expect(payment.stateAttempts).toBe(1)
           expect(payment.quote).toBeNull()
@@ -596,7 +605,10 @@ describe('OutgoingPaymentService', (): void => {
             .spyOn(Date, 'now')
             .mockReturnValueOnce(Date.now() + 1 * RETRY_BACKOFF_SECONDS * 1000)
 
-          const payment2 = await processNext(paymentId, PaymentState.Prepared)
+          const payment2 = await processNext(
+            paymentId,
+            OutgoingPaymentState.Prepared
+          )
           expect(payment2.quote).toBeDefined()
         })
 
@@ -608,11 +620,12 @@ describe('OutgoingPaymentService', (): void => {
               receivingPayment: receivingPayment
             })
           ).id
-          await payIncomingPayment(incomingPayment.amount)
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          await payIncomingPayment(incomingPayment.incomingAmount!.amount)
           await processNext(
             paymentId,
-            PaymentState.Failed,
-            Pay.PaymentError.InvoiceAlreadyPaid
+            OutgoingPaymentState.Failed,
+            Pay.PaymentError.IncomingPaymentCompleted
           )
         })
 
@@ -633,7 +646,7 @@ describe('OutgoingPaymentService', (): void => {
 
           await processNext(
             paymentId,
-            PaymentState.Failed,
+            OutgoingPaymentState.Failed,
             LifecycleError.SourceAssetConflict
           )
         })
@@ -650,7 +663,7 @@ describe('OutgoingPaymentService', (): void => {
           })
           await processNext(
             paymentId,
-            PaymentState.Failed,
+            OutgoingPaymentState.Failed,
             Pay.PaymentError.DestinationAssetConflict
           )
         })
@@ -667,7 +680,7 @@ describe('OutgoingPaymentService', (): void => {
             receivingAccount,
             sendAmount
           })
-          payment = await processNext(paymentId, PaymentState.Prepared)
+          payment = await processNext(paymentId, OutgoingPaymentState.Prepared)
         }
       )
 
@@ -681,7 +694,7 @@ describe('OutgoingPaymentService', (): void => {
           expiresAt: new Date(Date.now() - config.quoteLifespan - 1)
         })
 
-        await processNext(payment.id, PaymentState.Expired)
+        await processNext(payment.id, OutgoingPaymentState.Expired)
       })
     })
 
@@ -703,7 +716,10 @@ describe('OutgoingPaymentService', (): void => {
 
         trackAmountDelivered(paymentId)
 
-        const payment = await processNext(paymentId, PaymentState.Funding)
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Funding
+        )
         assert.ok(payment.sendAmount)
         await expect(
           outgoingPaymentService.fund({
@@ -712,7 +728,7 @@ describe('OutgoingPaymentService', (): void => {
             transferId: uuid()
           })
         ).resolves.toMatchObject({
-          state: PaymentState.Sending
+          state: OutgoingPaymentState.Sending
         })
 
         return paymentId
@@ -724,7 +740,10 @@ describe('OutgoingPaymentService', (): void => {
           sendAmount
         })
 
-        const payment = await processNext(paymentId, PaymentState.Completed)
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Completed
+        )
         await expectOutcome(payment, {
           accountBalance: BigInt(0),
           amountSent: BigInt(123),
@@ -738,7 +757,10 @@ describe('OutgoingPaymentService', (): void => {
           receiveAmount
         })
 
-        const payment = await processNext(paymentId, PaymentState.Completed)
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Completed
+        )
         if (!payment.sendAmount) throw 'no sendAmount'
         const amountSent = receiveAmount.amount * BigInt(2)
         await expectOutcome(payment, {
@@ -754,14 +776,20 @@ describe('OutgoingPaymentService', (): void => {
           receivingPayment: receivingPayment
         })
 
-        const payment = await processNext(paymentId, PaymentState.Completed)
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Completed
+        )
         if (!payment.sendAmount) throw 'no sendAmount'
-        const amountSent = incomingPayment.amount * BigInt(2)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const amountSent = incomingPayment.incomingAmount!.amount * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.amount - amountSent,
           amountSent,
-          amountDelivered: incomingPayment.amount,
-          incomingPaymentReceived: incomingPayment.amount,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          amountDelivered: incomingPayment.incomingAmount!.amount,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          incomingPaymentReceived: incomingPayment.incomingAmount!.amount,
           withdrawAmount: payment.sendAmount.amount - amountSent
         })
       })
@@ -773,15 +801,23 @@ describe('OutgoingPaymentService', (): void => {
           receivingPayment: receivingPayment
         })
 
-        const payment = await processNext(paymentId, PaymentState.Completed)
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Completed
+        )
         if (!payment.sendAmount) throw 'no sendAmount'
         const amountSent =
-          (incomingPayment.amount - amountAlreadyDelivered) * BigInt(2)
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          (incomingPayment.incomingAmount!.amount - amountAlreadyDelivered) *
+          BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.amount - amountSent,
           amountSent,
-          amountDelivered: incomingPayment.amount - amountAlreadyDelivered,
-          incomingPaymentReceived: incomingPayment.amount,
+          amountDelivered:
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            incomingPayment.incomingAmount!.amount - amountAlreadyDelivered,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          incomingPaymentReceived: incomingPayment.incomingAmount!.amount,
           withdrawAmount: payment.sendAmount.amount - amountSent
         })
       })
@@ -801,7 +837,10 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         for (let i = 0; i < 4; i++) {
-          const payment = await processNext(paymentId, PaymentState.Sending)
+          const payment = await processNext(
+            paymentId,
+            OutgoingPaymentState.Sending
+          )
           expect(payment.stateAttempts).toBe(i + 1)
           await expectOutcome(payment, {
             amountSent: BigInt(10 * (i + 1)),
@@ -813,7 +852,7 @@ describe('OutgoingPaymentService', (): void => {
         // Last attempt fails, but no more retries.
         const payment = await processNext(
           paymentId,
-          PaymentState.Failed,
+          OutgoingPaymentState.Failed,
           Pay.PaymentError.ClosedByReceiver
         )
         expect(payment.stateAttempts).toBe(0)
@@ -841,7 +880,7 @@ describe('OutgoingPaymentService', (): void => {
 
         const payment = await processNext(
           paymentId,
-          PaymentState.Failed,
+          OutgoingPaymentState.Failed,
           Pay.PaymentError.ReceiverProtocolViolation
         )
         await expectOutcome(payment, {
@@ -865,7 +904,10 @@ describe('OutgoingPaymentService', (): void => {
           sendAmount
         })
 
-        const payment = await processNext(paymentId, PaymentState.Sending)
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Sending
+        )
         mockFn.mockRestore()
         fastForwardToAttempt(1)
         await expectOutcome(payment, {
@@ -875,7 +917,10 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         // The next attempt is without the mock, so it succeeds.
-        const payment2 = await processNext(paymentId, PaymentState.Completed)
+        const payment2 = await processNext(
+          paymentId,
+          OutgoingPaymentState.Completed
+        )
         await expectOutcome(payment2, {
           accountBalance: BigInt(0),
           amountSent: sendAmount.amount,
@@ -890,12 +935,15 @@ describe('OutgoingPaymentService', (): void => {
           sendAmount
         })
 
-        await processNext(paymentId, PaymentState.Completed)
+        await processNext(paymentId, OutgoingPaymentState.Completed)
         // Pretend that the transaction didn't commit.
         await OutgoingPayment.query(knex)
           .findById(paymentId)
-          .patch({ state: PaymentState.Sending })
-        const payment = await processNext(paymentId, PaymentState.Completed)
+          .patch({ state: OutgoingPaymentState.Sending })
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Completed
+        )
         await expectOutcome(payment, {
           accountBalance: BigInt(0),
           amountSent: BigInt(123),
@@ -909,15 +957,20 @@ describe('OutgoingPaymentService', (): void => {
           receivingPayment: receivingPayment
         })
         // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
-        await payIncomingPayment(incomingPayment.amount)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        await payIncomingPayment(incomingPayment.incomingAmount!.amount)
 
-        const payment = await processNext(paymentId, PaymentState.Completed)
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Completed
+        )
         if (!payment.sendAmount) throw 'no sendAmount'
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.amount,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
-          incomingPaymentReceived: incomingPayment.amount,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          incomingPaymentReceived: incomingPayment.incomingAmount!.amount,
           withdrawAmount: payment.sendAmount.amount
         })
       })
@@ -937,7 +990,7 @@ describe('OutgoingPaymentService', (): void => {
 
         await processNext(
           paymentId,
-          PaymentState.Failed,
+          OutgoingPaymentState.Failed,
           LifecycleError.SourceAssetConflict
         )
       })
@@ -959,7 +1012,7 @@ describe('OutgoingPaymentService', (): void => {
 
         await processNext(
           paymentId,
-          PaymentState.Failed,
+          OutgoingPaymentState.Failed,
           Pay.PaymentError.DestinationAssetConflict
         )
       })
@@ -997,19 +1050,19 @@ describe('OutgoingPaymentService', (): void => {
       ).resolves.toMatchObject({
         id: paymentId,
         authorized: true,
-        state: PaymentState.Pending
+        state: OutgoingPaymentState.Pending
       })
 
       await expect(
         outgoingPaymentService.get(paymentId)
       ).resolves.toMatchObject({
         authorized: true,
-        state: PaymentState.Pending
+        state: OutgoingPaymentState.Pending
       })
     })
 
     it('transitions a Prepared payment to Funding state', async (): Promise<void> => {
-      await processNext(paymentId, PaymentState.Prepared)
+      await processNext(paymentId, OutgoingPaymentState.Prepared)
       await expect(
         outgoingPaymentService.update({
           id: paymentId,
@@ -1018,34 +1071,34 @@ describe('OutgoingPaymentService', (): void => {
       ).resolves.toMatchObject({
         id: paymentId,
         authorized: true,
-        state: PaymentState.Funding
+        state: OutgoingPaymentState.Funding
       })
 
       await expect(
         outgoingPaymentService.get(paymentId)
       ).resolves.toMatchObject({
         authorized: true,
-        state: PaymentState.Funding
+        state: OutgoingPaymentState.Funding
       })
     })
 
     describe.each`
       state
-      ${PaymentState.Pending}
-      ${PaymentState.Prepared}
-      ${PaymentState.Expired}
-    `(`$state → ${PaymentState.Pending}`, ({ state }): void => {
+      ${OutgoingPaymentState.Pending}
+      ${OutgoingPaymentState.Prepared}
+      ${OutgoingPaymentState.Expired}
+    `(`$state → ${OutgoingPaymentState.Pending}`, ({ state }): void => {
       beforeEach(
         async (): Promise<void> => {
-          if (state !== PaymentState.Pending) {
-            await processNext(paymentId, PaymentState.Prepared)
-            if (state === PaymentState.Expired) {
+          if (state !== OutgoingPaymentState.Pending) {
+            await processNext(paymentId, OutgoingPaymentState.Prepared)
+            if (state === OutgoingPaymentState.Expired) {
               await OutgoingPayment.query(knex)
                 .patch({
                   expiresAt: new Date(Date.now() - config.quoteLifespan - 1)
                 })
                 .findById(paymentId)
-              await processNext(paymentId, PaymentState.Expired)
+              await processNext(paymentId, OutgoingPaymentState.Expired)
             }
           }
         }
@@ -1059,7 +1112,7 @@ describe('OutgoingPaymentService', (): void => {
         describe.each`
           state
           ${undefined}
-          ${PaymentState.Pending}
+          ${OutgoingPaymentState.Pending}
         `('state: $state', ({ state }): void => {
           it.each`
             assetCode               | assetScale
@@ -1081,7 +1134,7 @@ describe('OutgoingPaymentService', (): void => {
               })
               assert.ok(!isOutgoingPaymentError(payment))
               expect(payment).toMatchObject({
-                state: PaymentState.Pending,
+                state: OutgoingPaymentState.Pending,
                 authorized: !!authorized
               })
               expect(payment.sendAmount).toEqual({
@@ -1092,7 +1145,7 @@ describe('OutgoingPaymentService', (): void => {
               expect(payment.receiveAmount).toBeNull()
               await expect(
                 outgoingPaymentService.get(paymentId)
-              ).resolves.toMatchObject({ state: PaymentState.Pending })
+              ).resolves.toMatchObject({ state: OutgoingPaymentState.Pending })
             }
           )
 
@@ -1116,14 +1169,14 @@ describe('OutgoingPaymentService', (): void => {
               })
               assert.ok(!isOutgoingPaymentError(payment))
               expect(payment).toMatchObject({
-                state: PaymentState.Pending,
+                state: OutgoingPaymentState.Pending,
                 authorized: !!authorized
               })
               expect(payment.receiveAmount).toEqual(receiveAmount)
               expect(payment.sendAmount).toBeNull()
               await expect(
                 outgoingPaymentService.get(paymentId)
-              ).resolves.toMatchObject({ state: PaymentState.Pending })
+              ).resolves.toMatchObject({ state: OutgoingPaymentState.Pending })
             }
           )
         })
@@ -1131,11 +1184,11 @@ describe('OutgoingPaymentService', (): void => {
     })
 
     it.each`
-      authorized   | state                   | sendAmount    | receiveAmount    | error
-      ${undefined} | ${undefined}            | ${undefined}  | ${undefined}     | ${OutgoingPaymentError.InvalidAmount}
-      ${undefined} | ${undefined}            | ${sendAmount} | ${receiveAmount} | ${OutgoingPaymentError.InvalidAmount}
-      ${true}      | ${PaymentState.Pending} | ${undefined}  | ${undefined}     | ${OutgoingPaymentError.InvalidState}
-      ${false}     | ${undefined}            | ${sendAmount} | ${undefined}     | ${OutgoingPaymentError.InvalidAuthorized}
+      authorized   | state                           | sendAmount    | receiveAmount    | error
+      ${undefined} | ${undefined}                    | ${undefined}  | ${undefined}     | ${OutgoingPaymentError.InvalidAmount}
+      ${undefined} | ${undefined}                    | ${sendAmount} | ${receiveAmount} | ${OutgoingPaymentError.InvalidAmount}
+      ${true}      | ${OutgoingPaymentState.Pending} | ${undefined}  | ${undefined}     | ${OutgoingPaymentError.InvalidState}
+      ${false}     | ${undefined}                    | ${sendAmount} | ${undefined}     | ${OutgoingPaymentError.InvalidAuthorized}
     `(
       '$error',
       async ({
@@ -1156,11 +1209,11 @@ describe('OutgoingPaymentService', (): void => {
         ).resolves.toEqual(error)
         await expect(
           outgoingPaymentService.get(paymentId)
-        ).resolves.toMatchObject({ state: PaymentState.Pending })
+        ).resolves.toMatchObject({ state: OutgoingPaymentState.Pending })
       }
     )
 
-    describe.each(Object.values(PaymentState).map((state) => [state]))(
+    describe.each(Object.values(OutgoingPaymentState).map((state) => [state]))(
       '%s payment',
       (state): void => {
         beforeEach(
@@ -1181,13 +1234,15 @@ describe('OutgoingPaymentService', (): void => {
           }
         )
 
-        if (state !== PaymentState.Prepared) {
+        if (state !== OutgoingPaymentState.Prepared) {
           it(`does not authorize a(n) ${
-            state === PaymentState.Pending ? 'authorized PENDING' : state
+            state === OutgoingPaymentState.Pending
+              ? 'authorized PENDING'
+              : state
           } payment`, async (): Promise<void> => {
             await OutgoingPayment.query(knex)
               .patch({
-                authorized: state === PaymentState.Pending,
+                authorized: state === OutgoingPaymentState.Pending,
                 state
               })
               .findById(paymentId)
@@ -1202,13 +1257,13 @@ describe('OutgoingPaymentService', (): void => {
 
         if (
           [
-            PaymentState.Pending,
-            PaymentState.Prepared,
-            PaymentState.Expired
+            OutgoingPaymentState.Pending,
+            OutgoingPaymentState.Prepared,
+            OutgoingPaymentState.Expired
           ].includes(state)
         ) {
-          Object.values(PaymentState).forEach((state) => {
-            if (state !== PaymentState.Pending) {
+          Object.values(OutgoingPaymentState).forEach((state) => {
+            if (state !== OutgoingPaymentState.Pending) {
               it(`does not update payment to ${state}`, async (): Promise<void> => {
                 await expect(
                   outgoingPaymentService.update({
@@ -1254,7 +1309,7 @@ describe('OutgoingPaymentService', (): void => {
         sendAmount,
         authorized: true
       })
-      payment = await processNext(paymentId, PaymentState.Funding)
+      payment = await processNext(paymentId, OutgoingPaymentState.Funding)
       assert.ok(payment.sendAmount)
       quoteAmount = payment.sendAmount.amount
       await expectOutcome(payment, { accountBalance: BigInt(0) })
@@ -1279,11 +1334,11 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toMatchObject({
         id: payment.id,
-        state: PaymentState.Sending
+        state: OutgoingPaymentState.Sending
       })
 
       const after = await outgoingPaymentService.get(payment.id)
-      expect(after?.state).toBe(PaymentState.Sending)
+      expect(after?.state).toBe(OutgoingPaymentState.Sending)
       await expectOutcome(payment, { accountBalance: quoteAmount })
     })
 
@@ -1297,12 +1352,12 @@ describe('OutgoingPaymentService', (): void => {
       ).resolves.toEqual(FundingError.InvalidAmount)
 
       const after = await outgoingPaymentService.get(payment.id)
-      expect(after?.state).toBe(PaymentState.Funding)
+      expect(after?.state).toBe(OutgoingPaymentState.Funding)
       await expectOutcome(payment, { accountBalance: BigInt(0) })
     })
 
-    Object.values(PaymentState).forEach((startState) => {
-      if (startState === PaymentState.Funding) return
+    Object.values(OutgoingPaymentState).forEach((startState) => {
+      if (startState === OutgoingPaymentState.Funding) return
       it(`does not fund a ${startState} payment`, async (): Promise<void> => {
         await payment.$query().patch({ state: startState })
         await expect(

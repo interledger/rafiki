@@ -8,7 +8,20 @@ import { WebhookEvent } from '../../../webhook/model'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incoming_payment.expired',
-  IncomingPaymentPaid = 'incoming_payment.paid'
+  IncomingPaymentCompleted = 'incoming_payment.completed'
+}
+
+export enum IncomingPaymentState {
+  // The payment has a state of `PENDING` when it is initially created.
+  Pending = 'PENDING',
+  // As soon as payment has started (funds have cleared into the account) the state moves to `PROCESSING`.
+  Processing = 'PROCESSING',
+  // The payment is either auto-completed once the received amount equals the expected amount `amount`,
+  // or it is completed manually via an API call.
+  Completed = 'COMPLETED',
+  // If the payment expires before it is completed then the state will move to `EXPIRED`
+  // and no further payments will be accepted.
+  Expired = 'EXPIRED'
 }
 
 export type IncomingPaymentData = {
@@ -18,9 +31,17 @@ export type IncomingPaymentData = {
     description?: string
     createdAt: string
     expiresAt: string
-    amount: string
-    received: string
+    incomingAmount?: Amount
+    receivedAmount: Amount
+    externalRef?: string
+    state: string
   }
+}
+
+export interface Amount {
+  amount: bigint
+  assetCode: string
+  assetScale: number
 }
 
 export class IncomingPaymentEvent extends WebhookEvent {
@@ -35,6 +56,10 @@ export class IncomingPayment
     return 'incomingPayments'
   }
 
+  static get virtualAttributes(): string[] {
+    return ['incomingAmount']
+  }
+
   static relationMappings = {
     account: {
       relation: Model.HasOneRelation,
@@ -43,54 +68,104 @@ export class IncomingPayment
         from: 'incomingPayments.accountId',
         to: 'accounts.id'
       }
+    },
+    asset: {
+      relation: Model.HasOneRelation,
+      modelClass: Asset,
+      join: {
+        from: 'incomingPayments.assetId',
+        to: 'assets.id'
+      }
     }
   }
 
   // Open payments account id this incoming payment is for
   public accountId!: string
   public account!: Account
-  public active!: boolean
   public description?: string
   public expiresAt!: Date
-  public readonly amount!: bigint
+  public state!: IncomingPaymentState
+  public externalRef?: string
 
   public processAt!: Date | null
 
-  public get asset(): Asset {
-    return this.account.asset
+  public readonly assetId!: string
+  public asset!: Asset
+
+  private incomingAmountValue?: bigint | null
+
+  public get incomingAmount(): Amount | undefined {
+    if (this.incomingAmountValue) {
+      return {
+        amount: this.incomingAmountValue,
+        assetCode: this.asset.code,
+        assetScale: this.asset.scale
+      }
+    }
+    return undefined
+  }
+
+  public set incomingAmount(value: Amount | undefined) {
+    this.incomingAmountValue = value?.amount ?? null
   }
 
   public async onCredit({
     totalReceived
   }: OnCreditOptions): Promise<IncomingPayment> {
-    if (this.amount <= totalReceived) {
-      const incomingPayment = await IncomingPayment.query()
+    let incomingPayment
+    if (this.incomingAmount && this.incomingAmount.amount <= totalReceived) {
+      incomingPayment = await IncomingPayment.query()
         .patchAndFetchById(this.id, {
-          active: false,
+          state: IncomingPaymentState.Completed,
           // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
           processAt: new Date(Date.now() + 30_000)
         })
-        .where({
-          active: true
+        .whereNotIn('state', [
+          IncomingPaymentState.Expired,
+          IncomingPaymentState.Completed
+        ])
+    } else {
+      incomingPayment = await IncomingPayment.query()
+        .patchAndFetchById(this.id, {
+          state: IncomingPaymentState.Processing
         })
-      if (incomingPayment) {
-        return incomingPayment
-      }
+        .whereNotIn('state', [
+          IncomingPaymentState.Expired,
+          IncomingPaymentState.Completed
+        ])
+    }
+    if (incomingPayment) {
+      return incomingPayment
     }
     return this
   }
 
   public toData(amountReceived: bigint): IncomingPaymentData {
-    return {
+    const data: IncomingPaymentData = {
       incomingPayment: {
         id: this.id,
         accountId: this.accountId,
-        amount: this.amount.toString(),
-        description: this.description,
-        expiresAt: this.expiresAt.toISOString(),
         createdAt: new Date(+this.createdAt).toISOString(),
-        received: amountReceived.toString()
+        expiresAt: this.expiresAt.toISOString(),
+        receivedAmount: {
+          amount: amountReceived,
+          assetCode: this.asset.code,
+          assetScale: this.asset.scale
+        },
+        state: this.state
       }
     }
+
+    if (this.incomingAmount) {
+      data.incomingPayment.incomingAmount = this.incomingAmount
+    }
+    if (this.description) {
+      data.incomingPayment.description = this.description
+    }
+    if (this.externalRef) {
+      data.incomingPayment.externalRef = this.externalRef
+    }
+
+    return data
   }
 }

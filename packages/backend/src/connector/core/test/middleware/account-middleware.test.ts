@@ -100,7 +100,7 @@ describe('Account Middleware', () => {
   test('return an error when the destination account is disabled', async () => {
     const outgoingAccount = IncomingPaymentAccountFactory.build({
       id: 'deactivatedIncomingPayment',
-      active: false
+      state: 'COMPLETED'
     })
     await rafikiServices.accounting.create(outgoingAccount)
     const middleware = createAccountMiddleware(ADDRESS)

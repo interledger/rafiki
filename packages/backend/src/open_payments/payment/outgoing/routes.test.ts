@@ -17,7 +17,7 @@ import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { OutgoingPaymentService, CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
-import { PaymentState } from './model'
+import { OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes } from './routes'
 import { AppContext } from '../../../app'
 
@@ -165,7 +165,7 @@ describe('Outgoing Payment Routes', (): void => {
             assetScale: asset.scale
           },
           receiveAmount: receiveAmount && { amount: receiveAmount.toString() },
-          state: PaymentState.Pending.toLowerCase(),
+          state: OutgoingPaymentState.Pending.toLowerCase(),
           authorized: false
         })
       }
@@ -181,7 +181,7 @@ describe('Outgoing Payment Routes', (): void => {
       })
       assert.ok(!isOutgoingPaymentError(outgoingPayment))
       await outgoingPayment.$query(knex).patch({
-        state: PaymentState.Funding,
+        state: OutgoingPaymentState.Funding,
         sendAmount,
         receiveAmount,
         expiresAt: new Date(Date.now() + 1000),
@@ -230,7 +230,7 @@ describe('Outgoing Payment Routes', (): void => {
       })
     })
 
-    Object.values(PaymentState).forEach((state) => {
+    Object.values(OutgoingPaymentState).forEach((state) => {
       test(`returns 200 with a(n) ${state} outgoing payment`, async (): Promise<void> => {
         const outgoingPayment = await outgoingPaymentService.create({
           accountId,
@@ -250,7 +250,10 @@ describe('Outgoing Payment Routes', (): void => {
           id: `https://wallet.example/outgoing-payments/${outgoingPayment.id}`,
           account: `https://wallet.example/pay/${accountId}`,
           receivingPayment,
-          state: [PaymentState.Funding, PaymentState.Sending].includes(state)
+          state: [
+            OutgoingPaymentState.Funding,
+            OutgoingPaymentState.Sending
+          ].includes(state)
             ? 'processing'
             : state.toLowerCase(),
           authorized: false
@@ -454,7 +457,7 @@ describe('Outgoing Payment Routes', (): void => {
               },
               receiveAmount: options.receiveAmount,
               authorized: false,
-              state: PaymentState.Pending.toLowerCase()
+              state: OutgoingPaymentState.Pending.toLowerCase()
             })
           }
         )
@@ -483,7 +486,7 @@ describe('Outgoing Payment Routes', (): void => {
           authorized: true,
           description: options.description,
           externalRef: options.externalRef,
-          state: PaymentState.Pending.toLowerCase()
+          state: OutgoingPaymentState.Pending.toLowerCase()
         })
       })
     })
@@ -547,7 +550,7 @@ describe('Outgoing Payment Routes', (): void => {
       ${'authorized'}    | ${123}
       ${'authorized'}    | ${'false'}
       ${'state'}         | ${123}
-      ${'state'}         | ${PaymentState.Completed}
+      ${'state'}         | ${OutgoingPaymentState.Completed}
     `(
       'returns error on invalid $field',
       async ({ field, invalidValue }): Promise<void> => {
@@ -581,7 +584,7 @@ describe('Outgoing Payment Routes', (): void => {
         account: `${config.publicHost}/pay/${accountId}`,
         receivingPayment,
         authorized: true,
-        state: PaymentState.Pending.toLowerCase()
+        state: OutgoingPaymentState.Pending.toLowerCase()
       })
     })
 
@@ -602,7 +605,7 @@ describe('Outgoing Payment Routes', (): void => {
       describe.each`
         state
         ${undefined}
-        ${PaymentState.Pending}
+        ${OutgoingPaymentState.Pending}
       `('state: $state', ({ state }): void => {
         beforeEach(
           async (): Promise<void> => {
@@ -662,7 +665,7 @@ describe('Outgoing Payment Routes', (): void => {
                 },
                 receiveAmount: ctx.request.body['receiveAmount'],
                 authorized: false,
-                state: PaymentState.Pending.toLowerCase()
+                state: OutgoingPaymentState.Pending.toLowerCase()
               })
             }
           )
@@ -671,9 +674,9 @@ describe('Outgoing Payment Routes', (): void => {
     })
 
     test.each`
-      state                   | authorized   | description
-      ${undefined}            | ${true}      | ${'authorized'}
-      ${PaymentState.Sending} | ${undefined} | ${'state'}
+      state                           | authorized   | description
+      ${undefined}                    | ${true}      | ${'authorized'}
+      ${OutgoingPaymentState.Sending} | ${undefined} | ${'state'}
     `(
       'returns error on conflicting $description',
       async ({ state, authorized }): Promise<void> => {
@@ -697,10 +700,10 @@ describe('Outgoing Payment Routes', (): void => {
     )
 
     it.each`
-      authorized   | state                   | sendAmount         | receiveAmount      | error
-      ${undefined} | ${undefined}            | ${undefined}       | ${undefined}       | ${'invalid amount'}
-      ${undefined} | ${undefined}            | ${{ amount: '1' }} | ${{ amount: '1' }} | ${'invalid amount'}
-      ${'true'}    | ${PaymentState.Pending} | ${undefined}       | ${undefined}       | ${'invalid state'}
+      authorized   | state                           | sendAmount         | receiveAmount      | error
+      ${undefined} | ${undefined}                    | ${undefined}       | ${undefined}       | ${'invalid amount'}
+      ${undefined} | ${undefined}                    | ${{ amount: '1' }} | ${{ amount: '1' }} | ${'invalid amount'}
+      ${'true'}    | ${OutgoingPaymentState.Pending} | ${undefined}       | ${undefined}       | ${'invalid state'}
     `(
       '$error',
       async ({

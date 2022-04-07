@@ -22,14 +22,14 @@ import {
 } from '../../open_payments/payment/outgoing/service'
 import {
   OutgoingPayment as OutgoingPaymentModel,
-  PaymentState
+  OutgoingPaymentState
 } from '../../open_payments/payment/outgoing/model'
 import { AccountingService } from '../../accounting/service'
 import { AccountService } from '../../open_payments/account/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
-  PaymentState as SchemaPaymentState,
+  OutgoingPaymentState as SchemaPaymentState,
   PaymentType as SchemaPaymentType
 } from '../generated/graphql'
 
@@ -89,7 +89,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     description
   }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
     OutgoingPaymentModel.query(knex).insertAndFetch({
-      state: PaymentState.Pending,
+      state: OutgoingPaymentState.Pending,
       receivingAccount,
       sendAmount: sendAmountOpts
         ? {
@@ -164,9 +164,10 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
 
         // Query with each payment state with and without an error
-        const states: [PaymentState, PaymentError | null][] = Object.values(
-          PaymentState
-        ).flatMap((state) => [
+        const states: [
+          OutgoingPaymentState,
+          PaymentError | null
+        ][] = Object.values(OutgoingPaymentState).flatMap((state) => [
           [state, null],
           [state, Pay.PaymentError.ReceiverProtocolViolation]
         ])
@@ -249,7 +250,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     amount: sendAmount.amount.toString() || null,
                     assetCode: sendAmount.assetCode,
                     assetScale: sendAmount.assetScale,
-                    __typename: 'PaymentAmount'
+                    __typename: 'OutgoingPaymentAmount'
                   }
                 : null
             )
@@ -259,7 +260,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     amount: receiveAmount.amount.toString() || null,
                     assetCode: receiveAmount.assetCode,
                     assetScale: receiveAmount.assetScale,
-                    __typename: 'PaymentAmount'
+                    __typename: 'OutgoingPaymentAmount'
                   }
                 : null
             )

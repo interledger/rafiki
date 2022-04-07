@@ -69,7 +69,7 @@ export const IncomingPaymentAccountFactory = Factory.define<MockOutgoingAccount>
   .extend(OutgoingAccountFactory)
   .option('amount', BigInt(0))
   .attrs({
-    active: true
+    state: 'PENDING'
   })
 
 export const AccountFactory = Factory.define<MockOutgoingAccount>(

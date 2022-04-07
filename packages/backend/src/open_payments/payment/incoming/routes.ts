@@ -6,7 +6,8 @@ import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { AccountingService } from '../../../accounting/service'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment } from './model'
+import { Amount, IncomingPayment, IncomingPaymentState } from './model'
+import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -23,6 +24,7 @@ interface ServiceDependencies {
 export interface IncomingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
+  update(ctx: AppContext): Promise<void>
 }
 
 export function createIncomingPaymentRoutes(
@@ -34,7 +36,8 @@ export function createIncomingPaymentRoutes(
   const deps = { ...deps_, logger }
   return {
     get: (ctx: AppContext) => getIncomingPayment(deps, ctx),
-    create: (ctx: AppContext) => createIncomingPayment(deps, ctx)
+    create: (ctx: AppContext) => createIncomingPayment(deps, ctx),
+    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx)
   }
 }
 
@@ -42,11 +45,10 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { incomingPaymentId: incomingPaymentId } = ctx.params
+  const { incomingPaymentId } = ctx.params
   ctx.assert(validateId(incomingPaymentId), 400, 'invalid id')
   const acceptJSON = ctx.accepts('application/json')
-  const acceptStream = ctx.accepts('application/ilp-stream+json')
-  ctx.assert(acceptJSON || acceptStream, 406)
+  ctx.assert(acceptJSON, 406, 'must accept json')
 
   const incomingPayment = await deps.incomingPaymentService.get(
     incomingPaymentId
@@ -65,27 +67,13 @@ async function getIncomingPayment(
   }
 
   const body = incomingPaymentToBody(deps, incomingPayment, amountReceived)
-  ctx.body = body
-  if (!acceptStream) return
-
-  const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-    paymentTag: incomingPayment.id,
-    // TODO receipt support on incoming payments?
-    //receiptSetup:
-    //  nonce && secret
-    //    ? {
-    //        nonce: Buffer.from(nonce.toString(), 'base64'),
-    //        secret: Buffer.from(secret.toString(), 'base64')
-    //      }
-    //    : undefined,
-    asset: {
-      code: incomingPayment.account.asset.code,
-      scale: incomingPayment.account.asset.scale
-    }
-  })
-
+  const { ilpAddress, sharedSecret } = getStreamCredentials(
+    deps,
+    incomingPayment
+  )
   body['ilpAddress'] = ilpAddress
   body['sharedSecret'] = base64url(sharedSecret)
+  ctx.body = body
 }
 
 async function createIncomingPayment(
@@ -103,27 +91,99 @@ async function createIncomingPayment(
 
   const { body } = ctx.request
   if (typeof body !== 'object') return ctx.throw(400, 'json body required')
-  const amount = tryParseAmount(body['amount'])
-  if (!amount) return ctx.throw(400, 'invalid amount')
+  let incomingAmount: Amount | undefined
+  try {
+    incomingAmount = parseAmount(body['incomingAmount'])
+  } catch (_) {
+    return ctx.throw(400, 'invalid incomingAmount')
+  }
   const expiresAt = Date.parse(body['expiresAt'] as string)
   if (!expiresAt) return ctx.throw(400, 'invalid expiresAt')
   if (body.description !== undefined && typeof body.description !== 'string')
     return ctx.throw(400, 'invalid description')
+  if (body.externalRef !== undefined && typeof body.externalRef !== 'string')
+    return ctx.throw(400, 'invalid externalRef')
   if (Date.now() + MAX_EXPIRY < expiresAt)
     return ctx.throw(400, 'expiry too high')
   if (expiresAt < Date.now()) return ctx.throw(400, 'already expired')
 
-  const incomingPayment = await deps.incomingPaymentService.create({
+  const incomingPaymentOrError = await deps.incomingPaymentService.create({
     accountId,
     description: body.description,
+    externalRef: body.externalRef,
     expiresAt: new Date(expiresAt),
-    amount
+    incomingAmount
   })
 
+  if (isIncomingPaymentError(incomingPaymentOrError)) {
+    return ctx.throw(
+      errorToCode[incomingPaymentOrError],
+      errorToMessage[incomingPaymentOrError]
+    )
+  }
+
   ctx.status = 201
-  const res = incomingPaymentToBody(deps, incomingPayment, BigInt(0))
+  const res = incomingPaymentToBody(deps, incomingPaymentOrError, BigInt(0))
+  const { ilpAddress, sharedSecret } = getStreamCredentials(
+    deps,
+    incomingPaymentOrError
+  )
+  res['ilpAddress'] = ilpAddress
+  res['sharedSecret'] = base64url(sharedSecret)
   ctx.body = res
-  ctx.set('Location', res.id)
+}
+
+async function updateIncomingPayment(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  const { incomingPaymentId } = ctx.params
+  ctx.assert(validateId(incomingPaymentId), 400, 'invalid id')
+  const acceptJSON = ctx.accepts('application/json')
+  ctx.assert(acceptJSON, 406, 'must accept json')
+  ctx.assert(
+    ctx.get('Content-Type') === 'application/json',
+    400,
+    'must send json body'
+  )
+
+  const { body } = ctx.request
+  if (typeof body !== 'object') return ctx.throw(400, 'json body required')
+  if (typeof body['state'] !== 'string') return ctx.throw(400, 'invalid state')
+  const state = Object.values(IncomingPaymentState).find(
+    (name) => name.toLowerCase() === body.state
+  )
+  if (state === undefined) return ctx.throw(400, 'invalid state')
+
+  const incomingPaymentOrError = await deps.incomingPaymentService.update({
+    id: incomingPaymentId,
+    state
+  })
+
+  if (isIncomingPaymentError(incomingPaymentOrError)) {
+    return ctx.throw(
+      errorToCode[incomingPaymentOrError],
+      errorToMessage[incomingPaymentOrError]
+    )
+  }
+
+  const amountReceived = await deps.accountingService.getTotalReceived(
+    incomingPaymentOrError.id
+  )
+  if (amountReceived === undefined) {
+    deps.logger.error(
+      { incomingPayment: incomingPaymentOrError.id },
+      'account not found'
+    )
+    return ctx.throw(500)
+  }
+
+  const res = incomingPaymentToBody(
+    deps,
+    incomingPaymentOrError,
+    amountReceived
+  )
+  ctx.body = res
 }
 
 function incomingPaymentToBody(
@@ -132,22 +192,62 @@ function incomingPaymentToBody(
   received: bigint
 ) {
   const location = `${deps.config.publicHost}/incoming-payments/${incomingPayment.id}`
-  return {
+  const body = {
     id: location,
-    account: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
-    amount: incomingPayment.amount.toString(),
-    assetCode: incomingPayment.account.asset.code,
-    assetScale: incomingPayment.account.asset.scale,
-    description: incomingPayment.description,
-    expiresAt: incomingPayment.expiresAt.toISOString(),
-    received: received.toString()
+    accountId: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
+    state: incomingPayment.state.toLowerCase(),
+    receivedAmount: {
+      amount: received.toString(),
+      assetCode: incomingPayment.account.asset.code,
+      assetScale: incomingPayment.account.asset.scale
+    },
+    expiresAt: incomingPayment.expiresAt.toISOString()
+  }
+
+  if (incomingPayment.incomingAmount) {
+    body['incomingAmount'] = {
+      amount: incomingPayment.incomingAmount.amount.toString(),
+      assetCode: incomingPayment.incomingAmount.assetCode,
+      assetScale: incomingPayment.incomingAmount.assetScale
+    }
+  }
+  if (incomingPayment.description)
+    body['description'] = incomingPayment.description
+  if (incomingPayment.externalRef)
+    body['externalRef'] = incomingPayment.externalRef
+  // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+  body['receiptsEnabled'] = false
+  return body
+}
+
+function parseAmount(amount: unknown): Amount | undefined {
+  if (amount === undefined) return amount
+  if (
+    typeof amount !== 'object' ||
+    amount === null ||
+    (amount['assetCode'] && typeof amount['assetCode'] !== 'string') ||
+    (amount['assetScale'] !== undefined &&
+      typeof amount['assetScale'] !== 'number') ||
+    amount['assetScale'] < 0
+  ) {
+    throw new Error('invalid amount')
+  }
+  return {
+    amount: BigInt(amount['amount']),
+    assetCode: amount['assetCode'],
+    assetScale: amount['assetScale']
   }
 }
 
-function tryParseAmount(amount: unknown): bigint | null {
-  try {
-    return BigInt(amount)
-  } catch (_) {
-    return null
-  }
+function getStreamCredentials(
+  deps: ServiceDependencies,
+  incomingPayment: IncomingPayment
+) {
+  return deps.streamServer.generateCredentials({
+    paymentTag: incomingPayment.id,
+    asset: {
+      code: incomingPayment.account.asset.code,
+      scale: incomingPayment.account.asset.scale
+    }
+  })
 }

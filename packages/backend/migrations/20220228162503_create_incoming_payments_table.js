@@ -5,11 +5,14 @@ exports.up = function (knex) {
     // Open payments account id
     table.uuid('accountId').notNullable()
     table.foreign('accountId').references('accounts.id')
-    table.boolean('active').notNullable()
     table.string('description').nullable()
     table.timestamp('expiresAt').notNullable()
-    table.bigInteger('amount').notNullable()
+    table.bigInteger('incomingAmountValue').nullable()
+    table.string('state').notNullable()
+    table.string('externalRef').nullable()
 
+    table.uuid('assetId').notNullable()
+    table.foreign('assetId').references('assets.id')
     table.timestamp('processAt').nullable()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())

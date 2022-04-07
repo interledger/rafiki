@@ -11,7 +11,7 @@ import { sendWebhookEvent } from './lifecycle'
 import {
   OutgoingPayment,
   PaymentAmount,
-  PaymentState,
+  OutgoingPaymentState,
   PaymentEventType
 } from './model'
 import { AccountingService } from '../../../accounting/service'
@@ -135,7 +135,7 @@ async function createOutgoingPayment(
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           ...options,
-          state: PaymentState.Pending
+          state: OutgoingPaymentState.Pending
         })
         .withGraphFetched('account.asset')
 
@@ -159,7 +159,7 @@ export interface UpdateOutgoingPaymentOptions {
   authorized?: boolean
   sendAmount?: PaymentAmount
   receiveAmount?: PaymentAmount
-  state?: PaymentState
+  state?: OutgoingPaymentState
 }
 
 async function updatePayment(
@@ -181,7 +181,7 @@ async function updatePayment(
     }
   } else if (sendAmount && receiveAmount) {
     return OutgoingPaymentError.InvalidAmount
-  } else if (state && state !== PaymentState.Pending) {
+  } else if (state && state !== OutgoingPaymentState.Pending) {
     return OutgoingPaymentError.InvalidState
   }
   if (authorized !== undefined && authorized !== true) {
@@ -197,10 +197,10 @@ async function updatePayment(
     if (sendAmount || receiveAmount) {
       const update: PartialModelObject<OutgoingPayment> = {}
       switch (payment.state) {
-        case PaymentState.Pending:
-        case PaymentState.Prepared:
-        case PaymentState.Expired:
-          update.state = PaymentState.Pending
+        case OutgoingPaymentState.Pending:
+        case OutgoingPaymentState.Prepared:
+        case OutgoingPaymentState.Expired:
+          update.state = OutgoingPaymentState.Pending
           update.expiresAt = null
           break
         default:
@@ -232,8 +232,8 @@ async function updatePayment(
       const update: PartialModelObject<OutgoingPayment> = {
         authorized
       }
-      if (payment.state === PaymentState.Prepared) {
-        update.state = PaymentState.Funding
+      if (payment.state === OutgoingPaymentState.Prepared) {
+        update.state = OutgoingPaymentState.Funding
         await sendWebhookEvent(
           {
             ...deps,
@@ -242,7 +242,10 @@ async function updatePayment(
           payment,
           PaymentEventType.PaymentFunding
         )
-      } else if (payment.state !== PaymentState.Pending || payment.authorized) {
+      } else if (
+        payment.state !== OutgoingPaymentState.Pending ||
+        payment.authorized
+      ) {
         return OutgoingPaymentError.WrongState
       }
       await payment.$query(trx).patch(update)
@@ -267,7 +270,7 @@ async function fundPayment(
       .forUpdate()
       .withGraphFetched('account.asset')
     if (!payment) return FundingError.UnknownPayment
-    if (payment.state !== PaymentState.Funding) {
+    if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
     if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
@@ -280,7 +283,7 @@ async function fundPayment(
     if (error) {
       return error
     }
-    await payment.$query(trx).patch({ state: PaymentState.Sending })
+    await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
     return payment
   })
 }

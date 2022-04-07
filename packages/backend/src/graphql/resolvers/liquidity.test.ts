@@ -24,7 +24,7 @@ import {
 } from '../../open_payments/payment/incoming/model'
 import {
   OutgoingPayment,
-  PaymentState,
+  OutgoingPaymentState,
   PaymentEvent,
   PaymentWithdrawType,
   isPaymentEventType
@@ -1596,10 +1596,15 @@ describe('Liquidity Resolvers', (): void => {
         const incomingPaymentService = await deps.use('incomingPaymentService')
         incomingPayment = await incomingPaymentService.create({
           accountId,
-          amount: BigInt(56),
+          incomingAmount: {
+            amount: BigInt(56),
+            assetCode: account.asset.code,
+            assetScale: account.asset.scale
+          },
           expiresAt: new Date(Date.now() + 60 * 1000),
           description: 'description!'
         })
+        assert.ok(!isIncomingPaymentEventType(incomingPayment))
         const outgoingPaymentService = await deps.use('outgoingPaymentService')
         const config = await deps.use('config')
         const receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
@@ -1609,7 +1614,7 @@ describe('Liquidity Resolvers', (): void => {
           receivingPayment
         })) as OutgoingPayment
         await payment.$query(knex).patch({
-          state: PaymentState.Funding,
+          state: OutgoingPaymentState.Funding,
           sendAmount: {
             amount: BigInt(456),
             assetCode: account.asset.code,

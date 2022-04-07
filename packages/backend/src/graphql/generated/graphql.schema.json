@@ -1966,7 +1966,7 @@
             "deprecationReason": null
           },
           {
-            "name": "active",
+            "name": "accountId",
             "description": null,
             "args": [],
             "type": {
@@ -1974,7 +1974,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Boolean",
+                "name": "ID",
                 "ofType": null
               }
             },
@@ -1982,15 +1982,15 @@
             "deprecationReason": null
           },
           {
-            "name": "createdAt",
+            "name": "state",
             "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
+                "kind": "ENUM",
+                "name": "IncomingPaymentState",
                 "ofType": null
               }
             },
@@ -2014,6 +2014,34 @@
             "deprecationReason": null
           },
           {
+            "name": "incomingAmount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "IncomingPaymentAmount",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "receivedAmount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "IncomingPaymentAmount",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "description",
             "description": null,
             "args": [],
@@ -2026,7 +2054,19 @@
             "deprecationReason": null
           },
           {
-            "name": "amount",
+            "name": "externalRef",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "createdAt",
             "description": null,
             "args": [],
             "type": {
@@ -2034,7 +2074,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "UInt64",
+                "name": "String",
                 "ofType": null
               }
             },
@@ -2050,6 +2090,65 @@
             "ofType": null
           }
         ],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "IncomingPaymentAmount",
+        "description": null,
+        "fields": [
+          {
+            "name": "amount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UInt64",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetCode",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetScale",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -2145,6 +2244,41 @@
         "inputFields": null,
         "interfaces": [],
         "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "IncomingPaymentState",
+        "description": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "PENDING",
+            "description": "The payment has a state of PENDING when it is initially created.",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PROCESSING",
+            "description": "As soon as payment has started (funds have cleared into the account) the state moves to PROCESSING",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "COMPLETED",
+            "description": "The payment is either auto-completed once the received amount equals the expected `incomingAmount.amount`, or it is completed manually via an API call.",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "EXPIRED",
+            "description": "If the payment expires before it is completed then the state will move to EXPIRED and no further payments will be accepted.",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
         "possibleTypes": null
       },
       {
@@ -3339,7 +3473,7 @@
               "name": null,
               "ofType": {
                 "kind": "ENUM",
-                "name": "PaymentState",
+                "name": "OutgoingPaymentState",
                 "ofType": null
               }
             },
@@ -3408,7 +3542,7 @@
             "args": [],
             "type": {
               "kind": "OBJECT",
-              "name": "PaymentAmount",
+              "name": "OutgoingPaymentAmount",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3420,7 +3554,7 @@
             "args": [],
             "type": {
               "kind": "OBJECT",
-              "name": "PaymentAmount",
+              "name": "OutgoingPaymentAmount",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3523,6 +3657,57 @@
             "ofType": null
           }
         ],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "OutgoingPaymentAmount",
+        "description": null,
+        "fields": [
+          {
+            "name": "amount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UInt64",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetCode",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetScale",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -3715,6 +3900,59 @@
         "possibleTypes": null
       },
       {
+        "kind": "ENUM",
+        "name": "OutgoingPaymentState",
+        "description": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "PENDING",
+            "description": "Will transition to PREPARED or FUNDING (if already authorized) when quote is complete",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PREPARED",
+            "description": "Will transition to FUNDING once authorized",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "FUNDING",
+            "description": "Will transition to SENDING once payment funds are reserved",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "SENDING",
+            "description": "Paying, will transition to COMPLETED on success",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "COMPLETED",
+            "description": "Successful completion",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "EXPIRED",
+            "description": "Payment quote expired; can be requoted to PENDING",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "FAILED",
+            "description": "Payment failed",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "PageInfo",
         "description": null,
@@ -3770,57 +4008,6 @@
             "type": {
               "kind": "SCALAR",
               "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
-        "name": "PaymentAmount",
-        "description": null,
-        "fields": [
-          {
-            "name": "amount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "assetCode",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "assetScale",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "Int",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3998,59 +4185,6 @@
         "inputFields": null,
         "interfaces": null,
         "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "ENUM",
-        "name": "PaymentState",
-        "description": null,
-        "fields": null,
-        "inputFields": null,
-        "interfaces": null,
-        "enumValues": [
-          {
-            "name": "PENDING",
-            "description": "Will transition to PREPARED or FUNDING (if already authorized) when quote is complete",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "PREPARED",
-            "description": "Will transition to FUNDING once authorized",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "FUNDING",
-            "description": "Will transition to SENDING once payment funds are reserved",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "SENDING",
-            "description": "Paying, will transition to COMPLETED on success",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "COMPLETED",
-            "description": "Successful completion",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "EXPIRED",
-            "description": "Payment quote expired; can be requoted to PENDING",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "FAILED",
-            "description": "Payment failed",
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
         "possibleTypes": null
       },
       {

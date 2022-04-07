@@ -266,6 +266,10 @@ export class App {
       '/pay/:accountId/incoming-payments',
       incomingPaymentRoutes.create
     )
+    this.publicRouter.put(
+      '/incoming-payments/:incomingPaymentId',
+      incomingPaymentRoutes.update
+    )
 
     this.publicRouter.get(
       '/outgoing-payments/:outgoingPaymentId',
@@ -275,7 +279,6 @@ export class App {
       '/pay/:accountId/outgoing-payments',
       outgoingPaymentRoutes.create
     )
-
     this.publicRouter.put(
       '/pay/:accountId/outgoing-payments',
       outgoingPaymentRoutes.update

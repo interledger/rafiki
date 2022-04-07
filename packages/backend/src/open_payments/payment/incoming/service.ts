@@ -1,31 +1,50 @@
 import {
+  Amount,
   IncomingPayment,
   IncomingPaymentEvent,
-  IncomingPaymentEventType
+  IncomingPaymentEventType,
+  IncomingPaymentState
 } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
 import { Transaction } from 'knex'
-import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import { PartialModelObject, TransactionOrKnex } from 'objection'
+import { AccountService } from '../../account/service'
+import { IncomingPaymentError } from './errors'
+import { parse, end } from 'iso8601-duration'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
 // Third retry waits 30 (more) seconds, etc. up to 60 seconds
 export const RETRY_BACKOFF_MS = 10_000
+// TODO: make expiry date configurable
+export const EXPIRY = parse('P90D') // 90 days in future
 
-interface CreateOptions {
+export interface CreateIncomingPaymentOptions {
   accountId: string
   description?: string
-  expiresAt: Date
-  amount: bigint
+  expiresAt?: Date
+  incomingAmount?: Amount
+  externalRef?: string
+}
+
+interface UpdateIncomingPaymentOptions {
+  id: string
+  state: IncomingPaymentState
 }
 
 export interface IncomingPaymentService {
   get(id: string): Promise<IncomingPayment | undefined>
-  create(options: CreateOptions, trx?: Transaction): Promise<IncomingPayment>
+  create(
+    options: CreateIncomingPaymentOptions,
+    trx?: Transaction
+  ): Promise<IncomingPayment | IncomingPaymentError>
+  update(
+    options: UpdateIncomingPaymentOptions
+  ): Promise<IncomingPayment | IncomingPaymentError>
   getAccountIncomingPaymentsPage(
     accountId: string,
     pagination?: Pagination
@@ -36,6 +55,7 @@ export interface IncomingPaymentService {
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
+  accountService: AccountService
 }
 
 export async function createIncomingPaymentService(
@@ -51,6 +71,7 @@ export async function createIncomingPaymentService(
   return {
     get: (id) => getIncomingPayment(deps, id),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
+    update: (options) => updateIncomingPayment(deps, options),
     getAccountIncomingPaymentsPage: (accountId, pagination) =>
       getAccountIncomingPaymentsPage(deps, accountId, pagination),
     processNext: () => processNextIncomingPayment(deps)
@@ -63,27 +84,51 @@ async function getIncomingPayment(
 ): Promise<IncomingPayment | undefined> {
   return IncomingPayment.query(deps.knex)
     .findById(id)
-    .withGraphJoined('account.asset')
+    .withGraphFetched('[account.asset, asset]')
 }
 
 async function createIncomingPayment(
   deps: ServiceDependencies,
-  { accountId, description, expiresAt, amount }: CreateOptions,
+  {
+    accountId,
+    description,
+    expiresAt,
+    incomingAmount,
+    externalRef
+  }: CreateIncomingPaymentOptions,
   trx?: Transaction
-): Promise<IncomingPayment> {
+): Promise<IncomingPayment | IncomingPaymentError> {
+  const account = await deps.accountService.get(accountId)
+  if (!account) {
+    return IncomingPaymentError.UnknownAccount
+  }
+  if (incomingAmount) {
+    if (incomingAmount.amount <= 0) {
+      return IncomingPaymentError.InvalidAmount
+    }
+    if (incomingAmount.assetCode || incomingAmount.assetScale) {
+      if (
+        incomingAmount.assetCode !== account.asset.code ||
+        incomingAmount.assetScale !== account.asset.scale
+      ) {
+        return IncomingPaymentError.InvalidAmount
+      }
+    }
+  }
   const invTrx = trx || (await IncomingPayment.startTransaction(deps.knex))
-
   try {
     const incomingPayment = await IncomingPayment.query(invTrx)
       .insertAndFetch({
         accountId,
+        assetId: account.asset.id,
         description,
-        expiresAt,
-        amount,
-        active: true,
-        processAt: new Date(expiresAt.getTime())
+        expiresAt: expiresAt || end(EXPIRY),
+        incomingAmount,
+        externalRef,
+        state: IncomingPaymentState.Pending,
+        processAt: expiresAt ?? end(EXPIRY)
       })
-      .withGraphFetched('account.asset')
+      .withGraphFetched('[account.asset, asset]')
 
     // Incoming payment accounts are credited by the amounts received by the incoming payment.
     // Credits are restricted such that the incoming payments cannot receive more than that amount.
@@ -96,11 +141,6 @@ async function createIncomingPayment(
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()
-    }
-    if (err instanceof ForeignKeyViolationError) {
-      throw new Error(
-        'unable to create incoming payment, account does not exist'
-      )
     }
     throw err
   }
@@ -120,7 +160,7 @@ async function processNextIncomingPayment(
       // If an incoming payment is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-      .withGraphFetched('account.asset')
+      .withGraphFetched('[account.asset, asset]')
 
     const incomingPayment = incomingPayments[0]
     if (!incomingPayment) return
@@ -132,7 +172,10 @@ async function processNextIncomingPayment(
         incomingPayment: incomingPayment.id
       })
     }
-    if (!incomingPayment.active) {
+    if (
+      incomingPayment.state === IncomingPaymentState.Expired ||
+      incomingPayment.state === IncomingPaymentState.Completed
+    ) {
       await handleDeactivated(deps, incomingPayment)
     } else {
       await handleExpired(deps, incomingPayment)
@@ -156,7 +199,7 @@ async function handleExpired(
       'deactivating expired incoming payment'
     )
     await incomingPayment.$query(deps.knex).patch({
-      active: false,
+      state: IncomingPaymentState.Expired,
       // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
       processAt: new Date(Date.now() + 30_000)
     })
@@ -186,9 +229,9 @@ async function handleDeactivated(
     }
 
     const type =
-      amountReceived < incomingPayment.amount
+      incomingPayment.state == IncomingPaymentState.Expired
         ? IncomingPaymentEventType.IncomingPaymentExpired
-        : IncomingPaymentEventType.IncomingPaymentPaid
+        : IncomingPaymentEventType.IncomingPaymentCompleted
     deps.logger.trace({ type }, 'creating incoming payment webhook event')
 
     await IncomingPaymentEvent.query(deps.knex).insertAndFetch({
@@ -218,5 +261,34 @@ async function getAccountIncomingPaymentsPage(
 
   return await IncomingPayment.query(deps.knex).getPage(pagination).where({
     accountId: accountId
+  })
+}
+
+async function updateIncomingPayment(
+  deps: ServiceDependencies,
+  { id, state }: UpdateIncomingPaymentOptions
+): Promise<IncomingPayment | IncomingPaymentError> {
+  return deps.knex.transaction(async (trx) => {
+    const payment = await IncomingPayment.query(trx)
+      .findById(id)
+      .forUpdate()
+      .withGraphFetched('[account.asset, asset]')
+    if (!payment) return IncomingPaymentError.UnknownPayment
+    const update: PartialModelObject<IncomingPayment> = {}
+    if (state == IncomingPaymentState.Completed) {
+      switch (payment.state) {
+        case IncomingPaymentState.Pending:
+        case IncomingPaymentState.Processing:
+          update.state = state
+          break
+        default:
+          return IncomingPaymentError.WrongState
+      }
+    } else {
+      return IncomingPaymentError.InvalidState
+    }
+    update.processAt = new Date(Date.now() + 30_000)
+    await payment.$query(trx).patch(update)
+    return payment
   })
 }
