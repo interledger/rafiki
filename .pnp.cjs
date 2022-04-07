@@ -6400,7 +6400,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["raw-body", "npm:2.4.1"],
             ["rosie", "npm:2.1.0"],
             ["testcontainers", "npm:7.20.4"],
-            ["tigerbeetle-node", "npm:0.4.1"],
+            ["tigerbeetle-node", "npm:0.6.0"],
             ["tmp", "npm:0.2.1"],
             ["typescript", "patch:typescript@npm%3A4.2.4#~builtin<compat/typescript>::version=4.2.4&hash=32657b"],
             ["uuid", "npm:8.3.2"]
@@ -16952,10 +16952,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["tigerbeetle-node", [
-        ["npm:0.4.1", {
-          "packageLocation": "./.yarn/unplugged/tigerbeetle-node-npm-0.4.1-16106fd9d1/node_modules/tigerbeetle-node/",
+        ["npm:0.6.0", {
+          "packageLocation": "./.yarn/unplugged/tigerbeetle-node-npm-0.6.0-3a63e60fae/node_modules/tigerbeetle-node/",
           "packageDependencies": [
-            ["tigerbeetle-node", "npm:0.4.1"]
+            ["tigerbeetle-node", "npm:0.6.0"]
           ],
           "linkType": "HARD",
         }]
