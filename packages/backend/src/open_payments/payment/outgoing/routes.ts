@@ -4,7 +4,8 @@ import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
-import { OutgoingPayment, PaymentAmount, OutgoingPaymentState } from './model'
+import { OutgoingPayment, OutgoingPaymentState } from './model'
+import { Amount } from '../amount'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -69,7 +70,7 @@ async function createOutgoingPayment(
     typeof body.receivingAccount !== 'string'
   )
     return ctx.throw(400, 'invalid receivingAccount')
-  let sendAmount: PaymentAmount | undefined
+  let sendAmount: Amount | undefined
   if (body.sendAmount) {
     try {
       sendAmount = parseAmount(body.sendAmount)
@@ -77,7 +78,7 @@ async function createOutgoingPayment(
       return ctx.throw(400, 'invalid sendAmount')
     }
   }
-  let receiveAmount: PaymentAmount | undefined
+  let receiveAmount: Amount | undefined
   if (body.receiveAmount) {
     try {
       receiveAmount = parseAmount(body.receiveAmount)
@@ -134,13 +135,13 @@ function outgoingPaymentToBody(
     sendAmount: outgoingPayment.sendAmount
       ? {
           ...outgoingPayment.sendAmount,
-          amount: outgoingPayment.sendAmount.amount.toString()
+          value: outgoingPayment.sendAmount.value.toString()
         }
       : undefined,
     receiveAmount: outgoingPayment.receiveAmount
       ? {
           ...outgoingPayment.receiveAmount,
-          amount: outgoingPayment.receiveAmount.amount.toString()
+          value: outgoingPayment.receiveAmount.value.toString()
         }
       : undefined,
     description: outgoingPayment.description ?? undefined,
@@ -148,7 +149,7 @@ function outgoingPaymentToBody(
   }
 }
 
-function parseAmount(amount: unknown): PaymentAmount {
+function parseAmount(amount: unknown): Amount {
   if (
     typeof amount !== 'object' ||
     amount === null ||
@@ -159,7 +160,7 @@ function parseAmount(amount: unknown): PaymentAmount {
     throw new Error('invalid amount')
   }
   return {
-    amount: BigInt(amount['amount']),
+    value: BigInt(amount['value']),
     assetCode: amount['assetCode'],
     assetScale: amount['assetScale']
   }

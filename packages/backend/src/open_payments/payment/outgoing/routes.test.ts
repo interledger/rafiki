@@ -19,6 +19,7 @@ import { OutgoingPaymentService, CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
 import { OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes } from './routes'
+import { Amount } from '../amount'
 import { AppContext } from '../../../app'
 
 describe('Outgoing Payment Routes', (): void => {
@@ -39,13 +40,13 @@ describe('Outgoing Payment Routes', (): void => {
   const receivingAccount = `https://wallet.example/${uuid()}`
   const receivingPayment = `${receivingAccount}/incoming-payments/${uuid()}`
   const asset = randomAsset()
-  const sendAmount = {
-    amount: BigInt(123),
+  const sendAmount: Amount = {
+    value: BigInt(123),
     assetCode: asset.code,
     assetScale: asset.scale
   }
-  const receiveAmount = {
-    amount: BigInt(56),
+  const receiveAmount: Amount = {
+    value: BigInt(56),
     assetCode: asset.code,
     assetScale: asset.scale
   }
@@ -132,17 +133,17 @@ describe('Outgoing Payment Routes', (): void => {
     })
 
     test.each`
-      sendAmount     | receiveAmount | description
-      ${BigInt(123)} | ${undefined}  | ${'fixed-send'}
-      ${undefined}   | ${BigInt(56)} | ${'fixed-receive'}
+      sendAmount    | receiveAmount    | description
+      ${sendAmount} | ${undefined}     | ${'fixed-send'}
+      ${undefined}  | ${receiveAmount} | ${'fixed-receive'}
     `(
       'returns 200 with a $description open payments outgoing payment',
       async ({ sendAmount, receiveAmount }): Promise<void> => {
         const outgoingPayment = await outgoingPaymentService.create({
           accountId,
           receivingAccount,
-          sendAmount: sendAmount && { amount: sendAmount },
-          receiveAmount: receiveAmount && { amount: receiveAmount }
+          sendAmount,
+          receiveAmount
         })
         assert.ok(!isOutgoingPaymentError(outgoingPayment))
         const ctx = createContext(
@@ -162,11 +163,13 @@ describe('Outgoing Payment Routes', (): void => {
           accountId: accountUrl,
           receivingAccount,
           sendAmount: sendAmount && {
-            amount: sendAmount.toString(),
-            assetCode: asset.code,
-            assetScale: asset.scale
+            ...sendAmount,
+            value: sendAmount.value.toString()
           },
-          receiveAmount: receiveAmount && { amount: receiveAmount.toString() },
+          receiveAmount: receiveAmount && {
+            ...receiveAmount,
+            value: receiveAmount.value.toString()
+          },
           state: OutgoingPaymentState.Pending.toLowerCase()
         })
       }
@@ -214,11 +217,11 @@ describe('Outgoing Payment Routes', (): void => {
         receivingPayment,
         sendAmount: {
           ...sendAmount,
-          amount: sendAmount.amount.toString()
+          value: sendAmount.value.toString()
         },
         receiveAmount: {
           ...receiveAmount,
-          amount: receiveAmount.amount.toString()
+          value: receiveAmount.value.toString()
         },
         state: 'processing',
         description: outgoingPayment.description,
@@ -363,8 +366,20 @@ describe('Outgoing Payment Routes', (): void => {
         options = {
           receivingAccount,
           receivingPayment,
-          sendAmount: sendAmount ? { amount: sendAmount } : undefined,
-          receiveAmount: receiveAmount ? { amount: receiveAmount } : undefined
+          sendAmount: sendAmount
+            ? {
+                value: sendAmount,
+                assetCode: asset.code,
+                assetScale: asset.scale
+              }
+            : undefined,
+          receiveAmount: receiveAmount
+            ? {
+                value: receiveAmount,
+                assetCode: asset.code,
+                assetScale: asset.scale
+              }
+            : undefined
         }
         const ctx = setup({})
         await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
@@ -390,66 +405,51 @@ describe('Outgoing Payment Routes', (): void => {
     })
 
     describe('returns the outgoing payment on success', (): void => {
-      describe.each`
+      test.each`
         sendAmount   | receiveAmount | description
         ${'123'}     | ${undefined}  | ${'fixed-send'}
         ${undefined} | ${'56'}       | ${'fixed-receive'}
-      `('$description', ({ sendAmount, receiveAmount }): void => {
-        test.each`
-          amountAsset
-          ${true}
-          ${false}
-        `(
-          'specify amount asset: $amountAsset',
-          async ({ amountAsset }): Promise<void> => {
-            options = {
-              receivingAccount,
-              sendAmount: sendAmount
-                ? {
-                    amount: sendAmount
-                  }
-                : undefined,
-              receiveAmount: receiveAmount
-                ? {
-                    amount: receiveAmount
-                  }
-                : undefined
-            }
-            if (amountAsset) {
-              if (options.sendAmount) {
-                ;(options.sendAmount.assetCode = asset.code),
-                  (options.sendAmount.assetScale = asset.scale)
-              } else if (options.receiveAmount) {
-                ;(options.receiveAmount.assetCode = asset.code),
-                  (options.receiveAmount.assetScale = asset.scale)
-              }
-            }
-            const ctx = setup({})
-            await expect(
-              outgoingPaymentRoutes.create(ctx)
-            ).resolves.toBeUndefined()
-            expect(ctx.response.status).toBe(201)
-            const outgoingPaymentId = ((ctx.response.body as Record<
-              string,
-              unknown
-            >)['id'] as string)
-              .split('/')
-              .pop()
-            expect(ctx.response.body).toEqual({
-              id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
-              accountId: accountUrl,
-              receivingAccount,
-              sendAmount: sendAmount && {
-                amount: sendAmount,
-                assetCode: asset.code,
-                assetScale: asset.scale
-              },
-              receiveAmount: options.receiveAmount,
-              state: OutgoingPaymentState.Pending.toLowerCase()
-            })
+      `(
+        '$description',
+        async ({ sendAmount, receiveAmount }): Promise<void> => {
+          options = {
+            receivingAccount,
+            sendAmount: sendAmount
+              ? {
+                  value: sendAmount,
+                  assetCode: asset.code,
+                  assetScale: asset.scale
+                }
+              : undefined,
+            receiveAmount: receiveAmount
+              ? {
+                  value: receiveAmount,
+                  assetCode: asset.code,
+                  assetScale: asset.scale
+                }
+              : undefined
           }
-        )
-      })
+          const ctx = setup({})
+          await expect(
+            outgoingPaymentRoutes.create(ctx)
+          ).resolves.toBeUndefined()
+          expect(ctx.response.status).toBe(201)
+          const outgoingPaymentId = ((ctx.response.body as Record<
+            string,
+            unknown
+          >)['id'] as string)
+            .split('/')
+            .pop()
+          expect(ctx.response.body).toEqual({
+            id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
+            accountId: accountUrl,
+            receivingAccount,
+            sendAmount: options.sendAmount,
+            receiveAmount: options.receiveAmount,
+            state: OutgoingPaymentState.Pending.toLowerCase()
+          })
+        }
+      )
 
       test('IncomingPayment', async (): Promise<void> => {
         options = {

@@ -5,6 +5,7 @@ import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
 import { Account } from '../../account/model'
+import { Amount } from '../amount'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
 
@@ -25,46 +26,48 @@ export class OutgoingPayment
   public receivingAccount?: string
   public receivingPayment?: string
 
-  private sendAmountAmount?: bigint | null
+  private sendAmountValue?: bigint | null
   private sendAmountAssetCode?: string | null
   private sendAmountAssetScale?: number | null
 
-  public get sendAmount(): PaymentAmount | null {
-    if (this.sendAmountAmount) {
+  public get sendAmount(): Amount | null {
+    if (this.sendAmountValue) {
       return {
-        amount: this.sendAmountAmount,
-        assetCode: this.sendAmountAssetCode ?? undefined,
-        assetScale: this.sendAmountAssetScale ?? undefined
+        value: this.sendAmountValue,
+        assetCode: this.asset.code,
+        assetScale: this.asset.scale
       }
     }
     return null
   }
 
-  public set sendAmount(value: PaymentAmount | null) {
-    this.sendAmountAmount = value?.amount ?? null
-    this.sendAmountAssetCode = value?.assetCode ?? null
-    this.sendAmountAssetScale = value?.assetScale ?? null
+  public set sendAmount(amount: Amount | null) {
+    this.sendAmountValue = amount?.value ?? null
   }
 
-  private receiveAmountAmount?: bigint | null
+  private receiveAmountValue?: bigint | null
   private receiveAmountAssetCode?: string | null
   private receiveAmountAssetScale?: number | null
 
-  public get receiveAmount(): PaymentAmount | null {
-    if (this.receiveAmountAmount) {
+  public get receiveAmount(): Amount | null {
+    if (
+      this.receiveAmountValue &&
+      this.receiveAmountAssetCode &&
+      this.receiveAmountAssetScale
+    ) {
       return {
-        amount: this.receiveAmountAmount,
-        assetCode: this.receiveAmountAssetCode ?? undefined,
-        assetScale: this.receiveAmountAssetScale ?? undefined
+        value: this.receiveAmountValue,
+        assetCode: this.receiveAmountAssetCode,
+        assetScale: this.receiveAmountAssetScale
       }
     }
     return null
   }
 
-  public set receiveAmount(value: PaymentAmount | null) {
-    this.receiveAmountAmount = value?.amount ?? null
-    this.receiveAmountAssetCode = value?.assetCode ?? null
-    this.receiveAmountAssetScale = value?.assetScale ?? null
+  public set receiveAmount(amount: Amount | null) {
+    this.receiveAmountValue = amount?.value ?? null
+    this.receiveAmountAssetCode = amount?.assetCode ?? null
+    this.receiveAmountAssetScale = amount?.assetScale ?? null
   }
 
   public description?: string
@@ -140,11 +143,10 @@ export class OutgoingPayment
 
   // Open payments account id of the sender
   public accountId!: string
-  public account!: Account
+  public account?: Account
 
-  public get asset(): Asset {
-    return this.account.asset
-  }
+  public readonly assetId!: string
+  public asset!: Asset
 
   static relationMappings = {
     account: {
@@ -153,6 +155,14 @@ export class OutgoingPayment
       join: {
         from: 'outgoingPayments.accountId',
         to: 'accounts.id'
+      }
+    },
+    asset: {
+      relation: Model.HasOneRelation,
+      modelClass: Asset,
+      join: {
+        from: 'outgoingPayments.assetId',
+        to: 'assets.id'
       }
     }
   }
@@ -194,14 +204,14 @@ export class OutgoingPayment
     }
     if (this.sendAmount) {
       data.payment.sendAmount = {
-        amount: this.sendAmount.amount.toString(),
+        value: this.sendAmount.value.toString(),
         assetCode: this.sendAmount.assetCode,
         assetScale: this.sendAmount.assetScale
       }
     }
     if (this.receiveAmount) {
       data.payment.receiveAmount = {
-        amount: this.receiveAmount.amount.toString(),
+        value: this.receiveAmount.value.toString(),
         assetCode: this.receiveAmount.assetCode,
         assetScale: this.receiveAmount.assetScale
       }
@@ -227,12 +237,6 @@ export class OutgoingPayment
     }
     return data
   }
-}
-
-export interface PaymentAmount {
-  amount: bigint
-  assetCode?: string
-  assetScale?: number
 }
 
 interface PaymentQuote {
@@ -279,9 +283,9 @@ export const PaymentEventType = {
 export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
 interface AmountData {
-  amount: string
-  assetCode?: string
-  assetScale?: number
+  value: string
+  assetCode: string
+  assetScale: number
 }
 
 export type PaymentData = {

@@ -1,5 +1,4 @@
 import {
-  Amount,
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
@@ -12,6 +11,7 @@ import assert from 'assert'
 import { Transaction } from 'knex'
 import { PartialModelObject, TransactionOrKnex } from 'objection'
 import { AccountService } from '../../account/service'
+import { Amount } from '../amount'
 import { IncomingPaymentError } from './errors'
 import { parse, end } from 'iso8601-duration'
 
@@ -101,7 +101,7 @@ async function createIncomingPayment(
     return IncomingPaymentError.UnknownAccount
   }
   if (incomingAmount) {
-    if (incomingAmount.amount <= 0) {
+    if (incomingAmount.value <= 0) {
       return IncomingPaymentError.InvalidAmount
     }
     if (incomingAmount.assetCode || incomingAmount.assetScale) {

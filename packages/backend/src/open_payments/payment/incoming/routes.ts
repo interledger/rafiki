@@ -6,8 +6,9 @@ import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { AccountingService } from '../../../accounting/service'
 import { IncomingPaymentService } from './service'
-import { Amount, IncomingPayment, IncomingPaymentState } from './model'
+import { IncomingPayment, IncomingPaymentState } from './model'
 import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
+import { Amount } from '../amount'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -201,7 +202,7 @@ function incomingPaymentToBody(
     accountId,
     state: incomingPayment.state.toLowerCase(),
     receivedAmount: {
-      amount: received.toString(),
+      value: received.toString(),
       assetCode: incomingPayment.asset.code,
       assetScale: incomingPayment.asset.scale
     },
@@ -210,7 +211,7 @@ function incomingPaymentToBody(
 
   if (incomingPayment.incomingAmount) {
     body['incomingAmount'] = {
-      amount: incomingPayment.incomingAmount.amount.toString(),
+      value: incomingPayment.incomingAmount.value.toString(),
       assetCode: incomingPayment.incomingAmount.assetCode,
       assetScale: incomingPayment.incomingAmount.assetScale
     }
@@ -235,7 +236,7 @@ function parseAmount(amount: unknown): Amount | undefined {
     throw new Error('invalid amount')
   }
   return {
-    amount: BigInt(amount['amount']),
+    value: BigInt(amount['value']),
     assetCode: amount['assetCode'],
     assetScale: amount['assetScale']
   }

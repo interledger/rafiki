@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
 import { PaymentError, PaymentType } from '@interledger/pay'
@@ -14,6 +15,7 @@ import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import {
   OutgoingPaymentError,
+  isOutgoingPaymentError,
   errorToMessage
 } from '../../open_payments/payment/outgoing/errors'
 import {
@@ -26,6 +28,7 @@ import {
 } from '../../open_payments/payment/outgoing/model'
 import { AccountingService } from '../../accounting/service'
 import { AccountService } from '../../open_payments/account/service'
+import { Amount } from '../../open_payments/payment/amount'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
@@ -43,13 +46,14 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   const receivingAccount = 'http://wallet2.example/bob'
   const receivingPayment = 'http://wallet2.example/bob/incoming-payments/123'
-  const sendAmount = {
-    amount: BigInt(123),
-    assetCode: randomAsset().code,
-    assetScale: randomAsset().scale
+  const asset = randomAsset()
+  const sendAmount: Amount = {
+    value: BigInt(123),
+    assetCode: asset.code,
+    assetScale: asset.scale
   }
-  const receiveAmount = {
-    amount: BigInt(56),
+  const receiveAmount: Amount = {
+    value: BigInt(56),
     assetCode: 'XRP',
     assetScale: 9
   }
@@ -79,32 +83,12 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
   )
 
-  const createPayment = async ({
-    accountId,
-    receivingAccount,
-    sendAmount: sendAmountOpts,
-    receiveAmount: receiveAmountOpts,
-    receivingPayment,
-    description
-  }: CreateOutgoingPaymentOptions): Promise<OutgoingPaymentModel> =>
-    OutgoingPaymentModel.query(knex).insertAndFetch({
-      state: OutgoingPaymentState.Pending,
-      receivingAccount,
-      sendAmount: sendAmountOpts
-        ? {
-            amount: sendAmountOpts.amount,
-            assetCode: sendAmount.assetCode,
-            assetScale: sendAmount.assetScale
-          }
-        : undefined,
-      receiveAmount: receiveAmountOpts
-        ? {
-            amount: receiveAmountOpts.amount,
-            assetCode: receiveAmount.assetCode,
-            assetScale: receiveAmount.assetScale
-          }
-        : undefined,
-      receivingPayment,
+  const createPayment = async (
+    options: CreateOutgoingPaymentOptions
+  ): Promise<OutgoingPaymentModel> => {
+    const payment = await outgoingPaymentService.create(options)
+    assert.ok(!isOutgoingPaymentError(payment))
+    await payment.$query(knex).patch({
       quote: {
         timestamp: new Date(),
         targetType: PaymentType.FixedSend,
@@ -115,10 +99,10 @@ describe('OutgoingPayment Resolvers', (): void => {
         lowExchangeRateEstimate: Pay.Ratio.from(1.2)!,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         highExchangeRateEstimate: Pay.Ratio.from(2.3)!
-      },
-      accountId,
-      description
+      }
     })
+    return payment
+  }
 
   describe('Query.outgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
@@ -126,7 +110,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     describe.each`
       receivingAccount    | sendAmount    | receiveAmount    | receivingPayment    | description
       ${receivingAccount} | ${sendAmount} | ${null}          | ${null}             | ${'fixed send'}
-      ${receivingAccount} | ${sendAmount} | ${receiveAmount} | ${null}             | ${'fixed receive'}
+      ${receivingAccount} | ${null}       | ${receiveAmount} | ${null}             | ${'fixed receive'}
       ${null}             | ${null}       | ${null}          | ${receivingPayment} | ${'incoming payment'}
     `(
       '$description',
@@ -140,12 +124,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         beforeEach(
           async (): Promise<void> => {
             const { id: accountId } = await accountService.create({
-              asset: sendAmount
-                ? {
-                    code: sendAmount.assetCode,
-                    scale: sendAmount.assetScale
-                  }
-                : randomAsset()
+              asset
             })
             payment = await createPayment({
               accountId,
@@ -198,12 +177,12 @@ describe('OutgoingPayment Resolvers', (): void => {
                       receivingAccount
                       receivingPayment
                       sendAmount {
-                        amount
+                        value
                         assetCode
                         assetScale
                       }
                       receiveAmount {
-                        amount
+                        value
                         assetCode
                         assetScale
                       }
@@ -239,20 +218,20 @@ describe('OutgoingPayment Resolvers', (): void => {
             expect(query.sendAmount).toEqual(
               sendAmount
                 ? {
-                    amount: sendAmount.amount.toString() || null,
+                    value: sendAmount.value.toString(),
                     assetCode: sendAmount.assetCode,
                     assetScale: sendAmount.assetScale,
-                    __typename: 'OutgoingPaymentAmount'
+                    __typename: 'Amount'
                   }
                 : null
             )
             expect(query.receiveAmount).toEqual(
               receiveAmount
                 ? {
-                    amount: receiveAmount.amount.toString() || null,
+                    value: receiveAmount.value.toString(),
                     assetCode: receiveAmount.assetCode,
                     assetScale: receiveAmount.assetScale,
-                    __typename: 'OutgoingPaymentAmount'
+                    __typename: 'Amount'
                   }
                 : null
             )
@@ -306,10 +285,10 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
 
     test.each`
-      receivingAccount    | sendAmount                       | receiveAmount                       | receivingPayment    | description  | externalRef  | type
-      ${receivingAccount} | ${{ amount: sendAmount.amount }} | ${undefined}                        | ${undefined}        | ${'rent'}    | ${'202201'}  | ${'fixed send'}
-      ${receivingAccount} | ${undefined}                     | ${{ amount: receiveAmount.amount }} | ${undefined}        | ${undefined} | ${undefined} | ${'fixed receive'}
-      ${undefined}        | ${undefined}                     | ${undefined}                        | ${receivingPayment} | ${undefined} | ${undefined} | ${'incoming payment'}
+      receivingAccount    | sendAmount    | receiveAmount    | receivingPayment    | description  | externalRef  | type
+      ${receivingAccount} | ${sendAmount} | ${undefined}     | ${undefined}        | ${'rent'}    | ${'202201'}  | ${'fixed send'}
+      ${receivingAccount} | ${undefined}  | ${receiveAmount} | ${undefined}        | ${undefined} | ${undefined} | ${'fixed receive'}
+      ${undefined}        | ${undefined}  | ${undefined}     | ${receivingPayment} | ${undefined} | ${undefined} | ${'incoming payment'}
     `(
       '200 ($type)',
       async ({
@@ -321,7 +300,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         externalRef
       }): Promise<void> => {
         const { id: accountId } = await accountService.create({
-          asset: randomAsset()
+          asset
         })
         const input = {
           accountId,
@@ -442,7 +421,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       async (): Promise<void> => {
         accountId = (
           await accountService.create({
-            asset: randomAsset()
+            asset
           })
         ).id
       }

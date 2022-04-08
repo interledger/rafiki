@@ -55,7 +55,7 @@ describe('Incoming Payment Routes', (): void => {
           incomingPayment.incomingAmount === undefined
             ? undefined
             : {
-                amount: incomingPayment.incomingAmount.amount.toString(),
+                value: incomingPayment.incomingAmount.value.toString(),
                 assetScale: incomingPayment.incomingAmount.assetScale,
                 assetCode: incomingPayment.incomingAmount.assetCode
               },
@@ -106,7 +106,7 @@ describe('Incoming Payment Routes', (): void => {
         description: 'text',
         expiresAt,
         incomingAmount: {
-          amount: BigInt(123),
+          value: BigInt(123),
           assetCode: asset.code,
           assetScale: asset.scale
         },
@@ -173,14 +173,14 @@ describe('Incoming Payment Routes', (): void => {
         id: `${accountId}/incoming-payments/${incomingPayment.id}`,
         accountId,
         incomingAmount: {
-          amount: '123',
+          value: '123',
           assetCode: asset.code,
           assetScale: asset.scale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
+          value: '0',
           assetCode: asset.code,
           assetScale: asset.scale
         },
@@ -196,19 +196,19 @@ describe('Incoming Payment Routes', (): void => {
   })
   describe('create', (): void => {
     test.each`
-      id              | headers                             | body                                                                     | status | message                     | description
-      ${'not_a_uuid'} | ${null}                             | ${null}                                                                  | ${400} | ${'invalid account id'}     | ${'invalid account id'}
-      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                                  | ${406} | ${'must accept json'}       | ${'invalid Accept header'}
-      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                                  | ${400} | ${'must send json body'}    | ${'invalid Content-Type header'}
-      ${uuid()}       | ${null}                             | ${null}                                                                  | ${404} | ${'unknown account'}        | ${'unknown account'}
-      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                                            | ${400} | ${'invalid incomingAmount'} | ${'non-object incomingAmount'}
-      ${null}         | ${null}                             | ${{ incomingAmount: { amount: '-2', assetCode: 'USD', assetScale: 2 } }} | ${400} | ${'invalid amount'}         | ${'invalid incomingAmount, amount non-positive'}
-      ${null}         | ${null}                             | ${{ incomingAmount: { amount: '2', assetCode: 4, assetScale: 2 } }}      | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetCode not string'}
-      ${null}         | ${null}                             | ${{ incomingAmount: { amount: '2', assetCode: 'USD', assetScale: -2 } }} | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetScale negative'}
-      ${null}         | ${null}                             | ${{ description: 123 }}                                                  | ${400} | ${'invalid description'}    | ${'invalid description'}
-      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                                  | ${400} | ${'invalid externalRef'}    | ${'invalid externalRef'}
-      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                                 | ${400} | ${'invalid expiresAt'}      | ${'invalid expiresAt'}
-      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }}                 | ${400} | ${'already expired'}        | ${'already expired expiresAt'}
+      id              | headers                             | body                                                                    | status | message                     | description
+      ${'not_a_uuid'} | ${null}                             | ${null}                                                                 | ${400} | ${'invalid account id'}     | ${'invalid account id'}
+      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                                 | ${406} | ${'must accept json'}       | ${'invalid Accept header'}
+      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                                 | ${400} | ${'must send json body'}    | ${'invalid Content-Type header'}
+      ${uuid()}       | ${null}                             | ${null}                                                                 | ${404} | ${'unknown account'}        | ${'unknown account'}
+      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                                           | ${400} | ${'invalid incomingAmount'} | ${'non-object incomingAmount'}
+      ${null}         | ${null}                             | ${{ incomingAmount: { value: '-2', assetCode: 'USD', assetScale: 2 } }} | ${400} | ${'invalid amount'}         | ${'invalid incomingAmount, value non-positive'}
+      ${null}         | ${null}                             | ${{ incomingAmount: { value: '2', assetCode: 4, assetScale: 2 } }}      | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetCode not string'}
+      ${null}         | ${null}                             | ${{ incomingAmount: { value: '2', assetCode: 'USD', assetScale: -2 } }} | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetScale negative'}
+      ${null}         | ${null}                             | ${{ description: 123 }}                                                 | ${400} | ${'invalid description'}    | ${'invalid description'}
+      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                                 | ${400} | ${'invalid externalRef'}    | ${'invalid externalRef'}
+      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                                | ${400} | ${'invalid expiresAt'}      | ${'invalid expiresAt'}
+      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }}                | ${400} | ${'already expired'}        | ${'already expired expiresAt'}
     `(
       'returns $status on $description',
       async ({ id, headers, body, status, message }): Promise<void> => {
@@ -248,14 +248,14 @@ describe('Incoming Payment Routes', (): void => {
         id: `${accountId}/incoming-payments/${incomingPaymentId}`,
         accountId,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount?.amount.toString(),
+          value: incomingPayment.incomingAmount?.value.toString(),
           assetCode: incomingPayment.incomingAmount?.assetCode,
           assetScale: incomingPayment.incomingAmount?.assetScale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
+          value: '0',
           assetCode: incomingPayment.asset.code,
           assetScale: incomingPayment.asset.scale
         },
@@ -285,7 +285,7 @@ describe('Incoming Payment Routes', (): void => {
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
+          value: '0',
           assetCode: incomingPayment.asset.code,
           assetScale: incomingPayment.asset.scale
         },
@@ -312,13 +312,13 @@ describe('Incoming Payment Routes', (): void => {
         id: `${accountId}/incoming-payments/${incomingPaymentId}`,
         accountId,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount?.amount.toString(),
+          value: incomingPayment.incomingAmount?.value.toString(),
           assetCode: incomingPayment.incomingAmount?.assetCode,
           assetScale: incomingPayment.incomingAmount?.assetScale
         },
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
+          value: '0',
           assetCode: incomingPayment.asset.code,
           assetScale: incomingPayment.asset.scale
         },
@@ -346,14 +346,14 @@ describe('Incoming Payment Routes', (): void => {
         id: `${accountId}/incoming-payments/${incomingPaymentId}`,
         accountId,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount?.amount.toString(),
+          value: incomingPayment.incomingAmount?.value.toString(),
           assetCode: incomingPayment.incomingAmount?.assetCode,
           assetScale: incomingPayment.incomingAmount?.assetScale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
+          value: '0',
           assetCode: incomingPayment.asset.code,
           assetScale: incomingPayment.asset.scale
         },
@@ -405,14 +405,14 @@ describe('Incoming Payment Routes', (): void => {
         id: `${accountId}/incoming-payments/${incomingPayment.id}`,
         accountId,
         incomingAmount: {
-          amount: '123',
+          value: '123',
           assetCode: asset.code,
           assetScale: asset.scale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
+          value: '0',
           assetCode: asset.code,
           assetScale: asset.scale
         },
