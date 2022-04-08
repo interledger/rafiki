@@ -30,13 +30,14 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let accountId: string
+  let accountUrl: string
 
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
   }
-  const receivingAccount = `https://wallet.example/pay/${uuid()}`
-  const receivingPayment = `http://wallet2.example/incoming/${uuid()}`
+  const receivingAccount = `https://wallet.example/${uuid()}`
+  const receivingPayment = `${receivingAccount}/incoming-payments/${uuid()}`
   const asset = randomAsset()
   const sendAmount = {
     amount: BigInt(123),
@@ -72,6 +73,7 @@ describe('Outgoing Payment Routes', (): void => {
     async (): Promise<void> => {
       const accountService = await deps.use('accountService')
       accountId = (await accountService.create({ asset })).id
+      accountUrl = `${config.publicHost}/${accountId}`
     }
   )
 
@@ -156,8 +158,8 @@ describe('Outgoing Payment Routes', (): void => {
         )
 
         expect(ctx.body).toEqual({
-          id: `https://wallet.example/outgoing-payments/${outgoingPayment.id}`,
-          account: `https://wallet.example/pay/${accountId}`,
+          id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
+          accountId: accountUrl,
           receivingAccount,
           sendAmount: sendAmount && {
             amount: sendAmount.toString(),
@@ -207,8 +209,8 @@ describe('Outgoing Payment Routes', (): void => {
       )
 
       expect(ctx.body).toEqual({
-        id: `https://wallet.example/outgoing-payments/${outgoingPayment.id}`,
-        account: `https://wallet.example/pay/${accountId}`,
+        id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
+        accountId: accountUrl,
         receivingPayment,
         sendAmount: {
           ...sendAmount,
@@ -241,8 +243,8 @@ describe('Outgoing Payment Routes', (): void => {
         await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
         expect(ctx.status).toBe(200)
         expect(ctx.body).toEqual({
-          id: `https://wallet.example/outgoing-payments/${outgoingPayment.id}`,
-          account: `https://wallet.example/pay/${accountId}`,
+          id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
+          accountId: accountUrl,
           receivingPayment,
           state: [
             OutgoingPaymentState.Funding,
@@ -434,8 +436,8 @@ describe('Outgoing Payment Routes', (): void => {
               .split('/')
               .pop()
             expect(ctx.response.body).toEqual({
-              id: `${config.publicHost}/outgoing-payments/${outgoingPaymentId}`,
-              account: `${config.publicHost}/pay/${accountId}`,
+              id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
+              accountId: accountUrl,
               receivingAccount,
               sendAmount: sendAmount && {
                 amount: sendAmount,
@@ -465,8 +467,8 @@ describe('Outgoing Payment Routes', (): void => {
           .split('/')
           .pop()
         expect(ctx.response.body).toEqual({
-          id: `${config.publicHost}/outgoing-payments/${outgoingPaymentId}`,
-          account: `${config.publicHost}/pay/${accountId}`,
+          id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
+          accountId: accountUrl,
           receivingPayment,
           description: options.description,
           externalRef: options.externalRef,

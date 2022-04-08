@@ -119,10 +119,10 @@ function outgoingPaymentToBody(
   deps: ServiceDependencies,
   outgoingPayment: OutgoingPayment
 ) {
-  const location = `${deps.config.publicHost}/outgoing-payments/${outgoingPayment.id}`
+  const accountId = `${deps.config.publicHost}/${outgoingPayment.accountId}`
   return {
-    id: location,
-    account: `${deps.config.publicHost}/pay/${outgoingPayment.accountId}`,
+    id: `${accountId}/outgoing-payments/${outgoingPayment.id}`,
+    accountId,
     state: [
       OutgoingPaymentState.Funding,
       OutgoingPaymentState.Sending

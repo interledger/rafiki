@@ -86,6 +86,7 @@ describe('Incoming Payment Routes', (): void => {
 
   let asset: { code: string; scale: number }
   let account: Account
+  let accountId: string
   let incomingPayment: IncomingPayment
   let expiresAt: Date
 
@@ -99,6 +100,7 @@ describe('Incoming Payment Routes', (): void => {
       asset = randomAsset()
       expiresAt = new Date(Date.now() + 30_000)
       account = await accountService.create({ asset })
+      accountId = `https://wallet.example/${account.id}`
       const incomingPaymentOrError = await incomingPaymentService.create({
         accountId: account.id,
         description: 'text',
@@ -168,8 +170,8 @@ describe('Incoming Payment Routes', (): void => {
       ]
 
       expect(ctx.body).toEqual({
-        id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
-        accountId: `https://wallet.example/pay/${account.id}`,
+        id: `${accountId}/incoming-payments/${incomingPayment.id}`,
+        accountId,
         incomingAmount: {
           amount: '123',
           assetCode: asset.code,
@@ -185,8 +187,7 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
@@ -244,8 +245,8 @@ describe('Incoming Payment Routes', (): void => {
         .split('/')
         .pop()
       expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        id: `${accountId}/incoming-payments/${incomingPaymentId}`,
+        accountId,
         incomingAmount: {
           amount: incomingPayment.incomingAmount?.amount.toString(),
           assetCode: incomingPayment.incomingAmount?.assetCode,
@@ -261,8 +262,7 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
     })
 
@@ -280,8 +280,8 @@ describe('Incoming Payment Routes', (): void => {
         .split('/')
         .pop()
       expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        id: `${accountId}/incoming-payments/${incomingPaymentId}`,
+        accountId,
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
@@ -292,8 +292,7 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
     })
     test('returns the incoming payment on undefined description', async (): Promise<void> => {
@@ -310,8 +309,8 @@ describe('Incoming Payment Routes', (): void => {
         .split('/')
         .pop()
       expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        id: `${accountId}/incoming-payments/${incomingPaymentId}`,
+        accountId,
         incomingAmount: {
           amount: incomingPayment.incomingAmount?.amount.toString(),
           assetCode: incomingPayment.incomingAmount?.assetCode,
@@ -326,8 +325,7 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
     })
 
@@ -345,8 +343,8 @@ describe('Incoming Payment Routes', (): void => {
         .split('/')
         .pop()
       expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        id: `${accountId}/incoming-payments/${incomingPaymentId}`,
+        accountId,
         incomingAmount: {
           amount: incomingPayment.incomingAmount?.amount.toString(),
           assetCode: incomingPayment.incomingAmount?.assetCode,
@@ -361,8 +359,7 @@ describe('Incoming Payment Routes', (): void => {
         },
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
     })
   })
@@ -405,8 +402,8 @@ describe('Incoming Payment Routes', (): void => {
         'application/json; charset=utf-8'
       )
       expect(ctx.body).toEqual({
-        id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
-        accountId: `https://wallet.example/pay/${account.id}`,
+        id: `${accountId}/incoming-payments/${incomingPayment.id}`,
+        accountId,
         incomingAmount: {
           amount: '123',
           assetCode: asset.code,
@@ -420,8 +417,7 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
-        state: IncomingPaymentState.Completed.toLowerCase(),
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        state: IncomingPaymentState.Completed.toLowerCase()
       })
     })
   })

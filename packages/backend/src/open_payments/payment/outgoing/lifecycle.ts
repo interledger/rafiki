@@ -24,11 +24,31 @@ export async function handlePending(
     throw LifecycleError.PricesUnavailable
   })
 
-  const destination = await Pay.setupPayment({
-    plugin,
-    destinationAccount: payment.receivingAccount,
-    destinationPayment: payment.receivingPayment
-  })
+  const options: Pay.SetupOptions = { plugin }
+  if (payment.receivingPayment) {
+    options.destinationPayment = payment.receivingPayment
+  } else {
+    options.destinationAccount = payment.receivingAccount
+    if (payment.receiveAmount) {
+      assert.ok(payment.receiveAmount.assetCode)
+      assert.ok(payment.receiveAmount.assetScale)
+      options.amountToDeliver = {
+        amount: payment.receiveAmount.amount,
+        assetCode: payment.receiveAmount.assetCode,
+        assetScale: payment.receiveAmount.assetScale
+      }
+    }
+  }
+  const destination = await Pay.setupPayment(options)
+
+  if (!payment.receivingPayment) {
+    if (!destination.destinationPaymentDetails) {
+      throw LifecycleError.MissingIncomingPayment
+    }
+    await payment.$query(deps.knex).patch({
+      receivingPayment: destination.destinationPaymentDetails.id
+    })
+  }
 
   validateAssets(deps, payment, destination)
 

@@ -41,8 +41,8 @@ describe('OutgoingPayment Resolvers', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let accountService: AccountService
 
-  const receivingAccount = 'http://wallet2.example/pay/bob'
-  const receivingPayment = 'http://wallet2.example/incoming/123'
+  const receivingAccount = 'http://wallet2.example/bob'
+  const receivingPayment = 'http://wallet2.example/bob/incoming-payments/123'
   const sendAmount = {
     amount: BigInt(123),
     assetCode: randomAsset().code,
