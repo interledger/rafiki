@@ -255,8 +255,8 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
           amount: '0',
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
@@ -286,8 +286,8 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
           amount: '0',
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
@@ -320,8 +320,8 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
           amount: '0',
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
@@ -356,8 +356,8 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
           amount: '0',
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
         },
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),

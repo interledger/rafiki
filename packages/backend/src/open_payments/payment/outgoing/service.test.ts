@@ -557,8 +557,8 @@ describe('OutgoingPaymentService', (): void => {
           const payment = await processNext(paymentId, nextState)
           expect(payment.receiveAmount).toEqual({
             amount: BigInt(56),
-            assetScale: incomingPayment.account.asset.scale,
-            assetCode: incomingPayment.account.asset.code
+            assetScale: incomingPayment.asset.scale,
+            assetCode: incomingPayment.asset.code
           })
           if (!payment.sendAmount) throw 'no sendAmount'
           expect(payment.sendAmount).toEqual({
@@ -1005,7 +1005,7 @@ describe('OutgoingPaymentService', (): void => {
           .patch({
             receiveAmount: {
               amount: BigInt(56),
-              assetCode: incomingPayment.account.asset.code,
+              assetCode: incomingPayment.asset.code,
               assetScale: 55
             }
           })
