@@ -279,10 +279,6 @@ export class App {
       '/pay/:accountId/outgoing-payments',
       outgoingPaymentRoutes.create
     )
-    this.publicRouter.put(
-      '/pay/:accountId/outgoing-payments',
-      outgoingPaymentRoutes.update
-    )
 
     this.koa.use(this.publicRouter.middleware())
   }

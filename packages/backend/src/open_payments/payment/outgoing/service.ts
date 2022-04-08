@@ -1,19 +1,9 @@
-import {
-  ForeignKeyViolationError,
-  TransactionOrKnex,
-  PartialModelObject
-} from 'objection'
+import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import { FundingError, LifecycleError, OutgoingPaymentError } from './errors'
-import { sendWebhookEvent } from './lifecycle'
-import {
-  OutgoingPayment,
-  PaymentAmount,
-  OutgoingPaymentState,
-  PaymentEventType
-} from './model'
+import { OutgoingPayment, PaymentAmount, OutgoingPaymentState } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { AccountService } from '../../account/service'
 import { RatesService } from '../../../rates/service'
@@ -24,9 +14,6 @@ export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
   create(
     options: CreateOutgoingPaymentOptions
-  ): Promise<OutgoingPayment | OutgoingPaymentError>
-  update(
-    options: UpdateOutgoingPaymentOptions
   ): Promise<OutgoingPayment | OutgoingPaymentError>
   fund(
     options: FundOutgoingPaymentOptions
@@ -59,7 +46,6 @@ export async function createOutgoingPaymentService(
     get: (id) => getOutgoingPayment(deps, id),
     create: (options: CreateOutgoingPaymentOptions) =>
       createOutgoingPayment(deps, options),
-    update: (options) => updatePayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
     getAccountPage: (accountId, pagination) =>
@@ -152,106 +138,6 @@ async function createOutgoingPayment(
     }
     throw err
   }
-}
-
-export interface UpdateOutgoingPaymentOptions {
-  id: string
-  authorized?: boolean
-  sendAmount?: PaymentAmount
-  receiveAmount?: PaymentAmount
-  state?: OutgoingPaymentState
-}
-
-async function updatePayment(
-  deps: ServiceDependencies,
-  {
-    id,
-    authorized,
-    sendAmount,
-    receiveAmount,
-    state
-  }: UpdateOutgoingPaymentOptions
-): Promise<OutgoingPayment | OutgoingPaymentError> {
-  // TODO: introspect access token
-  if (!sendAmount && !receiveAmount) {
-    if (!authorized) {
-      return OutgoingPaymentError.InvalidAmount
-    } else if (state) {
-      return OutgoingPaymentError.InvalidState
-    }
-  } else if (sendAmount && receiveAmount) {
-    return OutgoingPaymentError.InvalidAmount
-  } else if (state && state !== OutgoingPaymentState.Pending) {
-    return OutgoingPaymentError.InvalidState
-  }
-  if (authorized !== undefined && authorized !== true) {
-    return OutgoingPaymentError.InvalidAuthorized
-  }
-  return deps.knex.transaction(async (trx) => {
-    const payment = await OutgoingPayment.query(trx)
-      .findById(id)
-      .forUpdate()
-      .withGraphFetched('account.asset')
-    if (!payment) return OutgoingPaymentError.UnknownPayment
-
-    if (sendAmount || receiveAmount) {
-      const update: PartialModelObject<OutgoingPayment> = {}
-      switch (payment.state) {
-        case OutgoingPaymentState.Pending:
-        case OutgoingPaymentState.Prepared:
-        case OutgoingPaymentState.Expired:
-          update.state = OutgoingPaymentState.Pending
-          update.expiresAt = null
-          break
-        default:
-          return OutgoingPaymentError.WrongState
-      }
-
-      if (sendAmount) {
-        if (sendAmount.assetCode || sendAmount.assetScale) {
-          if (
-            sendAmount.assetCode !== payment.account.asset.code ||
-            sendAmount.assetScale !== payment.account.asset.scale
-          ) {
-            return OutgoingPaymentError.InvalidAmount
-          }
-        }
-        update.sendAmount = {
-          amount: sendAmount.amount,
-          assetCode: payment.account.asset.code,
-          assetScale: payment.account.asset.scale
-        }
-        update.receiveAmount = null
-      } else {
-        update.receiveAmount = receiveAmount
-        update.sendAmount = null
-      }
-      await payment.$query(trx).patch(update)
-    }
-    if (authorized) {
-      const update: PartialModelObject<OutgoingPayment> = {
-        authorized
-      }
-      if (payment.state === OutgoingPaymentState.Prepared) {
-        update.state = OutgoingPaymentState.Funding
-        await sendWebhookEvent(
-          {
-            ...deps,
-            knex: trx
-          },
-          payment,
-          PaymentEventType.PaymentFunding
-        )
-      } else if (
-        payment.state !== OutgoingPaymentState.Pending ||
-        payment.authorized
-      ) {
-        return OutgoingPaymentError.WrongState
-      }
-      await payment.$query(trx).patch(update)
-    }
-    return payment
-  })
 }
 
 export interface FundOutgoingPaymentOptions {

@@ -3481,22 +3481,6 @@
             "deprecationReason": null
           },
           {
-            "name": "authorized",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Boolean",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "error",
             "description": null,
             "args": [],
@@ -3586,18 +3570,6 @@
           },
           {
             "name": "externalRef",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "expiresAt",
             "description": null,
             "args": [],
             "type": {
@@ -3909,13 +3881,7 @@
         "enumValues": [
           {
             "name": "PENDING",
-            "description": "Will transition to PREPARED or FUNDING (if already authorized) when quote is complete",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "PREPARED",
-            "description": "Will transition to FUNDING once authorized",
+            "description": "Will transition to FUNDING when quote is complete",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -3934,12 +3900,6 @@
           {
             "name": "COMPLETED",
             "description": "Successful completion",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "EXPIRED",
-            "description": "Payment quote expired; can be requoted to PENDING",
             "isDeprecated": false,
             "deprecationReason": null
           },
