@@ -251,7 +251,7 @@ describe('OutgoingPaymentService', (): void => {
       accountUrl = `${config.publicHost}/pay/${destinationAccount.id}`
       receivingAccount = accountUrl.replace('https://', '$')
       const incomingPaymentService = await deps.use('incomingPaymentService')
-      incomingPayment = await incomingPaymentService.create({
+      incomingPayment = (await incomingPaymentService.create({
         accountId: destinationAccount.id,
         incomingAmount: {
           amount: BigInt(56),
@@ -259,7 +259,7 @@ describe('OutgoingPaymentService', (): void => {
           assetScale: destinationAsset.scale
         },
         description: 'description!'
-      })
+      })) as IncomingPayment
       assert.ok(!isIncomingPaymentError(incomingPayment))
       receivingPayment = `${config.publicHost}/incoming-payments/${incomingPayment.id}`
       amtDelivered = BigInt(0)
@@ -524,8 +524,8 @@ describe('OutgoingPaymentService', (): void => {
         )
         expect(payment.receiveAmount).toEqual({
           amount: BigInt(56),
-          assetScale: incomingPayment.account.asset.scale,
-          assetCode: incomingPayment.account.asset.code
+          assetScale: incomingPayment.asset.scale,
+          assetCode: incomingPayment.asset.code
         })
         if (!payment.sendAmount) throw 'no sendAmount'
         expect(payment.sendAmount).toEqual({
@@ -942,7 +942,7 @@ describe('OutgoingPaymentService', (): void => {
           .patch({
             receiveAmount: {
               amount: BigInt(56),
-              assetCode: incomingPayment.account.asset.code,
+              assetCode: incomingPayment.asset.code,
               assetScale: 55
             }
           })

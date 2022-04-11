@@ -1594,7 +1594,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         const accountId = account.id
         const incomingPaymentService = await deps.use('incomingPaymentService')
-        incomingPayment = await incomingPaymentService.create({
+        incomingPayment = (await incomingPaymentService.create({
           accountId,
           incomingAmount: {
             amount: BigInt(56),
@@ -1603,7 +1603,7 @@ describe('Liquidity Resolvers', (): void => {
           },
           expiresAt: new Date(Date.now() + 60 * 1000),
           description: 'description!'
-        })
+        })) as IncomingPayment
         assert.ok(!isIncomingPaymentEventType(incomingPayment))
         const outgoingPaymentService = await deps.use('outgoingPaymentService')
         const config = await deps.use('config')

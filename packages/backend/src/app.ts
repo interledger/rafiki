@@ -31,6 +31,7 @@ import { AccountRoutes } from './open_payments/account/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
+import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import {
   IlpPlugin,
@@ -71,11 +72,12 @@ export interface AppServices {
   peerService: Promise<PeerService>
   accountService: Promise<AccountService>
   spspRoutes: Promise<SPSPRoutes>
-  IncomingPaymentRoutes: Promise<IncomingPaymentRoutes>
+  incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
   accountRoutes: Promise<AccountRoutes>
-  IncomingPaymentService: Promise<IncomingPaymentService>
+  incomingPaymentService: Promise<IncomingPaymentService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
+  outgoingPaymentRoutes: Promise<OutgoingPaymentRoutes>
   outgoingPaymentService: Promise<OutgoingPaymentService>
   makeIlpPlugin: Promise<(options: IlpPluginOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
@@ -332,7 +334,7 @@ export class App {
         this.logger.warn({ error: err.message }, 'processIncomingPayment error')
         return true
       })
-      .then((hasMoreWork: boolean) => {
+      .then((hasMoreWork) => {
         if (hasMoreWork) process.nextTick(() => this.processIncomingPayment())
         else
           setTimeout(

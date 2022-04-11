@@ -198,8 +198,8 @@ function incomingPaymentToBody(
     state: incomingPayment.state.toLowerCase(),
     receivedAmount: {
       amount: received.toString(),
-      assetCode: incomingPayment.account.asset.code,
-      assetScale: incomingPayment.account.asset.scale
+      assetCode: incomingPayment.asset.code,
+      assetScale: incomingPayment.asset.scale
     },
     expiresAt: incomingPayment.expiresAt.toISOString()
   }
@@ -246,8 +246,8 @@ function getStreamCredentials(
   return deps.streamServer.generateCredentials({
     paymentTag: incomingPayment.id,
     asset: {
-      code: incomingPayment.account.asset.code,
-      scale: incomingPayment.account.asset.scale
+      code: incomingPayment.asset.code,
+      scale: incomingPayment.asset.scale
     }
   })
 }

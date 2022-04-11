@@ -1,5 +1,4 @@
 import { Model } from 'objection'
-import { Account } from '../../account/model'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
@@ -61,14 +60,6 @@ export class IncomingPayment
   }
 
   static relationMappings = {
-    account: {
-      relation: Model.HasOneRelation,
-      modelClass: Account,
-      join: {
-        from: 'incomingPayments.accountId',
-        to: 'accounts.id'
-      }
-    },
     asset: {
       relation: Model.HasOneRelation,
       modelClass: Asset,
@@ -81,7 +72,6 @@ export class IncomingPayment
 
   // Open payments account id this incoming payment is for
   public accountId!: string
-  public account!: Account
   public description?: string
   public expiresAt!: Date
   public state!: IncomingPaymentState

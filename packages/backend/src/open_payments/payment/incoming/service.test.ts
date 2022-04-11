@@ -102,7 +102,7 @@ describe('Incoming Payment Service', (): void => {
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
         id: incomingPayment.id,
-        account: await accountService.get(accountId),
+        asset,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
       const retrievedIncomingPayment = await incomingPaymentService.get(
