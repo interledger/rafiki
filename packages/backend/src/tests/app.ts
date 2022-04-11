@@ -49,7 +49,7 @@ export const createTestApp = async (
 
   // Since payment pointers MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
   nock(config.publicHost)
-    .get(/^\/(pay|incoming-payments)\//)
+    .get(/.*/)
     .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
     .reply(200, function (path) {
       return Axios.get(`http://localhost:${app.getPort()}${path}`, {

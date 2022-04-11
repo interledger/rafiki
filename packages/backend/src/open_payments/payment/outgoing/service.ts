@@ -3,9 +3,10 @@ import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import { FundingError, LifecycleError, OutgoingPaymentError } from './errors'
-import { OutgoingPayment, PaymentAmount, OutgoingPaymentState } from './model'
+import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { AccountService } from '../../account/service'
+import { Amount } from '../amount'
 import { RatesService } from '../../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
 import * as worker from './worker'
@@ -57,16 +58,14 @@ async function getOutgoingPayment(
   deps: ServiceDependencies,
   id: string
 ): Promise<OutgoingPayment | undefined> {
-  return OutgoingPayment.query(deps.knex)
-    .findById(id)
-    .withGraphJoined('account.asset')
+  return OutgoingPayment.query(deps.knex).findById(id).withGraphJoined('asset')
 }
 
 export interface CreateOutgoingPaymentOptions {
   accountId: string
   authorized?: boolean
-  sendAmount?: PaymentAmount
-  receiveAmount?: PaymentAmount
+  sendAmount?: Amount
+  receiveAmount?: Amount
   receivingAccount?: string
   receivingPayment?: string
   description?: string
@@ -86,12 +85,12 @@ async function createOutgoingPayment(
     }
   } else if (options.receivingAccount) {
     if (options.sendAmount) {
-      if (options.receiveAmount || options.sendAmount.amount <= BigInt(0)) {
+      if (options.receiveAmount || options.sendAmount.value <= BigInt(0)) {
         return OutgoingPaymentError.InvalidAmount
       }
     } else if (
       !options.receiveAmount ||
-      options.receiveAmount.amount <= BigInt(0)
+      options.receiveAmount.value <= BigInt(0)
     ) {
       return OutgoingPaymentError.InvalidAmount
     }
@@ -105,29 +104,26 @@ async function createOutgoingPayment(
       return OutgoingPaymentError.UnknownAccount
     }
     if (options.sendAmount) {
-      if (options.sendAmount.assetCode || options.sendAmount.assetScale) {
-        if (
-          options.sendAmount.assetCode !== account.asset.code ||
-          options.sendAmount.assetScale !== account.asset.scale
-        ) {
-          return OutgoingPaymentError.InvalidAmount
-        }
+      if (
+        options.sendAmount.assetCode !== account.asset.code ||
+        options.sendAmount.assetScale !== account.asset.scale
+      ) {
+        return OutgoingPaymentError.InvalidAmount
       }
-      ;(options.sendAmount.assetCode = account.asset.code),
-        (options.sendAmount.assetScale = account.asset.scale)
     }
 
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           ...options,
+          assetId: account.assetId,
           state: OutgoingPaymentState.Pending
         })
-        .withGraphFetched('account.asset')
+        .withGraphFetched('asset')
 
       await deps.accountingService.createLiquidityAccount({
         id: payment.id,
-        asset: payment.account.asset
+        asset: payment.asset
       })
 
       return payment
@@ -154,13 +150,13 @@ async function fundPayment(
     const payment = await OutgoingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('account.asset')
+      .withGraphFetched('asset')
     if (!payment) return FundingError.UnknownPayment
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
     if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
-    if (amount !== payment.sendAmount.amount) return FundingError.InvalidAmount
+    if (amount !== payment.sendAmount.value) return FundingError.InvalidAmount
     const error = await deps.accountingService.createDeposit({
       id: transferId,
       account: payment,
@@ -182,4 +178,5 @@ async function getAccountPage(
   return await OutgoingPayment.query(deps.knex)
     .getPage(pagination)
     .where({ accountId })
+    .withGraphFetched('asset')
 }

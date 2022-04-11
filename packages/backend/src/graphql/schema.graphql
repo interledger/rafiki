@@ -352,8 +352,8 @@ type IncomingPayment implements Model {
   accountId: ID!
   state: IncomingPaymentState!
   expiresAt: String!
-  incomingAmount: IncomingPaymentAmount
-  receivedAmount: IncomingPaymentAmount!
+  incomingAmount: Amount
+  receivedAmount: Amount!
   description: String
   externalRef: String
   createdAt: String!
@@ -364,14 +364,14 @@ enum IncomingPaymentState {
   PENDING
   "As soon as payment has started (funds have cleared into the account) the state moves to PROCESSING"
   PROCESSING
-  "The payment is either auto-completed once the received amount equals the expected `incomingAmount.amount`, or it is completed manually via an API call."
+  "The payment is either auto-completed once the received amount equals the expected `incomingAmount`, or it is completed manually via an API call."
   COMPLETED
   "If the payment expires before it is completed then the state will move to EXPIRED and no further payments will be accepted."
   EXPIRED
 }
 
-type IncomingPaymentAmount {
-  amount: UInt64!
+type Amount {
+  value: UInt64!
   assetCode: String!
   assetScale: Int!
 }
@@ -393,20 +393,14 @@ type OutgoingPayment implements Model {
   error: String
   stateAttempts: Int!
   receivingAccount: String
-  sendAmount: OutgoingPaymentAmount
-  receiveAmount: OutgoingPaymentAmount
+  sendAmount: Amount
+  receiveAmount: Amount
   receivingPayment: String
   description: String
   externalRef: String
   quote: PaymentQuote
   outcome: OutgoingPaymentOutcome
   createdAt: String!
-}
-
-type OutgoingPaymentAmount {
-  amount: UInt64!
-  assetCode: String
-  assetScale: Int
 }
 
 enum OutgoingPaymentState {
@@ -440,17 +434,17 @@ type OutgoingPaymentOutcome {
   amountSent: UInt64!
 }
 
-input PaymentAmountInput {
-  amount: UInt64!
-  assetCode: String
-  assetScale: Int
+input AmountInput {
+  value: UInt64!
+  assetCode: String!
+  assetScale: Int!
 }
 
 input CreateOutgoingPaymentInput {
   accountId: String!
   receivingAccount: String
-  sendAmount: PaymentAmountInput
-  receiveAmount: PaymentAmountInput
+  sendAmount: AmountInput
+  receiveAmount: AmountInput
   receivingPayment: String
   authorized: Boolean
   description: String

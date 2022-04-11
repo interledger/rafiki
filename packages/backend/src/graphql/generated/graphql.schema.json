@@ -503,6 +503,124 @@
       },
       {
         "kind": "OBJECT",
+        "name": "Amount",
+        "description": null,
+        "fields": [
+          {
+            "name": "value",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UInt64",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetCode",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetScale",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "AmountInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "value",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UInt64",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetCode",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetScale",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "ApiKey",
         "description": null,
         "fields": [
@@ -1321,7 +1439,7 @@
             "description": null,
             "type": {
               "kind": "INPUT_OBJECT",
-              "name": "PaymentAmountInput",
+              "name": "AmountInput",
               "ofType": null
             },
             "defaultValue": null,
@@ -1333,7 +1451,7 @@
             "description": null,
             "type": {
               "kind": "INPUT_OBJECT",
-              "name": "PaymentAmountInput",
+              "name": "AmountInput",
               "ofType": null
             },
             "defaultValue": null,
@@ -2019,7 +2137,7 @@
             "args": [],
             "type": {
               "kind": "OBJECT",
-              "name": "IncomingPaymentAmount",
+              "name": "Amount",
               "ofType": null
             },
             "isDeprecated": false,
@@ -2034,7 +2152,7 @@
               "name": null,
               "ofType": {
                 "kind": "OBJECT",
-                "name": "IncomingPaymentAmount",
+                "name": "Amount",
                 "ofType": null
               }
             },
@@ -2090,65 +2208,6 @@
             "ofType": null
           }
         ],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
-        "name": "IncomingPaymentAmount",
-        "description": null,
-        "fields": [
-          {
-            "name": "amount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "assetCode",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "assetScale",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -2268,7 +2327,7 @@
           },
           {
             "name": "COMPLETED",
-            "description": "The payment is either auto-completed once the received amount equals the expected `incomingAmount.amount`, or it is completed manually via an API call.",
+            "description": "The payment is either auto-completed once the received amount equals the expected `incomingAmount`, or it is completed manually via an API call.",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -3526,7 +3585,7 @@
             "args": [],
             "type": {
               "kind": "OBJECT",
-              "name": "OutgoingPaymentAmount",
+              "name": "Amount",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3538,7 +3597,7 @@
             "args": [],
             "type": {
               "kind": "OBJECT",
-              "name": "OutgoingPaymentAmount",
+              "name": "Amount",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3629,57 +3688,6 @@
             "ofType": null
           }
         ],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
-        "name": "OutgoingPaymentAmount",
-        "description": null,
-        "fields": [
-          {
-            "name": "amount",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "assetCode",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "assetScale",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "Int",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -3976,57 +3984,6 @@
         ],
         "inputFields": null,
         "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "INPUT_OBJECT",
-        "name": "PaymentAmountInput",
-        "description": null,
-        "fields": null,
-        "inputFields": [
-          {
-            "name": "amount",
-            "description": null,
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "assetCode",
-            "description": null,
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "assetScale",
-            "description": null,
-            "type": {
-              "kind": "SCALAR",
-              "name": "Int",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "interfaces": null,
         "enumValues": null,
         "possibleTypes": null
       },

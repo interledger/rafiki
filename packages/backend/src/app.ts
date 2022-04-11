@@ -249,7 +249,7 @@ export class App {
       'outgoingPaymentRoutes'
     )
     this.publicRouter.get(
-      '/pay/:accountId',
+      '/:accountId',
       async (ctx: AppContext): Promise<void> => {
         // Fall back to legacy protocols if client doesn't support Open Payments.
         if (ctx.accepts('application/json')) await accountRoutes.get(ctx)
@@ -261,24 +261,24 @@ export class App {
     )
 
     this.publicRouter.get(
-      '/incoming-payments/:incomingPaymentId',
+      '/:accountId/incoming-payments/:incomingPaymentId',
       incomingPaymentRoutes.get
     )
     this.publicRouter.post(
-      '/pay/:accountId/incoming-payments',
+      '/:accountId/incoming-payments',
       incomingPaymentRoutes.create
     )
     this.publicRouter.put(
-      '/incoming-payments/:incomingPaymentId',
+      '/:accountId/incoming-payments/:incomingPaymentId',
       incomingPaymentRoutes.update
     )
 
     this.publicRouter.get(
-      '/outgoing-payments/:outgoingPaymentId',
+      '/:accountId/outgoing-payments/:outgoingPaymentId',
       outgoingPaymentRoutes.get
     )
     this.publicRouter.post(
-      '/pay/:accountId/outgoing-payments',
+      '/:accountId/outgoing-payments',
       outgoingPaymentRoutes.create
     )
 

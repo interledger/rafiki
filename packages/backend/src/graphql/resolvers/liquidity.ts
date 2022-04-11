@@ -312,7 +312,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     )
     const paymentOrErr = await outgoingPaymentService.fund({
       id: event.data.payment.id,
-      amount: BigInt(event.data.payment.sendAmount.amount),
+      amount: BigInt(event.data.payment.sendAmount.value),
       transferId: event.id
     })
     if (isFundingError(paymentOrErr)) {

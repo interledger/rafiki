@@ -6,8 +6,9 @@ import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { AccountingService } from '../../../accounting/service'
 import { IncomingPaymentService } from './service'
-import { Amount, IncomingPayment, IncomingPaymentState } from './model'
+import { IncomingPayment, IncomingPaymentState } from './model'
 import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
+import { Amount } from '../amount'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -97,21 +98,25 @@ async function createIncomingPayment(
   } catch (_) {
     return ctx.throw(400, 'invalid incomingAmount')
   }
-  const expiresAt = Date.parse(body['expiresAt'] as string)
-  if (!expiresAt) return ctx.throw(400, 'invalid expiresAt')
+  let expiresAt: Date | undefined
+  if (body.expiresAt !== undefined) {
+    const expiry = Date.parse(body['expiresAt'] as string)
+    if (!expiry) return ctx.throw(400, 'invalid expiresAt')
+    if (Date.now() + MAX_EXPIRY < expiry)
+      return ctx.throw(400, 'expiry too high')
+    if (expiry < Date.now()) return ctx.throw(400, 'already expired')
+    expiresAt = new Date(expiry)
+  }
   if (body.description !== undefined && typeof body.description !== 'string')
     return ctx.throw(400, 'invalid description')
   if (body.externalRef !== undefined && typeof body.externalRef !== 'string')
     return ctx.throw(400, 'invalid externalRef')
-  if (Date.now() + MAX_EXPIRY < expiresAt)
-    return ctx.throw(400, 'expiry too high')
-  if (expiresAt < Date.now()) return ctx.throw(400, 'already expired')
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     accountId,
     description: body.description,
     externalRef: body.externalRef,
-    expiresAt: new Date(expiresAt),
+    expiresAt,
     incomingAmount
   })
 
@@ -191,13 +196,13 @@ function incomingPaymentToBody(
   incomingPayment: IncomingPayment,
   received: bigint
 ) {
-  const location = `${deps.config.publicHost}/incoming-payments/${incomingPayment.id}`
+  const accountId = `${deps.config.publicHost}/${incomingPayment.accountId}`
   const body = {
-    id: location,
-    accountId: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
+    id: `${accountId}/incoming-payments/${incomingPayment.id}`,
+    accountId,
     state: incomingPayment.state.toLowerCase(),
     receivedAmount: {
-      amount: received.toString(),
+      value: received.toString(),
       assetCode: incomingPayment.asset.code,
       assetScale: incomingPayment.asset.scale
     },
@@ -206,7 +211,7 @@ function incomingPaymentToBody(
 
   if (incomingPayment.incomingAmount) {
     body['incomingAmount'] = {
-      amount: incomingPayment.incomingAmount.amount.toString(),
+      value: incomingPayment.incomingAmount.value.toString(),
       assetCode: incomingPayment.incomingAmount.assetCode,
       assetScale: incomingPayment.incomingAmount.assetScale
     }
@@ -215,8 +220,6 @@ function incomingPaymentToBody(
     body['description'] = incomingPayment.description
   if (incomingPayment.externalRef)
     body['externalRef'] = incomingPayment.externalRef
-  // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
-  body['receiptsEnabled'] = false
   return body
 }
 
@@ -233,7 +236,7 @@ function parseAmount(amount: unknown): Amount | undefined {
     throw new Error('invalid amount')
   }
   return {
-    amount: BigInt(amount['amount']),
+    value: BigInt(amount['value']),
     assetCode: amount['assetCode'],
     assetScale: amount['assetScale']
   }

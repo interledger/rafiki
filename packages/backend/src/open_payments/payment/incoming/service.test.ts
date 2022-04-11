@@ -91,7 +91,7 @@ describe('Incoming Payment Service', (): void => {
       const incomingPayment = await incomingPaymentService.create({
         accountId,
         incomingAmount: {
-          amount: BigInt(123),
+          value: BigInt(123),
           assetCode: asset.code,
           assetScale: asset.scale
         },
@@ -119,7 +119,7 @@ describe('Incoming Payment Service', (): void => {
         description: 'IncomingPayment',
         expiresAt: new Date(Date.now() + 30_000),
         incomingAmount: {
-          amount: BigInt(123),
+          value: BigInt(123),
           assetCode: asset.code,
           assetScale: asset.scale
         },
@@ -136,7 +136,7 @@ describe('Incoming Payment Service', (): void => {
         incomingPaymentService.create({
           accountId: uuid(),
           incomingAmount: {
-            amount: BigInt(123),
+            value: BigInt(123),
             assetCode: asset.code,
             assetScale: asset.scale
           },
@@ -152,7 +152,7 @@ describe('Incoming Payment Service', (): void => {
         incomingPaymentService.create({
           accountId,
           incomingAmount: {
-            amount: BigInt(123),
+            value: BigInt(123),
             assetCode: 'ABC',
             assetScale: asset.scale
           },
@@ -165,7 +165,7 @@ describe('Incoming Payment Service', (): void => {
         incomingPaymentService.create({
           accountId,
           incomingAmount: {
-            amount: BigInt(123),
+            value: BigInt(123),
             assetCode: asset.code,
             assetScale: 20
           },
@@ -181,7 +181,7 @@ describe('Incoming Payment Service', (): void => {
         incomingPaymentService.create({
           accountId,
           incomingAmount: {
-            amount: BigInt(0),
+            value: BigInt(0),
             assetCode: 'ABC',
             assetScale: asset.scale
           },
@@ -194,7 +194,7 @@ describe('Incoming Payment Service', (): void => {
         incomingPaymentService.create({
           accountId,
           incomingAmount: {
-            amount: BigInt(-13),
+            value: BigInt(-13),
             assetCode: 'ABC',
             assetScale: asset.scale
           },
@@ -219,7 +219,7 @@ describe('Incoming Payment Service', (): void => {
           accountId,
           description: 'Test incoming payment',
           incomingAmount: {
-            amount: BigInt(123),
+            value: BigInt(123),
             assetCode: asset.code,
             assetScale: asset.scale
           },
@@ -256,7 +256,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPayment.onCredit({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          totalReceived: incomingPayment.incomingAmount!.amount
+          totalReceived: incomingPayment.incomingAmount!.value
         })
       ).resolves.toMatchObject({
         id: incomingPayment.id,
@@ -277,7 +277,7 @@ describe('Incoming Payment Service', (): void => {
       const incomingPaymentOrError = await incomingPaymentService.create({
         accountId,
         incomingAmount: {
-          amount: BigInt(123),
+          value: BigInt(123),
           assetCode: asset.code,
           assetScale: asset.scale
         },
@@ -302,7 +302,7 @@ describe('Incoming Payment Service', (): void => {
         const incomingPaymentOrError = await incomingPaymentService.create({
           accountId,
           incomingAmount: {
-            amount: BigInt(123),
+            value: BigInt(123),
             assetCode: asset.code,
             assetScale: asset.scale
           },
@@ -337,7 +337,7 @@ describe('Incoming Payment Service', (): void => {
         const incomingPaymentOrError = await incomingPaymentService.create({
           accountId,
           incomingAmount: {
-            amount: BigInt(123),
+            value: BigInt(123),
             assetCode: asset.code,
             assetScale: asset.scale
           },
@@ -369,7 +369,7 @@ describe('Incoming Payment Service', (): void => {
             const incomingPaymentOrError = await incomingPaymentService.create({
               accountId,
               incomingAmount: {
-                amount: BigInt(123),
+                value: BigInt(123),
                 assetCode: asset.code,
                 assetScale: asset.scale
               },
@@ -393,7 +393,7 @@ describe('Incoming Payment Service', (): void => {
             } else {
               await incomingPayment.onCredit({
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                totalReceived: incomingPayment.incomingAmount!.amount
+                totalReceived: incomingPayment.incomingAmount!.value
               })
             }
             incomingPayment = (await incomingPaymentService.get(
@@ -449,7 +449,7 @@ describe('Incoming Payment Service', (): void => {
         createPayment({
           accountId,
           incomingAmount: {
-            amount: BigInt(123),
+            value: BigInt(123),
             assetCode: asset.code,
             assetScale: asset.scale
           },
@@ -474,7 +474,7 @@ describe('Incoming Payment Service', (): void => {
           accountId,
           description: 'Test incoming payment',
           incomingAmount: {
-            amount: BigInt(123),
+            value: BigInt(123),
             assetCode: asset.code,
             assetScale: asset.scale
           },

@@ -105,7 +105,7 @@ export const getReceivedAmount: IncomingPaymentResolvers<ApolloContext>['receive
   parent,
   args,
   ctx
-): Promise<ResolversTypes['IncomingPaymentAmount']> => {
+): Promise<ResolversTypes['Amount']> => {
   if (!parent.id) throw new Error('missing id')
 
   const accountingService = await ctx.container.use('accountingService')
@@ -113,7 +113,7 @@ export const getReceivedAmount: IncomingPaymentResolvers<ApolloContext>['receive
   if (totalReceived === undefined)
     throw new Error('payment account does not exist')
   return {
-    amount: totalReceived,
+    value: totalReceived,
     assetCode: parent.receivedAmount.assetCode,
     assetScale: parent.receivedAmount.assetScale
   }

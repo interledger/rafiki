@@ -64,7 +64,7 @@ describe('Incoming Payment Resolver', (): void => {
         createPayment({
           accountId,
           incomingAmount: {
-            amount: BigInt(123),
+            value: BigInt(123),
             assetCode: asset.code,
             assetScale: asset.scale
           },

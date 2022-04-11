@@ -1,4 +1,5 @@
 import { Model } from 'objection'
+import { Amount } from '../amount'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
@@ -15,7 +16,7 @@ export enum IncomingPaymentState {
   Pending = 'PENDING',
   // As soon as payment has started (funds have cleared into the account) the state moves to `PROCESSING`.
   Processing = 'PROCESSING',
-  // The payment is either auto-completed once the received amount equals the expected amount `amount`,
+  // The payment is either auto-completed once the received amount equals the expected `incomingAmount`,
   // or it is completed manually via an API call.
   Completed = 'COMPLETED',
   // If the payment expires before it is completed then the state will move to `EXPIRED`
@@ -35,12 +36,6 @@ export type IncomingPaymentData = {
     externalRef?: string
     state: string
   }
-}
-
-export interface Amount {
-  amount: bigint
-  assetCode: string
-  assetScale: number
 }
 
 export class IncomingPaymentEvent extends WebhookEvent {
@@ -87,7 +82,7 @@ export class IncomingPayment
   public get incomingAmount(): Amount | undefined {
     if (this.incomingAmountValue) {
       return {
-        amount: this.incomingAmountValue,
+        value: this.incomingAmountValue,
         assetCode: this.asset.code,
         assetScale: this.asset.scale
       }
@@ -95,15 +90,15 @@ export class IncomingPayment
     return undefined
   }
 
-  public set incomingAmount(value: Amount | undefined) {
-    this.incomingAmountValue = value?.amount ?? null
+  public set incomingAmount(amount: Amount | undefined) {
+    this.incomingAmountValue = amount?.value ?? null
   }
 
   public async onCredit({
     totalReceived
   }: OnCreditOptions): Promise<IncomingPayment> {
     let incomingPayment
-    if (this.incomingAmount && this.incomingAmount.amount <= totalReceived) {
+    if (this.incomingAmount && this.incomingAmount.value <= totalReceived) {
       incomingPayment = await IncomingPayment.query()
         .patchAndFetchById(this.id, {
           state: IncomingPaymentState.Completed,
@@ -138,7 +133,7 @@ export class IncomingPayment
         createdAt: new Date(+this.createdAt).toISOString(),
         expiresAt: this.expiresAt.toISOString(),
         receivedAmount: {
-          amount: amountReceived,
+          value: amountReceived,
           assetCode: this.asset.code,
           assetScale: this.asset.scale
         },
