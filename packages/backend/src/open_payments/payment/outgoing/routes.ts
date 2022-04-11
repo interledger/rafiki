@@ -15,7 +15,6 @@ interface ServiceDependencies {
 export interface OutgoingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
-  update(ctx: AppContext): Promise<void>
 }
 
 export function createOutgoingPaymentRoutes(
@@ -27,8 +26,7 @@ export function createOutgoingPaymentRoutes(
   const deps = { ...deps_, logger }
   return {
     get: (ctx: AppContext) => getOutgoingPayment(deps, ctx),
-    create: (ctx: AppContext) => createOutgoingPayment(deps, ctx),
-    update: (ctx: AppContext) => updateOutgoingPayment(deps, ctx)
+    create: (ctx: AppContext) => createOutgoingPayment(deps, ctx)
   }
 }
 
@@ -65,14 +63,6 @@ async function createOutgoingPayment(
 
   const { body } = ctx.request
   if (typeof body !== 'object') return ctx.throw(400, 'json body required')
-  let authorized = false
-  if (body.authorized) {
-    if (body.authorized === 'true') {
-      authorized = true
-    } else if (body.authorized !== 'false') {
-      return ctx.throw(400, 'invalid authorized')
-    }
-  }
 
   if (
     body.receivingAccount !== undefined &&
@@ -108,7 +98,6 @@ async function createOutgoingPayment(
 
   const paymentOrErr = await deps.outgoingPaymentService.create({
     accountId,
-    authorized,
     receivingAccount: body.receivingAccount,
     sendAmount,
     receiveAmount,
@@ -122,73 +111,6 @@ async function createOutgoingPayment(
   }
 
   ctx.status = 201
-  const res = outgoingPaymentToBody(deps, paymentOrErr)
-  ctx.body = res
-}
-
-async function updateOutgoingPayment(
-  deps: ServiceDependencies,
-  ctx: AppContext
-): Promise<void> {
-  const { outgoingPaymentId } = ctx.params
-  ctx.assert(validateId(outgoingPaymentId), 400, 'invalid outgoing payment id')
-  ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
-  ctx.assert(
-    ctx.get('Content-Type') === 'application/json',
-    400,
-    'must send json body'
-  )
-
-  const { body } = ctx.request
-  if (typeof body !== 'object') return ctx.throw(400, 'json body required')
-
-  let authorized: boolean | undefined
-  if (body.authorized) {
-    if (body.authorized === 'true') {
-      authorized = true
-    } else {
-      return ctx.throw(400, 'invalid authorized')
-    }
-  }
-
-  let state: OutgoingPaymentState | undefined
-  if (body.state) {
-    if (body.state !== OutgoingPaymentState.Pending) {
-      return ctx.throw(400, 'invalid state')
-    }
-    state = body.state
-  }
-
-  let sendAmount: PaymentAmount | undefined
-  if (body.sendAmount) {
-    try {
-      sendAmount = parseAmount(body.sendAmount)
-    } catch (_) {
-      return ctx.throw(400, 'invalid sendAmount')
-    }
-  }
-  let receiveAmount: PaymentAmount | undefined
-  if (body.receiveAmount) {
-    try {
-      receiveAmount = parseAmount(body.receiveAmount)
-    } catch (_) {
-      return ctx.throw(400, 'invalid receiveAmount')
-    }
-  }
-
-  const paymentOrErr = await deps.outgoingPaymentService.update({
-    id: outgoingPaymentId,
-    authorized,
-    state,
-    sendAmount,
-    receiveAmount
-  })
-
-  if (isOutgoingPaymentError(paymentOrErr)) {
-    return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])
-  }
-
-  ctx.status = 200
   const res = outgoingPaymentToBody(deps, paymentOrErr)
   ctx.body = res
 }
@@ -207,7 +129,6 @@ function outgoingPaymentToBody(
     ].includes(outgoingPayment.state)
       ? 'processing'
       : outgoingPayment.state.toLowerCase(),
-    authorized: outgoingPayment.authorized,
     receivingAccount: outgoingPayment.receivingAccount ?? undefined,
     receivingPayment: outgoingPayment.receivingPayment ?? undefined,
     sendAmount: outgoingPayment.sendAmount
@@ -223,8 +144,7 @@ function outgoingPaymentToBody(
         }
       : undefined,
     description: outgoingPayment.description ?? undefined,
-    externalRef: outgoingPayment.externalRef ?? undefined,
-    expiresAt: outgoingPayment.expiresAt?.toISOString()
+    externalRef: outgoingPayment.externalRef ?? undefined
   }
 }
 

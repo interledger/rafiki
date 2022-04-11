@@ -164,7 +164,6 @@ export function paymentToGraphql(
     id: payment.id,
     accountId: payment.accountId,
     state: payment.state,
-    authorized: payment.authorized,
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
     receivingAccount: payment.receivingAccount,
@@ -173,7 +172,6 @@ export function paymentToGraphql(
     receiveAmount: payment.receiveAmount ?? undefined,
     description: payment.description,
     externalRef: payment.externalRef,
-    expiresAt: payment.expiresAt?.toISOString() ?? undefined,
     quote: payment.quote
       ? {
           ...payment.quote,

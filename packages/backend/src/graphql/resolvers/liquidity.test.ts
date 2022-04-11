@@ -1620,7 +1620,6 @@ describe('Liquidity Resolvers', (): void => {
             assetCode: account.asset.code,
             assetScale: account.asset.scale
           },
-          expiresAt: new Date(Date.now() + 1000),
           quote: {
             timestamp: new Date(),
             targetType: Pay.PaymentType.FixedSend,

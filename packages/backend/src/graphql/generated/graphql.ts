@@ -496,7 +496,6 @@ export type OutgoingPayment = Model & {
   id: Scalars['ID'];
   accountId: Scalars['ID'];
   state: OutgoingPaymentState;
-  authorized: Scalars['Boolean'];
   error?: Maybe<Scalars['String']>;
   stateAttempts: Scalars['Int'];
   receivingAccount?: Maybe<Scalars['String']>;
@@ -505,7 +504,6 @@ export type OutgoingPayment = Model & {
   receivingPayment?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
   externalRef?: Maybe<Scalars['String']>;
-  expiresAt?: Maybe<Scalars['String']>;
   quote?: Maybe<PaymentQuote>;
   outcome?: Maybe<OutgoingPaymentOutcome>;
   createdAt: Scalars['String'];
@@ -544,18 +542,14 @@ export type OutgoingPaymentResponse = {
 };
 
 export enum OutgoingPaymentState {
-  /** Will transition to PREPARED or FUNDING (if already authorized) when quote is complete */
+  /** Will transition to FUNDING when quote is complete */
   Pending = 'PENDING',
-  /** Will transition to FUNDING once authorized */
-  Prepared = 'PREPARED',
   /** Will transition to SENDING once payment funds are reserved */
   Funding = 'FUNDING',
   /** Paying, will transition to COMPLETED on success */
   Sending = 'SENDING',
   /** Successful completion */
   Completed = 'COMPLETED',
-  /** Payment quote expired; can be requoted to PENDING */
-  Expired = 'EXPIRED',
   /** Payment failed */
   Failed = 'FAILED'
 }
@@ -1174,7 +1168,6 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   accountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['OutgoingPaymentState'], ParentType, ContextType>;
-  authorized?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   receivingAccount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1183,7 +1176,6 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   receivingPayment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
   outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

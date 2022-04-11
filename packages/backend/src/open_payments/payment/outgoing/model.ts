@@ -18,11 +18,9 @@ export class OutgoingPayment
   }
 
   public state!: OutgoingPaymentState
-  public authorized!: boolean
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
-  public expiresAt?: Date | null
 
   public receivingAccount?: string
   public receivingPayment?: string
@@ -180,7 +178,6 @@ export class OutgoingPayment
         id: this.id,
         accountId: this.accountId,
         state: this.state,
-        authorized: this.authorized,
         stateAttempts: this.stateAttempts,
         createdAt: new Date(+this.createdAt).toISOString(),
         outcome: {
@@ -218,9 +215,6 @@ export class OutgoingPayment
     if (this.error) {
       data.payment.error = this.error
     }
-    if (this.expiresAt) {
-      data.payment.expiresAt = this.expiresAt.toISOString()
-    }
     if (this.quote) {
       data.payment.quote = {
         ...this.quote,
@@ -254,22 +248,15 @@ interface PaymentQuote {
 
 export enum OutgoingPaymentState {
   // Initial state. In this state, an empty account is generated, and the payment is automatically resolved & quoted.
-  // On success, transition to `PREPARED` or `FUNDING` if already authorized.
+  // On success, transition to `FUNDING`.
   // On failure, transition to `FAILED`.
   Pending = 'PENDING',
-  // Awaiting authorization.
-  // On authorization, transition to `FUNDING`.
-  // On quote expiration, transition to `EXPIRED`.
-  Prepared = 'PREPARED',
   // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
   // On success, transition to `SENDING`.
   Funding = 'FUNDING',
   // Pay from the account to the destination.
   // On success, transition to `COMPLETED`.
   Sending = 'SENDING',
-  // The payment quote expired.
-  // Requoting transitions to `PENDING`.
-  Expired = 'EXPIRED',
   // The payment failed. (Though some money may have been delivered).
   Failed = 'FAILED',
   // Successful completion.
@@ -303,7 +290,6 @@ export type PaymentData = {
     accountId: string
     createdAt: string
     state: OutgoingPaymentState
-    authorized: boolean
     error?: string
     stateAttempts: number
     receivingAccount?: string
@@ -312,7 +298,6 @@ export type PaymentData = {
     receiveAmount?: AmountData
     description?: string
     externalRef?: string
-    expiresAt?: string
     quote?: {
       timestamp: string
       targetType: Pay.PaymentType

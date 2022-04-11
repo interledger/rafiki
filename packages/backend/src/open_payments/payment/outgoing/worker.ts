@@ -59,11 +59,6 @@ export async function getPendingPayment(
           [RETRY_BACKOFF_SECONDS, now]
         )
     })
-    .orWhere((builder: knex.QueryBuilder) => {
-      builder
-        .where('state', OutgoingPaymentState.Prepared)
-        .andWhere('expiresAt', '<', now)
-    })
     .withGraphFetched('account.asset')
   return payments[0]
 }
@@ -113,8 +108,6 @@ export async function handlePaymentLifecycle(
             )
           })
         })
-    case OutgoingPaymentState.Prepared:
-      return lifecycle.handlePrepared(deps, payment).catch(onError)
     case OutgoingPaymentState.Sending:
       plugin = deps.makeIlpPlugin({
         sourceAccount: payment
