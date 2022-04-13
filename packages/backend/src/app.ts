@@ -262,6 +262,10 @@ export class App {
       '/incoming-payments/:incomingPaymentId',
       incomingPaymentRoutes.get
     )
+    this.publicRouter.get(
+      '/:accountId/incoming-payments',
+      incomingPaymentRoutes.list
+    )
     this.publicRouter.post(
       '/pay/:accountId/incoming-payments',
       incomingPaymentRoutes.create

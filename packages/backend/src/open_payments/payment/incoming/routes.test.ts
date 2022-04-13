@@ -65,6 +65,7 @@ describe('Incoming Payment Routes', (): void => {
       },
       reqOpts.body
     )
+    if (reqOpts.query) ctx.request.query = reqOpts.query
     return ctx
   }
 
@@ -87,6 +88,8 @@ describe('Incoming Payment Routes', (): void => {
   let asset: { code: string; scale: number }
   let account: Account
   let incomingPayment: IncomingPayment
+  let incomingPayment2: IncomingPayment
+  let incomingPayment3: IncomingPayment
   let expiresAt: Date
 
   beforeEach(
@@ -424,5 +427,175 @@ describe('Incoming Payment Routes', (): void => {
         receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
       })
     })
+  })
+
+  describe('list', (): void => {
+    let result: Record<string, unknown>[]
+    let paymentIds: string[]
+    beforeEach(
+      async (): Promise<void> => {
+        incomingPayment2 = (await incomingPaymentService.create({
+          accountId: account.id,
+          description: '2nd incoming payment',
+          expiresAt,
+          incomingAmount: {
+            amount: BigInt(321),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          externalRef: '#321'
+        })) as IncomingPayment
+        incomingPayment3 = (await incomingPaymentService.create({
+          accountId: account.id,
+          description: '3rd incoming payment',
+          expiresAt,
+          incomingAmount: {
+            amount: BigInt(213),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          externalRef: '#213'
+        })) as IncomingPayment
+        paymentIds = [
+          incomingPayment.id,
+          incomingPayment2.id,
+          incomingPayment3.id
+        ]
+        result = [
+          {
+            id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
+            accountId: `https://wallet.example/pay/${account.id}`,
+            incomingAmount: {
+              amount: '123',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            description: incomingPayment.description,
+            expiresAt: expiresAt.toISOString(),
+            receivedAmount: {
+              amount: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            externalRef: '#123',
+            state: IncomingPaymentState.Pending.toLowerCase(),
+            receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+          },
+          {
+            id: `https://wallet.example/incoming-payments/${incomingPayment2.id}`,
+            accountId: `https://wallet.example/pay/${account.id}`,
+            incomingAmount: {
+              amount: '321',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            description: incomingPayment2.description,
+            expiresAt: expiresAt.toISOString(),
+            receivedAmount: {
+              amount: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            externalRef: '#321',
+            state: IncomingPaymentState.Pending.toLowerCase(),
+            receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+          },
+          {
+            id: `https://wallet.example/incoming-payments/${incomingPayment3.id}`,
+            accountId: `https://wallet.example/pay/${account.id}`,
+            incomingAmount: {
+              amount: '213',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            description: incomingPayment3.description,
+            expiresAt: expiresAt.toISOString(),
+            receivedAmount: {
+              amount: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            externalRef: '#213',
+            state: IncomingPaymentState.Pending.toLowerCase(),
+            receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+          }
+        ]
+      }
+    )
+    test.each`
+      id              | headers                     | first           | last            | cursor          | status | message                           | description
+      ${'not_a_uuid'} | ${null}                     | ${'10'}         | ${null}         | ${null}         | ${400} | ${'invalid account id'}           | ${'invalid account id'}
+      ${null}         | ${{ Accept: 'text/plain' }} | ${'10'}         | ${null}         | ${null}         | ${406} | ${'must accept json'}             | ${'invalid Accept header'}
+      ${null}         | ${null}                     | ${['10', '20']} | ${null}         | ${null}         | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${null}         | ${['10', '20']} | ${null}         | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${'hello'}      | ${null}         | ${null}         | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${null}         | ${null}         | ${['a', 'b']}   | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${'10'}         | ${'10'}         | ${null}         | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${null}         | ${'10'}         | ${undefined}    | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${null}         | ${null}         | ${'not_a_uuid'} | ${400} | ${'invalid cursor'}               | ${'invalid cursor'}
+    `(
+      'returns $status on $description',
+      async ({
+        id,
+        headers,
+        first,
+        last,
+        cursor,
+        status,
+        message
+      }): Promise<void> => {
+        const params = id
+          ? { accountId: id }
+          : { accountId: incomingPayment.accountId }
+        const query = {
+          cursor: cursor === null ? incomingPayment.id : cursor
+        }
+        if (first) query['first'] = first
+        if (last) query['last'] = last
+        const ctx = setup({ headers, query }, params)
+        await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+          status,
+          message
+        })
+      }
+    )
+
+    test.each`
+      first   | last    | cursorIndex | pagination      | startIndex | endIndex | description
+      ${null} | ${null} | ${-1}       | ${{ first: 3 }} | ${0}       | ${2}     | ${'no pagination parameters'}
+      ${'10'} | ${null} | ${-1}       | ${{ first: 3 }} | ${0}       | ${2}     | ${'only `first`'}
+      ${'10'} | ${null} | ${0}        | ${{ first: 2 }} | ${1}       | ${2}     | ${'`first` plus `cursor`'}
+      ${null} | ${'10'} | ${2}        | ${{ last: 2 }}  | ${0}       | ${1}     | ${'`last` plus `cursor`'}
+    `(
+      'returns 200 on $description',
+      async ({
+        first,
+        last,
+        cursorIndex,
+        pagination,
+        startIndex,
+        endIndex
+      }): Promise<void> => {
+        const cursor = paymentIds[cursorIndex]
+        const ctx = setup(
+          {
+            headers: { Accept: 'application/json' },
+            query: { first, last, cursor }
+          },
+          { accountId: incomingPayment.accountId }
+        )
+        pagination['startCursor'] = paymentIds[startIndex]
+        pagination['endCursor'] = paymentIds[endIndex]
+        await expect(incomingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
+        expect(ctx.status).toBe(200)
+        expect(ctx.response.get('Content-Type')).toBe(
+          'application/json; charset=utf-8'
+        )
+        expect(ctx.body).toEqual({
+          pagination,
+          result: result.slice(startIndex, endIndex + 1)
+        })
+      }
+    )
   })
 })

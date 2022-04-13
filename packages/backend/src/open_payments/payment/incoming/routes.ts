@@ -25,6 +25,7 @@ export interface IncomingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
   update(ctx: AppContext): Promise<void>
+  list(ctx: AppContext): Promise<void>
 }
 
 export function createIncomingPaymentRoutes(
@@ -37,7 +38,8 @@ export function createIncomingPaymentRoutes(
   return {
     get: (ctx: AppContext) => getIncomingPayment(deps, ctx),
     create: (ctx: AppContext) => createIncomingPayment(deps, ctx),
-    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx)
+    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx),
+    list: (ctx: AppContext) => listIncomingPayments(deps, ctx)
   }
 }
 
@@ -55,24 +57,18 @@ async function getIncomingPayment(
   )
   if (!incomingPayment) return ctx.throw(404)
 
-  const amountReceived = await deps.accountingService.getTotalReceived(
-    incomingPayment.id
-  )
-  if (amountReceived === undefined) {
-    deps.logger.error(
-      { incomingPayment: incomingPayment.id },
-      'account not found'
+  const body = await incomingPaymentToBody(deps, incomingPayment)
+  if (
+    incomingPayment.state !== IncomingPaymentState.Expired &&
+    incomingPayment.state !== IncomingPaymentState.Completed
+  ) {
+    const { ilpAddress, sharedSecret } = getStreamCredentials(
+      deps,
+      incomingPayment
     )
-    return ctx.throw(500)
+    body['ilpAddress'] = ilpAddress
+    body['sharedSecret'] = base64url(sharedSecret)
   }
-
-  const body = incomingPaymentToBody(deps, incomingPayment, amountReceived)
-  const { ilpAddress, sharedSecret } = getStreamCredentials(
-    deps,
-    incomingPayment
-  )
-  body['ilpAddress'] = ilpAddress
-  body['sharedSecret'] = base64url(sharedSecret)
   ctx.body = body
 }
 
@@ -123,7 +119,11 @@ async function createIncomingPayment(
   }
 
   ctx.status = 201
-  const res = incomingPaymentToBody(deps, incomingPaymentOrError, BigInt(0))
+  const res = await incomingPaymentToBody(
+    deps,
+    incomingPaymentOrError,
+    BigInt(0)
+  )
   const { ilpAddress, sharedSecret } = getStreamCredentials(
     deps,
     incomingPaymentOrError
@@ -167,37 +167,85 @@ async function updateIncomingPayment(
     )
   }
 
-  const amountReceived = await deps.accountingService.getTotalReceived(
-    incomingPaymentOrError.id
-  )
-  if (amountReceived === undefined) {
-    deps.logger.error(
-      { incomingPayment: incomingPaymentOrError.id },
-      'account not found'
-    )
-    return ctx.throw(500)
-  }
-
-  const res = incomingPaymentToBody(
-    deps,
-    incomingPaymentOrError,
-    amountReceived
-  )
+  const res = await incomingPaymentToBody(deps, incomingPaymentOrError)
   ctx.body = res
 }
 
-function incomingPaymentToBody(
+async function listIncomingPayments(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  const acceptJSON = ctx.accepts('application/json')
+  ctx.assert(acceptJSON, 406, 'must accept json')
+  const { accountId } = ctx.params
+  ctx.assert(validateId(accountId), 400, 'invalid account id')
+  const { first, last, cursor } = ctx.request.query
+  if (
+    (first !== undefined && isNaN(Number(first))) ||
+    (last !== undefined && isNaN(Number(last))) ||
+    (first && last) ||
+    (last && !cursor) ||
+    (typeof cursor !== 'string' && cursor !== undefined)
+  )
+    ctx.throw(400, 'invalid pagination paramters')
+  const paginationParams = first
+    ? {
+        first: Number(first)
+      }
+    : last
+    ? { last: Number(last) }
+    : {}
+  if (cursor) {
+    ctx.assert(validateId(cursor), 400, 'invalid cursor')
+    if (paginationParams.first) paginationParams['after'] = cursor
+    if (paginationParams.last) paginationParams['before'] = cursor
+  }
+  const incomingPayments = await deps.incomingPaymentService.getAccountIncomingPaymentsPage(
+    accountId,
+    paginationParams
+  )
+  const result = await Promise.all(
+    incomingPayments.map(async (element) => {
+      return await incomingPaymentToBody(deps, element)
+    })
+  )
+  const pagination = {
+    startCursor: incomingPayments[0].id,
+    endCursor: incomingPayments[incomingPayments.length - 1].id
+  }
+  if (paginationParams.last) {
+    pagination['last'] = incomingPayments.length
+  } else {
+    pagination['first'] = incomingPayments.length
+  }
+
+  ctx.body = { pagination, result }
+}
+
+async function incomingPaymentToBody(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment,
-  received: bigint
+  received?: bigint
 ) {
+  if (!received) {
+    received = await deps.accountingService.getTotalReceived(incomingPayment.id)
+    if (received === undefined) {
+      deps.logger.error(
+        { incomingPayment: incomingPayment.id },
+        'account not found'
+      )
+    }
+  }
   const location = `${deps.config.publicHost}/incoming-payments/${incomingPayment.id}`
   const body = {
     id: location,
     accountId: `${deps.config.publicHost}/pay/${incomingPayment.accountId}`,
     state: incomingPayment.state.toLowerCase(),
     receivedAmount: {
-      amount: received.toString(),
+      amount:
+        received !== undefined
+          ? received.toString()
+          : 'error: account not found',
       assetCode: incomingPayment.account.asset.code,
       assetScale: incomingPayment.account.asset.scale
     },
