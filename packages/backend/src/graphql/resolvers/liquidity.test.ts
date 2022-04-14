@@ -1594,16 +1594,16 @@ describe('Liquidity Resolvers', (): void => {
         })
         const accountId = account.id
         const incomingPaymentService = await deps.use('incomingPaymentService')
-        incomingPayment = await incomingPaymentService.create({
+        incomingPayment = (await incomingPaymentService.create({
           accountId,
           incomingAmount: {
-            amount: BigInt(56),
+            value: BigInt(56),
             assetCode: account.asset.code,
             assetScale: account.asset.scale
           },
           expiresAt: new Date(Date.now() + 60 * 1000),
           description: 'description!'
-        })
+        })) as IncomingPayment
         assert.ok(!isIncomingPaymentEventType(incomingPayment))
         const outgoingPaymentService = await deps.use('outgoingPaymentService')
         const config = await deps.use('config')
@@ -1616,7 +1616,7 @@ describe('Liquidity Resolvers', (): void => {
         await payment.$query(knex).patch({
           state: OutgoingPaymentState.Funding,
           sendAmount: {
-            amount: BigInt(456),
+            value: BigInt(456),
             assetCode: account.asset.code,
             assetScale: account.asset.scale
           },
@@ -1693,11 +1693,11 @@ describe('Liquidity Resolvers', (): void => {
             await expect(depositSpy).toHaveBeenCalledWith({
               id: eventId,
               account: expect.any(OutgoingPayment),
-              amount: payment.sendAmount.amount
+              amount: payment.sendAmount.value
             })
             await expect(
               accountingService.getBalance(payment.id)
-            ).resolves.toEqual(payment.sendAmount.amount)
+            ).resolves.toEqual(payment.sendAmount.value)
           })
 
           test("Can't deposit for non-existent webhook event id", async (): Promise<void> => {

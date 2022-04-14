@@ -4,7 +4,7 @@ export const refreshSession: MutationResolvers['refreshSession'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['RefreshSessionMutationResponse'] => {
+): Promise<ResolversTypes['RefreshSessionMutationResponse']> => {
   try {
     const sessionService = await ctx.container.use('sessionService')
     const session = await sessionService.refresh(args.input.key)
@@ -41,7 +41,7 @@ export const revokeSession: MutationResolvers['revokeSession'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['RevokeSessionMutationResponse'] => {
+): Promise<ResolversTypes['RevokeSessionMutationResponse']> => {
   try {
     const sessionKeyService = await ctx.container.use('sessionService')
     await sessionKeyService.revoke(args.input.key)

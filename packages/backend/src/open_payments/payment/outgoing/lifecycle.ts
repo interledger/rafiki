@@ -24,11 +24,31 @@ export async function handlePending(
     throw LifecycleError.PricesUnavailable
   })
 
-  const destination = await Pay.setupPayment({
-    plugin,
-    destinationAccount: payment.receivingAccount,
-    destinationPayment: payment.receivingPayment
-  })
+  const options: Pay.SetupOptions = { plugin }
+  if (payment.receivingPayment) {
+    options.destinationPayment = payment.receivingPayment
+  } else {
+    options.destinationAccount = payment.receivingAccount
+    if (payment.receiveAmount) {
+      assert.ok(payment.receiveAmount.assetCode)
+      assert.ok(payment.receiveAmount.assetScale)
+      options.amountToDeliver = {
+        value: payment.receiveAmount.value,
+        assetCode: payment.receiveAmount.assetCode,
+        assetScale: payment.receiveAmount.assetScale
+      }
+    }
+  }
+  const destination = await Pay.setupPayment(options)
+
+  if (!payment.receivingPayment) {
+    if (!destination.destinationPaymentDetails) {
+      throw LifecycleError.MissingIncomingPayment
+    }
+    await payment.$query(deps.knex).patch({
+      receivingPayment: destination.destinationPaymentDetails.id
+    })
+  }
 
   validateAssets(deps, payment, destination)
 
@@ -36,11 +56,11 @@ export async function handlePending(
     plugin,
     destination,
     sourceAsset: {
-      scale: payment.account.asset.scale,
-      code: payment.account.asset.code
+      scale: payment.asset.scale,
+      code: payment.asset.code
     },
-    amountToSend: payment.sendAmount?.amount,
-    amountToDeliver: payment.receiveAmount?.amount,
+    amountToSend: payment.sendAmount?.value,
+    amountToDeliver: payment.receiveAmount?.value,
     slippage: deps.slippage,
     prices
   }).finally(() => {
@@ -65,12 +85,12 @@ export async function handlePending(
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Funding,
     sendAmount: payment.sendAmount || {
-      amount: quote.maxSourceAmount,
-      assetCode: payment.account.asset.code,
-      assetScale: payment.account.asset.scale
+      value: quote.maxSourceAmount,
+      assetCode: payment.asset.code,
+      assetScale: payment.asset.scale
     },
     receiveAmount: {
-      amount: payment.receiveAmount?.amount || quote.minDeliveryAmount,
+      value: payment.receiveAmount?.value || quote.minDeliveryAmount,
       assetCode: destination.destinationAsset.code,
       assetScale: destination.destinationAsset.scale
     },
@@ -114,7 +134,7 @@ export async function handleSending(
   }
 
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
-  const newMaxSourceAmount = payment.sendAmount.amount - amountSent
+  const newMaxSourceAmount = payment.sendAmount.value - amountSent
 
   let newMinDeliveryAmount
   if (
@@ -129,15 +149,15 @@ export async function handleSending(
         +amountSent.toString() * payment.quote.minExchangeRate.valueOf()
       )
     )
-    newMinDeliveryAmount = payment.receiveAmount.amount - amountDelivered
+    newMinDeliveryAmount = payment.receiveAmount.value - amountDelivered
   } else {
     if (
       destination.destinationPaymentDetails &&
       destination.destinationPaymentDetails.incomingAmount
     ) {
       newMinDeliveryAmount =
-        destination.destinationPaymentDetails.incomingAmount.amount -
-        destination.destinationPaymentDetails.receivedAmount.amount
+        destination.destinationPaymentDetails.incomingAmount.value -
+        destination.destinationPaymentDetails.receivedAmount.value
     } else {
       throw LifecycleError.MissingIncomingPayment
     }
@@ -272,7 +292,7 @@ export const sendWebhookEvent = async (
   const withdrawal = balance
     ? {
         accountId: payment.id,
-        assetId: payment.account.assetId,
+        assetId: payment.assetId,
         amount: balance
       }
     : undefined
@@ -288,30 +308,22 @@ const validateAssets = (
   payment: OutgoingPayment,
   destination: Pay.ResolvedPayment
 ): void => {
-  if (payment.sendAmount) {
-    if (
-      payment.sendAmount.assetCode !== payment.account.asset.code ||
-      payment.sendAmount.assetScale !== payment.account.asset.scale
-    ) {
-      throw LifecycleError.SourceAssetConflict
-    }
+  if (payment.assetId !== payment.account?.assetId) {
+    throw LifecycleError.SourceAssetConflict
   }
   if (payment.receiveAmount) {
-    if (payment.receiveAmount.assetCode || payment.receiveAmount.assetScale) {
-      if (
-        payment.receiveAmount.assetScale !==
-          destination.destinationAsset.scale ||
-        payment.receiveAmount.assetCode !== destination.destinationAsset.code
-      ) {
-        deps.logger.warn(
-          {
-            oldAsset: payment.receiveAmount,
-            newAsset: destination.destinationAsset
-          },
-          'destination asset changed'
-        )
-        throw Pay.PaymentError.DestinationAssetConflict
-      }
+    if (
+      payment.receiveAmount.assetScale !== destination.destinationAsset.scale ||
+      payment.receiveAmount.assetCode !== destination.destinationAsset.code
+    ) {
+      deps.logger.warn(
+        {
+          oldAsset: payment.receiveAmount,
+          newAsset: destination.destinationAsset
+        },
+        'destination asset changed'
+      )
+      throw Pay.PaymentError.DestinationAssetConflict
     }
   }
 }

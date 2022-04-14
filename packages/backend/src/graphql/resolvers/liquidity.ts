@@ -21,7 +21,7 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
   parent,
   args,
   ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
+): Promise<ResolversTypes['LiquidityMutationResponse']> => {
   try {
     if (args.input.amount === BigInt(0)) {
       return responses[LiquidityError.AmountZero]
@@ -65,7 +65,7 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
   parent,
   args,
   ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
+): Promise<ResolversTypes['LiquidityMutationResponse']> => {
   try {
     if (args.input.amount === BigInt(0)) {
       return responses[LiquidityError.AmountZero]
@@ -109,7 +109,7 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
   parent,
   args,
   ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
+): Promise<ResolversTypes['LiquidityMutationResponse']> => {
   try {
     if (args.input.amount === BigInt(0)) {
       return responses[LiquidityError.AmountZero]
@@ -154,7 +154,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
   parent,
   args,
   ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
+): Promise<ResolversTypes['LiquidityMutationResponse']> => {
   try {
     if (args.input.amount === BigInt(0)) {
       return responses[LiquidityError.AmountZero]
@@ -199,7 +199,7 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
   parent,
   args,
   ctx
-): ResolversTypes['AccountWithdrawalMutationResponse'] => {
+): Promise<ResolversTypes['AccountWithdrawalMutationResponse']> => {
   try {
     const accountService = await ctx.container.use('accountService')
     const account = await accountService.get(args.input.accountId)
@@ -258,7 +258,7 @@ export const finalizeLiquidityWithdrawal: MutationResolvers<ApolloContext>['fina
   parent,
   args,
   ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
+): Promise<ResolversTypes['LiquidityMutationResponse']> => {
   const accountingService = await ctx.container.use('accountingService')
   const error = await accountingService.commitWithdrawal(args.withdrawalId)
   if (error) {
@@ -275,7 +275,7 @@ export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['roll
   parent,
   args,
   ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
+): Promise<ResolversTypes['LiquidityMutationResponse']> => {
   const accountingService = await ctx.container.use('accountingService')
   const error = await accountingService.rollbackWithdrawal(args.withdrawalId)
   if (error) {
@@ -299,7 +299,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
   parent,
   args,
   ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
+): Promise<ResolversTypes['LiquidityMutationResponse']> => {
   try {
     const webhookService = await ctx.container.use('webhookService')
     const event = await webhookService.getEvent(args.eventId)
@@ -312,7 +312,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     )
     const paymentOrErr = await outgoingPaymentService.fund({
       id: event.data.payment.id,
-      amount: BigInt(event.data.payment.sendAmount.amount),
+      amount: BigInt(event.data.payment.sendAmount.value),
       transferId: event.id
     })
     if (isFundingError(paymentOrErr)) {
@@ -343,7 +343,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
   parent,
   args,
   ctx
-): ResolversTypes['LiquidityMutationResponse'] => {
+): Promise<ResolversTypes['LiquidityMutationResponse']> => {
   try {
     const webhookService = await ctx.container.use('webhookService')
     const event = await webhookService.getEvent(args.eventId)

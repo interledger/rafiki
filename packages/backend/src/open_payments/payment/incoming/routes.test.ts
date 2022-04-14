@@ -55,7 +55,7 @@ describe('Incoming Payment Routes', (): void => {
           incomingPayment.incomingAmount === undefined
             ? undefined
             : {
-                amount: incomingPayment.incomingAmount.amount.toString(),
+                value: incomingPayment.incomingAmount.value.toString(),
                 assetScale: incomingPayment.incomingAmount.assetScale,
                 assetCode: incomingPayment.incomingAmount.assetCode
               },
@@ -87,6 +87,7 @@ describe('Incoming Payment Routes', (): void => {
 
   let asset: { code: string; scale: number }
   let account: Account
+  let accountId: string
   let incomingPayment: IncomingPayment
   let incomingPayment2: IncomingPayment
   let incomingPayment3: IncomingPayment
@@ -102,12 +103,13 @@ describe('Incoming Payment Routes', (): void => {
       asset = randomAsset()
       expiresAt = new Date(Date.now() + 30_000)
       account = await accountService.create({ asset })
+      accountId = `https://wallet.example/${account.id}`
       const incomingPaymentOrError = await incomingPaymentService.create({
         accountId: account.id,
         description: 'text',
         expiresAt,
         incomingAmount: {
-          amount: BigInt(123),
+          value: BigInt(123),
           assetCode: asset.code,
           assetScale: asset.scale
         },
@@ -171,25 +173,24 @@ describe('Incoming Payment Routes', (): void => {
       ]
 
       expect(ctx.body).toEqual({
-        id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
-        accountId: `https://wallet.example/pay/${account.id}`,
+        id: `${accountId}/incoming-payments/${incomingPayment.id}`,
+        accountId,
         incomingAmount: {
-          amount: '123',
+          value: '123',
           assetCode: asset.code,
           assetScale: asset.scale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
+          value: '0',
           assetCode: asset.code,
           assetScale: asset.scale
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
@@ -198,19 +199,19 @@ describe('Incoming Payment Routes', (): void => {
   })
   describe('create', (): void => {
     test.each`
-      id              | headers                             | body                                                                     | status | message                     | description
-      ${'not_a_uuid'} | ${null}                             | ${null}                                                                  | ${400} | ${'invalid account id'}     | ${'invalid account id'}
-      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                                  | ${406} | ${'must accept json'}       | ${'invalid Accept header'}
-      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                                  | ${400} | ${'must send json body'}    | ${'invalid Content-Type header'}
-      ${uuid()}       | ${null}                             | ${null}                                                                  | ${404} | ${'unknown account'}        | ${'unknown account'}
-      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                                            | ${400} | ${'invalid incomingAmount'} | ${'non-object incomingAmount'}
-      ${null}         | ${null}                             | ${{ incomingAmount: { amount: '-2', assetCode: 'USD', assetScale: 2 } }} | ${400} | ${'invalid amount'}         | ${'invalid incomingAmount, amount non-positive'}
-      ${null}         | ${null}                             | ${{ incomingAmount: { amount: '2', assetCode: 4, assetScale: 2 } }}      | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetCode not string'}
-      ${null}         | ${null}                             | ${{ incomingAmount: { amount: '2', assetCode: 'USD', assetScale: -2 } }} | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetScale negative'}
-      ${null}         | ${null}                             | ${{ description: 123 }}                                                  | ${400} | ${'invalid description'}    | ${'invalid description'}
-      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                                  | ${400} | ${'invalid externalRef'}    | ${'invalid externalRef'}
-      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                                 | ${400} | ${'invalid expiresAt'}      | ${'invalid expiresAt'}
-      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }}                 | ${400} | ${'already expired'}        | ${'already expired expiresAt'}
+      id              | headers                             | body                                                                    | status | message                     | description
+      ${'not_a_uuid'} | ${null}                             | ${null}                                                                 | ${400} | ${'invalid account id'}     | ${'invalid account id'}
+      ${null}         | ${{ Accept: 'text/plain' }}         | ${null}                                                                 | ${406} | ${'must accept json'}       | ${'invalid Accept header'}
+      ${null}         | ${{ 'Content-Type': 'text/plain' }} | ${null}                                                                 | ${400} | ${'must send json body'}    | ${'invalid Content-Type header'}
+      ${uuid()}       | ${null}                             | ${null}                                                                 | ${404} | ${'unknown account'}        | ${'unknown account'}
+      ${null}         | ${null}                             | ${{ incomingAmount: 'fail' }}                                           | ${400} | ${'invalid incomingAmount'} | ${'non-object incomingAmount'}
+      ${null}         | ${null}                             | ${{ incomingAmount: { value: '-2', assetCode: 'USD', assetScale: 2 } }} | ${400} | ${'invalid amount'}         | ${'invalid incomingAmount, value non-positive'}
+      ${null}         | ${null}                             | ${{ incomingAmount: { value: '2', assetCode: 4, assetScale: 2 } }}      | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetCode not string'}
+      ${null}         | ${null}                             | ${{ incomingAmount: { value: '2', assetCode: 'USD', assetScale: -2 } }} | ${400} | ${'invalid incomingAmount'} | ${'invalid incomingAmount, assetScale negative'}
+      ${null}         | ${null}                             | ${{ description: 123 }}                                                 | ${400} | ${'invalid description'}    | ${'invalid description'}
+      ${null}         | ${null}                             | ${{ externalRef: 123 }}                                                 | ${400} | ${'invalid externalRef'}    | ${'invalid externalRef'}
+      ${null}         | ${null}                             | ${{ expiresAt: 'fail' }}                                                | ${400} | ${'invalid expiresAt'}      | ${'invalid expiresAt'}
+      ${null}         | ${null}                             | ${{ expiresAt: new Date(Date.now() - 1).toISOString() }}                | ${400} | ${'already expired'}        | ${'already expired expiresAt'}
     `(
       'returns $status on $description',
       async ({ id, headers, body, status, message }): Promise<void> => {
@@ -247,25 +248,24 @@ describe('Incoming Payment Routes', (): void => {
         .split('/')
         .pop()
       expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        id: `${accountId}/incoming-payments/${incomingPaymentId}`,
+        accountId,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount?.amount.toString(),
+          value: incomingPayment.incomingAmount?.value.toString(),
           assetCode: incomingPayment.incomingAmount?.assetCode,
           assetScale: incomingPayment.incomingAmount?.assetScale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          value: '0',
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
     })
 
@@ -283,20 +283,19 @@ describe('Incoming Payment Routes', (): void => {
         .split('/')
         .pop()
       expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        id: `${accountId}/incoming-payments/${incomingPaymentId}`,
+        accountId,
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          value: '0',
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
     })
     test('returns the incoming payment on undefined description', async (): Promise<void> => {
@@ -313,24 +312,23 @@ describe('Incoming Payment Routes', (): void => {
         .split('/')
         .pop()
       expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        id: `${accountId}/incoming-payments/${incomingPaymentId}`,
+        accountId,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount?.amount.toString(),
+          value: incomingPayment.incomingAmount?.value.toString(),
           assetCode: incomingPayment.incomingAmount?.assetCode,
           assetScale: incomingPayment.incomingAmount?.assetScale
         },
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          value: '0',
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
         },
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
     })
 
@@ -348,24 +346,23 @@ describe('Incoming Payment Routes', (): void => {
         .split('/')
         .pop()
       expect(ctx.response.body).toEqual({
-        id: `${config.publicHost}/incoming-payments/${incomingPaymentId}`,
-        accountId: `${config.publicHost}/pay/${incomingPayment.accountId}`,
+        id: `${accountId}/incoming-payments/${incomingPaymentId}`,
+        accountId,
         incomingAmount: {
-          amount: incomingPayment.incomingAmount?.amount.toString(),
+          value: incomingPayment.incomingAmount?.value.toString(),
           assetCode: incomingPayment.incomingAmount?.assetCode,
           assetScale: incomingPayment.incomingAmount?.assetScale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
-          assetCode: incomingPayment.account.asset.code,
-          assetScale: incomingPayment.account.asset.scale
+          value: '0',
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
         },
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        sharedSecret
       })
     })
   })
@@ -408,23 +405,22 @@ describe('Incoming Payment Routes', (): void => {
         'application/json; charset=utf-8'
       )
       expect(ctx.body).toEqual({
-        id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
-        accountId: `https://wallet.example/pay/${account.id}`,
+        id: `${accountId}/incoming-payments/${incomingPayment.id}`,
+        accountId,
         incomingAmount: {
-          amount: '123',
+          value: '123',
           assetCode: asset.code,
           assetScale: asset.scale
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         receivedAmount: {
-          amount: '0',
+          value: '0',
           assetCode: asset.code,
           assetScale: asset.scale
         },
         externalRef: '#123',
-        state: IncomingPaymentState.Completed.toLowerCase(),
-        receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+        state: IncomingPaymentState.Completed.toLowerCase()
       })
     })
   })
@@ -439,7 +435,7 @@ describe('Incoming Payment Routes', (): void => {
           description: '2nd incoming payment',
           expiresAt,
           incomingAmount: {
-            amount: BigInt(321),
+            value: BigInt(321),
             assetCode: asset.code,
             assetScale: asset.scale
           },
@@ -450,7 +446,7 @@ describe('Incoming Payment Routes', (): void => {
           description: '3rd incoming payment',
           expiresAt,
           incomingAmount: {
-            amount: BigInt(213),
+            value: BigInt(213),
             assetCode: asset.code,
             assetScale: asset.scale
           },
@@ -463,61 +459,58 @@ describe('Incoming Payment Routes', (): void => {
         ]
         result = [
           {
-            id: `https://wallet.example/incoming-payments/${incomingPayment.id}`,
-            accountId: `https://wallet.example/pay/${account.id}`,
+            id: `https://wallet.example/${account.id}/incoming-payments/${incomingPayment.id}`,
+            accountId: `https://wallet.example/${account.id}`,
             incomingAmount: {
-              amount: '123',
+              value: '123',
               assetCode: asset.code,
               assetScale: asset.scale
             },
             description: incomingPayment.description,
             expiresAt: expiresAt.toISOString(),
             receivedAmount: {
-              amount: '0',
+              value: '0',
               assetCode: asset.code,
               assetScale: asset.scale
             },
             externalRef: '#123',
-            state: IncomingPaymentState.Pending.toLowerCase(),
-            receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+            state: IncomingPaymentState.Pending.toLowerCase()
           },
           {
-            id: `https://wallet.example/incoming-payments/${incomingPayment2.id}`,
-            accountId: `https://wallet.example/pay/${account.id}`,
+            id: `https://wallet.example/${account.id}/incoming-payments/${incomingPayment2.id}`,
+            accountId: `https://wallet.example/${account.id}`,
             incomingAmount: {
-              amount: '321',
+              value: '321',
               assetCode: asset.code,
               assetScale: asset.scale
             },
             description: incomingPayment2.description,
             expiresAt: expiresAt.toISOString(),
             receivedAmount: {
-              amount: '0',
+              value: '0',
               assetCode: asset.code,
               assetScale: asset.scale
             },
             externalRef: '#321',
-            state: IncomingPaymentState.Pending.toLowerCase(),
-            receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+            state: IncomingPaymentState.Pending.toLowerCase()
           },
           {
-            id: `https://wallet.example/incoming-payments/${incomingPayment3.id}`,
-            accountId: `https://wallet.example/pay/${account.id}`,
+            id: `https://wallet.example/${account.id}/incoming-payments/${incomingPayment3.id}`,
+            accountId: `https://wallet.example/${account.id}`,
             incomingAmount: {
-              amount: '213',
+              value: '213',
               assetCode: asset.code,
               assetScale: asset.scale
             },
             description: incomingPayment3.description,
             expiresAt: expiresAt.toISOString(),
             receivedAmount: {
-              amount: '0',
+              value: '0',
               assetCode: asset.code,
               assetScale: asset.scale
             },
             externalRef: '#213',
-            state: IncomingPaymentState.Pending.toLowerCase(),
-            receiptsEnabled: false // workaround: will be removed with update to ilp-pay:0.4.0-alpha.2
+            state: IncomingPaymentState.Pending.toLowerCase()
           }
         ]
       }

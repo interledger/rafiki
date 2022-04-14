@@ -1,5 +1,4 @@
 import {
-  Amount,
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
@@ -12,6 +11,7 @@ import assert from 'assert'
 import { Transaction } from 'knex'
 import { PartialModelObject, TransactionOrKnex } from 'objection'
 import { AccountService } from '../../account/service'
+import { Amount } from '../amount'
 import { IncomingPaymentError } from './errors'
 import { parse, end } from 'iso8601-duration'
 
@@ -82,9 +82,7 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   id: string
 ): Promise<IncomingPayment | undefined> {
-  return IncomingPayment.query(deps.knex)
-    .findById(id)
-    .withGraphFetched('[account.asset, asset]')
+  return IncomingPayment.query(deps.knex).findById(id).withGraphFetched('asset')
 }
 
 async function createIncomingPayment(
@@ -103,7 +101,7 @@ async function createIncomingPayment(
     return IncomingPaymentError.UnknownAccount
   }
   if (incomingAmount) {
-    if (incomingAmount.amount <= 0) {
+    if (incomingAmount.value <= 0) {
       return IncomingPaymentError.InvalidAmount
     }
     if (incomingAmount.assetCode || incomingAmount.assetScale) {
@@ -128,7 +126,7 @@ async function createIncomingPayment(
         state: IncomingPaymentState.Pending,
         processAt: expiresAt ?? end(EXPIRY)
       })
-      .withGraphFetched('[account.asset, asset]')
+      .withGraphFetched('asset')
 
     // Incoming payment accounts are credited by the amounts received by the incoming payment.
     // Credits are restricted such that the incoming payments cannot receive more than that amount.
@@ -160,7 +158,7 @@ async function processNextIncomingPayment(
       // If an incoming payment is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-      .withGraphFetched('[account.asset, asset]')
+      .withGraphFetched('asset')
 
     const incomingPayment = incomingPayments[0]
     if (!incomingPayment) return
@@ -239,7 +237,7 @@ async function handleDeactivated(
       data: incomingPayment.toData(amountReceived),
       withdrawal: {
         accountId: incomingPayment.id,
-        assetId: incomingPayment.account.assetId,
+        assetId: incomingPayment.assetId,
         amount: amountReceived
       }
     })
@@ -264,7 +262,7 @@ async function getAccountIncomingPaymentsPage(
     .where({
       accountId: accountId
     })
-    .withGraphFetched('[account.asset, asset]')
+    .withGraphFetched('asset')
 }
 
 async function updateIncomingPayment(
@@ -275,7 +273,7 @@ async function updateIncomingPayment(
     const payment = await IncomingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('[account.asset, asset]')
+      .withGraphFetched('asset')
     if (!payment) return IncomingPaymentError.UnknownPayment
     const update: PartialModelObject<IncomingPayment> = {}
     if (state == IncomingPaymentState.Completed) {

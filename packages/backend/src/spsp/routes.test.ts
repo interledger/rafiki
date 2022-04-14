@@ -63,7 +63,7 @@ describe('SPSP Routes', (): void => {
     }
   )
 
-  describe('GET /pay/:id handler', (): void => {
+  describe('GET /:id handler', (): void => {
     let accountId: string
 
     beforeEach(

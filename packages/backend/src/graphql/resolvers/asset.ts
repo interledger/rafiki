@@ -15,7 +15,7 @@ export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['AssetsConnection'] => {
+): Promise<ResolversTypes['AssetsConnection']> => {
   const assetService = await ctx.container.use('assetService')
   const assets = await assetService.getPage(args)
   return {
@@ -30,7 +30,7 @@ export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['Asset'] => {
+): Promise<ResolversTypes['Asset']> => {
   const assetService = await ctx.container.use('assetService')
   const asset = await assetService.getById(args.id)
   if (!asset) {
@@ -43,7 +43,7 @@ export const createAsset: MutationResolvers<ApolloContext>['createAsset'] = asyn
   parent,
   args,
   ctx
-): ResolversTypes['AssetMutationResponse'] => {
+): Promise<ResolversTypes['AssetMutationResponse']> => {
   try {
     const assetService = await ctx.container.use('assetService')
     const assetOrError = await assetService.create(args.input)
@@ -85,7 +85,7 @@ export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['u
   parent,
   args,
   ctx
-): ResolversTypes['AssetMutationResponse'] => {
+): Promise<ResolversTypes['AssetMutationResponse']> => {
   try {
     const assetService = await ctx.container.use('assetService')
     const assetOrError = await assetService.update({
@@ -130,7 +130,7 @@ export const getAssetsConnectionPageInfo: AssetsConnectionResolvers<ApolloContex
   parent,
   args,
   ctx
-): ResolversTypes['PageInfo'] => {
+): Promise<ResolversTypes['PageInfo']> => {
   const edges = parent.edges
   if (edges == null || typeof edges == 'undefined' || edges.length == 0)
     return {
@@ -149,7 +149,7 @@ const getPageInfo = async ({
 }: {
   assetService: AssetService
   edges: AssetEdge[]
-}): ResolversTypes['PageInfo'] => {
+}): Promise<ResolversTypes['PageInfo']> => {
   const firstEdge = edges[0].cursor
   const lastEdge = edges[edges.length - 1].cursor
 

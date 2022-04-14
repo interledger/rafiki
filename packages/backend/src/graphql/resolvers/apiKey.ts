@@ -5,7 +5,7 @@ export const createApiKey: MutationResolvers['createApiKey'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['CreateApiKeyMutationResponse'] => {
+): Promise<ResolversTypes['CreateApiKeyMutationResponse']> => {
   try {
     const apiKeyService = await ctx.container.use('apiKeyService')
     const apiKey = await apiKeyService.create({ ...args.input })
@@ -41,7 +41,7 @@ export const deleteAllApiKeys: MutationResolvers['deleteAllApiKeys'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['DeleteAllApiKeysMutationResponse'] => {
+): Promise<ResolversTypes['DeleteAllApiKeysMutationResponse']> => {
   try {
     const apiKeyService = await ctx.container.use('apiKeyService')
     await apiKeyService.deleteAll(args.input)
@@ -71,7 +71,7 @@ export const redeemApiKey: MutationResolvers['redeemApiKey'] = async (
   parent,
   args,
   ctx
-): ResolversTypes['RedeemApiKeyMutationResponse'] => {
+): Promise<ResolversTypes['RedeemApiKeyMutationResponse']> => {
   try {
     const apiKeyService = await ctx.container.use('apiKeyService')
     const sessionKeyOrError = await apiKeyService.redeem(args.input)

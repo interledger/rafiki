@@ -120,7 +120,7 @@ describe('Account Routes', (): void => {
       )
 
       expect(ctx.body).toEqual({
-        id: `https://wallet.example/accounts/${account.id}`,
+        id: `https://wallet.example/${account.id}`,
         publicName: account.publicName,
         assetCode: asset.code,
         assetScale: asset.scale,
