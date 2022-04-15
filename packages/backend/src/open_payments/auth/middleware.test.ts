@@ -70,11 +70,11 @@ describe('Auth Middleware', (): void => {
   }
 
   test.each`
-    authorization        | description
-    ${undefined}         | ${'missing'}
-    ${'Bearer NOT-GNAP'} | ${'invalid'}
-    ${'no-token'}        | ${'invalid'}
-    ${'too many parts'}  | ${'invalid'}
+    authorization             | description
+    ${undefined}              | ${'missing'}
+    ${'Bearer NOT-GNAP'}      | ${'invalid'}
+    ${'GNAP'}                 | ${'missing'}
+    ${'GNAP multiple tokens'} | ${'invalid'}
   `(
     'returns 401 for $description access token',
     async ({ authorization }): Promise<void> => {
