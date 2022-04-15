@@ -5,8 +5,6 @@ Implements Open Payments authorization endpoints in accordance with the GNAP spe
 
 - https://github.com/interledger/open-payments/blob/master/auth-server-open-api-spec.yaml
 - https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol
-=======
->>>>>>> 08c8705 (feat(auth): initialize package)
 
 ## Local Development
 
@@ -21,7 +19,6 @@ In order to build the docker container run the following command.
 ```shell
 yarn docker build auth -t rafiki-auth
 ```
-<<<<<<< HEAD
 
 ## GNAP Endpoints
 
