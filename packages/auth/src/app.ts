@@ -112,13 +112,16 @@ export class App {
     })
 
     // TODO: GNAP endpoints
+    /*
+      - client key registration endpoint
+    */
     this.publicRouter.post('/grant/start', (ctx: AppContext): void => {
       // TODO: generate interaction session
       ctx.status = 200
     })
 
     this.publicRouter.post('/grant/continue', (ctx: AppContext): void => {
-      // TODO: generate
+      // TODO: generate completed grant response
       ctx.status = 200
     })
 
