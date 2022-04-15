@@ -13,7 +13,11 @@ import {
   isOutgoingPaymentError
 } from './errors'
 import { OutgoingPaymentService, CreateOutgoingPaymentOptions } from './service'
-import { createTestApp, TestContainer } from '../../../tests/app'
+import {
+  createTestApp,
+  TestContainer,
+  testAccessToken
+} from '../../../tests/app'
 import { IAppConfig, Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../'
@@ -134,7 +138,10 @@ describe('OutgoingPaymentService', (): void => {
           `http://localhost:${appContainer.port}${path}`,
           requestBody,
           {
-            headers: this.req.headers
+            headers: Object.assign(
+              { Authorization: `GNAP ${testAccessToken}` },
+              this.req.headers
+            )
           }
         ).then((res) => res.data)
       })
