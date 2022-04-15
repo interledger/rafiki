@@ -22,15 +22,13 @@ export function createAuthMiddleware({
     ctx: AppContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
+    const config = await ctx.container.use('config')
     try {
-      if (
-        !ctx.request.headers.authorization ||
-        ctx.request.headers.authorization.split(' ')[0] !== 'GNAP'
-      ) {
+      const parts = ctx.request.headers.authorization?.split(' ')
+      if (parts?.length !== 2 || parts[0] !== 'GNAP') {
         ctx.throw(401, 'Unauthorized')
       }
-      const token = ctx.request.headers.authorization.split(' ')[1]
-      const config = await ctx.container.use('config')
+      const token = parts[1]
       const grant = await getGrant(config.authServerIntrospectionUrl, token)
       if (!grant || !grant.active) {
         ctx.throw(401, 'Invalid Token')
@@ -50,7 +48,6 @@ export function createAuthMiddleware({
       if (err.status === 401) {
         ctx.status = 401
         ctx.message = err.message
-        const config = await ctx.container.use('config')
         ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
       } else {
         throw err

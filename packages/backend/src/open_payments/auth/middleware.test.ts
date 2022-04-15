@@ -73,6 +73,8 @@ describe('Auth Middleware', (): void => {
     authorization        | description
     ${undefined}         | ${'missing'}
     ${'Bearer NOT-GNAP'} | ${'invalid'}
+    ${'no-token'}        | ${'invalid'}
+    ${'too many parts'}  | ${'invalid'}
   `(
     'returns 401 for $description access token',
     async ({ authorization }): Promise<void> => {
