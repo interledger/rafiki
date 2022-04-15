@@ -115,12 +115,12 @@ export class App {
     /*
       - client key registration endpoint
     */
-    this.publicRouter.post('/grant/start', (ctx: AppContext): void => {
+    this.publicRouter.post('/auth', (ctx: AppContext): void => {
       // TODO: generate interaction session
       ctx.status = 200
     })
 
-    this.publicRouter.post('/grant/continue', (ctx: AppContext): void => {
+    this.publicRouter.post('/auth/continue/:id', (ctx: AppContext): void => {
       // TODO: generate completed grant response
       ctx.status = 200
     })
@@ -134,7 +134,7 @@ export class App {
     })
 
     // Token management
-    this.publicRouter.post('/introspect', (ctx: AppContext): void => {
+    this.publicRouter.post('/auth/introspect', (ctx: AppContext): void => {
       // TODO: tokenService.introspection
       ctx.status = 200
       // ctx.body = {
@@ -144,12 +144,12 @@ export class App {
       // }
     })
 
-    this.publicRouter.post('/token/:managementId', (ctx: AppContext): void => {
+    this.publicRouter.post('/auth/token/:id', (ctx: AppContext): void => {
       // TODO: tokenService.rotate
       ctx.status = 200
     })
 
-    this.publicRouter.del('/token/:managementId', (ctx: AppContext): void => {
+    this.publicRouter.del('/auth/token/:id', (ctx: AppContext): void => {
       // TODO: tokenService.revocation
       ctx.status = 200
     })

@@ -19,6 +19,7 @@
   - packages/backend/src/**/*
   - packages/frontend/src/**/*
   - packages/rates/src/**/*
+  - packages/auth/src/**/*
 
 # Add 'type: tests' label to any change to *.test.ts files
 'type: tests': packages/**/*.test.ts

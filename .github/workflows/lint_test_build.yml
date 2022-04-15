@@ -64,6 +64,19 @@ jobs:
       - run: yarn workspace rates format:check
       - run: yarn workspace rates test
 
+  auth:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: yarn workspace auth lint
+      - run: yarn workspace auth format:check
+      - run: yarn workspace auth test
+
   build:
     runs-on: ubuntu-latest
     needs:
