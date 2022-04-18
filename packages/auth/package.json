@@ -7,7 +7,7 @@
     "knex": "knex",
     "build": "yarn clean && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "yarn test:local",
     "prepack": "yarn build"
   },
   "dependencies": {
