@@ -8,6 +8,9 @@
     },
     {
       "path": "packages/rates"
+    },
+    {
+      "path": "packages/auth"
     }
   ],
   "files": [],
