@@ -24,6 +24,8 @@ import { AssetService } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
 import { AccountService } from './open_payments/account/service'
+import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
+import { createAuthMiddleware } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
@@ -48,6 +50,7 @@ export interface AppContextData {
   container: AppContainer
   // Set by @koa/router.
   params: { [key: string]: string }
+  grant?: Grant
 }
 
 export interface ApolloContext {
@@ -262,6 +265,10 @@ export class App {
 
     this.publicRouter.get(
       '/:accountId/incoming-payments/:incomingPaymentId',
+      createAuthMiddleware({
+        type: AccessType.IncomingPayment,
+        action: AccessAction.Read
+      }),
       incomingPaymentRoutes.get
     )
     this.publicRouter.get(
@@ -270,15 +277,27 @@ export class App {
     )
     this.publicRouter.post(
       '/:accountId/incoming-payments',
+      createAuthMiddleware({
+        type: AccessType.IncomingPayment,
+        action: AccessAction.Create
+      }),
       incomingPaymentRoutes.create
     )
     this.publicRouter.put(
       '/:accountId/incoming-payments/:incomingPaymentId',
+      createAuthMiddleware({
+        type: AccessType.IncomingPayment,
+        action: AccessAction.Update
+      }),
       incomingPaymentRoutes.update
     )
 
     this.publicRouter.get(
       '/:accountId/outgoing-payments/:outgoingPaymentId',
+      createAuthMiddleware({
+        type: AccessType.OutgoingPayment,
+        action: AccessAction.Read
+      }),
       outgoingPaymentRoutes.get
     )
     this.publicRouter.get(
@@ -287,6 +306,10 @@ export class App {
     )
     this.publicRouter.post(
       '/:accountId/outgoing-payments',
+      createAuthMiddleware({
+        type: AccessType.OutgoingPayment,
+        action: AccessAction.Create
+      }),
       outgoingPaymentRoutes.create
     )
 

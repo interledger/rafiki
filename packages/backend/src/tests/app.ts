@@ -13,9 +13,13 @@ import {
 } from '@apollo/client'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
+import { URL } from 'url'
 
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
+import { Grant, AccessAction, AccessType } from '../open_payments/auth/grant'
+
+export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {
   port: number
@@ -47,13 +51,40 @@ export const createTestApp = async (
   const app = new App(container)
   await start(container, app)
 
+  const grant = new Grant({
+    active: true,
+    grant: 'PRY5NM33OM4TB8N6BW7',
+    access: [
+      {
+        type: AccessType.IncomingPayment,
+        actions: [AccessAction.Create, AccessAction.Read]
+      },
+      {
+        type: AccessType.OutgoingPayment,
+        actions: [AccessAction.Read]
+      }
+    ]
+  })
+
+  const authServerIntrospectionUrl = new URL(config.authServerIntrospectionUrl)
+  nock(authServerIntrospectionUrl.origin)
+    .post(authServerIntrospectionUrl.pathname, {
+      access_token: testAccessToken
+    })
+    .reply(200, grant.toJSON())
+    .persist()
+
   // Since payment pointers MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
   nock(config.publicHost)
     .get(/.*/)
     .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
     .reply(200, function (path) {
+      const headers = this.req.headers
+      if (!headers['authorization']) {
+        headers.authorization = `GNAP ${testAccessToken}`
+      }
       return Axios.get(`http://localhost:${app.getPort()}${path}`, {
-        headers: this.req.headers
+        headers
       }).then((res) => res.data)
     })
     .persist()
