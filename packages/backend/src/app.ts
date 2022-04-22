@@ -140,8 +140,8 @@ export class App {
         }
       }
     )
-    await this._setupRoutes()
     this._setupGraphql()
+    await this._setupRoutes()
 
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
