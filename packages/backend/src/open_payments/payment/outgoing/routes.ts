@@ -16,6 +16,7 @@ interface ServiceDependencies {
 export interface OutgoingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
+  list(ctx: AppContext): Promise<void>
 }
 
 export function createOutgoingPaymentRoutes(
@@ -27,7 +28,8 @@ export function createOutgoingPaymentRoutes(
   const deps = { ...deps_, logger }
   return {
     get: (ctx: AppContext) => getOutgoingPayment(deps, ctx),
-    create: (ctx: AppContext) => createOutgoingPayment(deps, ctx)
+    create: (ctx: AppContext) => createOutgoingPayment(deps, ctx),
+    list: (ctx: AppContext) => listOutgoingPayments(deps, ctx)
   }
 }
 
@@ -114,6 +116,55 @@ async function createOutgoingPayment(
   ctx.status = 201
   const res = outgoingPaymentToBody(deps, paymentOrErr)
   ctx.body = res
+}
+
+async function listOutgoingPayments(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  const acceptJSON = ctx.accepts('application/json')
+  ctx.assert(acceptJSON, 406, 'must accept json')
+  const { accountId } = ctx.params
+  ctx.assert(validateId(accountId), 400, 'invalid account id')
+  const { first, last, cursor } = ctx.request.query
+  if (
+    (first !== undefined && isNaN(Number(first))) ||
+    (last !== undefined && isNaN(Number(last))) ||
+    (first && last) ||
+    (last && !cursor) ||
+    (typeof cursor !== 'string' && cursor !== undefined)
+  )
+    ctx.throw(400, 'invalid pagination paramters')
+  const paginationParams = first
+    ? {
+        first: Number(first)
+      }
+    : last
+    ? { last: Number(last) }
+    : {}
+  if (cursor) {
+    ctx.assert(validateId(cursor), 400, 'invalid cursor')
+    if (paginationParams.first) paginationParams['after'] = cursor
+    if (paginationParams.last) paginationParams['before'] = cursor
+  }
+  const outgoingPayments = await deps.outgoingPaymentService.getAccountPage(
+    accountId,
+    paginationParams
+  )
+  const result = outgoingPayments.map((element) => {
+    return outgoingPaymentToBody(deps, element)
+  })
+  const pagination = {
+    startCursor: outgoingPayments[0].id,
+    endCursor: outgoingPayments[outgoingPayments.length - 1].id
+  }
+  if (paginationParams.last) {
+    pagination['last'] = outgoingPayments.length
+  } else {
+    pagination['first'] = outgoingPayments.length
+  }
+
+  ctx.body = { pagination, result }
 }
 
 function outgoingPaymentToBody(

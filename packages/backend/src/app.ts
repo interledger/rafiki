@@ -281,6 +281,10 @@ export class App {
       '/:accountId/outgoing-payments/:outgoingPaymentId',
       outgoingPaymentRoutes.get
     )
+    this.publicRouter.get(
+      '/:accountId/outgoing-payments',
+      outgoingPaymentRoutes.list
+    )
     this.publicRouter.post(
       '/:accountId/outgoing-payments',
       outgoingPaymentRoutes.create

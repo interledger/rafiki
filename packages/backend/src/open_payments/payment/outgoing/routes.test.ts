@@ -17,7 +17,7 @@ import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { OutgoingPaymentService, CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
-import { OutgoingPaymentState } from './model'
+import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes } from './routes'
 import { Amount } from '../amount'
 import { AppContext } from '../../../app'
@@ -49,6 +49,23 @@ describe('Outgoing Payment Routes', (): void => {
     value: BigInt(56),
     assetCode: asset.code,
     assetScale: asset.scale
+  }
+
+  const setup = (
+    reqOpts: httpMocks.RequestOptions,
+    params: Record<string, unknown>
+  ): AppContext => {
+    const ctx = createContext(
+      {
+        headers: Object.assign(
+          { Accept: 'application/json', 'Content-Type': 'application/json' },
+          reqOpts.headers
+        )
+      },
+      params
+    )
+    if (reqOpts.query) ctx.request.query = reqOpts.query
+    return ctx
   }
 
   beforeAll(
@@ -476,5 +493,116 @@ describe('Outgoing Payment Routes', (): void => {
         })
       })
     })
+  })
+
+  describe('list', (): void => {
+    let outgoingPayments: OutgoingPayment[]
+    let result: Record<string, unknown>[]
+
+    beforeEach(
+      async (): Promise<void> => {
+        outgoingPayments = []
+        for (let i = 0; i < 3; i++) {
+          const op = (await outgoingPaymentService.create({
+            accountId,
+            receivingAccount: receivingAccount,
+            sendAmount,
+            description: `p${i}`
+          })) as OutgoingPayment
+          outgoingPayments.push(op)
+        }
+        result = [0, 1, 2].map((i) => {
+          return {
+            id: `${accountUrl}/outgoing-payments/${outgoingPayments[i].id}`,
+            accountId: accountUrl,
+            receivingAccount,
+            sendAmount: {
+              ...sendAmount,
+              value: sendAmount.value.toString()
+            },
+            state: 'pending',
+            description: outgoingPayments[i].description,
+            receivingPayment: undefined,
+            receiveAmount: undefined,
+            externalRef: undefined
+          }
+        })
+      }
+    )
+    test.each`
+      id              | headers                     | first           | last            | cursor          | status | message                           | description
+      ${'not_a_uuid'} | ${null}                     | ${'10'}         | ${null}         | ${null}         | ${400} | ${'invalid account id'}           | ${'invalid account id'}
+      ${null}         | ${{ Accept: 'text/plain' }} | ${'10'}         | ${null}         | ${null}         | ${406} | ${'must accept json'}             | ${'invalid Accept header'}
+      ${null}         | ${null}                     | ${['10', '20']} | ${null}         | ${null}         | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${null}         | ${['10', '20']} | ${null}         | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${'hello'}      | ${null}         | ${null}         | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${null}         | ${null}         | ${['a', 'b']}   | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${'10'}         | ${'10'}         | ${null}         | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${null}         | ${'10'}         | ${undefined}    | ${400} | ${'invalid pagination paramters'} | ${'invalid pagination paramters'}
+      ${null}         | ${null}                     | ${null}         | ${null}         | ${'not_a_uuid'} | ${400} | ${'invalid cursor'}               | ${'invalid cursor'}
+    `(
+      'returns $status on $description',
+      async ({
+        id,
+        headers,
+        first,
+        last,
+        cursor,
+        status,
+        message
+      }): Promise<void> => {
+        const params = id ? { accountId: id } : { accountId }
+        const query = {
+          cursor: cursor === null ? outgoingPayments[0].id : cursor
+        }
+        if (first) query['first'] = first
+        if (last) query['last'] = last
+        const ctx = setup({ headers, query }, params)
+        await expect(outgoingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+          status,
+          message
+        })
+      }
+    )
+
+    test.each`
+      first   | last    | cursorIndex | pagination      | startIndex | endIndex | description
+      ${null} | ${null} | ${-1}       | ${{ first: 3 }} | ${0}       | ${2}     | ${'no pagination parameters'}
+      ${'10'} | ${null} | ${-1}       | ${{ first: 3 }} | ${0}       | ${2}     | ${'only `first`'}
+      ${'10'} | ${null} | ${0}        | ${{ first: 2 }} | ${1}       | ${2}     | ${'`first` plus `cursor`'}
+      ${null} | ${'10'} | ${2}        | ${{ last: 2 }}  | ${0}       | ${1}     | ${'`last` plus `cursor`'}
+    `(
+      'returns 200 on $description',
+      async ({
+        first,
+        last,
+        cursorIndex,
+        pagination,
+        startIndex,
+        endIndex
+      }): Promise<void> => {
+        const cursor = outgoingPayments[cursorIndex]
+          ? outgoingPayments[cursorIndex].id
+          : undefined
+        const ctx = setup(
+          {
+            headers: { Accept: 'application/json' },
+            query: { first, last, cursor }
+          },
+          { accountId }
+        )
+        pagination['startCursor'] = outgoingPayments[startIndex].id
+        pagination['endCursor'] = outgoingPayments[endIndex].id
+        await expect(outgoingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
+        expect(ctx.status).toBe(200)
+        expect(ctx.response.get('Content-Type')).toBe(
+          'application/json; charset=utf-8'
+        )
+        expect(ctx.body).toEqual({
+          pagination,
+          result: result.slice(startIndex, endIndex + 1)
+        })
+      }
+    )
   })
 })
