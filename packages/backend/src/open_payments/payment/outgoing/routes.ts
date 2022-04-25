@@ -134,7 +134,7 @@ async function listOutgoingPayments(
     (last && !cursor) ||
     (typeof cursor !== 'string' && cursor !== undefined)
   )
-    ctx.throw(400, 'invalid pagination paramters')
+    ctx.throw(400, 'invalid pagination parameters')
   const paginationParams = first
     ? {
         first: Number(first)
