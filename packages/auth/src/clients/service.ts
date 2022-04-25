@@ -111,7 +111,7 @@ async function validateClientWithRegistry(
   if (keyRegistries.length > 0 && !keyRegistries.includes(kidUrl.origin))
     return false
 
-  const registryData = await Axios.get(jwk.kid as string)
+  const registryData = await Axios.get(jwk.kid)
     .then((res) => res.data)
     .catch((err) => {
       logger.error(
@@ -132,7 +132,7 @@ async function validateClientWithRegistry(
 
 function verifyClientDisplay(
   displayInfo: DisplayInfo,
-  registryClientInfo
+  registryClientInfo: DisplayInfo
 ): boolean {
   return (
     displayInfo.name === registryClientInfo.name &&
