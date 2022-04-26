@@ -27,4 +27,5 @@ export class AccessToken extends BaseModel {
   public type!: string
   public managementId!: string
   public actions!: Actions[]
+  public expiresIn: number
 }
