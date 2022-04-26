@@ -4487,7 +4487,7 @@ __metadata:
     "@types/koa__router": ^8.0.11
     "@types/pino": ^7.0.5
     "@types/uuid": ^8.3.0
-    knex: ^0.21.17
+    knex: ^0.21.15
     koa: ^2.13.4
     koa-bodyparser: ^4.3.0
     objection: ^2.2.15
@@ -9972,6 +9972,45 @@ __metadata:
   version: 3.0.3
   resolution: "kleur@npm:3.0.3"
   checksum: df82cd1e172f957bae9c536286265a5cdbd5eeca487cb0a3b2a7b41ef959fc61f8e7c0e9aeea9c114ccf2c166b6a8dd45a46fd619c1c569d210ecd2765ad5169
+  languageName: node
+  linkType: hard
+
+"knex@npm:^0.21.15":
+  version: 0.21.21
+  resolution: "knex@npm:0.21.21"
+  dependencies:
+    colorette: 1.2.1
+    commander: ^6.2.0
+    debug: 4.3.1
+    esm: ^3.2.25
+    getopts: 2.2.5
+    interpret: ^2.2.0
+    liftoff: 3.1.0
+    lodash: ^4.17.20
+    pg-connection-string: 2.4.0
+    tarn: ^3.0.1
+    tildify: 2.0.0
+    v8flags: ^3.2.0
+  peerDependencies:
+    mssql: ^6.2.1
+    mysql: ^2.18.1
+    mysql2: ^2.1.0
+    pg: ^8.3.0
+    sqlite3: ^5.0.0
+  peerDependenciesMeta:
+    mssql:
+      optional: true
+    mysql:
+      optional: true
+    mysql2:
+      optional: true
+    pg:
+      optional: true
+    sqlite3:
+      optional: true
+  bin:
+    knex: bin/cli.js
+  checksum: 6215f5bf4dfdce7f18a1d588444bc1a2ef7ff07bb4460bbb6a6deea99d94afe89bc491fa5f27404b8bad3b85eb5e618461c2fb0acdf4a0ec45c6e0b94d4b419d
   languageName: node
   linkType: hard
 

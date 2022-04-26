@@ -14,7 +14,7 @@
     "@adonisjs/fold": "^8.1.0",
     "@koa/cors": "^3.1.0",
     "@koa/router": "^10.0.0",
-    "knex": "^0.21.17",
+    "knex": "^0.21.15",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "objection": "^2.2.15",

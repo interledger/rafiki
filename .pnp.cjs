@@ -6169,7 +6169,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/koa__router", "npm:8.0.11"],
             ["@types/pino", "npm:7.0.5"],
             ["@types/uuid", "npm:8.3.0"],
-            ["knex", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.19"],
+            ["knex", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.21"],
             ["koa", "npm:2.13.4"],
             ["koa-bodyparser", "npm:4.3.0"],
             ["objection", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:2.2.15"],
@@ -6465,14 +6465,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ilp-protocol-stream", "npm:2.7.0"],
             ["ioredis", "npm:4.26.0"],
             ["iso8601-duration", "npm:1.3.0"],
-            ["knex", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.19"],
+            ["knex", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:0.21.19"],
             ["koa", "npm:2.13.1"],
             ["koa-bodyparser", "npm:4.3.0"],
             ["lodash", "npm:4.17.21"],
             ["nock", "npm:13.1.0"],
             ["node-mocks-http", "npm:1.10.1"],
-            ["objection", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:2.2.15"],
-            ["objection-db-errors", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:1.1.2"],
+            ["objection", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.2.15"],
+            ["objection-db-errors", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.1.2"],
             ["oer-utils", "npm:5.1.2"],
             ["pg", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:8.6.0"],
             ["pino", "npm:6.11.3"],
@@ -7972,10 +7972,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],
           "linkType": "HARD",
         }],
-        ["virtual:d66d39f83c0ae0d9213f3d57cb9db5f278b2045483db795eb64d2ab7cc73d1a420d6a1202559d9db9d22b0aaa4b0000e24985461cb263f392575d1dc1f037718#npm:4.3.1", {
-          "packageLocation": "./.yarn/__virtual__/debug-virtual-1cc69544d8/0/cache/debug-npm-4.3.1-22e08d605e-2c3352e37d.zip/node_modules/debug/",
+        ["virtual:b61bcff485e9b24d7dcbabfb9b548287a8fdf916ba474ae386e0f4b60f98f3d72240e2866856adb0389304c3a8ae0cfa7f2558902d4c0926150bb558b5a97755#npm:4.3.1", {
+          "packageLocation": "./.yarn/__virtual__/debug-virtual-d92ecbf0fa/0/cache/debug-npm-4.3.1-22e08d605e-2c3352e37d.zip/node_modules/debug/",
           "packageDependencies": [
-            ["debug", "virtual:d66d39f83c0ae0d9213f3d57cb9db5f278b2045483db795eb64d2ab7cc73d1a420d6a1202559d9db9d22b0aaa4b0000e24985461cb263f392575d1dc1f037718#npm:4.3.1"],
+            ["debug", "virtual:b61bcff485e9b24d7dcbabfb9b548287a8fdf916ba474ae386e0f4b60f98f3d72240e2866856adb0389304c3a8ae0cfa7f2558902d4c0926150bb558b5a97755#npm:4.3.1"],
             ["ms", "npm:2.1.2"],
             ["supports-color", null]
           ],
@@ -12480,10 +12480,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],
           "linkType": "SOFT",
         }],
-        ["virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.19", {
-          "packageLocation": "./.yarn/__virtual__/knex-virtual-d66d39f83c/0/cache/knex-npm-0.21.19-3354b71e87-bf496d83ff.zip/node_modules/knex/",
+        ["npm:0.21.21", {
+          "packageLocation": "./.yarn/cache/knex-npm-0.21.21-0f09d288e0-6215f5bf4d.zip/node_modules/knex/",
           "packageDependencies": [
-            ["knex", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.19"],
+            ["knex", "npm:0.21.21"]
+          ],
+          "linkType": "SOFT",
+        }],
+        ["virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.21", {
+          "packageLocation": "./.yarn/__virtual__/knex-virtual-b61bcff485/0/cache/knex-npm-0.21.21-0f09d288e0-6215f5bf4d.zip/node_modules/knex/",
+          "packageDependencies": [
+            ["knex", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.21"],
             ["@types/mssql", null],
             ["@types/mysql", null],
             ["@types/mysql2", null],
@@ -12491,7 +12498,48 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/sqlite3", null],
             ["colorette", "npm:1.2.1"],
             ["commander", "npm:6.2.1"],
-            ["debug", "virtual:d66d39f83c0ae0d9213f3d57cb9db5f278b2045483db795eb64d2ab7cc73d1a420d6a1202559d9db9d22b0aaa4b0000e24985461cb263f392575d1dc1f037718#npm:4.3.1"],
+            ["debug", "virtual:b61bcff485e9b24d7dcbabfb9b548287a8fdf916ba474ae386e0f4b60f98f3d72240e2866856adb0389304c3a8ae0cfa7f2558902d4c0926150bb558b5a97755#npm:4.3.1"],
+            ["esm", "npm:3.2.25"],
+            ["getopts", "npm:2.2.5"],
+            ["interpret", "npm:2.2.0"],
+            ["liftoff", "npm:3.1.0"],
+            ["lodash", "npm:4.17.21"],
+            ["mssql", null],
+            ["mysql", null],
+            ["mysql2", null],
+            ["pg", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:8.6.0"],
+            ["pg-connection-string", "npm:2.4.0"],
+            ["sqlite3", null],
+            ["tarn", "npm:3.0.1"],
+            ["tildify", "npm:2.0.0"],
+            ["v8flags", "npm:3.2.0"]
+          ],
+          "packagePeers": [
+            "@types/mssql",
+            "@types/mysql2",
+            "@types/mysql",
+            "@types/pg",
+            "@types/sqlite3",
+            "mssql",
+            "mysql2",
+            "mysql",
+            "pg",
+            "sqlite3"
+          ],
+          "linkType": "HARD",
+        }],
+        ["virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:0.21.19", {
+          "packageLocation": "./.yarn/__virtual__/knex-virtual-e149e40111/0/cache/knex-npm-0.21.19-3354b71e87-bf496d83ff.zip/node_modules/knex/",
+          "packageDependencies": [
+            ["knex", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:0.21.19"],
+            ["@types/mssql", null],
+            ["@types/mysql", null],
+            ["@types/mysql2", null],
+            ["@types/pg", null],
+            ["@types/sqlite3", null],
+            ["colorette", "npm:1.2.1"],
+            ["commander", "npm:6.2.1"],
+            ["debug", "virtual:b61bcff485e9b24d7dcbabfb9b548287a8fdf916ba474ae386e0f4b60f98f3d72240e2866856adb0389304c3a8ae0cfa7f2558902d4c0926150bb558b5a97755#npm:4.3.1"],
             ["esm", "npm:3.2.25"],
             ["getopts", "npm:2.2.5"],
             ["interpret", "npm:2.2.0"],
@@ -14125,7 +14173,22 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/knex", null],
             ["ajv", "npm:6.12.6"],
             ["db-errors", "npm:0.2.3"],
-            ["knex", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.19"]
+            ["knex", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.21"]
+          ],
+          "packagePeers": [
+            "@types/knex",
+            "knex"
+          ],
+          "linkType": "HARD",
+        }],
+        ["virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.2.15", {
+          "packageLocation": "./.yarn/__virtual__/objection-virtual-c6f3829caa/0/cache/objection-npm-2.2.15-83856128b0-ce22dbcc9f.zip/node_modules/objection/",
+          "packageDependencies": [
+            ["objection", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.2.15"],
+            ["@types/knex", null],
+            ["ajv", "npm:6.12.6"],
+            ["db-errors", "npm:0.2.3"],
+            ["knex", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:0.21.19"]
           ],
           "packagePeers": [
             "@types/knex",
@@ -14149,6 +14212,20 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/objection", null],
             ["db-errors", "npm:0.2.3"],
             ["objection", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:2.2.15"]
+          ],
+          "packagePeers": [
+            "@types/objection",
+            "objection"
+          ],
+          "linkType": "HARD",
+        }],
+        ["virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.1.2", {
+          "packageLocation": "./.yarn/__virtual__/objection-db-errors-virtual-1d4eae9303/0/cache/objection-db-errors-npm-1.1.2-2b1b4c226d-09bef4c3fa.zip/node_modules/objection-db-errors/",
+          "packageDependencies": [
+            ["objection-db-errors", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.1.2"],
+            ["@types/objection", null],
+            ["db-errors", "npm:0.2.3"],
+            ["objection", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.2.15"]
           ],
           "packagePeers": [
             "@types/objection",
