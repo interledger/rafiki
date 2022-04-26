@@ -115,11 +115,7 @@ async function createQuote(
     } else {
       setupOptions.destinationAccount = options.receivingAccount
       if (options.receiveAmount) {
-        setupOptions.amountToDeliver = {
-          value: options.receiveAmount.value,
-          assetCode: options.receiveAmount.assetCode,
-          assetScale: options.receiveAmount.assetScale
-        }
+        setupOptions.amountToDeliver = options.receiveAmount
       }
     }
     let destination: Pay.ResolvedPayment
