@@ -24,6 +24,9 @@ interface ClientInfo {
 interface JWKWithRequired extends JWK {
   kid: string
   x: string
+  alg: string
+  kty: string
+  crv: string
 }
 
 interface RegistryKey extends JWK {
@@ -79,9 +82,7 @@ async function verifySig(
 
 function validateRequiredJwkProperties(jwk: JWKWithRequired): boolean {
   if (
-    !jwk.kid ||
-    !jwk.x ||
-    jwk.kty !== 'OKP' ||
+    jwk.kty === 'OKP' ||
     !jwk.use ||
     jwk.use === 'sig' ||
     !jwk.key_ops ||
@@ -108,8 +109,7 @@ async function validateClientWithRegistry(
   if (!validateRequiredJwkProperties(jwk)) return false
 
   const kidUrl = new URL(jwk.kid)
-  if (keyRegistries.length > 0 && !keyRegistries.includes(kidUrl.origin))
-    return false
+  if (!keyRegistries.includes(kidUrl.origin)) return false
 
   const registryData = await Axios.get(jwk.kid)
     .then((res) => res.data)
@@ -124,9 +124,14 @@ async function validateClientWithRegistry(
       return false
     })
 
+  const { keys } = registryData
+  if (!keys.kid || !keys.x) {
+    return false
+  }
+
   return (
     verifyClientDisplay(clientInfo.display, registryData) &&
-    verifyJwk(jwk, registryData.keys)
+    verifyJwk(jwk, keys)
   )
 }
 
@@ -143,7 +148,7 @@ function verifyClientDisplay(
 function verifyJwk(jwk: JWKWithRequired, keys: RegistryKey): boolean {
   // TODO: update this to reflect eventual shape of response from registry
   return !!(
-    keys.revoked &&
+    !keys.revoked &&
     keys.exp &&
     new Date() > new Date(keys.exp) &&
     keys.nbf &&
