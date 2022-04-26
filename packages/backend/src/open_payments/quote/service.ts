@@ -161,7 +161,7 @@ async function createQuote(
       prices
     }
     assert.ok(quoteOptions.destination.destinationPaymentDetails)
-    const receivingPaymentAmount = destination.destinationPaymentDetails
+    const receivingPaymentValue = destination.destinationPaymentDetails
       .incomingAmount
       ? destination.destinationPaymentDetails.incomingAmount.value -
         destination.destinationPaymentDetails.receivedAmount.value
@@ -172,8 +172,8 @@ async function createQuote(
     } else if (options.receiveAmount) {
       if (options.receivingPayment) {
         quoteOptions.amountToDeliver = options.receiveAmount.value
-        if (receivingPaymentAmount) {
-          if (receivingPaymentAmount < options.receiveAmount.value) {
+        if (receivingPaymentValue) {
+          if (receivingPaymentValue < options.receiveAmount.value) {
             throw QuoteError.InvalidAmount
           }
           quoteOptions.destination.destinationPaymentDetails.incomingAmount = undefined
@@ -247,7 +247,7 @@ async function createQuote(
         },
         pendingQuote,
         ilpQuote.paymentType,
-        receivingPaymentAmount
+        receivingPaymentValue
       )
       return quote
     })
@@ -267,7 +267,7 @@ export async function finalizeQuote(
   deps: ServiceDependencies,
   quote: Quote,
   paymentType: Pay.PaymentType,
-  receivingPaymentAmount?: bigint
+  receivingPaymentValue?: bigint
 ): Promise<Quote> {
   const requestHeaders = {
     Accept: 'application/json',
@@ -311,10 +311,7 @@ export async function finalizeQuote(
     ) {
       throw QuoteError.InvalidAmount
     }
-    if (
-      receivingPaymentAmount &&
-      receivingPaymentAmount < receiveAmount.value
-    ) {
+    if (receivingPaymentValue && receivingPaymentValue < receiveAmount.value) {
       throw QuoteError.InvalidAmount
     }
   } else {
