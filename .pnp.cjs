@@ -6167,6 +6167,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/koa-bodyparser", "npm:4.3.7"],
             ["@types/koa__cors", "npm:3.1.1"],
             ["@types/koa__router", "npm:8.0.11"],
+            ["@types/nock", "npm:11.1.0"],
             ["@types/pino", "npm:7.0.5"],
             ["@types/uuid", "npm:8.3.0"],
             ["axios", "npm:0.26.1"],
@@ -6174,6 +6175,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["knex", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.19"],
             ["koa", "npm:2.13.4"],
             ["koa-bodyparser", "npm:4.3.0"],
+            ["nock", "npm:13.2.4"],
             ["objection", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:2.2.15"],
             ["objection-db-errors", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:1.1.2"],
             ["pg", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:8.6.0"],
@@ -13758,6 +13760,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/nock-npm-13.1.0-51764cfbd0-7176c55c54.zip/node_modules/nock/",
           "packageDependencies": [
             ["nock", "npm:13.1.0"],
+            ["debug", "virtual:901e1408cc8bfef5550e648cc3ee4f1ec6e307e3f5baab3ad60f0ba461a3df0a2fb4207ed57f6ec68edeacbb88063dcc84f3c35bb45638ba421a021eb350b42b#npm:4.3.2"],
+            ["json-stringify-safe", "npm:5.0.1"],
+            ["lodash.set", "npm:4.3.2"],
+            ["propagate", "npm:2.0.1"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:13.2.4", {
+          "packageLocation": "./.yarn/cache/nock-npm-13.2.4-f1ad2d6861-2750a82ea2.zip/node_modules/nock/",
+          "packageDependencies": [
+            ["nock", "npm:13.2.4"],
             ["debug", "virtual:901e1408cc8bfef5550e648cc3ee4f1ec6e307e3f5baab3ad60f0ba461a3df0a2fb4207ed57f6ec68edeacbb88063dcc84f3c35bb45638ba421a021eb350b42b#npm:4.3.2"],
             ["json-stringify-safe", "npm:5.0.1"],
             ["lodash.set", "npm:4.3.2"],

@@ -4485,6 +4485,7 @@ __metadata:
     "@types/koa-bodyparser": ^4.3.7
     "@types/koa__cors": ^3.1.1
     "@types/koa__router": ^8.0.11
+    "@types/nock": ^11.1.0
     "@types/pino": ^7.0.5
     "@types/uuid": ^8.3.0
     axios: ^0.26.1
@@ -4492,6 +4493,7 @@ __metadata:
     knex: ^0.21.17
     koa: ^2.13.4
     koa-bodyparser: ^4.3.0
+    nock: ^13.2.4
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
     pg: ^8.6.0
@@ -11098,6 +11100,18 @@ __metadata:
     lodash.set: ^4.3.2
     propagate: ^2.0.0
   checksum: 7176c55c5445d0f5642d1cc94f0dc5b205e495d49acfcc3e671ab892b79525055b042838aaa61e9b8469f3309fdb4f38aa9f16b0c50f66b1eee629a286b8ec08
+  languageName: node
+  linkType: hard
+
+"nock@npm:^13.2.4":
+  version: 13.2.4
+  resolution: "nock@npm:13.2.4"
+  dependencies:
+    debug: ^4.1.0
+    json-stringify-safe: ^5.0.1
+    lodash.set: ^4.3.2
+    propagate: ^2.0.0
+  checksum: 2750a82ea22eebd8203eb1d7669ae09c3daae1fd573026372bad2515adad48d723a804f647bd45d7a499eb3a9a632560da406bde05bca9df762d3027db9099b5
   languageName: node
   linkType: hard
 
