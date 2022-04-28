@@ -59,7 +59,7 @@ describe('Client Service', (): void => {
         expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
         nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
-          .reply({
+          .reply(200, {
             display: TEST_CLIENT_DISPLAY,
             keys: {
               ...TEST_CLIENT_KEY,
@@ -82,7 +82,7 @@ describe('Client Service', (): void => {
         expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
         nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
-          .reply({
+          .reply(200, {
             display: {
               name: 'Wrong Client',
               uri: 'https://example.com'
@@ -108,7 +108,7 @@ describe('Client Service', (): void => {
         expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
         nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
-          .reply({
+          .reply(200, {
             display: {
               name: 'Test Client',
               uri: 'https://example.com/wrong'
@@ -135,7 +135,7 @@ describe('Client Service', (): void => {
       futureDate.setTime(futureDate.getTime() + 1000 * 60 * 60)
       nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
-        .reply({
+        .reply(200, {
           display: TEST_CLIENT_DISPLAY,
           keys: {
             ...TEST_CLIENT_KEY,
@@ -217,7 +217,7 @@ describe('Client Service', (): void => {
       futureDate.setTime(futureDate.getTime() + 1000 * 60 * 60)
       nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
-        .reply({
+        .reply(200, {
           display: TEST_CLIENT_DISPLAY,
           keys: {
             ...TEST_CLIENT_KEY,
@@ -240,7 +240,7 @@ describe('Client Service', (): void => {
       expDate.setTime(expDate.getTime() - 1000 * 60 * 60)
       nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
-        .reply({
+        .reply(200, {
           display: TEST_CLIENT_DISPLAY,
           keys: {
             ...TEST_CLIENT_KEY,
@@ -263,7 +263,7 @@ describe('Client Service', (): void => {
       expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
       nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
-        .reply({
+        .reply(200, {
           display: TEST_CLIENT_DISPLAY,
           keys: {
             ...TEST_CLIENT_KEY,
