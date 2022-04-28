@@ -4561,6 +4561,7 @@ __metadata:
     koa: ^2.13.4
     koa-bodyparser: ^4.3.0
     nock: ^13.2.4
+    node-mocks-http: ^1.11.0
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
     pg: ^8.6.0
@@ -5736,6 +5737,15 @@ __metadata:
   dependencies:
     safe-buffer: 5.1.2
   checksum: 95bf164c0b0b8199d3f44b7631e51b37f683c6a90b9baa4315bd3d405a6d1bc81b7346f0981046aa004331fb3d7a28b629514d01fc209a5251573fc7e4d33380
+  languageName: node
+  linkType: hard
+
+"content-disposition@npm:^0.5.3":
+  version: 0.5.4
+  resolution: "content-disposition@npm:0.5.4"
+  dependencies:
+    safe-buffer: 5.2.1
+  checksum: afb9d545e296a5171d7574fcad634b2fdf698875f4006a9dd04a3e1333880c5c0c98d47b560d01216fb6505a54a2ba6a843ee3a02ec86d7e911e8315255f56c3
   languageName: node
   linkType: hard
 
@@ -11301,6 +11311,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-mocks-http@npm:^1.11.0":
+  version: 1.11.0
+  resolution: "node-mocks-http@npm:1.11.0"
+  dependencies:
+    accepts: ^1.3.7
+    content-disposition: ^0.5.3
+    depd: ^1.1.0
+    fresh: ^0.5.2
+    merge-descriptors: ^1.0.1
+    methods: ^1.1.2
+    mime: ^1.3.4
+    parseurl: ^1.3.3
+    range-parser: ^1.2.0
+    type-is: ^1.6.18
+  checksum: 35db122e59d29ee1977002a7fbc5d60523db3aa6b01e5faef65c96440bd2371e59b78bca90c9d2a07d22c8f488d90b5f1546c2baf284aeaed6e2d84101b8dc97
+  languageName: node
+  linkType: hard
+
 "node-modules-regexp@npm:^1.0.0":
   version: 1.0.0
   resolution: "node-modules-regexp@npm:1.0.0"
@@ -13225,7 +13253,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"safe-buffer@npm:^5.0.1, safe-buffer@npm:^5.1.2, safe-buffer@npm:~5.2.0":
+"safe-buffer@npm:5.2.1, safe-buffer@npm:^5.0.1, safe-buffer@npm:^5.1.2, safe-buffer@npm:~5.2.0":
   version: 5.2.1
   resolution: "safe-buffer@npm:5.2.1"
   checksum: b99c4b41fdd67a6aaf280fcd05e9ffb0813654894223afb78a31f14a19ad220bba8aba1cb14eddce1fcfb037155fe6de4e861784eb434f7d11ed58d1e70dd491
