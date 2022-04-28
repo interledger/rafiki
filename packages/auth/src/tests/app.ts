@@ -10,7 +10,6 @@ export interface TestContainer {
   port: number
   app: App
   knex: Knex
-  apolloClient: ApolloClient<NormalizedCacheObject>
   connectionUrl: string
   shutdown: () => Promise<void>
 }
