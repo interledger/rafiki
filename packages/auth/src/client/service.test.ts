@@ -1,5 +1,6 @@
 import nock from 'nock'
 import { createTestApp, TestContainer } from '../tests/app'
+import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
