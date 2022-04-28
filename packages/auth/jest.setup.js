@@ -20,7 +20,7 @@ module.exports = async (globalConfig) => {
 
     process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
       POSTGRES_PORT
-    )}/testing`
+    )}/auth_testing`
 
     global.__BACKEND_POSTGRES__ = postgresContainer
   }
@@ -48,10 +48,12 @@ module.exports = async (globalConfig) => {
   })
 
   for (let i = 1; i <= workers; i++) {
-    const workerDatabaseName = `testing_${i}`
+    const workerDatabaseName = `auth_testing_${i}`
 
     await knex.raw(`DROP DATABASE IF EXISTS ${workerDatabaseName}`)
-    await knex.raw(`CREATE DATABASE ${workerDatabaseName} TEMPLATE testing`)
+    await knex.raw(
+      `CREATE DATABASE ${workerDatabaseName} TEMPLATE auth_testing`
+    )
   }
 
   global.__BACKEND_KNEX__ = knex
