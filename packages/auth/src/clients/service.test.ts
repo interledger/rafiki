@@ -1,6 +1,7 @@
 import Knex from 'knex'
 import nock from 'nock'
 import { createTestApp, TestContainer } from '../tests/app'
+import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -70,8 +71,11 @@ describe('Client Service', (): void => {
           })
 
         const validClient = await clientService.validateClientWithRegistry({
-          display: TEST_CLIENT_KEY,
-          key: TEST_CLIENT_KEY
+          display: TEST_CLIENT_DISPLAY,
+          key: {
+            proof: 'httpsig',
+            jwk: TEST_CLIENT_KEY
+          }
         })
 
         expect(validClient).toEqual(true)
@@ -97,7 +101,10 @@ describe('Client Service', (): void => {
 
         const validClient = await clientService.validateClientWithRegistry({
           display: TEST_CLIENT_DISPLAY,
-          key: TEST_CLIENT_KEY
+          key: {
+            proof: 'httpsig',
+            jwk: TEST_CLIENT_KEY
+          }
         })
 
         expect(validClient).toEqual(false)
@@ -123,7 +130,10 @@ describe('Client Service', (): void => {
 
         const validClient = await clientService.validateClientWithRegistry({
           display: TEST_CLIENT_DISPLAY,
-          key: TEST_CLIENT_KEY
+          key: {
+            proof: 'httpsig',
+            jwk: TEST_CLIENT_KEY
+          }
         })
 
         expect(validClient).toEqual(false)
@@ -149,8 +159,11 @@ describe('Client Service', (): void => {
       const validClientKid = await clientService.validateClientWithRegistry({
         display: TEST_CLIENT_DISPLAY,
         key: {
-          ...TEST_CLIENT_KEY,
-          kid: 'https://openpayments.network/wrong'
+          proof: 'httpsig',
+          jwk: {
+            ...TEST_CLIENT_KEY,
+            kid: 'https://openpayments.network/wrong'
+          }
         }
       })
 
@@ -160,8 +173,11 @@ describe('Client Service', (): void => {
       const validClientKty = await clientService.validateClientWithRegistry({
         display: TEST_CLIENT_DISPLAY,
         key: {
-          ...TEST_CLIENT_KEY,
-          kty: 'EC'
+          proof: 'httpsig',
+          jwk: {
+            ...TEST_CLIENT_KEY,
+            kty: 'EC'
+          }
         }
       })
 
@@ -171,8 +187,11 @@ describe('Client Service', (): void => {
       const validClientKeyOps = await clientService.validateClientWithRegistry({
         display: TEST_CLIENT_DISPLAY,
         key: {
-          ...TEST_CLIENT_KEY,
-          key_ops: ['wrapKey']
+          proof: 'httpsig',
+          jwk: {
+            ...TEST_CLIENT_KEY,
+            key_ops: ['wrapKey']
+          }
         }
       })
 
@@ -182,8 +201,11 @@ describe('Client Service', (): void => {
       const validClientX = await clientService.validateClientWithRegistry({
         display: TEST_CLIENT_DISPLAY,
         key: {
-          ...TEST_CLIENT_KEY,
-          x: 'wrong public key'
+          proof: 'httpsig',
+          jwk: {
+            ...TEST_CLIENT_KEY,
+            x: 'wrong public key'
+          }
         }
       })
 
@@ -193,8 +215,11 @@ describe('Client Service', (): void => {
       const validClientAlg = await clientService.validateClientWithRegistry({
         display: TEST_CLIENT_DISPLAY,
         key: {
-          ...TEST_CLIENT_KEY,
-          alg: 'RS256'
+          proof: 'httpsig',
+          jwk: {
+            ...TEST_CLIENT_KEY,
+            alg: 'RS256'
+          }
         }
       })
 
@@ -204,8 +229,11 @@ describe('Client Service', (): void => {
       const validClientCrv = await clientService.validateClientWithRegistry({
         display: TEST_CLIENT_DISPLAY,
         key: {
-          ...TEST_CLIENT_KEY,
-          crv: 'P-256'
+          proof: 'httpsig',
+          jwk: {
+            ...TEST_CLIENT_KEY,
+            crv: 'P-256'
+          }
         }
       })
 
@@ -229,7 +257,10 @@ describe('Client Service', (): void => {
 
       const validKeyKid = await clientService.validateClientWithRegistry({
         display: TEST_CLIENT_DISPLAY,
-        key: TEST_CLIENT_KEY
+        key: {
+          proof: 'httpsig',
+          jwk: TEST_CLIENT_KEY
+        }
       })
 
       expect(validKeyKid).toEqual(false)
@@ -252,7 +283,10 @@ describe('Client Service', (): void => {
 
       const validClient = await clientService.validateClientWithRegistry({
         display: TEST_CLIENT_DISPLAY,
-        key: TEST_CLIENT_KEY
+        key: {
+          proof: 'httpsig',
+          jwk: TEST_CLIENT_KEY
+        }
       })
 
       expect(validClient).toEqual(false)
@@ -275,7 +309,10 @@ describe('Client Service', (): void => {
 
       const validClient = await clientService.validateClientWithRegistry({
         display: TEST_CLIENT_DISPLAY,
-        key: TEST_CLIENT_KEY
+        key: {
+          proof: 'httpsig',
+          jwk: TEST_CLIENT_KEY
+        }
       })
 
       expect(validClient).toEqual(false)
