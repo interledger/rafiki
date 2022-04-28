@@ -1760,6 +1760,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["@balena/dockerignore", [
+        ["npm:1.0.2", {
+          "packageLocation": "./.yarn/cache/@balena-dockerignore-npm-1.0.2-1128560642-0d39f8fbcf.zip/node_modules/@balena/dockerignore/",
+          "packageDependencies": [
+            ["@balena/dockerignore", "npm:1.0.2"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["@bcoe/v8-coverage", [
         ["npm:0.2.3", {
           "packageLocation": "./.yarn/cache/@bcoe-v8-coverage-npm-0.2.3-9e27b3c57e-850f930553.zip/node_modules/@bcoe/v8-coverage/",
@@ -3826,6 +3835,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/glob", "npm:7.1.3"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:5.3.1", {
+          "packageLocation": "./.yarn/cache/@types-archiver-npm-5.3.1-b9e2fa26fb-1c6babc7f5.zip/node_modules/@types/archiver/",
+          "packageDependencies": [
+            ["@types/archiver", "npm:5.3.1"],
+            ["@types/glob", "npm:7.1.3"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["@types/babel__core", [
@@ -3991,6 +4008,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-dockerode-npm-3.2.7-34e2652248-bbfbe4bb26.zip/node_modules/@types/dockerode/",
           "packageDependencies": [
             ["@types/dockerode", "npm:3.2.7"],
+            ["@types/docker-modem", "npm:3.0.1"],
+            ["@types/node", "npm:14.14.39"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:3.3.8", {
+          "packageLocation": "./.yarn/cache/@types-dockerode-npm-3.3.8-b3ced02ce7-3eebbe2c3e.zip/node_modules/@types/dockerode/",
+          "packageDependencies": [
+            ["@types/dockerode", "npm:3.3.8"],
             ["@types/docker-modem", "npm:3.0.1"],
             ["@types/node", "npm:14.14.39"]
           ],
@@ -4649,6 +4675,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-ssh2-npm-0.5.48-f50478d0cb-b1b62f0651.zip/node_modules/@types/ssh2/",
           "packageDependencies": [
             ["@types/ssh2", "npm:0.5.48"],
+            ["@types/node", "npm:14.14.39"],
+            ["@types/ssh2-streams", "npm:0.1.8"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:0.5.52", {
+          "packageLocation": "./.yarn/cache/@types-ssh2-npm-0.5.52-db874bb656-bc1c76ac72.zip/node_modules/@types/ssh2/",
+          "packageDependencies": [
+            ["@types/ssh2", "npm:0.5.52"],
             ["@types/node", "npm:14.14.39"],
             ["@types/ssh2-streams", "npm:0.1.8"]
           ],
@@ -5857,6 +5892,20 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["zip-stream", "npm:4.1.0"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:5.3.1", {
+          "packageLocation": "./.yarn/cache/archiver-npm-5.3.1-db84171f80-905b198ed0.zip/node_modules/archiver/",
+          "packageDependencies": [
+            ["archiver", "npm:5.3.1"],
+            ["archiver-utils", "npm:2.1.0"],
+            ["async", "npm:3.2.3"],
+            ["buffer-crc32", "npm:0.2.13"],
+            ["readable-stream", "npm:3.6.0"],
+            ["readdir-glob", "npm:1.1.1"],
+            ["tar-stream", "npm:2.2.0"],
+            ["zip-stream", "npm:4.1.0"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["archiver-utils", [
@@ -6071,6 +6120,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["safer-buffer", "npm:2.1.2"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:0.2.6", {
+          "packageLocation": "./.yarn/cache/asn1-npm-0.2.6-bdd07356c4-39f2ae343b.zip/node_modules/asn1/",
+          "packageDependencies": [
+            ["asn1", "npm:0.2.6"],
+            ["safer-buffer", "npm:2.1.2"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["assert-plus", [
@@ -6105,6 +6162,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/async-npm-3.2.0-b6fd825ddc-6739fae769.zip/node_modules/async/",
           "packageDependencies": [
             ["async", "npm:3.2.0"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:3.2.3", {
+          "packageLocation": "./.yarn/cache/async-npm-3.2.3-e9d6b79c88-c4bee57ab2.zip/node_modules/async/",
+          "packageDependencies": [
+            ["async", "npm:3.2.3"]
           ],
           "linkType": "HARD",
         }]
@@ -6181,6 +6245,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["pg", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:8.6.0"],
             ["pino", "npm:7.10.0"],
             ["pino-pretty", "npm:7.6.1"],
+            ["testcontainers", "npm:8.9.0"],
             ["typescript", "patch:typescript@npm%3A4.2.4#~builtin<compat/typescript>::version=4.2.4&hash=32657b"],
             ["uuid", "npm:8.3.2"]
           ],
@@ -6778,6 +6843,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/buffer-writer-npm-2.0.0-5cd2ef55bc-11736b48bb.zip/node_modules/buffer-writer/",
           "packageDependencies": [
             ["buffer-writer", "npm:2.0.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["buildcheck", [
+        ["npm:0.0.3", {
+          "packageLocation": "./.yarn/cache/buildcheck-npm-0.0.3-ac31c4ae43-baf30605c5.zip/node_modules/buildcheck/",
+          "packageDependencies": [
+            ["buildcheck", "npm:0.0.3"]
           ],
           "linkType": "HARD",
         }]
@@ -7671,6 +7745,18 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["cpu-features", [
+        ["npm:0.0.4", {
+          "packageLocation": "./.yarn/unplugged/cpu-features-npm-0.0.4-b474ef5da3/node_modules/cpu-features/",
+          "packageDependencies": [
+            ["cpu-features", "npm:0.0.4"],
+            ["buildcheck", "npm:0.0.3"],
+            ["nan", "npm:2.15.0"],
+            ["node-gyp", "npm:8.0.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["crc-32", [
         ["npm:1.2.0", {
           "packageLocation": "./.yarn/cache/crc-32-npm-1.2.0-e56bb85839-7bcde8bea2.zip/node_modules/crc-32/",
@@ -7936,6 +8022,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],
           "linkType": "SOFT",
         }],
+        ["npm:4.3.4", {
+          "packageLocation": "./.yarn/cache/debug-npm-4.3.4-4513954577-3dbad3f94e.zip/node_modules/debug/",
+          "packageDependencies": [
+            ["debug", "npm:4.3.4"]
+          ],
+          "linkType": "SOFT",
+        }],
         ["virtual:2bcc47d217f870e3d52f0e55493dc34fd3da852877f7db32fa2940cc320151746026495daf6a34a974488cf5a949d93be1e2dc1ffba036faf081a9b15fcd2252#npm:2.6.9", {
           "packageLocation": "./.yarn/__virtual__/debug-virtual-6cfa7ae8cd/0/cache/debug-npm-2.6.9-7d4cb597dc-d2f51589ca.zip/node_modules/debug/",
           "packageDependencies": [
@@ -7964,6 +8057,18 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/__virtual__/debug-virtual-56204c5ee4/0/cache/debug-npm-4.3.2-f0148b6afe-820ea160e2.zip/node_modules/debug/",
           "packageDependencies": [
             ["debug", "virtual:901e1408cc8bfef5550e648cc3ee4f1ec6e307e3f5baab3ad60f0ba461a3df0a2fb4207ed57f6ec68edeacbb88063dcc84f3c35bb45638ba421a021eb350b42b#npm:4.3.2"],
+            ["ms", "npm:2.1.2"],
+            ["supports-color", null]
+          ],
+          "packagePeers": [
+            "supports-color"
+          ],
+          "linkType": "HARD",
+        }],
+        ["virtual:aea510937a6d2056d16f4deb5bc809a99229024be975a13cd2f577629941fc1053d188da4a2954807e042e0e16381c5ca3da354a1d112ff17c3de220fb1b164c#npm:4.3.4", {
+          "packageLocation": "./.yarn/__virtual__/debug-virtual-2e489950f6/0/cache/debug-npm-4.3.4-4513954577-3dbad3f94e.zip/node_modules/debug/",
+          "packageDependencies": [
+            ["debug", "virtual:aea510937a6d2056d16f4deb5bc809a99229024be975a13cd2f577629941fc1053d188da4a2954807e042e0e16381c5ca3da354a1d112ff17c3de220fb1b164c#npm:4.3.4"],
             ["ms", "npm:2.1.2"],
             ["supports-color", null]
           ],
@@ -8310,6 +8415,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["yaml", "npm:1.10.2"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:0.23.17", {
+          "packageLocation": "./.yarn/cache/docker-compose-npm-0.23.17-7cb83a8cad-c308bf067c.zip/node_modules/docker-compose/",
+          "packageDependencies": [
+            ["docker-compose", "npm:0.23.17"],
+            ["yaml", "npm:1.10.2"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["docker-modem", [
@@ -8330,6 +8443,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/dockerode-npm-3.3.0-c5142c67ed-42e37da1da.zip/node_modules/dockerode/",
           "packageDependencies": [
             ["dockerode", "npm:3.3.0"],
+            ["docker-modem", "npm:3.0.0"],
+            ["tar-fs", "npm:2.0.1"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:3.3.1", {
+          "packageLocation": "./.yarn/cache/dockerode-npm-3.3.1-77efbe3384-930162ae2d.zip/node_modules/dockerode/",
+          "packageDependencies": [
+            ["dockerode", "npm:3.3.1"],
             ["docker-modem", "npm:3.0.0"],
             ["tar-fs", "npm:2.0.1"]
           ],
@@ -13697,6 +13819,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["nan", [
+        ["npm:2.15.0", {
+          "packageLocation": "./.yarn/unplugged/nan-npm-2.15.0-505c98ef4d/node_modules/nan/",
+          "packageDependencies": [
+            ["nan", "npm:2.15.0"],
+            ["node-gyp", "npm:8.0.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["nanomatch", [
         ["npm:1.2.13", {
           "packageLocation": "./.yarn/cache/nanomatch-npm-1.2.13-bc9173dbe7-54d4166d6e.zip/node_modules/nanomatch/",
@@ -15162,6 +15294,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/propagate-npm-2.0.1-2074bf76d3-c4febaee2b.zip/node_modules/propagate/",
           "packageDependencies": [
             ["propagate", "npm:2.0.1"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["properties-reader", [
+        ["npm:2.2.0", {
+          "packageLocation": "./.yarn/cache/properties-reader-npm-2.2.0-a1b3b17f1d-a5c5684b1e.zip/node_modules/properties-reader/",
+          "packageDependencies": [
+            ["properties-reader", "npm:2.2.0"],
+            ["mkdirp", "npm:1.0.4"]
           ],
           "linkType": "HARD",
         }]
@@ -16662,6 +16804,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ssh2", "npm:0.8.9"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:1.0.4", {
+          "packageLocation": "./.yarn/cache/ssh-remote-port-forward-npm-1.0.4-5c686cdf22-c6c04c5ddf.zip/node_modules/ssh-remote-port-forward/",
+          "packageDependencies": [
+            ["ssh-remote-port-forward", "npm:1.0.4"],
+            ["@types/ssh2", "npm:0.5.52"],
+            ["ssh2", "npm:1.10.0"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["ssh2", [
@@ -16670,6 +16821,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["ssh2", "npm:0.8.9"],
             ["ssh2-streams", "npm:0.4.10"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:1.10.0", {
+          "packageLocation": "./.yarn/unplugged/ssh2-npm-1.10.0-b2ce7309e9/node_modules/ssh2/",
+          "packageDependencies": [
+            ["ssh2", "npm:1.10.0"],
+            ["asn1", "npm:0.2.6"],
+            ["bcrypt-pbkdf", "npm:1.0.2"],
+            ["cpu-features", "npm:0.0.4"],
+            ["nan", "npm:2.15.0"]
           ],
           "linkType": "HARD",
         }]
@@ -17238,6 +17400,25 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["glob", "npm:7.1.7"],
             ["slash", "npm:3.0.0"],
             ["ssh-remote-port-forward", "npm:1.0.3"],
+            ["tar-fs", "npm:2.1.1"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:8.9.0", {
+          "packageLocation": "./.yarn/cache/testcontainers-npm-8.9.0-aea510937a-5513ae9439.zip/node_modules/testcontainers/",
+          "packageDependencies": [
+            ["testcontainers", "npm:8.9.0"],
+            ["@balena/dockerignore", "npm:1.0.2"],
+            ["@types/archiver", "npm:5.3.1"],
+            ["@types/dockerode", "npm:3.3.8"],
+            ["archiver", "npm:5.3.1"],
+            ["byline", "npm:5.0.0"],
+            ["debug", "virtual:aea510937a6d2056d16f4deb5bc809a99229024be975a13cd2f577629941fc1053d188da4a2954807e042e0e16381c5ca3da354a1d112ff17c3de220fb1b164c#npm:4.3.4"],
+            ["docker-compose", "npm:0.23.17"],
+            ["dockerode", "npm:3.3.1"],
+            ["get-port", "npm:5.1.1"],
+            ["properties-reader", "npm:2.2.0"],
+            ["ssh-remote-port-forward", "npm:1.0.4"],
             ["tar-fs", "npm:2.1.1"]
           ],
           "linkType": "HARD",

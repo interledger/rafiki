@@ -24,6 +24,7 @@
     "pg": "^8.6.0",
     "pino": "^7.10.0",
     "pino-pretty": "^7.6.1",
+    "testcontainers": "^8.9.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
