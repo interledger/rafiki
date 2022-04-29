@@ -22,7 +22,7 @@ module.exports = async (globalConfig) => {
       POSTGRES_PORT
     )}/auth_testing`
 
-    global.__BACKEND_POSTGRES__ = postgresContainer
+    global.__AUTH_POSTGRES__ = postgresContainer
   }
 
   const knex = Knex({
@@ -44,17 +44,15 @@ module.exports = async (globalConfig) => {
     BigInt
   )
   await knex.migrate.latest({
-    directory: './packages/backend/migrations'
+    directory: './packages/auth/migrations'
   })
 
   for (let i = 1; i <= workers; i++) {
     const workerDatabaseName = `auth_testing_${i}`
 
     await knex.raw(`DROP DATABASE IF EXISTS ${workerDatabaseName}`)
-    await knex.raw(
-      `CREATE DATABASE ${workerDatabaseName} TEMPLATE auth_testing`
-    )
+    await knex.raw(`CREATE DATABASE ${workerDatabaseName} TEMPLATE testing`)
   }
 
-  global.__BACKEND_KNEX__ = knex
+  global.__AUTH_KNEX__ = knex
 }

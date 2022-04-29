@@ -13,8 +13,8 @@ export async function truncateTables(
   ignoreTables = [
     'knex_migrations',
     'knex_migrations_lock',
-    'knex_migrations_backend',
-    'knex_migrations_backend_lock'
+    'knex_migrations_auth',
+    'knex_migrations_auth_lock'
   ]
 ): Promise<void> {
   const tables = await getTables(knex, ignoreTables)
