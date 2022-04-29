@@ -33,6 +33,7 @@ describe('Client Service', (): void => {
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       clientService = await deps.use('clientService')
+      knex = await deps.use('knex')
       appContainer = await createTestApp(deps)
     }
   )
