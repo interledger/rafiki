@@ -51,7 +51,9 @@ module.exports = async (globalConfig) => {
     const workerDatabaseName = `auth_testing_${i}`
 
     await knex.raw(`DROP DATABASE IF EXISTS ${workerDatabaseName}`)
-    await knex.raw(`CREATE DATABASE ${workerDatabaseName} TEMPLATE testing`)
+    await knex.raw(
+      `CREATE DATABASE ${workerDatabaseName} TEMPLATE auth_testing`
+    )
   }
 
   global.__BACKEND_KNEX__ = knex
