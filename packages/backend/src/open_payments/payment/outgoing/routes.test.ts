@@ -11,18 +11,26 @@ import { GraphileProducer } from '../../../messaging/graphileProducer'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices } from '../../../app'
+import { AppServices, ReadContext, CreateContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
-import { OutgoingPayment, OutgoingPaymentState } from './model'
-import { OutgoingPaymentRoutes } from './routes'
+import {
+  OutgoingPayment,
+  OutgoingPaymentState,
+  OutgoingPaymentJSON
+} from './model'
+import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { Amount } from '../../amount'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createQuote } from '../../../tests/quote'
-import { AppContext } from '../../../app'
 import { AccountingService } from '../../../accounting/service'
+import { OpenAPI, HttpMethod } from '../../../openapi'
+import { createResponseValidator } from '../../../openapi/validator'
+
+const COLLECTION_PATH = '/{accountId}/outgoing-payments'
+const RESOURCE_PATH = `${COLLECTION_PATH}/{id}`
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -34,6 +42,7 @@ describe('Outgoing Payment Routes', (): void => {
   let accountId: string
   let accountUrl: string
   let accountingService: AccountingService
+  let openApi: OpenAPI
 
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -80,6 +89,7 @@ describe('Outgoing Payment Routes', (): void => {
       config = await deps.use('config')
       outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
       accountingService = await deps.use('accountingService')
+      openApi = await deps.use('openApi')
     }
   )
 
@@ -106,38 +116,15 @@ describe('Outgoing Payment Routes', (): void => {
   )
 
   describe('get', (): void => {
-    test('returns error on invalid id', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { outgoingPaymentId: 'not_a_uuid' }
-      )
-      await expect(outgoingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid id'
-      )
-    })
-
-    test('returns 406 for wrong Accept', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'test/plain' }
-        },
-        { outgoingPaymentId: uuid() }
-      )
-      await expect(outgoingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
-        'status',
-        406
-      )
-    })
-
     test('returns 404 for nonexistent outgoing payment', async (): Promise<void> => {
-      const ctx = createContext(
+      const ctx = createContext<ReadContext>(
         {
           headers: { Accept: 'application/json' }
         },
-        { outgoingPaymentId: uuid() }
+        {
+          id: uuid(),
+          accountId
+        }
       )
       await expect(outgoingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
         'status',
@@ -153,11 +140,14 @@ describe('Outgoing Payment Routes', (): void => {
       jest
         .spyOn(accountingService, 'getTotalSent')
         .mockResolvedValueOnce(undefined)
-      const ctx = createContext(
+      const ctx = createContext<ReadContext>(
         {
           headers: { Accept: 'application/json' }
         },
-        { outgoingPaymentId: outgoingPayment.id }
+        {
+          id: outgoingPayment.id,
+          accountId
+        }
       )
       await expect(outgoingPaymentRoutes.get(ctx)).rejects.toMatchObject({
         status: 500,
@@ -171,17 +161,21 @@ describe('Outgoing Payment Routes', (): void => {
         description: 'rent',
         externalRef: '202201'
       })
-      const ctx = createContext(
+      const ctx = createContext<ReadContext>(
         {
           headers: { Accept: 'application/json' }
         },
-        { outgoingPaymentId: outgoingPayment.id }
+        {
+          id: outgoingPayment.id,
+          accountId
+        }
       )
       await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
-      expect(ctx.response.get('Content-Type')).toBe(
-        'application/json; charset=utf-8'
-      )
+      const validate = createResponseValidator<OutgoingPaymentJSON>({
+        path: openApi.paths[RESOURCE_PATH],
+        method: HttpMethod.GET
+      })
+      assert.ok(validate(ctx))
 
       expect(ctx.body).toEqual({
         id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
@@ -202,7 +196,9 @@ describe('Outgoing Payment Routes', (): void => {
         },
         state: 'processing',
         description: outgoingPayment.description,
-        externalRef: outgoingPayment.externalRef
+        externalRef: outgoingPayment.externalRef,
+        createdAt: outgoingPayment.createdAt.toISOString(),
+        updatedAt: outgoingPayment.updatedAt.toISOString()
       })
     })
 
@@ -213,14 +209,21 @@ describe('Outgoing Payment Routes', (): void => {
         })
         assert.ok(!isOutgoingPaymentError(outgoingPayment))
         await outgoingPayment.$query(knex).patch({ state })
-        const ctx = createContext(
+        const ctx = createContext<ReadContext>(
           {
             headers: { Accept: 'application/json' }
           },
-          { outgoingPaymentId: outgoingPayment.id }
+          {
+            id: outgoingPayment.id,
+            accountId
+          }
         )
         await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-        expect(ctx.status).toBe(200)
+        const validate = createResponseValidator<OutgoingPaymentJSON>({
+          path: openApi.paths[RESOURCE_PATH],
+          method: HttpMethod.GET
+        })
+        assert.ok(validate(ctx))
         expect(ctx.body).toEqual({
           id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
           accountId: accountUrl,
@@ -243,7 +246,9 @@ describe('Outgoing Payment Routes', (): void => {
           receiveAmount: {
             ...outgoingPayment.receiveAmount,
             value: outgoingPayment.receiveAmount.value.toString()
-          }
+          },
+          createdAt: outgoingPayment.createdAt.toISOString(),
+          updatedAt: outgoingPayment.updatedAt.toISOString()
         })
       })
     })
@@ -254,14 +259,14 @@ describe('Outgoing Payment Routes', (): void => {
 
     beforeEach(() => {
       options = {
-        quoteId: uuid()
+        quoteId: `https://wallet.example/${accountId}/quotes/${uuid()}`
       }
     })
 
     function setup(
       reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
-    ): AppContext {
-      const ctx = createContext(
+    ): CreateContext<CreateBody> {
+      const ctx = createContext<CreateContext<CreateBody>>(
         {
           headers: Object.assign(
             { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -273,48 +278,6 @@ describe('Outgoing Payment Routes', (): void => {
       ctx.request.body = options
       return ctx
     }
-
-    test('returns error on invalid id', async (): Promise<void> => {
-      const ctx = setup({})
-      ctx.params.accountId = 'not_a_uuid'
-      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
-        message: 'invalid account id',
-        status: 400
-      })
-    })
-
-    test('returns 406 on invalid Accept', async (): Promise<void> => {
-      const ctx = setup({ headers: { Accept: 'text/plain' } })
-      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
-        message: 'must accept json',
-        status: 406
-      })
-    })
-
-    test('returns error on invalid Content-Type', async (): Promise<void> => {
-      const ctx = setup({ headers: { 'Content-Type': 'text/plain' } })
-      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
-        message: 'must send json body',
-        status: 400
-      })
-    })
-
-    test.each`
-      field            | invalidValue
-      ${'quoteId'}     | ${123}
-      ${'description'} | ${123}
-      ${'externalRef'} | ${123}
-    `(
-      'returns error on invalid $field',
-      async ({ field, invalidValue }): Promise<void> => {
-        const ctx = setup({})
-        ctx.request.body[field] = invalidValue
-        await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
-          message: `invalid ${field}`,
-          status: 400
-        })
-      }
-    )
 
     test.each`
       description  | externalRef  | desc
@@ -330,19 +293,18 @@ describe('Outgoing Payment Routes', (): void => {
           validDestination: false
         })
         options = {
-          quoteId: quote.id,
+          quoteId: `https://wallet.example/${accountId}/quotes/${quote.id}`,
           description,
           externalRef
         }
         const ctx = setup({})
         await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
-        expect(ctx.response.status).toBe(201)
-        const outgoingPaymentId = ((ctx.response.body as Record<
-          string,
-          unknown
-        >)['id'] as string)
-          .split('/')
-          .pop()
+        const validate = createResponseValidator<OutgoingPaymentJSON>({
+          path: openApi.paths[COLLECTION_PATH],
+          method: HttpMethod.POST
+        })
+        assert.ok(validate(ctx))
+        const outgoingPaymentId = ctx.response.body.id.split('/').pop()
         expect(ctx.response.body).toEqual({
           id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
           accountId: accountUrl,
@@ -362,7 +324,9 @@ describe('Outgoing Payment Routes', (): void => {
             value: '0',
             assetCode: asset.code,
             assetScale: asset.scale
-          }
+          },
+          createdAt: ctx.body.createdAt,
+          updatedAt: ctx.body.updatedAt
         })
       }
     )

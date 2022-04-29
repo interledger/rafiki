@@ -100,6 +100,11 @@ async function createIncomingPayment(
   }: CreateIncomingPaymentOptions,
   trx?: Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
+  if (!expiresAt) {
+    expiresAt = end(EXPIRY)
+  } else if (expiresAt.getTime() <= Date.now()) {
+    return IncomingPaymentError.InvalidExpiry
+  }
   const account = await deps.accountService.get(accountId)
   if (!account) {
     return IncomingPaymentError.UnknownAccount
@@ -124,11 +129,11 @@ async function createIncomingPayment(
         accountId,
         assetId: account.asset.id,
         description,
-        expiresAt: expiresAt || end(EXPIRY),
+        expiresAt,
         incomingAmount,
         externalRef,
         state: IncomingPaymentState.Pending,
-        processAt: expiresAt ?? end(EXPIRY)
+        processAt: expiresAt
       })
       .withGraphFetched('asset')
 

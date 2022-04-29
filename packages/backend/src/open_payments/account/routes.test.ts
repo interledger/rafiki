@@ -10,7 +10,7 @@ import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config, IAppConfig } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
-import { AppServices } from '../../app'
+import { AppServices, AccountContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { randomAsset } from '../../tests/asset'
 import { AccountRoutes } from './routes'
@@ -69,34 +69,14 @@ describe('Account Routes', (): void => {
   )
 
   describe('get', (): void => {
-    test('returns 400 on invalid id', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { accountId: 'not_a_uuid' }
-      )
-      await expect(accountRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
-    })
-
     test('returns 404 for nonexistent account', async (): Promise<void> => {
-      const ctx = createContext(
+      const ctx = createContext<AccountContext>(
         {
           headers: { Accept: 'application/json' }
         },
-        { accountId: uuid() }
+        { id: uuid() }
       )
       await expect(accountRoutes.get(ctx)).rejects.toHaveProperty('status', 404)
-    })
-
-    test('returns 406 for wrong Accept', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/spsp4+json' }
-        },
-        { accountId: uuid() }
-      )
-      await expect(accountRoutes.get(ctx)).rejects.toHaveProperty('status', 406)
     })
 
     test('returns 200 with an open payments account', async (): Promise<void> => {
@@ -107,11 +87,11 @@ describe('Account Routes', (): void => {
         asset: asset
       })
 
-      const ctx = createContext(
+      const ctx = createContext<AccountContext>(
         {
           headers: { Accept: 'application/json' }
         },
-        { accountId: account.id }
+        { id: account.id }
       )
       await expect(accountRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(200)
