@@ -406,7 +406,7 @@ describe('Incoming Payment Service', (): void => {
               expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
             }
             await expect(
-              accountingService.getTotalReceived(incomingPayment.id)
+              accountingService.getAccountTotalReceived(incomingPayment.id)
             ).resolves.toEqual(amountReceived)
             await expect(
               accountingService.getBalance(incomingPayment.id)

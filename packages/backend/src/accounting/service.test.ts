@@ -164,15 +164,37 @@ describe('Accounting Service', (): void => {
     test("Can retrieve an account's total amount received", async (): Promise<void> => {
       const amount = BigInt(10)
       const { id } = await accountFactory.build({ balance: amount })
-      await expect(accountingService.getTotalReceived(id)).resolves.toEqual(
-        amount
-      )
+      await expect(
+        accountingService.getAccountTotalReceived(id)
+      ).resolves.toEqual(amount)
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
-        accountingService.getTotalReceived(uuid())
+        accountingService.getAccountTotalReceived(uuid())
       ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Get Accounts Total Received', (): void => {
+    test("Can retrieve an account's total amount received", async (): Promise<void> => {
+      const value = BigInt(10)
+      const { id } = await accountFactory.build({ balance: value })
+      await expect(
+        accountingService.getAccountsTotalReceived([id])
+      ).resolves.toEqual({ [id]: value })
+    })
+
+    test('Returns undefined for nonexistent account', async (): Promise<void> => {
+      const uid = uuid()
+      await expect(
+        accountingService.getAccountsTotalReceived([uid])
+      ).resolves.toEqual({ [uid]: undefined })
+      const value = BigInt(10)
+      const { id } = await accountFactory.build({ balance: value })
+      await expect(
+        accountingService.getAccountsTotalReceived([uid, id])
+      ).resolves.toEqual({ [uid]: undefined, [id]: value })
     })
   })
 

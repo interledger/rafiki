@@ -82,7 +82,11 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   id: string
 ): Promise<IncomingPayment | undefined> {
-  return IncomingPayment.query(deps.knex).findById(id).withGraphFetched('asset')
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .findById(id)
+    .withGraphFetched('asset')
+  if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
+  else return
 }
 
 async function createIncomingPayment(
@@ -135,7 +139,7 @@ async function createIncomingPayment(
     if (!trx) {
       await invTrx.commit()
     }
-    return incomingPayment
+    return await addReceivedAmount(deps, incomingPayment)
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()
@@ -188,7 +192,7 @@ async function handleExpired(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment
 ): Promise<void> {
-  const amountReceived = await deps.accountingService.getTotalReceived(
+  const amountReceived = await deps.accountingService.getAccountTotalReceived(
     incomingPayment.id
   )
   if (amountReceived) {
@@ -214,7 +218,7 @@ async function handleDeactivated(
 ): Promise<void> {
   assert.ok(incomingPayment.processAt)
   try {
-    const amountReceived = await deps.accountingService.getTotalReceived(
+    const amountReceived = await deps.accountingService.getAccountTotalReceived(
       incomingPayment.id
     )
     if (!amountReceived) {
@@ -257,12 +261,29 @@ async function getAccountIncomingPaymentsPage(
 ): Promise<IncomingPayment[]> {
   assert.ok(deps.knex, 'Knex undefined')
 
-  return await IncomingPayment.query(deps.knex)
+  const incomingPayments = await IncomingPayment.query(deps.knex)
     .getPage(pagination)
     .where({
       accountId: accountId
     })
     .withGraphFetched('asset')
+  if (incomingPayments.length > 0) {
+    const receivedAmounts = await deps.accountingService.getAccountsTotalReceived(
+      incomingPayments.map((payment) => payment.id)
+    )
+    return incomingPayments.map((payment) => {
+      try {
+        payment.receivedAmount = {
+          value: BigInt(receivedAmounts[payment.id]),
+          assetCode: payment.asset.code,
+          assetScale: payment.asset.scale
+        }
+      } catch (_) {
+        deps.logger.error({ incomingPayment: payment.id }, 'account not found')
+      }
+      return payment
+    })
+  } else return incomingPayments
 }
 
 async function updateIncomingPayment(
@@ -290,6 +311,25 @@ async function updateIncomingPayment(
     }
     update.processAt = new Date(Date.now() + 30_000)
     await payment.$query(trx).patch(update)
-    return payment
+    return await addReceivedAmount(deps, payment)
   })
+}
+
+async function addReceivedAmount(
+  deps: ServiceDependencies,
+  payment: IncomingPayment
+): Promise<IncomingPayment> {
+  const received = await deps.accountingService.getAccountTotalReceived(
+    payment.id
+  )
+  if (received !== undefined) {
+    payment.receivedAmount = {
+      value: received,
+      assetCode: payment.asset.code,
+      assetScale: payment.asset.scale
+    }
+  } else {
+    deps.logger.error({ incomingPayment: payment.id }, 'account not found')
+  }
+  return payment
 }

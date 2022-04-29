@@ -25,6 +25,7 @@ import {
 } from './transfers'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
+import { toTigerbeetleId } from './utils'
 
 // Model classes that have a corresponding Tigerbeetle liquidity
 // account SHOULD implement this LiquidityAccount interface and call
@@ -80,7 +81,10 @@ export interface AccountingService {
   createSettlementAccount(unit: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
-  getTotalReceived(id: string): Promise<bigint | undefined>
+  getAccountTotalReceived(id: string): Promise<bigint | undefined>
+  getAccountsTotalReceived(
+    ids: string[]
+  ): Promise<Record<string, bigint | undefined>>
   getSettlementBalance(unit: number): Promise<bigint | undefined>
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(deposit: Deposit): Promise<void | TransferError>
@@ -106,7 +110,8 @@ export function createAccountingService(
     createSettlementAccount: (unit) => createSettlementAccount(deps, unit),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
-    getTotalReceived: (id) => getAccountTotalReceived(deps, id),
+    getAccountTotalReceived: (id) => getAccountTotalReceived(deps, id),
+    getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
     getSettlementBalance: (unit) => getSettlementBalance(deps, unit),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
@@ -187,6 +192,21 @@ export async function getAccountTotalReceived(
   if (account) {
     return account.credits_accepted
   }
+}
+
+export async function getAccountsTotalReceived(
+  deps: ServiceDependencies,
+  ids: string[]
+): Promise<Record<string, bigint | undefined>> {
+  const accounts = await getAccounts(deps, ids)
+  return ids.reduce(
+    (o, id) => ({
+      ...o,
+      [id]: accounts.find((account) => account.id === toTigerbeetleId(id))
+        ?.credits_accepted
+    }),
+    {}
+  )
 }
 
 export async function getSettlementBalance(

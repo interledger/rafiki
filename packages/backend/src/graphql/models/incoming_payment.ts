@@ -7,7 +7,7 @@ export interface IncomingPaymentModel {
   createdAt: string
   expiresAt: string
   incomingAmount?: Amount
-  receivedAmount: Omit<Amount, 'value'>
+  receivedAmount: Amount
   externalRef?: string
   state: IncomingPaymentState
 }

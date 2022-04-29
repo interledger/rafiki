@@ -230,7 +230,7 @@ describe('OutgoingPaymentService', (): void => {
     }
     if (incomingPaymentReceived !== undefined) {
       await expect(
-        accountingService.getTotalReceived(incomingPayment.id)
+        accountingService.getAccountTotalReceived(incomingPayment.id)
       ).resolves.toEqual(incomingPaymentReceived)
     }
     if (withdrawAmount !== undefined) {

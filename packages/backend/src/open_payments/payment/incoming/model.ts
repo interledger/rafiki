@@ -76,6 +76,7 @@ export class IncomingPayment
 
   public readonly assetId!: string
   public asset!: Asset
+  public receivedAmount?: Amount
 
   private incomingAmountValue?: bigint | null
 

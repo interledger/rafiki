@@ -58,7 +58,7 @@ async function getIncomingPayment(
   )
   if (!incomingPayment) return ctx.throw(404)
 
-  const body = await incomingPaymentToBody(deps, incomingPayment)
+  const body = incomingPaymentToBody(deps, incomingPayment)
   if (
     incomingPayment.state !== IncomingPaymentState.Expired &&
     incomingPayment.state !== IncomingPaymentState.Completed
@@ -124,11 +124,7 @@ async function createIncomingPayment(
   }
 
   ctx.status = 201
-  const res = await incomingPaymentToBody(
-    deps,
-    incomingPaymentOrError,
-    BigInt(0)
-  )
+  const res = incomingPaymentToBody(deps, incomingPaymentOrError)
   const { ilpAddress, sharedSecret } = getStreamCredentials(
     deps,
     incomingPaymentOrError
@@ -172,7 +168,7 @@ async function updateIncomingPayment(
     )
   }
 
-  const res = await incomingPaymentToBody(deps, incomingPaymentOrError)
+  const res = incomingPaymentToBody(deps, incomingPaymentOrError)
   ctx.body = res
 }
 
@@ -209,11 +205,9 @@ async function listIncomingPayments(
     accountId,
     paginationParams
   )
-  const result = await Promise.all(
-    incomingPayments.map(async (element) => {
-      return await incomingPaymentToBody(deps, element)
-    })
-  )
+  const result = incomingPayments.map((element) => {
+    return incomingPaymentToBody(deps, element)
+  })
   const pagination = {
     startCursor: incomingPayments[0].id,
     endCursor: incomingPayments[incomingPayments.length - 1].id
@@ -227,33 +221,22 @@ async function listIncomingPayments(
   ctx.body = { pagination, result }
 }
 
-async function incomingPaymentToBody(
+function incomingPaymentToBody(
   deps: ServiceDependencies,
-  incomingPayment: IncomingPayment,
-  received?: bigint
+  incomingPayment: IncomingPayment
 ) {
-  if (!received) {
-    received = await deps.accountingService.getTotalReceived(incomingPayment.id)
-    if (received === undefined) {
-      deps.logger.error(
-        { incomingPayment: incomingPayment.id },
-        'account not found'
-      )
-    }
-  }
   const accountId = `${deps.config.publicHost}/${incomingPayment.accountId}`
   const body = {
     id: `${accountId}/incoming-payments/${incomingPayment.id}`,
     accountId,
     state: incomingPayment.state.toLowerCase(),
-    receivedAmount: {
-      value:
-        received !== undefined
-          ? received.toString()
-          : 'error: account not found',
-      assetCode: incomingPayment.asset.code,
-      assetScale: incomingPayment.asset.scale
-    },
+    receivedAmount: incomingPayment.receivedAmount
+      ? {
+          value: incomingPayment.receivedAmount.value.toString(),
+          assetCode: incomingPayment.receivedAmount.assetCode,
+          assetScale: incomingPayment.receivedAmount.assetScale
+        }
+      : 'error: account not found',
     expiresAt: incomingPayment.expiresAt.toISOString()
   }
 
