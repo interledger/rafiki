@@ -54,8 +54,8 @@ describe('Client Service', (): void => {
     }
   )
 
-  describe('Registry Validation', (): void => {
-    describe('Client Properties', (): void => {
+  describe('Registry Validation', async (): Promise<void> => {
+    describe('Client Properties', async (): Promise<void> => {
       test('Can validate client properties with registry', async (): Promise<void> => {
         const expDate = new Date()
         expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
