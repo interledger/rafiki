@@ -82,18 +82,17 @@ async function verifySig(
 
 function validateRequiredJwkProperties(jwk: JWKWithRequired): boolean {
   if (
-    jwk.kty === 'OKP' ||
-    !jwk.use ||
-    jwk.use === 'sig' ||
-    !jwk.key_ops ||
-    (jwk.key_ops.includes('sign') && jwk.key_ops.includes('verify')) ||
-    jwk.alg === 'EdDSA' ||
-    jwk.crv === 'Ed25519'
+    jwk.kty !== 'OKP' ||
+    (jwk.use && jwk.use !== 'sig') ||
+    (jwk.key_ops &&
+      (!jwk.key_ops.includes('sign') || !jwk.key_ops.includes('verify'))) ||
+    jwk.alg !== 'EdDSA' ||
+    jwk.crv !== 'Ed25519'
   ) {
-    return true
+    return false
   }
 
-  return false
+  return true
 }
 
 async function validateClientWithRegistry(
@@ -125,12 +124,12 @@ async function validateClientWithRegistry(
     })
 
   const { keys } = registryData
-  if (!keys.kid || !keys.x) {
+  if (!keys?.kid || !keys?.x) {
     return false
   }
 
-  return (
-    verifyClientDisplay(clientInfo.display, registryData) &&
+  return !!(
+    verifyClientDisplay(clientInfo.display, registryData.display) &&
     verifyJwk(jwk, keys)
   )
 }
@@ -150,9 +149,9 @@ function verifyJwk(jwk: JWKWithRequired, keys: RegistryKey): boolean {
   return !!(
     !keys.revoked &&
     keys.exp &&
-    new Date() > new Date(keys.exp) &&
+    new Date() < new Date(keys.exp * 1000) &&
     keys.nbf &&
-    new Date() < new Date(keys.nbf) &&
+    new Date() > new Date(keys.nbf * 1000) &&
     keys.x === jwk.x
   )
 }
