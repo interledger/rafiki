@@ -33,7 +33,7 @@ module.exports = async (globalConfig) => {
       max: 10
     },
     migrations: {
-      tableName: 'knex_migrations'
+      tableName: 'auth_knex_migrations'
     }
   })
 
