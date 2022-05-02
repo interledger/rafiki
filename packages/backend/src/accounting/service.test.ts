@@ -196,6 +196,12 @@ describe('Accounting Service', (): void => {
         accountingService.getAccountsTotalReceived([uid, id])
       ).resolves.toEqual({ [uid]: undefined, [id]: value })
     })
+
+    test('Returns empty object for empty array of ids', async (): Promise<void> => {
+      await expect(
+        accountingService.getAccountsTotalReceived([])
+      ).resolves.toEqual({})
+    })
   })
 
   describe('Create Settlement Account', (): void => {

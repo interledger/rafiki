@@ -198,15 +198,17 @@ export async function getAccountsTotalReceived(
   deps: ServiceDependencies,
   ids: string[]
 ): Promise<Record<string, bigint | undefined>> {
-  const accounts = await getAccounts(deps, ids)
-  return ids.reduce(
-    (o, id) => ({
-      ...o,
-      [id]: accounts.find((account) => account.id === toTigerbeetleId(id))
-        ?.credits_accepted
-    }),
-    {}
-  )
+  if (ids.length > 0) {
+    const accounts = await getAccounts(deps, ids)
+    return ids.reduce(
+      (o, id) => ({
+        ...o,
+        [id]: accounts.find((account) => account.id === toTigerbeetleId(id))
+          ?.credits_accepted
+      }),
+      {}
+    )
+  } else return {}
 }
 
 export async function getSettlementBalance(
