@@ -139,7 +139,7 @@ async function createIncomingPayment(
     if (!trx) {
       await invTrx.commit()
     }
-    return await addReceivedAmount(deps, incomingPayment)
+    return await addReceivedAmount(deps, incomingPayment, BigInt(0))
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()
@@ -317,11 +317,11 @@ async function updateIncomingPayment(
 
 async function addReceivedAmount(
   deps: ServiceDependencies,
-  payment: IncomingPayment
+  payment: IncomingPayment,
+  value?: bigint
 ): Promise<IncomingPayment> {
-  const received = await deps.accountingService.getAccountTotalReceived(
-    payment.id
-  )
+  const received =
+    value || (await deps.accountingService.getAccountTotalReceived(payment.id))
   if (received !== undefined) {
     payment.receivedAmount = {
       value: received,
