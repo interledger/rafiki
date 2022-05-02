@@ -5,7 +5,7 @@ import {
 } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { ApolloContext } from '../../app'
-import { Amount } from '@interledger/pay/dist/src/open-payments'
+import { Amount } from '../../open_payments/payment/amount'
 
 export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomingPayments'] = async (
   parent,
