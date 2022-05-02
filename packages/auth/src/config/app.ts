@@ -25,7 +25,7 @@ export const Config = {
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
       : envString(
           'DATABASE_URL',
-          'postgresql://postgres:password@localhost:5432/development'
+          'postgresql://postgres:password@localhost:5432/auth_development'
         ),
   keyRegistries: envStringArray('KEY_REGISTRIES', [
     'https://openpayments.network'

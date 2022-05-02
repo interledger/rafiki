@@ -37,7 +37,7 @@ export function initIocContainer(
       },
       migrations: {
         directory: './',
-        tableName: 'knex_migrations'
+        tableName: 'auth_knex_migrations'
       }
     })
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
