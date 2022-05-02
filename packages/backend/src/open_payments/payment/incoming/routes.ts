@@ -4,7 +4,6 @@ import { Logger } from 'pino'
 import { validateId } from '../../../shared/utils'
 import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
-import { AccountingService } from '../../../accounting/service'
 import { IncomingPaymentService } from './service'
 import { IncomingPayment, IncomingPaymentState } from './model'
 import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
@@ -17,7 +16,6 @@ export const MAX_EXPIRY = 24 * 60 * 60 * 1000 // milliseconds
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
-  accountingService: AccountingService
   incomingPaymentService: IncomingPaymentService
   streamServer: StreamServer
 }

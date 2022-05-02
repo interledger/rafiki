@@ -195,7 +195,6 @@ export function initIocContainer(
     return createIncomingPaymentRoutes({
       config: await deps.use('config'),
       logger: await deps.use('logger'),
-      accountingService: await deps.use('accountingService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       streamServer: await deps.use('streamServer')
     })
