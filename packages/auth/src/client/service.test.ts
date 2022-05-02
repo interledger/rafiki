@@ -1,6 +1,5 @@
 import nock from 'nock'
 import { createTestApp, TestContainer } from '../tests/app'
-import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -33,7 +32,6 @@ describe('Client Service', (): void => {
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       clientService = await deps.use('clientService')
-      knex = await deps.use('knex')
       appContainer = await createTestApp(deps)
     }
   )
