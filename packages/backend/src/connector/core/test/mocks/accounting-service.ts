@@ -6,6 +6,7 @@ import {
 
 import { Transaction } from '../../../../accounting/service'
 import { TransferError } from '../../../../accounting/errors'
+import { IncomingPaymentError } from '../../../../open_payments/payment/incoming/errors'
 
 interface MockAccount {
   id: string
@@ -38,12 +39,13 @@ export class MockAccountingService implements AccountingService {
 
   async _getIncomingPayment(
     incomingPaymentId: string
-  ): Promise<OutgoingAccount | undefined> {
+  ): Promise<OutgoingAccount | IncomingPaymentError> {
     const incomingPayment = this.find(
       (account) =>
         account.id === incomingPaymentId && account.state !== undefined
     )
-    return incomingPayment as OutgoingAccount
+    if (incomingPayment) return incomingPayment as OutgoingAccount
+    else return IncomingPaymentError.UnknownPaymentAccount
   }
 
   async _getAccount(accountId: string): Promise<OutgoingAccount | undefined> {
