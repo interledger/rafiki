@@ -1,7 +1,5 @@
-import Knex from 'knex'
 import nock from 'nock'
 import { createTestApp, TestContainer } from '../tests/app'
-import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -28,21 +26,18 @@ const TEST_CLIENT_KEY = {
 describe('Client Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let clientService: ClientService
 
   beforeAll(
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       clientService = await deps.use('clientService')
-      knex = await deps.use('knex')
       appContainer = await createTestApp(deps)
     }
   )
 
   afterEach(
     async (): Promise<void> => {
-      await truncateTables(knex)
       nock.cleanAll()
     }
   )
@@ -54,8 +49,8 @@ describe('Client Service', (): void => {
     }
   )
 
-  describe('Registry Validation', async (): Promise<void> => {
-    describe('Client Properties', async (): Promise<void> => {
+  describe('Registry Validation', (): void => {
+    describe('Client Properties', (): void => {
       test('Can validate client properties with registry', async (): Promise<void> => {
         const expDate = new Date()
         expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
