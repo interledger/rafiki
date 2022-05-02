@@ -8,6 +8,7 @@ import {
 import { AuthState } from './auth'
 import { validateId } from '../../../shared/utils'
 import { IncomingPaymentState } from '../../../open_payments/payment/incoming/model'
+import { isIncomingPaymentError } from '../../../open_payments/payment/incoming/errors'
 
 const UUID_LENGTH = 36
 
@@ -27,7 +28,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
         const incomingPayment = await incomingPayments.get(
           ctx.state.streamDestination
         )
-        if (incomingPayment) {
+        if (!isIncomingPaymentError(incomingPayment)) {
           if (
             incomingPayment.state === IncomingPaymentState.Completed ||
             incomingPayment.state === IncomingPaymentState.Expired
