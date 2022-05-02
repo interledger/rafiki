@@ -6,6 +6,7 @@ import {
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { ApolloContext } from '../../app'
 import { Amount } from '../../open_payments/payment/amount'
+import { isIncomingPaymentError } from '../../open_payments/payment/incoming/errors'
 
 export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomingPayments'] = async (
   parent,
@@ -70,7 +71,8 @@ export const getPageInfo: IncomingPaymentConnectionResolvers<ApolloContext>['pag
   const firstIncomingPayment = await incomingPaymentService.get(
     edges[0].node.id
   )
-  if (!firstIncomingPayment) throw new Error('incomingPayment not found')
+  if (isIncomingPaymentError(firstIncomingPayment))
+    throw new Error('incomingPayment not found')
 
   let hasNextPageIncomingPayments, hasPreviousPageIncomingPayments
   try {

@@ -3,7 +3,8 @@ export enum IncomingPaymentError {
   InvalidAmount = 'InvalidAmount',
   UnknownPayment = 'UnknownPayment',
   InvalidState = 'InvalidState',
-  WrongState = 'WrongState'
+  WrongState = 'WrongState',
+  UnknownPaymentAccount = 'UnknownPaymentAccount'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -17,7 +18,8 @@ export const errorToCode: {
   [IncomingPaymentError.InvalidAmount]: 400,
   [IncomingPaymentError.UnknownPayment]: 404,
   [IncomingPaymentError.InvalidState]: 400,
-  [IncomingPaymentError.WrongState]: 409
+  [IncomingPaymentError.WrongState]: 409,
+  [IncomingPaymentError.UnknownPaymentAccount]: 500
 }
 
 export const errorToMessage: {
@@ -27,5 +29,6 @@ export const errorToMessage: {
   [IncomingPaymentError.InvalidAmount]: 'invalid amount',
   [IncomingPaymentError.UnknownPayment]: 'unknown payment',
   [IncomingPaymentError.InvalidState]: 'invalid state',
-  [IncomingPaymentError.WrongState]: 'wrong state'
+  [IncomingPaymentError.WrongState]: 'wrong state',
+  [IncomingPaymentError.UnknownPaymentAccount]: 'unknown payment account'
 }

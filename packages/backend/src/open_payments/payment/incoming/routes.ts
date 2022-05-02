@@ -51,19 +51,24 @@ async function getIncomingPayment(
   const acceptJSON = ctx.accepts('application/json')
   ctx.assert(acceptJSON, 406, 'must accept json')
 
-  const incomingPayment = await deps.incomingPaymentService.get(
+  const incomingPaymentOrError = await deps.incomingPaymentService.get(
     incomingPaymentId
   )
-  if (!incomingPayment) return ctx.throw(404)
+  if (isIncomingPaymentError(incomingPaymentOrError)) {
+    return ctx.throw(
+      errorToCode[incomingPaymentOrError],
+      errorToMessage[incomingPaymentOrError]
+    )
+  }
 
-  const body = incomingPaymentToBody(deps, incomingPayment)
+  const body = incomingPaymentToBody(deps, incomingPaymentOrError)
   if (
-    incomingPayment.state !== IncomingPaymentState.Expired &&
-    incomingPayment.state !== IncomingPaymentState.Completed
+    incomingPaymentOrError.state !== IncomingPaymentState.Expired &&
+    incomingPaymentOrError.state !== IncomingPaymentState.Completed
   ) {
     const { ilpAddress, sharedSecret } = getStreamCredentials(
       deps,
-      incomingPayment
+      incomingPaymentOrError
     )
     body['ilpAddress'] = ilpAddress
     body['sharedSecret'] = base64url(sharedSecret)

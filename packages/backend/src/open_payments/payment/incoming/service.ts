@@ -37,7 +37,7 @@ interface UpdateIncomingPaymentOptions {
 }
 
 export interface IncomingPaymentService {
-  get(id: string): Promise<IncomingPayment | undefined>
+  get(id: string): Promise<IncomingPayment | IncomingPaymentError>
   create(
     options: CreateIncomingPaymentOptions,
     trx?: Transaction
@@ -81,12 +81,12 @@ export async function createIncomingPaymentService(
 async function getIncomingPayment(
   deps: ServiceDependencies,
   id: string
-): Promise<IncomingPayment | undefined> {
+): Promise<IncomingPayment | IncomingPaymentError> {
   const incomingPayment = await IncomingPayment.query(deps.knex)
     .findById(id)
     .withGraphFetched('asset')
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
-  else return
+  else return IncomingPaymentError.UnknownPayment
 }
 
 async function createIncomingPayment(
@@ -319,7 +319,7 @@ async function addReceivedAmount(
   deps: ServiceDependencies,
   payment: IncomingPayment,
   value?: bigint
-): Promise<IncomingPayment> {
+): Promise<IncomingPayment | IncomingPaymentError> {
   const received =
     value || (await deps.accountingService.getAccountTotalReceived(payment.id))
   if (received !== undefined) {
@@ -330,6 +330,7 @@ async function addReceivedAmount(
     }
   } else {
     deps.logger.error({ incomingPayment: payment.id }, 'account not found')
+    return IncomingPaymentError.UnknownPaymentAccount
   }
   return payment
 }

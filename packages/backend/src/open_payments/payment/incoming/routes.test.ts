@@ -140,7 +140,7 @@ describe('Incoming Payment Routes', (): void => {
       id              | headers                     | status | message               | description
       ${'not_a_uuid'} | ${null}                     | ${400} | ${'invalid id'}       | ${'invalid incoming payment id'}
       ${null}         | ${{ Accept: 'text/plain' }} | ${406} | ${'must accept json'} | ${'invalid Accept header'}
-      ${uuid()}       | ${null}                     | ${404} | ${'Not Found'}        | ${'unknown incoming payment'}
+      ${uuid()}       | ${null}                     | ${404} | ${'unknown payment'}  | ${'unknown incoming payment'}
     `(
       'returns $status on $description',
       async ({ id, headers, status, message }): Promise<void> => {
