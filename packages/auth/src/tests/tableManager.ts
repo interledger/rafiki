@@ -10,12 +10,7 @@ export async function truncateTable(
 
 export async function truncateTables(
   knex: Knex,
-  ignoreTables = [
-    'knex_migrations',
-    'knex_migrations_lock',
-    'knex_migrations_auth',
-    'knex_migrations_auth_lock'
-  ]
+  ignoreTables = ['auth_knex_migrations', 'auth_knex_migrations_lock']
 ): Promise<void> {
   const tables = await getTables(knex, ignoreTables)
   const RAW = `TRUNCATE TABLE "${tables}" RESTART IDENTITY`
