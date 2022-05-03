@@ -8,7 +8,7 @@ const POSTGRES_PORT = 5432
 module.exports = async (globalConfig) => {
   const workers = globalConfig.maxWorkers
 
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.AUTH_DATABASE_URL) {
     const postgresContainer = await new GenericContainer('postgres')
       .withExposedPorts(POSTGRES_PORT)
       .withBindMount(
@@ -18,7 +18,7 @@ module.exports = async (globalConfig) => {
       .withEnv('POSTGRES_PASSWORD', 'password')
       .start()
 
-    process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
+    process.env.AUTH_DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
       POSTGRES_PORT
     )}/auth_testing`
 
@@ -27,7 +27,7 @@ module.exports = async (globalConfig) => {
 
   const knex = Knex({
     client: 'postgresql',
-    connection: process.env.DATABASE_URL,
+    connection: process.env.AUTH_DATABASE_URL,
     pool: {
       min: 2,
       max: 10

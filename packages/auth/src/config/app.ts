@@ -22,9 +22,9 @@ export const Config = {
   env: envString('NODE_ENV', 'development'),
   databaseUrl:
     process.env.NODE_ENV === 'test'
-      ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
+      ? `${process.env.AUTH_DATABASE_URL}_${process.env.JEST_WORKER_ID}`
       : envString(
-          'DATABASE_URL',
+          'AUTH_DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/auth_development'
         ),
   keyRegistries: envStringArray('KEY_REGISTRIES', [
