@@ -18,7 +18,7 @@ import { Readable } from 'stream'
 import { HttpContext, HttpMiddleware, ILPMiddleware } from '../rafiki'
 import getRawBody from 'raw-body'
 
-const CONTENT_TYPE = 'application/octet-stream'
+export const CONTENT_TYPE = 'application/octet-stream'
 
 export interface IlpPacketMiddlewareOptions {
   getRawBody?: (req: Readable) => Promise<Buffer>
