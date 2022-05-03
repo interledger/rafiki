@@ -596,4 +596,37 @@ describe('Incoming Payment Service', (): void => {
       })
     })
   })
+
+  describe('addReceivedAmount', (): void => {
+    let incomingPayment: IncomingPayment
+
+    beforeEach(
+      async (): Promise<void> => {
+        const incomingPaymentOrError = await incomingPaymentService.create({
+          accountId,
+          description: 'Test incoming payment',
+          incomingAmount: {
+            value: BigInt(123),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() + 30_000),
+          externalRef: '#123'
+        })
+        assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
+        incomingPayment = incomingPaymentOrError
+      }
+    )
+
+    test('throws if no TB account found', async (): Promise<void> => {
+      jest
+        .spyOn(accountingService, 'getAccountTotalReceived')
+        .mockImplementationOnce(async (_args) => undefined)
+      await expect(
+        incomingPaymentService.get(incomingPayment.id)
+      ).rejects.toThrowError(
+        `Underlying TB account not found, payment id: ${incomingPayment.id}`
+      )
+    })
+  })
 })

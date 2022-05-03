@@ -6,7 +6,12 @@ import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
 import { IncomingPayment, IncomingPaymentState } from './model'
-import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
+import {
+  errorToCode,
+  errorToMessage,
+  IncomingPaymentError,
+  isIncomingPaymentError
+} from './errors'
 import { Amount } from '../amount'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
@@ -51,9 +56,12 @@ async function getIncomingPayment(
   const acceptJSON = ctx.accepts('application/json')
   ctx.assert(acceptJSON, 406, 'must accept json')
 
-  const incomingPayment = await deps.incomingPaymentService.get(
-    incomingPaymentId
-  )
+  let incomingPayment: IncomingPayment | undefined
+  try {
+    incomingPayment = await deps.incomingPaymentService.get(incomingPaymentId)
+  } catch (err) {
+    ctx.throw(500, err.message)
+  }
   if (!incomingPayment) return ctx.throw(404)
 
   const body = incomingPaymentToBody(deps, incomingPayment)
@@ -154,10 +162,15 @@ async function updateIncomingPayment(
   )
   if (state === undefined) return ctx.throw(400, 'invalid state')
 
-  const incomingPaymentOrError = await deps.incomingPaymentService.update({
-    id: incomingPaymentId,
-    state
-  })
+  let incomingPaymentOrError: IncomingPayment | IncomingPaymentError
+  try {
+    incomingPaymentOrError = await deps.incomingPaymentService.update({
+      id: incomingPaymentId,
+      state
+    })
+  } catch (err) {
+    ctx.throw(500, err.message)
+  }
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
     return ctx.throw(
@@ -199,10 +212,15 @@ async function listIncomingPayments(
     if (paginationParams.first) paginationParams['after'] = cursor
     if (paginationParams.last) paginationParams['before'] = cursor
   }
-  const incomingPayments = await deps.incomingPaymentService.getAccountIncomingPaymentsPage(
-    accountId,
-    paginationParams
-  )
+  let incomingPayments: IncomingPayment[]
+  try {
+    incomingPayments = await deps.incomingPaymentService.getAccountIncomingPaymentsPage(
+      accountId,
+      paginationParams
+    )
+  } catch (err) {
+    ctx.throw(500, err.message)
+  }
   const result = incomingPayments.map((element) => {
     return incomingPaymentToBody(deps, element)
   })

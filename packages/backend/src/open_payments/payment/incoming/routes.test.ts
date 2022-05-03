@@ -21,6 +21,7 @@ import { IncomingPayment, IncomingPaymentState } from './model'
 import { IncomingPaymentRoutes, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
 import { isIncomingPaymentError } from './errors'
+import { AccountingService } from '../../../accounting/service'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -28,6 +29,7 @@ describe('Incoming Payment Routes', (): void => {
   let knex: Knex
   let workerUtils: WorkerUtils
   let accountService: AccountService
+  let accountingService: AccountingService
   let incomingPaymentService: IncomingPaymentService
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
@@ -82,6 +84,7 @@ describe('Incoming Payment Routes', (): void => {
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
+      accountingService = await deps.use('accountingService')
     }
   )
 
@@ -195,6 +198,22 @@ describe('Incoming Payment Routes', (): void => {
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
       expect(sharedSecret).toEqual(base64url(sharedSecretBuffer))
+    })
+
+    test('returns 500 if TB account not found', async (): Promise<void> => {
+      jest
+        .spyOn(accountingService, 'getAccountTotalReceived')
+        .mockImplementationOnce(async (_args) => undefined)
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { incomingPaymentId: incomingPayment.id }
+      )
+      await expect(incomingPaymentRoutes.get(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: `Underlying TB account not found, payment id: ${incomingPayment.id}`
+      })
     })
   })
   describe('create', (): void => {
@@ -467,6 +486,18 @@ describe('Incoming Payment Routes', (): void => {
           })
         }
       )
+      test('returns 500 if one TB account not found', async (): Promise<void> => {
+        jest
+          .spyOn(accountingService, 'getAccountsTotalReceived')
+          .mockImplementationOnce(async (_args) => {
+            return {}
+          })
+        const ctx = setup({}, { accountId: incomingPayment.accountId })
+        await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+          status: 500,
+          message: `Underlying TB account not found, payment id: ${incomingPayment.id}`
+        })
+      })
     })
 
     describe('successes', (): void => {

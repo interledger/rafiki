@@ -280,6 +280,9 @@ async function getAccountIncomingPaymentsPage(
         }
       } catch (_) {
         deps.logger.error({ incomingPayment: payment.id }, 'account not found')
+        throw new Error(
+          `Underlying TB account not found, payment id: ${payment.id}`
+        )
       }
       return payment
     })
@@ -330,6 +333,9 @@ async function addReceivedAmount(
     }
   } else {
     deps.logger.error({ incomingPayment: payment.id }, 'account not found')
+    throw new Error(
+      `Underlying TB account not found, payment id: ${payment.id}`
+    )
   }
   return payment
 }
