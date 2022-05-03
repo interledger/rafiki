@@ -5,7 +5,6 @@ import {
 } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { ApolloContext } from '../../app'
-import { Amount } from '../../open_payments/payment/amount'
 
 export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomingPayments'] = async (
   parent,
@@ -28,7 +27,7 @@ export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomi
           cursor: incomingPayment.id,
           node: {
             ...incomingPayment,
-            receivedAmount: incomingPayment.receivedAmount as Amount,
+            receivedAmount: incomingPayment.receivedAmount,
             expiresAt: incomingPayment.expiresAt.toISOString(),
             createdAt: incomingPayment.createdAt?.toISOString()
           }
