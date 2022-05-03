@@ -206,9 +206,7 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test('Cannot fetch a bogus incoming payment', async (): Promise<void> => {
-      await expect(incomingPaymentService.get(uuid())).resolves.toBe(
-        IncomingPaymentError.UnknownPayment
-      )
+      await expect(incomingPaymentService.get(uuid())).resolves.toBeUndefined()
     })
   })
 
@@ -351,9 +349,9 @@ describe('Incoming Payment Service', (): void => {
         await expect(incomingPaymentService.processNext()).resolves.toBe(
           incomingPaymentOrError.id
         )
-        await expect(
-          incomingPaymentService.get(incomingPaymentOrError.id)
-        ).resolves.toBe(IncomingPaymentError.UnknownPayment)
+        expect(
+          await incomingPaymentService.get(incomingPaymentOrError.id)
+        ).toBeUndefined()
       })
     })
 
