@@ -490,7 +490,7 @@ describe('Incoming Payment Routes', (): void => {
         jest
           .spyOn(accountingService, 'getAccountsTotalReceived')
           .mockImplementationOnce(async (_args) => {
-            return {}
+            return []
           })
         const ctx = setup({}, { accountId: incomingPayment.accountId })
         await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({

@@ -82,9 +82,7 @@ export interface AccountingService {
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountTotalReceived(id: string): Promise<bigint | undefined>
-  getAccountsTotalReceived(
-    ids: string[]
-  ): Promise<Record<string, bigint | undefined>>
+  getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]>
   getSettlementBalance(unit: number): Promise<bigint | undefined>
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(deposit: Deposit): Promise<void | TransferError>
@@ -197,18 +195,15 @@ export async function getAccountTotalReceived(
 export async function getAccountsTotalReceived(
   deps: ServiceDependencies,
   ids: string[]
-): Promise<Record<string, bigint | undefined>> {
+): Promise<(bigint | undefined)[]> {
   if (ids.length > 0) {
     const accounts = await getAccounts(deps, ids)
-    return ids.reduce(
-      (o, id) => ({
-        ...o,
-        [id]: accounts.find((account) => account.id === toTigerbeetleId(id))
+    return ids.map(
+      (id) =>
+        accounts.find((account) => account.id === toTigerbeetleId(id))
           ?.credits_accepted
-      }),
-      {}
     )
-  } else return {}
+  } else return []
 }
 
 export async function getSettlementBalance(

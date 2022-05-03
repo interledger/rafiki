@@ -182,25 +182,25 @@ describe('Accounting Service', (): void => {
       const { id } = await accountFactory.build({ balance: value })
       await expect(
         accountingService.getAccountsTotalReceived([id])
-      ).resolves.toEqual({ [id]: value })
+      ).resolves.toEqual([value])
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       const uid = uuid()
       await expect(
         accountingService.getAccountsTotalReceived([uid])
-      ).resolves.toEqual({ [uid]: undefined })
+      ).resolves.toEqual([undefined])
       const value = BigInt(10)
       const { id } = await accountFactory.build({ balance: value })
       await expect(
         accountingService.getAccountsTotalReceived([uid, id])
-      ).resolves.toEqual({ [uid]: undefined, [id]: value })
+      ).resolves.toEqual([undefined, value])
     })
 
     test('Returns empty object for empty array of ids', async (): Promise<void> => {
       await expect(
         accountingService.getAccountsTotalReceived([])
-      ).resolves.toEqual({})
+      ).resolves.toEqual([])
     })
   })
 

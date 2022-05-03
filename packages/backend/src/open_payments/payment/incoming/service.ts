@@ -271,10 +271,10 @@ async function getAccountIncomingPaymentsPage(
     const receivedAmounts = await deps.accountingService.getAccountsTotalReceived(
       incomingPayments.map((payment) => payment.id)
     )
-    return incomingPayments.map((payment) => {
+    return incomingPayments.map((payment, i) => {
       try {
         payment.receivedAmount = {
-          value: BigInt(receivedAmounts[payment.id]),
+          value: BigInt(receivedAmounts[i]),
           assetCode: payment.asset.code,
           assetScale: payment.asset.scale
         }
