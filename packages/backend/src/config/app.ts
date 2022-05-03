@@ -1,4 +1,6 @@
 import * as crypto from 'crypto'
+import { readFileSync } from 'fs'
+import { ConnectionOptions } from 'tls'
 
 function envString(name: string, value: string): string {
   const envValue = process.env[name]
@@ -37,6 +39,11 @@ export const Config = {
         ),
   env: envString('NODE_ENV', 'development'),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
+  redisTls: parseRedisTlsConfig(
+    envString('REDIS_TLS_CA_FILE_PATH', ''),
+    envString('REDIS_TLS_KEY_FILE_PATH', ''),
+    envString('REDIS_TLS_CERT_FILE_PATH', '')
+  ),
   coilApiGrpcUrl: envString('COIL_API_GRPC_URL', 'localhost:6000'),
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
   adminKey: envString('ADMIN_KEY', 'qwertyuiop1234567890'),
@@ -91,4 +98,28 @@ export const Config = {
 
   /** Frontend **/
   frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')
+}
+
+function parseRedisTlsConfig(
+  caFile: string,
+  keyFile: string,
+  certFile: string
+): ConnectionOptions | undefined {
+  const options: ConnectionOptions = {}
+
+  // self-signed certs.
+  if (caFile !== '') {
+    options.ca = readFileSync(caFile)
+    options.rejectUnauthorized = false
+  }
+
+  if (certFile !== '') {
+    options.cert = readFileSync(certFile)
+  }
+
+  if (keyFile !== '') {
+    options.key = readFileSync(keyFile)
+  }
+
+  return Object.keys(options).length > 0 ? options : undefined
 }
