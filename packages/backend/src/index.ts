@@ -97,10 +97,13 @@ export function initIocContainer(
     return knex
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
-  container.singleton('redis', async (deps) => {
-    const config = await deps.use('config')
-    return new IORedis(config.redisUrl)
-  })
+  container.singleton(
+    'redis',
+    async (deps): Promise<IORedis.Redis> => {
+      const config = await deps.use('config')
+      return new IORedis(config.redisUrl, { tls: config.redisTls })
+    }
+  )
   container.singleton('streamServer', async (deps) => {
     const config = await deps.use('config')
     return new StreamServer({
