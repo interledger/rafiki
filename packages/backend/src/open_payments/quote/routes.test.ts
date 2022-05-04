@@ -174,7 +174,7 @@ describe('Quote Routes', (): void => {
   })
 
   describe('create', (): void => {
-    let options: Omit<CreateQuoteOptions & CreateQuoteOptions, 'accountId'>
+    let options: Omit<CreateQuoteOptions, 'accountId'>
 
     beforeEach(() => {
       options = {}
