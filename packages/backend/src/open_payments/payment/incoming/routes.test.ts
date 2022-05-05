@@ -203,7 +203,7 @@ describe('Incoming Payment Routes', (): void => {
     test('returns 500 if TB account not found', async (): Promise<void> => {
       jest
         .spyOn(accountingService, 'getAccountTotalReceived')
-        .mockImplementationOnce(async (_args) => undefined)
+        .mockResolvedValueOnce(undefined)
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' }
