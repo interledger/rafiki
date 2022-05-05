@@ -81,6 +81,7 @@ export interface AccountingService {
   createSettlementAccount(unit: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
+  getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
   getAccountTotalReceived(id: string): Promise<bigint | undefined>
   getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]>
   getSettlementBalance(unit: number): Promise<bigint | undefined>
@@ -108,6 +109,7 @@ export function createAccountingService(
     createSettlementAccount: (unit) => createSettlementAccount(deps, unit),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
+    getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
     getAccountTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
     getSettlementBalance: (unit) => getSettlementBalance(deps, unit),
@@ -180,6 +182,20 @@ export async function getAccountTotalSent(
   if (account) {
     return account.debits_accepted
   }
+}
+
+export async function getAccountsTotalSent(
+  deps: ServiceDependencies,
+  ids: string[]
+): Promise<(bigint | undefined)[]> {
+  if (ids.length > 0) {
+    const accounts = await getAccounts(deps, ids)
+    return ids.map(
+      (id) =>
+        accounts.find((account) => account.id === toTigerbeetleId(id))
+          ?.debits_accepted
+    )
+  } else return []
 }
 
 export async function getAccountTotalReceived(

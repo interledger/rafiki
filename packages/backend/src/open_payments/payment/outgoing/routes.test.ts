@@ -21,6 +21,7 @@ import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes } from './routes'
 import { Amount } from '../amount'
 import { AppContext } from '../../../app'
+import { AccountingService } from '../../../accounting/service'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -32,6 +33,7 @@ describe('Outgoing Payment Routes', (): void => {
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let accountId: string
   let accountUrl: string
+  let accountingService: AccountingService
 
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -84,6 +86,7 @@ describe('Outgoing Payment Routes', (): void => {
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       config = await deps.use('config')
       outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
+      accountingService = await deps.use('accountingService')
     }
   )
 
@@ -147,6 +150,29 @@ describe('Outgoing Payment Routes', (): void => {
         'status',
         404
       )
+    })
+
+    test('returns 500 if TB account not found', async (): Promise<void> => {
+      const outgoingPayment = await outgoingPaymentService.create({
+        accountId,
+        receivingAccount,
+        sendAmount
+      })
+      console.log(outgoingPayment)
+      assert.ok(!isOutgoingPaymentError(outgoingPayment))
+      jest
+        .spyOn(accountingService, 'getTotalSent')
+        .mockResolvedValueOnce(undefined)
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { outgoingPaymentId: outgoingPayment.id }
+      )
+      await expect(outgoingPaymentRoutes.get(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: `Error trying to get outgoing payment`
+      })
     })
 
     test.each`
@@ -536,6 +562,25 @@ describe('Outgoing Payment Routes', (): void => {
           })
         }
       )
+
+      test('returns 500 if one TB account not found', async (): Promise<void> => {
+        const outgoingPayment = await outgoingPaymentService.create({
+          accountId,
+          receivingAccount,
+          sendAmount
+        })
+        assert.ok(!isOutgoingPaymentError(outgoingPayment))
+        jest
+          .spyOn(accountingService, 'getAccountsTotalSent')
+          .mockImplementationOnce(async (_args) => {
+            return []
+          })
+        const ctx = setup({}, { accountId: outgoingPayment.accountId })
+        await expect(outgoingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+          status: 500,
+          message: `Error trying to list outgoing payments`
+        })
+      })
     })
 
     describe('successes', (): void => {

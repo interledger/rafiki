@@ -58,7 +58,11 @@ async function getOutgoingPayment(
   deps: ServiceDependencies,
   id: string
 ): Promise<OutgoingPayment | undefined> {
-  return OutgoingPayment.query(deps.knex).findById(id).withGraphJoined('asset')
+  const outgoingPayment = await OutgoingPayment.query(deps.knex)
+    .findById(id)
+    .withGraphJoined('asset')
+  if (outgoingPayment) return await addSentAmount(deps, outgoingPayment)
+  else return
 }
 
 export interface CreateOutgoingPaymentOptions {
@@ -126,7 +130,7 @@ async function createOutgoingPayment(
         asset: payment.asset
       })
 
-      return payment
+      return await addSentAmount(deps, payment, BigInt(0))
     })
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
@@ -166,7 +170,7 @@ async function fundPayment(
       return error
     }
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
-    return payment
+    return await addSentAmount(deps, payment)
   })
 }
 
@@ -175,8 +179,50 @@ async function getAccountPage(
   accountId: string,
   pagination?: Pagination
 ): Promise<OutgoingPayment[]> {
-  return await OutgoingPayment.query(deps.knex)
+  const outgoingPayments = await OutgoingPayment.query(deps.knex)
     .getPage(pagination)
     .where({ accountId })
     .withGraphFetched('asset')
+  if (outgoingPayments.length > 0) {
+    const sentAmounts = await deps.accountingService.getAccountsTotalSent(
+      outgoingPayments.map((payment) => payment.id)
+    )
+    return outgoingPayments.map((payment, i) => {
+      try {
+        payment.sentAmount = {
+          value: BigInt(sentAmounts[i]),
+          assetCode: payment.asset.code,
+          assetScale: payment.asset.scale
+        }
+      } catch (_) {
+        deps.logger.error({ incomingPayment: payment.id }, 'account not found')
+        throw new Error(
+          `Underlying TB account not found, payment id: ${payment.id}`
+        )
+      }
+      return payment
+    })
+  } else return outgoingPayments
+}
+
+async function addSentAmount(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  value?: bigint
+): Promise<OutgoingPayment> {
+  const received =
+    value || (await deps.accountingService.getTotalSent(payment.id))
+  if (received !== undefined) {
+    payment.sentAmount = {
+      value: received,
+      assetCode: payment.asset.code,
+      assetScale: payment.asset.scale
+    }
+  } else {
+    deps.logger.error({ outgoingPayment: payment.id }, 'account not found')
+    throw new Error(
+      `Underlying TB account not found, payment id: ${payment.id}`
+    )
+  }
+  return payment
 }

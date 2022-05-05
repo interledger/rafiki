@@ -42,9 +42,12 @@ async function getOutgoingPayment(
   const acceptJSON = ctx.accepts('application/json')
   ctx.assert(acceptJSON, 406)
 
-  const outgoingPayment = await deps.outgoingPaymentService.get(
-    outgoingPaymentId
-  )
+  let outgoingPayment: OutgoingPayment | undefined
+  try {
+    outgoingPayment = await deps.outgoingPaymentService.get(outgoingPaymentId)
+  } catch (_) {
+    ctx.throw(500, 'Error trying to get outgoing payment')
+  }
   if (!outgoingPayment) return ctx.throw(404)
 
   const body = outgoingPaymentToBody(deps, outgoingPayment)
@@ -147,10 +150,15 @@ async function listOutgoingPayments(
     if (paginationParams.first) paginationParams['after'] = cursor
     if (paginationParams.last) paginationParams['before'] = cursor
   }
-  const outgoingPayments = await deps.outgoingPaymentService.getAccountPage(
-    accountId,
-    paginationParams
-  )
+  let outgoingPayments: OutgoingPayment[]
+  try {
+    outgoingPayments = await deps.outgoingPaymentService.getAccountPage(
+      accountId,
+      paginationParams
+    )
+  } catch (_) {
+    ctx.throw(500, 'Error trying to list outgoing payments')
+  }
   const result = outgoingPayments.map((element) => {
     return outgoingPaymentToBody(deps, element)
   })
@@ -195,6 +203,10 @@ function outgoingPaymentToBody(
           value: outgoingPayment.receiveAmount.value.toString()
         }
       : undefined,
+    sentAmount: {
+      ...outgoingPayment.sentAmount,
+      value: outgoingPayment.sentAmount.value.toString()
+    },
     description: outgoingPayment.description ?? undefined,
     externalRef: outgoingPayment.externalRef ?? undefined
   }
