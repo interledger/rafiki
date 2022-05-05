@@ -146,18 +146,40 @@ const handleCompleted = async (
   payment: OutgoingPayment
 ): Promise<void> => {
   if (payment.quote.completeReceivingPayment) {
-    await axios.put(
-      payment.receivingPayment,
-      {
-        state: IncomingPaymentState.Completed.toLowerCase()
-      },
-      {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
+    try {
+      const { data } = await axios.put(
+        payment.receivingPayment,
+        {
+          state: IncomingPaymentState.Completed.toLowerCase()
+        },
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          validateStatus: (status) => status === 200
         }
+      )
+      if (data.id !== payment.receivingPayment) {
+        deps.logger.warn(
+          {
+            data
+          },
+          'invalid incoming payment PUT response'
+        )
+        throw LifecycleError.ReceivingPaymentError
       }
-    )
+    } catch (err) {
+      if (err !== LifecycleError.ReceivingPaymentError) {
+        deps.logger.warn(
+          {
+            error: err.message
+          },
+          'incoming payment PUT request failed'
+        )
+      }
+      throw LifecycleError.ReceivingPaymentError
+    }
   }
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed

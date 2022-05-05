@@ -2,7 +2,7 @@
 
 ## Quote
 
-A user creates a quote by passing details to `Mutation.createQuote`.
+The wallet creates a quote on behalf of a user by passing details to `Mutation.createQuote`.
 
 First, the recipient Open Payments account or incoming payment is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
 
@@ -19,7 +19,7 @@ Rafiki assigns a deadline based on the expected validity of its slippage paramet
 
 ### Payment creation
 
-A user creates a payment by passing details to `Mutation.createOutgoingPayment`. The payment is created in the `FUNDING` state.
+The wallet creates a payment on behalf of a user by passing details to `Mutation.createOutgoingPayment`. The payment is created in the `FUNDING` state.
 
 ### Funding
 

@@ -125,7 +125,7 @@ describe('OutgoingPaymentService', (): void => {
       })
       .matchHeader('Accept', 'application/json')
       .matchHeader('Content-Type', 'application/json')
-      .reply(201, function (path, requestBody) {
+      .reply(200, function (path, requestBody) {
         const headers = this.req.headers
         if (!headers['authorization']) {
           headers.authorization = `GNAP ${testAccessToken}`
@@ -697,6 +697,34 @@ describe('OutgoingPaymentService', (): void => {
           OutgoingPaymentState.Failed,
           Pay.PaymentError.DestinationAssetConflict
         )
+      })
+
+      it('SENDING (update incoming payment request failed)', async (): Promise<void> => {
+        const paymentId = await setup({
+          receivingAccount,
+          sendAmount
+        })
+
+        const { receivingPayment } = (await outgoingPaymentService.get(
+          paymentId
+        )) as OutgoingPayment
+        const incomingPaymentUrl = new URL(receivingPayment)
+        const failScope = nock(incomingPaymentUrl.origin)
+          .put(incomingPaymentUrl.pathname)
+          .reply(500)
+
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Sending
+        )
+        failScope.isDone()
+
+        // Skip through the backoff timer.
+        fastForwardToAttempt(payment.stateAttempts)
+
+        const scope = mockUpdateIncomingPayment(payment.receivingPayment)
+        await processNext(paymentId, OutgoingPaymentState.Completed)
+        scope.isDone()
       })
     })
   })

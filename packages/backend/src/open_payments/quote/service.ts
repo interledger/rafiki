@@ -156,7 +156,7 @@ async function createQuote(
             options.receivingAccount && options.sendAmount
           ),
           // Patch using createdAt below
-          expiresAt: new Date()
+          expiresAt: new Date(0)
         })
         .withGraphFetched('asset')
 
