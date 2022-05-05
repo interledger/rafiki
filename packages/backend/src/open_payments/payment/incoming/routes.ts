@@ -60,7 +60,7 @@ async function getIncomingPayment(
   try {
     incomingPayment = await deps.incomingPaymentService.get(incomingPaymentId)
   } catch (err) {
-    ctx.throw(500, err.message)
+    ctx.throw(500, 'Error trying to get incoming payment')
   }
   if (!incomingPayment) return ctx.throw(404)
 
@@ -169,7 +169,7 @@ async function updateIncomingPayment(
       state
     })
   } catch (err) {
-    ctx.throw(500, err.message)
+    ctx.throw(500, 'Error trying to update incoming payment')
   }
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -219,7 +219,7 @@ async function listIncomingPayments(
       paginationParams
     )
   } catch (err) {
-    ctx.throw(500, err.message)
+    ctx.throw(500, 'Error trying to list incoming payments')
   }
   const result = incomingPayments.map((element) => {
     return incomingPaymentToBody(deps, element)

@@ -212,7 +212,7 @@ describe('Incoming Payment Routes', (): void => {
       )
       await expect(incomingPaymentRoutes.get(ctx)).rejects.toMatchObject({
         status: 500,
-        message: `Underlying TB account not found, payment id: ${incomingPayment.id}`
+        message: `Error trying to get incoming payment`
       })
     })
   })
@@ -495,7 +495,7 @@ describe('Incoming Payment Routes', (): void => {
         const ctx = setup({}, { accountId: incomingPayment.accountId })
         await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
           status: 500,
-          message: `Underlying TB account not found, payment id: ${incomingPayment.id}`
+          message: `Error trying to list incoming payments`
         })
       })
     })
