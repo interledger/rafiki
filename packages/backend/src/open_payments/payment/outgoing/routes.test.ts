@@ -158,7 +158,6 @@ describe('Outgoing Payment Routes', (): void => {
         receivingAccount,
         sendAmount
       })
-      console.log(outgoingPayment)
       assert.ok(!isOutgoingPaymentError(outgoingPayment))
       jest
         .spyOn(accountingService, 'getTotalSent')
@@ -208,6 +207,11 @@ describe('Outgoing Payment Routes', (): void => {
           sendAmount: sendAmount && {
             ...sendAmount,
             value: sendAmount.value.toString()
+          },
+          sentAmount: {
+            value: '0',
+            assetCode: asset.code,
+            assetScale: asset.scale
           },
           receiveAmount: receiveAmount && {
             ...receiveAmount,
@@ -262,6 +266,11 @@ describe('Outgoing Payment Routes', (): void => {
           ...sendAmount,
           value: sendAmount.value.toString()
         },
+        sentAmount: {
+          value: '0',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
         receiveAmount: {
           ...receiveAmount,
           value: receiveAmount.value.toString()
@@ -292,6 +301,11 @@ describe('Outgoing Payment Routes', (): void => {
           id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
           accountId: accountUrl,
           receivingPayment,
+          sentAmount: {
+            value: '0',
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
           state: [
             OutgoingPaymentState.Funding,
             OutgoingPaymentState.Sending
@@ -489,7 +503,12 @@ describe('Outgoing Payment Routes', (): void => {
             receivingAccount,
             sendAmount: options.sendAmount,
             receiveAmount: options.receiveAmount,
-            state: OutgoingPaymentState.Pending.toLowerCase()
+            state: OutgoingPaymentState.Pending.toLowerCase(),
+            sentAmount: {
+              value: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
           })
         }
       )
@@ -515,7 +534,12 @@ describe('Outgoing Payment Routes', (): void => {
           receivingPayment,
           description: options.description,
           externalRef: options.externalRef,
-          state: OutgoingPaymentState.Pending.toLowerCase()
+          state: OutgoingPaymentState.Pending.toLowerCase(),
+          sentAmount: {
+            value: '0',
+            assetCode: asset.code,
+            assetScale: asset.scale
+          }
         })
       })
     })
@@ -604,6 +628,11 @@ describe('Outgoing Payment Routes', (): void => {
               sendAmount: {
                 ...sendAmount,
                 value: sendAmount.value.toString()
+              },
+              sentAmount: {
+                value: '0',
+                assetCode: asset.code,
+                assetScale: asset.scale
               },
               state: 'pending',
               description: outgoingPayments[i].description,
