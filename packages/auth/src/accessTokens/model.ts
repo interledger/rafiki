@@ -1,11 +1,7 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { Limit } from './limits/model'
-
-enum Actions {
-  Create = 'create',
-  Read = 'read'
-}
+import { Grant } from '../grants/model'
 
 export class AccessToken extends BaseModel {
   public static get tableName(): string {
@@ -18,14 +14,21 @@ export class AccessToken extends BaseModel {
       modelClass: Limit,
       join: {
         from: 'accessTokens.value',
-        to: 'limits.id'
+        to: 'limits.accessToken'
+      }
+    },
+    grant: {
+      relation: Model.HasOneRelation,
+      modelClass: Grant,
+      join: {
+        from: 'accessTokens.grantId',
+        to: 'grants.id'
       }
     }
   }
 
   public value!: string
-  public type!: string
   public managementId!: string
-  public actions!: Actions[]
-  public expiresIn: number
+  public grantId!: string
+  public expiresIn?: number
 }

@@ -1,4 +1,6 @@
+import { Model } from 'objection'
 import { BaseModel } from '../../shared/baseModel'
+import { AccessToken } from '../model'
 
 enum LimitNames {
   SendAmount = 'sendAmount',
@@ -22,7 +24,20 @@ export class Limit extends BaseModel {
     return ['data']
   }
 
+  static relationMappings = {
+    accessToken: {
+      relation: Model.HasOneRelation,
+      modelClass: AccessToken,
+      join: {
+        from: 'limit.accessToken',
+        to: 'accessTokens.value'
+      }
+    }
+  }
+
+  public id!: string
   public name!: LimitNames
+  public accessToken!: string
   public value?: bigint
   public assetCode?: string
   public assetScale?: number
