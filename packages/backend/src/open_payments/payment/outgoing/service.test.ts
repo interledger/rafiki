@@ -202,17 +202,22 @@ describe('OutgoingPaymentService', (): void => {
   async function expectOutcome(
     payment: OutgoingPayment,
     {
+      amountSent,
       amountDelivered,
       accountBalance,
       incomingPaymentReceived,
       withdrawAmount
     }: {
+      amountSent?: bigint
       amountDelivered?: bigint
       accountBalance?: bigint
       incomingPaymentReceived?: bigint
       withdrawAmount?: bigint
     }
   ) {
+    if (amountSent !== undefined) {
+      expect(payment.sentAmount.value).toEqual(amountSent)
+    }
     await expect(accountingService.getTotalSent(payment.id)).resolves.toBe(
       payment.sentAmount.value
     )
@@ -691,6 +696,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         await expectOutcome(payment, {
           accountBalance: BigInt(0),
+          amountSent: BigInt(123),
           amountDelivered: BigInt(Math.floor(123 / 2))
         })
       })
@@ -709,6 +715,7 @@ describe('OutgoingPaymentService', (): void => {
         const amountSent = receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.value - amountSent,
+          amountSent,
           amountDelivered: receiveAmount.value,
           withdrawAmount: payment.sendAmount.value - amountSent
         })
@@ -728,6 +735,7 @@ describe('OutgoingPaymentService', (): void => {
         const amountSent = incomingPayment.incomingAmount!.value * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.value - amountSent,
+          amountSent,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           amountDelivered: incomingPayment.incomingAmount!.value,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -754,6 +762,7 @@ describe('OutgoingPaymentService', (): void => {
           BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.value - amountSent,
+          amountSent,
           amountDelivered:
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             incomingPayment.incomingAmount!.value - amountAlreadyDelivered,
@@ -784,6 +793,7 @@ describe('OutgoingPaymentService', (): void => {
           )
           expect(payment.stateAttempts).toBe(i + 1)
           await expectOutcome(payment, {
+            amountSent: BigInt(10 * (i + 1)),
             amountDelivered: BigInt(5 * (i + 1))
           })
           // Skip through the backoff timer.
@@ -799,6 +809,7 @@ describe('OutgoingPaymentService', (): void => {
         // "mockPay" allows a small amount of money to be paid every attempt.
         await expectOutcome(payment, {
           accountBalance: BigInt(123 - 10 * 5),
+          amountSent: BigInt(10 * 5),
           amountDelivered: BigInt(5 * 5),
           withdrawAmount: BigInt(123 - 10 * 5)
         })
@@ -824,6 +835,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         await expectOutcome(payment, {
           accountBalance: BigInt(123 - 10),
+          amountSent: BigInt(10),
           amountDelivered: BigInt(5),
           withdrawAmount: BigInt(123 - 10)
         })
@@ -850,6 +862,7 @@ describe('OutgoingPaymentService', (): void => {
         fastForwardToAttempt(1)
         await expectOutcome(payment, {
           accountBalance: BigInt(123 - 10),
+          amountSent: BigInt(10),
           amountDelivered: BigInt(5)
         })
 
@@ -860,6 +873,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         await expectOutcome(payment2, {
           accountBalance: BigInt(0),
+          amountSent: sendAmount.value,
           amountDelivered: sendAmount.value / BigInt(2)
         })
       })
@@ -882,6 +896,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         await expectOutcome(payment, {
           accountBalance: BigInt(0),
+          amountSent: BigInt(123),
           amountDelivered: BigInt(123) / BigInt(2)
         })
       })
@@ -902,6 +917,7 @@ describe('OutgoingPaymentService', (): void => {
         if (!payment.sendAmount) throw 'no sendAmount'
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.value,
+          amountSent: BigInt(0),
           amountDelivered: BigInt(0),
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           incomingPaymentReceived: incomingPayment.incomingAmount!.value,
