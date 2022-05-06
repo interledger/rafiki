@@ -36,12 +36,6 @@ describe('Client Service', (): void => {
     }
   )
 
-  afterEach(
-    async (): Promise<void> => {
-      nock.cleanAll()
-    }
-  )
-
   afterAll(
     async (): Promise<void> => {
       nock.restore()
