@@ -57,7 +57,7 @@ export const createTestApp = async (
     access: [
       {
         type: AccessType.IncomingPayment,
-        actions: [AccessAction.Create, AccessAction.Read]
+        actions: [AccessAction.Create, AccessAction.Update, AccessAction.Read]
       },
       {
         type: AccessType.OutgoingPayment,

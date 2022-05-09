@@ -5,7 +5,6 @@ import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
-import { Amount } from '../amount'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -65,32 +64,7 @@ async function createOutgoingPayment(
   const { body } = ctx.request
   if (typeof body !== 'object') return ctx.throw(400, 'json body required')
 
-  if (
-    body.receivingAccount !== undefined &&
-    typeof body.receivingAccount !== 'string'
-  )
-    return ctx.throw(400, 'invalid receivingAccount')
-  let sendAmount: Amount | undefined
-  if (body.sendAmount) {
-    try {
-      sendAmount = parseAmount(body.sendAmount)
-    } catch (_) {
-      return ctx.throw(400, 'invalid sendAmount')
-    }
-  }
-  let receiveAmount: Amount | undefined
-  if (body.receiveAmount) {
-    try {
-      receiveAmount = parseAmount(body.receiveAmount)
-    } catch (_) {
-      return ctx.throw(400, 'invalid receiveAmount')
-    }
-  }
-  if (
-    body.receivingPayment !== undefined &&
-    typeof body.receivingPayment !== 'string'
-  )
-    return ctx.throw(400, 'invalid receivingPayment')
+  if (typeof body.quoteId !== 'string') return ctx.throw(400, 'invalid quoteId')
 
   if (body.description !== undefined && typeof body.description !== 'string')
     return ctx.throw(400, 'invalid description')
@@ -99,10 +73,7 @@ async function createOutgoingPayment(
 
   const paymentOrErr = await deps.outgoingPaymentService.create({
     accountId,
-    receivingAccount: body.receivingAccount,
-    sendAmount,
-    receiveAmount,
-    receivingPayment: body.receivingPayment,
+    quoteId: body.quoteId,
     description: body.description,
     externalRef: body.externalRef
   })
@@ -130,38 +101,16 @@ function outgoingPaymentToBody(
     ].includes(outgoingPayment.state)
       ? 'processing'
       : outgoingPayment.state.toLowerCase(),
-    receivingAccount: outgoingPayment.receivingAccount ?? undefined,
-    receivingPayment: outgoingPayment.receivingPayment ?? undefined,
-    sendAmount: outgoingPayment.sendAmount
-      ? {
-          ...outgoingPayment.sendAmount,
-          value: outgoingPayment.sendAmount.value.toString()
-        }
-      : undefined,
-    receiveAmount: outgoingPayment.receiveAmount
-      ? {
-          ...outgoingPayment.receiveAmount,
-          value: outgoingPayment.receiveAmount.value.toString()
-        }
-      : undefined,
+    receivingPayment: outgoingPayment.receivingPayment,
+    sendAmount: {
+      ...outgoingPayment.sendAmount,
+      value: outgoingPayment.sendAmount.value.toString()
+    },
+    receiveAmount: {
+      ...outgoingPayment.receiveAmount,
+      value: outgoingPayment.receiveAmount.value.toString()
+    },
     description: outgoingPayment.description ?? undefined,
     externalRef: outgoingPayment.externalRef ?? undefined
-  }
-}
-
-function parseAmount(amount: unknown): Amount {
-  if (
-    typeof amount !== 'object' ||
-    amount === null ||
-    (amount['assetCode'] && typeof amount['assetCode'] !== 'string') ||
-    (amount['assetScale'] !== undefined &&
-      typeof amount['assetScale'] !== 'number')
-  ) {
-    throw new Error('invalid amount')
-  }
-  return {
-    value: BigInt(amount['value']),
-    assetCode: amount['assetCode'],
-    assetScale: amount['assetScale']
   }
 }

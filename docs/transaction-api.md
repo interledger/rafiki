@@ -1,28 +1,29 @@
 # Transaction API
 
+## Quote
+
+The wallet creates a quote on behalf of a user by passing details to `Mutation.createQuote`.
+
+First, the recipient Open Payments account or incoming payment is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
+
+The quote may fail in cases such as if the payment pointer or account URL was semantically invalid, the incoming payment was already paid, a terminal ILP Reject was encountered, or the rate was insufficient; or in the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available.
+
+If the STREAM sender successfully established a connection to the recipient and discovered rates and the path capacity, Rafiki sends the quote details to the wallet's configured quote endpoint. If the quote is acceptable and the `sendAmount.value` does not exceed sender's account balance, the wallet returns `201` with the quote. The wallet may also adjust quote amounts as follows:
+
+- If `quote.paymentType` is `FIXED_SEND`, `receiveAmount.value` may be reduced.
+- If `quote.paymentType` is `FIXED_DELIVERY`, `sendAmount.value` may be increased.
+
+Rafiki assigns a deadline based on the expected validity of its slippage parameters for the wallet to fund the payment and returns the created quote.
+
 ## Outgoing Payment Lifecycle
 
 ### Payment creation
 
-A user creates a payment by passing details to `Mutation.createOutgoingPayment`. The payment is created in the `PENDING` state.
-
-### Quoting
-
-To begin a payment attempt, an instance acquires a lock to setup and quote the payment.
-
-First, the recipient Open Payments account or incoming payment is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
-
-Quotes can end in 3 states:
-
-1. Success. The STREAM sender successfully established a connection to the recipient, and discovered rates and the path capacity. This advances the state to `FUNDING`. The parameters of the quote are persisted so they may be resumed if the payment is funded. Rafiki also assigns a deadline based on the expected validity of its slippage parameters for the wallet to fund the payment.
-2. Irrevocable failure. In cases such as if the payment pointer or account URL was semantically invalid, the incoming payment was already paid, a terminal ILP Reject was encountered, or the rate was insufficient, the payment is unlikely to ever succeed, or requires some manual intervention. These cases advance the state to `FAILED`.
-3. Recoverable failure. In the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available, Rafiki may elect to automatically retry the quote. The state remains as `PENDING`, and Rafiki internally tracks that the quote failed and when to schedule another attempt.
-
-After the quote ends and state advances, the lock on the payment is released.
+The wallet creates a payment on behalf of a user by passing details to `Mutation.createOutgoingPayment`. The payment is created in the `FUNDING` state.
 
 ### Funding
 
-After quoting completes, Rafiki notifies the wallet operator via an `outgoing_payment.funding` [webhook event](#webhooks) to reserve the maximum requisite funds for the payment attempt by moving `sendAmount.value` from the funding wallet account owned by the payer to the payment account.
+After the payment is created, Rafiki notifies the wallet operator via an `outgoing_payment.created` [webhook event](#webhooks) to reserve the maximum requisite funds for the payment attempt by moving `sendAmount.value` from the funding wallet account owned by the payer to the payment account.
 
 If the wallet funds the payment, the state advances to `SENDING`.
 
@@ -30,7 +31,7 @@ If the wallet funds the payment, the state advances to `SENDING`.
 
 To send, an instance acquires a lock on a payment with a `SENDING` state.
 
-The instance sends the payment with STREAM, which uses the quote parameters acquired during the `PENDING` state.
+The instance sends the payment with STREAM, which uses the quote parameters.
 
 After the payment completes, the instance releases the lock on the payment and advances the state depending upon the outcome:
 
@@ -46,7 +47,7 @@ After the payment completes, the instance releases the lock on the payment and a
 
 ### Payment resolution
 
-In the `COMPLETED` and `FAILED` cases, the wallet is notifed of any remaining funds in the payment account via `outgoing_payment.completed` and `outgoing_payment.cancelled` [webhook events](#webhooks).
+In the `COMPLETED` and `FAILED` cases, the wallet is notifed of any remaining funds in the payment account via `outgoing_payment.completed` and `outgoing_payment.failed` [webhook events](#webhooks).
 
 ## Incoming Payment Lifecycle
 
@@ -96,9 +97,9 @@ Incoming payment has received its specified `incomingAmount`.
 
 Credit `incomingPayment.received` to the wallet balance for `incomingPayment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
-#### `outgoing_payment.funding`
+#### `outgoing_payment.created`
 
-Payment needs liquidity in order to send quoted amount.
+Payment created and needs liquidity in order to send quoted amount.
 
 To fund the payment, deduct `sendAmount.value` from the wallet balance for `payment.accountId` and call `Mutation.depositEventLiquidity` with the event id.
 
@@ -124,44 +125,61 @@ Credit `payment.balance` to the wallet balance for `payment.accountId`, and call
 
 ## Resources
 
+### `Quote`
+
+The quote must be created with (`receivingPayment` xor `receivingAccount`) and (`sendAmount` xor `receiveAmount`) or `receivingPayment` and no specified amount (assuming the Incoming Payment has an `incomingAmount`).
+
+| Name                       | Optional | Type          | Description                                                                                                                                                                                                                                                                                                               |
+| :------------------------- | :------- | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                       | No       | `ID`          | Unique ID for this quote, randomly generated by Rafiki.                                                                                                                                                                                                                                                                   |
+| `paymentType`              | No       | `PaymentType` | See [`PaymentType`](#paymenttype).                                                                                                                                                                                                                                                                                        |
+| `maxPacketAmount`          | No       | `UInt64`      | Discovered maximum packet amount allowed over this payment path.                                                                                                                                                                                                                                                          |
+| `minExchangeRate`          | No       | `Float`       | Aggregate exchange rate the payment is guaranteed to meet, as a ratio of destination base units to source base units. Corresponds to the minimum exchange rate enforced on each packet (_except for the final packet_) to ensure sufficient money gets delivered. For strict bookkeeping, use `sendAmount.value` instead. |
+| `lowExchangeRateEstimate`  | No       | `Float`       | Lower bound of probed exchange rate over the path (inclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                      |
+| `highExchangeRateEstimate` | No       | `Float`       | Upper bound of probed exchange rate over the path (exclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                      |
+| `accountId`                | No       | `ID`          | Id of the payer's Open Payments account.                                                                                                                                                                                                                                                                                  |
+| `sendAmount`               | No       | `Object`      |                                                                                                                                                                                                                                                                                                                           |
+| `sendAmount.value`         | No       | `UInt64`      | Fixed amount that will be sent in the base unit and asset of the sending account.                                                                                                                                                                                                                                         |
+| `sendAmount.assetScale`    | No       | `Integer`     |                                                                                                                                                                                                                                                                                                                           |
+| `sendAmount.assetCode`     | No       | `String`      |                                                                                                                                                                                                                                                                                                                           |
+| `receiveAmount`            | No       | `Object`      |                                                                                                                                                                                                                                                                                                                           |
+| `receiveAmount.value`      | No       | `UInt64`      | Fixed amount that will be delivered if the payment completes, in the base unit and asset of the receiving account.                                                                                                                                                                                                        |
+| `receiveAmount.assetScale` | No       | `Integer`     |                                                                                                                                                                                                                                                                                                                           |
+| `receiveAmount.assetCode`  | No       | `String`      |                                                                                                                                                                                                                                                                                                                           |
+| `receivingPayment`         | No       | `String`      | The URL of the Open Payments incoming payment that is being paid.                                                                                                                                                                                                                                                         |
+| `createdAt`                | No       | `String`      | ISO 8601 format.                                                                                                                                                                                                                                                                                                          |
+| `expiresAt`                | No       | `String`      | ISO 8601 format.                                                                                                                                                                                                                                                                                                          |
+
 ### `OutgoingPayment`
 
-The payment must be created with `receivingPayment` xor (`receivingAccount` and (`sendAmount` xor `receiveAmount`)).
+The payment must be created with `quoteId`.
 
-| Name                             | Optional | Type                   | Description                                                                                                                                                                                                                                                                                                               |
-| :------------------------------- | :------- | :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                             | No       | `ID`                   | Unique ID for this payment, randomly generated by Rafiki.                                                                                                                                                                                                                                                                 |
-| `state`                          | No       | `OutgoingPaymentState` | See [`OutgoingPaymentState`](#outgoingpaymentstate).                                                                                                                                                                                                                                                                      |
-| `description`                    | Yes      | `String`               | Human readable description of the outgoing payment.                                                                                                                                                                                                                                                                       |
-| `externalRef`                    | Yes      | `String`               | A reference that can be used by external systems to reconcile this payment with their systems.                                                                                                                                                                                                                            |
-| `error`                          | Yes      | `String`               | Failure reason.                                                                                                                                                                                                                                                                                                           |
-| `stateAttempts`                  | No       | `Integer`              | Retry number at current state.                                                                                                                                                                                                                                                                                            |
-| `quote`                          | Yes      | `Object`               | Parameters of payment execution and the projected outcome of a payment.                                                                                                                                                                                                                                                   |
-| `quote.timestamp`                | No       | `String`               | Timestamp when the most recent quote for this transaction finished.                                                                                                                                                                                                                                                       |
-| `quote.targetType`               | No       | `PaymentType`          | See [`PaymentType`](#paymenttype).                                                                                                                                                                                                                                                                                        |
-| `quote.maxPacketAmount`          | No       | `UInt64`               | Discovered maximum packet amount allowed over this payment path.                                                                                                                                                                                                                                                          |
-| `quote.minExchangeRate`          | No       | `Float`                | Aggregate exchange rate the payment is guaranteed to meet, as a ratio of destination base units to source base units. Corresponds to the minimum exchange rate enforced on each packet (_except for the final packet_) to ensure sufficient money gets delivered. For strict bookkeeping, use `sendAmount.value` instead. |
-| `quote.lowExchangeRateEstimate`  | No       | `Float`                | Lower bound of probed exchange rate over the path (inclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                      |
-| `quote.highExchangeRateEstimate` | No       | `Float`                | Upper bound of probed exchange rate over the path (exclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                      |
-| `accountId`                      | No       | `String`               | Id of the payer's Open Payments account.                                                                                                                                                                                                                                                                                  |
-| `receivingAccount`               | Yes      | `String`               | Payment pointer or URL of the destination Open Payments or SPSP account. Requires `sendAmount` or `receiveAmount`.                                                                                                                                                                                                        |
-| `sendAmount`                     | Yes      | `Object`               | Requires `receivingAccount`.                                                                                                                                                                                                                                                                                              |
-| `sendAmount.value`               | No       | `UInt64`               | Fixed amount (`FIXED_SEND`) or maximum amount (`FIXED_DELIVERY`) that will be sent in the base unit and asset of the sending account.                                                                                                                                                                                     |
-| `sendAmount.assetScale`          | No       | `Integer`              |                                                                                                                                                                                                                                                                                                                           |
-| `sendAmount.assetCode`           | No       | `String`               |                                                                                                                                                                                                                                                                                                                           |
-| `receiveAmount`                  | Yes      | `Object`               | Requires `receivingAccount`.                                                                                                                                                                                                                                                                                              |
-| `receiveAmount.value`            | No       | `UInt64`               | Fixed amount (`FIXED_DELIVERY`) or minumum amount (`FIXED_SEND`) that will be delivered if the payment completes, in the base unit and asset of the receiving account.                                                                                                                                                    |
-| `receiveAmount.assetScale`       | No       | `Integer`              |                                                                                                                                                                                                                                                                                                                           |
-| `receiveAmount.assetCode`        | No       | `String`               |                                                                                                                                                                                                                                                                                                                           |
-| `receivingPayment`               | Yes      | `String`               | The URL of the Open Payments incoming payment that is being paid.                                                                                                                                                                                                                                                         |
-| `outcome`                        | No       | `Object`               | Only set once a payment reaches the sending state. Subsequent attempts add to the totals, and the outcome persists even if a payment attempt fails.                                                                                                                                                                       |
-| `outcome.amountSent`             | No       | `UInt64`               | Total amount sent and fulfilled, across all payment attempts, in base units of the source asset.                                                                                                                                                                                                                          |
-| `createdAt`                      | No       | `String`               | ISO 8601 format.                                                                                                                                                                                                                                                                                                          |
+| Name                       | Optional | Type                   | Description                                                                                                                                         |
+| :------------------------- | :------- | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | No       | `ID`                   | Unique ID for this payment, randomly generated by Rafiki.                                                                                           |
+| `state`                    | No       | `OutgoingPaymentState` | See [`OutgoingPaymentState`](#outgoingpaymentstate).                                                                                                |
+| `description`              | Yes      | `String`               | Human readable description of the outgoing payment.                                                                                                 |
+| `externalRef`              | Yes      | `String`               | A reference that can be used by external systems to reconcile this payment with their systems.                                                      |
+| `error`                    | Yes      | `String`               | Failure reason.                                                                                                                                     |
+| `stateAttempts`            | No       | `Integer`              | Retry number at current state.                                                                                                                      |
+| `accountId`                | No       | `ID`                   | Id of the payer's Open Payments account.                                                                                                            |
+| `quoteId`                  | No       | `ID`                   | Id of the payment's Open Payments quote.                                                                                                            |
+| `sendAmount`               | No       | `Object`               |                                                                                                                                                     |
+| `sendAmount.value`         | No       | `UInt64`               | Fixed amount that will be sent in the base unit and asset of the sending account.                                                                   |
+| `sendAmount.assetScale`    | No       | `Integer`              |                                                                                                                                                     |
+| `sendAmount.assetCode`     | No       | `String`               |                                                                                                                                                     |
+| `receiveAmount`            | No       | `Object`               |                                                                                                                                                     |
+| `receiveAmount.value`      | No       | `UInt64`               | Fixed amount that will be delivered if the payment completes, in the base unit and asset of the receiving account.                                  |
+| `receiveAmount.assetScale` | No       | `Integer`              |                                                                                                                                                     |
+| `receiveAmount.assetCode`  | No       | `String`               |                                                                                                                                                     |
+| `receivingPayment`         | No       | `String`               | The URL of the Open Payments incoming payment that is being paid.                                                                                   |
+| `outcome`                  | No       | `Object`               | Only set once a payment reaches the sending state. Subsequent attempts add to the totals, and the outcome persists even if a payment attempt fails. |
+| `outcome.amountSent`       | No       | `UInt64`               | Total amount sent and fulfilled, across all payment attempts, in base units of the source asset.                                                    |
+| `createdAt`                | No       | `String`               | ISO 8601 format.                                                                                                                                    |
 
 ### `OutgoingPaymentState`
 
-- `PENDING`: Initial state. In this state, an empty payment account is generated, and the payment is automatically resolved & quoted. On success, transition to `FUNDING`. On failure, transition to `FAILED`.
-- `FUNDING`: Awaiting the wallet to add payment liquidity. On success, transition to `SENDING`.
+- `FUNDING`: Initial state. Awaiting the wallet to add payment liquidity. On success, transition to `SENDING`.
 - `SENDING`: Stream payment from the payment account to the destination.
 - `FAILED`: The payment failed. (Though some money may have been delivered)
 - `COMPLETED`: Successful completion.
@@ -176,7 +194,7 @@ The payment must be created with `receivingPayment` xor (`receivingAccount` and 
 | Name                        | Optional | Type                   | Description                                                                               |
 | :-------------------------- | :------- | :--------------------- | :---------------------------------------------------------------------------------------- |
 | `id`                        | No       | `ID`                   | Unique ID for this incoming payment, randomly generated by Rafiki.                        |
-| `accountId`                 | No       | `String`               | Id of the recipient's Open Payments account.                                              |
+| `accountId`                 | No       | `ID`                   | Id of the recipient's Open Payments account.                                              |
 | `state`                     | No       | `IncomingPaymentState` | See [`IncomingPaymentState`](#incomingpaymentstate)                                       |
 | `incomingAmount`            | Yes      | `Object`               | The amount that is expected to be received.                                               |
 | `incomingAmount.value`      | No       | `UInt64`               | The amount that will be received in the base unit and asset of the receiving account.     |

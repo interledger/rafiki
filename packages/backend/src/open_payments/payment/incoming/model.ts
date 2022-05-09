@@ -1,5 +1,5 @@
 import { Model } from 'objection'
-import { Amount } from '../amount'
+import { Amount } from '../../amount'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'

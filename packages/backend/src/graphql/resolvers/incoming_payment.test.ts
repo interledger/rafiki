@@ -1,4 +1,3 @@
-import assert from 'assert'
 import Knex from 'knex'
 
 import { getPageTests } from './page.test'
@@ -8,19 +7,13 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
+import { createIncomingPayment } from '../../tests/incomingPayment'
 import { truncateTables } from '../../tests/tableManager'
-import {
-  CreateIncomingPaymentOptions,
-  IncomingPaymentService
-} from '../../open_payments/payment/incoming/service'
 import { AccountService } from '../../open_payments/account/service'
-import { isIncomingPaymentError } from '../../open_payments/payment/incoming/errors'
-import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let incomingPaymentService: IncomingPaymentService
   let accountService: AccountService
   let knex: Knex
   let accountId: string
@@ -31,7 +24,6 @@ describe('Incoming Payment Resolver', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    incomingPaymentService = await deps.use('incomingPaymentService')
     accountService = await deps.use('accountService')
   }, 10_000)
 
@@ -44,14 +36,6 @@ describe('Incoming Payment Resolver', (): void => {
   )
 
   describe('Account incoming payments', (): void => {
-    const createPayment = async (
-      options: CreateIncomingPaymentOptions
-    ): Promise<IncomingPayment> => {
-      const payment = await incomingPaymentService.create(options)
-      assert.ok(!isIncomingPaymentError(payment))
-      return payment
-    }
-
     beforeEach(
       async (): Promise<void> => {
         accountId = (await accountService.create({ asset })).id
@@ -61,7 +45,7 @@ describe('Incoming Payment Resolver', (): void => {
     getPageTests({
       getClient: () => appContainer.apolloClient,
       createModel: () =>
-        createPayment({
+        createIncomingPayment(deps, {
           accountId,
           incomingAmount: {
             value: BigInt(123),
