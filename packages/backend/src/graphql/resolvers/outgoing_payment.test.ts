@@ -186,6 +186,11 @@ describe('OutgoingPayment Resolvers', (): void => {
                         assetCode
                         assetScale
                       }
+                      sentAmount {
+                        value
+                        assetCode
+                        assetScale
+                      }
                       description
                       externalRef
                       quote {
@@ -195,9 +200,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                         minExchangeRate
                         lowExchangeRateEstimate
                         highExchangeRateEstimate
-                      }
-                      outcome {
-                        amountSent
                       }
                       createdAt
                     }
@@ -235,6 +237,12 @@ describe('OutgoingPayment Resolvers', (): void => {
                   }
                 : null
             )
+            expect(query.sentAmount).toEqual({
+              value: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale,
+              __typename: 'Amount'
+            })
             expect(query.receivingPayment).toEqual(receivingPayment)
             expect(query.description).toEqual(description)
             expect(query.externalRef).toBeNull()
@@ -246,10 +254,6 @@ describe('OutgoingPayment Resolvers', (): void => {
               lowExchangeRateEstimate: payment.quote?.lowExchangeRateEstimate.valueOf(),
               highExchangeRateEstimate: payment.quote?.highExchangeRateEstimate.valueOf(),
               __typename: 'PaymentQuote'
-            })
-            expect(query.outcome).toEqual({
-              amountSent: amountSent.toString(),
-              __typename: 'OutgoingPaymentOutcome'
             })
             expect(new Date(query.createdAt)).toEqual(payment.createdAt)
           }

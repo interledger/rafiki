@@ -509,7 +509,7 @@ export type OutgoingPayment = Model & {
   description?: Maybe<Scalars['String']>;
   externalRef?: Maybe<Scalars['String']>;
   quote?: Maybe<PaymentQuote>;
-  outcome?: Maybe<OutgoingPaymentOutcome>;
+  sentAmount: Amount;
   createdAt: Scalars['String'];
 };
 
@@ -1166,7 +1166,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['PaymentQuote']>, ParentType, ContextType>;
-  outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
+  sentAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

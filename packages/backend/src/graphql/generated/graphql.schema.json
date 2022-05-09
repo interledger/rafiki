@@ -3652,13 +3652,17 @@
             "deprecationReason": null
           },
           {
-            "name": "outcome",
+            "name": "sentAmount",
             "description": null,
             "args": [],
             "type": {
-              "kind": "OBJECT",
-              "name": "OutgoingPaymentOutcome",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Amount",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null

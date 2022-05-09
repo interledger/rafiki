@@ -1,7 +1,6 @@
 import {
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
-  OutgoingPaymentResolvers,
   OutgoingPaymentConnectionResolvers,
   AccountResolvers,
   PaymentType as SchemaPaymentType,
@@ -28,26 +27,6 @@ export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'
   const payment = await outgoingPaymentService.get(args.id)
   if (!payment) throw new Error('payment does not exist')
   return paymentToGraphql(payment)
-}
-
-export const getOutcome: OutgoingPaymentResolvers<ApolloContext>['outcome'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['OutgoingPaymentOutcome']> => {
-  if (!parent.id) throw new Error('missing id')
-  const outgoingPaymentService = await ctx.container.use(
-    'outgoingPaymentService'
-  )
-  const payment = await outgoingPaymentService.get(parent.id)
-  if (!payment) throw new Error('payment does not exist')
-
-  const accountingService = await ctx.container.use('accountingService')
-  const totalSent = await accountingService.getTotalSent(payment.id)
-  if (totalSent === undefined) throw new Error('payment account does not exist')
-  return {
-    amountSent: totalSent
-  }
 }
 
 export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutgoingPayment'] = async (
@@ -169,6 +148,7 @@ export function paymentToGraphql(
     receivingAccount: payment.receivingAccount,
     receivingPayment: payment.receivingPayment,
     sendAmount: payment.sendAmount ?? undefined,
+    sentAmount: payment.sentAmount,
     receiveAmount: payment.receiveAmount ?? undefined,
     description: payment.description,
     externalRef: payment.externalRef,

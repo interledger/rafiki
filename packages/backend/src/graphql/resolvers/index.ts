@@ -11,7 +11,6 @@ import { getAccountIncomingPayments, getPageInfo } from './incoming_payment'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
-  getOutcome,
   getAccountOutgoingPayments,
   getOutgoingPaymentPageInfo
 } from './outgoing_payment'
@@ -60,9 +59,6 @@ export const resolvers: Resolvers = {
   },
   OutgoingPaymentConnection: {
     pageInfo: getOutgoingPaymentPageInfo
-  },
-  OutgoingPayment: {
-    outcome: getOutcome
   },
   PeersConnection: {
     pageInfo: getPeersConnectionPageInfo
