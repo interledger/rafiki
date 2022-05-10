@@ -1,19 +1,19 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
-import { AccessToken } from '../accessTokens/model'
-import { Limit } from '../limits/model'
+import { AccessToken } from '../accessToken/model'
+import { Limit } from '../limit/model'
 
-export enum Actions {
+export enum Action {
   Create = 'create',
   Read = 'read',
   List = 'list'
 }
 
-export enum StartMethods {
+export enum StartMethod {
   Redirect = 'redirect'
 }
 
-export enum FinishMethods {
+export enum FinishMethod {
   Redirect = 'redirect'
 }
 
@@ -23,7 +23,7 @@ export enum GrantState {
   Revoked = 'revoked'
 }
 
-export enum AccessTypes {
+export enum AccessType {
   Account = 'account',
   IncomingPayment = 'incomingPayment',
   OutgoingPayment = 'outgoingPayment',
@@ -55,15 +55,15 @@ export class Grant extends BaseModel {
   }
 
   public state!: GrantState
-  public type!: AccessTypes
-  public actions!: Actions[]
-  public startMethod!: StartMethods[]
+  public type!: AccessType
+  public actions!: Action[]
+  public startMethod!: StartMethod[]
 
   public continueToken?: string
   public continueId?: string
   public wait?: number
 
-  public finishMethod!: FinishMethods
+  public finishMethod!: FinishMethod
   public finishUri!: string
   public nonce!: string
 

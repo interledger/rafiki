@@ -1,7 +1,7 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
-import { AccessToken } from '../accessTokens/model'
-import { Grant } from '../grants/model'
+import { AccessToken } from '../accessToken/model'
+import { Grant } from '../grant/model'
 
 enum LimitNames {
   SendAmount = 'sendAmount',

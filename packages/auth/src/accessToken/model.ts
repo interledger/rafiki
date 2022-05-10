@@ -1,7 +1,7 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
-import { Limit } from '../limits/model'
-import { Grant } from '../grants/model'
+import { Limit } from '../limit/model'
+import { Grant } from '../grant/model'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-3.2.1
 export class AccessToken extends BaseModel {
