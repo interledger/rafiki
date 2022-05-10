@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { Amount } from '../payment/amount'
+import { Amount } from '../amount'
 
 interface AmountJSON {
   value: string

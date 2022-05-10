@@ -82,10 +82,10 @@ async function sendWebhookEvent(
       'Content-Type': 'application/json'
     }
 
-    if (deps.config.webhookSecret) {
+    if (deps.config.signatureSecret) {
       requestHeaders['Rafiki-Signature'] = generateWebhookSignature(
         event,
-        deps.config.webhookSecret,
+        deps.config.signatureSecret,
         deps.config.signatureVersion
       )
     }

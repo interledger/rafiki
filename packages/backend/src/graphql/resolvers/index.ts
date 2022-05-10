@@ -9,6 +9,12 @@ import {
 } from './asset'
 import { getAccountIncomingPayments, getPageInfo } from './incoming_payment'
 import {
+  getQuote,
+  createQuote,
+  getAccountQuotes,
+  getQuotePageInfo
+} from './quote'
+import {
   getOutgoingPayment,
   createOutgoingPayment,
   getAccountOutgoingPayments,
@@ -45,17 +51,22 @@ export const resolvers: Resolvers = {
     assets: getAssets,
     outgoingPayment: getOutgoingPayment,
     peer: getPeer,
-    peers: getPeers
+    peers: getPeers,
+    quote: getQuote
   },
   Account: {
     incomingPayments: getAccountIncomingPayments,
-    outgoingPayments: getAccountOutgoingPayments
+    outgoingPayments: getAccountOutgoingPayments,
+    quotes: getAccountQuotes
   },
   AssetsConnection: {
     pageInfo: getAssetsConnectionPageInfo
   },
   IncomingPaymentConnection: {
     pageInfo: getPageInfo
+  },
+  QuoteConnection: {
+    pageInfo: getQuotePageInfo
   },
   OutgoingPaymentConnection: {
     pageInfo: getOutgoingPaymentPageInfo
@@ -68,6 +79,7 @@ export const resolvers: Resolvers = {
     triggerAccountEvents,
     createAsset,
     updateAssetWithdrawalThreshold,
+    createQuote,
     createOutgoingPayment,
     createApiKey: createApiKey,
     redeemApiKey: redeemApiKey,

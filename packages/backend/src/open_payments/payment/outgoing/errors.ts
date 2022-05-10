@@ -5,9 +5,9 @@ import { TransferError } from '../../../accounting/errors'
 export enum OutgoingPaymentError {
   UnknownAccount = 'UnknownAccount',
   UnknownPayment = 'UnknownPayment',
+  UnknownQuote = 'UnknownQuote',
   WrongState = 'WrongState',
-  InvalidAmount = 'InvalidAmount',
-  InvalidDestination = 'InvalidDestination'
+  InvalidQuote = 'InvalidQuote'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -19,9 +19,9 @@ export const errorToCode: {
 } = {
   [OutgoingPaymentError.UnknownAccount]: 404,
   [OutgoingPaymentError.UnknownPayment]: 404,
+  [OutgoingPaymentError.UnknownQuote]: 404,
   [OutgoingPaymentError.WrongState]: 409,
-  [OutgoingPaymentError.InvalidAmount]: 400,
-  [OutgoingPaymentError.InvalidDestination]: 400
+  [OutgoingPaymentError.InvalidQuote]: 400
 }
 
 export const errorToMessage: {
@@ -29,9 +29,9 @@ export const errorToMessage: {
 } = {
   [OutgoingPaymentError.UnknownAccount]: 'unknown account',
   [OutgoingPaymentError.UnknownPayment]: 'unknown payment',
+  [OutgoingPaymentError.UnknownQuote]: 'unknown quote',
   [OutgoingPaymentError.WrongState]: 'wrong state',
-  [OutgoingPaymentError.InvalidAmount]: 'invalid amount',
-  [OutgoingPaymentError.InvalidDestination]: 'invalid destination'
+  [OutgoingPaymentError.InvalidQuote]: 'invalid quote'
 }
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }
@@ -50,21 +50,21 @@ export enum LifecycleError {
   BadState = 'BadState',
   // Account asset conflicts with sendAmount asset
   SourceAssetConflict = 'SourceAssetConflict',
+  // Error updating receivingPayment as completed
+  ReceivingPaymentError = 'ReceivingPaymentError',
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
   MissingBalance = 'MissingBalance',
   MissingQuote = 'MissingQuote',
   MissingExpiration = 'MissingExpiration',
-  MissingSendAmount = 'MissingSendAmount',
-  MissingReceiveAmount = 'MissingReceiveAmount',
   MissingIncomingPayment = 'MissingIncomingPayment',
-  InvalidRatio = 'InvalidRatio',
   Unauthorized = 'Unauthorized'
 }
 
 const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
   // Lifecycle errors
   PricesUnavailable: true,
+  ReceivingPaymentError: true,
   // From @interledger/pay's PaymentError:
   QueryFailed: true,
   ConnectorError: true,

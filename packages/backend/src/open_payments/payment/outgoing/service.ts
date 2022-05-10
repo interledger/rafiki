@@ -2,13 +2,20 @@ import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
-import { FundingError, LifecycleError, OutgoingPaymentError } from './errors'
-import { OutgoingPayment, OutgoingPaymentState } from './model'
+import {
+  FundingError,
+  OutgoingPaymentError,
+  isOutgoingPaymentError
+} from './errors'
+import {
+  OutgoingPayment,
+  OutgoingPaymentState,
+  PaymentEventType
+} from './model'
 import { AccountingService } from '../../../accounting/service'
 import { AccountService } from '../../account/service'
-import { Amount } from '../amount'
-import { RatesService } from '../../../rates/service'
-import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
+import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
+import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 
 export interface OutgoingPaymentService {
@@ -28,11 +35,8 @@ export interface OutgoingPaymentService {
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
-  slippage: number
-  quoteLifespan: number // milliseconds
   accountingService: AccountingService
   accountService: AccountService
-  ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
 }
 
@@ -60,18 +64,14 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
     .findById(id)
-    .withGraphJoined('asset')
+    .withGraphJoined('quote.asset')
   if (outgoingPayment) return await addSentAmount(deps, outgoingPayment)
   else return
 }
 
 export interface CreateOutgoingPaymentOptions {
   accountId: string
-  authorized?: boolean
-  sendAmount?: Amount
-  receiveAmount?: Amount
-  receivingAccount?: string
-  receivingPayment?: string
+  quoteId: string
   description?: string
   externalRef?: string
 }
@@ -80,61 +80,49 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
-  if (options.receivingPayment) {
-    if (options.receivingAccount) {
-      return OutgoingPaymentError.InvalidDestination
-    }
-    if (options.sendAmount || options.receiveAmount) {
-      return OutgoingPaymentError.InvalidAmount
-    }
-  } else if (options.receivingAccount) {
-    if (options.sendAmount) {
-      if (options.receiveAmount || options.sendAmount.value <= BigInt(0)) {
-        return OutgoingPaymentError.InvalidAmount
-      }
-    } else if (
-      !options.receiveAmount ||
-      options.receiveAmount.value <= BigInt(0)
-    ) {
-      return OutgoingPaymentError.InvalidAmount
-    }
-  } else {
-    return OutgoingPaymentError.InvalidDestination
-  }
-
   try {
-    const account = await deps.accountService.get(options.accountId)
-    if (!account) {
-      return OutgoingPaymentError.UnknownAccount
-    }
-    if (options.sendAmount) {
-      if (
-        options.sendAmount.assetCode !== account.asset.code ||
-        options.sendAmount.assetScale !== account.asset.scale
-      ) {
-        return OutgoingPaymentError.InvalidAmount
-      }
-    }
-
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
-          ...options,
-          assetId: account.assetId,
-          state: OutgoingPaymentState.Pending
+          id: options.quoteId,
+          accountId: options.accountId,
+          description: options.description,
+          externalRef: options.externalRef,
+          state: OutgoingPaymentState.Funding
         })
-        .withGraphFetched('asset')
+        .withGraphFetched('[quote.asset]')
 
+      if (
+        payment.accountId !== payment.quote.accountId ||
+        payment.quote.expiresAt.getTime() <= payment.createdAt.getTime()
+      ) {
+        throw OutgoingPaymentError.InvalidQuote
+      }
+
+      // TODO: move to fundPayment
       await deps.accountingService.createLiquidityAccount({
         id: payment.id,
         asset: payment.asset
       })
-
+      await sendWebhookEvent(
+        {
+          ...deps,
+          knex: trx
+        },
+        payment,
+        PaymentEventType.PaymentCreated
+      )
       return await addSentAmount(deps, payment, BigInt(0))
     })
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
-      return OutgoingPaymentError.UnknownAccount
+      if (err.constraint === 'outgoingpayments_id_foreign') {
+        return OutgoingPaymentError.UnknownQuote
+      } else if (err.constraint === 'outgoingpayments_accountid_foreign') {
+        return OutgoingPaymentError.UnknownAccount
+      }
+    } else if (isOutgoingPaymentError(err)) {
+      return err
     }
     throw err
   }
@@ -154,12 +142,11 @@ async function fundPayment(
     const payment = await OutgoingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('asset')
+      .withGraphFetched('[quote.asset]')
     if (!payment) return FundingError.UnknownPayment
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
-    if (!payment.sendAmount) throw LifecycleError.MissingSendAmount
     if (amount !== payment.sendAmount.value) return FundingError.InvalidAmount
     const error = await deps.accountingService.createDeposit({
       id: transferId,
@@ -182,7 +169,7 @@ async function getAccountPage(
   const outgoingPayments = await OutgoingPayment.query(deps.knex)
     .getPage(pagination)
     .where({ accountId })
-    .withGraphFetched('asset')
+    .withGraphFetched('quote.asset')
   if (outgoingPayments.length > 0) {
     const sentAmounts = await deps.accountingService.getAccountsTotalSent(
       outgoingPayments.map((payment) => payment.id)
