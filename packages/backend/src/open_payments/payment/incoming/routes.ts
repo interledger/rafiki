@@ -65,17 +65,12 @@ async function getIncomingPayment(
   if (!incomingPayment) return ctx.throw(404)
 
   const body = incomingPaymentToBody(deps, incomingPayment)
-  if (
-    incomingPayment.state !== IncomingPaymentState.Expired &&
-    incomingPayment.state !== IncomingPaymentState.Completed
-  ) {
-    const { ilpAddress, sharedSecret } = getStreamCredentials(
-      deps,
-      incomingPayment
-    )
-    body['ilpAddress'] = ilpAddress
-    body['sharedSecret'] = base64url(sharedSecret)
-  }
+  const { ilpAddress, sharedSecret } = getStreamCredentials(
+    deps,
+    incomingPayment
+  )
+  body['ilpAddress'] = ilpAddress
+  body['sharedSecret'] = base64url(sharedSecret)
   ctx.body = body
 }
 
