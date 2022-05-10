@@ -29,7 +29,6 @@ export interface IncomingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
   update(ctx: AppContext): Promise<void>
-  list(ctx: AppContext): Promise<void>
 }
 
 export function createIncomingPaymentRoutes(
@@ -42,8 +41,7 @@ export function createIncomingPaymentRoutes(
   return {
     get: (ctx: AppContext) => getIncomingPayment(deps, ctx),
     create: (ctx: AppContext) => createIncomingPayment(deps, ctx),
-    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx),
-    list: (ctx: AppContext) => listIncomingPayments(deps, ctx)
+    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx)
   }
 }
 
@@ -178,60 +176,6 @@ async function updateIncomingPayment(
 
   const res = incomingPaymentToBody(deps, incomingPaymentOrError)
   ctx.body = res
-}
-
-async function listIncomingPayments(
-  deps: ServiceDependencies,
-  ctx: AppContext
-): Promise<void> {
-  const acceptJSON = ctx.accepts('application/json')
-  ctx.assert(acceptJSON, 406, 'must accept json')
-  const { accountId } = ctx.params
-  ctx.assert(validateId(accountId), 400, 'invalid account id')
-  const { first, last, cursor } = ctx.request.query
-  if (
-    (first !== undefined && isNaN(Number(first))) ||
-    (last !== undefined && isNaN(Number(last))) ||
-    (first && last) ||
-    (last && !cursor) ||
-    (typeof cursor !== 'string' && cursor !== undefined)
-  )
-    ctx.throw(400, 'invalid pagination parameters')
-  const paginationParams = first
-    ? {
-        first: Number(first)
-      }
-    : last
-    ? { last: Number(last) }
-    : {}
-  if (cursor) {
-    ctx.assert(validateId(cursor), 400, 'invalid cursor')
-    if (paginationParams.first) paginationParams['after'] = cursor
-    if (paginationParams.last) paginationParams['before'] = cursor
-  }
-  let incomingPayments: IncomingPayment[]
-  try {
-    incomingPayments = await deps.incomingPaymentService.getAccountIncomingPaymentsPage(
-      accountId,
-      paginationParams
-    )
-  } catch (err) {
-    ctx.throw(500, 'Error trying to list incoming payments')
-  }
-  const result = incomingPayments.map((element) => {
-    return incomingPaymentToBody(deps, element)
-  })
-  const pagination = {
-    startCursor: incomingPayments[0].id,
-    endCursor: incomingPayments[incomingPayments.length - 1].id
-  }
-  if (paginationParams.last) {
-    pagination['last'] = incomingPayments.length
-  } else {
-    pagination['first'] = incomingPayments.length
-  }
-
-  ctx.body = { pagination, result }
 }
 
 function incomingPaymentToBody(
