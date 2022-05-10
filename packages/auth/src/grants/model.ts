@@ -1,10 +1,12 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { AccessToken } from '../accessTokens/model'
+import { Limit } from '../limits/model'
 
 export enum Actions {
   Create = 'create',
-  Read = 'read'
+  Read = 'read',
+  List = 'list'
 }
 
 export enum StartMethods {
@@ -21,6 +23,13 @@ export enum GrantState {
   Revoked = 'revoked'
 }
 
+export enum AccessTypes {
+  Account = 'account',
+  IncomingPayment = 'incomingPayment',
+  OutgoingPayment = 'outgoingPayment',
+  Quote = 'quote'
+}
+
 export class Grant extends BaseModel {
   public static get tableName(): string {
     return 'grants'
@@ -34,19 +43,27 @@ export class Grant extends BaseModel {
         from: 'grants.id',
         to: 'accessTokens.grantId'
       }
+    },
+    grants: {
+      relation: Model.HasManyRelation,
+      modelClass: Limit,
+      join: {
+        from: 'grants.id',
+        to: 'limits.grantId'
+      }
     }
   }
 
   public state!: GrantState
-  public type!: string
+  public type!: AccessTypes
   public actions!: Actions[]
-  public start!: StartMethods[]
+  public startMethod!: StartMethods[]
 
   public continueToken?: string
   public continueId?: string
   public wait?: number
 
-  public finish!: FinishMethods[]
+  public finishMethod!: FinishMethods
   public finishUri!: string
   public nonce!: string
 

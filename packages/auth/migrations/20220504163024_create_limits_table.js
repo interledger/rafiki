@@ -7,10 +7,9 @@ exports.up = function (knex) {
     table.integer('assetScale')
     table.string('createdById')
     table.string('accessToken').notNullable()
-    table
-      .foreign('accessToken')
-      .references('accessTokens.value')
-      .onDelete('CASCADE')
+    table.foreign('accessToken').references('accessTokens.value')
+
+    table.foreign('grantId').references('grants.id').onDelete('CASCADE')
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())

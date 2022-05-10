@@ -1,8 +1,9 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
-import { Limit } from './limits/model'
+import { Limit } from '../limits/model'
 import { Grant } from '../grants/model'
 
+// https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-3.2.1
 export class AccessToken extends BaseModel {
   public static get tableName(): string {
     return 'accessTokens'

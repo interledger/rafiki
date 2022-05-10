@@ -1,6 +1,7 @@
 import { Model } from 'objection'
-import { BaseModel } from '../../shared/baseModel'
-import { AccessToken } from '../model'
+import { BaseModel } from '../shared/baseModel'
+import { AccessToken } from '../accessTokens/model'
+import { Grant } from '../grants/model'
 
 enum LimitNames {
   SendAmount = 'sendAmount',
@@ -29,8 +30,16 @@ export class Limit extends BaseModel {
       relation: Model.HasOneRelation,
       modelClass: AccessToken,
       join: {
-        from: 'limit.accessToken',
+        from: 'limits.accessToken',
         to: 'accessTokens.value'
+      }
+    },
+    grant: {
+      relation: Model.HasOneRelation,
+      modelClass: Grant,
+      join: {
+        from: 'limits.grantId',
+        to: 'grants.id'
       }
     }
   }
@@ -38,6 +47,7 @@ export class Limit extends BaseModel {
   public id!: string
   public name!: LimitNames
   public accessToken!: string
+  public grantId!: string
   public value?: bigint
   public assetCode?: string
   public assetScale?: number
