@@ -248,13 +248,11 @@ function incomingPaymentToBody(
     id: `${accountId}/incoming-payments/${incomingPayment.id}`,
     accountId,
     state: incomingPayment.state.toLowerCase(),
-    receivedAmount: incomingPayment.receivedAmount
-      ? {
-          value: incomingPayment.receivedAmount.value.toString(),
-          assetCode: incomingPayment.receivedAmount.assetCode,
-          assetScale: incomingPayment.receivedAmount.assetScale
-        }
-      : 'error: account not found',
+    receivedAmount: {
+      value: incomingPayment.receivedAmount.value.toString(),
+      assetCode: incomingPayment.receivedAmount.assetCode,
+      assetScale: incomingPayment.receivedAmount.assetScale
+    },
     expiresAt: incomingPayment.expiresAt.toISOString()
   }
 
