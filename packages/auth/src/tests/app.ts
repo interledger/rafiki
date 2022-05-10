@@ -1,6 +1,7 @@
 import Knex from 'knex'
 import nock from 'nock'
 import { IocContract } from '@adonisjs/fold'
+import createLogger from 'pino'
 
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
@@ -18,6 +19,17 @@ export const createTestApp = async (
 ): Promise<TestContainer> => {
   const config = await container.use('config')
   config.port = 0
+
+  const logger = createLogger({
+    prettyPrint: {
+      translateTime: true,
+      ignore: 'pid,hostname'
+    },
+    level: process.env.LOG_LEVEL || 'error',
+    name: 'test-logger'
+  })
+
+  container.bind('logger', async () => logger)
 
   const app = new App(container)
   await start(container, app)

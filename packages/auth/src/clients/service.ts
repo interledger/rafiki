@@ -151,7 +151,7 @@ function verifyJwk(jwk: JWKWithRequired, keys: RegistryKey): boolean {
     keys.exp &&
     new Date() < new Date(keys.exp * 1000) &&
     keys.nbf &&
-    new Date() > new Date(keys.nbf * 1000) &&
+    new Date() >= new Date(keys.nbf * 1000) &&
     keys.x === jwk.x
   )
 }
