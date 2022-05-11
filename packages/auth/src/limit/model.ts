@@ -9,7 +9,7 @@ enum LimitName {
   CreatedBy = 'createdBy'
 }
 
-const AMOUNT_LIMITS = [LimitNames.SendAmount, LimitNames.ReceiveAmount]
+const AMOUNT_LIMITS = [LimitName.SendAmount, LimitName.ReceiveAmount]
 
 interface AmountData {
   assetCode?: string
