@@ -51,7 +51,7 @@ export class IncomingPayment
   }
 
   static get virtualAttributes(): string[] {
-    return ['incomingAmount']
+    return ['incomingAmount', 'receivedAmount']
   }
 
   static relationMappings = {
@@ -78,6 +78,7 @@ export class IncomingPayment
   public asset!: Asset
 
   private incomingAmountValue?: bigint | null
+  private receivedAmountValue?: bigint
 
   public get incomingAmount(): Amount | undefined {
     if (this.incomingAmountValue) {
@@ -92,6 +93,17 @@ export class IncomingPayment
 
   public set incomingAmount(amount: Amount | undefined) {
     this.incomingAmountValue = amount?.value ?? null
+  }
+
+  public get receivedAmount(): Amount {
+    return {
+      value: this.receivedAmountValue || BigInt(0),
+      assetCode: this.asset.code,
+      assetScale: this.asset.scale
+    }
+  }
+  public set receivedAmount(amount: Amount) {
+    this.receivedAmountValue = amount.value
   }
 
   public async onCredit({

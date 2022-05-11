@@ -39,9 +39,12 @@ async function getOutgoingPayment(
   const acceptJSON = ctx.accepts('application/json')
   ctx.assert(acceptJSON, 406)
 
-  const outgoingPayment = await deps.outgoingPaymentService.get(
-    outgoingPaymentId
-  )
+  let outgoingPayment: OutgoingPayment | undefined
+  try {
+    outgoingPayment = await deps.outgoingPaymentService.get(outgoingPaymentId)
+  } catch (_) {
+    ctx.throw(500, 'Error trying to get outgoing payment')
+  }
   if (!outgoingPayment) return ctx.throw(404)
 
   const body = outgoingPaymentToBody(deps, outgoingPayment)
@@ -105,6 +108,10 @@ function outgoingPaymentToBody(
     sendAmount: {
       ...outgoingPayment.sendAmount,
       value: outgoingPayment.sendAmount.value.toString()
+    },
+    sentAmount: {
+      ...outgoingPayment.sentAmount,
+      value: outgoingPayment.sentAmount.value.toString()
     },
     receiveAmount: {
       ...outgoingPayment.receiveAmount,

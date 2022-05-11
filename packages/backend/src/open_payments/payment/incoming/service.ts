@@ -82,7 +82,11 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   id: string
 ): Promise<IncomingPayment | undefined> {
-  return IncomingPayment.query(deps.knex).findById(id).withGraphFetched('asset')
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .findById(id)
+    .withGraphFetched('asset')
+  if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
+  else return
 }
 
 async function createIncomingPayment(
@@ -135,7 +139,7 @@ async function createIncomingPayment(
     if (!trx) {
       await invTrx.commit()
     }
-    return incomingPayment
+    return await addReceivedAmount(deps, incomingPayment, BigInt(0))
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()
@@ -257,12 +261,32 @@ async function getAccountIncomingPaymentsPage(
 ): Promise<IncomingPayment[]> {
   assert.ok(deps.knex, 'Knex undefined')
 
-  return await IncomingPayment.query(deps.knex)
+  const incomingPayments = await IncomingPayment.query(deps.knex)
     .getPage(pagination)
     .where({
       accountId: accountId
     })
     .withGraphFetched('asset')
+  if (incomingPayments.length > 0) {
+    const receivedAmounts = await deps.accountingService.getAccountsTotalReceived(
+      incomingPayments.map((payment) => payment.id)
+    )
+    return incomingPayments.map((payment, i) => {
+      try {
+        payment.receivedAmount = {
+          value: BigInt(receivedAmounts[i]),
+          assetCode: payment.asset.code,
+          assetScale: payment.asset.scale
+        }
+      } catch (_) {
+        deps.logger.error({ incomingPayment: payment.id }, 'account not found')
+        throw new Error(
+          `Underlying TB account not found, payment id: ${payment.id}`
+        )
+      }
+      return payment
+    })
+  } else return incomingPayments
 }
 
 async function updateIncomingPayment(
@@ -290,6 +314,28 @@ async function updateIncomingPayment(
     }
     update.processAt = new Date(Date.now() + 30_000)
     await payment.$query(trx).patch(update)
-    return payment
+    return await addReceivedAmount(deps, payment)
   })
+}
+
+async function addReceivedAmount(
+  deps: ServiceDependencies,
+  payment: IncomingPayment,
+  value?: bigint
+): Promise<IncomingPayment> {
+  const received =
+    value || (await deps.accountingService.getTotalReceived(payment.id))
+  if (received !== undefined) {
+    payment.receivedAmount = {
+      value: received,
+      assetCode: payment.asset.code,
+      assetScale: payment.asset.scale
+    }
+  } else {
+    deps.logger.error({ incomingPayment: payment.id }, 'account not found')
+    throw new Error(
+      `Underlying TB account not found, payment id: ${payment.id}`
+    )
+  }
+  return payment
 }

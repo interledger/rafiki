@@ -401,7 +401,7 @@ type OutgoingPayment implements Model {
   description: String
   externalRef: String
   quote: Quote
-  outcome: OutgoingPaymentOutcome
+  sentAmount: Amount!
   createdAt: String!
 }
 

@@ -22,6 +22,7 @@ import { Amount } from '../../amount'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createQuote } from '../../../tests/quote'
 import { AppContext } from '../../../app'
+import { AccountingService } from '../../../accounting/service'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -32,6 +33,7 @@ describe('Outgoing Payment Routes', (): void => {
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let accountId: string
   let accountUrl: string
+  let accountingService: AccountingService
 
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -77,6 +79,7 @@ describe('Outgoing Payment Routes', (): void => {
       knex = await deps.use('knex')
       config = await deps.use('config')
       outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
+      accountingService = await deps.use('accountingService')
     }
   )
 
@@ -142,6 +145,26 @@ describe('Outgoing Payment Routes', (): void => {
       )
     })
 
+    test('returns 500 if TB account not found', async (): Promise<void> => {
+      const outgoingPayment = await createPayment({
+        accountId
+      })
+      assert.ok(!isOutgoingPaymentError(outgoingPayment))
+      jest
+        .spyOn(accountingService, 'getTotalSent')
+        .mockResolvedValueOnce(undefined)
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { outgoingPaymentId: outgoingPayment.id }
+      )
+      await expect(outgoingPaymentRoutes.get(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: `Error trying to get outgoing payment`
+      })
+    })
+
     test('returns 200 with an outgoing payment', async (): Promise<void> => {
       const outgoingPayment = await createPayment({
         accountId,
@@ -167,6 +190,11 @@ describe('Outgoing Payment Routes', (): void => {
         sendAmount: {
           ...outgoingPayment.sendAmount,
           value: outgoingPayment.sendAmount.value.toString()
+        },
+        sentAmount: {
+          value: '0',
+          assetCode: asset.code,
+          assetScale: asset.scale
         },
         receiveAmount: {
           ...outgoingPayment.receiveAmount,
@@ -197,6 +225,11 @@ describe('Outgoing Payment Routes', (): void => {
           id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
           accountId: accountUrl,
           receivingPayment: outgoingPayment.receivingPayment,
+          sentAmount: {
+            value: '0',
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
           state: [
             OutgoingPaymentState.Funding,
             OutgoingPaymentState.Sending
@@ -324,7 +357,12 @@ describe('Outgoing Payment Routes', (): void => {
           },
           description: options.description,
           externalRef: options.externalRef,
-          state: 'processing'
+          state: 'processing',
+          sentAmount: {
+            value: '0',
+            assetCode: asset.code,
+            assetScale: asset.scale
+          }
         })
       }
     )

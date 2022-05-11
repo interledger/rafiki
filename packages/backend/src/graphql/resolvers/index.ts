@@ -7,11 +7,7 @@ import {
   createAsset,
   updateAssetWithdrawalThreshold
 } from './asset'
-import {
-  getAccountIncomingPayments,
-  getPageInfo,
-  getReceivedAmount
-} from './incoming_payment'
+import { getAccountIncomingPayments, getPageInfo } from './incoming_payment'
 import {
   getQuote,
   createQuote,
@@ -21,7 +17,6 @@ import {
 import {
   getOutgoingPayment,
   createOutgoingPayment,
-  getOutcome,
   getAccountOutgoingPayments,
   getOutgoingPaymentPageInfo
 } from './outgoing_payment'
@@ -70,17 +65,11 @@ export const resolvers: Resolvers = {
   IncomingPaymentConnection: {
     pageInfo: getPageInfo
   },
-  IncomingPayment: {
-    receivedAmount: getReceivedAmount
-  },
   QuoteConnection: {
     pageInfo: getQuotePageInfo
   },
   OutgoingPaymentConnection: {
     pageInfo: getOutgoingPaymentPageInfo
-  },
-  OutgoingPayment: {
-    outcome: getOutcome
   },
   PeersConnection: {
     pageInfo: getPeersConnectionPageInfo

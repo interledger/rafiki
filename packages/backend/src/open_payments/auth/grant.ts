@@ -18,7 +18,8 @@ export enum AccessType {
 export enum AccessAction {
   Create = 'create',
   Read = 'read',
-  Update = 'update'
+  Update = 'update',
+  List = 'list'
 }
 
 export interface AccessLimits {

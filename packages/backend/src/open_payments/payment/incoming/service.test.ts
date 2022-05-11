@@ -201,6 +201,30 @@ describe('Incoming Payment Service', (): void => {
     test('Cannot fetch a bogus incoming payment', async (): Promise<void> => {
       await expect(incomingPaymentService.get(uuid())).resolves.toBeUndefined()
     })
+
+    test('throws if no TB account found', async (): Promise<void> => {
+      const incomingPaymentOrError = await incomingPaymentService.create({
+        accountId,
+        description: 'Test incoming payment',
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        externalRef: '#123'
+      })
+      assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
+
+      jest
+        .spyOn(accountingService, 'getTotalReceived')
+        .mockResolvedValueOnce(undefined)
+      await expect(
+        incomingPaymentService.get(incomingPaymentOrError.id)
+      ).rejects.toThrowError(
+        `Underlying TB account not found, payment id: ${incomingPaymentOrError.id}`
+      )
+    })
   })
 
   describe('onCredit', (): void => {

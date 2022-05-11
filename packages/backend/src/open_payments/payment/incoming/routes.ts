@@ -4,10 +4,14 @@ import { Logger } from 'pino'
 import { validateId } from '../../../shared/utils'
 import { AppContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
-import { AccountingService } from '../../../accounting/service'
 import { IncomingPaymentService } from './service'
 import { IncomingPayment, IncomingPaymentState } from './model'
-import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
+import {
+  errorToCode,
+  errorToMessage,
+  IncomingPaymentError,
+  isIncomingPaymentError
+} from './errors'
 import { Amount, parseAmount } from '../../amount'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
@@ -17,7 +21,6 @@ export const MAX_EXPIRY = 24 * 60 * 60 * 1000 // milliseconds
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
-  accountingService: AccountingService
   incomingPaymentService: IncomingPaymentService
   streamServer: StreamServer
 }
@@ -51,23 +54,15 @@ async function getIncomingPayment(
   const acceptJSON = ctx.accepts('application/json')
   ctx.assert(acceptJSON, 406, 'must accept json')
 
-  const incomingPayment = await deps.incomingPaymentService.get(
-    incomingPaymentId
-  )
+  let incomingPayment: IncomingPayment | undefined
+  try {
+    incomingPayment = await deps.incomingPaymentService.get(incomingPaymentId)
+  } catch (err) {
+    ctx.throw(500, 'Error trying to get incoming payment')
+  }
   if (!incomingPayment) return ctx.throw(404)
 
-  const amountReceived = await deps.accountingService.getTotalReceived(
-    incomingPayment.id
-  )
-  if (amountReceived === undefined) {
-    deps.logger.error(
-      { incomingPayment: incomingPayment.id },
-      'account not found'
-    )
-    return ctx.throw(500)
-  }
-
-  const body = incomingPaymentToBody(deps, incomingPayment, amountReceived)
+  const body = incomingPaymentToBody(deps, incomingPayment)
   const { ilpAddress, sharedSecret } = getStreamCredentials(
     deps,
     incomingPayment
@@ -130,7 +125,7 @@ async function createIncomingPayment(
   }
 
   ctx.status = 201
-  const res = incomingPaymentToBody(deps, incomingPaymentOrError, BigInt(0))
+  const res = incomingPaymentToBody(deps, incomingPaymentOrError)
   const { ilpAddress, sharedSecret } = getStreamCredentials(
     deps,
     incomingPaymentOrError
@@ -162,10 +157,15 @@ async function updateIncomingPayment(
   )
   if (state === undefined) return ctx.throw(400, 'invalid state')
 
-  const incomingPaymentOrError = await deps.incomingPaymentService.update({
-    id: incomingPaymentId,
-    state
-  })
+  let incomingPaymentOrError: IncomingPayment | IncomingPaymentError
+  try {
+    incomingPaymentOrError = await deps.incomingPaymentService.update({
+      id: incomingPaymentId,
+      state
+    })
+  } catch (err) {
+    ctx.throw(500, 'Error trying to update incoming payment')
+  }
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
     return ctx.throw(
@@ -174,29 +174,13 @@ async function updateIncomingPayment(
     )
   }
 
-  const amountReceived = await deps.accountingService.getTotalReceived(
-    incomingPaymentOrError.id
-  )
-  if (amountReceived === undefined) {
-    deps.logger.error(
-      { incomingPayment: incomingPaymentOrError.id },
-      'account not found'
-    )
-    return ctx.throw(500)
-  }
-
-  const res = incomingPaymentToBody(
-    deps,
-    incomingPaymentOrError,
-    amountReceived
-  )
+  const res = incomingPaymentToBody(deps, incomingPaymentOrError)
   ctx.body = res
 }
 
 function incomingPaymentToBody(
   deps: ServiceDependencies,
-  incomingPayment: IncomingPayment,
-  received: bigint
+  incomingPayment: IncomingPayment
 ) {
   const accountId = `${deps.config.publicHost}/${incomingPayment.accountId}`
   const body = {
@@ -204,9 +188,9 @@ function incomingPaymentToBody(
     accountId,
     state: incomingPayment.state.toLowerCase(),
     receivedAmount: {
-      value: received.toString(),
-      assetCode: incomingPayment.asset.code,
-      assetScale: incomingPayment.asset.scale
+      value: incomingPayment.receivedAmount.value.toString(),
+      assetCode: incomingPayment.receivedAmount.assetCode,
+      assetScale: incomingPayment.receivedAmount.assetScale
     },
     expiresAt: incomingPayment.expiresAt.toISOString()
   }

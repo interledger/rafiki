@@ -146,6 +146,11 @@ describe('OutgoingPayment Resolvers', (): void => {
                       assetCode
                       assetScale
                     }
+                    sentAmount {
+                      value
+                      assetCode
+                      assetScale
+                    }
                     receiveAmount {
                       value
                       assetCode
@@ -161,9 +166,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                       highEstimatedExchangeRate
                       createdAt
                       expiresAt
-                    }
-                    outcome {
-                      amountSent
                     }
                     createdAt
                   }
@@ -188,6 +190,12 @@ describe('OutgoingPayment Resolvers', (): void => {
               assetScale: payment.sendAmount.assetScale,
               __typename: 'Amount'
             },
+            sentAmount: {
+              value: payment.sentAmount.value.toString(),
+              assetCode: payment.sentAmount.assetCode,
+              assetScale: payment.sentAmount.assetScale,
+              __typename: 'Amount'
+            },
             receiveAmount: {
               value: payment.receiveAmount.value.toString(),
               assetCode: payment.receiveAmount.assetCode,
@@ -205,10 +213,6 @@ describe('OutgoingPayment Resolvers', (): void => {
               createdAt: payment.quote.createdAt.toISOString(),
               expiresAt: payment.quote.expiresAt.toISOString(),
               __typename: 'Quote'
-            },
-            outcome: {
-              amountSent: amountSent.toString(),
-              __typename: 'OutgoingPaymentOutcome'
             },
             createdAt: payment.createdAt.toISOString(),
             __typename: 'OutgoingPayment'

@@ -21,6 +21,7 @@ import { IncomingPayment, IncomingPaymentState } from './model'
 import { IncomingPaymentRoutes, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
 import { isIncomingPaymentError } from './errors'
+import { AccountingService } from '../../../accounting/service'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -28,6 +29,7 @@ describe('Incoming Payment Routes', (): void => {
   let knex: Knex
   let workerUtils: WorkerUtils
   let accountService: AccountService
+  let accountingService: AccountingService
   let incomingPaymentService: IncomingPaymentService
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
@@ -65,6 +67,7 @@ describe('Incoming Payment Routes', (): void => {
       },
       reqOpts.body
     )
+    if (reqOpts.query) ctx.request.query = reqOpts.query
     return ctx
   }
 
@@ -81,6 +84,7 @@ describe('Incoming Payment Routes', (): void => {
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
+      accountingService = await deps.use('accountingService')
     }
   )
 
@@ -192,6 +196,22 @@ describe('Incoming Payment Routes', (): void => {
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
       expect(sharedSecret).toEqual(base64url(sharedSecretBuffer))
+    })
+
+    test('returns 500 if TB account not found', async (): Promise<void> => {
+      jest
+        .spyOn(accountingService, 'getTotalReceived')
+        .mockResolvedValueOnce(undefined)
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { incomingPaymentId: incomingPayment.id }
+      )
+      await expect(incomingPaymentRoutes.get(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: `Error trying to get incoming payment`
+      })
     })
   })
   describe('create', (): void => {

@@ -1,7 +1,6 @@
 import {
   ResolversTypes,
   IncomingPaymentConnectionResolvers,
-  IncomingPaymentResolvers,
   AccountResolvers
 } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
@@ -22,18 +21,17 @@ export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomi
   )
 
   return {
-    edges: incomingPayments.map((incomingPayment: IncomingPayment) => ({
-      cursor: incomingPayment.id,
-      node: {
-        ...incomingPayment,
-        receivedAmount: {
-          assetCode: incomingPayment.asset.code,
-          assetScale: incomingPayment.asset.scale
-        },
-        expiresAt: incomingPayment.expiresAt.toISOString(),
-        createdAt: incomingPayment.createdAt?.toISOString()
+    edges: incomingPayments.map((incomingPayment: IncomingPayment) => {
+      return {
+        cursor: incomingPayment.id,
+        node: {
+          ...incomingPayment,
+          receivedAmount: incomingPayment.receivedAmount,
+          expiresAt: incomingPayment.expiresAt.toISOString(),
+          createdAt: incomingPayment.createdAt?.toISOString()
+        }
       }
-    }))
+    })
   }
 }
 
@@ -98,23 +96,5 @@ export const getPageInfo: IncomingPaymentConnectionResolvers<ApolloContext>['pag
     hasNextPage: hasNextPageIncomingPayments.length == 1,
     hasPreviousPage: hasPreviousPageIncomingPayments.length == 1,
     startCursor: firstEdge
-  }
-}
-
-export const getReceivedAmount: IncomingPaymentResolvers<ApolloContext>['receivedAmount'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['Amount']> => {
-  if (!parent.id) throw new Error('missing id')
-
-  const accountingService = await ctx.container.use('accountingService')
-  const totalReceived = await accountingService.getTotalReceived(parent.id)
-  if (totalReceived === undefined)
-    throw new Error('payment account does not exist')
-  return {
-    value: totalReceived,
-    assetCode: parent.receivedAmount.assetCode,
-    assetScale: parent.receivedAmount.assetScale
   }
 }

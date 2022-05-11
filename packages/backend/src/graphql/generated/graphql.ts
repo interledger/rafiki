@@ -1,10 +1,8 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { IncomingPaymentModel } from '../models/';
 export type Maybe<T> = T | undefined;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -517,7 +515,7 @@ export type OutgoingPayment = Model & {
   description?: Maybe<Scalars['String']>;
   externalRef?: Maybe<Scalars['String']>;
   quote?: Maybe<Quote>;
-  outcome?: Maybe<OutgoingPaymentOutcome>;
+  sentAmount: Amount;
   createdAt: Scalars['String'];
 };
 
@@ -840,12 +838,12 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
-  Account: ResolverTypeWrapper<Partial<Omit<Account, 'incomingPayments'> & { incomingPayments?: Maybe<ResolversTypes['IncomingPaymentConnection']> }>>;
+  Account: ResolverTypeWrapper<Partial<Account>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
-  AccountWithdrawal: ResolverTypeWrapper<Partial<Omit<AccountWithdrawal, 'account'> & { account: ResolversTypes['Account'] }>>;
-  AccountWithdrawalMutationResponse: ResolverTypeWrapper<Partial<Omit<AccountWithdrawalMutationResponse, 'withdrawal'> & { withdrawal?: Maybe<ResolversTypes['AccountWithdrawal']> }>>;
+  AccountWithdrawal: ResolverTypeWrapper<Partial<AccountWithdrawal>>;
+  AccountWithdrawalMutationResponse: ResolverTypeWrapper<Partial<AccountWithdrawalMutationResponse>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
   AddAssetLiquidityInput: ResolverTypeWrapper<Partial<AddAssetLiquidityInput>>;
   AddPeerLiquidityInput: ResolverTypeWrapper<Partial<AddPeerLiquidityInput>>;
@@ -858,7 +856,7 @@ export type ResolversTypes = {
   AssetMutationResponse: ResolverTypeWrapper<Partial<AssetMutationResponse>>;
   AssetsConnection: ResolverTypeWrapper<Partial<AssetsConnection>>;
   CreateAccountInput: ResolverTypeWrapper<Partial<CreateAccountInput>>;
-  CreateAccountMutationResponse: ResolverTypeWrapper<Partial<Omit<CreateAccountMutationResponse, 'account'> & { account?: Maybe<ResolversTypes['Account']> }>>;
+  CreateAccountMutationResponse: ResolverTypeWrapper<Partial<CreateAccountMutationResponse>>;
   CreateAccountWithdrawalInput: ResolverTypeWrapper<Partial<CreateAccountWithdrawalInput>>;
   CreateApiKeyInput: ResolverTypeWrapper<Partial<CreateApiKeyInput>>;
   CreateApiKeyMutationResponse: ResolverTypeWrapper<Partial<CreateApiKeyMutationResponse>>;
@@ -877,9 +875,9 @@ export type ResolversTypes = {
   HttpInput: ResolverTypeWrapper<Partial<HttpInput>>;
   HttpOutgoing: ResolverTypeWrapper<Partial<HttpOutgoing>>;
   HttpOutgoingInput: ResolverTypeWrapper<Partial<HttpOutgoingInput>>;
-  IncomingPayment: ResolverTypeWrapper<IncomingPaymentModel>;
-  IncomingPaymentConnection: ResolverTypeWrapper<Partial<Omit<IncomingPaymentConnection, 'edges'> & { edges: Array<ResolversTypes['IncomingPaymentEdge']> }>>;
-  IncomingPaymentEdge: ResolverTypeWrapper<Partial<Omit<IncomingPaymentEdge, 'node'> & { node: ResolversTypes['IncomingPayment'] }>>;
+  IncomingPayment: ResolverTypeWrapper<Partial<IncomingPayment>>;
+  IncomingPaymentConnection: ResolverTypeWrapper<Partial<IncomingPaymentConnection>>;
+  IncomingPaymentEdge: ResolverTypeWrapper<Partial<IncomingPaymentEdge>>;
   IncomingPaymentState: ResolverTypeWrapper<Partial<IncomingPaymentState>>;
   LiquidityError: ResolverTypeWrapper<Partial<LiquidityError>>;
   LiquidityMutationResponse: ResolverTypeWrapper<Partial<LiquidityMutationResponse>>;
@@ -919,12 +917,12 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
-  Account: Partial<Omit<Account, 'incomingPayments'> & { incomingPayments?: Maybe<ResolversParentTypes['IncomingPaymentConnection']> }>;
+  Account: Partial<Account>;
   ID: Partial<Scalars['ID']>;
   String: Partial<Scalars['String']>;
   Int: Partial<Scalars['Int']>;
-  AccountWithdrawal: Partial<Omit<AccountWithdrawal, 'account'> & { account: ResolversParentTypes['Account'] }>;
-  AccountWithdrawalMutationResponse: Partial<Omit<AccountWithdrawalMutationResponse, 'withdrawal'> & { withdrawal?: Maybe<ResolversParentTypes['AccountWithdrawal']> }>;
+  AccountWithdrawal: Partial<AccountWithdrawal>;
+  AccountWithdrawalMutationResponse: Partial<AccountWithdrawalMutationResponse>;
   Boolean: Partial<Scalars['Boolean']>;
   AddAssetLiquidityInput: Partial<AddAssetLiquidityInput>;
   AddPeerLiquidityInput: Partial<AddPeerLiquidityInput>;
@@ -937,7 +935,7 @@ export type ResolversParentTypes = {
   AssetMutationResponse: Partial<AssetMutationResponse>;
   AssetsConnection: Partial<AssetsConnection>;
   CreateAccountInput: Partial<CreateAccountInput>;
-  CreateAccountMutationResponse: Partial<Omit<CreateAccountMutationResponse, 'account'> & { account?: Maybe<ResolversParentTypes['Account']> }>;
+  CreateAccountMutationResponse: Partial<CreateAccountMutationResponse>;
   CreateAccountWithdrawalInput: Partial<CreateAccountWithdrawalInput>;
   CreateApiKeyInput: Partial<CreateApiKeyInput>;
   CreateApiKeyMutationResponse: Partial<CreateApiKeyMutationResponse>;
@@ -956,9 +954,9 @@ export type ResolversParentTypes = {
   HttpInput: Partial<HttpInput>;
   HttpOutgoing: Partial<HttpOutgoing>;
   HttpOutgoingInput: Partial<HttpOutgoingInput>;
-  IncomingPayment: IncomingPaymentModel;
-  IncomingPaymentConnection: Partial<Omit<IncomingPaymentConnection, 'edges'> & { edges: Array<ResolversParentTypes['IncomingPaymentEdge']> }>;
-  IncomingPaymentEdge: Partial<Omit<IncomingPaymentEdge, 'node'> & { node: ResolversParentTypes['IncomingPayment'] }>;
+  IncomingPayment: Partial<IncomingPayment>;
+  IncomingPaymentConnection: Partial<IncomingPaymentConnection>;
+  IncomingPaymentEdge: Partial<IncomingPaymentEdge>;
   LiquidityMutationResponse: Partial<LiquidityMutationResponse>;
   Model: ResolversParentTypes['Account'] | ResolversParentTypes['ApiKey'] | ResolversParentTypes['Asset'] | ResolversParentTypes['IncomingPayment'] | ResolversParentTypes['OutgoingPayment'] | ResolversParentTypes['Peer'];
   Mutation: {};
@@ -1205,7 +1203,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType>;
-  outcome?: Resolver<Maybe<ResolversTypes['OutgoingPaymentOutcome']>, ParentType, ContextType>;
+  sentAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
