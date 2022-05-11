@@ -177,12 +177,17 @@ describe('Accounting Service', (): void => {
   })
 
   describe('Get Accounts Total Received', (): void => {
-    test("Can retrieve an account's total amount received", async (): Promise<void> => {
-      const value = BigInt(10)
-      const { id } = await accountFactory.build({ balance: value })
+    test("Can retrieve accounts' total amount received", async (): Promise<void> => {
+      const balances = [BigInt(10), BigInt(20), BigInt(50)]
+      const ids = await Promise.all(
+        balances.map(async (balance) => {
+          const { id } = await accountFactory.build({ balance })
+          return id
+        })
+      )
       await expect(
-        accountingService.getAccountsTotalReceived([id])
-      ).resolves.toEqual([value])
+        accountingService.getAccountsTotalReceived(ids)
+      ).resolves.toEqual(balances)
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
@@ -195,6 +200,55 @@ describe('Accounting Service', (): void => {
       await expect(
         accountingService.getAccountsTotalReceived([uid, id])
       ).resolves.toEqual([undefined, value])
+    })
+
+    describe('Get Accounts Total Sent', (): void => {
+      test("Can retrieve accounts' total amount sent", async (): Promise<void> => {
+        const receivingAccount = await accountFactory.build()
+        const balances = [BigInt(100), BigInt(100), BigInt(100)]
+        const accounts = await Promise.all(
+          balances.map(async (balance) => {
+            return await accountFactory.build({
+              balance,
+              asset: receivingAccount.asset
+            })
+          })
+        )
+        await Promise.all(
+          accounts.map(async (account, i) => {
+            const transfer = await accountingService.createTransfer({
+              sourceAccount: account,
+              sourceAmount: BigInt(10 * (i + 1)),
+              destinationAccount: receivingAccount,
+              timeout: BigInt(10000)
+            })
+            assert.ok(!isTransferError(transfer))
+            await transfer.commit()
+          })
+        )
+        await expect(
+          accountingService.getAccountsTotalSent(
+            accounts.map((account) => account.id)
+          )
+        ).resolves.toEqual([BigInt(10), BigInt(20), BigInt(30)])
+      })
+
+      test('Returns undefined for nonexistent account', async (): Promise<void> => {
+        const uid = uuid()
+        await expect(
+          accountingService.getAccountsTotalSent([uid])
+        ).resolves.toEqual([undefined])
+        const { id } = await accountFactory.build()
+        await expect(
+          accountingService.getAccountsTotalSent([uid, id])
+        ).resolves.toEqual([undefined, BigInt(0)])
+      })
+
+      test('Returns empty object for empty array of ids', async (): Promise<void> => {
+        await expect(
+          accountingService.getAccountsTotalSent([])
+        ).resolves.toEqual([])
+      })
     })
 
     test('Returns empty object for empty array of ids', async (): Promise<void> => {
