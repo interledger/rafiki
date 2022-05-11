@@ -3,7 +3,7 @@ import { BaseModel } from '../shared/baseModel'
 import { AccessToken } from '../accessToken/model'
 import { Grant } from '../grant/model'
 
-enum LimitNames {
+enum LimitName {
   SendAmount = 'sendAmount',
   ReceiveAmount = 'receiveAmount',
   CreatedBy = 'createdBy'
@@ -45,7 +45,7 @@ export class Limit extends BaseModel {
   }
 
   public id!: string
-  public name!: LimitNames
+  public name!: LimitName
   public accessToken!: string
   public grantId!: string
   public value?: bigint
@@ -54,7 +54,7 @@ export class Limit extends BaseModel {
   public createdById?: string
 
   get data(): string | AmountData | undefined {
-    if (this.name === LimitNames.CreatedBy) {
+    if (this.name === LimitName.CreatedBy) {
       return this.createdById
     } else if (AMOUNT_LIMITS.includes(this.name)) {
       return {
