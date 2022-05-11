@@ -274,7 +274,7 @@ describe('Client Service', (): void => {
           display: TEST_CLIENT_DISPLAY,
           keys: {
             ...TEST_CLIENT_KEY,
-            exp: Math.round(expDate.getTime() / 1000),
+            exp: Math.round(nbfDate.getTime() / 1000),
             nbf: Math.round(nbfDate.getTime() / 1000),
             revoked: false
           }

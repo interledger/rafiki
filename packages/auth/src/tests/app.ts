@@ -21,9 +21,12 @@ export const createTestApp = async (
   config.port = 0
 
   const logger = createLogger({
-    prettyPrint: {
-      translateTime: true,
-      ignore: 'pid,hostname'
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        translateTime: true,
+        ignore: 'pid,hostname'
+      }
     },
     level: process.env.LOG_LEVEL || 'error',
     name: 'test-logger'
