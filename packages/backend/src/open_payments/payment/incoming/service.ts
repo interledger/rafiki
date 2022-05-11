@@ -192,7 +192,7 @@ async function handleExpired(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment
 ): Promise<void> {
-  const amountReceived = await deps.accountingService.getAccountTotalReceived(
+  const amountReceived = await deps.accountingService.getTotalReceived(
     incomingPayment.id
   )
   if (amountReceived) {
@@ -218,7 +218,7 @@ async function handleDeactivated(
 ): Promise<void> {
   assert.ok(incomingPayment.processAt)
   try {
-    const amountReceived = await deps.accountingService.getAccountTotalReceived(
+    const amountReceived = await deps.accountingService.getTotalReceived(
       incomingPayment.id
     )
     if (!amountReceived) {
@@ -324,7 +324,7 @@ async function addReceivedAmount(
   value?: bigint
 ): Promise<IncomingPayment> {
   const received =
-    value || (await deps.accountingService.getAccountTotalReceived(payment.id))
+    value || (await deps.accountingService.getTotalReceived(payment.id))
   if (received !== undefined) {
     payment.receivedAmount = {
       value: received,

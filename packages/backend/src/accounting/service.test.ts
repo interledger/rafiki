@@ -164,14 +164,14 @@ describe('Accounting Service', (): void => {
     test("Can retrieve an account's total amount received", async (): Promise<void> => {
       const amount = BigInt(10)
       const { id } = await accountFactory.build({ balance: amount })
-      await expect(
-        accountingService.getAccountTotalReceived(id)
-      ).resolves.toEqual(amount)
+      await expect(accountingService.getTotalReceived(id)).resolves.toEqual(
+        amount
+      )
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
-        accountingService.getAccountTotalReceived(uuid())
+        accountingService.getTotalReceived(uuid())
       ).resolves.toBeUndefined()
     })
   })

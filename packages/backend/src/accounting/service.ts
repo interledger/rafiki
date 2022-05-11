@@ -82,7 +82,7 @@ export interface AccountingService {
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
-  getAccountTotalReceived(id: string): Promise<bigint | undefined>
+  getTotalReceived(id: string): Promise<bigint | undefined>
   getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]>
   getSettlementBalance(unit: number): Promise<bigint | undefined>
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
@@ -110,7 +110,7 @@ export function createAccountingService(
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
-    getAccountTotalReceived: (id) => getAccountTotalReceived(deps, id),
+    getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
     getSettlementBalance: (unit) => getSettlementBalance(deps, unit),
     createTransfer: (options) => createTransfer(deps, options),

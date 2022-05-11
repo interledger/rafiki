@@ -217,7 +217,7 @@ describe('Incoming Payment Service', (): void => {
       assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
 
       jest
-        .spyOn(accountingService, 'getAccountTotalReceived')
+        .spyOn(accountingService, 'getTotalReceived')
         .mockResolvedValueOnce(undefined)
       await expect(
         incomingPaymentService.get(incomingPaymentOrError.id)
@@ -423,7 +423,7 @@ describe('Incoming Payment Service', (): void => {
               expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
             }
             await expect(
-              accountingService.getAccountTotalReceived(incomingPayment.id)
+              accountingService.getTotalReceived(incomingPayment.id)
             ).resolves.toEqual(amountReceived)
             await expect(
               accountingService.getBalance(incomingPayment.id)

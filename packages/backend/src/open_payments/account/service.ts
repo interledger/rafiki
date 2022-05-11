@@ -133,7 +133,7 @@ async function createWithdrawalEvent(
   deps: ServiceDependencies,
   account: Account
 ): Promise<void> {
-  const totalReceived = await deps.accountingService.getAccountTotalReceived(
+  const totalReceived = await deps.accountingService.getTotalReceived(
     account.id
   )
   if (!totalReceived) {
