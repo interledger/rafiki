@@ -22,18 +22,14 @@ export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomi
 
   return {
     edges: incomingPayments.map((incomingPayment: IncomingPayment) => {
-      if (incomingPayment.receivedAmount) {
-        return {
-          cursor: incomingPayment.id,
-          node: {
-            ...incomingPayment,
-            receivedAmount: incomingPayment.receivedAmount,
-            expiresAt: incomingPayment.expiresAt.toISOString(),
-            createdAt: incomingPayment.createdAt?.toISOString()
-          }
+      return {
+        cursor: incomingPayment.id,
+        node: {
+          ...incomingPayment,
+          receivedAmount: incomingPayment.receivedAmount,
+          expiresAt: incomingPayment.expiresAt.toISOString(),
+          createdAt: incomingPayment.createdAt?.toISOString()
         }
-      } else {
-        throw new Error('payment account does not exist')
       }
     })
   }
