@@ -182,7 +182,7 @@ async function getAccountPage(
           assetScale: payment.asset.scale
         }
       } catch (_) {
-        deps.logger.error({ incomingPayment: payment.id }, 'account not found')
+        deps.logger.error({ outgoingPayment: payment.id }, 'account not found')
         throw new Error(
           `Underlying TB account not found, payment id: ${payment.id}`
         )
