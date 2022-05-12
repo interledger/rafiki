@@ -14,6 +14,7 @@ import { AccountService } from '../../account/service'
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { parse, end } from 'iso8601-duration'
+import { getAccountPage, Resource } from '../../../shared/pagination'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -45,14 +46,14 @@ export interface IncomingPaymentService {
   update(
     options: UpdateIncomingPaymentOptions
   ): Promise<IncomingPayment | IncomingPaymentError>
-  getAccountIncomingPaymentsPage(
+  getAccountPage(
     accountId: string,
     pagination?: Pagination
   ): Promise<IncomingPayment[]>
   processNext(): Promise<string | undefined>
 }
 
-interface ServiceDependencies extends BaseService {
+export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   accountService: AccountService
@@ -72,8 +73,13 @@ export async function createIncomingPaymentService(
     get: (id) => getIncomingPayment(deps, id),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     update: (options) => updateIncomingPayment(deps, options),
-    getAccountIncomingPaymentsPage: (accountId, pagination) =>
-      getAccountIncomingPaymentsPage(deps, accountId, pagination),
+    getAccountPage: (accountId, pagination) =>
+      getAccountPage(
+        Resource.incomingPayment,
+        deps,
+        accountId,
+        pagination
+      ) as Promise<IncomingPayment[]>,
     processNext: () => processNextIncomingPayment(deps)
   }
 }
@@ -252,41 +258,6 @@ async function handleDeactivated(
   } catch (error) {
     deps.logger.warn({ error }, 'webhook event creation failed; retrying')
   }
-}
-
-async function getAccountIncomingPaymentsPage(
-  deps: ServiceDependencies,
-  accountId: string,
-  pagination?: Pagination
-): Promise<IncomingPayment[]> {
-  assert.ok(deps.knex, 'Knex undefined')
-
-  const incomingPayments = await IncomingPayment.query(deps.knex)
-    .getPage(pagination)
-    .where({
-      accountId: accountId
-    })
-    .withGraphFetched('asset')
-  if (incomingPayments.length > 0) {
-    const receivedAmounts = await deps.accountingService.getAccountsTotalReceived(
-      incomingPayments.map((payment) => payment.id)
-    )
-    return incomingPayments.map((payment, i) => {
-      try {
-        payment.receivedAmount = {
-          value: BigInt(receivedAmounts[i]),
-          assetCode: payment.asset.code,
-          assetScale: payment.asset.scale
-        }
-      } catch (_) {
-        deps.logger.error({ incomingPayment: payment.id }, 'account not found')
-        throw new Error(
-          `Underlying TB account not found, payment id: ${payment.id}`
-        )
-      }
-      return payment
-    })
-  } else return incomingPayments
 }
 
 async function updateIncomingPayment(

@@ -17,6 +17,7 @@ import { AccountService } from '../../account/service'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
+import { getAccountPage, Resource } from '../../../shared/pagination'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
@@ -54,7 +55,12 @@ export async function createOutgoingPaymentService(
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
     getAccountPage: (accountId, pagination) =>
-      getAccountPage(deps, accountId, pagination)
+      getAccountPage(
+        Resource.outgoingPayment,
+        deps,
+        accountId,
+        pagination
+      ) as Promise<OutgoingPayment[]>
   }
 }
 
@@ -159,37 +165,6 @@ async function fundPayment(
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
     return await addSentAmount(deps, payment)
   })
-}
-
-async function getAccountPage(
-  deps: ServiceDependencies,
-  accountId: string,
-  pagination?: Pagination
-): Promise<OutgoingPayment[]> {
-  const outgoingPayments = await OutgoingPayment.query(deps.knex)
-    .getPage(pagination)
-    .where({ accountId })
-    .withGraphFetched('quote.asset')
-  if (outgoingPayments.length > 0) {
-    const sentAmounts = await deps.accountingService.getAccountsTotalSent(
-      outgoingPayments.map((payment) => payment.id)
-    )
-    return outgoingPayments.map((payment, i) => {
-      try {
-        payment.sentAmount = {
-          value: BigInt(sentAmounts[i]),
-          assetCode: payment.asset.code,
-          assetScale: payment.asset.scale
-        }
-      } catch (_) {
-        deps.logger.error({ outgoingPayment: payment.id }, 'account not found')
-        throw new Error(
-          `Underlying TB account not found, payment id: ${payment.id}`
-        )
-      }
-      return payment
-    })
-  } else return outgoingPayments
 }
 
 async function addSentAmount(

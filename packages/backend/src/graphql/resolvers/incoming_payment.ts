@@ -15,7 +15,7 @@ export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomi
   const incomingPaymentService = await ctx.container.use(
     'incomingPaymentService'
   )
-  const incomingPayments = await incomingPaymentService.getAccountIncomingPaymentsPage(
+  const incomingPayments = await incomingPaymentService.getAccountPage(
     parent.id,
     args
   )
@@ -69,7 +69,7 @@ export const getPageInfo: IncomingPaymentConnectionResolvers<ApolloContext>['pag
 
   let hasNextPageIncomingPayments, hasPreviousPageIncomingPayments
   try {
-    hasNextPageIncomingPayments = await incomingPaymentService.getAccountIncomingPaymentsPage(
+    hasNextPageIncomingPayments = await incomingPaymentService.getAccountPage(
       firstIncomingPayment.accountId,
       {
         after: lastEdge,
@@ -80,7 +80,7 @@ export const getPageInfo: IncomingPaymentConnectionResolvers<ApolloContext>['pag
     hasNextPageIncomingPayments = []
   }
   try {
-    hasPreviousPageIncomingPayments = await incomingPaymentService.getAccountIncomingPaymentsPage(
+    hasPreviousPageIncomingPayments = await incomingPaymentService.getAccountPage(
       firstIncomingPayment.accountId,
       {
         before: firstEdge,
