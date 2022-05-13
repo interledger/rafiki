@@ -1,5 +1,4 @@
 import Knex from 'knex'
-import nock from 'nock'
 import { IocContract } from '@adonisjs/fold'
 import createLogger from 'pino'
 
@@ -45,7 +44,6 @@ export const createTestApp = async (
     knex,
     connectionUrl: config.databaseUrl,
     shutdown: async () => {
-      nock.cleanAll()
       await gracefulShutdown(container, app)
     }
   }
