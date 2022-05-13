@@ -8,7 +8,7 @@ exports.up = function (knex) {
     table.string('createdById')
     table.string('accessToken').notNullable()
     table.foreign('accessToken').references('accessTokens.value')
-
+    table.uuid('grantId').notNullable()
     table.foreign('grantId').references('grants.id').onDelete('CASCADE')
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())

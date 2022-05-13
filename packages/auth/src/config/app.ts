@@ -8,6 +8,12 @@ function envInt(name: string, value: number): number {
   return envValue == null ? value : parseInt(envValue)
 }
 
+// Represented by JSON-stringified arrays in the environment
+function envStringArray(name: string, value: string[]): string[] {
+  const envValue = process.env[name]
+  return envValue == null ? value : JSON.parse(envValue)
+}
+
 export type IAppConfig = typeof Config
 
 export const Config = {
@@ -16,9 +22,12 @@ export const Config = {
   env: envString('NODE_ENV', 'development'),
   databaseUrl:
     process.env.NODE_ENV === 'test'
-      ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
+      ? `${process.env.AUTH_DATABASE_URL}_${process.env.JEST_WORKER_ID}`
       : envString(
-          'DATABASE_URL',
-          'postgresql://postgres:password@localhost:5432/development'
-        )
+          'AUTH_DATABASE_URL',
+          'postgresql://postgres:password@localhost:5432/auth_development'
+        ),
+  keyRegistries: envStringArray('KEY_REGISTRIES', [
+    'https://openpayments.network'
+  ])
 }

@@ -112,9 +112,6 @@ export class App {
     })
 
     // TODO: GNAP endpoints
-    /*
-      - client key registration endpoint
-    */
     this.publicRouter.post('/auth', (ctx: AppContext): void => {
       // TODO: generate interaction session
       ctx.status = 200

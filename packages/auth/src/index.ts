@@ -6,6 +6,7 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 
 import { App, AppServices } from './app'
 import { Config } from './config/app'
+import { createClientService } from './clients/service'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -36,7 +37,7 @@ export function initIocContainer(
       },
       migrations: {
         directory: './',
-        tableName: 'knex_migrations'
+        tableName: 'auth_knex_migrations'
       }
     })
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
@@ -50,6 +51,16 @@ export function initIocContainer(
 
   container.singleton('closeEmitter', async () => new EventEmitter())
   // TODO: add redis
+
+  container.singleton(
+    'clientService',
+    async (deps: IocContract<AppServices>) => {
+      return createClientService({
+        config: await deps.use('config'),
+        logger: await deps.use('logger')
+      })
+    }
+  )
 
   return container
 }
