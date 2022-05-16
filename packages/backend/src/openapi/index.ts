@@ -27,7 +27,6 @@ interface Paths<T = unknown, P = unknown> {
 
 export interface OpenAPI {
   paths: Paths
-  hasPath: (path: PropertyKey) => path is keyof this['paths']
 }
 
 class OpenAPIImpl implements OpenAPI {
@@ -36,7 +35,4 @@ class OpenAPIImpl implements OpenAPI {
     this.paths = spec.paths as Paths
   }
   public paths: Paths
-  public hasPath(path: PropertyKey): path is keyof this['paths'] {
-    return path in this.paths
-  }
 }

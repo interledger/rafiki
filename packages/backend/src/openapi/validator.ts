@@ -116,6 +116,8 @@ export function createValidatorMiddleware<T extends Koa.Context>({
   ): Promise<void> => {
     if (validate(ctx)) {
       await next()
+    } else {
+      throw new Error('unreachable')
     }
   }
 }
