@@ -6629,7 +6629,9 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["objection", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:2.2.15"],
             ["objection-db-errors", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:1.1.2"],
             ["oer-utils", "npm:5.1.2"],
+            ["openapi-default-setter", "npm:11.0.1"],
             ["openapi-jsonschema-parameters", "npm:11.0.0"],
+            ["openapi-request-coercer", "npm:11.0.1"],
             ["openapi-types", "npm:11.0.0"],
             ["pg", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:8.6.0"],
             ["pino", "npm:6.11.3"],
@@ -14556,6 +14558,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["openapi-default-setter", [
+        ["npm:11.0.1", {
+          "packageLocation": "./.yarn/cache/openapi-default-setter-npm-11.0.1-70f45c1292-590d43809d.zip/node_modules/openapi-default-setter/",
+          "packageDependencies": [
+            ["openapi-default-setter", "npm:11.0.1"],
+            ["openapi-types", "npm:11.0.1"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["openapi-jsonschema-parameters", [
         ["npm:11.0.0", {
           "packageLocation": "./.yarn/cache/openapi-jsonschema-parameters-npm-11.0.0-370c60fff3-c73d0d9124.zip/node_modules/openapi-jsonschema-parameters/",
@@ -14566,11 +14578,29 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["openapi-request-coercer", [
+        ["npm:11.0.1", {
+          "packageLocation": "./.yarn/cache/openapi-request-coercer-npm-11.0.1-5d9d12f43c-d5bb05ebc7.zip/node_modules/openapi-request-coercer/",
+          "packageDependencies": [
+            ["openapi-request-coercer", "npm:11.0.1"],
+            ["openapi-types", "npm:11.0.1"],
+            ["ts-log", "npm:2.2.4"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["openapi-types", [
         ["npm:11.0.0", {
           "packageLocation": "./.yarn/cache/openapi-types-npm-11.0.0-30ab474ad7-2c54c8edcd.zip/node_modules/openapi-types/",
           "packageDependencies": [
             ["openapi-types", "npm:11.0.0"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:11.0.1", {
+          "packageLocation": "./.yarn/cache/openapi-types-npm-11.0.1-d77e512c96-182c5b2819.zip/node_modules/openapi-types/",
+          "packageDependencies": [
+            ["openapi-types", "npm:11.0.1"]
           ],
           "linkType": "HARD",
         }]
@@ -17916,6 +17946,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/ts-log-npm-2.2.3-5a6427f4a1-8aa34a2724.zip/node_modules/ts-log/",
           "packageDependencies": [
             ["ts-log", "npm:2.2.3"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:2.2.4", {
+          "packageLocation": "./.yarn/cache/ts-log-npm-2.2.4-167dc9162c-489393cf0d.zip/node_modules/ts-log/",
+          "packageDependencies": [
+            ["ts-log", "npm:2.2.4"]
           ],
           "linkType": "HARD",
         }]

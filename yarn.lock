@@ -4882,7 +4882,9 @@ __metadata:
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
     oer-utils: ^5.1.2
+    openapi-default-setter: ^11.0.1
     openapi-jsonschema-parameters: ^11.0.0
+    openapi-request-coercer: ^11.0.1
     openapi-types: ^11.0.0
     pg: ^8.6.0
     pino: ^6.11.3
@@ -11808,6 +11810,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"openapi-default-setter@npm:^11.0.1":
+  version: 11.0.1
+  resolution: "openapi-default-setter@npm:11.0.1"
+  dependencies:
+    openapi-types: ^11.0.1
+  checksum: 590d43809de50313f46774b92a8e15397aec2489f92c560bc7cf7d6dab205bec411426e3f2d2b169bb3d6268e4d372104317a971da224a22a201bd13e64fe6b9
+  languageName: node
+  linkType: hard
+
 "openapi-jsonschema-parameters@npm:^11.0.0":
   version: 11.0.0
   resolution: "openapi-jsonschema-parameters@npm:11.0.0"
@@ -11817,10 +11828,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"openapi-request-coercer@npm:^11.0.1":
+  version: 11.0.1
+  resolution: "openapi-request-coercer@npm:11.0.1"
+  dependencies:
+    openapi-types: ^11.0.1
+    ts-log: ^2.1.4
+  checksum: d5bb05ebc77716ab97a331eadfc48735c2b11cdb18c4291b7a91c66db06a89afce43dde2763b942710d3451e28824c9bc6054f197bc8a992c1115a2b142b46a5
+  languageName: node
+  linkType: hard
+
 "openapi-types@npm:^11.0.0":
   version: 11.0.0
   resolution: "openapi-types@npm:11.0.0"
   checksum: 2c54c8edcd20b25713fceb51b5b3829b80c67ee070779f32e99e7fe26cf08afa3d53a047e62fe6e6831f80cd6a803b17ad16b0ae3c6f3abe638363832b6a917f
+  languageName: node
+  linkType: hard
+
+"openapi-types@npm:^11.0.1":
+  version: 11.0.1
+  resolution: "openapi-types@npm:11.0.1"
+  checksum: 182c5b28199a0d030bf5f64b9c23f65dc800cdc845ae09c40aa5e03b862634a02526d5092af53bf853514af778ee2f36dead741e0521e01f944cf7f50927e14e
   languageName: node
   linkType: hard
 
@@ -14790,6 +14818,13 @@ resolve@^2.0.0-next.3:
   bin:
     ts-jest: cli.js
   checksum: 135bd444a49c73d70c05a471c8a17342c1bb5842df9a70155c0a6f1edfea4772fd67b691635bd98e1ad37aa30a33a2878e8821e00570723ded5ce0ff69c803fc
+  languageName: node
+  linkType: hard
+
+"ts-log@npm:^2.1.4":
+  version: 2.2.4
+  resolution: "ts-log@npm:2.2.4"
+  checksum: 489393cf0d46c3c86a837a589af8b0ec464cb7aa7a75ce9cdf19bf831308f5dda4dc24329359efc920bfb252d3bc5e0c109dcbcc8cb5025348c630f2e3028e24
   languageName: node
   linkType: hard
 

@@ -2,6 +2,8 @@ import assert from 'assert'
 import Ajv2020, { ValidateFunction } from 'ajv/dist/2020'
 import addFormats from 'ajv-formats'
 import Koa from 'koa'
+import OpenAPIDefaultSetter from 'openapi-default-setter'
+import OpenapiRequestCoercer from 'openapi-request-coercer'
 import { convertParametersToJSONSchema } from 'openapi-jsonschema-parameters'
 import { OpenAPIV3_1, IJsonSchema } from 'openapi-types'
 
@@ -66,14 +68,21 @@ export function createValidatorMiddleware<T extends Koa.Context>({
       )
     })
 
-  // TODO:
-  // Deserialize params
-  // Assign default query parameter values
-  const queryParams = path[method]?.parameters
+  const queryParams = path[method]?.parameters as OpenAPIV3_1.ParameterObject[]
+  const coercer =
+    queryParams &&
+    new OpenapiRequestCoercer({
+      parameters: queryParams
+    })
+  const defaultSetter =
+    queryParams &&
+    new OpenAPIDefaultSetter({
+      parameters: queryParams
+    })
   const validateQuery =
     queryParams &&
     ajv.compile<T['query']>({
-      allOf: getParametersSchema(queryParams as OpenAPIV3_1.ParameterObject[])
+      allOf: getParametersSchema(queryParams)
     })
 
   const bodySchema = (path[method]
@@ -86,6 +95,12 @@ export function createValidatorMiddleware<T extends Koa.Context>({
     ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
     if (validateParams && !validateParams(ctx.params)) {
       ctx.throw(400, getErrorMessage(validateParams))
+    }
+    if (coercer) {
+      coercer.coerce(ctx.request.query)
+    }
+    if (defaultSetter) {
+      defaultSetter.handle(ctx.request)
     }
     if (validateQuery && !validateQuery(ctx.request.query)) {
       ctx.throw(400, getErrorMessage(validateQuery))

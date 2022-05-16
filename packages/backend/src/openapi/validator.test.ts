@@ -79,9 +79,7 @@ describe('OpenAPI Validator', (): void => {
       }
     )
 
-    // TODO:
-    // Deserialize params
-    test.skip('returns 400 on invalid query parameter', async (): Promise<void> => {
+    test('returns 400 on invalid query parameter', async (): Promise<void> => {
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' },
@@ -154,7 +152,7 @@ describe('OpenAPI Validator', (): void => {
       }
     )
 
-    test('calls next on valid request', async (): Promise<void> => {
+    test('sets default query params and calls next on valid request', async (): Promise<void> => {
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' }
@@ -165,6 +163,10 @@ describe('OpenAPI Validator', (): void => {
       )
       await expect(validateListMiddleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
+      expect(ctx.request.query).toEqual({
+        first: 10,
+        last: 10
+      })
     })
   })
 })
