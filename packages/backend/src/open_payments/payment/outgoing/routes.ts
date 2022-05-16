@@ -3,7 +3,7 @@ import { ReadContext, CreateContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
-import { OutgoingPayment, OutgoingPaymentState } from './model'
+import { OutgoingPayment } from './model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -87,12 +87,6 @@ function outgoingPaymentToBody(
   return {
     id: `${accountId}/outgoing-payments/${outgoingPayment.id}`,
     accountId,
-    state: [
-      OutgoingPaymentState.Funding,
-      OutgoingPaymentState.Sending
-    ].includes(outgoingPayment.state)
-      ? 'processing'
-      : outgoingPayment.state.toLowerCase(),
     receivingPayment: outgoingPayment.receivingPayment,
     sendAmount: {
       ...outgoingPayment.sendAmount,

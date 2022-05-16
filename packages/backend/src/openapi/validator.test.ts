@@ -57,9 +57,9 @@ describe('OpenAPI Validator', (): void => {
     })
 
     test.each`
-      accountId       | message                                       | description
-      ${undefined}    | ${" must have required property 'accountId'"} | ${'missing'}
-      ${'not_a_uuid'} | ${'accountId must match format "uuid"'}       | ${'invalid'}
+      accountId       | message                                      | description
+      ${undefined}    | ${"must have required property 'accountId'"} | ${'missing'}
+      ${'not_a_uuid'} | ${'accountId must match format "uuid"'}      | ${'invalid'}
     `(
       'returns 400 on $description path parameter',
       async ({ accountId, message }): Promise<void> => {
@@ -122,14 +122,15 @@ describe('OpenAPI Validator', (): void => {
     )
 
     test.each`
-      body                                                                    | message                                              | description
-      ${{ incomingAmount: 'fail' }}                                           | ${'incomingAmount must be object'}                   | ${'non-object incomingAmount'}
-      ${{ incomingAmount: { value: '-2', assetCode: 'USD', assetScale: 2 } }} | ${'incomingAmount.value must match format "uint64"'} | ${'invalid incomingAmount, value non-positive'}
-      ${{ incomingAmount: { value: '2', assetCode: 4, assetScale: 2 } }}      | ${'incomingAmount.assetCode must be string'}         | ${'invalid incomingAmount, assetCode not string'}
-      ${{ incomingAmount: { value: '2', assetCode: 'USD', assetScale: -2 } }} | ${'incomingAmount.assetScale must be >= 0'}          | ${'invalid incomingAmount, assetScale negative'}
-      ${{ description: 123 }}                                                 | ${'description must be string'}                      | ${'invalid description'}
-      ${{ externalRef: 123 }}                                                 | ${'externalRef must be string'}                      | ${'invalid externalRef'}
-      ${{ expiresAt: 'fail' }}                                                | ${'expiresAt must match format "date-time"'}         | ${'invalid expiresAt'}
+      body                                                                    | message                                                  | description
+      ${{ incomingAmount: 'fail' }}                                           | ${'incomingAmount must be object'}                       | ${'non-object incomingAmount'}
+      ${{ incomingAmount: { value: '-2', assetCode: 'USD', assetScale: 2 } }} | ${'incomingAmount.value must match format "uint64"'}     | ${'invalid incomingAmount, value non-positive'}
+      ${{ incomingAmount: { value: '2', assetCode: 4, assetScale: 2 } }}      | ${'incomingAmount.assetCode must be string'}             | ${'invalid incomingAmount, assetCode not string'}
+      ${{ incomingAmount: { value: '2', assetCode: 'USD', assetScale: -2 } }} | ${'incomingAmount.assetScale must be >= 0'}              | ${'invalid incomingAmount, assetScale negative'}
+      ${{ description: 123 }}                                                 | ${'description must be string'}                          | ${'invalid description'}
+      ${{ externalRef: 123 }}                                                 | ${'externalRef must be string'}                          | ${'invalid externalRef'}
+      ${{ expiresAt: 'fail' }}                                                | ${'expiresAt must match format "date-time"'}             | ${'invalid expiresAt'}
+      ${{ additionalProp: 'disallowed' }}                                     | ${'must NOT have additional properties: additionalProp'} | ${'invalid additional property'}
     `(
       'returns 400 on invalid body ($description)',
       async ({ body, message }): Promise<void> => {

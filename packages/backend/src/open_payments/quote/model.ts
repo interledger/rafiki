@@ -154,7 +154,6 @@ export class Quote extends BaseModel {
         value: json.receiveAmount.value.toString()
       },
       createdAt: json.createdAt,
-      updatedAt: json.updatedAt,
       expiresAt: json.expiresAt.toISOString()
     }
   }

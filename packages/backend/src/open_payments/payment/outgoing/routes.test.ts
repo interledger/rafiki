@@ -16,11 +16,7 @@ import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
-import {
-  OutgoingPayment,
-  OutgoingPaymentState,
-  OutgoingPaymentJSON
-} from './model'
+import { OutgoingPayment, OutgoingPaymentJSON } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { Amount } from '../../amount'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
@@ -194,62 +190,10 @@ describe('Outgoing Payment Routes', (): void => {
           ...outgoingPayment.receiveAmount,
           value: outgoingPayment.receiveAmount.value.toString()
         },
-        state: 'processing',
         description: outgoingPayment.description,
         externalRef: outgoingPayment.externalRef,
         createdAt: outgoingPayment.createdAt.toISOString(),
         updatedAt: outgoingPayment.updatedAt.toISOString()
-      })
-    })
-
-    Object.values(OutgoingPaymentState).forEach((state) => {
-      test(`returns 200 with a(n) ${state} outgoing payment`, async (): Promise<void> => {
-        const outgoingPayment = await createPayment({
-          accountId
-        })
-        assert.ok(!isOutgoingPaymentError(outgoingPayment))
-        await outgoingPayment.$query(knex).patch({ state })
-        const ctx = createContext<ReadContext>(
-          {
-            headers: { Accept: 'application/json' }
-          },
-          {
-            id: outgoingPayment.id,
-            accountId
-          }
-        )
-        await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-        const validate = createResponseValidator<OutgoingPaymentJSON>({
-          path: openApi.paths[RESOURCE_PATH],
-          method: HttpMethod.GET
-        })
-        assert.ok(validate(ctx))
-        expect(ctx.body).toEqual({
-          id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
-          accountId: accountUrl,
-          receivingPayment: outgoingPayment.receivingPayment,
-          sentAmount: {
-            value: '0',
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          state: [
-            OutgoingPaymentState.Funding,
-            OutgoingPaymentState.Sending
-          ].includes(state)
-            ? 'processing'
-            : state.toLowerCase(),
-          sendAmount: {
-            ...outgoingPayment.sendAmount,
-            value: outgoingPayment.sendAmount.value.toString()
-          },
-          receiveAmount: {
-            ...outgoingPayment.receiveAmount,
-            value: outgoingPayment.receiveAmount.value.toString()
-          },
-          createdAt: outgoingPayment.createdAt.toISOString(),
-          updatedAt: outgoingPayment.updatedAt.toISOString()
-        })
       })
     })
   })
@@ -319,7 +263,6 @@ describe('Outgoing Payment Routes', (): void => {
           },
           description: options.description,
           externalRef: options.externalRef,
-          state: 'processing',
           sentAmount: {
             value: '0',
             assetCode: asset.code,

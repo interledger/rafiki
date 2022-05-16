@@ -83,19 +83,12 @@ export function createValidatorMiddleware<T extends Koa.Context>({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const validate = (ctx: any): ctx is T => {
-    const throwValidateError = (validate: ValidateFunction): void => {
-      const error = validate.errors?.[0]
-      ctx.throw(
-        400,
-        `${error?.instancePath.slice(1).replace('/', '.')} ${error?.message}`
-      )
-    }
     ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
     if (validateParams && !validateParams(ctx.params)) {
-      throwValidateError(validateParams)
+      ctx.throw(400, getErrorMessage(validateParams))
     }
     if (validateQuery && !validateQuery(ctx.request.query)) {
-      throwValidateError(validateQuery)
+      ctx.throw(400, getErrorMessage(validateQuery))
     }
     if (validateBody) {
       ctx.assert(
@@ -105,7 +98,7 @@ export function createValidatorMiddleware<T extends Koa.Context>({
       )
 
       if (!validateBody(ctx.request.body)) {
-        throwValidateError(validateBody)
+        ctx.throw(400, getErrorMessage(validateBody))
       }
     }
     return true
@@ -145,11 +138,19 @@ RequestOptions): (ctx: any) => ctx is ResponseContext<T> {
       'application/json; charset=utf-8'
     )
     if (!validateBody(ctx.response.body)) {
-      const error = validateBody.errors?.[0]
-      throw `${error?.instancePath.slice(1).replace('/', '.')} ${
-        error?.message
-      }`
+      throw getErrorMessage(validateBody)
     }
     return true
   }
+}
+
+const getErrorMessage = (validate: ValidateFunction): string => {
+  // Remove preceding 'data/'
+  // Delineate subfields with '.'
+  const message = ajv.errorsText(validate.errors).slice(5).replace('/', '.')
+  const additionalProperty =
+    validate.errors?.[0].keyword === 'additionalProperties'
+      ? `: ${validate.errors?.[0].params.additionalProperty}`
+      : ''
+  return message + additionalProperty
 }

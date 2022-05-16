@@ -157,7 +157,6 @@ describe('Quote Routes', (): void => {
           value: quote.receiveAmount.value.toString()
         },
         createdAt: quote.createdAt.toISOString(),
-        updatedAt: quote.updatedAt.toISOString(),
         expiresAt: quote.expiresAt.toISOString()
       })
     })
@@ -291,7 +290,6 @@ describe('Quote Routes', (): void => {
                 value: quote.receiveAmount.value.toString()
               },
               createdAt: quote.createdAt.toISOString(),
-              updatedAt: quote.updatedAt.toISOString(),
               expiresAt: quote.expiresAt.toISOString()
             })
           }
@@ -338,7 +336,6 @@ describe('Quote Routes', (): void => {
                 value: quote.receiveAmount.value.toString()
               },
               createdAt: quote.createdAt.toISOString(),
-              updatedAt: quote.updatedAt.toISOString(),
               expiresAt: quote.expiresAt.toISOString()
             })
           })
