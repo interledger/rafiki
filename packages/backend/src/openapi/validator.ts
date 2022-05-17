@@ -117,15 +117,16 @@ export function createResponseValidator<T>({
     errorTransformer
   })
 
-  const code = Object.keys(responses).find((code) => code.startsWith('20'))
-  assert.ok(code)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (ctx: any): ctx is ResponseContext<T> => {
     assert.equal(
       ctx.response.get('Content-Type'),
       'application/json; charset=utf-8'
     )
-    const errors = responseValidator.validateResponse(code, ctx.response.body)
+    const errors = responseValidator.validateResponse(
+      ctx.status,
+      ctx.response.body
+    )
     if (errors) {
       throw errors.errors[0]
     }
