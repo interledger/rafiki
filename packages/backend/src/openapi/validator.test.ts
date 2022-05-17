@@ -97,9 +97,9 @@ describe('OpenAPI Validator', (): void => {
     })
 
     test.each`
-      headers                             | status | message                  | description
-      ${{ Accept: 'text/plain' }}         | ${406} | ${'must accept json'}    | ${'Accept'}
-      ${{ 'Content-Type': 'text/plain' }} | ${400} | ${'must send json body'} | ${'Content-Type'}
+      headers                             | status | message                                  | description
+      ${{ Accept: 'text/plain' }}         | ${406} | ${'must accept json'}                    | ${'Accept'}
+      ${{ 'Content-Type': 'text/plain' }} | ${415} | ${'Unsupported Content-Type text/plain'} | ${'Content-Type'}
     `(
       'returns $status on invalid $description header',
       async ({ headers, status, message }): Promise<void> => {
@@ -120,15 +120,15 @@ describe('OpenAPI Validator', (): void => {
     )
 
     test.each`
-      body                                                                    | message                                                  | description
-      ${{ incomingAmount: 'fail' }}                                           | ${'incomingAmount must be object'}                       | ${'non-object incomingAmount'}
-      ${{ incomingAmount: { value: '-2', assetCode: 'USD', assetScale: 2 } }} | ${'incomingAmount.value must match format "uint64"'}     | ${'invalid incomingAmount, value non-positive'}
-      ${{ incomingAmount: { value: '2', assetCode: 4, assetScale: 2 } }}      | ${'incomingAmount.assetCode must be string'}             | ${'invalid incomingAmount, assetCode not string'}
-      ${{ incomingAmount: { value: '2', assetCode: 'USD', assetScale: -2 } }} | ${'incomingAmount.assetScale must be >= 0'}              | ${'invalid incomingAmount, assetScale negative'}
-      ${{ description: 123 }}                                                 | ${'description must be string'}                          | ${'invalid description'}
-      ${{ externalRef: 123 }}                                                 | ${'externalRef must be string'}                          | ${'invalid externalRef'}
-      ${{ expiresAt: 'fail' }}                                                | ${'expiresAt must match format "date-time"'}             | ${'invalid expiresAt'}
-      ${{ additionalProp: 'disallowed' }}                                     | ${'must NOT have additional properties: additionalProp'} | ${'invalid additional property'}
+      body                                                                    | message                                                       | description
+      ${{ incomingAmount: 'fail' }}                                           | ${'body.incomingAmount must be object'}                       | ${'non-object incomingAmount'}
+      ${{ incomingAmount: { value: '-2', assetCode: 'USD', assetScale: 2 } }} | ${'body.incomingAmount.value must match format "uint64"'}     | ${'invalid incomingAmount, value non-positive'}
+      ${{ incomingAmount: { value: '2', assetCode: 4, assetScale: 2 } }}      | ${'body.incomingAmount.assetCode must be string'}             | ${'invalid incomingAmount, assetCode not string'}
+      ${{ incomingAmount: { value: '2', assetCode: 'USD', assetScale: -2 } }} | ${'body.incomingAmount.assetScale must be >= 0'}              | ${'invalid incomingAmount, assetScale negative'}
+      ${{ description: 123 }}                                                 | ${'body.description must be string'}                          | ${'invalid description'}
+      ${{ externalRef: 123 }}                                                 | ${'body.externalRef must be string'}                          | ${'invalid externalRef'}
+      ${{ expiresAt: 'fail' }}                                                | ${'body.expiresAt must match format "date-time"'}             | ${'invalid expiresAt'}
+      ${{ additionalProp: 'disallowed' }}                                     | ${'body must NOT have additional properties: additionalProp'} | ${'invalid additional property'}
     `(
       'returns 400 on invalid body ($description)',
       async ({ body, message }): Promise<void> => {

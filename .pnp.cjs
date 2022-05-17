@@ -5238,10 +5238,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],
           "linkType": "SOFT",
         }],
-        ["virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.1.1", {
-          "packageLocation": "./.yarn/__virtual__/ajv-formats-virtual-3f2effef60/0/cache/ajv-formats-npm-2.1.1-3cec02eae9-4a287d937f.zip/node_modules/ajv-formats/",
+        ["virtual:03ab1982e515414d178f89a9cef245b039023594836d402852b6f64b51b6e45d264d1db70d956ebd337961189bc15099cbabed45fe99c69f02799d7f2799b15b#npm:2.1.1", {
+          "packageLocation": "./.yarn/__virtual__/ajv-formats-virtual-e66474eb4e/0/cache/ajv-formats-npm-2.1.1-3cec02eae9-4a287d937f.zip/node_modules/ajv-formats/",
           "packageDependencies": [
-            ["ajv-formats", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.1.1"],
+            ["ajv-formats", "virtual:03ab1982e515414d178f89a9cef245b039023594836d402852b6f64b51b6e45d264d1db70d956ebd337961189bc15099cbabed45fe99c69f02799d7f2799b15b#npm:2.1.1"],
             ["@types/ajv", null],
             ["ajv", "npm:8.11.0"]
           ],
@@ -6599,7 +6599,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/uuid", "npm:8.3.0"],
             ["add", "npm:2.0.6"],
             ["ajv", "npm:8.11.0"],
-            ["ajv-formats", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.1.1"],
+            ["ajv-formats", "virtual:03ab1982e515414d178f89a9cef245b039023594836d402852b6f64b51b6e45d264d1db70d956ebd337961189bc15099cbabed45fe99c69f02799d7f2799b15b#npm:2.1.1"],
             ["apollo-server", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:3.5.0"],
             ["apollo-server-koa", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.25.1"],
             ["axios", "npm:0.21.4"],
@@ -6630,8 +6630,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["objection-db-errors", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:1.1.2"],
             ["oer-utils", "npm:5.1.2"],
             ["openapi-default-setter", "npm:11.0.1"],
-            ["openapi-jsonschema-parameters", "npm:11.0.0"],
             ["openapi-request-coercer", "npm:11.0.1"],
+            ["openapi-request-validator", "npm:11.0.1"],
             ["openapi-types", "npm:11.0.0"],
             ["pg", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:8.6.0"],
             ["pino", "npm:6.11.3"],
@@ -14569,11 +14569,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["openapi-jsonschema-parameters", [
-        ["npm:11.0.0", {
-          "packageLocation": "./.yarn/cache/openapi-jsonschema-parameters-npm-11.0.0-370c60fff3-c73d0d9124.zip/node_modules/openapi-jsonschema-parameters/",
+        ["npm:11.0.1", {
+          "packageLocation": "./.yarn/cache/openapi-jsonschema-parameters-npm-11.0.1-c6ea5d50ba-a1b75b2b44.zip/node_modules/openapi-jsonschema-parameters/",
           "packageDependencies": [
-            ["openapi-jsonschema-parameters", "npm:11.0.0"],
-            ["openapi-types", "npm:11.0.0"]
+            ["openapi-jsonschema-parameters", "npm:11.0.1"],
+            ["openapi-types", "npm:11.0.1"]
           ],
           "linkType": "HARD",
         }]
@@ -14583,6 +14583,21 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/openapi-request-coercer-npm-11.0.1-5d9d12f43c-d5bb05ebc7.zip/node_modules/openapi-request-coercer/",
           "packageDependencies": [
             ["openapi-request-coercer", "npm:11.0.1"],
+            ["openapi-types", "npm:11.0.1"],
+            ["ts-log", "npm:2.2.4"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["openapi-request-validator", [
+        ["npm:11.0.1", {
+          "packageLocation": "./.yarn/cache/openapi-request-validator-npm-11.0.1-03ab1982e5-f763527233.zip/node_modules/openapi-request-validator/",
+          "packageDependencies": [
+            ["openapi-request-validator", "npm:11.0.1"],
+            ["ajv", "npm:8.11.0"],
+            ["ajv-formats", "virtual:03ab1982e515414d178f89a9cef245b039023594836d402852b6f64b51b6e45d264d1db70d956ebd337961189bc15099cbabed45fe99c69f02799d7f2799b15b#npm:2.1.1"],
+            ["content-type", "npm:1.0.4"],
+            ["openapi-jsonschema-parameters", "npm:11.0.1"],
             ["openapi-types", "npm:11.0.1"],
             ["ts-log", "npm:2.2.4"]
           ],
