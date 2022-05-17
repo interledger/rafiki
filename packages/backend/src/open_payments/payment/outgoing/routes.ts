@@ -3,7 +3,7 @@ import { ReadContext, CreateContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
-import { OutgoingPayment } from './model'
+import { OutgoingPayment, OutgoingPaymentState } from './model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -102,6 +102,7 @@ function outgoingPaymentToBody(
     },
     description: outgoingPayment.description ?? undefined,
     externalRef: outgoingPayment.externalRef ?? undefined,
+    failed: outgoingPayment.state === OutgoingPaymentState.Failed,
     createdAt: outgoingPayment.createdAt.toISOString(),
     updatedAt: outgoingPayment.updatedAt.toISOString()
   }

@@ -1,10 +1,13 @@
 import assert from 'assert'
-import Ajv2020, { ValidateFunction, ErrorObject } from 'ajv/dist/2020'
+import Ajv2020, { ErrorObject } from 'ajv/dist/2020'
 import addFormats from 'ajv-formats'
 import Koa from 'koa'
 import OpenAPIDefaultSetter from 'openapi-default-setter'
 import OpenapiRequestCoercer from 'openapi-request-coercer'
 import OpenAPIRequestValidator from 'openapi-request-validator'
+import OpenAPIResponseValidator, {
+  OpenAPIResponseValidatorError
+} from 'openapi-response-validator'
 import { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
 
 import { HttpMethod } from './'
@@ -26,14 +29,6 @@ interface RequestOptions {
 
 const ajv = new Ajv2020()
 addFormats(ajv)
-ajv.addFormat('uint64', (x) => {
-  try {
-    const value = BigInt(x)
-    return value >= BigInt(0)
-  } catch (e) {
-    return false
-  }
-})
 
 export function createValidatorMiddleware<T extends Koa.Context>({
   path,
@@ -64,11 +59,7 @@ export function createValidatorMiddleware<T extends Koa.Context>({
     parameters,
     // OpenAPIRequestValidator hasn't been updated with OpenAPIV3_1 types
     requestBody: path[method]?.requestBody as OpenAPIV3.RequestBodyObject,
-    errorTransformer: (_openapiError, ajvError) => {
-      return {
-        message: formatErrorMessage(ajvError)
-      }
-    },
+    errorTransformer,
     customFormats: {
       uint64: function (input) {
         try {
@@ -117,46 +108,41 @@ export function createResponseValidator<T>({
 RequestOptions): (ctx: any) => ctx is ResponseContext<T> {
   const responses = path[method]?.responses
   assert.ok(responses)
+  const responseValidator = new OpenAPIResponseValidator({
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: OpenAPIResponseValidator supports v3 responses but its types aren't updated
+    responses,
+    errorTransformer
+  })
 
   const code = Object.keys(responses).find((code) => code.startsWith('20'))
   assert.ok(code)
-  const bodySchema = (responses[code] as OpenAPIV3_1.ResponseObject).content?.[
-    'application/json'
-  ].schema
-  assert.ok(bodySchema)
-  const validateBody = ajv.compile<T>(bodySchema)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (ctx: any): ctx is ResponseContext<T> => {
-    assert.equal(ctx.status.toString(), code)
     assert.equal(
       ctx.response.get('Content-Type'),
       'application/json; charset=utf-8'
     )
-    if (!validateBody(ctx.response.body)) {
-      throw getErrorMessage(validateBody)
+    const errors = responseValidator.validateResponse(code, ctx.response.body)
+    if (errors) {
+      throw errors.errors[0]
     }
     return true
   }
 }
 
-const getErrorMessage = (validate: ValidateFunction): string => {
+const errorTransformer = (
+  _openapiError: OpenAPIResponseValidatorError,
+  ajvError: ErrorObject
+) => {
   // Remove preceding 'data/'
   // Delineate subfields with '.'
-  const message = ajv.errorsText(validate.errors).slice(5).replace(/\//g, '.')
+  const message = ajv.errorsText([ajvError]).slice(5).replace(/\//g, '.')
   const additionalProperty =
-    validate.errors?.[0].keyword === 'additionalProperties'
-      ? `: ${validate.errors?.[0].params.additionalProperty}`
+    ajvError.keyword === 'additionalProperties'
+      ? `: ${ajvError.params.additionalProperty}`
       : ''
-  return message + additionalProperty
-}
-
-const formatErrorMessage = (error: ErrorObject): string => {
-  // Remove preceding 'data/'
-  // Delineate subfields with '.'
-  const message = ajv.errorsText([error]).slice(5).replace(/\//g, '.')
-  const additionalProperty =
-    error.keyword === 'additionalProperties'
-      ? `: ${error.params.additionalProperty}`
-      : ''
-  return message + additionalProperty
+  return {
+    message: message + additionalProperty
+  }
 }

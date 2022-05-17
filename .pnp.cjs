@@ -6632,6 +6632,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["openapi-default-setter", "npm:11.0.1"],
             ["openapi-request-coercer", "npm:11.0.1"],
             ["openapi-request-validator", "npm:11.0.1"],
+            ["openapi-response-validator", "npm:11.0.1"],
             ["openapi-types", "npm:11.0.0"],
             ["pg", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:8.6.0"],
             ["pino", "npm:6.11.3"],
@@ -14600,6 +14601,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["openapi-jsonschema-parameters", "npm:11.0.1"],
             ["openapi-types", "npm:11.0.1"],
             ["ts-log", "npm:2.2.4"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["openapi-response-validator", [
+        ["npm:11.0.1", {
+          "packageLocation": "./.yarn/cache/openapi-response-validator-npm-11.0.1-91a75c8b20-7bd59e3b0b.zip/node_modules/openapi-response-validator/",
+          "packageDependencies": [
+            ["openapi-response-validator", "npm:11.0.1"],
+            ["ajv", "npm:8.11.0"],
+            ["openapi-types", "npm:11.0.1"]
           ],
           "linkType": "HARD",
         }]

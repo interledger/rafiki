@@ -16,7 +16,11 @@ import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
-import { OutgoingPayment, OutgoingPaymentJSON } from './model'
+import {
+  OutgoingPayment,
+  OutgoingPaymentState,
+  OutgoingPaymentJSON
+} from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { Amount } from '../../amount'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
@@ -151,51 +155,64 @@ describe('Outgoing Payment Routes', (): void => {
       })
     })
 
-    test('returns 200 with an outgoing payment', async (): Promise<void> => {
-      const outgoingPayment = await createPayment({
-        accountId,
-        description: 'rent',
-        externalRef: '202201'
-      })
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        {
-          id: outgoingPayment.id,
-          accountId
+    test.each`
+      failed   | description
+      ${false} | ${''}
+      ${true}  | ${'failed '}
+    `(
+      'returns the $description outgoing payment on success',
+      async ({ failed }): Promise<void> => {
+        const outgoingPayment = await createPayment({
+          accountId,
+          description: 'rent',
+          externalRef: '202201'
+        })
+        if (failed) {
+          await outgoingPayment
+            .$query(knex)
+            .patch({ state: OutgoingPaymentState.Failed })
         }
-      )
-      await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-      const validate = createResponseValidator<OutgoingPaymentJSON>({
-        path: openApi.paths[RESOURCE_PATH],
-        method: HttpMethod.GET
-      })
-      assert.ok(validate(ctx))
+        const ctx = createContext<ReadContext>(
+          {
+            headers: { Accept: 'application/json' }
+          },
+          {
+            id: outgoingPayment.id,
+            accountId
+          }
+        )
+        await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
+        const validate = createResponseValidator<OutgoingPaymentJSON>({
+          path: openApi.paths[RESOURCE_PATH],
+          method: HttpMethod.GET
+        })
+        assert.ok(validate(ctx))
 
-      expect(ctx.body).toEqual({
-        id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
-        accountId: accountUrl,
-        receivingPayment: outgoingPayment.receivingPayment,
-        sendAmount: {
-          ...outgoingPayment.sendAmount,
-          value: outgoingPayment.sendAmount.value.toString()
-        },
-        sentAmount: {
-          value: '0',
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        receiveAmount: {
-          ...outgoingPayment.receiveAmount,
-          value: outgoingPayment.receiveAmount.value.toString()
-        },
-        description: outgoingPayment.description,
-        externalRef: outgoingPayment.externalRef,
-        createdAt: outgoingPayment.createdAt.toISOString(),
-        updatedAt: outgoingPayment.updatedAt.toISOString()
-      })
-    })
+        expect(ctx.body).toEqual({
+          id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
+          accountId: accountUrl,
+          receivingPayment: outgoingPayment.receivingPayment,
+          sendAmount: {
+            ...outgoingPayment.sendAmount,
+            value: outgoingPayment.sendAmount.value.toString()
+          },
+          sentAmount: {
+            value: '0',
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          receiveAmount: {
+            ...outgoingPayment.receiveAmount,
+            value: outgoingPayment.receiveAmount.value.toString()
+          },
+          description: outgoingPayment.description,
+          externalRef: outgoingPayment.externalRef,
+          failed,
+          createdAt: outgoingPayment.createdAt.toISOString(),
+          updatedAt: outgoingPayment.updatedAt.toISOString()
+        })
+      }
+    )
   })
 
   describe('create', (): void => {
@@ -268,6 +285,7 @@ describe('Outgoing Payment Routes', (): void => {
             assetCode: asset.code,
             assetScale: asset.scale
           },
+          failed: false,
           createdAt: ctx.body.createdAt,
           updatedAt: ctx.body.updatedAt
         })

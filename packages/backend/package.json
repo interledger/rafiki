@@ -86,6 +86,7 @@
     "openapi-default-setter": "^11.0.1",
     "openapi-request-coercer": "^11.0.1",
     "openapi-request-validator": "^11.0.1",
+    "openapi-response-validator": "^11.0.1",
     "openapi-types": "^11.0.0",
     "pg": "^8.6.0",
     "pino": "^6.11.3",

@@ -175,12 +175,13 @@ export interface OutgoingPaymentJSON {
   receiveAmount: AmountJSON
   description?: string
   externalRef?: string
+  failed: boolean
   updatedAt: string
   sentAmount: AmountJSON
 }
 
 export type PaymentData = {
-  payment: Omit<OutgoingPaymentJSON, 'sentAmount'> & {
+  payment: Omit<OutgoingPaymentJSON, 'sentAmount' | 'failed'> & {
     error?: string
     stateAttempts: number
     outcome: {
