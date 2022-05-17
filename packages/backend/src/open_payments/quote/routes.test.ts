@@ -20,7 +20,10 @@ import { Amount } from '../amount'
 import { randomAsset } from '../../tests/asset'
 import { createQuote } from '../../tests/quote'
 import { OpenAPI, HttpMethod } from '../../openapi'
-import { createResponseValidator } from '../../openapi/validator'
+import {
+  createResponseValidator,
+  ResponseValidator
+} from '../../openapi/validator'
 
 const COLLECTION_PATH = '/{accountId}/quotes'
 const RESOURCE_PATH = `${COLLECTION_PATH}/{id}`
@@ -215,6 +218,15 @@ describe('Quote Routes', (): void => {
     })
 
     describe('returns the quote on success', (): void => {
+      let validate: ResponseValidator<QuoteJSON>
+
+      beforeAll((): void => {
+        validate = createResponseValidator<QuoteJSON>({
+          path: openApi.paths[COLLECTION_PATH],
+          method: HttpMethod.POST
+        })
+      })
+
       describe.each`
         receivingAccount    | receivingPayment    | description
         ${receivingAccount} | ${undefined}        | ${'receivingAccount'}
@@ -269,10 +281,6 @@ describe('Quote Routes', (): void => {
                 ...options.receiveAmount,
                 value: BigInt(options.receiveAmount.value)
               }
-            })
-            const validate = createResponseValidator<QuoteJSON>({
-              path: openApi.paths[COLLECTION_PATH],
-              method: HttpMethod.POST
             })
             assert.ok(validate(ctx))
             const quoteId = ctx.response.body.id.split('/').pop()

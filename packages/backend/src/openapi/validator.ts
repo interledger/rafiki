@@ -101,11 +101,13 @@ export function createValidatorMiddleware<T extends Koa.Context>({
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ResponseValidator<T> = (ctx: any) => ctx is ResponseContext<T>
+
 export function createResponseValidator<T>({
   path,
   method
-}: // eslint-disable-next-line @typescript-eslint/no-explicit-any
-RequestOptions): (ctx: any) => ctx is ResponseContext<T> {
+}: RequestOptions): ResponseValidator<T> {
   const responses = path[method]?.responses
   assert.ok(responses)
   const responseValidator = new OpenAPIResponseValidator({

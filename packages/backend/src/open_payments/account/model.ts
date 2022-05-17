@@ -89,3 +89,11 @@ export class AccountEvent extends WebhookEvent {
   public type!: AccountEventType
   public data!: AccountData
 }
+
+export interface AccountJSON {
+  id: string
+  publicName?: string
+  assetCode: string
+  assetScale: number
+  authServer: string
+}

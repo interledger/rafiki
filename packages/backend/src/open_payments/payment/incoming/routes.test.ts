@@ -37,7 +37,10 @@ import { AppContext } from '../../../app'
 import { isIncomingPaymentError } from './errors'
 import { AccountingService } from '../../../accounting/service'
 import { OpenAPI, HttpMethod } from '../../../openapi'
-import { createResponseValidator } from '../../../openapi/validator'
+import {
+  createResponseValidator,
+  ResponseValidator
+} from '../../../openapi/validator'
 
 const COLLECTION_PATH = '/{accountId}/incoming-payments'
 const RESOURCE_PATH = `${COLLECTION_PATH}/{id}`
@@ -181,6 +184,7 @@ describe('Incoming Payment Routes', (): void => {
       assert.ok(validate(ctx))
 
       const sharedSecret = ctx.response.body.sharedSecret
+      assert.ok(sharedSecret)
 
       expect(ctx.body).toEqual({
         id: `${accountId}/incoming-payments/${incomingPayment.id}`,
@@ -204,7 +208,7 @@ describe('Incoming Payment Routes', (): void => {
         createdAt: incomingPayment.createdAt.toISOString(),
         updatedAt: incomingPayment.updatedAt.toISOString()
       })
-      const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
+      const sharedSecretBuffer = Buffer.from(sharedSecret, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
       expect(sharedSecret).toEqual(base64url(sharedSecretBuffer))
     })
@@ -229,6 +233,15 @@ describe('Incoming Payment Routes', (): void => {
     })
   })
   describe('create', (): void => {
+    let validate: ResponseValidator<IncomingPaymentJSON>
+
+    beforeAll((): void => {
+      validate = createResponseValidator<IncomingPaymentJSON>({
+        path: openApi.paths[COLLECTION_PATH],
+        method: HttpMethod.POST
+      })
+    })
+
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
       const ctx = setup<CreateContext<CreateBody>>(
         { body: {} },
@@ -267,14 +280,8 @@ describe('Incoming Payment Routes', (): void => {
           { accountId: account.id }
         )
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
-        const validate = createResponseValidator<IncomingPaymentJSON>({
-          path: openApi.paths[COLLECTION_PATH],
-          method: HttpMethod.POST
-        })
         assert.ok(validate(ctx))
-        const incomingPaymentId = (ctx.response.body['id'] as string)
-          .split('/')
-          .pop()
+        const incomingPaymentId = ctx.response.body.id.split('/').pop()
         expect(ctx.response.body).toEqual({
           id: `${accountId}/incoming-payments/${incomingPaymentId}`,
           accountId,

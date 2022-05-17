@@ -27,7 +27,10 @@ import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createQuote } from '../../../tests/quote'
 import { AccountingService } from '../../../accounting/service'
 import { OpenAPI, HttpMethod } from '../../../openapi'
-import { createResponseValidator } from '../../../openapi/validator'
+import {
+  createResponseValidator,
+  ResponseValidator
+} from '../../../openapi/validator'
 
 const COLLECTION_PATH = '/{accountId}/outgoing-payments'
 const RESOURCE_PATH = `${COLLECTION_PATH}/{id}`
@@ -116,6 +119,15 @@ describe('Outgoing Payment Routes', (): void => {
   )
 
   describe('get', (): void => {
+    let validate: ResponseValidator<OutgoingPaymentJSON>
+
+    beforeAll((): void => {
+      validate = createResponseValidator<OutgoingPaymentJSON>({
+        path: openApi.paths[RESOURCE_PATH],
+        method: HttpMethod.GET
+      })
+    })
+
     test('returns 404 for nonexistent outgoing payment', async (): Promise<void> => {
       const ctx = createContext<ReadContext>(
         {
@@ -182,10 +194,6 @@ describe('Outgoing Payment Routes', (): void => {
           }
         )
         await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-        const validate = createResponseValidator<OutgoingPaymentJSON>({
-          path: openApi.paths[RESOURCE_PATH],
-          method: HttpMethod.GET
-        })
         assert.ok(validate(ctx))
 
         expect(ctx.body).toEqual({
@@ -216,7 +224,15 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   describe('create', (): void => {
+    let validate: ResponseValidator<OutgoingPaymentJSON>
     let options: Omit<CreateOutgoingPaymentOptions, 'accountId'>
+
+    beforeAll((): void => {
+      validate = createResponseValidator<OutgoingPaymentJSON>({
+        path: openApi.paths[COLLECTION_PATH],
+        method: HttpMethod.POST
+      })
+    })
 
     beforeEach(() => {
       options = {
@@ -260,10 +276,6 @@ describe('Outgoing Payment Routes', (): void => {
         }
         const ctx = setup({})
         await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
-        const validate = createResponseValidator<OutgoingPaymentJSON>({
-          path: openApi.paths[COLLECTION_PATH],
-          method: HttpMethod.POST
-        })
         assert.ok(validate(ctx))
         const outgoingPaymentId = ctx.response.body.id.split('/').pop()
         expect(ctx.response.body).toEqual({
