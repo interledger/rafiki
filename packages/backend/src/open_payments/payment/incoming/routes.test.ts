@@ -441,4 +441,51 @@ describe('Incoming Payment Routes', (): void => {
       })
     })
   })
+
+  describe('list', (): void => {
+    test('returns 200 without query params', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { accountId: account.id }
+      )
+      await expect(incomingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+    })
+
+    test('returns 200 with query params', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' },
+          query: { first: 5, cursor: incomingPayment.id }
+        },
+        { accountId: account.id }
+      )
+      await expect(incomingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+    })
+
+    test('returns 500 if TB account not found', async (): Promise<void> => {
+      jest
+        .spyOn(accountingService, 'getAccountsTotalReceived')
+        .mockResolvedValueOnce([undefined])
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { accountId: account.id }
+      )
+      await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: `Error trying to list incoming payments`
+      })
+    })
+  })
 })

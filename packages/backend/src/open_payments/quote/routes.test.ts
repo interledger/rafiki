@@ -435,4 +435,39 @@ describe('Quote Routes', (): void => {
       })
     })
   })
+
+  describe('list', (): void => {
+    let quote: Quote
+    beforeEach(async () => {
+      quote = await createAccountQuote(accountId)
+    })
+    test('returns 200 without query params', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { accountId }
+      )
+      await expect(quoteRoutes.list(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+    })
+
+    test('returns 200 with query params', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' },
+          query: { first: 5, cursor: quote.id }
+        },
+        { accountId }
+      )
+      await expect(quoteRoutes.list(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+    })
+  })
 })

@@ -6,6 +6,7 @@ import { QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { Amount, parseAmount } from '../amount'
+import { list } from '../../shared/pagination'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -16,6 +17,7 @@ interface ServiceDependencies {
 export interface QuoteRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
+  list(ctx: AppContext): Promise<void>
 }
 
 export function createQuoteRoutes(deps_: ServiceDependencies): QuoteRoutes {
@@ -25,7 +27,8 @@ export function createQuoteRoutes(deps_: ServiceDependencies): QuoteRoutes {
   const deps = { ...deps_, logger }
   return {
     get: (ctx: AppContext) => getQuote(deps, ctx),
-    create: (ctx: AppContext) => createQuote(deps, ctx)
+    create: (ctx: AppContext) => createQuote(deps, ctx),
+    list: (ctx: AppContext) => listQuotes(deps, ctx)
   }
 }
 
@@ -115,6 +118,27 @@ async function createQuote(
     }
     deps.logger.debug({ error: err.message })
     ctx.throw(500, 'Error trying to create quote')
+  }
+}
+
+async function listQuotes(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  // todo: validation
+  const { accountId } = ctx.params
+  const pagination = ctx.request.query
+  let result: unknown
+  try {
+    result = await list(
+      deps.quoteService,
+      deps.config.publicHost,
+      accountId,
+      pagination
+    )
+    ctx.body = result
+  } catch (_) {
+    ctx.throw(500, 'Error trying to list quotes')
   }
 }
 

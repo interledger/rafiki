@@ -1,4 +1,4 @@
-import { Model, ModelOptions, QueryContext } from 'objection'
+import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
@@ -15,7 +15,13 @@ export class OutgoingPayment
   public static readonly tableName = 'outgoingPayments'
 
   static get virtualAttributes(): string[] {
-    return ['sendAmount', 'receiveAmount', 'quote', 'sentAmount']
+    return [
+      'sendAmount',
+      'receiveAmount',
+      'quote',
+      'sentAmount',
+      'receivingPayment'
+    ]
   }
 
   public state!: OutgoingPaymentState
@@ -132,6 +138,32 @@ export class OutgoingPayment
     }
     return data
   }
+
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      id: json.id,
+      accountId: json.accountId,
+      state: json.state.toLowerCase(),
+      receivingPayment: json.receivingPayment,
+      sendAmount: {
+        ...json.sendAmount,
+        value: json.sendAmount.value.toString()
+      },
+      sentAmount: {
+        ...json.sentAmount,
+        value: json.sentAmount.value.toString()
+      },
+      receiveAmount: {
+        ...json.receiveAmount,
+        value: json.receiveAmount.value.toString()
+      },
+      description: json.description,
+      externalRef: json.externalRef,
+      createdAt: json.createdAt,
+      updatedAt: json.updatedAt
+    }
+  }
 }
 
 export enum OutgoingPaymentState {
@@ -196,4 +228,18 @@ export const isPaymentEvent = (o: any): o is PaymentEvent =>
 export class PaymentEvent extends WebhookEvent {
   public type!: PaymentEventType
   public data!: PaymentData
+}
+
+export type OutgoingPaymentJSON = {
+  id: string
+  accountId: string
+  failed: boolean
+  receivingPayment: string
+  sendAmount: AmountJSON
+  sentAmount: AmountJSON
+  receiveAmount: AmountJSON
+  description: string | undefined
+  externalRef: string | undefined
+  createdAt: string
+  updatedAt: string
 }

@@ -21,6 +21,8 @@ export interface PageInfo {
   endCursor?: string
   hasNextPage?: boolean
   hasPreviousPage?: boolean
+  first?: number
+  last?: number
 }
 
 class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<

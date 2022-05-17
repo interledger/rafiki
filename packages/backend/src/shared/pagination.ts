@@ -22,6 +22,11 @@ export enum Resource {
   quote = 'quote'
 }
 
+type ListResult = {
+  pagination: PageInfo
+  result: unknown // (IncomingPaymentJSON | OutgoingPaymentJSON | QuoteJSON)[]
+}
+
 export async function getAccountPage(
   resource: Resource,
   deps: IncomingServiceDeps | OutgoingServiceDeps | QuoteServiceDeps,
@@ -84,6 +89,36 @@ export async function getAccountPage(
         )
       }
       return payment
+    })
+  }
+}
+
+export async function list(
+  service: IncomingPaymentService | OutgoingPaymentService | QuoteService,
+  host: string,
+  accountId: string,
+  pagination?: Pagination
+): Promise<ListResult> {
+  const page = await service.getAccountPage(accountId, pagination)
+  const pageInfo = await getPageInfo(service, page)
+  if (pagination && pagination.last) {
+    pageInfo.last = page.length
+  } else {
+    pageInfo.first = page.length
+  }
+  return {
+    pagination: pageInfo,
+    result: page.map((item: IncomingPayment | OutgoingPayment | Quote) => {
+      return {
+        ...item.toJSON(),
+        accountId: `${host}/${accountId}`,
+        id:
+          item['receivedAmount'] !== undefined
+            ? `${host}/${accountId}/incoming-payments/${item.id}`
+            : item['sentAmount'] !== undefined
+            ? `${host}/${accountId}/outgoing-payments/${item.id}`
+            : `${host}/${accountId}/quotes/${item.id}`
+      }
     })
   }
 }

@@ -5,6 +5,7 @@ import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
+import { list } from '../../../shared/pagination'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -15,6 +16,7 @@ interface ServiceDependencies {
 export interface OutgoingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
+  list(ctx: AppContext): Promise<void>
 }
 
 export function createOutgoingPaymentRoutes(
@@ -26,7 +28,8 @@ export function createOutgoingPaymentRoutes(
   const deps = { ...deps_, logger }
   return {
     get: (ctx: AppContext) => getOutgoingPayment(deps, ctx),
-    create: (ctx: AppContext) => createOutgoingPayment(deps, ctx)
+    create: (ctx: AppContext) => createOutgoingPayment(deps, ctx),
+    list: (ctx: AppContext) => listOutgoingPayments(deps, ctx)
   }
 }
 
@@ -88,6 +91,27 @@ async function createOutgoingPayment(
   ctx.status = 201
   const res = outgoingPaymentToBody(deps, paymentOrErr)
   ctx.body = res
+}
+
+async function listOutgoingPayments(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  // todo: validation
+  const { accountId } = ctx.params
+  const pagination = ctx.request.query
+  let result: unknown
+  try {
+    result = await list(
+      deps.outgoingPaymentService,
+      deps.config.publicHost,
+      accountId,
+      pagination
+    )
+    ctx.body = result
+  } catch (_) {
+    ctx.throw(500, 'Error trying to list outgoing payments')
+  }
 }
 
 function outgoingPaymentToBody(

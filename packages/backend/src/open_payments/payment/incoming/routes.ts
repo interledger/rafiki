@@ -13,6 +13,7 @@ import {
   isIncomingPaymentError
 } from './errors'
 import { Amount, parseAmount } from '../../amount'
+import { list } from '../../../shared/pagination'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -29,6 +30,7 @@ export interface IncomingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
   update(ctx: AppContext): Promise<void>
+  list(ctx: AppContext): Promise<void>
 }
 
 export function createIncomingPaymentRoutes(
@@ -41,7 +43,8 @@ export function createIncomingPaymentRoutes(
   return {
     get: (ctx: AppContext) => getIncomingPayment(deps, ctx),
     create: (ctx: AppContext) => createIncomingPayment(deps, ctx),
-    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx)
+    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx),
+    list: (ctx: AppContext) => listIncomingPayments(deps, ctx)
   }
 }
 
@@ -176,6 +179,27 @@ async function updateIncomingPayment(
 
   const res = incomingPaymentToBody(deps, incomingPaymentOrError)
   ctx.body = res
+}
+
+async function listIncomingPayments(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  // todo: validation
+  const { accountId } = ctx.params
+  const pagination = ctx.request.query
+  let result: unknown
+  try {
+    result = await list(
+      deps.incomingPaymentService,
+      deps.config.publicHost,
+      accountId,
+      pagination
+    )
+    ctx.body = result
+  } catch (_) {
+    ctx.throw(500, 'Error trying to list incoming payments')
+  }
 }
 
 function incomingPaymentToBody(

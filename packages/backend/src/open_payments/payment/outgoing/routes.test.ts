@@ -367,4 +367,57 @@ describe('Outgoing Payment Routes', (): void => {
       }
     )
   })
+
+  describe('list', (): void => {
+    let outgoingPayment: OutgoingPayment
+    beforeEach(async () => {
+      outgoingPayment = await createPayment({
+        accountId
+      })
+    })
+    test('returns 200 without query params', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { accountId }
+      )
+      await expect(outgoingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+    })
+
+    test('returns 200 with query params', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' },
+          query: { first: 5, cursor: outgoingPayment.id }
+        },
+        { accountId }
+      )
+      await expect(outgoingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+    })
+
+    test('returns 500 if TB account not found', async (): Promise<void> => {
+      jest
+        .spyOn(accountingService, 'getAccountsTotalSent')
+        .mockResolvedValueOnce([undefined])
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { accountId }
+      )
+      await expect(outgoingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: `Error trying to list outgoing payments`
+      })
+    })
+  })
 })
