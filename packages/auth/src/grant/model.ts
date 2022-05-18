@@ -44,6 +44,9 @@ export class Grant extends BaseModel {
   public access!: Access[]
   public state!: GrantState
   public startMethod!: StartMethod[]
+  // public locations!: string[]
+  // public identifier!: string
+  public interval?: string
 
   public continueToken!: string
   public continueId!: string
