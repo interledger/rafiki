@@ -1,4 +1,3 @@
-import assert from 'assert'
 import * as httpMocks from 'node-mocks-http'
 import base64url from 'base64url'
 import Knex from 'knex'
@@ -22,11 +21,7 @@ import {
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentService } from './service'
-import {
-  IncomingPayment,
-  IncomingPaymentState,
-  IncomingPaymentJSON
-} from './model'
+import { IncomingPayment, IncomingPaymentState } from './model'
 import {
   IncomingPaymentRoutes,
   CreateBody,
@@ -36,14 +31,6 @@ import {
 import { AppContext } from '../../../app'
 import { isIncomingPaymentError } from './errors'
 import { AccountingService } from '../../../accounting/service'
-import { OpenAPI, HttpMethod } from '../../../openapi'
-import {
-  createResponseValidator,
-  ResponseValidator
-} from '../../../openapi/validator'
-
-const COLLECTION_PATH = '/{accountId}/incoming-payments'
-const RESOURCE_PATH = `${COLLECTION_PATH}/{id}`
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -55,7 +42,6 @@ describe('Incoming Payment Routes', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
-  let openApi: OpenAPI
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -67,6 +53,7 @@ describe('Incoming Payment Routes', (): void => {
   ): T => {
     const ctx = createContext<T>(
       {
+        ...reqOpts,
         headers: Object.assign(
           { Accept: 'application/json', 'Content-Type': 'application/json' },
           reqOpts.headers
@@ -95,7 +82,6 @@ describe('Incoming Payment Routes', (): void => {
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
       accountingService = await deps.use('accountingService')
-      openApi = await deps.use('openApi')
     }
   )
 
@@ -169,7 +155,9 @@ describe('Incoming Payment Routes', (): void => {
     test('returns 200 with an open payments incoming payment', async (): Promise<void> => {
       const ctx = createContext<ReadContext>(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          method: 'GET',
+          url: `/${account.id}/incoming-payments/${incomingPayment.id}`
         },
         {
           id: incomingPayment.id,
@@ -177,14 +165,11 @@ describe('Incoming Payment Routes', (): void => {
         }
       )
       await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-      const validate = createResponseValidator<IncomingPaymentJSON>({
-        path: openApi.paths[RESOURCE_PATH],
-        method: HttpMethod.GET
-      })
-      assert.ok(validate(ctx))
+      expect(ctx.response).toSatisfyApiSpec()
 
-      const sharedSecret = ctx.response.body.sharedSecret
-      assert.ok(sharedSecret)
+      const sharedSecret = (ctx.response.body as Record<string, unknown>)[
+        'sharedSecret'
+      ]
 
       expect(ctx.body).toEqual({
         id: `${accountId}/incoming-payments/${incomingPayment.id}`,
@@ -208,7 +193,7 @@ describe('Incoming Payment Routes', (): void => {
         createdAt: incomingPayment.createdAt.toISOString(),
         updatedAt: incomingPayment.updatedAt.toISOString()
       })
-      const sharedSecretBuffer = Buffer.from(sharedSecret, 'base64')
+      const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
       expect(sharedSecret).toEqual(base64url(sharedSecretBuffer))
     })
@@ -233,15 +218,6 @@ describe('Incoming Payment Routes', (): void => {
     })
   })
   describe('create', (): void => {
-    let validate: ResponseValidator<IncomingPaymentJSON>
-
-    beforeAll((): void => {
-      validate = createResponseValidator<IncomingPaymentJSON>({
-        path: openApi.paths[COLLECTION_PATH],
-        method: HttpMethod.POST
-      })
-    })
-
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
       const ctx = setup<CreateContext<CreateBody>>(
         { body: {} },
@@ -275,19 +251,29 @@ describe('Incoming Payment Routes', (): void => {
               description,
               externalRef,
               expiresAt
-            }
+            },
+            method: 'POST',
+            url: `/${account.id}/incoming-payments`
           },
           { accountId: account.id }
         )
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
-        assert.ok(validate(ctx))
-        const incomingPaymentId = ctx.response.body.id.split('/').pop()
+        expect(ctx.response).toSatisfyApiSpec()
+        const sharedSecret = (ctx.response.body as Record<string, unknown>)[
+          'sharedSecret'
+        ]
+        const incomingPaymentId = ((ctx.response.body as Record<
+          string,
+          unknown
+        >)['id'] as string)
+          .split('/')
+          .pop()
         expect(ctx.response.body).toEqual({
           id: `${accountId}/incoming-payments/${incomingPaymentId}`,
           accountId,
           incomingAmount,
           description,
-          expiresAt: expiresAt || ctx.response.body.expiresAt,
+          expiresAt: expiresAt || expect.any(String),
           receivedAmount: {
             value: '0',
             assetCode: incomingPayment.asset.code,
@@ -298,9 +284,9 @@ describe('Incoming Payment Routes', (): void => {
           ilpAddress: expect.stringMatching(
             /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
           ),
-          sharedSecret: ctx.response.body.sharedSecret,
-          createdAt: ctx.response.body.createdAt,
-          updatedAt: ctx.response.body.updatedAt
+          sharedSecret,
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String)
         })
       }
     )
@@ -311,7 +297,9 @@ describe('Incoming Payment Routes', (): void => {
       const ctx = setup<UpdateContext<UpdateBody>>(
         {
           headers: { Accept: 'application/json' },
-          body: { state: 'completed' }
+          body: { state: 'completed' },
+          method: 'PUT',
+          url: `/${account.id}/incoming-payments/${incomingPayment.id}`
         },
         {
           id: incomingPayment.id,
@@ -319,11 +307,7 @@ describe('Incoming Payment Routes', (): void => {
         }
       )
       await expect(incomingPaymentRoutes.update(ctx)).resolves.toBeUndefined()
-      const validate = createResponseValidator<IncomingPaymentJSON>({
-        path: openApi.paths[RESOURCE_PATH],
-        method: HttpMethod.PUT
-      })
-      assert.ok(validate(ctx))
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         id: `${accountId}/incoming-payments/${incomingPayment.id}`,
         accountId,
@@ -342,7 +326,7 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Completed.toLowerCase(),
         createdAt: incomingPayment.createdAt.toISOString(),
-        updatedAt: ctx.body.updatedAt
+        updatedAt: expect.any(String)
       })
     })
   })

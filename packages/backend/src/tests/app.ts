@@ -1,7 +1,10 @@
+import $RefParser from '@apidevtools/json-schema-ref-parser'
+import jestOpenAPI from 'jest-openapi'
 import Axios from 'axios'
 import createLogger from 'pino'
 import Knex from 'knex'
 import nock from 'nock'
+import { OpenAPIV3_1 } from 'openapi-types'
 import fetch from 'cross-fetch'
 import { IocContract } from '@adonisjs/fold'
 import {
@@ -34,6 +37,11 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
+  jestOpenAPI(
+    (await $RefParser.dereference(
+      config.openPaymentsSpec
+    )) as OpenAPIV3_1.Document
+  )
   config.port = 0
   config.connectorPort = 0
   config.publicHost = 'https://wallet.example'

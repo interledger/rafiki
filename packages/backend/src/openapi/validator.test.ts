@@ -155,18 +155,52 @@ describe('OpenAPI Validator', (): void => {
     test('sets default query params and calls next on valid request', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: {
+            Accept: 'application/json'
+          }
         },
         {
           accountId
         }
       )
+      const next = jest.fn().mockImplementation(() => {
+        expect(ctx.request.query).toEqual({
+          first: 10,
+          last: 10
+        })
+        ctx.response.body = {}
+      })
       await expect(validateListMiddleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
-      expect(ctx.request.query).toEqual({
-        first: 10,
-        last: 10
-      })
     })
+
+    test.each`
+      status | body                    | message                                                           | description
+      ${202} | ${{}}                   | ${'An unknown status code was used and no default was provided.'} | ${'status code'}
+      ${200} | ${{ invalid: 'field' }} | ${'response must NOT have additional properties: invalid'}        | ${'body'}
+    `(
+      'returns 500 on invalid response $description',
+      async ({ status, body, message }): Promise<void> => {
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json'
+            }
+          },
+          {
+            accountId
+          }
+        )
+        const next = jest.fn().mockImplementation(() => {
+          ctx.status = status
+          ctx.response.body = body
+        })
+        await expect(validateListMiddleware(ctx, next)).rejects.toMatchObject({
+          status: 500,
+          message
+        })
+        expect(next).toHaveBeenCalled()
+      }
+    )
   })
 })

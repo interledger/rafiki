@@ -1,4 +1,3 @@
-import assert from 'assert'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
@@ -14,13 +13,8 @@ import { initIocContainer } from '../../'
 import { AppServices, AccountContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { randomAsset } from '../../tests/asset'
-import { AccountJSON } from './model'
 import { AccountRoutes } from './routes'
-import { OpenAPI, HttpMethod } from '../../openapi'
-import { createResponseValidator } from '../../openapi/validator'
 import { faker } from '@faker-js/faker'
-
-const RESOURCE_PATH = '/{id}'
 
 describe('Account Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -30,7 +24,6 @@ describe('Account Routes', (): void => {
   let accountService: AccountService
   let config: IAppConfig
   let accountRoutes: AccountRoutes
-  let openApi: OpenAPI
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
@@ -50,7 +43,6 @@ describe('Account Routes', (): void => {
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
-      openApi = await deps.use('openApi')
     }
   )
 
@@ -97,16 +89,13 @@ describe('Account Routes', (): void => {
 
       const ctx = createContext<AccountContext>(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/${account.id}`
         },
         { id: account.id }
       )
       await expect(accountRoutes.get(ctx)).resolves.toBeUndefined()
-      const validate = createResponseValidator<AccountJSON>({
-        path: openApi.paths[RESOURCE_PATH],
-        method: HttpMethod.GET
-      })
-      assert.ok(validate(ctx))
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         id: `https://wallet.example/${account.id}`,
         publicName: account.publicName,

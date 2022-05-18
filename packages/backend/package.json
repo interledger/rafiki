@@ -35,6 +35,7 @@
     "ilp-packet": "^3.1.2",
     "ilp-protocol-ildcp": "^2.2.2",
     "ilp-protocol-stream": "^2.7.0",
+    "jest-openapi": "^0.14.2",
     "nock": "^13.1.0",
     "node-mocks-http": "^1.10.1",
     "rosie": "^2.1.0",

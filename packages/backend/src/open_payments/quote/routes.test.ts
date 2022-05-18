@@ -14,19 +14,11 @@ import { initIocContainer } from '../..'
 import { AppServices, CreateContext, ReadContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { QuoteService } from './service'
-import { Quote, QuoteJSON } from './model'
+import { Quote } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
 import { Amount } from '../amount'
 import { randomAsset } from '../../tests/asset'
 import { createQuote } from '../../tests/quote'
-import { OpenAPI, HttpMethod } from '../../openapi'
-import {
-  createResponseValidator,
-  ResponseValidator
-} from '../../openapi/validator'
-
-const COLLECTION_PATH = '/{accountId}/quotes'
-const RESOURCE_PATH = `${COLLECTION_PATH}/{id}`
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -38,7 +30,6 @@ describe('Quote Routes', (): void => {
   let quoteRoutes: QuoteRoutes
   let accountId: string
   let accountUrl: string
-  let openApi: OpenAPI
 
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -82,7 +73,6 @@ describe('Quote Routes', (): void => {
       config = await deps.use('config')
       quoteRoutes = await deps.use('quoteRoutes')
       quoteService = await deps.use('quoteService')
-      openApi = await deps.use('openApi')
     }
   )
 
@@ -133,7 +123,9 @@ describe('Quote Routes', (): void => {
       const quote = await createAccountQuote(accountId)
       const ctx = createContext<ReadContext>(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          method: 'GET',
+          url: `/${accountId}/quotes/${quote.id}`
         },
         {
           id: quote.id,
@@ -141,12 +133,7 @@ describe('Quote Routes', (): void => {
         }
       )
       await expect(quoteRoutes.get(ctx)).resolves.toBeUndefined()
-      const validate = createResponseValidator<QuoteJSON>({
-        path: openApi.paths[RESOURCE_PATH],
-        method: HttpMethod.GET
-      })
-      assert.ok(validate(ctx))
-
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         id: `${accountUrl}/quotes/${quote.id}`,
         accountId: accountUrl,
@@ -180,7 +167,9 @@ describe('Quote Routes', (): void => {
           headers: Object.assign(
             { Accept: 'application/json', 'Content-Type': 'application/json' },
             reqOpts.headers
-          )
+          ),
+          method: 'POST',
+          url: `/${accountId}/quotes`
         },
         { accountId }
       )
@@ -218,15 +207,6 @@ describe('Quote Routes', (): void => {
     })
 
     describe('returns the quote on success', (): void => {
-      let validate: ResponseValidator<QuoteJSON>
-
-      beforeAll((): void => {
-        validate = createResponseValidator<QuoteJSON>({
-          path: openApi.paths[COLLECTION_PATH],
-          method: HttpMethod.POST
-        })
-      })
-
       describe.each`
         receivingAccount    | receivingPayment    | description
         ${receivingAccount} | ${undefined}        | ${'receivingAccount'}
@@ -282,8 +262,12 @@ describe('Quote Routes', (): void => {
                 value: BigInt(options.receiveAmount.value)
               }
             })
-            assert.ok(validate(ctx))
-            const quoteId = ctx.response.body.id.split('/').pop()
+            expect(ctx.response).toSatisfyApiSpec()
+            const quoteId = ((ctx.response.body as Record<string, unknown>)[
+              'id'
+            ] as string)
+              .split('/')
+              .pop()
             assert.ok(quote)
             expect(ctx.response.body).toEqual({
               id: `${accountUrl}/quotes/${quoteId}`,
@@ -324,12 +308,12 @@ describe('Quote Routes', (): void => {
               accountId,
               receivingPayment
             })
-            const validate = createResponseValidator<QuoteJSON>({
-              path: openApi.paths[COLLECTION_PATH],
-              method: HttpMethod.POST
-            })
-            assert.ok(validate(ctx))
-            const quoteId = ctx.response.body.id.split('/').pop()
+            expect(ctx.response).toSatisfyApiSpec()
+            const quoteId = ((ctx.response.body as Record<string, unknown>)[
+              'id'
+            ] as string)
+              .split('/')
+              .pop()
             assert.ok(quote)
             expect(ctx.response.body).toEqual({
               id: `${accountUrl}/quotes/${quoteId}`,

@@ -16,24 +16,12 @@ import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
-import {
-  OutgoingPayment,
-  OutgoingPaymentState,
-  OutgoingPaymentJSON
-} from './model'
+import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { Amount } from '../../amount'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createQuote } from '../../../tests/quote'
 import { AccountingService } from '../../../accounting/service'
-import { OpenAPI, HttpMethod } from '../../../openapi'
-import {
-  createResponseValidator,
-  ResponseValidator
-} from '../../../openapi/validator'
-
-const COLLECTION_PATH = '/{accountId}/outgoing-payments'
-const RESOURCE_PATH = `${COLLECTION_PATH}/{id}`
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -45,7 +33,6 @@ describe('Outgoing Payment Routes', (): void => {
   let accountId: string
   let accountUrl: string
   let accountingService: AccountingService
-  let openApi: OpenAPI
 
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
@@ -92,7 +79,6 @@ describe('Outgoing Payment Routes', (): void => {
       config = await deps.use('config')
       outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
       accountingService = await deps.use('accountingService')
-      openApi = await deps.use('openApi')
     }
   )
 
@@ -119,15 +105,6 @@ describe('Outgoing Payment Routes', (): void => {
   )
 
   describe('get', (): void => {
-    let validate: ResponseValidator<OutgoingPaymentJSON>
-
-    beforeAll((): void => {
-      validate = createResponseValidator<OutgoingPaymentJSON>({
-        path: openApi.paths[RESOURCE_PATH],
-        method: HttpMethod.GET
-      })
-    })
-
     test('returns 404 for nonexistent outgoing payment', async (): Promise<void> => {
       const ctx = createContext<ReadContext>(
         {
@@ -186,7 +163,9 @@ describe('Outgoing Payment Routes', (): void => {
         }
         const ctx = createContext<ReadContext>(
           {
-            headers: { Accept: 'application/json' }
+            headers: { Accept: 'application/json' },
+            method: 'GET',
+            url: `/${accountId}/outgoing-payments/${outgoingPayment.id}`
           },
           {
             id: outgoingPayment.id,
@@ -194,8 +173,7 @@ describe('Outgoing Payment Routes', (): void => {
           }
         )
         await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-        assert.ok(validate(ctx))
-
+        expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.body).toEqual({
           id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
           accountId: accountUrl,
@@ -224,15 +202,7 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   describe('create', (): void => {
-    let validate: ResponseValidator<OutgoingPaymentJSON>
     let options: Omit<CreateOutgoingPaymentOptions, 'accountId'>
-
-    beforeAll((): void => {
-      validate = createResponseValidator<OutgoingPaymentJSON>({
-        path: openApi.paths[COLLECTION_PATH],
-        method: HttpMethod.POST
-      })
-    })
 
     beforeEach(() => {
       options = {
@@ -248,7 +218,9 @@ describe('Outgoing Payment Routes', (): void => {
           headers: Object.assign(
             { Accept: 'application/json', 'Content-Type': 'application/json' },
             reqOpts.headers
-          )
+          ),
+          method: 'POST',
+          url: `/${accountId}/outgoing-payments`
         },
         { accountId }
       )
@@ -276,8 +248,13 @@ describe('Outgoing Payment Routes', (): void => {
         }
         const ctx = setup({})
         await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
-        assert.ok(validate(ctx))
-        const outgoingPaymentId = ctx.response.body.id.split('/').pop()
+        expect(ctx.response).toSatisfyApiSpec()
+        const outgoingPaymentId = ((ctx.response.body as Record<
+          string,
+          unknown
+        >)['id'] as string)
+          .split('/')
+          .pop()
         expect(ctx.response.body).toEqual({
           id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
           accountId: accountUrl,
@@ -298,8 +275,8 @@ describe('Outgoing Payment Routes', (): void => {
             assetScale: asset.scale
           },
           failed: false,
-          createdAt: ctx.body.createdAt,
-          updatedAt: ctx.body.updatedAt
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String)
         })
       }
     )

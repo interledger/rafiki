@@ -13,15 +13,6 @@ import { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
 import { HttpMethod } from './'
 import { AppContext } from '../app'
 
-type Response<T> = Omit<AppContext['response'], 'body'> & {
-  body: T
-}
-
-type ResponseContext<T> = Omit<AppContext, 'response'> & {
-  body: T
-  response: Response<T>
-}
-
 interface RequestOptions {
   path: OpenAPIV3_1.PathItemObject
   method: HttpMethod
@@ -73,7 +64,7 @@ export function createValidatorMiddleware<T extends Koa.Context>({
   })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const validate = (ctx: any): ctx is T => {
+  const validateRequest = (ctx: any): ctx is T => {
     ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
     if (coercer) {
       coercer.coerce(ctx.request.query)
@@ -89,48 +80,47 @@ export function createValidatorMiddleware<T extends Koa.Context>({
     }
     return true
   }
+
+  const responses = path[method]?.responses
+  assert.ok(responses)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let validateResponse: ((ctx: any) => ctx is T) | undefined
+  if (process.env.NODE_ENV !== 'production') {
+    const responseValidator = new OpenAPIResponseValidator({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: OpenAPIResponseValidator supports v3 responses but its types aren't updated
+      responses,
+      errorTransformer
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    validateResponse = (ctx: any): ctx is T => {
+      if (process.env.NODE_ENV !== 'production') {
+        const errors = responseValidator.validateResponse(
+          ctx.status,
+          ctx.response.body
+        )
+        if (errors) {
+          ctx.throw(500, errors.errors[0])
+        }
+      }
+      return true
+    }
+  }
+
   return async (
     ctx: AppContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    if (validate(ctx)) {
+    if (validateRequest(ctx)) {
       await next()
+      if (validateResponse && !validateResponse(ctx)) {
+        throw new Error('unreachable')
+      }
     } else {
       throw new Error('unreachable')
     }
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ResponseValidator<T> = (ctx: any) => ctx is ResponseContext<T>
-
-export function createResponseValidator<T>({
-  path,
-  method
-}: RequestOptions): ResponseValidator<T> {
-  const responses = path[method]?.responses
-  assert.ok(responses)
-  const responseValidator = new OpenAPIResponseValidator({
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: OpenAPIResponseValidator supports v3 responses but its types aren't updated
-    responses,
-    errorTransformer
-  })
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (ctx: any): ctx is ResponseContext<T> => {
-    assert.equal(
-      ctx.response.get('Content-Type'),
-      'application/json; charset=utf-8'
-    )
-    const errors = responseValidator.validateResponse(
-      ctx.status,
-      ctx.response.body
-    )
-    if (errors) {
-      throw errors.errors[0]
-    }
-    return true
   }
 }
 
