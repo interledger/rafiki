@@ -9,6 +9,8 @@ import { Logger } from 'pino'
 import Router from '@koa/router'
 
 import { IAppConfig } from './config/app'
+import { ClientService } from './client/service'
+import { GrantService } from './grant/service'
 
 export interface AppContextData {
   logger: Logger
@@ -25,8 +27,9 @@ export interface AppServices {
   knex: Promise<Knex>
   closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
-
   // TODO: Add GNAP-related services
+  clientService: Promise<ClientService>
+  grantService: Promise<GrantService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -112,10 +115,38 @@ export class App {
     })
 
     // TODO: GNAP endpoints
-    this.publicRouter.post('/auth', (ctx: AppContext): void => {
-      // TODO: generate interaction session
-      ctx.status = 200
-    })
+    this.publicRouter.post(
+      '/auth',
+      async (ctx: AppContext): Promise<void> => {
+        ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
+        ctx.assert(
+          ctx.get('Content-Type') === 'application/json',
+          400,
+          'must send json body'
+        )
+        const { body } = ctx.request
+        const grantService = await this.container.use('grantService')
+        const clientService = await this.container.use('clientService')
+        if (!grantService.validateGrantRequest(body)) {
+          ctx.status = 400
+          ctx.body = 'Malformed grant request'
+          return
+        }
+
+        const isValidClient = await clientService.validateClientWithRegistry(
+          body.client
+        )
+        if (!isValidClient) {
+          ctx.status = 400
+          ctx.body = 'Invalid client or key provided'
+          return
+        }
+
+        const res = await grantService.initiateGrant(body)
+        ctx.status = 200
+        ctx.body = res
+      }
+    )
 
     this.publicRouter.post('/auth/continue/:id', (ctx: AppContext): void => {
       // TODO: generate completed grant response

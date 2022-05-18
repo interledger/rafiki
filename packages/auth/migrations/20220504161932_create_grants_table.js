@@ -6,6 +6,7 @@ exports.up = function (knex) {
     table.string('type').notNullable()
     table.specificType('actions', 'text[]').notNullable()
     table.specificType('startMethod', 'text[]').notNullable()
+    table.integer('interval')
 
     table.string('continueToken')
     table.string('continueId')
@@ -13,9 +14,11 @@ exports.up = function (knex) {
 
     table.string('finishMethod').notNullable()
     table.string('finishUri').notNullable()
-    table.string('nonce').notNullable()
+    table.string('clientNonce').notNullable()
 
+    table.string('interactId').notNullable()
     table.string('interactRef').notNullable()
+    table.string('interactNonce').notNullable()
   })
 }
 
