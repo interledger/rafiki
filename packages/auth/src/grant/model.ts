@@ -58,14 +58,19 @@ export class Grant extends BaseModel {
   public type!: AccessType
   public actions!: Action[]
   public startMethod!: StartMethod[]
+  // public locations!: string[]
+  // public identifier!: string
+  public interval?: string
 
-  public continueToken?: string
-  public continueId?: string
+  public continueToken!: string
+  public continueId!: string
   public wait?: number
 
   public finishMethod!: FinishMethod
   public finishUri!: string
-  public nonce!: string
+  public clientNonce!: string // nonce for hash
 
+  public interactId!: string
   public interactRef!: string
+  public interactNonce!: string
 }

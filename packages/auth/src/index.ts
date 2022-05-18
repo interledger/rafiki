@@ -6,7 +6,9 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 
 import { App, AppServices } from './app'
 import { Config } from './config/app'
-import { createClientService } from './clients/service'
+import { createClientService } from './client/service'
+import { createLimitService } from './limit/service'
+import { createGrantService } from './grant/service'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -53,11 +55,33 @@ export function initIocContainer(
   // TODO: add redis
 
   container.singleton(
+    'limitService',
+    async (deps: IocContract<AppServices>) => {
+      return createLimitService({
+        logger: await deps.use('logger'),
+        knex: await deps.use('knex')
+      })
+    }
+  )
+
+  container.singleton(
     'clientService',
     async (deps: IocContract<AppServices>) => {
       return createClientService({
         config: await deps.use('config'),
         logger: await deps.use('logger')
+      })
+    }
+  )
+
+  container.singleton(
+    'grantService',
+    async (deps: IocContract<AppServices>) => {
+      return createGrantService({
+        config: await deps.use('config'),
+        logger: await deps.use('logger'),
+        limitService: await deps.use('limitService'),
+        knex: await deps.use('knex')
       })
     }
   )

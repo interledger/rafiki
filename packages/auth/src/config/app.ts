@@ -29,5 +29,7 @@ export const Config = {
         ),
   keyRegistries: envStringArray('KEY_REGISTRIES', [
     'https://openpayments.network'
-  ])
+  ]),
+  interactUrl: envString('INTERACT_URL', 'http://localhost:3004/interact'), // TODO: replace this with whatever frontend port ends up being
+  domain: envString('DOMAIN', 'http://localhost:3006')
 }

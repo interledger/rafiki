@@ -2,27 +2,11 @@ import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { AccessToken } from '../accessToken/model'
 import { Grant } from '../grant/model'
-
-enum LimitName {
-  SendAmount = 'sendAmount',
-  ReceiveAmount = 'receiveAmount',
-  CreatedBy = 'createdBy'
-}
-
-const AMOUNT_LIMITS = [LimitName.SendAmount, LimitName.ReceiveAmount]
-
-interface AmountData {
-  assetCode?: string
-  assetScale?: number
-}
+import { LimitData } from './types'
 
 export class Limit extends BaseModel {
   public static get tableName(): string {
     return 'limits'
-  }
-
-  static get virtualAttributes(): string[] {
-    return ['data']
   }
 
   static relationMappings = {
@@ -45,24 +29,11 @@ export class Limit extends BaseModel {
   }
 
   public id!: string
-  public name!: LimitName
-  public accessToken!: string
+  public accessToken?: string
   public grantId!: string
-  public value?: bigint
-  public assetCode?: string
-  public assetScale?: number
-  public createdById?: string
+  public data!: LimitData
 
-  get data(): string | AmountData | undefined {
-    if (this.name === LimitName.CreatedBy) {
-      return this.createdById
-    } else if (AMOUNT_LIMITS.includes(this.name)) {
-      return {
-        assetScale: this.assetScale,
-        assetCode: this.assetCode
-      }
-    } else {
-      throw new Error('unknown limit name')
-    }
-  }
+  public createdById?: string
+  public description?: string
+  public externalRef?: string
 }

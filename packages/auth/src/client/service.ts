@@ -16,7 +16,7 @@ interface KeyInfo {
   jwk: JWKWithRequired
 }
 
-interface ClientInfo {
+export interface ClientInfo {
   display: DisplayInfo
   key: KeyInfo
 }
