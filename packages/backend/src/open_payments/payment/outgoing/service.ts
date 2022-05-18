@@ -17,7 +17,6 @@ import { AccountService } from '../../account/service'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
-import { getAccountPage, Resource } from '../../../shared/pagination'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
@@ -55,12 +54,7 @@ export async function createOutgoingPaymentService(
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
     getAccountPage: (accountId, pagination) =>
-      getAccountPage(
-        Resource.outgoingPayment,
-        deps,
-        accountId,
-        pagination
-      ) as Promise<OutgoingPayment[]>
+      getAccountPage(deps, accountId, pagination)
   }
 }
 
@@ -164,6 +158,39 @@ async function fundPayment(
     }
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
     return await addSentAmount(deps, payment)
+  })
+}
+
+async function getAccountPage(
+  deps: ServiceDependencies,
+  accountId: string,
+  pagination?: Pagination
+): Promise<OutgoingPayment[]> {
+  const page = await OutgoingPayment.query(deps.knex)
+    .getPage(pagination)
+    .where({
+      accountId
+    })
+    .withGraphFetched('asset')
+
+  const amounts = await deps.accountingService.getAccountsTotalSent(
+    page.map((payment: OutgoingPayment) => payment.id)
+  )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  return page.map((payment: OutgoingPayment, i: number) => {
+    try {
+      payment.sentAmount = {
+        value: BigInt(amounts[i]),
+        assetCode: payment.asset.code,
+        assetScale: payment.asset.scale
+      }
+    } catch (_) {
+      deps.logger.error({ payment: payment.id }, 'account not found')
+      throw new Error(
+        `Underlying TB account not found, payment id: ${payment.id}`
+      )
+    }
+    return payment
   })
 }
 

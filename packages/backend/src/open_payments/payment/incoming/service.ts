@@ -14,7 +14,6 @@ import { AccountService } from '../../account/service'
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { parse, end } from 'iso8601-duration'
-import { getAccountPage, Resource } from '../../../shared/pagination'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -74,12 +73,7 @@ export async function createIncomingPaymentService(
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     update: (options) => updateIncomingPayment(deps, options),
     getAccountPage: (accountId, pagination) =>
-      getAccountPage(
-        Resource.incomingPayment,
-        deps,
-        accountId,
-        pagination
-      ) as Promise<IncomingPayment[]>,
+      getAccountPage(deps, accountId, pagination),
     processNext: () => processNextIncomingPayment(deps)
   }
 }
@@ -258,6 +252,39 @@ async function handleDeactivated(
   } catch (error) {
     deps.logger.warn({ error }, 'webhook event creation failed; retrying')
   }
+}
+
+async function getAccountPage(
+  deps: ServiceDependencies,
+  accountId: string,
+  pagination?: Pagination
+): Promise<IncomingPayment[]> {
+  const page = await IncomingPayment.query(deps.knex)
+    .getPage(pagination)
+    .where({
+      accountId
+    })
+    .withGraphFetched('asset')
+
+  const amounts = await deps.accountingService.getAccountsTotalReceived(
+    page.map((payment: IncomingPayment) => payment.id)
+  )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  return page.map((payment: IncomingPayment, i: number) => {
+    try {
+      payment.receivedAmount = {
+        value: BigInt(amounts[i]),
+        assetCode: payment.asset.code,
+        assetScale: payment.asset.scale
+      }
+    } catch (_) {
+      deps.logger.error({ payment: payment.id }, 'account not found')
+      throw new Error(
+        `Underlying TB account not found, payment id: ${payment.id}`
+      )
+    }
+    return payment
+  })
 }
 
 async function updateIncomingPayment(

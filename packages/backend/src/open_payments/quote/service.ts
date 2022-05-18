@@ -12,7 +12,6 @@ import { Amount } from '../amount'
 import { AccountService } from '../account/service'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
-import { getAccountPage, Resource } from '../../shared/pagination'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -45,9 +44,7 @@ export async function createQuoteService(
     get: (id) => getQuote(deps, id),
     create: (options: CreateQuoteOptions) => createQuote(deps, options),
     getAccountPage: (accountId, pagination) =>
-      getAccountPage(Resource.quote, deps, accountId, pagination) as Promise<
-        Quote[]
-      >
+      getAccountPage(deps, accountId, pagination)
   }
 }
 
@@ -381,4 +378,17 @@ export function generateQuoteSignature(
   const digest = hmac.digest('hex')
 
   return `t=${timestamp}, v${version}=${digest}`
+}
+
+async function getAccountPage(
+  deps: ServiceDependencies,
+  accountId: string,
+  pagination?: Pagination
+): Promise<Quote[]> {
+  return await Quote.query(deps.knex)
+    .getPage(pagination)
+    .where({
+      accountId
+    })
+    .withGraphFetched('asset')
 }
