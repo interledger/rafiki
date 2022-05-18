@@ -19,7 +19,7 @@ export async function list(
 ): Promise<ListResult> {
   const page = await service.getAccountPage(accountId, pagination)
   const pageInfo = await getPageInfo(service, page)
-  if (pagination && pagination.last) {
+  if (pagination?.last) {
     pageInfo.last = page.length
   } else {
     pageInfo.first = page.length
