@@ -3811,33 +3811,6 @@
       },
       {
         "kind": "OBJECT",
-        "name": "OutgoingPaymentOutcome",
-        "description": null,
-        "fields": [
-          {
-            "name": "amountSent",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
         "name": "OutgoingPaymentResponse",
         "description": null,
         "fields": [

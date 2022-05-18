@@ -113,12 +113,13 @@ export class OutgoingPayment
           ...this.receiveAmount,
           value: this.receiveAmount.value.toString()
         },
+        sentAmount: {
+          ...this.sendAmount,
+          value: amountSent.toString()
+        },
         stateAttempts: this.stateAttempts,
         createdAt: new Date(+this.createdAt).toISOString(),
         updatedAt: new Date(+this.updatedAt).toISOString(),
-        outcome: {
-          amountSent: amountSent.toString()
-        },
         balance: balance.toString()
       }
     }
@@ -181,12 +182,9 @@ export interface OutgoingPaymentJSON {
 }
 
 export type PaymentData = {
-  payment: Omit<OutgoingPaymentJSON, 'sentAmount' | 'failed'> & {
+  payment: Omit<OutgoingPaymentJSON, 'failed'> & {
     error?: string
     stateAttempts: number
-    outcome: {
-      amountSent: string
-    }
     balance: string
   }
 }
