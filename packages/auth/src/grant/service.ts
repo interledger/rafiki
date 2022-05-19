@@ -3,13 +3,13 @@ import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
-import { AccessRequest } from './types'
+import { AccessRequest, isAccessRequest } from './types'
 import { ClientInfo } from '../client/service'
 import { IAppConfig } from '../config/app'
 import { LimitService } from '../limit/service'
 
 export interface GrantService {
-  // validateGrantRequest(grantRequest: unknown): boolean
+  validateGrantRequest(grantRequest: GrantRequest): boolean
   initiateGrant(grantRequest: GrantRequest): Promise<GrantResponse>
 }
 
@@ -62,10 +62,25 @@ export async function createGrantService({
     knex
   }
   return {
-    // validateGrantRequest: (grantRequest: unknown) => validateGrantRequest(grantRequest),
+    validateGrantRequest: (grantRequest: GrantRequest) =>
+      validateGrantRequest(grantRequest),
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
       initiateGrant(deps, grantRequest, trx)
   }
+}
+
+function validateGrantRequest(
+  grantRequest: GrantRequest
+): grantRequest is GrantRequest {
+  if (typeof grantRequest.access !== 'object') return false
+  for (const access of grantRequest.access) {
+    if (!isAccessRequest(access)) return false
+  }
+
+  return (
+    grantRequest.interact?.start !== undefined &&
+    grantRequest.interact?.finish !== undefined
+  )
 }
 
 async function initiateGrant(
