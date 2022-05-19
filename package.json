@@ -41,5 +41,8 @@
     "tigerbeetle-node": {
       "built": true
     }
+  },
+  "resolutions": {
+    "@types/koa": "2.13.4"
   }
 }
