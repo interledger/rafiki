@@ -171,7 +171,7 @@ async function getAccountPage(
     .where({
       accountId
     })
-    .withGraphFetched('asset')
+    .withGraphFetched('quote.asset')
 
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
