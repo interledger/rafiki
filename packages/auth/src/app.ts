@@ -136,7 +136,7 @@ export class App {
   }
 
   private async _setupRoutes(): Promise<void> {
-    this.publicRouter.use(koaBody())
+    this.publicRouter.use(bodyParser())
     this.publicRouter.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
