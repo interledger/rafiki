@@ -1,9 +1,13 @@
+import { Asset } from '../asset/model'
+import { AssetService } from '../asset/service'
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { IncomingPaymentService } from '../open_payments/payment/incoming/service'
 import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
 import { OutgoingPaymentService } from '../open_payments/payment/outgoing/service'
 import { Quote } from '../open_payments/quote/model'
 import { QuoteService } from '../open_payments/quote/service'
+import { Peer } from '../peer/model'
+import { PeerService } from '../peer/service'
 import { PageInfo, Pagination } from './baseModel'
 
 type ListResult = {
@@ -42,8 +46,14 @@ export async function list(
 }
 
 export async function getPageInfo(
-  service: IncomingPaymentService | OutgoingPaymentService | QuoteService,
-  page: (IncomingPayment | OutgoingPayment | Quote)[]
+  service:
+    | IncomingPaymentService
+    | OutgoingPaymentService
+    | QuoteService
+    | AssetService
+    | PeerService,
+  page: (IncomingPayment | OutgoingPayment | Quote | Asset | Peer)[],
+  accountId?: string
 ): Promise<PageInfo> {
   if (page.length == 0)
     return {
@@ -53,25 +63,46 @@ export async function getPageInfo(
   const firstId = page[0].id
   const lastId = page[page.length - 1].id
 
-  const firstResource = await service.get(firstId)
-  if (!firstResource) throw new Error('Resource not found')
-
   let hasNextPage, hasPreviousPage
-  try {
-    hasNextPage = await service.getAccountPage(firstResource.accountId, {
-      after: lastId,
-      first: 1
-    })
-  } catch (e) {
-    hasNextPage = []
-  }
-  try {
-    hasPreviousPage = await service.getAccountPage(firstResource.accountId, {
-      before: firstId,
-      last: 1
-    })
-  } catch (e) {
-    hasPreviousPage = []
+  if (accountId) {
+    service = service as
+      | IncomingPaymentService
+      | OutgoingPaymentService
+      | QuoteService
+    try {
+      hasNextPage = await service.getAccountPage(accountId, {
+        after: lastId,
+        first: 1
+      })
+    } catch (e) {
+      hasNextPage = []
+    }
+    try {
+      hasPreviousPage = await service.getAccountPage(accountId, {
+        before: firstId,
+        last: 1
+      })
+    } catch (e) {
+      hasPreviousPage = []
+    }
+  } else {
+    service = service as AssetService | PeerService
+    try {
+      hasNextPage = await service.getPage({
+        after: lastId,
+        first: 1
+      })
+    } catch (e) {
+      hasNextPage = []
+    }
+    try {
+      hasPreviousPage = await service.getPage({
+        before: firstId,
+        last: 1
+      })
+    } catch (e) {
+      hasPreviousPage = []
+    }
   }
 
   return {

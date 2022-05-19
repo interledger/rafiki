@@ -22,8 +22,11 @@ import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
 import { Quote } from '../open_payments/quote/model'
 import { Amount } from '@interledger/pay/dist/src/open-payments'
-import { list } from './pagination'
+import { getPageInfo, list } from './pagination'
 import { isIncomingPaymentError } from '../open_payments/payment/incoming/errors'
+import { AssetService } from '../asset/service'
+import { PeerService } from '../peer/service'
+import { PeerFactory } from '../tests/peerFactory'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -264,6 +267,117 @@ describe('Pagination', (): void => {
           })
         }
       )
+    })
+  })
+
+  describe('getPageInfo', (): void => {
+    let assetService: AssetService
+    let peerService: PeerService
+    let peerFactory: PeerFactory
+
+    beforeEach(
+      async (): Promise<void> => {
+        assetService = await deps.use('assetService')
+        peerService = await deps.use('peerService')
+        peerFactory = new PeerFactory(peerService)
+      }
+    )
+    test('incoming payments', async (): Promise<void> => {
+      for (let i = 0; i < 10; i++) {
+        await createIncomingPayment(deps, {
+          accountId: defaultAccount.id
+        })
+      }
+      const page = await incomingPaymentService.getAccountPage(
+        defaultAccount.id,
+        { first: 5 }
+      )
+      const pageInfo = await getPageInfo(
+        incomingPaymentService,
+        page,
+        defaultAccount.id
+      )
+      expect(pageInfo).toEqual({
+        endCursor: page[4].id,
+        hasNextPage: true,
+        hasPreviousPage: false,
+        startCursor: page[0].id
+      })
+    })
+    test('outgoing payments', async (): Promise<void> => {
+      for (let i = 0; i < 10; i++) {
+        await createOutgoingPayment(deps, {
+          accountId: defaultAccount.id,
+          receivingAccount: secondaryAccountId,
+          sendAmount,
+          validDestination: false
+        })
+      }
+      const page = await outgoingPaymentService.getAccountPage(
+        defaultAccount.id,
+        { first: 5 }
+      )
+      const pageInfo = await getPageInfo(
+        outgoingPaymentService,
+        page,
+        defaultAccount.id
+      )
+      expect(pageInfo).toEqual({
+        endCursor: page[4].id,
+        hasNextPage: true,
+        hasPreviousPage: false,
+        startCursor: page[0].id
+      })
+    })
+    test('quotes', async (): Promise<void> => {
+      for (let i = 0; i < 10; i++) {
+        await createQuote(deps, {
+          accountId: defaultAccount.id,
+          receivingAccount: secondaryAccountId,
+          sendAmount,
+          validDestination: false
+        })
+      }
+      const page = await quoteService.getAccountPage(defaultAccount.id, {
+        first: 5
+      })
+      const pageInfo = await getPageInfo(quoteService, page, defaultAccount.id)
+      expect(pageInfo).toEqual({
+        endCursor: page[4].id,
+        hasNextPage: true,
+        hasPreviousPage: false,
+        startCursor: page[0].id
+      })
+    })
+    test('assets', async (): Promise<void> => {
+      for (let i = 0; i < 10; i++) {
+        await assetService.create(randomAsset())
+      }
+      const page = await assetService.getPage({
+        first: 5
+      })
+      const pageInfo = await getPageInfo(assetService, page)
+      expect(pageInfo).toEqual({
+        endCursor: page[4].id,
+        hasNextPage: true,
+        hasPreviousPage: false,
+        startCursor: page[0].id
+      })
+    })
+    test('peers', async (): Promise<void> => {
+      for (let i = 0; i < 10; i++) {
+        await peerFactory.build()
+      }
+      const page = await peerService.getPage({
+        first: 5
+      })
+      const pageInfo = await getPageInfo(peerService, page)
+      expect(pageInfo).toEqual({
+        endCursor: page[4].id,
+        hasNextPage: true,
+        hasPreviousPage: false,
+        startCursor: page[0].id
+      })
     })
   })
 })
