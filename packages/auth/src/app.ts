@@ -4,7 +4,8 @@ import { EventEmitter } from 'events'
 import { IocContract } from '@adonisjs/fold'
 import Knex from 'knex'
 import Koa, { DefaultState } from 'koa'
-import bodyParser from 'koa-bodyparser'
+// import bodyParser from 'koa-bodyparser'
+import koaBody from 'koa-body'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 
@@ -109,7 +110,7 @@ export class App {
   }
 
   private async _setupRoutes(): Promise<void> {
-    this.publicRouter.use(bodyParser())
+    this.publicRouter.use(koaBody())
     this.publicRouter.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
