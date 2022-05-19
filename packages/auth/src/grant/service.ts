@@ -4,7 +4,7 @@ import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
-import { AccessRequest } from '../access/types'
+import { AccessRequest, isAccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
 
@@ -87,6 +87,20 @@ async function issueGrant(
   return Grant.query().patchAndFetchById(grantId, {
     state: GrantState.Granted
   })
+}
+
+function validateGrantRequest(
+  grantRequest: GrantRequest
+): grantRequest is GrantRequest {
+  if (typeof grantRequest.access !== 'object') return false
+  for (const access of grantRequest.access) {
+    if (!isAccessRequest(access)) return false
+  }
+
+  return (
+    grantRequest.interact?.start !== undefined &&
+    grantRequest.interact?.finish !== undefined
+  )
 }
 
 async function initiateGrant(
