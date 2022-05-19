@@ -1,3 +1,4 @@
+import jestOpenAPI from 'jest-openapi'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
@@ -43,6 +44,7 @@ describe('Account Routes', (): void => {
       await workerUtils.migrate()
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
+      jestOpenAPI(await deps.use('openApi'))
     }
   )
 

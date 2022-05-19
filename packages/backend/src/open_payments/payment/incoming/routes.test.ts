@@ -1,4 +1,5 @@
 import * as httpMocks from 'node-mocks-http'
+import jestOpenAPI from 'jest-openapi'
 import base64url from 'base64url'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
@@ -82,6 +83,7 @@ describe('Incoming Payment Routes', (): void => {
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
       accountingService = await deps.use('accountingService')
+      jestOpenAPI(await deps.use('openApi'))
     }
   )
 

@@ -1,4 +1,5 @@
 import assert from 'assert'
+import jestOpenAPI from 'jest-openapi'
 import * as httpMocks from 'node-mocks-http'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
@@ -79,6 +80,7 @@ describe('Outgoing Payment Routes', (): void => {
       config = await deps.use('config')
       outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
       accountingService = await deps.use('accountingService')
+      jestOpenAPI(await deps.use('openApi'))
     }
   )
 

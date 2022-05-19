@@ -1,4 +1,5 @@
 import assert from 'assert'
+import jestOpenAPI from 'jest-openapi'
 import * as httpMocks from 'node-mocks-http'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
@@ -73,6 +74,7 @@ describe('Quote Routes', (): void => {
       config = await deps.use('config')
       quoteRoutes = await deps.use('quoteRoutes')
       quoteService = await deps.use('quoteService')
+      jestOpenAPI(await deps.use('openApi'))
     }
   )
 
