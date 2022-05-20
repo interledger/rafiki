@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid'
 
 import { OpenAPI, HttpMethod } from './'
-import { createValidatorMiddleware } from './validator'
+import { createValidatorMiddleware } from './middleware'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'

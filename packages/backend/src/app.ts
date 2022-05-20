@@ -45,7 +45,7 @@ import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { HttpMethod, isHttpMethod } from './openapi'
-import { createValidatorMiddleware } from './openapi/validator'
+import { createValidatorMiddleware } from './openapi/middleware'
 
 export interface AppContextData {
   logger: Logger
