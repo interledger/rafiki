@@ -2,6 +2,7 @@ import assert from 'assert'
 import { join } from 'path'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
+import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
 import Knex from 'knex'
@@ -64,32 +65,35 @@ export interface ApolloContext {
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
-export type AppRequest<ParamsT extends string = string, BodyT = unknown> = Omit<
-  AppContext['request'],
-  'params' | 'body'
-> & {
+export type AppRequest<
+  ParamsT extends string = string,
+  BodyT = never,
+  QueryT = ParsedUrlQuery
+> = Omit<AppContext['request'], 'params' | 'body' | 'query'> & {
   params: Record<ParamsT, string>
+  query: QueryT
   body: BodyT
+}
+
+interface ListQuery {
+  cursor: string
+  first: number
+  last: number
 }
 
 type Context<T> = Omit<AppContext, 'request'> & {
   request: T
 }
 
-export type AccountContext = Context<AppRequest<'id', never>>
+export type AccountContext = Context<AppRequest<'id'>>
+
+// Account subresources
 export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>
-export type ReadContext = Context<AppRequest<'accountId' | 'id', never>>
+export type ReadContext = Context<AppRequest<'accountId' | 'id'>>
 export type UpdateContext<BodyT> = Context<
   AppRequest<'accountId' | 'id', BodyT>
 >
-
-// TODO
-// type AppRequest<ParamsT, QueryT, BodyT> = Omit<AppContext['request'], 'body' | 'query'> & {
-//   params: ParamsT
-//   query: QueryT
-//   body: BodyT
-// }
-// export type ListContext = Context<AppRequest<'accountId', Record<'cursor' | 'first' | 'last', string>, never>>
+export type ListContext = Context<AppRequest<'accountId', never, ListQuery>>
 
 type ContextType<T> = T extends (
   ctx: infer Context
