@@ -27,6 +27,7 @@ import { isIncomingPaymentError } from '../open_payments/payment/incoming/errors
 import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
 import { PeerFactory } from '../tests/peerFactory'
+import { isAssetError } from '../asset/errors'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -59,35 +60,6 @@ describe('Pagination', (): void => {
     }
   )
 
-  let asset: { code: string; scale: number }
-  let defaultAccount: Account
-  let defaultAccountId: string
-  let secondaryAccount: Account
-  let secondaryAccountId: string
-  let expiresAt: Date
-  let sendAmount: Amount
-
-  beforeEach(
-    async (): Promise<void> => {
-      accountService = await deps.use('accountService')
-      incomingPaymentService = await deps.use('incomingPaymentService')
-      outgoingPaymentService = await deps.use('outgoingPaymentService')
-      quoteService = await deps.use('quoteService')
-
-      asset = randomAsset()
-      expiresAt = new Date(Date.now() + 30_000)
-      defaultAccount = await accountService.create({ asset })
-      defaultAccountId = `${config.publicHost}/${defaultAccount.id}`
-      secondaryAccount = await accountService.create({ asset })
-      secondaryAccountId = `${config.publicHost}/${secondaryAccount.id}`
-      sendAmount = {
-        value: BigInt(42),
-        assetCode: asset.code,
-        assetScale: asset.scale
-      }
-    }
-  )
-
   afterEach(
     async (): Promise<void> => {
       await truncateTables(knex)
@@ -106,6 +78,34 @@ describe('Pagination', (): void => {
     let items: (IncomingPayment | OutgoingPayment | Quote)[]
     let result: unknown[]
     let service: IncomingPaymentService | OutgoingPaymentService | QuoteService
+    let asset: { code: string; scale: number }
+    let defaultAccount: Account
+    let defaultAccountId: string
+    let secondaryAccount: Account
+    let secondaryAccountId: string
+    let expiresAt: Date
+    let sendAmount: Amount
+
+    beforeEach(
+      async (): Promise<void> => {
+        accountService = await deps.use('accountService')
+        incomingPaymentService = await deps.use('incomingPaymentService')
+        outgoingPaymentService = await deps.use('outgoingPaymentService')
+        quoteService = await deps.use('quoteService')
+
+        asset = randomAsset()
+        expiresAt = new Date(Date.now() + 30_000)
+        defaultAccount = await accountService.create({ asset })
+        defaultAccountId = `${config.publicHost}/${defaultAccount.id}`
+        secondaryAccount = await accountService.create({ asset })
+        secondaryAccountId = `${config.publicHost}/${secondaryAccount.id}`
+        sendAmount = {
+          value: BigInt(42),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        }
+      }
+    )
     const setup = async function (resourceType: string) {
       switch (resourceType) {
         case 'incoming-payments':
@@ -271,113 +271,289 @@ describe('Pagination', (): void => {
   })
 
   describe('getPageInfo', (): void => {
-    let assetService: AssetService
-    let peerService: PeerService
-    let peerFactory: PeerFactory
+    describe('account resources', (): void => {
+      let asset: { code: string; scale: number }
+      let defaultAccount: Account
+      let secondaryAccount: Account
+      let secondaryAccountId: string
+      let sendAmount: Amount
 
-    beforeEach(
-      async (): Promise<void> => {
-        assetService = await deps.use('assetService')
-        peerService = await deps.use('peerService')
-        peerFactory = new PeerFactory(peerService)
-      }
-    )
-    test('incoming payments', async (): Promise<void> => {
-      for (let i = 0; i < 10; i++) {
-        await createIncomingPayment(deps, {
-          accountId: defaultAccount.id
-        })
-      }
-      const page = await incomingPaymentService.getAccountPage(
-        defaultAccount.id,
-        { first: 5 }
+      beforeEach(
+        async (): Promise<void> => {
+          accountService = await deps.use('accountService')
+          incomingPaymentService = await deps.use('incomingPaymentService')
+          outgoingPaymentService = await deps.use('outgoingPaymentService')
+          quoteService = await deps.use('quoteService')
+
+          asset = randomAsset()
+          defaultAccount = await accountService.create({ asset })
+          secondaryAccount = await accountService.create({ asset })
+          secondaryAccountId = `${config.publicHost}/${secondaryAccount.id}`
+          sendAmount = {
+            value: BigInt(42),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          }
+        }
       )
-      const pageInfo = await getPageInfo(
-        incomingPaymentService,
-        page,
-        defaultAccount.id
-      )
-      expect(pageInfo).toEqual({
-        endCursor: page[4].id,
-        hasNextPage: true,
-        hasPreviousPage: false,
-        startCursor: page[0].id
+
+      describe('incoming payments', (): void => {
+        test.each`
+          num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
+          ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
+          ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
+          ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
+          ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
+          ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
+        `(
+          '$num payments, pagination $pagination with cursor $cursor',
+          async ({
+            num,
+            pagination,
+            cursor,
+            start,
+            end,
+            hasNextPage,
+            hasPreviousPage
+          }): Promise<void> => {
+            const paymentIds: string[] = []
+            for (let i = 0; i < num; i++) {
+              const payment = await createIncomingPayment(deps, {
+                accountId: defaultAccount.id
+              })
+              paymentIds.push(payment.id)
+            }
+            if (cursor) {
+              if (pagination.last) pagination.before = paymentIds[cursor]
+              else pagination.after = paymentIds[cursor]
+            }
+            const page = await incomingPaymentService.getAccountPage(
+              defaultAccount.id,
+              pagination
+            )
+            const pageInfo = await getPageInfo(
+              incomingPaymentService,
+              page,
+              defaultAccount.id
+            )
+            expect(pageInfo).toEqual({
+              startCursor: paymentIds[start],
+              endCursor: paymentIds[end],
+              hasNextPage,
+              hasPreviousPage
+            })
+          }
+        )
+      })
+      describe('outgoing payments', (): void => {
+        test.each`
+          num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
+          ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
+          ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
+          ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
+          ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
+          ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
+        `(
+          '$num payments, pagination $pagination with cursor $cursor',
+          async ({
+            num,
+            pagination,
+            cursor,
+            start,
+            end,
+            hasNextPage,
+            hasPreviousPage
+          }): Promise<void> => {
+            const paymentIds: string[] = []
+            for (let i = 0; i < num; i++) {
+              const payment = await createOutgoingPayment(deps, {
+                accountId: defaultAccount.id,
+                receivingAccount: secondaryAccountId,
+                sendAmount,
+                validDestination: false
+              })
+              paymentIds.push(payment.id)
+            }
+            if (cursor) {
+              if (pagination.last) pagination.before = paymentIds[cursor]
+              else pagination.after = paymentIds[cursor]
+            }
+            const page = await outgoingPaymentService.getAccountPage(
+              defaultAccount.id,
+              pagination
+            )
+            const pageInfo = await getPageInfo(
+              outgoingPaymentService,
+              page,
+              defaultAccount.id
+            )
+            expect(pageInfo).toEqual({
+              startCursor: paymentIds[start],
+              endCursor: paymentIds[end],
+              hasNextPage,
+              hasPreviousPage
+            })
+          }
+        )
+      })
+      describe('quotes', (): void => {
+        test.each`
+          num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
+          ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
+          ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
+          ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
+          ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
+          ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
+        `(
+          '$num payments, pagination $pagination with cursor $cursor',
+          async ({
+            num,
+            pagination,
+            cursor,
+            start,
+            end,
+            hasNextPage,
+            hasPreviousPage
+          }): Promise<void> => {
+            const quoteIds: string[] = []
+            for (let i = 0; i < num; i++) {
+              const quote = await createQuote(deps, {
+                accountId: defaultAccount.id,
+                receivingAccount: secondaryAccountId,
+                sendAmount,
+                validDestination: false
+              })
+              quoteIds.push(quote.id)
+            }
+            if (cursor) {
+              if (pagination.last) pagination.before = quoteIds[cursor]
+              else pagination.after = quoteIds[cursor]
+            }
+            const page = await quoteService.getAccountPage(
+              defaultAccount.id,
+              pagination
+            )
+            const pageInfo = await getPageInfo(
+              quoteService,
+              page,
+              defaultAccount.id
+            )
+            expect(pageInfo).toEqual({
+              startCursor: quoteIds[start],
+              endCursor: quoteIds[end],
+              hasNextPage,
+              hasPreviousPage
+            })
+          }
+        )
       })
     })
-    test('outgoing payments', async (): Promise<void> => {
-      for (let i = 0; i < 10; i++) {
-        await createOutgoingPayment(deps, {
-          accountId: defaultAccount.id,
-          receivingAccount: secondaryAccountId,
-          sendAmount,
-          validDestination: false
-        })
-      }
-      const page = await outgoingPaymentService.getAccountPage(
-        defaultAccount.id,
-        { first: 5 }
+    describe('non-account resources', (): void => {
+      let assetService: AssetService
+      let peerService: PeerService
+      let peerFactory: PeerFactory
+      beforeEach(
+        async (): Promise<void> => {
+          assetService = await deps.use('assetService')
+          peerService = await deps.use('peerService')
+          peerFactory = new PeerFactory(peerService)
+        }
       )
-      const pageInfo = await getPageInfo(
-        outgoingPaymentService,
-        page,
-        defaultAccount.id
-      )
-      expect(pageInfo).toEqual({
-        endCursor: page[4].id,
-        hasNextPage: true,
-        hasPreviousPage: false,
-        startCursor: page[0].id
+      describe('assets', (): void => {
+        test.each`
+          num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
+          ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
+          ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
+          ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
+          ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
+          ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
+        `(
+          '$num payments, pagination $pagination with cursor $cursor',
+          async ({
+            num,
+            pagination,
+            cursor,
+            start,
+            end,
+            hasNextPage,
+            hasPreviousPage
+          }): Promise<void> => {
+            const assetIds: string[] = []
+            for (let i = 0; i < num; i++) {
+              const asset = await assetService.create(randomAsset())
+              assert.ok(!isAssetError(asset))
+              assetIds.push(asset.id)
+            }
+            if (cursor) {
+              if (pagination.last) pagination.before = assetIds[cursor]
+              else pagination.after = assetIds[cursor]
+            }
+            const page = await assetService.getPage(pagination)
+            const pageInfo = await getPageInfo(assetService, page)
+            expect(pageInfo).toEqual({
+              startCursor: assetIds[start],
+              endCursor: assetIds[end],
+              hasNextPage,
+              hasPreviousPage
+            })
+          }
+        )
       })
-    })
-    test('quotes', async (): Promise<void> => {
-      for (let i = 0; i < 10; i++) {
-        await createQuote(deps, {
-          accountId: defaultAccount.id,
-          receivingAccount: secondaryAccountId,
-          sendAmount,
-          validDestination: false
-        })
-      }
-      const page = await quoteService.getAccountPage(defaultAccount.id, {
-        first: 5
-      })
-      const pageInfo = await getPageInfo(quoteService, page, defaultAccount.id)
-      expect(pageInfo).toEqual({
-        endCursor: page[4].id,
-        hasNextPage: true,
-        hasPreviousPage: false,
-        startCursor: page[0].id
-      })
-    })
-    test('assets', async (): Promise<void> => {
-      for (let i = 0; i < 10; i++) {
-        await assetService.create(randomAsset())
-      }
-      const page = await assetService.getPage({
-        first: 5
-      })
-      const pageInfo = await getPageInfo(assetService, page)
-      expect(pageInfo).toEqual({
-        endCursor: page[4].id,
-        hasNextPage: true,
-        hasPreviousPage: false,
-        startCursor: page[0].id
-      })
-    })
-    test('peers', async (): Promise<void> => {
-      for (let i = 0; i < 10; i++) {
-        await peerFactory.build()
-      }
-      const page = await peerService.getPage({
-        first: 5
-      })
-      const pageInfo = await getPageInfo(peerService, page)
-      expect(pageInfo).toEqual({
-        endCursor: page[4].id,
-        hasNextPage: true,
-        hasPreviousPage: false,
-        startCursor: page[0].id
+      describe('peers', (): void => {
+        test.each`
+          num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
+          ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
+          ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
+          ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
+          ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
+          ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
+        `(
+          '$num payments, pagination $pagination with cursor $cursor',
+          async ({
+            num,
+            pagination,
+            cursor,
+            start,
+            end,
+            hasNextPage,
+            hasPreviousPage
+          }): Promise<void> => {
+            const peerIds: string[] = []
+            for (let i = 0; i < num; i++) {
+              const peer = await peerFactory.build()
+              peerIds.push(peer.id)
+            }
+            if (cursor) {
+              if (pagination.last) pagination.before = peerIds[cursor]
+              else pagination.after = peerIds[cursor]
+            }
+            const page = await peerService.getPage(pagination)
+            const pageInfo = await getPageInfo(peerService, page)
+            expect(pageInfo).toEqual({
+              startCursor: peerIds[start],
+              endCursor: peerIds[end],
+              hasNextPage,
+              hasPreviousPage
+            })
+          }
+        )
       })
     })
   })
 })
+
+// test('assets', async (): Promise<void> => {
+//   for (let i = 0; i < 10; i++) {
+//     await assetService.create(randomAsset())
+//   }
+//   const page = await assetService.getPage({
+//     first: 5
+//   })
+//   const pageInfo = await getPageInfo(assetService, page)
+//   expect(pageInfo).toEqual({
+//     endCursor: page[4].id,
+//     hasNextPage: true,
+//     hasPreviousPage: false,
+//     startCursor: page[0].id
+//   })
+// })
