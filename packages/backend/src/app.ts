@@ -64,42 +64,34 @@ export interface ApolloContext {
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
-export type AccountContext = Omit<AppContext, 'params'> & {
-  params: Record<'id', string>
+export type AppRequest<ParamsT extends string = string, BodyT = unknown> = Omit<
+  AppContext['request'],
+  'params' | 'body'
+> & {
+  params: Record<ParamsT, string>
+  body: BodyT
 }
 
-type CollectionParams = Record<'accountId', string>
-type SubResourceParams = Record<'accountId' | 'id', string>
-
-type Request<T> = Omit<AppContext['request'], 'body'> & {
-  body: T
+type Context<T> = Omit<AppContext, 'request'> & {
+  request: T
 }
 
-export type CreateContext<T> = Omit<AppContext, 'params' | 'request'> & {
-  params: CollectionParams
-  request: Request<T>
-}
-
-export type ReadContext = Omit<AppContext, 'params'> & {
-  params: SubResourceParams
-}
-
-export type UpdateContext<T> = Omit<AppContext, 'params' | 'request'> & {
-  params: SubResourceParams
-  request: Request<T>
-}
+export type AccountContext = Context<AppRequest<'id', never>>
+export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>
+export type ReadContext = Context<AppRequest<'accountId' | 'id', never>>
+export type UpdateContext<BodyT> = Context<
+  AppRequest<'accountId' | 'id', BodyT>
+>
 
 // TODO
-// type Request<BodyT, QueryT=unknown> = Omit<AppContext['request'], 'body' | 'query'> & {
-//   body: BodyT
+// type AppRequest<ParamsT, QueryT, BodyT> = Omit<AppContext['request'], 'body' | 'query'> & {
+//   params: ParamsT
 //   query: QueryT
+//   body: BodyT
 // }
-// export type ListContext = Omit<AppContext, 'params', 'query'> & {
-//   params: CollectionParams
-//   request: Request<never, Record<'cursor' | 'first' | 'last', string>
-// }
+// export type ListContext = Context<AppRequest<'accountId', Record<'cursor' | 'first' | 'last', string>, never>>
 
-export type ContextType<T> = T extends (
+type ContextType<T> = T extends (
   ctx: infer Context
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ) => any
@@ -355,8 +347,8 @@ export class App {
             if (path === '/{id}' && method === HttpMethod.GET) {
               this.publicRouter.get(
                 toRouterPath(path),
-                createValidatorMiddleware<AccountContext>({
-                  path: openApi.paths[path],
+                createValidatorMiddleware<AccountContext>(openApi, {
+                  path,
                   method
                 }),
                 async (ctx: AccountContext): Promise<void> => {
@@ -380,8 +372,8 @@ export class App {
               type,
               action
             }),
-            createValidatorMiddleware<ContextType<typeof route>>({
-              path: openApi.paths[path],
+            createValidatorMiddleware<ContextType<typeof route>>(openApi, {
+              path,
               method
             }),
             route

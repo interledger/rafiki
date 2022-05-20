@@ -42,12 +42,12 @@ describe('OpenAPI Validator', (): void => {
     const accountId = uuid()
 
     beforeAll((): void => {
-      validatePostMiddleware = createValidatorMiddleware({
-        path: openApi.paths[PATH],
+      validatePostMiddleware = createValidatorMiddleware(openApi, {
+        path: PATH,
         method: HttpMethod.POST
       })
-      validateListMiddleware = createValidatorMiddleware({
-        path: openApi.paths[PATH],
+      validateListMiddleware = createValidatorMiddleware(openApi, {
+        path: PATH,
         method: HttpMethod.GET
       })
     })

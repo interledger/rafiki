@@ -50,7 +50,7 @@ describe('Incoming Payment Routes', (): void => {
 
   const setup = <T extends AppContext>(
     reqOpts: httpMocks.RequestOptions,
-    params: Record<string, unknown>
+    params: Record<string, string>
   ): T => {
     const ctx = createContext<T>(
       {
