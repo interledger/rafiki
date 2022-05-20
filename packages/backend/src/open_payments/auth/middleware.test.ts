@@ -1,4 +1,5 @@
-import nock from 'nock'
+import assert from 'assert'
+import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
@@ -8,6 +9,7 @@ import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppContext, AppServices } from '../../app'
+import { HttpMethod, ValidateFunction } from 'openapi'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 
@@ -15,6 +17,11 @@ type AppMiddleware = (
   ctx: AppContext,
   next: () => Promise<void>
 ) => Promise<void>
+
+type IntrospectionBody = {
+  access_token: string
+  resource_server: string
+}
 
 describe('Auth Middleware', (): void => {
   let deps: IocContract<AppServices>
@@ -24,6 +31,7 @@ describe('Auth Middleware', (): void => {
   let middleware: AppMiddleware
   let ctx: AppContext
   let next: jest.MockedFunction<() => Promise<void>>
+  let validateRequest: ValidateFunction<IntrospectionBody>
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
 
   beforeAll(
@@ -35,6 +43,11 @@ describe('Auth Middleware', (): void => {
       middleware = createAuthMiddleware({
         type: AccessType.IncomingPayment,
         action: AccessAction.Read
+      })
+      const authOpenApi = await deps.use('authOpenApi')
+      validateRequest = authOpenApi.createRequestValidator({
+        path: '/introspect',
+        method: HttpMethod.POST
       })
     }
   )
@@ -65,7 +78,19 @@ describe('Auth Middleware', (): void => {
     grant: GrantJSON | string | undefined = undefined
   ): nock.Scope {
     return nock(authServerIntrospectionUrl.origin)
-      .post(authServerIntrospectionUrl.pathname, { access_token: token })
+      .post(
+        authServerIntrospectionUrl.pathname,
+        function (this: Definition, body) {
+          assert.ok(
+            validateRequest({
+              ...this,
+              body
+            })
+          )
+          expect(body.access_token).toEqual(token)
+          return true
+        }
+      )
       .reply(grant ? 200 : 404, grant)
   }
 

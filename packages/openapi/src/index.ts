@@ -43,16 +43,13 @@ export interface RequestOptions {
   method: HttpMethod
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ValidateFunction<T> = (data: any) => data is T
+
 export interface OpenAPI {
   paths: Paths
-  createRequestValidator<T>(
-    options: RequestOptions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): (request: any) => request is T
-  createResponseValidator<T>(
-    options: RequestOptions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): (response: any) => response is T
+  createRequestValidator<T>(options: RequestOptions): ValidateFunction<T>
+  createResponseValidator<T>(options: RequestOptions): ValidateFunction<T>
 }
 
 class OpenAPIImpl implements OpenAPI {

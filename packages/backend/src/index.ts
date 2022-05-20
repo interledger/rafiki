@@ -25,6 +25,7 @@ import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
 import { createAccountingService } from './accounting/service'
 import { createPeerService } from './peer/service'
+import { createAuthService } from './open_payments/auth/service'
 import { createAccountService } from './open_payments/account/service'
 import { createSPSPRoutes } from './spsp/routes'
 import { createAccountRoutes } from './open_payments/account/routes'
@@ -125,6 +126,10 @@ export function initIocContainer(
     const config = await deps.use('config')
     return await createOpenAPI(config.openPaymentsSpec)
   })
+  container.singleton('authOpenApi', async (deps) => {
+    const config = await deps.use('config')
+    return await createOpenAPI(config.authServerSpec)
+  })
 
   /**
    * Add services to the container.
@@ -164,6 +169,14 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       assetService: await deps.use('assetService'),
       httpTokenService: await deps.use('httpTokenService')
+    })
+  })
+  container.singleton('authService', async (deps) => {
+    const config = await deps.use('config')
+    return await createAuthService({
+      logger: await deps.use('logger'),
+      authServerIntrospectionUrl: config.authServerIntrospectionUrl,
+      authOpenApi: await deps.use('authOpenApi')
     })
   })
   container.singleton('accountService', async (deps) => {
