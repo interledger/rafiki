@@ -1,12 +1,13 @@
+import { v4 } from 'uuid'
 import * as crypto from 'crypto'
 import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
-import { AccessRequest, isAccessRequest } from './types'
+import { AccessRequest, isAccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { IAppConfig } from '../config/app'
-import { LimitService } from '../limit/service'
+import { AccessService } from '../access/service'
 
 export interface GrantService {
   validateGrantRequest(grantRequest: GrantRequest): boolean
@@ -14,7 +15,7 @@ export interface GrantService {
 }
 
 interface ServiceDependencies extends BaseService {
-  limitService: LimitService
+  accessService: AccessService
   config: IAppConfig
   knex: TransactionOrKnex
 }
@@ -48,7 +49,7 @@ export interface GrantResponse {
 
 export async function createGrantService({
   logger,
-  limitService,
+  accessService,
   config,
   knex
 }: ServiceDependencies): Promise<GrantService> {
@@ -57,7 +58,7 @@ export async function createGrantService({
   })
   const deps: ServiceDependencies = {
     logger: log,
-    limitService,
+    accessService,
     config,
     knex
   }
@@ -88,7 +89,7 @@ async function initiateGrant(
   grantRequest: GrantRequest,
   trx?: Transaction
 ): Promise<GrantResponse> {
-  const { limitService, knex, config } = deps
+  const { accessService, knex, config } = deps
 
   const {
     access,
@@ -100,29 +101,27 @@ async function initiateGrant(
 
   const grant = await Grant.query(trx || knex).insert({
     state: GrantState.Pending,
-    ...grantRequest.access,
     startMethod: start,
     finishMethod,
     finishUri,
     clientNonce,
-    interactId: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: maybe replace this & interactRef with uuid/v4
-    interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    interactId: v4(),
+    interactRef: v4(),
+    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
+    continueId: v4(),
+    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
   })
 
-  // Associate provided limits with grant
+  // Associate provided accesses with grant
   await Promise.all(
     access.map((accessRequest) => {
-      const { limits } = accessRequest
-      if (limits) {
-        limitService.createLimit(grant.id, limits, trx)
-      }
+      accessService.createAccess(grant.id, accessRequest, trx)
     })
   )
 
   return {
     interact: {
-      redirect: config.domain + `/interact/${grant.interactId}`,
+      redirect: config.interactDomain + `/interact/${grant.interactId}`,
       finish: grant.interactNonce
     },
     continue: {

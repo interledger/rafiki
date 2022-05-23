@@ -1,13 +1,7 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { AccessToken } from '../accessToken/model'
-import { Limit } from '../limit/model'
-
-export enum Action {
-  Create = 'create',
-  Read = 'read',
-  List = 'list'
-}
+import { Access } from '../access/model'
 
 export enum StartMethod {
   Redirect = 'redirect'
@@ -21,13 +15,6 @@ export enum GrantState {
   Pending = 'pending',
   Granted = 'granted',
   Revoked = 'revoked'
-}
-
-export enum AccessType {
-  Account = 'account',
-  IncomingPayment = 'incomingPayment',
-  OutgoingPayment = 'outgoingPayment',
-  Quote = 'quote'
 }
 
 export class Grant extends BaseModel {
@@ -46,7 +33,7 @@ export class Grant extends BaseModel {
     },
     grants: {
       relation: Model.HasManyRelation,
-      modelClass: Limit,
+      modelClass: Access,
       join: {
         from: 'grants.id',
         to: 'limits.grantId'
@@ -55,11 +42,9 @@ export class Grant extends BaseModel {
   }
 
   public state!: GrantState
-  public type!: AccessType
-  public actions!: Action[]
   public startMethod!: StartMethod[]
-  // public locations!: string[]
-  // public identifier!: string
+  public locations?: string[]
+  public identifier?: string
   public interval?: string
 
   public continueToken!: string

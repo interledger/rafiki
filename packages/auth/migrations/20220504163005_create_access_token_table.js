@@ -4,6 +4,9 @@ exports.up = function (knex) {
     table.string('value').notNullable().unique()
     table.string('managementId').notNullable()
     table.integer('expiresIn')
+
+    table.timestamp('createdAt').defaultTo(knex.fn.now())
+    table.timestamp('updatedAt').defaultTo(knex.fn.now())
   })
 }
 
