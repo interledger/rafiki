@@ -98,10 +98,10 @@ export const Config = {
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
-  // TODO:
-  // Default to official spec once finalized
-  // https://github.com/interledger/open-payments/blob/master/open-api-spec.yaml
-  openPaymentsSpec: envString('OPEN_PAYMENTS_SPEC', './open-api-spec.yaml'),
+  openPaymentsSpec: envString(
+    'OPEN_PAYMENTS_SPEC',
+    'https://github.com/interledger/open-payments/raw/3930448672cfc678ec2bc02938566a316d83871c/open-api-spec.yaml'
+  ),
 
   /** Frontend **/
   frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')

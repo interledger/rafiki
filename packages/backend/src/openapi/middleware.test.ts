@@ -57,9 +57,9 @@ describe('OpenAPI Validator', (): void => {
     })
 
     test.each`
-      accountId       | message                                      | description
-      ${undefined}    | ${"must have required property 'accountId'"} | ${'missing'}
-      ${'not_a_uuid'} | ${'accountId must match format "uuid"'}      | ${'invalid'}
+      accountId    | message                                      | description
+      ${undefined} | ${"must have required property 'accountId'"} | ${'missing'}
+      ${2}         | ${'accountId must be string'}                | ${'invalid'}
     `(
       'returns 400 on $description path parameter',
       async ({ accountId, message }): Promise<void> => {
