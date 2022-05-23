@@ -1,11 +1,11 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { Grant } from '../grant/model'
+import { LimitData, AccessType, Action } from './types'
 
-// https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-3.2.1
-export class AccessToken extends BaseModel {
+export class Access extends BaseModel {
   public static get tableName(): string {
-    return 'accessTokens'
+    return 'accesses'
   }
 
   static relationMappings = {
@@ -13,14 +13,17 @@ export class AccessToken extends BaseModel {
       relation: Model.HasOneRelation,
       modelClass: Grant,
       join: {
-        from: 'accessTokens.grantId',
+        from: 'accesses.grantId',
         to: 'grants.id'
       }
     }
   }
 
-  public value!: string
-  public managementId!: string
+  public id!: string
   public grantId!: string
-  public expiresIn?: number
+  public type!: AccessType
+  public actions!: Action[]
+  public identifier?: string
+  public locations?: string[]
+  public limits?: LimitData
 }

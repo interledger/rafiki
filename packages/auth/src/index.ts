@@ -7,7 +7,7 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { createClientService } from './client/service'
-import { createLimitService } from './limit/service'
+import { createAccessService } from './access/service'
 import { createGrantService } from './grant/service'
 
 const container = initIocContainer(Config)
@@ -55,9 +55,9 @@ export function initIocContainer(
   // TODO: add redis
 
   container.singleton(
-    'limitService',
+    'accessService',
     async (deps: IocContract<AppServices>) => {
-      return createLimitService({
+      return createAccessService({
         logger: await deps.use('logger'),
         knex: await deps.use('knex')
       })
@@ -80,7 +80,7 @@ export function initIocContainer(
       return createGrantService({
         config: await deps.use('config'),
         logger: await deps.use('logger'),
-        limitService: await deps.use('limitService'),
+        accessService: await deps.use('accessService'),
         knex: await deps.use('knex')
       })
     }
@@ -157,7 +157,6 @@ export const start = async (
 
   // Do migrations
   const knex = await container.use('knex')
-  // TODO: create migrations, knexfile.js, etc.
   await knex.migrate
     .latest({
       directory: './packages/auth/migrations'
