@@ -16,7 +16,11 @@ import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
-import { OutgoingPayment, OutgoingPaymentState } from './model'
+import {
+  OutgoingPayment,
+  OutgoingPaymentJSON,
+  OutgoingPaymentState
+} from './model'
 import { OutgoingPaymentRoutes } from './routes'
 import { Amount } from '../../amount'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
@@ -201,8 +205,10 @@ describe('Outgoing Payment Routes', (): void => {
           value: outgoingPayment.receiveAmount.value.toString()
         },
         state: 'processing',
-        description: outgoingPayment.description,
-        externalRef: outgoingPayment.externalRef
+        description: outgoingPayment.description ?? null,
+        externalRef: outgoingPayment.externalRef ?? null,
+        createdAt: outgoingPayment.createdAt.toISOString(),
+        updatedAt: outgoingPayment.updatedAt.toISOString()
       })
     })
 
@@ -243,7 +249,11 @@ describe('Outgoing Payment Routes', (): void => {
           receiveAmount: {
             ...outgoingPayment.receiveAmount,
             value: outgoingPayment.receiveAmount.value.toString()
-          }
+          },
+          description: outgoingPayment.description ?? null,
+          externalRef: outgoingPayment.externalRef ?? null,
+          createdAt: outgoingPayment.createdAt.toISOString(),
+          updatedAt: outgoingPayment.updatedAt.toISOString()
         })
       })
     })
@@ -343,6 +353,12 @@ describe('Outgoing Payment Routes', (): void => {
         >)['id'] as string)
           .split('/')
           .pop()
+        const createdAt = (ctx.response.body as Record<string, unknown>)[
+          'createdAt'
+        ]
+        const updatedAt = (ctx.response.body as Record<string, unknown>)[
+          'updatedAt'
+        ]
         expect(ctx.response.body).toEqual({
           id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
           accountId: accountUrl,
@@ -355,55 +371,98 @@ describe('Outgoing Payment Routes', (): void => {
             ...quote.receiveAmount,
             value: quote.receiveAmount.value.toString()
           },
-          description: options.description,
-          externalRef: options.externalRef,
+          description: options.description ?? null,
+          externalRef: options.externalRef ?? null,
           state: 'processing',
           sentAmount: {
             value: '0',
             assetCode: asset.code,
             assetScale: asset.scale
-          }
+          },
+          createdAt,
+          updatedAt
         })
       }
     )
   })
 
   describe('list', (): void => {
-    let outgoingPayment: OutgoingPayment
-    beforeEach(async () => {
-      outgoingPayment = await createPayment({
-        accountId
-      })
-    })
-    test('returns 200 without query params', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { accountId }
-      )
-      await expect(outgoingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
-      expect(ctx.response.get('Content-Type')).toBe(
-        'application/json; charset=utf-8'
-      )
-    })
-
-    test('returns 200 with query params', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' },
-          query: { first: 5, cursor: outgoingPayment.id }
-        },
-        { accountId }
-      )
-      await expect(outgoingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
-      expect(ctx.response.get('Content-Type')).toBe(
-        'application/json; charset=utf-8'
-      )
-    })
-
+    let items: OutgoingPayment[]
+    let result: OutgoingPaymentJSON[]
+    beforeEach(
+      async (): Promise<void> => {
+        items = []
+        for (let i = 0; i < 3; i++) {
+          const ip = await createPayment({
+            accountId,
+            description: `p${i}`
+          })
+          items.push(ip)
+        }
+        result = [0, 1, 2].map((i) => {
+          return {
+            id: `${accountUrl}/outgoing-payments/${items[i].id}`,
+            accountId: accountUrl,
+            receivingPayment: items[i]['receivingPayment'],
+            sendAmount: {
+              ...items[i]['sendAmount'],
+              value: items[i]['sendAmount'].value.toString()
+            },
+            receiveAmount: {
+              ...items[i]['receiveAmount'],
+              value: items[i]['receiveAmount'].value.toString()
+            },
+            sentAmount: {
+              value: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            state: 'processing',
+            description: items[i]['description'] ?? null,
+            externalRef: null,
+            createdAt: items[i].createdAt.toISOString(),
+            updatedAt: items[i].updatedAt.toISOString()
+          }
+        })
+      }
+    )
+    test.each`
+      first   | last    | cursorIndex | pagination                                                  | startIndex | endIndex | description
+      ${null} | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'no pagination parameters'}
+      ${'10'} | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'only `first`'}
+      ${'10'} | ${null} | ${0}        | ${{ first: 2, hasPreviousPage: true, hasNextPage: false }}  | ${1}       | ${2}     | ${'`first` plus `cursor`'}
+      ${null} | ${'10'} | ${2}        | ${{ last: 2, hasPreviousPage: false, hasNextPage: true }}   | ${0}       | ${1}     | ${'`last` plus `cursor`'}
+    `(
+      'returns 200 on $description',
+      async ({
+        first,
+        last,
+        cursorIndex,
+        pagination,
+        startIndex,
+        endIndex
+      }): Promise<void> => {
+        const cursor = items[cursorIndex] ? items[cursorIndex].id : ''
+        pagination['startCursor'] = items[startIndex].id
+        pagination['endCursor'] = items[endIndex].id
+        const ctx = createContext(
+          {
+            headers: { Accept: 'application/json' }
+          },
+          { accountId }
+        )
+        ctx.request.query = { first, last, cursor }
+        await expect(outgoingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
+        expect(ctx.status).toBe(200)
+        expect(ctx.response.get('Content-Type')).toBe(
+          'application/json; charset=utf-8'
+        )
+        expect(ctx.body).toEqual({
+          pagination,
+          result: result.slice(startIndex, endIndex + 1)
+        })
+      }
+    )
     test('returns 500 if TB account not found', async (): Promise<void> => {
       jest
         .spyOn(accountingService, 'getAccountsTotalSent')

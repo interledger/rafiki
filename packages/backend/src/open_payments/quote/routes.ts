@@ -6,7 +6,11 @@ import { QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { Amount, parseAmount } from '../amount'
-import { list } from '../../shared/pagination'
+import {
+  getListPageInfo,
+  parsePaginationQueryParameters
+} from '../../shared/pagination'
+import { Pagination } from '../../shared/baseModel'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -127,15 +131,25 @@ async function listQuotes(
 ): Promise<void> {
   // todo: validation
   const { accountId } = ctx.params
-  const pagination = ctx.request.query
-  let result: unknown
+  const { first, last, cursor } = ctx.request.query
+  let pagination: Pagination
   try {
-    result = await list(
-      deps.quoteService,
-      deps.config.publicHost,
-      accountId,
+    pagination = parsePaginationQueryParameters(first, last, cursor)
+  } catch (err) {
+    ctx.throw(404, err.message)
+  }
+  try {
+    const page = await deps.quoteService.getAccountPage(accountId, pagination)
+    const pageInfo = await getListPageInfo(
+      (pagination: Pagination) =>
+        deps.quoteService.getAccountPage(accountId, pagination),
+      page,
       pagination
     )
+    const result = {
+      pagination: pageInfo,
+      result: page.map((item: Quote) => quoteToBody(deps, item))
+    }
     ctx.body = result
   } catch (_) {
     ctx.throw(500, 'Error trying to list quotes')

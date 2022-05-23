@@ -1,59 +1,48 @@
-import { Asset } from '../asset/model'
-import { AssetService } from '../asset/service'
-import { IncomingPayment } from '../open_payments/payment/incoming/model'
-import { IncomingPaymentService } from '../open_payments/payment/incoming/service'
-import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
-import { OutgoingPaymentService } from '../open_payments/payment/outgoing/service'
-import { Quote } from '../open_payments/quote/model'
-import { QuoteService } from '../open_payments/quote/service'
-import { Peer } from '../peer/model'
-import { PeerService } from '../peer/service'
-import { PageInfo, Pagination } from './baseModel'
+import { BaseModel, PageInfo, Pagination } from './baseModel'
 
-type ListResult = {
-  pagination: PageInfo
-  result: unknown // (IncomingPaymentJSON | OutgoingPaymentJSON | QuoteJSON)[]
+export function parsePaginationQueryParameters(
+  first?: string | string[],
+  last?: string | string[],
+  cursor?: string | string[]
+): Pagination {
+  if (
+    (first !== undefined && typeof first !== 'string') ||
+    (last !== undefined && typeof last !== 'string') ||
+    (cursor !== undefined && typeof cursor !== 'string')
+  ) {
+    throw new Error('Query parameters are not strings')
+  }
+  if (first && last) {
+    throw new Error('first and last provided. Only one allowed')
+  }
+  if (last && !cursor) {
+    throw new Error('cursor needed for backwards pagination')
+  }
+  return {
+    first: Number(first) || undefined,
+    last: Number(last) || undefined,
+    before: last ? cursor : undefined,
+    after: cursor && !last ? cursor : undefined
+  }
 }
 
-export async function list(
-  service: IncomingPaymentService | OutgoingPaymentService | QuoteService,
-  host: string,
-  accountId: string,
+export async function getListPageInfo<T extends BaseModel>(
+  getPage: (pagination: Pagination) => Promise<T[]>,
+  page: T[],
   pagination?: Pagination
-): Promise<ListResult> {
-  const page = await service.getAccountPage(accountId, pagination)
-  const pageInfo = await getPageInfo(service, page)
+): Promise<PageInfo> {
+  const pageInfo = await getPageInfo((pagination) => getPage(pagination), page)
   if (pagination?.last) {
     pageInfo.last = page.length
   } else {
     pageInfo.first = page.length
   }
-  return {
-    pagination: pageInfo,
-    result: page.map((item: IncomingPayment | OutgoingPayment | Quote) => {
-      return {
-        ...item.toJSON(),
-        accountId: `${host}/${accountId}`,
-        id:
-          item['receivedAmount'] !== undefined
-            ? `${host}/${accountId}/incoming-payments/${item.id}`
-            : item['sentAmount'] !== undefined
-            ? `${host}/${accountId}/outgoing-payments/${item.id}`
-            : `${host}/${accountId}/quotes/${item.id}`
-      }
-    })
-  }
+  return pageInfo
 }
 
-export async function getPageInfo(
-  service:
-    | IncomingPaymentService
-    | OutgoingPaymentService
-    | QuoteService
-    | AssetService
-    | PeerService,
-  page: (IncomingPayment | OutgoingPayment | Quote | Asset | Peer)[],
-  accountId?: string
+export async function getPageInfo<T extends BaseModel>(
+  getPage: (pagination: Pagination) => Promise<T[]>,
+  page: T[]
 ): Promise<PageInfo> {
   if (page.length == 0)
     return {
@@ -64,45 +53,22 @@ export async function getPageInfo(
   const lastId = page[page.length - 1].id
 
   let hasNextPage, hasPreviousPage
-  if (accountId) {
-    service = service as
-      | IncomingPaymentService
-      | OutgoingPaymentService
-      | QuoteService
-    try {
-      hasNextPage = await service.getAccountPage(accountId, {
-        after: lastId,
-        first: 1
-      })
-    } catch (e) {
-      hasNextPage = []
-    }
-    try {
-      hasPreviousPage = await service.getAccountPage(accountId, {
-        before: firstId,
-        last: 1
-      })
-    } catch (e) {
-      hasPreviousPage = []
-    }
-  } else {
-    service = service as AssetService | PeerService
-    try {
-      hasNextPage = await service.getPage({
-        after: lastId,
-        first: 1
-      })
-    } catch (e) {
-      hasNextPage = []
-    }
-    try {
-      hasPreviousPage = await service.getPage({
-        before: firstId,
-        last: 1
-      })
-    } catch (e) {
-      hasPreviousPage = []
-    }
+
+  try {
+    hasNextPage = await getPage({
+      after: lastId,
+      first: 1
+    })
+  } catch (e) {
+    hasNextPage = []
+  }
+  try {
+    hasPreviousPage = await getPage({
+      before: firstId,
+      last: 1
+    })
+  } catch (e) {
+    hasPreviousPage = []
   }
 
   return {

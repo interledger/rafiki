@@ -233,13 +233,12 @@ export class PaymentEvent extends WebhookEvent {
 export type OutgoingPaymentJSON = {
   id: string
   accountId: string
-  failed: boolean
   receivingPayment: string
   sendAmount: AmountJSON
   sentAmount: AmountJSON
   receiveAmount: AmountJSON
-  description: string | undefined
-  externalRef: string | undefined
+  description: string | null
+  externalRef: string | null
   createdAt: string
   updatedAt: string
 }

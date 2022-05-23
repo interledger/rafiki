@@ -5,7 +5,11 @@ import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
-import { list } from '../../../shared/pagination'
+import {
+  getListPageInfo,
+  parsePaginationQueryParameters
+} from '../../../shared/pagination'
+import { Pagination } from '../../../shared/baseModel'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -99,15 +103,30 @@ async function listOutgoingPayments(
 ): Promise<void> {
   // todo: validation
   const { accountId } = ctx.params
-  const pagination = ctx.request.query
-  let result: unknown
+  const { first, last, cursor } = ctx.request.query
+  let pagination: Pagination
   try {
-    result = await list(
-      deps.outgoingPaymentService,
-      deps.config.publicHost,
+    pagination = parsePaginationQueryParameters(first, last, cursor)
+  } catch (err) {
+    ctx.throw(404, err.message)
+  }
+  try {
+    const page = await deps.outgoingPaymentService.getAccountPage(
       accountId,
       pagination
     )
+    const pageInfo = await getListPageInfo(
+      (pagination: Pagination) =>
+        deps.outgoingPaymentService.getAccountPage(accountId, pagination),
+      page,
+      pagination
+    )
+    const result = {
+      pagination: pageInfo,
+      result: page.map((item: OutgoingPayment) =>
+        outgoingPaymentToBody(deps, item)
+      )
+    }
     ctx.body = result
   } catch (_) {
     ctx.throw(500, 'Error trying to list outgoing payments')
@@ -118,30 +137,15 @@ function outgoingPaymentToBody(
   deps: ServiceDependencies,
   outgoingPayment: OutgoingPayment
 ) {
-  const accountId = `${deps.config.publicHost}/${outgoingPayment.accountId}`
   return {
-    id: `${accountId}/outgoing-payments/${outgoingPayment.id}`,
-    accountId,
+    ...outgoingPayment.toJSON(),
+    accountId: `${deps.config.publicHost}/${outgoingPayment.accountId}`,
+    id: `${deps.config.publicHost}/${outgoingPayment.accountId}/outgoing-payments/${outgoingPayment.id}`,
     state: [
       OutgoingPaymentState.Funding,
       OutgoingPaymentState.Sending
     ].includes(outgoingPayment.state)
       ? 'processing'
-      : outgoingPayment.state.toLowerCase(),
-    receivingPayment: outgoingPayment.receivingPayment,
-    sendAmount: {
-      ...outgoingPayment.sendAmount,
-      value: outgoingPayment.sendAmount.value.toString()
-    },
-    sentAmount: {
-      ...outgoingPayment.sentAmount,
-      value: outgoingPayment.sentAmount.value.toString()
-    },
-    receiveAmount: {
-      ...outgoingPayment.receiveAmount,
-      value: outgoingPayment.receiveAmount.value.toString()
-    },
-    description: outgoingPayment.description ?? undefined,
-    externalRef: outgoingPayment.externalRef ?? undefined
+      : outgoingPayment.state.toLowerCase()
   }
 }

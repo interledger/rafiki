@@ -194,11 +194,11 @@ export class IncomingPayment
 export type IncomingPaymentJSON = {
   id: string
   accountId: string
-  incomingAmount: AmountJSON | undefined
+  incomingAmount: AmountJSON | null
   receivedAmount: AmountJSON
   state: string
-  description: string | undefined
-  externalRef: string | undefined
+  description: string | null
+  externalRef: string | null
   createdAt: string
   updatedAt: string
   expiresAt: string

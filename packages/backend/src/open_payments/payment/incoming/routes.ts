@@ -13,7 +13,11 @@ import {
   isIncomingPaymentError
 } from './errors'
 import { Amount, parseAmount } from '../../amount'
-import { list } from '../../../shared/pagination'
+import {
+  getListPageInfo,
+  parsePaginationQueryParameters
+} from '../../../shared/pagination'
+import { Pagination } from '../../../shared/baseModel'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -187,15 +191,30 @@ async function listIncomingPayments(
 ): Promise<void> {
   // todo: validation
   const { accountId } = ctx.params
-  const pagination = ctx.request.query
-  let result: unknown
+  const { first, last, cursor } = ctx.request.query
+  let pagination: Pagination
   try {
-    result = await list(
-      deps.incomingPaymentService,
-      deps.config.publicHost,
+    pagination = parsePaginationQueryParameters(first, last, cursor)
+  } catch (err) {
+    ctx.throw(404, err.message)
+  }
+  try {
+    const page = await deps.incomingPaymentService.getAccountPage(
       accountId,
       pagination
     )
+    const pageInfo = await getListPageInfo(
+      (pagination: Pagination) =>
+        deps.incomingPaymentService.getAccountPage(accountId, pagination),
+      page,
+      pagination
+    )
+    const result = {
+      pagination: pageInfo,
+      result: page.map((item: IncomingPayment) =>
+        incomingPaymentToBody(deps, item)
+      )
+    }
     ctx.body = result
   } catch (_) {
     ctx.throw(500, 'Error trying to list incoming payments')
@@ -206,31 +225,11 @@ function incomingPaymentToBody(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment
 ) {
-  const accountId = `${deps.config.publicHost}/${incomingPayment.accountId}`
-  const body = {
-    id: `${accountId}/incoming-payments/${incomingPayment.id}`,
-    accountId,
-    state: incomingPayment.state.toLowerCase(),
-    receivedAmount: {
-      value: incomingPayment.receivedAmount.value.toString(),
-      assetCode: incomingPayment.receivedAmount.assetCode,
-      assetScale: incomingPayment.receivedAmount.assetScale
-    },
-    expiresAt: incomingPayment.expiresAt.toISOString()
+  return {
+    ...incomingPayment.toJSON(),
+    accountId: `${deps.config.publicHost}/${incomingPayment.accountId}`,
+    id: `${deps.config.publicHost}/${incomingPayment.accountId}/incoming-payments/${incomingPayment.id}`
   }
-
-  if (incomingPayment.incomingAmount) {
-    body['incomingAmount'] = {
-      value: incomingPayment.incomingAmount.value.toString(),
-      assetCode: incomingPayment.incomingAmount.assetCode,
-      assetScale: incomingPayment.incomingAmount.assetScale
-    }
-  }
-  if (incomingPayment.description)
-    body['description'] = incomingPayment.description
-  if (incomingPayment.externalRef)
-    body['externalRef'] = incomingPayment.externalRef
-  return body
 }
 
 function getStreamCredentials(

@@ -14,7 +14,7 @@ import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { QuoteService, CreateQuoteOptions } from './service'
-import { Quote } from './model'
+import { Quote, QuoteJSON } from './model'
 import { QuoteRoutes } from './routes'
 import { Amount } from '../amount'
 import { randomAsset } from '../../tests/asset'
@@ -437,37 +437,71 @@ describe('Quote Routes', (): void => {
   })
 
   describe('list', (): void => {
-    let quote: Quote
-    beforeEach(async () => {
-      quote = await createAccountQuote(accountId)
-    })
-    test('returns 200 without query params', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { accountId }
-      )
-      await expect(quoteRoutes.list(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
-      expect(ctx.response.get('Content-Type')).toBe(
-        'application/json; charset=utf-8'
-      )
-    })
-
-    test('returns 200 with query params', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' },
-          query: { first: 5, cursor: quote.id }
-        },
-        { accountId }
-      )
-      await expect(quoteRoutes.list(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
-      expect(ctx.response.get('Content-Type')).toBe(
-        'application/json; charset=utf-8'
-      )
-    })
+    let items: Quote[]
+    let result: QuoteJSON[]
+    beforeEach(
+      async (): Promise<void> => {
+        items = []
+        for (let i = 0; i < 3; i++) {
+          const ip = await createAccountQuote(accountId)
+          items.push(ip)
+        }
+        result = [0, 1, 2].map((i) => {
+          return {
+            id: `${accountUrl}/quotes/${items[i].id}`,
+            accountId: accountUrl,
+            receivingPayment: items[i]['receivingPayment'],
+            sendAmount: {
+              ...items[i]['sendAmount'],
+              value: items[i]['sendAmount'].value.toString()
+            },
+            receiveAmount: {
+              ...items[i]['receiveAmount'],
+              value: items[i]['receiveAmount'].value.toString()
+            },
+            expiresAt: items[i].expiresAt.toISOString(),
+            createdAt: items[i].createdAt.toISOString(),
+            updatedAt: items[i].updatedAt.toISOString()
+          }
+        })
+      }
+    )
+    test.each`
+      first   | last    | cursorIndex | pagination                                                  | startIndex | endIndex | description
+      ${null} | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'no pagination parameters'}
+      ${'10'} | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'only `first`'}
+      ${'10'} | ${null} | ${0}        | ${{ first: 2, hasPreviousPage: true, hasNextPage: false }}  | ${1}       | ${2}     | ${'`first` plus `cursor`'}
+      ${null} | ${'10'} | ${2}        | ${{ last: 2, hasPreviousPage: false, hasNextPage: true }}   | ${0}       | ${1}     | ${'`last` plus `cursor`'}
+    `(
+      'returns 200 on $description',
+      async ({
+        first,
+        last,
+        cursorIndex,
+        pagination,
+        startIndex,
+        endIndex
+      }): Promise<void> => {
+        const cursor = items[cursorIndex] ? items[cursorIndex].id : ''
+        pagination['startCursor'] = items[startIndex].id
+        pagination['endCursor'] = items[endIndex].id
+        const ctx = createContext(
+          {
+            headers: { Accept: 'application/json' }
+          },
+          { accountId }
+        )
+        ctx.request.query = { first, last, cursor }
+        await expect(quoteRoutes.list(ctx)).resolves.toBeUndefined()
+        expect(ctx.status).toBe(200)
+        expect(ctx.response.get('Content-Type')).toBe(
+          'application/json; charset=utf-8'
+        )
+        expect(ctx.body).toEqual({
+          pagination,
+          result: result.slice(startIndex, endIndex + 1)
+        })
+      }
+    )
   })
 })
