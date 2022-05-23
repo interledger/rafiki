@@ -19,8 +19,8 @@ export interface Pagination {
 export interface PageInfo {
   startCursor?: string
   endCursor?: string
-  hasNextPage?: boolean
-  hasPreviousPage?: boolean
+  hasNextPage: boolean
+  hasPreviousPage: boolean
   first?: number
   last?: number
 }

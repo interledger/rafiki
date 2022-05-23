@@ -3,14 +3,13 @@ import {
   QueryResolvers,
   ResolversTypes,
   Peer as SchemaPeer,
-  PeerEdge,
-  MutationResolvers,
-  PeersConnectionResolvers
+  MutationResolvers
 } from '../generated/graphql'
 import { Peer } from '../../peer/model'
-import { PeerService } from '../../peer/service'
 import { PeerError, isPeerError } from '../../peer/errors'
 import { ApolloContext } from '../../app'
+import { getPageInfo } from '../../shared/pagination'
+import { Pagination } from '../../shared/baseModel'
 
 export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   parent,
@@ -19,7 +18,12 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
 ): Promise<ResolversTypes['PeersConnection']> => {
   const peerService = await ctx.container.use('peerService')
   const peers = await peerService.getPage(args)
+  const pageInfo = await getPageInfo(
+    (pagination: Pagination) => peerService.getPage(pagination),
+    peers
+  )
   return {
+    pageInfo,
     edges: peers.map((peer: Peer) => ({
       cursor: peer.id,
       node: peerToGraphql(peer)
@@ -144,59 +148,6 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] = async 
   // TODO:
   console.log(ctx) // temporary to pass linting
   return {}
-}
-
-export const getPeersConnectionPageInfo: PeersConnectionResolvers<ApolloContext>['pageInfo'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['PageInfo']> => {
-  const edges = parent.edges
-  if (edges == null || typeof edges == 'undefined' || edges.length == 0)
-    return {
-      hasPreviousPage: false,
-      hasNextPage: false
-    }
-  return getPageInfo({
-    peerService: await ctx.container.use('peerService'),
-    edges
-  })
-}
-
-const getPageInfo = async ({
-  peerService,
-  edges
-}: {
-  peerService: PeerService
-  edges: PeerEdge[]
-}): Promise<ResolversTypes['PageInfo']> => {
-  const firstEdge = edges[0].cursor
-  const lastEdge = edges[edges.length - 1].cursor
-
-  let hasNextPagePeers, hasPreviousPagePeers
-  try {
-    hasNextPagePeers = await peerService.getPage({
-      after: lastEdge,
-      first: 1
-    })
-  } catch (e) {
-    hasNextPagePeers = []
-  }
-  try {
-    hasPreviousPagePeers = await peerService.getPage({
-      before: firstEdge,
-      last: 1
-    })
-  } catch (e) {
-    hasPreviousPagePeers = []
-  }
-
-  return {
-    endCursor: lastEdge,
-    hasNextPage: hasNextPagePeers.length == 1,
-    hasPreviousPage: hasPreviousPagePeers.length == 1,
-    startCursor: firstEdge
-  }
 }
 
 export const peerToGraphql = (peer: Peer): SchemaPeer => ({
