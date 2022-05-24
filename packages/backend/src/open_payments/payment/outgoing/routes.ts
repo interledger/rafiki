@@ -137,15 +137,17 @@ function outgoingPaymentToBody(
   deps: ServiceDependencies,
   outgoingPayment: OutgoingPayment
 ) {
-  return {
-    ...outgoingPayment.toJSON(),
-    accountId: `${deps.config.publicHost}/${outgoingPayment.accountId}`,
-    id: `${deps.config.publicHost}/${outgoingPayment.accountId}/outgoing-payments/${outgoingPayment.id}`,
-    state: [
-      OutgoingPaymentState.Funding,
-      OutgoingPaymentState.Sending
-    ].includes(outgoingPayment.state)
-      ? 'processing'
-      : outgoingPayment.state.toLowerCase()
-  }
+  return Object.fromEntries(
+    Object.entries({
+      ...outgoingPayment.toJSON(),
+      accountId: `${deps.config.publicHost}/${outgoingPayment.accountId}`,
+      id: `${deps.config.publicHost}/${outgoingPayment.accountId}/outgoing-payments/${outgoingPayment.id}`,
+      state: [
+        OutgoingPaymentState.Funding,
+        OutgoingPaymentState.Sending
+      ].includes(outgoingPayment.state)
+        ? 'processing'
+        : outgoingPayment.state.toLowerCase()
+    }).filter(([_, v]) => v != null)
+  )
 }

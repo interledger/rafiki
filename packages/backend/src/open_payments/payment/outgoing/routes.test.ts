@@ -250,8 +250,6 @@ describe('Outgoing Payment Routes', (): void => {
             ...outgoingPayment.receiveAmount,
             value: outgoingPayment.receiveAmount.value.toString()
           },
-          description: outgoingPayment.description ?? null,
-          externalRef: outgoingPayment.externalRef ?? null,
           createdAt: outgoingPayment.createdAt.toISOString(),
           updatedAt: outgoingPayment.updatedAt.toISOString()
         })
@@ -371,8 +369,8 @@ describe('Outgoing Payment Routes', (): void => {
             ...quote.receiveAmount,
             value: quote.receiveAmount.value.toString()
           },
-          description: options.description ?? null,
-          externalRef: options.externalRef ?? null,
+          description: options.description,
+          externalRef: options.externalRef,
           state: 'processing',
           sentAmount: {
             value: '0',
@@ -388,7 +386,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   describe('list', (): void => {
     let items: OutgoingPayment[]
-    let result: OutgoingPaymentJSON[]
+    let result: Omit<OutgoingPaymentJSON, 'externalRef'>[]
     beforeEach(
       async (): Promise<void> => {
         items = []
@@ -419,7 +417,6 @@ describe('Outgoing Payment Routes', (): void => {
             },
             state: 'processing',
             description: items[i]['description'] ?? null,
-            externalRef: null,
             createdAt: items[i].createdAt.toISOString(),
             updatedAt: items[i].updatedAt.toISOString()
           }

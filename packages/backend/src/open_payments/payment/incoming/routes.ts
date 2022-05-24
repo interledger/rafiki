@@ -225,11 +225,13 @@ function incomingPaymentToBody(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment
 ) {
-  return {
-    ...incomingPayment.toJSON(),
-    accountId: `${deps.config.publicHost}/${incomingPayment.accountId}`,
-    id: `${deps.config.publicHost}/${incomingPayment.accountId}/incoming-payments/${incomingPayment.id}`
-  }
+  return Object.fromEntries(
+    Object.entries({
+      ...incomingPayment.toJSON(),
+      accountId: `${deps.config.publicHost}/${incomingPayment.accountId}`,
+      id: `${deps.config.publicHost}/${incomingPayment.accountId}/incoming-payments/${incomingPayment.id}`
+    }).filter(([_, v]) => v != null)
+  )
 }
 
 function getStreamCredentials(

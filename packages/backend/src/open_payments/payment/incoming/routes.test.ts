@@ -347,8 +347,7 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        incomingAmount: null
+        sharedSecret
       })
     })
     test('returns the incoming payment on undefined description', async (): Promise<void> => {
@@ -389,8 +388,7 @@ describe('Incoming Payment Routes', (): void => {
         externalRef,
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        description: null
+        sharedSecret
       })
     })
 
@@ -432,8 +430,7 @@ describe('Incoming Payment Routes', (): void => {
         },
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        externalRef: null
+        sharedSecret
       })
     })
   })
@@ -515,7 +512,7 @@ describe('Incoming Payment Routes', (): void => {
 
   describe('list', (): void => {
     let items: IncomingPayment[]
-    let result: IncomingPaymentJSON[]
+    let result: Omit<IncomingPaymentJSON, 'incomingAmount' | 'externalRef'>[]
     beforeEach(
       async (): Promise<void> => {
         items = []
@@ -531,14 +528,12 @@ describe('Incoming Payment Routes', (): void => {
           return {
             id: `${accountId}/incoming-payments/${items[i].id}`,
             accountId,
-            incomingAmount: null,
             receivedAmount: {
               value: '0',
               assetCode: asset.code,
               assetScale: asset.scale
             },
             description: items[i]['description'] ?? null,
-            externalRef: null,
             state: 'pending',
             expiresAt: expiresAt.toISOString(),
             createdAt: items[i].createdAt.toISOString(),

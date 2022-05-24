@@ -158,9 +158,11 @@ async function listQuotes(
 
 function quoteToBody(deps: ServiceDependencies, quote: Quote) {
   const accountId = `${deps.config.publicHost}/${quote.accountId}`
-  return {
-    ...quote.toJSON(),
-    id: `${accountId}/quotes/${quote.id}`,
-    accountId
-  }
+  return Object.fromEntries(
+    Object.entries({
+      ...quote.toJSON(),
+      id: `${accountId}/quotes/${quote.id}`,
+      accountId
+    }).filter(([_, v]) => v != null)
+  )
 }
