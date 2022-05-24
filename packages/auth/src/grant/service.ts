@@ -78,10 +78,7 @@ function validateGrantRequest(
     if (!isAccessRequest(access)) return false
   }
 
-  return (
-    grantRequest.interact?.start !== undefined &&
-    grantRequest.interact?.finish !== undefined
-  )
+  return grantRequest.interact?.start !== undefined
 }
 
 async function initiateGrant(

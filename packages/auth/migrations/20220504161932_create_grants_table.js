@@ -4,7 +4,6 @@ exports.up = function (knex) {
 
     table.string('state').notNullable()
     table.specificType('startMethod', 'text[]').notNullable()
-    table.integer('interval')
 
     table.string('continueToken').unique()
     table.string('continueId').unique()
