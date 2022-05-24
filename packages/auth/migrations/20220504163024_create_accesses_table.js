@@ -5,6 +5,7 @@ exports.up = function (knex) {
     table.specificType('actions', 'text[]').notNullable()
     table.string('identifier')
     table.specificType('locations', 'text[]')
+    table.integer('interval')
     table.jsonb('limits').notNullable()
     table.uuid('grantId').notNullable()
     table.foreign('grantId').references('grants.id').onDelete('CASCADE')

@@ -8,7 +8,8 @@ export enum AccessType {
 export enum Action {
   Create = 'create',
   Read = 'read',
-  List = 'list'
+  List = 'list',
+  Complete = 'complete'
 }
 
 interface BaseAccessRequest {
