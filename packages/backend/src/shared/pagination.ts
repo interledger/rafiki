@@ -31,7 +31,7 @@ export async function getListPageInfo<T extends BaseModel>(
   page: T[],
   pagination?: Pagination
 ): Promise<PageInfo> {
-  const pageInfo = await getPageInfo((pagination) => getPage(pagination), page)
+  const pageInfo = await getPageInfo(getPage, page)
   if (pagination?.last) {
     pageInfo.last = page.length
   } else {
