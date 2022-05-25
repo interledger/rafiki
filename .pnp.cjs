@@ -35,6 +35,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         "reference": "workspace:packages/frontend"
       },
       {
+        "name": "openapi",
+        "reference": "workspace:packages/openapi"
+      },
+      {
         "name": "rates",
         "reference": "workspace:packages/rates"
       }
@@ -46,6 +50,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
       ["auth", ["workspace:packages/auth"]],
       ["backend", ["workspace:packages/backend"]],
       ["frontend", ["workspace:packages/frontend"]],
+      ["openapi", ["workspace:packages/openapi"]],
       ["rates", ["workspace:packages/rates"]]
     ],
     "fallbackPool": [
@@ -237,7 +242,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/express", "npm:4.17.11"],
             ["@types/fs-capacitor", "npm:2.0.0"],
             ["@types/graphql", null],
-            ["@types/koa", "npm:2.13.1"],
+            ["@types/koa", "npm:2.13.4"],
             ["busboy", "npm:0.3.1"],
             ["fs-capacitor", "npm:2.0.4"],
             ["graphql", "npm:15.5.0"],
@@ -4260,6 +4265,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["pretty-format", "npm:27.5.1"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:27.5.1", {
+          "packageLocation": "./.yarn/cache/@types-jest-npm-27.5.1-853338350a-be20e39f7a.zip/node_modules/@types/jest/",
+          "packageDependencies": [
+            ["@types/jest", "npm:27.5.1"],
+            ["jest-matcher-utils", "npm:27.5.1"],
+            ["pretty-format", "npm:27.5.1"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["@types/js-yaml", [
@@ -4326,36 +4340,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["@types/koa", [
-        ["npm:2.13.1", {
-          "packageLocation": "./.yarn/cache/@types-koa-npm-2.13.1-8a5d9779e8-d6f83b120a.zip/node_modules/@types/koa/",
-          "packageDependencies": [
-            ["@types/koa", "npm:2.13.1"],
-            ["@types/accepts", "npm:1.3.5"],
-            ["@types/content-disposition", "npm:0.5.3"],
-            ["@types/cookies", "npm:0.7.6"],
-            ["@types/http-assert", "npm:1.5.1"],
-            ["@types/http-errors", "npm:1.8.0"],
-            ["@types/keygrip", "npm:1.0.2"],
-            ["@types/koa-compose", "npm:3.2.5"],
-            ["@types/node", "npm:14.14.39"]
-          ],
-          "linkType": "HARD",
-        }],
-        ["npm:2.13.3", {
-          "packageLocation": "./.yarn/cache/@types-koa-npm-2.13.3-c9357ee250-d7d7e67669.zip/node_modules/@types/koa/",
-          "packageDependencies": [
-            ["@types/koa", "npm:2.13.3"],
-            ["@types/accepts", "npm:1.3.5"],
-            ["@types/content-disposition", "npm:0.5.3"],
-            ["@types/cookies", "npm:0.7.6"],
-            ["@types/http-assert", "npm:1.5.1"],
-            ["@types/http-errors", "npm:1.8.0"],
-            ["@types/keygrip", "npm:1.0.2"],
-            ["@types/koa-compose", "npm:3.2.5"],
-            ["@types/node", "npm:14.14.39"]
-          ],
-          "linkType": "HARD",
-        }],
         ["npm:2.13.4", {
           "packageLocation": "./.yarn/cache/@types-koa-npm-2.13.4-e10e6e7742-35a54e6894.zip/node_modules/@types/koa/",
           "packageDependencies": [
@@ -4377,7 +4361,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa-bodyparser-npm-4.3.0-dbbe458791-b124fc80f7.zip/node_modules/@types/koa-bodyparser/",
           "packageDependencies": [
             ["@types/koa-bodyparser", "npm:4.3.0"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }],
@@ -4385,7 +4369,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa-bodyparser-npm-4.3.1-01f7ed0142-d6b8ac69e0.zip/node_modules/@types/koa-bodyparser/",
           "packageDependencies": [
             ["@types/koa-bodyparser", "npm:4.3.1"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }],
@@ -4393,7 +4377,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa-bodyparser-npm-4.3.7-ff2df015ea-3a2cac14cb.zip/node_modules/@types/koa-bodyparser/",
           "packageDependencies": [
             ["@types/koa-bodyparser", "npm:4.3.7"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }]
@@ -4403,7 +4387,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa-compose-npm-3.2.5-b9ab25d904-5d1147c4b0.zip/node_modules/@types/koa-compose/",
           "packageDependencies": [
             ["@types/koa-compose", "npm:3.2.5"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }]
@@ -4413,7 +4397,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__cors-npm-2.2.3-80bc1d95ea-eab4da98fc.zip/node_modules/@types/koa__cors/",
           "packageDependencies": [
             ["@types/koa__cors", "npm:2.2.3"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }],
@@ -4421,7 +4405,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__cors-npm-3.0.2-025aaf3a31-6286f04c7a.zip/node_modules/@types/koa__cors/",
           "packageDependencies": [
             ["@types/koa__cors", "npm:3.0.2"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }],
@@ -4429,7 +4413,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__cors-npm-3.1.1-e9d7fc72b9-7ef2c09a45.zip/node_modules/@types/koa__cors/",
           "packageDependencies": [
             ["@types/koa__cors", "npm:3.1.1"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }]
@@ -4439,15 +4423,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__router-npm-8.0.11-08ca25f7c2-81f55ed772.zip/node_modules/@types/koa__router/",
           "packageDependencies": [
             ["@types/koa__router", "npm:8.0.11"],
-            ["@types/koa", "npm:2.13.1"]
-          ],
-          "linkType": "HARD",
-        }],
-        ["npm:8.0.4", {
-          "packageLocation": "./.yarn/cache/@types-koa__router-npm-8.0.4-47961c9f7c-6347028866.zip/node_modules/@types/koa__router/",
-          "packageDependencies": [
-            ["@types/koa__router", "npm:8.0.4"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }]
@@ -4830,6 +4806,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-uuid-npm-8.3.0-60b441a3d7-0f46b15020.zip/node_modules/@types/uuid/",
           "packageDependencies": [
             ["@types/uuid", "npm:8.3.0"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:8.3.4", {
+          "packageLocation": "./.yarn/cache/@types-uuid-npm-8.3.4-7547f4402c-6f11f3ff70.zip/node_modules/@types/uuid/",
+          "packageDependencies": [
+            ["@types/uuid", "npm:8.3.4"]
           ],
           "linkType": "HARD",
         }]
@@ -5805,7 +5788,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@koa/cors", "npm:2.2.3"],
             ["@types/accepts", "npm:1.3.5"],
             ["@types/graphql", null],
-            ["@types/koa", "npm:2.13.3"],
+            ["@types/koa", "npm:2.13.4"],
             ["@types/koa-bodyparser", "npm:4.3.0"],
             ["@types/koa-compose", "npm:3.2.5"],
             ["@types/koa__cors", "npm:2.2.3"],
@@ -6619,7 +6602,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["backend", "workspace:packages/backend"],
             ["@adonisjs/fold", "npm:8.1.0"],
-            ["@apidevtools/json-schema-ref-parser", "npm:9.0.9"],
             ["@apollo/client", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:3.3.20"],
             ["@faker-js/faker", "npm:6.0.0"],
             ["@graphql-codegen/cli", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:1.21.5"],
@@ -6637,10 +6619,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/bcrypt", "npm:5.0.0"],
             ["@types/ioredis", "npm:4.22.3"],
             ["@types/jest", "npm:26.0.22"],
-            ["@types/koa", "npm:2.13.1"],
+            ["@types/koa", "npm:2.13.4"],
             ["@types/koa-bodyparser", "npm:4.3.1"],
             ["@types/koa__cors", "npm:3.0.2"],
-            ["@types/koa__router", "npm:8.0.4"],
+            ["@types/koa__router", "npm:8.0.11"],
             ["@types/lodash", "npm:4.14.175"],
             ["@types/luxon", "npm:1.26.4"],
             ["@types/nock", "npm:11.1.0"],
@@ -6650,7 +6632,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/uuid", "npm:8.3.0"],
             ["add", "npm:2.0.6"],
             ["ajv", "npm:8.11.0"],
-            ["ajv-formats", "virtual:f3365d3729ff2810e57b449fca1d4e64bb15e9f2757c2733381f781d5989b78a423db2d5f1336d91018bbe54132491e8aba9904a83194842ef097a18987e75a0#npm:2.1.1"],
             ["apollo-server", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:3.5.0"],
             ["apollo-server-koa", "virtual:aa59773ac87791c4813d53447077fcf8a847d6de5a301d34dc31286584b1dbb26d30d3adb5b4c41c1e8aea04371e926fda05c09c6253647c432e11d872a304ba#npm:2.25.1"],
             ["axios", "npm:0.21.4"],
@@ -6681,11 +6662,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["objection", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:2.2.15"],
             ["objection-db-errors", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:1.1.2"],
             ["oer-utils", "npm:5.1.2"],
-            ["openapi-default-setter", "npm:11.0.1"],
-            ["openapi-request-coercer", "npm:11.0.1"],
-            ["openapi-request-validator", "npm:11.0.1"],
-            ["openapi-response-validator", "npm:11.0.1"],
-            ["openapi-types", "npm:11.0.0"],
+            ["openapi", "workspace:packages/openapi"],
+            ["openapi-types", "npm:11.0.1"],
             ["pg", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:8.6.0"],
             ["pino", "npm:6.11.3"],
             ["pino-pretty", "npm:4.7.1"],
@@ -14650,6 +14628,30 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["openapi", [
+        ["workspace:packages/openapi", {
+          "packageLocation": "./packages/openapi/",
+          "packageDependencies": [
+            ["openapi", "workspace:packages/openapi"],
+            ["@apidevtools/json-schema-ref-parser", "npm:9.0.9"],
+            ["@types/jest", "npm:27.5.1"],
+            ["@types/koa", "npm:2.13.4"],
+            ["@types/uuid", "npm:8.3.4"],
+            ["ajv", "npm:8.11.0"],
+            ["ajv-formats", "virtual:f3365d3729ff2810e57b449fca1d4e64bb15e9f2757c2733381f781d5989b78a423db2d5f1336d91018bbe54132491e8aba9904a83194842ef097a18987e75a0#npm:2.1.1"],
+            ["koa", "npm:2.13.4"],
+            ["node-mocks-http", "npm:1.11.0"],
+            ["openapi-default-setter", "npm:11.0.1"],
+            ["openapi-request-coercer", "npm:11.0.1"],
+            ["openapi-request-validator", "npm:11.0.1"],
+            ["openapi-response-validator", "npm:11.0.1"],
+            ["openapi-types", "npm:11.0.1"],
+            ["typescript", "patch:typescript@npm%3A4.2.4#~builtin<compat/typescript>::version=4.2.4&hash=32657b"],
+            ["uuid", "npm:8.3.2"]
+          ],
+          "linkType": "SOFT",
+        }]
+      ]],
       ["openapi-default-setter", [
         ["npm:11.0.1", {
           "packageLocation": "./.yarn/cache/openapi-default-setter-npm-11.0.1-70f45c1292-590d43809d.zip/node_modules/openapi-default-setter/",
@@ -14730,13 +14732,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["openapi-types", [
-        ["npm:11.0.0", {
-          "packageLocation": "./.yarn/cache/openapi-types-npm-11.0.0-30ab474ad7-2c54c8edcd.zip/node_modules/openapi-types/",
-          "packageDependencies": [
-            ["openapi-types", "npm:11.0.0"]
-          ],
-          "linkType": "HARD",
-        }],
         ["npm:11.0.1", {
           "packageLocation": "./.yarn/cache/openapi-types-npm-11.0.1-d77e512c96-182c5b2819.zip/node_modules/openapi-types/",
           "packageDependencies": [
@@ -15817,8 +15812,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["rates", "workspace:packages/rates"],
             ["@koa/router", "npm:10.0.0"],
             ["@types/jest", "npm:26.0.22"],
-            ["@types/koa", "npm:2.13.1"],
-            ["@types/koa__router", "npm:8.0.4"],
+            ["@types/koa", "npm:2.13.4"],
+            ["@types/koa__router", "npm:8.0.11"],
             ["@types/nock", "npm:11.1.0"],
             ["@types/pino", "npm:6.3.7"],
             ["@types/sax", "npm:1.2.1"],

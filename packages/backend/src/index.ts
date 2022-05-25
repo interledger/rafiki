@@ -35,7 +35,7 @@ import { createWebhookService } from './webhook/service'
 import { createConnectorService } from './connector'
 import { createSessionService } from './session/service'
 import { createApiKeyService } from './apiKey/service'
-import { createOpenAPI } from './openapi'
+import { createOpenAPI } from 'openapi'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()

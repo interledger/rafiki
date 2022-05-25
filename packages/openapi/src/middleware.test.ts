@@ -1,37 +1,49 @@
+import Koa from 'koa'
+import * as httpMocks from 'node-mocks-http'
 import { v4 as uuid } from 'uuid'
 
-import { OpenAPI, HttpMethod } from './'
+import { createOpenAPI, OpenAPI, HttpMethod } from './'
 import { createValidatorMiddleware } from './middleware'
-import { Config } from '../config/app'
-import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppContext, AppServices } from '../app'
-import { createTestApp, TestContainer } from '../tests/app'
-import { createContext } from '../tests/context'
+
+declare module 'koa' {
+  interface Request {
+    // Set by @koa/router.
+    params: { [key: string]: string }
+  }
+}
+
+export interface ContextData {
+  // Set by @koa/router.
+  params: { [key: string]: string }
+}
 
 type AppMiddleware = (
-  ctx: AppContext,
+  ctx: Koa.Context,
   next: () => Promise<void>
 ) => Promise<void>
 
+export function createContext<T extends Koa.Context>(
+  reqOpts: httpMocks.RequestOptions,
+  params: Record<string, string>
+): T {
+  const req = httpMocks.createRequest(reqOpts)
+  const res = httpMocks.createResponse(req)
+  const koa = new Koa<unknown, ContextData>()
+  const ctx = koa.createContext(req, res)
+  ctx.params = ctx.request.params = params
+  return ctx as T
+}
+
 const PATH = '/{accountId}/incoming-payments'
+const SPEC =
+  'https://github.com/interledger/open-payments/raw/3930448672cfc678ec2bc02938566a316d83871c/open-api-spec.yaml'
 
 describe('OpenAPI Validator', (): void => {
-  let deps: IocContract<AppServices>
-  let appContainer: TestContainer
   let openApi: OpenAPI
 
   beforeAll(
     async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      openApi = await deps.use('openApi')
-    }
-  )
-
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.shutdown()
+      openApi = await createOpenAPI(SPEC)
     }
   )
 

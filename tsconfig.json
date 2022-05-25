@@ -1,6 +1,9 @@
 {
   "references": [
     {
+      "path": "packages/openapi"
+    },
+    {
       "path": "packages/backend"
     },
     {

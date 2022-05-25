@@ -1,17 +1,18 @@
 import { OpenAPI, RequestOptions } from './'
-import { AppContext } from '../app'
 
-export function createValidatorMiddleware<T extends AppContext>(
+import Koa from 'koa'
+
+export function createValidatorMiddleware<T extends Koa.ParameterizedContext>(
   spec: OpenAPI,
   options: RequestOptions
-): (ctx: AppContext, next: () => Promise<unknown>) => Promise<void> {
+): (ctx: Koa.Context, next: () => Promise<unknown>) => Promise<void> {
   const validateRequest = spec.createRequestValidator<T['request']>(options)
   const validateResponse =
     process.env.NODE_ENV !== 'production' &&
     spec.createResponseValidator(options)
 
   return async (
-    ctx: AppContext,
+    ctx: Koa.Context,
     next: () => Promise<unknown>
   ): Promise<void> => {
     ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')

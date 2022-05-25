@@ -10,6 +10,8 @@ import OpenAPIResponseValidator, {
 } from 'openapi-response-validator'
 import { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
 
+export { createValidatorMiddleware } from './middleware'
+
 export const HttpMethod = {
   ...OpenAPIV3.HttpMethods
 }

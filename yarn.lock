@@ -3004,6 +3004,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/jest@npm:^27.5.1":
+  version: 27.5.1
+  resolution: "@types/jest@npm:27.5.1"
+  dependencies:
+    jest-matcher-utils: ^27.0.0
+    pretty-format: ^27.0.0
+  checksum: be20e39f7aaf17179109c0060d0a0489cec2034d4e2e28a631284c7ecd13c5ae52f62697a33a0e89b03b6cfe54e9d5e8c2bd387ab2bd90d6071d68c63b86d1e3
+  languageName: node
+  linkType: hard
+
 "@types/js-yaml@npm:^4.0.0":
   version: 4.0.1
   resolution: "@types/js-yaml@npm:4.0.1"
@@ -3093,39 +3103,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/koa@npm:*, @types/koa@npm:^2.13.1":
-  version: 2.13.1
-  resolution: "@types/koa@npm:2.13.1"
-  dependencies:
-    "@types/accepts": "*"
-    "@types/content-disposition": "*"
-    "@types/cookies": "*"
-    "@types/http-assert": "*"
-    "@types/http-errors": "*"
-    "@types/keygrip": "*"
-    "@types/koa-compose": "*"
-    "@types/node": "*"
-  checksum: d6f83b120ad0b8d9f3c7a7a0b2f09a2a149c1f83aaae3c754ac869a3bbc8a5a50f2e653e26817ba1648ed17da49202a19aaf69af0f4f9317c44fb172e548f838
-  languageName: node
-  linkType: hard
-
-"@types/koa@npm:^2.0.46":
-  version: 2.13.3
-  resolution: "@types/koa@npm:2.13.3"
-  dependencies:
-    "@types/accepts": "*"
-    "@types/content-disposition": "*"
-    "@types/cookies": "*"
-    "@types/http-assert": "*"
-    "@types/http-errors": "*"
-    "@types/keygrip": "*"
-    "@types/koa-compose": "*"
-    "@types/node": "*"
-  checksum: d7d7e67669175bff864b0ba155020dd93dcde4178ffbb5a1e7184fd0d1b368f73bc230baa84e05cf0c6db257f4d8f71266f069683cd8b4819fe58c89949da3a9
-  languageName: node
-  linkType: hard
-
-"@types/koa@npm:^2.13.4":
+"@types/koa@npm:*, @types/koa@npm:^2.0.46, @types/koa@npm:^2.13.4":
   version: 2.13.4
   resolution: "@types/koa@npm:2.13.4"
   dependencies:
@@ -3174,15 +3152,6 @@ __metadata:
   dependencies:
     "@types/koa": "*"
   checksum: 81f55ed77273871728c81a20fa546ee906bebfe72fd72e3723d983a19504eb7d9578908a0fb8ef230764c5495031412df4245eee93479161bd7bd5135ca1ea04
-  languageName: node
-  linkType: hard
-
-"@types/koa__router@npm:^8.0.4":
-  version: 8.0.4
-  resolution: "@types/koa__router@npm:8.0.4"
-  dependencies:
-    "@types/koa": "*"
-  checksum: 6347028866f16efe32596ee1311204468c18057f219054a514f323f9acb80e2f7dd09c811e8319de40973423c97b5c0ad9a970d1ac3e51e8ddf0d3bf51d91a5a
   languageName: node
   linkType: hard
 
@@ -3512,6 +3481,13 @@ __metadata:
   version: 8.3.0
   resolution: "@types/uuid@npm:8.3.0"
   checksum: 0f46b15020b9c252473fb327a6491fd7d238c7b5bbaebd32195a0de178db040f6abb96902507ba25dd4a673cdd9cc28b8880512dba54561e8bc60d8f326c1e30
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:^8.3.4":
+  version: 8.3.4
+  resolution: "@types/uuid@npm:8.3.4"
+  checksum: 6f11f3ff70f30210edaa8071422d405e9c1d4e53abbe50fdce365150d3c698fe7bbff65c1e71ae080cbfb8fded860dbb5e174da96fdbbdfcaa3fb3daa474d20f
   languageName: node
   linkType: hard
 
@@ -4864,7 +4840,6 @@ __metadata:
   resolution: "backend@workspace:packages/backend"
   dependencies:
     "@adonisjs/fold": ^8.1.0
-    "@apidevtools/json-schema-ref-parser": ^9.0.9
     "@apollo/client": ^3.3.20
     "@faker-js/faker": ^6.0.0
     "@graphql-codegen/cli": 1.21.5
@@ -4882,10 +4857,10 @@ __metadata:
     "@types/bcrypt": ^5.0.0
     "@types/ioredis": ^4.22.3
     "@types/jest": ^26.0.22
-    "@types/koa": ^2.13.1
+    "@types/koa": ^2.13.4
     "@types/koa-bodyparser": ^4.3.0
     "@types/koa__cors": ^3.0.2
-    "@types/koa__router": ^8.0.4
+    "@types/koa__router": ^8.0.11
     "@types/lodash": ^4.14.175
     "@types/luxon": ^1.26.4
     "@types/nock": ^11.1.0
@@ -4895,7 +4870,6 @@ __metadata:
     "@types/uuid": ^8.3.0
     add: ^2.0.6
     ajv: ^8.11.0
-    ajv-formats: ^2.1.1
     apollo-server: ^3.5.0
     apollo-server-koa: ^2.25.1
     axios: ^0.21.4
@@ -4926,11 +4900,8 @@ __metadata:
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
     oer-utils: ^5.1.2
-    openapi-default-setter: ^11.0.1
-    openapi-request-coercer: ^11.0.1
-    openapi-request-validator: ^11.0.1
-    openapi-response-validator: ^11.0.1
-    openapi-types: ^11.0.0
+    openapi: "workspace:packages/openapi"
+    openapi-types: ^11.0.1
     pg: ^8.6.0
     pino: ^6.11.3
     pino-pretty: ^4.7.1
@@ -11964,13 +11935,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openapi-types@npm:^11.0.0":
-  version: 11.0.0
-  resolution: "openapi-types@npm:11.0.0"
-  checksum: 2c54c8edcd20b25713fceb51b5b3829b80c67ee070779f32e99e7fe26cf08afa3d53a047e62fe6e6831f80cd6a803b17ad16b0ae3c6f3abe638363832b6a917f
-  languageName: node
-  linkType: hard
-
 "openapi-types@npm:^11.0.1":
   version: 11.0.1
   resolution: "openapi-types@npm:11.0.1"
@@ -12002,6 +11966,28 @@ __metadata:
   checksum: 84724677d6a51c9ba5ec145850097e87396d34ea831f969e6b58c3ab18151b382f895e679e1b919449ce6c02d80097d9142dc78915f68d3571e0a44bfb36c8e3
   languageName: node
   linkType: hard
+
+"openapi@workspace:packages/openapi":
+  version: 0.0.0-use.local
+  resolution: "openapi@workspace:packages/openapi"
+  dependencies:
+    "@apidevtools/json-schema-ref-parser": ^9.0.9
+    "@types/jest": ^27.5.1
+    "@types/koa": ^2.13.4
+    "@types/uuid": ^8.3.4
+    ajv: ^8.11.0
+    ajv-formats: ^2.1.1
+    koa: ^2.13.4
+    node-mocks-http: ^1.11.0
+    openapi-default-setter: ^11.0.1
+    openapi-request-coercer: ^11.0.1
+    openapi-request-validator: ^11.0.1
+    openapi-response-validator: ^11.0.1
+    openapi-types: ^11.0.1
+    typescript: ^4.2.4
+    uuid: ^8.3.2
+  languageName: unknown
+  linkType: soft
 
 "optimism@npm:^0.16.0":
   version: 0.16.1
@@ -12910,8 +12896,8 @@ __metadata:
   dependencies:
     "@koa/router": ^10.0.0
     "@types/jest": ^26.0.22
-    "@types/koa": ^2.13.1
-    "@types/koa__router": ^8.0.4
+    "@types/koa": ^2.13.4
+    "@types/koa__router": ^8.0.11
     "@types/nock": ^11.1.0
     "@types/pino": ^6.3.7
     "@types/sax": ^1.2.1
