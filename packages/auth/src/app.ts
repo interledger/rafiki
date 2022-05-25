@@ -129,7 +129,7 @@ export class App {
         const clientService = await this.container.use('clientService')
         if (!grantService.validateGrantRequest(body)) {
           ctx.status = 400
-          ctx.body = 'Malformed grant request'
+          ctx.body = { error: 'invalid_request' }
           return
         }
 
@@ -138,7 +138,7 @@ export class App {
         )
         if (!isValidClient) {
           ctx.status = 400
-          ctx.body = 'Invalid client or key provided'
+          ctx.body = { error: 'invalid_client' }
           return
         }
 

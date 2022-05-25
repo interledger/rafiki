@@ -31,7 +31,7 @@ export class Grant extends BaseModel {
         to: 'accessTokens.grantId'
       }
     },
-    accesses: {
+    access: {
       relation: Model.HasManyRelation,
       modelClass: Access,
       join: {
