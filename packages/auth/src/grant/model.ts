@@ -31,12 +31,12 @@ export class Grant extends BaseModel {
         to: 'accessTokens.grantId'
       }
     },
-    grants: {
+    accesses: {
       relation: Model.HasManyRelation,
       modelClass: Access,
       join: {
         from: 'grants.id',
-        to: 'limits.grantId'
+        to: 'accesses.grantId'
       }
     }
   }

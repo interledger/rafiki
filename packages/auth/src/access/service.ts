@@ -7,9 +7,9 @@ import { AccessRequest } from './types'
 export interface AccessService {
   createAccess(
     grantId: string,
-    accessRequest: AccessRequest,
+    accessRequests: AccessRequest[],
     trx?: Transaction
-  ): Promise<Access>
+  ): Promise<Access[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -32,20 +32,21 @@ export async function createAccessService({
   return {
     createAccess: (
       grantId: string,
-      accessRequest: AccessRequest,
+      accessRequests: AccessRequest[],
       trx?: Transaction
-    ) => createAccess(deps, grantId, accessRequest, trx)
+    ) => createAccess(deps, grantId, accessRequests, trx)
   }
 }
 
 async function createAccess(
   deps: ServiceDependencies,
   grantId: string,
-  accessRequest: AccessRequest,
+  accessRequests: AccessRequest[],
   trx?: Transaction
-): Promise<Access> {
-  return Access.query(trx || deps.knex).insert({
-    grantId,
-    ...accessRequest
+): Promise<Access[]> {
+  const accessRequestsWithGrant = accessRequests.map((access) => {
+    return { grantId, ...access }
   })
+
+  return Access.query(trx).insert(accessRequestsWithGrant)
 }

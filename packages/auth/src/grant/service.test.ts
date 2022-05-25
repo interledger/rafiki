@@ -112,14 +112,16 @@ describe('Grant Service', (): void => {
   describe('Grant validation', (): void => {
     test('Valid incoming payment grant', (): void => {
       const incomingPaymentGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.IncomingPayment,
-            limits: INCOMING_PAYMENT_LIMIT
-          }
-        ]
+        access_token: {
+          ...BASE_GRANT_REQUEST,
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.IncomingPayment,
+              limits: INCOMING_PAYMENT_LIMIT
+            }
+          ]
+        }
       }
 
       const isValid = grantService.validateGrantRequest(
@@ -130,14 +132,16 @@ describe('Grant Service', (): void => {
 
     test('Valid outgoing payment grant', (): void => {
       const outgoingPaymentGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.OutgoingPayment,
-            limits: OUTGOING_PAYMENT_LIMIT
-          }
-        ]
+        access_token: {
+          ...BASE_GRANT_REQUEST,
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.OutgoingPayment,
+              limits: OUTGOING_PAYMENT_LIMIT
+            }
+          ]
+        }
       }
 
       const isValid = grantService.validateGrantRequest(
@@ -148,13 +152,15 @@ describe('Grant Service', (): void => {
 
     test('Valid account grant', (): void => {
       const accountGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.Account
-          }
-        ]
+        access_token: {
+          ...BASE_GRANT_REQUEST,
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.Account
+            }
+          ]
+        }
       }
 
       const isValid = grantService.validateGrantRequest(accountGrantRequest)
@@ -163,13 +169,15 @@ describe('Grant Service', (): void => {
 
     test('Valid quote grant', (): void => {
       const quoteGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.Quote
-          }
-        ]
+        access_token: {
+          ...BASE_GRANT_REQUEST,
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.Quote
+            }
+          ]
+        }
       }
 
       const isValid = grantService.validateGrantRequest(quoteGrantRequest)
@@ -178,14 +186,16 @@ describe('Grant Service', (): void => {
 
     test('Cannot create incoming payment grant with unexpected limit payload', (): void => {
       const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.IncomingPayment,
-            limits: OUTGOING_PAYMENT_LIMIT
-          }
-        ]
+        access_token: {
+          ...BASE_GRANT_REQUEST,
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.IncomingPayment,
+              limits: OUTGOING_PAYMENT_LIMIT
+            }
+          ]
+        }
       }
 
       const isValid = grantService.validateGrantRequest(
@@ -196,14 +206,16 @@ describe('Grant Service', (): void => {
 
     test('Cannot create outgoing payment grant with unexpected limit payload', (): void => {
       const outgoingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.OutgoingPayment,
-            limits: INCOMING_PAYMENT_LIMIT
-          }
-        ]
+        access_token: {
+          ...BASE_GRANT_REQUEST,
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.OutgoingPayment,
+              limits: INCOMING_PAYMENT_LIMIT
+            }
+          ]
+        }
       }
 
       const isValid = grantService.validateGrantRequest(
@@ -214,14 +226,16 @@ describe('Grant Service', (): void => {
 
     test('Cannot create account grant with unexpected limit payload', (): void => {
       const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.Account,
-            limits: OUTGOING_PAYMENT_LIMIT
-          }
-        ]
+        access_token: {
+          ...BASE_GRANT_REQUEST,
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.Account,
+              limits: OUTGOING_PAYMENT_LIMIT
+            }
+          ]
+        }
       }
 
       const isValid = grantService.validateGrantRequest(
@@ -232,14 +246,16 @@ describe('Grant Service', (): void => {
 
     test('Cannot create quote grant with unexpected limit payload', (): void => {
       const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.Quote,
-            limits: OUTGOING_PAYMENT_LIMIT
-          }
-        ]
+        access_token: {
+          ...BASE_GRANT_REQUEST,
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.Quote,
+              limits: OUTGOING_PAYMENT_LIMIT
+            }
+          ]
+        }
       }
 
       const isValid = grantService.validateGrantRequest(
@@ -251,14 +267,16 @@ describe('Grant Service', (): void => {
 
   test('Can create a grant', async (): Promise<void> => {
     const grantRequest: GrantRequest = {
-      ...BASE_GRANT_REQUEST,
-      access: [
-        {
-          ...BASE_GRANT_ACCESS,
-          type: AccessType.IncomingPayment,
-          limits: INCOMING_PAYMENT_LIMIT
-        }
-      ]
+      access_token: {
+        ...BASE_GRANT_REQUEST,
+        access: [
+          {
+            ...BASE_GRANT_ACCESS,
+            type: AccessType.IncomingPayment,
+            limits: INCOMING_PAYMENT_LIMIT
+          }
+        ]
+      }
     }
 
     const grantResponse = await grantService.initiateGrant(grantRequest)

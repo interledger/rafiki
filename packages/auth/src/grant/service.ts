@@ -21,15 +21,18 @@ interface ServiceDependencies extends BaseService {
 }
 
 // TODO: maybe update docs.openpayments.guide with location
+// datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-2
 export interface GrantRequest {
-  access: AccessRequest[]
-  client: ClientInfo
-  interact: {
-    start: StartMethod[]
-    finish: {
-      method: FinishMethod
-      uri: string
-      nonce: string
+  access_token: {
+    access: AccessRequest[]
+    client: ClientInfo
+    interact: {
+      start: StartMethod[]
+      finish?: {
+        method: FinishMethod
+        uri: string
+        nonce: string
+      }
     }
   }
 }
@@ -73,12 +76,14 @@ export async function createGrantService({
 function validateGrantRequest(
   grantRequest: GrantRequest
 ): grantRequest is GrantRequest {
-  if (typeof grantRequest.access !== 'object') return false
-  for (const access of grantRequest.access) {
+  if (typeof grantRequest.access_token !== 'object') return false
+  const { access_token } = grantRequest
+  if (typeof access_token.access !== 'object') return false
+  for (const access of access_token.access) {
     if (!isAccessRequest(access)) return false
   }
 
-  return grantRequest.interact?.start !== undefined
+  return access_token.interact?.start !== undefined
 }
 
 async function initiateGrant(
@@ -89,43 +94,51 @@ async function initiateGrant(
   const { accessService, knex, config } = deps
 
   const {
-    access,
-    interact: {
-      start,
-      finish: { method: finishMethod, uri: finishUri, nonce: clientNonce }
+    access_token: {
+      access,
+      interact: { start, finish }
     }
   } = grantRequest
 
-  const grant = await Grant.query(trx || knex).insert({
-    state: GrantState.Pending,
-    startMethod: start,
-    finishMethod,
-    finishUri,
-    clientNonce,
-    interactId: v4(),
-    interactRef: v4(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
-    continueId: v4(),
-    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
-  })
-
-  // Associate provided accesses with grant
-  await Promise.all(
-    access.map((accessRequest) => {
-      accessService.createAccess(grant.id, accessRequest, trx)
+  const invTrx = trx || (await Grant.startTransaction(knex))
+  try {
+    const grant = await Grant.query(invTrx).insert({
+      state: GrantState.Pending,
+      startMethod: start,
+      finishMethod: finish?.method,
+      finishUri: finish?.uri,
+      clientNonce: finish?.nonce,
+      interactId: v4(),
+      interactRef: v4(),
+      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
+      continueId: v4(),
+      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
     })
-  )
 
-  return {
-    interact: {
-      redirect: config.interactDomain + `/interact/${grant.interactId}`,
-      finish: grant.interactNonce
-    },
-    continue: {
-      access_token: {
-        value: grant.continueToken
-      },
-      uri: config.domain + `/auth/continue/${grant.continueId}`
+    // Associate provided accesses with grant
+    await accessService.createAccess(grant.id, access, invTrx)
+
+    if (!trx) {
+      await invTrx.commit()
     }
+
+    return {
+      interact: {
+        redirect: config.interactDomain + `/interact/${grant.interactId}`,
+        finish: grant.interactNonce
+      },
+      continue: {
+        access_token: {
+          value: grant.continueToken
+        },
+        uri: config.domain + `/auth/continue/${grant.continueId}`
+      }
+    }
+  } catch (err) {
+    if (!trx) {
+      await invTrx.commit()
+    }
+
+    throw err
   }
 }

@@ -76,14 +76,13 @@ describe('Access Service', (): void => {
       limits: incomingPaymentLimit
     }
 
-    const access = await accessService.createAccess(
-      grant.id,
+    const access = await accessService.createAccess(grant.id, [
       incomingPaymentAccess
-    )
+    ])
 
-    expect(access.grantId).toEqual(grant.id)
-    expect(access.type).toEqual(AccessType.IncomingPayment)
-    expect(access.limits).toEqual(incomingPaymentLimit)
+    expect(access[0].grantId).toEqual(grant.id)
+    expect(access[0].type).toEqual(AccessType.IncomingPayment)
+    expect(access[0].limits).toEqual(incomingPaymentLimit)
   })
 
   test('Can create outgoing payment access', async (): Promise<void> => {
@@ -113,13 +112,12 @@ describe('Access Service', (): void => {
 
     const grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
 
-    const access = await accessService.createAccess(
-      grant.id,
+    const access = await accessService.createAccess(grant.id, [
       outgoingPaymentAccess
-    )
+    ])
 
-    expect(access.grantId).toEqual(grant.id)
-    expect(access.type).toEqual(AccessType.OutgoingPayment)
-    expect(access.limits).toEqual(outgoingPaymentLimit)
+    expect(access[0].grantId).toEqual(grant.id)
+    expect(access[0].type).toEqual(AccessType.OutgoingPayment)
+    expect(access[0].limits).toEqual(outgoingPaymentLimit)
   })
 })
