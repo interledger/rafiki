@@ -5,7 +5,7 @@ import Knex, { Transaction } from 'knex'
 import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -18,12 +18,14 @@ describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
+  let config: IAppConfig
   let knex: Knex
   let trx: Transaction
 
   beforeAll(
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
+      config = await deps.use('config')
       grantService = await deps.use('grantService')
       knex = await deps.use('knex')
       appContainer = await createTestApp(deps)
@@ -291,7 +293,8 @@ describe('Grant Service', (): void => {
           access_token: {
             value: expect.any(String)
           },
-          uri: expect.any(String)
+          uri: expect.any(String),
+          wait: config.waitTime
         }
       })
     )
