@@ -44,7 +44,7 @@ export class Grant extends BaseModel {
         to: 'accessTokens.grantId'
       }
     },
-    grants: {
+    limits: {
       relation: Model.HasManyRelation,
       modelClass: Limit,
       join: {

@@ -7,6 +7,7 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { createClientService } from './clients/service'
+import { createAccessTokenService } from './accessToken/service'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -61,6 +62,13 @@ export function initIocContainer(
       })
     }
   )
+
+  container.singleton('accessTokenService', async (deps) => {
+    return await createAccessTokenService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
+    })
+  })
 
   return container
 }

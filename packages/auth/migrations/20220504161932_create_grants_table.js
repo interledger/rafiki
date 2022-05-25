@@ -16,6 +16,9 @@ exports.up = function (knex) {
     table.string('nonce').notNullable()
 
     table.string('interactRef').notNullable()
+
+    table.timestamp('createdAt').defaultTo(knex.fn.now())
+    table.timestamp('updatedAt').defaultTo(knex.fn.now())
   })
 }
 

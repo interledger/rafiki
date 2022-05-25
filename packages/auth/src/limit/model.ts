@@ -3,7 +3,7 @@ import { BaseModel } from '../shared/baseModel'
 import { AccessToken } from '../accessToken/model'
 import { Grant } from '../grant/model'
 
-enum LimitName {
+export enum LimitName {
   SendAmount = 'sendAmount',
   ReceiveAmount = 'receiveAmount',
   CreatedBy = 'createdBy'

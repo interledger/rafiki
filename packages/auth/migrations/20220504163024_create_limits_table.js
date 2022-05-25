@@ -6,8 +6,6 @@ exports.up = function (knex) {
     table.string('assetCode')
     table.integer('assetScale')
     table.string('createdById')
-    table.string('accessToken').notNullable()
-    table.foreign('accessToken').references('accessTokens.value')
     table.uuid('grantId').notNullable()
     table.foreign('grantId').references('grants.id').onDelete('CASCADE')
 
