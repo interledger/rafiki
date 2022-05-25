@@ -31,5 +31,6 @@ export const Config = {
     'https://openpayments.network'
   ]),
   interactDomain: envString('INTERACT_URL', 'http://localhost:3004'),
-  domain: envString('DOMAIN', 'http://localhost:3006') // TODO: replace this with whatever frontend port ends up being
+  domain: envString('DOMAIN', 'http://localhost:3006'), // TODO: replace this with whatever frontend port ends up being
+  waitTime: envInt('WAIT', 5)
 }

@@ -47,6 +47,7 @@ export interface GrantResponse {
       value: string
     }
     uri: string
+    wait: number
   }
 }
 
@@ -131,7 +132,8 @@ async function initiateGrant(
         access_token: {
           value: grant.continueToken
         },
-        uri: config.domain + `/auth/continue/${grant.continueId}`
+        uri: config.domain + `/auth/continue/${grant.continueId}`,
+        wait: config.waitTime
       }
     }
   } catch (err) {
