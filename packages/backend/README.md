@@ -5,8 +5,7 @@
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/engine/install/) configured to [run as non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
-- If you are running MacOS on a non apple silicon device there is a known [issue](https://github.com/coilhq/tigerbeetle/issues/92) with
-  [tigerbeetle](https://github.com/coilhq/tigerbeetle). To fix this you can set defaults in `$HOME/.docker/daemon.json` with
+- If you are running MacOS on a non apple silicon device there is a known [issue](https://github.com/coilhq/tigerbeetle/issues/92) with [testcontainers](https://github.com/testcontainers/testcontainers-node) when running [tigerbeetle](https://github.com/coilhq/tigerbeetle). To fix this you can set defaults in `$HOME/.docker/daemon.json` with
 
   ```
   "default-ulimits": {
