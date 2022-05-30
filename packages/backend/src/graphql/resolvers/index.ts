@@ -3,32 +3,18 @@ import { getAccount, createAccount, triggerAccountEvents } from './account'
 import {
   getAsset,
   getAssets,
-  getAssetsConnectionPageInfo,
   createAsset,
   updateAssetWithdrawalThreshold
 } from './asset'
-import { getAccountIncomingPayments, getPageInfo } from './incoming_payment'
-import {
-  getQuote,
-  createQuote,
-  getAccountQuotes,
-  getQuotePageInfo
-} from './quote'
+import { getAccountIncomingPayments } from './incoming_payment'
+import { getQuote, createQuote, getAccountQuotes } from './quote'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
-  getAccountOutgoingPayments,
-  getOutgoingPaymentPageInfo
+  getAccountOutgoingPayments
 } from './outgoing_payment'
 import { createApiKey, deleteAllApiKeys, redeemApiKey } from './apiKey'
-import {
-  getPeer,
-  getPeers,
-  getPeersConnectionPageInfo,
-  createPeer,
-  updatePeer,
-  deletePeer
-} from './peer'
+import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
   addAssetLiquidity,
   addPeerLiquidity,
@@ -58,21 +44,6 @@ export const resolvers: Resolvers = {
     incomingPayments: getAccountIncomingPayments,
     outgoingPayments: getAccountOutgoingPayments,
     quotes: getAccountQuotes
-  },
-  AssetsConnection: {
-    pageInfo: getAssetsConnectionPageInfo
-  },
-  IncomingPaymentConnection: {
-    pageInfo: getPageInfo
-  },
-  QuoteConnection: {
-    pageInfo: getQuotePageInfo
-  },
-  OutgoingPaymentConnection: {
-    pageInfo: getOutgoingPaymentPageInfo
-  },
-  PeersConnection: {
-    pageInfo: getPeersConnectionPageInfo
   },
   Mutation: {
     createAccount,

@@ -163,9 +163,10 @@ export class Quote extends BaseModel {
 export type QuoteJSON = {
   id: string
   accountId: string
-  createdAt: string
   receivingPayment: string
   sendAmount: AmountJSON
   receiveAmount: AmountJSON
+  createdAt: string
+  updatedAt: string
   expiresAt: string
 }

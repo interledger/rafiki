@@ -387,6 +387,8 @@ async function getAccountPage(
 ): Promise<Quote[]> {
   return await Quote.query(deps.knex)
     .getPage(pagination)
-    .where({ accountId })
+    .where({
+      accountId
+    })
     .withGraphFetched('asset')
 }

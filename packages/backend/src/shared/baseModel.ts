@@ -16,6 +16,15 @@ export interface Pagination {
   last?: number // Backward pagination: limit.
 }
 
+export interface PageInfo {
+  startCursor?: string
+  endCursor?: string
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+  first?: number
+  last?: number
+}
+
 class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
   M,
   R
