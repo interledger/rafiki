@@ -1,10 +1,15 @@
 import { Logger } from 'pino'
-import { ReadContext, CreateContext } from '../../app'
+import { ReadContext, CreateContext, ListContext } from '../../app'
 import { IAppConfig } from '../../config/app'
 import { QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
+import {
+  getListPageInfo,
+  parsePaginationQueryParameters
+} from '../../shared/pagination'
+import { Pagination } from '../../shared/baseModel'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -15,6 +20,7 @@ interface ServiceDependencies {
 export interface QuoteRoutes {
   get(ctx: ReadContext): Promise<void>
   create(ctx: CreateContext<CreateBody>): Promise<void>
+  list(ctx: ListContext): Promise<void>
 }
 
 export function createQuoteRoutes(deps_: ServiceDependencies): QuoteRoutes {
@@ -24,7 +30,8 @@ export function createQuoteRoutes(deps_: ServiceDependencies): QuoteRoutes {
   const deps = { ...deps_, logger }
   return {
     get: (ctx: ReadContext) => getQuote(deps, ctx),
-    create: (ctx: CreateContext<CreateBody>) => createQuote(deps, ctx)
+    create: (ctx: CreateContext<CreateBody>) => createQuote(deps, ctx),
+    list: (ctx: ListContext) => listQuotes(deps, ctx)
   }
 }
 
@@ -76,11 +83,44 @@ async function createQuote(
   }
 }
 
+async function listQuotes(
+  deps: ServiceDependencies,
+  ctx: ListContext
+): Promise<void> {
+  // todo: validation
+  const { accountId } = ctx.params
+  const { first, last, cursor } = ctx.request.query
+  let pagination: Pagination
+  try {
+    pagination = parsePaginationQueryParameters(first, last, cursor)
+  } catch (err) {
+    ctx.throw(404, err.message)
+  }
+  try {
+    const page = await deps.quoteService.getAccountPage(accountId, pagination)
+    const pageInfo = await getListPageInfo(
+      (pagination: Pagination) =>
+        deps.quoteService.getAccountPage(accountId, pagination),
+      page,
+      pagination
+    )
+    const result = {
+      pagination: pageInfo,
+      result: page.map((item: Quote) => quoteToBody(deps, item))
+    }
+    ctx.body = result
+  } catch (_) {
+    ctx.throw(500, 'Error trying to list quotes')
+  }
+}
+
 function quoteToBody(deps: ServiceDependencies, quote: Quote) {
   const accountId = `${deps.config.publicHost}/${quote.accountId}`
-  return {
-    ...quote.toJSON(),
-    id: `${accountId}/quotes/${quote.id}`,
-    accountId
-  }
+  return Object.fromEntries(
+    Object.entries({
+      ...quote.toJSON(),
+      id: `${accountId}/quotes/${quote.id}`,
+      accountId
+    }).filter(([_, v]) => v != null)
+  )
 }

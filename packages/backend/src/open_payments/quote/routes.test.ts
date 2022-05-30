@@ -12,10 +12,10 @@ import { resetGraphileDb } from '../../tests/graphileDb'
 import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
-import { AppServices, CreateContext, ReadContext } from '../../app'
+import { AppServices, CreateContext, ReadContext, ListContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { QuoteService } from './service'
-import { Quote } from './model'
+import { Quote, QuoteJSON } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
 import { Amount } from '../amount'
 import { randomAsset } from '../../tests/asset'
@@ -336,5 +336,73 @@ describe('Quote Routes', (): void => {
         }
       })
     })
+  })
+
+  describe('list', (): void => {
+    let items: Quote[]
+    let result: QuoteJSON[]
+    beforeEach(
+      async (): Promise<void> => {
+        items = []
+        for (let i = 0; i < 3; i++) {
+          const ip = await createAccountQuote(accountId)
+          items.push(ip)
+        }
+        result = [0, 1, 2].map((i) => {
+          return {
+            id: `${accountUrl}/quotes/${items[i].id}`,
+            accountId: accountUrl,
+            receivingPayment: items[i]['receivingPayment'],
+            sendAmount: {
+              ...items[i]['sendAmount'],
+              value: items[i]['sendAmount'].value.toString()
+            },
+            receiveAmount: {
+              ...items[i]['receiveAmount'],
+              value: items[i]['receiveAmount'].value.toString()
+            },
+            expiresAt: items[i].expiresAt.toISOString(),
+            createdAt: items[i].createdAt.toISOString()
+          }
+        })
+      }
+    )
+    test.each`
+      first   | last    | cursorIndex | pagination                                                  | startIndex | endIndex | description
+      ${null} | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'no pagination parameters'}
+      ${'10'} | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'only `first`'}
+      ${'10'} | ${null} | ${0}        | ${{ first: 2, hasPreviousPage: true, hasNextPage: false }}  | ${1}       | ${2}     | ${'`first` plus `cursor`'}
+      ${null} | ${'10'} | ${2}        | ${{ last: 2, hasPreviousPage: false, hasNextPage: true }}   | ${0}       | ${1}     | ${'`last` plus `cursor`'}
+    `(
+      'returns 200 on $description',
+      async ({
+        first,
+        last,
+        cursorIndex,
+        pagination,
+        startIndex,
+        endIndex
+      }): Promise<void> => {
+        const cursor = items[cursorIndex] ? items[cursorIndex].id : ''
+        pagination['startCursor'] = items[startIndex].id
+        pagination['endCursor'] = items[endIndex].id
+        const ctx = createContext<ListContext>(
+          {
+            headers: { Accept: 'application/json' }
+          },
+          { accountId }
+        )
+        ctx.request.query = { first, last, cursor }
+        await expect(quoteRoutes.list(ctx)).resolves.toBeUndefined()
+        expect(ctx.status).toBe(200)
+        expect(ctx.response.get('Content-Type')).toBe(
+          'application/json; charset=utf-8'
+        )
+        expect(ctx.body).toEqual({
+          pagination,
+          result: result.slice(startIndex, endIndex + 1)
+        })
+      }
+    )
   })
 })

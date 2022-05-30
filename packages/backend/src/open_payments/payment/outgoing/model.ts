@@ -1,4 +1,4 @@
-import { Model, ModelOptions, QueryContext } from 'objection'
+import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
@@ -15,7 +15,13 @@ export class OutgoingPayment
   public static readonly tableName = 'outgoingPayments'
 
   static get virtualAttributes(): string[] {
-    return ['sendAmount', 'receiveAmount', 'quote', 'sentAmount']
+    return [
+      'sendAmount',
+      'receiveAmount',
+      'quote',
+      'sentAmount',
+      'receivingPayment'
+    ]
   }
 
   public state!: OutgoingPaymentState
@@ -134,6 +140,33 @@ export class OutgoingPayment
     }
     return data
   }
+
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      id: json.id,
+      accountId: json.accountId,
+      state: json.state,
+      receivingPayment: json.receivingPayment,
+      sendAmount: {
+        ...json.sendAmount,
+        value: json.sendAmount.value.toString()
+      },
+      sentAmount: {
+        ...json.sentAmount,
+        value: json.sentAmount.value.toString()
+      },
+      receiveAmount: {
+        ...json.receiveAmount,
+        value: json.receiveAmount.value.toString()
+      },
+      description: json.description,
+      externalRef: json.externalRef,
+      failed: json.failed ?? false,
+      createdAt: json.createdAt,
+      updatedAt: json.updatedAt
+    }
+  }
 }
 
 export enum OutgoingPaymentState {
@@ -166,7 +199,7 @@ export const PaymentEventType = {
 }
 export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
-export interface OutgoingPaymentJSON {
+export interface OutgoingPaymentResponse {
   id: string
   accountId: string
   createdAt: string
@@ -182,7 +215,7 @@ export interface OutgoingPaymentJSON {
 }
 
 export type PaymentData = {
-  payment: Omit<OutgoingPaymentJSON, 'failed'> & {
+  payment: Omit<OutgoingPaymentResponse, 'failed'> & {
     error?: string
     stateAttempts: number
     balance: string
@@ -200,4 +233,18 @@ export const isPaymentEvent = (o: any): o is PaymentEvent =>
 export class PaymentEvent extends WebhookEvent {
   public type!: PaymentEventType
   public data!: PaymentData
+}
+
+export type OutgoingPaymentJSON = {
+  id: string
+  accountId: string
+  receivingPayment: string
+  sendAmount: AmountJSON
+  sentAmount: AmountJSON
+  receiveAmount: AmountJSON
+  description: string | null
+  externalRef: string | null
+  failed: boolean
+  createdAt: string
+  updatedAt: string
 }

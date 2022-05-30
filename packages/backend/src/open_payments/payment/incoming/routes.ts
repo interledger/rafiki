@@ -1,7 +1,12 @@
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
 import { Logger } from 'pino'
-import { ReadContext, CreateContext, UpdateContext } from '../../../app'
+import {
+  ReadContext,
+  CreateContext,
+  UpdateContext,
+  ListContext
+} from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
 import { IncomingPayment, IncomingPaymentState } from './model'
@@ -12,6 +17,11 @@ import {
   isIncomingPaymentError
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
+import {
+  getListPageInfo,
+  parsePaginationQueryParameters
+} from '../../../shared/pagination'
+import { Pagination } from '../../../shared/baseModel'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -28,6 +38,7 @@ export interface IncomingPaymentRoutes {
   get(ctx: ReadContext): Promise<void>
   create(ctx: CreateContext<CreateBody>): Promise<void>
   update(ctx: UpdateContext<UpdateBody>): Promise<void>
+  list(ctx: ListContext): Promise<void>
 }
 
 export function createIncomingPaymentRoutes(
@@ -41,7 +52,9 @@ export function createIncomingPaymentRoutes(
     get: (ctx: ReadContext) => getIncomingPayment(deps, ctx),
     create: (ctx: CreateContext<CreateBody>) =>
       createIncomingPayment(deps, ctx),
-    update: (ctx: UpdateContext<UpdateBody>) => updateIncomingPayment(deps, ctx)
+    update: (ctx: UpdateContext<UpdateBody>) =>
+      updateIncomingPayment(deps, ctx),
+    list: (ctx: ListContext) => listIncomingPayments(deps, ctx)
   }
 }
 
@@ -142,37 +155,52 @@ async function updateIncomingPayment(
   ctx.body = res
 }
 
+async function listIncomingPayments(
+  deps: ServiceDependencies,
+  ctx: ListContext
+): Promise<void> {
+  const { accountId } = ctx.params
+  const { first, last, cursor } = ctx.request.query
+  let pagination: Pagination
+  try {
+    pagination = parsePaginationQueryParameters(first, last, cursor)
+  } catch (err) {
+    ctx.throw(404, err.message)
+  }
+  try {
+    const page = await deps.incomingPaymentService.getAccountPage(
+      accountId,
+      pagination
+    )
+    const pageInfo = await getListPageInfo(
+      (pagination: Pagination) =>
+        deps.incomingPaymentService.getAccountPage(accountId, pagination),
+      page,
+      pagination
+    )
+    const result = {
+      pagination: pageInfo,
+      result: page.map((item: IncomingPayment) =>
+        incomingPaymentToBody(deps, item)
+      )
+    }
+    ctx.body = result
+  } catch (_) {
+    ctx.throw(500, 'Error trying to list incoming payments')
+  }
+}
+
 function incomingPaymentToBody(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment
 ) {
-  const accountId = `${deps.config.publicHost}/${incomingPayment.accountId}`
-  const body = {
-    id: `${accountId}/incoming-payments/${incomingPayment.id}`,
-    accountId,
-    state: incomingPayment.state.toLowerCase(),
-    receivedAmount: {
-      value: incomingPayment.receivedAmount.value.toString(),
-      assetCode: incomingPayment.receivedAmount.assetCode,
-      assetScale: incomingPayment.receivedAmount.assetScale
-    },
-    expiresAt: incomingPayment.expiresAt.toISOString(),
-    createdAt: incomingPayment.createdAt.toISOString(),
-    updatedAt: incomingPayment.updatedAt.toISOString()
-  }
-
-  if (incomingPayment.incomingAmount) {
-    body['incomingAmount'] = {
-      value: incomingPayment.incomingAmount.value.toString(),
-      assetCode: incomingPayment.incomingAmount.assetCode,
-      assetScale: incomingPayment.incomingAmount.assetScale
-    }
-  }
-  if (incomingPayment.description)
-    body['description'] = incomingPayment.description
-  if (incomingPayment.externalRef)
-    body['externalRef'] = incomingPayment.externalRef
-  return body
+  return Object.fromEntries(
+    Object.entries({
+      ...incomingPayment.toJSON(),
+      accountId: `${deps.config.publicHost}/${incomingPayment.accountId}`,
+      id: `${deps.config.publicHost}/${incomingPayment.accountId}/incoming-payments/${incomingPayment.id}`
+    }).filter(([_, v]) => v != null)
+  )
 }
 
 function getStreamCredentials(

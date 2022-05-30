@@ -68,9 +68,9 @@ export type AppRequest<
   ParamsT extends string = string,
   BodyT = never,
   QueryT = ParsedUrlQuery
-> = Omit<AppContext['request'], 'params' | 'body' | 'query'> & {
+> = Omit<AppContext['request'], 'params' | 'body'> & {
   params: Record<ParamsT, string>
-  query: QueryT
+  query: ParsedUrlQuery & QueryT
   body: BodyT
 }
 
@@ -330,10 +330,6 @@ export class App {
         if (isHttpMethod(method)) {
           const action = toAction({ path, method })
           assert.ok(action)
-          // TODO
-          if (action === AccessAction.List) {
-            continue
-          }
 
           let type: AccessType
           let route: (ctx: AppContext) => Promise<void>

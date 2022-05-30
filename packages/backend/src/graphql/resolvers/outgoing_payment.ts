@@ -2,7 +2,6 @@ import { quoteToGraphql } from './quote'
 import {
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
-  OutgoingPaymentConnectionResolvers,
   AccountResolvers,
   QueryResolvers,
   ResolversTypes
@@ -15,6 +14,8 @@ import {
 } from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
+import { getPageInfo } from '../../shared/pagination'
+import { Pagination } from '../../shared/baseModel'
 
 export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'] = async (
   parent,
@@ -72,67 +73,17 @@ export const getAccountOutgoingPayments: AccountResolvers<ApolloContext>['outgoi
     parent.id,
     args
   )
+  const pageInfo = await getPageInfo(
+    (pagination: Pagination) =>
+      outgoingPaymentService.getAccountPage(parent.id as string, pagination),
+    outgoingPayments
+  )
   return {
+    pageInfo,
     edges: outgoingPayments.map((payment: OutgoingPayment) => ({
       cursor: payment.id,
       node: paymentToGraphql(payment)
     }))
-  }
-}
-
-export const getOutgoingPaymentPageInfo: OutgoingPaymentConnectionResolvers<ApolloContext>['pageInfo'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['PageInfo']> => {
-  const logger = await ctx.container.use('logger')
-  const outgoingPaymentService = await ctx.container.use(
-    'outgoingPaymentService'
-  )
-  logger.info({ edges: parent.edges }, 'getPageInfo parent edges')
-
-  const edges = parent.edges
-  if (edges == null || typeof edges == 'undefined' || edges.length == 0)
-    return {
-      hasPreviousPage: false,
-      hasNextPage: false
-    }
-
-  const firstEdge = edges[0].cursor
-  const lastEdge = edges[edges.length - 1].cursor
-
-  const firstPayment = await outgoingPaymentService.get(edges[0].node.id)
-  if (!firstPayment) throw 'payment does not exist'
-
-  let hasNextPagePayments, hasPreviousPagePayments
-  try {
-    hasNextPagePayments = await outgoingPaymentService.getAccountPage(
-      firstPayment.accountId,
-      {
-        after: lastEdge,
-        first: 1
-      }
-    )
-  } catch (e) {
-    hasNextPagePayments = []
-  }
-  try {
-    hasPreviousPagePayments = await outgoingPaymentService.getAccountPage(
-      firstPayment.accountId,
-      {
-        before: firstEdge,
-        last: 1
-      }
-    )
-  } catch (e) {
-    hasPreviousPagePayments = []
-  }
-
-  return {
-    endCursor: lastEdge,
-    hasNextPage: hasNextPagePayments.length == 1,
-    hasPreviousPage: hasPreviousPagePayments.length == 1,
-    startCursor: firstEdge
   }
 }
 

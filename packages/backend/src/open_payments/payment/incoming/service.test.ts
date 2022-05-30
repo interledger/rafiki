@@ -491,10 +491,7 @@ describe('Incoming Payment Service', (): void => {
           externalRef: '#123'
         }),
       getPage: (pagination: Pagination) =>
-        incomingPaymentService.getAccountIncomingPaymentsPage(
-          accountId,
-          pagination
-        )
+        incomingPaymentService.getAccountPage(accountId, pagination)
     })
   })
 

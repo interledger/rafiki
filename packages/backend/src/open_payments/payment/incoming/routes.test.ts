@@ -18,11 +18,15 @@ import {
   AppServices,
   ReadContext,
   CreateContext,
-  UpdateContext
+  UpdateContext,
+  ListContext
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
-import { IncomingPaymentService } from './service'
-import { IncomingPayment, IncomingPaymentState } from './model'
+import {
+  IncomingPayment,
+  IncomingPaymentJSON,
+  IncomingPaymentState
+} from './model'
 import {
   IncomingPaymentRoutes,
   CreateBody,
@@ -30,8 +34,9 @@ import {
   MAX_EXPIRY
 } from './routes'
 import { AppContext } from '../../../app'
-import { isIncomingPaymentError } from './errors'
 import { AccountingService } from '../../../accounting/service'
+import { createIncomingPayment } from '../../../tests/incomingPayment'
+import { Amount } from '@interledger/pay/dist/src/open-payments'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -40,7 +45,6 @@ describe('Incoming Payment Routes', (): void => {
   let workerUtils: WorkerUtils
   let accountService: AccountService
   let accountingService: AccountingService
-  let incomingPaymentService: IncomingPaymentService
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
   const messageProducer = new GraphileProducer()
@@ -93,33 +97,27 @@ describe('Incoming Payment Routes', (): void => {
   }
   let account: Account
   let accountId: string
-  let incomingPayment: IncomingPayment
   let expiresAt: Date
+  let incomingAmount: Amount
+  let description: string
+  let externalRef: string
 
   beforeEach(
     async (): Promise<void> => {
       accountService = await deps.use('accountService')
-      incomingPaymentService = await deps.use('incomingPaymentService')
       config = await deps.use('config')
       incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
 
       expiresAt = new Date(Date.now() + 30_000)
       account = await accountService.create({ asset })
       accountId = `https://wallet.example/${account.id}`
-      const incomingPaymentOrError = await incomingPaymentService.create({
-        accountId: account.id,
-        description: 'text',
-        expiresAt,
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        externalRef: '#123'
-      })
-      if (!isIncomingPaymentError(incomingPaymentOrError)) {
-        incomingPayment = incomingPaymentOrError
+      incomingAmount = {
+        value: BigInt('123'),
+        assetScale: asset.scale,
+        assetCode: asset.code
       }
+      description = 'hello world'
+      externalRef = '#123'
     }
   )
 
@@ -138,6 +136,19 @@ describe('Incoming Payment Routes', (): void => {
   )
 
   describe('get', (): void => {
+    let incomingPayment: IncomingPayment
+    beforeEach(
+      async (): Promise<void> => {
+        incomingPayment = await createIncomingPayment(deps, {
+          accountId: account.id,
+          description,
+          expiresAt,
+          incomingAmount,
+          externalRef
+        })
+      }
+    )
+
     test('returns 404 on unknown incoming payment', async (): Promise<void> => {
       const ctx = createContext<ReadContext>(
         {
@@ -183,6 +194,8 @@ describe('Incoming Payment Routes', (): void => {
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
+        createdAt: incomingPayment.createdAt.toISOString(),
+        updatedAt: incomingPayment.updatedAt.toISOString(),
         receivedAmount: {
           value: '0',
           assetCode: asset.code,
@@ -191,9 +204,7 @@ describe('Incoming Payment Routes', (): void => {
         externalRef: '#123',
         state: IncomingPaymentState.Pending.toLowerCase(),
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret,
-        createdAt: incomingPayment.createdAt.toISOString(),
-        updatedAt: incomingPayment.updatedAt.toISOString()
+        sharedSecret
       })
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
@@ -278,8 +289,8 @@ describe('Incoming Payment Routes', (): void => {
           expiresAt: expiresAt || expect.any(String),
           receivedAmount: {
             value: '0',
-            assetCode: incomingPayment.asset.code,
-            assetScale: incomingPayment.asset.scale
+            assetCode: asset.code,
+            assetScale: asset.scale
           },
           externalRef,
           state: IncomingPaymentState.Pending.toLowerCase(),
@@ -295,6 +306,18 @@ describe('Incoming Payment Routes', (): void => {
   })
 
   describe('update', (): void => {
+    let incomingPayment: IncomingPayment
+    beforeEach(
+      async (): Promise<void> => {
+        incomingPayment = await createIncomingPayment(deps, {
+          accountId: account.id,
+          description,
+          expiresAt,
+          incomingAmount,
+          externalRef
+        })
+      }
+    )
     test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
       const ctx = setup<UpdateContext<UpdateBody>>(
         {
@@ -329,6 +352,94 @@ describe('Incoming Payment Routes', (): void => {
         state: IncomingPaymentState.Completed.toLowerCase(),
         createdAt: incomingPayment.createdAt.toISOString(),
         updatedAt: expect.any(String)
+      })
+    })
+  })
+
+  describe.only('list', (): void => {
+    let items: IncomingPayment[]
+    let result: Omit<IncomingPaymentJSON, 'incomingAmount' | 'externalRef'>[]
+    beforeEach(
+      async (): Promise<void> => {
+        items = []
+        for (let i = 0; i < 3; i++) {
+          const ip = await createIncomingPayment(deps, {
+            accountId: account.id,
+            description: `p${i}`,
+            expiresAt
+          })
+          items.push(ip)
+        }
+        result = [0, 1, 2].map((i) => {
+          return {
+            id: `${accountId}/incoming-payments/${items[i].id}`,
+            accountId,
+            receivedAmount: {
+              value: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            description: items[i]['description'] ?? null,
+            state: 'pending',
+            expiresAt: expiresAt.toISOString(),
+            createdAt: items[i].createdAt.toISOString(),
+            updatedAt: items[i].updatedAt.toISOString()
+          }
+        })
+      }
+    )
+    test.each`
+      first   | last    | cursorIndex | pagination                                                  | startIndex | endIndex | description
+      ${null} | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'no pagination parameters'}
+      ${10}   | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'only `first`'}
+      ${10}   | ${null} | ${0}        | ${{ first: 2, hasPreviousPage: true, hasNextPage: false }}  | ${1}       | ${2}     | ${'`first` plus `cursor`'}
+      ${null} | ${10}   | ${2}        | ${{ last: 2, hasPreviousPage: false, hasNextPage: true }}   | ${0}       | ${1}     | ${'`last` plus `cursor`'}
+    `(
+      'returns 200 on $description',
+      async ({
+        first,
+        last,
+        cursorIndex,
+        pagination,
+        startIndex,
+        endIndex
+      }): Promise<void> => {
+        const cursor = items[cursorIndex] ? items[cursorIndex].id : null
+        pagination['startCursor'] = items[startIndex].id
+        pagination['endCursor'] = items[endIndex].id
+        const ctx = setup<ListContext>(
+          {
+            headers: { Accept: 'application/json' },
+            method: 'GET',
+            query: { first, last, cursor }
+          },
+          { accountId: account.id }
+        )
+        await expect(incomingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
+        expect(ctx.status).toBe(200)
+        expect(ctx.response.get('Content-Type')).toBe(
+          'application/json; charset=utf-8'
+        )
+        expect(ctx.body).toEqual({
+          pagination,
+          result: result.slice(startIndex, endIndex + 1)
+        })
+      }
+    )
+
+    test('returns 500 if TB account not found', async (): Promise<void> => {
+      jest
+        .spyOn(accountingService, 'getAccountsTotalReceived')
+        .mockResolvedValueOnce([undefined])
+      const ctx = createContext<ListContext>(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { accountId: account.id }
+      )
+      await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: `Error trying to list incoming payments`
       })
     })
   })

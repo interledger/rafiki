@@ -1,10 +1,8 @@
-import {
-  ResolversTypes,
-  IncomingPaymentConnectionResolvers,
-  AccountResolvers
-} from '../generated/graphql'
+import { ResolversTypes, AccountResolvers } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { ApolloContext } from '../../app'
+import { getPageInfo } from '../../shared/pagination'
+import { Pagination } from '../../shared/baseModel'
 
 export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomingPayments'] = async (
   parent,
@@ -15,12 +13,18 @@ export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomi
   const incomingPaymentService = await ctx.container.use(
     'incomingPaymentService'
   )
-  const incomingPayments = await incomingPaymentService.getAccountIncomingPaymentsPage(
+  const incomingPayments = await incomingPaymentService.getAccountPage(
     parent.id,
     args
   )
+  const pageInfo = await getPageInfo(
+    (pagination: Pagination) =>
+      incomingPaymentService.getAccountPage(parent.id as string, pagination),
+    incomingPayments
+  )
 
   return {
+    pageInfo,
     edges: incomingPayments.map((incomingPayment: IncomingPayment) => {
       return {
         cursor: incomingPayment.id,
@@ -32,69 +36,5 @@ export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomi
         }
       }
     })
-  }
-}
-
-export const getPageInfo: IncomingPaymentConnectionResolvers<ApolloContext>['pageInfo'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['PageInfo']> => {
-  const logger = await ctx.container.use('logger')
-  const incomingPaymentService = await ctx.container.use(
-    'incomingPaymentService'
-  )
-
-  logger.info({ edges: parent.edges }, 'getPageInfo parent edges')
-
-  const edges = parent.edges
-  if (
-    edges == null ||
-    typeof edges == 'undefined' ||
-    edges.length == 0 ||
-    !edges[0].node
-  )
-    return {
-      hasPreviousPage: false,
-      hasNextPage: false
-    }
-
-  const firstEdge = edges[0].cursor
-  const lastEdge = edges[edges.length - 1].cursor
-
-  const firstIncomingPayment = await incomingPaymentService.get(
-    edges[0].node.id
-  )
-  if (!firstIncomingPayment) throw new Error('incomingPayment not found')
-
-  let hasNextPageIncomingPayments, hasPreviousPageIncomingPayments
-  try {
-    hasNextPageIncomingPayments = await incomingPaymentService.getAccountIncomingPaymentsPage(
-      firstIncomingPayment.accountId,
-      {
-        after: lastEdge,
-        first: 1
-      }
-    )
-  } catch (e) {
-    hasNextPageIncomingPayments = []
-  }
-  try {
-    hasPreviousPageIncomingPayments = await incomingPaymentService.getAccountIncomingPaymentsPage(
-      firstIncomingPayment.accountId,
-      {
-        before: firstEdge,
-        last: 1
-      }
-    )
-  } catch (e) {
-    hasPreviousPageIncomingPayments = []
-  }
-
-  return {
-    endCursor: lastEdge,
-    hasNextPage: hasNextPageIncomingPayments.length == 1,
-    hasPreviousPage: hasPreviousPageIncomingPayments.length == 1,
-    startCursor: firstEdge
   }
 }

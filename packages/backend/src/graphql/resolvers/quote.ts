@@ -1,7 +1,6 @@
 import {
   MutationResolvers,
   Quote as SchemaQuote,
-  QuoteConnectionResolvers,
   AccountResolvers,
   QueryResolvers,
   ResolversTypes
@@ -14,6 +13,8 @@ import {
 } from '../../open_payments/quote/errors'
 import { Quote } from '../../open_payments/quote/model'
 import { ApolloContext } from '../../app'
+import { getPageInfo } from '../../shared/pagination'
+import { Pagination } from '../../shared/baseModel'
 
 export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   parent,
@@ -62,65 +63,17 @@ export const getAccountQuotes: AccountResolvers<ApolloContext>['quotes'] = async
   if (!parent.id) throw new Error('missing account id')
   const quoteService = await ctx.container.use('quoteService')
   const quotes = await quoteService.getAccountPage(parent.id, args)
+  const pageInfo = await getPageInfo(
+    (pagination: Pagination) =>
+      quoteService.getAccountPage(parent.id as string, pagination),
+    quotes
+  )
   return {
+    pageInfo,
     edges: quotes.map((quote: Quote) => ({
       cursor: quote.id,
       node: quoteToGraphql(quote)
     }))
-  }
-}
-
-export const getQuotePageInfo: QuoteConnectionResolvers<ApolloContext>['pageInfo'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['PageInfo']> => {
-  const logger = await ctx.container.use('logger')
-  const quoteService = await ctx.container.use('quoteService')
-  logger.info({ edges: parent.edges }, 'getPageInfo parent edges')
-
-  const edges = parent.edges
-  if (edges == null || typeof edges == 'undefined' || edges.length == 0)
-    return {
-      hasPreviousPage: false,
-      hasNextPage: false
-    }
-
-  const firstEdge = edges[0].cursor
-  const lastEdge = edges[edges.length - 1].cursor
-
-  const firstPayment = await quoteService.get(edges[0].node.id)
-  if (!firstPayment) throw 'quote does not exist'
-
-  let hasNextPageQuotes, hasPreviousPageQuotes
-  try {
-    hasNextPageQuotes = await quoteService.getAccountPage(
-      firstPayment.accountId,
-      {
-        after: lastEdge,
-        first: 1
-      }
-    )
-  } catch (e) {
-    hasNextPageQuotes = []
-  }
-  try {
-    hasPreviousPageQuotes = await quoteService.getAccountPage(
-      firstPayment.accountId,
-      {
-        before: firstEdge,
-        last: 1
-      }
-    )
-  } catch (e) {
-    hasPreviousPageQuotes = []
-  }
-
-  return {
-    endCursor: lastEdge,
-    hasNextPage: hasNextPageQuotes.length == 1,
-    hasPreviousPage: hasPreviousPageQuotes.length == 1,
-    startCursor: firstEdge
   }
 }
 

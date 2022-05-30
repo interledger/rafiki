@@ -1,9 +1,14 @@
 import { Logger } from 'pino'
-import { ReadContext, CreateContext } from '../../../app'
+import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
+import {
+  getListPageInfo,
+  parsePaginationQueryParameters
+} from '../../../shared/pagination'
+import { Pagination } from '../../../shared/baseModel'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -14,6 +19,7 @@ interface ServiceDependencies {
 export interface OutgoingPaymentRoutes {
   get(ctx: ReadContext): Promise<void>
   create(ctx: CreateContext<CreateBody>): Promise<void>
+  list(ctx: ListContext): Promise<void>
 }
 
 export function createOutgoingPaymentRoutes(
@@ -25,7 +31,9 @@ export function createOutgoingPaymentRoutes(
   const deps = { ...deps_, logger }
   return {
     get: (ctx: ReadContext) => getOutgoingPayment(deps, ctx),
-    create: (ctx: CreateContext<CreateBody>) => createOutgoingPayment(deps, ctx)
+    create: (ctx: CreateContext<CreateBody>) =>
+      createOutgoingPayment(deps, ctx),
+    list: (ctx: ListContext) => listOutgoingPayments(deps, ctx)
   }
 }
 
@@ -79,31 +87,57 @@ async function createOutgoingPayment(
   ctx.body = res
 }
 
+async function listOutgoingPayments(
+  deps: ServiceDependencies,
+  ctx: ListContext
+): Promise<void> {
+  // todo: validation
+  const { accountId } = ctx.params
+  const { first, last, cursor } = ctx.request.query
+  let pagination: Pagination
+  try {
+    pagination = parsePaginationQueryParameters(first, last, cursor)
+  } catch (err) {
+    ctx.throw(404, err.message)
+  }
+  try {
+    const page = await deps.outgoingPaymentService.getAccountPage(
+      accountId,
+      pagination
+    )
+    const pageInfo = await getListPageInfo(
+      (pagination: Pagination) =>
+        deps.outgoingPaymentService.getAccountPage(accountId, pagination),
+      page,
+      pagination
+    )
+    const result = {
+      pagination: pageInfo,
+      result: page.map((item: OutgoingPayment) =>
+        outgoingPaymentToBody(deps, item)
+      )
+    }
+    ctx.body = result
+  } catch (_) {
+    ctx.throw(500, 'Error trying to list outgoing payments')
+  }
+}
+
 function outgoingPaymentToBody(
   deps: ServiceDependencies,
   outgoingPayment: OutgoingPayment
 ) {
-  const accountId = `${deps.config.publicHost}/${outgoingPayment.accountId}`
-  return {
-    id: `${accountId}/outgoing-payments/${outgoingPayment.id}`,
-    accountId,
-    receivingPayment: outgoingPayment.receivingPayment,
-    sendAmount: {
-      ...outgoingPayment.sendAmount,
-      value: outgoingPayment.sendAmount.value.toString()
-    },
-    sentAmount: {
-      ...outgoingPayment.sentAmount,
-      value: outgoingPayment.sentAmount.value.toString()
-    },
-    receiveAmount: {
-      ...outgoingPayment.receiveAmount,
-      value: outgoingPayment.receiveAmount.value.toString()
-    },
-    description: outgoingPayment.description ?? undefined,
-    externalRef: outgoingPayment.externalRef ?? undefined,
-    failed: outgoingPayment.state === OutgoingPaymentState.Failed,
-    createdAt: outgoingPayment.createdAt.toISOString(),
-    updatedAt: outgoingPayment.updatedAt.toISOString()
-  }
+  return Object.fromEntries(
+    Object.entries({
+      ...outgoingPayment.toJSON(),
+      accountId: `${deps.config.publicHost}/${outgoingPayment.accountId}`,
+      id: `${deps.config.publicHost}/${outgoingPayment.accountId}/outgoing-payments/${outgoingPayment.id}`,
+      state: [
+        OutgoingPaymentState.Funding,
+        OutgoingPaymentState.Sending
+      ].includes(outgoingPayment.state)
+        ? 'processing'
+        : outgoingPayment.state.toLowerCase()
+    }).filter(([_, v]) => v != null)
+  )
 }
