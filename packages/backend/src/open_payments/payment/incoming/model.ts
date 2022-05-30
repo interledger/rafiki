@@ -1,5 +1,5 @@
-import { Model } from 'objection'
-import { Amount } from '../../amount'
+import { Model, Pojo } from 'objection'
+import { Amount, AmountJSON } from '../../amount'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
@@ -165,4 +165,41 @@ export class IncomingPayment
 
     return data
   }
+
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      id: json.id,
+      accountId: json.accountId,
+      incomingAmount: this.incomingAmount
+        ? {
+            ...json.incomingAmount,
+            value: json.incomingAmount.value.toString()
+          }
+        : null,
+      receivedAmount: {
+        ...json.receivedAmount,
+        value: json.receivedAmount.value.toString()
+      },
+      state: json.state.toLowerCase(),
+      description: json.description,
+      externalRef: json.externalRef,
+      createdAt: json.createdAt,
+      updatedAt: json.updatedAt,
+      expiresAt: json.expiresAt.toISOString()
+    }
+  }
+}
+
+export type IncomingPaymentJSON = {
+  id: string
+  accountId: string
+  incomingAmount: AmountJSON | null
+  receivedAmount: AmountJSON
+  state: string
+  description: string | null
+  externalRef: string | null
+  createdAt: string
+  updatedAt: string
+  expiresAt: string
 }

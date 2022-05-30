@@ -13,6 +13,11 @@ import {
   isIncomingPaymentError
 } from './errors'
 import { Amount, parseAmount } from '../../amount'
+import {
+  getListPageInfo,
+  parsePaginationQueryParameters
+} from '../../../shared/pagination'
+import { Pagination } from '../../../shared/baseModel'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -29,6 +34,7 @@ export interface IncomingPaymentRoutes {
   get(ctx: AppContext): Promise<void>
   create(ctx: AppContext): Promise<void>
   update(ctx: AppContext): Promise<void>
+  list(ctx: AppContext): Promise<void>
 }
 
 export function createIncomingPaymentRoutes(
@@ -41,7 +47,8 @@ export function createIncomingPaymentRoutes(
   return {
     get: (ctx: AppContext) => getIncomingPayment(deps, ctx),
     create: (ctx: AppContext) => createIncomingPayment(deps, ctx),
-    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx)
+    update: (ctx: AppContext) => updateIncomingPayment(deps, ctx),
+    list: (ctx: AppContext) => listIncomingPayments(deps, ctx)
   }
 }
 
@@ -178,35 +185,53 @@ async function updateIncomingPayment(
   ctx.body = res
 }
 
+async function listIncomingPayments(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  // todo: validation
+  const { accountId } = ctx.params
+  const { first, last, cursor } = ctx.request.query
+  let pagination: Pagination
+  try {
+    pagination = parsePaginationQueryParameters(first, last, cursor)
+  } catch (err) {
+    ctx.throw(404, err.message)
+  }
+  try {
+    const page = await deps.incomingPaymentService.getAccountPage(
+      accountId,
+      pagination
+    )
+    const pageInfo = await getListPageInfo(
+      (pagination: Pagination) =>
+        deps.incomingPaymentService.getAccountPage(accountId, pagination),
+      page,
+      pagination
+    )
+    const result = {
+      pagination: pageInfo,
+      result: page.map((item: IncomingPayment) =>
+        incomingPaymentToBody(deps, item)
+      )
+    }
+    ctx.body = result
+  } catch (_) {
+    ctx.throw(500, 'Error trying to list incoming payments')
+  }
+}
+
 function incomingPaymentToBody(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment
 ) {
-  const accountId = `${deps.config.publicHost}/${incomingPayment.accountId}`
-  const body = {
-    id: `${accountId}/incoming-payments/${incomingPayment.id}`,
-    accountId,
-    state: incomingPayment.state.toLowerCase(),
-    receivedAmount: {
-      value: incomingPayment.receivedAmount.value.toString(),
-      assetCode: incomingPayment.receivedAmount.assetCode,
-      assetScale: incomingPayment.receivedAmount.assetScale
-    },
-    expiresAt: incomingPayment.expiresAt.toISOString()
-  }
-
-  if (incomingPayment.incomingAmount) {
-    body['incomingAmount'] = {
-      value: incomingPayment.incomingAmount.value.toString(),
-      assetCode: incomingPayment.incomingAmount.assetCode,
-      assetScale: incomingPayment.incomingAmount.assetScale
-    }
-  }
-  if (incomingPayment.description)
-    body['description'] = incomingPayment.description
-  if (incomingPayment.externalRef)
-    body['externalRef'] = incomingPayment.externalRef
-  return body
+  return Object.fromEntries(
+    Object.entries({
+      ...incomingPayment.toJSON(),
+      accountId: `${deps.config.publicHost}/${incomingPayment.accountId}`,
+      id: `${deps.config.publicHost}/${incomingPayment.accountId}/incoming-payments/${incomingPayment.id}`
+    }).filter(([_, v]) => v != null)
+  )
 }
 
 function getStreamCredentials(
