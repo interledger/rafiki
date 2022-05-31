@@ -24,7 +24,7 @@ import {
 import { truncateTables } from '../../../tests/tableManager'
 import {
   IncomingPayment,
-  IncomingPaymentJSON,
+  IncomingPaymentResponse,
   IncomingPaymentState
 } from './model'
 import {
@@ -355,7 +355,7 @@ describe('Incoming Payment Routes', (): void => {
 
   describe('list', (): void => {
     let items: IncomingPayment[]
-    let result: Omit<IncomingPaymentJSON, 'incomingAmount' | 'externalRef'>[]
+    let result: IncomingPaymentResponse[]
     beforeEach(
       async (): Promise<void> => {
         items = []
@@ -376,7 +376,7 @@ describe('Incoming Payment Routes', (): void => {
               assetCode: asset.code,
               assetScale: asset.scale
             },
-            description: items[i]['description'] ?? null,
+            description: items[i]['description'],
             state: 'pending',
             expiresAt: expiresAt.toISOString(),
             createdAt: items[i].createdAt.toISOString(),

@@ -31,8 +31,8 @@ export interface IncomingPaymentResponse {
   createdAt: string
   updatedAt: string
   expiresAt: string
-  incomingAmount?: Amount
-  receivedAmount: Amount
+  incomingAmount?: AmountJSON
+  receivedAmount: AmountJSON
   externalRef?: string
   state: string
   ilpAddress?: string
@@ -150,7 +150,7 @@ export class IncomingPayment
         createdAt: new Date(+this.createdAt).toISOString(),
         expiresAt: this.expiresAt.toISOString(),
         receivedAmount: {
-          value: amountReceived,
+          value: amountReceived.toString(),
           assetCode: this.asset.code,
           assetScale: this.asset.scale
         },
@@ -160,7 +160,10 @@ export class IncomingPayment
     }
 
     if (this.incomingAmount) {
-      data.incomingPayment.incomingAmount = this.incomingAmount
+      data.incomingPayment.incomingAmount = {
+        ...this.incomingAmount,
+        value: this.incomingAmount.value.toString()
+      }
     }
     if (this.description) {
       data.incomingPayment.description = this.description
