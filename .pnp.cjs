@@ -224,7 +224,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/express", "npm:4.17.11"],
             ["@types/fs-capacitor", "npm:2.0.0"],
             ["@types/graphql", null],
-            ["@types/koa", "npm:2.13.1"],
+            ["@types/koa", "npm:2.13.4"],
             ["busboy", "npm:0.3.1"],
             ["fs-capacitor", "npm:2.0.4"],
             ["graphql", "npm:15.5.0"],
@@ -4279,36 +4279,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["@types/koa", [
-        ["npm:2.13.1", {
-          "packageLocation": "./.yarn/cache/@types-koa-npm-2.13.1-8a5d9779e8-d6f83b120a.zip/node_modules/@types/koa/",
-          "packageDependencies": [
-            ["@types/koa", "npm:2.13.1"],
-            ["@types/accepts", "npm:1.3.5"],
-            ["@types/content-disposition", "npm:0.5.3"],
-            ["@types/cookies", "npm:0.7.6"],
-            ["@types/http-assert", "npm:1.5.1"],
-            ["@types/http-errors", "npm:1.8.0"],
-            ["@types/keygrip", "npm:1.0.2"],
-            ["@types/koa-compose", "npm:3.2.5"],
-            ["@types/node", "npm:14.14.39"]
-          ],
-          "linkType": "HARD",
-        }],
-        ["npm:2.13.3", {
-          "packageLocation": "./.yarn/cache/@types-koa-npm-2.13.3-c9357ee250-d7d7e67669.zip/node_modules/@types/koa/",
-          "packageDependencies": [
-            ["@types/koa", "npm:2.13.3"],
-            ["@types/accepts", "npm:1.3.5"],
-            ["@types/content-disposition", "npm:0.5.3"],
-            ["@types/cookies", "npm:0.7.6"],
-            ["@types/http-assert", "npm:1.5.1"],
-            ["@types/http-errors", "npm:1.8.0"],
-            ["@types/keygrip", "npm:1.0.2"],
-            ["@types/koa-compose", "npm:3.2.5"],
-            ["@types/node", "npm:14.14.39"]
-          ],
-          "linkType": "HARD",
-        }],
         ["npm:2.13.4", {
           "packageLocation": "./.yarn/cache/@types-koa-npm-2.13.4-e10e6e7742-35a54e6894.zip/node_modules/@types/koa/",
           "packageDependencies": [
@@ -4330,7 +4300,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa-bodyparser-npm-4.3.0-dbbe458791-b124fc80f7.zip/node_modules/@types/koa-bodyparser/",
           "packageDependencies": [
             ["@types/koa-bodyparser", "npm:4.3.0"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }],
@@ -4338,7 +4308,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa-bodyparser-npm-4.3.1-01f7ed0142-d6b8ac69e0.zip/node_modules/@types/koa-bodyparser/",
           "packageDependencies": [
             ["@types/koa-bodyparser", "npm:4.3.1"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }],
@@ -4346,7 +4316,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa-bodyparser-npm-4.3.7-ff2df015ea-3a2cac14cb.zip/node_modules/@types/koa-bodyparser/",
           "packageDependencies": [
             ["@types/koa-bodyparser", "npm:4.3.7"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }]
@@ -4356,7 +4326,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa-compose-npm-3.2.5-b9ab25d904-5d1147c4b0.zip/node_modules/@types/koa-compose/",
           "packageDependencies": [
             ["@types/koa-compose", "npm:3.2.5"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }]
@@ -4366,7 +4336,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__cors-npm-2.2.3-80bc1d95ea-eab4da98fc.zip/node_modules/@types/koa__cors/",
           "packageDependencies": [
             ["@types/koa__cors", "npm:2.2.3"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }],
@@ -4374,7 +4344,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__cors-npm-3.0.2-025aaf3a31-6286f04c7a.zip/node_modules/@types/koa__cors/",
           "packageDependencies": [
             ["@types/koa__cors", "npm:3.0.2"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }],
@@ -4382,7 +4352,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__cors-npm-3.1.1-e9d7fc72b9-7ef2c09a45.zip/node_modules/@types/koa__cors/",
           "packageDependencies": [
             ["@types/koa__cors", "npm:3.1.1"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }]
@@ -4392,7 +4362,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__router-npm-8.0.11-08ca25f7c2-81f55ed772.zip/node_modules/@types/koa__router/",
           "packageDependencies": [
             ["@types/koa__router", "npm:8.0.11"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }],
@@ -4400,7 +4370,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-koa__router-npm-8.0.4-47961c9f7c-6347028866.zip/node_modules/@types/koa__router/",
           "packageDependencies": [
             ["@types/koa__router", "npm:8.0.4"],
-            ["@types/koa", "npm:2.13.1"]
+            ["@types/koa", "npm:2.13.4"]
           ],
           "linkType": "HARD",
         }]
@@ -5703,7 +5673,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@koa/cors", "npm:2.2.3"],
             ["@types/accepts", "npm:1.3.5"],
             ["@types/graphql", null],
-            ["@types/koa", "npm:2.13.3"],
+            ["@types/koa", "npm:2.13.4"],
             ["@types/koa-bodyparser", "npm:4.3.0"],
             ["@types/koa-compose", "npm:3.2.5"],
             ["@types/koa__cors", "npm:2.2.3"],
@@ -6534,7 +6504,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/bcrypt", "npm:5.0.0"],
             ["@types/ioredis", "npm:4.22.3"],
             ["@types/jest", "npm:26.0.22"],
-            ["@types/koa", "npm:2.13.1"],
+            ["@types/koa", "npm:2.13.4"],
             ["@types/koa-bodyparser", "npm:4.3.1"],
             ["@types/koa__cors", "npm:3.0.2"],
             ["@types/koa__router", "npm:8.0.4"],
@@ -15527,7 +15497,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["rates", "workspace:packages/rates"],
             ["@koa/router", "npm:10.0.0"],
             ["@types/jest", "npm:26.0.22"],
-            ["@types/koa", "npm:2.13.1"],
+            ["@types/koa", "npm:2.13.4"],
             ["@types/koa__router", "npm:8.0.4"],
             ["@types/nock", "npm:11.1.0"],
             ["@types/pino", "npm:6.3.7"],

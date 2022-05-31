@@ -3,19 +3,19 @@ exports.up = function (knex) {
     table.uuid('id').notNullable().primary()
 
     table.string('state').notNullable()
-    table.string('type').notNullable()
-    table.specificType('actions', 'text[]').notNullable()
     table.specificType('startMethod', 'text[]').notNullable()
 
-    table.string('continueToken')
-    table.string('continueId')
+    table.string('continueToken').unique()
+    table.string('continueId').unique()
     table.integer('wait')
 
     table.string('finishMethod').notNullable()
     table.string('finishUri').notNullable()
-    table.string('nonce').notNullable()
+    table.string('clientNonce').notNullable()
 
-    table.string('interactRef').notNullable()
+    table.string('interactId').notNullable().unique()
+    table.string('interactRef').notNullable().unique()
+    table.string('interactNonce').notNullable().unique()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())

@@ -3053,39 +3053,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/koa@npm:*, @types/koa@npm:^2.13.1":
-  version: 2.13.1
-  resolution: "@types/koa@npm:2.13.1"
-  dependencies:
-    "@types/accepts": "*"
-    "@types/content-disposition": "*"
-    "@types/cookies": "*"
-    "@types/http-assert": "*"
-    "@types/http-errors": "*"
-    "@types/keygrip": "*"
-    "@types/koa-compose": "*"
-    "@types/node": "*"
-  checksum: d6f83b120ad0b8d9f3c7a7a0b2f09a2a149c1f83aaae3c754ac869a3bbc8a5a50f2e653e26817ba1648ed17da49202a19aaf69af0f4f9317c44fb172e548f838
-  languageName: node
-  linkType: hard
-
-"@types/koa@npm:^2.0.46":
-  version: 2.13.3
-  resolution: "@types/koa@npm:2.13.3"
-  dependencies:
-    "@types/accepts": "*"
-    "@types/content-disposition": "*"
-    "@types/cookies": "*"
-    "@types/http-assert": "*"
-    "@types/http-errors": "*"
-    "@types/keygrip": "*"
-    "@types/koa-compose": "*"
-    "@types/node": "*"
-  checksum: d7d7e67669175bff864b0ba155020dd93dcde4178ffbb5a1e7184fd0d1b368f73bc230baa84e05cf0c6db257f4d8f71266f069683cd8b4819fe58c89949da3a9
-  languageName: node
-  linkType: hard
-
-"@types/koa@npm:^2.13.4":
+"@types/koa@npm:2.13.4":
   version: 2.13.4
   resolution: "@types/koa@npm:2.13.4"
   dependencies:
