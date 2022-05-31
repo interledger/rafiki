@@ -49,7 +49,7 @@ async function introspect(
   } else {
     const grant = await Grant.query(deps.knex)
       .findById(token.grantId)
-      .withGraphFetched('limits')
+      .withGraphFetched('access')
     return { active: true, ...grant }
   }
 }

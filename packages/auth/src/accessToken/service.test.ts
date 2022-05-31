@@ -9,17 +9,11 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import {
-  AccessType,
-  Action,
-  FinishMethod,
-  Grant,
-  GrantState,
-  StartMethod
-} from '../grant/model'
-import { Limit, LimitName } from '../limit/model'
+import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
+import { AccessType, Action } from '../access/types'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
+import { Access } from '../access/model'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -52,23 +46,28 @@ describe('Access Token Service', (): void => {
 
   const BASE_GRANT = {
     state: GrantState.Pending,
-    type: AccessType.OutgoingPayment,
-    actions: [Action.Read],
     startMethod: [StartMethod.Redirect],
     continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
     continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
-    nonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    interactRef: crypto.randomBytes(8).toString('hex').toUpperCase()
+    clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    interactId: v4(),
+    interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
   }
 
-  const BASE_LIMIT = {
-    name: LimitName.SendAmount,
-    value: BigInt(500),
-    assetCode: 'USD',
-    assetScale: 2,
-    createdById: 'helloworld'
+  const BASE_ACCESS = {
+    type: AccessType.OutgoingPayment,
+    actions: [Action.Read, Action.Create],
+    limits: {
+      receivingAccount: 'https://wallet.com/alice',
+      sendAmount: {
+        value: '400',
+        assetCode: 'USD',
+        assetScale: 2
+      }
+    }
   }
 
   const BASE_TOKEN = {
@@ -79,16 +78,16 @@ describe('Access Token Service', (): void => {
 
   describe('Introspect', (): void => {
     let grant: Grant
-    let limit: Limit
+    let access: Access
     let token: AccessToken
     beforeEach(
       async (): Promise<void> => {
         grant = await Grant.query(trx).insertAndFetch({
           ...BASE_GRANT
         })
-        limit = await Limit.query(trx).insertAndFetch({
+        access = await Access.query(trx).insertAndFetch({
           grantId: grant.id,
-          ...BASE_LIMIT
+          ...BASE_ACCESS
         })
         token = await AccessToken.query(trx).insertAndFetch({
           grantId: grant.id,
@@ -100,7 +99,7 @@ describe('Access Token Service', (): void => {
       const introspection = await accessTokenService.introspect(token.value)
       assert.ok(introspection)
       expect(introspection.active).toEqual(true)
-      expect(introspection).toMatchObject({ ...grant, limits: [limit] })
+      expect(introspection).toMatchObject({ ...grant, access: [access] })
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
