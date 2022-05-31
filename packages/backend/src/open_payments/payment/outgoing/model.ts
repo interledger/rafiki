@@ -162,7 +162,6 @@ export class OutgoingPayment
       },
       description: json.description,
       externalRef: json.externalRef,
-      failed: json.failed ?? false,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt
     }
@@ -203,7 +202,6 @@ export interface OutgoingPaymentResponse {
   id: string
   accountId: string
   createdAt: string
-  state: OutgoingPaymentState
   receivingPayment: string
   sendAmount: AmountJSON
   receiveAmount: AmountJSON
@@ -217,6 +215,7 @@ export interface OutgoingPaymentResponse {
 export type PaymentData = {
   payment: Omit<OutgoingPaymentResponse, 'failed'> & {
     error?: string
+    state: OutgoingPaymentState
     stateAttempts: number
     balance: string
   }

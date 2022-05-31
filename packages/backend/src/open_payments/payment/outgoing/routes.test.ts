@@ -280,7 +280,6 @@ describe('Outgoing Payment Routes', (): void => {
           },
           description: options.description,
           externalRef: options.externalRef,
-          state: 'processing',
           sentAmount: {
             value: '0',
             assetCode: asset.code,
@@ -326,7 +325,6 @@ describe('Outgoing Payment Routes', (): void => {
               assetScale: asset.scale
             },
             failed: false,
-            state: 'processing',
             description: items[i]['description'] ?? null,
             createdAt: items[i].createdAt.toISOString(),
             updatedAt: items[i].updatedAt.toISOString()
