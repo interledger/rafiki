@@ -100,7 +100,7 @@ export const Config = {
 
   openPaymentsSpec: envString(
     'OPEN_PAYMENTS_SPEC',
-    'https://raw.githubusercontent.com/wilsonianb/open-payments/rafiki/open-api-spec.yaml'
+    'https://raw.githubusercontent.com/wilsonianb/open-payments/c34c82acf179be1d953fb7b1aae4c9c1e58d50bb/open-api-spec.yaml'
   ),
 
   /** Frontend **/

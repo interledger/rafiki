@@ -5,7 +5,7 @@ import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import {
-  getListPageInfo,
+  getPageInfo,
   parsePaginationQueryParameters
 } from '../../../shared/pagination'
 import { Pagination } from '../../../shared/baseModel'
@@ -104,11 +104,10 @@ async function listOutgoingPayments(
       accountId,
       pagination
     )
-    const pageInfo = await getListPageInfo(
+    const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
         deps.outgoingPaymentService.getAccountPage(accountId, pagination),
-      page,
-      pagination
+      page
     )
     const result = {
       pagination: pageInfo,

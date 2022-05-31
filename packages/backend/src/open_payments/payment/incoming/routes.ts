@@ -18,7 +18,7 @@ import {
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import {
-  getListPageInfo,
+  getPageInfo,
   parsePaginationQueryParameters
 } from '../../../shared/pagination'
 import { Pagination } from '../../../shared/baseModel'
@@ -172,11 +172,10 @@ async function listIncomingPayments(
       accountId,
       pagination
     )
-    const pageInfo = await getListPageInfo(
+    const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
         deps.incomingPaymentService.getAccountPage(accountId, pagination),
-      page,
-      pagination
+      page
     )
     const result = {
       pagination: pageInfo,

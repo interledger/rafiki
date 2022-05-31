@@ -6,7 +6,7 @@ import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
 import {
-  getListPageInfo,
+  getPageInfo,
   parsePaginationQueryParameters
 } from '../../shared/pagination'
 import { Pagination } from '../../shared/baseModel'
@@ -97,11 +97,10 @@ async function listQuotes(
   }
   try {
     const page = await deps.quoteService.getAccountPage(accountId, pagination)
-    const pageInfo = await getListPageInfo(
+    const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
         deps.quoteService.getAccountPage(accountId, pagination),
-      page,
-      pagination
+      page
     )
     const result = {
       pagination: pageInfo,

@@ -19,20 +19,6 @@ export function parsePaginationQueryParameters(
   }
 }
 
-export async function getListPageInfo<T extends BaseModel>(
-  getPage: (pagination: Pagination) => Promise<T[]>,
-  page: T[],
-  pagination?: Pagination
-): Promise<PageInfo> {
-  const pageInfo = await getPageInfo(getPage, page)
-  if (pagination?.last) {
-    pageInfo.last = page.length
-  } else {
-    pageInfo.first = page.length
-  }
-  return pageInfo
-}
-
 export async function getPageInfo<T extends BaseModel>(
   getPage: (pagination: Pagination) => Promise<T[]>,
   page: T[]
