@@ -408,15 +408,13 @@ describe('Incoming Payment Routes', (): void => {
           {
             headers: { Accept: 'application/json' },
             method: 'GET',
-            query: { first, last, cursor }
+            query: { first, last, cursor },
+            url: `/${account.id}/incoming-payments`
           },
           { accountId: account.id }
         )
         await expect(incomingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
-        expect(ctx.status).toBe(200)
-        expect(ctx.response.get('Content-Type')).toBe(
-          'application/json; charset=utf-8'
-        )
+        expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.body).toEqual({
           pagination,
           result: result.slice(startIndex, endIndex + 1)

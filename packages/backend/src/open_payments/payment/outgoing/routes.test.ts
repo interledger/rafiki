@@ -353,16 +353,15 @@ describe('Outgoing Payment Routes', (): void => {
         pagination['endCursor'] = items[endIndex].id
         const ctx = createContext<ListContext>(
           {
-            headers: { Accept: 'application/json' }
+            headers: { Accept: 'application/json' },
+            method: 'GET',
+            url: `/${accountId}/outgoing-payments`
           },
           { accountId }
         )
         ctx.request.query = { first, last, cursor }
         await expect(outgoingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
-        expect(ctx.status).toBe(200)
-        expect(ctx.response.get('Content-Type')).toBe(
-          'application/json; charset=utf-8'
-        )
+        expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.body).toEqual({
           pagination,
           result: result.slice(startIndex, endIndex + 1)
