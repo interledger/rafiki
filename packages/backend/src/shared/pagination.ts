@@ -1,24 +1,5 @@
 import { BaseModel, PageInfo, Pagination } from './baseModel'
 
-export function parsePaginationQueryParameters(
-  first?: number,
-  last?: number,
-  cursor?: string
-): Pagination {
-  if (first && last) {
-    throw new Error('first and last provided. Only one allowed')
-  }
-  if (last && !cursor) {
-    throw new Error('cursor needed for backwards pagination')
-  }
-  return {
-    first,
-    last,
-    before: last ? cursor : undefined,
-    after: cursor && !last ? cursor : undefined
-  }
-}
-
 export async function getPageInfo<T extends BaseModel>(
   getPage: (pagination: Pagination) => Promise<T[]>,
   page: T[]

@@ -15,11 +15,12 @@ import { initIocContainer } from '../..'
 import { AppServices, CreateContext, ReadContext, ListContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { QuoteService } from './service'
-import { Quote, QuoteJSON } from './model'
+import { Quote } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
 import { Amount } from '../amount'
 import { randomAsset } from '../../tests/asset'
 import { createQuote } from '../../tests/quote'
+import { listTests } from '../../shared/routes.test'
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -339,69 +340,28 @@ describe('Quote Routes', (): void => {
   })
 
   describe('list', (): void => {
-    let items: Quote[]
-    let result: QuoteJSON[]
-    beforeEach(
-      async (): Promise<void> => {
-        items = []
-        for (let i = 0; i < 3; i++) {
-          const ip = await createAccountQuote(accountId)
-          items.push(ip)
-        }
-        result = [0, 1, 2].map((i) => {
-          return {
-            id: `${accountUrl}/quotes/${items[i].id}`,
-            accountId: accountUrl,
-            receivingPayment: items[i]['receivingPayment'],
-            sendAmount: {
-              ...items[i]['sendAmount'],
-              value: items[i]['sendAmount'].value.toString()
-            },
-            receiveAmount: {
-              ...items[i]['receiveAmount'],
-              value: items[i]['receiveAmount'].value.toString()
-            },
-            expiresAt: items[i].expiresAt.toISOString(),
-            createdAt: items[i].createdAt.toISOString()
-          }
-        })
-      }
-    )
-    test.each`
-      first   | last    | cursorIndex | pagination                                        | startIndex | endIndex | description
-      ${null} | ${null} | ${-1}       | ${{ hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'no pagination parameters'}
-      ${10}   | ${null} | ${-1}       | ${{ hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'only `first`'}
-      ${10}   | ${null} | ${0}        | ${{ hasPreviousPage: true, hasNextPage: false }}  | ${1}       | ${2}     | ${'`first` plus `cursor`'}
-      ${null} | ${10}   | ${2}        | ${{ hasPreviousPage: false, hasNextPage: true }}  | ${0}       | ${1}     | ${'`last` plus `cursor`'}
-    `(
-      'returns 200 on $description',
-      async ({
-        first,
-        last,
-        cursorIndex,
-        pagination,
-        startIndex,
-        endIndex
-      }): Promise<void> => {
-        const cursor = items[cursorIndex] ? items[cursorIndex].id : ''
-        pagination['startCursor'] = items[startIndex].id
-        pagination['endCursor'] = items[endIndex].id
-        const ctx = createContext<ListContext>(
-          {
-            headers: { Accept: 'application/json' },
-            method: 'GET',
-            url: `/${accountId}/quotes`
+    listTests({
+      getAccountId: () => accountId,
+      getUrl: () => `/${accountId}/quotes`,
+      createItem: async (_index) => {
+        const quote = await createAccountQuote(accountId)
+        return {
+          id: `${accountUrl}/quotes/${quote.id}`,
+          accountId: accountUrl,
+          receivingPayment: quote.receivingPayment,
+          sendAmount: {
+            ...quote.sendAmount,
+            value: quote.sendAmount.value.toString()
           },
-          { accountId }
-        )
-        ctx.request.query = { first, last, cursor }
-        await expect(quoteRoutes.list(ctx)).resolves.toBeUndefined()
-        expect(ctx.response).toSatisfyApiSpec()
-        expect(ctx.body).toEqual({
-          pagination,
-          result: result.slice(startIndex, endIndex + 1)
-        })
-      }
-    )
+          receiveAmount: {
+            ...quote.receiveAmount,
+            value: quote.receiveAmount.value.toString()
+          },
+          expiresAt: quote.expiresAt.toISOString(),
+          createdAt: quote.createdAt.toISOString()
+        }
+      },
+      list: (ctx: ListContext) => quoteRoutes.list(ctx)
+    })
   })
 })

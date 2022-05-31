@@ -39,6 +39,7 @@ import { QuoteRoutes } from './open_payments/quote/routes'
 import { QuoteService } from './open_payments/quote/service'
 import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
+import { Pagination } from './shared/baseModel'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
 import { SessionService } from './session/service'
@@ -74,12 +75,6 @@ export type AppRequest<
   body: BodyT
 }
 
-interface ListQuery {
-  cursor: string
-  first: number
-  last: number
-}
-
 type Context<T> = Omit<AppContext, 'request'> & {
   request: T
 }
@@ -92,7 +87,7 @@ export type ReadContext = Context<AppRequest<'accountId' | 'id'>>
 export type UpdateContext<BodyT> = Context<
   AppRequest<'accountId' | 'id', BodyT>
 >
-export type ListContext = Context<AppRequest<'accountId', never, ListQuery>>
+export type ListContext = Context<AppRequest<'accountId', never, Pagination>>
 
 type ContextType<T> = T extends (
   ctx: infer Context

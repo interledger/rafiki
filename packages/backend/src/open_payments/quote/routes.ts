@@ -5,10 +5,7 @@ import { QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
-import {
-  getPageInfo,
-  parsePaginationQueryParameters
-} from '../../shared/pagination'
+import { getPageInfo } from '../../shared/pagination'
 import { Pagination } from '../../shared/baseModel'
 
 interface ServiceDependencies {
@@ -88,13 +85,7 @@ async function listQuotes(
   ctx: ListContext
 ): Promise<void> {
   const { accountId } = ctx.params
-  const { first, last, cursor } = ctx.request.query
-  let pagination: Pagination
-  try {
-    pagination = parsePaginationQueryParameters(first, last, cursor)
-  } catch (err) {
-    ctx.throw(404, err.message)
-  }
+  const pagination = ctx.request.query
   try {
     const page = await deps.quoteService.getAccountPage(accountId, pagination)
     const pageInfo = await getPageInfo(

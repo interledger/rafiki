@@ -22,16 +22,13 @@ import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
-import {
-  OutgoingPayment,
-  OutgoingPaymentResponse,
-  OutgoingPaymentState
-} from './model'
+import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { Amount } from '../../amount'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createQuote } from '../../../tests/quote'
 import { AccountingService } from '../../../accounting/service'
+import { listTests } from '../../../shared/routes.test'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -294,84 +291,45 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   describe('list', (): void => {
-    let items: OutgoingPayment[]
-    let result: OutgoingPaymentResponse[]
-    beforeEach(
-      async (): Promise<void> => {
-        items = []
-        for (let i = 0; i < 3; i++) {
-          const ip = await createPayment({
-            accountId,
-            description: `p${i}`
-          })
-          items.push(ip)
-        }
-        result = [0, 1, 2].map((i) => {
-          return {
-            id: `${accountUrl}/outgoing-payments/${items[i].id}`,
-            accountId: accountUrl,
-            receivingPayment: items[i]['receivingPayment'],
-            sendAmount: {
-              ...items[i]['sendAmount'],
-              value: items[i]['sendAmount'].value.toString()
-            },
-            receiveAmount: {
-              ...items[i]['receiveAmount'],
-              value: items[i]['receiveAmount'].value.toString()
-            },
-            sentAmount: {
-              value: '0',
-              assetCode: asset.code,
-              assetScale: asset.scale
-            },
-            failed: false,
-            description: items[i]['description'] ?? undefined,
-            createdAt: items[i].createdAt.toISOString(),
-            updatedAt: items[i].updatedAt.toISOString()
-          }
+    listTests({
+      getAccountId: () => accountId,
+      getUrl: () => `/${accountId}/outgoing-payments`,
+      createItem: async (index: number) => {
+        const payment = await createPayment({
+          accountId,
+          description: `p${index}`
         })
-      }
-    )
-    test.each`
-      first   | last    | cursorIndex | pagination                                        | startIndex | endIndex | description
-      ${null} | ${null} | ${-1}       | ${{ hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'no pagination parameters'}
-      ${10}   | ${null} | ${-1}       | ${{ hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'only `first`'}
-      ${10}   | ${null} | ${0}        | ${{ hasPreviousPage: true, hasNextPage: false }}  | ${1}       | ${2}     | ${'`first` plus `cursor`'}
-      ${null} | ${10}   | ${2}        | ${{ hasPreviousPage: false, hasNextPage: true }}  | ${0}       | ${1}     | ${'`last` plus `cursor`'}
-    `(
-      'returns 200 on $description',
-      async ({
-        first,
-        last,
-        cursorIndex,
-        pagination,
-        startIndex,
-        endIndex
-      }): Promise<void> => {
-        const cursor = items[cursorIndex] ? items[cursorIndex].id : ''
-        pagination['startCursor'] = items[startIndex].id
-        pagination['endCursor'] = items[endIndex].id
-        const ctx = createContext<ListContext>(
-          {
-            headers: { Accept: 'application/json' },
-            method: 'GET',
-            url: `/${accountId}/outgoing-payments`
+        return {
+          id: `${accountUrl}/outgoing-payments/${payment.id}`,
+          accountId: accountUrl,
+          receivingPayment: payment.receivingPayment,
+          sendAmount: {
+            ...payment.sendAmount,
+            value: payment.sendAmount.value.toString()
           },
-          { accountId }
-        )
-        ctx.request.query = { first, last, cursor }
-        await expect(outgoingPaymentRoutes.list(ctx)).resolves.toBeUndefined()
-        expect(ctx.response).toSatisfyApiSpec()
-        expect(ctx.body).toEqual({
-          pagination,
-          result: result.slice(startIndex, endIndex + 1)
-        })
-      }
-    )
-    test('returns 500 if TB account not found', async (): Promise<void> => {
+          receiveAmount: {
+            ...payment.receiveAmount,
+            value: payment.receiveAmount.value.toString()
+          },
+          sentAmount: {
+            value: '0',
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          failed: false,
+          description: payment.description,
+          createdAt: payment.createdAt.toISOString(),
+          updatedAt: payment.updatedAt.toISOString()
+        }
+      },
+      list: (ctx: ListContext) => outgoingPaymentRoutes.list(ctx)
+    })
+
+    test('returns 500 for unexpected error', async (): Promise<void> => {
+      const outgoingPaymentService = await deps.use('outgoingPaymentService')
       jest
-        .spyOn(accountingService, 'getAccountsTotalSent')
-        .mockResolvedValueOnce([undefined])
+        .spyOn(outgoingPaymentService, 'getAccountPage')
+        .mockRejectedValueOnce(new Error('unexpected'))
       const ctx = createContext<ListContext>(
         {
           headers: { Accept: 'application/json' }
