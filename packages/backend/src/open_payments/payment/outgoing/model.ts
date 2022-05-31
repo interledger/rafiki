@@ -243,7 +243,6 @@ export type OutgoingPaymentJSON = {
   receiveAmount: AmountJSON
   description: string | null
   externalRef: string | null
-  failed: boolean
   createdAt: string
   updatedAt: string
 }

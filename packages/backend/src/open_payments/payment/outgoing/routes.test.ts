@@ -24,7 +24,7 @@ import { CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
 import {
   OutgoingPayment,
-  OutgoingPaymentJSON,
+  OutgoingPaymentResponse,
   OutgoingPaymentState
 } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
@@ -259,7 +259,7 @@ describe('Outgoing Payment Routes', (): void => {
         }
         const ctx = setup({})
         await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
-        // expect(ctx.response).toSatisfyApiSpec()
+        expect(ctx.response).toSatisfyApiSpec()
         const outgoingPaymentId = ((ctx.response.body as Record<
           string,
           unknown
@@ -295,7 +295,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   describe('list', (): void => {
     let items: OutgoingPayment[]
-    let result: Omit<OutgoingPaymentJSON, 'externalRef'>[]
+    let result: OutgoingPaymentResponse[]
     beforeEach(
       async (): Promise<void> => {
         items = []
@@ -325,7 +325,7 @@ describe('Outgoing Payment Routes', (): void => {
               assetScale: asset.scale
             },
             failed: false,
-            description: items[i]['description'] ?? null,
+            description: items[i]['description'] ?? undefined,
             createdAt: items[i].createdAt.toISOString(),
             updatedAt: items[i].updatedAt.toISOString()
           }

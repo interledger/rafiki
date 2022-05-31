@@ -91,7 +91,6 @@ async function listOutgoingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  // todo: validation
   const { accountId } = ctx.params
   const { first, last, cursor } = ctx.request.query
   let pagination: Pagination

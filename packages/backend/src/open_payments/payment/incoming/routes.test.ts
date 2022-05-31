@@ -272,9 +272,6 @@ describe('Incoming Payment Routes', (): void => {
         )
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
-        const sharedSecret = (ctx.response.body as Record<string, unknown>)[
-          'sharedSecret'
-        ]
         const incomingPaymentId = ((ctx.response.body as Record<
           string,
           unknown
@@ -287,6 +284,8 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount,
           description,
           expiresAt: expiresAt || expect.any(String),
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
           receivedAmount: {
             value: '0',
             assetCode: asset.code,
@@ -297,9 +296,7 @@ describe('Incoming Payment Routes', (): void => {
           ilpAddress: expect.stringMatching(
             /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
           ),
-          sharedSecret,
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String)
+          sharedSecret: expect.any(String)
         })
       }
     )
@@ -343,20 +340,20 @@ describe('Incoming Payment Routes', (): void => {
         },
         description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
+        createdAt: incomingPayment.createdAt.toISOString(),
+        updatedAt: expect.any(String),
         receivedAmount: {
           value: '0',
           assetCode: asset.code,
           assetScale: asset.scale
         },
         externalRef: '#123',
-        state: IncomingPaymentState.Completed.toLowerCase(),
-        createdAt: incomingPayment.createdAt.toISOString(),
-        updatedAt: expect.any(String)
+        state: IncomingPaymentState.Completed.toLowerCase()
       })
     })
   })
 
-  describe.only('list', (): void => {
+  describe('list', (): void => {
     let items: IncomingPayment[]
     let result: Omit<IncomingPaymentJSON, 'incomingAmount' | 'externalRef'>[]
     beforeEach(
