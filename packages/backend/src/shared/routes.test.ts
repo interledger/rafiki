@@ -49,7 +49,7 @@ export const listTests = <Type extends BaseResponse>({
       }): Promise<void> => {
         const cursor = items[cursorIndex] ? getCursor(cursorIndex) : undefined
         if (cursor) {
-          query[query.last ? 'before' : 'after'] = cursor
+          query['cursor'] = cursor
         }
         pagination['startCursor'] = getCursor(startIndex)
         pagination['endCursor'] = getCursor(endIndex)

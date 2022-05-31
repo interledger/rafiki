@@ -19,7 +19,7 @@ import { createIncomingPayment } from '../tests/incomingPayment'
 import { createQuote } from '../tests/quote'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
 import { Amount } from '@interledger/pay/dist/src/open-payments'
-import { getPageInfo } from './pagination'
+import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
 import { PeerFactory } from '../tests/peerFactory'
@@ -69,6 +69,22 @@ describe('Pagination', (): void => {
       await workerUtils.release()
     }
   )
+  describe('parsePaginationQueryParameters', (): void => {
+    test.each`
+      first        | last         | cursor   | result
+      ${undefined} | ${undefined} | ${''}    | ${{ first: undefined, last: undefined, before: undefined, after: undefined }}
+      ${10}        | ${undefined} | ${''}    | ${{ first: 10, last: undefined, before: undefined, after: undefined }}
+      ${10}        | ${undefined} | ${'abc'} | ${{ first: 10, last: undefined, before: undefined, after: 'abc' }}
+      ${undefined} | ${20}        | ${'efg'} | ${{ first: undefined, last: 20, before: 'efg', after: undefined }}
+    `(
+      "success with first: '$first', last: '$last', cursor: '$cursor'",
+      async ({ first, last, cursor, result }): Promise<void> => {
+        expect(parsePaginationQueryParameters({ first, last, cursor })).toEqual(
+          result
+        )
+      }
+    )
+  })
   describe('getPageInfo', (): void => {
     describe('account resources', (): void => {
       let asset: { code: string; scale: number }
