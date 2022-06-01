@@ -12,7 +12,7 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
 }
 
-interface Introspection extends Partial<Grant> {
+export interface Introspection extends Partial<Grant> {
   active: boolean
 }
 

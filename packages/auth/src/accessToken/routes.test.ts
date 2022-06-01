@@ -1,0 +1,189 @@
+import Knex, { Transaction } from 'knex'
+import crypto from 'crypto'
+import { v4 } from 'uuid'
+
+import { createTestApp, TestContainer } from '../tests/app'
+import { Config } from '../config/app'
+import { IocContract } from '@adonisjs/fold'
+import { initIocContainer } from '..'
+import { AppServices } from '../app'
+import { truncateTables } from '../tests/tableManager'
+import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
+import { AccessType, Action } from '../access/types'
+import { AccessToken } from './model'
+import { Access } from '../access/model'
+import { AccessTokenRoutes } from './routes'
+import { createContext } from '../tests/context'
+
+describe('Access Token Routes', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+  let knex: Knex
+  let trx: Transaction
+  let accessTokenRoutes: AccessTokenRoutes
+
+  beforeAll(
+    async (): Promise<void> => {
+      deps = await initIocContainer(Config)
+      appContainer = await createTestApp(deps)
+      knex = await deps.use('knex')
+      accessTokenRoutes = await deps.use('accessTokenRoutes')
+    }
+  )
+
+  afterEach(
+    async (): Promise<void> => {
+      jest.useRealTimers()
+      await truncateTables(knex)
+    }
+  )
+
+  afterAll(
+    async (): Promise<void> => {
+      await appContainer.shutdown()
+    }
+  )
+
+  const BASE_GRANT = {
+    state: GrantState.Pending,
+    startMethod: [StartMethod.Redirect],
+    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    continueId: v4(),
+    finishMethod: FinishMethod.Redirect,
+    finishUri: 'https://example.com/finish',
+    clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    interactId: v4(),
+    interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+  }
+
+  const BASE_ACCESS = {
+    type: AccessType.OutgoingPayment,
+    actions: [Action.Read, Action.Create],
+    limits: {
+      receivingAccount: 'https://wallet.com/alice',
+      sendAmount: {
+        value: '400',
+        assetCode: 'USD',
+        assetScale: 2
+      }
+    }
+  }
+
+  const BASE_TOKEN = {
+    value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    managementId: 'https://example.com/manage/12345',
+    expiresIn: 3600
+  }
+
+  describe('Introspect', (): void => {
+    let grant: Grant
+    let access: Access
+    let token: AccessToken
+    beforeEach(
+      async (): Promise<void> => {
+        grant = await Grant.query(trx).insertAndFetch({
+          ...BASE_GRANT
+        })
+        access = await Access.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_ACCESS
+        })
+        token = await AccessToken.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_TOKEN
+        })
+      }
+    )
+    test('Cannot introspect fake token', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        {}
+      )
+      ctx.request.body = {
+        access_token: v4(),
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+      await expect(accessTokenRoutes.introspect(ctx)).rejects.toMatchObject({
+        status: 404,
+        message: 'token not found'
+      })
+    })
+
+    test('Cannot introspect if no token passed', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        {}
+      )
+      ctx.request.body = {
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+      await expect(accessTokenRoutes.introspect(ctx)).rejects.toMatchObject({
+        status: 400,
+        message: 'invalid introspection request'
+      })
+    })
+
+    test('Successfully introspects valid token', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        {}
+      )
+      ctx.request.body = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+      expect(ctx.body).toEqual({
+        active: true,
+        grant: grant.id,
+        access: [
+          {
+            type: access.type,
+            actions: access.actions,
+            limits: access.limits
+          }
+        ]
+        // key: {}
+      })
+    })
+
+    test('Successfully introspects expired token', async (): Promise<void> => {
+      const now = new Date(new Date().getTime() + 4000)
+      jest.useFakeTimers('modern')
+      jest.setSystemTime(now)
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        {}
+      )
+      ctx.request.body = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+      expect(ctx.body).toEqual({
+        active: false
+      })
+    })
+  })
+})
