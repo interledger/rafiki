@@ -70,6 +70,9 @@ export class OutgoingPayment
     return this.quote.asset
   }
 
+  // Outgoing peer
+  public peerId?: string
+
   static relationMappings = {
     account: {
       relation: Model.HasOneRelation,
@@ -135,6 +138,9 @@ export class OutgoingPayment
     }
     if (this.error) {
       data.payment.error = this.error
+    }
+    if (this.peerId) {
+      data.payment.peerId = this.peerId
     }
     return data
   }
@@ -214,6 +220,7 @@ export type PaymentData = {
       amountSent: string
     }
     balance: string
+    peerId?: string
   }
 }
 

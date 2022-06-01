@@ -1,5 +1,6 @@
 import assert from 'assert'
 import { IocContract } from '@adonisjs/fold'
+import * as Pay from '@interledger/pay'
 
 import { createQuote, CreateTestQuoteOptions } from './quote'
 import { AppServices } from '../app'
@@ -16,6 +17,20 @@ export async function createOutgoingPayment(
 ): Promise<OutgoingPayment> {
   const quote = await createQuote(deps, options)
   const outgoingPaymentService = await deps.use('outgoingPaymentService')
+  if (options.validDestination === false) {
+    const streamServer = await deps.use('streamServer')
+    const { ilpAddress, sharedSecret } = streamServer.generateCredentials()
+    jest.spyOn(Pay, 'setupPayment').mockResolvedValueOnce({
+      destinationAsset: {
+        code: quote.receiveAmount.assetCode,
+        scale: quote.receiveAmount.assetScale
+      },
+      destinationAddress: ilpAddress,
+      sharedSecret,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      requestCounter: Pay.Counter.from(0)!
+    })
+  }
   const outgoingPaymentOrError = await outgoingPaymentService.create({
     ...options,
     quoteId: quote.id

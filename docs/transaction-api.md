@@ -177,6 +177,7 @@ The payment must be created with `quoteId`.
 | `receiveAmount.assetScale` | No       | `Integer`              |                                                                                                                    |
 | `receiveAmount.assetCode`  | No       | `String`               |                                                                                                                    |
 | `receivingPayment`         | No       | `String`               | The URL of the Open Payments incoming payment that is being paid.                                                  |
+| `peerId`                   | Yes      | `ID`                   | Id of the outgoing peer.                                                                                           |
 | `createdAt`                | No       | `String`               | ISO 8601 format.                                                                                                   |
 
 ### `OutgoingPaymentState`

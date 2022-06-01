@@ -19,6 +19,7 @@ import {
 } from '../../../tests/app'
 import { IAppConfig, Config } from '../../../config/app'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
+import { PeerFactory } from '../../../tests/peerFactory'
 import { createQuote } from '../../../tests/quote'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../'
@@ -27,6 +28,7 @@ import { truncateTables } from '../../../tests/tableManager'
 import {
   OutgoingPayment,
   OutgoingPaymentState,
+  PaymentData,
   PaymentEvent,
   PaymentEventType
 } from './model'
@@ -305,8 +307,7 @@ describe('OutgoingPaymentService', (): void => {
       const quote = await createQuote(deps, {
         accountId,
         receivingAccount,
-        sendAmount,
-        validDestination: false
+        sendAmount
       })
       const options = {
         accountId,
@@ -327,39 +328,72 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe('create', (): void => {
-    it('creates an OutgoingPayment from a quote', async () => {
-      const quote = await createQuote(deps, {
-        accountId,
-        receivingAccount,
-        sendAmount,
-        validDestination: false
-      })
-      const options = {
-        accountId,
-        quoteId: quote.id,
-        description: 'rent',
-        externalRef: '202201'
-      }
-      const payment = await outgoingPaymentService.create(options)
-      assert.ok(!isOutgoingPaymentError(payment))
-      expect(payment).toMatchObject({
-        id: quote.id,
-        accountId,
-        receivingPayment: quote.receivingPayment,
-        sendAmount: quote.sendAmount,
-        receiveAmount: quote.receiveAmount,
-        description: options.description,
-        externalRef: options.externalRef,
-        state: OutgoingPaymentState.Funding,
-        asset,
-        quote
-      })
-      await expectOutcome(payment, { accountBalance: BigInt(0) })
+    it.each`
+      outgoingPeer | description
+      ${false}     | ${''}
+      ${true}      | ${'with an outgoing peer'}
+    `(
+      'creates an OutgoingPayment from a quote $description',
+      async ({ outgoingPeer }): Promise<void> => {
+        const peerService = await deps.use('peerService')
+        const peerFactory = new PeerFactory(peerService)
+        const peer = await peerFactory.build()
+        const quote = await createQuote(deps, {
+          accountId,
+          receivingAccount,
+          sendAmount
+        })
+        const options = {
+          accountId,
+          quoteId: quote.id,
+          description: 'rent',
+          externalRef: '202201'
+        }
+        if (outgoingPeer) {
+          jest
+            .spyOn(peerService, 'getByDestinationAddress')
+            .mockResolvedValueOnce(peer)
+        }
+        const payment = await outgoingPaymentService.create(options)
+        assert.ok(!isOutgoingPaymentError(payment))
+        expect(payment).toMatchObject({
+          id: quote.id,
+          accountId,
+          receivingPayment: quote.receivingPayment,
+          sendAmount: quote.sendAmount,
+          receiveAmount: quote.receiveAmount,
+          description: options.description,
+          externalRef: options.externalRef,
+          state: OutgoingPaymentState.Funding,
+          asset,
+          quote,
+          peerId: outgoingPeer ? peer.id : null
+        })
+        await expectOutcome(payment, { accountBalance: BigInt(0) })
 
-      await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
-        payment
-      )
-    })
+        await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
+          payment
+        )
+
+        const expectedPaymentData: Partial<PaymentData['payment']> = {
+          id: payment.id
+        }
+        if (outgoingPeer) {
+          expectedPaymentData.peerId = peer.id
+        }
+        await expect(
+          PaymentEvent.query(knex).where({
+            type: PaymentEventType.PaymentCreated
+          })
+        ).resolves.toMatchObject([
+          {
+            data: {
+              payment: expectedPaymentData
+            }
+          }
+        ])
+      }
+    )
 
     it('fails to create on unknown account', async () => {
       const { id: quoteId } = await createQuote(deps, {

@@ -333,9 +333,8 @@ describe('Outgoing Payment Routes', (): void => {
       async ({ description, externalRef }): Promise<void> => {
         const quote = await createQuote(deps, {
           accountId,
-          receivingAccount,
-          sendAmount,
-          validDestination: false
+          receivingAccount: accountUrl,
+          sendAmount
         })
         options = {
           quoteId: quote.id,
