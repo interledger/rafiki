@@ -840,5 +840,23 @@ describe('OutgoingPaymentService', (): void => {
       getPage: (pagination: Pagination) =>
         outgoingPaymentService.getAccountPage(accountId, pagination)
     })
+
+    it('throws if no TB account found', async (): Promise<void> => {
+      const payment = await createOutgoingPayment(deps, {
+        accountId,
+        receivingAccount,
+        sendAmount,
+        validDestination: false
+      })
+
+      jest
+        .spyOn(accountingService, 'getAccountsTotalSent')
+        .mockResolvedValueOnce([undefined])
+      await expect(
+        outgoingPaymentService.getAccountPage(accountId, {})
+      ).rejects.toThrowError(
+        `Underlying TB account not found, payment id: ${payment.id}`
+      )
+    })
   })
 })

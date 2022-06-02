@@ -1,4 +1,5 @@
 import assert from 'assert'
+import jestOpenAPI from 'jest-openapi'
 import * as httpMocks from 'node-mocks-http'
 import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
@@ -11,15 +12,15 @@ import { resetGraphileDb } from '../../tests/graphileDb'
 import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
-import { AppServices } from '../../app'
+import { AppServices, CreateContext, ReadContext, ListContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
-import { QuoteService, CreateQuoteOptions } from './service'
-import { Quote, QuoteJSON } from './model'
-import { QuoteRoutes } from './routes'
+import { QuoteService } from './service'
+import { Quote } from './model'
+import { QuoteRoutes, CreateBody } from './routes'
 import { Amount } from '../amount'
 import { randomAsset } from '../../tests/asset'
 import { createQuote } from '../../tests/quote'
-import { AppContext } from '../../app'
+import { listTests } from '../../shared/routes.test'
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -74,6 +75,7 @@ describe('Quote Routes', (): void => {
       config = await deps.use('config')
       quoteRoutes = await deps.use('quoteRoutes')
       quoteService = await deps.use('quoteService')
+      jestOpenAPI(await deps.use('openApi'))
     }
   )
 
@@ -107,53 +109,34 @@ describe('Quote Routes', (): void => {
   )
 
   describe('get', (): void => {
-    test('returns error on invalid id', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { quoteId: 'not_a_uuid' }
-      )
-      await expect(quoteRoutes.get(ctx)).rejects.toHaveProperty(
-        'message',
-        'invalid id'
-      )
-    })
-
-    test('returns 406 for wrong Accept', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'test/plain' }
-        },
-        { quoteId: uuid() }
-      )
-      await expect(quoteRoutes.get(ctx)).rejects.toHaveProperty('status', 406)
-    })
-
     test('returns 404 for nonexistent quote', async (): Promise<void> => {
-      const ctx = createContext(
+      const ctx = createContext<ReadContext>(
         {
           headers: { Accept: 'application/json' }
         },
-        { quoteId: uuid() }
+        {
+          id: uuid(),
+          accountId
+        }
       )
       await expect(quoteRoutes.get(ctx)).rejects.toHaveProperty('status', 404)
     })
 
     test('returns 200 with a quote', async (): Promise<void> => {
       const quote = await createAccountQuote(accountId)
-      const ctx = createContext(
+      const ctx = createContext<ReadContext>(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          method: 'GET',
+          url: `/${accountId}/quotes/${quote.id}`
         },
-        { quoteId: quote.id }
+        {
+          id: quote.id,
+          accountId
+        }
       )
       await expect(quoteRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
-      expect(ctx.response.get('Content-Type')).toBe(
-        'application/json; charset=utf-8'
-      )
-
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         id: `${accountUrl}/quotes/${quote.id}`,
         accountId: accountUrl,
@@ -167,14 +150,13 @@ describe('Quote Routes', (): void => {
           value: quote.receiveAmount.value.toString()
         },
         createdAt: quote.createdAt.toISOString(),
-        updatedAt: quote.updatedAt.toISOString(),
         expiresAt: quote.expiresAt.toISOString()
       })
     })
   })
 
   describe('create', (): void => {
-    let options: Omit<CreateQuoteOptions, 'accountId'>
+    let options: CreateBody
 
     beforeEach(() => {
       options = {}
@@ -182,107 +164,30 @@ describe('Quote Routes', (): void => {
 
     function setup(
       reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
-    ): AppContext {
-      const ctx = createContext(
+    ): CreateContext<CreateBody> {
+      const ctx = createContext<CreateContext<CreateBody>>(
         {
           headers: Object.assign(
             { Accept: 'application/json', 'Content-Type': 'application/json' },
             reqOpts.headers
-          )
+          ),
+          method: 'POST',
+          url: `/${accountId}/quotes`
         },
         { accountId }
       )
-      ctx.request.body = options
+      ctx.request.body = {
+        ...options
+      }
       return ctx
     }
-
-    test('returns error on invalid id', async (): Promise<void> => {
-      const ctx = setup({})
-      ctx.params.accountId = 'not_a_uuid'
-      await expect(quoteRoutes.create(ctx)).rejects.toMatchObject({
-        message: 'invalid account id',
-        status: 400
-      })
-    })
-
-    test('returns 406 on invalid Accept', async (): Promise<void> => {
-      const ctx = setup({ headers: { Accept: 'text/plain' } })
-      await expect(quoteRoutes.create(ctx)).rejects.toMatchObject({
-        message: 'must accept json',
-        status: 406
-      })
-    })
-
-    test('returns error on invalid Content-Type', async (): Promise<void> => {
-      const ctx = setup({ headers: { 'Content-Type': 'text/plain' } })
-      await expect(quoteRoutes.create(ctx)).rejects.toMatchObject({
-        message: 'must send json body',
-        status: 400
-      })
-    })
-
-    test.each`
-      field                 | invalidValue
-      ${'receivingAccount'} | ${123}
-      ${'sendAmount'}       | ${123}
-      ${'receiveAmount'}    | ${123}
-      ${'receivingPayment'} | ${123}
-    `(
-      'returns error on invalid $field',
-      async ({ field, invalidValue }): Promise<void> => {
-        const ctx = setup({})
-        ctx.request.body[field] = invalidValue
-        await expect(quoteRoutes.create(ctx)).rejects.toMatchObject({
-          message: `invalid ${field}`,
-          status: 400
-        })
-      }
-    )
-
-    test.each`
-      receivingAccount    | receivingPayment    | sendAmount   | receiveAmount
-      ${receivingAccount} | ${undefined}        | ${undefined} | ${undefined}
-      ${receivingAccount} | ${undefined}        | ${123}       | ${123}
-      ${undefined}        | ${receivingPayment} | ${123}       | ${123}
-    `(
-      'returns error on invalid amount',
-      async ({
-        receivingAccount,
-        receivingPayment,
-        sendAmount,
-        receiveAmount
-      }): Promise<void> => {
-        options = {
-          receivingPayment,
-          receivingAccount,
-          sendAmount: sendAmount
-            ? {
-                value: sendAmount,
-                assetCode: asset.code,
-                assetScale: asset.scale
-              }
-            : undefined,
-          receiveAmount: receiveAmount
-            ? {
-                value: receiveAmount,
-                assetCode: asset.code,
-                assetScale: asset.scale
-              }
-            : undefined
-        }
-        const ctx = setup({})
-        await expect(quoteRoutes.create(ctx)).rejects.toMatchObject({
-          message: 'invalid amount',
-          status: 400
-        })
-      }
-    )
 
     test('returns error on invalid sendAmount asset', async (): Promise<void> => {
       options = {
         receivingAccount,
         sendAmount: {
           ...sendAmount,
+          value: sendAmount.value.toString(),
           assetScale: sendAmount.assetScale + 1
         }
       }
@@ -360,7 +265,7 @@ describe('Quote Routes', (): void => {
                 value: BigInt(options.receiveAmount.value)
               }
             })
-            expect(ctx.response.status).toBe(201)
+            expect(ctx.response).toSatisfyApiSpec()
             const quoteId = ((ctx.response.body as Record<string, unknown>)[
               'id'
             ] as string)
@@ -380,7 +285,6 @@ describe('Quote Routes', (): void => {
                 value: quote.receiveAmount.value.toString()
               },
               createdAt: quote.createdAt.toISOString(),
-              updatedAt: quote.updatedAt.toISOString(),
               expiresAt: quote.expiresAt.toISOString()
             })
           }
@@ -407,7 +311,7 @@ describe('Quote Routes', (): void => {
               accountId,
               receivingPayment
             })
-            expect(ctx.response.status).toBe(201)
+            expect(ctx.response).toSatisfyApiSpec()
             const quoteId = ((ctx.response.body as Record<string, unknown>)[
               'id'
             ] as string)
@@ -427,7 +331,6 @@ describe('Quote Routes', (): void => {
                 value: quote.receiveAmount.value.toString()
               },
               createdAt: quote.createdAt.toISOString(),
-              updatedAt: quote.updatedAt.toISOString(),
               expiresAt: quote.expiresAt.toISOString()
             })
           })
@@ -437,71 +340,28 @@ describe('Quote Routes', (): void => {
   })
 
   describe('list', (): void => {
-    let items: Quote[]
-    let result: QuoteJSON[]
-    beforeEach(
-      async (): Promise<void> => {
-        items = []
-        for (let i = 0; i < 3; i++) {
-          const ip = await createAccountQuote(accountId)
-          items.push(ip)
-        }
-        result = [0, 1, 2].map((i) => {
-          return {
-            id: `${accountUrl}/quotes/${items[i].id}`,
-            accountId: accountUrl,
-            receivingPayment: items[i]['receivingPayment'],
-            sendAmount: {
-              ...items[i]['sendAmount'],
-              value: items[i]['sendAmount'].value.toString()
-            },
-            receiveAmount: {
-              ...items[i]['receiveAmount'],
-              value: items[i]['receiveAmount'].value.toString()
-            },
-            expiresAt: items[i].expiresAt.toISOString(),
-            createdAt: items[i].createdAt.toISOString(),
-            updatedAt: items[i].updatedAt.toISOString()
-          }
-        })
-      }
-    )
-    test.each`
-      first   | last    | cursorIndex | pagination                                                  | startIndex | endIndex | description
-      ${null} | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'no pagination parameters'}
-      ${'10'} | ${null} | ${-1}       | ${{ first: 3, hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'only `first`'}
-      ${'10'} | ${null} | ${0}        | ${{ first: 2, hasPreviousPage: true, hasNextPage: false }}  | ${1}       | ${2}     | ${'`first` plus `cursor`'}
-      ${null} | ${'10'} | ${2}        | ${{ last: 2, hasPreviousPage: false, hasNextPage: true }}   | ${0}       | ${1}     | ${'`last` plus `cursor`'}
-    `(
-      'returns 200 on $description',
-      async ({
-        first,
-        last,
-        cursorIndex,
-        pagination,
-        startIndex,
-        endIndex
-      }): Promise<void> => {
-        const cursor = items[cursorIndex] ? items[cursorIndex].id : ''
-        pagination['startCursor'] = items[startIndex].id
-        pagination['endCursor'] = items[endIndex].id
-        const ctx = createContext(
-          {
-            headers: { Accept: 'application/json' }
+    listTests({
+      getAccountId: () => accountId,
+      getUrl: () => `/${accountId}/quotes`,
+      createItem: async (_index) => {
+        const quote = await createAccountQuote(accountId)
+        return {
+          id: `${accountUrl}/quotes/${quote.id}`,
+          accountId: accountUrl,
+          receivingPayment: quote.receivingPayment,
+          sendAmount: {
+            ...quote.sendAmount,
+            value: quote.sendAmount.value.toString()
           },
-          { accountId }
-        )
-        ctx.request.query = { first, last, cursor }
-        await expect(quoteRoutes.list(ctx)).resolves.toBeUndefined()
-        expect(ctx.status).toBe(200)
-        expect(ctx.response.get('Content-Type')).toBe(
-          'application/json; charset=utf-8'
-        )
-        expect(ctx.body).toEqual({
-          pagination,
-          result: result.slice(startIndex, endIndex + 1)
-        })
-      }
-    )
+          receiveAmount: {
+            ...quote.receiveAmount,
+            value: quote.receiveAmount.value.toString()
+          },
+          expiresAt: quote.expiresAt.toISOString(),
+          createdAt: quote.createdAt.toISOString()
+        }
+      },
+      list: (ctx: ListContext) => quoteRoutes.list(ctx)
+    })
   })
 })

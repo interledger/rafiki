@@ -198,6 +198,22 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
     })
 
+    test('Cannot create expired incoming payment', async (): Promise<void> => {
+      await expect(
+        incomingPaymentService.create({
+          accountId,
+          incomingAmount: {
+            value: BigInt(0),
+            assetCode: 'ABC',
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() - 40_000),
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        })
+      ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
+    })
+
     test('Cannot fetch a bogus incoming payment', async (): Promise<void> => {
       await expect(incomingPaymentService.get(uuid())).resolves.toBeUndefined()
     })
@@ -316,7 +332,7 @@ describe('Incoming Payment Service', (): void => {
 
     describe('handleExpired', (): void => {
       test('Deactivates an expired incoming payment with received money', async (): Promise<void> => {
-        const incomingPaymentOrError = await incomingPaymentService.create({
+        const incomingPayment = await createIncomingPayment(deps, {
           accountId,
           incomingAmount: {
             value: BigInt(123),
@@ -324,26 +340,25 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           description: 'Test incoming payment',
-          expiresAt: new Date(Date.now() - 40_000),
+          expiresAt: new Date(Date.now() + 30_000),
           externalRef: '#123'
         })
-        assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
         await expect(
           accountingService.createDeposit({
             id: uuid(),
-            account: incomingPaymentOrError,
+            account: incomingPayment,
             amount: BigInt(1)
           })
         ).resolves.toBeUndefined()
 
-        const now = new Date()
+        const now = incomingPayment.expiresAt
         jest.useFakeTimers('modern')
         jest.setSystemTime(now)
         await expect(incomingPaymentService.processNext()).resolves.toBe(
-          incomingPaymentOrError.id
+          incomingPayment.id
         )
         await expect(
-          incomingPaymentService.get(incomingPaymentOrError.id)
+          incomingPaymentService.get(incomingPayment.id)
         ).resolves.toMatchObject({
           state: IncomingPaymentState.Expired,
           processAt: new Date(now.getTime() + 30_000)
@@ -351,7 +366,7 @@ describe('Incoming Payment Service', (): void => {
       })
 
       test('Deletes an expired incoming payment (and account) with no money', async (): Promise<void> => {
-        const incomingPaymentOrError = await incomingPaymentService.create({
+        const incomingPayment = await createIncomingPayment(deps, {
           accountId,
           incomingAmount: {
             value: BigInt(123),
@@ -359,23 +374,24 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           description: 'Test incoming payment',
-          expiresAt: new Date(Date.now() - 40_000),
+          expiresAt: new Date(Date.now() + 30_000),
           externalRef: '#123'
         })
-        assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
+        jest.useFakeTimers('modern')
+        jest.setSystemTime(incomingPayment.expiresAt)
         await expect(incomingPaymentService.processNext()).resolves.toBe(
-          incomingPaymentOrError.id
+          incomingPayment.id
         )
         expect(
-          await incomingPaymentService.get(incomingPaymentOrError.id)
+          await incomingPaymentService.get(incomingPayment.id)
         ).toBeUndefined()
       })
     })
 
     describe.each`
-      eventType                                            | expiresAt  | amountReceived
-      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${-40_000} | ${BigInt(1)}
-      ${IncomingPaymentEventType.IncomingPaymentCompleted} | ${30_000}  | ${BigInt(123)}
+      eventType                                            | expiresAt                        | amountReceived
+      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${new Date(Date.now() + 30_000)} | ${BigInt(1)}
+      ${IncomingPaymentEventType.IncomingPaymentCompleted} | ${undefined}                     | ${BigInt(123)}
     `(
       'handleDeactivated ($eventType)',
       ({ eventType, expiresAt, amountReceived }): void => {
@@ -383,19 +399,17 @@ describe('Incoming Payment Service', (): void => {
 
         beforeEach(
           async (): Promise<void> => {
-            const incomingPaymentOrError = await incomingPaymentService.create({
+            incomingPayment = await createIncomingPayment(deps, {
               accountId,
               incomingAmount: {
                 value: BigInt(123),
                 assetCode: asset.code,
                 assetScale: asset.scale
               },
-              expiresAt: new Date(Date.now() + expiresAt),
+              expiresAt,
               description: 'Test incoming payment',
               externalRef: '#123'
             })
-            assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
-            incomingPayment = incomingPaymentOrError
             await expect(
               accountingService.createDeposit({
                 id: uuid(),
@@ -404,6 +418,8 @@ describe('Incoming Payment Service', (): void => {
               })
             ).resolves.toBeUndefined()
             if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
+              jest.useFakeTimers('modern')
+              jest.setSystemTime(incomingPayment.expiresAt)
               await expect(incomingPaymentService.processNext()).resolves.toBe(
                 incomingPayment.id
               )
@@ -476,6 +492,29 @@ describe('Incoming Payment Service', (): void => {
         }),
       getPage: (pagination: Pagination) =>
         incomingPaymentService.getAccountPage(accountId, pagination)
+    })
+
+    it('throws if no TB account found', async (): Promise<void> => {
+      const payment = await createIncomingPayment(deps, {
+        accountId,
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        description: 'IncomingPayment',
+        externalRef: '#123'
+      })
+
+      jest
+        .spyOn(accountingService, 'getAccountsTotalReceived')
+        .mockResolvedValueOnce([undefined])
+      await expect(
+        incomingPaymentService.getAccountPage(accountId, {})
+      ).rejects.toThrowError(
+        `Underlying TB account not found, payment id: ${payment.id}`
+      )
     })
   })
 

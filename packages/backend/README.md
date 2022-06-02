@@ -5,6 +5,11 @@
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/engine/install/) configured to [run as non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
+- [`openapi`](https://github.com/interledger/rafiki/tree/main/packages/openapi):
+
+```shell
+yarn workspace openapi build
+```
 
 ### Testing
 

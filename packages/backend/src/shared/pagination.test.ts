@@ -71,31 +71,17 @@ describe('Pagination', (): void => {
   )
   describe('parsePaginationQueryParameters', (): void => {
     test.each`
-      first   | last    | cursor   | result
-      ${''}   | ${''}   | ${''}    | ${{ first: undefined, last: undefined, before: undefined, after: undefined }}
-      ${'10'} | ${''}   | ${''}    | ${{ first: 10, last: undefined, before: undefined, after: undefined }}
-      ${'10'} | ${''}   | ${'abc'} | ${{ first: 10, last: undefined, before: undefined, after: 'abc' }}
-      ${''}   | ${'20'} | ${'efg'} | ${{ first: undefined, last: 20, before: 'efg', after: undefined }}
+      first        | last         | cursor   | result
+      ${undefined} | ${undefined} | ${''}    | ${{ first: undefined, last: undefined, before: undefined, after: undefined }}
+      ${10}        | ${undefined} | ${''}    | ${{ first: 10, last: undefined, before: undefined, after: undefined }}
+      ${10}        | ${undefined} | ${'abc'} | ${{ first: 10, last: undefined, before: undefined, after: 'abc' }}
+      ${undefined} | ${20}        | ${'efg'} | ${{ first: undefined, last: 20, before: 'efg', after: undefined }}
     `(
       "success with first: '$first', last: '$last', cursor: '$cursor'",
       async ({ first, last, cursor, result }): Promise<void> => {
-        expect(parsePaginationQueryParameters(first, last, cursor)).toEqual(
+        expect(parsePaginationQueryParameters({ first, last, cursor })).toEqual(
           result
         )
-      }
-    )
-    test.each`
-      first     | last      | cursor     | error
-      ${''}     | ${'20'}   | ${''}      | ${'cursor needed for backwards pagination'}
-      ${'10'}   | ${'20'}   | ${''}      | ${'first and last provided. Only one allowed'}
-      ${['10']} | ${''}     | ${''}      | ${'Query parameters are not strings'}
-      ${''}     | ${['20']} | ${''}      | ${'Query parameters are not strings'}
-      ${''}     | ${''}     | ${['abc']} | ${'Query parameters are not strings'}
-    `(
-      "failure with first: '$first', last: '$last', cursor: '$cursor'",
-      async ({ first, last, cursor, error }): Promise<void> => {
-        const parse = () => parsePaginationQueryParameters(first, last, cursor)
-        expect(parse).toThrow(error)
       }
     )
   })
