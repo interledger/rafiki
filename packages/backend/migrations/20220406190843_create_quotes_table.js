@@ -2,7 +2,7 @@ exports.up = function (knex) {
   return knex.schema.createTable('quotes', function (table) {
     table.uuid('id').notNullable().primary()
 
-    table.string('receivingPayment').notNullable()
+    table.string('receiver').notNullable()
     table.bigInteger('sendAmountValue').notNullable()
     table.bigInteger('receiveAmountValue').notNullable()
     table.string('receiveAmountAssetCode').notNullable()
@@ -18,8 +18,6 @@ exports.up = function (knex) {
     table.bigInteger('highEstimatedExchangeRateDenominator').notNullable()
 
     table.timestamp('expiresAt').notNullable()
-
-    table.boolean('completeReceivingPayment').notNullable().defaultTo(false)
 
     // Open Payments account from which this quote's payment would be sent
     table.uuid('accountId').notNullable()

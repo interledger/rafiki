@@ -1,6 +1,5 @@
 import assert from 'assert'
-import axios from 'axios'
-import nock, { Definition } from 'nock'
+import nock from 'nock'
 import Knex from 'knex'
 import * as Pay from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
@@ -12,12 +11,9 @@ import {
   isOutgoingPaymentError
 } from './errors'
 import { OutgoingPaymentService } from './service'
-import {
-  createTestApp,
-  TestContainer,
-  testAccessToken
-} from '../../../tests/app'
+import { createTestApp, TestContainer } from '../../../tests/app'
 import { IAppConfig, Config } from '../../../config/app'
+import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createQuote } from '../../../tests/quote'
 import { IocContract } from '@adonisjs/fold'
@@ -34,7 +30,6 @@ import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../../../accounting/errors'
 import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
-import { IncomingPaymentState } from '../incoming/model'
 import { CreateQuoteOptions } from '../../quote/service'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
@@ -48,6 +43,8 @@ describe('OutgoingPaymentService', (): void => {
   let knex: Knex
   let accountId: string
   let receivingAccount: string
+  let receiver: string
+  let receiverAccountId: string
   let amtDelivered: bigint
   let config: IAppConfig
 
@@ -114,30 +111,6 @@ describe('OutgoingPaymentService', (): void => {
       })
   }
 
-  function mockUpdateIncomingPayment(receivingPayment: string): nock.Scope {
-    const incomingPaymentUrl = new URL(receivingPayment)
-    return nock(incomingPaymentUrl.origin)
-      .put(incomingPaymentUrl.pathname, function (this: Definition, body) {
-        expect(body).toEqual({
-          state: IncomingPaymentState.Completed.toLowerCase()
-        })
-        return true
-      })
-      .matchHeader('Accept', 'application/json')
-      .matchHeader('Content-Type', 'application/json')
-      .reply(200, function (path, requestBody) {
-        const headers = this.req.headers
-        if (!headers['authorization']) {
-          headers.authorization = `GNAP ${testAccessToken}`
-        }
-        return axios
-          .put(`http://localhost:${appContainer.port}${path}`, requestBody, {
-            headers
-          })
-          .then((res) => res.data)
-      })
-  }
-
   // Mock the time to fast-forward to the time that the specified (absolute, not relative) attempt is scheduled.
   function fastForwardToAttempt(stateAttempts: number): void {
     jest
@@ -147,22 +120,20 @@ describe('OutgoingPaymentService', (): void => {
       )
   }
 
-  function getIncomingPaymentId(receivingPayment: string): string {
-    return receivingPayment.slice(
-      `${receivingAccount}/incoming-payments/`.length
-    )
+  function getIncomingPaymentId(receiver: string): string {
+    return receiver.slice(`${receivingAccount}/incoming-payments/`.length)
   }
 
   async function payIncomingPayment({
-    receivingPayment,
+    receiver,
     amount
   }: {
-    receivingPayment: string
+    receiver: string
     amount: bigint
   }): Promise<void> {
     const incomingPaymentService = await deps.use('incomingPaymentService')
     const incomingPayment = await incomingPaymentService.get(
-      getIncomingPaymentId(receivingPayment)
+      getIncomingPaymentId(receiver)
     )
     assert.ok(incomingPayment)
     await expect(
@@ -223,7 +194,7 @@ describe('OutgoingPaymentService', (): void => {
     if (incomingPaymentReceived !== undefined) {
       await expect(
         accountingService.getTotalReceived(
-          getIncomingPaymentId(payment.receivingPayment)
+          getIncomingPaymentId(payment.receiver)
         )
       ).resolves.toEqual(incomingPaymentReceived)
     }
@@ -271,6 +242,7 @@ describe('OutgoingPaymentService', (): void => {
       const destinationAccount = await accountService.create({
         asset: destinationAsset
       })
+      receiverAccountId = destinationAccount.id
       await expect(
         accountingService.createDeposit({
           id: uuid(),
@@ -279,6 +251,11 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toBeUndefined()
       receivingAccount = `${config.publicHost}/${destinationAccount.id}`
+      const incomingPayment = await createIncomingPayment(deps, {
+        accountId: receiverAccountId
+      })
+      receiver = `${receivingAccount}/incoming-payments/${incomingPayment.id}`
+
       amtDelivered = BigInt(0)
     }
   )
@@ -304,7 +281,7 @@ describe('OutgoingPaymentService', (): void => {
     it('throws if no TB account found', async (): Promise<void> => {
       const quote = await createQuote(deps, {
         accountId,
-        receivingAccount,
+        receiver,
         sendAmount,
         validDestination: false
       })
@@ -330,7 +307,7 @@ describe('OutgoingPaymentService', (): void => {
     it('creates an OutgoingPayment from a quote', async () => {
       const quote = await createQuote(deps, {
         accountId,
-        receivingAccount,
+        receiver,
         sendAmount,
         validDestination: false
       })
@@ -345,7 +322,7 @@ describe('OutgoingPaymentService', (): void => {
       expect(payment).toMatchObject({
         id: quote.id,
         accountId,
-        receivingPayment: quote.receivingPayment,
+        receiver: quote.receiver,
         sendAmount: quote.sendAmount,
         receiveAmount: quote.receiveAmount,
         description: options.description,
@@ -364,7 +341,7 @@ describe('OutgoingPaymentService', (): void => {
     it('fails to create on unknown account', async () => {
       const { id: quoteId } = await createQuote(deps, {
         accountId,
-        receivingAccount,
+        receiver,
         sendAmount,
         validDestination: false
       })
@@ -388,13 +365,13 @@ describe('OutgoingPaymentService', (): void => {
     it('fails to create on invalid quote account', async () => {
       const quote = await createQuote(deps, {
         accountId,
-        receivingAccount,
+        receiver,
         sendAmount,
         validDestination: false
       })
       await expect(
         outgoingPaymentService.create({
-          accountId: receivingAccount.slice(config.publicHost.length + 1),
+          accountId: receiverAccountId,
           quoteId: quote.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -403,7 +380,7 @@ describe('OutgoingPaymentService', (): void => {
     it('fails to create on expired quote', async () => {
       const quote = await createQuote(deps, {
         accountId,
-        receivingAccount,
+        receiver,
         sendAmount,
         validDestination: false
       })
@@ -428,8 +405,19 @@ describe('OutgoingPaymentService', (): void => {
       }
 
       async function setup(
-        opts: Omit<CreateQuoteOptions, 'accountId'>
+        opts: Omit<CreateQuoteOptions, 'accountId'>,
+        incomingAmount?: Amount
       ): Promise<string> {
+        if (incomingAmount) {
+          const incomingPaymentService = await deps.use(
+            'incomingPaymentService'
+          )
+          const incomingPayment = await incomingPaymentService.get(
+            getIncomingPaymentId(receiver)
+          )
+          assert.ok(incomingPayment)
+          await incomingPayment.$query(knex).patch({ incomingAmount })
+        }
         const payment = await createOutgoingPayment(deps, {
           accountId,
           ...opts
@@ -451,29 +439,19 @@ describe('OutgoingPaymentService', (): void => {
       }
 
       test.each`
-        sendAmount    | receiveAmount    | completeReceivingPayment
-        ${sendAmount} | ${undefined}     | ${true}
-        ${undefined}  | ${receiveAmount} | ${false}
+        sendAmount    | receiveAmount
+        ${sendAmount} | ${undefined}
+        ${undefined}  | ${receiveAmount}
       `(
-        'COMPLETED (completeReceivingPayment: $completeReceivingPayment)',
-        async ({
-          sendAmount,
-          receiveAmount,
-          completeReceivingPayment
-        }): Promise<void> => {
+        'COMPLETED',
+        async ({ sendAmount, receiveAmount }): Promise<void> => {
           const paymentId = await setup({
-            receivingAccount,
+            receiver,
             sendAmount,
             receiveAmount
           })
 
           let scope: nock.Scope | undefined
-          if (completeReceivingPayment) {
-            const payment = (await outgoingPaymentService.get(
-              paymentId
-            )) as OutgoingPayment
-            scope = mockUpdateIncomingPayment(payment.receivingPayment)
-          }
           const payment = await processNext(
             paymentId,
             OutgoingPaymentState.Completed
@@ -492,17 +470,16 @@ describe('OutgoingPaymentService', (): void => {
       )
 
       it('COMPLETED (with incoming payment initially partially paid)', async (): Promise<void> => {
-        const paymentId = await setup({
-          receivingAccount,
+        const paymentId = await setup(
+          {
+            receiver
+          },
           receiveAmount
-        })
+        )
 
         const amountAlreadyDelivered = BigInt(34)
-        const { receivingPayment } = (await outgoingPaymentService.get(
-          paymentId
-        )) as OutgoingPayment
         await payIncomingPayment({
-          receivingPayment,
+          receiver,
           amount: amountAlreadyDelivered
         })
 
@@ -532,7 +509,7 @@ describe('OutgoingPaymentService', (): void => {
         )
 
         const paymentId = await setup({
-          receivingAccount,
+          receiver,
           sendAmount
         })
 
@@ -574,7 +551,7 @@ describe('OutgoingPaymentService', (): void => {
           Pay.PaymentError.ReceiverProtocolViolation
         )
         const paymentId = await setup({
-          receivingAccount,
+          receiver,
           sendAmount
         })
 
@@ -600,7 +577,7 @@ describe('OutgoingPaymentService', (): void => {
           Pay.PaymentError.ClosedByReceiver
         )
         const paymentId = await setup({
-          receivingAccount,
+          receiver,
           receiveAmount
         })
 
@@ -631,10 +608,13 @@ describe('OutgoingPaymentService', (): void => {
 
       // Caused by retry after failed SENDING→COMPLETED transition commit.
       it('COMPLETED (FixedSend, already fully paid)', async (): Promise<void> => {
-        const paymentId = await setup({
-          receivingAccount,
+        const paymentId = await setup(
+          {
+            receiver,
+            receiveAmount
+          },
           receiveAmount
-        })
+        )
 
         await processNext(paymentId, OutgoingPaymentState.Completed)
         // Pretend that the transaction didn't commit.
@@ -655,16 +635,16 @@ describe('OutgoingPaymentService', (): void => {
 
       // Caused by retry after failed SENDING→COMPLETED transition commit.
       it('COMPLETED (already fully paid)', async (): Promise<void> => {
-        const paymentId = await setup({
-          receivingAccount,
+        const paymentId = await setup(
+          {
+            receiver,
+            receiveAmount
+          },
           receiveAmount
-        })
+        )
         // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
-        const { receivingPayment } = (await outgoingPaymentService.get(
-          paymentId
-        )) as OutgoingPayment
         await payIncomingPayment({
-          receivingPayment,
+          receiver,
           amount: receiveAmount.value
         })
 
@@ -684,7 +664,7 @@ describe('OutgoingPaymentService', (): void => {
 
       it('FAILED (source asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
-          receivingAccount,
+          receiver,
           sendAmount
         })
         const assetService = await deps.use('assetService')
@@ -705,7 +685,7 @@ describe('OutgoingPaymentService', (): void => {
 
       it('FAILED (destination asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
-          receivingAccount,
+          receiver,
           sendAmount
         })
         // Pretend that the destination asset was initially different.
@@ -723,34 +703,6 @@ describe('OutgoingPaymentService', (): void => {
           Pay.PaymentError.DestinationAssetConflict
         )
       })
-
-      it('SENDING (update incoming payment request failed)', async (): Promise<void> => {
-        const paymentId = await setup({
-          receivingAccount,
-          sendAmount
-        })
-
-        const { receivingPayment } = (await outgoingPaymentService.get(
-          paymentId
-        )) as OutgoingPayment
-        const incomingPaymentUrl = new URL(receivingPayment)
-        const failScope = nock(incomingPaymentUrl.origin)
-          .put(incomingPaymentUrl.pathname)
-          .reply(500)
-
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Sending
-        )
-        failScope.isDone()
-
-        // Skip through the backoff timer.
-        fastForwardToAttempt(payment.stateAttempts)
-
-        const scope = mockUpdateIncomingPayment(payment.receivingPayment)
-        await processNext(paymentId, OutgoingPaymentState.Completed)
-        scope.isDone()
-      })
     })
   })
 
@@ -761,7 +713,7 @@ describe('OutgoingPaymentService', (): void => {
     beforeEach(async (): Promise<void> => {
       payment = await createOutgoingPayment(deps, {
         accountId,
-        receivingAccount,
+        receiver,
         sendAmount,
         validDestination: false
       })
@@ -833,7 +785,7 @@ describe('OutgoingPaymentService', (): void => {
       createModel: () =>
         createOutgoingPayment(deps, {
           accountId,
-          receivingAccount,
+          receiver,
           sendAmount,
           validDestination: false
         }),
@@ -844,7 +796,7 @@ describe('OutgoingPaymentService', (): void => {
     it('throws if no TB account found', async (): Promise<void> => {
       const payment = await createOutgoingPayment(deps, {
         accountId,
-        receivingAccount,
+        receiver,
         sendAmount,
         validDestination: false
       })

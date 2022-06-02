@@ -1758,18 +1758,6 @@
             "deprecationReason": null
           },
           {
-            "name": "receivingAccount",
-            "description": null,
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "sendAmount",
             "description": null,
             "type": {
@@ -1794,12 +1782,16 @@
             "deprecationReason": null
           },
           {
-            "name": "receivingPayment",
+            "name": "receiver",
             "description": null,
             "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -3624,13 +3616,17 @@
             "deprecationReason": null
           },
           {
-            "name": "receivingPayment",
+            "name": "receiver",
             "description": null,
             "args": [],
             "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -4505,7 +4501,7 @@
             "deprecationReason": null
           },
           {
-            "name": "receivingPayment",
+            "name": "receiver",
             "description": null,
             "args": [],
             "type": {

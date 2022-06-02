@@ -60,7 +60,7 @@ describe('Outgoing Payment Routes', (): void => {
   }): Promise<OutgoingPayment> => {
     return await createOutgoingPayment(deps, {
       ...options,
-      receivingAccount,
+      receiver: `${receivingAccount}/incoming-payments/${uuid()}`,
       sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,
@@ -185,7 +185,7 @@ describe('Outgoing Payment Routes', (): void => {
         expect(ctx.body).toEqual({
           id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
           accountId: accountUrl,
-          receivingPayment: outgoingPayment.receivingPayment,
+          receiver: outgoingPayment.receiver,
           sendAmount: {
             ...outgoingPayment.sendAmount,
             value: outgoingPayment.sendAmount.value.toString()
@@ -245,7 +245,7 @@ describe('Outgoing Payment Routes', (): void => {
       async ({ description, externalRef }): Promise<void> => {
         const quote = await createQuote(deps, {
           accountId,
-          receivingAccount,
+          receiver: `receivingAccount/incoming-payments/${uuid()}`,
           sendAmount,
           validDestination: false
         })
@@ -266,7 +266,7 @@ describe('Outgoing Payment Routes', (): void => {
         expect(ctx.response.body).toEqual({
           id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
           accountId: accountUrl,
-          receivingPayment: quote.receivingPayment,
+          receiver: quote.receiver,
           sendAmount: {
             ...quote.sendAmount,
             value: quote.sendAmount.value.toString()
@@ -302,7 +302,7 @@ describe('Outgoing Payment Routes', (): void => {
         return {
           id: `${accountUrl}/outgoing-payments/${payment.id}`,
           accountId: accountUrl,
-          receivingPayment: payment.receivingPayment,
+          receiver: payment.receiver,
           sendAmount: {
             ...payment.sendAmount,
             value: payment.sendAmount.value.toString()

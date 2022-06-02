@@ -49,8 +49,7 @@ export class Quote extends BaseModel {
 
   public expiresAt!: Date
 
-  public receivingPayment!: string
-  public completeReceivingPayment!: boolean
+  public receiver!: string
 
   private sendAmountValue!: bigint
 
@@ -144,7 +143,7 @@ export class Quote extends BaseModel {
     return {
       id: json.id,
       accountId: json.accountId,
-      receivingPayment: json.receivingPayment,
+      receiver: json.receiver,
       sendAmount: {
         ...json.sendAmount,
         value: json.sendAmount.value.toString()
@@ -162,7 +161,7 @@ export class Quote extends BaseModel {
 export type QuoteJSON = {
   id: string
   accountId: string
-  receivingPayment: string
+  receiver: string
   sendAmount: AmountJSON
   receiveAmount: AmountJSON
   createdAt: string

@@ -59,45 +59,30 @@ export interface CreateQuoteOptions {
   accountId: string
   sendAmount?: Amount
   receiveAmount?: Amount
-  receivingAccount?: string
-  receivingPayment?: string
+  receiver: string
 }
 
 async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
-  if (options.receivingPayment) {
-    if (options.receivingAccount) {
-      return QuoteError.InvalidDestination
-    }
-    if (options.sendAmount && options.receiveAmount) {
-      return QuoteError.InvalidAmount
-    }
-  } else if (options.receivingAccount) {
-    if (options.sendAmount) {
-      if (options.receiveAmount || options.sendAmount.value <= BigInt(0)) {
-        return QuoteError.InvalidAmount
-      }
-    } else if (
-      !options.receiveAmount ||
-      options.receiveAmount.value <= BigInt(0)
-    ) {
-      return QuoteError.InvalidAmount
-    }
-  } else {
-    return QuoteError.InvalidDestination
+  if (options.sendAmount && options.receiveAmount) {
+    return QuoteError.InvalidAmount
   }
-
   const account = await deps.accountService.get(options.accountId)
   if (!account) {
     return QuoteError.UnknownAccount
   }
   if (options.sendAmount) {
     if (
+      options.sendAmount.value <= BigInt(0) ||
       options.sendAmount.assetCode !== account.asset.code ||
       options.sendAmount.assetScale !== account.asset.scale
     ) {
+      return QuoteError.InvalidAmount
+    }
+  } else if (options.receiveAmount) {
+    if (options.receiveAmount.value <= BigInt(0)) {
       return QuoteError.InvalidAmount
     }
   }
@@ -133,7 +118,7 @@ async function createQuote(
         .insertAndFetch({
           accountId: options.accountId,
           assetId: account.assetId,
-          receivingPayment: destination.destinationPaymentDetails.id,
+          receiver: options.receiver,
           sendAmount: {
             value: ilpQuote.maxSourceAmount,
             assetCode: account.asset.code,
@@ -152,9 +137,6 @@ async function createQuote(
           minExchangeRate: ilpQuote.minExchangeRate,
           lowEstimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate,
           highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
-          completeReceivingPayment: !!(
-            options.receivingAccount && options.sendAmount
-          ),
           // Patch using createdAt below
           expiresAt: new Date(0)
         })
@@ -195,18 +177,12 @@ export async function resolveDestination(
   options: CreateQuoteOptions,
   plugin: IlpPlugin
 ): Promise<Pay.ResolvedPayment> {
-  const setupOptions: Pay.SetupOptions = { plugin }
-  if (options.receivingPayment) {
-    setupOptions.destinationPayment = options.receivingPayment
-  } else {
-    setupOptions.destinationAccount = options.receivingAccount
-    if (options.receiveAmount) {
-      setupOptions.amountToDeliver = options.receiveAmount
-    }
-  }
   let destination: Pay.ResolvedPayment
   try {
-    destination = await Pay.setupPayment(setupOptions)
+    destination = await Pay.setupPayment({
+      plugin,
+      destinationPayment: options.receiver
+    })
   } catch (err) {
     if (err === Pay.PaymentError.QueryFailed) {
       throw QuoteError.InvalidDestination
@@ -230,20 +206,13 @@ export async function resolveDestination(
     ) {
       throw QuoteError.InvalidAmount
     }
-    if (options.receivingPayment) {
-      if (destination.destinationPaymentDetails.incomingAmount) {
-        const receivingPaymentValue =
-          destination.destinationPaymentDetails.incomingAmount.value -
-          destination.destinationPaymentDetails.receivedAmount.value
-        if (receivingPaymentValue < options.receiveAmount.value) {
-          throw QuoteError.InvalidAmount
-        }
+    if (destination.destinationPaymentDetails.incomingAmount) {
+      const receivingPaymentValue =
+        destination.destinationPaymentDetails.incomingAmount.value -
+        destination.destinationPaymentDetails.receivedAmount.value
+      if (receivingPaymentValue < options.receiveAmount.value) {
+        throw QuoteError.InvalidAmount
       }
-    } else {
-      assert.ok(
-        destination.destinationPaymentDetails.incomingAmount?.value ===
-          options.receiveAmount.value
-      )
     }
   } else if (
     !options.sendAmount &&
@@ -266,7 +235,7 @@ export async function startQuote(
   if (options.sendAmount) {
     quoteOptions.amountToSend = options.sendAmount.value
     quoteOptions.destination.destinationPaymentDetails.incomingAmount = undefined
-  } else if (options.receiveAmount && options.receivingPayment) {
+  } else if (options.receiveAmount) {
     quoteOptions.amountToDeliver = options.receiveAmount.value
     quoteOptions.destination.destinationPaymentDetails.incomingAmount = undefined
   }

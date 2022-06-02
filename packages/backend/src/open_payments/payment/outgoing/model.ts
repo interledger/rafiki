@@ -15,13 +15,7 @@ export class OutgoingPayment
   public static readonly tableName = 'outgoingPayments'
 
   static get virtualAttributes(): string[] {
-    return [
-      'sendAmount',
-      'receiveAmount',
-      'quote',
-      'sentAmount',
-      'receivingPayment'
-    ]
+    return ['sendAmount', 'receiveAmount', 'quote', 'sentAmount', 'receiver']
   }
 
   public state!: OutgoingPaymentState
@@ -29,8 +23,8 @@ export class OutgoingPayment
   public error?: string | null
   public stateAttempts!: number
 
-  public get receivingPayment(): string {
-    return this.quote.receivingPayment
+  public get receiver(): string {
+    return this.quote.receiver
   }
 
   public get sendAmount(): Amount {
@@ -110,7 +104,7 @@ export class OutgoingPayment
         id: this.id,
         accountId: this.accountId,
         state: this.state,
-        receivingPayment: this.receivingPayment,
+        receiver: this.receiver,
         sendAmount: {
           ...this.sendAmount,
           value: this.sendAmount.value.toString()
@@ -147,7 +141,7 @@ export class OutgoingPayment
       id: json.id,
       accountId: json.accountId,
       state: json.state,
-      receivingPayment: json.receivingPayment,
+      receiver: json.receiver,
       sendAmount: {
         ...json.sendAmount,
         value: json.sendAmount.value.toString()
@@ -202,7 +196,7 @@ export interface OutgoingPaymentResponse {
   id: string
   accountId: string
   createdAt: string
-  receivingPayment: string
+  receiver: string
   sendAmount: AmountJSON
   receiveAmount: AmountJSON
   description?: string
@@ -237,7 +231,7 @@ export class PaymentEvent extends WebhookEvent {
 export type OutgoingPaymentJSON = {
   id: string
   accountId: string
-  receivingPayment: string
+  receiver: string
   sendAmount: AmountJSON
   sentAmount: AmountJSON
   receiveAmount: AmountJSON

@@ -1603,13 +1603,9 @@ describe('Liquidity Resolvers', (): void => {
           expiresAt: new Date(Date.now() + 60 * 1000),
           description: 'description!'
         })
-        const { id: receivingAccountId } = await accountService.create({
-          asset: account.asset
-        })
-        const config = await deps.use('config')
         payment = await createOutgoingPayment(deps, {
           accountId,
-          receivingAccount: `${config.publicHost}/${receivingAccountId}`,
+          receiver: incomingPayment.id,
           sendAmount: {
             value: BigInt(456),
             assetCode: account.asset.code,
