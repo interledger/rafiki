@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { Duration, parse, end } from 'iso8601-duration'
 
 import { Amount } from '../amount'
 
@@ -26,6 +27,8 @@ export interface AccessLimits {
   receiver?: string
   sendAmount?: Amount
   receiveAmount?: Amount
+  description?: string
+  externalRef?: string
 }
 
 interface AccessLimitsJSON {
@@ -68,6 +71,7 @@ export class Grant {
   public readonly grant: string
   public readonly access: GrantAccess[]
 
+  // TODO: check interval
   public includesAccess({
     type,
     action,
@@ -83,6 +87,29 @@ export class Grant {
         (!access.identifier || access.identifier === identifier) &&
         access.actions.includes(action)
     )
+  }
+
+  public getAccess({
+    type,
+    identifier,
+    action
+  }: {
+    type?: AccessType
+    identifier?: string
+    action?: AccessAction
+  }): GrantAccess[] {
+    return this.access.filter((access) => {
+      if (type && access.type !== type) {
+        return false
+      }
+      if (identifier && access.identifier !== identifier) {
+        return false
+      }
+      if (action && !access.actions.includes(action)) {
+        return false
+      }
+      return true
+    })
   }
 
   public toJSON(): GrantJSON {
@@ -106,5 +133,52 @@ export class Grant {
         }
       })
     }
+  }
+}
+
+export interface Interval {
+  start: Date
+  end: Date
+}
+
+function parseDuration(duration: string): Duration | undefined {
+  try {
+    return parse(duration)
+  } catch (_err) {
+    return undefined
+  }
+}
+
+export function getInterval(
+  repeatingInterval: string,
+  target: Date
+): Interval | undefined {
+  const parts = repeatingInterval.split('/')
+  assert.ok(parts.length === 3)
+  let repetitions: number | undefined
+  if (parts[0].length > 1 && parts[0][1] !== '-') {
+    repetitions = Number(parts[0].slice(1))
+  }
+  const forwardDuration = parseDuration(parts[2])
+  if (forwardDuration) {
+    let intervalStart = new Date(parts[1])
+    if (target.getTime() < intervalStart.getTime()) {
+      return undefined
+    }
+    let intervalEnd = end(forwardDuration, intervalStart)
+    for (let i = 0; !repetitions || i < repetitions; i++) {
+      intervalStart = intervalEnd
+      intervalEnd = end(forwardDuration, intervalStart)
+      if (target.getTime() < intervalEnd.getTime()) {
+        return {
+          start: intervalStart,
+          end: intervalEnd
+        }
+      }
+    }
+    return undefined
+  } else {
+    // TODO: backwards duration
+    return undefined
   }
 }
