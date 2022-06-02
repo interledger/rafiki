@@ -1,6 +1,8 @@
+import assert from 'assert'
 import { join } from 'path'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
+import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
 import Knex from 'knex'
@@ -37,11 +39,13 @@ import { QuoteRoutes } from './open_payments/quote/routes'
 import { QuoteService } from './open_payments/quote/service'
 import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
+import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
 import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
+import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 
 export interface AppContextData {
   logger: Logger
@@ -60,6 +64,39 @@ export interface ApolloContext {
   session: Session | undefined
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
+
+export type AppRequest<
+  ParamsT extends string = string,
+  BodyT = never,
+  QueryT = ParsedUrlQuery
+> = Omit<AppContext['request'], 'params' | 'body'> & {
+  params: Record<ParamsT, string>
+  query: ParsedUrlQuery & QueryT
+  body: BodyT
+}
+
+type Context<T> = Omit<AppContext, 'request'> & {
+  request: T
+}
+
+export type AccountContext = Context<AppRequest<'id'>>
+
+// Account subresources
+export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>
+export type ReadContext = Context<AppRequest<'accountId' | 'id'>>
+export type UpdateContext<BodyT> = Context<
+  AppRequest<'accountId' | 'id', BodyT>
+>
+export type ListContext = Context<
+  AppRequest<'accountId', never, PageQueryParams>
+>
+
+type ContextType<T> = T extends (
+  ctx: infer Context
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+) => any
+  ? Context
+  : never
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -253,76 +290,93 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
-    this.publicRouter.get(
-      '/:accountId',
-      async (ctx: AppContext): Promise<void> => {
-        // Fall back to legacy protocols if client doesn't support Open Payments.
-        if (ctx.accepts('application/json')) await accountRoutes.get(ctx)
-        //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
-        else if (ctx.accepts('application/spsp4+json'))
-          await spspRoutes.get(ctx)
-        else ctx.throw(406, 'no accepted Content-Type available')
+    const openApi = await this.container.use('openApi')
+    const toRouterPath = (path: string): string =>
+      path.replace(/{/g, ':').replace(/}/g, '')
+
+    const toAction = ({
+      path,
+      method
+    }: {
+      path: string
+      method: HttpMethod
+    }): AccessAction | undefined => {
+      switch (method) {
+        case HttpMethod.GET:
+          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
+        case HttpMethod.POST:
+          return AccessAction.Create
+        case HttpMethod.PUT:
+          return AccessAction.Update
+        default:
+          return undefined
       }
-    )
+    }
 
-    this.publicRouter.get(
-      '/:accountId/incoming-payments/:incomingPaymentId',
-      createAuthMiddleware({
-        type: AccessType.IncomingPayment,
-        action: AccessAction.Read
-      }),
-      incomingPaymentRoutes.get
-    )
-    this.publicRouter.post(
-      '/:accountId/incoming-payments',
-      createAuthMiddleware({
-        type: AccessType.IncomingPayment,
-        action: AccessAction.Create
-      }),
-      incomingPaymentRoutes.create
-    )
-    this.publicRouter.put(
-      '/:accountId/incoming-payments/:incomingPaymentId',
-      createAuthMiddleware({
-        type: AccessType.IncomingPayment,
-        action: AccessAction.Update
-      }),
-      incomingPaymentRoutes.update
-    )
+    const actionToRoute: {
+      [key in AccessAction]: string
+    } = {
+      [AccessAction.Create]: 'create',
+      [AccessAction.Read]: 'get',
+      [AccessAction.Update]: 'update',
+      [AccessAction.List]: 'list'
+    }
 
-    this.publicRouter.get(
-      '/:accountId/outgoing-payments/:outgoingPaymentId',
-      createAuthMiddleware({
-        type: AccessType.OutgoingPayment,
-        action: AccessAction.Read
-      }),
-      outgoingPaymentRoutes.get
-    )
-    this.publicRouter.post(
-      '/:accountId/outgoing-payments',
-      createAuthMiddleware({
-        type: AccessType.OutgoingPayment,
-        action: AccessAction.Create
-      }),
-      outgoingPaymentRoutes.create
-    )
+    for (const path in openApi.paths) {
+      for (const method in openApi.paths[path]) {
+        if (isHttpMethod(method)) {
+          const action = toAction({ path, method })
+          assert.ok(action)
 
-    this.publicRouter.get(
-      '/:accountId/quotes/:quoteId',
-      createAuthMiddleware({
-        type: AccessType.Quote,
-        action: AccessAction.Read
-      }),
-      quoteRoutes.get
-    )
-    this.publicRouter.post(
-      '/:accountId/quotes',
-      createAuthMiddleware({
-        type: AccessType.Quote,
-        action: AccessAction.Create
-      }),
-      quoteRoutes.create
-    )
+          let type: AccessType
+          let route: (ctx: AppContext) => Promise<void>
+          if (path.includes('incoming-payments')) {
+            type = AccessType.IncomingPayment
+            route = incomingPaymentRoutes[actionToRoute[action]]
+          } else if (path.includes('outgoing-payments')) {
+            type = AccessType.OutgoingPayment
+            route = outgoingPaymentRoutes[actionToRoute[action]]
+          } else if (path.includes('quotes')) {
+            type = AccessType.Quote
+            route = quoteRoutes[actionToRoute[action]]
+          } else {
+            if (path === '/{id}' && method === HttpMethod.GET) {
+              this.publicRouter.get(
+                toRouterPath(path),
+                createValidatorMiddleware<AccountContext>(openApi, {
+                  path,
+                  method
+                }),
+                async (ctx: AccountContext): Promise<void> => {
+                  // Fall back to legacy protocols if client doesn't support Open Payments.
+                  if (ctx.accepts('application/json'))
+                    await accountRoutes.get(ctx)
+                  //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
+                  else if (ctx.accepts('application/spsp4+json'))
+                    await spspRoutes.get(ctx)
+                  else ctx.throw(406, 'no accepted Content-Type available')
+                }
+              )
+            } else {
+              this.logger.warn({ path, method }, 'unexpected path/method')
+            }
+            continue
+          }
+          this.publicRouter[method](
+            toRouterPath(path),
+            createAuthMiddleware({
+              type,
+              action
+            }),
+            createValidatorMiddleware<ContextType<typeof route>>(openApi, {
+              path,
+              method
+            }),
+            route
+          )
+        }
+      }
+    }
 
     this.koa.use(this.publicRouter.middleware())
   }

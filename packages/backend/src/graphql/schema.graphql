@@ -440,10 +440,6 @@ type Quote {
   expiresAt: String!
 }
 
-type OutgoingPaymentOutcome {
-  amountSent: UInt64!
-}
-
 input AmountInput {
   value: UInt64!
   assetCode: String!

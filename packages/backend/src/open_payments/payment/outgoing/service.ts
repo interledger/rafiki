@@ -166,30 +166,32 @@ async function getAccountPage(
   accountId: string,
   pagination?: Pagination
 ): Promise<OutgoingPayment[]> {
-  const outgoingPayments = await OutgoingPayment.query(deps.knex)
+  const page = await OutgoingPayment.query(deps.knex)
     .getPage(pagination)
-    .where({ accountId })
-    .withGraphFetched('quote.asset')
-  if (outgoingPayments.length > 0) {
-    const sentAmounts = await deps.accountingService.getAccountsTotalSent(
-      outgoingPayments.map((payment) => payment.id)
-    )
-    return outgoingPayments.map((payment, i) => {
-      try {
-        payment.sentAmount = {
-          value: BigInt(sentAmounts[i]),
-          assetCode: payment.asset.code,
-          assetScale: payment.asset.scale
-        }
-      } catch (_) {
-        deps.logger.error({ outgoingPayment: payment.id }, 'account not found')
-        throw new Error(
-          `Underlying TB account not found, payment id: ${payment.id}`
-        )
-      }
-      return payment
+    .where({
+      accountId
     })
-  } else return outgoingPayments
+    .withGraphFetched('quote.asset')
+
+  const amounts = await deps.accountingService.getAccountsTotalSent(
+    page.map((payment: OutgoingPayment) => payment.id)
+  )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  return page.map((payment: OutgoingPayment, i: number) => {
+    try {
+      payment.sentAmount = {
+        value: BigInt(amounts[i]),
+        assetCode: payment.asset.code,
+        assetScale: payment.asset.scale
+      }
+    } catch (_) {
+      deps.logger.error({ payment: payment.id }, 'account not found')
+      throw new Error(
+        `Underlying TB account not found, payment id: ${payment.id}`
+      )
+    }
+    return payment
+  })
 }
 
 async function addSentAmount(

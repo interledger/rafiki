@@ -1,0 +1,33 @@
+{
+  "name": "openapi",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "lint": "yarn lint:local",
+    "format": "yarn format:local",
+    "format:check": "yarn format:check:local",
+    "test": "yarn test:local",
+    "build": "yarn clean && tsc --build tsconfig.json",
+    "clean": "rm -fr dist/",
+    "prepack": "yarn build"
+  },
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^9.0.9",
+    "ajv": "^8.11.0",
+    "ajv-formats": "^2.1.1",
+    "openapi-default-setter": "^11.0.1",
+    "openapi-request-coercer": "^11.0.1",
+    "openapi-request-validator": "^11.0.1",
+    "openapi-response-validator": "^11.0.1",
+    "openapi-types": "^11.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.5.1",
+    "@types/koa": "^2.13.4",
+    "@types/uuid": "^8.3.4",
+    "koa": "^2.13.4",
+    "node-mocks-http": "^1.11.0",
+    "typescript": "^4.2.4",
+    "uuid": "^8.3.2"
+  }
+}

@@ -1,5 +1,4 @@
-import { validateId } from '../../shared/utils'
-import { AppContext } from '../../app'
+import { AccountContext } from '../../app'
 import { IAppConfig } from '../../config/app'
 import { AccountService } from './service'
 
@@ -9,25 +8,21 @@ interface ServiceDependencies {
 }
 
 export interface AccountRoutes {
-  get(ctx: AppContext): Promise<void>
+  get(ctx: AccountContext): Promise<void>
 }
 
 export function createAccountRoutes(deps: ServiceDependencies): AccountRoutes {
   return {
-    get: (ctx: AppContext) => getAccount(deps, ctx)
+    get: (ctx: AccountContext) => getAccount(deps, ctx)
   }
 }
 
 // Spec: https://docs.openpayments.guide/reference/get-public-account
 export async function getAccount(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: AccountContext
 ): Promise<void> {
-  const { accountId } = ctx.params
-  ctx.assert(validateId(accountId), 400, 'Invalid account id')
-  ctx.assert(ctx.accepts('application/json'), 406)
-
-  const account = await deps.accountService.get(accountId)
+  const account = await deps.accountService.get(ctx.params.id)
   if (!account) {
     ctx.throw(404)
     return // unreachable, but satisfies typescript
@@ -35,7 +30,7 @@ export async function getAccount(
 
   const config = await deps.config
   ctx.body = {
-    id: `${config.publicHost}/${encodeURIComponent(accountId)}`,
+    id: `${config.publicHost}/${encodeURIComponent(account.id)}`,
     publicName: account.publicName ?? undefined,
     assetCode: account.asset.code,
     assetScale: account.asset.scale,

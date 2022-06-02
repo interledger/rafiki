@@ -1,5 +1,5 @@
-import { Model } from 'objection'
-import { Amount } from '../../amount'
+import { Model, Pojo } from 'objection'
+import { Amount, AmountJSON } from '../../amount'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
@@ -24,18 +24,23 @@ export enum IncomingPaymentState {
   Expired = 'EXPIRED'
 }
 
+export interface IncomingPaymentResponse {
+  id: string
+  accountId: string
+  description?: string
+  createdAt: string
+  updatedAt: string
+  expiresAt: string
+  incomingAmount?: AmountJSON
+  receivedAmount: AmountJSON
+  externalRef?: string
+  state: string
+  ilpAddress?: string
+  sharedSecret?: string
+}
+
 export type IncomingPaymentData = {
-  incomingPayment: {
-    id: string
-    accountId: string
-    description?: string
-    createdAt: string
-    expiresAt: string
-    incomingAmount?: Amount
-    receivedAmount: Amount
-    externalRef?: string
-    state: string
-  }
+  incomingPayment: IncomingPaymentResponse
 }
 
 export class IncomingPaymentEvent extends WebhookEvent {
@@ -145,16 +150,20 @@ export class IncomingPayment
         createdAt: new Date(+this.createdAt).toISOString(),
         expiresAt: this.expiresAt.toISOString(),
         receivedAmount: {
-          value: amountReceived,
+          value: amountReceived.toString(),
           assetCode: this.asset.code,
           assetScale: this.asset.scale
         },
-        state: this.state
+        state: this.state,
+        updatedAt: new Date(+this.updatedAt).toISOString()
       }
     }
 
     if (this.incomingAmount) {
-      data.incomingPayment.incomingAmount = this.incomingAmount
+      data.incomingPayment.incomingAmount = {
+        ...this.incomingAmount,
+        value: this.incomingAmount.value.toString()
+      }
     }
     if (this.description) {
       data.incomingPayment.description = this.description
@@ -165,4 +174,41 @@ export class IncomingPayment
 
     return data
   }
+
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      id: json.id,
+      accountId: json.accountId,
+      incomingAmount: this.incomingAmount
+        ? {
+            ...json.incomingAmount,
+            value: json.incomingAmount.value.toString()
+          }
+        : null,
+      receivedAmount: {
+        ...json.receivedAmount,
+        value: json.receivedAmount.value.toString()
+      },
+      state: json.state.toLowerCase(),
+      description: json.description,
+      externalRef: json.externalRef,
+      createdAt: json.createdAt,
+      updatedAt: json.updatedAt,
+      expiresAt: json.expiresAt.toISOString()
+    }
+  }
+}
+
+export type IncomingPaymentJSON = {
+  id: string
+  accountId: string
+  incomingAmount: AmountJSON | null
+  receivedAmount: AmountJSON
+  state: string
+  description: string | null
+  externalRef: string | null
+  createdAt: string
+  updatedAt: string
+  expiresAt: string
 }

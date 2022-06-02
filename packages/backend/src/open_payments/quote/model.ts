@@ -154,7 +154,6 @@ export class Quote extends BaseModel {
         value: json.receiveAmount.value.toString()
       },
       createdAt: json.createdAt,
-      updatedAt: json.updatedAt,
       expiresAt: json.expiresAt.toISOString()
     }
   }
@@ -163,9 +162,9 @@ export class Quote extends BaseModel {
 export type QuoteJSON = {
   id: string
   accountId: string
-  createdAt: string
   receivingPayment: string
   sendAmount: AmountJSON
   receiveAmount: AmountJSON
+  createdAt: string
   expiresAt: string
 }

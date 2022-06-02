@@ -213,7 +213,6 @@ describe('QuoteService', (): void => {
               },
               paymentType: expected.paymentType,
               createdAt: expect.any(String),
-              updatedAt: expect.any(String),
               expiresAt: expect.any(String)
             })
           } catch (err) {

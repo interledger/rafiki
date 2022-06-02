@@ -36,6 +36,7 @@ jobs:
       - run: yarn workspace backend lint
       - run: yarn workspace backend format:check
       - run: yarn install --immutable --immutable-cache
+      - run: yarn workspace openapi build
       - run: yarn workspace backend test
 
   frontend:
@@ -76,6 +77,19 @@ jobs:
       - run: yarn workspace auth lint
       - run: yarn workspace auth format:check
       - run: yarn workspace auth test
+
+  openapi:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: yarn workspace openapi lint
+      - run: yarn workspace openapi format:check
+      - run: yarn workspace openapi test
 
   build:
     runs-on: ubuntu-latest

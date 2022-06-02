@@ -1,4 +1,4 @@
-import { Model, ModelOptions, QueryContext } from 'objection'
+import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
@@ -15,7 +15,13 @@ export class OutgoingPayment
   public static readonly tableName = 'outgoingPayments'
 
   static get virtualAttributes(): string[] {
-    return ['sendAmount', 'receiveAmount', 'quote', 'sentAmount']
+    return [
+      'sendAmount',
+      'receiveAmount',
+      'quote',
+      'sentAmount',
+      'receivingPayment'
+    ]
   }
 
   public state!: OutgoingPaymentState
@@ -113,11 +119,13 @@ export class OutgoingPayment
           ...this.receiveAmount,
           value: this.receiveAmount.value.toString()
         },
+        sentAmount: {
+          ...this.sendAmount,
+          value: amountSent.toString()
+        },
         stateAttempts: this.stateAttempts,
         createdAt: new Date(+this.createdAt).toISOString(),
-        outcome: {
-          amountSent: amountSent.toString()
-        },
+        updatedAt: new Date(+this.updatedAt).toISOString(),
         balance: balance.toString()
       }
     }
@@ -131,6 +139,32 @@ export class OutgoingPayment
       data.payment.error = this.error
     }
     return data
+  }
+
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      id: json.id,
+      accountId: json.accountId,
+      state: json.state,
+      receivingPayment: json.receivingPayment,
+      sendAmount: {
+        ...json.sendAmount,
+        value: json.sendAmount.value.toString()
+      },
+      sentAmount: {
+        ...json.sentAmount,
+        value: json.sentAmount.value.toString()
+      },
+      receiveAmount: {
+        ...json.receiveAmount,
+        value: json.receiveAmount.value.toString()
+      },
+      description: json.description,
+      externalRef: json.externalRef,
+      createdAt: json.createdAt,
+      updatedAt: json.updatedAt
+    }
   }
 }
 
@@ -164,23 +198,25 @@ export const PaymentEventType = {
 }
 export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
+export interface OutgoingPaymentResponse {
+  id: string
+  accountId: string
+  createdAt: string
+  receivingPayment: string
+  sendAmount: AmountJSON
+  receiveAmount: AmountJSON
+  description?: string
+  externalRef?: string
+  failed: boolean
+  updatedAt: string
+  sentAmount: AmountJSON
+}
+
 export type PaymentData = {
-  payment: {
-    id: string
-    accountId: string
-    createdAt: string
-    state: OutgoingPaymentState
+  payment: Omit<OutgoingPaymentResponse, 'failed'> & {
     error?: string
+    state: OutgoingPaymentState
     stateAttempts: number
-    receivingAccount?: string
-    receivingPayment?: string
-    sendAmount?: AmountJSON
-    receiveAmount?: AmountJSON
-    description?: string
-    externalRef?: string
-    outcome: {
-      amountSent: string
-    }
     balance: string
   }
 }
@@ -196,4 +232,17 @@ export const isPaymentEvent = (o: any): o is PaymentEvent =>
 export class PaymentEvent extends WebhookEvent {
   public type!: PaymentEventType
   public data!: PaymentData
+}
+
+export type OutgoingPaymentJSON = {
+  id: string
+  accountId: string
+  receivingPayment: string
+  sendAmount: AmountJSON
+  sentAmount: AmountJSON
+  receiveAmount: AmountJSON
+  description: string | null
+  externalRef: string | null
+  createdAt: string
+  updatedAt: string
 }
