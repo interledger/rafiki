@@ -245,7 +245,7 @@ describe('Outgoing Payment Routes', (): void => {
       async ({ description, externalRef }): Promise<void> => {
         const quote = await createQuote(deps, {
           accountId,
-          receiver: `receivingAccount/incoming-payments/${uuid()}`,
+          receiver: `${receivingAccount}/incoming-payments/${uuid()}`,
           sendAmount,
           validDestination: false
         })
