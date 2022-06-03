@@ -1,7 +1,8 @@
 import { AppContext } from '../app'
-import { GrantService } from './service'
+import { GrantService, GrantRequest } from './service'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
+import { isAccessRequest } from '../access/types'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -9,9 +10,8 @@ interface ServiceDependencies extends BaseService {
 }
 
 export interface GrantRoutes {
-  auth: {
-    post(ctx: AppContext): Promise<void>
-  }
+  validateGrantRequest(grantRequest: GrantRequest): boolean
+  create(ctx: AppContext): Promise<void>
   // interaction: {
   //   get(ctx: AppContext): Promise<void>
   //   post(ctx: AppContext): Promise<void>
@@ -33,13 +33,26 @@ export function createGrantRoutes({
     logger: log
   }
   return {
-    auth: {
-      post: (ctx: AppContext) => postGrantInitiation(deps, ctx)
-    }
+    validateGrantRequest: (grantRequest: GrantRequest) =>
+      validateGrantRequest(grantRequest),
+    create: (ctx: AppContext) => createGrantInitiation(deps, ctx)
   }
 }
 
-async function postGrantInitiation(
+function validateGrantRequest(
+  grantRequest: GrantRequest
+): grantRequest is GrantRequest {
+  if (typeof grantRequest.access_token !== 'object') return false
+  const { access_token } = grantRequest
+  if (typeof access_token.access !== 'object') return false
+  for (const access of access_token.access) {
+    if (!isAccessRequest(access)) return false
+  }
+
+  return grantRequest.interact?.start !== undefined
+}
+
+async function createGrantInitiation(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
@@ -55,7 +68,7 @@ async function postGrantInitiation(
   }
   const { body } = ctx.request
   const { grantService, clientService } = deps
-  if (!grantService.validateGrantRequest(body)) {
+  if (!validateGrantRequest(body)) {
     ctx.status = 400
     ctx.body = { error: 'invalid_request' }
     return

@@ -87,31 +87,13 @@ describe('Grant Service', (): void => {
       assetScale: 9
     },
     expiresAt: new Date().toISOString(),
-    description: 'this is a test',
+    description: 'this is a test you fuck',
     externalRef: v4()
   }
 
-  const OUTGOING_PAYMENT_LIMIT = {
-    sendAmount: {
-      value: '1000000000',
-      assetCode: 'usd',
-      assetScale: 9
-    },
-    receiveAmount: {
-      value: '2000000000',
-      assetCode: 'usd',
-      assetScale: 9
-    },
-    expiresAt: new Date().toISOString(),
-    description: 'this is a test',
-    externalRef: v4(),
-    receivingAccount: 'test-account',
-    receivingPayment: 'test-payment'
-  }
-
-  describe('Grant validation', (): void => {
-    test('Valid incoming payment grant', (): void => {
-      const incomingPaymentGrantRequest: GrantRequest = {
+  describe('create', (): void => {
+    test('Can create a grant', async (): Promise<void> => {
+      const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
         access_token: {
           access: [
@@ -124,204 +106,52 @@ describe('Grant Service', (): void => {
         }
       }
 
-      const isValid = grantService.validateGrantRequest(
-        incomingPaymentGrantRequest
-      )
-      expect(isValid).toBeTruthy()
-    })
+      const grantResponse = await grantService.initiateGrant(grantRequest)
 
-    test('Valid outgoing payment grant', (): void => {
-      const outgoingPaymentGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.OutgoingPayment,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        outgoingPaymentGrantRequest
-      )
-      expect(isValid).toBeTruthy()
-    })
-
-    test('Valid account grant', (): void => {
-      const accountGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Account
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(accountGrantRequest)
-      expect(isValid).toBeTruthy()
-    })
-
-    test('Valid quote grant', (): void => {
-      const quoteGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Quote
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(quoteGrantRequest)
-      expect(isValid).toBeTruthy()
-    })
-
-    test('Cannot create incoming payment grant with unexpected limit payload', (): void => {
-      const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        incomingPaymentGrantRequest as GrantRequest
-      )
-      expect(isValid).toEqual(false)
-    })
-
-    test('Cannot create outgoing payment grant with unexpected limit payload', (): void => {
-      const outgoingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.OutgoingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        outgoingPaymentGrantRequest as GrantRequest
-      )
-      expect(isValid).toEqual(false)
-    })
-
-    test('Cannot create account grant with unexpected limit payload', (): void => {
-      const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Account,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        incomingPaymentGrantRequest as GrantRequest
-      )
-      expect(isValid).toEqual(false)
-    })
-
-    test('Cannot create quote grant with unexpected limit payload', (): void => {
-      const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Quote,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        incomingPaymentGrantRequest as GrantRequest
-      )
-      expect(isValid).toEqual(false)
-    })
-  })
-
-  test('Can create a grant', async (): Promise<void> => {
-    const grantRequest: GrantRequest = {
-      ...BASE_GRANT_REQUEST,
-      access_token: {
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.IncomingPayment,
-            limits: INCOMING_PAYMENT_LIMIT
-          }
-        ]
-      }
-    }
-
-    const grantResponse = await grantService.initiateGrant(grantRequest)
-
-    expect(grantResponse).toEqual(
-      expect.objectContaining({
-        interact: {
-          redirect: expect.any(String),
-          finish: expect.any(String)
-        },
-        continue: {
-          access_token: {
-            value: expect.any(String)
+      expect(grantResponse).toEqual(
+        expect.objectContaining({
+          interact: {
+            redirect: expect.any(String),
+            finish: expect.any(String)
           },
-          uri: expect.any(String),
-          wait: config.waitTime
-        }
-      })
-    )
+          continue: {
+            access_token: {
+              value: expect.any(String)
+            },
+            uri: expect.any(String),
+            wait: config.waitTime
+          }
+        })
+      )
 
-    const redirectUrl = new URL(grantResponse.interact.redirect)
-    const continueUrl = new URL(grantResponse.continue.uri)
-    expect(redirectUrl.pathname).toMatch(/\/interact\/[a-z,A-Z,0-9,-]+/g)
-    expect(continueUrl.pathname).toMatch(/\/auth\/continue\/[a-z,A-Z,0-9,-]+/g)
+      const redirectUrl = new URL(grantResponse.interact.redirect)
+      const continueUrl = new URL(grantResponse.continue.uri)
+      expect(redirectUrl.pathname).toMatch(/\/interact\/[a-z,A-Z,0-9,-]+/g)
+      expect(continueUrl.pathname).toMatch(
+        /\/auth\/continue\/[a-z,A-Z,0-9,-]+/g
+      )
 
-    const dbGrant = await Grant.query(trx)
-      .where({
-        interactNonce: grantResponse.interact.finish,
-        continueToken: grantResponse.continue.access_token.value
-      })
-      .first()
-    expect(dbGrant.interactId).toEqual(
-      redirectUrl.pathname.replace('/interact/', '')
-    )
-    expect(dbGrant.continueId).toEqual(
-      continueUrl.pathname.replace('/auth/continue/', '')
-    )
+      const dbGrant = await Grant.query(trx)
+        .where({
+          interactNonce: grantResponse.interact.finish,
+          continueToken: grantResponse.continue.access_token.value
+        })
+        .first()
+      expect(dbGrant.interactId).toEqual(
+        redirectUrl.pathname.replace('/interact/', '')
+      )
+      expect(dbGrant.continueId).toEqual(
+        continueUrl.pathname.replace('/auth/continue/', '')
+      )
 
-    const dbAccessGrant = await Access.query(trx)
-      .where({
-        grantId: dbGrant.id
-      })
-      .first()
+      const dbAccessGrant = await Access.query(trx)
+        .where({
+          grantId: dbGrant.id
+        })
+        .first()
 
-    expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
-    expect(dbAccessGrant.limits).toEqual(INCOMING_PAYMENT_LIMIT)
+      expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
+      expect(dbAccessGrant.limits).toEqual(INCOMING_PAYMENT_LIMIT)
+    })
   })
 })

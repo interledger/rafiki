@@ -116,7 +116,7 @@ export class App {
 
     const grantRoutes = await this.container.use('grantRoutes')
     // TODO: GNAP endpoints
-    this.publicRouter.post('/auth', grantRoutes.auth.post)
+    this.publicRouter.post('/', grantRoutes.create)
 
     this.publicRouter.post('/auth/continue/:id', (ctx: AppContext): void => {
       // TODO: generate completed grant response

@@ -4,13 +4,12 @@ import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
-import { AccessRequest, isAccessRequest } from '../access/types'
+import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { IAppConfig } from '../config/app'
 import { AccessService } from '../access/service'
 
 export interface GrantService {
-  validateGrantRequest(grantRequest: GrantRequest): boolean
   initiateGrant(grantRequest: GrantRequest): Promise<GrantResponse>
 }
 
@@ -20,7 +19,6 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
 }
 
-// TODO: maybe update docs.openpayments.guide with location
 // datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-2
 export interface GrantRequest {
   access_token: {
@@ -67,24 +65,9 @@ export async function createGrantService({
     knex
   }
   return {
-    validateGrantRequest: (grantRequest: GrantRequest) =>
-      validateGrantRequest(grantRequest),
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
       initiateGrant(deps, grantRequest, trx)
   }
-}
-
-function validateGrantRequest(
-  grantRequest: GrantRequest
-): grantRequest is GrantRequest {
-  if (typeof grantRequest.access_token !== 'object') return false
-  const { access_token } = grantRequest
-  if (typeof access_token.access !== 'object') return false
-  for (const access of access_token.access) {
-    if (!isAccessRequest(access)) return false
-  }
-
-  return grantRequest.interact?.start !== undefined
 }
 
 async function initiateGrant(
@@ -115,7 +98,19 @@ async function initiateGrant(
     })
 
     // Associate provided accesses with grant
+    deps.logger.info(
+      {
+        access
+      },
+      'creating access'
+    )
     await accessService.createAccess(grant.id, access, invTrx)
+    deps.logger.info(
+      {
+        access
+      },
+      'created access'
+    )
 
     if (!trx) {
       await invTrx.commit()
@@ -123,14 +118,14 @@ async function initiateGrant(
 
     return {
       interact: {
-        redirect: config.interactDomain + `/interact/${grant.interactId}`,
+        redirect: config.resourceServerDomain + `/interact/${grant.interactId}`,
         finish: grant.interactNonce
       },
       continue: {
         access_token: {
           value: grant.continueToken
         },
-        uri: config.domain + `/auth/continue/${grant.continueId}`,
+        uri: config.authServerDomain + `/auth/continue/${grant.continueId}`,
         wait: config.waitTime
       }
     }

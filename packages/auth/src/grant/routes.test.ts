@@ -13,6 +13,7 @@ import { truncateTables } from '../tests/tableManager'
 import { GrantRoutes } from './routes'
 import { Action, AccessType } from '../access/types'
 import { StartMethod, FinishMethod } from '../grant/model'
+import { GrantRequest } from '../grant/service'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const TEST_KID_PATH = '/keys/base-test-key'
@@ -31,6 +32,42 @@ export const TEST_CLIENT_KEY = {
     key_ops: ['sign', 'verify'],
     use: 'sig'
   }
+}
+
+const BASE_GRANT_ACCESS = {
+  type: AccessType.IncomingPayment,
+  actions: [Action.Create, Action.Read, Action.List],
+  locations: ['https://example.com'],
+  identifier: 'test-identifier'
+}
+
+const INCOMING_PAYMENT_LIMIT = {
+  incomingAmount: {
+    value: '1000000000',
+    assetCode: 'usd',
+    assetScale: 9
+  },
+  expiresAt: new Date().toISOString(),
+  description: 'this is a test',
+  externalRef: v4()
+}
+
+const OUTGOING_PAYMENT_LIMIT = {
+  sendAmount: {
+    value: '1000000000',
+    assetCode: 'usd',
+    assetScale: 9
+  },
+  receiveAmount: {
+    value: '2000000000',
+    assetCode: 'usd',
+    assetScale: 9
+  },
+  expiresAt: new Date().toISOString(),
+  description: 'this is a test',
+  externalRef: v4(),
+  receivingAccount: 'test-account',
+  receivingPayment: 'test-payment'
 }
 
 const BASE_GRANT_REQUEST = {
@@ -95,7 +132,163 @@ describe('Grant Routes', (): void => {
     }
   )
 
-  describe('auth/post', (): void => {
+  describe('Grant validation', (): void => {
+    test('Valid incoming payment grant', (): void => {
+      const incomingPaymentGrantRequest: GrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.IncomingPayment,
+              limits: INCOMING_PAYMENT_LIMIT
+            }
+          ]
+        }
+      }
+
+      const isValid = grantRoutes.validateGrantRequest(
+        incomingPaymentGrantRequest
+      )
+      expect(isValid).toBeTruthy()
+    })
+
+    test('Valid outgoing payment grant', (): void => {
+      const outgoingPaymentGrantRequest: GrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.OutgoingPayment,
+              limits: OUTGOING_PAYMENT_LIMIT
+            }
+          ]
+        }
+      }
+
+      const isValid = grantRoutes.validateGrantRequest(
+        outgoingPaymentGrantRequest
+      )
+      expect(isValid).toBeTruthy()
+    })
+
+    test('Valid account grant', (): void => {
+      const accountGrantRequest: GrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.Account
+            }
+          ]
+        }
+      }
+
+      const isValid = grantRoutes.validateGrantRequest(accountGrantRequest)
+      expect(isValid).toBeTruthy()
+    })
+
+    test('Valid quote grant', (): void => {
+      const quoteGrantRequest: GrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.Quote
+            }
+          ]
+        }
+      }
+
+      const isValid = grantRoutes.validateGrantRequest(quoteGrantRequest)
+      expect(isValid).toBeTruthy()
+    })
+
+    test('Cannot create incoming payment grant with unexpected limit payload', (): void => {
+      const incomingPaymentGrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.IncomingPayment,
+              limits: OUTGOING_PAYMENT_LIMIT
+            }
+          ]
+        }
+      }
+
+      const isValid = grantRoutes.validateGrantRequest(
+        incomingPaymentGrantRequest as GrantRequest
+      )
+      expect(isValid).toEqual(false)
+    })
+
+    test('Cannot create outgoing payment grant with unexpected limit payload', (): void => {
+      const outgoingPaymentGrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.OutgoingPayment,
+              limits: INCOMING_PAYMENT_LIMIT
+            }
+          ]
+        }
+      }
+
+      const isValid = grantRoutes.validateGrantRequest(
+        outgoingPaymentGrantRequest as GrantRequest
+      )
+      expect(isValid).toEqual(false)
+    })
+
+    test('Cannot create account grant with unexpected limit payload', (): void => {
+      const incomingPaymentGrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.Account,
+              limits: OUTGOING_PAYMENT_LIMIT
+            }
+          ]
+        }
+      }
+
+      const isValid = grantRoutes.validateGrantRequest(
+        incomingPaymentGrantRequest as GrantRequest
+      )
+      expect(isValid).toEqual(false)
+    })
+
+    test('Cannot create quote grant with unexpected limit payload', (): void => {
+      const incomingPaymentGrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.Quote,
+              limits: OUTGOING_PAYMENT_LIMIT
+            }
+          ]
+        }
+      }
+
+      const isValid = grantRoutes.validateGrantRequest(
+        incomingPaymentGrantRequest as GrantRequest
+      )
+      expect(isValid).toEqual(false)
+    })
+  })
+
+  describe('/create', (): void => {
     test('accepts json only', async (): Promise<void> => {
       const ctx = createContext(
         {
@@ -106,7 +299,7 @@ describe('Grant Routes', (): void => {
 
       ctx.request.body = BASE_GRANT_REQUEST
 
-      await expect(grantRoutes.auth.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(406)
       expect(ctx.body).toEqual({ error: 'invalid_request' })
     })
@@ -121,7 +314,7 @@ describe('Grant Routes', (): void => {
 
       ctx.request.body = BASE_GRANT_REQUEST
 
-      await expect(grantRoutes.auth.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(406)
       expect(ctx.body).toEqual({ error: 'invalid_request' })
     })
@@ -139,7 +332,7 @@ describe('Grant Routes', (): void => {
 
       ctx.request.body = BASE_GRANT_REQUEST
 
-      await expect(grantRoutes.auth.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(400)
       expect(ctx.body).toEqual({
         error: 'invalid_client'
@@ -187,7 +380,7 @@ describe('Grant Routes', (): void => {
         }
       }
 
-      await expect(grantRoutes.auth.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(400)
       expect(ctx.body).toEqual({
         error: 'invalid_request'
@@ -226,7 +419,7 @@ describe('Grant Routes', (): void => {
 
       ctx.request.body = BASE_GRANT_REQUEST
 
-      await expect(grantRoutes.auth.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual({
         interact: {
