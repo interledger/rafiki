@@ -25,14 +25,14 @@ interface ServiceDependencies extends BaseService {
 export interface GrantRequest {
   access_token: {
     access: AccessRequest[]
-    client: ClientInfo
-    interact: {
-      start: StartMethod[]
-      finish?: {
-        method: FinishMethod
-        uri: string
-        nonce: string
-      }
+  }
+  client: ClientInfo
+  interact: {
+    start: StartMethod[]
+    finish?: {
+      method: FinishMethod
+      uri: string
+      nonce: string
     }
   }
 }
@@ -84,7 +84,7 @@ function validateGrantRequest(
     if (!isAccessRequest(access)) return false
   }
 
-  return access_token.interact?.start !== undefined
+  return grantRequest.interact?.start !== undefined
 }
 
 async function initiateGrant(
@@ -95,10 +95,8 @@ async function initiateGrant(
   const { accessService, knex, config } = deps
 
   const {
-    access_token: {
-      access,
-      interact: { start, finish }
-    }
+    access_token: { access },
+    interact: { start, finish }
   } = grantRequest
 
   const invTrx = trx || (await Grant.startTransaction(knex))

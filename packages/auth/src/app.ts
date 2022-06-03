@@ -114,39 +114,9 @@ export class App {
       ctx.status = 200
     })
 
+    const grantRoutes = await this.container.use('grantRoutes')
     // TODO: GNAP endpoints
-    this.publicRouter.post(
-      '/auth',
-      async (ctx: AppContext): Promise<void> => {
-        ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
-        ctx.assert(
-          ctx.get('Content-Type') === 'application/json',
-          400,
-          'must send json body'
-        )
-        const { body } = ctx.request
-        const grantService = await this.container.use('grantService')
-        const clientService = await this.container.use('clientService')
-        if (!grantService.validateGrantRequest(body)) {
-          ctx.status = 400
-          ctx.body = { error: 'invalid_request' }
-          return
-        }
-
-        const isValidClient = await clientService.validateClientWithRegistry(
-          body.client
-        )
-        if (!isValidClient) {
-          ctx.status = 400
-          ctx.body = { error: 'invalid_client' }
-          return
-        }
-
-        const res = await grantService.initiateGrant(body)
-        ctx.status = 200
-        ctx.body = res
-      }
-    )
+    this.publicRouter.post('/auth', grantRoutes.auth.post)
 
     this.publicRouter.post('/auth/continue/:id', (ctx: AppContext): void => {
       // TODO: generate completed grant response
