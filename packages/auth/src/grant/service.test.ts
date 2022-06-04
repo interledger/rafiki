@@ -87,7 +87,7 @@ describe('Grant Service', (): void => {
       assetScale: 9
     },
     expiresAt: new Date().toISOString(),
-    description: 'this is a test you fuck',
+    description: 'this is a test',
     externalRef: v4()
   }
 

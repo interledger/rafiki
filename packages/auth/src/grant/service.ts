@@ -98,19 +98,7 @@ async function initiateGrant(
     })
 
     // Associate provided accesses with grant
-    deps.logger.info(
-      {
-        access
-      },
-      'creating access'
-    )
     await accessService.createAccess(grant.id, access, invTrx)
-    deps.logger.info(
-      {
-        access
-      },
-      'created access'
-    )
 
     if (!trx) {
       await invTrx.commit()

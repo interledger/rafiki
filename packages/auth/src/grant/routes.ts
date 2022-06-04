@@ -10,7 +10,6 @@ interface ServiceDependencies extends BaseService {
 }
 
 export interface GrantRoutes {
-  validateGrantRequest(grantRequest: GrantRequest): boolean
   create(ctx: AppContext): Promise<void>
   // interaction: {
   //   get(ctx: AppContext): Promise<void>
@@ -33,8 +32,6 @@ export function createGrantRoutes({
     logger: log
   }
   return {
-    validateGrantRequest: (grantRequest: GrantRequest) =>
-      validateGrantRequest(grantRequest),
     create: (ctx: AppContext) => createGrantInitiation(deps, ctx)
   }
 }
