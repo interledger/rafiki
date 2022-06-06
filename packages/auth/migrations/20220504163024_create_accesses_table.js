@@ -1,9 +1,12 @@
 exports.up = function (knex) {
-  return knex.schema.createTable('accessTokens', function (table) {
+  return knex.schema.createTable('accesses', function (table) {
     table.uuid('id').notNullable().primary()
-    table.string('value').notNullable().unique()
-    table.string('managementId').notNullable()
-    table.integer('expiresIn')
+    table.string('type').notNullable()
+    table.specificType('actions', 'text[]').notNullable()
+    table.string('identifier')
+    table.specificType('locations', 'text[]')
+    table.integer('interval')
+    table.jsonb('limits')
     table.uuid('grantId').notNullable()
     table.foreign('grantId').references('grants.id').onDelete('CASCADE')
 
@@ -13,5 +16,5 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('accessTokens')
+  return knex.schema.dropTableIfExists('accesses')
 }

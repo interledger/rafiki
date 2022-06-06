@@ -6,7 +6,10 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 
 import { App, AppServices } from './app'
 import { Config } from './config/app'
-import { createClientService } from './clients/service'
+import { createClientService } from './client/service'
+import { createAccessService } from './access/service'
+import { createGrantService } from './grant/service'
+import { createGrantRoutes } from './grant/routes'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -53,6 +56,16 @@ export function initIocContainer(
   // TODO: add redis
 
   container.singleton(
+    'accessService',
+    async (deps: IocContract<AppServices>) => {
+      return createAccessService({
+        logger: await deps.use('logger'),
+        knex: await deps.use('knex')
+      })
+    }
+  )
+
+  container.singleton(
     'clientService',
     async (deps: IocContract<AppServices>) => {
       return createClientService({
@@ -61,6 +74,26 @@ export function initIocContainer(
       })
     }
   )
+
+  container.singleton(
+    'grantService',
+    async (deps: IocContract<AppServices>) => {
+      return createGrantService({
+        config: await deps.use('config'),
+        logger: await deps.use('logger'),
+        accessService: await deps.use('accessService'),
+        knex: await deps.use('knex')
+      })
+    }
+  )
+
+  container.singleton('grantRoutes', async (deps: IocContract<AppServices>) => {
+    return createGrantRoutes({
+      grantService: await deps.use('grantService'),
+      clientService: await deps.use('clientService'),
+      logger: await deps.use('logger')
+    })
+  })
 
   return container
 }
@@ -133,7 +166,6 @@ export const start = async (
 
   // Do migrations
   const knex = await container.use('knex')
-  // TODO: create migrations, knexfile.js, etc.
   await knex.migrate
     .latest({
       directory: './packages/auth/migrations'

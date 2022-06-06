@@ -9,6 +9,8 @@ import { Logger } from 'pino'
 import Router from '@koa/router'
 
 import { IAppConfig } from './config/app'
+import { ClientService } from './client/service'
+import { GrantService } from './grant/service'
 
 export interface AppContextData {
   logger: Logger
@@ -25,8 +27,9 @@ export interface AppServices {
   knex: Promise<Knex>
   closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
-
   // TODO: Add GNAP-related services
+  clientService: Promise<ClientService>
+  grantService: Promise<GrantService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -111,11 +114,9 @@ export class App {
       ctx.status = 200
     })
 
+    const grantRoutes = await this.container.use('grantRoutes')
     // TODO: GNAP endpoints
-    this.publicRouter.post('/auth', (ctx: AppContext): void => {
-      // TODO: generate interaction session
-      ctx.status = 200
-    })
+    this.publicRouter.post('/', grantRoutes.create)
 
     this.publicRouter.post('/auth/continue/:id', (ctx: AppContext): void => {
       // TODO: generate completed grant response
