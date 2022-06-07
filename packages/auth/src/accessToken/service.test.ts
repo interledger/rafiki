@@ -1,3 +1,4 @@
+import nock from 'nock'
 import assert from 'assert'
 import Knex, { Transaction } from 'knex'
 import crypto from 'crypto'
@@ -14,6 +15,18 @@ import { AccessType, Action } from '../access/types'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
+
+const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
+const TEST_KID_PATH = '/keys/test-key'
+const TEST_CLIENT_KEY = {
+  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+  x: 'test-public-key',
+  kty: 'OKP',
+  alg: 'EdDSA',
+  crv: 'Ed25519',
+  key_ops: ['sign', 'verify'],
+  use: 'sig'
+}
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -40,6 +53,7 @@ describe('Access Token Service', (): void => {
 
   afterAll(
     async (): Promise<void> => {
+      nock.restore()
       await appContainer.shutdown()
     }
   )
@@ -52,6 +66,7 @@ describe('Access Token Service', (): void => {
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
     interactId: v4(),
     interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
     interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -96,10 +111,18 @@ describe('Access Token Service', (): void => {
       }
     )
     test('Can introspect active token', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN).get(TEST_KID_PATH).reply(200, {
+        keys: TEST_CLIENT_KEY
+      })
       const introspection = await accessTokenService.introspect(token.value)
       assert.ok(introspection)
       expect(introspection.active).toEqual(true)
-      expect(introspection).toMatchObject({ ...grant, access: [access] })
+      expect(introspection).toMatchObject({
+        ...grant,
+        access: [access],
+        key: { proof: 'httpsig', jwk: TEST_CLIENT_KEY }
+      })
+      scope.isDone()
     })
 
     test('Can introspect expired token', async (): Promise<void> => {

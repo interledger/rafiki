@@ -11,7 +11,7 @@ interface DisplayInfo {
   uri: string
 }
 
-interface KeyInfo {
+export interface KeyInfo {
   proof: string
   jwk: JWKWithRequired
 }

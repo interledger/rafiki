@@ -1,8 +1,10 @@
 import { TransactionOrKnex } from 'objection'
+import Axios from 'axios'
 
 import { BaseService } from '../shared/baseService'
 import { Grant } from '../grant/model'
 import { AccessToken } from './model'
+import { KeyInfo } from '../client/service'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
@@ -14,6 +16,7 @@ interface ServiceDependencies extends BaseService {
 
 export interface Introspection extends Partial<Grant> {
   active: boolean
+  key?: KeyInfo
 }
 
 export async function createAccessTokenService({
@@ -50,6 +53,20 @@ async function introspect(
     const grant = await Grant.query(deps.knex)
       .findById(token.grantId)
       .withGraphFetched('access')
-    return { active: true, ...grant }
+    const registryData = await Axios.get(grant.clientKeyId)
+      .then((res) => res.data)
+      .catch((err) => {
+        deps.logger.error(
+          {
+            err,
+            kid: grant.clientKeyId
+          },
+          'failed to fetch key'
+        )
+        throw new Error('failed to fetch key')
+      })
+
+    const { keys } = registryData
+    return { active: true, ...grant, key: { proof: 'httpsig', jwk: keys } }
   }
 }

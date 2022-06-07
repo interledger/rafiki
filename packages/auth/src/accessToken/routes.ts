@@ -52,9 +52,8 @@ function introspectionToBody(result: Introspection) {
     return {
       active: result.active,
       grant: result.id,
-      access: result.access?.map((a: Access) => accessToBody(a))
-      // TODO: add key
-      // key: {}
+      access: result.access?.map((a: Access) => accessToBody(a)),
+      key: result.key
     }
   }
 }

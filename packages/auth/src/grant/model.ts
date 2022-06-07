@@ -52,6 +52,7 @@ export class Grant extends BaseModel {
   public finishMethod!: FinishMethod
   public finishUri!: string
   public clientNonce!: string // nonce for hash
+  public clientKeyId!: string
 
   public interactId!: string
   public interactRef!: string
