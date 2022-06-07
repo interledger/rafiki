@@ -3,6 +3,7 @@ export enum IncomingPaymentError {
   InvalidAmount = 'InvalidAmount',
   UnknownPayment = 'UnknownPayment',
   InvalidState = 'InvalidState',
+  InvalidExpiry = 'InvalidExpiry',
   WrongState = 'WrongState'
 }
 
@@ -17,6 +18,7 @@ export const errorToCode: {
   [IncomingPaymentError.InvalidAmount]: 400,
   [IncomingPaymentError.UnknownPayment]: 404,
   [IncomingPaymentError.InvalidState]: 400,
+  [IncomingPaymentError.InvalidExpiry]: 400,
   [IncomingPaymentError.WrongState]: 409
 }
 
@@ -27,5 +29,6 @@ export const errorToMessage: {
   [IncomingPaymentError.InvalidAmount]: 'invalid amount',
   [IncomingPaymentError.UnknownPayment]: 'unknown payment',
   [IncomingPaymentError.InvalidState]: 'invalid state',
+  [IncomingPaymentError.InvalidExpiry]: 'invalid expiresAt',
   [IncomingPaymentError.WrongState]: 'wrong state'
 }

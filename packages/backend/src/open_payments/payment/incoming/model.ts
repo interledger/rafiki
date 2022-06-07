@@ -24,18 +24,23 @@ export enum IncomingPaymentState {
   Expired = 'EXPIRED'
 }
 
+export interface IncomingPaymentResponse {
+  id: string
+  accountId: string
+  description?: string
+  createdAt: string
+  updatedAt: string
+  expiresAt: string
+  incomingAmount?: AmountJSON
+  receivedAmount: AmountJSON
+  externalRef?: string
+  state: string
+  ilpAddress?: string
+  sharedSecret?: string
+}
+
 export type IncomingPaymentData = {
-  incomingPayment: {
-    id: string
-    accountId: string
-    description?: string
-    createdAt: string
-    expiresAt: string
-    incomingAmount?: Amount
-    receivedAmount: Amount
-    externalRef?: string
-    state: string
-  }
+  incomingPayment: IncomingPaymentResponse
 }
 
 export class IncomingPaymentEvent extends WebhookEvent {
@@ -145,16 +150,20 @@ export class IncomingPayment
         createdAt: new Date(+this.createdAt).toISOString(),
         expiresAt: this.expiresAt.toISOString(),
         receivedAmount: {
-          value: amountReceived,
+          value: amountReceived.toString(),
           assetCode: this.asset.code,
           assetScale: this.asset.scale
         },
-        state: this.state
+        state: this.state,
+        updatedAt: new Date(+this.updatedAt).toISOString()
       }
     }
 
     if (this.incomingAmount) {
-      data.incomingPayment.incomingAmount = this.incomingAmount
+      data.incomingPayment.incomingAmount = {
+        ...this.incomingAmount,
+        value: this.incomingAmount.value.toString()
+      }
     }
     if (this.description) {
       data.incomingPayment.description = this.description

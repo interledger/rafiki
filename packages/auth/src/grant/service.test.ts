@@ -1,6 +1,5 @@
 import { URL } from 'url'
 import crypto from 'crypto'
-import nock from 'nock'
 import Knex, { Transaction } from 'knex'
 import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -40,7 +39,6 @@ describe('Grant Service', (): void => {
 
   afterAll(
     async (): Promise<void> => {
-      nock.restore()
       await appContainer.shutdown()
     }
   )
@@ -93,237 +91,67 @@ describe('Grant Service', (): void => {
     externalRef: v4()
   }
 
-  const OUTGOING_PAYMENT_LIMIT = {
-    sendAmount: {
-      value: '1000000000',
-      assetCode: 'usd',
-      assetScale: 9
-    },
-    receiveAmount: {
-      value: '2000000000',
-      assetCode: 'usd',
-      assetScale: 9
-    },
-    expiresAt: new Date().toISOString(),
-    description: 'this is a test',
-    externalRef: v4(),
-    receivingAccount: 'test-account',
-    receivingPayment: 'test-payment'
-  }
-
-  describe('Grant validation', (): void => {
-    test('Valid incoming payment grant', (): void => {
-      const incomingPaymentGrantRequest: GrantRequest = {
-        access_token: {
-          ...BASE_GRANT_REQUEST,
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        incomingPaymentGrantRequest
-      )
-      expect(isValid).toBeTruthy()
-    })
-
-    test('Valid outgoing payment grant', (): void => {
-      const outgoingPaymentGrantRequest: GrantRequest = {
-        access_token: {
-          ...BASE_GRANT_REQUEST,
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.OutgoingPayment,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        outgoingPaymentGrantRequest
-      )
-      expect(isValid).toBeTruthy()
-    })
-
-    test('Valid account grant', (): void => {
-      const accountGrantRequest: GrantRequest = {
-        access_token: {
-          ...BASE_GRANT_REQUEST,
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Account
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(accountGrantRequest)
-      expect(isValid).toBeTruthy()
-    })
-
-    test('Valid quote grant', (): void => {
-      const quoteGrantRequest: GrantRequest = {
-        access_token: {
-          ...BASE_GRANT_REQUEST,
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Quote
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(quoteGrantRequest)
-      expect(isValid).toBeTruthy()
-    })
-
-    test('Cannot create incoming payment grant with unexpected limit payload', (): void => {
-      const incomingPaymentGrantRequest = {
-        access_token: {
-          ...BASE_GRANT_REQUEST,
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        incomingPaymentGrantRequest as GrantRequest
-      )
-      expect(isValid).toEqual(false)
-    })
-
-    test('Cannot create outgoing payment grant with unexpected limit payload', (): void => {
-      const outgoingPaymentGrantRequest = {
-        access_token: {
-          ...BASE_GRANT_REQUEST,
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.OutgoingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        outgoingPaymentGrantRequest as GrantRequest
-      )
-      expect(isValid).toEqual(false)
-    })
-
-    test('Cannot create account grant with unexpected limit payload', (): void => {
-      const incomingPaymentGrantRequest = {
-        access_token: {
-          ...BASE_GRANT_REQUEST,
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Account,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        incomingPaymentGrantRequest as GrantRequest
-      )
-      expect(isValid).toEqual(false)
-    })
-
-    test('Cannot create quote grant with unexpected limit payload', (): void => {
-      const incomingPaymentGrantRequest = {
-        access_token: {
-          ...BASE_GRANT_REQUEST,
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Quote,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const isValid = grantService.validateGrantRequest(
-        incomingPaymentGrantRequest as GrantRequest
-      )
-      expect(isValid).toEqual(false)
-    })
-  })
-
-  test('Can create a grant', async (): Promise<void> => {
-    const grantRequest: GrantRequest = {
-      access_token: {
+  describe('create', (): void => {
+    test('Can create a grant', async (): Promise<void> => {
+      const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
-        access: [
-          {
-            ...BASE_GRANT_ACCESS,
-            type: AccessType.IncomingPayment,
-            limits: INCOMING_PAYMENT_LIMIT
-          }
-        ]
-      }
-    }
-
-    const grantResponse = await grantService.initiateGrant(grantRequest)
-
-    expect(grantResponse).toEqual(
-      expect.objectContaining({
-        interact: {
-          redirect: expect.any(String),
-          finish: expect.any(String)
-        },
-        continue: {
-          access_token: {
-            value: expect.any(String)
-          },
-          uri: expect.any(String),
-          wait: config.waitTime
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.IncomingPayment,
+              limits: INCOMING_PAYMENT_LIMIT
+            }
+          ]
         }
-      })
-    )
+      }
 
-    const redirectUrl = new URL(grantResponse.interact.redirect)
-    const continueUrl = new URL(grantResponse.continue.uri)
-    expect(redirectUrl.pathname).toMatch(/\/interact\/[a-z,A-Z,0-9,-]+/g)
-    expect(continueUrl.pathname).toMatch(/\/auth\/continue\/[a-z,A-Z,0-9,-]+/g)
+      const grantResponse = await grantService.initiateGrant(grantRequest)
 
-    const dbGrant = await Grant.query(trx)
-      .where({
-        interactNonce: grantResponse.interact.finish,
-        continueToken: grantResponse.continue.access_token.value
-      })
-      .first()
-    expect(dbGrant.interactId).toEqual(
-      redirectUrl.pathname.replace('/interact/', '')
-    )
-    expect(dbGrant.continueId).toEqual(
-      continueUrl.pathname.replace('/auth/continue/', '')
-    )
+      expect(grantResponse).toEqual(
+        expect.objectContaining({
+          interact: {
+            redirect: expect.any(String),
+            finish: expect.any(String)
+          },
+          continue: {
+            access_token: {
+              value: expect.any(String)
+            },
+            uri: expect.any(String),
+            wait: config.waitTime
+          }
+        })
+      )
 
-    const dbAccessGrant = await Access.query(trx)
-      .where({
-        grantId: dbGrant.id
-      })
-      .first()
+      const redirectUrl = new URL(grantResponse.interact.redirect)
+      const continueUrl = new URL(grantResponse.continue.uri)
+      expect(redirectUrl.pathname).toMatch(/\/interact\/[a-z,A-Z,0-9,-]+/g)
+      expect(continueUrl.pathname).toMatch(
+        /\/auth\/continue\/[a-z,A-Z,0-9,-]+/g
+      )
 
-    expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
-    expect(dbAccessGrant.limits).toEqual(INCOMING_PAYMENT_LIMIT)
+      const dbGrant = await Grant.query(trx)
+        .where({
+          interactNonce: grantResponse.interact.finish,
+          continueToken: grantResponse.continue.access_token.value
+        })
+        .first()
+      expect(dbGrant.interactId).toEqual(
+        redirectUrl.pathname.replace('/interact/', '')
+      )
+      expect(dbGrant.continueId).toEqual(
+        continueUrl.pathname.replace('/auth/continue/', '')
+      )
+
+      const dbAccessGrant = await Access.query(trx)
+        .where({
+          grantId: dbGrant.id
+        })
+        .first()
+
+      expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
+      expect(dbAccessGrant.limits).toEqual(INCOMING_PAYMENT_LIMIT)
+    })
   })
 })

@@ -3,6 +3,8 @@
 'pkg: backend': packages/backend/**/*
 'pkg: frontend': packages/frontend/**/*
 'pkg: rates': packages/rates/**/*
+'pkg: auth': packages/auth/**/*
+'pkg: openapi': packages/openapi/**/*
 
 # Add 'type: documentation' label to any change to *.md files
 'type: ci':
@@ -20,6 +22,7 @@
   - packages/frontend/src/**/*
   - packages/rates/src/**/*
   - packages/auth/src/**/*
+  - packages/openapi/src/**/*
 
 # Add 'type: tests' label to any change to *.test.ts files
 'type: tests': packages/**/*.test.ts

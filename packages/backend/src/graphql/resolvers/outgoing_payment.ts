@@ -89,7 +89,7 @@ export const getAccountOutgoingPayments: AccountResolvers<ApolloContext>['outgoi
 
 export function paymentToGraphql(
   payment: OutgoingPayment
-): Omit<SchemaOutgoingPayment, 'outcome'> {
+): SchemaOutgoingPayment {
   return {
     id: payment.id,
     accountId: payment.accountId,

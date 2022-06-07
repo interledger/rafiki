@@ -35,6 +35,7 @@ import { createWebhookService } from './webhook/service'
 import { createConnectorService } from './connector'
 import { createSessionService } from './session/service'
 import { createApiKeyService } from './apiKey/service'
+import { createOpenAPI } from 'openapi'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -119,6 +120,10 @@ export function initIocContainer(
       cluster_id: config.tigerbeetleClusterId,
       replica_addresses: config.tigerbeetleReplicaAddresses
     })
+  })
+  container.singleton('openApi', async (deps) => {
+    const config = await deps.use('config')
+    return await createOpenAPI(config.openPaymentsSpec)
   })
 
   /**

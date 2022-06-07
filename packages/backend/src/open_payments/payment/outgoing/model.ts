@@ -119,11 +119,13 @@ export class OutgoingPayment
           ...this.receiveAmount,
           value: this.receiveAmount.value.toString()
         },
+        sentAmount: {
+          ...this.sendAmount,
+          value: amountSent.toString()
+        },
         stateAttempts: this.stateAttempts,
         createdAt: new Date(+this.createdAt).toISOString(),
-        outcome: {
-          amountSent: amountSent.toString()
-        },
+        updatedAt: new Date(+this.updatedAt).toISOString(),
         balance: balance.toString()
       }
     }
@@ -144,7 +146,7 @@ export class OutgoingPayment
     return {
       id: json.id,
       accountId: json.accountId,
-      state: json.state.toLowerCase(),
+      state: json.state,
       receivingPayment: json.receivingPayment,
       sendAmount: {
         ...json.sendAmount,
@@ -196,23 +198,25 @@ export const PaymentEventType = {
 }
 export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
+export interface OutgoingPaymentResponse {
+  id: string
+  accountId: string
+  createdAt: string
+  receivingPayment: string
+  sendAmount: AmountJSON
+  receiveAmount: AmountJSON
+  description?: string
+  externalRef?: string
+  failed: boolean
+  updatedAt: string
+  sentAmount: AmountJSON
+}
+
 export type PaymentData = {
-  payment: {
-    id: string
-    accountId: string
-    createdAt: string
-    state: OutgoingPaymentState
+  payment: Omit<OutgoingPaymentResponse, 'failed'> & {
     error?: string
+    state: OutgoingPaymentState
     stateAttempts: number
-    receivingAccount?: string
-    receivingPayment?: string
-    sendAmount?: AmountJSON
-    receiveAmount?: AmountJSON
-    description?: string
-    externalRef?: string
-    outcome: {
-      amountSent: string
-    }
     balance: string
   }
 }

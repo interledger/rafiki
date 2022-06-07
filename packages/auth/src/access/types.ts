@@ -109,7 +109,6 @@ export function isAccessRequest(
   )
 }
 
-// value should hold bigint, serialized as string for requests & storage as jsonb field in postgres
 export interface PaymentAmount {
   value: string
   assetCode: string
