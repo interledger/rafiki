@@ -1,5 +1,3 @@
-import * as crypto from 'crypto'
-import { URL } from 'url'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
 
@@ -190,6 +188,14 @@ export class App {
         }
       }
     }
+
+    // Interaction
+    this.publicRouter.get('/interact/:interactId', grantRoutes.interaction.get)
+
+    this.publicRouter.post(
+      '/interact/:interactId/login',
+      grantRoutes.interaction.post
+    )
 
     // Token management
     this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)

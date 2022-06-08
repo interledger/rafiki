@@ -1,26 +1,31 @@
+import * as crypto from 'crypto'
+import { URL } from 'url'
 import { AppContext } from '../app'
 import { GrantService, GrantRequest } from './service'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
 import { isAccessRequest } from '../access/types'
+import { IAppConfig } from '../config/app'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
   clientService: ClientService
+  config: IAppConfig
 }
 
 export interface GrantRoutes {
   create(ctx: AppContext): Promise<void>
-  // interaction: {
-  //   get(ctx: AppContext): Promise<void>
-  //   post(ctx: AppContext): Promise<void>
-  // }
+  interaction: {
+    get(ctx: AppContext): Promise<void>
+    post(ctx: AppContext): Promise<void>
+  }
 }
 
 export function createGrantRoutes({
   grantService,
   clientService,
-  logger
+  logger,
+  config
 }: ServiceDependencies): GrantRoutes {
   const log = logger.child({
     service: 'GrantRoutes'
@@ -29,10 +34,15 @@ export function createGrantRoutes({
   const deps = {
     grantService,
     clientService,
-    logger: log
+    logger: log,
+    config
   }
   return {
-    create: (ctx: AppContext) => createGrantInitiation(deps, ctx)
+    create: (ctx: AppContext) => createGrantInitiation(deps, ctx),
+    interaction: {
+      get: (ctx: AppContext) => startInteraction(deps, ctx),
+      post: (ctx: AppContext) => finishInteraction(deps, ctx)
+    }
   }
 }
 
@@ -83,4 +93,86 @@ async function createGrantInitiation(
   const res = await grantService.initiateGrant(body)
   ctx.status = 201
   ctx.body = res
+}
+
+async function startInteraction(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  const { interactId } = ctx.params
+  const { config, grantService, clientService } = deps
+  const grant = await grantService.getByInteraction(interactId)
+
+  if (!grant) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'unknown_request'
+    }
+
+    return
+  }
+
+  ctx.cookies.set('_grant', grant.interactId, {
+    path: `/interact/${interactId}`,
+    httpOnly: true,
+    signed: true,
+    maxAge: 600000 // TODO: make this a config item
+  })
+
+  const displayInfo = await clientService.getClientDisplayInfo(
+    grant.clientKeyId
+  )
+
+  if (!displayInfo) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'invalid_client'
+    }
+    return
+  }
+
+  const interactionUrl = new URL(config.resourceServerDomain)
+  interactionUrl.searchParams.set('clientName', displayInfo.name)
+  interactionUrl.searchParams.set('clientUri', displayInfo.uri)
+
+  ctx.redirect(interactionUrl.toString())
+}
+
+async function finishInteraction(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  const { interactId } = ctx.params
+  const interactCookie = ctx.cookies.get('_grant', { signed: true })
+
+  if (!interactCookie || !interactId || interactCookie !== interactId) {
+    ctx.status = 404
+    ctx.body = {
+      error: 'unknown_request'
+    }
+    return
+  }
+
+  const { grantService, config } = deps
+  const grant = await grantService.getByInteraction(interactId)
+
+  if (!grant) {
+    ctx.status = 404
+    ctx.body = {
+      error: 'unknown_request'
+    }
+  }
+
+  const clientRedirectUri = new URL(grant.finishUri)
+  const { clientNonce, interactNonce, interactRef } = grant
+  const interactUrl = config.resourceServerDomain + `/interact/${interactId}`
+
+  // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
+  const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${interactUrl}`
+
+  // TODO: support other hash_methods if provided
+  const hash = crypto.createHash('sha3-512').update(data).digest('base64')
+  clientRedirectUri.searchParams.set('hash', hash)
+  clientRedirectUri.searchParams.set('interact_ref', interactRef)
+  ctx.redirect(clientRedirectUri.toString())
 }
