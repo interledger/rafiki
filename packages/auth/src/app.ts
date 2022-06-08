@@ -217,7 +217,6 @@ export class App {
     this.publicRouter.post(
       '/interact/:interactId/login',
       grantRoutes.interaction.finish
-
     )
 
     // Token management
