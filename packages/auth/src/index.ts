@@ -80,7 +80,8 @@ export function initIocContainer(
   container.singleton('accessTokenService', async (deps) => {
     return await createAccessTokenService({
       logger: await deps.use('logger'),
-      knex: await deps.use('knex')
+      knex: await deps.use('knex'),
+      clientService: await deps.use('clientService')
     })
   })
   container.singleton('accessTokenRoutes', async (deps) => {

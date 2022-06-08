@@ -1,10 +1,9 @@
 import { TransactionOrKnex } from 'objection'
-import Axios from 'axios'
 
 import { BaseService } from '../shared/baseService'
 import { Grant } from '../grant/model'
 import { AccessToken } from './model'
-import { KeyInfo } from '../client/service'
+import { ClientService, KeyInfo } from '../client/service'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
@@ -12,6 +11,7 @@ export interface AccessTokenService {
 
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
+  clientService: ClientService
 }
 
 export interface Introspection extends Partial<Grant> {
@@ -21,7 +21,8 @@ export interface Introspection extends Partial<Grant> {
 
 export async function createAccessTokenService({
   logger,
-  knex
+  knex,
+  clientService
 }: ServiceDependencies): Promise<AccessTokenService> {
   const log = logger.child({
     service: 'TokenService'
@@ -29,7 +30,8 @@ export async function createAccessTokenService({
 
   const deps: ServiceDependencies = {
     logger: log,
-    knex
+    knex,
+    clientService
   }
 
   return {
@@ -53,20 +55,10 @@ async function introspect(
     const grant = await Grant.query(deps.knex)
       .findById(token.grantId)
       .withGraphFetched('access')
-    const registryData = await Axios.get(grant.clientKeyId)
-      .then((res) => res.data)
-      .catch((err) => {
-        deps.logger.error(
-          {
-            err,
-            kid: grant.clientKeyId
-          },
-          'failed to fetch key'
-        )
-        throw new Error('failed to fetch key')
-      })
-
+    const registryData = await deps.clientService.getRegistryDataByKid(
+      grant.clientKeyId
+    )
     const { keys } = registryData
-    return { active: true, ...grant, key: { proof: 'httpsig', jwk: keys } }
+    return { active: true, ...grant, key: { proof: 'httpsig', jwk: keys[0] } }
   }
 }

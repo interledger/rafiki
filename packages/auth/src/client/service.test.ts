@@ -9,7 +9,7 @@ import { ClientService } from './service'
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
-  uri: 'https://example.com'
+  url: 'https://example.com'
 }
 
 const TEST_KID_PATH = '/keys/test-key'
@@ -54,14 +54,16 @@ describe('Client Service', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get('/keys/correct')
           .reply(200, {
-            display: TEST_CLIENT_DISPLAY,
-            keys: {
-              ...TEST_CLIENT_KEY,
-              kid: KEY_REGISTRY_ORIGIN + '/keys/correct',
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
+            ...TEST_CLIENT_DISPLAY,
+            keys: [
+              {
+                ...TEST_CLIENT_KEY,
+                kid: KEY_REGISTRY_ORIGIN + '/keys/correct',
+                exp: Math.round(expDate.getTime() / 1000),
+                nbf: Math.round(nbfDate.getTime() / 1000),
+                revoked: false
+              }
+            ]
           })
 
         const validClient = await clientService.validateClientWithRegistry({
@@ -87,12 +89,14 @@ describe('Client Service', (): void => {
               name: 'Wrong Client',
               uri: 'https://example.com'
             },
-            keys: {
-              ...TEST_CLIENT_KEY,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
+            keys: [
+              {
+                ...TEST_CLIENT_KEY,
+                exp: Math.round(expDate.getTime() / 1000),
+                nbf: Math.round(nbfDate.getTime() / 1000),
+                revoked: false
+              }
+            ]
           })
 
         const validClient = await clientService.validateClientWithRegistry({
@@ -111,16 +115,16 @@ describe('Client Service', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
-            display: {
-              name: 'Test Client',
-              uri: 'https://example.com/wrong'
-            },
-            keys: {
-              ...TEST_CLIENT_KEY,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
+            ...TEST_CLIENT_KEY,
+            url: 'https://example.com/wrong',
+            keys: [
+              {
+                ...TEST_CLIENT_KEY,
+                exp: Math.round(expDate.getTime() / 1000),
+                nbf: Math.round(nbfDate.getTime() / 1000),
+                revoked: false
+              }
+            ]
           })
 
         const validClient = await clientService.validateClientWithRegistry({
@@ -158,13 +162,15 @@ describe('Client Service', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
 
       const validClientX = await clientService.validateClientWithRegistry({
@@ -246,13 +252,15 @@ describe('Client Service', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY,
-            exp: Math.round(futureDate.getTime() / 1000),
-            nbf: Math.round(futureDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY,
+              exp: Math.round(futureDate.getTime() / 1000),
+              nbf: Math.round(futureDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
 
       const validKeyKid = await clientService.validateClientWithRegistry({
@@ -271,13 +279,15 @@ describe('Client Service', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY,
-            exp: Math.round(nbfDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY,
+              exp: Math.round(nbfDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
 
       const validClient = await clientService.validateClientWithRegistry({
@@ -296,13 +306,15 @@ describe('Client Service', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: true
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: true
+            }
+          ]
         })
 
       const validClient = await clientService.validateClientWithRegistry({

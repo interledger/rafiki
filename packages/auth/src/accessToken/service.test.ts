@@ -111,9 +111,11 @@ describe('Access Token Service', (): void => {
       }
     )
     test('Can introspect active token', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN).get(TEST_KID_PATH).reply(200, {
-        keys: TEST_CLIENT_KEY
-      })
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(TEST_KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY]
+        })
       const introspection = await accessTokenService.introspect(token.value)
       assert.ok(introspection)
       expect(introspection.active).toEqual(true)

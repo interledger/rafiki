@@ -146,9 +146,11 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Successfully introspects valid token', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN).get(TEST_KID_PATH).reply(200, {
-        keys: TEST_CLIENT_KEY
-      })
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(TEST_KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY]
+        })
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' }
