@@ -1,5 +1,3 @@
-import * as crypto from 'crypto'
-import { URL } from 'url'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
 
