@@ -7,6 +7,8 @@ import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest, isAccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
+import { AccessTokenService } from '../accessToken/service'
+import { AccessToken } from '../accessToken/model'
 
 export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
@@ -100,6 +102,34 @@ function validateGrantRequest(
   }
 
   return access_token.interact?.start !== undefined
+}
+
+async function issueGrant(
+  deps: ServiceDependencies,
+  grantId: string,
+  trx?: Transaction
+): Promise<{ grant: Grant; accessToken: AccessToken }> {
+  // TODO: create access token, update grant state
+  const invTrx = trx || (await Grant.startTransaction())
+  try {
+    const accessToken = await deps.accessTokenService.create(grantId, {
+      trx: invTrx
+    })
+    const grant = await Grant.query(invTrx).patchAndFetchById(grantId, {
+      state: GrantState.Granted
+    })
+
+    if (!trx) {
+      await invTrx.commit()
+    }
+    return { accessToken, grant }
+  } catch (err) {
+    if (!trx) {
+      await invTrx.rollback()
+    }
+
+    throw err
+  }
 }
 
 async function initiateGrant(
