@@ -8,13 +8,20 @@ import { AccessRequest, isAccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { IAppConfig } from '../config/app'
 import { AccessService } from '../access/service'
+import { AccessTokenService } from '../accessToken/service'
+import { AccessToken } from '../accessToken/model'
 
 export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<GrantResponse>
+  getByInteraction(interactId: string): Promise<Grant>
+  issueGrant(
+    grantId: string
+  ): Promise<{ grant: Grant; accessToken: AccessToken }>
 }
 
 interface ServiceDependencies extends BaseService {
   accessService: AccessService
+  accessTokenService: AccessTokenService
   config: IAppConfig
   knex: TransactionOrKnex
 }
@@ -52,6 +59,7 @@ export interface GrantResponse {
 export async function createGrantService({
   logger,
   accessService,
+  accessTokenService,
   config,
   knex
 }: ServiceDependencies): Promise<GrantService> {
@@ -61,12 +69,15 @@ export async function createGrantService({
   const deps: ServiceDependencies = {
     logger: log,
     accessService,
+    accessTokenService,
     config,
     knex
   }
   return {
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
-      initiateGrant(deps, grantRequest, trx)
+      initiateGrant(deps, grantRequest, trx),
+    getByInteraction: (interactId: string) => getByInteraction(interactId),
+    issueGrant: (grantId: string) => issueGrant(deps, grantId)
   }
 }
 
@@ -81,6 +92,34 @@ function validateGrantRequest(
   }
 
   return access_token.interact?.start !== undefined
+}
+
+async function issueGrant(
+  deps: ServiceDependencies,
+  grantId: string,
+  trx?: Transaction
+): Promise<{ grant: Grant; accessToken: AccessToken }> {
+  // TODO: create access token, update grant state
+  const invTrx = trx || (await Grant.startTransaction())
+  try {
+    const accessToken = await deps.accessTokenService.create(grantId, {
+      trx: invTrx
+    })
+    const grant = await Grant.query(invTrx).patchAndFetchById(grantId, {
+      state: GrantState.Granted
+    })
+
+    if (!trx) {
+      await invTrx.commit()
+    }
+    return { accessToken, grant }
+  } catch (err) {
+    if (!trx) {
+      await invTrx.rollback()
+    }
+
+    throw err
+  }
 }
 
 async function initiateGrant(
@@ -138,9 +177,13 @@ async function initiateGrant(
     }
   } catch (err) {
     if (!trx) {
-      await invTrx.commit()
+      await invTrx.rollback()
     }
 
     throw err
   }
+}
+
+async function getByInteraction(interactId: string): Promise<Grant> {
+  return Grant.query().where({ interactId }).first()
 }

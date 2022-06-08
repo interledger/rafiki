@@ -1,3 +1,5 @@
+import * as crypto from 'crypto'
+
 function envString(name: string, value: string): string {
   const envValue = process.env[name]
   return envValue == null ? value : envValue
@@ -36,5 +38,6 @@ export const Config = {
   authServerSpec: envString(
     'AUTH_SERVER_SPEC',
     'https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml'
-  )
+  ),
+  cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex'))
 }

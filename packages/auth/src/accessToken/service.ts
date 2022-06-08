@@ -1,13 +1,16 @@
-import { TransactionOrKnex } from 'objection'
+import * as crypto from 'crypto'
+import { v4 } from 'uuid'
+import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState } from '../grant/model'
-import { AccessToken } from './model'
 import { ClientService, KeyInfo } from '../client/service'
+import { AccessToken } from './model'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
   revoke(id: string): Promise<Error | undefined>
+  create(grantId: string, opts: AccessTokenOpts): Promise<AccessToken>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -18,6 +21,11 @@ interface ServiceDependencies extends BaseService {
 export interface Introspection extends Partial<Grant> {
   active: boolean
   key?: KeyInfo
+}
+
+interface AccessTokenOpts {
+  expiresIn?: number
+  trx?: Transaction
 }
 
 export async function createAccessTokenService({
@@ -37,7 +45,9 @@ export async function createAccessTokenService({
 
   return {
     introspect: (token: string) => introspect(deps, token),
-    revoke: (id: string) => revoke(deps, id)
+    revoke: (id: string) => revoke(deps, id),
+    create: (grantId: string, opts?: AccessTokenOpts) =>
+      createAccessToken(deps, grantId, opts)
   }
 }
 
@@ -83,5 +93,33 @@ async function revoke(
     }
   } else {
     return new Error('token not found')
+  }
+}
+
+async function createAccessToken(
+  deps: ServiceDependencies,
+  grantId: string,
+  opts?: AccessTokenOpts
+): Promise<AccessToken> {
+  const invTrx = opts?.trx || (await AccessToken.startTransaction(deps.knex))
+  try {
+    const accessToken = await AccessToken.query(invTrx).insert({
+      value: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
+      managementId: v4(),
+      grantId,
+      expiresIn: opts?.expiresIn
+    })
+
+    if (!opts?.trx) {
+      await invTrx.commit()
+    }
+
+    return accessToken
+  } catch (err) {
+    if (!opts?.trx) {
+      await invTrx.rollback()
+    }
+
+    throw err
   }
 }

@@ -1,3 +1,5 @@
+import * as crypto from 'crypto'
+import { URL } from 'url'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
 
@@ -89,6 +91,8 @@ export class App {
         }
       }
     )
+
+    this.koa.keys = [this.config.cookieKey]
     await this._setupRoutes()
   }
 
