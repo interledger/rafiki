@@ -9,6 +9,8 @@ import { Config } from './config/app'
 import { createClientService } from './client/service'
 import { createAccessService } from './access/service'
 import { createGrantService } from './grant/service'
+import { createAccessTokenService } from './accessToken/service'
+import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 
 const container = initIocContainer(Config)
@@ -75,6 +77,20 @@ export function initIocContainer(
     }
   )
 
+  container.singleton('accessTokenService', async (deps) => {
+    return await createAccessTokenService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      clientService: await deps.use('clientService')
+    })
+  })
+  container.singleton('accessTokenRoutes', async (deps) => {
+    return await createAccessTokenRoutes({
+      config: await deps.use('config'),
+      logger: await deps.use('logger'),
+      accessTokenService: await deps.use('accessTokenService')
+    })
+  })
   container.singleton(
     'grantService',
     async (deps: IocContract<AppServices>) => {

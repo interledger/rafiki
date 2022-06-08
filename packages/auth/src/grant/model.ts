@@ -22,7 +22,8 @@ export class Grant extends BaseModel {
     return 'grants'
   }
 
-  static relationMappings = {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  static relationMappings = () => ({
     accessTokens: {
       relation: Model.HasManyRelation,
       modelClass: AccessToken,
@@ -39,8 +40,8 @@ export class Grant extends BaseModel {
         to: 'accesses.grantId'
       }
     }
-  }
-
+  })
+  public access!: Access[]
   public state!: GrantState
   public startMethod!: StartMethod[]
 
@@ -51,6 +52,7 @@ export class Grant extends BaseModel {
   public finishMethod!: FinishMethod
   public finishUri!: string
   public clientNonce!: string // nonce for hash
+  public clientKeyId!: string
 
   public interactId!: string
   public interactRef!: string

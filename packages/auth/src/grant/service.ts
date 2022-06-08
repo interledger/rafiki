@@ -79,7 +79,12 @@ async function initiateGrant(
 
   const {
     access_token: { access },
-    interact: { start, finish }
+    interact: { start, finish },
+    client: {
+      key: {
+        jwk: { kid }
+      }
+    }
   } = grantRequest
 
   const invTrx = trx || (await Grant.startTransaction(knex))
@@ -90,6 +95,7 @@ async function initiateGrant(
       finishMethod: finish?.method,
       finishUri: finish?.uri,
       clientNonce: finish?.nonce,
+      clientKeyId: kid,
       interactId: v4(),
       interactRef: v4(),
       interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation

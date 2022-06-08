@@ -12,6 +12,7 @@ exports.up = function (knex) {
     table.string('finishMethod').notNullable()
     table.string('finishUri').notNullable()
     table.string('clientNonce').notNullable()
+    table.string('clientKeyId').notNullable()
 
     table.string('interactId').notNullable().unique()
     table.string('interactRef').notNullable().unique()

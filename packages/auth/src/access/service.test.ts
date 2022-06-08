@@ -49,6 +49,7 @@ describe('Access Service', (): void => {
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    clientKeyId: 'https://openpayments.network/keys/test-key',
     interactId: v4(),
     interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
     interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()

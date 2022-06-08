@@ -19,7 +19,7 @@ export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const TEST_KID_PATH = '/keys/base-test-key'
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
-  uri: 'https://example.com'
+  url: 'https://example.com'
 }
 export const TEST_CLIENT_KEY = {
   proof: 'httpsig',
@@ -156,13 +156,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
       const ctx = createContext(
         {
@@ -199,13 +201,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
       const ctx = createContext(
         {
@@ -241,13 +245,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
       const ctx = createContext(
         {
@@ -283,13 +289,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
       const ctx = createContext(
         {
@@ -326,13 +334,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
       const ctx = createContext(
         {
@@ -369,13 +379,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
       const ctx = createContext(
         {
@@ -412,13 +424,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
       const ctx = createContext(
         {
@@ -455,13 +469,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
       const ctx = createContext(
         {
@@ -555,13 +571,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
 
       const ctx = createContext(
@@ -605,13 +623,15 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          display: TEST_CLIENT_DISPLAY,
-          keys: {
-            ...TEST_CLIENT_KEY.jwk,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          }
+          ...TEST_CLIENT_DISPLAY,
+          keys: [
+            {
+              ...TEST_CLIENT_KEY.jwk,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            }
+          ]
         })
       const ctx = createContext(
         {

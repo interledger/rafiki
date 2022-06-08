@@ -11,6 +11,7 @@ import Router from '@koa/router'
 import { IAppConfig } from './config/app'
 import { ClientService } from './client/service'
 import { GrantService } from './grant/service'
+import { AccessTokenRoutes } from './accessToken/routes'
 
 export interface AppContextData {
   logger: Logger
@@ -30,6 +31,7 @@ export interface AppServices {
   // TODO: Add GNAP-related services
   clientService: Promise<ClientService>
   grantService: Promise<GrantService>
+  accessTokenRoutes: Promise<AccessTokenRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -113,6 +115,7 @@ export class App {
     this.publicRouter.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
+    const accessTokenRoutes = await this.container.use('accessTokenRoutes')
 
     const grantRoutes = await this.container.use('grantRoutes')
     // TODO: GNAP endpoints
@@ -132,15 +135,7 @@ export class App {
     })
 
     // Token management
-    this.publicRouter.post('/auth/introspect', (ctx: AppContext): void => {
-      // TODO: tokenService.introspection
-      ctx.status = 200
-      // ctx.body = {
-      //   active: boolean
-      //   access: [...]
-      //   key: JWK
-      // }
-    })
+    this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
 
     this.publicRouter.post('/auth/token/:id', (ctx: AppContext): void => {
       // TODO: tokenService.rotate

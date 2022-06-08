@@ -8,10 +8,10 @@ import { IAppConfig } from '../config/app'
 
 interface DisplayInfo {
   name: string
-  uri: string
+  url: string
 }
 
-interface KeyInfo {
+export interface KeyInfo {
   proof: string
   jwk: JWKWithRequired
 }
@@ -19,6 +19,15 @@ interface KeyInfo {
 export interface ClientInfo {
   display: DisplayInfo
   key: KeyInfo
+}
+
+interface RegistryData {
+  id: string
+  name: string
+  image: string
+  url: string
+  email: string
+  keys: JWKWithRequired[]
 }
 
 interface JWKWithRequired extends JWK {
@@ -46,6 +55,7 @@ export interface ClientService {
     challenge: string
   ): Promise<boolean>
   validateClientWithRegistry(clientInfo: ClientInfo): Promise<boolean>
+  getRegistryDataByKid(kid: string): Promise<RegistryData>
 }
 
 export async function createClientService({
@@ -65,7 +75,8 @@ export async function createClientService({
     verifySig: (sig: string, jwk: JWKWithRequired, challenge: string) =>
       verifySig(deps, sig, jwk, challenge),
     validateClientWithRegistry: (clientInfo: ClientInfo) =>
-      validateClientWithRegistry(deps, clientInfo)
+      validateClientWithRegistry(deps, clientInfo),
+    getRegistryDataByKid: (kid: string) => getRegistryDataByKid(deps, kid)
   }
 }
 
@@ -99,7 +110,7 @@ async function validateClientWithRegistry(
   deps: ServiceDependencies,
   clientInfo: ClientInfo
 ): Promise<boolean> {
-  const { logger, config } = deps
+  const { config } = deps
   const { jwk } = clientInfo.key
   const { keyRegistries } = config
 
@@ -110,28 +121,39 @@ async function validateClientWithRegistry(
   const kidUrl = new URL(jwk.kid)
   if (!keyRegistries.includes(kidUrl.origin)) return false
 
-  const registryData = await Axios.get(jwk.kid)
-    .then((res) => res.data)
-    .catch((err) => {
-      logger.error(
-        {
-          err,
-          kid: jwk.kid
-        },
-        'failed to validate key'
-      )
-      return false
-    })
+  const { keys, ...registryClientInfo } = await getRegistryDataByKid(
+    deps,
+    jwk.kid
+  )
 
-  const { keys } = registryData
-  if (!keys?.kid || !keys?.x) {
+  if (!keys || !keys[0].kid || !keys[0].x) {
     return false
   }
 
   return !!(
-    verifyClientDisplay(clientInfo.display, registryData.display) &&
-    verifyJwk(jwk, keys)
+    verifyClientDisplay(clientInfo.display, registryClientInfo) &&
+    verifyJwk(jwk, keys[0])
   )
+}
+
+async function getRegistryDataByKid(
+  deps: ServiceDependencies,
+  kid: string
+): Promise<RegistryData> {
+  const registryData = await Axios.get(kid)
+    .then((res) => res.data)
+    .catch((err) => {
+      deps.logger.error(
+        {
+          err,
+          kid: kid
+        },
+        'failed to fetch client info'
+      )
+      return false
+    })
+
+  return registryData
 }
 
 function verifyClientDisplay(
@@ -140,7 +162,7 @@ function verifyClientDisplay(
 ): boolean {
   return (
     displayInfo.name === registryClientInfo.name &&
-    displayInfo.uri === registryClientInfo.uri
+    displayInfo.url === registryClientInfo.url
   )
 }
 

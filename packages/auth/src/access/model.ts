@@ -8,7 +8,8 @@ export class Access extends BaseModel {
     return 'accesses'
   }
 
-  static relationMappings = {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  static relationMappings = () => ({
     grant: {
       relation: Model.HasOneRelation,
       modelClass: Grant,
@@ -17,7 +18,7 @@ export class Access extends BaseModel {
         to: 'grants.id'
       }
     }
-  }
+  })
 
   public id!: string
   public grantId!: string

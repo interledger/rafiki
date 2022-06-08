@@ -55,7 +55,7 @@ describe('Grant Service', (): void => {
     client: {
       display: {
         name: 'Test Client',
-        uri: 'https://example.com'
+        url: 'https://example.com'
       },
       key: {
         proof: 'httpsig',
