@@ -1,3 +1,5 @@
+import * as crypto from 'crypto'
+import { URL } from 'url'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
 
@@ -106,6 +108,7 @@ export class App {
       }
     )
 
+    this.koa.keys = [this.config.cookieKey]
     await this._setupRoutes()
   }
 
@@ -213,6 +216,7 @@ export class App {
     this.publicRouter.post(
       '/interact/:interactId/login',
       grantRoutes.interaction.finish
+
     )
 
     // Token management
