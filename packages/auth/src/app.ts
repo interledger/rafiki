@@ -191,6 +191,16 @@ export class App {
       }
     }
 
+    // Token management
+    this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
+
+    this.publicRouter.post('/auth/token/:id', (ctx: AppContext): void => {
+      // TODO: tokenService.rotate
+      ctx.status = 200
+    })
+
+    this.publicRouter.del('/auth/token/:id', accessTokenRoutes.revoke)
+
     this.koa.use(this.publicRouter.middleware())
   }
 }

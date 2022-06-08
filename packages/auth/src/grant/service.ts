@@ -4,7 +4,7 @@ import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
-import { AccessRequest, isAccessRequest } from '../access/types'
+import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { IAppConfig } from '../config/app'
 import { AccessService } from '../access/service'
@@ -81,19 +81,6 @@ export async function createGrantService({
   }
 }
 
-function validateGrantRequest(
-  grantRequest: GrantRequest
-): grantRequest is GrantRequest {
-  if (typeof grantRequest.access_token !== 'object') return false
-  const { access_token } = grantRequest
-  if (typeof access_token.access !== 'object') return false
-  for (const access of access_token.access) {
-    if (!isAccessRequest(access)) return false
-  }
-
-  return access_token.interact?.start !== undefined
-}
-
 async function issueGrant(
   deps: ServiceDependencies,
   grantId: string,
@@ -152,7 +139,8 @@ async function initiateGrant(
       interactRef: v4(),
       interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
       continueId: v4(),
-      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
+      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      clientKeyId: kid
     })
 
     // Associate provided accesses with grant

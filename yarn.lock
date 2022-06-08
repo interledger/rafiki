@@ -3103,11 +3103,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-<<<<<<< HEAD
 "@types/koa@npm:2.13.4":
-=======
-"@types/koa@npm:2.13.4, @types/koa@npm:^2.0.46, @types/koa@npm:^2.13.4":
->>>>>>> 65f8093 (fix: add resolution to @types/koa)
   version: 2.13.4
   resolution: "@types/koa@npm:2.13.4"
   dependencies:
