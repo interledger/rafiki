@@ -1,7 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
-import { Grant } from '../grant/model'
+import { Grant, GrantState } from '../grant/model'
 import { AccessToken } from './model'
 import { ClientService, KeyInfo } from '../client/service'
 
@@ -55,6 +55,9 @@ async function introspect(
     const grant = await Grant.query(deps.knex)
       .findById(token.grantId)
       .withGraphFetched('access')
+    if (grant.state === GrantState.Revoked) {
+      return { active: false }
+    }
     const registryData = await deps.clientService.getRegistryDataByKid(
       grant.clientKeyId
     )

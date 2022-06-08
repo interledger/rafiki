@@ -135,6 +135,12 @@ describe('Access Token Service', (): void => {
       expect(introspection).toEqual({ active: false })
     })
 
+    test('Can introspect active token for revoked grant', async (): Promise<void> => {
+      await grant.$query(trx).patch({ state: GrantState.Revoked })
+      const introspection = await accessTokenService.introspect(token.value)
+      expect(introspection).toEqual({ active: false })
+    })
+
     test('Cannot introspect non-existing token', async (): Promise<void> => {
       expect(accessTokenService.introspect('uuid')).resolves.toBeUndefined()
     })
