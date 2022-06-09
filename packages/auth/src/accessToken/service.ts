@@ -7,6 +7,7 @@ import { ClientService, KeyInfo } from '../client/service'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
+  revoke(id: string): Promise<RevocationResult>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -17,6 +18,10 @@ interface ServiceDependencies extends BaseService {
 export interface Introspection extends Partial<Grant> {
   active: boolean
   key?: KeyInfo
+}
+
+export interface RevocationResult {
+  foundToken: boolean
 }
 
 export async function createAccessTokenService({
@@ -35,8 +40,17 @@ export async function createAccessTokenService({
   }
 
   return {
-    introspect: (token: string) => introspect(deps, token)
+    introspect: (token: string) => introspect(deps, token),
+    revoke: (id: string) => revoke(deps, id)
   }
+}
+
+function isTokenExpired(token: AccessToken): boolean {
+  const now = new Date(Date.now())
+  const expiresAt = token.expiresIn
+    ? token.createdAt.getTime() + token.expiresIn
+    : Infinity
+  return expiresAt < now.getTime()
 }
 
 async function introspect(
@@ -45,11 +59,7 @@ async function introspect(
 ): Promise<Introspection | undefined> {
   const token = await AccessToken.query(deps.knex).findOne({ value })
   if (!token) return
-  const now = new Date(Date.now())
-  const expiresAt = token.expiresIn
-    ? token.createdAt.getTime() + token.expiresIn
-    : Infinity
-  if (expiresAt < now.getTime()) {
+  if (isTokenExpired(token)) {
     return { active: false }
   } else {
     const grant = await Grant.query(deps.knex)
@@ -63,5 +73,29 @@ async function introspect(
     )
     const { keys } = registryData
     return { active: true, ...grant, key: { proof: 'httpsig', jwk: keys[0] } }
+  }
+}
+
+async function revoke(
+  deps: ServiceDependencies,
+  id: string
+): Promise<RevocationResult> {
+  const token = await AccessToken.query(deps.knex).findOne({ id })
+  if (token) {
+    if (!isTokenExpired(token)) {
+      AccessToken.query(deps.knex)
+        .update({
+          expiresIn: 1
+        })
+        .where('id', token.id)
+    }
+
+    return {
+      foundToken: true
+    }
+  } else {
+    return {
+      foundToken: false
+    }
   }
 }

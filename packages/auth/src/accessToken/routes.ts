@@ -12,6 +12,7 @@ interface ServiceDependencies {
 
 export interface AccessTokenRoutes {
   introspect(ctx: AppContext): Promise<void>
+  revoke(ctx: AppContext): Promise<void>
 }
 
 export function createAccessTokenRoutes(
@@ -22,7 +23,8 @@ export function createAccessTokenRoutes(
   })
   const deps = { ...deps_, logger }
   return {
-    introspect: (ctx: AppContext) => introspectToken(deps, ctx)
+    introspect: (ctx: AppContext) => introspectToken(deps, ctx),
+    revoke: (ctx: AppContext) => revokeToken(deps, ctx)
   }
 }
 
@@ -69,4 +71,20 @@ function accessToBody(access: Access) {
         k != 'updatedAt'
     )
   )
+}
+
+async function revokeToken(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  //TODO: verify accessToken with httpsig method
+
+  const revocationResult = await deps.accessTokenService.revoke(
+    ctx.params['id']
+  )
+  if (revocationResult.foundToken) {
+    ctx.status = 204
+  } else {
+    return ctx.throw(404, 'token not found')
+  }
 }
