@@ -35,6 +35,7 @@ export interface IncomingPaymentResponse {
   receivedAmount: AmountJSON
   externalRef?: string
   state: string
+  connectionId: string
   ilpAddress?: string
   sharedSecret?: string
 }
@@ -76,6 +77,7 @@ export class IncomingPayment
   public expiresAt!: Date
   public state!: IncomingPaymentState
   public externalRef?: string
+  public connectionId!: string
 
   public processAt!: Date | null
 
@@ -155,7 +157,8 @@ export class IncomingPayment
           assetScale: this.asset.scale
         },
         state: this.state,
-        updatedAt: new Date(+this.updatedAt).toISOString()
+        updatedAt: new Date(+this.updatedAt).toISOString(),
+        connectionId: this.connectionId
       }
     }
 
@@ -190,12 +193,13 @@ export class IncomingPayment
         ...json.receivedAmount,
         value: json.receivedAmount.value.toString()
       },
-      state: json.state.toLowerCase(),
+      completed: !!(this.state === IncomingPaymentState.Completed),
       description: json.description,
       externalRef: json.externalRef,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,
-      expiresAt: json.expiresAt.toISOString()
+      expiresAt: json.expiresAt.toISOString(),
+      ilpStreamConnection: json.connectionId
     }
   }
 }
@@ -205,10 +209,11 @@ export type IncomingPaymentJSON = {
   accountId: string
   incomingAmount: AmountJSON | null
   receivedAmount: AmountJSON
-  state: string
+  completed: boolean
   description: string | null
   externalRef: string | null
   createdAt: string
   updatedAt: string
   expiresAt: string
+  ilpStreamConnection: string
 }

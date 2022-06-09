@@ -80,6 +80,7 @@ type Context<T> = Omit<AppContext, 'request'> & {
 }
 
 export type AccountContext = Context<AppRequest<'id'>>
+export type ConnectionContext = Context<AppRequest<'id'>>
 
 // Account subresources
 export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>

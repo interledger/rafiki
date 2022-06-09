@@ -36,6 +36,8 @@ import { createConnectorService } from './connector'
 import { createSessionService } from './session/service'
 import { createApiKeyService } from './apiKey/service'
 import { createOpenAPI } from 'openapi'
+import { createConnectionService } from './open_payments/connection/service'
+import { createConnectionRoutes } from './open_payments/connection/routes'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -206,13 +208,27 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
-      streamServer: await deps.use('streamServer')
+      connectionService: await deps.use('connectionService')
     })
   })
   container.singleton('accountRoutes', async (deps) => {
     return createAccountRoutes({
       config: await deps.use('config'),
       accountService: await deps.use('accountService')
+    })
+  })
+  container.singleton('connectionService', async (deps) => {
+    return await createConnectionService({
+      logger: await deps.use('logger'),
+      streamServer: await deps.use('streamServer')
+    })
+  })
+  container.singleton('connectionRoutes', async (deps) => {
+    return createConnectionRoutes({
+      config: await deps.use('config'),
+      logger: await deps.use('logger'),
+      incomingPaymentService: await deps.use('incomingPaymentService'),
+      connectionService: await deps.use('connectionService')
     })
   })
 
