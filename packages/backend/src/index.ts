@@ -267,7 +267,8 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      accountService: await deps.use('accountService')
+      accountService: await deps.use('accountService'),
+      peerService: await deps.use('peerService')
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {
