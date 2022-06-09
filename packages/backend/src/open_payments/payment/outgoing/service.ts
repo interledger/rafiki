@@ -1,4 +1,5 @@
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import * as Pay from '@interledger/pay'
 
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
@@ -14,6 +15,7 @@ import {
 } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { AccountService } from '../../account/service'
+import { PeerService } from '../../../peer/service'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -37,6 +39,7 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   accountService: AccountService
+  peerService: PeerService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
 }
 
@@ -97,6 +100,34 @@ async function createOutgoingPayment(
         payment.quote.expiresAt.getTime() <= payment.createdAt.getTime()
       ) {
         throw OutgoingPaymentError.InvalidQuote
+      }
+
+      const plugin = deps.makeIlpPlugin({
+        sourceAccount: {
+          id: payment.accountId,
+          asset: {
+            id: payment.assetId,
+            unit: payment.asset.unit
+          }
+        },
+        unfulfillable: true
+      })
+      try {
+        await plugin.connect()
+        const destination = await Pay.setupPayment({
+          plugin,
+          destinationPayment: payment.receiver
+        })
+        const peer = await deps.peerService.getByDestinationAddress(
+          destination.destinationAddress
+        )
+        if (peer) {
+          await payment.$query(trx).patch({ peerId: peer.id })
+        }
+      } finally {
+        plugin.disconnect().catch((err: Error) => {
+          deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
+        })
       }
 
       // TODO: move to fundPayment
