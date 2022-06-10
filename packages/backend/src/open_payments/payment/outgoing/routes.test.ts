@@ -24,9 +24,7 @@ import { CreateOutgoingPaymentOptions } from './service'
 import { isOutgoingPaymentError } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
-import { Amount } from '../../amount'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
-import { createQuote } from '../../../tests/quote'
 import { AccountingService } from '../../../accounting/service'
 import { listTests } from '../../../shared/routes.test'
 
@@ -47,11 +45,6 @@ describe('Outgoing Payment Routes', (): void => {
   }
   const receivingAccount = `https://wallet.example/${uuid()}`
   const asset = randomAsset()
-  const sendAmount: Amount = {
-    value: BigInt(123),
-    assetCode: asset.code,
-    assetScale: asset.scale
-  }
 
   const createPayment = async (options: {
     accountId: string
@@ -60,7 +53,7 @@ describe('Outgoing Payment Routes', (): void => {
   }): Promise<OutgoingPayment> => {
     return await createOutgoingPayment(deps, {
       ...options,
-      receivingAccount,
+      receiver: `${receivingAccount}/incoming-payments/${uuid()}`,
       sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,
@@ -185,7 +178,7 @@ describe('Outgoing Payment Routes', (): void => {
         expect(ctx.body).toEqual({
           id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
           accountId: accountUrl,
-          receivingPayment: outgoingPayment.receivingPayment,
+          receiver: outgoingPayment.receiver,
           sendAmount: {
             ...outgoingPayment.sendAmount,
             value: outgoingPayment.sendAmount.value.toString()
@@ -212,11 +205,13 @@ describe('Outgoing Payment Routes', (): void => {
   describe('create', (): void => {
     let options: Omit<CreateOutgoingPaymentOptions, 'accountId'>
 
-    beforeEach(() => {
-      options = {
-        quoteId: `https://wallet.example/${accountId}/quotes/${uuid()}`
+    beforeEach(
+      async (): Promise<void> => {
+        options = {
+          quoteId: `https://wallet.example/${accountId}/quotes/${uuid()}`
+        }
       }
-    })
+    )
 
     function setup(
       reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
@@ -243,18 +238,28 @@ describe('Outgoing Payment Routes', (): void => {
     `(
       'returns the outgoing payment on success ($desc)',
       async ({ description, externalRef }): Promise<void> => {
-        const quote = await createQuote(deps, {
+        const payment = await createPayment({
           accountId,
-          receivingAccount: accountUrl,
-          sendAmount
+          description,
+          externalRef
         })
         options = {
-          quoteId: `https://wallet.example/${accountId}/quotes/${quote.id}`,
+          quoteId: `https://wallet.example/${accountId}/quotes/${payment.quote.id}`,
           description,
           externalRef
         }
         const ctx = setup({})
+        const outgoingPaymentService = await deps.use('outgoingPaymentService')
+        const createSpy = jest
+          .spyOn(outgoingPaymentService, 'create')
+          .mockResolvedValueOnce(payment)
         await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
+        expect(createSpy).toHaveBeenCalledWith({
+          accountId,
+          quoteId: payment.quote.id,
+          description,
+          externalRef
+        })
         expect(ctx.response).toSatisfyApiSpec()
         const outgoingPaymentId = ((ctx.response.body as Record<
           string,
@@ -265,14 +270,14 @@ describe('Outgoing Payment Routes', (): void => {
         expect(ctx.response.body).toEqual({
           id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
           accountId: accountUrl,
-          receivingPayment: quote.receivingPayment,
+          receiver: payment.receiver,
           sendAmount: {
-            ...quote.sendAmount,
-            value: quote.sendAmount.value.toString()
+            ...payment.sendAmount,
+            value: payment.sendAmount.value.toString()
           },
           receiveAmount: {
-            ...quote.receiveAmount,
-            value: quote.receiveAmount.value.toString()
+            ...payment.receiveAmount,
+            value: payment.receiveAmount.value.toString()
           },
           description: options.description,
           externalRef: options.externalRef,
@@ -301,7 +306,7 @@ describe('Outgoing Payment Routes', (): void => {
         return {
           id: `${accountUrl}/outgoing-payments/${payment.id}`,
           accountId: accountUrl,
-          receivingPayment: payment.receivingPayment,
+          receiver: payment.receiver,
           sendAmount: {
             ...payment.sendAmount,
             value: payment.sendAmount.value.toString()

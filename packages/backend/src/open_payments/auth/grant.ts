@@ -24,15 +24,13 @@ export enum AccessAction {
 }
 
 export interface AccessLimits {
-  receivingAccount?: string
-  receivingPayment?: string
+  receiver?: string
   sendAmount?: Amount
   receiveAmount?: Amount
 }
 
 interface AccessLimitsJSON {
-  receivingAccount?: string
-  receivingPayment?: string
+  receiver?: string
   sendAmount?: AmountJSON
   receiveAmount?: AmountJSON
 }
