@@ -116,7 +116,7 @@ async function createOutgoingPayment(
         await plugin.connect()
         const destination = await Pay.setupPayment({
           plugin,
-          destinationPayment: payment.receivingPayment
+          destinationPayment: payment.receiver
         })
         const peer = await deps.peerService.getByDestinationAddress(
           destination.destinationAddress

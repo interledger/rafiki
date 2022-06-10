@@ -50,8 +50,6 @@ export enum LifecycleError {
   BadState = 'BadState',
   // Account asset conflicts with sendAmount asset
   SourceAssetConflict = 'SourceAssetConflict',
-  // Error updating receivingPayment as completed
-  ReceivingPaymentError = 'ReceivingPaymentError',
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
   MissingBalance = 'MissingBalance',
@@ -64,7 +62,6 @@ export enum LifecycleError {
 const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
   // Lifecycle errors
   PricesUnavailable: true,
-  ReceivingPaymentError: true,
   // From @interledger/pay's PaymentError:
   QueryFailed: true,
   ConnectorError: true,

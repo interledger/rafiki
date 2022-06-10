@@ -100,7 +100,7 @@ export const Config = {
 
   openPaymentsSpec: envString(
     'OPEN_PAYMENTS_SPEC',
-    'https://raw.githubusercontent.com/wilsonianb/open-payments/aaa8dc33aad983aadeab33b8db9099c25549ddcd/open-api-spec.yaml'
+    'https://raw.githubusercontent.com/wilsonianb/open-payments/e3092fa9df6de2f7c1d2a086d982a783fe10dd42/open-api-spec.yaml'
   ),
 
   /** Frontend **/

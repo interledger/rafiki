@@ -397,7 +397,7 @@ type OutgoingPayment implements Model {
   stateAttempts: Int!
   sendAmount: Amount!
   receiveAmount: Amount!
-  receivingPayment: String
+  receiver: String!
   description: String
   externalRef: String
   quote: Quote
@@ -429,7 +429,7 @@ type QuoteEdge {
 type Quote {
   id: ID!
   accountId: ID!
-  receivingPayment: String!
+  receiver: String!
   sendAmount: Amount!
   receiveAmount: Amount!
   maxPacketAmount: UInt64!
@@ -448,10 +448,9 @@ input AmountInput {
 
 input CreateQuoteInput {
   accountId: String!
-  receivingAccount: String
   sendAmount: AmountInput
   receiveAmount: AmountInput
-  receivingPayment: String
+  receiver: String!
 }
 
 type QuoteResponse {

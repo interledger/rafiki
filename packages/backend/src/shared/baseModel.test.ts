@@ -12,14 +12,12 @@ export const getPageTests = <Type extends BaseModel>({
   describe('Common BaseModel pagination', (): void => {
     let modelsCreated: Type[]
 
-    beforeEach(
-      async (): Promise<void> => {
-        modelsCreated = []
-        for (let i = 0; i < 40; i++) {
-          modelsCreated.push(await createModel())
-        }
+    beforeEach(async (): Promise<void> => {
+      modelsCreated = []
+      for (let i = 0; i < 40; i++) {
+        modelsCreated.push(await createModel())
       }
-    )
+    }, 10_000)
 
     test.each`
       pagination                   | expected                               | description
@@ -45,7 +43,8 @@ export const getPageTests = <Type extends BaseModel>({
         expect(models[expected.length - 1].id).toEqual(
           modelsCreated[expected.last].id
         )
-      }
+      },
+      10_000
     )
 
     test.each`
@@ -57,7 +56,8 @@ export const getPageTests = <Type extends BaseModel>({
       '$description',
       async ({ pagination, expectedError }): Promise<void> => {
         await expect(getPage(pagination)).rejects.toThrow(expectedError)
-      }
+      },
+      10_000
     )
 
     test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
@@ -73,7 +73,7 @@ export const getPageTests = <Type extends BaseModel>({
       expect(modelsForwards).toHaveLength(10)
       expect(modelsBackwards).toHaveLength(10)
       expect(modelsForwards).toEqual(modelsBackwards)
-    })
+    }, 10_000)
   })
 }
 

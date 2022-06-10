@@ -72,7 +72,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   }): Promise<OutgoingPaymentModel> => {
     return await createOutgoingPayment(deps, {
       ...options,
-      receivingAccount: `${Config.publicHost}/${uuid()}`,
+      receiver: `${Config.publicHost}/${uuid()}`,
       sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,
@@ -140,7 +140,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     state
                     error
                     stateAttempts
-                    receivingPayment
+                    receiver
                     sendAmount {
                       value
                       assetCode
@@ -183,7 +183,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             state,
             error,
             stateAttempts: 0,
-            receivingPayment: payment.receivingPayment,
+            receiver: payment.receiver,
             sendAmount: {
               value: payment.sendAmount.value.toString(),
               assetCode: payment.sendAmount.assetCode,

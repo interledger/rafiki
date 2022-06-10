@@ -221,10 +221,9 @@ export type CreatePeerMutationResponse = MutationResponse & {
 
 export type CreateQuoteInput = {
   accountId: Scalars['String'];
-  receivingAccount?: Maybe<Scalars['String']>;
   sendAmount?: Maybe<AmountInput>;
   receiveAmount?: Maybe<AmountInput>;
-  receivingPayment?: Maybe<Scalars['String']>;
+  receiver: Scalars['String'];
 };
 
 export type DeleteAllApiKeysInput = {
@@ -511,7 +510,7 @@ export type OutgoingPayment = Model & {
   stateAttempts: Scalars['Int'];
   sendAmount: Amount;
   receiveAmount: Amount;
-  receivingPayment?: Maybe<Scalars['String']>;
+  receiver: Scalars['String'];
   description?: Maybe<Scalars['String']>;
   externalRef?: Maybe<Scalars['String']>;
   quote?: Maybe<Quote>;
@@ -642,7 +641,7 @@ export type Quote = {
   __typename?: 'Quote';
   id: Scalars['ID'];
   accountId: Scalars['ID'];
-  receivingPayment: Scalars['String'];
+  receiver: Scalars['String'];
   sendAmount: Amount;
   receiveAmount: Amount;
   maxPacketAmount: Scalars['UInt64'];
@@ -1192,7 +1191,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   sendAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
-  receivingPayment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType>;
@@ -1264,7 +1263,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 export type QuoteResolvers<ContextType = any, ParentType extends ResolversParentTypes['Quote'] = ResolversParentTypes['Quote']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   accountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  receivingPayment?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   sendAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   maxPacketAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;

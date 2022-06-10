@@ -1,4 +1,3 @@
-import axios from 'axios'
 import * as Pay from '@interledger/pay'
 
 import { LifecycleError } from './errors'
@@ -9,7 +8,6 @@ import {
   PaymentEventType
 } from './model'
 import { ServiceDependencies } from './service'
-import { IncomingPaymentState } from '../incoming/model'
 import { IlpPlugin } from '../../../shared/ilp_plugin'
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -22,7 +20,7 @@ export async function handleSending(
 
   const destination = await Pay.setupPayment({
     plugin,
-    destinationPayment: payment.receivingPayment
+    destinationPayment: payment.receiver
   })
 
   if (!destination.destinationPaymentDetails) {
@@ -145,42 +143,6 @@ const handleCompleted = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> => {
-  if (payment.quote.completeReceivingPayment) {
-    try {
-      const { data } = await axios.put(
-        payment.receivingPayment,
-        {
-          state: IncomingPaymentState.Completed.toLowerCase()
-        },
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          validateStatus: (status) => status === 200
-        }
-      )
-      if (data.id !== payment.receivingPayment) {
-        deps.logger.warn(
-          {
-            data
-          },
-          'invalid incoming payment PUT response'
-        )
-        throw LifecycleError.ReceivingPaymentError
-      }
-    } catch (err) {
-      if (err !== LifecycleError.ReceivingPaymentError) {
-        deps.logger.warn(
-          {
-            error: err.message
-          },
-          'incoming payment PUT request failed'
-        )
-      }
-      throw LifecycleError.ReceivingPaymentError
-    }
-  }
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })

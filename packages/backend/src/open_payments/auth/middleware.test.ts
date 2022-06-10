@@ -165,7 +165,7 @@ describe('Auth Middleware', (): void => {
                 assetCode: 'USD',
                 assetScale: 2
               },
-              receivingAccount: 'https://wallet2.example/bob'
+              receiver: 'https://wallet2.example/bob'
             }
           },
           {
@@ -173,7 +173,7 @@ describe('Auth Middleware', (): void => {
             actions: [AccessAction.Create],
             identifier: 'alice',
             limits: {
-              receivingPayment:
+              receiver:
                 'https://wallet2.example/bob/incoming-payments/fi7td6dito8yf6t'
             }
           }
