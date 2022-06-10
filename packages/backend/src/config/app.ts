@@ -100,7 +100,7 @@ export const Config = {
 
   openPaymentsSpec: envString(
     'OPEN_PAYMENTS_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/3ec25eb2fb106aa01c79b582c5d5a3eb371e45f7/open-api-spec.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/2a86d143139305fccf13db7b98cf6afee06c4858/open-api-spec.yaml'
   ),
 
   /** Frontend **/
