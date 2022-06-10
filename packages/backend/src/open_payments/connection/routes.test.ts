@@ -19,7 +19,7 @@ import { IncomingPayment } from '../payment/incoming/model'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import base64url from 'base64url'
 
-describe('Account Routes', (): void => {
+describe('Connection Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
@@ -95,7 +95,8 @@ describe('Account Routes', (): void => {
     test('returns 404 for nonexistent connection id on incoming payment', async (): Promise<void> => {
       const ctx = createContext<ConnectionContext>(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/connections/${incomingPayment.connectionId}`
         },
         {
           id: uuid()
@@ -110,15 +111,15 @@ describe('Account Routes', (): void => {
     test('returns 200 for correct connection id', async (): Promise<void> => {
       const ctx = createContext<ConnectionContext>(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/connections/${incomingPayment.connectionId}`
         },
         {
           id: incomingPayment.connectionId
         }
       )
       await expect(connectionRoutes.get(ctx)).resolves.toBeUndefined()
-      // todo: api spec validation
-      // expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.response).toSatisfyApiSpec()
 
       const sharedSecret = (ctx.response.body as Record<string, unknown>)[
         'sharedSecret'
