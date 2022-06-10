@@ -18,17 +18,12 @@ import {
   AppServices,
   ReadContext,
   CreateContext,
-  UpdateContext,
+  CompleteContext,
   ListContext
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment } from './model'
-import {
-  IncomingPaymentRoutes,
-  CreateBody,
-  UpdateBody,
-  MAX_EXPIRY
-} from './routes'
+import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
 import { AccountingService } from '../../../accounting/service'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
@@ -326,21 +321,19 @@ describe('Incoming Payment Routes', (): void => {
       }
     )
     test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
-      const ctx = setup<UpdateContext<UpdateBody>>(
+      const ctx = setup<CompleteContext>(
         {
           headers: { Accept: 'application/json' },
-          body: { state: 'completed' },
-          method: 'PUT',
-          url: `/${account.id}/incoming-payments/${incomingPayment.id}`
+          method: 'POST',
+          url: `/${account.id}/incoming-payments/${incomingPayment.id}/complete`
         },
         {
           id: incomingPayment.id,
           accountId: account.id
         }
       )
-      await expect(incomingPaymentRoutes.update(ctx)).resolves.toBeUndefined()
-      // todo: path needs to be updated to POST /complete to match spec
-      // expect(ctx.response).toSatisfyApiSpec()
+      await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         id: `${accountId}/incoming-payments/${incomingPayment.id}`,
         accountId,

@@ -85,9 +85,7 @@ export type ConnectionContext = Context<AppRequest<'id'>>
 // Account subresources
 export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>
 export type ReadContext = Context<AppRequest<'accountId' | 'id'>>
-export type UpdateContext<BodyT> = Context<
-  AppRequest<'accountId' | 'id', BodyT>
->
+export type CompleteContext = Context<AppRequest<'accountId' | 'id'>>
 export type ListContext = Context<
   AppRequest<'accountId', never, PageQueryParams>
 >
@@ -307,9 +305,9 @@ export class App {
         case HttpMethod.GET:
           return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
         case HttpMethod.POST:
-          return AccessAction.Create
-        case HttpMethod.PUT:
-          return AccessAction.Update
+          return path.endsWith('complete')
+            ? AccessAction.Update
+            : AccessAction.Create
         default:
           return undefined
       }
@@ -320,7 +318,7 @@ export class App {
     } = {
       [AccessAction.Create]: 'create',
       [AccessAction.Read]: 'get',
-      [AccessAction.Update]: 'update',
+      [AccessAction.Update]: 'complete',
       [AccessAction.List]: 'list'
     }
 
