@@ -15,6 +15,7 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
+import Objection from 'objection'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_KID_PATH = '/keys/test-key'
@@ -205,6 +206,138 @@ describe('Access Token Routes', (): void => {
       expect(ctx.body).toEqual({
         active: false
       })
+    })
+  })
+
+  describe('Revocation', (): void => {
+    let grant: Grant
+    let token: AccessToken
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let tokenQuery: <M extends { QueryBuilderType: any }>(
+      trxOrKnex?: Objection.TransactionOrKnex | undefined
+    ) => Objection.QueryBuilderType<M>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let actualTokenQuery: <M extends { QueryBuilderType: any }>(
+      trxOrKnex?: Objection.TransactionOrKnex | undefined
+    ) => Objection.QueryBuilderType<M>
+
+    beforeAll(
+      async (): Promise<void> => {
+        actualTokenQuery = AccessToken.query
+      }
+    )
+
+    beforeEach(
+      async (): Promise<void> => {
+        grant = await Grant.query(trx).insertAndFetch({
+          ...BASE_GRANT
+        })
+        token = await AccessToken.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_TOKEN
+        })
+        tokenQuery = AccessToken.query
+      }
+    )
+
+    afterEach(
+      async (): Promise<void> => {
+        AccessToken.query = actualTokenQuery
+      }
+    )
+
+    test('Returns status 404 if token does not exist', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        {}
+      )
+      ctx.request.body = {
+        access_token: v4(),
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+
+      tokenQuery = () => {
+        return {
+          findOne: () => {
+            return undefined
+          }
+        }
+      }
+      AccessToken.query = jest.fn(tokenQuery)
+
+      await expect(accessTokenRoutes.revoke(ctx)).rejects.toMatchObject({
+        status: 404,
+        message: 'token not found'
+      })
+    })
+
+    test('Does not modify token if it has already expired', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        {}
+      )
+      ctx.request.body = {
+        access_token: v4(),
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+
+      const mockUpdate = jest.fn(() => Promise.resolve())
+      tokenQuery = () => {
+        return {
+          findOne: () => {
+            return {
+              ...token,
+              expiresIn: -1
+            }
+          },
+          update: mockUpdate
+        }
+      }
+      AccessToken.query = jest.fn(tokenQuery)
+
+      await accessTokenRoutes.revoke(ctx)
+      expect(mockUpdate).not.toHaveBeenCalled()
+    })
+
+    test('Modifies token if it has not expired', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        {}
+      )
+      ctx.request.body = {
+        access_token: v4(),
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+
+      const mockUpdate = jest.fn(() => {
+        return {
+          where: () => Promise.resolve()
+        }
+      })
+      tokenQuery = () => {
+        return {
+          findOne: () => {
+            return {
+              ...token,
+              expiresIn: 10000
+            }
+          },
+          update: mockUpdate
+        }
+      }
+      AccessToken.query = jest.fn(tokenQuery)
+
+      await accessTokenRoutes.revoke(ctx)
+      expect(mockUpdate).toHaveBeenCalled()
     })
   })
 })
