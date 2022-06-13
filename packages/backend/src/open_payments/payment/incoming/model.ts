@@ -34,8 +34,7 @@ export interface IncomingPaymentResponse {
   incomingAmount?: AmountJSON
   receivedAmount: AmountJSON
   externalRef?: string
-  state: string
-  connectionId: string
+  completed: boolean
   ilpAddress?: string
   sharedSecret?: string
 }
@@ -156,9 +155,8 @@ export class IncomingPayment
           assetCode: this.asset.code,
           assetScale: this.asset.scale
         },
-        state: this.state,
-        updatedAt: new Date(+this.updatedAt).toISOString(),
-        connectionId: this.connectionId
+        completed: this.state === IncomingPaymentState.Completed,
+        updatedAt: new Date(+this.updatedAt).toISOString()
       }
     }
 

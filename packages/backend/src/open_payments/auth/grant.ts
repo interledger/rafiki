@@ -19,7 +19,7 @@ export enum AccessType {
 export enum AccessAction {
   Create = 'create',
   Read = 'read',
-  Update = 'update',
+  Complete = 'complete',
   List = 'list'
 }
 

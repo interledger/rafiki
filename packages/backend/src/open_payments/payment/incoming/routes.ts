@@ -124,12 +124,11 @@ async function completeIncomingPayment(
 ): Promise<void> {
   let incomingPaymentOrError: IncomingPayment | IncomingPaymentError
   try {
-    incomingPaymentOrError = await deps.incomingPaymentService.update({
-      id: ctx.params.id,
-      state: IncomingPaymentState.Completed
-    })
+    incomingPaymentOrError = await deps.incomingPaymentService.complete(
+      ctx.params.id
+    )
   } catch (err) {
-    ctx.throw(500, 'Error trying to update incoming payment')
+    ctx.throw(500, 'Error trying to complete incoming payment')
   }
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -186,7 +185,9 @@ function incomingPaymentToBody(
             ilpAddress: streamCredentials.ilpAddress,
             sharedSecret: base64url(streamCredentials.sharedSecret)
           }
-        : `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`
+        : `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`,
+      state: null,
+      completed: incomingPayment.state === IncomingPaymentState.Completed
     }).filter(([_, v]) => v != null)
   )
 }

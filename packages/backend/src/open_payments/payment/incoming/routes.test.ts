@@ -307,7 +307,7 @@ describe('Incoming Payment Routes', (): void => {
     )
   })
 
-  describe('update', (): void => {
+  describe('complete', (): void => {
     let incomingPayment: IncomingPayment
     beforeEach(
       async (): Promise<void> => {

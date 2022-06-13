@@ -489,7 +489,13 @@ describe('QuoteService', (): void => {
             `(
               'throws on $state receiver',
               async ({ state, error }): Promise<void> => {
-                await incomingPayment.$query(knex).patch({ state })
+                await incomingPayment.$query(knex).patch({
+                  state,
+                  expiresAt:
+                    state === IncomingPaymentState.Expired
+                      ? new Date()
+                      : undefined
+                })
                 await expect(quoteService.create(options)).rejects.toEqual(
                   error
                 )

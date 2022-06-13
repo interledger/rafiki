@@ -9,7 +9,7 @@ import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
 import { Transaction } from 'knex'
-import { PartialModelObject, TransactionOrKnex } from 'objection'
+import { TransactionOrKnex } from 'objection'
 import { AccountService } from '../../account/service'
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
@@ -32,20 +32,13 @@ export interface CreateIncomingPaymentOptions {
   externalRef?: string
 }
 
-interface UpdateIncomingPaymentOptions {
-  id: string
-  state: IncomingPaymentState
-}
-
 export interface IncomingPaymentService {
   get(id: string): Promise<IncomingPayment | undefined>
   create(
     options: CreateIncomingPaymentOptions,
     trx?: Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
-  update(
-    options: UpdateIncomingPaymentOptions
-  ): Promise<IncomingPayment | IncomingPaymentError>
+  complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
   getAccountPage(
     accountId: string,
     pagination?: Pagination
@@ -73,7 +66,7 @@ export async function createIncomingPaymentService(
   return {
     get: (id) => getIncomingPayment(deps, 'id', id),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
-    update: (options) => updateIncomingPayment(deps, options),
+    complete: (id) => completeIncomingPayment(deps, id),
     getAccountPage: (accountId, pagination) =>
       getAccountPage(deps, accountId, pagination),
     processNext: () => processNextIncomingPayment(deps),
@@ -298,9 +291,9 @@ async function getAccountPage(
   })
 }
 
-async function updateIncomingPayment(
+async function completeIncomingPayment(
   deps: ServiceDependencies,
-  { id, state }: UpdateIncomingPaymentOptions
+  id: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await IncomingPayment.query(trx)
@@ -308,21 +301,17 @@ async function updateIncomingPayment(
       .forUpdate()
       .withGraphFetched('asset')
     if (!payment) return IncomingPaymentError.UnknownPayment
-    const update: PartialModelObject<IncomingPayment> = {}
-    if (state == IncomingPaymentState.Completed) {
-      switch (payment.state) {
-        case IncomingPaymentState.Pending:
-        case IncomingPaymentState.Processing:
-          update.state = state
-          break
-        default:
-          return IncomingPaymentError.WrongState
-      }
-    } else {
-      return IncomingPaymentError.InvalidState
+    if (
+      ![IncomingPaymentState.Pending, IncomingPaymentState.Processing].includes(
+        payment.state
+      )
+    ) {
+      return IncomingPaymentError.WrongState
     }
-    update.processAt = new Date(Date.now() + 30_000)
-    await payment.$query(trx).patch(update)
+    await payment.$query(trx).patch({
+      state: IncomingPaymentState.Completed,
+      processAt: new Date(Date.now() + 30_000)
+    })
     return await addReceivedAmount(deps, payment)
   })
 }

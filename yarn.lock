@@ -2087,31 +2087,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@interledger/pay@npm:0.4.0-alpha.3":
-  version: 0.4.0-alpha.3
-  resolution: "@interledger/pay@npm:0.4.0-alpha.3"
+"@interledger/pay@npm:^0.4.0-alpha.6":
+  version: 0.4.0-alpha.6
+  resolution: "@interledger/pay@npm:0.4.0-alpha.6"
   dependencies:
     abort-controller: ^3.0.0
-    ilp-logger: ^1.4.4
-    ilp-packet: ^3.1.3
-    ilp-protocol-stream: ^2.6.4
+    ilp-logger: ^1.4.5-alpha.1
+    ilp-packet: ^3.1.4-alpha.1
+    ilp-protocol-stream: ^2.7.2-alpha.0
     long: ^4.0.0
     node-fetch: 2.6.1
-  checksum: c1f3ff846d29cfab238b089788d92630638f95d972080e76fb380f724d7e61badabc626cee9212583c9c94e751ed7808dd8899da29fd881dfdfd4c28574aaaa6
+  checksum: 2a45860c0f511f68806f88089d2481a772b693d2fc0dfadc2c02dcbe79ffa15ca1daaef5fbac9e83cf1a027cab0e80daaeb12af3d0d45aee2ae6f88afb834a79
   languageName: node
   linkType: hard
 
-"@interledger/stream-receiver@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "@interledger/stream-receiver@npm:0.2.2"
+"@interledger/stream-receiver@npm:^0.3.3-alpha.1":
+  version: 0.3.3-alpha.1
+  resolution: "@interledger/stream-receiver@npm:0.3.3-alpha.1"
   dependencies:
     "@types/long": ^4.0.1
-    ilp-logger: ^1.4.2
-    ilp-packet: ^3.1.2
-    ilp-protocol-stream: ^2.6.4
+    ilp-logger: ^1.4.5-alpha.1
+    ilp-packet: ^3.1.4-alpha.1
+    ilp-protocol-stream: ^2.7.2-alpha.0
     long: ^4.0.0
-    oer-utils: ^5.1.2
-  checksum: d37e62f9ed6d2253d5bb22c95cd83c9d322a088e3f806ab5d42f0a3ae2c5f2d946bea925f7d99fbaf9308eb5e065e935911bb9451ab5d3f62ff73728f29e420e
+    oer-utils: ^5.1.3-alpha.1
+  checksum: 7da238dd7d508d019760a864a4e0571201229e13b6ea27ea40c675d8e5edd38a356595454011db819fe4426c9501f41f00991c6d20be00eab2929e3173a8edf8
   languageName: node
   linkType: hard
 
@@ -4850,8 +4850,8 @@ __metadata:
     "@graphql-tools/load": ^7.1.9
     "@graphql-tools/schema": ^8.1.2
     "@graphql-tools/utils": ^8.5.3
-    "@interledger/pay": 0.4.0-alpha.3
-    "@interledger/stream-receiver": ^0.2.2
+    "@interledger/pay": ^0.4.0-alpha.6
+    "@interledger/stream-receiver": ^0.3.3-alpha.1
     "@koa/cors": ^3.1.0
     "@koa/router": ^10.0.0
     "@types/bcrypt": ^5.0.0
@@ -8618,7 +8618,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ilp-logger@npm:^1.3.1, ilp-logger@npm:^1.4.2, ilp-logger@npm:^1.4.4":
+"ilp-logger@npm:^1.3.1":
   version: 1.4.4
   resolution: "ilp-logger@npm:1.4.4"
   dependencies:
@@ -8629,13 +8629,34 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ilp-packet@npm:^3.0.9, ilp-packet@npm:^3.1.2, ilp-packet@npm:^3.1.3":
+"ilp-logger@npm:^1.4.5-alpha.1":
+  version: 1.4.5-alpha.1
+  resolution: "ilp-logger@npm:1.4.5-alpha.1"
+  dependencies:
+    "@types/debug": ^4.1.0
+    debug: ^4.3.0
+    supports-color: ^7.1.0
+  checksum: ff7cdaa98e9a067e1617293cb499e60052e6aa9a46e24ea8c977ceba844e00ccf7c59e63930ece18e4512419102903a9671a4839984739bb64fbf5196735a761
+  languageName: node
+  linkType: hard
+
+"ilp-packet@npm:^3.0.9, ilp-packet@npm:^3.1.2":
   version: 3.1.3
   resolution: "ilp-packet@npm:3.1.3"
   dependencies:
     extensible-error: ^1.0.2
     oer-utils: ^5.1.2
   checksum: 410f75c6f62959a6dd4d115044f5201ddb59dcbc393ff42cba4b649a11466f3325b2663e7237986ec5aee53d8a923b74c78c18e5048a1b41adf804d76ccf9a17
+  languageName: node
+  linkType: hard
+
+"ilp-packet@npm:^3.1.4-alpha.1":
+  version: 3.1.4-alpha.1
+  resolution: "ilp-packet@npm:3.1.4-alpha.1"
+  dependencies:
+    extensible-error: ^1.0.2
+    oer-utils: ^5.1.3-alpha.1
+  checksum: c2f233b96fb50a855200f8df379134498db34bd69ebd818f7c872deb1a407dbd650217dc269525a88d62437bccceaf4a6933bebcb97c70de213e8a3ee537fc31
   languageName: node
   linkType: hard
 
@@ -8660,7 +8681,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ilp-protocol-stream@npm:^2.6.4, ilp-protocol-stream@npm:^2.7.0":
+"ilp-protocol-stream@npm:^2.7.0":
   version: 2.7.0
   resolution: "ilp-protocol-stream@npm:2.7.0"
   dependencies:
@@ -8672,6 +8693,21 @@ __metadata:
     oer-utils: ^5.0.1
     uuid: ^3.4.0
   checksum: 61195c68b188c71a1a8bc449dd435fdb764a0380f7c11d89843fd12e477811663c9507f8f1373d2acc34b9ac90e916006005bfe31bfa6994ab684c8eeea93891
+  languageName: node
+  linkType: hard
+
+"ilp-protocol-stream@npm:^2.7.2-alpha.0":
+  version: 2.7.2-alpha.0
+  resolution: "ilp-protocol-stream@npm:2.7.2-alpha.0"
+  dependencies:
+    "@types/node": ^10.14.22
+    ilp-logger: ^1.3.1
+    ilp-packet: ^3.0.9
+    ilp-protocol-ildcp: ^2.1.4
+    long: ^4.0.0
+    oer-utils: ^5.0.1
+    uuid: ^3.4.0
+  checksum: b27a13cf00a38eada46da07c511fd46c57201abee1ecfae908927598f9e859ba658f9db4c5e751ae990832b899f024c695177e02937f98f806c9210edda32b0f
   languageName: node
   linkType: hard
 
@@ -11808,6 +11844,16 @@ __metadata:
     "@types/long": 4.0.1
     long: ^4.0.0
   checksum: e4b04ebbd178c6d7deb012b9206acdf059c4c9aabdf05b01a006df58a7810f263bb67e5dc8544565b6c030b709ae20e2a2e7efb0fcd386688e6caa8d6aa1537e
+  languageName: node
+  linkType: hard
+
+"oer-utils@npm:^5.1.3-alpha.1":
+  version: 5.1.3-alpha.1
+  resolution: "oer-utils@npm:5.1.3-alpha.1"
+  dependencies:
+    "@types/long": 4.0.1
+    long: ^4.0.0
+  checksum: 279b8b2ef41fe5f21f0fbf4b6ecf76c4084067f6059a217013e81797ae315b1ce6c751af8be1ecf0253edc07901f444c48546522484b4fc6571a02bb1ef3f8a0
   languageName: node
   linkType: hard
 

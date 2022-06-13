@@ -305,8 +305,8 @@ export class App {
         case HttpMethod.GET:
           return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
         case HttpMethod.POST:
-          return path.endsWith('complete')
-            ? AccessAction.Update
+          return path.endsWith('/complete')
+            ? AccessAction.Complete
             : AccessAction.Create
         default:
           return undefined
@@ -318,7 +318,7 @@ export class App {
     } = {
       [AccessAction.Create]: 'create',
       [AccessAction.Read]: 'get',
-      [AccessAction.Update]: 'complete',
+      [AccessAction.Complete]: 'complete',
       [AccessAction.List]: 'list'
     }
 
