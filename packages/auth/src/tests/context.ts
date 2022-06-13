@@ -10,6 +10,7 @@ export function createContext(
   const req = httpMocks.createRequest(reqOpts)
   const res = httpMocks.createResponse()
   const koa = new Koa<unknown, AppContextData>()
+  koa.keys = ['test-key']
   const ctx = koa.createContext(req, res)
   ctx.params = params
   ctx.closeEmitter = new EventEmitter()

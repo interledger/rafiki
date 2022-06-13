@@ -91,25 +91,37 @@ describe('Access Token Service', (): void => {
     expiresIn: 3600
   }
 
+  let grant: Grant
+  let access: Access
+  let token: AccessToken
+  beforeEach(
+    async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT
+      })
+      access = await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_ACCESS
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN
+      })
+    }
+  )
+
+  describe('Create', (): void => {
+    test('Can create access token', async (): Promise<void> => {
+      const accessToken = await accessTokenService.create(grant.id)
+      expect(accessToken).toMatchObject({
+        grantId: grant.id,
+        managementId: expect.any(String),
+        value: expect.any(String)
+      })
+    })
+  })
+
   describe('Introspect', (): void => {
-    let grant: Grant
-    let access: Access
-    let token: AccessToken
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
-        })
-        access = await Access.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_ACCESS
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN
-        })
-      }
-    )
     test('Can introspect active token', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)

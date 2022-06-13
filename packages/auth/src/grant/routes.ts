@@ -119,11 +119,11 @@ async function startInteraction(
     maxAge: 600000 // TODO: make this a config item
   })
 
-  const displayInfo = await clientService.getClientDisplayInfo(
+  const registryData = await clientService.getRegistryDataByKid(
     grant.clientKeyId
   )
 
-  if (!displayInfo) {
+  if (!registryData) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_client'
@@ -132,8 +132,8 @@ async function startInteraction(
   }
 
   const interactionUrl = new URL(config.resourceServerDomain)
-  interactionUrl.searchParams.set('clientName', displayInfo.name)
-  interactionUrl.searchParams.set('clientUri', displayInfo.uri)
+  interactionUrl.searchParams.set('clientName', registryData.name)
+  interactionUrl.searchParams.set('clientUri', registryData.url)
 
   ctx.redirect(interactionUrl.toString())
 }

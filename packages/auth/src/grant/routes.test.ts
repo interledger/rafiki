@@ -4,16 +4,18 @@ import * as crypto from 'crypto'
 import { IocContract } from '@adonisjs/fold'
 import nock from 'nock'
 import jestOpenAPI from 'jest-openapi'
+import { URL } from 'url'
 
 import { createContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { GrantRoutes } from './routes'
 import { Action, AccessType } from '../access/types'
-import { StartMethod, FinishMethod } from '../grant/model'
+import { Access } from '../access/model'
+import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { GrantRequest } from '../grant/service'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
@@ -111,11 +113,13 @@ describe('Grant Routes', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let grantRoutes: GrantRoutes
+  let config: IAppConfig
 
   beforeAll(
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       grantRoutes = await deps.use('grantRoutes')
+      config = await deps.use('config')
       knex = await deps.use('knex')
       appContainer = await createTestApp(deps)
       jestOpenAPI(await deps.use('openApi'))
@@ -695,6 +699,65 @@ describe('Grant Routes', (): void => {
       })
 
       scope.isDone()
+    })
+  })
+
+  describe('interaction', (): void => {
+    describe('interaction start', (): void => {
+      test('Can start an interaction', async (): Promise<void> => {
+        const scope = nock(KEY_REGISTRY_ORIGIN)
+          .get(TEST_KID_PATH)
+          .reply(200, {
+            ...TEST_CLIENT_DISPLAY,
+            keys: [
+              {
+                ...TEST_CLIENT_KEY.jwk,
+                revoked: false
+              }
+            ]
+          })
+
+        const grant = await Grant.query().insert({
+          state: GrantState.Pending,
+          startMethod: [StartMethod.Redirect],
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          continueId: v4(),
+          finishMethod: FinishMethod.Redirect,
+          finishUri: 'https://example.com',
+          clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+          interactId: v4(),
+          interactRef: v4(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        })
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grant.id
+        })
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'set-cookie': []
+            }
+          },
+          { interactId: grant.interactId }
+        )
+
+        const redirectUrl = new URL(config.resourceServerDomain)
+        redirectUrl.searchParams.set('clientName', TEST_CLIENT_DISPLAY.name)
+        redirectUrl.searchParams.set('clientUri', TEST_CLIENT_DISPLAY.url)
+        const spy = jest.spyOn(ctx, 'redirect')
+
+        // TODO: check cookies
+        await expect(grantRoutes.interaction.get(ctx)).resolves.toBeUndefined()
+        expect(spy).toHaveBeenCalledWith(redirectUrl.toString())
+
+        scope.isDone()
+      })
     })
   })
 })

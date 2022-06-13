@@ -71,6 +71,7 @@ export class App {
     this.koa.context.closeEmitter = await this.container.use('closeEmitter')
     this.publicRouter = new Router()
 
+    this.koa.keys = [this.config.cookieKey]
     this.koa.use(
       async (
         ctx: {
@@ -90,7 +91,6 @@ export class App {
       }
     )
 
-    this.koa.keys = [this.config.cookieKey]
     await this._setupRoutes()
   }
 

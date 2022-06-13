@@ -139,8 +139,7 @@ async function initiateGrant(
       interactRef: v4(),
       interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
       continueId: v4(),
-      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      clientKeyId: kid
+      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
     })
 
     // Associate provided accesses with grant

@@ -10,7 +10,7 @@ import { AccessToken } from './model'
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
   revoke(id: string): Promise<Error | undefined>
-  create(grantId: string, opts: AccessTokenOpts): Promise<AccessToken>
+  create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
 }
 
 interface ServiceDependencies extends BaseService {
