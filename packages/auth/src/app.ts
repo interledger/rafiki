@@ -107,7 +107,6 @@ export class App {
       }
     )
 
-    this.koa.keys = [this.config.cookieKey]
     await this._setupRoutes()
   }
 
