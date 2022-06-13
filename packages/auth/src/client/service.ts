@@ -55,8 +55,7 @@ export interface ClientService {
     challenge: string
   ): Promise<boolean>
   validateClientWithRegistry(clientInfo: ClientInfo): Promise<boolean>
-  getRegistryData(kid: string): Promise<RegistryData>
-  getClientDisplayInfo(kid: string): Promise<DisplayInfo>
+  getRegistryDataByKid(kid: string): Promise<RegistryData>
 }
 
 export async function createClientService({
@@ -77,29 +76,8 @@ export async function createClientService({
       verifySig(deps, sig, jwk, challenge),
     validateClientWithRegistry: (clientInfo: ClientInfo) =>
       validateClientWithRegistry(deps, clientInfo),
-    getRegistryData: (kid: string) => getRegistryData(deps, kid),
-    getClientDisplayInfo: (kid) => getClientDisplayInfo(deps, kid)
+    getRegistryDataByKid: (kid: string) => getRegistryDataByKid(deps, kid)
   }
-}
-
-async function getClientDisplayInfo(
-  deps: ServiceDependencies,
-  kid: string
-): Promise<DisplayInfo> {
-  const registryData = await Axios.get(kid)
-    .then((res) => res.data)
-    .catch((err) => {
-      deps.logger.error(
-        {
-          err,
-          kid
-        },
-        'failed to retrieve key'
-      )
-      return false
-    })
-
-  return registryData.display
 }
 
 async function verifySig(
@@ -143,7 +121,7 @@ async function validateClientWithRegistry(
   const kidUrl = new URL(jwk.kid)
   if (!keyRegistries.includes(kidUrl.origin)) return false
 
-  const { keys, ...registryClientInfo } = await getRegistryData(
+  const { keys, ...registryClientInfo } = await getRegistryDataByKid(
     deps,
     jwk.kid
   )
@@ -158,7 +136,7 @@ async function validateClientWithRegistry(
   )
 }
 
-async function getRegistryData(
+async function getRegistryDataByKid(
   deps: ServiceDependencies,
   kid: string
 ): Promise<RegistryData> {

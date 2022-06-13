@@ -52,8 +52,7 @@ describe('Access Service', (): void => {
     clientKeyId: 'https://openpayments.network/keys/test-key',
     interactId: v4(),
     interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    clientKeyId: v4()
+    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
   }
 
   test('Can create incoming payment access', async (): Promise<void> => {
