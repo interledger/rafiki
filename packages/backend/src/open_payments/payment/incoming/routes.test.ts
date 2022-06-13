@@ -18,17 +18,12 @@ import {
   AppServices,
   ReadContext,
   CreateContext,
-  UpdateContext,
+  CompleteContext,
   ListContext
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
-import { IncomingPayment, IncomingPaymentState } from './model'
-import {
-  IncomingPaymentRoutes,
-  CreateBody,
-  UpdateBody,
-  MAX_EXPIRY
-} from './routes'
+import { IncomingPayment } from './model'
+import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
 import { AccountingService } from '../../../accounting/service'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
@@ -199,7 +194,7 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
-        state: IncomingPaymentState.Pending.toLowerCase(),
+        completed: false,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
@@ -289,7 +284,7 @@ describe('Incoming Payment Routes', (): void => {
             assetScale: asset.scale
           },
           externalRef,
-          state: IncomingPaymentState.Pending.toLowerCase(),
+          completed: false,
           ilpAddress: expect.stringMatching(
             /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
           ),
@@ -299,7 +294,7 @@ describe('Incoming Payment Routes', (): void => {
     )
   })
 
-  describe('update', (): void => {
+  describe('complete', (): void => {
     let incomingPayment: IncomingPayment
     beforeEach(
       async (): Promise<void> => {
@@ -313,19 +308,18 @@ describe('Incoming Payment Routes', (): void => {
       }
     )
     test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
-      const ctx = setup<UpdateContext<UpdateBody>>(
+      const ctx = setup<CompleteContext>(
         {
           headers: { Accept: 'application/json' },
-          body: { state: 'completed' },
-          method: 'PUT',
-          url: `/${account.id}/incoming-payments/${incomingPayment.id}`
+          method: 'POST',
+          url: `/${account.id}/incoming-payments/${incomingPayment.id}/complete`
         },
         {
           id: incomingPayment.id,
           accountId: account.id
         }
       )
-      await expect(incomingPaymentRoutes.update(ctx)).resolves.toBeUndefined()
+      await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         id: `${accountId}/incoming-payments/${incomingPayment.id}`,
@@ -345,7 +339,7 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
-        state: IncomingPaymentState.Completed.toLowerCase()
+        completed: true
       })
     })
   })
@@ -369,7 +363,7 @@ describe('Incoming Payment Routes', (): void => {
             assetScale: asset.scale
           },
           description: payment.description,
-          state: 'pending',
+          completed: false,
           expiresAt: expiresAt.toISOString(),
           createdAt: payment.createdAt.toISOString(),
           updatedAt: payment.updatedAt.toISOString()
