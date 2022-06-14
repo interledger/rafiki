@@ -7,7 +7,7 @@ import { ClientService, KeyInfo } from '../client/service'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
-  revoke(id: string): Promise<RevocationResult>
+  revoke(id: string): Promise<Error | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -18,10 +18,6 @@ interface ServiceDependencies extends BaseService {
 export interface Introspection extends Partial<Grant> {
   active: boolean
   key?: KeyInfo
-}
-
-export interface RevocationResult {
-  foundToken: boolean
 }
 
 export async function createAccessTokenService({
@@ -79,23 +75,13 @@ async function introspect(
 async function revoke(
   deps: ServiceDependencies,
   id: string
-): Promise<RevocationResult> {
-  const token = await AccessToken.query(deps.knex).findOne({ id })
+): Promise<Error | undefined> {
+  const token = await AccessToken.query(deps.knex).findById(id)
   if (token) {
     if (!isTokenExpired(token)) {
-      AccessToken.query(deps.knex)
-        .update({
-          expiresIn: 1
-        })
-        .where('id', token.id)
-    }
-
-    return {
-      foundToken: true
+      await token.$query(deps.knex).patch({ expiresIn: 1 })
     }
   } else {
-    return {
-      foundToken: false
-    }
+    return new Error('token not found')
   }
 }

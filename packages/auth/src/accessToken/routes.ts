@@ -79,12 +79,10 @@ async function revokeToken(
 ): Promise<void> {
   //TODO: verify accessToken with httpsig method
 
-  const revocationResult = await deps.accessTokenService.revoke(
-    ctx.params['id']
-  )
-  if (revocationResult.foundToken) {
-    ctx.status = 204
+  const revocationError = await deps.accessTokenService.revoke(ctx.params['id'])
+  if (revocationError) {
+    return ctx.throw(404, revocationError.message)
   } else {
-    return ctx.throw(404, 'token not found')
+    ctx.status = 204
   }
 }

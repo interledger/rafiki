@@ -220,6 +220,7 @@ describe('Access Token Routes', (): void => {
     let actualTokenQuery: <M extends { QueryBuilderType: any }>(
       trxOrKnex?: Objection.TransactionOrKnex | undefined
     ) => Objection.QueryBuilderType<M>
+    let id: string
 
     beforeAll(
       async (): Promise<void> => {
@@ -237,6 +238,7 @@ describe('Access Token Routes', (): void => {
           ...BASE_TOKEN
         })
         tokenQuery = AccessToken.query
+        id = v4()
       }
     )
 
@@ -249,19 +251,15 @@ describe('Access Token Routes', (): void => {
     test('Returns status 404 if token does not exist', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          params: { id }
         },
         {}
       )
-      ctx.request.body = {
-        access_token: v4(),
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
 
       tokenQuery = () => {
         return {
-          findOne: () => {
+          findById: () => {
             return undefined
           }
         }
@@ -277,67 +275,69 @@ describe('Access Token Routes', (): void => {
     test('Does not modify token if it has already expired', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          params: { id }
         },
         {}
       )
-      ctx.request.body = {
-        access_token: v4(),
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
 
-      const mockUpdate = jest.fn(() => Promise.resolve())
       tokenQuery = () => {
         return {
-          findOne: () => {
+          findById: () => {
             return {
               ...token,
-              expiresIn: -1
+              expiresIn: 10000,
+              $query: () => {
+                return {
+                  patch: () => {
+                    return {
+                      where: () => Promise.resolve()
+                    }
+                  }
+                }
+              }
             }
-          },
-          update: mockUpdate
+          }
         }
       }
       AccessToken.query = jest.fn(tokenQuery)
 
       await accessTokenRoutes.revoke(ctx)
-      expect(mockUpdate).not.toHaveBeenCalled()
+      expect(ctx.response.status).toBe(204)
     })
 
     test('Modifies token if it has not expired', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          params: { id }
         },
         {}
       )
-      ctx.request.body = {
-        access_token: v4(),
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
 
-      const mockUpdate = jest.fn(() => {
-        return {
-          where: () => Promise.resolve()
-        }
-      })
       tokenQuery = () => {
         return {
-          findOne: () => {
+          findById: () => {
             return {
               ...token,
-              expiresIn: 10000
+              expiresIn: 10000,
+              $query: () => {
+                return {
+                  patch: () => {
+                    return {
+                      where: () => Promise.resolve()
+                    }
+                  }
+                }
+              }
             }
-          },
-          update: mockUpdate
+          }
         }
       }
       AccessToken.query = jest.fn(tokenQuery)
 
       await accessTokenRoutes.revoke(ctx)
-      expect(mockUpdate).toHaveBeenCalled()
+      expect(ctx.response.status).toBe(204)
     })
   })
 })
