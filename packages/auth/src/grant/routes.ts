@@ -112,7 +112,7 @@ async function startInteraction(
     return
   }
 
-  // ctx.session.interactId = grant.interactId
+  ctx.session.interactId = grant.interactId
 
   const registryData = await clientService.getRegistryDataByKid(
     grant.clientKeyId
@@ -138,15 +138,15 @@ async function finishInteraction(
   ctx: AppContext
 ): Promise<void> {
   const { interactId } = ctx.params
-  // const interactSession = ctx.session.interactId
+  const interactSession = ctx.session.interactId
 
-  // if (!interactSession || !interactId || interactSession !== interactId) {
-  //   ctx.status = 401
-  //   ctx.body = {
-  //     error: 'unknown_request'
-  //   }
-  //   return
-  // }
+  if (!interactSession || !interactId || interactSession !== interactId) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'unknown_request'
+    }
+    return
+  }
 
   const { grantService, config } = deps
   const grant = await grantService.getByInteraction(interactId)

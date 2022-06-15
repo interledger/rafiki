@@ -818,7 +818,7 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.interaction.get(ctx)).resolves.toBeUndefined()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
-        // expect(ctx.session.interactId).toEqual(grant.interactId)
+        expect(ctx.session.interactId).toEqual(grant.interactId)
 
         scope.isDone()
       })
@@ -855,7 +855,7 @@ describe('Grant Routes', (): void => {
           { interactId: '' }
         )
 
-        // ctx.session.interactId = grant.interactId
+        ctx.session.interactId = grant.interactId
         await expect(grantRoutes.interaction.post(ctx)).resolves.toBeUndefined()
         expect(ctx.status).toBe(401)
         expect(ctx.body).toEqual({
@@ -912,7 +912,7 @@ describe('Grant Routes', (): void => {
           { interactId: fakeInteractId }
         )
 
-        // ctx.session.interactId = fakeInteractId
+        ctx.session.interactId = fakeInteractId
         await expect(grantRoutes.interaction.post(ctx)).resolves.toBeUndefined()
         expect(ctx.status).toBe(404)
         expect(ctx.body).toEqual({
@@ -950,7 +950,7 @@ describe('Grant Routes', (): void => {
           { interactId: grant.interactId }
         )
 
-        // ctx.session.interactId = grant.interactId
+        ctx.session.interactId = grant.interactId
 
         const clientRedirectUri = new URL(grant.finishUri)
         const { clientNonce, interactNonce, interactRef } = grant
