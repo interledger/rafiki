@@ -124,7 +124,7 @@ async function startInteraction(
     return
   }
 
-  // ctx.session.interactId = grant.interactId
+  ctx.session.interactId = grant.interactId
 
   const registryData = await clientService.getRegistryDataByKid(
     grant.clientKeyId
