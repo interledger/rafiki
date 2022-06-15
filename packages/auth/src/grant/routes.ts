@@ -112,12 +112,7 @@ async function startInteraction(
     return
   }
 
-  ctx.cookies.set('_grant', grant.interactId, {
-    path: `/interact/${interactId}`,
-    httpOnly: true,
-    signed: true,
-    maxAge: 600000 // TODO: make this a config item
-  })
+  ctx.session.interactId = grant.interactId
 
   const registryData = await clientService.getRegistryDataByKid(
     grant.clientKeyId
@@ -143,10 +138,10 @@ async function finishInteraction(
   ctx: AppContext
 ): Promise<void> {
   const { interactId } = ctx.params
-  const interactCookie = ctx.cookies.get('_grant', { signed: true })
+  const interactSession = ctx.session.interactId
 
-  if (!interactCookie || !interactId || interactCookie !== interactId) {
-    ctx.status = 404
+  if (!interactSession || !interactId || interactSession !== interactId) {
+    ctx.status = 401
     ctx.body = {
       error: 'unknown_request'
     }
@@ -161,6 +156,7 @@ async function finishInteraction(
     ctx.body = {
       error: 'unknown_request'
     }
+    return
   }
 
   const clientRedirectUri = new URL(grant.finishUri)
