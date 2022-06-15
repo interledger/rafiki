@@ -3103,7 +3103,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/koa-generic-session@npm:^2.2.1":
+"@types/koa-generic-session@npm:2.2.1":
   version: 2.2.1
   resolution: "@types/koa-generic-session@npm:2.2.1"
   dependencies:
