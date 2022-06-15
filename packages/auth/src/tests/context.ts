@@ -27,6 +27,7 @@ export function createContext(
   )
   const ctx = koa.createContext(req, res)
   ctx.params = params
+  ctx.session = {}
   ctx.closeEmitter = new EventEmitter()
   return ctx as AppContext
 }
