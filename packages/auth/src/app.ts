@@ -5,7 +5,7 @@ import { IocContract } from '@adonisjs/fold'
 import Knex from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
-import session from 'koa-generic-session'
+// import session from 'koa-generic-session'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 
@@ -21,8 +21,8 @@ export interface AppContextData {
   container: AppContainer
   // Set by @koa/router
   params: { [key: string]: string }
-  // Set by koa-generic-session
-  session: { [key: string]: string }
+  // // Set by koa-generic-session
+  // session: { [key: string]: string }
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
@@ -75,15 +75,15 @@ export class App {
     this.publicRouter = new Router()
 
     this.koa.keys = [this.config.cookieKey]
-    this.koa.use(
-      session({
-        key: 'sessionId',
-        cookie: {
-          maxAge: 60 * 1000,
-          signed: true
-        }
-      })
-    )
+    // this.koa.use(
+    //   session({
+    //     key: 'sessionId',
+    //     cookie: {
+    //       maxAge: 60 * 1000,
+    //       signed: true
+    //     }
+    //   })
+    // )
     this.koa.use(
       async (
         ctx: {
