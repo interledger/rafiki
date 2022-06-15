@@ -21,8 +21,8 @@ export interface AppContextData extends DefaultContext {
   container: AppContainer
   // Set by @koa/router
   params: { [key: string]: string }
-  // Set by koa-generic-session
-  session: { [key: string]: string }
+  // // Set by koa-generic-session
+  // session: { [key: string]: string }
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
