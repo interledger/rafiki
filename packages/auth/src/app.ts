@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 
 import { IocContract } from '@adonisjs/fold'
 import Knex from 'knex'
-import Koa, { DefaultState } from 'koa'
+import Koa, { DefaultState, DefaultContext } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
 import { Logger } from 'pino'
@@ -15,7 +15,7 @@ import { GrantService } from './grant/service'
 import { AccessTokenRoutes } from './accessToken/routes'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 
-export interface AppContextData {
+export interface AppContextData extends DefaultContext {
   logger: Logger
   closeEmitter: EventEmitter
   container: AppContainer
@@ -72,15 +72,20 @@ export class App {
     this.koa.context.container = this.container
     this.koa.context.logger = await this.container.use('logger')
     this.koa.context.closeEmitter = await this.container.use('closeEmitter')
-    this.publicRouter = new Router()
+    this.publicRouter = new Router<DefaultState, AppContext>()
 
     this.koa.keys = [this.config.cookieKey]
     this.koa.use(
-      session({
-        key: 'sessionId',
-        maxAge: 60 * 1000,
-        signed: true
-      })
+      session(
+        {
+          key: 'sessionId',
+          maxAge: 60 * 1000,
+          signed: true
+          // Only accepts Middleware<DefaultState, DefaultContext> for some reason, this.koa is Middleware<DefaultState, AppContext>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        },
+        this.koa as any
+      )
     )
     this.koa.use(
       async (
