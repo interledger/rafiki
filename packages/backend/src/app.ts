@@ -53,7 +53,7 @@ export interface AppContextData {
   closeEmitter: EventEmitter
   container: AppContainer
   // Set by @koa/router.
-  params: { [key: string]: string }
+  params: { id: string; [key: string]: string }
   grant?: Grant
 }
 
