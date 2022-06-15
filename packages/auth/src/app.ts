@@ -5,7 +5,7 @@ import { IocContract } from '@adonisjs/fold'
 import Knex from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
-import session from 'koa-generic-session'
+import session from 'koa-session'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 
@@ -78,10 +78,8 @@ export class App {
     this.koa.use(
       session({
         key: 'sessionId',
-        cookie: {
-          maxAge: 60 * 1000,
-          signed: true
-        }
+        maxAge: 60 * 1000,
+        signed: true
       })
     )
     this.koa.use(
