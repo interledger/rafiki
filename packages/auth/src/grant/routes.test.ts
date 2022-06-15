@@ -962,7 +962,7 @@ describe('Grant Routes', (): void => {
           { interactId: grant.interactId }
         )
 
-        ctx.session.interactId = grant.interactId
+        // ctx.session.interactId = grant.interactId
 
         const clientRedirectUri = new URL(grant.finishUri)
         const { clientNonce, interactNonce, interactRef } = grant
