@@ -93,8 +93,7 @@ async function introspectToken(
           }
           if (access.limits) {
             options.limits = {
-              receivingAccount: access.limits.receivingAccount,
-              receivingPayment: access.limits.receivingPayment
+              receiver: access.limits.receiver
             }
             if (access.limits.sendAmount) {
               options.limits.sendAmount = {
