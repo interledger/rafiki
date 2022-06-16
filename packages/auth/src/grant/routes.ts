@@ -42,7 +42,8 @@ export function createGrantRoutes({
     interaction: {
       start: (ctx: AppContext) => startInteraction(deps, ctx),
       finish: (ctx: AppContext) => finishInteraction(deps, ctx)
-    }
+    },
+    post: (ctx: AppContext) => continueGrant(deps, ctx)
   }
 }
 
@@ -184,4 +185,46 @@ async function finishInteraction(
   clientRedirectUri.searchParams.set('hash', hash)
   clientRedirectUri.searchParams.set('interact_ref', interactRef)
   ctx.redirect(clientRedirectUri.toString())
+}
+
+async function continueGrant(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  // TODO: httpsig validation
+  const { continueId } = ctx.params
+  const continueToken = ctx.headers['Authorization'].split('GNAP ')[1]
+  const { interactRef } = ctx.request.body
+
+  if (!continueId || !continueToken || !interactRef) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'invalid_request'
+    }
+  }
+
+  const grant = await grantService.getByContinue(
+    continueId,
+    continueToken,
+    interactRef
+  )
+  if (!grant) {
+    ctx.status = 404
+    ctx.body = {
+      error: 'unknown_request'
+    }
+    return
+  }
+
+  // const { grant: issuedGrant, accessToken } = await grantService.issueGrant(grant.id)
+
+  // const { config } = deps
+
+  // TODO: add "continue" to response if additional grant request steps are added
+  // ctx.body = {
+  //   access_token: {
+  //     value: accessToken.value,
+  //     manage: config.authServerDomain + `/token/${accessToken.managementId}`
+  //   }
+  // }
 }

@@ -987,4 +987,8 @@ describe('Grant Routes', (): void => {
       })
     })
   })
+
+  describe('/continue', (): void => {
+    test('Can complete interaction and ')
+  })
 })

@@ -13,6 +13,11 @@ export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
   getByInteraction(interactId: string): Promise<Grant>
   issueGrant(grantId: string): Promise<Grant>
+  getByContinue(
+    continueId: string,
+    continueToken: string,
+    interactRef: string
+  ): Promise<Grant>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -70,7 +75,12 @@ export async function createGrantService({
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
       initiateGrant(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
-    issueGrant: (grantId: string) => issueGrant(deps, grantId)
+    issueGrant: (grantId: string) => issueGrant(deps, grantId),
+    getByContinue: (
+      continueId: string,
+      continueToken: string,
+      interactRef: string
+    ) => getByContinue(continueId, continueToken, interactRef)
   }
 }
 
@@ -150,4 +160,12 @@ async function initiateGrant(
 
 async function getByInteraction(interactId: string): Promise<Grant> {
   return Grant.query().findOne({ interactId })
+}
+
+async function getByContinue(
+  continueId: string,
+  continueToken: string,
+  interactRef: string
+): Promise<Grant> {
+  return Grant.query().where({ contiueId, continueToken, interactRef }).first()
 }
