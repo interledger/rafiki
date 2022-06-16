@@ -109,7 +109,6 @@ async function issueGrant(
   grantId: string,
   trx?: Transaction
 ): Promise<{ grant: Grant; accessToken: AccessToken }> {
-  // TODO: create access token, update grant state
   const invTrx = trx || (await Grant.startTransaction())
   try {
     const accessToken = await deps.accessTokenService.create(grantId, {
