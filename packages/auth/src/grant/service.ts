@@ -7,8 +7,6 @@ import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
-import { AccessTokenService } from '../accessToken/service'
-import { AccessToken } from '../accessToken/model'
 
 export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
@@ -108,12 +106,9 @@ async function issueGrant(
   deps: ServiceDependencies,
   grantId: string,
   trx?: Transaction
-): Promise<{ grant: Grant; accessToken: AccessToken }> {
+): Promise<Grant> {
   const invTrx = trx || (await Grant.startTransaction())
   try {
-    const accessToken = await deps.accessTokenService.create(grantId, {
-      trx: invTrx
-    })
     const grant = await Grant.query(invTrx).patchAndFetchById(grantId, {
       state: GrantState.Granted
     })
@@ -121,7 +116,7 @@ async function issueGrant(
     if (!trx) {
       await invTrx.commit()
     }
-    return { accessToken, grant }
+    return grant
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()
