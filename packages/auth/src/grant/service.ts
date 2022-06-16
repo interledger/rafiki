@@ -8,20 +8,15 @@ import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { IAppConfig } from '../config/app'
 import { AccessService } from '../access/service'
-import { AccessTokenService } from '../accessToken/service'
-import { AccessToken } from '../accessToken/model'
 
 export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<GrantResponse>
   getByInteraction(interactId: string): Promise<Grant>
-  issueGrant(
-    grantId: string
-  ): Promise<{ grant: Grant; accessToken: AccessToken }>
+  issueGrant(grantId: string): Promise<Grant>
 }
 
 interface ServiceDependencies extends BaseService {
   accessService: AccessService
-  accessTokenService: AccessTokenService
   config: IAppConfig
   knex: TransactionOrKnex
 }
@@ -59,7 +54,6 @@ export interface GrantResponse {
 export async function createGrantService({
   logger,
   accessService,
-  accessTokenService,
   config,
   knex
 }: ServiceDependencies): Promise<GrantService> {
@@ -69,7 +63,6 @@ export async function createGrantService({
   const deps: ServiceDependencies = {
     logger: log,
     accessService,
-    accessTokenService,
     config,
     knex
   }
@@ -85,12 +78,9 @@ async function issueGrant(
   deps: ServiceDependencies,
   grantId: string,
   trx?: Transaction
-): Promise<{ grant: Grant; accessToken: AccessToken }> {
+): Promise<Grant> {
   const invTrx = trx || (await Grant.startTransaction())
   try {
-    const accessToken = await deps.accessTokenService.create(grantId, {
-      trx: invTrx
-    })
     const grant = await Grant.query(invTrx).patchAndFetchById(grantId, {
       state: GrantState.Granted
     })
@@ -98,7 +88,7 @@ async function issueGrant(
     if (!trx) {
       await invTrx.commit()
     }
-    return { accessToken, grant }
+    return grant
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()

@@ -967,6 +967,9 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.interaction.post(ctx)).resolves.toBeUndefined()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+
+        const issuedGrant = await Grant.query().findById(grant.id)
+        expect(issuedGrant.state).toEqual(GrantState.Granted)
       })
     })
   })

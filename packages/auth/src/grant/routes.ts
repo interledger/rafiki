@@ -159,6 +159,8 @@ async function finishInteraction(
     return
   }
 
+  await grantService.issueGrant(grant.id)
+
   const clientRedirectUri = new URL(grant.finishUri)
   const { clientNonce, interactNonce, interactRef } = grant
   const interactUrl = config.resourceServerDomain + `/interact/${interactId}`
