@@ -47,8 +47,7 @@ async function getQuote(
 }
 
 export type CreateBody = {
-  receivingAccount?: string
-  receivingPayment?: string
+  receiver: string
   sendAmount?: AmountJSON
   receiveAmount?: AmountJSON
 }
@@ -61,10 +60,9 @@ async function createQuote(
   try {
     const quoteOrErr = await deps.quoteService.create({
       accountId: ctx.params.accountId,
-      receivingAccount: body.receivingAccount,
+      receiver: body.receiver,
       sendAmount: body.sendAmount && parseAmount(body.sendAmount),
-      receiveAmount: body.receiveAmount && parseAmount(body.receiveAmount),
-      receivingPayment: body.receivingPayment
+      receiveAmount: body.receiveAmount && parseAmount(body.receiveAmount)
     })
 
     if (isQuoteError(quoteOrErr)) {

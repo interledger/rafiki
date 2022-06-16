@@ -1,13 +1,7 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { AccessToken } from '../accessToken/model'
-import { Limit } from '../limit/model'
-
-export enum Action {
-  Create = 'create',
-  Read = 'read',
-  List = 'list'
-}
+import { Access } from '../access/model'
 
 export enum StartMethod {
   Redirect = 'redirect'
@@ -23,19 +17,13 @@ export enum GrantState {
   Revoked = 'revoked'
 }
 
-export enum AccessType {
-  Account = 'account',
-  IncomingPayment = 'incomingPayment',
-  OutgoingPayment = 'outgoingPayment',
-  Quote = 'quote'
-}
-
 export class Grant extends BaseModel {
   public static get tableName(): string {
     return 'grants'
   }
 
-  static relationMappings = {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  static relationMappings = () => ({
     accessTokens: {
       relation: Model.HasManyRelation,
       modelClass: AccessToken,
@@ -44,28 +32,29 @@ export class Grant extends BaseModel {
         to: 'accessTokens.grantId'
       }
     },
-    grants: {
+    access: {
       relation: Model.HasManyRelation,
-      modelClass: Limit,
+      modelClass: Access,
       join: {
         from: 'grants.id',
-        to: 'limits.grantId'
+        to: 'accesses.grantId'
       }
     }
-  }
-
+  })
+  public access!: Access[]
   public state!: GrantState
-  public type!: AccessType
-  public actions!: Action[]
   public startMethod!: StartMethod[]
 
-  public continueToken?: string
-  public continueId?: string
+  public continueToken!: string
+  public continueId!: string
   public wait?: number
 
   public finishMethod!: FinishMethod
   public finishUri!: string
-  public nonce!: string
+  public clientNonce!: string // nonce for hash
+  public clientKeyId!: string
 
+  public interactId!: string
   public interactRef!: string
+  public interactNonce!: string
 }

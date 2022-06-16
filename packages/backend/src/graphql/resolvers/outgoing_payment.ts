@@ -96,7 +96,7 @@ export function paymentToGraphql(
     state: payment.state,
     error: payment.error ?? undefined,
     stateAttempts: payment.stateAttempts,
-    receivingPayment: payment.receivingPayment,
+    receiver: payment.receiver,
     sendAmount: payment.sendAmount,
     sentAmount: payment.sentAmount,
     receiveAmount: payment.receiveAmount,

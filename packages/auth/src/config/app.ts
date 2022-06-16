@@ -29,5 +29,8 @@ export const Config = {
         ),
   keyRegistries: envStringArray('KEY_REGISTRIES', [
     'https://openpayments.network'
-  ])
+  ]),
+  resourceServerDomain: envString('INTERACT_URL', 'http://localhost:3004'),
+  authServerDomain: envString('DOMAIN', 'http://localhost:3006'), // TODO: replace this with whatever frontend port ends up being
+  waitTime: envInt('WAIT', 5)
 }

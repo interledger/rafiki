@@ -18,20 +18,18 @@ export enum AccessType {
 export enum AccessAction {
   Create = 'create',
   Read = 'read',
-  Update = 'update',
+  Complete = 'complete',
   List = 'list'
 }
 
 export interface AccessLimits {
-  receivingAccount?: string
-  receivingPayment?: string
+  receiver?: string
   sendAmount?: Amount
   receiveAmount?: Amount
 }
 
 interface AccessLimitsJSON {
-  receivingAccount?: string
-  receivingPayment?: string
+  receiver?: string
   sendAmount?: AmountJSON
   receiveAmount?: AmountJSON
 }

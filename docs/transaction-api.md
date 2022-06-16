@@ -127,7 +127,7 @@ Credit `payment.balance` to the wallet balance for `payment.accountId`, and call
 
 ### `Quote`
 
-The quote must be created with (`receivingPayment` xor `receivingAccount`) and (`sendAmount` xor `receiveAmount`) or `receivingPayment` and no specified amount (assuming the Incoming Payment has an `incomingAmount`).
+The quote must be created with `receiver` and (`sendAmount` xor `receiveAmount`) or no specified amount (assuming the Incoming Payment has an `incomingAmount`).
 
 | Name                       | Optional | Type          | Description                                                                                                                                                                                                                                                                                                               |
 | :------------------------- | :------- | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -146,7 +146,7 @@ The quote must be created with (`receivingPayment` xor `receivingAccount`) and (
 | `receiveAmount.value`      | No       | `UInt64`      | Fixed amount that will be delivered if the payment completes, in the base unit and asset of the receiving account.                                                                                                                                                                                                        |
 | `receiveAmount.assetScale` | No       | `Integer`     |                                                                                                                                                                                                                                                                                                                           |
 | `receiveAmount.assetCode`  | No       | `String`      |                                                                                                                                                                                                                                                                                                                           |
-| `receivingPayment`         | No       | `String`      | The URL of the Open Payments incoming payment that is being paid.                                                                                                                                                                                                                                                         |
+| `receiver`                 | No       | `String`      | The URL of the Open Payments incoming payment that is being paid.                                                                                                                                                                                                                                                         |
 | `createdAt`                | No       | `String`      | ISO 8601 format.                                                                                                                                                                                                                                                                                                          |
 | `expiresAt`                | No       | `String`      | ISO 8601 format.                                                                                                                                                                                                                                                                                                          |
 
@@ -176,7 +176,8 @@ The payment must be created with `quoteId`.
 | `receiveAmount.value`      | No       | `UInt64`               | Fixed amount that will be delivered if the payment completes, in the base unit and asset of the receiving account. |
 | `receiveAmount.assetScale` | No       | `Integer`              |                                                                                                                    |
 | `receiveAmount.assetCode`  | No       | `String`               |                                                                                                                    |
-| `receivingPayment`         | No       | `String`               | The URL of the Open Payments incoming payment that is being paid.                                                  |
+| `receiver`                 | No       | `String`               | The URL of the Open Payments incoming payment that is being paid.                                                  |
+| `peerId`                   | Yes      | `ID`                   | Id of the outgoing peer.                                                                                           |
 | `createdAt`                | No       | `String`               | ISO 8601 format.                                                                                                   |
 
 ### `OutgoingPaymentState`

@@ -37,8 +37,7 @@ describe('Quote Routes', (): void => {
   const mockMessageProducer = {
     send: jest.fn()
   }
-  const receivingAccount = 'http://wallet2.example/bob'
-  const receivingPayment = `${receivingAccount}/incoming-payments/${uuid()}`
+  const receiver = `http://wallet2.example/bob/incoming-payments/${uuid()}`
   const asset = randomAsset()
   const sendAmount: Amount = {
     value: BigInt(123),
@@ -49,7 +48,7 @@ describe('Quote Routes', (): void => {
   const createAccountQuote = async (accountId: string): Promise<Quote> => {
     return await createQuote(deps, {
       accountId,
-      receivingAccount,
+      receiver,
       sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,
@@ -140,7 +139,7 @@ describe('Quote Routes', (): void => {
       expect(ctx.body).toEqual({
         id: `${accountUrl}/quotes/${quote.id}`,
         accountId: accountUrl,
-        receivingPayment: quote.receivingPayment,
+        receiver: quote.receiver,
         sendAmount: {
           ...quote.sendAmount,
           value: quote.sendAmount.value.toString()
@@ -157,10 +156,6 @@ describe('Quote Routes', (): void => {
 
   describe('create', (): void => {
     let options: CreateBody
-
-    beforeEach(() => {
-      options = {}
-    })
 
     function setup(
       reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
@@ -184,7 +179,7 @@ describe('Quote Routes', (): void => {
 
     test('returns error on invalid sendAmount asset', async (): Promise<void> => {
       options = {
-        receivingAccount,
+        receiver,
         sendAmount: {
           ...sendAmount,
           value: sendAmount.value.toString(),
@@ -210,131 +205,121 @@ describe('Quote Routes', (): void => {
     })
 
     describe('returns the quote on success', (): void => {
-      describe.each`
-        receivingAccount    | receivingPayment    | description
-        ${receivingAccount} | ${undefined}        | ${'receivingAccount'}
-        ${undefined}        | ${receivingPayment} | ${'receivingPayment'}
-      `('$description', ({ receivingAccount, receivingPayment }): void => {
-        test.each`
-          sendAmount   | receiveAmount | description
-          ${'123'}     | ${undefined}  | ${'sendAmount'}
-          ${undefined} | ${'56'}       | ${'receiveAmount'}
-        `(
-          '$description',
-          async ({ sendAmount, receiveAmount }): Promise<void> => {
-            options = {
-              receivingAccount,
-              receivingPayment,
-              sendAmount: sendAmount
-                ? {
-                    value: sendAmount,
-                    assetCode: asset.code,
-                    assetScale: asset.scale
-                  }
-                : undefined,
-              receiveAmount: receiveAmount
-                ? {
-                    value: receiveAmount,
-                    assetCode: asset.code,
-                    assetScale: asset.scale
-                  }
-                : undefined
-            }
-            const ctx = setup({})
-            let quote: Quote | undefined
-            const quoteSpy = jest
-              .spyOn(quoteService, 'create')
-              .mockImplementationOnce(async (opts) => {
-                quote = await createQuote(deps, {
-                  ...opts,
-                  validDestination: false
-                })
-                return quote
-              })
-            await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
-            expect(quoteSpy).toHaveBeenCalledWith({
-              accountId,
-              receivingAccount,
-              receivingPayment,
-              sendAmount: options.sendAmount && {
-                ...options.sendAmount,
-                value: BigInt(options.sendAmount.value)
-              },
-              receiveAmount: options.receiveAmount && {
-                ...options.receiveAmount,
-                value: BigInt(options.receiveAmount.value)
-              }
-            })
-            expect(ctx.response).toSatisfyApiSpec()
-            const quoteId = ((ctx.response.body as Record<string, unknown>)[
-              'id'
-            ] as string)
-              .split('/')
-              .pop()
-            assert.ok(quote)
-            expect(ctx.response.body).toEqual({
-              id: `${accountUrl}/quotes/${quoteId}`,
-              accountId: accountUrl,
-              receivingPayment: quote.receivingPayment,
-              sendAmount: {
-                ...quote.sendAmount,
-                value: quote.sendAmount.value.toString()
-              },
-              receiveAmount: {
-                ...quote.receiveAmount,
-                value: quote.receiveAmount.value.toString()
-              },
-              createdAt: quote.createdAt.toISOString(),
-              expiresAt: quote.expiresAt.toISOString()
-            })
+      test.each`
+        sendAmount   | receiveAmount | description
+        ${'123'}     | ${undefined}  | ${'sendAmount'}
+        ${undefined} | ${'56'}       | ${'receiveAmount'}
+      `(
+        '$description',
+        async ({ sendAmount, receiveAmount }): Promise<void> => {
+          options = {
+            receiver,
+            sendAmount: sendAmount
+              ? {
+                  value: sendAmount,
+                  assetCode: asset.code,
+                  assetScale: asset.scale
+                }
+              : undefined,
+            receiveAmount: receiveAmount
+              ? {
+                  value: receiveAmount,
+                  assetCode: asset.code,
+                  assetScale: asset.scale
+                }
+              : undefined
           }
-        )
-
-        if (receivingPayment) {
-          test('receivingPayment.incomingAmount', async (): Promise<void> => {
-            options = {
-              receivingPayment
-            }
-            const ctx = setup({})
-            let quote: Quote | undefined
-            const quoteSpy = jest
-              .spyOn(quoteService, 'create')
-              .mockImplementationOnce(async (opts) => {
-                quote = await createQuote(deps, {
-                  ...opts,
-                  validDestination: false
-                })
-                return quote
+          const ctx = setup({})
+          let quote: Quote | undefined
+          const quoteSpy = jest
+            .spyOn(quoteService, 'create')
+            .mockImplementationOnce(async (opts) => {
+              quote = await createQuote(deps, {
+                ...opts,
+                validDestination: false
               })
-            await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
-            expect(quoteSpy).toHaveBeenCalledWith({
-              accountId,
-              receivingPayment
+              return quote
             })
-            expect(ctx.response).toSatisfyApiSpec()
-            const quoteId = ((ctx.response.body as Record<string, unknown>)[
-              'id'
-            ] as string)
-              .split('/')
-              .pop()
-            assert.ok(quote)
-            expect(ctx.response.body).toEqual({
-              id: `${accountUrl}/quotes/${quoteId}`,
-              accountId: accountUrl,
-              receivingPayment: options.receivingPayment,
-              sendAmount: {
-                ...quote.sendAmount,
-                value: quote.sendAmount.value.toString()
-              },
-              receiveAmount: {
-                ...quote.receiveAmount,
-                value: quote.receiveAmount.value.toString()
-              },
-              createdAt: quote.createdAt.toISOString(),
-              expiresAt: quote.expiresAt.toISOString()
-            })
+          await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
+          expect(quoteSpy).toHaveBeenCalledWith({
+            accountId,
+            receiver,
+            sendAmount: options.sendAmount && {
+              ...options.sendAmount,
+              value: BigInt(options.sendAmount.value)
+            },
+            receiveAmount: options.receiveAmount && {
+              ...options.receiveAmount,
+              value: BigInt(options.receiveAmount.value)
+            }
+          })
+          expect(ctx.response).toSatisfyApiSpec()
+          const quoteId = ((ctx.response.body as Record<string, unknown>)[
+            'id'
+          ] as string)
+            .split('/')
+            .pop()
+          assert.ok(quote)
+          expect(ctx.response.body).toEqual({
+            id: `${accountUrl}/quotes/${quoteId}`,
+            accountId: accountUrl,
+            receiver: quote.receiver,
+            sendAmount: {
+              ...quote.sendAmount,
+              value: quote.sendAmount.value.toString()
+            },
+            receiveAmount: {
+              ...quote.receiveAmount,
+              value: quote.receiveAmount.value.toString()
+            },
+            createdAt: quote.createdAt.toISOString(),
+            expiresAt: quote.expiresAt.toISOString()
           })
         }
+      )
+
+      test('receiver.incomingAmount', async (): Promise<void> => {
+        options = {
+          receiver
+        }
+        const ctx = setup({})
+        let quote: Quote | undefined
+        const quoteSpy = jest
+          .spyOn(quoteService, 'create')
+          .mockImplementationOnce(async (opts) => {
+            quote = await createQuote(deps, {
+              ...opts,
+              validDestination: false
+            })
+            return quote
+          })
+        await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
+        expect(quoteSpy).toHaveBeenCalledWith({
+          accountId,
+          receiver
+        })
+        expect(ctx.response).toSatisfyApiSpec()
+        const quoteId = ((ctx.response.body as Record<string, unknown>)[
+          'id'
+        ] as string)
+          .split('/')
+          .pop()
+        assert.ok(quote)
+        expect(ctx.response.body).toEqual({
+          id: `${accountUrl}/quotes/${quoteId}`,
+          accountId: accountUrl,
+          receiver: options.receiver,
+          sendAmount: {
+            ...quote.sendAmount,
+            value: quote.sendAmount.value.toString()
+          },
+          receiveAmount: {
+            ...quote.receiveAmount,
+            value: quote.receiveAmount.value.toString()
+          },
+          createdAt: quote.createdAt.toISOString(),
+          expiresAt: quote.expiresAt.toISOString()
+        })
       })
     })
   })
@@ -348,7 +333,7 @@ describe('Quote Routes', (): void => {
         return {
           id: `${accountUrl}/quotes/${quote.id}`,
           accountId: accountUrl,
-          receivingPayment: quote.receivingPayment,
+          receiver: quote.receiver,
           sendAmount: {
             ...quote.sendAmount,
             value: quote.sendAmount.value.toString()

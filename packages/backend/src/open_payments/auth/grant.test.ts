@@ -41,9 +41,9 @@ describe('Grant', (): void => {
       })
 
       test.each`
-        type                          | action                 | identifier    | description
-        ${AccessType.OutgoingPayment} | ${action}              | ${identifier} | ${'type'}
-        ${type}                       | ${AccessAction.Update} | ${identifier} | ${'action'}
+        type                          | action                   | identifier    | description
+        ${AccessType.OutgoingPayment} | ${action}                | ${identifier} | ${'type'}
+        ${type}                       | ${AccessAction.Complete} | ${identifier} | ${'action'}
       `(
         'Returns false for missing $description',
         async ({ type, action, identifier }): Promise<void> => {

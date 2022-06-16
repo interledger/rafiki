@@ -186,7 +186,7 @@ describe('Pagination', (): void => {
             for (let i = 0; i < num; i++) {
               const payment = await createOutgoingPayment(deps, {
                 accountId: defaultAccount.id,
-                receivingAccount: secondaryAccountId,
+                receiver: secondaryAccountId,
                 sendAmount,
                 validDestination: false
               })
@@ -240,7 +240,7 @@ describe('Pagination', (): void => {
             for (let i = 0; i < num; i++) {
               const quote = await createQuote(deps, {
                 accountId: defaultAccount.id,
-                receivingAccount: secondaryAccountId,
+                receiver: secondaryAccountId,
                 sendAmount,
                 validDestination: false
               })

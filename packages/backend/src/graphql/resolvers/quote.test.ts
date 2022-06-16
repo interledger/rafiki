@@ -26,7 +26,7 @@ describe('Quote Resolvers', (): void => {
   let accountService: AccountService
 
   const receivingAccount = 'http://wallet2.example/bob'
-  const receivingPayment = `${receivingAccount}/incoming-payments/${uuid()}`
+  const receiver = `${receivingAccount}/incoming-payments/${uuid()}`
   const asset = randomAsset()
 
   beforeAll(
@@ -56,7 +56,7 @@ describe('Quote Resolvers', (): void => {
   const createAccountQuote = async (accountId: string): Promise<QuoteModel> => {
     return await createQuote(deps, {
       accountId,
-      receivingAccount,
+      receiver,
       sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,
@@ -80,7 +80,7 @@ describe('Quote Resolvers', (): void => {
               quote(id: $quoteId) {
                 id
                 accountId
-                receivingPayment
+                receiver
                 sendAmount {
                   value
                   assetCode
@@ -109,7 +109,7 @@ describe('Quote Resolvers', (): void => {
       expect(query).toEqual({
         id: quote.id,
         accountId,
-        receivingPayment: quote.receivingPayment,
+        receiver: quote.receiver,
         sendAmount: {
           value: quote.sendAmount.value.toString(),
           assetCode: quote.sendAmount.assetCode,
@@ -168,34 +168,26 @@ describe('Quote Resolvers', (): void => {
 
     const input = {
       accountId: uuid(),
-      receivingAccount,
+      receiver,
       sendAmount
     }
 
     test.each`
-      receivingAccount    | receivingPayment    | sendAmount    | receiveAmount    | type
-      ${receivingAccount} | ${undefined}        | ${sendAmount} | ${undefined}     | ${'fixed send to account'}
-      ${receivingAccount} | ${undefined}        | ${undefined}  | ${receiveAmount} | ${'fixed receive to account'}
-      ${undefined}        | ${receivingPayment} | ${sendAmount} | ${undefined}     | ${'fixed send to incoming payment'}
-      ${undefined}        | ${receivingPayment} | ${undefined}  | ${receiveAmount} | ${'fixed receive to incoming payment'}
-      ${undefined}        | ${receivingPayment} | ${undefined}  | ${undefined}     | ${'incoming payment'}
+      sendAmount    | receiveAmount    | type
+      ${sendAmount} | ${undefined}     | ${'fixed send to incoming payment'}
+      ${undefined}  | ${receiveAmount} | ${'fixed receive to incoming payment'}
+      ${undefined}  | ${undefined}     | ${'incoming payment'}
     `(
       '200 ($type)',
-      async ({
-        receivingAccount,
-        receivingPayment,
-        sendAmount,
-        receiveAmount
-      }): Promise<void> => {
+      async ({ sendAmount, receiveAmount }): Promise<void> => {
         const { id: accountId } = await accountService.create({
           asset
         })
         const input = {
           accountId,
-          receivingAccount,
           sendAmount,
           receiveAmount,
-          receivingPayment
+          receiver
         }
 
         let quote: QuoteModel | undefined

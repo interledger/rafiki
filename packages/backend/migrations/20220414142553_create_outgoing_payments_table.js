@@ -14,6 +14,9 @@ exports.up = function (knex) {
     table.uuid('accountId').notNullable()
     table.foreign('accountId').references('accounts.id')
 
+    table.uuid('peerId').nullable()
+    table.foreign('peerId').references('peers.id')
+
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 

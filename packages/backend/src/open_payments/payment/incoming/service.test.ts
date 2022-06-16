@@ -518,7 +518,7 @@ describe('Incoming Payment Service', (): void => {
     })
   })
 
-  describe('update', (): void => {
+  describe('complete', (): void => {
     let incomingPayment: IncomingPayment
 
     beforeEach(
@@ -542,10 +542,7 @@ describe('Incoming Payment Service', (): void => {
       const now = new Date()
       jest.spyOn(global.Date, 'now').mockImplementation(() => now.valueOf())
       await expect(
-        incomingPaymentService.update({
-          id: incomingPayment.id,
-          state: IncomingPaymentState.Completed
-        })
+        incomingPaymentService.complete(incomingPayment.id)
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
@@ -559,13 +556,10 @@ describe('Incoming Payment Service', (): void => {
       })
     })
 
-    test('fails to update state of unknown payment', async (): Promise<void> => {
-      await expect(
-        incomingPaymentService.update({
-          id: uuid(),
-          state: IncomingPaymentState.Completed
-        })
-      ).resolves.toEqual(IncomingPaymentError.UnknownPayment)
+    test('fails to complete unknown payment', async (): Promise<void> => {
+      await expect(incomingPaymentService.complete(uuid())).resolves.toEqual(
+        IncomingPaymentError.UnknownPayment
+      )
     })
 
     test('updates state of processing incoming payment to complete', async (): Promise<void> => {
@@ -578,10 +572,7 @@ describe('Incoming Payment Service', (): void => {
         state: IncomingPaymentState.Processing
       })
       await expect(
-        incomingPaymentService.update({
-          id: incomingPayment.id,
-          state: IncomingPaymentState.Completed
-        })
+        incomingPaymentService.complete(incomingPayment.id)
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
@@ -615,10 +606,7 @@ describe('Incoming Payment Service', (): void => {
         state: IncomingPaymentState.Expired
       })
       await expect(
-        incomingPaymentService.update({
-          id: incomingPayment.id,
-          state: IncomingPaymentState.Completed
-        })
+        incomingPaymentService.complete(incomingPayment.id)
       ).resolves.toBe(IncomingPaymentError.WrongState)
       await expect(
         incomingPaymentService.get(incomingPayment.id)
@@ -637,10 +625,7 @@ describe('Incoming Payment Service', (): void => {
         state: IncomingPaymentState.Completed
       })
       await expect(
-        incomingPaymentService.update({
-          id: incomingPayment.id,
-          state: IncomingPaymentState.Completed
-        })
+        incomingPaymentService.complete(incomingPayment.id)
       ).resolves.toBe(IncomingPaymentError.WrongState)
       await expect(
         incomingPaymentService.get(incomingPayment.id)
