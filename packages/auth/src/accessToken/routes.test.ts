@@ -212,6 +212,7 @@ describe('Access Token Routes', (): void => {
   describe('Revocation', (): void => {
     let grant: Grant
     let token: AccessToken
+    // overriding the `no-explicit-any' rule to avoid having to mock every Objection method for each tokenQuery mock
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let tokenQuery: <M extends { QueryBuilderType: any }>(
       trxOrKnex?: Objection.TransactionOrKnex | undefined
@@ -249,22 +250,13 @@ describe('Access Token Routes', (): void => {
     )
 
     test('Returns status 404 if token does not exist', async (): Promise<void> => {
+      id = v4()
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
-          params: { id }
+          headers: { Accept: 'application/json' }
         },
-        {}
+        { id }
       )
-
-      tokenQuery = () => {
-        return {
-          findById: () => {
-            return undefined
-          }
-        }
-      }
-      AccessToken.query = jest.fn(tokenQuery)
 
       await expect(accessTokenRoutes.revoke(ctx)).rejects.toMatchObject({
         status: 404,
@@ -275,10 +267,9 @@ describe('Access Token Routes', (): void => {
     test('Does not modify token if it has already expired', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
-          params: { id }
+          headers: { Accept: 'application/json' }
         },
-        {}
+        { id }
       )
 
       tokenQuery = () => {
@@ -309,10 +300,9 @@ describe('Access Token Routes', (): void => {
     test('Modifies token if it has not expired', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
-          params: { id }
+          headers: { Accept: 'application/json' }
         },
-        {}
+        { id }
       )
 
       tokenQuery = () => {
