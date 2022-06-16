@@ -694,7 +694,7 @@ describe('Grant Routes', (): void => {
             value: expect.any(String)
           },
           uri: expect.any(String),
-          wait: Config.waitTime
+          wait: Config.waitTimeSeconds
         }
       })
 

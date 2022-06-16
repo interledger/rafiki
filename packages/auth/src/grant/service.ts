@@ -86,7 +86,6 @@ async function issueGrant(
   grantId: string,
   trx?: Transaction
 ): Promise<{ grant: Grant; accessToken: AccessToken }> {
-  // TODO: create access token, update grant state
   const invTrx = trx || (await Grant.startTransaction())
   try {
     const accessToken = await deps.accessTokenService.create(grantId, {
@@ -159,7 +158,7 @@ async function initiateGrant(
           value: grant.continueToken
         },
         uri: config.authServerDomain + `/auth/continue/${grant.continueId}`,
-        wait: config.waitTime
+        wait: config.waitTimeSeconds
       }
     }
   } catch (err) {

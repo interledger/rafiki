@@ -34,10 +34,10 @@ export const Config = {
   ]),
   resourceServerDomain: envString('INTERACT_URL', 'http://localhost:3004'),
   authServerDomain: envString('DOMAIN', 'http://localhost:3006'), // TODO: replace this with whatever frontend port ends up being
-  waitTime: envInt('WAIT', 5),
   authServerSpec: envString(
     'AUTH_SERVER_SPEC',
     'https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml'
   ),
+  waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex'))
 }

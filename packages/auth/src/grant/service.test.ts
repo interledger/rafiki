@@ -119,7 +119,7 @@ describe('Grant Service', (): void => {
               value: expect.any(String)
             },
             uri: expect.any(String),
-            wait: config.waitTime
+            wait: config.waitTimeSeconds
           }
         })
       )
