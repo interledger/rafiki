@@ -859,7 +859,7 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.interaction.post(ctx)).resolves.toBeUndefined()
         expect(ctx.status).toBe(401)
         expect(ctx.body).toEqual({
-          error: 'unknown_request'
+          error: 'invalid_request'
         })
       })
 
@@ -896,7 +896,7 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.interaction.post(ctx)).resolves.toBeUndefined()
         expect(ctx.status).toBe(401)
         expect(ctx.body).toEqual({
-          error: 'unknown_request'
+          error: 'invalid_request'
         })
       })
 

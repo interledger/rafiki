@@ -143,7 +143,7 @@ async function finishInteraction(
   if (!interactSession || !interactId || interactSession !== interactId) {
     ctx.status = 401
     ctx.body = {
-      error: 'unknown_request'
+      error: 'invalid_request'
     }
     return
   }
