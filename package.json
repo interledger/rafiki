@@ -43,7 +43,6 @@
     }
   },
   "resolutions": {
-    "@types/koa": "2.13.4",
-    "@types/koa-generic-session": "2.2.1"
+    "@types/koa": "2.13.4"
   }
 }
