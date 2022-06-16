@@ -7,8 +7,6 @@ import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
-import { AccessTokenService } from '../accessToken/service'
-import { AccessToken } from '../accessToken/model'
 import { IAppConfig } from '../config/app'
 
 export interface GrantService {

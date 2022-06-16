@@ -99,7 +99,6 @@ export function initIocContainer(
       return createGrantService({
         logger: await deps.use('logger'),
         accessService: await deps.use('accessService'),
-        accessTokenService: await deps.use('accessTokenService'),
         config: await deps.use('config'),
         knex: await deps.use('knex')
       })
