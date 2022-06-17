@@ -216,6 +216,8 @@ export class App {
       grantRoutes.interaction.finish
     )
 
+    this.publicRouter.post('/auth/continue/:id', grantRoutes.post)
+
     // Token management
     this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
 
