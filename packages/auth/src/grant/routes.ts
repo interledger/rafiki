@@ -2,14 +2,17 @@ import * as crypto from 'crypto'
 import { URL } from 'url'
 import { AppContext } from '../app'
 import { GrantService, GrantRequest } from './service'
+import { GrantState } from './model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
 import { isAccessRequest } from '../access/types'
 import { IAppConfig } from '../config/app'
+import { AccessTokenService } from '../accessToken/service'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
   clientService: ClientService
+  accessTokenService: AccessTokenService
   config: IAppConfig
 }
 
@@ -19,11 +22,13 @@ export interface GrantRoutes {
     start(ctx: AppContext): Promise<void>
     finish(ctx: AppContext): Promise<void>
   }
+  post(ctx: AppContext): Promise<void>
 }
 
 export function createGrantRoutes({
   grantService,
   clientService,
+  accessTokenService,
   logger,
   config
 }: ServiceDependencies): GrantRoutes {
@@ -34,6 +39,7 @@ export function createGrantRoutes({
   const deps = {
     grantService,
     clientService,
+    accessTokenService,
     logger: log,
     config
   }
@@ -193,16 +199,20 @@ async function continueGrant(
 ): Promise<void> {
   // TODO: httpsig validation
   const { continueId } = ctx.params
-  const continueToken = ctx.headers['Authorization'].split('GNAP ')[1]
-  const { interactRef } = ctx.request.body
+  const continueToken = (ctx.headers['authorization'] as string)?.split(
+    'GNAP '
+  )[1]
+  const { interact_ref: interactRef } = ctx.request.body
 
   if (!continueId || !continueToken || !interactRef) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_request'
     }
+    return
   }
 
+  const { config, accessTokenService, grantService } = deps
   const grant = await grantService.getByContinue(
     continueId,
     continueToken,
@@ -216,15 +226,21 @@ async function continueGrant(
     return
   }
 
-  // const { grant: issuedGrant, accessToken } = await grantService.issueGrant(grant.id)
+  if (grant.state !== GrantState.Granted) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'request_denied'
+    }
+    return
+  }
 
-  // const { config } = deps
+  const accessToken = await accessTokenService.create(grant.id)
 
   // TODO: add "continue" to response if additional grant request steps are added
-  // ctx.body = {
-  //   access_token: {
-  //     value: accessToken.value,
-  //     manage: config.authServerDomain + `/token/${accessToken.managementId}`
-  //   }
-  // }
+  ctx.body = {
+    access_token: {
+      value: accessToken.value,
+      manage: config.authServerDomain + `/token/${accessToken.managementId}`
+    }
+  }
 }

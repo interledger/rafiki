@@ -167,5 +167,5 @@ async function getByContinue(
   continueToken: string,
   interactRef: string
 ): Promise<Grant> {
-  return Grant.query().where({ contiueId, continueToken, interactRef }).first()
+  return Grant.query().where({ continueId, continueToken, interactRef }).first()
 }

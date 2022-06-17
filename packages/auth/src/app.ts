@@ -141,6 +141,7 @@ export class App {
     this.publicRouter.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
+
     this.publicRouter.get('/discovery', (ctx: AppContext): void => {
       ctx.body = {
         grant_request_endpoint: '/',
@@ -215,6 +216,8 @@ export class App {
       '/interact/:interactId/login',
       grantRoutes.interaction.finish
     )
+
+    this.publicRouter.post('/auth/continue/:id', grantRoutes.post)
 
     // Token management
     this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
