@@ -15,7 +15,6 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
-import Objection from 'objection'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_KID_PATH = '/keys/test-key'
@@ -212,22 +211,7 @@ describe('Access Token Routes', (): void => {
   describe('Revocation', (): void => {
     let grant: Grant
     let token: AccessToken
-    // overriding the `no-explicit-any' rule to avoid having to mock every Objection method for each tokenQuery mock
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let tokenQuery: <M extends { QueryBuilderType: any }>(
-      trxOrKnex?: Objection.TransactionOrKnex | undefined
-    ) => Objection.QueryBuilderType<M>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let actualTokenQuery: <M extends { QueryBuilderType: any }>(
-      trxOrKnex?: Objection.TransactionOrKnex | undefined
-    ) => Objection.QueryBuilderType<M>
     let id: string
-
-    beforeAll(
-      async (): Promise<void> => {
-        actualTokenQuery = AccessToken.query
-      }
-    )
 
     beforeEach(
       async (): Promise<void> => {
@@ -238,14 +222,7 @@ describe('Access Token Routes', (): void => {
           grantId: grant.id,
           ...BASE_TOKEN
         })
-        tokenQuery = AccessToken.query
-        id = v4()
-      }
-    )
-
-    afterEach(
-      async (): Promise<void> => {
-        AccessToken.query = actualTokenQuery
+        id = token.id
       }
     )
 
@@ -264,7 +241,7 @@ describe('Access Token Routes', (): void => {
       })
     })
 
-    test('Does not modify token if it has already expired', async (): Promise<void> => {
+    test('Returns status 204 if token has not expired', async (): Promise<void> => {
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' }
@@ -272,32 +249,12 @@ describe('Access Token Routes', (): void => {
         { id }
       )
 
-      tokenQuery = () => {
-        return {
-          findById: () => {
-            return {
-              ...token,
-              expiresIn: 10000,
-              $query: () => {
-                return {
-                  patch: () => {
-                    return {
-                      where: () => Promise.resolve()
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      AccessToken.query = jest.fn(tokenQuery)
-
+      await token.$query(trx).patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
     })
 
-    test('Modifies token if it has not expired', async (): Promise<void> => {
+    test('Returns status 204 if token has expired', async (): Promise<void> => {
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' }
@@ -305,27 +262,7 @@ describe('Access Token Routes', (): void => {
         { id }
       )
 
-      tokenQuery = () => {
-        return {
-          findById: () => {
-            return {
-              ...token,
-              expiresIn: 10000,
-              $query: () => {
-                return {
-                  patch: () => {
-                    return {
-                      where: () => Promise.resolve()
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      AccessToken.query = jest.fn(tokenQuery)
-
+      await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
     })
