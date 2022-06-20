@@ -74,7 +74,7 @@ export const Config = {
   ),
   authServerIntrospectionUrl: envString(
     'AUTH_SERVER_INTROSPECTION_URL',
-    'http://127.0.0.1:3007'
+    'http://127.0.0.1:3007/introspect'
   ),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),
@@ -101,6 +101,10 @@ export const Config = {
   openPaymentsSpec: envString(
     'OPEN_PAYMENTS_SPEC',
     'https://raw.githubusercontent.com/wilsonianb/open-payments/ab840c8ff904a4b8c45d94ac23f5518a79a67686/open-api-spec.yaml'
+  ),
+  authServerSpec: envString(
+    'AUTH_SERVER_SPEC',
+    'https://raw.githubusercontent.com/interledger/open-payments/ab840c8ff904a4b8c45d94ac23f5518a79a67686/auth-server-open-api-spec.yaml'
   ),
 
   /** Frontend **/
