@@ -39,7 +39,7 @@ async function getQuote(
   deps: ServiceDependencies,
   ctx: ReadContext
 ): Promise<void> {
-  const quote = await deps.quoteService.get(ctx.params.id)
+  const quote = await deps.quoteService.get(ctx.params.quoteId)
   if (!quote) return ctx.throw(404)
 
   const body = quoteToBody(deps, quote)

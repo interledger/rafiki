@@ -340,7 +340,7 @@ export class App {
             type = AccessType.Quote
             route = quoteRoutes[actionToRoute[action]]
           } else {
-            if (path === '/{id}' && method === HttpMethod.GET) {
+            if (path === '/{accountId}' && method === HttpMethod.GET) {
               this.publicRouter.get(
                 toRouterPath(path),
                 createValidatorMiddleware<AccountContext>(openApi, {

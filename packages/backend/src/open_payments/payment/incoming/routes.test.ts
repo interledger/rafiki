@@ -147,7 +147,7 @@ describe('Incoming Payment Routes', (): void => {
           headers: { Accept: 'application/json' }
         },
         {
-          id: uuid(),
+          incomingPaymentId: uuid(),
           accountId: account.id
         }
       )
@@ -165,7 +165,7 @@ describe('Incoming Payment Routes', (): void => {
           url: `/${account.id}/incoming-payments/${incomingPayment.id}`
         },
         {
-          id: incomingPayment.id,
+          incomingPaymentId: incomingPayment.id,
           accountId: account.id
         }
       )
@@ -212,7 +212,7 @@ describe('Incoming Payment Routes', (): void => {
           headers: { Accept: 'application/json' }
         },
         {
-          id: incomingPayment.id,
+          incomingPaymentId: incomingPayment.id,
           accountId: account.id
         }
       )
@@ -315,7 +315,7 @@ describe('Incoming Payment Routes', (): void => {
           url: `/${account.id}/incoming-payments/${incomingPayment.id}/complete`
         },
         {
-          id: incomingPayment.id,
+          incomingPaymentId: incomingPayment.id,
           accountId: account.id
         }
       )
