@@ -4,7 +4,7 @@ import { Logger } from 'pino'
 import {
   ReadContext,
   CreateContext,
-  UpdateContext,
+  CompleteContext,
   ListContext
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
@@ -37,7 +37,7 @@ interface ServiceDependencies {
 export interface IncomingPaymentRoutes {
   get(ctx: ReadContext): Promise<void>
   create(ctx: CreateContext<CreateBody>): Promise<void>
-  update(ctx: UpdateContext<UpdateBody>): Promise<void>
+  complete(ctx: CompleteContext): Promise<void>
   list(ctx: ListContext): Promise<void>
 }
 
@@ -52,8 +52,7 @@ export function createIncomingPaymentRoutes(
     get: (ctx: ReadContext) => getIncomingPayment(deps, ctx),
     create: (ctx: CreateContext<CreateBody>) =>
       createIncomingPayment(deps, ctx),
-    update: (ctx: UpdateContext<UpdateBody>) =>
-      updateIncomingPayment(deps, ctx),
+    complete: (ctx: CompleteContext) => completeIncomingPayment(deps, ctx),
     list: (ctx: ListContext) => listIncomingPayments(deps, ctx)
   }
 }
@@ -126,22 +125,17 @@ async function createIncomingPayment(
   ctx.body = res
 }
 
-export type UpdateBody = {
-  state: string
-}
-
-async function updateIncomingPayment(
+async function completeIncomingPayment(
   deps: ServiceDependencies,
-  ctx: UpdateContext<UpdateBody>
+  ctx: CompleteContext
 ): Promise<void> {
   let incomingPaymentOrError: IncomingPayment | IncomingPaymentError
   try {
-    incomingPaymentOrError = await deps.incomingPaymentService.update({
-      id: ctx.params.id,
-      state: IncomingPaymentState.Completed
-    })
+    incomingPaymentOrError = await deps.incomingPaymentService.complete(
+      ctx.params.id
+    )
   } catch (err) {
-    ctx.throw(500, 'Error trying to update incoming payment')
+    ctx.throw(500, 'Error trying to complete incoming payment')
   }
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -191,7 +185,9 @@ function incomingPaymentToBody(
     Object.entries({
       ...incomingPayment.toJSON(),
       accountId: `${deps.config.publicHost}/${incomingPayment.accountId}`,
-      id: `${deps.config.publicHost}/${incomingPayment.accountId}/incoming-payments/${incomingPayment.id}`
+      id: `${deps.config.publicHost}/${incomingPayment.accountId}/incoming-payments/${incomingPayment.id}`,
+      state: null,
+      completed: incomingPayment.state === IncomingPaymentState.Completed
     }).filter(([_, v]) => v != null)
   )
 }

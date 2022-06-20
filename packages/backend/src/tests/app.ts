@@ -57,7 +57,7 @@ export const createTestApp = async (
     access: [
       {
         type: AccessType.IncomingPayment,
-        actions: [AccessAction.Create, AccessAction.Update, AccessAction.Read]
+        actions: [AccessAction.Create, AccessAction.Complete, AccessAction.Read]
       },
       {
         type: AccessType.OutgoingPayment,
@@ -69,7 +69,8 @@ export const createTestApp = async (
   const authServerIntrospectionUrl = new URL(config.authServerIntrospectionUrl)
   nock(authServerIntrospectionUrl.origin)
     .post(authServerIntrospectionUrl.pathname, {
-      access_token: testAccessToken
+      access_token: testAccessToken,
+      resource_server: '7C7C4AZ9KHRS6X63AJAO'
     })
     .reply(200, grant.toJSON())
     .persist()
