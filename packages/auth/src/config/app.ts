@@ -39,5 +39,6 @@ export const Config = {
     'https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml'
   ),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
-  cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex'))
+  cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
+  accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60) // Default 10 minutes
 }

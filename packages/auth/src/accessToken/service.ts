@@ -6,6 +6,7 @@ import { BaseService } from '../shared/baseService'
 import { Grant, GrantState } from '../grant/model'
 import { ClientService, KeyInfo } from '../client/service'
 import { AccessToken } from './model'
+import { IAppConfig } from '../config/app'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
@@ -16,6 +17,7 @@ export interface AccessTokenService {
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   clientService: ClientService
+  config: IAppConfig
 }
 
 export interface Introspection extends Partial<Grant> {
@@ -31,6 +33,7 @@ interface AccessTokenOpts {
 export async function createAccessTokenService({
   logger,
   knex,
+  config,
   clientService
 }: ServiceDependencies): Promise<AccessTokenService> {
   const log = logger.child({
@@ -40,7 +43,8 @@ export async function createAccessTokenService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    clientService
+    clientService,
+    config
   }
 
   return {
@@ -107,7 +111,7 @@ async function createAccessToken(
       value: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
       managementId: v4(),
       grantId,
-      expiresIn: opts?.expiresIn
+      expiresIn: opts?.expiresIn || deps.config.accessTokenExpirySeconds
     })
 
     if (!opts?.trx) {

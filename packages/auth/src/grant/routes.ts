@@ -16,8 +16,8 @@ interface ServiceDependencies extends BaseService {
 export interface GrantRoutes {
   create(ctx: AppContext): Promise<void>
   interaction: {
-    get(ctx: AppContext): Promise<void>
-    post(ctx: AppContext): Promise<void>
+    start(ctx: AppContext): Promise<void>
+    finish(ctx: AppContext): Promise<void>
   }
 }
 
@@ -40,8 +40,8 @@ export function createGrantRoutes({
   return {
     create: (ctx: AppContext) => createGrantInitiation(deps, ctx),
     interaction: {
-      get: (ctx: AppContext) => startInteraction(deps, ctx),
-      post: (ctx: AppContext) => finishInteraction(deps, ctx)
+      start: (ctx: AppContext) => startInteraction(deps, ctx),
+      finish: (ctx: AppContext) => finishInteraction(deps, ctx)
     }
   }
 }

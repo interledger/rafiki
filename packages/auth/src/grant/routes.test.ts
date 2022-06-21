@@ -727,7 +727,9 @@ describe('Grant Routes', (): void => {
           { interactId: 'unknown_interaction' }
         )
 
-        await expect(grantRoutes.interaction.get(ctx)).resolves.toBeUndefined()
+        await expect(
+          grantRoutes.interaction.start(ctx)
+        ).resolves.toBeUndefined()
         expect(ctx.status).toBe(401)
         expect(ctx.body).toEqual({ error: 'unknown_request' })
         scope.isDone()
@@ -763,7 +765,9 @@ describe('Grant Routes', (): void => {
           { interactId: grant.interactId }
         )
 
-        await expect(grantRoutes.interaction.get(ctx)).resolves.toBeUndefined()
+        await expect(
+          grantRoutes.interaction.start(ctx)
+        ).resolves.toBeUndefined()
         expect(ctx.status).toBe(401)
         expect(ctx.body).toEqual({ error: 'invalid_client' })
       })
@@ -815,7 +819,9 @@ describe('Grant Routes', (): void => {
         redirectUrl.searchParams.set('clientUri', TEST_CLIENT_DISPLAY.url)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
-        await expect(grantRoutes.interaction.get(ctx)).resolves.toBeUndefined()
+        await expect(
+          grantRoutes.interaction.start(ctx)
+        ).resolves.toBeUndefined()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
         expect(ctx.session.interactId).toEqual(grant.interactId)
@@ -856,7 +862,9 @@ describe('Grant Routes', (): void => {
         )
 
         ctx.session.interactId = grant.interactId
-        await expect(grantRoutes.interaction.post(ctx)).resolves.toBeUndefined()
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
         expect(ctx.status).toBe(401)
         expect(ctx.body).toEqual({
           error: 'invalid_request'
@@ -893,7 +901,9 @@ describe('Grant Routes', (): void => {
           { interactId: grant.interactId }
         )
 
-        await expect(grantRoutes.interaction.post(ctx)).resolves.toBeUndefined()
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
         expect(ctx.status).toBe(401)
         expect(ctx.body).toEqual({
           error: 'invalid_request'
@@ -913,7 +923,9 @@ describe('Grant Routes', (): void => {
         )
 
         ctx.session.interactId = fakeInteractId
-        await expect(grantRoutes.interaction.post(ctx)).resolves.toBeUndefined()
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
         expect(ctx.status).toBe(404)
         expect(ctx.body).toEqual({
           error: 'unknown_request'
@@ -964,7 +976,9 @@ describe('Grant Routes', (): void => {
 
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
-        await expect(grantRoutes.interaction.post(ctx)).resolves.toBeUndefined()
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
 

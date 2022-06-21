@@ -21,7 +21,7 @@ export interface AppContextData extends DefaultContext {
   container: AppContainer
   // Set by @koa/router
   params: { [key: string]: string }
-  // // Set by koa-generic-session
+  // Set by koa-generic-session
   session: { [key: string]: string }
 }
 
@@ -205,11 +205,14 @@ export class App {
     }
 
     // Interaction
-    this.publicRouter.get('/interact/:interactId', grantRoutes.interaction.get)
+    this.publicRouter.get(
+      '/interact/:interactId',
+      grantRoutes.interaction.start
+    )
 
     this.publicRouter.post(
       '/interact/:interactId/login',
-      grantRoutes.interaction.post
+      grantRoutes.interaction.finish
     )
 
     // Token management
