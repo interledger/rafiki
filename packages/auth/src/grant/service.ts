@@ -17,6 +17,7 @@ export interface GrantService {
     continueToken: string,
     interactRef: string
   ): Promise<Grant | null>
+  denyGrant(grantId: string): Promise<Grant>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -76,7 +77,8 @@ export async function createGrantService({
       continueId: string,
       continueToken: string,
       interactRef: string
-    ) => getByContinue(continueId, continueToken, interactRef)
+    ) => getByContinue(continueId, continueToken, interactRef),
+    denyGrant: (grantId: string, trx?: Transaction) => denyGrant(grantId, trx)
   }
 }
 
@@ -111,6 +113,26 @@ async function issueGrant(
   try {
     const grant = await Grant.query(invTrx).patchAndFetchById(grantId, {
       state: GrantState.Granted
+    })
+
+    if (!trx) {
+      await invTrx.commit()
+    }
+    return grant
+  } catch (err) {
+    if (!trx) {
+      await invTrx.rollback()
+    }
+
+    throw err
+  }
+}
+
+async function denyGrant(grantId: string, trx?: Transaction): Promise<Grant> {
+  const invTrx = trx || (await Grant.startTransaction())
+  try {
+    const grant = await Grant.query(invTrx).patchAndFetchById(grantId, {
+      state: GrantState.Denied
     })
 
     if (!trx) {
