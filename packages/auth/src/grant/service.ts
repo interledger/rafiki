@@ -161,5 +161,5 @@ async function initiateGrant(
 }
 
 async function getByInteraction(interactId: string): Promise<Grant> {
-  return Grant.query().where({ interactId }).first()
+  return Grant.query().findOne({ interactId })
 }
