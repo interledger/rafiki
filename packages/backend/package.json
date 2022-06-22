@@ -9,8 +9,7 @@
     "generate": "graphql-codegen --config codegen.yml",
     "build": "yarn clean && tsc --build tsconfig.json && yarn copy-files",
     "clean": "rm -fr dist/",
-    "copy-files": "cp src/graphql/schema.graphql dist/graphql/",
-    "prepack": "yarn build"
+    "copy-files": "cp src/graphql/schema.graphql dist/graphql/"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "1.21.5",

@@ -8,8 +8,7 @@
     "format:check": "yarn format:check:local",
     "test": "yarn test:local",
     "build": "yarn clean && tsc --build tsconfig.json",
-    "clean": "rm -fr dist/",
-    "prepack": "yarn build"
+    "clean": "rm -fr dist/"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^9.0.9",
