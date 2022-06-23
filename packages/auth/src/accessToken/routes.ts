@@ -103,6 +103,7 @@ async function rotateToken(
       }
     }
   } else {
-    return ctx.throw(400, result.error.message)
+    ctx.status = 400
+    return ctx.throw(ctx.status, result.error.message)
   }
 }

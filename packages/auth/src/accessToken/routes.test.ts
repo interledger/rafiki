@@ -284,5 +284,94 @@ describe('Access Token Routes', (): void => {
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
     })
+
+    test('Returns status 204 if token has been revoked', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { id }
+      )
+
+      await token.$query(trx).patch({ revoked: true })
+      await accessTokenRoutes.revoke(ctx)
+      expect(ctx.response.status).toBe(204)
+    })
+  })
+
+  describe('Rotation', (): void => {
+    let grant: Grant
+    let token: AccessToken
+    let id: string
+
+    beforeEach(
+      async (): Promise<void> => {
+        grant = await Grant.query(trx).insertAndFetch({
+          ...BASE_GRANT
+        })
+        await Access.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_ACCESS
+        })
+        token = await AccessToken.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_TOKEN
+        })
+        id = token.id
+      }
+    )
+
+    test('Cannot rotate nonexistent token', async (): Promise<void> => {
+      id = v4()
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { id }
+      )
+
+      await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
+        status: 400,
+        message: 'token not found'
+      })
+    })
+
+    test('Can rotate token', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { id }
+      )
+
+      await accessTokenRoutes.rotate(ctx)
+      expect(ctx.response.status).toBe(200)
+    })
+
+    test('Can rotate an expired token', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { id }
+      )
+
+      await token.$query(trx).patch({ expiresIn: -1 })
+      await accessTokenRoutes.rotate(ctx)
+      expect(ctx.response.status).toBe(200)
+    })
+
+    test('Cannot rotate a revoked token', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { id }
+      )
+
+      await token.$query(trx).patch({ revoked: true })
+      await expect(accessTokenRoutes.rotate(ctx)).rejects.toThrow()
+      expect(ctx.response.status).toBe(400)
+    })
   })
 })

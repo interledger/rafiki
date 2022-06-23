@@ -113,7 +113,6 @@ async function rotate(
       error = new Error('token revoked')
     } else {
       await token.$query(deps.knex).patch({
-        expiresIn: deps.knex.raw('DEFAULT'),
         value: uuid()
       })
       access = await Access.query(deps.knex).findOne({ grantId: token.grantId })
