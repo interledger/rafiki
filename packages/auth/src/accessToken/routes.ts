@@ -13,6 +13,7 @@ interface ServiceDependencies {
 export interface AccessTokenRoutes {
   introspect(ctx: AppContext): Promise<void>
   revoke(ctx: AppContext): Promise<void>
+  rotate(ctx: AppContext): Promise<void>
 }
 
 export function createAccessTokenRoutes(
@@ -24,7 +25,8 @@ export function createAccessTokenRoutes(
   const deps = { ...deps_, logger }
   return {
     introspect: (ctx: AppContext) => introspectToken(deps, ctx),
-    revoke: (ctx: AppContext) => revokeToken(deps, ctx)
+    revoke: (ctx: AppContext) => revokeToken(deps, ctx),
+    rotate: (ctx: AppContext) => rotateToken(deps, ctx)
   }
 }
 
@@ -84,5 +86,23 @@ async function revokeToken(
     return ctx.throw(404, revocationError.message)
   } else {
     ctx.status = 204
+  }
+}
+
+async function rotateToken(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  //TODO: verify accessToken with httpsig method
+  const result = await deps.accessTokenService.rotate(ctx.params['id'])
+  if (result.success) {
+    ctx.status = 200
+    ctx.body = {
+      access_token: {
+        access: [accessToBody(result.access)]
+      }
+    }
+  } else {
+    return ctx.throw(400, result.error.message)
   }
 }

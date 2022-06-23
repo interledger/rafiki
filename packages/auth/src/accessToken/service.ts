@@ -4,10 +4,13 @@ import { BaseService } from '../shared/baseService'
 import { Grant, GrantState } from '../grant/model'
 import { AccessToken } from './model'
 import { ClientService, KeyInfo } from '../client/service'
+import { Access } from '../access/model'
+import { v4 as uuid } from 'uuid'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
   revoke(id: string): Promise<Error | undefined>
+  rotate(id: string): Promise<Rotation>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -19,6 +22,16 @@ export interface Introspection extends Partial<Grant> {
   active: boolean
   key?: KeyInfo
 }
+
+export type Rotation =
+  | {
+      success: true
+      access: Access
+    }
+  | {
+      success: false
+      error: Error
+    }
 
 export async function createAccessTokenService({
   logger,
@@ -37,7 +50,8 @@ export async function createAccessTokenService({
 
   return {
     introspect: (token: string) => introspect(deps, token),
-    revoke: (id: string) => revoke(deps, id)
+    revoke: (id: string) => revoke(deps, id),
+    rotate: (id: string) => rotate(deps, id)
   }
 }
 
@@ -78,10 +92,45 @@ async function revoke(
 ): Promise<Error | undefined> {
   const token = await AccessToken.query(deps.knex).findById(id)
   if (token) {
-    if (!isTokenExpired(token)) {
-      await token.$query(deps.knex).patch({ expiresIn: 1 })
+    if (!token.revoked && !isTokenExpired(token)) {
+      await token.$query(deps.knex).patch({ revoked: true })
     }
   } else {
     return new Error('token not found')
+  }
+}
+
+async function rotate(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Rotation> {
+  let access: Access | undefined
+  let error: Error | undefined
+
+  const token = await AccessToken.query(deps.knex).findById(id)
+  if (token) {
+    if (token.revoked) {
+      error = new Error('token revoked')
+    } else {
+      await token.$query(deps.knex).patch({
+        expiresIn: deps.knex.raw('DEFAULT'),
+        value: uuid()
+      })
+      access = await Access.query(deps.knex).findOne({ grantId: token.grantId })
+    }
+  } else {
+    error = new Error('token not found')
+  }
+
+  if (access) {
+    return {
+      success: true,
+      access
+    }
+  } else {
+    return {
+      success: false,
+      error: error || new Error('token rotation failed')
+    }
   }
 }
