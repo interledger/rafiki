@@ -10,4 +10,4 @@ RUN yarn install --immutable
 
 COPY packs ./
 
-CMD ["node", "-r", "./.pnp.cjs", "./packages/backend/dist/index.js"]
+CMD ["node", "./packages/backend/dist/index.js"]

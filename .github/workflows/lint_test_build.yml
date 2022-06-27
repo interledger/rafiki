@@ -33,9 +33,9 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      - run: yarn install --immutable --immutable-cache
       - run: yarn workspace backend lint
       - run: yarn workspace backend format:check
-      - run: yarn install --immutable --immutable-cache
       - run: yarn workspace openapi build
       - run: yarn workspace backend test
 
@@ -48,6 +48,7 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      - run: yarn install --immutable --immutable-cache
       - run: yarn workspace frontend lint
       - run: yarn workspace frontend format:check
       - run: yarn workspace frontend test
@@ -61,6 +62,7 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      - run: yarn install --immutable --immutable-cache
       - run: yarn workspace rates lint
       - run: yarn workspace rates format:check
       - run: yarn workspace rates test
@@ -74,6 +76,7 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      - run: yarn install --immutable --immutable-cache
       - run: yarn workspace auth lint
       - run: yarn workspace auth format:check
       - run: yarn workspace auth test
@@ -87,6 +90,7 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      - run: yarn install --immutable --immutable-cache
       - run: yarn workspace openapi lint
       - run: yarn workspace openapi format:check
       - run: yarn workspace openapi test
