@@ -7,11 +7,13 @@ import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
+import { AccessToken } from '../accessToken/model'
 
 export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
   getByInteraction(interactId: string): Promise<Grant>
   issueGrant(grantId: string): Promise<Grant>
+  getByAccessToken(accessToken: string): Promise<Grant>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -63,6 +65,7 @@ export async function createGrantService({
     knex
   }
   return {
+    getByAccessToken: (token: string) => getByAccessToken(token),
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
       initiateGrant(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
@@ -77,6 +80,11 @@ async function issueGrant(
   return Grant.query(deps.knex).patchAndFetchById(grantId, {
     state: GrantState.Granted
   })
+}
+
+async function getByAccessToken(token: string): Promise<Grant> {
+  const { grantId } = await AccessToken.query().findOne({ value: token })
+  return Grant.query().findById(grantId)
 }
 
 async function initiateGrant(

@@ -1,10 +1,13 @@
+import crypto from 'crypto'
 import nock from 'nock'
+import { importJWK } from 'jose'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { ClientService } from './service'
+import { createContext } from '../tests/context'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_CLIENT_DISPLAY = {
@@ -13,14 +16,19 @@ const TEST_CLIENT_DISPLAY = {
 }
 
 const TEST_KID_PATH = '/keys/test-key'
-const TEST_CLIENT_KEY = {
+const TEST_PUBLIC_KEY = {
   kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-  x: 'test-public-key',
+  x: 'hin88zzQxp79OOqIFNCME26wMiz0yqjzgkcBe0MW8pE',
   kty: 'OKP',
   alg: 'EdDSA',
   crv: 'Ed25519',
   key_ops: ['sign', 'verify'],
   use: 'sig'
+}
+
+const TEST_PRIVATE_KEY = {
+  ...TEST_PUBLIC_KEY,
+  d: 'v6gr9N9Nf3AUyuTgU5pk7gyNULQnzNJCBNMPp5OkiqA'
 }
 
 describe('Client Service', (): void => {
@@ -43,6 +51,147 @@ describe('Client Service', (): void => {
     }
   )
 
+  describe('signatures', (): void => {
+    test('can verify a signature', async (): Promise<void> => {
+      const challenge = 'test-challenge'
+      const privateJwk = (await importJWK(TEST_PRIVATE_KEY)) as crypto.KeyLike
+      const signature = crypto.sign(null, Buffer.from(challenge), privateJwk)
+      const verified = await clientService.verifySig(
+        signature.toString('base64'),
+        TEST_PUBLIC_KEY,
+        challenge
+      )
+
+      expect(verified).toBe(true)
+    })
+
+    test('can construct a challenge from signature input', (): void => {
+      const sigInputHeader =
+        'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"'
+      const ctx = createContext(
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Digest': 'sha-256=:test-hash:',
+            'Content-Length': '1234',
+            'Signature-Input': sigInputHeader,
+            Authorization: 'GNAP test-access-token'
+          }
+        },
+        {}
+      )
+
+      ctx.request.body = { foo: 'bar' }
+      ctx.method = 'GET'
+      ctx.request.url = '/test'
+
+      const challenge = clientService.sigInputToChallenge(sigInputHeader, ctx)
+      expect(challenge).toEqual(
+        `"@method": GET\n"@target-uri": /test\n"content-digest": sha-256=:test-hash:\n"content-length": 1234\n"content-type": application/json\n"authorization": GNAP test-access-token\n"@signature-params": ${sigInputHeader.replace(
+          'sig1=',
+          ''
+        )}`
+      )
+    })
+
+    test('fails to construct signature input if @method is missing', (): void => {
+      const sigInputHeader =
+        'sig1=("@target-uri" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'
+      const ctx = createContext(
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Digest': 'sha-256=:test-hash:',
+            'Content-Length': '1234',
+            'Signature-Input': sigInputHeader
+          }
+        },
+        {}
+      )
+
+      ctx.request.body = { foo: 'bar' }
+      ctx.method = 'GET'
+      ctx.request.url = '/test'
+
+      expect(() => {
+        clientService.sigInputToChallenge(sigInputHeader, ctx)
+      }).toThrow()
+    })
+
+    test('fails to construct signature input if @target-uri is missing', (): void => {
+      const sigInputHeader =
+        'sig1=("@method" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'
+      const ctx = createContext(
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Digest': 'sha-256=:test-hash:',
+            'Content-Length': '1234',
+            'Signature-Input': sigInputHeader
+          }
+        },
+        {}
+      )
+
+      ctx.request.body = { foo: 'bar' }
+      ctx.method = 'GET'
+      ctx.request.url = '/test'
+
+      expect(() => {
+        clientService.sigInputToChallenge(sigInputHeader, ctx)
+      }).toThrow()
+    })
+
+    test('fails to construct signature input if request body is present but content-digest is not', (): void => {
+      const sigInputHeader =
+        'sig1=("@method" "@target-uri" "content-length" "content-type");created=1618884473;keyid="gnap-key"'
+      const ctx = createContext(
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Digest': 'sha-256=:test-hash:',
+            'Content-Length': '1234',
+            'Signature-Input': sigInputHeader
+          }
+        },
+        {}
+      )
+
+      ctx.request.body = { foo: 'bar' }
+      ctx.method = 'GET'
+      ctx.request.url = '/test'
+
+      expect(() => {
+        clientService.sigInputToChallenge(sigInputHeader, ctx)
+      }).toThrow()
+    })
+
+    test('fails to construct signature input if authorization header is present but not in signature input', (): void => {
+      const sigInputHeader =
+        'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'
+      const ctx = createContext(
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Digest': 'sha-256=:test-hash:',
+            'Content-Length': '1234',
+            'Signature-Input': sigInputHeader,
+            Authorization: 'GNAP test-access-token'
+          }
+        },
+        {}
+      )
+
+      ctx.request.body = { foo: 'bar' }
+      ctx.method = 'GET'
+      ctx.request.url = '/test'
+
+      expect(() => {
+        clientService.sigInputToChallenge(sigInputHeader, ctx)
+      }).toThrow()
+    })
+  })
+
   describe('Registry Validation', (): void => {
     const expDate = new Date()
     expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
@@ -57,7 +206,7 @@ describe('Client Service', (): void => {
             ...TEST_CLIENT_DISPLAY,
             keys: [
               {
-                ...TEST_CLIENT_KEY,
+                ...TEST_PUBLIC_KEY,
                 kid: KEY_REGISTRY_ORIGIN + '/keys/correct',
                 exp: Math.round(expDate.getTime() / 1000),
                 nbf: Math.round(nbfDate.getTime() / 1000),
@@ -71,7 +220,7 @@ describe('Client Service', (): void => {
           key: {
             proof: 'httpsig',
             jwk: {
-              ...TEST_CLIENT_KEY,
+              ...TEST_PUBLIC_KEY,
               kid: KEY_REGISTRY_ORIGIN + '/keys/correct'
             }
           }
@@ -91,7 +240,7 @@ describe('Client Service', (): void => {
             },
             keys: [
               {
-                ...TEST_CLIENT_KEY,
+                ...TEST_PUBLIC_KEY,
                 exp: Math.round(expDate.getTime() / 1000),
                 nbf: Math.round(nbfDate.getTime() / 1000),
                 revoked: false
@@ -103,7 +252,7 @@ describe('Client Service', (): void => {
           display: TEST_CLIENT_DISPLAY,
           key: {
             proof: 'httpsig',
-            jwk: TEST_CLIENT_KEY
+            jwk: TEST_PUBLIC_KEY
           }
         })
 
@@ -115,11 +264,11 @@ describe('Client Service', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
-            ...TEST_CLIENT_KEY,
+            ...TEST_PUBLIC_KEY,
             url: 'https://example.com/wrong',
             keys: [
               {
-                ...TEST_CLIENT_KEY,
+                ...TEST_PUBLIC_KEY,
                 exp: Math.round(expDate.getTime() / 1000),
                 nbf: Math.round(nbfDate.getTime() / 1000),
                 revoked: false
@@ -131,7 +280,7 @@ describe('Client Service', (): void => {
           display: TEST_CLIENT_DISPLAY,
           key: {
             proof: 'httpsig',
-            jwk: TEST_CLIENT_KEY
+            jwk: TEST_PUBLIC_KEY
           }
         })
 
@@ -148,7 +297,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...TEST_PUBLIC_KEY,
             kid: 'https://openpayments.network/wrong'
           }
         }
@@ -165,7 +314,7 @@ describe('Client Service', (): void => {
           ...TEST_CLIENT_DISPLAY,
           keys: [
             {
-              ...TEST_CLIENT_KEY,
+              ...TEST_PUBLIC_KEY,
               exp: Math.round(expDate.getTime() / 1000),
               nbf: Math.round(nbfDate.getTime() / 1000),
               revoked: false
@@ -178,7 +327,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...TEST_PUBLIC_KEY,
             x: 'wrong public key'
           }
         }
@@ -195,7 +344,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...TEST_PUBLIC_KEY,
             kty: 'EC'
           }
         }
@@ -209,7 +358,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...TEST_PUBLIC_KEY,
             key_ops: ['wrapKey']
           }
         }
@@ -223,7 +372,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...TEST_PUBLIC_KEY,
             alg: 'RS256'
           }
         }
@@ -237,7 +386,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...TEST_PUBLIC_KEY,
             crv: 'P-256'
           }
         }
@@ -255,7 +404,7 @@ describe('Client Service', (): void => {
           ...TEST_CLIENT_DISPLAY,
           keys: [
             {
-              ...TEST_CLIENT_KEY,
+              ...TEST_PUBLIC_KEY,
               exp: Math.round(futureDate.getTime() / 1000),
               nbf: Math.round(futureDate.getTime() / 1000),
               revoked: false
@@ -267,7 +416,7 @@ describe('Client Service', (): void => {
         display: TEST_CLIENT_DISPLAY,
         key: {
           proof: 'httpsig',
-          jwk: TEST_CLIENT_KEY
+          jwk: TEST_PUBLIC_KEY
         }
       })
 
@@ -282,7 +431,7 @@ describe('Client Service', (): void => {
           ...TEST_CLIENT_DISPLAY,
           keys: [
             {
-              ...TEST_CLIENT_KEY,
+              ...TEST_PUBLIC_KEY,
               exp: Math.round(nbfDate.getTime() / 1000),
               nbf: Math.round(nbfDate.getTime() / 1000),
               revoked: false
@@ -294,7 +443,7 @@ describe('Client Service', (): void => {
         display: TEST_CLIENT_DISPLAY,
         key: {
           proof: 'httpsig',
-          jwk: TEST_CLIENT_KEY
+          jwk: TEST_PUBLIC_KEY
         }
       })
 
@@ -309,7 +458,7 @@ describe('Client Service', (): void => {
           ...TEST_CLIENT_DISPLAY,
           keys: [
             {
-              ...TEST_CLIENT_KEY,
+              ...TEST_PUBLIC_KEY,
               exp: Math.round(expDate.getTime() / 1000),
               nbf: Math.round(nbfDate.getTime() / 1000),
               revoked: true
@@ -321,7 +470,7 @@ describe('Client Service', (): void => {
         display: TEST_CLIENT_DISPLAY,
         key: {
           proof: 'httpsig',
-          jwk: TEST_CLIENT_KEY
+          jwk: TEST_PUBLIC_KEY
         }
       })
 

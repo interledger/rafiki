@@ -5,6 +5,9 @@ import { URL } from 'url'
 
 import { BaseService } from '../shared/baseService'
 import { IAppConfig } from '../config/app'
+import { AppContext } from '../app'
+import { AccessToken } from '../accessToken/model'
+import { Grant } from '../grant/model'
 
 interface DisplayInfo {
   name: string
@@ -30,7 +33,7 @@ interface RegistryData {
   keys: JWKWithRequired[]
 }
 
-interface JWKWithRequired extends JWK {
+export interface JWKWithRequired extends JWK {
   kid: string
   x: string
   alg: string
@@ -54,8 +57,15 @@ export interface ClientService {
     jwk: JWKWithRequired,
     challenge: string
   ): Promise<boolean>
+  verifySigFromBoundKey(
+    sig: string,
+    sigInput: string,
+    accessTokenValue: string,
+    ctx: AppContext
+  ): Promise<boolean>
   validateClientWithRegistry(clientInfo: ClientInfo): Promise<boolean>
   getRegistryDataByKid(kid: string): Promise<RegistryData>
+  sigInputToChallenge(sigInput: string, ctx: AppContext): string
 }
 
 export async function createClientService({
@@ -74,10 +84,56 @@ export async function createClientService({
   return {
     verifySig: (sig: string, jwk: JWKWithRequired, challenge: string) =>
       verifySig(deps, sig, jwk, challenge),
+    verifySigFromBoundKey: (
+      sig: string,
+      sigInput: string,
+      accessTokenValue: string,
+      ctx: AppContext
+    ) => verifySigFromBoundKey(deps, sig, sigInput, accessTokenValue, ctx),
     validateClientWithRegistry: (clientInfo: ClientInfo) =>
       validateClientWithRegistry(deps, clientInfo),
-    getRegistryDataByKid: (kid: string) => getRegistryDataByKid(deps, kid)
+    getRegistryDataByKid: (kid: string) => getRegistryDataByKid(deps, kid),
+    sigInputToChallenge: (sigInput: string, ctx: AppContext) =>
+      sigInputToChallenge(sigInput, ctx)
   }
+}
+
+function sigInputToChallenge(sigInput: string, ctx: AppContext): string {
+  // https://datatracker.ietf.org/doc/html/rfc8941#section-4.1.1.1
+  const messageComponents = sigInput.split('sig1=')[1].split(';')[0].split(' ')
+  const cleanMessageComponents = messageComponents.map((component) =>
+    component.replace(/[()"]/g, '')
+  )
+
+  // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-7.3.1
+  if (
+    !cleanMessageComponents.includes('@method') ||
+    !cleanMessageComponents.includes('@target-uri') ||
+    (ctx.request.body && !cleanMessageComponents.includes('content-digest')) ||
+    (ctx.headers['authorization'] &&
+      !cleanMessageComponents.includes('authorization'))
+  ) {
+    const err = new Error('Signature input missing required properties')
+    err.name = 'InvalidSigInputError'
+    throw err
+  }
+
+  // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures-09#section-2.3
+  let signatureBase = ''
+  for (const component of cleanMessageComponents) {
+    if (component === '@method') {
+      signatureBase += `"@method": ${ctx.request.method}\n`
+    } else if (component === '@target-uri') {
+      signatureBase += `"@target-uri": ${ctx.request.url}\n`
+    } else {
+      signatureBase += `"${component}": ${ctx.headers[component]}\n`
+    }
+  }
+
+  signatureBase += `"@signature-params": ${(ctx.headers[
+    'signature-input'
+  ] as string)?.replace('sig1=', '')}`
+  return signatureBase
 }
 
 async function verifySig(
@@ -88,7 +144,28 @@ async function verifySig(
 ): Promise<boolean> {
   const publicKey = (await importJWK(jwk)) as crypto.KeyLike
   const data = Buffer.from(challenge)
-  return crypto.verify(null, data, publicKey, Buffer.from(sig))
+  return crypto.verify(null, data, publicKey, Buffer.from(sig, 'base64'))
+}
+
+async function verifySigFromBoundKey(
+  deps: ServiceDependencies,
+  sig: string,
+  sigInput: string,
+  accessTokenValue: string,
+  ctx: AppContext
+): Promise<boolean> {
+  const accessToken = await AccessToken.query().findOne({
+    value: accessTokenValue
+  })
+  if (!accessToken) return false
+  const grant = await Grant.query().findById(accessToken.grantId)
+
+  const registryData = await getRegistryDataByKid(deps, grant.clientKeyId)
+  if (!registryData) return false
+  const { keys } = registryData
+
+  const challenge = sigInputToChallenge(sigInput, ctx)
+  return verifySig(deps, sig, keys[0], challenge)
 }
 
 function validateRequiredJwkProperties(jwk: JWKWithRequired): boolean {
