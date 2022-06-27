@@ -80,6 +80,7 @@
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
     "lodash": "^4.17.21",
+    "luxon": "^2.4.0",
     "objection": "^2.2.15",
     "objection-db-errors": "^1.1.2",
     "oer-utils": "^5.1.2",

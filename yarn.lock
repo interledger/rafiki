@@ -4895,6 +4895,7 @@ __metadata:
     koa: ^2.13.1
     koa-bodyparser: ^4.3.0
     lodash: ^4.17.21
+    luxon: ^2.4.0
     nock: ^13.1.0
     node-mocks-http: ^1.10.1
     objection: ^2.2.15
@@ -10934,6 +10935,13 @@ __metadata:
   dependencies:
     yallist: ^4.0.0
   checksum: f97f499f898f23e4585742138a22f22526254fdba6d75d41a1c2526b3b6cc5747ef59c5612ba7375f42aca4f8461950e925ba08c991ead0651b4918b7c978297
+  languageName: node
+  linkType: hard
+
+"luxon@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "luxon@npm:2.4.0"
+  checksum: 6071028d65cc3d3bdab5e6a3995dd97411c92bb3b3163a02deb7b7014318ad3a6fd750ae77131c42141b717c14aef8880d3130f265281d500ef2365f7265b3f3
   languageName: node
   linkType: hard
 

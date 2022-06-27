@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { Duration, parse, end } from 'iso8601-duration'
+import { Interval, Duration, DateTime } from 'luxon'
 
 import { Amount } from '../amount'
 
@@ -71,7 +71,6 @@ export class Grant {
   public readonly grant: string
   public readonly access: GrantAccess[]
 
-  // TODO: check interval
   public includesAccess({
     type,
     action,
@@ -85,7 +84,9 @@ export class Grant {
       (access) =>
         access.type === type &&
         (!access.identifier || access.identifier === identifier) &&
-        access.actions.includes(action)
+        access.actions.includes(action) &&
+        (!access.interval ||
+          getInterval(access.interval, new Date()) !== undefined)
     )
   }
 
@@ -106,6 +107,12 @@ export class Grant {
         return false
       }
       if (action && !access.actions.includes(action)) {
+        return false
+      }
+      if (
+        access.interval &&
+        getInterval(access.interval, new Date()) === undefined
+      ) {
         return false
       }
       return true
@@ -136,49 +143,57 @@ export class Grant {
   }
 }
 
-export interface Interval {
-  start: Date
-  end: Date
-}
-
-function parseDuration(duration: string): Duration | undefined {
-  try {
-    return parse(duration)
-  } catch (_err) {
-    return undefined
-  }
-}
-
+// Export for testing
 export function getInterval(
   repeatingInterval: string,
   target: Date
 ): Interval | undefined {
   const parts = repeatingInterval.split('/')
   assert.ok(parts.length === 3)
+
   let repetitions: number | undefined
   if (parts[0].length > 1 && parts[0][1] !== '-') {
     repetitions = Number(parts[0].slice(1))
+  } else if (
+    (parts[0].length === 1 && parts[0][0] === 'R') ||
+    (parts[0].length > 1 && parts[0][1] === '-')
+  ) {
+    repetitions = Infinity
   }
-  const forwardDuration = parseDuration(parts[2])
-  if (forwardDuration) {
-    let intervalStart = new Date(parts[1])
-    if (target.getTime() < intervalStart.getTime()) {
-      return undefined
-    }
-    let intervalEnd = end(forwardDuration, intervalStart)
-    for (let i = 0; !repetitions || i < repetitions; i++) {
-      intervalStart = intervalEnd
-      intervalEnd = end(forwardDuration, intervalStart)
-      if (target.getTime() < intervalEnd.getTime()) {
-        return {
-          start: intervalStart,
-          end: intervalEnd
-        }
-      }
-    }
-    return undefined
+  if (repetitions === undefined || isNaN(repetitions)) return
+
+  const interval = Interval.fromISO(`${parts[1]}/${parts[2]}`)
+  if (!interval.start) return
+  if (interval.contains(DateTime.fromJSDate(target))) return interval
+
+  let duration: string
+  let forward: boolean
+  if (parts[1].length > 1 && parts[1][0] === 'P') {
+    duration = parts[1]
+    forward = false
+  } else if (parts[2].length > 1 && parts[2][0] === 'P') {
+    duration = parts[2]
+    forward = true
   } else {
-    // TODO: backwards duration
-    return undefined
+    duration = interval.toDuration().toString()
+    forward = true
+  }
+
+  const intervals = [interval]
+  for (let i = 1; i < repetitions + 1; i++) {
+    let nextInterval: Interval
+    if (forward) {
+      nextInterval = Interval.after(
+        intervals[i - 1].end,
+        Duration.fromISO(duration)
+      )
+    } else {
+      nextInterval = Interval.before(
+        intervals[i - 1].start,
+        Duration.fromISO(duration)
+      )
+    }
+    if (nextInterval.contains(DateTime.fromJSDate(target))) return nextInterval
+    intervals.push(nextInterval)
   }
 }

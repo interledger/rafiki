@@ -6657,6 +6657,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["koa", "npm:2.13.1"],
             ["koa-bodyparser", "npm:4.3.0"],
             ["lodash", "npm:4.17.21"],
+            ["luxon", "npm:2.4.0"],
             ["nock", "npm:13.1.0"],
             ["node-mocks-http", "npm:1.10.1"],
             ["objection", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:2.2.15"],
@@ -13564,6 +13565,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["lru-cache", "npm:6.0.0"],
             ["yallist", "npm:4.0.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["luxon", [
+        ["npm:2.4.0", {
+          "packageLocation": "./.yarn/cache/luxon-npm-2.4.0-53e53c605a-6071028d65.zip/node_modules/luxon/",
+          "packageDependencies": [
+            ["luxon", "npm:2.4.0"]
           ],
           "linkType": "HARD",
         }]

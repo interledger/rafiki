@@ -23,12 +23,12 @@ import {
   AccessType,
   AccessAction,
   AccessLimits,
-  Interval,
   getInterval
 } from '../../auth/grant'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
+import { Interval } from 'luxon'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
@@ -217,8 +217,8 @@ function validatePaymentAccess({
   if (
     (!access.identifier || access.identifier === identifier) &&
     (!access.paymentInterval ||
-      (access.paymentInterval.start.getTime() <= payment.createdAt.getTime() &&
-        payment.createdAt.getTime() < access.paymentInterval.end.getTime())) &&
+      (access.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
+        payment.createdAt.getTime() < access.paymentInterval.end.toMillis())) &&
     (!access.limits || validateAccessLimits(payment, access.limits))
   ) {
     return true
@@ -260,10 +260,7 @@ function validateAmountAssets(
 }
 
 interface PaymentAccess extends GrantAccess {
-  paymentInterval?: {
-    start: Date
-    end: Date
-  }
+  paymentInterval?: Interval
 }
 
 // "payment" is locked by the "deps.knex" transaction.
