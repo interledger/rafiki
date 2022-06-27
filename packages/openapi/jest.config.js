@@ -9,7 +9,7 @@ module.exports = {
   clearMocks: true,
   roots: [`<rootDir>/packages/${packageName}`],
   testRegex: `(packages/${packageName}/.*/__tests__/.*|\\.(test|spec))\\.tsx?$`,
-  moduleDirectories: ['.yarn'],
+  moduleDirectories: [`node_modules`, `packages/${packageName}/node_modules`],
   modulePaths: [`<rootDir>/packages/${packageName}/src/`],
   name: packageName,
   displayName: packageName,
