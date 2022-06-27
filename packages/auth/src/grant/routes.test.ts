@@ -18,6 +18,11 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { GrantRequest } from '../grant/service'
 import { AccessToken } from '../accessToken/model'
+import {
+  generateSigHeaders,
+  SIGNATURE_METHOD,
+  SIGNATURE_TARGET_URI
+} from '../tests/signature'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const TEST_KID_PATH = '/keys/base-test-key'
@@ -25,6 +30,8 @@ export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
   uri: 'https://example.com'
 }
+
+// TODO: figure out why factoring this out causes tests to break, then factor out test client consts
 export const TEST_CLIENT_KEY = {
   proof: 'httpsig',
   jwk: {
@@ -36,7 +43,7 @@ export const TEST_CLIENT_KEY = {
       uri: TEST_CLIENT_DISPLAY.uri
     },
     kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-    x: 'test-public-key',
+    x: 'hin88zzQxp79OOqIFNCME26wMiz0yqjzgkcBe0MW8pE',
     kty: 'OKP',
     alg: 'EdDSA',
     crv: 'Ed25519',
@@ -193,11 +200,17 @@ describe('Grant Routes', (): void => {
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        incomingPaymentGrantRequest
+      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
           },
           url: '/',
           method: 'POST'
@@ -205,6 +218,8 @@ describe('Grant Routes', (): void => {
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = incomingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -236,11 +251,17 @@ describe('Grant Routes', (): void => {
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        outgoingPaymentGrantRequest
+      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
           },
           url: '/',
           method: 'POST'
@@ -248,6 +269,8 @@ describe('Grant Routes', (): void => {
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = outgoingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -278,11 +301,18 @@ describe('Grant Routes', (): void => {
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        accountGrantRequest
+      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
           },
           url: '/',
           method: 'POST'
@@ -290,6 +320,8 @@ describe('Grant Routes', (): void => {
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = accountGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -320,11 +352,18 @@ describe('Grant Routes', (): void => {
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        quoteGrantRequest
+      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
           },
           url: '/',
           method: 'POST'
@@ -332,6 +371,8 @@ describe('Grant Routes', (): void => {
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = quoteGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -363,11 +404,18 @@ describe('Grant Routes', (): void => {
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        incomingPaymentGrantRequest
+      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
           },
           url: '/',
           method: 'POST'
@@ -375,6 +423,8 @@ describe('Grant Routes', (): void => {
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = incomingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -405,11 +455,18 @@ describe('Grant Routes', (): void => {
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        outgoingPaymentGrantRequest
+      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
           },
           url: '/',
           method: 'POST'
@@ -417,6 +474,8 @@ describe('Grant Routes', (): void => {
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = outgoingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -447,11 +506,18 @@ describe('Grant Routes', (): void => {
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        incomingPaymentGrantRequest
+      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
           },
           url: '/',
           method: 'POST'
@@ -459,6 +525,8 @@ describe('Grant Routes', (): void => {
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = incomingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -489,11 +557,18 @@ describe('Grant Routes', (): void => {
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        incomingPaymentGrantRequest
+      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
           },
           url: '/',
           method: 'POST'
@@ -501,6 +576,8 @@ describe('Grant Routes', (): void => {
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = incomingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -512,15 +589,26 @@ describe('Grant Routes', (): void => {
 
   describe('/create', (): void => {
     test('accepts json only', async (): Promise<void> => {
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        BASE_GRANT_REQUEST
+      )
       const ctx = createContext(
         {
-          headers: { Accept: 'text/plain', 'Content-Type': 'application/json' },
+          headers: {
+            Accept: 'text/plain',
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
           url: '/',
           method: 'POST'
         },
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = BASE_GRANT_REQUEST
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -529,15 +617,26 @@ describe('Grant Routes', (): void => {
     })
 
     test('sends json body only', async (): Promise<void> => {
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        BASE_GRANT_REQUEST
+      )
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json', 'Content-Type': 'text/plain' },
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'text/plain',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
           url: '/',
           method: 'POST'
         },
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = BASE_GRANT_REQUEST
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -546,19 +645,7 @@ describe('Grant Routes', (): void => {
     })
 
     test('Cannot initiate grant with invalid client', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url: '/',
-          method: 'POST'
-        },
-        {}
-      )
-
-      ctx.request.body = {
+      const body = {
         ...BASE_GRANT_REQUEST,
         client: {
           display: TEST_CLIENT_DISPLAY,
@@ -571,6 +658,25 @@ describe('Grant Routes', (): void => {
           }
         }
       }
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        body
+      )
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {}
+      )
+
+      ctx.request.body = body
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(400)
@@ -595,19 +701,7 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url: '/',
-          method: 'POST'
-        },
-        {}
-      )
-
-      ctx.request.body = {
+      const body = {
         ...BASE_GRANT_REQUEST,
         access_token: {
           access: [
@@ -618,6 +712,28 @@ describe('Grant Routes', (): void => {
           ]
         }
       }
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        body
+      )
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {}
+      )
+
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
+      ctx.request.body = body
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(400)
@@ -643,11 +759,18 @@ describe('Grant Routes', (): void => {
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        BASE_GRANT_REQUEST
+      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
           },
           url: '/',
           method: 'POST'
@@ -655,6 +778,8 @@ describe('Grant Routes', (): void => {
         {}
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = BASE_GRANT_REQUEST
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()

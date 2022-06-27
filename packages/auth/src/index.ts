@@ -80,21 +80,6 @@ export function initIocContainer(
     }
   )
 
-  container.singleton('accessTokenService', async (deps) => {
-    return await createAccessTokenService({
-      config: await deps.use('config'),
-      logger: await deps.use('logger'),
-      knex: await deps.use('knex'),
-      clientService: await deps.use('clientService')
-    })
-  })
-  container.singleton('accessTokenRoutes', async (deps) => {
-    return await createAccessTokenRoutes({
-      config: await deps.use('config'),
-      logger: await deps.use('logger'),
-      accessTokenService: await deps.use('accessTokenService')
-    })
-  })
   container.singleton(
     'grantService',
     async (deps: IocContract<AppServices>) => {
@@ -121,6 +106,29 @@ export function initIocContainer(
     const config = await deps.use('config')
     return await createOpenAPI(config.authServerSpec)
   })
+
+  container.singleton(
+    'accessTokenService',
+    async (deps: IocContract<AppServices>) => {
+      return await createAccessTokenService({
+        logger: await deps.use('logger'),
+        config: await deps.use('config'),
+        knex: await deps.use('knex'),
+        clientService: await deps.use('clientService')
+      })
+    }
+  )
+  container.singleton(
+    'accessTokenRoutes',
+    async (deps: IocContract<AppServices>) => {
+      return await createAccessTokenRoutes({
+        config: await deps.use('config'),
+        logger: await deps.use('logger'),
+        accessTokenService: await deps.use('accessTokenService'),
+        clientService: await deps.use('clientService')
+      })
+    }
+  )
 
   return container
 }

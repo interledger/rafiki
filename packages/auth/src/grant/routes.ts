@@ -88,6 +88,7 @@ async function createGrantInitiation(
     }
     return
   }
+
   const { body } = ctx.request
   const { grantService, clientService, config } = deps
   if (!validateGrantRequest(body)) {
@@ -101,6 +102,50 @@ async function createGrantInitiation(
     ctx.status = 400
     ctx.body = { error: 'invalid_client' }
     return
+  }
+
+  try {
+    const sig = ctx.headers['signature']
+    const sigInput = ctx.headers['signature-input']
+
+    if (
+      !sig ||
+      !sigInput ||
+      typeof sig !== 'string' ||
+      typeof sigInput !== 'string'
+    ) {
+      ctx.status = 400
+      ctx.body = {
+        error: 'invalid_request'
+      }
+      return
+    }
+    const challenge = deps.clientService.sigInputToChallenge(sigInput, ctx)
+    const verified = deps.clientService.verifySig(
+      sig.replace('sig1=', ''),
+      body.client.key.jwk,
+      challenge
+    )
+    if (!verified) {
+      ctx.status = 401
+      ctx.body = {
+        error: 'invalid_client'
+      }
+    }
+  } catch (err) {
+    if ((err as Error).name === 'InvalidSigInputError') {
+      ctx.status = 400
+      ctx.body = {
+        error: 'invalid_request'
+      }
+      return
+    } else {
+      ctx.status = 401
+      ctx.body = {
+        error: 'invalid_client'
+      }
+      return
+    }
   }
 
   const grant = await grantService.initiateGrant(body)
