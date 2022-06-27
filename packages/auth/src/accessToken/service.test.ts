@@ -61,15 +61,10 @@ describe('Access Token Service', (): void => {
   const BASE_GRANT = {
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
-    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-    interactId: v4(),
-    interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH
   }
 
   const BASE_ACCESS = {
@@ -86,7 +81,6 @@ describe('Access Token Service', (): void => {
   }
 
   const BASE_TOKEN = {
-    value: crypto.randomBytes(8).toString('hex').toUpperCase(),
     managementId: 'https://example.com/manage/12345',
     expiresIn: 3600
   }
@@ -97,7 +91,12 @@ describe('Access Token Service', (): void => {
   beforeEach(
     async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT
+        ...BASE_GRANT,
+        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        continueId: v4(),
+        interactId: v4(),
+        interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
       })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -105,7 +104,8 @@ describe('Access Token Service', (): void => {
       })
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
-        ...BASE_TOKEN
+        ...BASE_TOKEN,
+        value: crypto.randomBytes(8).toString('hex').toUpperCase()
       })
     }
   )
@@ -164,11 +164,17 @@ describe('Access Token Service', (): void => {
     beforeEach(
       async (): Promise<void> => {
         grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
+          ...BASE_GRANT,
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          continueId: v4(),
+          interactId: v4(),
+          interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
         })
         token = await AccessToken.query(trx).insertAndFetch({
           grantId: grant.id,
-          ...BASE_TOKEN
+          ...BASE_TOKEN,
+          value: crypto.randomBytes(8).toString('hex').toUpperCase()
         })
       }
     )
