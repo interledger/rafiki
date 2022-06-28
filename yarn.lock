@@ -4639,7 +4639,9 @@ __metadata:
     "@types/nock": ^11.1.0
     "@types/pino": ^7.0.5
     "@types/uuid": ^8.3.0
+    ajv: ^8.11.0
     axios: ^0.26.1
+    jest-openapi: ^0.14.2
     jose: ^4.7.0
     knex: ^0.21.17
     koa: ^2.13.4
@@ -4648,6 +4650,8 @@ __metadata:
     node-mocks-http: ^1.11.0
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
+    openapi: "workspace:packages/openapi"
+    openapi-types: ^12.0.0
     pg: ^8.6.0
     pino: ^7.10.0
     pino-pretty: ^7.6.1
@@ -11985,6 +11989,13 @@ __metadata:
   version: 11.0.1
   resolution: "openapi-types@npm:11.0.1"
   checksum: 182c5b28199a0d030bf5f64b9c23f65dc800cdc845ae09c40aa5e03b862634a02526d5092af53bf853514af778ee2f36dead741e0521e01f944cf7f50927e14e
+  languageName: node
+  linkType: hard
+
+"openapi-types@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "openapi-types@npm:12.0.0"
+  checksum: 8d22cb3727e892ad8f9782210360627f6cde92a53c229407d897f0252543a937aed59bfd7a4bee291b50547d7a4e836290ee35eaebc3978c873c601de9ace5b6
   languageName: node
   linkType: hard
 

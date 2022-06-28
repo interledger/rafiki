@@ -1,7 +1,7 @@
 export enum AccessType {
   Account = 'account',
-  IncomingPayment = 'incomingPayment',
-  OutgoingPayment = 'outgoingPayment',
+  IncomingPayment = 'incoming-payment',
+  OutgoingPayment = 'outgoing-payment',
   Quote = 'quote'
 }
 

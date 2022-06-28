@@ -12,6 +12,7 @@ import { IAppConfig } from './config/app'
 import { ClientService } from './client/service'
 import { GrantService } from './grant/service'
 import { AccessTokenRoutes } from './accessToken/routes'
+import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 
 export interface AppContextData {
   logger: Logger
@@ -22,6 +23,13 @@ export interface AppContextData {
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
+
+type ContextType<T> = T extends (
+  ctx: infer Context
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+) => any
+  ? Context
+  : never
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -115,34 +123,69 @@ export class App {
     this.publicRouter.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
-    const accessTokenRoutes = await this.container.use('accessTokenRoutes')
-
-    const grantRoutes = await this.container.use('grantRoutes')
-    // TODO: GNAP endpoints
-    this.publicRouter.post('/', grantRoutes.create)
-
-    this.publicRouter.post('/auth/continue/:id', (ctx: AppContext): void => {
-      // TODO: generate completed grant response
-      ctx.status = 200
-    })
-
     this.publicRouter.get('/discovery', (ctx: AppContext): void => {
       ctx.body = {
-        grant_request_endpoint: '/grant/start',
+        grant_request_endpoint: '/',
         interaction_start_modes_supported: ['redirect'],
         interaction_finish_modes_supported: ['redirect']
       }
     })
 
-    // Token management
-    this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
+    const accessTokenRoutes = await this.container.use('accessTokenRoutes')
+    const grantRoutes = await this.container.use('grantRoutes')
 
-    this.publicRouter.post('/auth/token/:id', (ctx: AppContext): void => {
-      // TODO: tokenService.rotate
-      ctx.status = 200
-    })
+    const openApi = await this.container.use('openApi')
+    const toRouterPath = (path: string): string =>
+      path.replace(/{/g, ':').replace(/}/g, '')
+    const grantMethodToRoute = {
+      [HttpMethod.POST]: 'continue',
+      [HttpMethod.PATCH]: 'update',
+      [HttpMethod.DELETE]: 'cancel'
+    }
+    const tokenMethodToRoute = {
+      [HttpMethod.POST]: 'rotate',
+      [HttpMethod.DELETE]: 'revoke'
+    }
 
-    this.publicRouter.del('/auth/token/:id', accessTokenRoutes.revoke)
+    for (const path in openApi.paths) {
+      for (const method in openApi.paths[path]) {
+        if (isHttpMethod(method)) {
+          let route: (ctx: AppContext) => Promise<void>
+          if (path.includes('continue')) {
+            route = grantRoutes[grantMethodToRoute[method]]
+          } else if (path.includes('token')) {
+            route = accessTokenRoutes[tokenMethodToRoute[method]]
+          } else if (path.includes('introspect')) {
+            route = accessTokenRoutes.introspect
+          } else {
+            if (path === '/' && method === HttpMethod.POST) {
+              route = grantRoutes.create
+            } else {
+              this.logger.warn({ path, method }, 'unexpected path/method')
+            }
+            continue
+          }
+          if (route) {
+            this.publicRouter[method](
+              toRouterPath(path),
+              createValidatorMiddleware<ContextType<typeof route>>(openApi, {
+                path,
+                method
+              }),
+              route
+            )
+            // TODO: remove once all endpoints are implemented
+          } else {
+            this.publicRouter[method](
+              toRouterPath(path),
+              (ctx: AppContext): void => {
+                ctx.status = 200
+              }
+            )
+          }
+        }
+      }
+    }
 
     this.koa.use(this.publicRouter.middleware())
   }

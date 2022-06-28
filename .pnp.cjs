@@ -6343,7 +6343,9 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/nock", "npm:11.1.0"],
             ["@types/pino", "npm:7.0.5"],
             ["@types/uuid", "npm:8.3.0"],
+            ["ajv", "npm:8.11.0"],
             ["axios", "npm:0.26.1"],
+            ["jest-openapi", "npm:0.14.2"],
             ["jose", "npm:4.7.0"],
             ["knex", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:0.21.19"],
             ["koa", "npm:2.13.4"],
@@ -6352,6 +6354,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["node-mocks-http", "npm:1.11.0"],
             ["objection", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:2.2.15"],
             ["objection-db-errors", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:1.1.2"],
+            ["openapi", "workspace:packages/openapi"],
+            ["openapi-types", "npm:12.0.0"],
             ["pg", "virtual:990efca738494a53ff0d9b0f885198a865d5bcf851affae39ba56cc6b00fa8e7bf36df9191bd9bbb6b519579671add53cf12113448e1a9b327e9a128e1f1b5e9#npm:8.6.0"],
             ["pino", "npm:7.10.0"],
             ["pino-pretty", "npm:7.6.1"],
@@ -14780,6 +14784,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/openapi-types-npm-11.0.1-d77e512c96-182c5b2819.zip/node_modules/openapi-types/",
           "packageDependencies": [
             ["openapi-types", "npm:11.0.1"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:12.0.0", {
+          "packageLocation": "./.yarn/cache/openapi-types-npm-12.0.0-94c912b0cc-8d22cb3727.zip/node_modules/openapi-types/",
+          "packageDependencies": [
+            ["openapi-types", "npm:12.0.0"]
           ],
           "linkType": "HARD",
         }],
