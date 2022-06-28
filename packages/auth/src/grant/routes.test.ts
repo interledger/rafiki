@@ -814,7 +814,7 @@ describe('Grant Routes', (): void => {
           { interactId: grant.interactId }
         )
 
-        const redirectUrl = new URL(config.resourceServerDomain)
+        const redirectUrl = new URL(config.identityServerDomain)
         redirectUrl.searchParams.set('clientName', TEST_CLIENT_DISPLAY.name)
         redirectUrl.searchParams.set('clientUri', TEST_CLIENT_DISPLAY.url)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
@@ -967,7 +967,7 @@ describe('Grant Routes', (): void => {
         const clientRedirectUri = new URL(grant.finishUri)
         const { clientNonce, interactNonce, interactRef } = grant
         const interactUrl =
-          config.resourceServerDomain + `/interact/${grant.interactId}`
+          config.identityServerDomain + `/interact/${grant.interactId}`
 
         const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${interactUrl}`
         const hash = crypto.createHash('sha3-512').update(data).digest('base64')

@@ -32,12 +32,15 @@ export const Config = {
   keyRegistries: envStringArray('KEY_REGISTRIES', [
     'https://openpayments.network'
   ]),
-  resourceServerDomain: envString('INTERACT_URL', 'http://localhost:3004'),
-  authServerDomain: envString('DOMAIN', 'http://localhost:3006'), // TODO: replace this with whatever frontend port ends up being
   authServerSpec: envString(
     'AUTH_SERVER_SPEC',
     'https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml'
   ),
+  identityServerDomain: envString(
+    'IDENTITY_SERVER_DOMAIN',
+    'http://localhost:3004'
+  ),
+  authServerDomain: envString('AUTH_SERVER_DOMAIN', 'http://localhost:3006'), // TODO: replace this with whatever frontend port ends up being
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60) // Default 10 minutes

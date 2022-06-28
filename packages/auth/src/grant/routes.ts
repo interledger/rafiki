@@ -126,7 +126,7 @@ async function startInteraction(
     return
   }
 
-  const interactionUrl = new URL(config.resourceServerDomain)
+  const interactionUrl = new URL(config.identityServerDomain)
   interactionUrl.searchParams.set('clientName', registryData.name)
   interactionUrl.searchParams.set('clientUri', registryData.url)
 
@@ -163,7 +163,7 @@ async function finishInteraction(
 
   const clientRedirectUri = new URL(grant.finishUri)
   const { clientNonce, interactNonce, interactRef } = grant
-  const interactUrl = config.resourceServerDomain + `/interact/${interactId}`
+  const interactUrl = config.identityServerDomain + `/interact/${interactId}`
 
   // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
   const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${interactUrl}`

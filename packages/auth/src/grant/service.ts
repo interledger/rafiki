@@ -140,7 +140,7 @@ async function initiateGrant(
 
     return {
       interact: {
-        redirect: config.resourceServerDomain + `/interact/${grant.interactId}`,
+        redirect: config.identityServerDomain + `/interact/${grant.interactId}`,
         finish: grant.interactNonce
       },
       continue: {
