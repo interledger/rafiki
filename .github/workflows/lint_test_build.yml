@@ -43,7 +43,6 @@ jobs:
       - run: yarn workspace backend format:check
       - run: yarn workspace openapi build
       - run: yarn workspace backend test
-      - run: yarn docker build backend -t test-backend-build-remove-before-merge
 
   frontend:
     runs-on: ubuntu-latest
