@@ -30,7 +30,7 @@ interface RegistryData {
   image: string
   url: string
   email: string
-  keys: JWKWithRequired[]
+  keys: RegistryKey[]
 }
 
 export interface JWKWithRequired extends JWK {
@@ -41,7 +41,7 @@ export interface JWKWithRequired extends JWK {
   crv: string
 }
 
-interface RegistryKey extends JWK {
+interface RegistryKey extends JWKWithRequired {
   exp?: number
   nbf?: number
   revoked?: boolean
@@ -49,6 +49,13 @@ interface RegistryKey extends JWK {
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig
+}
+
+interface VerifySigFromBoundKeyResult {
+  success: boolean
+  status?: number
+  error?: string
+  message?: string
 }
 
 export interface ClientService {
@@ -60,12 +67,13 @@ export interface ClientService {
   verifySigFromBoundKey(
     sig: string,
     sigInput: string,
+    accessTokenKey: string,
     accessTokenValue: string,
     ctx: AppContext
-  ): Promise<boolean>
+  ): Promise<VerifySigFromBoundKeyResult>
   validateClientWithRegistry(clientInfo: ClientInfo): Promise<boolean>
   getRegistryDataByKid(kid: string): Promise<RegistryData>
-  sigInputToChallenge(sigInput: string, ctx: AppContext): string
+  sigInputToChallenge(sigInput: string, ctx: AppContext): string | null
 }
 
 export async function createClientService({
@@ -87,9 +95,18 @@ export async function createClientService({
     verifySigFromBoundKey: (
       sig: string,
       sigInput: string,
+      accessTokenKey: string,
       accessTokenValue: string,
       ctx: AppContext
-    ) => verifySigFromBoundKey(deps, sig, sigInput, accessTokenValue, ctx),
+    ) =>
+      verifySigFromBoundKey(
+        deps,
+        sig,
+        sigInput,
+        accessTokenKey,
+        accessTokenValue,
+        ctx
+      ),
     validateClientWithRegistry: (clientInfo: ClientInfo) =>
       validateClientWithRegistry(deps, clientInfo),
     getRegistryDataByKid: (kid: string) => getRegistryDataByKid(deps, kid),
@@ -98,7 +115,7 @@ export async function createClientService({
   }
 }
 
-function sigInputToChallenge(sigInput: string, ctx: AppContext): string {
+function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
   // https://datatracker.ietf.org/doc/html/rfc8941#section-4.1.1.1
   const messageComponents = sigInput.split('sig1=')[1].split(';')[0].split(' ')
   const cleanMessageComponents = messageComponents.map((component) =>
@@ -113,9 +130,7 @@ function sigInputToChallenge(sigInput: string, ctx: AppContext): string {
     (ctx.headers['authorization'] &&
       !cleanMessageComponents.includes('authorization'))
   ) {
-    const err = new Error('Signature input missing required properties')
-    err.name = 'InvalidSigInputError'
-    throw err
+    return null
   }
 
   // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures-09#section-2.3
@@ -151,21 +166,52 @@ async function verifySigFromBoundKey(
   deps: ServiceDependencies,
   sig: string,
   sigInput: string,
+  accessTokenKey: string,
   accessTokenValue: string,
   ctx: AppContext
-): Promise<boolean> {
-  const accessToken = await AccessToken.query().findOne({
-    value: accessTokenValue
-  })
-  if (!accessToken) return false
+): Promise<VerifySigFromBoundKeyResult> {
+  const accessToken = await AccessToken.query().findOne(
+    accessTokenKey,
+    accessTokenValue
+  )
+  if (!accessToken) {
+    return {
+      success: false,
+      error: 'invalid_client',
+      status: 404,
+      message: 'token not found'
+    }
+  }
   const grant = await Grant.query().findById(accessToken.grantId)
 
   const registryData = await getRegistryDataByKid(deps, grant.clientKeyId)
-  if (!registryData) return false
+  if (!registryData)
+    return {
+      success: false,
+      error: 'invalid_client',
+      status: 401
+    }
   const { keys } = registryData
+  const clientKey = keys[0]
 
   const challenge = sigInputToChallenge(sigInput, ctx)
-  return verifySig(deps, sig, keys[0], challenge)
+  if (!challenge) {
+    return {
+      success: false,
+      status: 400,
+      error: 'invalid_request',
+      message: 'invalid Sig-Input'
+    }
+  }
+
+  return {
+    success: await verifySig(
+      deps,
+      sig.replace('sig1=', ''),
+      clientKey,
+      challenge
+    )
+  }
 }
 
 function validateRequiredJwkProperties(jwk: JWKWithRequired): boolean {
@@ -243,14 +289,14 @@ function verifyClientDisplay(
   )
 }
 
+function isJwkViable(keys: RegistryKey): boolean {
+  return !!(
+    (!keys.exp || new Date() < new Date(keys.exp * 1000)) &&
+    (!keys.nbf || new Date() >= new Date(keys.nbf * 1000))
+  )
+}
+
 function verifyJwk(jwk: JWKWithRequired, keys: RegistryKey): boolean {
   // TODO: update this to reflect eventual shape of response from registry
-  return !!(
-    !keys.revoked &&
-    keys.exp &&
-    new Date() < new Date(keys.exp * 1000) &&
-    keys.nbf &&
-    new Date() >= new Date(keys.nbf * 1000) &&
-    keys.x === jwk.x
-  )
+  return !!(!keys.revoked && isJwkViable(keys) && keys.x === jwk.x)
 }
