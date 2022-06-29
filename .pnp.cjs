@@ -3815,14 +3815,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@sinonjs/commons", "npm:1.8.3"]
           ],
           "linkType": "HARD",
-        }],
-        ["npm:9.1.2", {
-          "packageLocation": "./.yarn/cache/@sinonjs-fake-timers-npm-9.1.2-3ff37ab7fb-7d3aef54e1.zip/node_modules/@sinonjs/fake-timers/",
-          "packageDependencies": [
-            ["@sinonjs/fake-timers", "npm:9.1.2"],
-            ["@sinonjs/commons", "npm:1.8.3"]
-          ],
-          "linkType": "HARD",
         }]
       ]],
       ["@szmarczak/http-timer", [
@@ -4700,15 +4692,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/serve-static", "npm:1.13.9"],
             ["@types/mime", "npm:1.3.2"],
             ["@types/node", "npm:14.14.39"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
-      ["@types/sinonjs__fake-timers", [
-        ["npm:8.1.2", {
-          "packageLocation": "./.yarn/cache/@types-sinonjs__fake-timers-npm-8.1.2-278832251f-bbc73a5ab6.zip/node_modules/@types/sinonjs__fake-timers/",
-          "packageDependencies": [
-            ["@types/sinonjs__fake-timers", "npm:8.1.2"]
           ],
           "linkType": "HARD",
         }]
@@ -6352,7 +6335,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@adonisjs/fold", "npm:8.1.0"],
             ["@koa/cors", "npm:3.1.0"],
             ["@koa/router", "npm:10.0.0"],
-            ["@sinonjs/fake-timers", "npm:9.1.2"],
             ["@types/jest", "npm:27.4.1"],
             ["@types/koa", "npm:2.13.4"],
             ["@types/koa-bodyparser", "npm:4.3.7"],
@@ -6360,7 +6342,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/koa__router", "npm:8.0.11"],
             ["@types/nock", "npm:11.1.0"],
             ["@types/pino", "npm:7.0.5"],
-            ["@types/sinonjs__fake-timers", "npm:8.1.2"],
             ["@types/uuid", "npm:8.3.0"],
             ["axios", "npm:0.26.1"],
             ["jose", "npm:4.7.0"],

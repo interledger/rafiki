@@ -2593,15 +2593,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sinonjs/fake-timers@npm:^9.1.2":
-  version: 9.1.2
-  resolution: "@sinonjs/fake-timers@npm:9.1.2"
-  dependencies:
-    "@sinonjs/commons": ^1.7.0
-  checksum: 7d3aef54e17c1073101cb64d953157c19d62a40e261a30923fa1ee337b049c5f29cc47b1f0c477880f42b5659848ba9ab897607ac8ea4acd5c30ddcfac57fca6
-  languageName: node
-  linkType: hard
-
 "@szmarczak/http-timer@npm:^1.1.2":
   version: 1.1.2
   resolution: "@szmarczak/http-timer@npm:1.1.2"
@@ -3400,13 +3391,6 @@ __metadata:
     "@types/mime": ^1
     "@types/node": "*"
   checksum: 5c5f3b64e9fe7c51fb428ef70f1f2365b897fc3c8400be6d6afc8db0f152639182b360361ebd3d0cbaeb607b125dee03bf0c50bf7e08642ff150028f05bb7381
-  languageName: node
-  linkType: hard
-
-"@types/sinonjs__fake-timers@npm:^8.1.2":
-  version: 8.1.2
-  resolution: "@types/sinonjs__fake-timers@npm:8.1.2"
-  checksum: bbc73a5ab6c0ec974929392f3d6e1e8db4ebad97ec506d785301e1c3d8a4f98a35b1aa95b97035daef02886fd8efd7788a2fa3ced2ec7105988bfd8dce61eedd
   languageName: node
   linkType: hard
 
@@ -4657,7 +4641,6 @@ __metadata:
     "@adonisjs/fold": ^8.1.0
     "@koa/cors": ^3.1.0
     "@koa/router": ^10.0.0
-    "@sinonjs/fake-timers": ^9.1.2
     "@types/jest": ^27.4.1
     "@types/koa": ^2.13.4
     "@types/koa-bodyparser": ^4.3.7
@@ -4666,7 +4649,6 @@ __metadata:
     "@types/koa__router": ^8.0.11
     "@types/nock": ^11.1.0
     "@types/pino": ^7.0.5
-    "@types/sinonjs__fake-timers": ^8.1.2
     "@types/uuid": ^8.3.0
     ajv: ^8.11.0
     axios: ^0.26.1
