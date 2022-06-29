@@ -15,7 +15,6 @@ import {
   PaymentEventType
 } from './model'
 import { AccountingService } from '../../../accounting/service'
-import { AccountService } from '../../account/service'
 import { PeerService } from '../../../peer/service'
 import {
   Grant,
@@ -48,7 +47,6 @@ export interface OutgoingPaymentService {
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
-  accountService: AccountService
   peerService: PeerService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
   publicHost: string
@@ -264,7 +262,8 @@ interface PaymentAccess extends GrantAccess {
 }
 
 // "payment" is locked by the "deps.knex" transaction.
-async function validateGrant(
+// export for testing
+export async function validateGrant(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   grant: Grant
@@ -409,8 +408,18 @@ async function validateGrant(
   }
 
   // Do paymentAccess limits support payment and competing existing payments?
-  // TODO: Attempt to assign existing payment(s) to unrelatedAccess first
   for (const grantPayment of competingPayments) {
+    if (
+      unrelatedAccess.find((access) =>
+        validateAccess({
+          access,
+          payment: grantPayment,
+          identifier: `${deps.publicHost}/${grantPayment.accountId}`
+        })
+      )
+    ) {
+      continue
+    }
     for (const access of paymentAccess) {
       if (
         validatePaymentAccess({
