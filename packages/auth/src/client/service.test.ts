@@ -117,9 +117,7 @@ describe('Client Service', (): void => {
       ctx.method = 'GET'
       ctx.request.url = '/test'
 
-      expect(() => {
-        clientService.sigInputToChallenge(sigInputHeader, ctx)
-      }).toThrow()
+      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
     })
 
     test('fails to construct signature input if @target-uri is missing', (): void => {
@@ -141,9 +139,7 @@ describe('Client Service', (): void => {
       ctx.method = 'GET'
       ctx.request.url = '/test'
 
-      expect(() => {
-        clientService.sigInputToChallenge(sigInputHeader, ctx)
-      }).toThrow()
+      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
     })
 
     test('fails to construct signature input if request body is present but content-digest is not', (): void => {
@@ -165,9 +161,7 @@ describe('Client Service', (): void => {
       ctx.method = 'GET'
       ctx.request.url = '/test'
 
-      expect(() => {
-        clientService.sigInputToChallenge(sigInputHeader, ctx)
-      }).toThrow()
+      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
     })
 
     test('fails to construct signature input if authorization header is present but not in signature input', (): void => {
@@ -190,9 +184,7 @@ describe('Client Service', (): void => {
       ctx.method = 'GET'
       ctx.request.url = '/test'
 
-      expect(() => {
-        clientService.sigInputToChallenge(sigInputHeader, ctx)
-      }).toThrow()
+      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
     })
   })
 

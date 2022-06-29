@@ -121,6 +121,15 @@ async function createGrantInitiation(
       return
     }
     const challenge = deps.clientService.sigInputToChallenge(sigInput, ctx)
+
+    if (!challenge) {
+      ctx.status = 400
+      ctx.body = {
+        error: 'invalid_request'
+      }
+      return
+    }
+
     const verified = deps.clientService.verifySig(
       sig.replace('sig1=', ''),
       body.client.key.jwk,

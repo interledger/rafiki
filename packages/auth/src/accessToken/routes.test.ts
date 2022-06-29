@@ -16,6 +16,11 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
+import {
+  generateSigHeaders,
+  SIGNATURE_METHOD,
+  SIGNATURE_TARGET_URI
+} from '../tests/signature'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_KID_PATH = '/keys/test-key'
@@ -114,40 +119,67 @@ describe('Access Token Routes', (): void => {
       })
     })
     test('Cannot introspect fake token', async (): Promise<void> => {
+      const requestBody = {
+        access_token: v4(),
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        requestBody
+      )
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
           url: '/introspect',
           method: 'POST'
         },
         {}
       )
-      ctx.request.body = {
-        access_token: v4(),
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
-      await expect(accessTokenRoutes.introspect(ctx)).rejects.toMatchObject({
-        status: 404,
+      ctx.request.body = requestBody
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(404)
+      expect(ctx.body).toMatchObject({
+        error: 'invalid_client',
         message: 'token not found'
       })
     })
 
     test('Cannot introspect if no token passed', async (): Promise<void> => {
+      const requestBody = {
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        requestBody
+      )
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
           url: '/introspect',
           method: 'POST'
         },
         {}
       )
-      ctx.request.body = {
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
-      await expect(accessTokenRoutes.introspect(ctx)).rejects.toMatchObject({
-        status: 400,
+      ctx.request.body = requestBody
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(400)
+      expect(ctx.body).toEqual({
+        error: 'invalid_request',
         message: 'invalid introspection request'
       })
     })
@@ -173,6 +205,27 @@ describe('Access Token Routes', (): void => {
         proof: 'httpsig',
         resource_server: 'test'
       }
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        requestBody
+      )
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url: '/introspect',
+          method: 'POST'
+          // method: SIGNATURE_METHOD,
+          // url: SIGNATURE_TARGET_URI
+        },
+        {}
+      )
+
+      ctx.request.body = requestBody
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
@@ -196,22 +249,40 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Successfully introspects expired token', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(TEST_KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY.jwk]
+        })
       const now = new Date(new Date().getTime() + 4000)
       jest.useFakeTimers()
       jest.setSystemTime(now)
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' },
-          url: '/introspect',
-          method: 'POST'
-        },
-        {}
-      )
-      ctx.request.body = {
+      const requestBody = {
         access_token: token.value,
         proof: 'httpsig',
         resource_server: 'test'
       }
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        requestBody
+      )
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url: '/introspect',
+          method: 'POST'
+          // method: SIGNATURE_METHOD,
+          // url: SIGNATURE_TARGET_URI
+        },
+        {}
+      )
+
+      ctx.request.body = requestBody
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
@@ -221,34 +292,43 @@ describe('Access Token Routes', (): void => {
       expect(ctx.body).toEqual({
         active: false
       })
+
+      scope.isDone()
     })
   })
 
   describe('Revocation', (): void => {
     let grant: Grant
     let token: AccessToken
-    let id: string
+    let managementId: string
 
-    beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT
-      })
-      token = await AccessToken.query(trx).insertAndFetch({
-        grantId: grant.id,
-        ...BASE_TOKEN
-      })
-      id = token.id
-    })
+    beforeEach(
+      async (): Promise<void> => {
+        grant = await Grant.query(trx).insertAndFetch({
+          ...BASE_GRANT
+        })
+        token = await AccessToken.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_TOKEN
+        })
+        managementId = token.managementId
+      }
+    )
 
     test('Returns status 204 even if token does not exist', async (): Promise<void> => {
       id = v4()
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
-          url: `/token/${id}`,
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url: `/token/${managementId}`,
           method: 'DELETE'
         },
-        { id }
+        { managementId }
       )
 
       await accessTokenRoutes.revoke(ctx)
@@ -256,33 +336,75 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(TEST_KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY.jwk]
+        })
+
+      const requestBody = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+      const { signature, sigInput, contentDigest } = await generateSigHeaders()
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
-          url: `/token/${id}`,
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url: `/token/${managementId}`,
           method: 'DELETE'
         },
-        { id }
+        { managementId }
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
+      ctx.request.body = requestBody
       await token.$query(trx).patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
+      scope.isDone()
     })
 
     test('Returns status 204 if token has expired', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(TEST_KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY.jwk]
+        })
+
+      const requestBody = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+      const { signature, sigInput, contentDigest } = await generateSigHeaders()
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
-          url: `/token/${id}`,
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url: `/token/${managementId}`,
           method: 'DELETE'
         },
-        { id }
+        { managementId }
       )
 
+      ctx.method = SIGNATURE_METHOD
+      ctx.request.url = SIGNATURE_TARGET_URI
+      ctx.request.body = requestBody
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
+      scope.isDone()
     })
   })
 

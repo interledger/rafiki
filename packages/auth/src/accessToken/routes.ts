@@ -47,49 +47,37 @@ async function introspectToken(
     return
   }
 
-  try {
-    const sig = ctx.headers['signature']
-    const sigInput = ctx.headers['signature-input']
+  const sig = ctx.headers['signature']
+  const sigInput = ctx.headers['signature-input']
 
-    if (
-      !sig ||
-      !sigInput ||
-      typeof sig !== 'string' ||
-      typeof sigInput !== 'string'
-    ) {
-      ctx.status = 400
-      ctx.body = {
-        error: 'invalid_request'
-      }
-      return
+  if (
+    !sig ||
+    !sigInput ||
+    typeof sig !== 'string' ||
+    typeof sigInput !== 'string'
+  ) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_request',
+      message: 'invalid signature headers'
     }
+    return
+  }
 
-    const verified = await deps.clientService.verifySigFromBoundKey(
-      sig,
-      sigInput,
-      body['access_token'],
-      ctx
-    )
-    if (!verified) {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client'
-      }
+  const verified = await deps.clientService.verifySigFromBoundKey(
+    sig,
+    sigInput,
+    'value',
+    body['access_token'],
+    ctx
+  )
+  if (!verified.success) {
+    ctx.status = verified.status || 401
+    ctx.body = {
+      error: verified.error || 'request_denied',
+      message: verified.message || null
     }
-  } catch (err) {
-    if ((err as Error).name === 'InvalidSigInputError') {
-      ctx.status = 400
-      ctx.body = {
-        error: 'invalid_request'
-      }
-      return
-    } else {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client'
-      }
-      return
-    }
+    return
   }
 
   const introspectionResult = await deps.accessTokenService.introspect(
@@ -124,48 +112,33 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  try {
-    const sig = ctx.headers['signature']
-    const sigInput = ctx.headers['signature-input']
+  const sig = ctx.headers['signature']
+  const sigInput = ctx.headers['signature-input']
 
-    if (
-      !sig ||
-      !sigInput ||
-      typeof sig !== 'string' ||
-      typeof sigInput !== 'string'
-    ) {
-      ctx.status = 400
-      ctx.body = {
-        error: 'invalid_request'
-      }
-      return
+  if (
+    !sig ||
+    !sigInput ||
+    typeof sig !== 'string' ||
+    typeof sigInput !== 'string'
+  ) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_request'
     }
+    return
+  }
 
-    const verified = await deps.clientService.verifySigFromBoundKey(
-      sig,
-      sigInput,
-      ctx.params['id'],
-      ctx
-    )
-    if (!verified) {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client'
-      }
-    }
-  } catch (err) {
-    if ((err as Error).name === 'InvalidSigInputError') {
-      ctx.status = 400
-      ctx.body = {
-        error: 'invalid_request'
-      }
-      return
-    } else {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client'
-      }
-      return
+  const verified = await deps.clientService.verifySigFromBoundKey(
+    sig,
+    sigInput,
+    'managementId',
+    ctx.params['managementId'],
+    ctx
+  )
+  if (!verified.success) {
+    ctx.status = verified.status || 401
+    ctx.body = {
+      error: verified.error || 'invalid_client'
     }
   }
 
