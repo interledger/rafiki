@@ -4,10 +4,6 @@ on:
     - main
     tags:
     - '*'
-  pull_request:
-    types:
-      - opened
-      - synchronize
 
 name: Release Docker Image
 
@@ -32,3 +28,13 @@ jobs:
       - name: Tag Docker Image with Tag Name
         if: github.ref_type == 'tag'
         run: docker tag ghcr.io/${{ github.repository_owner }}/rafiki-backend:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/rafiki-backend:${{ github.ref_name }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Docker Image to GHCR
+        run: docker image push --all-tags ghcr.io/${{ github.repository_owner }}/rafiki-backend
