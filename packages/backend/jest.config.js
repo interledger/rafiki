@@ -11,7 +11,7 @@ module.exports = {
   globalSetup: `<rootDir>/packages/${packageName}/jest.setup.js`,
   globalTeardown: `<rootDir>/packages/${packageName}/jest.teardown.js`,
   testRegex: `(packages/${packageName}/.*/__tests__/.*|\\.(test|spec))\\.tsx?$`,
-  moduleDirectories: ['.yarn'],
+  moduleDirectories: [`node_modules`, `packages/${packageName}/node_modules`],
   modulePaths: [`<rootDir>/packages/${packageName}/src/`],
   name: packageName,
   displayName: packageName,

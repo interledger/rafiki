@@ -142,10 +142,7 @@ export class App {
       ctx.status = 200
     })
 
-    this.publicRouter.del('/auth/token/:id', (ctx: AppContext): void => {
-      // TODO: tokenService.revocation
-      ctx.status = 200
-    })
+    this.publicRouter.del('/auth/token/:id', accessTokenRoutes.revoke)
 
     this.koa.use(this.publicRouter.middleware())
   }

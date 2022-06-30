@@ -8,7 +8,7 @@ export function createContext<T extends AppContext>(
   params: Record<string, string>
 ): T {
   const req = httpMocks.createRequest(reqOpts)
-  const res = httpMocks.createResponse(req)
+  const res = httpMocks.createResponse({ req })
   const koa = new Koa<unknown, AppContextData>()
   const ctx = koa.createContext(req, res)
   ctx.params = (ctx.request as AppRequest).params = params
