@@ -81,6 +81,7 @@ type Context<T> = Omit<AppContext, 'request'> & {
 }
 
 export type AccountContext = Context<AppRequest<'id'>>
+export type ConnectionContext = Context<AppRequest<'id'>>
 
 // Account subresources
 export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>
@@ -290,6 +291,7 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
+    const connectionRoutes = await this.container.use('connectionRoutes')
     const openApi = await this.container.use('openApi')
     const toRouterPath = (path: string): string =>
       path.replace(/{/g, ':').replace(/}/g, '')
@@ -339,6 +341,9 @@ export class App {
           } else if (path.includes('quotes')) {
             type = AccessType.Quote
             route = quoteRoutes[actionToRoute[action]]
+          } else if (path.includes('connections')) {
+            type = AccessType.Connection
+            route = connectionRoutes[actionToRoute[action]]
           } else {
             if (path === '/{id}' && method === HttpMethod.GET) {
               this.publicRouter.get(

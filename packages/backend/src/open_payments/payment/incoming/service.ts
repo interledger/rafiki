@@ -14,6 +14,7 @@ import { AccountService } from '../../account/service'
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { parse, end } from 'iso8601-duration'
+import { uuid } from '../../../connector/core'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -43,6 +44,7 @@ export interface IncomingPaymentService {
     pagination?: Pagination
   ): Promise<IncomingPayment[]>
   processNext(): Promise<string | undefined>
+  getByConnection(connectionId: string): Promise<IncomingPayment | undefined>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -62,21 +64,24 @@ export async function createIncomingPaymentService(
     logger: log
   }
   return {
-    get: (id) => getIncomingPayment(deps, id),
+    get: (id) => getIncomingPayment(deps, 'id', id),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     complete: (id) => completeIncomingPayment(deps, id),
     getAccountPage: (accountId, pagination) =>
       getAccountPage(deps, accountId, pagination),
-    processNext: () => processNextIncomingPayment(deps)
+    processNext: () => processNextIncomingPayment(deps),
+    getByConnection: (connectionId) =>
+      getIncomingPayment(deps, 'connectionId', connectionId)
   }
 }
 
 async function getIncomingPayment(
   deps: ServiceDependencies,
-  id: string
+  key: string,
+  value: string
 ): Promise<IncomingPayment | undefined> {
   const incomingPayment = await IncomingPayment.query(deps.knex)
-    .findById(id)
+    .findOne(key, value)
     .withGraphFetched('asset')
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
   else return
@@ -126,7 +131,8 @@ async function createIncomingPayment(
         incomingAmount,
         externalRef,
         state: IncomingPaymentState.Pending,
-        processAt: expiresAt
+        processAt: expiresAt,
+        connectionId: uuid()
       })
       .withGraphFetched('asset')
 
