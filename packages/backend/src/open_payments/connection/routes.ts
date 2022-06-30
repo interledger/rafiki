@@ -1,6 +1,6 @@
 import base64url from 'base64url'
 import { Logger } from 'pino'
-import { ConnectionContext } from '../../app'
+import { ReadContext } from '../../app'
 import { IAppConfig } from '../../config/app'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { ConnectionService } from './service'
@@ -13,7 +13,7 @@ interface ServiceDependencies {
 }
 
 export interface ConnectionRoutes {
-  get(ctx: ConnectionContext): Promise<void>
+  get(ctx: ReadContext): Promise<void>
 }
 
 export function createConnectionRoutes(
@@ -24,15 +24,15 @@ export function createConnectionRoutes(
   })
   const deps = { ...deps_, logger }
   return {
-    get: (ctx: ConnectionContext) => getConnection(deps, ctx)
+    get: (ctx: ReadContext) => getConnection(deps, ctx)
   }
 }
 
 async function getConnection(
   deps: ServiceDependencies,
-  ctx: ConnectionContext
+  ctx: ReadContext
 ): Promise<void> {
-  const id = ctx.params.id
+  const id = ctx.params.connectionId
   const incomingPayment = await deps.incomingPaymentService.getByConnection(id)
   if (!incomingPayment) return ctx.throw(404)
 
