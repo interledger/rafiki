@@ -2,6 +2,7 @@ import nock from 'nock'
 import Knex, { Transaction } from 'knex'
 import crypto from 'crypto'
 import { v4 } from 'uuid'
+import jestOpenAPI from 'jest-openapi'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
@@ -41,6 +42,7 @@ describe('Access Token Routes', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       accessTokenRoutes = await deps.use('accessTokenRoutes')
+      jestOpenAPI(await deps.use('openApi'))
     }
   )
 
@@ -113,7 +115,9 @@ describe('Access Token Routes', (): void => {
     test('Cannot introspect fake token', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: '/introspect',
+          method: 'POST'
         },
         {}
       )
@@ -131,7 +135,9 @@ describe('Access Token Routes', (): void => {
     test('Cannot introspect if no token passed', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: '/introspect',
+          method: 'POST'
         },
         {}
       )
@@ -153,7 +159,9 @@ describe('Access Token Routes', (): void => {
         })
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: '/introspect',
+          method: 'POST'
         },
         {}
       )
@@ -163,6 +171,7 @@ describe('Access Token Routes', (): void => {
         resource_server: 'test'
       }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -188,7 +197,9 @@ describe('Access Token Routes', (): void => {
       jest.setSystemTime(now)
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: '/introspect',
+          method: 'POST'
         },
         {}
       )
@@ -198,6 +209,7 @@ describe('Access Token Routes', (): void => {
         resource_server: 'test'
       }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -230,7 +242,9 @@ describe('Access Token Routes', (): void => {
       id = v4()
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/token/${id}`,
+          method: 'DELETE'
         },
         { id }
       )
@@ -244,7 +258,9 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/token/${id}`,
+          method: 'DELETE'
         },
         { id }
       )
@@ -257,7 +273,9 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 if token has expired', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/token/${id}`,
+          method: 'DELETE'
         },
         { id }
       )

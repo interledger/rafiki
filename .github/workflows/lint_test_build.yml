@@ -93,6 +93,7 @@ jobs:
       - run: yarn install --immutable --immutable-cache
       - run: yarn workspace auth lint
       - run: yarn workspace auth format:check
+      - run: yarn workspace openapi build
       - run: yarn workspace auth test
 
   openapi:

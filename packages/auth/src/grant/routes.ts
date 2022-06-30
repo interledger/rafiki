@@ -81,6 +81,6 @@ async function createGrantInitiation(
   }
 
   const res = await grantService.initiateGrant(body)
-  ctx.status = 200
+  ctx.status = 201
   ctx.body = res
 }
