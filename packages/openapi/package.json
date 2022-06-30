@@ -2,6 +2,9 @@
   "name": "openapi",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "lint": "yarn lint:local",
     "format": "yarn format:local",
