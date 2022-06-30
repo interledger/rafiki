@@ -2087,9 +2087,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@interledger/pay@npm:^0.4.0-alpha.6":
-  version: 0.4.0-alpha.6
-  resolution: "@interledger/pay@npm:0.4.0-alpha.6"
+"@interledger/pay@npm:^0.4.0-alpha.7":
+  version: 0.4.0-alpha.7
+  resolution: "@interledger/pay@npm:0.4.0-alpha.7"
   dependencies:
     abort-controller: ^3.0.0
     ilp-logger: ^1.4.5-alpha.1
@@ -2097,7 +2097,7 @@ __metadata:
     ilp-protocol-stream: ^2.7.2-alpha.0
     long: ^4.0.0
     node-fetch: 2.6.1
-  checksum: 2a45860c0f511f68806f88089d2481a772b693d2fc0dfadc2c02dcbe79ffa15ca1daaef5fbac9e83cf1a027cab0e80daaeb12af3d0d45aee2ae6f88afb834a79
+  checksum: b44e249091a250b202ac1c3965dd9fbd27349467a644ad5e207801087b0f78ed429bf5f8e13ba0cc94f72a2507b4cb8943ff0fc562eed470e9e634795c5cf7f6
   languageName: node
   linkType: hard
 
@@ -4639,7 +4639,9 @@ __metadata:
     "@types/nock": ^11.1.0
     "@types/pino": ^7.0.5
     "@types/uuid": ^8.3.0
+    ajv: ^8.11.0
     axios: ^0.26.1
+    jest-openapi: ^0.14.2
     jose: ^4.7.0
     knex: ^0.21.17
     koa: ^2.13.4
@@ -4648,6 +4650,8 @@ __metadata:
     node-mocks-http: ^1.11.0
     objection: ^2.2.15
     objection-db-errors: ^1.1.2
+    openapi: "workspace:packages/openapi"
+    openapi-types: ^12.0.0
     pg: ^8.6.0
     pino: ^7.10.0
     pino-pretty: ^7.6.1
@@ -4850,7 +4854,7 @@ __metadata:
     "@graphql-tools/load": ^7.1.9
     "@graphql-tools/schema": ^8.1.2
     "@graphql-tools/utils": ^8.5.3
-    "@interledger/pay": ^0.4.0-alpha.6
+    "@interledger/pay": ^0.4.0-alpha.7
     "@interledger/stream-receiver": ^0.3.3-alpha.1
     "@koa/cors": ^3.1.0
     "@koa/router": ^10.0.0
@@ -11985,6 +11989,13 @@ __metadata:
   version: 11.0.1
   resolution: "openapi-types@npm:11.0.1"
   checksum: 182c5b28199a0d030bf5f64b9c23f65dc800cdc845ae09c40aa5e03b862634a02526d5092af53bf853514af778ee2f36dead741e0521e01f944cf7f50927e14e
+  languageName: node
+  linkType: hard
+
+"openapi-types@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "openapi-types@npm:12.0.0"
+  checksum: 8d22cb3727e892ad8f9782210360627f6cde92a53c229407d897f0252543a937aed59bfd7a4bee291b50547d7a4e836290ee35eaebc3978c873c601de9ace5b6
   languageName: node
   linkType: hard
 

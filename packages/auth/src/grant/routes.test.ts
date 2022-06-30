@@ -3,6 +3,7 @@ import { v4 } from 'uuid'
 import * as crypto from 'crypto'
 import { IocContract } from '@adonisjs/fold'
 import nock from 'nock'
+import jestOpenAPI from 'jest-openapi'
 
 import { createContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -117,6 +118,7 @@ describe('Grant Routes', (): void => {
       grantRoutes = await deps.use('grantRoutes')
       knex = await deps.use('knex')
       appContainer = await createTestApp(deps)
+      jestOpenAPI(await deps.use('openApi'))
     }
   )
 
@@ -171,7 +173,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -179,7 +183,8 @@ describe('Grant Routes', (): void => {
       ctx.request.body = incomingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(201)
 
       scope.isDone()
     })
@@ -216,7 +221,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -224,7 +231,8 @@ describe('Grant Routes', (): void => {
       ctx.request.body = outgoingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(201)
 
       scope.isDone()
     })
@@ -260,7 +268,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -268,7 +278,8 @@ describe('Grant Routes', (): void => {
       ctx.request.body = accountGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(201)
 
       scope.isDone()
     })
@@ -304,7 +315,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -312,7 +325,8 @@ describe('Grant Routes', (): void => {
       ctx.request.body = quoteGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(201)
 
       scope.isDone()
     })
@@ -349,7 +363,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -394,7 +410,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -439,7 +457,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -484,7 +504,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -502,7 +524,9 @@ describe('Grant Routes', (): void => {
     test('accepts json only', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'text/plain', 'Content-Type': 'application/json' }
+          headers: { Accept: 'text/plain', 'Content-Type': 'application/json' },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -517,7 +541,9 @@ describe('Grant Routes', (): void => {
     test('sends json body only', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json', 'Content-Type': 'text/plain' }
+          headers: { Accept: 'application/json', 'Content-Type': 'text/plain' },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -535,7 +561,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -587,7 +615,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -638,7 +668,9 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          url: '/',
+          method: 'POST'
         },
         {}
       )
@@ -646,7 +678,8 @@ describe('Grant Routes', (): void => {
       ctx.request.body = BASE_GRANT_REQUEST
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(201)
       expect(ctx.body).toEqual({
         interact: {
           redirect: expect.any(String),

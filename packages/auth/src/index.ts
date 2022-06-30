@@ -12,6 +12,7 @@ import { createGrantService } from './grant/service'
 import { createAccessTokenService } from './accessToken/service'
 import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
+import { createOpenAPI } from 'openapi'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -109,6 +110,11 @@ export function initIocContainer(
       clientService: await deps.use('clientService'),
       logger: await deps.use('logger')
     })
+  })
+
+  container.singleton('openApi', async (deps) => {
+    const config = await deps.use('config')
+    return await createOpenAPI(config.authServerSpec)
   })
 
   return container

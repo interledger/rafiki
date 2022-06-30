@@ -634,4 +634,33 @@ describe('Incoming Payment Service', (): void => {
       })
     })
   })
+  describe('getByConnection', (): void => {
+    let incomingPayment: IncomingPayment
+
+    beforeEach(
+      async (): Promise<void> => {
+        incomingPayment = (await incomingPaymentService.create({
+          accountId,
+          description: 'Test incoming payment',
+          incomingAmount: {
+            value: BigInt(123),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() + 30_000),
+          externalRef: '#123'
+        })) as IncomingPayment
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+      }
+    )
+    test('returns incoming payment id on correct connectionId', async (): Promise<void> => {
+      await expect(
+        incomingPaymentService.getByConnection(incomingPayment.connectionId)
+      ).resolves.toEqual(incomingPayment)
+    })
+    test('returns undefined on incorrect connectionId', async (): Promise<void> => {
+      await expect(incomingPaymentService.getByConnection(uuid())).resolves
+        .toBeUndefined
+    })
+  })
 })

@@ -1,5 +1,5 @@
 import base64url from 'base64url'
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamCredentials } from '@interledger/stream-receiver'
 import { Logger } from 'pino'
 import {
   ReadContext,
@@ -22,6 +22,7 @@ import {
   parsePaginationQueryParameters
 } from '../../../shared/pagination'
 import { Pagination } from '../../../shared/baseModel'
+import { ConnectionService } from '../../connection/service'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -31,7 +32,7 @@ interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   incomingPaymentService: IncomingPaymentService
-  streamServer: StreamServer
+  connectionService: ConnectionService
 }
 
 export interface IncomingPaymentRoutes {
@@ -71,14 +72,8 @@ async function getIncomingPayment(
   }
   if (!incomingPayment) return ctx.throw(404)
 
-  const body = incomingPaymentToBody(deps, incomingPayment)
-  const { ilpAddress, sharedSecret } = getStreamCredentials(
-    deps,
-    incomingPayment
-  )
-  body['ilpAddress'] = ilpAddress
-  body['sharedSecret'] = base64url(sharedSecret)
-  ctx.body = body
+  const streamCredentials = deps.connectionService.get(incomingPayment)
+  ctx.body = incomingPaymentToBody(deps, incomingPayment, streamCredentials)
 }
 
 export type CreateBody = {
@@ -117,14 +112,12 @@ async function createIncomingPayment(
   }
 
   ctx.status = 201
-  const res = incomingPaymentToBody(deps, incomingPaymentOrError)
-  const { ilpAddress, sharedSecret } = getStreamCredentials(
+  const streamCredentials = deps.connectionService.get(incomingPaymentOrError)
+  ctx.body = incomingPaymentToBody(
     deps,
-    incomingPaymentOrError
+    incomingPaymentOrError,
+    streamCredentials
   )
-  res['ilpAddress'] = ilpAddress
-  res['sharedSecret'] = base64url(sharedSecret)
-  ctx.body = res
 }
 
 async function completeIncomingPayment(
@@ -147,8 +140,7 @@ async function completeIncomingPayment(
     )
   }
 
-  const res = incomingPaymentToBody(deps, incomingPaymentOrError)
-  ctx.body = res
+  ctx.body = incomingPaymentToBody(deps, incomingPaymentOrError)
 }
 
 async function listIncomingPayments(
@@ -181,28 +173,23 @@ async function listIncomingPayments(
 
 function incomingPaymentToBody(
   deps: ServiceDependencies,
-  incomingPayment: IncomingPayment
+  incomingPayment: IncomingPayment,
+  streamCredentials?: StreamCredentials
 ) {
   return Object.fromEntries(
     Object.entries({
       ...incomingPayment.toJSON(),
       accountId: `${deps.config.publicHost}/${incomingPayment.accountId}`,
       id: `${deps.config.publicHost}/${incomingPayment.accountId}/incoming-payments/${incomingPayment.id}`,
+      ilpStreamConnection: streamCredentials
+        ? {
+            id: `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`,
+            ilpAddress: streamCredentials.ilpAddress,
+            sharedSecret: base64url(streamCredentials.sharedSecret)
+          }
+        : `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`,
       state: null,
       completed: incomingPayment.state === IncomingPaymentState.Completed
     }).filter(([_, v]) => v != null)
   )
-}
-
-function getStreamCredentials(
-  deps: ServiceDependencies,
-  incomingPayment: IncomingPayment
-) {
-  return deps.streamServer.generateCredentials({
-    paymentTag: incomingPayment.id,
-    asset: {
-      code: incomingPayment.asset.code,
-      scale: incomingPayment.asset.scale
-    }
-  })
 }
