@@ -49,3 +49,6 @@ dist
 
 # IDEs
 .idea/
+
+# node_modules
+**/node_modules

@@ -7,6 +7,7 @@ import { ClientService, KeyInfo } from '../client/service'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
+  revoke(id: string): Promise<Error | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -35,8 +36,17 @@ export async function createAccessTokenService({
   }
 
   return {
-    introspect: (token: string) => introspect(deps, token)
+    introspect: (token: string) => introspect(deps, token),
+    revoke: (id: string) => revoke(deps, id)
   }
+}
+
+function isTokenExpired(token: AccessToken): boolean {
+  const now = new Date(Date.now())
+  const expiresAt = token.expiresIn
+    ? token.createdAt.getTime() + token.expiresIn
+    : Infinity
+  return expiresAt < now.getTime()
 }
 
 async function introspect(
@@ -45,11 +55,7 @@ async function introspect(
 ): Promise<Introspection | undefined> {
   const token = await AccessToken.query(deps.knex).findOne({ value })
   if (!token) return
-  const now = new Date(Date.now())
-  const expiresAt = token.expiresIn
-    ? token.createdAt.getTime() + token.expiresIn
-    : Infinity
-  if (expiresAt < now.getTime()) {
+  if (isTokenExpired(token)) {
     return { active: false }
   } else {
     const grant = await Grant.query(deps.knex)
@@ -63,5 +69,19 @@ async function introspect(
     )
     const { keys } = registryData
     return { active: true, ...grant, key: { proof: 'httpsig', jwk: keys[0] } }
+  }
+}
+
+async function revoke(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Error | undefined> {
+  const token = await AccessToken.query(deps.knex).findById(id)
+  if (token) {
+    if (!isTokenExpired(token)) {
+      await token.$query(deps.knex).patch({ expiresIn: 1 })
+    }
+  } else {
+    return new Error('token not found')
   }
 }
