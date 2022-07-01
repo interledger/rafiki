@@ -316,7 +316,7 @@ describe('Access Token Routes', (): void => {
     )
 
     test('Returns status 204 even if token does not exist', async (): Promise<void> => {
-      id = v4()
+      managementId = v4()
       const ctx = createContext(
         {
           headers: {
