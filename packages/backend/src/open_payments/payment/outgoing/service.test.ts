@@ -882,42 +882,6 @@ describe('OutgoingPaymentService', (): void => {
         })
       }
     )
-    test('returns true if grant access has no limits', async (): Promise<void> => {
-      const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-      const grant = new Grant({
-        active: true,
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create, AccessAction.Read],
-            identifier: `${Config.publicHost}/${payment.accountId}`,
-            interval: `R0/${start.toISOString()}/P1M`,
-            limits: undefined
-          }
-        ]
-      })
-      expect(validateGrant(serviceDeps, payment, grant)).resolves.toEqual(true)
-    })
-    test('returns true if limits do not specify send or receive amount', async (): Promise<void> => {
-      const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-      const grant = new Grant({
-        active: true,
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create, AccessAction.Read],
-            identifier: `${Config.publicHost}/${payment.accountId}`,
-            interval: `R0/${start.toISOString()}/P1M`,
-            limits: {
-              receiver
-            }
-          }
-        ]
-      })
-      expect(validateGrant(serviceDeps, payment, grant)).resolves.toEqual(true)
-    })
     test('returns false if identifier does not match', async (): Promise<void> => {
       const grant = new Grant({
         active: true,
@@ -942,27 +906,6 @@ describe('OutgoingPaymentService', (): void => {
             type: AccessType.OutgoingPayment,
             actions: [AccessAction.Create, AccessAction.Read],
             interval: `R0/${start.toISOString()}/P1M`
-          }
-        ]
-      })
-      expect(validateGrant(serviceDeps, payment, grant)).resolves.toEqual(false)
-    })
-    test('returns false if limits receiver does not match', async (): Promise<void> => {
-      const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-      const grant = new Grant({
-        active: true,
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create, AccessAction.Read],
-            identifier: `${Config.publicHost}/${payment.accountId}`,
-            interval: `R0/${start.toISOString()}/P1M`,
-            limits: {
-              receiver: `${
-                Config.publicHost
-              }/${uuid()}/incoming-payments/${uuid()}`
-            }
           }
         ]
       })
@@ -1004,9 +947,14 @@ describe('OutgoingPaymentService', (): void => {
       ${true}    | ${'sendAmount'}
       ${false}   | ${'receiveAmount'}
     `(
-      'returns true if limit $description match payment ',
+      'returns false if limit $description is not enough for payment ',
       async (sendAmount): Promise<void> => {
         const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+        const amount = {
+          value: BigInt(12),
+          assetCode: 'USD',
+          assetScale: 9
+        }
         const grant = new Grant({
           active: true,
           grant: uuid(),
@@ -1017,20 +965,112 @@ describe('OutgoingPaymentService', (): void => {
               identifier: `${Config.publicHost}/${payment.accountId}`,
               interval: `R0/${start.toISOString()}/P1M`,
               limits: sendAmount
-                ? {
-                    sendAmount: {
-                      value: BigInt(1234567),
-                      assetCode: 'USD',
-                      assetScale: 9
-                    }
-                  }
-                : {
-                    receiveAmount: {
-                      value: BigInt(1234567),
-                      assetCode: 'USD',
-                      assetScale: 9
-                    }
-                  }
+                ? { sendAmount: amount }
+                : { receiveAmount: amount }
+            }
+          ]
+        })
+        expect(validateGrant(serviceDeps, payment, grant)).resolves.toEqual(
+          false
+        )
+      }
+    )
+    test('returns false if limit was already used up', async (): Promise<void> => {
+      const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      const grant = new Grant({
+        active: true,
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [AccessAction.Create, AccessAction.Read],
+            identifier: `${Config.publicHost}/${payment.accountId}`,
+            interval: `R0/${start.toISOString()}/P1M`,
+            limits: {
+              sendAmount: {
+                value: BigInt(1000000000),
+                assetCode: 'USD',
+                assetScale: 9
+              }
+            }
+          }
+        ]
+      })
+      const firstPayment = await createOutgoingPayment(deps, {
+        accountId,
+        receiver,
+        sendAmount: {
+          value: BigInt(999999999),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        grant,
+        validDestination: false
+      })
+      assert.ok(firstPayment)
+      expect(validateGrant(serviceDeps, payment, grant)).resolves.toEqual(false)
+    })
+    test('returns true if grant access has no limits', async (): Promise<void> => {
+      const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      const grant = new Grant({
+        active: true,
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [AccessAction.Create, AccessAction.Read],
+            identifier: `${Config.publicHost}/${payment.accountId}`,
+            interval: `R0/${start.toISOString()}/P1M`,
+            limits: undefined
+          }
+        ]
+      })
+      expect(validateGrant(serviceDeps, payment, grant)).resolves.toEqual(true)
+    })
+    test('returns true if limits do not specify send or receive amount', async (): Promise<void> => {
+      const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      const grant = new Grant({
+        active: true,
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [AccessAction.Create, AccessAction.Read],
+            identifier: `${Config.publicHost}/${payment.accountId}`,
+            interval: `R0/${start.toISOString()}/P1M`,
+            limits: {
+              receiver
+            }
+          }
+        ]
+      })
+      expect(validateGrant(serviceDeps, payment, grant)).resolves.toEqual(true)
+    })
+    test.each`
+      sendAmount | description
+      ${true}    | ${'sendAmount'}
+      ${false}   | ${'receiveAmount'}
+    `(
+      'returns true if limit $description is enough for payment ',
+      async (sendAmount): Promise<void> => {
+        const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+        const amount = {
+          value: BigInt(1234567),
+          assetCode: 'USD',
+          assetScale: 9
+        }
+        const grant = new Grant({
+          active: true,
+          grant: uuid(),
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              identifier: `${Config.publicHost}/${payment.accountId}`,
+              interval: `R0/${start.toISOString()}/P1M`,
+              limits: sendAmount
+                ? { sendAmount: amount }
+                : { receiveAmount: amount }
             }
           ]
         })
