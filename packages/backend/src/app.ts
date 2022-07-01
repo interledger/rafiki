@@ -314,7 +314,7 @@ export class App {
     }): AccessAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
-          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
+          return path.endsWith('Id}') ? AccessAction.Read : AccessAction.List
         case HttpMethod.POST:
           return path.endsWith('/complete')
             ? AccessAction.Complete
