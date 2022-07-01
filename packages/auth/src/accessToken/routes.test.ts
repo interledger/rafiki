@@ -244,9 +244,6 @@ describe('Access Token Routes', (): void => {
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk]
         })
-      const now = new Date(new Date().getTime())
-      jest.useFakeTimers('modern')
-      jest.setSystemTime(now)
       const requestBody = {
         access_token: token.value,
         proof: 'httpsig',
@@ -256,6 +253,10 @@ describe('Access Token Routes', (): void => {
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
         requestBody
       )
+      jest.useFakeTimers({
+        doNotFake: ['nextTick'],
+        now: new Date(new Date().getTime() + 4000)
+      })
       const ctx = createContext(
         {
           headers: {
