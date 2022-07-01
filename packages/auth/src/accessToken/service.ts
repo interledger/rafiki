@@ -108,7 +108,7 @@ async function createAccessToken(
   const invTrx = opts?.trx || (await AccessToken.startTransaction(deps.knex))
   try {
     const accessToken = await AccessToken.query(invTrx).insert({
-      value: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
+      value: crypto.randomBytes(8).toString('hex').toUpperCase(),
       managementId: v4(),
       grantId,
       expiresIn: opts?.expiresIn || deps.config.accessTokenExpirySeconds
