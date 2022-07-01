@@ -17,11 +17,7 @@ import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { GrantRequest } from '../grant/service'
-import {
-  generateSigHeaders,
-  SIGNATURE_METHOD,
-  SIGNATURE_TARGET_URI
-} from '../tests/signature'
+import { generateSigHeaders } from '../tests/signature'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const TEST_KID_PATH = '/keys/base-test-key'
@@ -151,6 +147,8 @@ describe('Grant Routes', (): void => {
 
     const nbfDate = new Date()
     nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
+    const url = '/'
+    const method = 'POST'
 
     test('Valid incoming payment grant', async (): Promise<void> => {
       const incomingPaymentGrantRequest: GrantRequest = {
@@ -179,7 +177,10 @@ describe('Grant Routes', (): void => {
             }
           ]
         })
+
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         incomingPaymentGrantRequest
       )
       const ctx = createContext(
@@ -191,14 +192,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = incomingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -235,7 +234,10 @@ describe('Grant Routes', (): void => {
             }
           ]
         })
+
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         outgoingPaymentGrantRequest
       )
       const ctx = createContext(
@@ -247,14 +249,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = outgoingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -292,6 +292,8 @@ describe('Grant Routes', (): void => {
         })
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         accountGrantRequest
       )
       const ctx = createContext(
@@ -303,14 +305,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = accountGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -348,6 +348,8 @@ describe('Grant Routes', (): void => {
         })
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         quoteGrantRequest
       )
       const ctx = createContext(
@@ -359,14 +361,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = quoteGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -405,6 +405,8 @@ describe('Grant Routes', (): void => {
         })
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         incomingPaymentGrantRequest
       )
       const ctx = createContext(
@@ -422,8 +424,6 @@ describe('Grant Routes', (): void => {
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = incomingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -461,6 +461,8 @@ describe('Grant Routes', (): void => {
         })
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         outgoingPaymentGrantRequest
       )
       const ctx = createContext(
@@ -472,14 +474,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = outgoingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -517,6 +517,8 @@ describe('Grant Routes', (): void => {
         })
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         incomingPaymentGrantRequest
       )
       const ctx = createContext(
@@ -528,14 +530,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = incomingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -573,6 +573,8 @@ describe('Grant Routes', (): void => {
         })
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         incomingPaymentGrantRequest
       )
       const ctx = createContext(
@@ -584,14 +586,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = incomingPaymentGrantRequest
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -602,8 +602,13 @@ describe('Grant Routes', (): void => {
   })
 
   describe('/create', (): void => {
+    const url = '/'
+    const method = 'POST'
+
     test('accepts json only', async (): Promise<void> => {
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         BASE_GRANT_REQUEST
       )
       const ctx = createContext(
@@ -615,14 +620,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = BASE_GRANT_REQUEST
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -632,6 +635,8 @@ describe('Grant Routes', (): void => {
 
     test('sends json body only', async (): Promise<void> => {
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         BASE_GRANT_REQUEST
       )
       const ctx = createContext(
@@ -643,14 +648,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = BASE_GRANT_REQUEST
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -673,6 +676,8 @@ describe('Grant Routes', (): void => {
         }
       }
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         body
       )
       const ctx = createContext(
@@ -684,8 +689,8 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -733,6 +738,8 @@ describe('Grant Routes', (): void => {
       }
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         body
       )
       const ctx = createContext(
@@ -744,14 +751,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = body
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
@@ -785,6 +790,8 @@ describe('Grant Routes', (): void => {
         })
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         BASE_GRANT_REQUEST
       )
       const ctx = createContext(
@@ -796,14 +803,12 @@ describe('Grant Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = BASE_GRANT_REQUEST
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()

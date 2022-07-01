@@ -19,6 +19,8 @@ export const TEST_CLIENT_KEY = {
 }
 
 export async function generateSigHeaders(
+  url: string,
+  method: string,
   body?: unknown
 ): Promise<{ sigInput: string; signature: string; contentDigest?: string }> {
   const privateKey = {
@@ -36,12 +38,12 @@ export async function generateSigHeaders(
     hash.update(Buffer.from(JSON.stringify(body)))
     const bodyDigest = hash.digest()
     contentDigest = `sha-256:${bodyDigest.toString('base64')}:`
-    challenge = `"@method": ${SIGNATURE_METHOD}\n"@target-uri": ${SIGNATURE_TARGET_URI}\n"content-digest": ${contentDigest}\n"@signature-params": ${sigInput.replace(
+    challenge = `"@method": ${method}\n"@target-uri": ${url}\n"content-digest": ${contentDigest}\n"@signature-params": ${sigInput.replace(
       'sig1=',
       ''
     )}`
   } else {
-    challenge = `"@method": ${SIGNATURE_METHOD}\n"@target-uri": ${SIGNATURE_TARGET_URI}\n"@signature-params": ${sigInput.replace(
+    challenge = `"@method": ${method}\n"@target-uri": ${url}\n"@signature-params": ${sigInput.replace(
       'sig1=',
       ''
     )}`

@@ -16,11 +16,7 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
-import {
-  generateSigHeaders,
-  SIGNATURE_METHOD,
-  SIGNATURE_TARGET_URI
-} from '../tests/signature'
+import { generateSigHeaders } from '../tests/signature'
 import {
   TEST_KID_PATH,
   KEY_REGISTRY_ORIGIN,
@@ -95,6 +91,10 @@ describe('Access Token Routes', (): void => {
     let grant: Grant
     let access: Access
     let token: AccessToken
+
+    const url = '/introspect'
+    const method = 'POST'
+
     beforeEach(
       async (): Promise<void> => {
         grant = await Grant.query(trx).insertAndFetch({
@@ -117,6 +117,8 @@ describe('Access Token Routes', (): void => {
         resource_server: 'test'
       }
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         requestBody
       )
       const ctx = createContext(
@@ -127,14 +129,12 @@ describe('Access Token Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/introspect',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
       ctx.request.body = requestBody
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)
       expect(ctx.body).toMatchObject({
@@ -150,6 +150,8 @@ describe('Access Token Routes', (): void => {
       }
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         requestBody
       )
       const ctx = createContext(
@@ -160,14 +162,12 @@ describe('Access Token Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: '/introspect',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
       ctx.request.body = requestBody
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(400)
       expect(ctx.body).toEqual({
@@ -190,6 +190,8 @@ describe('Access Token Routes', (): void => {
       }
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         requestBody
       )
       const ctx = createContext(
@@ -202,8 +204,6 @@ describe('Access Token Routes', (): void => {
           },
           url: '/introspect',
           method: 'POST'
-          // method: SIGNATURE_METHOD,
-          // url: SIGNATURE_TARGET_URI
         },
         {}
       )
@@ -251,6 +251,8 @@ describe('Access Token Routes', (): void => {
       }
 
       const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
         requestBody
       )
       jest.useFakeTimers({
@@ -267,8 +269,6 @@ describe('Access Token Routes', (): void => {
           },
           url: '/introspect',
           method: 'POST'
-          // method: SIGNATURE_METHOD,
-          // url: SIGNATURE_TARGET_URI
         },
         {}
       )
@@ -292,6 +292,9 @@ describe('Access Token Routes', (): void => {
     let grant: Grant
     let token: AccessToken
     let managementId: string
+    let url: string
+
+    const method = 'DELETE'
 
     beforeEach(
       async (): Promise<void> => {
@@ -303,6 +306,7 @@ describe('Access Token Routes', (): void => {
           ...BASE_TOKEN
         })
         managementId = token.managementId
+        url = `/token/${managementId}`
       }
     )
 
@@ -321,7 +325,10 @@ describe('Access Token Routes', (): void => {
         resource_server: 'test'
       }
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders()
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method
+      )
       const ctx = createContext(
         {
           headers: {
@@ -331,7 +338,7 @@ describe('Access Token Routes', (): void => {
             'Signature-Input': sigInput
           },
           url: `/token/${managementId}`,
-          method: 'DELETE'
+          method
         },
         { managementId }
       )
@@ -358,7 +365,10 @@ describe('Access Token Routes', (): void => {
         proof: 'httpsig',
         resource_server: 'test'
       }
-      const { signature, sigInput, contentDigest } = await generateSigHeaders()
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method
+      )
       const ctx = createContext(
         {
           headers: {
@@ -367,14 +377,12 @@ describe('Access Token Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: `/token/${managementId}`,
-          method: 'DELETE'
+          url,
+          method
         },
         { managementId }
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = requestBody
       await token.$query(trx).patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
@@ -394,7 +402,10 @@ describe('Access Token Routes', (): void => {
         proof: 'httpsig',
         resource_server: 'test'
       }
-      const { signature, sigInput, contentDigest } = await generateSigHeaders()
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method
+      )
       const ctx = createContext(
         {
           headers: {
@@ -403,14 +414,12 @@ describe('Access Token Routes', (): void => {
             Signature: signature,
             'Signature-Input': sigInput
           },
-          url: `/token/${managementId}`,
-          method: 'DELETE'
+          url,
+          method
         },
         { managementId }
       )
 
-      ctx.method = SIGNATURE_METHOD
-      ctx.request.url = SIGNATURE_TARGET_URI
       ctx.request.body = requestBody
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
