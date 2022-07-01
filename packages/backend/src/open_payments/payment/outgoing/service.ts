@@ -262,8 +262,7 @@ interface PaymentAccess extends GrantAccess {
 }
 
 // "payment" is locked by the "deps.knex" transaction.
-// export for testing
-export async function validateGrant(
+async function validateGrant(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   grant: Grant
