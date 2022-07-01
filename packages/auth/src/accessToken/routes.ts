@@ -94,7 +94,9 @@ async function rotateToken(
   ctx: AppContext
 ): Promise<void> {
   //TODO: verify accessToken with httpsig method
-  const result = await deps.accessTokenService.rotate(ctx.params['id'])
+  const result = await deps.accessTokenService.rotate(
+    ctx.params['managementId']
+  )
   if (result.success) {
     ctx.status = 200
     ctx.body = {
@@ -103,7 +105,7 @@ async function rotateToken(
       }
     }
   } else {
-    ctx.status = 400
+    ctx.status = 404
     return ctx.throw(ctx.status, result.error.message)
   }
 }

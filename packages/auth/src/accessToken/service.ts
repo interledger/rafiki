@@ -10,7 +10,7 @@ import { v4 as uuid } from 'uuid'
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
   revoke(id: string): Promise<Error | undefined>
-  rotate(id: string): Promise<Rotation>
+  rotate(managementId: string): Promise<Rotation>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -51,7 +51,7 @@ export async function createAccessTokenService({
   return {
     introspect: (token: string) => introspect(deps, token),
     revoke: (id: string) => revoke(deps, id),
-    rotate: (id: string) => rotate(deps, id)
+    rotate: (managementId: string) => rotate(deps, managementId)
   }
 }
 
@@ -102,12 +102,12 @@ async function revoke(
 
 async function rotate(
   deps: ServiceDependencies,
-  id: string
+  managementId: string
 ): Promise<Rotation> {
   let access: Access | undefined
   let error: Error | undefined
 
-  const token = await AccessToken.query(deps.knex).findById(id)
+  const token = await AccessToken.query(deps.knex).findOne({ managementId })
   if (token) {
     if (token.revoked) {
       error = new Error('token revoked')

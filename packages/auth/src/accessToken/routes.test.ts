@@ -302,7 +302,7 @@ describe('Access Token Routes', (): void => {
   describe('Rotation', (): void => {
     let grant: Grant
     let token: AccessToken
-    let id: string
+    let managementId: string
 
     beforeEach(
       async (): Promise<void> => {
@@ -317,21 +317,21 @@ describe('Access Token Routes', (): void => {
           grantId: grant.id,
           ...BASE_TOKEN
         })
-        id = token.id
+        managementId = BASE_TOKEN.managementId
       }
     )
 
     test('Cannot rotate nonexistent token', async (): Promise<void> => {
-      id = v4()
+      managementId = v4()
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' }
         },
-        { id }
+        { managementId }
       )
 
       await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
-        status: 400,
+        status: 404,
         message: 'token not found'
       })
     })
@@ -341,7 +341,7 @@ describe('Access Token Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { id }
+        { managementId }
       )
 
       await accessTokenRoutes.rotate(ctx)
@@ -353,7 +353,7 @@ describe('Access Token Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { id }
+        { managementId }
       )
 
       await token.$query(trx).patch({ expiresIn: -1 })
@@ -366,12 +366,12 @@ describe('Access Token Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { id }
+        { managementId }
       )
 
       await token.$query(trx).patch({ revoked: true })
       await expect(accessTokenRoutes.rotate(ctx)).rejects.toThrow()
-      expect(ctx.response.status).toBe(400)
+      expect(ctx.response.status).toBe(404)
     })
   })
 })
