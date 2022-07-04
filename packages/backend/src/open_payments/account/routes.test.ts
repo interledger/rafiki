@@ -76,7 +76,7 @@ describe('Account Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { id: uuid() }
+        { accountId: uuid() }
       )
       await expect(accountRoutes.get(ctx)).rejects.toHaveProperty('status', 404)
     })
@@ -94,7 +94,7 @@ describe('Account Routes', (): void => {
           headers: { Accept: 'application/json' },
           url: `/${account.id}`
         },
-        { id: account.id }
+        { accountId: account.id }
       )
       await expect(accountRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
