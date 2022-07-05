@@ -5011,7 +5011,7 @@ __metadata:
     "@koa/router": ^10.0.0
     "@types/bcrypt": ^5.0.0
     "@types/ioredis": ^4.22.3
-    "@types/jest": ^26.0.22
+    "@types/jest": ^28.1.4
     "@types/koa": ^2.13.4
     "@types/koa-bodyparser": ^4.3.0
     "@types/koa__cors": ^3.0.2
