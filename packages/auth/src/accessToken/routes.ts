@@ -81,12 +81,8 @@ async function revokeToken(
 ): Promise<void> {
   //TODO: verify accessToken with httpsig method
 
-  const revocationError = await deps.accessTokenService.revoke(ctx.params['id'])
-  if (revocationError) {
-    return ctx.throw(404, revocationError.message)
-  } else {
-    ctx.status = 204
-  }
+  await deps.accessTokenService.revoke(ctx.params['id'])
+  ctx.status = 204
 }
 
 async function rotateToken(

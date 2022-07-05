@@ -9,7 +9,7 @@ import { v4 as uuid } from 'uuid'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
-  revoke(id: string): Promise<Error | undefined>
+  revoke(id: string): Promise<void>
   rotate(managementId: string): Promise<Rotation>
 }
 
@@ -86,17 +86,10 @@ async function introspect(
   }
 }
 
-async function revoke(
-  deps: ServiceDependencies,
-  id: string
-): Promise<Error | undefined> {
+async function revoke(deps: ServiceDependencies, id: string): Promise<void> {
   const token = await AccessToken.query(deps.knex).findById(id)
   if (token) {
-    if (!token.revoked && !isTokenExpired(token)) {
-      await token.$query(deps.knex).patch({ revoked: true })
-    }
-  } else {
-    return new Error('token not found')
+    await token.$query(deps.knex).delete()
   }
 }
 
@@ -109,14 +102,10 @@ async function rotate(
 
   const token = await AccessToken.query(deps.knex).findOne({ managementId })
   if (token) {
-    if (token.revoked) {
-      error = new Error('token revoked')
-    } else {
-      await token.$query(deps.knex).patch({
-        value: uuid()
-      })
-      access = await Access.query(deps.knex).findOne({ grantId: token.grantId })
-    }
+    await token.$query(deps.knex).patch({
+      value: uuid()
+    })
+    access = await Access.query(deps.knex).findOne({ grantId: token.grantId })
   } else {
     error = new Error('token not found')
   }

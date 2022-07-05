@@ -238,7 +238,7 @@ describe('Access Token Routes', (): void => {
       }
     )
 
-    test('Returns status 404 if token does not exist', async (): Promise<void> => {
+    test('Returns status 204 even if token does not exist', async (): Promise<void> => {
       id = v4()
       const ctx = createContext(
         {
@@ -249,10 +249,8 @@ describe('Access Token Routes', (): void => {
         { id }
       )
 
-      await expect(accessTokenRoutes.revoke(ctx)).rejects.toMatchObject({
-        status: 404,
-        message: 'token not found'
-      })
+      await accessTokenRoutes.revoke(ctx)
+      expect(ctx.response.status).toBe(204)
     })
 
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
@@ -281,19 +279,6 @@ describe('Access Token Routes', (): void => {
       )
 
       await token.$query(trx).patch({ expiresIn: -1 })
-      await accessTokenRoutes.revoke(ctx)
-      expect(ctx.response.status).toBe(204)
-    })
-
-    test('Returns status 204 if token has been revoked', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { id }
-      )
-
-      await token.$query(trx).patch({ revoked: true })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
     })
@@ -359,19 +344,6 @@ describe('Access Token Routes', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.rotate(ctx)
       expect(ctx.response.status).toBe(200)
-    })
-
-    test('Cannot rotate a revoked token', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { managementId }
-      )
-
-      await token.$query(trx).patch({ revoked: true })
-      await expect(accessTokenRoutes.rotate(ctx)).rejects.toThrow()
-      expect(ctx.response.status).toBe(404)
     })
   })
 })
