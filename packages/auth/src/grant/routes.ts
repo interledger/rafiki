@@ -74,7 +74,7 @@ async function createGrantInitiation(
     return
   }
   const { body } = ctx.request
-  const { grantService, clientService } = deps
+  const { grantService, clientService, config } = deps
   if (!validateGrantRequest(body)) {
     ctx.status = 400
     ctx.body = { error: 'invalid_request' }
@@ -90,9 +90,21 @@ async function createGrantInitiation(
     return
   }
 
-  const res = await grantService.initiateGrant(body)
+  const grant = await grantService.initiateGrant(body)
   ctx.status = 201
-  ctx.body = res
+  ctx.body = {
+    interact: {
+      redirect: config.identityServerDomain + `/interact/${grant.interactId}`,
+      finish: grant.interactNonce
+    },
+    continue: {
+      access_token: {
+        value: grant.continueToken
+      },
+      uri: config.authServerDomain + `/auth/continue/${grant.continueId}`,
+      wait: config.waitTimeSeconds
+    }
+  }
 }
 
 async function startInteraction(

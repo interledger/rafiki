@@ -41,7 +41,6 @@ export class Grant extends BaseModel {
       }
     }
   })
-  public access!: Access[]
   public state!: GrantState
   public startMethod!: StartMethod[]
 

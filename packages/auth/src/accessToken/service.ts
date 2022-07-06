@@ -105,25 +105,10 @@ async function createAccessToken(
   grantId: string,
   opts?: AccessTokenOpts
 ): Promise<AccessToken> {
-  const invTrx = opts?.trx || (await AccessToken.startTransaction(deps.knex))
-  try {
-    const accessToken = await AccessToken.query(invTrx).insert({
-      value: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      managementId: v4(),
-      grantId,
-      expiresIn: opts?.expiresIn || deps.config.accessTokenExpirySeconds
-    })
-
-    if (!opts?.trx) {
-      await invTrx.commit()
-    }
-
-    return accessToken
-  } catch (err) {
-    if (!opts?.trx) {
-      await invTrx.rollback()
-    }
-
-    throw err
-  }
+  return AccessToken.query(deps.knex).insert({
+    value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    managementId: v4(),
+    grantId,
+    expiresIn: opts?.expiresIn || deps.config.accessTokenExpirySeconds
+  })
 }

@@ -6,18 +6,16 @@ import { BaseService } from '../shared/baseService'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
-import { IAppConfig } from '../config/app'
 import { AccessService } from '../access/service'
 
 export interface GrantService {
-  initiateGrant(grantRequest: GrantRequest): Promise<GrantResponse>
+  initiateGrant(grantRequest: GrantRequest): Promise<Grant>
   getByInteraction(interactId: string): Promise<Grant>
   issueGrant(grantId: string): Promise<Grant>
 }
 
 interface ServiceDependencies extends BaseService {
   accessService: AccessService
-  config: IAppConfig
   knex: TransactionOrKnex
 }
 
@@ -54,7 +52,6 @@ export interface GrantResponse {
 export async function createGrantService({
   logger,
   accessService,
-  config,
   knex
 }: ServiceDependencies): Promise<GrantService> {
   const log = logger.child({
@@ -63,7 +60,6 @@ export async function createGrantService({
   const deps: ServiceDependencies = {
     logger: log,
     accessService,
-    config,
     knex
   }
   return {
@@ -76,34 +72,19 @@ export async function createGrantService({
 
 async function issueGrant(
   deps: ServiceDependencies,
-  grantId: string,
-  trx?: Transaction
+  grantId: string
 ): Promise<Grant> {
-  const invTrx = trx || (await Grant.startTransaction())
-  try {
-    const grant = await Grant.query(invTrx).patchAndFetchById(grantId, {
-      state: GrantState.Granted
-    })
-
-    if (!trx) {
-      await invTrx.commit()
-    }
-    return grant
-  } catch (err) {
-    if (!trx) {
-      await invTrx.rollback()
-    }
-
-    throw err
-  }
+  return Grant.query(deps.knex).patchAndFetchById(grantId, {
+    state: GrantState.Granted
+  })
 }
 
 async function initiateGrant(
   deps: ServiceDependencies,
   grantRequest: GrantRequest,
   trx?: Transaction
-): Promise<GrantResponse> {
-  const { accessService, knex, config } = deps
+): Promise<Grant> {
+  const { accessService, knex } = deps
 
   const {
     access_token: { access },
@@ -138,19 +119,7 @@ async function initiateGrant(
       await invTrx.commit()
     }
 
-    return {
-      interact: {
-        redirect: config.identityServerDomain + `/interact/${grant.interactId}`,
-        finish: grant.interactNonce
-      },
-      continue: {
-        access_token: {
-          value: grant.continueToken
-        },
-        uri: config.authServerDomain + `/auth/continue/${grant.continueId}`,
-        wait: config.waitTimeSeconds
-      }
-    }
+    return grant
   } catch (err) {
     if (!trx) {
       await invTrx.rollback()
