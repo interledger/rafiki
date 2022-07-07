@@ -97,7 +97,10 @@ async function rotateToken(
     ctx.status = 200
     ctx.body = {
       access_token: {
-        access: [accessToBody(result.access)]
+        access: [accessToBody(result.access)],
+        value: result.value,
+        management: result.managementId,
+        expires_in: result.expiresIn
       }
     }
   } else {

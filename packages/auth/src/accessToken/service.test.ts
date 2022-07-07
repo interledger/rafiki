@@ -210,7 +210,9 @@ describe('Access Token Service', (): void => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
       const result = await accessTokenService.rotate(token.managementId)
       expect(result.success).toBe(true)
-      token = await AccessToken.query(trx).findById(token.id)
+      token = await AccessToken.query(trx).findOne({
+        managementId: result.success && result.managementId
+      })
       expect(token.expiresIn).toBe(1000000)
       expect(token.value).not.toBe(originalTokenValue)
     })
@@ -218,7 +220,9 @@ describe('Access Token Service', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       const result = await accessTokenService.rotate(token.managementId)
       expect(result.success).toBe(true)
-      token = await AccessToken.query(trx).findById(token.id)
+      token = await AccessToken.query(trx).findOne({
+        managementId: result.success && result.managementId
+      })
       expect(token.value).not.toBe(originalTokenValue)
     })
     test('Cannot rotate nonexistent token', async (): Promise<void> => {

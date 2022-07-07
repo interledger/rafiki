@@ -286,6 +286,7 @@ describe('Access Token Routes', (): void => {
 
   describe('Rotation', (): void => {
     let grant: Grant
+    let access: Access
     let token: AccessToken
     let managementId: string
 
@@ -294,7 +295,7 @@ describe('Access Token Routes', (): void => {
         grant = await Grant.query(trx).insertAndFetch({
           ...BASE_GRANT
         })
-        await Access.query(trx).insertAndFetch({
+        access = await Access.query(trx).insertAndFetch({
           grantId: grant.id,
           ...BASE_ACCESS
         })
@@ -324,19 +325,40 @@ describe('Access Token Routes', (): void => {
     test('Can rotate token', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/token/${token.id}`,
+          method: 'POST'
         },
         { managementId }
       )
 
       await accessTokenRoutes.rotate(ctx)
-      expect(ctx.response.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+      expect(ctx.body).toMatchObject({
+        access_token: {
+          access: [
+            {
+              type: access.type,
+              actions: access.actions,
+              limits: access.limits
+            }
+          ],
+          value: expect.anything(),
+          management: expect.anything(),
+          expires_in: token.expiresIn
+        }
+      })
+      expect(ctx.response).toSatisfyApiSpec()
     })
 
     test('Can rotate an expired token', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/token/${token.id}`,
+          method: 'POST'
         },
         { managementId }
       )
@@ -344,6 +366,24 @@ describe('Access Token Routes', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.rotate(ctx)
       expect(ctx.response.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+      expect(ctx.body).toMatchObject({
+        access_token: {
+          access: [
+            {
+              type: access.type,
+              actions: access.actions,
+              limits: access.limits
+            }
+          ],
+          value: expect.anything(),
+          management: expect.anything(),
+          expires_in: token.expiresIn
+        }
+      })
+      expect(ctx.response).toSatisfyApiSpec()
     })
   })
 })

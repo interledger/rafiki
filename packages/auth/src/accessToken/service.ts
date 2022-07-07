@@ -27,6 +27,9 @@ export type Rotation =
   | {
       success: true
       access: Access
+      value: string
+      managementId: string
+      expiresIn?: number
     }
   | {
       success: false
@@ -97,28 +100,30 @@ async function rotate(
   deps: ServiceDependencies,
   managementId: string
 ): Promise<Rotation> {
-  let access: Access | undefined
-  let error: Error | undefined
-
-  const token = await AccessToken.query(deps.knex).findOne({ managementId })
+  let token = await AccessToken.query(deps.knex).findOne({ managementId })
   if (token) {
-    await token.$query(deps.knex).patch({
-      value: uuid()
+    await token.$query(deps.knex).delete()
+    const newManagementId = uuid()
+    token = await AccessToken.query(deps.knex).insertAndFetch({
+      value: uuid(),
+      grantId: token.grantId,
+      expiresIn: token.expiresIn,
+      managementId: newManagementId
     })
-    access = await Access.query(deps.knex).findOne({ grantId: token.grantId })
-  } else {
-    error = new Error('token not found')
-  }
-
-  if (access) {
+    const access = await Access.query(deps.knex).findOne({
+      grantId: token.grantId
+    })
     return {
       success: true,
-      access
+      access,
+      value: token.value,
+      managementId: token.managementId,
+      expiresIn: token.expiresIn
     }
   } else {
     return {
       success: false,
-      error: error || new Error('token rotation failed')
+      error: new Error('token not found')
     }
   }
 }
