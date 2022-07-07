@@ -616,6 +616,46 @@ describe('OutgoingPaymentService', (): void => {
           ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
         }
       )
+      test('fails if multiple accesses with send and receive amount, sum too little', async (): Promise<void> => {
+        const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+        const grant = new Grant({
+          active: true,
+          grant: uuid(),
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              identifier: `${Config.publicHost}/${accountId}`,
+              interval: `R0/${start.toISOString()}/P1M`,
+              limits: {
+                sendAmount: {
+                  value: BigInt(23),
+                  assetCode: sendAmount.assetCode,
+                  assetScale: sendAmount.assetScale
+                }
+              }
+            },
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              identifier: `${Config.publicHost}/${accountId}`,
+              interval: `R0/${start.toISOString()}/P1M`,
+              limits: {
+                receiveAmount: {
+                  value: BigInt(
+                    Math.round(0.5 * Number(quote.receiveAmount.value))
+                  ),
+                  assetCode: quote.receiveAmount.assetCode,
+                  assetScale: quote.receiveAmount.assetScale
+                }
+              }
+            }
+          ]
+        })
+        await expect(
+          outgoingPaymentService.create({ ...options, grant })
+        ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
+      })
       test('succeeds if grant access has no limits', async (): Promise<void> => {
         const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
         const grant = new Grant({
@@ -719,6 +759,44 @@ describe('OutgoingPaymentService', (): void => {
           ).resolves.toBeInstanceOf(OutgoingPayment)
         }
       )
+      test('succeeds if multiple accesses with send and receive amount', async (): Promise<void> => {
+        const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+        const grant = new Grant({
+          active: true,
+          grant: uuid(),
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              identifier: `${Config.publicHost}/${accountId}`,
+              interval: `R0/${start.toISOString()}/P1M`,
+              limits: {
+                sendAmount: {
+                  value: BigInt(23),
+                  assetCode: sendAmount.assetCode,
+                  assetScale: sendAmount.assetScale
+                }
+              }
+            },
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              identifier: `${Config.publicHost}/${accountId}`,
+              interval: `R0/${start.toISOString()}/P1M`,
+              limits: {
+                receiveAmount: {
+                  value: BigInt(4567),
+                  assetCode: quote.receiveAmount.assetCode,
+                  assetScale: quote.receiveAmount.assetScale
+                }
+              }
+            }
+          ]
+        })
+        await expect(
+          outgoingPaymentService.create({ ...options, grant })
+        ).resolves.toBeInstanceOf(OutgoingPayment)
+      })
     })
   })
 

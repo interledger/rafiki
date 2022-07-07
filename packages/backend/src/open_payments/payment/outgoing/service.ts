@@ -50,6 +50,7 @@ export interface ServiceDependencies extends BaseService {
   peerService: PeerService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
   publicHost: string
+  slippage: number
 }
 
 export async function createOutgoingPaymentService(
@@ -282,10 +283,9 @@ async function validateGrant(
   const unlimitedAccess: GrantAccess[] = []
   const unrelatedAccess: GrantAccess[] = []
 
-  let validSendAmount = false
-  let validReceiveAmount = false
-
   for (const access of grantAccess) {
+    let noSendAmount = false
+    let noReceiveAmount = false
     if (
       validateAccess({
         access,
@@ -297,12 +297,12 @@ async function validateGrant(
         return true
       }
       if (!access.limits.sendAmount) {
-        validSendAmount = true
+        noSendAmount = true
       }
       if (!access.limits.receiveAmount) {
-        validReceiveAmount = true
+        noReceiveAmount = true
       }
-      if (validSendAmount && validReceiveAmount) {
+      if (noSendAmount && noReceiveAmount) {
         return true
       }
       let paymentInterval: Interval | undefined
@@ -327,30 +327,42 @@ async function validateGrant(
     return false
   }
 
-  let availableSendAmount = validSendAmount
-    ? BigInt(0)
-    : paymentAccess.reduce(
-        (prev, access) =>
-          prev + (access.limits?.sendAmount?.value ?? BigInt(0)),
-        BigInt(0)
-      )
-  if (!validSendAmount && availableSendAmount < payment.sendAmount.value) {
-    // Payment amount single-handedly exceeds sendAmount limit(s)
-    return false
-  }
+  const availableSendAmount = paymentAccess.reduce(
+    (prev, access) => prev + (access.limits?.sendAmount?.value ?? BigInt(0)),
+    BigInt(0)
+  )
 
-  let availableReceiveAmount = validReceiveAmount
-    ? BigInt(0)
-    : paymentAccess.reduce(
-        (prev, access) =>
-          prev + (access.limits?.receiveAmount?.value ?? BigInt(0)),
-        BigInt(0)
+  const availableReceiveAmount = paymentAccess.reduce(
+    (prev, access) => prev + (access.limits?.receiveAmount?.value ?? BigInt(0)),
+    BigInt(0)
+  )
+
+  let estTotalAvailableSendAmount =
+    availableSendAmount +
+    BigInt(
+      Math.floor(
+        (Number(payment.quote.lowEstimatedExchangeRate.b) /
+          Number(payment.quote.lowEstimatedExchangeRate.a)) *
+          (1 + deps.slippage) *
+          Number(availableReceiveAmount)
       )
+    )
+  let estTotalAvailableReceiveAmount =
+    availableReceiveAmount +
+    BigInt(
+      Math.floor(
+        (Number(payment.quote.lowEstimatedExchangeRate.a) /
+          Number(payment.quote.lowEstimatedExchangeRate.b)) *
+          (1 + deps.slippage) *
+          Number(availableSendAmount)
+      )
+    )
+
   if (
-    !validReceiveAmount &&
-    availableReceiveAmount < payment.receiveAmount.value
+    estTotalAvailableSendAmount < payment.sendAmount.value ||
+    estTotalAvailableReceiveAmount < payment.receiveAmount.value
   ) {
-    // Payment amount single-handedly exceeds receiveAmount limit(s)
+    // Payment amount single-handedly exceeds sendAmount limit(s)
     return false
   }
 
@@ -408,6 +420,7 @@ async function validateGrant(
 
   // Do paymentAccess limits support payment and competing existing payments?
   for (const grantPayment of competingPayments) {
+    // Todo: check that amount in unrelated access is enough
     if (
       unrelatedAccess.find((access) =>
         validateAccess({
@@ -419,50 +432,20 @@ async function validateGrant(
     ) {
       continue
     }
-    for (const access of paymentAccess) {
-      if (
-        validatePaymentAccess({
-          access,
-          payment: grantPayment,
-          identifier: `${deps.publicHost}/${grantPayment.accountId}`
-        })
-      ) {
-        if (!validSendAmount && access.limits?.sendAmount?.value) {
-          if (grantPayment.sendAmount.value < access.limits.sendAmount.value) {
-            availableSendAmount -= grantPayment.sentAmount.value
-            access.limits.sendAmount.value -= grantPayment.sentAmount.value
-          } else {
-            availableSendAmount -= access.limits.sendAmount.value
-            grantPayment.sentAmount.value -= access.limits.sendAmount.value
-          }
-          if (availableSendAmount < payment.sendAmount.value) {
-            return false
-          }
-        }
-        if (!validReceiveAmount && access.limits?.receiveAmount?.value) {
-          // Estimate delivered amount of failed payment
-          if (grantPayment.state === OutgoingPaymentState.Failed) {
-            grantPayment.receiveAmount.value =
-              (grantPayment.receiveAmount.value *
-                grantPayment.sentAmount.value) /
-              grantPayment.sendAmount.value
-          }
-          if (
-            grantPayment.receiveAmount.value < access.limits.receiveAmount.value
-          ) {
-            availableReceiveAmount -= grantPayment.receiveAmount.value
-            access.limits.receiveAmount.value -=
-              grantPayment.receiveAmount.value
-          } else {
-            availableReceiveAmount -= access.limits.receiveAmount.value
-            grantPayment.receiveAmount.value -=
-              access.limits.receiveAmount.value
-          }
-          if (availableReceiveAmount < payment.receiveAmount.value) {
-            return false
-          }
-        }
-      }
+
+    // Estimate delivered amount of failed payment
+    if (grantPayment.state === OutgoingPaymentState.Failed) {
+      grantPayment.receiveAmount.value =
+        (grantPayment.receiveAmount.value * grantPayment.sentAmount.value) /
+        grantPayment.sendAmount.value
+    }
+    estTotalAvailableSendAmount -= grantPayment.sentAmount.value
+    estTotalAvailableReceiveAmount -= grantPayment.receiveAmount.value
+    if (
+      estTotalAvailableSendAmount < payment.sendAmount.value ||
+      estTotalAvailableReceiveAmount < payment.receiveAmount.value
+    ) {
+      return false
     }
   }
 
