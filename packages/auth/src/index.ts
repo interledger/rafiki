@@ -97,7 +97,6 @@ export function initIocContainer(
     'grantService',
     async (deps: IocContract<AppServices>) => {
       return createGrantService({
-        config: await deps.use('config'),
         logger: await deps.use('logger'),
         accessService: await deps.use('accessService'),
         knex: await deps.use('knex')
