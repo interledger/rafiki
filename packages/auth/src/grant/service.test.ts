@@ -105,21 +105,19 @@ describe('Grant Service', (): void => {
 
       const grant = await grantService.initiateGrant(grantRequest)
 
-      expect(grant).toEqual(
-        expect.objectContaining({
-          state: GrantState.Pending,
-          continueId: expect.any(String),
-          continueToken: expect.any(String),
-          interactRef: expect.any(String),
-          interactId: expect.any(String),
-          interactNonce: expect.any(String),
-          finishMethod: FinishMethod.Redirect,
-          finishUri: BASE_GRANT_REQUEST.interact.finish.uri,
-          clientNonce: BASE_GRANT_REQUEST.interact.finish.nonce,
-          clientKeyId: BASE_GRANT_REQUEST.client.key.jwk.kid,
-          startMethod: expect.arrayContaining([StartMethod.Redirect])
-        })
-      )
+      expect(grant).toMatchObject({
+        state: GrantState.Pending,
+        continueId: expect.any(String),
+        continueToken: expect.any(String),
+        interactRef: expect.any(String),
+        interactId: expect.any(String),
+        interactNonce: expect.any(String),
+        finishMethod: FinishMethod.Redirect,
+        finishUri: BASE_GRANT_REQUEST.interact.finish.uri,
+        clientNonce: BASE_GRANT_REQUEST.interact.finish.nonce,
+        clientKeyId: BASE_GRANT_REQUEST.client.key.jwk.kid,
+        startMethod: expect.arrayContaining([StartMethod.Redirect])
+      })
 
       const dbAccessGrant = await Access.query(trx)
         .where({

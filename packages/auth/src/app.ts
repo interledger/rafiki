@@ -211,7 +211,7 @@ export class App {
     )
 
     this.publicRouter.post(
-      '/interact/:interactId/login',
+      '/interact/:interactId/finish',
       grantRoutes.interaction.finish
     )
 
