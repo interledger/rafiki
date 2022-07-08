@@ -99,7 +99,7 @@ async function rotateToken(
       access_token: {
         access: [accessToBody(result.access)],
         value: result.value,
-        management: result.managementId,
+        manage: result.managementId,
         expires_in: result.expiresIn
       }
     }

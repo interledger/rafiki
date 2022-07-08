@@ -346,7 +346,7 @@ describe('Access Token Routes', (): void => {
             }
           ],
           value: expect.anything(),
-          management: expect.anything(),
+          manage: expect.anything(),
           expires_in: token.expiresIn
         }
       })
@@ -379,7 +379,7 @@ describe('Access Token Routes', (): void => {
             }
           ],
           value: expect.anything(),
-          management: expect.anything(),
+          manage: expect.anything(),
           expires_in: token.expiresIn
         }
       })

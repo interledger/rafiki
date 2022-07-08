@@ -6,6 +6,7 @@ import { AccessToken } from './model'
 import { ClientService, KeyInfo } from '../client/service'
 import { Access } from '../access/model'
 import { v4 as uuid } from 'uuid'
+import * as crypto from 'crypto'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
@@ -105,7 +106,7 @@ async function rotate(
     await token.$query(deps.knex).delete()
     const newManagementId = uuid()
     token = await AccessToken.query(deps.knex).insertAndFetch({
-      value: uuid(),
+      value: crypto.randomBytes(8).toString('hex').toUpperCase(),
       grantId: token.grantId,
       expiresIn: token.expiresIn,
       managementId: newManagementId
