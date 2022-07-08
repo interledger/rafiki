@@ -258,6 +258,46 @@ function validateAmountAssets(
   )
 }
 
+function estimateTotalAvailableAmounts<T extends GrantAccess>(
+  accessArray: T[],
+  payment: OutgoingPayment,
+  slippage: number
+) {
+  const availableSendAmount = accessArray.reduce(
+    (prev: bigint, access: T) =>
+      prev + (access.limits?.sendAmount?.value ?? BigInt(0)),
+    BigInt(0)
+  )
+
+  const availableReceiveAmount = accessArray.reduce(
+    (prev: bigint, access: T) =>
+      prev + (access.limits?.receiveAmount?.value ?? BigInt(0)),
+    BigInt(0)
+  )
+
+  const estTotalAvailableSendAmount =
+    availableSendAmount +
+    BigInt(
+      Math.floor(
+        (Number(payment.quote.lowEstimatedExchangeRate.b) /
+          Number(payment.quote.lowEstimatedExchangeRate.a)) *
+          (1 + slippage) *
+          Number(availableReceiveAmount)
+      )
+    )
+  const estTotalAvailableReceiveAmount =
+    availableReceiveAmount +
+    BigInt(
+      Math.floor(
+        (Number(payment.quote.lowEstimatedExchangeRate.a) /
+          Number(payment.quote.lowEstimatedExchangeRate.b)) *
+          (1 + slippage) *
+          Number(availableSendAmount)
+      )
+    )
+  return { estTotalAvailableSendAmount, estTotalAvailableReceiveAmount }
+}
+
 interface PaymentAccess extends GrantAccess {
   paymentInterval?: Interval
 }
@@ -326,37 +366,14 @@ async function validateGrant(
   if (paymentAccess.length === 0) {
     return false
   }
-
-  const availableSendAmount = paymentAccess.reduce(
-    (prev, access) => prev + (access.limits?.sendAmount?.value ?? BigInt(0)),
-    BigInt(0)
+  let {
+    estTotalAvailableSendAmount,
+    estTotalAvailableReceiveAmount
+  } = estimateTotalAvailableAmounts<PaymentAccess>(
+    paymentAccess,
+    payment,
+    deps.slippage
   )
-
-  const availableReceiveAmount = paymentAccess.reduce(
-    (prev, access) => prev + (access.limits?.receiveAmount?.value ?? BigInt(0)),
-    BigInt(0)
-  )
-
-  let estTotalAvailableSendAmount =
-    availableSendAmount +
-    BigInt(
-      Math.floor(
-        (Number(payment.quote.lowEstimatedExchangeRate.b) /
-          Number(payment.quote.lowEstimatedExchangeRate.a)) *
-          (1 + deps.slippage) *
-          Number(availableReceiveAmount)
-      )
-    )
-  let estTotalAvailableReceiveAmount =
-    availableReceiveAmount +
-    BigInt(
-      Math.floor(
-        (Number(payment.quote.lowEstimatedExchangeRate.a) /
-          Number(payment.quote.lowEstimatedExchangeRate.b)) *
-          (1 + deps.slippage) *
-          Number(availableSendAmount)
-      )
-    )
 
   if (
     estTotalAvailableSendAmount < payment.sendAmount.value ||
@@ -420,25 +437,54 @@ async function validateGrant(
 
   // Do paymentAccess limits support payment and competing existing payments?
   for (const grantPayment of competingPayments) {
-    // Todo: check that amount in unrelated access is enough
-    if (
-      unrelatedAccess.find((access) =>
-        validateAccess({
-          access,
-          payment: grantPayment,
-          identifier: `${deps.publicHost}/${grantPayment.accountId}`
-        })
-      )
-    ) {
-      continue
-    }
-
     // Estimate delivered amount of failed payment
     if (grantPayment.state === OutgoingPaymentState.Failed) {
       grantPayment.receiveAmount.value =
         (grantPayment.receiveAmount.value * grantPayment.sentAmount.value) /
         grantPayment.sendAmount.value
     }
+
+    // Check if competing payment was created with (for current payment) unrelated access
+    const competingUnrelatedAccess = unrelatedAccess.filter((access) =>
+      validateAccess({
+        access,
+        payment: grantPayment,
+        identifier: `${deps.publicHost}/${grantPayment.accountId}`
+      })
+    )
+    if (competingUnrelatedAccess.length > 0) {
+      for (const access of unrelatedAccess) {
+        if (competingUnrelatedAccess.indexOf(access) > -1) {
+          if (access.limits?.sendAmount) {
+            if (
+              access.limits.sendAmount.value > grantPayment.sentAmount.value
+            ) {
+              access.limits.sendAmount.value -= grantPayment.sentAmount.value
+              grantPayment.sentAmount.value = BigInt(0)
+            } else {
+              access.limits.sendAmount.value = BigInt(0)
+              grantPayment.sentAmount.value -= access.limits.sendAmount.value
+            }
+          } else if (access.limits?.receiveAmount) {
+            if (
+              access.limits.receiveAmount.value >
+              grantPayment.receiveAmount.value
+            ) {
+              access.limits.receiveAmount.value -=
+                grantPayment.receiveAmount.value
+              grantPayment.receiveAmount.value = BigInt(0)
+            } else {
+              access.limits.receiveAmount.value = BigInt(0)
+              grantPayment.receiveAmount.value -=
+                access.limits.receiveAmount.value
+            }
+          }
+        } else {
+          continue
+        }
+      }
+    }
+
     estTotalAvailableSendAmount -= grantPayment.sentAmount.value
     estTotalAvailableReceiveAmount -= grantPayment.receiveAmount.value
     if (
