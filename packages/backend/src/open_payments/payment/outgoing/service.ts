@@ -437,11 +437,15 @@ async function validateGrant(
 
   // Do paymentAccess limits support payment and competing existing payments?
   for (const grantPayment of competingPayments) {
+    let sentAmount = grantPayment.sentAmount.value
+    let receivedAmount: bigint
     // Estimate delivered amount of failed payment
     if (grantPayment.state === OutgoingPaymentState.Failed) {
-      grantPayment.receiveAmount.value =
+      receivedAmount =
         (grantPayment.receiveAmount.value * grantPayment.sentAmount.value) /
         grantPayment.sendAmount.value
+    } else {
+      receivedAmount = grantPayment.receiveAmount.value
     }
 
     // Check if competing payment was created with (for current payment) unrelated access
@@ -456,27 +460,30 @@ async function validateGrant(
       for (const access of unrelatedAccess) {
         if (competingUnrelatedAccess.indexOf(access) > -1) {
           if (access.limits?.sendAmount) {
-            if (
-              access.limits.sendAmount.value > grantPayment.sentAmount.value
-            ) {
-              access.limits.sendAmount.value -= grantPayment.sentAmount.value
-              grantPayment.sentAmount.value = BigInt(0)
+            if (access.limits.sendAmount.value > sentAmount) {
+              access.limits.sendAmount.value -= sentAmount
+              sentAmount = BigInt(0)
+              receivedAmount = BigInt(0)
             } else {
+              receivedAmount -=
+                (access.limits.sendAmount.value *
+                  grantPayment.receiveAmount.value) /
+                grantPayment.sentAmount.value
+              sentAmount -= access.limits.sendAmount.value
               access.limits.sendAmount.value = BigInt(0)
-              grantPayment.sentAmount.value -= access.limits.sendAmount.value
             }
           } else if (access.limits?.receiveAmount) {
-            if (
-              access.limits.receiveAmount.value >
-              grantPayment.receiveAmount.value
-            ) {
-              access.limits.receiveAmount.value -=
-                grantPayment.receiveAmount.value
-              grantPayment.receiveAmount.value = BigInt(0)
+            if (access.limits.receiveAmount.value > receivedAmount) {
+              access.limits.receiveAmount.value -= receivedAmount
+              receivedAmount = BigInt(0)
+              sentAmount = BigInt(0)
             } else {
+              sentAmount -=
+                (access.limits.receiveAmount.value *
+                  grantPayment.sentAmount.value) /
+                grantPayment.receiveAmount.value
+              receivedAmount -= access.limits.receiveAmount.value
               access.limits.receiveAmount.value = BigInt(0)
-              grantPayment.receiveAmount.value -=
-                access.limits.receiveAmount.value
             }
           }
         } else {
@@ -485,8 +492,8 @@ async function validateGrant(
       }
     }
 
-    estTotalAvailableSendAmount -= grantPayment.sentAmount.value
-    estTotalAvailableReceiveAmount -= grantPayment.receiveAmount.value
+    estTotalAvailableSendAmount -= sentAmount
+    estTotalAvailableReceiveAmount -= receivedAmount
     if (
       estTotalAvailableSendAmount < payment.sendAmount.value ||
       estTotalAvailableReceiveAmount < payment.receiveAmount.value
