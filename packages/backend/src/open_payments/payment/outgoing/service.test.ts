@@ -656,6 +656,60 @@ describe('OutgoingPaymentService', (): void => {
           outgoingPaymentService.create({ ...options, grant })
         ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
       })
+      test('fails with multiple accesses with different scopes and competing payment using too much', async (): Promise<void> => {
+        const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+        const firstReceiver = `${
+          Config.publicHost
+        }/${uuid()}/incoming-payments/${uuid()}`
+        const grant = new Grant({
+          active: true,
+          grant: uuid(),
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              identifier: `${Config.publicHost}/${accountId}`,
+              interval: `R0/${start.toISOString()}/P1M`,
+              limits: {
+                receiver: firstReceiver,
+                sendAmount: {
+                  value: BigInt(23),
+                  assetCode: sendAmount.assetCode,
+                  assetScale: sendAmount.assetScale
+                }
+              }
+            },
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              identifier: `${Config.publicHost}/${accountId}`,
+              interval: `R0/${start.toISOString()}/P1M`,
+              limits: {
+                sendAmount: {
+                  value: BigInt(150),
+                  assetCode: sendAmount.assetCode,
+                  assetScale: sendAmount.assetScale
+                }
+              }
+            }
+          ]
+        })
+        const firstPayment = await createOutgoingPayment(deps, {
+          accountId,
+          receiver: firstReceiver,
+          sendAmount: {
+            value: BigInt(51),
+            assetCode: sendAmount.assetCode,
+            assetScale: sendAmount.assetScale
+          },
+          grant,
+          validDestination: false
+        })
+        assert.ok(firstPayment)
+        await expect(
+          outgoingPaymentService.create({ ...options, grant })
+        ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
+      })
       test('succeeds if grant access has no limits', async (): Promise<void> => {
         const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
         const grant = new Grant({
@@ -793,6 +847,60 @@ describe('OutgoingPaymentService', (): void => {
             }
           ]
         })
+        await expect(
+          outgoingPaymentService.create({ ...options, grant })
+        ).resolves.toBeInstanceOf(OutgoingPayment)
+      })
+      test('succeeds with multiple accesses with different scopes and competing payment not using too much', async (): Promise<void> => {
+        const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+        const firstReceiver = `${
+          Config.publicHost
+        }/${uuid()}/incoming-payments/${uuid()}`
+        const grant = new Grant({
+          active: true,
+          grant: uuid(),
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              identifier: `${Config.publicHost}/${accountId}`,
+              interval: `R0/${start.toISOString()}/P1M`,
+              limits: {
+                receiver: firstReceiver,
+                sendAmount: {
+                  value: BigInt(23),
+                  assetCode: sendAmount.assetCode,
+                  assetScale: sendAmount.assetScale
+                }
+              }
+            },
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              identifier: `${Config.publicHost}/${accountId}`,
+              interval: `R0/${start.toISOString()}/P1M`,
+              limits: {
+                sendAmount: {
+                  value: BigInt(150),
+                  assetCode: sendAmount.assetCode,
+                  assetScale: sendAmount.assetScale
+                }
+              }
+            }
+          ]
+        })
+        const firstPayment = await createOutgoingPayment(deps, {
+          accountId,
+          receiver: firstReceiver,
+          sendAmount: {
+            value: BigInt(50),
+            assetCode: sendAmount.assetCode,
+            assetScale: sendAmount.assetScale
+          },
+          grant,
+          validDestination: false
+        })
+        assert.ok(firstPayment)
         await expect(
           outgoingPaymentService.create({ ...options, grant })
         ).resolves.toBeInstanceOf(OutgoingPayment)
