@@ -6,7 +6,6 @@ import Knex from 'knex'
 import Koa, { DefaultState, DefaultContext } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
-import koaBody from 'koa-body'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 
