@@ -48,7 +48,7 @@ export function createGrantRoutes({
     create: (ctx: AppContext) => createGrantInitiation(deps, ctx),
     interaction: {
       start: (ctx: AppContext) => startInteraction(deps, ctx),
-      finish: (ctx: AppContext) => finishInteraction(deps, ctx),
+      finish: (ctx: AppContext) => finishInteraction(deps, ctx)
     },
     post: (ctx: AppContext) => continueGrant(deps, ctx),
     del: (ctx: AppContext) => cancelInteraction(deps, ctx)
@@ -180,10 +180,7 @@ async function finishInteraction(
     return
   }
 
-  if (
-    grant.grantState === GrantState.Revoked ||
-    grant.grantState === GrantState.Denied
-  ) {
+  if (grant.state === GrantState.Revoked || grant.state === GrantState.Denied) {
     ctx.status = 401
     ctx.body = {
       error: 'user_denied'
@@ -191,7 +188,7 @@ async function finishInteraction(
     return
   }
 
-  if (grant.grantState === GrantState.Granted) {
+  if (grant.state === GrantState.Granted) {
     ctx.status = 400
     ctx.body = {
       error: 'request_denied'

@@ -91,43 +91,6 @@ async function issueGrant(
   })
 }
 
-function validateGrantRequest(
-  grantRequest: GrantRequest
-): grantRequest is GrantRequest {
-  if (typeof grantRequest.access_token !== 'object') return false
-  const { access_token } = grantRequest
-  if (typeof access_token.access !== 'object') return false
-  for (const access of access_token.access) {
-    if (!isAccessRequest(access)) return false
-  }
-
-  return access_token.interact?.start !== undefined
-}
-
-async function issueGrant(
-  deps: ServiceDependencies,
-  grantId: string,
-  trx?: Transaction
-): Promise<Grant> {
-  const invTrx = trx || (await Grant.startTransaction())
-  try {
-    const grant = await Grant.query(invTrx).patchAndFetchById(grantId, {
-      state: GrantState.Granted
-    })
-
-    if (!trx) {
-      await invTrx.commit()
-    }
-    return grant
-  } catch (err) {
-    if (!trx) {
-      await invTrx.rollback()
-    }
-
-    throw err
-  }
-}
-
 async function denyGrant(grantId: string, trx?: Transaction): Promise<Grant> {
   const invTrx = trx || (await Grant.startTransaction())
   try {
