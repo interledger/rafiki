@@ -80,6 +80,7 @@ export function initIocContainer(
 
   container.singleton('accessTokenService', async (deps) => {
     return await createAccessTokenService({
+      config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       clientService: await deps.use('clientService')
@@ -96,7 +97,6 @@ export function initIocContainer(
     'grantService',
     async (deps: IocContract<AppServices>) => {
       return createGrantService({
-        config: await deps.use('config'),
         logger: await deps.use('logger'),
         accessService: await deps.use('accessService'),
         knex: await deps.use('knex')
@@ -108,7 +108,8 @@ export function initIocContainer(
     return createGrantRoutes({
       grantService: await deps.use('grantService'),
       clientService: await deps.use('clientService'),
-      logger: await deps.use('logger')
+      logger: await deps.use('logger'),
+      config: await deps.use('config')
     })
   })
 

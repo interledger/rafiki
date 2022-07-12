@@ -4,16 +4,18 @@ import * as crypto from 'crypto'
 import { IocContract } from '@adonisjs/fold'
 import nock from 'nock'
 import jestOpenAPI from 'jest-openapi'
+import { URL } from 'url'
 
 import { createContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { GrantRoutes } from './routes'
 import { Action, AccessType } from '../access/types'
-import { StartMethod, FinishMethod } from '../grant/model'
+import { Access } from '../access/model'
+import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { GrantRequest } from '../grant/service'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
@@ -111,11 +113,13 @@ describe('Grant Routes', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let grantRoutes: GrantRoutes
+  let config: IAppConfig
 
   beforeAll(
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       grantRoutes = await deps.use('grantRoutes')
+      config = await deps.use('config')
       knex = await deps.use('knex')
       appContainer = await createTestApp(deps)
       jestOpenAPI(await deps.use('openApi'))
@@ -690,11 +694,297 @@ describe('Grant Routes', (): void => {
             value: expect.any(String)
           },
           uri: expect.any(String),
-          wait: Config.waitTime
+          wait: Config.waitTimeSeconds
         }
       })
 
       scope.isDone()
+    })
+  })
+
+  describe('interaction', (): void => {
+    describe('interaction start', (): void => {
+      test('Interaction start fails if grant is invalid', async (): Promise<void> => {
+        const scope = nock(KEY_REGISTRY_ORIGIN)
+          .get(TEST_KID_PATH)
+          .reply(200, {
+            ...TEST_CLIENT_DISPLAY,
+            keys: [
+              {
+                ...TEST_CLIENT_KEY.jwk,
+                revoked: false
+              }
+            ]
+          })
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { interactId: 'unknown_interaction' }
+        )
+
+        await expect(
+          grantRoutes.interaction.start(ctx)
+        ).resolves.toBeUndefined()
+        expect(ctx.status).toBe(401)
+        expect(ctx.body).toEqual({ error: 'unknown_request' })
+        scope.isDone()
+      })
+
+      test('Interaction start fails if client is invalid', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          state: GrantState.Pending,
+          startMethod: [StartMethod.Redirect],
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          continueId: v4(),
+          finishMethod: FinishMethod.Redirect,
+          finishUri: 'https://example.com',
+          clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          clientKeyId: KEY_REGISTRY_ORIGIN + '/wrong-key',
+          interactId: v4(),
+          interactRef: v4(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        })
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grant.id
+        })
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { interactId: grant.interactId }
+        )
+
+        await expect(
+          grantRoutes.interaction.start(ctx)
+        ).resolves.toBeUndefined()
+        expect(ctx.status).toBe(401)
+        expect(ctx.body).toEqual({ error: 'invalid_client' })
+      })
+
+      test('Can start an interaction', async (): Promise<void> => {
+        const scope = nock(KEY_REGISTRY_ORIGIN)
+          .get(TEST_KID_PATH)
+          .reply(200, {
+            ...TEST_CLIENT_DISPLAY,
+            keys: [
+              {
+                ...TEST_CLIENT_KEY.jwk,
+                revoked: false
+              }
+            ]
+          })
+
+        const grant = await Grant.query().insert({
+          state: GrantState.Pending,
+          startMethod: [StartMethod.Redirect],
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          continueId: v4(),
+          finishMethod: FinishMethod.Redirect,
+          finishUri: 'https://example.com',
+          clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+          interactId: v4(),
+          interactRef: v4(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        })
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grant.id
+        })
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { interactId: grant.interactId }
+        )
+
+        const redirectUrl = new URL(config.identityServerDomain)
+        redirectUrl.searchParams.set('clientName', TEST_CLIENT_DISPLAY.name)
+        redirectUrl.searchParams.set('clientUri', TEST_CLIENT_DISPLAY.url)
+        const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+        await expect(
+          grantRoutes.interaction.start(ctx)
+        ).resolves.toBeUndefined()
+        expect(ctx.status).toBe(302)
+        expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
+        expect(ctx.session.interactId).toEqual(grant.interactId)
+
+        scope.isDone()
+      })
+    })
+
+    describe('interaction complete', (): void => {
+      test('cannot finish interaction with missing id', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          state: GrantState.Pending,
+          startMethod: [StartMethod.Redirect],
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          continueId: v4(),
+          finishMethod: FinishMethod.Redirect,
+          finishUri: 'https://example.com',
+          clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+          interactId: v4(),
+          interactRef: v4(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        })
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grant.id
+        })
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { interactId: '' }
+        )
+
+        ctx.session.interactId = grant.interactId
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
+        expect(ctx.status).toBe(401)
+        expect(ctx.body).toEqual({
+          error: 'invalid_request'
+        })
+      })
+
+      test('Cannot finish interaction with invalid session', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          state: GrantState.Pending,
+          startMethod: [StartMethod.Redirect],
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          continueId: v4(),
+          finishMethod: FinishMethod.Redirect,
+          finishUri: 'https://example.com',
+          clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+          interactId: v4(),
+          interactRef: v4(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        })
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grant.id
+        })
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { interactId: grant.interactId }
+        )
+
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
+        expect(ctx.status).toBe(401)
+        expect(ctx.body).toEqual({
+          error: 'invalid_request'
+        })
+      })
+
+      test('Cannot finish interaction that does not exist', async (): Promise<void> => {
+        const fakeInteractId = v4()
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { interactId: fakeInteractId }
+        )
+
+        ctx.session.interactId = fakeInteractId
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
+        expect(ctx.status).toBe(404)
+        expect(ctx.body).toEqual({
+          error: 'unknown_request'
+        })
+      })
+
+      test('Can finish interaction', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          state: GrantState.Pending,
+          startMethod: [StartMethod.Redirect],
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          continueId: v4(),
+          finishMethod: FinishMethod.Redirect,
+          finishUri: 'https://example.com',
+          clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+          interactId: v4(),
+          interactRef: v4(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        })
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grant.id
+        })
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { interactId: grant.interactId }
+        )
+
+        ctx.session.interactId = grant.interactId
+
+        const clientRedirectUri = new URL(grant.finishUri)
+        const { clientNonce, interactNonce, interactRef } = grant
+        const interactUrl =
+          config.identityServerDomain + `/interact/${grant.interactId}`
+
+        const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${interactUrl}`
+        const hash = crypto.createHash('sha3-512').update(data).digest('base64')
+        clientRedirectUri.searchParams.set('hash', hash)
+        clientRedirectUri.searchParams.set('interact_ref', interactRef)
+
+        const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
+        expect(ctx.status).toBe(302)
+        expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+
+        const issuedGrant = await Grant.query().findById(grant.id)
+        expect(issuedGrant.state).toEqual(GrantState.Granted)
+      })
     })
   })
 })

@@ -1,18 +1,23 @@
-import { TransactionOrKnex } from 'objection'
+import * as crypto from 'crypto'
+import { v4 } from 'uuid'
+import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState } from '../grant/model'
-import { AccessToken } from './model'
 import { ClientService, KeyInfo } from '../client/service'
+import { AccessToken } from './model'
+import { IAppConfig } from '../config/app'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
   revoke(id: string): Promise<Error | undefined>
+  create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
 }
 
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   clientService: ClientService
+  config: IAppConfig
 }
 
 export interface Introspection extends Partial<Grant> {
@@ -20,9 +25,15 @@ export interface Introspection extends Partial<Grant> {
   key?: KeyInfo
 }
 
+interface AccessTokenOpts {
+  expiresIn?: number
+  trx?: Transaction
+}
+
 export async function createAccessTokenService({
   logger,
   knex,
+  config,
   clientService
 }: ServiceDependencies): Promise<AccessTokenService> {
   const log = logger.child({
@@ -32,12 +43,15 @@ export async function createAccessTokenService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    clientService
+    clientService,
+    config
   }
 
   return {
     introspect: (token: string) => introspect(deps, token),
-    revoke: (id: string) => revoke(deps, id)
+    revoke: (id: string) => revoke(deps, id),
+    create: (grantId: string, opts?: AccessTokenOpts) =>
+      createAccessToken(deps, grantId, opts)
   }
 }
 
@@ -84,4 +98,17 @@ async function revoke(
   } else {
     return new Error('token not found')
   }
+}
+
+async function createAccessToken(
+  deps: ServiceDependencies,
+  grantId: string,
+  opts?: AccessTokenOpts
+): Promise<AccessToken> {
+  return AccessToken.query(deps.knex).insert({
+    value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    managementId: v4(),
+    grantId,
+    expiresIn: opts?.expiresIn || deps.config.accessTokenExpirySeconds
+  })
 }
