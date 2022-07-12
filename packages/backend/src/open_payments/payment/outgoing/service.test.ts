@@ -563,14 +563,16 @@ describe('OutgoingPaymentService', (): void => {
         }
       )
       test.each`
-        sendAmount | description
-        ${true}    | ${'sendAmount'}
-        ${false}   | ${'receiveAmount'}
+        sendAmount | failed   | description
+        ${true}    | ${false} | ${'sendAmount'}
+        ${false}   | ${false} | ${'receiveAmount'}
+        ${true}    | ${true}  | ${'sendAmount'}
+        ${false}   | ${true}  | ${'receiveAmount'}
       `(
         'fails if limit was already used up - $description',
-        async ({ sendAmount }): Promise<void> => {
+        async ({ sendAmount, failed }): Promise<void> => {
           const grantAmount = {
-            value: BigInt(1000000000),
+            value: BigInt(200),
             assetCode: sendAmount
               ? quote.asset.code
               : quote.receiveAmount.assetCode,
@@ -596,7 +598,7 @@ describe('OutgoingPaymentService', (): void => {
           })
           const paymentAmount = {
             ...grantAmount,
-            value: grantAmount.value - BigInt(10)
+            value: BigInt(190)
           }
           const firstPayment = await createOutgoingPayment(deps, {
             accountId,
@@ -609,6 +611,15 @@ describe('OutgoingPaymentService', (): void => {
             validDestination: false
           })
           assert.ok(firstPayment)
+          if (failed) {
+            await firstPayment
+              .$query(trx)
+              .patch({ state: OutgoingPaymentState.Failed })
+
+            jest
+              .spyOn(accountingService, 'getTotalSent')
+              .mockResolvedValueOnce(sendAmount ? BigInt(188) : BigInt(188 * 2))
+          }
 
           await expect(
             outgoingPaymentService.create({ ...options, grant })
@@ -780,16 +791,23 @@ describe('OutgoingPaymentService', (): void => {
         ).resolves.toBeInstanceOf(OutgoingPayment)
       })
       test.each`
-        sendAmount | competingPayment | failed       | description
-        ${true}    | ${false}         | ${undefined} | ${'sendAmount w/o competing payment'}
-        ${false}   | ${false}         | ${undefined} | ${'receiveAmount w/o competing payment'}
-        ${true}    | ${true}          | ${false}     | ${'sendAmount w/ competing payment'}
-        ${false}   | ${true}          | ${false}     | ${'receiveAmount w/ competing payment'}
-        ${true}    | ${true}          | ${true}      | ${'sendAmount w/ failed competing payment'}
-        ${false}   | ${true}          | ${true}      | ${'receiveAmount w/ failed competing payment'}
+        sendAmount | competingPayment | failed       | half     | description
+        ${true}    | ${false}         | ${undefined} | ${false} | ${'sendAmount w/o competing payment'}
+        ${false}   | ${false}         | ${undefined} | ${false} | ${'receiveAmount w/o competing payment'}
+        ${true}    | ${true}          | ${false}     | ${false} | ${'sendAmount w/ competing payment'}
+        ${false}   | ${true}          | ${false}     | ${false} | ${'receiveAmount w/ competing payment'}
+        ${true}    | ${true}          | ${true}      | ${false} | ${'sendAmount w/ failed competing payment'}
+        ${false}   | ${true}          | ${true}      | ${false} | ${'receiveAmount w/ failed competing payment'}
+        ${true}    | ${true}          | ${true}      | ${true}  | ${'sendAmount w/ half-way failed competing payment'}
+        ${false}   | ${true}          | ${true}      | ${true}  | ${'receiveAmount half-way w/ failed competing payment'}
       `(
         'succeeds if grant limit is enough for payment - $description',
-        async ({ sendAmount, competingPayment, failed }): Promise<void> => {
+        async ({
+          sendAmount,
+          competingPayment,
+          failed,
+          half
+        }): Promise<void> => {
           const grantAmount = {
             value: BigInt(1234567),
             assetCode: sendAmount
@@ -834,6 +852,11 @@ describe('OutgoingPaymentService', (): void => {
               await firstPayment
                 .$query(trx)
                 .patch({ state: OutgoingPaymentState.Failed })
+              if (half) {
+                jest
+                  .spyOn(accountingService, 'getTotalSent')
+                  .mockResolvedValueOnce(BigInt(100))
+              }
             }
           }
           await expect(

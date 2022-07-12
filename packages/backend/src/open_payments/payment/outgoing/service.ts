@@ -407,7 +407,7 @@ async function validateGrant(
       if (totalSent === BigInt(0)) {
         continue
       }
-      grantPayment.sentAmount.value = totalSent
+      grantPayment.sentAmount = { ...grantPayment.sentAmount, value: totalSent }
     } else {
       grantPayment.sentAmount = grantPayment.sendAmount
     }
