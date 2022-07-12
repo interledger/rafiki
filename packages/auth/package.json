@@ -19,7 +19,6 @@
     "jose": "^4.7.0",
     "knex": "^0.21.17",
     "koa": "^2.13.4",
-    "koa-body": "^5.0.0",
     "koa-bodyparser": "^4.3.0",
     "koa-session": "^6.2.0",
     "node-mocks-http": "^1.11.0",
