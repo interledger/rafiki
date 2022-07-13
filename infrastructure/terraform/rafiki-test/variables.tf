@@ -22,7 +22,7 @@ locals {
     node_pools = [
       {
         name = "default"
-        machine_type = "n1-standard-1"
+        machine_type = "n2-standard-2"
         node_count = 2
         min_node_count = 2
         max_node_count = 8

@@ -12,7 +12,7 @@ variable name {
 
 variable zone {
   type = string
-  default = "us-central1-a"
+  default = "us-central1-b"
 }
 
 variable networking_mode {
@@ -43,7 +43,7 @@ variable node_pools {
   default = [
     {
       name = "default"
-      machine_type = "n1-standard-1"
+      machine_type = "n2-standard-2"
       node_count = 1
       min_node_count = 0
       max_node_count = 8
