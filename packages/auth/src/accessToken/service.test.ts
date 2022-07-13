@@ -175,7 +175,8 @@ describe('Access Token Service', (): void => {
         token = await AccessToken.query(trx).insertAndFetch({
           grantId: grant.id,
           ...BASE_TOKEN,
-          value: crypto.randomBytes(8).toString('hex').toUpperCase()
+          value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          managementId: v4()
         })
       }
     )
