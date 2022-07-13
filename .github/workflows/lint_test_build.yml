@@ -42,7 +42,6 @@ jobs:
       - run: yarn workspace backend lint
       - run: yarn workspace backend format:check
       - run: yarn workspace openapi build
-      - run: yarn docker build backend -t ghcr.io/${{ github.repository_owner }}/rafiki-backend:${{ github.sha }} -t ghcr.io/${{ github.repository_owner }}/rafiki-backend:latest
       - run: yarn workspace backend test
 
   frontend:
