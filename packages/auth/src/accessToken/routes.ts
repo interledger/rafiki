@@ -3,11 +3,13 @@ import { Access } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService, Introspection } from './service'
+import { ClientService } from '../client/service'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   accessTokenService: AccessTokenService
+  clientService: ClientService
 }
 
 export interface AccessTokenRoutes {
@@ -32,19 +34,61 @@ async function introspectToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  // TODO: request validation
   const { body } = ctx.request
-  if (body['access_token']) {
-    const introspectionResult = await deps.accessTokenService.introspect(
-      body['access_token']
-    )
-    if (introspectionResult) {
-      ctx.body = introspectionToBody(introspectionResult)
-    } else {
-      return ctx.throw(404, 'token not found')
+  if (!body['access_token']) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_request',
+      message: 'invalid introspection request'
     }
+    return
+  }
+
+  const sig = ctx.headers['signature']
+  const sigInput = ctx.headers['signature-input']
+
+  if (
+    !sig ||
+    !sigInput ||
+    typeof sig !== 'string' ||
+    typeof sigInput !== 'string'
+  ) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_request',
+      message: 'invalid signature headers'
+    }
+    return
+  }
+
+  const verified = await deps.clientService.verifySigFromBoundKey(
+    sig,
+    sigInput,
+    'value',
+    body['access_token'],
+    ctx
+  )
+  if (!verified.success) {
+    ctx.status = verified.status || 401
+    ctx.body = {
+      error: verified.error || 'request_denied',
+      message: verified.message || null
+    }
+    return
+  }
+
+  const introspectionResult = await deps.accessTokenService.introspect(
+    body['access_token']
+  )
+  if (introspectionResult) {
+    ctx.body = introspectionToBody(introspectionResult)
   } else {
-    return ctx.throw(400, 'invalid introspection request')
+    ctx.status = 404
+    ctx.body = {
+      error: 'invalid_request',
+      message: 'token not found'
+    }
+    return
   }
 }
 
@@ -77,9 +121,39 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  //TODO: verify accessToken with httpsig method
+  const sig = ctx.headers['signature']
+  const sigInput = ctx.headers['signature-input']
 
-  const revocationError = await deps.accessTokenService.revoke(ctx.params['id'])
+  if (
+    !sig ||
+    !sigInput ||
+    typeof sig !== 'string' ||
+    typeof sigInput !== 'string'
+  ) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_request'
+    }
+    return
+  }
+
+  const verified = await deps.clientService.verifySigFromBoundKey(
+    sig,
+    sigInput,
+    'managementId',
+    ctx.params['managementId'],
+    ctx
+  )
+  if (!verified.success) {
+    ctx.status = verified.status || 401
+    ctx.body = {
+      error: verified.error || 'invalid_client'
+    }
+  }
+
+  const revocationError = await deps.accessTokenService.revoke(
+    ctx.params['managementId']
+  )
   if (revocationError) {
     return ctx.throw(404, revocationError.message)
   } else {

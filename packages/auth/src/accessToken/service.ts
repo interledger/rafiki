@@ -90,7 +90,7 @@ async function revoke(
   deps: ServiceDependencies,
   id: string
 ): Promise<Error | undefined> {
-  const token = await AccessToken.query(deps.knex).findById(id)
+  const token = await AccessToken.query(deps.knex).findOne({ managementId: id })
   if (token) {
     if (!isTokenExpired(token)) {
       await token.$query(deps.knex).patch({ expiresIn: 1 })
