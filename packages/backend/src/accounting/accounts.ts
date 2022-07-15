@@ -35,16 +35,16 @@ export async function createAccounts(
       id: toTigerbeetleId(account.id),
       user_data: BigInt(0),
       reserved: ACCOUNT_RESERVED,
-      unit: account.unit,
-      code: 0,
+      ledger: account.unit,
+      code: 1,
       flags:
         account.type === AccountType.Debit
           ? AccountFlags.credits_must_not_exceed_debits
           : AccountFlags.debits_must_not_exceed_credits,
-      debits_accepted: BigInt(0),
-      debits_reserved: BigInt(0),
-      credits_accepted: BigInt(0),
-      credits_reserved: BigInt(0),
+      debits_posted: BigInt(0),
+      debits_pending: BigInt(0),
+      credits_posted: BigInt(0),
+      credits_pending: BigInt(0),
       timestamp: 0n
     }))
   )
@@ -67,15 +67,11 @@ export async function getAccounts(
 export function calculateBalance(account: Account): bigint {
   if (account.flags & AccountFlags.credits_must_not_exceed_debits) {
     return (
-      account.debits_accepted -
-      account.credits_accepted +
-      account.debits_reserved
+      account.debits_posted - account.credits_posted + account.debits_pending
     )
   } else {
     return (
-      account.credits_accepted -
-      account.debits_accepted -
-      account.debits_reserved
+      account.credits_posted - account.debits_posted - account.debits_pending
     )
   }
 }
