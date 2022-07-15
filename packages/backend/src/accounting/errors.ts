@@ -1,7 +1,4 @@
-import {
-  CommitTransferError as CommitTransferErrorCode,
-  CreateTransferError as CreateTransferErrorCode
-} from 'tigerbeetle-node'
+import { CreateTransferError as CreateTransferErrorCode } from 'tigerbeetle-node'
 
 import { AccountId } from './utils'
 
@@ -16,13 +13,6 @@ export class CreateTransferError extends Error {
   constructor(public code: CreateTransferErrorCode) {
     super()
     this.name = 'CreateTransferError'
-  }
-}
-
-export class CommitTransferError extends Error {
-  constructor(public code: CommitTransferErrorCode) {
-    super()
-    this.name = 'CommitTransferError'
   }
 }
 

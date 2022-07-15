@@ -114,7 +114,7 @@ describe('Accounting Service', (): void => {
       jest.spyOn(tigerbeetle, 'createAccounts').mockResolvedValueOnce([
         {
           index: 0,
-          code: CreateTbAccountError.exists_with_different_unit
+          code: CreateTbAccountError.exists_with_different_code
         }
       ])
 
@@ -127,7 +127,7 @@ describe('Accounting Service', (): void => {
           }
         })
       ).rejects.toThrowError(
-        new CreateAccountError(CreateTbAccountError.exists_with_different_unit)
+        new CreateAccountError(CreateTbAccountError.exists_with_different_code)
       )
     })
   })

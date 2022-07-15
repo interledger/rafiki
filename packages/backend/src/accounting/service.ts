@@ -17,12 +17,7 @@ import {
   TransferError,
   UnknownAccountError
 } from './errors'
-import {
-  CreateTransferOptions,
-  createTransfers,
-  commitTransfers,
-  rollbackTransfers
-} from './transfers'
+import { CreateTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 import { toTigerbeetleId } from './utils'
@@ -180,7 +175,7 @@ export async function getAccountTotalSent(
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [id]))[0]
   if (account) {
-    return account.debits_accepted
+    return account.debits_posted
   }
 }
 
@@ -193,7 +188,7 @@ export async function getAccountsTotalSent(
     return ids.map(
       (id) =>
         accounts.find((account) => account.id === toTigerbeetleId(id))
-          ?.debits_accepted
+          ?.debits_posted
     )
   } else return []
 }
@@ -204,7 +199,7 @@ export async function getAccountTotalReceived(
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [id]))[0]
   if (account) {
-    return account.credits_accepted
+    return account.credits_posted
   }
 }
 
@@ -217,7 +212,7 @@ export async function getAccountsTotalReceived(
     return ids.map(
       (id) =>
         accounts.find((account) => account.id === toTigerbeetleId(id))
-          ?.credits_accepted
+          ?.credits_posted
     )
   } else return []
 }
@@ -257,18 +252,22 @@ export async function createTransfer(
   const addTransfer = ({
     sourceAccountId,
     destinationAccountId,
-    amount
+    amount,
+    unit
   }: {
     sourceAccountId: string
     destinationAccountId: string
     amount: bigint
+    unit: number
   }) => {
     transfers.push({
       id: uuid(),
+      pendingId: '0',
       sourceAccountId,
       destinationAccountId,
       amount,
-      timeout
+      timeout,
+      ledger: unit
     })
   }
 
@@ -280,7 +279,8 @@ export async function createTransfer(
       amount:
         destinationAmount && destinationAmount < sourceAmount
           ? destinationAmount
-          : sourceAmount
+          : sourceAmount,
+      unit: sourceAccount.asset.unit
     })
     // Same asset, different amounts
     if (destinationAmount && sourceAmount !== destinationAmount) {
@@ -289,14 +289,16 @@ export async function createTransfer(
         addTransfer({
           sourceAccountId: sourceAccount.id,
           destinationAccountId: sourceAccount.asset.id,
-          amount: sourceAmount - destinationAmount
+          amount: sourceAmount - destinationAmount,
+          unit: sourceAccount.asset.unit
         })
         // Deliver excess destination amount from liquidity account
       } else {
         addTransfer({
           sourceAccountId: destinationAccount.asset.id,
           destinationAccountId: destinationAccount.id,
-          amount: destinationAmount - sourceAmount
+          amount: destinationAmount - sourceAmount,
+          unit: sourceAccount.asset.unit
         })
       }
     }
@@ -311,12 +313,14 @@ export async function createTransfer(
     addTransfer({
       sourceAccountId: sourceAccount.id,
       destinationAccountId: sourceAccount.asset.id,
-      amount: sourceAmount
+      amount: sourceAmount,
+      unit: sourceAccount.asset.unit
     })
     addTransfer({
       sourceAccountId: destinationAccount.asset.id,
       destinationAccountId: destinationAccount.id,
-      amount: destinationAmount
+      amount: destinationAmount,
+      unit: destinationAccount.asset.unit
     })
   }
   const error = await createTransfers(deps, transfers)
@@ -342,9 +346,16 @@ export async function createTransfer(
 
   const trx: Transaction = {
     commit: async (): Promise<void | TransferError> => {
-      const error = await commitTransfers(
+      const error = await createTransfers(
         deps,
-        transfers.map((transfer) => transfer.id)
+        transfers.map((transfer) => {
+          return {
+            ...transfer,
+            timeout: undefined,
+            pendingId: transfer.id,
+            commit: true
+          }
+        })
       )
       if (error) {
         return error.error
@@ -362,9 +373,16 @@ export async function createTransfer(
       }
     },
     rollback: async (): Promise<void | TransferError> => {
-      const error = await rollbackTransfers(
+      const error = await createTransfers(
         deps,
-        transfers.map((transfer) => transfer.id)
+        transfers.map((transfer) => {
+          return {
+            ...transfer,
+            timeout: undefined,
+            pendingId: transfer.id,
+            commit: false
+          }
+        })
       )
       if (error) {
         return error.error
@@ -386,7 +404,8 @@ async function createAccountDeposit(
       id,
       sourceAccountId: account.asset.unit,
       destinationAccountId: account.id,
-      amount
+      amount,
+      ledger: account.asset.unit
     }
   ])
   if (error) {
@@ -407,7 +426,8 @@ async function createAccountWithdrawal(
       sourceAccountId: account.id,
       destinationAccountId: account.asset.unit,
       amount,
-      timeout
+      timeout,
+      ledger: account.asset.unit
     }
   ])
   if (error) {
@@ -422,7 +442,22 @@ async function rollbackAccountWithdrawal(
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const error = await rollbackTransfers(deps, [withdrawalId])
+  const transfers = await deps.tigerbeetle.lookupTransfers([
+    toTigerbeetleId(withdrawalId)
+  ])
+  const error = await createTransfers(
+    deps,
+    [
+      {
+        id: Number(transfers[0].id),
+        sourceAccountId: Number(transfers[0].debit_account_id),
+        destinationAccountId: Number(transfers[0].credit_account_id),
+        amount: transfers[0].amount,
+        ledger: transfers[0].ledger
+      }
+    ],
+    false
+  )
   if (error) {
     return error.error
   }
@@ -435,7 +470,22 @@ async function commitAccountWithdrawal(
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const error = await commitTransfers(deps, [withdrawalId])
+  const transfers = await deps.tigerbeetle.lookupTransfers([
+    toTigerbeetleId(withdrawalId)
+  ])
+  const error = await createTransfers(
+    deps,
+    [
+      {
+        id: Number(transfers[0].id),
+        sourceAccountId: Number(transfers[0].debit_account_id),
+        destinationAccountId: Number(transfers[0].credit_account_id),
+        amount: transfers[0].amount,
+        ledger: transfers[0].ledger
+      }
+    ],
+    true
+  )
   if (error) {
     return error.error
   }

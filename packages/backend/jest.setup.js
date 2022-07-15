@@ -68,7 +68,7 @@ module.exports = async (globalConfig) => {
     const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
 
     await new GenericContainer(
-      'ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7'
+      'ghcr.io/coilhq/tigerbeetle@sha256:b1fe98356a0db183b56b555eac17c5a43f4b61305f5ac711ea741d5085a2f977'
     )
       .withExposedPorts(TIGERBEETLE_PORT)
       .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
@@ -82,7 +82,7 @@ module.exports = async (globalConfig) => {
       .start()
 
     const tigerbeetleContainer = await new GenericContainer(
-      'ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7'
+      'ghcr.io/coilhq/tigerbeetle@sha256:b1fe98356a0db183b56b555eac17c5a43f4b61305f5ac711ea741d5085a2f977'
     )
       .withExposedPorts(TIGERBEETLE_PORT)
       .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
