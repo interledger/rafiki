@@ -7,7 +7,8 @@ export enum OutgoingPaymentError {
   UnknownPayment = 'UnknownPayment',
   UnknownQuote = 'UnknownQuote',
   WrongState = 'WrongState',
-  InvalidQuote = 'InvalidQuote'
+  InvalidQuote = 'InvalidQuote',
+  InsufficientGrant = 'InsufficientGrant'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -21,7 +22,8 @@ export const errorToCode: {
   [OutgoingPaymentError.UnknownPayment]: 404,
   [OutgoingPaymentError.UnknownQuote]: 404,
   [OutgoingPaymentError.WrongState]: 409,
-  [OutgoingPaymentError.InvalidQuote]: 400
+  [OutgoingPaymentError.InvalidQuote]: 400,
+  [OutgoingPaymentError.InsufficientGrant]: 403
 }
 
 export const errorToMessage: {
@@ -31,7 +33,8 @@ export const errorToMessage: {
   [OutgoingPaymentError.UnknownPayment]: 'unknown payment',
   [OutgoingPaymentError.UnknownQuote]: 'unknown quote',
   [OutgoingPaymentError.WrongState]: 'wrong state',
-  [OutgoingPaymentError.InvalidQuote]: 'invalid quote'
+  [OutgoingPaymentError.InvalidQuote]: 'invalid quote',
+  [OutgoingPaymentError.InsufficientGrant]: 'unauthorized'
 }
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }

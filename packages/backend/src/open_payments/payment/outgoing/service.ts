@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 
@@ -14,11 +15,19 @@ import {
   PaymentEventType
 } from './model'
 import { AccountingService } from '../../../accounting/service'
-import { AccountService } from '../../account/service'
 import { PeerService } from '../../../peer/service'
+import {
+  Grant,
+  GrantAccess,
+  AccessType,
+  AccessAction,
+  AccessLimits,
+  getInterval
+} from '../../auth/grant'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
+import { Interval } from 'luxon'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
@@ -38,9 +47,10 @@ export interface OutgoingPaymentService {
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
-  accountService: AccountService
   peerService: PeerService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  publicHost: string
+  slippage: number
 }
 
 export async function createOutgoingPaymentService(
@@ -77,6 +87,7 @@ export interface CreateOutgoingPaymentOptions {
   quoteId: string
   description?: string
   externalRef?: string
+  grant?: Grant
 }
 
 async function createOutgoingPayment(
@@ -91,7 +102,8 @@ async function createOutgoingPayment(
           accountId: options.accountId,
           description: options.description,
           externalRef: options.externalRef,
-          state: OutgoingPaymentState.Funding
+          state: OutgoingPaymentState.Funding,
+          grant: options.grant?.grant
         })
         .withGraphFetched('[quote.asset]')
 
@@ -102,6 +114,20 @@ async function createOutgoingPayment(
         throw OutgoingPaymentError.InvalidQuote
       }
 
+      if (options.grant) {
+        if (
+          !(await validateGrant(
+            {
+              ...deps,
+              knex: trx
+            },
+            payment,
+            options.grant
+          ))
+        ) {
+          throw OutgoingPaymentError.InsufficientGrant
+        }
+      }
       const plugin = deps.makeIlpPlugin({
         sourceAccount: {
           id: payment.accountId,
@@ -157,6 +183,326 @@ async function createOutgoingPayment(
     }
     throw err
   }
+}
+
+function validateAccess({
+  access,
+  payment,
+  identifier
+}: {
+  access: GrantAccess
+  payment: OutgoingPayment
+  identifier: string
+}): boolean {
+  if (
+    (!access.identifier || access.identifier === identifier) &&
+    (!access.interval || !!getInterval(access.interval, payment.createdAt)) &&
+    (!access.limits || validateAccessLimits(payment, access.limits))
+  ) {
+    return true
+  }
+  return false
+}
+
+function validatePaymentAccess({
+  access,
+  payment,
+  identifier
+}: {
+  access: PaymentAccess
+  payment: OutgoingPayment
+  identifier: string
+}): boolean {
+  if (
+    (!access.identifier || access.identifier === identifier) &&
+    (!access.paymentInterval ||
+      (access.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
+        payment.createdAt.getTime() < access.paymentInterval.end.toMillis())) &&
+    (!access.limits || validateAccessLimits(payment, access.limits))
+  ) {
+    return true
+  }
+  return false
+}
+
+function validateAccessLimits(
+  payment: OutgoingPayment,
+  limits: AccessLimits
+): boolean {
+  if (
+    (!limits.receiver || payment.receiver === limits?.receiver) &&
+    (!limits.description || payment.description === limits?.description) &&
+    (!limits.externalRef || payment.externalRef === limits?.externalRef) &&
+    validateAmountAssets(payment, limits)
+  ) {
+    return true
+  }
+  return false
+}
+
+function validateAmountAssets(
+  payment: OutgoingPayment,
+  limits: AccessLimits
+): boolean {
+  if (
+    limits.sendAmount &&
+    (limits.sendAmount.assetCode !== payment.asset.code ||
+      limits.sendAmount.assetScale !== payment.asset.scale)
+  ) {
+    return false
+  }
+  return (
+    !limits.receiveAmount ||
+    (limits.receiveAmount.assetCode === payment.receiveAmount.assetCode &&
+      limits.receiveAmount.assetScale === payment.receiveAmount.assetScale)
+  )
+}
+
+function estimateTotalAvailableAmounts<T extends GrantAccess>(
+  accessArray: T[],
+  payment: OutgoingPayment,
+  slippage: number
+) {
+  const availableSendAmount = accessArray.reduce(
+    (prev: bigint, access: T) =>
+      prev + (access.limits?.sendAmount?.value ?? BigInt(0)),
+    BigInt(0)
+  )
+
+  const availableReceiveAmount = accessArray.reduce(
+    (prev: bigint, access: T) =>
+      prev + (access.limits?.receiveAmount?.value ?? BigInt(0)),
+    BigInt(0)
+  )
+
+  const estTotalAvailableSendAmount =
+    availableSendAmount +
+    BigInt(
+      Math.floor(
+        (Number(payment.quote.lowEstimatedExchangeRate.b) /
+          Number(payment.quote.lowEstimatedExchangeRate.a)) *
+          (1 + slippage) *
+          Number(availableReceiveAmount)
+      )
+    )
+  const estTotalAvailableReceiveAmount =
+    availableReceiveAmount +
+    BigInt(
+      Math.floor(
+        (Number(payment.quote.lowEstimatedExchangeRate.a) /
+          Number(payment.quote.lowEstimatedExchangeRate.b)) *
+          (1 + slippage) *
+          Number(availableSendAmount)
+      )
+    )
+  return { estTotalAvailableSendAmount, estTotalAvailableReceiveAmount }
+}
+
+interface PaymentAccess extends GrantAccess {
+  paymentInterval?: Interval
+}
+
+// "payment" is locked by the "deps.knex" transaction.
+async function validateGrant(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  grant: Grant
+): Promise<boolean> {
+  const grantAccess = grant.getAccess({
+    type: AccessType.OutgoingPayment,
+    action: AccessAction.Create
+  })
+
+  if (!grantAccess) {
+    // log?
+    return false
+  }
+
+  // Find grant access(es) that authorize this payment (pending send/receive limits).
+  const paymentAccess: PaymentAccess[] = []
+  const unlimitedAccess: GrantAccess[] = []
+  const unrelatedAccess: GrantAccess[] = []
+
+  for (const access of grantAccess) {
+    let noSendAmount = false
+    let noReceiveAmount = false
+    if (
+      validateAccess({
+        access,
+        payment,
+        identifier: `${deps.publicHost}/${payment.accountId}`
+      })
+    ) {
+      if (!access.limits) {
+        return true
+      }
+      if (!access.limits.sendAmount) {
+        noSendAmount = true
+      }
+      if (!access.limits.receiveAmount) {
+        noReceiveAmount = true
+      }
+      if (noSendAmount && noReceiveAmount) {
+        return true
+      }
+      let paymentInterval: Interval | undefined
+      if (access.interval) {
+        paymentInterval = getInterval(access.interval, payment.createdAt)
+        assert.ok(paymentInterval)
+      }
+      paymentAccess.push({
+        ...access,
+        paymentInterval
+      })
+    } else {
+      if (access.limits) {
+        unrelatedAccess.push(access)
+      } else {
+        unlimitedAccess.push(access)
+      }
+    }
+  }
+
+  if (paymentAccess.length === 0) {
+    return false
+  }
+  let {
+    estTotalAvailableSendAmount,
+    estTotalAvailableReceiveAmount
+  } = estimateTotalAvailableAmounts<PaymentAccess>(
+    paymentAccess,
+    payment,
+    deps.slippage
+  )
+
+  if (
+    estTotalAvailableSendAmount < payment.sendAmount.value ||
+    estTotalAvailableReceiveAmount < payment.receiveAmount.value
+  ) {
+    // Payment amount single-handedly exceeds sendAmount limit(s)
+    return false
+  }
+
+  // TODO: lock to prevent multiple grant payments from being created concurrently?
+  const grantPayments = await OutgoingPayment.query(deps.knex)
+    .where({
+      grant: grant.grant
+    })
+    .andWhereNot({
+      id: payment.id
+    })
+    .withGraphFetched('[quote.asset]')
+
+  if (grantPayments.length === 0) {
+    return true
+  }
+
+  const competingPayments: OutgoingPayment[] = []
+  for (const grantPayment of grantPayments) {
+    if (grantPayment.state === OutgoingPaymentState.Failed) {
+      const totalSent = await deps.accountingService.getTotalSent(
+        grantPayment.id
+      )
+      assert.ok(totalSent !== undefined)
+      if (totalSent === BigInt(0)) {
+        continue
+      }
+      grantPayment.sentAmount = { ...grantPayment.sentAmount, value: totalSent }
+    } else {
+      grantPayment.sentAmount = grantPayment.sendAmount
+    }
+    if (
+      paymentAccess.find((access) =>
+        validatePaymentAccess({
+          access,
+          payment: grantPayment,
+          identifier: `${deps.publicHost}/${grantPayment.accountId}`
+        })
+      ) &&
+      !unlimitedAccess.find((access) =>
+        validateAccess({
+          access,
+          payment: grantPayment,
+          identifier: `${deps.publicHost}/${grantPayment.accountId}`
+        })
+      )
+    ) {
+      competingPayments.push(grantPayment)
+    }
+  }
+  if (!competingPayments) {
+    // The payment may use the entire amount limit(s)
+    return true
+  }
+
+  // Do paymentAccess limits support payment and competing existing payments?
+  for (const grantPayment of competingPayments) {
+    let sentAmount = grantPayment.sentAmount.value
+    let receivedAmount: bigint
+    // Estimate delivered amount of failed payment
+    if (grantPayment.state === OutgoingPaymentState.Failed) {
+      receivedAmount =
+        (grantPayment.receiveAmount.value * grantPayment.sentAmount.value) /
+        grantPayment.sendAmount.value
+    } else {
+      receivedAmount = grantPayment.receiveAmount.value
+    }
+
+    // Check if competing payment was created with (for current payment) unrelated access
+    const competingUnrelatedAccess = unrelatedAccess.filter((access) =>
+      validateAccess({
+        access,
+        payment: grantPayment,
+        identifier: `${deps.publicHost}/${grantPayment.accountId}`
+      })
+    )
+    if (competingUnrelatedAccess.length > 0) {
+      for (const access of unrelatedAccess) {
+        if (competingUnrelatedAccess.indexOf(access) > -1) {
+          if (access.limits?.sendAmount) {
+            if (access.limits.sendAmount.value > sentAmount) {
+              access.limits.sendAmount.value -= sentAmount
+              sentAmount = BigInt(0)
+              receivedAmount = BigInt(0)
+            } else {
+              receivedAmount -=
+                (access.limits.sendAmount.value *
+                  grantPayment.receiveAmount.value) /
+                grantPayment.sentAmount.value
+              sentAmount -= access.limits.sendAmount.value
+              access.limits.sendAmount.value = BigInt(0)
+            }
+          } else if (access.limits?.receiveAmount) {
+            if (access.limits.receiveAmount.value > receivedAmount) {
+              access.limits.receiveAmount.value -= receivedAmount
+              receivedAmount = BigInt(0)
+              sentAmount = BigInt(0)
+            } else {
+              sentAmount -=
+                (access.limits.receiveAmount.value *
+                  grantPayment.sentAmount.value) /
+                grantPayment.receiveAmount.value
+              receivedAmount -= access.limits.receiveAmount.value
+              access.limits.receiveAmount.value = BigInt(0)
+            }
+          }
+        } else {
+          continue
+        }
+      }
+    }
+
+    estTotalAvailableSendAmount -= sentAmount
+    estTotalAvailableReceiveAmount -= receivedAmount
+    if (
+      estTotalAvailableSendAmount < payment.sendAmount.value ||
+      estTotalAvailableReceiveAmount < payment.receiveAmount.value
+    ) {
+      return false
+    }
+  }
+
+  return true
 }
 
 export interface FundOutgoingPaymentOptions {
