@@ -109,6 +109,20 @@ const BASE_GRANT_REQUEST = {
   }
 }
 
+const generateBaseGrant = () => ({
+  state: GrantState.Pending,
+  startMethod: [StartMethod.Redirect],
+  continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+  continueId: v4(),
+  finishMethod: FinishMethod.Redirect,
+  finishUri: 'https://example.com',
+  clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+  clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+  interactId: v4(),
+  interactRef: v4(),
+  interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+})
+
 describe('Grant Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
@@ -119,19 +133,7 @@ describe('Grant Routes', (): void => {
   let grant: Grant
   beforeEach(
     async (): Promise<void> => {
-      grant = await Grant.query().insert({
-        state: GrantState.Pending,
-        startMethod: [StartMethod.Redirect],
-        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        continueId: v4(),
-        finishMethod: FinishMethod.Redirect,
-        finishUri: 'https://example.com',
-        clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-        interactId: v4(),
-        interactRef: v4(),
-        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
-      })
+      grant = await Grant.query().insert(generateBaseGrant())
 
       await Access.query().insert({
         ...BASE_GRANT_ACCESS,
@@ -939,17 +941,8 @@ describe('Grant Routes', (): void => {
   describe('/continue', (): void => {
     test('Can issue access token', async (): Promise<void> => {
       const grant = await Grant.query().insert({
-        state: GrantState.Granted,
-        startMethod: [StartMethod.Redirect],
-        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        continueId: v4(),
-        finishMethod: FinishMethod.Redirect,
-        finishUri: 'https://example.com',
-        clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-        interactId: v4(),
-        interactRef: v4(),
-        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        ...generateBaseGrant(),
+        state: GrantState.Granted
       })
 
       await Access.query().insert({
@@ -963,7 +956,9 @@ describe('Grant Routes', (): void => {
             Accept: 'application/json',
             'Content-Type': 'application/json',
             Authorization: `GNAP ${grant.continueToken}`
-          }
+          },
+          url: `/continue/${grant.continueId}`,
+          method: 'POST'
         },
         {
           continueId: grant.continueId
@@ -974,7 +969,9 @@ describe('Grant Routes', (): void => {
         interact_ref: grant.interactRef
       }
 
-      await expect(grantRoutes.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
+
+      expect(ctx.response).toSatisfyApiSpec()
 
       const accessToken = await AccessToken.query().findOne({
         grantId: grant.id
@@ -1007,7 +1004,7 @@ describe('Grant Routes', (): void => {
         interact_ref: v4()
       }
 
-      await expect(grantRoutes.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)
       expect(ctx.body).toEqual({
         error: 'unknown_request'
@@ -1015,23 +1012,9 @@ describe('Grant Routes', (): void => {
     })
 
     test('Cannot issue access token if grant has not been granted', async (): Promise<void> => {
-      const pendingGrant = await Grant.query().insert({
-        state: GrantState.Pending,
-        startMethod: [StartMethod.Redirect],
-        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        continueId: v4(),
-        finishMethod: FinishMethod.Redirect,
-        finishUri: 'https://example.com',
-        clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-        interactId: v4(),
-        interactRef: v4(),
-        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
-      })
-
       await Access.query().insert({
         ...BASE_GRANT_ACCESS,
-        grantId: pendingGrant.id
+        grantId: grant.id
       })
 
       const ctx = createContext(
@@ -1039,19 +1022,19 @@ describe('Grant Routes', (): void => {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
-            Authorization: `GNAP ${pendingGrant.continueToken}`
+            Authorization: `GNAP ${grant.continueToken}`
           }
         },
         {
-          continueId: pendingGrant.continueId
+          continueId: grant.continueId
         }
       )
 
       ctx.request.body = {
-        interact_ref: pendingGrant.interactRef
+        interact_ref: grant.interactRef
       }
 
-      await expect(grantRoutes.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
       expect(ctx.body).toEqual({
         error: 'request_denied'
@@ -1074,7 +1057,7 @@ describe('Grant Routes', (): void => {
 
       ctx.request.body = {}
 
-      await expect(grantRoutes.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
       expect(ctx.body).toEqual({
         error: 'invalid_request'
@@ -1098,7 +1081,7 @@ describe('Grant Routes', (): void => {
         interact_ref: grant.interactRef
       }
 
-      await expect(grantRoutes.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
       expect(ctx.body).toEqual({
         error: 'invalid_request'
@@ -1121,7 +1104,7 @@ describe('Grant Routes', (): void => {
         interact_ref: grant.interactRef
       }
 
-      await expect(grantRoutes.post(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
       expect(ctx.body).toEqual({
         error: 'invalid_request'

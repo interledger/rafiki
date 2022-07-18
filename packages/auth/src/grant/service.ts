@@ -7,7 +7,6 @@ import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
-import { IAppConfig } from '../config/app'
 
 export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
@@ -17,12 +16,11 @@ export interface GrantService {
     continueId: string,
     continueToken: string,
     interactRef: string
-  ): Promise<Grant>
+  ): Promise<Grant | null>
 }
 
 interface ServiceDependencies extends BaseService {
   accessService: AccessService
-  config: IAppConfig
   knex: TransactionOrKnex
 }
 
@@ -59,7 +57,6 @@ export interface GrantResponse {
 export async function createGrantService({
   logger,
   accessService,
-  config,
   knex
 }: ServiceDependencies): Promise<GrantService> {
   const log = logger.child({
@@ -68,7 +65,6 @@ export async function createGrantService({
   const deps: ServiceDependencies = {
     logger: log,
     accessService,
-    config,
     knex
   }
   return {
@@ -86,26 +82,11 @@ export async function createGrantService({
 
 async function issueGrant(
   deps: ServiceDependencies,
-  grantId: string,
-  trx?: Transaction
+  grantId: string
 ): Promise<Grant> {
-  const invTrx = trx || (await Grant.startTransaction())
-  try {
-    const grant = await Grant.query(invTrx).patchAndFetchById(grantId, {
-      state: GrantState.Granted
-    })
-
-    if (!trx) {
-      await invTrx.commit()
-    }
-    return grant
-  } catch (err) {
-    if (!trx) {
-      await invTrx.rollback()
-    }
-
-    throw err
-  }
+  return Grant.query().patchAndFetchById(grantId, {
+    state: GrantState.Granted
+  })
 }
 
 async function initiateGrant(
@@ -166,6 +147,12 @@ async function getByContinue(
   continueId: string,
   continueToken: string,
   interactRef: string
-): Promise<Grant> {
-  return Grant.query().where({ continueId, continueToken, interactRef }).first()
+): Promise<Grant | null> {
+  const grant = await Grant.query().findOne({ interactRef })
+  if (
+    continueId !== grant?.continueId ||
+    continueToken !== grant?.continueToken
+  )
+    return null
+  return grant
 }

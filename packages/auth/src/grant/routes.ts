@@ -22,7 +22,7 @@ export interface GrantRoutes {
     start(ctx: AppContext): Promise<void>
     finish(ctx: AppContext): Promise<void>
   }
-  post(ctx: AppContext): Promise<void>
+  continue(ctx: AppContext): Promise<void>
 }
 
 export function createGrantRoutes({
@@ -49,7 +49,7 @@ export function createGrantRoutes({
       start: (ctx: AppContext) => startInteraction(deps, ctx),
       finish: (ctx: AppContext) => finishInteraction(deps, ctx)
     },
-    post: (ctx: AppContext) => continueGrant(deps, ctx)
+    continue: (ctx: AppContext) => continueGrant(deps, ctx)
   }
 }
 
