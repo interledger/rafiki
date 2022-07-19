@@ -27,7 +27,7 @@ export interface Introspection extends Partial<Grant> {
 export type Rotation =
   | {
       success: true
-      access: Access
+      access: Array<Access>
       value: string
       managementId: string
       expiresIn?: number
@@ -104,14 +104,13 @@ async function rotate(
   let token = await AccessToken.query(deps.knex).findOne({ managementId })
   if (token) {
     await token.$query(deps.knex).delete()
-    const newManagementId = uuid()
     token = await AccessToken.query(deps.knex).insertAndFetch({
       value: crypto.randomBytes(8).toString('hex').toUpperCase(),
       grantId: token.grantId,
       expiresIn: token.expiresIn,
-      managementId: newManagementId
+      managementId: uuid()
     })
-    const access = await Access.query(deps.knex).findOne({
+    const access = await Access.query(deps.knex).where({
       grantId: token.grantId
     })
     return {
