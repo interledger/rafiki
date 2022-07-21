@@ -1,6 +1,7 @@
 import * as crypto from 'crypto'
 import { v4 } from 'uuid'
 import { Transaction, TransactionOrKnex } from 'objection'
+
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState } from '../grant/model'
 import { ClientService, KeyInfo } from '../client/service'
@@ -150,17 +151,4 @@ async function rotate(
       error: new Error('token not found')
     }
   }
-}
-
-async function createAccessToken(
-  deps: ServiceDependencies,
-  grantId: string,
-  opts?: AccessTokenOpts
-): Promise<AccessToken> {
-  return AccessToken.query(deps.knex).insert({
-    value: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    managementId: v4(),
-    grantId,
-    expiresIn: opts?.expiresIn || deps.config.accessTokenExpirySeconds
-  })
 }
