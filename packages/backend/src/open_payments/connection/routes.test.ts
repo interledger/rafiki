@@ -4,7 +4,7 @@ import Knex from 'knex'
 import jestOpenAPI from 'jest-openapi'
 import { v4 as uuid } from 'uuid'
 
-import { AppServices, ConnectionContext } from '../../app'
+import { AppServices, ReadContext } from '../../app'
 import { Config, IAppConfig } from '../../config/app'
 import { GraphileProducer } from '../../messaging/graphileProducer'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -93,13 +93,13 @@ describe('Connection Routes', (): void => {
 
   describe('get', (): void => {
     test('returns 404 for nonexistent connection id on incoming payment', async (): Promise<void> => {
-      const ctx = createContext<ConnectionContext>(
+      const ctx = createContext<ReadContext>(
         {
           headers: { Accept: 'application/json' },
           url: `/connections/${incomingPayment.connectionId}`
         },
         {
-          id: uuid()
+          connectionId: uuid()
         }
       )
       await expect(connectionRoutes.get(ctx)).rejects.toHaveProperty(
@@ -109,13 +109,13 @@ describe('Connection Routes', (): void => {
     })
 
     test('returns 200 for correct connection id', async (): Promise<void> => {
-      const ctx = createContext<ConnectionContext>(
+      const ctx = createContext<ReadContext>(
         {
           headers: { Accept: 'application/json' },
           url: `/connections/${incomingPayment.connectionId}`
         },
         {
-          id: incomingPayment.connectionId
+          connectionId: incomingPayment.connectionId
         }
       )
       await expect(connectionRoutes.get(ctx)).resolves.toBeUndefined()

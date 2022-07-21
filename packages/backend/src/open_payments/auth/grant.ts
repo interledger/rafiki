@@ -12,8 +12,7 @@ export enum AccessType {
   Account = 'account',
   IncomingPayment = 'incoming-payment',
   OutgoingPayment = 'outgoing-payment',
-  Quote = 'quote',
-  Connection = 'connection'
+  Quote = 'quote'
 }
 
 export enum AccessAction {

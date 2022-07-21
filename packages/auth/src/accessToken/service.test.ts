@@ -61,15 +61,10 @@ describe('Access Token Service', (): void => {
   const BASE_GRANT = {
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
-    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-    interactId: v4(),
-    interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH
   }
 
   const BASE_ACCESS = {
@@ -86,30 +81,47 @@ describe('Access Token Service', (): void => {
   }
 
   const BASE_TOKEN = {
-    value: crypto.randomBytes(8).toString('hex').toUpperCase(),
     managementId: 'https://example.com/manage/12345',
     expiresIn: 3600
   }
 
+  let grant: Grant
+  let access: Access
+  let token: AccessToken
+  beforeEach(
+    async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT,
+        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        continueId: v4(),
+        interactId: v4(),
+        interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+      })
+      access = await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_ACCESS
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN,
+        value: crypto.randomBytes(8).toString('hex').toUpperCase()
+      })
+    }
+  )
+
+  describe('Create', (): void => {
+    test('Can create access token', async (): Promise<void> => {
+      const accessToken = await accessTokenService.create(grant.id)
+      expect(accessToken).toMatchObject({
+        grantId: grant.id,
+        managementId: expect.any(String),
+        value: expect.any(String)
+      })
+    })
+  })
+
   describe('Introspect', (): void => {
-    let grant: Grant
-    let access: Access
-    let token: AccessToken
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
-        })
-        access = await Access.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_ACCESS
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN
-        })
-      }
-    )
     test('Can introspect active token', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
@@ -152,11 +164,17 @@ describe('Access Token Service', (): void => {
     beforeEach(
       async (): Promise<void> => {
         grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
+          ...BASE_GRANT,
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          continueId: v4(),
+          interactId: v4(),
+          interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
         })
         token = await AccessToken.query(trx).insertAndFetch({
           grantId: grant.id,
-          ...BASE_TOKEN
+          ...BASE_TOKEN,
+          value: crypto.randomBytes(8).toString('hex').toUpperCase()
         })
       }
     )

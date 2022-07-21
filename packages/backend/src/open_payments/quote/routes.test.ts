@@ -114,7 +114,7 @@ describe('Quote Routes', (): void => {
           headers: { Accept: 'application/json' }
         },
         {
-          id: uuid(),
+          quoteId: uuid(),
           accountId
         }
       )
@@ -130,7 +130,7 @@ describe('Quote Routes', (): void => {
           url: `/${accountId}/quotes/${quote.id}`
         },
         {
-          id: quote.id,
+          quoteId: quote.id,
           accountId
         }
       )

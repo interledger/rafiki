@@ -1,15 +1,14 @@
-import { URL } from 'url'
 import crypto from 'crypto'
 import Knex, { Transaction } from 'knex'
 import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
-import { Config, IAppConfig } from '../config/app'
+import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { GrantService, GrantRequest } from '../grant/service'
-import { Grant, StartMethod, FinishMethod } from '../grant/model'
+import { StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 
@@ -17,14 +16,12 @@ describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
-  let config: IAppConfig
   let knex: Knex
   let trx: Transaction
 
   beforeAll(
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
-      config = await deps.use('config')
       grantService = await deps.use('grantService')
       knex = await deps.use('knex')
       appContainer = await createTestApp(deps)
@@ -106,47 +103,25 @@ describe('Grant Service', (): void => {
         }
       }
 
-      const grantResponse = await grantService.initiateGrant(grantRequest)
+      const grant = await grantService.initiateGrant(grantRequest)
 
-      expect(grantResponse).toEqual(
-        expect.objectContaining({
-          interact: {
-            redirect: expect.any(String),
-            finish: expect.any(String)
-          },
-          continue: {
-            access_token: {
-              value: expect.any(String)
-            },
-            uri: expect.any(String),
-            wait: config.waitTime
-          }
-        })
-      )
-
-      const redirectUrl = new URL(grantResponse.interact.redirect)
-      const continueUrl = new URL(grantResponse.continue.uri)
-      expect(redirectUrl.pathname).toMatch(/\/interact\/[a-z,A-Z,0-9,-]+/g)
-      expect(continueUrl.pathname).toMatch(
-        /\/auth\/continue\/[a-z,A-Z,0-9,-]+/g
-      )
-
-      const dbGrant = await Grant.query(trx)
-        .where({
-          interactNonce: grantResponse.interact.finish,
-          continueToken: grantResponse.continue.access_token.value
-        })
-        .first()
-      expect(dbGrant.interactId).toEqual(
-        redirectUrl.pathname.replace('/interact/', '')
-      )
-      expect(dbGrant.continueId).toEqual(
-        continueUrl.pathname.replace('/auth/continue/', '')
-      )
+      expect(grant).toMatchObject({
+        state: GrantState.Pending,
+        continueId: expect.any(String),
+        continueToken: expect.any(String),
+        interactRef: expect.any(String),
+        interactId: expect.any(String),
+        interactNonce: expect.any(String),
+        finishMethod: FinishMethod.Redirect,
+        finishUri: BASE_GRANT_REQUEST.interact.finish.uri,
+        clientNonce: BASE_GRANT_REQUEST.interact.finish.nonce,
+        clientKeyId: BASE_GRANT_REQUEST.client.key.jwk.kid,
+        startMethod: expect.arrayContaining([StartMethod.Redirect])
+      })
 
       const dbAccessGrant = await Access.query(trx)
         .where({
-          grantId: dbGrant.id
+          grantId: grant.id
         })
         .first()
 

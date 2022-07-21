@@ -1,3 +1,5 @@
+import * as crypto from 'crypto'
+
 function envString(name: string, value: string): string {
   const envValue = process.env[name]
   return envValue == null ? value : envValue
@@ -30,11 +32,16 @@ export const Config = {
   keyRegistries: envStringArray('KEY_REGISTRIES', [
     'https://openpayments.network'
   ]),
-  resourceServerDomain: envString('INTERACT_URL', 'http://localhost:3004'),
-  authServerDomain: envString('DOMAIN', 'http://localhost:3006'), // TODO: replace this with whatever frontend port ends up being
-  waitTime: envInt('WAIT', 5),
   authServerSpec: envString(
     'AUTH_SERVER_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml'
-  )
+    'https://raw.githubusercontent.com/interledger/open-payments/c170fff1bab932076b01b00d09ee13dce2e774c8/auth-server-open-api-spec.yaml'
+  ),
+  identityServerDomain: envString(
+    'IDENTITY_SERVER_DOMAIN',
+    'http://localhost:3004'
+  ),
+  authServerDomain: envString('AUTH_SERVER_DOMAIN', 'http://localhost:3006'), // TODO: replace this with whatever frontend port ends up being
+  waitTimeSeconds: envInt('WAIT_SECONDS', 5),
+  cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
+  accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60) // Default 10 minutes
 }

@@ -3,8 +3,9 @@ import { EventEmitter } from 'events'
 
 import { IocContract } from '@adonisjs/fold'
 import Knex from 'knex'
-import Koa, { DefaultState } from 'koa'
+import Koa, { DefaultState, DefaultContext } from 'koa'
 import bodyParser from 'koa-bodyparser'
+import session from 'koa-session'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 
@@ -14,12 +15,14 @@ import { GrantService } from './grant/service'
 import { AccessTokenRoutes } from './accessToken/routes'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 
-export interface AppContextData {
+export interface AppContextData extends DefaultContext {
   logger: Logger
   closeEmitter: EventEmitter
   container: AppContainer
   // Set by @koa/router
   params: { [key: string]: string }
+  // Set by koa-generic-session
+  session: { [key: string]: string }
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
@@ -69,8 +72,21 @@ export class App {
     this.koa.context.container = this.container
     this.koa.context.logger = await this.container.use('logger')
     this.koa.context.closeEmitter = await this.container.use('closeEmitter')
-    this.publicRouter = new Router()
+    this.publicRouter = new Router<DefaultState, AppContext>()
 
+    this.koa.keys = [this.config.cookieKey]
+    this.koa.use(
+      session(
+        {
+          key: 'sessionId',
+          maxAge: 60 * 1000,
+          signed: true
+        },
+        // Only accepts Middleware<DefaultState, DefaultContext> for some reason, this.koa is Middleware<DefaultState, AppContext>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.koa as any
+      )
+    )
     this.koa.use(
       async (
         ctx: {
@@ -89,6 +105,7 @@ export class App {
         }
       }
     )
+
     await this._setupRoutes()
   }
 
@@ -186,6 +203,27 @@ export class App {
         }
       }
     }
+
+    // Interaction
+    this.publicRouter.get(
+      '/interact/:interactId',
+      grantRoutes.interaction.start
+    )
+
+    this.publicRouter.post(
+      '/interact/:interactId/login',
+      grantRoutes.interaction.finish
+    )
+
+    // Token management
+    this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
+
+    this.publicRouter.post('/auth/token/:id', (ctx: AppContext): void => {
+      // TODO: tokenService.rotate
+      ctx.status = 200
+    })
+
+    this.publicRouter.del('/auth/token/:id', accessTokenRoutes.revoke)
 
     this.koa.use(this.publicRouter.middleware())
   }
