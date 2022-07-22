@@ -3,16 +3,19 @@ import { URL } from 'url'
 import { AppContext } from '../app'
 import { GrantService, GrantRequest } from './service'
 import { GrantState } from './model'
+import { Access } from '../access/model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
 import { isAccessRequest } from '../access/types'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
+import { AccessService } from '../access/service'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
   clientService: ClientService
   accessTokenService: AccessTokenService
+  accessService: AccessService
   config: IAppConfig
 }
 
@@ -29,6 +32,7 @@ export function createGrantRoutes({
   grantService,
   clientService,
   accessTokenService,
+  accessService,
   logger,
   config
 }: ServiceDependencies): GrantRoutes {
@@ -40,6 +44,7 @@ export function createGrantRoutes({
     grantService,
     clientService,
     accessTokenService,
+    accessService,
     logger: log,
     config
   }
@@ -51,6 +56,20 @@ export function createGrantRoutes({
     },
     continue: (ctx: AppContext) => continueGrant(deps, ctx)
   }
+}
+
+// TODO: factor out/import this
+function accessToBody(access: Access) {
+  return Object.fromEntries(
+    Object.entries(access.toJSON()).filter(
+      ([k, v]) =>
+        v != null &&
+        k != 'id' &&
+        k != 'grantId' &&
+        k != 'createdAt' &&
+        k != 'updatedAt'
+    )
+  )
 }
 
 function validateGrantRequest(
@@ -212,7 +231,7 @@ async function continueGrant(
     return
   }
 
-  const { config, accessTokenService, grantService } = deps
+  const { config, accessTokenService, grantService, accessService } = deps
   const grant = await grantService.getByContinue(
     continueId,
     continueToken,
@@ -235,12 +254,15 @@ async function continueGrant(
   }
 
   const accessToken = await accessTokenService.create(grant.id)
+  const access = await accessService.getByGrant(grant.id)
 
   // TODO: add "continue" to response if additional grant request steps are added
   ctx.body = {
     access_token: {
       value: accessToken.value,
-      manage: config.authServerDomain + `/token/${accessToken.managementId}`
+      manage: config.authServerDomain + `/token/${accessToken.managementId}`,
+      access: access.map((a: Access) => accessToBody(a)),
+      expiresIn: accessToken.expiresIn
     }
   }
 }

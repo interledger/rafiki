@@ -981,7 +981,17 @@ describe('Grant Routes', (): void => {
       expect(ctx.body).toEqual({
         access_token: {
           value: accessToken.value,
-          manage: Config.authServerDomain + `/token/${accessToken.managementId}`
+          manage:
+            Config.authServerDomain + `/token/${accessToken.managementId}`,
+          access: expect.arrayContaining([
+            {
+              actions: expect.arrayContaining(['create', 'read', 'list']),
+              identifier: 'test-identifier',
+              locations: expect.arrayContaining(['https://example.com']),
+              type: 'incoming-payment'
+            }
+          ]),
+          expiresIn: 600
         }
       })
     })

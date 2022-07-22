@@ -106,9 +106,9 @@ async function initiateGrant(
     }
   } = grantRequest
 
-  const invTrx = trx || (await Grant.startTransaction(knex))
+  const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
-    const grant = await Grant.query(invTrx).insert({
+    const grant = await Grant.query(grantTrx).insert({
       state: GrantState.Pending,
       startMethod: start,
       finishMethod: finish?.method,
@@ -123,16 +123,16 @@ async function initiateGrant(
     })
 
     // Associate provided accesses with grant
-    await accessService.createAccess(grant.id, access, invTrx)
+    await accessService.createAccess(grant.id, access, grantTrx)
 
     if (!trx) {
-      await invTrx.commit()
+      await grantTrx.commit()
     }
 
     return grant
   } catch (err) {
     if (!trx) {
-      await invTrx.rollback()
+      await grantTrx.rollback()
     }
 
     throw err
