@@ -183,17 +183,72 @@ describe('Access Token Service', (): void => {
       const result = await accessTokenService.revoke(token.id)
       expect(result).toBeUndefined()
       token = await AccessToken.query(trx).findById(token.id)
-      expect(token.expiresIn).toBe(1)
+      expect(token).toBeUndefined()
     })
     test('Can revoke even if token has already expired', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: -1 })
       const result = await accessTokenService.revoke(token.id)
       expect(result).toBeUndefined()
       token = await AccessToken.query(trx).findById(token.id)
-      expect(token.expiresIn).toBe(-1)
+      expect(token).toBeUndefined()
+    })
+    test('Can revoke even if token has already been revoked', async (): Promise<void> => {
+      await token.$query(trx).delete()
+      const result = await accessTokenService.revoke(token.id)
+      expect(result).toBeUndefined()
+      token = await AccessToken.query(trx).findById(token.id)
+      expect(token).toBeUndefined()
     })
     test('Cannot revoke nonexistent token', async (): Promise<void> => {
       expect(accessTokenService.revoke('uuid')).rejects.toBeInstanceOf(Error)
+    })
+  })
+
+  describe('Rotate', (): void => {
+    let grant: Grant
+    let token: AccessToken
+    let originalTokenValue: string
+    beforeEach(
+      async (): Promise<void> => {
+        grant = await Grant.query(trx).insertAndFetch({
+          ...BASE_GRANT,
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          interactId: v4(),
+          interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        })
+        await Access.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_ACCESS
+        })
+        token = await AccessToken.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_TOKEN,
+          value: crypto.randomBytes(8).toString('hex').toUpperCase()
+        })
+        originalTokenValue = token.value
+      }
+    )
+    test('Can rotate un-expired token', async (): Promise<void> => {
+      await token.$query(trx).patch({ expiresIn: 1000000 })
+      const result = await accessTokenService.rotate(token.managementId)
+      expect(result.success).toBe(true)
+      expect(result.success && result.value).not.toBe(originalTokenValue)
+    })
+    test('Can rotate expired token', async (): Promise<void> => {
+      await token.$query(trx).patch({ expiresIn: -1 })
+      const result = await accessTokenService.rotate(token.managementId)
+      expect(result.success).toBe(true)
+      token = await AccessToken.query(trx).findOne({
+        managementId: result.success && result.managementId
+      })
+      expect(token.value).not.toBe(originalTokenValue)
+    })
+    test('Cannot rotate nonexistent token', async (): Promise<void> => {
+      const result = await accessTokenService.rotate(
+        'https://example.com/manage/some-nonexistent-id'
+      )
+      expect(result.success).toBe(false)
     })
   })
 })

@@ -7,11 +7,13 @@ import { Grant, GrantState } from '../grant/model'
 import { ClientService, KeyInfo } from '../client/service'
 import { AccessToken } from './model'
 import { IAppConfig } from '../config/app'
+import { Access } from '../access/model'
 
 export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
-  revoke(id: string): Promise<Error | undefined>
+  revoke(id: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
+  rotate(managementId: string): Promise<Rotation>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -29,6 +31,19 @@ interface AccessTokenOpts {
   expiresIn?: number
   trx?: Transaction
 }
+
+export type Rotation =
+  | {
+      success: true
+      access: Array<Access>
+      value: string
+      managementId: string
+      expiresIn?: number
+    }
+  | {
+      success: false
+      error: Error
+    }
 
 export async function createAccessTokenService({
   logger,
@@ -51,7 +66,8 @@ export async function createAccessTokenService({
     introspect: (token: string) => introspect(deps, token),
     revoke: (id: string) => revoke(deps, id),
     create: (grantId: string, opts?: AccessTokenOpts) =>
-      createAccessToken(deps, grantId, opts)
+      createAccessToken(deps, grantId, opts),
+    rotate: (managementId: string) => rotate(deps, managementId)
   }
 }
 
@@ -86,17 +102,10 @@ async function introspect(
   }
 }
 
-async function revoke(
-  deps: ServiceDependencies,
-  id: string
-): Promise<Error | undefined> {
+async function revoke(deps: ServiceDependencies, id: string): Promise<void> {
   const token = await AccessToken.query(deps.knex).findById(id)
   if (token) {
-    if (!isTokenExpired(token)) {
-      await token.$query(deps.knex).patch({ expiresIn: 1 })
-    }
-  } else {
-    return new Error('token not found')
+    await token.$query(deps.knex).delete()
   }
 }
 
@@ -111,4 +120,35 @@ async function createAccessToken(
     grantId,
     expiresIn: opts?.expiresIn || deps.config.accessTokenExpirySeconds
   })
+}
+
+async function rotate(
+  deps: ServiceDependencies,
+  managementId: string
+): Promise<Rotation> {
+  let token = await AccessToken.query(deps.knex).findOne({ managementId })
+  if (token) {
+    await token.$query(deps.knex).delete()
+    token = await AccessToken.query(deps.knex).insertAndFetch({
+      value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      grantId: token.grantId,
+      expiresIn: token.expiresIn,
+      managementId: v4()
+    })
+    const access = await Access.query(deps.knex).where({
+      grantId: token.grantId
+    })
+    return {
+      success: true,
+      access,
+      value: token.value,
+      managementId: token.managementId,
+      expiresIn: token.expiresIn
+    }
+  } else {
+    return {
+      success: false,
+      error: new Error('token not found')
+    }
+  }
 }
