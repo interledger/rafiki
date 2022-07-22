@@ -12,6 +12,11 @@ export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
   getByInteraction(interactId: string): Promise<Grant>
   issueGrant(grantId: string): Promise<Grant>
+  getByContinue(
+    continueId: string,
+    continueToken: string,
+    interactRef: string
+  ): Promise<Grant | null>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -66,7 +71,12 @@ export async function createGrantService({
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
       initiateGrant(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
-    issueGrant: (grantId: string) => issueGrant(deps, grantId)
+    issueGrant: (grantId: string) => issueGrant(deps, grantId),
+    getByContinue: (
+      continueId: string,
+      continueToken: string,
+      interactRef: string
+    ) => getByContinue(continueId, continueToken, interactRef)
   }
 }
 
@@ -74,7 +84,7 @@ async function issueGrant(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<Grant> {
-  return Grant.query(deps.knex).patchAndFetchById(grantId, {
+  return Grant.query().patchAndFetchById(grantId, {
     state: GrantState.Granted
   })
 }
@@ -96,9 +106,9 @@ async function initiateGrant(
     }
   } = grantRequest
 
-  const invTrx = trx || (await Grant.startTransaction(knex))
+  const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
-    const grant = await Grant.query(invTrx).insert({
+    const grant = await Grant.query(grantTrx).insert({
       state: GrantState.Pending,
       startMethod: start,
       finishMethod: finish?.method,
@@ -113,16 +123,16 @@ async function initiateGrant(
     })
 
     // Associate provided accesses with grant
-    await accessService.createAccess(grant.id, access, invTrx)
+    await accessService.createAccess(grant.id, access, grantTrx)
 
     if (!trx) {
-      await invTrx.commit()
+      await grantTrx.commit()
     }
 
     return grant
   } catch (err) {
     if (!trx) {
-      await invTrx.rollback()
+      await grantTrx.rollback()
     }
 
     throw err
@@ -131,4 +141,18 @@ async function initiateGrant(
 
 async function getByInteraction(interactId: string): Promise<Grant> {
   return Grant.query().findOne({ interactId })
+}
+
+async function getByContinue(
+  continueId: string,
+  continueToken: string,
+  interactRef: string
+): Promise<Grant | null> {
+  const grant = await Grant.query().findOne({ interactRef })
+  if (
+    continueId !== grant?.continueId ||
+    continueToken !== grant?.continueToken
+  )
+    return null
+  return grant
 }

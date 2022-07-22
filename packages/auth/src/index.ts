@@ -108,6 +108,8 @@ export function initIocContainer(
     return createGrantRoutes({
       grantService: await deps.use('grantService'),
       clientService: await deps.use('clientService'),
+      accessTokenService: await deps.use('accessTokenService'),
+      accessService: await deps.use('accessService'),
       logger: await deps.use('logger'),
       config: await deps.use('config')
     })

@@ -10,6 +10,7 @@ export interface AccessService {
     accessRequests: AccessRequest[],
     trx?: Transaction
   ): Promise<Access[]>
+  getByGrant(grantId: string): Promise<Access[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -34,7 +35,8 @@ export async function createAccessService({
       grantId: string,
       accessRequests: AccessRequest[],
       trx?: Transaction
-    ) => createAccess(deps, grantId, accessRequests, trx)
+    ) => createAccess(deps, grantId, accessRequests, trx),
+    getByGrant: (grantId: string) => getByGrant(grantId)
   }
 }
 
@@ -48,5 +50,11 @@ async function createAccess(
     return { grantId, ...access }
   })
 
-  return Access.query(trx).insert(accessRequestsWithGrant)
+  return Access.query(trx || deps.knex).insert(accessRequestsWithGrant)
+}
+
+async function getByGrant(grantId: string): Promise<Access[]> {
+  return Access.query().where({
+    grantId
+  })
 }
