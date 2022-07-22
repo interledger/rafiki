@@ -211,7 +211,11 @@ describe('Access Token Service', (): void => {
     beforeEach(
       async (): Promise<void> => {
         grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
+          ...BASE_GRANT,
+          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          interactId: v4(),
+          interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
         })
         await Access.query(trx).insertAndFetch({
           grantId: grant.id,
@@ -219,7 +223,8 @@ describe('Access Token Service', (): void => {
         })
         token = await AccessToken.query(trx).insertAndFetch({
           grantId: grant.id,
-          ...BASE_TOKEN
+          ...BASE_TOKEN,
+          value: crypto.randomBytes(8).toString('hex').toUpperCase()
         })
         originalTokenValue = token.value
       }
@@ -228,11 +233,7 @@ describe('Access Token Service', (): void => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
       const result = await accessTokenService.rotate(token.managementId)
       expect(result.success).toBe(true)
-      token = await AccessToken.query(trx).findOne({
-        managementId: result.success && result.managementId
-      })
-      expect(token.expiresIn).toBe(1000000)
-      expect(token.value).not.toBe(originalTokenValue)
+      expect(result.success && result.value).not.toBe(originalTokenValue)
     })
     test('Can rotate expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: -1 })
@@ -244,8 +245,9 @@ describe('Access Token Service', (): void => {
       expect(token.value).not.toBe(originalTokenValue)
     })
     test('Cannot rotate nonexistent token', async (): Promise<void> => {
-      await token.$query(trx).delete()
-      const result = await accessTokenService.rotate(token.managementId)
+      const result = await accessTokenService.rotate(
+        'https://example.com/manage/some-nonexistent-id'
+      )
       expect(result.success).toBe(false)
     })
   })
