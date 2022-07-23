@@ -5,7 +5,7 @@ import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
-import Knex, { QueryInterface } from 'knex'
+import Knex from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
@@ -100,28 +100,6 @@ export type ListContext = Context<
   AppRequest<'accountId', never, PageQueryParams>
 >
 
-export interface DatabaseCleanupRule {
-  /**
-   * the name of the column containing the starting time from which the age will be computed
-   * ex: `createdAt` or `updatedAt`
-   */
-  absoluteStartTimeColumnName: string
-  /**
-   * the column which will be used to either set or offset the computed age
-   * if not provided, rows are considered expired when the difference between the current time
-   * and the time specified in `absoluteStartTimeColumnName` is greater than or equal to `minLapseTimeMillis`
-   */
-  lapseTime?: {
-    columnName: string
-    absolute?: boolean
-  }
-  /**
-   * the minimum number of milliseconds since expiration before rows of this table will be
-   * considered safe to delete during clean up
-   */
-  minLapseTimeMillis: number
-}
-
 type ContextType<T> = T extends (
   ctx: infer Context
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -172,9 +150,6 @@ export class App {
   private config!: IAppConfig
   private outgoingPaymentTimer!: NodeJS.Timer
   private deactivateInvoiceTimer!: NodeJS.Timer
-  private databaseCleanupRules!: {
-    [tableName: string]: DatabaseCleanupRule | undefined
-  }
 
   public constructor(private container: IocContract<AppServices>) {}
 
@@ -194,16 +169,6 @@ export class App {
     this.koa.context.closeEmitter = await this.container.use('closeEmitter')
     this.messageProducer = await this.container.use('messageProducer')
     this.publicRouter = new Router()
-    this.databaseCleanupRules = {
-      accessTokens: {
-        absoluteStartTimeColumnName: 'updatedAt',
-        lapseTime: {
-          columnName: 'expiresIn',
-          absolute: false
-        },
-        minLapseTimeMillis: this.config.accessTokenCleanupMinAge
-      }
-    }
 
     this.koa.use(
       async (
@@ -239,9 +204,6 @@ export class App {
       }
       for (let i = 0; i < this.config.webhookWorkers; i++) {
         process.nextTick(() => this.processWebhook())
-      }
-      for (let i = 0; i < this.config.databaseCleanupWorkers; i++) {
-        process.nextTick(() => this.processDatabaseCleanup())
       }
     }
   }
@@ -515,53 +477,5 @@ export class App {
             this.config.webhookWorkerIdle
           ).unref()
       })
-  }
-
-  private isDatabaseRowExpired<TRecord, TResult>(
-    now: number,
-    row: QueryInterface<TRecord, TResult>,
-    rule: DatabaseCleanupRule
-  ): boolean {
-    // get the base time used to compute the row's age
-    let absoluteLapseTime = row.column[rule.absoluteStartTimeColumnName]
-
-    if (rule.lapseTime) {
-      const timeParameter =
-        row.column[rule.lapseTime.columnName] || rule.minLapseTimeMillis
-      if (rule.lapseTime.absolute) {
-        absoluteLapseTime = timeParameter
-      } else {
-        // offset the working base time by a time span stored in another column
-        absoluteLapseTime += timeParameter
-      }
-    } else {
-      absoluteLapseTime =
-        row.column[rule.absoluteStartTimeColumnName] + rule.minLapseTimeMillis
-    }
-
-    return now - absoluteLapseTime >= rule.minLapseTimeMillis
-  }
-
-  private async processDatabaseCleanup(): Promise<void> {
-    const knex = await this.container.use('knex')
-
-    const tableNames = Object.keys(this.databaseCleanupRules)
-    for (const tableName of tableNames) {
-      const rule = this.databaseCleanupRules[tableName]
-      if (rule) {
-        const now = Date.now()
-
-        try {
-          await knex(tableName)
-            .where((row) => this.isDatabaseRowExpired(now, row, rule))
-            .delete()
-        } catch (err) {
-          this.logger.warn(
-            { error: err.message, tableName },
-            'processDatabaseCleanup error'
-          )
-        }
-      }
-    }
   }
 }

@@ -2,7 +2,7 @@ import { Server } from 'http'
 import { EventEmitter } from 'events'
 
 import { IocContract } from '@adonisjs/fold'
-import Knex from 'knex'
+import Knex, { QueryInterface } from 'knex'
 import Koa, { DefaultState, DefaultContext } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
@@ -26,6 +26,28 @@ export interface AppContextData extends DefaultContext {
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
+
+export interface DatabaseCleanupRule {
+  /**
+   * the name of the column containing the starting time from which the age will be computed
+   * ex: `createdAt` or `updatedAt`
+   */
+  absoluteStartTimeColumnName: string
+  /**
+   * the column which will be used to either set or offset the computed age
+   * if not provided, rows are considered expired when the difference between the current time
+   * and the time specified in `absoluteStartTimeColumnName` is greater than or equal to `minLapseTimeMillis`
+   */
+  lapseTime?: {
+    columnName: string
+    absolute?: boolean
+  }
+  /**
+   * the minimum number of milliseconds since expiration before rows of this table will be
+   * considered safe to delete during clean up
+   */
+  minLapseTimeMillis: number
+}
 
 type ContextType<T> = T extends (
   ctx: infer Context
@@ -54,6 +76,9 @@ export class App {
   private closeEmitter!: EventEmitter
   private logger!: Logger
   private config!: IAppConfig
+  private databaseCleanupRules!: {
+    [tableName: string]: DatabaseCleanupRule | undefined
+  }
   public isShuttingDown = false
 
   public constructor(private container: IocContract<AppServices>) {}
@@ -73,6 +98,16 @@ export class App {
     this.koa.context.logger = await this.container.use('logger')
     this.koa.context.closeEmitter = await this.container.use('closeEmitter')
     this.publicRouter = new Router<DefaultState, AppContext>()
+    this.databaseCleanupRules = {
+      accessTokens: {
+        absoluteStartTimeColumnName: 'createdAt',
+        lapseTime: {
+          columnName: 'expiresIn',
+          absolute: false
+        },
+        minLapseTimeMillis: this.config.accessTokenCleanupMinAge
+      }
+    }
 
     this.koa.keys = [this.config.cookieKey]
     this.koa.use(
@@ -107,6 +142,12 @@ export class App {
     )
 
     await this._setupRoutes()
+
+    if (this.config.env !== 'test') {
+      for (let i = 0; i < this.config.databaseCleanupWorkers; i++) {
+        process.nextTick(() => this.processDatabaseCleanup())
+      }
+    }
   }
 
   public listen(port: number | string): void {
@@ -232,5 +273,57 @@ export class App {
     this.publicRouter.del('/auth/token/:id', accessTokenRoutes.revoke)
 
     this.koa.use(this.publicRouter.middleware())
+  }
+
+  private isDatabaseRowExpired<TRecord, TResult>(
+    now: number,
+    row: QueryInterface<TRecord, TResult>,
+    rule: DatabaseCleanupRule
+  ): boolean {
+    // get the base time used to compute the row's age
+    let absoluteLapseTime = row.column[
+      rule.absoluteStartTimeColumnName
+    ].valueOf()
+
+    if (rule.lapseTime) {
+      const timeParameter =
+        row.column[rule.lapseTime.columnName].valueOf() ||
+        rule.minLapseTimeMillis
+      if (rule.lapseTime.absolute) {
+        absoluteLapseTime = timeParameter
+      } else {
+        // offset the working base time by a time span stored in another column
+        absoluteLapseTime += timeParameter
+      }
+    } else {
+      absoluteLapseTime =
+        row.column[rule.absoluteStartTimeColumnName].valueOf() +
+        rule.minLapseTimeMillis
+    }
+
+    return now - absoluteLapseTime >= rule.minLapseTimeMillis
+  }
+
+  private async processDatabaseCleanup(): Promise<void> {
+    const knex = await this.container.use('knex')
+
+    const tableNames = Object.keys(this.databaseCleanupRules)
+    for (const tableName of tableNames) {
+      const rule = this.databaseCleanupRules[tableName]
+      if (rule) {
+        const now = Date.now()
+
+        try {
+          await knex(tableName)
+            .where((row) => this.isDatabaseRowExpired(now, row, rule))
+            .delete()
+        } catch (err) {
+          this.logger.warn(
+            { error: err.message, tableName },
+            'processDatabaseCleanup error'
+          )
+        }
+      }
+    }
   }
 }

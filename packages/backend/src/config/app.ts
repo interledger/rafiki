@@ -89,7 +89,6 @@ export const Config = {
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
   webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
-  databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
 
   withdrawalThrottleDelay:
     process.env.WITHDRAWAL_THROTTLE_DELAY == null
@@ -107,8 +106,6 @@ export const Config = {
     'AUTH_SERVER_SPEC',
     'https://raw.githubusercontent.com/interledger/open-payments/ab840c8ff904a4b8c45d94ac23f5518a79a67686/auth-server-open-api-spec.yaml'
   ),
-
-  accessTokenCleanupMinAge: 1000 * 60 * 60 * 24 * 30, // 30 days
 
   /** Frontend **/
   frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')
