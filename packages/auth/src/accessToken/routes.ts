@@ -3,6 +3,7 @@ import { Access } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService, Introspection } from './service'
+import { accessToBody } from '../shared/utils'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -58,19 +59,6 @@ function introspectionToBody(result: Introspection) {
       key: result.key
     }
   }
-}
-
-function accessToBody(access: Access) {
-  return Object.fromEntries(
-    Object.entries(access.toJSON()).filter(
-      ([k, v]) =>
-        v != null &&
-        k != 'id' &&
-        k != 'grantId' &&
-        k != 'createdAt' &&
-        k != 'updatedAt'
-    )
-  )
 }
 
 async function revokeToken(

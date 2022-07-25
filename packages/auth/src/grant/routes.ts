@@ -10,6 +10,7 @@ import { isAccessRequest } from '../access/types'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
+import { accessToBody } from '../shared/utils'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -56,20 +57,6 @@ export function createGrantRoutes({
     },
     continue: (ctx: AppContext) => continueGrant(deps, ctx)
   }
-}
-
-// TODO: factor out/import this
-function accessToBody(access: Access) {
-  return Object.fromEntries(
-    Object.entries(access.toJSON()).filter(
-      ([k, v]) =>
-        v != null &&
-        k != 'id' &&
-        k != 'grantId' &&
-        k != 'createdAt' &&
-        k != 'updatedAt'
-    )
-  )
 }
 
 function validateGrantRequest(
