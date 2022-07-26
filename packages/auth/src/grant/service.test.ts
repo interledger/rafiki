@@ -8,7 +8,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { GrantService, GrantRequest } from '../grant/service'
-import { StartMethod, FinishMethod, GrantState } from '../grant/model'
+import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 
@@ -19,12 +19,40 @@ describe('Grant Service', (): void => {
   let knex: Knex
   let trx: Transaction
 
+  let grant: Grant
+
   beforeAll(
     async (): Promise<void> => {
       deps = await initIocContainer(Config)
       grantService = await deps.use('grantService')
       knex = await deps.use('knex')
       appContainer = await createTestApp(deps)
+    }
+  )
+
+  const KEY_REGISTRY_URL = 'https://openpayments.network/keys/test-key'
+
+  beforeEach(
+    async (): Promise<void> => {
+      grant = await Grant.query().insert({
+        state: GrantState.Pending,
+        startMethod: [StartMethod.Redirect],
+        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        continueId: v4(),
+        finishMethod: FinishMethod.Redirect,
+        finishUri: 'https://example.com',
+        clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        clientKeyId: KEY_REGISTRY_URL,
+        interactId: v4(),
+        interactRef: v4(),
+        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+      })
+
+      await Access.query().insert({
+        ...BASE_GRANT_ACCESS,
+        type: AccessType.IncomingPayment,
+        grantId: grant.id
+      })
     }
   )
 
@@ -39,8 +67,6 @@ describe('Grant Service', (): void => {
       await appContainer.shutdown()
     }
   )
-
-  const KEY_REGISTRY_URL = 'https://openpayments.network/keys/test-key'
 
   const BASE_GRANT_ACCESS = {
     actions: [Action.Create, Action.Read, Action.List],
@@ -127,6 +153,29 @@ describe('Grant Service', (): void => {
 
       expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
       expect(dbAccessGrant.limits).toEqual(INCOMING_PAYMENT_LIMIT)
+    })
+  })
+
+  describe('issue', (): void => {
+    test('Can issue a grant', async (): Promise<void> => {
+      const issuedGrant = await grantService.issueGrant(grant.id)
+      expect(issuedGrant.state).toEqual(GrantState.Granted)
+    })
+  })
+
+  describe('continue', (): void => {
+    test('Can fetch a grant by its continuation information', async (): Promise<void> => {
+      const { continueId, continueToken, interactRef } = grant
+
+      const fetchedGrant = await grantService.getByContinue(
+        continueId,
+        continueToken,
+        interactRef
+      )
+      expect(fetchedGrant?.id).toEqual(grant.id)
+      expect(fetchedGrant?.continueId).toEqual(continueId)
+      expect(fetchedGrant?.continueToken).toEqual(continueToken)
+      expect(fetchedGrant?.interactRef).toEqual(interactRef)
     })
   })
 })
