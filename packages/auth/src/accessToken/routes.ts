@@ -47,39 +47,6 @@ async function introspectToken(
     return
   }
 
-  const sig = ctx.headers['signature']
-  const sigInput = ctx.headers['signature-input']
-
-  if (
-    !sig ||
-    !sigInput ||
-    typeof sig !== 'string' ||
-    typeof sigInput !== 'string'
-  ) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid signature headers'
-    }
-    return
-  }
-
-  const verified = await deps.clientService.verifySigFromBoundKey(
-    sig,
-    sigInput,
-    'value',
-    body['access_token'],
-    ctx
-  )
-  if (!verified.success) {
-    ctx.status = verified.status || 401
-    ctx.body = {
-      error: verified.error || 'request_denied',
-      message: verified.message || null
-    }
-    return
-  }
-
   const introspectionResult = await deps.accessTokenService.introspect(
     body['access_token']
   )

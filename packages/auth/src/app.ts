@@ -185,6 +185,7 @@ export class App {
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
     const grantRoutes = await this.container.use('grantRoutes')
+    const clientService = await this.container.use('clientService')
 
     const openApi = await this.container.use('openApi')
     const toRouterPath = (path: string): string =>
@@ -202,12 +203,15 @@ export class App {
     for (const path in openApi.paths) {
       for (const method in openApi.paths[path]) {
         if (isHttpMethod(method)) {
+          let useHttpSigMiddleware = false
           let route: (ctx: AppContext) => Promise<void>
           if (path.includes('continue')) {
             route = grantRoutes[grantMethodToRoute[method]]
           } else if (path.includes('token')) {
+            useHttpSigMiddleware = true
             route = accessTokenRoutes[tokenMethodToRoute[method]]
           } else if (path.includes('introspect')) {
+            useHttpSigMiddleware = true
             route = accessTokenRoutes.introspect
           } else {
             if (path === '/' && method === HttpMethod.POST) {
@@ -218,14 +222,28 @@ export class App {
             }
           }
           if (route) {
-            this.publicRouter[method](
-              toRouterPath(path),
-              createValidatorMiddleware<ContextType<typeof route>>(openApi, {
-                path,
-                method
-              }),
-              route
-            )
+            if (useHttpSigMiddleware) {
+              this.publicRouter[method](
+                toRouterPath(path),
+                createValidatorMiddleware<ContextType<typeof route>>(openApi, {
+                  path,
+                  method
+                }),
+                // TODO: httpsig middleware goes here if applicable
+                clientService.tokenHttpsigMiddleware,
+                route
+              )
+            } else {
+              this.publicRouter[method](
+                toRouterPath(path),
+                createValidatorMiddleware<ContextType<typeof route>>(openApi, {
+                  path,
+                  method
+                }),
+                // TODO: httpsig middleware goes here if applicable
+                route
+              )
+            }
             // TODO: remove once all endpoints are implemented
           } else {
             this.publicRouter[method](

@@ -69,8 +69,13 @@ export interface ClientService {
     accessTokenKey: string,
     accessTokenValue: string,
     ctx: AppContext
-  ): Promise<boolean>
+  ): Promise<VerifySigFromBoundKeyResult>
   sigInputToChallenge(sigInput: string, ctx: AppContext): string
+  tokenHttpsigMiddleware(
+    ctx: AppContext,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    next: () => Promise<any>
+  ): Promise<void>
 }
 
 export async function createClientService({
@@ -102,7 +107,10 @@ export async function createClientService({
         ctx
       ),
     sigInputToChallenge: (sigInput: string, ctx: AppContext) =>
-      sigInputToChallenge(sigInput, ctx)
+      sigInputToChallenge(sigInput, ctx),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    tokenHttpsigMiddleware: (ctx: AppContext, next: () => Promise<any>) =>
+      tokenHttpsigMiddleware(deps, ctx, next)
   }
 }
 
@@ -296,4 +304,68 @@ function isJwkViable(keys: RegistryKey): boolean {
 function verifyJwk(jwk: JWKWithRequired, keys: RegistryKey): boolean {
   // TODO: update this to reflect eventual shape of response from registry
   return !!(!keys.revoked && isJwkViable(keys) && keys.x === jwk.x)
+}
+
+// TODO: tests for this
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function tokenHttpsigMiddleware(
+  deps: ServiceDependencies,
+  ctx: AppContext,
+  next: () => Promise<any>
+): Promise<void> {
+  const sig = ctx.headers['signature']
+  const sigInput = ctx.headers['signature-input']
+
+  if (
+    !sig ||
+    !sigInput ||
+    typeof sig !== 'string' ||
+    typeof sigInput !== 'string'
+  ) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_request',
+      message: 'invalid signature headers'
+    }
+    next()
+    return
+  }
+
+  const { body } = ctx.request
+  let keyName = '',
+    value = ''
+  const { path, method } = ctx
+
+  if (path.includes('/introspect') && method === 'POST') {
+    keyName = 'value'
+    value = body['access_token']
+  } else if (path.includes('/token') && method === 'DEL') {
+    keyName = 'managementId'
+    value = ctx.params['managementId']
+  } else {
+    // Is not a route that requires httpsig validation, somehow
+    next()
+    return
+  }
+
+  const verified = await verifySigFromBoundKey(
+    deps,
+    sig,
+    sigInput,
+    keyName,
+    value,
+    ctx
+  )
+
+  if (!verified.success) {
+    ctx.status = verified.status || 401
+    ctx.body = {
+      error: verified.error || 'request_denied',
+      message: verified.message || null
+    }
+    next()
+    return
+  }
+
+  next()
 }

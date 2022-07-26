@@ -152,7 +152,7 @@ describe('Access Token Routes', (): void => {
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)
       expect(ctx.body).toMatchObject({
-        error: 'invalid_client',
+        error: 'invalid_request',
         message: 'token not found'
       })
     })
