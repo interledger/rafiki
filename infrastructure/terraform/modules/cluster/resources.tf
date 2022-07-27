@@ -13,6 +13,10 @@ resource "google_container_cluster" "cluster" {
   initial_node_count       = 1
   remove_default_node_pool = true
   enable_shielded_nodes    = true
+  # Throws an error if the AZ of the cluster itself is included in the list 
+  # (also the location of the cluster could be a region, which would also be
+  # invalid as a node location)
+  node_locations = setsubtract(distinct(flatten([for pool in var.node_pools : pool.node_locations])), [var.zone])
   networking_mode = var.networking_mode
 
   // https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#nested_ip_allocation_policy
@@ -48,7 +52,8 @@ resource "google_container_node_pool" "pools" {
   count             = length(var.node_pools)
   project           = var.project
   name              = var.node_pools[count.index].name
-  location          = var.zone
+  location          = var.node_pools[count.index].location
+  node_locations    = var.node_pools[count.index].node_locations
   cluster           = google_container_cluster.cluster.name
   max_pods_per_node = 110 # default
   node_count        = var.node_pools[count.index].node_count
