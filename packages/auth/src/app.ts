@@ -2,7 +2,7 @@ import { Server } from 'http'
 import { EventEmitter } from 'events'
 
 import { IocContract } from '@adonisjs/fold'
-import Knex, { QueryInterface } from 'knex'
+import Knex from 'knex'
 import Koa, { DefaultState, DefaultContext } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
@@ -34,19 +34,15 @@ export interface DatabaseCleanupRule {
    */
   absoluteStartTimeColumnName: string
   /**
-   * the column which will be used to either set or offset the computed age
-   * if not provided, rows are considered expired when the difference between the current time
-   * and the time specified in `absoluteStartTimeColumnName` is greater than or equal to `minLapseTimeMillis`
+   * the name of the column containing the time offset, in seconds, since
+   * `absoluteStartTimeColumnName`, which specifies when the row expires
    */
-  lapseTime?: {
-    columnName: string
-    absolute?: boolean
-  }
+  expirationOffsetColumnName: string
   /**
-   * the minimum number of milliseconds since expiration before rows of this table will be
-   * considered safe to delete during clean up
+   * the minimum number of days since expiration before rows of
+   * this table will be considered safe to delete during clean up
    */
-  minLapseTimeMillis: number
+  minDaysLapsedBeforeDeletion: number
 }
 
 type ContextType<T> = T extends (
@@ -101,11 +97,9 @@ export class App {
     this.databaseCleanupRules = {
       accessTokens: {
         absoluteStartTimeColumnName: 'createdAt',
-        lapseTime: {
-          columnName: 'expiresIn',
-          absolute: false
-        },
-        minLapseTimeMillis: this.config.accessTokenCleanupMinAge
+        expirationOffsetColumnName: 'expiresIn',
+        minDaysLapsedBeforeDeletion: this.config
+          .accessTokenMinDaysBeforeDeletion
       }
     }
 
@@ -275,48 +269,28 @@ export class App {
     this.koa.use(this.publicRouter.middleware())
   }
 
-  private isDatabaseRowExpired<TRecord, TResult>(
-    now: number,
-    row: QueryInterface<TRecord, TResult>,
-    rule: DatabaseCleanupRule
-  ): boolean {
-    // get the base time used to compute the row's age
-    let absoluteLapseTime = row.column[
-      rule.absoluteStartTimeColumnName
-    ].valueOf()
-
-    if (rule.lapseTime) {
-      const timeParameter =
-        row.column[rule.lapseTime.columnName].valueOf() ||
-        rule.minLapseTimeMillis
-      if (rule.lapseTime.absolute) {
-        absoluteLapseTime = timeParameter
-      } else {
-        // offset the working base time by a time span stored in another column
-        absoluteLapseTime += timeParameter
-      }
-    } else {
-      absoluteLapseTime =
-        row.column[rule.absoluteStartTimeColumnName].valueOf() +
-        rule.minLapseTimeMillis
-    }
-
-    return now - absoluteLapseTime >= rule.minLapseTimeMillis
-  }
-
   private async processDatabaseCleanup(): Promise<void> {
     const knex = await this.container.use('knex')
 
     const tableNames = Object.keys(this.databaseCleanupRules)
-    for (const tableName of tableNames) {
+    for await (const tableName of tableNames) {
       const rule = this.databaseCleanupRules[tableName]
       if (rule) {
-        const now = Date.now()
-
         try {
+          /**
+           * NOTE: do not remove seemingly pointless interpolations such as '${'??'}'
+           * because they are necessary for preventing SQL injection attacks
+           */
           await knex(tableName)
-            .where((row) => this.isDatabaseRowExpired(now, row, rule))
-            .delete()
+            .whereRaw(
+              `?? + COALESCE(make_interval(0, 0, 0, 0, 0, 0, ??), interval '${'??'}') < NOW()`,
+              [
+                rule.absoluteStartTimeColumnName,
+                rule.expirationOffsetColumnName,
+                `${rule.minDaysLapsedBeforeDeletion} days`
+              ]
+            )
+            .del()
         } catch (err) {
           this.logger.warn(
             { error: err.message, tableName },
