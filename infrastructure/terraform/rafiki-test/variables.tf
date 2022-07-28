@@ -16,19 +16,22 @@ variable region {
 locals {
   env = var.env
   project = var.project
-  kubernetes_zone = "us-central1-a"
+  kubernetes_zone = "us-west1-a"
   cluster = {
     enable_workload_identity = true
     node_pools = [
       {
-        name = "default"
-        machine_type = "n1-standard-1"
-        node_count = 2
-        min_node_count = 2
+        name = "us-west1"
+        location = "us-west1-a"
+        node_locations = ["us-west1-a", "us-west1-b","us-west1-c"]
+        machine_type = "n2-standard-2"
+        # the "node count" is actually "nodes per node location" count
+        node_count = 1
+        min_node_count = 0
         max_node_count = 8
         max_surge = 4
         max_unavailable = 0
-      }
+      },
     ]
     maintenance_schedule = {
       start_time = "2021-05-26T11:00:00Z"
