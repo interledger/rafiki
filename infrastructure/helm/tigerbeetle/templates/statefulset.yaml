@@ -33,7 +33,7 @@ spec:
       initContainers:
         # TODO: init script; note that it needs to be safe if already initialized
         - name: init-tigerbeetle
-          image: ubuntu:22.04
+          image: "{{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
           command:
             - /bin/sh
@@ -117,6 +117,19 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -ex; 
+              REPLICA=${HOSTNAME##*-}
+              ADDRESSES=""
+              for n in $(seq 0 5)
+              do
+                ADDRESSES="$ADDRESSES,{{ .Chart.Name }}-$n.{{ .Chart.Name }}.{{ .Release.Namespace }}.svc.cluster.local"
+              done
+              ADDRESSES=${ADDRESSES#?}
+              /opt/beta-beetle/tigerbeetle start --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
           ports:
             - name: http
               containerPort: 80
@@ -129,6 +142,9 @@ spec:
           #  httpGet:
           #    path: /
           #    port: http
+          env:
+            - name: CLUSTER
+              value: "0"
           volumeMounts:
             - name: data
               mountPath: /var/lib/tigerbeetle
@@ -152,7 +168,7 @@ spec:
       {{- end }}
   volumeClaimTemplates:
     - metadata:
-        name: datadir
+        name: data
         labels:
           app.kubernetes.io/name: {{ include "tigerbeetle.name" . }}
           app.kubernetes.io/instance: {{ .Release.Name | quote }}

@@ -4,7 +4,7 @@ metadata:
   name: {{ include "tigerbeetle.fullname" . }}
   labels: {{- include "tigerbeetle.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  clusterIP: None
   ports:
     - port: {{ .Values.service.port }}
       targetPort: http
