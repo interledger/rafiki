@@ -229,7 +229,6 @@ export class App {
                   path,
                   method
                 }),
-                // TODO: httpsig middleware goes here if applicable
                 clientService.tokenHttpsigMiddleware,
                 route
               )
@@ -240,7 +239,6 @@ export class App {
                   path,
                   method
                 }),
-                // TODO: httpsig middleware goes here if applicable
                 route
               )
             }

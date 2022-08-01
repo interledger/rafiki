@@ -330,12 +330,12 @@ describe('Access Token Routes', (): void => {
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json',
+            Accept: 'application/json'
           },
           url: `/token/${managementId}`,
           method
         },
-        { managementId }
+        { id: managementId }
       )
 
       await accessTokenRoutes.revoke(ctx)
@@ -354,22 +354,15 @@ describe('Access Token Routes', (): void => {
         proof: 'httpsig',
         resource_server: 'test'
       }
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method
-      )
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            Accept: 'application/json'
           },
           url,
           method
         },
-        { managementId }
+        { id: managementId }
       )
 
       ctx.request.body = requestBody
@@ -391,22 +384,15 @@ describe('Access Token Routes', (): void => {
         proof: 'httpsig',
         resource_server: 'test'
       }
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method
-      )
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            Accept: 'application/json'
           },
           url,
           method
         },
-        { managementId }
+        { id: managementId }
       )
 
       ctx.request.body = requestBody

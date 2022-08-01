@@ -79,36 +79,6 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const sig = ctx.headers['signature']
-  const sigInput = ctx.headers['signature-input']
-
-  if (
-    !sig ||
-    !sigInput ||
-    typeof sig !== 'string' ||
-    typeof sigInput !== 'string'
-  ) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request'
-    }
-    return
-  }
-
-  const verified = await deps.clientService.verifySigFromBoundKey(
-    sig,
-    sigInput,
-    'managementId',
-    ctx.params['managementId'],
-    ctx
-  )
-  if (!verified.success) {
-    ctx.status = verified.status || 401
-    ctx.body = {
-      error: verified.error || 'invalid_client'
-    }
-  }
-
   const { id: managementId } = ctx.params
   await deps.accessTokenService.revoke(managementId)
   ctx.status = 204
@@ -118,7 +88,6 @@ async function rotateToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  //TODO: verify accessToken with httpsig method
   const { id: managementId } = ctx.params
   const result = await deps.accessTokenService.rotate(managementId)
   if (result.success == true) {

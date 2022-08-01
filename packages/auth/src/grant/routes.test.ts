@@ -18,11 +18,7 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { GrantRequest } from '../grant/service'
 import { AccessToken } from '../accessToken/model'
-import {
-  generateSigHeaders,
-  SIGNATURE_METHOD,
-  SIGNATURE_TARGET_URI
-} from '../tests/signature'
+import { generateSigHeaders } from '../tests/signature'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const TEST_KID_PATH = '/keys/base-test-key'
