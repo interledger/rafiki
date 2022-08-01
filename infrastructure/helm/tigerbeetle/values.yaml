@@ -27,6 +27,12 @@ statefulset:
     # Overrides the image tag whose default is the chart appVersion.
     tag: "56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7"
 
+  proxyImage:
+    repository: nginx
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "1.23.1" 
+
   replicas: 6
   updateStrategy:
     type: RollingUpdate
@@ -78,7 +84,7 @@ statefulset:
   podAntiAffinity:
     # The topologyKey to be used.
     # Can be used to spread across different nodes, AZs, regions etc.
-    topologyKey: kubernetes.io/hostname
+    topologyKey: topology.gke.io/zone
     # Type of anti-affinity rules: either `soft`, `hard` or empty value (which
     # disables anti-affinity rules).
     type: soft

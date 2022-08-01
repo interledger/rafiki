@@ -130,10 +130,32 @@ spec:
               done
               ADDRESSES=${ADDRESSES#?}
               /opt/beta-beetle/tigerbeetle start --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
+        - name: {{ .Chart.Name }}-nginx-proxy
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.statefulset.proxyImage.repository }}:{{ .Values.statefulset.proxyImage.tag | default "1.23.1" }}"
+          imagePullPolicy: {{ .Values.statefulset.proxyImage.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -ex; 
+              REPLICA=${HOSTNAME##*-}
+              ADDRESSES=""
+              for n in $(seq 0 5)
+              do
+                ADDRESSES="$ADDRESSES,{{ .Chart.Name }}-$n.{{ .Chart.Name }}.{{ .Release.Namespace }}.svc.cluster.local"
+              done
+              ADDRESSES=${ADDRESSES#?}
+              /opt/beta-beetle/tigerbeetle start --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
+          volumeMounts:
+            - name: {{ .Chart.Name }}-nginx-proxy
+              mountPath: /etc/nginx/conf.d/
           ports:
-            - name: http
-              containerPort: 80
+            {{- range ( untilStep 0 ( .Values.statefulset.replicas | int) 1 ) }}
+            - containerPort: {{ ( add 3000 . ) }}
               protocol: TCP
+            {{- end }}
           #livenessProbe:
           #  httpGet:
           #    path: /
@@ -151,6 +173,12 @@ spec:
           resources:
             {{- toYaml .Values.statefulset.resources | nindent 12 }}
       volumes:
+        - name: {{ .Chart.Name }}-nginx-proxy
+          configMap:
+            name: {{ .Chart.Name }}-nginx-proxy
+            items:
+              - key: log_level
+                path: default.conf
         - name: data
           persistentVolumeClaim:
             claimName: data
