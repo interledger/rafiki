@@ -1,7 +1,11 @@
 import crypto from 'crypto'
 import nock from 'nock'
 import { importJWK } from 'jose'
+import { v4 } from 'uuid'
+import Knex, { Transaction } from 'knex'
+
 import { createTestApp, TestContainer } from '../tests/app'
+import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -9,6 +13,12 @@ import { AppServices } from '../app'
 import { ClientService } from './service'
 import { v4 } from 'uuid'
 import { createContext } from '../tests/context'
+import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
+import { Access } from '../access/model'
+import { AccessToken } from '../accessToken/model'
+import { AccessType, Action } from '../access/types'
+import { generateSigHeaders } from '../tests/signature'
+import { TEST_CLIENT_KEY } from '../grant/routes.test'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_CLIENT_DISPLAY = {
@@ -185,6 +195,248 @@ describe('Client Service', (): void => {
       ctx.request.url = '/test'
 
       expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
+    })
+  })
+
+  describe('Signature middleware', (): void => {
+    let grant: Grant
+    let token: AccessToken
+    let knex: Knex
+    let trx: Transaction
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let next: () => Promise<any>
+    let managementId: string
+    let tokenManagementUrl: string
+
+    const BASE_GRANT = {
+      state: GrantState.Pending,
+      startMethod: [StartMethod.Redirect],
+      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      continueId: v4(),
+      finishMethod: FinishMethod.Redirect,
+      finishUri: 'https://example.com/finish',
+      clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+      interactId: v4(),
+      interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    }
+
+    const BASE_ACCESS = {
+      type: AccessType.OutgoingPayment,
+      actions: [Action.Read, Action.Create],
+      limits: {
+        receivingAccount: 'https://wallet.com/alice',
+        sendAmount: {
+          value: '400',
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+    }
+
+    const BASE_TOKEN = {
+      value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      managementId: 'https://example.com/manage/12345',
+      expiresIn: 3600
+    }
+
+    beforeAll(
+      async (): Promise<void> => {
+        knex = await deps.use('knex')
+      }
+    )
+
+    beforeEach(
+      async (): Promise<void> => {
+        grant = await Grant.query(trx).insertAndFetch({
+          ...BASE_GRANT
+        })
+        await Access.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_ACCESS
+        })
+        token = await AccessToken.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_TOKEN
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        next = jest.fn(async function (): Promise<any> {
+          return null
+        })
+
+        managementId = token.managementId
+        tokenManagementUrl = `/token/${managementId}`
+      }
+    )
+
+    afterEach(
+      async (): Promise<void> => {
+        jest.useRealTimers()
+        await truncateTables(knex)
+      }
+    )
+
+    // afterAll(async (): Promise<void> => {
+    //   nock.restore()
+    // })
+
+    test('Validate /introspect request with middleware', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(TEST_KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY.jwk]
+        })
+      const url = '/introspect'
+      const method = 'POST'
+
+      const requestBody = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        url,
+        method,
+        requestBody
+      )
+
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url,
+          method
+        },
+        {}
+      )
+
+      ctx.request.body = requestBody
+      await clientService.tokenHttpsigMiddleware(ctx, next)
+
+      expect(next).toHaveBeenCalled()
+      expect(ctx.response.status).toEqual(200)
+
+      scope.isDone()
+    })
+
+    test('Validate DEL /token request with middleware', async () => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(TEST_KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY.jwk]
+        })
+      const method = 'DELETE'
+
+      const requestBody = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        tokenManagementUrl,
+        method,
+        requestBody
+      )
+
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url: tokenManagementUrl,
+          method
+        },
+        { managementId }
+      )
+
+      ctx.request.body = requestBody
+      await clientService.tokenHttpsigMiddleware(ctx, next)
+
+      expect(next).toHaveBeenCalled()
+      expect(ctx.response.status).toEqual(200)
+
+      scope.isDone()
+    })
+
+    test('httpsig middleware fails if client is invalid', async () => {
+      const url = '/introspect'
+      const method = 'POST'
+
+      const requestBody = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+
+      const { signature, sigInput, contentDigest } = await generateSigHeaders(
+        tokenManagementUrl,
+        method,
+        requestBody
+      )
+
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Digest': contentDigest,
+            Signature: signature,
+            'Signature-Input': sigInput
+          },
+          url,
+          method
+        },
+        { managementId }
+      )
+
+      ctx.request.body = requestBody
+      await clientService.tokenHttpsigMiddleware(ctx, next)
+
+      expect(next).toHaveBeenCalled()
+      expect(ctx.response.status).toEqual(401)
+    })
+
+    test('httpsig middleware fails if headers are invalid', async () => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(TEST_KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY.jwk]
+        })
+      const method = 'DELETE'
+
+      const requestBody = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
+
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: tokenManagementUrl,
+          method
+        },
+        { managementId }
+      )
+
+      ctx.request.body = requestBody
+      await clientService.tokenHttpsigMiddleware(ctx, next)
+
+      expect(next).toHaveBeenCalled()
+      expect(ctx.response.status).toEqual(400)
+
+      scope.isDone()
     })
   })
 
@@ -371,7 +623,7 @@ describe('Client Service', (): void => {
       const futureDate = new Date()
       futureDate.setTime(futureDate.getTime() + 1000 * 60 * 60)
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get('/keys/notready')
         .reply(200, {
           ...TEST_CLIENT_KEY,
           exp: Math.round(futureDate.getTime() / 1000),
@@ -383,7 +635,10 @@ describe('Client Service', (): void => {
         display: TEST_CLIENT_DISPLAY,
         key: {
           proof: 'httpsig',
-          jwk: TEST_PUBLIC_KEY
+          jwk: {
+            ...TEST_PUBLIC_KEY,
+            kid: KEY_REGISTRY_ORIGIN + '/keys/notready'
+          }
         }
       })
 
@@ -393,7 +648,7 @@ describe('Client Service', (): void => {
 
     test('Cannot validate client with expired key', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get('/keys/invalidclient')
         .reply(200, {
           ...TEST_CLIENT_KEY,
           exp: Math.round(nbfDate.getTime() / 1000),
@@ -405,7 +660,10 @@ describe('Client Service', (): void => {
         display: TEST_CLIENT_DISPLAY,
         key: {
           proof: 'httpsig',
-          jwk: TEST_PUBLIC_KEY
+          jwk: {
+            ...TEST_PUBLIC_KEY,
+            kid: KEY_REGISTRY_ORIGIN + '/keys/invalidclient'
+          }
         }
       })
 
@@ -415,7 +673,7 @@ describe('Client Service', (): void => {
 
     test('Cannot validate client with revoked key', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get('/keys/revoked')
         .reply(200, {
           ...TEST_CLIENT_KEY,
           exp: Math.round(expDate.getTime() / 1000),
@@ -427,7 +685,10 @@ describe('Client Service', (): void => {
         display: TEST_CLIENT_DISPLAY,
         key: {
           proof: 'httpsig',
-          jwk: TEST_PUBLIC_KEY
+          jwk: {
+            ...TEST_PUBLIC_KEY,
+            kid: KEY_REGISTRY_ORIGIN + '/keys/revoked'
+          }
         }
       })
 

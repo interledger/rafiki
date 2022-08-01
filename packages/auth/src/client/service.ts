@@ -306,11 +306,10 @@ function verifyJwk(jwk: JWKWithRequired, keys: RegistryKey): boolean {
   return !!(!keys.revoked && isJwkViable(keys) && keys.x === jwk.x)
 }
 
-// TODO: tests for this
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function tokenHttpsigMiddleware(
   deps: ServiceDependencies,
   ctx: AppContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   next: () => Promise<any>
 ): Promise<void> {
   const sig = ctx.headers['signature']
@@ -335,11 +334,11 @@ async function tokenHttpsigMiddleware(
   let keyName = '',
     value = ''
   const { path, method } = ctx
-
+  // TODO: replace with HttpMethod types instead of string literals
   if (path.includes('/introspect') && method === 'POST') {
     keyName = 'value'
     value = body['access_token']
-  } else if (path.includes('/token') && method === 'DEL') {
+  } else if (path.includes('/token') && method === 'DELETE') {
     keyName = 'managementId'
     value = ctx.params['managementId']
   } else {
