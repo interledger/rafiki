@@ -3,6 +3,7 @@ import { Access } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService, Introspection } from './service'
+import { accessToBody } from '../shared/utils'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -13,6 +14,7 @@ interface ServiceDependencies {
 export interface AccessTokenRoutes {
   introspect(ctx: AppContext): Promise<void>
   revoke(ctx: AppContext): Promise<void>
+  rotate(ctx: AppContext): Promise<void>
 }
 
 export function createAccessTokenRoutes(
@@ -24,7 +26,8 @@ export function createAccessTokenRoutes(
   const deps = { ...deps_, logger }
   return {
     introspect: (ctx: AppContext) => introspectToken(deps, ctx),
-    revoke: (ctx: AppContext) => revokeToken(deps, ctx)
+    revoke: (ctx: AppContext) => revokeToken(deps, ctx),
+    rotate: (ctx: AppContext) => rotateToken(deps, ctx)
   }
 }
 
@@ -60,29 +63,36 @@ function introspectionToBody(result: Introspection) {
   }
 }
 
-function accessToBody(access: Access) {
-  return Object.fromEntries(
-    Object.entries(access.toJSON()).filter(
-      ([k, v]) =>
-        v != null &&
-        k != 'id' &&
-        k != 'grantId' &&
-        k != 'createdAt' &&
-        k != 'updatedAt'
-    )
-  )
-}
-
 async function revokeToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
   //TODO: verify accessToken with httpsig method
 
-  const revocationError = await deps.accessTokenService.revoke(ctx.params['id'])
-  if (revocationError) {
-    return ctx.throw(404, revocationError.message)
+  await deps.accessTokenService.revoke(ctx.params['id'])
+  ctx.status = 204
+}
+
+async function rotateToken(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  //TODO: verify accessToken with httpsig method
+  const result = await deps.accessTokenService.rotate(
+    ctx.params['managementId']
+  )
+  if (result.success) {
+    ctx.status = 200
+    ctx.body = {
+      access_token: {
+        access: result.access.map((a) => accessToBody(a)),
+        value: result.value,
+        manage: result.managementId,
+        expires_in: result.expiresIn
+      }
+    }
   } else {
-    ctx.status = 204
+    ctx.status = 404
+    return ctx.throw(ctx.status, result.error.message)
   }
 }

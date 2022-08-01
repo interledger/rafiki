@@ -140,6 +140,7 @@ export class App {
     this.publicRouter.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
+
     this.publicRouter.get('/discovery', (ctx: AppContext): void => {
       ctx.body = {
         grant_request_endpoint: '/',

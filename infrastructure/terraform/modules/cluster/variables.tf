@@ -34,6 +34,9 @@ variable node_pools {
   type = list(object({
     name = string
     machine_type = string
+    location = string
+    node_locations = list(string)
+    # the "node count" is actually "nodes per node location" count
     node_count = number
     min_node_count = number
     max_node_count = number
@@ -46,6 +49,8 @@ variable node_pools {
       machine_type = "n1-standard-1"
       node_count = 1
       min_node_count = 0
+      location = "us-central1-a"
+      node_locations = ["us-central1-a"]
       max_node_count = 8
       max_surge = 4
       max_unavailable = 0
