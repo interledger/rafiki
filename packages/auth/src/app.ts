@@ -216,8 +216,6 @@ export class App {
       grantRoutes.interaction.finish
     )
 
-    this.publicRouter.post('/auth/continue/:id', grantRoutes.post)
-
     this.publicRouter.del('/interact/:interactId/deny', grantRoutes.del)
 
     // Token management
