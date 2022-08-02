@@ -4,6 +4,9 @@ metadata:
   name: {{ .Chart.Name }}-nginx-proxy
 data:
   # property-like keys; each key maps to a simple value
+  nginx-prestart.sh: |
+    #!/bin/sh
+    sleep 60
   conf: |
     events {}
     stream {
@@ -11,7 +14,12 @@ data:
       {{- range ( untilStep 0 ( .Values.statefulset.replicas | int) 1 ) }}
         server {
             listen     {{ ( add 3000 . ) }};
-            proxy_pass {{ $.Chart.Name }}-{{ . }}.{{ $.Chart.Name }}.{{ $.Release.Namespace }}.svc.cluster.local:4242;
+            proxy_pass replica_{{ . }};
+        }
+      {{- end }}
+      {{- range ( untilStep 0 ( .Values.statefulset.replicas | int) 1 ) }}
+        upstream replica_{{ . }} {
+            server {{ $.Chart.Name }}-{{ . }}.{{ $.Chart.Name }}.{{ $.Release.Namespace }}.svc.cluster.local:4242;
         }
       {{- end }}
 

@@ -148,6 +148,8 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/tigerbeetle
+            - name: {{ .Chart.Name }}-nginx-startup-scripts
+              mountPath: /docker-entrypoint.d/
         - name: {{ .Chart.Name }}-nginx-proxy
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -156,6 +158,9 @@ spec:
           volumeMounts:
             - name: {{ .Chart.Name }}-nginx-proxy
               mountPath: /etc/nginx/
+            - name: {{ .Chart.Name }}-nginx-startup-scripts
+              mountPath: /docker-entrypoint.d/nginx-prestart.sh
+              subPath: nginx-prestart.sh
           #livenessProbe:
           #  httpGet:
           #    path: /
@@ -173,6 +178,13 @@ spec:
             items:
               - key: conf
                 path: nginx.conf
+        - name: {{ .Chart.Name }}-nginx-startup-scripts
+          configMap:
+            name: {{ .Chart.Name }}-nginx-proxy
+            defaultMode: 0555
+            items:
+              - key: nginx-prestart.sh
+                path: nginx-prestart.sh
         - name: data
           persistentVolumeClaim:
             claimName: data
