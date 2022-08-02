@@ -5,18 +5,14 @@ metadata:
 data:
   # property-like keys; each key maps to a simple value
   conf: |
+    events {}
     stream {
 
       {{- range ( untilStep 0 ( .Values.statefulset.replicas | int) 1 ) }}
         server {
             listen     {{ ( add 3000 . ) }};
-            proxy_pass stream_backend_{{ . }};
+            proxy_pass {{ $.Chart.Name }}-{{ . }}.{{ $.Chart.Name }}.{{ $.Release.Namespace }}.svc.cluster.local:4242;
         }
       {{- end }}
 
     }
-    {{- range ( untilStep 0 ( .Values.statefulset.replicas | int) 1 ) }}
-    upstream stream_backend_{{ . }} {
-        server {{ $.Chart.Name }}-{{ . }}.{{ $.Chart.Name }}.{{ $.Release.Namespace }}.svc.cluster.local:4242
-    }
-    {{- end }}

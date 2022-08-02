@@ -31,17 +31,23 @@ spec:
       securityContext:
         {{- toYaml .Values.statefulset.securityContext | nindent 8 }}
       initContainers:
-        # TODO: init script; note that it needs to be safe if already initialized
         - name: init-tigerbeetle
           image: "{{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
           command:
             - /bin/sh
             - -c
-            - set -ex; REPLICA=${HOSTNAME##*-}; FMT_CLUSTER=$(echo $CLUSTER | awk '{ printf("%010d\n", $1) }'); FMT_REPLICA=$(echo $REPLICA | awk '{ printf("%03d\n", $1) }'); ls /var/lib/tigerbeetle; DATA_FILE=/var/lib/tigerbeetle/cluster_${FMT_CLUSTER}_replica_${FMT_REPLICA}.tigerbeetle; if [[ ! -f "$DATA_FILE" ]]; then /opt/beta-beetle/tigerbeetle init --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle; fi
-          env:
-            - name: CLUSTER
-              value: "0"
+            - | 
+              set -ex
+              CLUSTER=0 
+              REPLICA=${HOSTNAME##*-} 
+              FMT_CLUSTER=$(echo $CLUSTER | awk '{ printf("%010d\n", $1) }')
+              FMT_REPLICA=$(echo $REPLICA | awk '{ printf("%03d\n", $1) }')
+              ls /var/lib/tigerbeetle
+              DATA_FILE=/var/lib/tigerbeetle/cluster_${FMT_CLUSTER}_replica_${FMT_REPLICA}.tigerbeetle
+              if [ ! -f "$DATA_FILE" ]; then 
+                /opt/beta-beetle/tigerbeetle init --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle; 
+              fi
           volumeMounts:
             - name: data
               mountPath: /var/lib/tigerbeetle
@@ -111,6 +117,7 @@ spec:
       # TODO is this correct? No pre-stop hook is required, a SIGTERM plus some time is all that's
       # needed for graceful shutdown of a node.
       terminationGracePeriodSeconds: 60
+      restartPolicy: Always
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -126,36 +133,29 @@ spec:
               ADDRESSES=""
               for n in $(seq 0 5)
               do
-                ADDRESSES="$ADDRESSES,{{ .Chart.Name }}-$n.{{ .Chart.Name }}.{{ .Release.Namespace }}.svc.cluster.local"
+                if [ "$n" != "$REPLICA" ]
+                then 
+                  ADDRESSES="$ADDRESSES,127.0.0.1:300$n"
+                else
+                  ADDRESSES="$ADDRESSES,0.0.0.0:4242"
+                fi
               done
               ADDRESSES=${ADDRESSES#?}
-              /opt/beta-beetle/tigerbeetle start --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
+              /opt/beta-beetle/tigerbeetle start --cluster=0 --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
+          ports:
+            - containerPort: 4242
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/tigerbeetle
         - name: {{ .Chart.Name }}-nginx-proxy
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.statefulset.proxyImage.repository }}:{{ .Values.statefulset.proxyImage.tag | default "1.23.1" }}"
           imagePullPolicy: {{ .Values.statefulset.proxyImage.pullPolicy }}
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -ex; 
-              REPLICA=${HOSTNAME##*-}
-              ADDRESSES=""
-              for n in $(seq 0 5)
-              do
-                ADDRESSES="$ADDRESSES,{{ .Chart.Name }}-$n.{{ .Chart.Name }}.{{ .Release.Namespace }}.svc.cluster.local"
-              done
-              ADDRESSES=${ADDRESSES#?}
-              /opt/beta-beetle/tigerbeetle start --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
           volumeMounts:
             - name: {{ .Chart.Name }}-nginx-proxy
-              mountPath: /etc/nginx/conf.d/
-          ports:
-            {{- range ( untilStep 0 ( .Values.statefulset.replicas | int) 1 ) }}
-            - containerPort: {{ ( add 3000 . ) }}
-              protocol: TCP
-            {{- end }}
+              mountPath: /etc/nginx/
           #livenessProbe:
           #  httpGet:
           #    path: /
@@ -164,12 +164,6 @@ spec:
           #  httpGet:
           #    path: /
           #    port: http
-          env:
-            - name: CLUSTER
-              value: "0"
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/tigerbeetle
           resources:
             {{- toYaml .Values.statefulset.resources | nindent 12 }}
       volumes:
@@ -177,8 +171,8 @@ spec:
           configMap:
             name: {{ .Chart.Name }}-nginx-proxy
             items:
-              - key: log_level
-                path: default.conf
+              - key: conf
+                path: nginx.conf
         - name: data
           persistentVolumeClaim:
             claimName: data
