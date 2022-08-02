@@ -6,7 +6,7 @@ data:
   # property-like keys; each key maps to a simple value
   nginx-prestart.sh: |
     #!/bin/sh
-    sleep 60
+    sleep 600
   conf: |
     events {}
     stream {

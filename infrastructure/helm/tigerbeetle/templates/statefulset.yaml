@@ -39,7 +39,6 @@ spec:
             - -c
             - | 
               set -ex
-              CLUSTER=0 
               REPLICA=${HOSTNAME##*-} 
               FMT_CLUSTER=$(echo $CLUSTER | awk '{ printf("%010d\n", $1) }')
               FMT_REPLICA=$(echo $REPLICA | awk '{ printf("%03d\n", $1) }')
@@ -48,6 +47,9 @@ spec:
               if [ ! -f "$DATA_FILE" ]; then 
                 /opt/beta-beetle/tigerbeetle init --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle; 
               fi
+          env:
+            - name: CLUSTER
+              value: "0"
           volumeMounts:
             - name: data
               mountPath: /var/lib/tigerbeetle
@@ -141,15 +143,16 @@ spec:
                 fi
               done
               ADDRESSES=${ADDRESSES#?}
-              /opt/beta-beetle/tigerbeetle start --cluster=0 --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
+              /opt/beta-beetle/tigerbeetle start --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
+          env:
+            - name: CLUSTER
+              value: "0"
           ports:
             - containerPort: 4242
               protocol: TCP
           volumeMounts:
             - name: data
               mountPath: /var/lib/tigerbeetle
-            - name: {{ .Chart.Name }}-nginx-startup-scripts
-              mountPath: /docker-entrypoint.d/
         - name: {{ .Chart.Name }}-nginx-proxy
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -160,6 +163,7 @@ spec:
               mountPath: /etc/nginx/
             - name: {{ .Chart.Name }}-nginx-startup-scripts
               mountPath: /docker-entrypoint.d/nginx-prestart.sh
+              # using subPath here to mount the single file is necessary for the mounted file to have the correct filetype to be noticed by the nginx startup script.
               subPath: nginx-prestart.sh
           #livenessProbe:
           #  httpGet:

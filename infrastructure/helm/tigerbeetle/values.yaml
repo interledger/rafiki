@@ -151,7 +151,7 @@ storage:
   persistentVolume:
     enabled: true
 
-    size: 100Gi
+    size: 15Gi
 
     # If defined, then `storageClassName: <storageClass>`.
     # If set to "-", then `storageClassName: ""`, which disables dynamic
@@ -159,7 +159,7 @@ storage:
     # If undefined or empty (default), then no `storageClassName` spec is set,
     # so the default provisioner will be chosen (gp2 on AWS, standard on
     # GKE, AWS & OpenStack).
-    storageClass: ""
+    storageClass: "tigerbeetle-storage"
 
     # Additional labels to apply to the created PersistentVolumeClaims.
     labels: {}
