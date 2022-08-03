@@ -6,21 +6,23 @@ data:
   # property-like keys; each key maps to a simple value
   nginx-prestart.sh: |
     #!/bin/sh
-    sleep 600
-  conf: |
+    set -ex; 
+    DNS_SERVER=$(cat /etc/resolv.conf |grep -i '^nameserver'|head -n1|cut -d ' ' -f2)
+    echo $DNS_SERVER
+    config=$(cat << EOF
     events {}
     stream {
 
       {{- range ( untilStep 0 ( .Values.statefulset.replicas | int) 1 ) }}
         server {
             listen     {{ ( add 3000 . ) }};
-            proxy_pass replica_{{ . }};
+            resolver $DNS_SERVER;
+            set \$backend {{ $.Chart.Name }}-{{ . }}.{{ $.Chart.Name }}.{{ $.Release.Namespace }}.svc.cluster.local:4242;
+            proxy_pass \$backend;
         }
       {{- end }}
-      {{- range ( untilStep 0 ( .Values.statefulset.replicas | int) 1 ) }}
-        upstream replica_{{ . }} {
-            server {{ $.Chart.Name }}-{{ . }}.{{ $.Chart.Name }}.{{ $.Release.Namespace }}.svc.cluster.local:4242;
-        }
-      {{- end }}
-
     }
+    EOF
+    )
+    echo $config
+    echo $config > /etc/nginx/nginx.conf 

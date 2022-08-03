@@ -118,7 +118,6 @@ spec:
     {{- end }}
       # TODO is this correct? No pre-stop hook is required, a SIGTERM plus some time is all that's
       # needed for graceful shutdown of a node.
-      terminationGracePeriodSeconds: 60
       restartPolicy: Always
       containers:
         - name: {{ .Chart.Name }}
@@ -159,8 +158,6 @@ spec:
           image: "{{ .Values.statefulset.proxyImage.repository }}:{{ .Values.statefulset.proxyImage.tag | default "1.23.1" }}"
           imagePullPolicy: {{ .Values.statefulset.proxyImage.pullPolicy }}
           volumeMounts:
-            - name: {{ .Chart.Name }}-nginx-proxy
-              mountPath: /etc/nginx/
             - name: {{ .Chart.Name }}-nginx-startup-scripts
               mountPath: /docker-entrypoint.d/nginx-prestart.sh
               # using subPath here to mount the single file is necessary for the mounted file to have the correct filetype to be noticed by the nginx startup script.
@@ -176,12 +173,6 @@ spec:
           resources:
             {{- toYaml .Values.statefulset.resources | nindent 12 }}
       volumes:
-        - name: {{ .Chart.Name }}-nginx-proxy
-          configMap:
-            name: {{ .Chart.Name }}-nginx-proxy
-            items:
-              - key: conf
-                path: nginx.conf
         - name: {{ .Chart.Name }}-nginx-startup-scripts
           configMap:
             name: {{ .Chart.Name }}-nginx-proxy
