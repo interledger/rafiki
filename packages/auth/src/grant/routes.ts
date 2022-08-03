@@ -25,9 +25,9 @@ export interface GrantRoutes {
   interaction: {
     start(ctx: AppContext): Promise<void>
     finish(ctx: AppContext): Promise<void>
+    deny(ctx: AppContext): Promise<void>
   }
   continue(ctx: AppContext): Promise<void>
-  del(ctx: AppContext): Promise<void>
 }
 
 export function createGrantRoutes({
@@ -54,10 +54,10 @@ export function createGrantRoutes({
     create: (ctx: AppContext) => createGrantInitiation(deps, ctx),
     interaction: {
       start: (ctx: AppContext) => startInteraction(deps, ctx),
-      finish: (ctx: AppContext) => finishInteraction(deps, ctx)
+      finish: (ctx: AppContext) => finishInteraction(deps, ctx),
+      deny: (ctx: AppContext) => denyInteraction(deps, ctx)
     },
-    continue: (ctx: AppContext) => continueGrant(deps, ctx),
-    del: (ctx: AppContext) => cancelInteraction(deps, ctx)
+    continue: (ctx: AppContext) => continueGrant(deps, ctx)
   }
 }
 
@@ -216,7 +216,7 @@ async function finishInteraction(
   ctx.redirect(clientRedirectUri.toString())
 }
 
-async function cancelInteraction(
+async function denyInteraction(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
@@ -251,7 +251,6 @@ async function continueGrant(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  // TODO: httpsig validation
   const { continueId } = ctx.params
   const continueToken = (ctx.headers['authorization'] as string)?.split(
     'GNAP '
