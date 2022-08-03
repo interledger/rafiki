@@ -159,7 +159,7 @@ storage:
     # If undefined or empty (default), then no `storageClassName` spec is set,
     # so the default provisioner will be chosen (gp2 on AWS, standard on
     # GKE, AWS & OpenStack).
-    storageClass: "tigerbeetle-storage"
+    storageClass: ""
 
     # Additional labels to apply to the created PersistentVolumeClaims.
     labels: {}
