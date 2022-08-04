@@ -17,7 +17,7 @@ export interface GrantService {
     continueToken: string,
     interactRef: string
   ): Promise<Grant | null>
-  denyGrant(grantId: string): Promise<Grant>
+  denyGrant(grantId: string): Promise<Grant | null>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -94,7 +94,7 @@ async function issueGrant(
 async function denyGrant(
   deps: ServiceDependencies,
   grantId: string
-): Promise<Grant> {
+): Promise<Grant | null> {
   return Grant.query(deps.knex).patchAndFetchById(grantId, {
     state: GrantState.Denied
   })
