@@ -7,7 +7,6 @@ import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
-import { AccessToken } from '../accessToken/model'
 
 export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>

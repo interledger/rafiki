@@ -142,19 +142,11 @@ async function createGrantInitiation(
       }
     }
   } catch (err) {
-    if ((err as Error).name === 'InvalidSigInputError') {
-      ctx.status = 400
-      ctx.body = {
-        error: 'invalid_request'
-      }
-      return
-    } else {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client'
-      }
-      return
+    ctx.status = 401
+    ctx.body = {
+      error: 'invalid_client'
     }
+    return
   }
 
   const grant = await grantService.initiateGrant(body)

@@ -108,6 +108,29 @@ describe('Client Service', (): void => {
       )
     })
 
+    test('fails to construct signature input if a component is not in lower case', (): void => {
+      const sigInputHeader =
+        'sig1=("@METHOD" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"'
+      const ctx = createContext(
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Digest': 'sha-256=:test-hash:',
+            'Content-Length': '1234',
+            'Signature-Input': sigInputHeader,
+            Authorization: 'GNAP test-access-token'
+          }
+        },
+        {}
+      )
+
+      ctx.request.body = { foo: 'bar' }
+      ctx.method = 'GET'
+      ctx.request.url = '/test'
+
+      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
+    })
+
     test('fails to construct signature input if @method is missing', (): void => {
       const sigInputHeader =
         'sig1=("@target-uri" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'

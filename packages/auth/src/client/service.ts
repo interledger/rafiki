@@ -135,6 +135,11 @@ function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
   // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures-09#section-2.3
   let signatureBase = ''
   for (const component of cleanMessageComponents) {
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures-09#section-2.1
+    if (component !== component.toLowerCase()) {
+      return null
+    }
+
     if (component === '@method') {
       signatureBase += `"@method": ${ctx.request.method}\n`
     } else if (component === '@target-uri') {
