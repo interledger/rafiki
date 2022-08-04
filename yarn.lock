@@ -4789,7 +4789,7 @@ __metadata:
     pino: ^7.10.0
     pino-pretty: ^7.6.1
     testcontainers: ^8.9.0
-    typescript: ^4.2.4
+    typescript: ^4.3.0
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft
@@ -14970,6 +14970,16 @@ typescript@^4.2.4:
   languageName: node
   linkType: hard
 
+typescript@^4.3.0:
+  version: 4.7.4
+  resolution: "typescript@npm:4.7.4"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 5750181b1cd7e6482c4195825547e70f944114fb47e58e4aa7553e62f11b3f3173766aef9c281783edfd881f7b8299cf35e3ca8caebe73d8464528c907a164df
+  languageName: node
+  linkType: hard
+
 "typescript@patch:typescript@^4.2.4#~builtin<compat/typescript>":
   version: 4.2.4
   resolution: "typescript@patch:typescript@npm%3A4.2.4#~builtin<compat/typescript>::version=4.2.4&hash=32657b"
@@ -14977,6 +14987,16 @@ typescript@^4.2.4:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 91772e5fc70895a8f645837cb91d14af95a11b173043ed0dcf12c1069f9dcf5c3c82bc7212c217c9a2cb488900dd2cda3f40f543bed5d149428df13c90c10098
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@^4.3.0#~builtin<compat/typescript>":
+  version: 4.7.4
+  resolution: "typescript@patch:typescript@npm%3A4.7.4#~builtin<compat/typescript>::version=4.7.4&hash=32657b"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 0b078b97f27848c2d10fc0777b7cb4cb85374426620edac25b2fe62459a4344569655e7f1a989d0ce9d5618cdeb958451eb2ee9436e78f7af86a99e800df967b
   languageName: node
   linkType: hard
 
