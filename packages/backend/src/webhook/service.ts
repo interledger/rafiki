@@ -1,24 +1,25 @@
-import assert from 'assert'
 import axios from 'axios'
 import { createHmac } from 'crypto'
+import { ForeignKeyViolationError, Transaction } from 'objection'
 
+import { WebhookEventError } from './errors'
 import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 
-// First retry waits 10 seconds
-// Second retry waits 20 (more) seconds
-// Third retry waits 30 (more) seconds, etc. up to 60 seconds
-export const RETRY_BACKOFF_MS = 10_000
-
 export interface WebhookService {
+  createEvent(
+    opts: EventOptions,
+    trx?: Transaction
+  ): Promise<WebhookEvent | WebhookEventError>
   getEvent(id: string): Promise<WebhookEvent | undefined>
-  processNext(): Promise<string | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig
 }
+
+export type EventOptions = Pick<WebhookEvent, 'type' | 'data' | 'withdrawal'>
 
 export async function createWebhookService(
   deps_: ServiceDependencies
@@ -28,8 +29,27 @@ export async function createWebhookService(
   })
   const deps = { ...deps_, logger }
   return {
-    getEvent: (id) => getWebhookEvent(deps, id),
-    processNext: () => processNextWebhookEvent(deps)
+    createEvent: (opts, trx) => createWebhookEvent(deps, opts, trx),
+    getEvent: (id) => getWebhookEvent(deps, id)
+  }
+}
+
+async function createWebhookEvent(
+  deps: ServiceDependencies,
+  opts: EventOptions,
+  trx?: Transaction
+): Promise<WebhookEvent | WebhookEventError> {
+  try {
+    const event = await WebhookEvent.query(trx || deps.knex).insert(opts)
+    sendWebhookEvent(deps, event)
+    return event
+  } catch (err) {
+    if (err instanceof ForeignKeyViolationError) {
+      if (err.constraint === 'webhookevents_withdrawalassetid_foreign') {
+        return WebhookEventError.InvalidWithdrawalAsset
+      }
+    }
+    throw err
   }
 }
 
@@ -38,39 +58,6 @@ async function getWebhookEvent(
   id: string
 ): Promise<WebhookEvent | undefined> {
   return WebhookEvent.query(deps.knex).findById(id)
-}
-
-// Fetch (and lock) a webhook event for work.
-// Returns the id of the processed event (if any).
-async function processNextWebhookEvent(
-  deps_: ServiceDependencies
-): Promise<string | undefined> {
-  assert.ok(deps_.knex, 'Knex undefined')
-  return deps_.knex.transaction(async (trx) => {
-    const now = Date.now()
-    const events = await WebhookEvent.query(trx)
-      .limit(1)
-      // Ensure the webhook event cannot be processed concurrently by multiple workers.
-      .forUpdate()
-      // If a webhook event is locked, don't wait — just come back for it later.
-      .skipLocked()
-      .where('processAt', '<=', new Date(now).toISOString())
-
-    const event = events[0]
-    if (!event) return
-
-    const deps = {
-      ...deps_,
-      knex: trx,
-      logger: deps_.logger.child({
-        event: event.id
-      })
-    }
-
-    await sendWebhookEvent(deps, event)
-
-    return event.id
-  })
 }
 
 async function sendWebhookEvent(
@@ -101,28 +88,15 @@ async function sendWebhookEvent(
       headers: requestHeaders,
       validateStatus: (status) => status === 200
     })
-
-    await event.$query(deps.knex).patch({
-      attempts: event.attempts + 1,
-      statusCode: 200,
-      processAt: null
-    })
   } catch (err) {
-    const attempts = event.attempts + 1
     const error = err.message
     deps.logger.warn(
       {
-        attempts,
-        error
+        error,
+        statusCode: err.isAxiosError && err.response?.status
       },
       'webhook request failed'
     )
-
-    await event.$query(deps.knex).patch({
-      attempts,
-      statusCode: err.isAxiosError && err.response?.status,
-      processAt: new Date(Date.now() + Math.min(attempts, 6) * RETRY_BACKOFF_MS)
-    })
   }
 }
 

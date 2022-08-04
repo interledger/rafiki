@@ -4,15 +4,13 @@ import { URL } from 'url'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { WebhookEvent } from './model'
+import { WebhookEventError, isWebhookEventError } from './errors'
 import {
+  EventOptions,
   WebhookService,
-  generateWebhookSignature,
-  RETRY_BACKOFF_MS
+  generateWebhookSignature
 } from './service'
-import { AccountingService } from '../accounting/service'
 import { createTestApp, TestContainer } from '../tests/app'
-import { AccountFactory } from '../tests/accountFactory'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
@@ -24,29 +22,11 @@ describe('Webhook Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let webhookService: WebhookService
-  let accountingService: AccountingService
   let knex: Knex
   let webhookUrl: URL
-  let event: WebhookEvent
+  let accountId: string
+  let assetId: string
   const WEBHOOK_SECRET = 'test secret'
-
-  async function makeWithdrawalEvent(event: WebhookEvent): Promise<void> {
-    const assetService = await deps.use('assetService')
-    const accountFactory = new AccountFactory(accountingService)
-    const asset = await assetService.getOrCreate(randomAsset())
-    const amount = BigInt(10)
-    const account = await accountFactory.build({
-      asset,
-      balance: amount
-    })
-    await event.$query(knex).patch({
-      withdrawal: {
-        accountId: account.id,
-        assetId: account.asset.id,
-        amount
-      }
-    })
-  }
 
   beforeAll(
     async (): Promise<void> => {
@@ -55,28 +35,21 @@ describe('Webhook Service', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       webhookService = await deps.use('webhookService')
-      accountingService = await deps.use('accountingService')
       webhookUrl = new URL(Config.webhookUrl)
     }
   )
 
   beforeEach(
     async (): Promise<void> => {
-      event = await WebhookEvent.query(knex).insertAndFetch({
-        id: uuid(),
-        type: 'account.test_event',
-        data: {
-          account: {
-            id: uuid()
-          }
-        }
-      })
+      const accountService = await deps.use('accountService')
+      const account = await accountService.create({ asset: randomAsset() })
+      accountId = account.id
+      assetId = account.assetId
     }
   )
 
   afterEach(
     async (): Promise<void> => {
-      jest.useRealTimers()
       await truncateTables(knex)
     }
   )
@@ -87,24 +60,36 @@ describe('Webhook Service', (): void => {
     }
   )
 
-  describe('Get Webhook Event', (): void => {
-    test('A webhook event can be fetched', async (): Promise<void> => {
-      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
+  describe.each`
+    withdrawal | description
+    ${false}   | ${''}
+    ${true}    | ${'Withdrawal'}
+  `('Create $description Webhook Event', ({ withdrawal }): void => {
+    let options: EventOptions
+
+    beforeEach((): void => {
+      options = {
+        type: 'account.test_event',
+        data: {
+          account: {
+            id: accountId
+          }
+        }
+      }
+
+      if (withdrawal) {
+        options.withdrawal = {
+          accountId,
+          assetId,
+          amount: BigInt(10)
+        }
+      }
     })
 
-    test('A withdrawal webhook event can be fetched', async (): Promise<void> => {
-      await makeWithdrawalEvent(event)
-      assert.ok(event.withdrawal)
-      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
-    })
-
-    test('Cannot fetch a bogus webhook event', async (): Promise<void> => {
-      await expect(webhookService.getEvent(uuid())).resolves.toBeUndefined()
-    })
-  })
-
-  describe('processNext', (): void => {
-    function mockWebhookServer(status = 200): nock.Scope {
+    function mockWebhookServer(
+      options: EventOptions,
+      status = 200
+    ): nock.Scope {
       return nock(webhookUrl.origin)
         .post(webhookUrl.pathname, function (this: Definition, body) {
           assert.ok(this.headers)
@@ -117,68 +102,57 @@ describe('Webhook Service', (): void => {
             )
           ).toEqual(signature)
           expect(body).toMatchObject({
-            id: event.id,
-            type: event.type,
-            data: event.data
+            type: options.type,
+            data: options.data
           })
           return true
         })
         .reply(status)
     }
 
-    test('Does not process events not scheduled to be sent', async (): Promise<void> => {
-      await event.$query(knex).patch({
-        processAt: new Date(Date.now() + 30_000)
-      })
+    test('A webhook event can be created and fetched', async (): Promise<void> => {
+      const event = await webhookService.createEvent(options)
+      assert.ok(!isWebhookEventError(event))
+      expect(event).toMatchObject(options)
       await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
-      await expect(webhookService.processNext()).resolves.toBeUndefined()
     })
 
-    test('Sends webhook event', async (): Promise<void> => {
-      const scope = mockWebhookServer()
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      expect(scope.isDone()).toBe(true)
-      await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
-        attempts: 1,
-        statusCode: 200,
-        processAt: null
-      })
-    })
-
-    test.each([[201], [400], [504]])(
-      'Schedules retry if request fails (%i)',
-      async (status): Promise<void> => {
-        const scope = mockWebhookServer(status)
-        await expect(webhookService.processNext()).resolves.toEqual(event.id)
-        expect(scope.isDone()).toBe(true)
-        const updatedEvent = await webhookService.getEvent(event.id)
-        assert.ok(updatedEvent?.processAt)
-        expect(updatedEvent).toMatchObject({
-          attempts: 1,
-          statusCode: status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    test.each<any>([200, 201, 400, 504])(
+      'Sends webhook event asynchronously (succeeds regardless of response code: %i)',
+      async (status, done: jest.DoneCallback): Promise<void> => {
+        const scope = mockWebhookServer(options, status)
+        scope.on('replied', function (_req, _interceptor) {
+          done()
         })
-        expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
-          event.createdAt.getTime() + RETRY_BACKOFF_MS
-        )
+        await expect(
+          webhookService.createEvent(options)
+        ).resolves.toMatchObject(options)
       }
     )
 
-    test('Schedules retry if request times out', async (): Promise<void> => {
-      const scope = nock(webhookUrl.origin)
-        .post(webhookUrl.pathname)
-        .delayConnection(Config.webhookTimeout + 1)
-        .reply(200)
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      expect(scope.isDone()).toBe(true)
-      const updatedEvent = await webhookService.getEvent(event.id)
-      assert.ok(updatedEvent?.processAt)
-      expect(updatedEvent).toMatchObject({
-        attempts: 1,
-        statusCode: null
+    if (withdrawal) {
+      test.skip('Cannot create webhook event with unknown withdrawal account', async (): Promise<void> => {
+        assert.ok(options.withdrawal)
+        options.withdrawal.accountId = uuid()
+        await expect(webhookService.createEvent(options)).resolves.toEqual(
+          WebhookEventError.InvalidWithdrawalAccount
+        )
       })
-      expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
-        event.createdAt.getTime() + RETRY_BACKOFF_MS
-      )
+
+      test('Cannot create webhook event with unknown withdrawal asset', async (): Promise<void> => {
+        assert.ok(options.withdrawal)
+        options.withdrawal.assetId = uuid()
+        await expect(webhookService.createEvent(options)).resolves.toEqual(
+          WebhookEventError.InvalidWithdrawalAsset
+        )
+      })
+    }
+  })
+
+  describe('Get Webhook Event', (): void => {
+    test('Cannot fetch a bogus webhook event', async (): Promise<void> => {
+      await expect(webhookService.getEvent(uuid())).resolves.toBeUndefined()
     })
   })
 })

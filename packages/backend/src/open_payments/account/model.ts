@@ -4,7 +4,6 @@ import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../connector/core/rafiki'
 import { Asset } from '../../asset/model'
 import { BaseModel } from '../../shared/baseModel'
-import { WebhookEvent } from '../../webhook/model'
 
 export class Account
   extends BaseModel
@@ -83,9 +82,4 @@ export type AccountData = {
     createdAt: string
     received: string
   }
-}
-
-export class AccountEvent extends WebhookEvent {
-  public type!: AccountEventType
-  public data!: AccountData
 }

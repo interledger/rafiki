@@ -1,9 +1,10 @@
-import { TransactionOrKnex } from 'objection'
+import { Transaction, TransactionOrKnex } from 'objection'
 
-import { Account, AccountEvent, AccountEventType } from './model'
+import { Account, AccountEventType } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
 import { AssetService, AssetOptions } from '../../asset/service'
+import { WebhookService } from '../../webhook/service'
 
 export interface CreateOptions {
   asset: AssetOptions
@@ -21,23 +22,16 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   assetService: AssetService
+  webhookService: WebhookService
 }
 
-export async function createAccountService({
-  logger,
-  knex,
-  accountingService,
-  assetService
-}: ServiceDependencies): Promise<AccountService> {
-  const log = logger.child({
+export async function createAccountService(
+  deps_: ServiceDependencies
+): Promise<AccountService> {
+  const logger = deps_.logger.child({
     service: 'AccountService'
   })
-  const deps: ServiceDependencies = {
-    logger: log,
-    knex,
-    accountingService,
-    assetService
-  }
+  const deps = { ...deps_, logger }
   return {
     create: (options) => createAccount(deps, options),
     get: (id) => getAccount(deps, id),
@@ -156,15 +150,18 @@ async function createWithdrawalEvent(
 
   deps.logger.trace({ amount }, 'creating webhook withdrawal event')
 
-  await AccountEvent.query(deps.knex).insert({
-    type: AccountEventType.AccountWebMonetization,
-    data: account.toData(amount),
-    withdrawal: {
-      accountId: account.id,
-      assetId: account.assetId,
-      amount
-    }
-  })
+  await deps.webhookService.createEvent(
+    {
+      type: AccountEventType.AccountWebMonetization,
+      data: account.toData(amount),
+      withdrawal: {
+        accountId: account.id,
+        assetId: account.assetId,
+        amount
+      }
+    },
+    deps.knex as Transaction
+  )
 
   await account.$query(deps.knex).patch({
     totalEventsAmount: account.totalEventsAmount + amount

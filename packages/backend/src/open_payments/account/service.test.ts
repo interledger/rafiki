@@ -2,7 +2,7 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { Account, AccountEvent, AccountEventType } from './model'
+import { Account, AccountEventType } from './model'
 import { AccountService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -10,6 +10,7 @@ import { randomAsset } from '../../tests/asset'
 import { resetGraphileDb } from '../../tests/graphileDb'
 import { truncateTables } from '../../tests/tableManager'
 import { GraphileProducer } from '../../messaging/graphileProducer'
+import { WebhookEvent } from '../../webhook/model'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
@@ -274,7 +275,7 @@ describe('Open Payments Account Service', (): void => {
           totalEventsAmount: totalEventsAmount + withdrawalAmount
         })
         await expect(
-          AccountEvent.query(knex).where({
+          WebhookEvent.query(knex).where({
             type: AccountEventType.AccountWebMonetization,
             withdrawalAccountId: account.id,
             withdrawalAssetId: account.assetId,
@@ -335,7 +336,7 @@ describe('Open Payments Account Service', (): void => {
         }
         await expect(accountService.triggerEvents(limit)).resolves.toBe(count)
         await expect(
-          AccountEvent.query(knex).where({
+          WebhookEvent.query(knex).where({
             type: AccountEventType.AccountWebMonetization
           })
         ).resolves.toHaveLength(count)

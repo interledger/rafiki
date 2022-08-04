@@ -202,9 +202,6 @@ export class App {
       for (let i = 0; i < this.config.incomingPaymentWorkers; i++) {
         process.nextTick(() => this.processIncomingPayment())
       }
-      for (let i = 0; i < this.config.webhookWorkers; i++) {
-        process.nextTick(() => this.processWebhook())
-      }
     }
   }
 
@@ -457,24 +454,6 @@ export class App {
           setTimeout(
             () => this.processIncomingPayment(),
             this.config.incomingPaymentWorkerIdle
-          ).unref()
-      })
-  }
-
-  private async processWebhook(): Promise<void> {
-    const webhookService = await this.container.use('webhookService')
-    return webhookService
-      .processNext()
-      .catch((err) => {
-        this.logger.warn({ error: err.message }, 'processWebhook error')
-        return true
-      })
-      .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processWebhook())
-        else
-          setTimeout(
-            () => this.processWebhook(),
-            this.config.webhookWorkerIdle
           ).unref()
       })
   }
