@@ -4891,6 +4891,7 @@ __metadata:
     axios: ^0.21.4
     base64url: ^3.0.1
     bcrypt: ^5.0.1
+    canonical-json: ^0.0.4
     cross-fetch: ^3.1.4
     extensible-error: ^1.0.2
     fishery: ^1.2.0
@@ -5396,6 +5397,13 @@ __metadata:
   version: 1.0.30001237
   resolution: "caniuse-lite@npm:1.0.30001237"
   checksum: 929dc395f1ff67beb385aade65122faba47c0364044f41cedfe7ada1b89d656beb05d38abf1eedcf9f6e09af0b34577b7953668ff363a6392bf35f20095bba66
+  languageName: node
+  linkType: hard
+
+"canonical-json@npm:^0.0.4":
+  version: 0.0.4
+  resolution: "canonical-json@npm:0.0.4"
+  checksum: cc1efe7d7a82d4b5678c156620f62502871dde9773e9f7b082e55e02baf8ee12011f8a4a696ddd3d717a1ec5e84a472c0ad8678301779fa10ba5cfa3e86cb44e
   languageName: node
   linkType: hard
 

@@ -63,6 +63,7 @@
     "axios": "^0.21.4",
     "base64url": "^3.0.1",
     "bcrypt": "^5.0.1",
+    "canonical-json": "^0.0.4",
     "extensible-error": "^1.0.2",
     "fishery": "^1.2.0",
     "got": "^11.8.2",
