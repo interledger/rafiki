@@ -23,9 +23,9 @@ import {
 } from '../../open_payments/payment/incoming/model'
 import {
   OutgoingPayment,
-  PaymentEvent,
-  PaymentWithdrawType,
-  isPaymentEventType
+  OutgoingPaymentEvent,
+  OutgoingPaymentWithdrawType,
+  isOutgoingPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
 import { Peer } from '../../peer/model'
 import { randomAsset } from '../../tests/asset'
@@ -1630,13 +1630,10 @@ describe('Liquidity Resolvers', (): void => {
           beforeEach(
             async (): Promise<void> => {
               eventId = uuid()
-              await PaymentEvent.query(knex).insertAndFetch({
+              await OutgoingPaymentEvent.query(knex).insertAndFetch({
                 id: eventId,
                 type,
-                data: payment.toData({
-                  amountSent: BigInt(0),
-                  balance: BigInt(0)
-                })
+                data: payment.toData()
               })
             }
           )
@@ -1762,12 +1759,12 @@ describe('Liquidity Resolvers', (): void => {
     const WithdrawEventType = {
       ...AccountEventType,
       ...IncomingPaymentEventType,
-      ...PaymentWithdrawType
+      ...OutgoingPaymentWithdrawType
     }
     type WithdrawEventType =
       | AccountEventType
       | IncomingPaymentEventType
-      | PaymentWithdrawType
+      | OutgoingPaymentWithdrawType
 
     const isIncomingPaymentEventType = (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -1788,18 +1785,29 @@ describe('Liquidity Resolvers', (): void => {
               const amount = BigInt(10)
               let liquidityAccount: LiquidityAccount
               let data: Record<string, unknown>
-              if (isPaymentEventType(type)) {
+              if (isOutgoingPaymentEventType(type)) {
                 liquidityAccount = payment
-                data = payment.toData({
-                  amountSent: BigInt(0),
-                  balance: amount
-                })
+                data = payment.toData()
               } else if (isIncomingPaymentEventType(type)) {
                 liquidityAccount = incomingPayment
-                data = incomingPayment.toData(amount)
+                incomingPayment.receivedAmount = {
+                  value: amount,
+                  assetCode: incomingPayment.asset.code,
+                  assetScale: incomingPayment.asset.scale
+                }
+                data = incomingPayment.toData()
               } else {
                 liquidityAccount = account
-                data = account.toData(amount)
+                data = {
+                  webMonetization: {
+                    accountId: account.id,
+                    amount: {
+                      value: amount,
+                      assetCode: account.asset.code,
+                      assetScale: account.asset.scale
+                    }
+                  }
+                }
               }
               await WebhookEvent.query(knex).insertAndFetch({
                 id: eventId,

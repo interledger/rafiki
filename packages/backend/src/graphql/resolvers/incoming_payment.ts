@@ -29,10 +29,10 @@ export const getAccountIncomingPayments: AccountResolvers<ApolloContext>['incomi
       return {
         cursor: incomingPayment.id,
         node: {
-          ...incomingPayment,
-          receivedAmount: incomingPayment.receivedAmount,
-          expiresAt: incomingPayment.expiresAt.toISOString(),
-          createdAt: incomingPayment.createdAt?.toISOString()
+          ...incomingPayment.toResponse(),
+          // toResponse converts amounts to string, but GraphQL schema expects bigint
+          incomingAmount: incomingPayment.incomingAmount ?? undefined,
+          receivedAmount: incomingPayment.receivedAmount
         }
       }
     })

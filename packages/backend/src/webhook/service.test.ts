@@ -5,6 +5,7 @@ import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { WebhookEventError, isWebhookEventError } from './errors'
+import { WebhookEvent } from './model'
 import {
   EventOptions,
   WebhookService,
@@ -17,6 +18,8 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
+import { Pagination } from '../shared/baseModel'
+import { getPageTests } from '../shared/baseModel.test'
 
 describe('Webhook Service', (): void => {
   let deps: IocContract<AppServices>
@@ -153,6 +156,21 @@ describe('Webhook Service', (): void => {
   describe('Get Webhook Event', (): void => {
     test('Cannot fetch a bogus webhook event', async (): Promise<void> => {
       await expect(webhookService.getEvent(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('getPage', (): void => {
+    getPageTests({
+      createModel: () =>
+        webhookService.createEvent({
+          type: 'account.test_event',
+          data: {
+            account: {
+              id: accountId
+            }
+          }
+        }) as Promise<WebhookEvent>,
+      getPage: (pagination: Pagination) => webhookService.getPage(pagination)
     })
   })
 })

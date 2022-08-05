@@ -139,7 +139,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                     accountId
                     state
                     error
-                    stateAttempts
                     receiver
                     sendAmount {
                       value
@@ -182,7 +181,6 @@ describe('OutgoingPayment Resolvers', (): void => {
             accountId: payment.accountId,
             state,
             error,
-            stateAttempts: 0,
             receiver: payment.receiver,
             sendAmount: {
               value: payment.sendAmount.value.toString(),

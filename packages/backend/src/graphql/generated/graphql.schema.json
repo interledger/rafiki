@@ -51,7 +51,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Paginating forwards: the cursor before the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -63,7 +63,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Paginating backwards: the cursor after the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -112,7 +112,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Paginating forwards: the cursor before the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -124,7 +124,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Paginating backwards: the cursor after the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -173,7 +173,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Paginating forwards: the cursor before the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -185,7 +185,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Paginating backwards: the cursor after the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -1960,6 +1960,126 @@
         "possibleTypes": null
       },
       {
+        "kind": "UNION",
+        "name": "Event",
+        "description": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": [
+          {
+            "kind": "OBJECT",
+            "name": "IncomingPaymentEvent",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "OutgoingPaymentEvent",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "WebMonetizationEvent",
+            "ofType": null
+          }
+        ]
+      },
+      {
+        "kind": "OBJECT",
+        "name": "EventEdge",
+        "description": null,
+        "fields": [
+          {
+            "name": "node",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "UNION",
+                "name": "Event",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "cursor",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "EventsConnection",
+        "description": null,
+        "fields": [
+          {
+            "name": "pageInfo",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "PageInfo",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "edges",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "EventEdge",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "Http",
         "description": null,
@@ -2184,15 +2304,15 @@
             "deprecationReason": null
           },
           {
-            "name": "state",
+            "name": "completed",
             "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "ENUM",
-                "name": "IncomingPaymentState",
+                "kind": "SCALAR",
+                "name": "Boolean",
                 "ofType": null
               }
             },
@@ -2390,38 +2510,111 @@
         "possibleTypes": null
       },
       {
-        "kind": "ENUM",
-        "name": "IncomingPaymentState",
+        "kind": "OBJECT",
+        "name": "IncomingPaymentEvent",
         "description": null,
-        "fields": null,
-        "inputFields": null,
-        "interfaces": null,
-        "enumValues": [
+        "fields": [
           {
-            "name": "PENDING",
-            "description": "The payment has a state of PENDING when it is initially created.",
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "PROCESSING",
-            "description": "As soon as payment has started (funds have cleared into the account) the state moves to PROCESSING",
+            "name": "type",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "COMPLETED",
-            "description": "The payment is either auto-completed once the received amount equals the expected `incomingAmount`, or it is completed manually via an API call.",
+            "name": "data",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "IncomingPaymentEventData",
+                "ofType": null
+              }
+            },
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "EXPIRED",
-            "description": "If the payment expires before it is completed then the state will move to EXPIRED and no further payments will be accepted.",
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
             "isDeprecated": false,
             "deprecationReason": null
           }
         ],
+        "inputFields": null,
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Model",
+            "ofType": null
+          }
+        ],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "IncomingPaymentEventData",
+        "description": null,
+        "fields": [
+          {
+            "name": "incomingPayment",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "IncomingPayment",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
         "possibleTypes": null
       },
       {
@@ -2648,12 +2841,27 @@
           },
           {
             "kind": "OBJECT",
+            "name": "IncomingPaymentEvent",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
             "name": "OutgoingPayment",
             "ofType": null
           },
           {
             "kind": "OBJECT",
+            "name": "OutgoingPaymentEvent",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
             "name": "Peer",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "WebMonetizationEvent",
             "ofType": null
           }
         ]
@@ -3568,22 +3776,6 @@
             "deprecationReason": null
           },
           {
-            "name": "stateAttempts",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "sendAmount",
             "description": null,
             "args": [],
@@ -3793,6 +3985,114 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "OutgoingPaymentEvent",
+        "description": null,
+        "fields": [
+          {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "type",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "data",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "OutgoingPaymentEventData",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Model",
+            "ofType": null
+          }
+        ],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "OutgoingPaymentEventData",
+        "description": null,
+        "fields": [
+          {
+            "name": "outgoingPayment",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "OutgoingPayment",
                 "ofType": null
               }
             },
@@ -4246,7 +4546,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Paginating forwards: the cursor before the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -4258,7 +4558,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Paginating backwards: the cursor after the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -4306,6 +4606,71 @@
             "deprecationReason": null
           },
           {
+            "name": "events",
+            "description": "Fetch a page of events.",
+            "args": [
+              {
+                "name": "after",
+                "description": "Paginating forwards: the cursor before the requested page.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "before",
+                "description": "Paginating backwards: the cursor after the requested page.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "first",
+                "description": "Paginating forwards: The first **n** elements from the page.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "last",
+                "description": "Paginating backwards: The last **n** elements from the page.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "EventsConnection",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "peer",
             "description": null,
             "args": [
@@ -4340,7 +4705,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Paginating forwards: the cursor before the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -4352,7 +4717,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Paginating backwards: the cursor after the requested page.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -5508,6 +5873,157 @@
             "ofType": null
           }
         ],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "WebMonetization",
+        "description": null,
+        "fields": [
+          {
+            "name": "accountId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "amount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Amount",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "WebMonetizationEvent",
+        "description": null,
+        "fields": [
+          {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "type",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "data",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "WebMonetizationEventData",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Model",
+            "ofType": null
+          }
+        ],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "WebMonetizationEventData",
+        "description": null,
+        "fields": [
+          {
+            "name": "webMonetization",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "WebMonetization",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },

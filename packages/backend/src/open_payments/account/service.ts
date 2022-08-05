@@ -152,8 +152,17 @@ async function createWithdrawalEvent(
 
   await deps.webhookService.createEvent(
     {
-      type: AccountEventType.AccountWebMonetization,
-      data: account.toData(amount),
+      type: AccountEventType.WebMonetizationReceived,
+      data: {
+        webMonetization: {
+          accountId: account.id,
+          amount: {
+            value: amount,
+            assetCode: account.asset.code,
+            assetScale: account.asset.scale
+          }
+        }
+      },
       withdrawal: {
         accountId: account.id,
         assetId: account.assetId,

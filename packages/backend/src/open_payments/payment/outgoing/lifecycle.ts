@@ -4,8 +4,8 @@ import { LifecycleError } from './errors'
 import {
   OutgoingPayment,
   OutgoingPaymentState,
-  PaymentEvent,
-  PaymentEventType
+  OutgoingPaymentEvent,
+  OutgoingPaymentEventType
 } from './model'
 import { ServiceDependencies } from './service'
 import { IlpPlugin } from '../../../shared/ilp_plugin'
@@ -136,7 +136,7 @@ export async function handleFailed(
     state: OutgoingPaymentState.Failed,
     error
   })
-  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFailed)
+  await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
 }
 
 const handleCompleted = async (
@@ -146,20 +146,37 @@ const handleCompleted = async (
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
-  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCompleted)
+  await sendWebhookEvent(
+    deps,
+    payment,
+    OutgoingPaymentEventType.PaymentCompleted
+  )
 }
 
 export const sendWebhookEvent = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  type: PaymentEventType
+  type: OutgoingPaymentEventType
 ): Promise<void> => {
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
   const balance = await deps.accountingService.getBalance(payment.id)
   if (amountSent === undefined || balance === undefined) {
     throw LifecycleError.MissingBalance
   }
-
+  if (payment.sentAmount.value - amountSent !== balance) {
+    deps.logger.warn(
+      {
+        sendAmount: payment.sendAmount,
+        amountSent,
+        balance
+      },
+      'unexpected payment balance'
+    )
+  }
+  payment.sentAmount = {
+    ...payment.sendAmount,
+    value: amountSent
+  }
   const withdrawal = balance
     ? {
         accountId: payment.id,
@@ -167,9 +184,9 @@ export const sendWebhookEvent = async (
         amount: balance
       }
     : undefined
-  await PaymentEvent.query(deps.knex).insertAndFetch({
+  await OutgoingPaymentEvent.query(deps.knex).insertAndFetch({
     type,
-    data: payment.toData({ amountSent, balance }),
+    data: payment.toData(),
     withdrawal
   })
 }

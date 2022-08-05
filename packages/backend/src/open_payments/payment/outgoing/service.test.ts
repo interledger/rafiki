@@ -24,9 +24,9 @@ import { truncateTables } from '../../../tests/tableManager'
 import {
   OutgoingPayment,
   OutgoingPaymentState,
-  PaymentData,
-  PaymentEvent,
-  PaymentEventType
+  OutgoingPaymentData,
+  OutgoingPaymentEvent,
+  OutgoingPaymentEventType
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../../../accounting/errors'
@@ -67,12 +67,12 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   const webhookTypes: {
-    [key in OutgoingPaymentState]: PaymentEventType | undefined
+    [key in OutgoingPaymentState]: OutgoingPaymentEventType | undefined
   } = {
-    [OutgoingPaymentState.Funding]: PaymentEventType.PaymentCreated,
+    [OutgoingPaymentState.Funding]: OutgoingPaymentEventType.PaymentCreated,
     [OutgoingPaymentState.Sending]: undefined,
-    [OutgoingPaymentState.Failed]: PaymentEventType.PaymentFailed,
-    [OutgoingPaymentState.Completed]: PaymentEventType.PaymentCompleted
+    [OutgoingPaymentState.Failed]: OutgoingPaymentEventType.PaymentFailed,
+    [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted
   }
 
   async function processNext(
@@ -88,7 +88,7 @@ describe('OutgoingPaymentService', (): void => {
     const type = webhookTypes[payment.state]
     if (type) {
       await expect(
-        PaymentEvent.query(knex).where({
+        OutgoingPaymentEvent.query(knex).where({
           type
         })
       ).resolves.not.toHaveLength(0)
@@ -202,7 +202,7 @@ describe('OutgoingPaymentService', (): void => {
     }
     if (withdrawAmount !== undefined) {
       await expect(
-        PaymentEvent.query(knex).where({
+        OutgoingPaymentEvent.query(knex).where({
           withdrawalAccountId: payment.id,
           withdrawalAmount: withdrawAmount
         })
@@ -352,20 +352,22 @@ describe('OutgoingPaymentService', (): void => {
           payment
         )
 
-        const expectedPaymentData: Partial<PaymentData['payment']> = {
+        const expectedPaymentData: Partial<
+          OutgoingPaymentData['outgoingPayment']
+        > = {
           id: payment.id
         }
         if (outgoingPeer) {
           expectedPaymentData.peerId = peer.id
         }
         await expect(
-          PaymentEvent.query(knex).where({
-            type: PaymentEventType.PaymentCreated
+          OutgoingPaymentEvent.query(knex).where({
+            type: OutgoingPaymentEventType.PaymentCreated
           })
         ).resolves.toMatchObject([
           {
             data: {
-              payment: expectedPaymentData
+              outgoingPayment: expectedPaymentData
             }
           }
         ])

@@ -13,6 +13,7 @@ interface PageTestsOptions<Type> {
   createModel: () => Promise<Type>
   pagedQuery: string
   parent?: ParentModel
+  queryFields?: string
 }
 
 interface ParentModel {
@@ -30,7 +31,7 @@ interface Edge<Type> {
   cursor: string
 }
 
-const queryFields = `edges {
+const defaultQueryFields = `edges {
     node {
       id
     }
@@ -47,7 +48,8 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
   getClient,
   createModel,
   pagedQuery,
-  parent
+  parent,
+  queryFields = defaultQueryFields
 }: PageTestsOptions<M>): void => {
   const toConnection = (query: ApolloQueryResult<T>): Connection<T> => {
     if (query.data) {

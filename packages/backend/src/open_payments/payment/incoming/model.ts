@@ -11,6 +11,16 @@ export enum IncomingPaymentEventType {
   IncomingPaymentCompleted = 'incoming_payment.completed'
 }
 
+export const isIncomingPaymentEventType = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  o: any
+): o is IncomingPaymentEventType =>
+  Object.values(IncomingPaymentEventType).includes(o)
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isIncomingPaymentEvent = (o: any): o is IncomingPaymentEvent =>
+  o instanceof WebhookEvent && isIncomingPaymentEventType(o.type)
+
 export enum IncomingPaymentState {
   // The payment has a state of `PENDING` when it is initially created.
   Pending = 'PENDING',
@@ -143,37 +153,39 @@ export class IncomingPayment
     return this
   }
 
-  public toData(amountReceived: bigint): IncomingPaymentData {
-    const data: IncomingPaymentData = {
-      incomingPayment: {
-        id: this.id,
-        accountId: this.accountId,
-        createdAt: new Date(+this.createdAt).toISOString(),
-        expiresAt: this.expiresAt.toISOString(),
-        receivedAmount: {
-          value: amountReceived.toString(),
-          assetCode: this.asset.code,
-          assetScale: this.asset.scale
-        },
-        completed: this.state === IncomingPaymentState.Completed,
-        updatedAt: new Date(+this.updatedAt).toISOString()
-      }
+  public toData(): IncomingPaymentData {
+    return {
+      incomingPayment: this.toResponse()
+    }
+  }
+
+  public toResponse(): IncomingPaymentResponse {
+    const incomingPayment: IncomingPaymentResponse = {
+      id: this.id,
+      accountId: this.accountId,
+      createdAt: new Date(+this.createdAt).toISOString(),
+      expiresAt: this.expiresAt.toISOString(),
+      receivedAmount: {
+        ...this.receivedAmount,
+        value: this.receivedAmount.value.toString()
+      },
+      completed: this.state === IncomingPaymentState.Completed,
+      updatedAt: new Date(+this.updatedAt).toISOString()
     }
 
     if (this.incomingAmount) {
-      data.incomingPayment.incomingAmount = {
+      incomingPayment.incomingAmount = {
         ...this.incomingAmount,
         value: this.incomingAmount.value.toString()
       }
     }
     if (this.description) {
-      data.incomingPayment.description = this.description
+      incomingPayment.description = this.description
     }
     if (this.externalRef) {
-      data.incomingPayment.externalRef = this.externalRef
+      incomingPayment.externalRef = this.externalRef
     }
-
-    return data
+    return incomingPayment
   }
 
   $formatJson(json: Pojo): Pojo {

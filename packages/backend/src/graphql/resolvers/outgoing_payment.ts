@@ -91,18 +91,13 @@ export function paymentToGraphql(
   payment: OutgoingPayment
 ): SchemaOutgoingPayment {
   return {
-    id: payment.id,
-    accountId: payment.accountId,
-    state: payment.state,
-    error: payment.error ?? undefined,
-    stateAttempts: payment.stateAttempts,
-    receiver: payment.receiver,
+    ...payment.toResponse(),
+    // toResponse converts amounts to string, but GraphQL schema expects bigint
     sendAmount: payment.sendAmount,
     sentAmount: payment.sentAmount,
     receiveAmount: payment.receiveAmount,
-    description: payment.description,
-    externalRef: payment.externalRef,
-    createdAt: new Date(+payment.createdAt).toISOString(),
     quote: quoteToGraphql(payment.quote)
   }
 }
+
+// TODO: add quote resolver

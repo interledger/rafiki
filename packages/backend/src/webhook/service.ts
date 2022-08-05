@@ -7,6 +7,7 @@ const canonicalJson = require('canonical-json')
 import { WebhookEventError } from './errors'
 import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
+import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 
 export interface WebhookService {
@@ -15,6 +16,7 @@ export interface WebhookService {
     trx?: Transaction
   ): Promise<WebhookEvent | WebhookEventError>
   getEvent(id: string): Promise<WebhookEvent | undefined>
+  getPage(pagination?: Pagination): Promise<WebhookEvent[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -32,7 +34,8 @@ export async function createWebhookService(
   const deps = { ...deps_, logger }
   return {
     createEvent: (opts, trx) => createWebhookEvent(deps, opts, trx),
-    getEvent: (id) => getWebhookEvent(deps, id)
+    getEvent: (id) => getWebhookEvent(deps, id),
+    getPage: (pagination?) => getEventsPage(deps, pagination)
   }
 }
 
@@ -121,4 +124,11 @@ export function generateWebhookSignature(
   const digest = hmac.digest('hex')
 
   return `t=${timestamp}, v${version}=${digest}`
+}
+
+async function getEventsPage(
+  deps: ServiceDependencies,
+  pagination?: Pagination
+): Promise<WebhookEvent[]> {
+  return await WebhookEvent.query(deps.knex).getPage(pagination)
 }

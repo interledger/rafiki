@@ -5,9 +5,9 @@ type Query {
 
   "Fetch a page of assets."
   assets(
-    "Paginating forwards: the cursor before the the requested page."
+    "Paginating forwards: the cursor before the requested page."
     after: String
-    "Paginating backwards: the cursor after the the requested page."
+    "Paginating backwards: the cursor after the requested page."
     before: String
     "Paginating forwards: The first **n** elements from the page."
     first: Int
@@ -15,13 +15,25 @@ type Query {
     last: Int
   ): AssetsConnection!
 
+  "Fetch a page of events."
+  events(
+    "Paginating forwards: the cursor before the requested page."
+    after: String
+    "Paginating backwards: the cursor after the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): EventsConnection!
+
   peer(id: String!): Peer
 
   "Fetch a page of peers."
   peers(
-    "Paginating forwards: the cursor before the the requested page."
+    "Paginating forwards: the cursor before the requested page."
     after: String
-    "Paginating backwards: the cursor after the the requested page."
+    "Paginating backwards: the cursor after the requested page."
     before: String
     "Paginating forwards: The first **n** elements from the page."
     first: Int
@@ -150,6 +162,16 @@ input UpdateAssetInput {
   withdrawalThreshold: UInt64
 }
 
+type EventsConnection {
+  pageInfo: PageInfo!
+  edges: [EventEdge!]!
+}
+
+type EventEdge {
+  node: Event!
+  cursor: String!
+}
+
 type PeersConnection {
   pageInfo: PageInfo!
   edges: [PeerEdge!]!
@@ -271,6 +293,46 @@ type Asset implements Model {
   createdAt: String!
 }
 
+type IncomingPaymentEvent implements Model {
+  id: ID!
+  type: String!
+  data: IncomingPaymentEventData!
+  createdAt: String!
+}
+
+type OutgoingPaymentEvent implements Model {
+  id: ID!
+  type: String!
+  data: OutgoingPaymentEventData!
+  createdAt: String!
+}
+
+type WebMonetizationEvent implements Model {
+  id: ID!
+  type: String!
+  data: WebMonetizationEventData!
+  createdAt: String!
+}
+
+union Event = IncomingPaymentEvent | OutgoingPaymentEvent | WebMonetizationEvent
+
+type IncomingPaymentEventData {
+  incomingPayment: IncomingPayment!
+}
+
+type OutgoingPaymentEventData {
+  outgoingPayment: OutgoingPayment!
+}
+
+type WebMonetizationEventData {
+  webMonetization: WebMonetization!
+}
+
+type WebMonetization {
+  accountId: ID!
+  amount: Amount!
+}
+
 enum LiquidityError {
   AlreadyCommitted
   AlreadyRolledBack
@@ -308,9 +370,9 @@ type Account implements Model {
   id: ID!
   asset: Asset!
   incomingPayments(
-    "Paginating forwards: the cursor before the the requested page."
+    "Paginating forwards: the cursor before the requested page."
     after: String
-    "Paginating backwards: the cursor after the the requested page."
+    "Paginating backwards: the cursor after the requested page."
     before: String
     "Paginating forwards: The first **n** elements from the page."
     first: Int
@@ -318,9 +380,9 @@ type Account implements Model {
     last: Int
   ): IncomingPaymentConnection
   quotes(
-    "Paginating forwards: the cursor before the the requested page."
+    "Paginating forwards: the cursor before the requested page."
     after: String
-    "Paginating backwards: the cursor after the the requested page."
+    "Paginating backwards: the cursor after the requested page."
     before: String
     "Paginating forwards: The first **n** elements from the page."
     first: Int
@@ -328,9 +390,9 @@ type Account implements Model {
     last: Int
   ): QuoteConnection
   outgoingPayments(
-    "Paginating forwards: the cursor before the the requested page."
+    "Paginating forwards: the cursor before the requested page."
     after: String
-    "Paginating backwards: the cursor after the the requested page."
+    "Paginating backwards: the cursor after the requested page."
     before: String
     "Paginating forwards: The first **n** elements from the page."
     first: Int
@@ -353,24 +415,13 @@ type IncomingPaymentEdge {
 type IncomingPayment implements Model {
   id: ID!
   accountId: ID!
-  state: IncomingPaymentState!
+  completed: Boolean!
   expiresAt: String!
   incomingAmount: Amount
   receivedAmount: Amount!
   description: String
   externalRef: String
   createdAt: String!
-}
-
-enum IncomingPaymentState {
-  "The payment has a state of PENDING when it is initially created."
-  PENDING
-  "As soon as payment has started (funds have cleared into the account) the state moves to PROCESSING"
-  PROCESSING
-  "The payment is either auto-completed once the received amount equals the expected `incomingAmount`, or it is completed manually via an API call."
-  COMPLETED
-  "If the payment expires before it is completed then the state will move to EXPIRED and no further payments will be accepted."
-  EXPIRED
 }
 
 type Amount {
@@ -394,7 +445,6 @@ type OutgoingPayment implements Model {
   accountId: ID!
   state: OutgoingPaymentState!
   error: String
-  stateAttempts: Int!
   sendAmount: Amount!
   receiveAmount: Amount!
   receiver: String!
@@ -414,6 +464,11 @@ enum OutgoingPaymentState {
   COMPLETED
   "Payment failed"
   FAILED
+}
+
+type WebMonetization {
+  accountId: ID!
+  amount: Amount!
 }
 
 type QuoteConnection {

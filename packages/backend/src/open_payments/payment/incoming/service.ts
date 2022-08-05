@@ -234,6 +234,12 @@ async function handleDeactivated(
       return
     }
 
+    incomingPayment.receivedAmount = {
+      value: amountReceived,
+      assetCode: incomingPayment.asset.code,
+      assetScale: incomingPayment.asset.scale
+    }
+
     const type =
       incomingPayment.state == IncomingPaymentState.Expired
         ? IncomingPaymentEventType.IncomingPaymentExpired
@@ -242,7 +248,7 @@ async function handleDeactivated(
 
     await IncomingPaymentEvent.query(deps.knex).insertAndFetch({
       type,
-      data: incomingPayment.toData(amountReceived),
+      data: incomingPayment.toData(),
       withdrawal: {
         accountId: incomingPayment.id,
         assetId: incomingPayment.assetId,

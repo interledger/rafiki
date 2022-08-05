@@ -287,7 +287,7 @@ describe('Account Resolvers', (): void => {
         expect(response.count).toEqual(count)
         await expect(
           WebhookEvent.query(knex).where({
-            type: AccountEventType.AccountWebMonetization
+            type: AccountEventType.WebMonetizationReceived
           })
         ).resolves.toHaveLength(count)
         for (let i = 1; i <= count; i++) {

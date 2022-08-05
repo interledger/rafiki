@@ -95,50 +95,46 @@ export class OutgoingPayment
     }
   }
 
-  public toData({
-    amountSent,
-    balance
-  }: {
-    amountSent: bigint
-    balance: bigint
-  }): PaymentData {
-    const data: PaymentData = {
-      payment: {
-        id: this.id,
-        accountId: this.accountId,
-        state: this.state,
-        receiver: this.receiver,
-        sendAmount: {
-          ...this.sendAmount,
-          value: this.sendAmount.value.toString()
-        },
-        receiveAmount: {
-          ...this.receiveAmount,
-          value: this.receiveAmount.value.toString()
-        },
-        sentAmount: {
-          ...this.sendAmount,
-          value: amountSent.toString()
-        },
-        stateAttempts: this.stateAttempts,
-        createdAt: new Date(+this.createdAt).toISOString(),
-        updatedAt: new Date(+this.updatedAt).toISOString(),
-        balance: balance.toString()
-      }
+  public toData(): OutgoingPaymentData {
+    return {
+      outgoingPayment: this.toResponse()
+    }
+  }
+
+  public toResponse(): OutgoingPaymentResponse {
+    const payment: OutgoingPaymentResponse = {
+      id: this.id,
+      accountId: this.accountId,
+      state: this.state,
+      receiver: this.receiver,
+      sendAmount: {
+        ...this.sendAmount,
+        value: this.sendAmount.value.toString()
+      },
+      receiveAmount: {
+        ...this.receiveAmount,
+        value: this.receiveAmount.value.toString()
+      },
+      sentAmount: {
+        ...this.sentAmount,
+        value: this.sentAmount.value.toString()
+      },
+      createdAt: new Date(+this.createdAt).toISOString(),
+      updatedAt: new Date(+this.updatedAt).toISOString()
     }
     if (this.description) {
-      data.payment.description = this.description
+      payment.description = this.description
     }
     if (this.externalRef) {
-      data.payment.externalRef = this.externalRef
+      payment.externalRef = this.externalRef
     }
     if (this.error) {
-      data.payment.error = this.error
+      payment.error = this.error
     }
     if (this.peerId) {
-      data.payment.peerId = this.peerId
+      payment.peerId = this.peerId
     }
-    return data
+    return payment
   }
 
   $formatJson(json: Pojo): Pojo {
@@ -183,20 +179,22 @@ export enum OutgoingPaymentState {
   Completed = 'COMPLETED'
 }
 
-export enum PaymentDepositType {
+export enum OutgoingPaymentDepositType {
   PaymentCreated = 'outgoing_payment.created'
 }
 
-export enum PaymentWithdrawType {
+export enum OutgoingPaymentWithdrawType {
   PaymentFailed = 'outgoing_payment.failed',
   PaymentCompleted = 'outgoing_payment.completed'
 }
 
-export const PaymentEventType = {
-  ...PaymentDepositType,
-  ...PaymentWithdrawType
+export const OutgoingPaymentEventType = {
+  ...OutgoingPaymentDepositType,
+  ...OutgoingPaymentWithdrawType
 }
-export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
+export type OutgoingPaymentEventType =
+  | OutgoingPaymentDepositType
+  | OutgoingPaymentWithdrawType
 
 export interface OutgoingPaymentResponse {
   id: string
@@ -207,32 +205,30 @@ export interface OutgoingPaymentResponse {
   receiveAmount: AmountJSON
   description?: string
   externalRef?: string
-  failed: boolean
+  error?: string
+  state: OutgoingPaymentState
   updatedAt: string
   sentAmount: AmountJSON
+  peerId?: string
 }
 
-export type PaymentData = {
-  payment: Omit<OutgoingPaymentResponse, 'failed'> & {
-    error?: string
-    state: OutgoingPaymentState
-    stateAttempts: number
-    balance: string
-    peerId?: string
-  }
+export type OutgoingPaymentData = {
+  outgoingPayment: OutgoingPaymentResponse
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isPaymentEventType = (o: any): o is PaymentEventType =>
-  Object.values(PaymentEventType).includes(o)
+export const isOutgoingPaymentEventType = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  o: any
+): o is OutgoingPaymentEventType =>
+  Object.values(OutgoingPaymentEventType).includes(o)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isPaymentEvent = (o: any): o is PaymentEvent =>
-  o instanceof WebhookEvent && isPaymentEventType(o.type)
+export const isOutgoingPaymentEvent = (o: any): o is OutgoingPaymentEvent =>
+  o instanceof WebhookEvent && isOutgoingPaymentEventType(o.type)
 
-export class PaymentEvent extends WebhookEvent {
-  public type!: PaymentEventType
-  public data!: PaymentData
+export class OutgoingPaymentEvent extends WebhookEvent {
+  public type!: OutgoingPaymentEventType
+  public data!: OutgoingPaymentData
 }
 
 export type OutgoingPaymentJSON = {

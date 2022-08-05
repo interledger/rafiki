@@ -276,7 +276,7 @@ describe('Open Payments Account Service', (): void => {
         })
         await expect(
           WebhookEvent.query(knex).where({
-            type: AccountEventType.AccountWebMonetization,
+            type: AccountEventType.WebMonetizationReceived,
             withdrawalAccountId: account.id,
             withdrawalAssetId: account.assetId,
             withdrawalAmount
@@ -337,7 +337,7 @@ describe('Open Payments Account Service', (): void => {
         await expect(accountService.triggerEvents(limit)).resolves.toBe(count)
         await expect(
           WebhookEvent.query(knex).where({
-            type: AccountEventType.AccountWebMonetization
+            type: AccountEventType.WebMonetizationReceived
           })
         ).resolves.toHaveLength(count)
         for (let i = 1; i <= count; i++) {

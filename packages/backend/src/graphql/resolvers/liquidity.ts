@@ -13,8 +13,8 @@ import {
   isFundingError
 } from '../../open_payments/payment/outgoing/errors'
 import {
-  isPaymentEvent,
-  PaymentDepositType
+  isOutgoingPaymentEvent,
+  OutgoingPaymentDepositType
 } from '../../open_payments/payment/outgoing/model'
 
 export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] = async (
@@ -288,8 +288,8 @@ export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['roll
   }
 }
 
-export const DepositEventType = PaymentDepositType
-export type DepositEventType = PaymentDepositType
+export const DepositEventType = OutgoingPaymentDepositType
+export type DepositEventType = OutgoingPaymentDepositType
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isDepositEventType = (o: any): o is DepositEventType =>
@@ -303,16 +303,20 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
   try {
     const webhookService = await ctx.container.use('webhookService')
     const event = await webhookService.getEvent(args.eventId)
-    if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
+    if (
+      !event ||
+      !isOutgoingPaymentEvent(event) ||
+      !isDepositEventType(event.type)
+    ) {
       return responses[LiquidityError.InvalidId]
     }
-    assert.ok(event.data.payment?.sendAmount)
+    assert.ok(event.data.outgoingPayment?.sendAmount)
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
     const paymentOrErr = await outgoingPaymentService.fund({
-      id: event.data.payment.id,
-      amount: BigInt(event.data.payment.sendAmount.value),
+      id: event.data.outgoingPayment.id,
+      amount: BigInt(event.data.outgoingPayment.sendAmount.value),
       transferId: event.id
     })
     if (isFundingError(paymentOrErr)) {
