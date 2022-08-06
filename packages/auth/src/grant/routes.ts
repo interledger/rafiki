@@ -6,7 +6,7 @@ import { GrantState } from './model'
 import { Access } from '../access/model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
-import { isAccessRequest } from '../access/types'
+import { AccessRequest, isAccessRequest } from '../access/types'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
@@ -28,6 +28,7 @@ export interface GrantRoutes {
     deny(ctx: AppContext): Promise<void>
   }
   continue(ctx: AppContext): Promise<void>
+  update(ctx: AppContext): Promise<void>
 }
 
 export function createGrantRoutes({
@@ -57,7 +58,8 @@ export function createGrantRoutes({
       finish: (ctx: AppContext) => finishInteraction(deps, ctx),
       deny: (ctx: AppContext) => denyInteraction(deps, ctx)
     },
-    continue: (ctx: AppContext) => continueGrant(deps, ctx)
+    continue: (ctx: AppContext) => continueGrant(deps, ctx),
+    update: (ctx: AppContext) => updateGrant(deps, ctx)
   }
 }
 
@@ -298,6 +300,79 @@ async function continueGrant(
       manage: config.authServerDomain + `/token/${accessToken.managementId}`,
       access: access.map((a: Access) => accessToBody(a)),
       expiresIn: accessToken.expiresIn
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isAccessTokenUpdateParameter(
+  param: any
+): param is {
+  access: AccessRequest[]
+} {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (
+    param &&
+    param.access &&
+    Array.isArray(param.access) &&
+    param.access.length > 0 &&
+    param.access.every((a: any) => isAccessRequest(a))
+  )
+}
+
+async function updateGrant(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  // TODO: httpsig validation
+  const { continueId } = ctx.params
+  const continueToken = (ctx.headers['authorization'] as string)?.split(
+    'GNAP '
+  )[1]
+  const {
+    interact_ref: interactRef,
+    access_token: accessToken
+  } = ctx.request.body
+
+  if (
+    !continueId ||
+    !continueToken ||
+    !interactRef ||
+    !isAccessTokenUpdateParameter(accessToken)
+  ) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'invalid_request'
+    }
+  } else {
+    const { config, accessTokenService, grantService, accessService } = deps
+    const grant = await grantService.getByContinue(
+      continueId,
+      continueToken,
+      interactRef
+    )
+
+    if (grant) {
+      await grantService.update(grant.id, accessToken.access)
+      const updatedAccessToken = await accessTokenService.create(grant.id)
+      const updatedAccess = await accessService.getByGrant(grant.id)
+
+      // TODO: add "continue" to response if additional grant request steps are added
+      ctx.body = {
+        access_token: {
+          value: updatedAccessToken.value,
+          manage:
+            config.authServerDomain +
+            `/token/${updatedAccessToken.managementId}`,
+          access: updatedAccess.map((a: Access) => accessToBody(a)),
+          expiresIn: updatedAccessToken.expiresIn
+        }
+      }
+    } else {
+      ctx.status = 404
+      ctx.body = {
+        error: 'unknown_request'
+      }
     }
   }
 }

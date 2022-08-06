@@ -7,6 +7,7 @@ import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
+import { Access } from '../access/model'
 
 export interface GrantService {
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
@@ -18,6 +19,7 @@ export interface GrantService {
     interactRef: string
   ): Promise<Grant | null>
   denyGrant(grantId: string): Promise<Grant | null>
+  update(grantId: string, updatedAccessRequests: AccessRequest[]): Promise<void>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -78,7 +80,9 @@ export async function createGrantService({
       continueToken: string,
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
-    denyGrant: (grantId: string) => denyGrant(deps, grantId)
+    denyGrant: (grantId: string) => denyGrant(deps, grantId),
+    update: (grantId: string, updatedAccessRequests: AccessRequest[]) =>
+      update(deps, grantId, updatedAccessRequests)
   }
 }
 
@@ -166,4 +170,24 @@ async function getByContinue(
   )
     return null
   return grant
+}
+
+async function update(
+  deps: ServiceDependencies,
+  grantId: string,
+  updatedAccessRequests: AccessRequest[]
+): Promise<void> {
+  const { accessService, knex } = deps
+  const trx = await Access.startTransaction(knex)
+  try {
+    const existingAccess = await accessService.getByGrant(grantId)
+    await Access.query(trx)
+      .findByIds(existingAccess.map((a) => a.id))
+      .del()
+    await accessService.createAccess(grantId, updatedAccessRequests, trx)
+    await trx.commit()
+  } catch (err) {
+    await trx.rollback()
+    throw err
+  }
 }
