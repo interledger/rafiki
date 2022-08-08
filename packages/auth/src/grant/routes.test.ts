@@ -953,8 +953,6 @@ describe('Grant Routes', (): void => {
         {}
       )
 
-      // ctx.session.interactId = grant.interactId
-
       await expect(grantRoutes.interaction.deny(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
     })
@@ -974,8 +972,6 @@ describe('Grant Routes', (): void => {
         { interactId }
       )
 
-      // ctx.session.interactId = interactId
-
       await expect(grantRoutes.interaction.deny(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)
     })
@@ -993,8 +989,6 @@ describe('Grant Routes', (): void => {
         },
         { interactId: grant.interactId }
       )
-
-      // ctx.session.interactId = grant.interactId
 
       await expect(grantRoutes.interaction.deny(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(200)
