@@ -216,6 +216,11 @@ export class App {
       grantRoutes.interaction.finish
     )
 
+    this.publicRouter.del(
+      '/interact/:interactId/login',
+      grantRoutes.interaction.deny
+    )
+
     // Token management
     this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
 

@@ -25,6 +25,7 @@ export interface GrantRoutes {
   interaction: {
     start(ctx: AppContext): Promise<void>
     finish(ctx: AppContext): Promise<void>
+    deny(ctx: AppContext): Promise<void>
   }
   continue(ctx: AppContext): Promise<void>
 }
@@ -53,7 +54,8 @@ export function createGrantRoutes({
     create: (ctx: AppContext) => createGrantInitiation(deps, ctx),
     interaction: {
       start: (ctx: AppContext) => startInteraction(deps, ctx),
-      finish: (ctx: AppContext) => finishInteraction(deps, ctx)
+      finish: (ctx: AppContext) => finishInteraction(deps, ctx),
+      deny: (ctx: AppContext) => denyInteraction(deps, ctx)
     },
     continue: (ctx: AppContext) => continueGrant(deps, ctx)
   }
@@ -184,6 +186,21 @@ async function finishInteraction(
     return
   }
 
+  if (grant.state === GrantState.Revoked || grant.state === GrantState.Denied) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'user_denied'
+    }
+    return
+  }
+
+  if (grant.state === GrantState.Granted) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'request_denied'
+    }
+  }
+
   await grantService.issueGrant(grant.id)
 
   const clientRedirectUri = new URL(grant.finishUri)
@@ -197,6 +214,37 @@ async function finishInteraction(
   clientRedirectUri.searchParams.set('hash', hash)
   clientRedirectUri.searchParams.set('interact_ref', interactRef)
   ctx.redirect(clientRedirectUri.toString())
+}
+
+async function denyInteraction(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  const { interactId } = ctx.params
+  const interactSession = ctx.session.interactId
+
+  if (!interactSession || !interactId || interactSession !== interactId) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'invalid_request'
+    }
+    return
+  }
+
+  const { grantService } = deps
+  const grant = await grantService.getByInteraction(interactId)
+
+  if (!grant) {
+    ctx.status = 404
+    ctx.body = {
+      error: 'unknown_request'
+    }
+    return
+  }
+
+  await deps.grantService.denyGrant(grant.id)
+
+  ctx.status = 200
 }
 
 async function continueGrant(

@@ -938,6 +938,66 @@ describe('Grant Routes', (): void => {
     })
   })
 
+  describe('Deny interaction', (): void => {
+    test('Cannot deny interaction without interaction id', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          session: {
+            interactId: grant.interactId
+          }
+        },
+        {}
+      )
+
+      await expect(grantRoutes.interaction.deny(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(401)
+    })
+
+    test('Cannot deny interaction if grant does not exist', async (): Promise<void> => {
+      const interactId = v4()
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          session: {
+            interactId
+          }
+        },
+        { interactId }
+      )
+
+      await expect(grantRoutes.interaction.deny(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(404)
+    })
+
+    test('Can deny interaction', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          session: {
+            interactId: grant.interactId
+          }
+        },
+        { interactId: grant.interactId }
+      )
+
+      await expect(grantRoutes.interaction.deny(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+
+      const issuedGrant = await Grant.query().findById(grant.id)
+      expect(issuedGrant.state).toEqual(GrantState.Denied)
+    })
+  })
+
   describe('/continue', (): void => {
     test('Can issue access token', async (): Promise<void> => {
       const grant = await Grant.query().insert({
