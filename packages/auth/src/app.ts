@@ -42,7 +42,7 @@ export interface DatabaseCleanupRule {
    * the minimum number of days since expiration before rows of
    * this table will be considered safe to delete during clean up
    */
-  minDaysLapsedBeforeDeletion: number
+  defaultExpirationOffsetDays: number
 }
 
 type ContextType<T> = T extends (
@@ -98,7 +98,7 @@ export class App {
       accessTokens: {
         absoluteStartTimeColumnName: 'createdAt',
         expirationOffsetColumnName: 'expiresIn',
-        minDaysLapsedBeforeDeletion: this.config
+        defaultExpirationOffsetDays: this.config
           .accessTokenMinDaysBeforeDeletion
       }
     }
