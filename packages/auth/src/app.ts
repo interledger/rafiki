@@ -287,7 +287,7 @@ export class App {
               [
                 rule.absoluteStartTimeColumnName,
                 rule.expirationOffsetColumnName,
-                `${rule.minDaysLapsedBeforeDeletion} days`
+                `${rule.defaultExpirationOffsetDays} days`
               ]
             )
             .del()
