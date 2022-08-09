@@ -273,7 +273,7 @@ export class App {
     const knex = await this.container.use('knex')
 
     const tableNames = Object.keys(this.databaseCleanupRules)
-    for await (const tableName of tableNames) {
+    for (const tableName of tableNames) {
       const rule = this.databaseCleanupRules[tableName]
       if (rule) {
         try {
