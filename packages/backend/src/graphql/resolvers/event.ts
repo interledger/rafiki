@@ -54,14 +54,11 @@ export const getEventResolveType: TypeResolveFn<
     return 'OutgoingPaymentEvent'
   } else if (isIncomingPaymentEventType(parent.type)) {
     return 'IncomingPaymentEvent'
-    // } else if (isAccountEventType(parent.type)) {
-  } else {
-    assert.ok(isAccountEventType(parent.type))
+  } else if (isAccountEventType(parent.type)) {
     return 'WebMonetizationEvent'
-    // TODO
-    // } else {
-    //   // GraphQLError is thrown
-    //   return null
+  } else {
+    // GraphQLError is thrown
+    return null
   }
 }
 
