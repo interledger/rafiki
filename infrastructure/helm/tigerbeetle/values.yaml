@@ -20,6 +20,7 @@ service:
   port: 80
 
 statefulset:
+  clusterId: "0"
 
   image:
     repository: ghcr.io/coilhq/tigerbeetle@sha256

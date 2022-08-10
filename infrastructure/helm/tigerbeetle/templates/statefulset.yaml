@@ -49,7 +49,7 @@ spec:
               fi
           env:
             - name: CLUSTER
-              value: "0"
+              value: "{{ .Values.statefulset.clusterId }}"
           volumeMounts:
             - name: data
               mountPath: /var/lib/tigerbeetle
@@ -132,7 +132,7 @@ spec:
               set -ex; 
               REPLICA=${HOSTNAME##*-}
               ADDRESSES=""
-              for n in $(seq 0 5)
+              for n in $(seq 0 {{sub .Values.statefulset.replicas 1}})
               do
                 if [ "$n" != "$REPLICA" ]
                 then 
@@ -145,7 +145,7 @@ spec:
               /opt/beta-beetle/tigerbeetle start --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
           env:
             - name: CLUSTER
-              value: "0"
+              value: "{{ .Values.statefulset.clusterId }}"
           ports:
             - containerPort: 4242
               protocol: TCP
