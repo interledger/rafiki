@@ -136,7 +136,11 @@ export async function handleFailed(
     state: OutgoingPaymentState.Failed,
     error
   })
-  await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
+  await sendWebhookEvent(
+    deps,
+    payment,
+    OutgoingPaymentEventType.OutgoingPaymentFailed
+  )
 }
 
 const handleCompleted = async (
@@ -149,7 +153,7 @@ const handleCompleted = async (
   await sendWebhookEvent(
     deps,
     payment,
-    OutgoingPaymentEventType.PaymentCompleted
+    OutgoingPaymentEventType.OutgoingPaymentCompleted
   )
 }
 

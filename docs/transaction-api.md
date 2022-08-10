@@ -23,7 +23,7 @@ The wallet creates a payment on behalf of a user by passing details to `Mutation
 
 ### Funding
 
-After the payment is created, Rafiki notifies the wallet operator via an `outgoing_payment.created` [webhook event](#webhooks) to reserve the maximum requisite funds for the payment attempt by moving `sendAmount.value` from the funding wallet account owned by the payer to the payment account.
+After the payment is created, Rafiki notifies the wallet operator via an `OUTGOING_PAYMENT_CREATED` [webhook event](#webhooks) to reserve the maximum requisite funds for the payment attempt by moving `sendAmount.value` from the funding wallet account owned by the payer to the payment account.
 
 If the wallet funds the payment, the state advances to `SENDING`.
 
@@ -47,7 +47,7 @@ After the payment completes, the instance releases the lock on the payment and a
 
 ### Payment resolution
 
-In the `COMPLETED` and `FAILED` cases, the wallet is notifed of any remaining funds in the payment account via `outgoing_payment.completed` and `outgoing_payment.failed` [webhook events](#webhooks).
+In the `COMPLETED` and `FAILED` cases, the wallet is notifed of any remaining funds in the payment account via `OUTGOING_PAYMENT_COMPLETED` and `OUTGOING_PAYMENT_FAILED` [webhook events](#webhooks).
 
 ## Incoming Payment Lifecycle
 
@@ -65,9 +65,9 @@ An incoming payment expires when it passes the `expiresAt` time.
 
 An incoming payment is completed when it has received its specified `incomingAmount.value` or when it is completed manually via an API call.
 
-When the incoming payment expires, Rafiki notifies the wallet of received funds via the `incoming_payment.expired` [webhook event](#webhooks).
+When the incoming payment expires, Rafiki notifies the wallet of received funds via the `INCOMING_PAYMENT_EXPIRED` [webhook event](#webhooks).
 
-When the incoming payment is completed, Rafiki notifies the wallet of received funds via the `incoming_payment.completed` [webhook event](#webhooks).
+When the incoming payment is completed, Rafiki notifies the wallet of received funds via the `INCOMING_PAYMENT_COMPLETED` [webhook event](#webhooks).
 
 An expired incoming payment that has never received money is deleted.
 
@@ -79,37 +79,37 @@ Webhook event handlers must be idempotent and return `200` on success. Rafiki wi
 
 ### `EventType`
 
-#### `incoming_payment.expired`
+#### `INCOMING_PAYMENT_EXPIRED`
 
 Incoming payment has expired.
 
 Credit `incomingPayment.received` to the wallet balance for `incomingPayment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
-#### `incoming_payment.completed`
+#### `INCOMING_PAYMENT_COMPLETED`
 
 Incoming payment has received its specified `incomingAmount`.
 
 Credit `incomingPayment.received` to the wallet balance for `incomingPayment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
-#### `outgoing_payment.created`
+#### `OUTGOING_PAYMENT_CREATED`
 
 Payment created and needs liquidity in order to send quoted amount.
 
 To fund the payment, deduct `sendAmount.value` from the wallet balance for `payment.accountId` and call `Mutation.depositEventLiquidity` with the event id.
 
-#### `outgoing_payment.failed`
+#### `OUTGOING_PAYMENT_FAILED`
 
 Payment failed.
 
 Credit `payment.balance` to the wallet balance for `payment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
-#### `outgoing_payment.completed`
+#### `OUTGOING_PAYMENT_COMPLETED`
 
 Payment completed sending the quoted amount.
 
 Credit `payment.balance` to the wallet balance for `payment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
-#### `web_monetization.received`
+#### `WEB_MONETIZATION_RECEIVED`
 
 Account has web monetization balance to be withdrawn.
 

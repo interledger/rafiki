@@ -2,7 +2,7 @@ import Knex from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
-import { Account, AccountEventType } from './model'
+import { Account, WebMonetizationEventType } from './model'
 import { AccountService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -276,7 +276,7 @@ describe('Open Payments Account Service', (): void => {
         })
         await expect(
           WebhookEvent.query(knex).where({
-            type: AccountEventType.WebMonetizationReceived,
+            type: WebMonetizationEventType.WebMonetizationReceived,
             withdrawalAccountId: account.id,
             withdrawalAssetId: account.assetId,
             withdrawalAmount
@@ -337,7 +337,7 @@ describe('Open Payments Account Service', (): void => {
         await expect(accountService.triggerEvents(limit)).resolves.toBe(count)
         await expect(
           WebhookEvent.query(knex).where({
-            type: AccountEventType.WebMonetizationReceived
+            type: WebMonetizationEventType.WebMonetizationReceived
           })
         ).resolves.toHaveLength(count)
         for (let i = 1; i <= count; i++) {

@@ -7,8 +7,8 @@ import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
 
 export enum IncomingPaymentEventType {
-  IncomingPaymentExpired = 'incoming_payment.expired',
-  IncomingPaymentCompleted = 'incoming_payment.completed'
+  IncomingPaymentExpired = 'INCOMING_PAYMENT_EXPIRED',
+  IncomingPaymentCompleted = 'INCOMING_PAYMENT_COMPLETED'
 }
 
 export const isIncomingPaymentEventType = (

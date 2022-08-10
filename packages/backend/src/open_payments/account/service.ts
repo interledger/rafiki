@@ -1,6 +1,6 @@
 import { Transaction, TransactionOrKnex } from 'objection'
 
-import { Account, AccountEventType } from './model'
+import { Account, WebMonetizationEventType } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
 import { AssetService, AssetOptions } from '../../asset/service'
@@ -152,7 +152,7 @@ async function createWithdrawalEvent(
 
   await deps.webhookService.createEvent(
     {
-      type: AccountEventType.WebMonetizationReceived,
+      type: WebMonetizationEventType.WebMonetizationReceived,
       data: {
         webMonetization: {
           accountId: account.id,

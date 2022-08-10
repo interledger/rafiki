@@ -64,21 +64,23 @@ export class Account
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isAccountEventType = (o: any): o is AccountEventType =>
-  Object.values(AccountEventType).includes(o)
+export const isWebMonetizationEventType = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  o: any
+): o is WebMonetizationEventType =>
+  Object.values(WebMonetizationEventType).includes(o)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isAccountEvent = (o: any): o is AccountEvent =>
-  o instanceof WebhookEvent && isAccountEventType(o.type)
+export const isWebMonetizationEvent = (o: any): o is WebMonetizationEvent =>
+  o instanceof WebhookEvent && isWebMonetizationEventType(o.type)
 
-export class AccountEvent extends WebhookEvent {
-  public type!: AccountEventType
+export class WebMonetizationEvent extends WebhookEvent {
+  public type!: WebMonetizationEventType
   public data!: WebMonetizationData
 }
 
-export enum AccountEventType {
-  WebMonetizationReceived = 'web_monetization.received'
+export enum WebMonetizationEventType {
+  WebMonetizationReceived = 'WEB_MONETIZATION_RECEIVED'
 }
 
 export type WebMonetizationData = {

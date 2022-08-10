@@ -312,7 +312,7 @@ export type IncomingPaymentEdge = {
 export type IncomingPaymentEvent = Model & {
   __typename?: 'IncomingPaymentEvent';
   id: Scalars['ID'];
-  type: Scalars['String'];
+  type: IncomingPaymentEventType;
   data: IncomingPaymentEventData;
   createdAt: Scalars['String'];
 };
@@ -321,6 +321,11 @@ export type IncomingPaymentEventData = {
   __typename?: 'IncomingPaymentEventData';
   incomingPayment: IncomingPayment;
 };
+
+export enum IncomingPaymentEventType {
+  IncomingPaymentExpired = 'INCOMING_PAYMENT_EXPIRED',
+  IncomingPaymentCompleted = 'INCOMING_PAYMENT_COMPLETED'
+}
 
 export enum LiquidityError {
   AlreadyCommitted = 'AlreadyCommitted',
@@ -548,7 +553,7 @@ export type OutgoingPaymentEdge = {
 export type OutgoingPaymentEvent = Model & {
   __typename?: 'OutgoingPaymentEvent';
   id: Scalars['ID'];
-  type: Scalars['String'];
+  type: OutgoingPaymentEventType;
   data: OutgoingPaymentEventData;
   createdAt: Scalars['String'];
 };
@@ -557,6 +562,12 @@ export type OutgoingPaymentEventData = {
   __typename?: 'OutgoingPaymentEventData';
   outgoingPayment: OutgoingPayment;
 };
+
+export enum OutgoingPaymentEventType {
+  OutgoingPaymentCreated = 'OUTGOING_PAYMENT_CREATED',
+  OutgoingPaymentFailed = 'OUTGOING_PAYMENT_FAILED',
+  OutgoingPaymentCompleted = 'OUTGOING_PAYMENT_COMPLETED'
+}
 
 export type OutgoingPaymentResponse = {
   __typename?: 'OutgoingPaymentResponse';
@@ -800,7 +811,7 @@ export type WebMonetization = {
 export type WebMonetizationEvent = Model & {
   __typename?: 'WebMonetizationEvent';
   id: Scalars['ID'];
-  type: Scalars['String'];
+  type: WebMonetizationEventType;
   data: WebMonetizationEventData;
   createdAt: Scalars['String'];
 };
@@ -809,6 +820,10 @@ export type WebMonetizationEventData = {
   __typename?: 'WebMonetizationEventData';
   webMonetization: WebMonetization;
 };
+
+export enum WebMonetizationEventType {
+  WebMonetizationReceived = 'WEB_MONETIZATION_RECEIVED'
+}
 
 
 
@@ -924,6 +939,7 @@ export type ResolversTypes = {
   IncomingPaymentEdge: ResolverTypeWrapper<Partial<IncomingPaymentEdge>>;
   IncomingPaymentEvent: ResolverTypeWrapper<Partial<IncomingPaymentEvent>>;
   IncomingPaymentEventData: ResolverTypeWrapper<Partial<IncomingPaymentEventData>>;
+  IncomingPaymentEventType: ResolverTypeWrapper<Partial<IncomingPaymentEventType>>;
   LiquidityError: ResolverTypeWrapper<Partial<LiquidityError>>;
   LiquidityMutationResponse: ResolverTypeWrapper<Partial<LiquidityMutationResponse>>;
   Model: ResolversTypes['Account'] | ResolversTypes['ApiKey'] | ResolversTypes['Asset'] | ResolversTypes['IncomingPayment'] | ResolversTypes['IncomingPaymentEvent'] | ResolversTypes['OutgoingPayment'] | ResolversTypes['OutgoingPaymentEvent'] | ResolversTypes['Peer'] | ResolversTypes['WebMonetizationEvent'];
@@ -934,6 +950,7 @@ export type ResolversTypes = {
   OutgoingPaymentEdge: ResolverTypeWrapper<Partial<OutgoingPaymentEdge>>;
   OutgoingPaymentEvent: ResolverTypeWrapper<Partial<OutgoingPaymentEvent>>;
   OutgoingPaymentEventData: ResolverTypeWrapper<Partial<OutgoingPaymentEventData>>;
+  OutgoingPaymentEventType: ResolverTypeWrapper<Partial<OutgoingPaymentEventType>>;
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
   OutgoingPaymentState: ResolverTypeWrapper<Partial<OutgoingPaymentState>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
@@ -962,6 +979,7 @@ export type ResolversTypes = {
   WebMonetization: ResolverTypeWrapper<Partial<WebMonetization>>;
   WebMonetizationEvent: ResolverTypeWrapper<Partial<WebMonetizationEvent>>;
   WebMonetizationEventData: ResolverTypeWrapper<Partial<WebMonetizationEventData>>;
+  WebMonetizationEventType: ResolverTypeWrapper<Partial<WebMonetizationEventType>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -1220,7 +1238,7 @@ export type IncomingPaymentEdgeResolvers<ContextType = any, ParentType extends R
 
 export type IncomingPaymentEventResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPaymentEvent'] = ResolversParentTypes['IncomingPaymentEvent']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['IncomingPaymentEventType'], ParentType, ContextType>;
   data?: Resolver<ResolversTypes['IncomingPaymentEventData'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1308,7 +1326,7 @@ export type OutgoingPaymentEdgeResolvers<ContextType = any, ParentType extends R
 
 export type OutgoingPaymentEventResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPaymentEvent'] = ResolversParentTypes['OutgoingPaymentEvent']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['OutgoingPaymentEventType'], ParentType, ContextType>;
   data?: Resolver<ResolversTypes['OutgoingPaymentEventData'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1467,7 +1485,7 @@ export type WebMonetizationResolvers<ContextType = any, ParentType extends Resol
 
 export type WebMonetizationEventResolvers<ContextType = any, ParentType extends ResolversParentTypes['WebMonetizationEvent'] = ResolversParentTypes['WebMonetizationEvent']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['WebMonetizationEventType'], ParentType, ContextType>;
   data?: Resolver<ResolversTypes['WebMonetizationEventData'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

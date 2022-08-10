@@ -3,7 +3,6 @@ import { gql } from 'apollo-server-koa'
 import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { DepositEventType } from './liquidity'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
@@ -16,15 +15,19 @@ import {
 } from '../../accounting/service'
 import { Asset } from '../../asset/model'
 import { AssetService } from '../../asset/service'
-import { Account, AccountEventType } from '../../open_payments/account/model'
+import {
+  Account,
+  WebMonetizationEventType
+} from '../../open_payments/account/model'
 import {
   IncomingPayment,
-  IncomingPaymentEventType
+  IncomingPaymentEventType,
+  isIncomingPaymentEventType
 } from '../../open_payments/payment/incoming/model'
 import {
   OutgoingPayment,
   OutgoingPaymentEvent,
-  OutgoingPaymentWithdrawType,
+  OutgoingPaymentEventType,
   isOutgoingPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
 import { Peer } from '../../peer/model'
@@ -1622,7 +1625,7 @@ describe('Liquidity Resolvers', (): void => {
     )
 
     describe('depositEventLiquidity', (): void => {
-      describe.each(Object.values(DepositEventType).map((type) => [type]))(
+      describe.each([OutgoingPaymentEventType.OutgoingPaymentCreated])(
         '%s',
         (type): void => {
           let eventId: string
@@ -1756,21 +1759,24 @@ describe('Liquidity Resolvers', (): void => {
       )
     })
 
+    const {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      OutgoingPaymentCreated,
+      ...OutgoingPaymentWithdrawType
+    } = OutgoingPaymentEventType
+    type OutgoingPaymentWithdrawType = Exclude<
+      OutgoingPaymentEventType,
+      OutgoingPaymentEventType.OutgoingPaymentCreated
+    >
     const WithdrawEventType = {
-      ...AccountEventType,
+      ...WebMonetizationEventType,
       ...IncomingPaymentEventType,
       ...OutgoingPaymentWithdrawType
     }
     type WithdrawEventType =
-      | AccountEventType
+      | WebMonetizationEventType
       | IncomingPaymentEventType
       | OutgoingPaymentWithdrawType
-
-    const isIncomingPaymentEventType = (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-      o: any
-    ): o is IncomingPaymentEventType =>
-      Object.values(IncomingPaymentEventType).includes(o)
 
     describe('withdrawEventLiquidity', (): void => {
       describe.each(Object.values(WithdrawEventType).map((type) => [type]))(

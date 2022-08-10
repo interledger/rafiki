@@ -295,43 +295,58 @@ type Asset implements Model {
 
 type IncomingPaymentEvent implements Model {
   id: ID!
-  type: String!
+  type: IncomingPaymentEventType!
   data: IncomingPaymentEventData!
   createdAt: String!
 }
 
+enum IncomingPaymentEventType {
+  INCOMING_PAYMENT_EXPIRED
+  INCOMING_PAYMENT_COMPLETED
+}
+
+type IncomingPaymentEventData {
+  incomingPayment: IncomingPayment!
+}
+
 type OutgoingPaymentEvent implements Model {
   id: ID!
-  type: String!
+  type: OutgoingPaymentEventType!
   data: OutgoingPaymentEventData!
   createdAt: String!
 }
 
-type WebMonetizationEvent implements Model {
-  id: ID!
-  type: String!
-  data: WebMonetizationEventData!
-  createdAt: String!
-}
-
-union Event = IncomingPaymentEvent | OutgoingPaymentEvent | WebMonetizationEvent
-
-type IncomingPaymentEventData {
-  incomingPayment: IncomingPayment!
+enum OutgoingPaymentEventType {
+  OUTGOING_PAYMENT_CREATED
+  OUTGOING_PAYMENT_FAILED
+  OUTGOING_PAYMENT_COMPLETED
 }
 
 type OutgoingPaymentEventData {
   outgoingPayment: OutgoingPayment!
 }
 
+type WebMonetizationEvent implements Model {
+  id: ID!
+  type: WebMonetizationEventType!
+  data: WebMonetizationEventData!
+  createdAt: String!
+}
+
 type WebMonetizationEventData {
   webMonetization: WebMonetization!
+}
+
+enum WebMonetizationEventType {
+  WEB_MONETIZATION_RECEIVED
 }
 
 type WebMonetization {
   accountId: ID!
   amount: Amount!
 }
+
+union Event = IncomingPaymentEvent | OutgoingPaymentEvent | WebMonetizationEvent
 
 enum LiquidityError {
   AlreadyCommitted

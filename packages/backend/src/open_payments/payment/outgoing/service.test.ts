@@ -69,10 +69,13 @@ describe('OutgoingPaymentService', (): void => {
   const webhookTypes: {
     [key in OutgoingPaymentState]: OutgoingPaymentEventType | undefined
   } = {
-    [OutgoingPaymentState.Funding]: OutgoingPaymentEventType.PaymentCreated,
+    [OutgoingPaymentState.Funding]:
+      OutgoingPaymentEventType.OutgoingPaymentCreated,
     [OutgoingPaymentState.Sending]: undefined,
-    [OutgoingPaymentState.Failed]: OutgoingPaymentEventType.PaymentFailed,
-    [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted
+    [OutgoingPaymentState.Failed]:
+      OutgoingPaymentEventType.OutgoingPaymentFailed,
+    [OutgoingPaymentState.Completed]:
+      OutgoingPaymentEventType.OutgoingPaymentCompleted
   }
 
   async function processNext(
@@ -362,7 +365,7 @@ describe('OutgoingPaymentService', (): void => {
         }
         await expect(
           OutgoingPaymentEvent.query(knex).where({
-            type: OutgoingPaymentEventType.PaymentCreated
+            type: OutgoingPaymentEventType.OutgoingPaymentCreated
           })
         ).resolves.toMatchObject([
           {

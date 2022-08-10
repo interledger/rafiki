@@ -179,22 +179,11 @@ export enum OutgoingPaymentState {
   Completed = 'COMPLETED'
 }
 
-export enum OutgoingPaymentDepositType {
-  PaymentCreated = 'outgoing_payment.created'
+export enum OutgoingPaymentEventType {
+  OutgoingPaymentCreated = 'OUTGOING_PAYMENT_CREATED',
+  OutgoingPaymentFailed = 'OUTGOING_PAYMENT_FAILED',
+  OutgoingPaymentCompleted = 'OUTGOING_PAYMENT_COMPLETED'
 }
-
-export enum OutgoingPaymentWithdrawType {
-  PaymentFailed = 'outgoing_payment.failed',
-  PaymentCompleted = 'outgoing_payment.completed'
-}
-
-export const OutgoingPaymentEventType = {
-  ...OutgoingPaymentDepositType,
-  ...OutgoingPaymentWithdrawType
-}
-export type OutgoingPaymentEventType =
-  | OutgoingPaymentDepositType
-  | OutgoingPaymentWithdrawType
 
 export interface OutgoingPaymentResponse {
   id: string

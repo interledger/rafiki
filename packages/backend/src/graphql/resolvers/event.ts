@@ -9,8 +9,8 @@ import {
 } from '../generated/graphql'
 import { parseAmount } from '../../open_payments/amount'
 import {
-  isAccountEvent,
-  isAccountEventType
+  isWebMonetizationEvent,
+  isWebMonetizationEventType
 } from '../../open_payments/account/model'
 import {
   isIncomingPaymentEvent,
@@ -54,7 +54,7 @@ export const getEventResolveType: TypeResolveFn<
     return 'OutgoingPaymentEvent'
   } else if (isIncomingPaymentEventType(parent.type)) {
     return 'IncomingPaymentEvent'
-  } else if (isAccountEventType(parent.type)) {
+  } else if (isWebMonetizationEventType(parent.type)) {
     return 'WebMonetizationEvent'
   } else {
     // GraphQLError is thrown
@@ -93,7 +93,7 @@ export const eventToGraphql = (event: WebhookEvent): Event => {
       createdAt: new Date(+event.createdAt).toISOString()
     }
   } else {
-    assert.ok(isAccountEvent(event))
+    assert.ok(isWebMonetizationEvent(event))
     return {
       id: event.id,
       type: event.type,

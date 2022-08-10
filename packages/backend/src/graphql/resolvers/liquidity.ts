@@ -14,7 +14,7 @@ import {
 } from '../../open_payments/payment/outgoing/errors'
 import {
   isOutgoingPaymentEvent,
-  OutgoingPaymentDepositType
+  OutgoingPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
 
 export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] = async (
@@ -288,8 +288,9 @@ export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['roll
   }
 }
 
-export const DepositEventType = OutgoingPaymentDepositType
-export type DepositEventType = OutgoingPaymentDepositType
+enum DepositEventType {
+  OutgoingPaymentCreated = OutgoingPaymentEventType.OutgoingPaymentCreated
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isDepositEventType = (o: any): o is DepositEventType =>

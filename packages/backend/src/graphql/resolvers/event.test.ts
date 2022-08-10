@@ -7,7 +7,7 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { AccountEventType } from '../../open_payments/account/model'
+import { WebMonetizationEventType } from '../../open_payments/account/model'
 import { AccountService } from '../../open_payments/account/service'
 import { IncomingPaymentEventType } from '../../open_payments/payment/incoming/model'
 import { OutgoingPaymentEventType } from '../../open_payments/payment/outgoing/model'
@@ -85,7 +85,7 @@ describe('Event Resolver', (): void => {
             break
           case 1:
             options = {
-              type: AccountEventType.WebMonetizationReceived,
+              type: WebMonetizationEventType.WebMonetizationReceived,
               data: {
                 webMonetization: {
                   accountId,
@@ -112,7 +112,7 @@ describe('Event Resolver', (): void => {
             })
             return WebhookEvent.query(knex)
               .findOne({
-                type: OutgoingPaymentEventType.PaymentCreated
+                type: OutgoingPaymentEventType.OutgoingPaymentCreated
               })
               .orderBy('createdAt', 'desc')
         }

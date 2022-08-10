@@ -141,7 +141,7 @@ async function createOutgoingPayment(
           knex: trx
         },
         payment,
-        OutgoingPaymentEventType.PaymentCreated
+        OutgoingPaymentEventType.OutgoingPaymentCreated
       )
       return await addSentAmount(deps, payment, BigInt(0))
     })
