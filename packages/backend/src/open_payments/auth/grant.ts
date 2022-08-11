@@ -1,7 +1,9 @@
 import assert from 'assert'
-import { Interval, Duration, DateTime } from 'luxon'
+import { Interval, Duration, DateTime, Settings } from 'luxon'
 
 import { Amount } from '../amount'
+
+Settings.defaultZone = 'utc'
 
 interface AmountJSON {
   value: string
@@ -154,46 +156,36 @@ export function getInterval(
   let repetitions: number | undefined
   if (parts[0].length > 1 && parts[0][1] !== '-') {
     repetitions = Number(parts[0].slice(1))
-  } else if (
-    (parts[0].length === 1 && parts[0][0] === 'R') ||
-    (parts[0].length > 1 && parts[0][1] === '-')
-  ) {
+  } else if (['R', 'R-1'].includes(parts[0])) {
     repetitions = Infinity
   }
   if (repetitions === undefined || isNaN(repetitions)) return
 
-  const interval = Interval.fromISO(`${parts[1]}/${parts[2]}`)
-  if (!interval.start) return
+  let interval = Interval.fromISO(`${parts[1]}/${parts[2]}`)
+  if (!interval.isValid || !interval.start) return
   if (interval.contains(DateTime.fromJSDate(target))) return interval
 
-  let duration: string
+  let duration: Duration
   let forward: boolean
   if (parts[1].length > 1 && parts[1][0] === 'P') {
-    duration = parts[1]
+    duration = Duration.fromISO(parts[1])
     forward = false
   } else if (parts[2].length > 1 && parts[2][0] === 'P') {
-    duration = parts[2]
+    duration = Duration.fromISO(parts[2])
     forward = true
   } else {
-    duration = interval.toDuration().toString()
+    duration = Duration.fromISO(interval.toDuration().toString())
     forward = true
   }
 
-  const intervals = [interval]
   for (let i = 1; i < repetitions + 1; i++) {
     let nextInterval: Interval
     if (forward) {
-      nextInterval = Interval.after(
-        intervals[i - 1].end,
-        Duration.fromISO(duration)
-      )
+      nextInterval = Interval.after(interval.end, duration)
     } else {
-      nextInterval = Interval.before(
-        intervals[i - 1].start,
-        Duration.fromISO(duration)
-      )
+      nextInterval = Interval.before(interval.start, duration)
     }
     if (nextInterval.contains(DateTime.fromJSDate(target))) return nextInterval
-    intervals.push(nextInterval)
+    interval = nextInterval
   }
 }

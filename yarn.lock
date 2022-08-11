@@ -3169,10 +3169,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/luxon@npm:^1.26.4":
-  version: 1.26.4
-  resolution: "@types/luxon@npm:1.26.4"
-  checksum: d3b4dcdc8273891eefa19e6c996c195f8fc17aec80527f8e85d5912c64f013a6bb5dc29a50886752c8dcb3e7c7f7134595afb83cc9935b6f98f10fe5bc6c95c8
+"@types/luxon@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@types/luxon@npm:3.0.0"
+  checksum: 7738d3f4b91097a8139eca966ab53c6b40bb417b2cc2014c3bbd0aee033d6ff54af14c62046c2eb042434923b6bf796874f24b2af90e07ef422e6d841463d4b2
   languageName: node
   linkType: hard
 
@@ -4862,7 +4862,7 @@ __metadata:
     "@types/koa__cors": ^3.0.2
     "@types/koa__router": ^8.0.11
     "@types/lodash": ^4.14.175
-    "@types/luxon": ^1.26.4
+    "@types/luxon": ^3.0.0
     "@types/nock": ^11.1.0
     "@types/pino": ^6.3.7
     "@types/rosie": ^0.0.40
