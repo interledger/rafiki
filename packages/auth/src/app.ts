@@ -98,8 +98,7 @@ export class App {
       accessTokens: {
         absoluteStartTimeColumnName: 'createdAt',
         expirationOffsetColumnName: 'expiresIn',
-        defaultExpirationOffsetDays: this.config
-          .accessTokenDeletionDays
+        defaultExpirationOffsetDays: this.config.accessTokenDeletionDays
       }
     }
 
