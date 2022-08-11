@@ -45,5 +45,5 @@ export const Config = {
   cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
-  accessTokenDeletionDays: 30
+  accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30)
 }
