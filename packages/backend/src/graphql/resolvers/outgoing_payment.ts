@@ -99,5 +99,3 @@ export function paymentToGraphql(
     quote: quoteToGraphql(payment.quote)
   }
 }
-
-// TODO: add quote resolver

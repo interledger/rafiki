@@ -5,6 +5,7 @@ import {
   ResolversParentTypes,
   ResolversTypes,
   Event,
+  OutgoingPayment,
   TypeResolveFn
 } from '../generated/graphql'
 import { parseAmount } from '../../open_payments/amount'
@@ -64,16 +65,18 @@ export const getEventResolveType: TypeResolveFn<
 
 export const eventToGraphql = (event: WebhookEvent): Event => {
   if (isOutgoingPaymentEvent(event)) {
+    // Quote is fetched in subfield resolver
+    const outgoingPayment: Omit<OutgoingPayment, 'quote'> = {
+      ...event.data.outgoingPayment,
+      sendAmount: parseAmount(event.data.outgoingPayment.sendAmount),
+      receiveAmount: parseAmount(event.data.outgoingPayment.receiveAmount),
+      sentAmount: parseAmount(event.data.outgoingPayment.sentAmount)
+    }
     return {
       id: event.id,
       type: event.type,
       data: {
-        outgoingPayment: {
-          ...event.data.outgoingPayment,
-          sendAmount: parseAmount(event.data.outgoingPayment.sendAmount),
-          receiveAmount: parseAmount(event.data.outgoingPayment.receiveAmount),
-          sentAmount: parseAmount(event.data.outgoingPayment.sentAmount)
-        }
+        outgoingPayment: (outgoingPayment as unknown) as OutgoingPayment
       },
       createdAt: new Date(+event.createdAt).toISOString()
     }

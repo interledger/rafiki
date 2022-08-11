@@ -465,7 +465,7 @@ type OutgoingPayment implements Model {
   receiver: String!
   description: String
   externalRef: String
-  quote: Quote
+  quote: Quote!
   sentAmount: Amount!
   createdAt: String!
 }

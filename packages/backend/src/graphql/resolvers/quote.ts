@@ -2,6 +2,7 @@ import {
   MutationResolvers,
   Quote as SchemaQuote,
   AccountResolvers,
+  OutgoingPaymentResolvers,
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
@@ -25,6 +26,21 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   const quote = await quoteService.get(args.id)
   if (!quote) throw new Error('quote does not exist')
   return quoteToGraphql(quote)
+}
+
+// TODO: https://github.com/interledger/rafiki/issues/167
+export const getPaymentQuote: OutgoingPaymentResolvers<ApolloContext>['quote'] = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['Quote']> => {
+  if (!parent.id) throw new Error('missing id')
+  const outgoingPaymentService = await ctx.container.use(
+    'outgoingPaymentService'
+  )
+  const payment = await outgoingPaymentService.get(parent.id)
+  if (!payment?.quote) throw new Error('quote does not exist')
+  return quoteToGraphql(payment.quote)
 }
 
 export const createQuote: MutationResolvers<ApolloContext>['createQuote'] = async (

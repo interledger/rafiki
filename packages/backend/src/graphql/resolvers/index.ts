@@ -8,7 +8,12 @@ import {
 } from './asset'
 import { getEvents, getEventResolveType } from './event'
 import { getAccountIncomingPayments } from './incoming_payment'
-import { getQuote, createQuote, getAccountQuotes } from './quote'
+import {
+  getQuote,
+  createQuote,
+  getAccountQuotes,
+  getPaymentQuote
+} from './quote'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
@@ -49,6 +54,9 @@ export const resolvers: Resolvers = {
   },
   Event: {
     __resolveType: getEventResolveType
+  },
+  OutgoingPayment: {
+    quote: getPaymentQuote
   },
   Mutation: {
     createAccount,
