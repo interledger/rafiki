@@ -50,20 +50,11 @@ statefulset:
     # fsGroup: 2000
     # runAsUser: 1000
 
-  # List of additional command-line arguments you want to pass to the
-  # `cockroach start` command.
+  # List of additional command-line arguments
   args: []
-    # - --disable-cluster-name-verification
 
   # List of extra environment variables to pass into container
   env: []
-    # - name: COCKROACH_ENGINE_MAX_SYNC_DURATION
-    #   value: "24h"
-
-  # List of Secrets names in the same Namespace as the CockroachDB cluster,
-  # which shall be mounted into `/etc/cockroach/secrets/` for every cluster
-  # member.
-  secretMounts: []
 
   # Additional labels to apply to this StatefulSet and all its Pods.
   labels:
