@@ -99,7 +99,7 @@ export class App {
         absoluteStartTimeColumnName: 'createdAt',
         expirationOffsetColumnName: 'expiresIn',
         defaultExpirationOffsetDays: this.config
-          .accessTokenMinDaysBeforeDeletion
+          .accessTokenDeletionDays
       }
     }
 
@@ -283,7 +283,7 @@ export class App {
            */
           await knex(tableName)
             .whereRaw(
-              `?? + COALESCE(make_interval(0, 0, 0, 0, 0, 0, ??), interval '${'??'}') < NOW()`,
+              `?? + make_interval(0, 0, 0, 0, 0, 0, ??) + interval '${'??'}' < NOW()`,
               [
                 rule.absoluteStartTimeColumnName,
                 rule.expirationOffsetColumnName,
