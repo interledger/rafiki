@@ -391,18 +391,6 @@ async function validateGrant(
 
   const competingPayments: OutgoingPayment[] = []
   for (const grantPayment of grantPayments) {
-    if (grantPayment.state === OutgoingPaymentState.Failed) {
-      const totalSent = await deps.accountingService.getTotalSent(
-        grantPayment.id
-      )
-      assert.ok(totalSent !== undefined)
-      if (totalSent === BigInt(0)) {
-        continue
-      }
-      grantPayment.sentAmount = { ...grantPayment.sentAmount, value: totalSent }
-    } else {
-      grantPayment.sentAmount = grantPayment.sendAmount
-    }
     if (
       paymentAccess.find((access) =>
         validatePaymentAccess({
@@ -432,14 +420,25 @@ async function validateGrant(
 
   // Do paymentAccess limits support payment and competing existing payments?
   for (const grantPayment of competingPayments) {
-    let sentAmount = grantPayment.sentAmount.value
+    let sentAmount: bigint
     let receivedAmount: bigint
-    // Estimate delivered amount of failed payment
     if (grantPayment.state === OutgoingPaymentState.Failed) {
+      const totalSent = await deps.accountingService.getTotalSent(
+        grantPayment.id
+      )
+      assert.ok(totalSent !== undefined)
+      if (totalSent === BigInt(0)) {
+        continue
+      }
+      grantPayment.sentAmount = { ...grantPayment.sentAmount, value: totalSent }
+      sentAmount = totalSent
+      // Estimate delivered amount of failed payment
       receivedAmount =
-        (grantPayment.receiveAmount.value * grantPayment.sentAmount.value) /
+        (grantPayment.receiveAmount.value * sentAmount) /
         grantPayment.sendAmount.value
     } else {
+      grantPayment.sentAmount = grantPayment.sendAmount
+      sentAmount = grantPayment.sendAmount.value
       receivedAmount = grantPayment.receiveAmount.value
     }
 
