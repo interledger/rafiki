@@ -501,14 +501,14 @@ describe('OutgoingPaymentService', (): void => {
         ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
       })
       test.each`
-        limits                                                                        | description
-        ${{ receiver: `${Config.publicHost}/${uuid()}/incoming-payments/${uuid()}` }} | ${'receiver'}
-        ${{ description: 'hello world' }}                                             | ${'description'}
-        ${{ externalRef: 'hello world' }}                                             | ${'externalRef'}
-        ${{ sendAmount: { assetCode: 'EUR', assetScale: 9 } }}                        | ${'sendAmount asset code'}
-        ${{ sendAmount: { assetCode: 'USD', assetScale: 2 } }}                        | ${'sendAmount asset scale'}
-        ${{ receiveAmount: { assetCode: 'EUR', assetScale: 9 } }}                     | ${'receiveAmount asset code'}
-        ${{ receiveAmount: { assetCode: 'USD', assetScale: 2 } }}                     | ${'receiveAmount asset scale'}
+        limits                                                                         | description
+        ${{ receiver: `${Config.publicHost}/${uuid()}/incoming-payments/${uuid()}` }}  | ${'receiver'}
+        ${{ description: 'hello world' }}                                              | ${'description'}
+        ${{ externalRef: 'hello world' }}                                              | ${'externalRef'}
+        ${{ sendAmount: { assetCode: 'EUR', assetScale: asset.scale } }}               | ${'sendAmount asset code'}
+        ${{ sendAmount: { assetCode: asset.code, assetScale: 2 } }}                    | ${'sendAmount asset scale'}
+        ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${'receiveAmount asset code'}
+        ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${'receiveAmount asset scale'}
       `(
         'fails if grant limits do not match payment - $description',
         async ({ limits }): Promise<void> => {
@@ -539,8 +539,12 @@ describe('OutgoingPaymentService', (): void => {
         async ({ sendAmount }): Promise<void> => {
           const amount = {
             value: BigInt(12),
-            assetCode: 'USD',
-            assetScale: 9
+            assetCode: sendAmount
+              ? quote.asset.code
+              : quote.receiveAmount.assetCode,
+            assetScale: sendAmount
+              ? quote.asset.scale
+              : quote.receiveAmount.assetScale
           }
           const grant = new Grant({
             active: true,
