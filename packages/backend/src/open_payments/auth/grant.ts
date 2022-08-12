@@ -178,6 +178,10 @@ export function getInterval(
     forward = true
   }
 
+  if (forward && interval.isAfter(DateTime.fromJSDate(target))) return undefined
+  if (!forward && interval.isBefore(DateTime.fromJSDate(target)))
+    return undefined
+
   for (let i = 1; i < repetitions + 1; i++) {
     let nextInterval: Interval
     if (forward) {
