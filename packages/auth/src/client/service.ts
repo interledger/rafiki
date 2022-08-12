@@ -71,6 +71,7 @@ export interface ClientService {
     ctx: AppContext
   ): Promise<VerifySigFromBoundKeyResult>
   sigInputToChallenge(sigInput: string, ctx: AppContext): string
+  getRegistryDataByKid(kid: string): Promise<RegistryData>
   tokenHttpsigMiddleware(
     ctx: AppContext,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,15 +98,16 @@ export async function createClientService({
     validateClient: (clientInfo: ClientInfo) =>
       validateClient(deps, clientInfo),
     getKeyByKid: (kid: string) => getKeyByKid(deps, kid),
-    ) =>
+    verifySigFromBoundKey: (sig: string, sigInput: string, grant: Grant, ctx: AppContext) =>
       verifySigFromBoundKey(
         deps,
         sig,
         sigInput,
-        accessTokenKey,
-        accessTokenValue,
+        grant
         ctx
       ),
+    validateClientWithRegistry: (clientInfo: ClientInfo) =>
+      validateClientWithRegistry(deps, clientInfo),
     sigInputToChallenge: (sigInput: string, ctx: AppContext) =>
       sigInputToChallenge(sigInput, ctx),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -170,24 +172,9 @@ async function verifySigFromBoundKey(
   deps: ServiceDependencies,
   sig: string,
   sigInput: string,
-  accessTokenKey: string,
-  accessTokenValue: string,
+  grant: Grant,
   ctx: AppContext
 ): Promise<VerifySigFromBoundKeyResult> {
-  const accessToken = await AccessToken.query().findOne(
-    accessTokenKey,
-    accessTokenValue
-  )
-  if (!accessToken) {
-    return {
-      success: false,
-      error: 'invalid_client',
-      status: 404,
-      message: 'token not found'
-    }
-  }
-  const grant = await Grant.query().findById(accessToken.grantId)
-
   const registryData = await getRegistryDataByKid(deps, grant.clientKeyId)
   if (!registryData)
     return {
@@ -336,30 +323,46 @@ async function tokenHttpsigMiddleware(
   }
 
   const { body } = ctx.request
-  let keyName = '',
-    value = ''
   const { path, method } = ctx
   // TODO: replace with HttpMethod types instead of string literals
+  let grant: Grant
   if (path.includes('/introspect') && method === 'POST') {
-    keyName = 'value'
-    value = body['access_token']
+    const accessToken = await AccessToken.query().findOne(
+      'value',
+      body['access_token']
+    )
+    if (!accessToken) {
+      ctx.status = 404
+      ctx.body = {
+        error: 'invalid_client',
+        message: 'token not found'
+      }
+    }
+
+    grant = await Grant.query().findById(accessToken.grantId)
   } else if (path.includes('/token') && method === 'DELETE') {
-    keyName = 'managementId'
-    value = ctx.params['managementId']
+    const accessToken = await AccessToken.query().findOne(
+      'managementId',
+      ctx.params['managementId']
+    )
+    if (!accessToken) {
+      ctx.status = 404
+      ctx.body = {
+        error: 'invalid_client',
+        message: 'token not found'
+      }
+    }
+
+    grant = await Grant.query().findById(accessToken.grantId)
+  } else if (path.includes('/continue')) {
+    grant = await Grant.query().findOne('interactId', ctx.params['interactId'])
   } else {
     // Is not a route that requires httpsig validation, somehow
     next()
     return
   }
 
-  const verified = await verifySigFromBoundKey(
-    deps,
-    sig,
-    sigInput,
-    keyName,
-    value,
-    ctx
-  )
+  const verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
 
   if (!verified.success) {
     ctx.status = verified.status || 401
