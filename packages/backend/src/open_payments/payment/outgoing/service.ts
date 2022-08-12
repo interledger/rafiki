@@ -324,8 +324,6 @@ async function validateGrant(
   const unrelatedAccess: GrantAccess[] = []
 
   for (const access of grantAccess) {
-    let noSendAmount = false
-    let noReceiveAmount = false
     if (
       validateAccess({
         access,
@@ -333,16 +331,7 @@ async function validateGrant(
         identifier: `${deps.publicHost}/${payment.accountId}`
       })
     ) {
-      if (!access.limits) {
-        return true
-      }
-      if (!access.limits.sendAmount) {
-        noSendAmount = true
-      }
-      if (!access.limits.receiveAmount) {
-        noReceiveAmount = true
-      }
-      if (noSendAmount && noReceiveAmount) {
+      if (!access.limits?.sendAmount && !access.limits?.receiveAmount) {
         return true
       }
       let paymentInterval: Interval | undefined
@@ -379,7 +368,7 @@ async function validateGrant(
     estTotalAvailableSendAmount < payment.sendAmount.value ||
     estTotalAvailableReceiveAmount < payment.receiveAmount.value
   ) {
-    // Payment amount single-handedly exceeds sendAmount limit(s)
+    // Payment amount single-handedly exceeds amount limit(s)
     return false
   }
 
@@ -486,8 +475,6 @@ async function validateGrant(
               access.limits.receiveAmount.value = BigInt(0)
             }
           }
-        } else {
-          continue
         }
       }
     }
