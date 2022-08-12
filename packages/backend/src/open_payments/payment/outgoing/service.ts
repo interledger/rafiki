@@ -188,15 +188,17 @@ async function createOutgoingPayment(
 function validateAccess({
   access,
   payment,
-  identifier
+  identifier,
+  paymentInterval
 }: {
   access: GrantAccess
   payment: OutgoingPayment
   identifier: string
+  paymentInterval: Interval | undefined
 }): boolean {
   if (
     (!access.identifier || access.identifier === identifier) &&
-    (!access.interval || !!getInterval(access.interval, payment.createdAt)) &&
+    (!access.interval || !!paymentInterval) &&
     (!access.limits || validateAccessLimits(payment, access.limits))
   ) {
     return true
@@ -324,20 +326,21 @@ async function validateGrant(
   const unrelatedAccess: GrantAccess[] = []
 
   for (const access of grantAccess) {
+    let paymentInterval: Interval | undefined
+    if (access.interval) {
+      paymentInterval = getInterval(access.interval, payment.createdAt)
+      assert.ok(paymentInterval)
+    }
     if (
       validateAccess({
         access,
         payment,
-        identifier: `${deps.publicHost}/${payment.accountId}`
+        identifier: `${deps.publicHost}/${payment.accountId}`,
+        paymentInterval
       })
     ) {
       if (!access.limits?.sendAmount && !access.limits?.receiveAmount) {
         return true
-      }
-      let paymentInterval: Interval | undefined
-      if (access.interval) {
-        paymentInterval = getInterval(access.interval, payment.createdAt)
-        assert.ok(paymentInterval)
       }
       paymentAccess.push({
         ...access,
@@ -412,7 +415,10 @@ async function validateGrant(
         validateAccess({
           access,
           payment: grantPayment,
-          identifier: `${deps.publicHost}/${grantPayment.accountId}`
+          identifier: `${deps.publicHost}/${grantPayment.accountId}`,
+          paymentInterval: access.interval
+            ? getInterval(access.interval, grantPayment.createdAt)
+            : undefined
         })
       )
     ) {
@@ -442,7 +448,10 @@ async function validateGrant(
       validateAccess({
         access,
         payment: grantPayment,
-        identifier: `${deps.publicHost}/${grantPayment.accountId}`
+        identifier: `${deps.publicHost}/${grantPayment.accountId}`,
+        paymentInterval: access.interval
+          ? getInterval(access.interval, grantPayment.createdAt)
+          : undefined
       })
     )
     if (competingUnrelatedAccess.length > 0) {
