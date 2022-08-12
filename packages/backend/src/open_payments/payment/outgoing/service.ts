@@ -443,45 +443,42 @@ async function validateGrant(
     }
 
     // Check if competing payment was created with (for current payment) unrelated access
-    const competingUnrelatedAccess = unrelatedAccess.filter((access) =>
-      validateAccess({
-        access,
-        payment: grantPayment,
-        identifier: `${deps.publicHost}/${grantPayment.accountId}`,
-        paymentInterval: access.interval
-          ? getInterval(access.interval, grantPayment.createdAt)
-          : undefined
-      })
-    )
-    if (competingUnrelatedAccess.length > 0) {
-      for (const access of unrelatedAccess) {
-        if (competingUnrelatedAccess.indexOf(access) > -1) {
-          if (access.limits?.sendAmount) {
-            if (access.limits.sendAmount.value > sentAmount) {
-              access.limits.sendAmount.value -= sentAmount
-              sentAmount = BigInt(0)
-              receivedAmount = BigInt(0)
-            } else {
-              receivedAmount -=
-                (access.limits.sendAmount.value *
-                  grantPayment.receiveAmount.value) /
-                grantPayment.sentAmount.value
-              sentAmount -= access.limits.sendAmount.value
-              access.limits.sendAmount.value = BigInt(0)
-            }
-          } else if (access.limits?.receiveAmount) {
-            if (access.limits.receiveAmount.value > receivedAmount) {
-              access.limits.receiveAmount.value -= receivedAmount
-              receivedAmount = BigInt(0)
-              sentAmount = BigInt(0)
-            } else {
-              sentAmount -=
-                (access.limits.receiveAmount.value *
-                  grantPayment.sentAmount.value) /
-                grantPayment.receiveAmount.value
-              receivedAmount -= access.limits.receiveAmount.value
-              access.limits.receiveAmount.value = BigInt(0)
-            }
+    for (const access of unrelatedAccess) {
+      if (
+        validateAccess({
+          access,
+          payment: grantPayment,
+          identifier: `${deps.publicHost}/${grantPayment.accountId}`,
+          paymentInterval: access.interval
+            ? getInterval(access.interval, grantPayment.createdAt)
+            : undefined
+        })
+      ) {
+        if (access.limits?.sendAmount) {
+          if (access.limits.sendAmount.value > sentAmount) {
+            access.limits.sendAmount.value -= sentAmount
+            sentAmount = BigInt(0)
+            receivedAmount = BigInt(0)
+          } else {
+            receivedAmount -=
+              (access.limits.sendAmount.value *
+                grantPayment.receiveAmount.value) /
+              grantPayment.sentAmount.value
+            sentAmount -= access.limits.sendAmount.value
+            access.limits.sendAmount.value = BigInt(0)
+          }
+        } else if (access.limits?.receiveAmount) {
+          if (access.limits.receiveAmount.value > receivedAmount) {
+            access.limits.receiveAmount.value -= receivedAmount
+            receivedAmount = BigInt(0)
+            sentAmount = BigInt(0)
+          } else {
+            sentAmount -=
+              (access.limits.receiveAmount.value *
+                grantPayment.sentAmount.value) /
+              grantPayment.receiveAmount.value
+            receivedAmount -= access.limits.receiveAmount.value
+            access.limits.receiveAmount.value = BigInt(0)
           }
         }
       }
