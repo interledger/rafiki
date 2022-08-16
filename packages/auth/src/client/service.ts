@@ -1,6 +1,8 @@
 import * as crypto from 'crypto'
 import Axios from 'axios'
 import { importJWK, JWK } from 'jose'
+import { URL } from 'url'
+import { HttpMethod } from 'openapi'
 
 import { BaseService } from '../shared/baseService'
 import { IAppConfig } from '../config/app'
@@ -326,7 +328,10 @@ async function tokenHttpsigMiddleware(
   const { path, method } = ctx
   // TODO: replace with HttpMethod types instead of string literals
   let grant: Grant
-  if (path.includes('/introspect') && method === 'POST') {
+  if (
+    path.includes('/introspect') &&
+    method === HttpMethod.POST.toUpperCase()
+  ) {
     const accessToken = await AccessToken.query().findOne(
       'value',
       body['access_token']
@@ -340,7 +345,10 @@ async function tokenHttpsigMiddleware(
     }
 
     grant = await Grant.query().findById(accessToken.grantId)
-  } else if (path.includes('/token') && method === 'DELETE') {
+  } else if (
+    path.includes('/token') &&
+    method === HttpMethod.DELETE.toUpperCase()
+  ) {
     const accessToken = await AccessToken.query().findOne(
       'managementId',
       ctx.params['managementId']
@@ -357,7 +365,6 @@ async function tokenHttpsigMiddleware(
   } else if (path.includes('/continue')) {
     grant = await Grant.query().findOne('interactId', ctx.params['interactId'])
   } else {
-    // Is not a route that requires httpsig validation, somehow
     next()
     return
   }

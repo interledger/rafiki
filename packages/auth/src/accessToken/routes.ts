@@ -38,15 +38,6 @@ async function introspectToken(
   ctx: AppContext
 ): Promise<void> {
   const { body } = ctx.request
-  if (!body['access_token']) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid introspection request'
-    }
-    return
-  }
-
   const introspectionResult = await deps.accessTokenService.introspect(
     body['access_token']
   )

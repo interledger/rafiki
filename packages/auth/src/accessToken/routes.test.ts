@@ -127,21 +127,12 @@ describe('Access Token Routes', (): void => {
     test('Cannot introspect fake token', async (): Promise<void> => {
       const requestBody = {
         access_token: v4(),
-        proof: 'httpsig',
         resource_server: 'test'
       }
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        requestBody
-      )
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            Accept: 'application/json'
           },
           url,
           method
@@ -154,39 +145,6 @@ describe('Access Token Routes', (): void => {
       expect(ctx.body).toMatchObject({
         error: 'invalid_request',
         message: 'token not found'
-      })
-    })
-
-    test('Cannot introspect if no token passed', async (): Promise<void> => {
-      const requestBody = {
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
-
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        requestBody
-      )
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
-          },
-          url,
-          method
-        },
-        {}
-      )
-      ctx.request.body = requestBody
-      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-      expect(ctx.body).toEqual({
-        error: 'invalid_request',
-        message: 'invalid introspection request'
       })
     })
 
@@ -208,22 +166,13 @@ describe('Access Token Routes', (): void => {
       )
       ctx.request.body = {
         access_token: token.value,
-        proof: 'httpsig',
         resource_server: 'test'
       }
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        requestBody
-      )
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            Accept: 'application/json'
           },
           url: '/introspect',
           method: 'POST'
@@ -265,7 +214,6 @@ describe('Access Token Routes', (): void => {
       jest.setSystemTime(now)
       const requestBody = {
         access_token: token.value,
-        proof: 'httpsig',
         resource_server: 'test'
       }
 
@@ -277,10 +225,7 @@ describe('Access Token Routes', (): void => {
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            Accept: 'application/json'
           },
           url: '/introspect',
           method: 'POST'

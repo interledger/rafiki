@@ -300,10 +300,6 @@ describe('Client Service', (): void => {
       }
     )
 
-    // afterAll(async (): Promise<void> => {
-    //   nock.restore()
-    // })
-
     test('Validate /introspect request with middleware', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
