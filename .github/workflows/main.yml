@@ -9,7 +9,7 @@ on:
       - opened
       - synchronize
 
-name: Sanity check
+name: Sanity Check
 
 jobs:
   build:
