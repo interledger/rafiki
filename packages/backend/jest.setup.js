@@ -72,6 +72,7 @@ module.exports = async (globalConfig) => {
     )
       .withExposedPorts(TIGERBEETLE_PORT)
       .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+      .withPrivilegedMode()
       .withCmd([
         'init',
         '--cluster=' + TIGERBEETLE_CLUSTER_ID,
@@ -85,6 +86,7 @@ module.exports = async (globalConfig) => {
       'ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7'
     )
       .withExposedPorts(TIGERBEETLE_PORT)
+      .withPrivilegedMode()
       .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
       .withCmd([
         'start',
