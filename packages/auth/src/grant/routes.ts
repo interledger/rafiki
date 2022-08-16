@@ -304,7 +304,7 @@ async function continueGrant(
   }
 }
 
-// eslint-disable @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function isAccessTokenUpdateParameter(
   param: any
 ): param is {
@@ -318,7 +318,7 @@ function isAccessTokenUpdateParameter(
     param.access.every((a: any) => isAccessRequest(a))
   )
 }
-// eslint-enable
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 async function updateGrant(
   deps: ServiceDependencies,
