@@ -6,7 +6,8 @@ services:
     ports:
       - "3001:3001"
       - "3002:3002"
-      - "4000:4000"
+    networks:
+      rafiki:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
@@ -16,7 +17,7 @@ services:
       REDIS_URL: redis://redis:6379
       TIGERBEETLE_CLUSTER_ID: 0
       # Tigerbeetle will support DNS in future
-      TIGERBEETLE_REPLICA_ADDRESSES: "[\"10.5.0.5:4342\"]"
+      TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.5:4342"]'
       NONCE_REDIS_KEY: test
       AUTH_SERVER_GRANT_URL: http://mockserver
       AUTH_SERVER_INTROSPECTION_URL: http://mockserver
@@ -30,6 +31,8 @@ services:
   database:
     image: "postgres" # use latest official postgres version
     restart: unless-stopped
+    networks:
+      rafiki:
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
       - ./scripts/init.sh:/docker-entrypoint-initdb.d/init.sh
@@ -55,6 +58,7 @@ services:
       - -c
       - | 
         set -ex
+        hostname -I
         ls /var/lib/tigerbeetle
         DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
         /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=0.0.0.0:4342
@@ -64,6 +68,8 @@ services:
   tigerbeetle-init: 
     image: ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7 
     privileged: true
+    networks:
+      rafiki:
     volumes:
       - tigerbeetle-data:/var/lib/tigerbeetle
     entrypoint:
@@ -83,6 +89,8 @@ services:
   redis:
     image: "redis:5" # use latest official postgres version
     restart: unless-stopped
+    networks:
+      rafiki:
     ports:
       - "6379:6379"
 volumes:
