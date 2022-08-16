@@ -1,0 +1,58 @@
+version: '3'
+services:
+  database:
+    image: "postgres" # use latest official postgres version
+    restart: unless-stopped
+    volumes:
+      - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
+      - ./scripts/init.sh:/docker-entrypoint-initdb.d/init.sh
+    ports:
+      - "4242:4242"
+  tigerbeetle:
+    image: ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7 
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - tigerbeetle-data:/var/lib/tigerbeetle
+    ports:
+      - "4342:4342"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - | 
+        set -ex
+        ls /var/lib/tigerbeetle
+        DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
+        if [ ! -f "$DATA_FILE" ]; then 
+          /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=127.0.0.1:4342
+        fi
+    depends_on:
+      tigerbeetle-init:
+        condition: service_completed_successfully # Let the init container create the data directory first
+  tigerbeetle-init: 
+    image: ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7 
+    privileged: true
+    volumes:
+      - tigerbeetle-data:/var/lib/tigerbeetle
+    entrypoint:
+      - /bin/sh
+      - -c
+      - | 
+        set -ex
+        FILE=$(ls /var/lib/tigerbeetle | grep "/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle")
+        echo $FILE
+        DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
+        ls $DATA_FILE
+        DATA_FILE_EXISTS="$?"
+        echo $DATA_FILE_EXISTS
+        if [ "$DATA_FILE_EXISTS" != 0 ]; then 
+          /opt/beta-beetle/tigerbeetle init --cluster=0 --replica=0 --directory=/var/lib/tigerbeetle; 
+        fi
+  redis:
+    image: "redis:5" # use latest official postgres version
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+volumes:
+  database-data: # named volumes can be managed easier using docker-compose
+  tigerbeetle-data: # named volumes can be managed easier using docker-compose
