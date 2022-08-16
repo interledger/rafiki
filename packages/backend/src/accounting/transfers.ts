@@ -54,17 +54,15 @@ export async function createTransfers(
       id: toTigerbeetleId(transfers[i].id || uuid()),
       debit_account_id: toTigerbeetleId(transfer.sourceAccountId),
       credit_account_id: toTigerbeetleId(transfer.destinationAccountId),
-      amount: transfer.amount,
-      user_data: BigInt(0),
-      reserved: BigInt(0),
+      user_data: 0n,
+      reserved: 0n,
+      pending_id: transfer.pendingId ? toTigerbeetleId(transfer.pendingId) : 0n,
+      timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : 0n, // ms -> ns
+      ledger: transfer.ledger,
       code: ACCOUNT_TYPE,
       flags,
-      timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : 0n, // ms -> ns
-      timestamp: BigInt(0),
-      pending_id: transfer.pendingId
-        ? toTigerbeetleId(transfer.pendingId)
-        : BigInt(0),
-      ledger: transfer.ledger
+      amount: transfer.amount,
+      timestamp: 0n
     })
   }
   const res = await deps.tigerbeetle.createTransfers(tbTransfers)
