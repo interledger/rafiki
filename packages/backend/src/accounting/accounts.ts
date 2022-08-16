@@ -9,6 +9,7 @@ import { CreateAccountError } from './errors'
 import { AccountId, toTigerbeetleId } from './utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
+const ACCOUNT_TYPE = 1
 
 // Credit and debit accounts can both send and receive
 // but are restricted by their respective Tigerbeetle flags.
@@ -33,24 +34,25 @@ export async function createAccounts(
   const errors = await deps.tigerbeetle.createAccounts(
     accounts.map((account) => ({
       id: toTigerbeetleId(account.id),
-      user_data: BigInt(0),
+      user_data: 0n,
       reserved: ACCOUNT_RESERVED,
       ledger: account.unit,
-      code: 1,
+      code: ACCOUNT_TYPE,
       flags:
         account.type === AccountType.Debit
           ? AccountFlags.credits_must_not_exceed_debits
           : AccountFlags.debits_must_not_exceed_credits,
-      debits_posted: BigInt(0),
-      debits_pending: BigInt(0),
-      credits_posted: BigInt(0),
-      credits_pending: BigInt(0),
+      debits_pending: 0n,
+      debits_posted: 0n,
+      credits_pending: 0n,
+      credits_posted: 0n,
       timestamp: 0n
     }))
   )
+
   for (const { code } of errors) {
     if (code !== CreateAccountErrorCode.linked_event_failed) {
-      throw new CreateAccountError(code)
+      throw new CreateAccountError([code])
     }
   }
 }
@@ -66,11 +68,11 @@ export async function getAccounts(
 
 export function calculateBalance(account: Account): bigint {
   if (account.flags & AccountFlags.credits_must_not_exceed_debits) {
-    return (
+    return BigInt(
       account.debits_posted - account.credits_posted + account.debits_pending
     )
   } else {
-    return (
+    return BigInt(
       account.credits_posted - account.debits_posted - account.debits_pending
     )
   }

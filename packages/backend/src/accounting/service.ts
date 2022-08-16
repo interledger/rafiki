@@ -1,8 +1,5 @@
 import assert from 'assert'
-import {
-  Client,
-  CreateAccountError as CreateAccountErrorCode
-} from 'tigerbeetle-node'
+import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import {
@@ -14,6 +11,7 @@ import {
 import {
   BalanceTransferError,
   CreateAccountError,
+  isAllTBAccountExistsErrors,
   TransferError,
   UnknownAccountError
 } from './errors'
@@ -151,7 +149,7 @@ export async function createSettlementAccount(
     // This could change if TigerBeetle could be reset between tests.
     if (
       err instanceof CreateAccountError &&
-      err.code === CreateAccountErrorCode.exists
+      isAllTBAccountExistsErrors(err.codes)
     ) {
       return
     }

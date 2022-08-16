@@ -9,6 +9,8 @@ import { CreateTransferError, TransferError } from './errors'
 import { ServiceDependencies } from './service'
 import { AccountId, toTigerbeetleId } from './utils'
 
+const ACCOUNT_TYPE = 1
+
 type TransfersError = {
   index: number
   error: TransferError
@@ -55,9 +57,9 @@ export async function createTransfers(
       amount: transfer.amount,
       user_data: BigInt(0),
       reserved: BigInt(0),
-      code: 1,
+      code: ACCOUNT_TYPE,
       flags,
-      timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : BigInt(0), // ms -> ns
+      timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : 0n, // ms -> ns
       timestamp: BigInt(0),
       pending_id: transfer.pendingId
         ? toTigerbeetleId(transfer.pendingId)

@@ -10,6 +10,7 @@ const POSTGRES_PORT = 5432
 const TIGERBEETLE_CLUSTER_ID = 1
 const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
+const TIGERBEETLE_FILE = `${TIGERBEETLE_DIR}/cluster_${TIGERBEETLE_CLUSTER_ID}_replica_0.tigerbeetle`
 
 const REDIS_PORT = 6379
 
@@ -68,30 +69,30 @@ module.exports = async (globalConfig) => {
     const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
 
     await new GenericContainer(
-      'ghcr.io/coilhq/tigerbeetle@sha256:b1fe98356a0db183b56b555eac17c5a43f4b61305f5ac711ea741d5085a2f977'
+      'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b'
     )
       .withExposedPorts(TIGERBEETLE_PORT)
       .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+      .withPrivilegedMode()
       .withCmd([
-        'init',
-        '--cluster=' + TIGERBEETLE_CLUSTER_ID,
+        'format',
+        `--cluster=${TIGERBEETLE_CLUSTER_ID}`,
         '--replica=0',
-        '--directory=' + TIGERBEETLE_DIR
+        TIGERBEETLE_FILE
       ])
-      .withWaitStrategy(Wait.forLogMessage(/initialized data file/))
+      .withWaitStrategy(Wait.forLogMessage(/allocating/)) //TODO @jason need to add more criteria
       .start()
 
     const tigerbeetleContainer = await new GenericContainer(
-      'ghcr.io/coilhq/tigerbeetle@sha256:b1fe98356a0db183b56b555eac17c5a43f4b61305f5ac711ea741d5085a2f977'
+      'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b'
     )
       .withExposedPorts(TIGERBEETLE_PORT)
+      .withPrivilegedMode()
       .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
       .withCmd([
         'start',
-        '--cluster=' + TIGERBEETLE_CLUSTER_ID,
-        '--replica=0',
         '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
-        '--directory=' + TIGERBEETLE_DIR
+        TIGERBEETLE_FILE
       ])
       .withWaitStrategy(Wait.forLogMessage(/listening on/))
       .start()

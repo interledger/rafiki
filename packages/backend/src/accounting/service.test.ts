@@ -127,7 +127,9 @@ describe('Accounting Service', (): void => {
           }
         })
       ).rejects.toThrowError(
-        new CreateAccountError(CreateTbAccountError.exists_with_different_code)
+        new CreateAccountError([
+          CreateTbAccountError.exists_with_different_code
+        ])
       )
     })
   })

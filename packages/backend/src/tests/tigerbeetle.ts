@@ -10,32 +10,31 @@ export async function startTigerbeetleContainer(
   clusterId: number = Config.tigerbeetleClusterId
 ): Promise<StartedTestContainer> {
   const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
+  const tigerBeetleFile = `${TIGERBEETLE_DIR}/cluster_${clusterId}_replica_0_test.tigerbeetle`
 
   await new GenericContainer(
-    'ghcr.io/coilhq/tigerbeetle@sha256:b1fe98356a0db183b56b555eac17c5a43f4b61305f5ac711ea741d5085a2f977'
+    'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
     .withCmd([
-      'init',
-      '--cluster=' + clusterId,
+      'format',
+      `--cluster=${clusterId}`,
       '--replica=0',
-      '--directory=' + TIGERBEETLE_DIR
+      tigerBeetleFile
     ])
-    .withWaitStrategy(Wait.forLogMessage(/initialized data file/))
+    .withWaitStrategy(Wait.forLogMessage(/allocating/)) //TODO @jason need to add more criteria (does not contain error)
     .start()
 
   return await new GenericContainer(
-    'ghcr.io/coilhq/tigerbeetle@sha256:b1fe98356a0db183b56b555eac17c5a43f4b61305f5ac711ea741d5085a2f977'
+    'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
     .withCmd([
       'start',
-      '--cluster=' + clusterId,
-      '--replica=0',
-      '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
-      '--directory=' + TIGERBEETLE_DIR
+      `--addresses=0.0.0.0:${TIGERBEETLE_PORT}`,
+      tigerBeetleFile
     ])
     .withWaitStrategy(Wait.forLogMessage(/listening on/))
     .start()
