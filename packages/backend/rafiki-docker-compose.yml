@@ -23,9 +23,7 @@ services:
         set -ex
         ls /var/lib/tigerbeetle
         DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
-        if [ ! -f "$DATA_FILE" ]; then 
-          /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=127.0.0.1:4342
-        fi
+        /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=127.0.0.1:4342
     depends_on:
       tigerbeetle-init:
         condition: service_completed_successfully # Let the init container create the data directory first
@@ -39,13 +37,11 @@ services:
       - -c
       - | 
         set -ex
-        FILE=$(ls /var/lib/tigerbeetle | grep "/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle")
-        echo $FILE
         DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
-        ls $DATA_FILE
-        DATA_FILE_EXISTS="$?"
-        echo $DATA_FILE_EXISTS
-        if [ "$DATA_FILE_EXISTS" != 0 ]; then 
+        ls $$DATA_FILE
+        DATA_FILE_EXISTS="$$?"
+        echo $$DATA_FILE_EXISTS
+        if [ "$$DATA_FILE_EXISTS" != 0 ]; then 
           /opt/beta-beetle/tigerbeetle init --cluster=0 --replica=0 --directory=/var/lib/tigerbeetle; 
         fi
   redis:
