@@ -3,6 +3,7 @@ services:
   backend:
     image: ghcr.io/interledger/rafiki-backend:40fe987fff0a7a154b0877fff26ea3345d010303
     restart: always
+    privileged: true
     ports:
       - "3001:3001"
       - "3002:3002"
