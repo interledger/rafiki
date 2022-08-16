@@ -1,8 +1,7 @@
 import assert from 'assert'
 import axios from 'axios'
 import { createHmac } from 'crypto'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const canonicalJson = require('canonical-json')
+import { canonicalize } from 'json-canonicalize'
 
 import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
@@ -137,7 +136,7 @@ export function generateWebhookSignature(
 ): string {
   const timestamp = Math.round(new Date().getTime() / 1000)
 
-  const payload = `${timestamp}.${canonicalJson({
+  const payload = `${timestamp}.${canonicalize({
     id: event.id,
     type: event.type,
     data: event.data
