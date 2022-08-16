@@ -1,5 +1,15 @@
 version: '3'
 services:
+  auth:
+    image: rafiki-auth
+    restart: always
+    networks:
+      rafiki:
+    ports:
+      - "3006:3006"
+    environment:
+      NODE_ENV: development
+      AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
   backend:
     image: ghcr.io/interledger/rafiki-backend:40fe987fff0a7a154b0877fff26ea3345d010303
     restart: always
@@ -14,14 +24,14 @@ services:
       LOG_LEVEL: debug
       PORT: 3001
       CONNECTOR_PORT: 3002
-      DATABASE_URL: postgresql://rafiki:password@database/rafiki
+      DATABASE_URL: postgresql://backend:backend@database/backend
       REDIS_URL: redis://redis:6379
       TIGERBEETLE_CLUSTER_ID: 0
       # Tigerbeetle will support DNS in future
       TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.5:4342"]'
       NONCE_REDIS_KEY: test
-      AUTH_SERVER_GRANT_URL: http://mockserver
-      AUTH_SERVER_INTROSPECTION_URL: http://mockserver
+      AUTH_SERVER_GRANT_URL: http://rafiki-auth
+      AUTH_SERVER_INTROSPECTION_URL: http://rafiki-auth
       ILP_ADDRESS: test.rafiki
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
@@ -36,13 +46,12 @@ services:
       rafiki:
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
-      - ./scripts/init.sh:/docker-entrypoint-initdb.d/init.sh
+      - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: rafiki
-      POSTGRES_USER: rafiki
+      POSTGRES_USER: postgres
   tigerbeetle:
     image: ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7 
     restart: unless-stopped
