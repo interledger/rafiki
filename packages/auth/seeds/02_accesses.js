@@ -1,0 +1,29 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { v4 } = require('uuid')
+
+exports.seed = function (knex) {
+  // Deletes ALL existing entries
+  return knex('accesses')
+    .del()
+    .then(function () {
+      // Inserts seed entries
+      return knex('accesses').insert([
+        {
+          id: v4(),
+          type: 'incoming-payment',
+          actions: ['create', 'read', 'list'],
+          grantId: '051208da-f6b6-4ed0-b49b-8b00439003bc',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: v4(),
+          type: 'outgoing-payment',
+          actions: ['create', 'read', 'list'],
+          grantId: '051208da-f6b6-4ed0-b49b-8b00439003bc',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ])
+    })
+}
