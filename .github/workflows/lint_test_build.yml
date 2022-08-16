@@ -24,7 +24,7 @@ jobs:
             ./**/node_modules
             ./.yarn
           key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
+      - run: yarn install
 
   backend:
     runs-on: ubuntu-latest
@@ -38,7 +38,7 @@ jobs:
             ./**/node_modules
             ./.yarn
           key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
+      - run: yarn install
       - run: yarn workspace backend lint
       - run: yarn workspace backend format:check
       - run: yarn workspace openapi build
@@ -56,7 +56,7 @@ jobs:
             ./**/node_modules
             ./.yarn
           key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
+      - run: yarn install
       - run: yarn workspace frontend lint
       - run: yarn workspace frontend format:check
       - run: yarn workspace frontend test
@@ -73,7 +73,7 @@ jobs:
             ./**/node_modules
             ./.yarn
           key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
+      - run: yarn install
       - run: yarn workspace rates lint
       - run: yarn workspace rates format:check
       - run: yarn workspace rates test
@@ -90,7 +90,7 @@ jobs:
             ./**/node_modules
             ./.yarn
           key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
+      - run: yarn install
       - run: yarn workspace auth lint
       - run: yarn workspace auth format:check
       - run: yarn workspace openapi build
@@ -108,7 +108,7 @@ jobs:
             ./**/node_modules
             ./.yarn
           key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
+      - run: yarn install
       - run: yarn workspace openapi lint
       - run: yarn workspace openapi format:check
       - run: yarn workspace openapi test
@@ -128,5 +128,5 @@ jobs:
             ./**/node_modules
             ./.yarn
           key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
+      - run: yarn install
       - run: yarn build
