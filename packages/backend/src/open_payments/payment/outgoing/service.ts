@@ -337,11 +337,11 @@ async function validateGrant(
       if (access.interval) {
         paymentInterval = getInterval(access.interval, payment.createdAt)
         assert.ok(paymentInterval)
-        paymentAccess.push({
-          ...access,
-          paymentInterval
-        })
       }
+      paymentAccess.push({
+        ...access,
+        paymentInterval
+      })
     } else {
       if (access.limits) {
         unrelatedAccess.push({
@@ -351,11 +351,11 @@ async function validateGrant(
         if (access.interval) {
           paymentInterval = getInterval(access.interval, payment.createdAt)
           assert.ok(paymentInterval)
-          unlimitedAccess.push({
-            ...access,
-            paymentInterval
-          })
         }
+        unlimitedAccess.push({
+          ...access,
+          paymentInterval
+        })
       }
     }
   }
