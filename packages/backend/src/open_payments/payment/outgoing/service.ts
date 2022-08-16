@@ -188,17 +188,14 @@ async function createOutgoingPayment(
 function validateAccess({
   access,
   payment,
-  identifier,
-  paymentInterval
+  identifier
 }: {
   access: GrantAccess
   payment: OutgoingPayment
   identifier: string
-  paymentInterval: Interval | undefined
 }): boolean {
   if (
     (!access.identifier || access.identifier === identifier) &&
-    (!access.interval || !!paymentInterval) &&
     (!access.limits || validateAccessLimits(payment, access.limits))
   ) {
     return true
@@ -322,35 +319,43 @@ async function validateGrant(
 
   // Find grant access(es) that authorize this payment (pending send/receive limits).
   const paymentAccess: PaymentAccess[] = []
-  const unlimitedAccess: GrantAccess[] = []
+  const unlimitedAccess: PaymentAccess[] = []
   const unrelatedAccess: GrantAccess[] = []
 
   for (const access of grantAccess) {
     let paymentInterval: Interval | undefined
-    if (access.interval) {
-      paymentInterval = getInterval(access.interval, payment.createdAt)
-      assert.ok(paymentInterval)
-    }
     if (
       validateAccess({
         access,
         payment,
-        identifier: `${deps.publicHost}/${payment.accountId}`,
-        paymentInterval
+        identifier: `${deps.publicHost}/${payment.accountId}`
       })
     ) {
       if (!access.limits?.sendAmount && !access.limits?.receiveAmount) {
         return true
       }
-      paymentAccess.push({
-        ...access,
-        paymentInterval
-      })
+      if (access.interval) {
+        paymentInterval = getInterval(access.interval, payment.createdAt)
+        assert.ok(paymentInterval)
+        paymentAccess.push({
+          ...access,
+          paymentInterval
+        })
+      }
     } else {
       if (access.limits) {
-        unrelatedAccess.push(access)
+        unrelatedAccess.push({
+          ...access
+        })
       } else {
-        unlimitedAccess.push(access)
+        if (access.interval) {
+          paymentInterval = getInterval(access.interval, payment.createdAt)
+          assert.ok(paymentInterval)
+          unlimitedAccess.push({
+            ...access,
+            paymentInterval
+          })
+        }
       }
     }
   }
@@ -400,13 +405,10 @@ async function validateGrant(
         })
       ) &&
       !unlimitedAccess.find((access) =>
-        validateAccess({
+        validatePaymentAccess({
           access,
           payment: grantPayment,
-          identifier: `${deps.publicHost}/${grantPayment.accountId}`,
-          paymentInterval: access.interval
-            ? getInterval(access.interval, grantPayment.createdAt)
-            : undefined
+          identifier: `${deps.publicHost}/${grantPayment.accountId}`
         })
       )
     ) {
@@ -448,37 +450,39 @@ async function validateGrant(
         validateAccess({
           access,
           payment: grantPayment,
-          identifier: `${deps.publicHost}/${grantPayment.accountId}`,
-          paymentInterval: access.interval
-            ? getInterval(access.interval, grantPayment.createdAt)
-            : undefined
+          identifier: `${deps.publicHost}/${grantPayment.accountId}`
         })
       ) {
-        if (access.limits?.sendAmount) {
-          if (access.limits.sendAmount.value > sentAmount) {
-            access.limits.sendAmount.value -= sentAmount
-            sentAmount = BigInt(0)
-            receivedAmount = BigInt(0)
-          } else {
-            receivedAmount -=
-              (access.limits.sendAmount.value *
-                grantPayment.receiveAmount.value) /
-              grantPayment.sentAmount.value
-            sentAmount -= access.limits.sendAmount.value
-            access.limits.sendAmount.value = BigInt(0)
-          }
-        } else if (access.limits?.receiveAmount) {
-          if (access.limits.receiveAmount.value > receivedAmount) {
-            access.limits.receiveAmount.value -= receivedAmount
-            receivedAmount = BigInt(0)
-            sentAmount = BigInt(0)
-          } else {
-            sentAmount -=
-              (access.limits.receiveAmount.value *
-                grantPayment.sentAmount.value) /
-              grantPayment.receiveAmount.value
-            receivedAmount -= access.limits.receiveAmount.value
-            access.limits.receiveAmount.value = BigInt(0)
+        if (
+          !access.interval ||
+          !!getInterval(access.interval, payment.createdAt)
+        ) {
+          if (access.limits?.sendAmount) {
+            if (access.limits.sendAmount.value > sentAmount) {
+              access.limits.sendAmount.value -= sentAmount
+              sentAmount = BigInt(0)
+              receivedAmount = BigInt(0)
+            } else {
+              receivedAmount -=
+                (access.limits.sendAmount.value *
+                  grantPayment.receiveAmount.value) /
+                grantPayment.sentAmount.value
+              sentAmount -= access.limits.sendAmount.value
+              access.limits.sendAmount.value = BigInt(0)
+            }
+          } else if (access.limits?.receiveAmount) {
+            if (access.limits.receiveAmount.value > receivedAmount) {
+              access.limits.receiveAmount.value -= receivedAmount
+              receivedAmount = BigInt(0)
+              sentAmount = BigInt(0)
+            } else {
+              sentAmount -=
+                (access.limits.receiveAmount.value *
+                  grantPayment.sentAmount.value) /
+                grantPayment.receiveAmount.value
+              receivedAmount -= access.limits.receiveAmount.value
+              access.limits.receiveAmount.value = BigInt(0)
+            }
           }
         }
       }
