@@ -3,7 +3,7 @@ exports.up = function (knex) {
     table.uuid('id').notNullable().primary()
     table.string('value').notNullable().unique()
     table.string('managementId').notNullable()
-    table.integer('expiresIn')
+    table.integer('expiresIn').notNullable()
     table.uuid('grantId').notNullable()
     table.foreign('grantId').references('grants.id').onDelete('CASCADE')
 

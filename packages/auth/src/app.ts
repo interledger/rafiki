@@ -27,6 +27,24 @@ export interface AppContextData extends DefaultContext {
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
+export interface DatabaseCleanupRule {
+  /**
+   * the name of the column containing the starting time from which the age will be computed
+   * ex: `createdAt` or `updatedAt`
+   */
+  absoluteStartTimeColumnName: string
+  /**
+   * the name of the column containing the time offset, in seconds, since
+   * `absoluteStartTimeColumnName`, which specifies when the row expires
+   */
+  expirationOffsetColumnName: string
+  /**
+   * the minimum number of days since expiration before rows of
+   * this table will be considered safe to delete during clean up
+   */
+  defaultExpirationOffsetDays: number
+}
+
 type ContextType<T> = T extends (
   ctx: infer Context
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,6 +72,9 @@ export class App {
   private closeEmitter!: EventEmitter
   private logger!: Logger
   private config!: IAppConfig
+  private databaseCleanupRules!: {
+    [tableName: string]: DatabaseCleanupRule | undefined
+  }
   public isShuttingDown = false
 
   public constructor(private container: IocContract<AppServices>) {}
@@ -73,6 +94,13 @@ export class App {
     this.koa.context.logger = await this.container.use('logger')
     this.koa.context.closeEmitter = await this.container.use('closeEmitter')
     this.publicRouter = new Router<DefaultState, AppContext>()
+    this.databaseCleanupRules = {
+      accessTokens: {
+        absoluteStartTimeColumnName: 'createdAt',
+        expirationOffsetColumnName: 'expiresIn',
+        defaultExpirationOffsetDays: this.config.accessTokenDeletionDays
+      }
+    }
 
     this.koa.keys = [this.config.cookieKey]
     this.koa.use(
@@ -107,6 +135,12 @@ export class App {
     )
 
     await this._setupRoutes()
+
+    if (this.config.env !== 'test') {
+      for (let i = 0; i < this.config.databaseCleanupWorkers; i++) {
+        process.nextTick(() => this.processDatabaseCleanup())
+      }
+    }
   }
 
   public listen(port: number | string): void {
@@ -232,5 +266,37 @@ export class App {
     this.publicRouter.del('/auth/token/:id', accessTokenRoutes.revoke)
 
     this.koa.use(this.publicRouter.middleware())
+  }
+
+  private async processDatabaseCleanup(): Promise<void> {
+    const knex = await this.container.use('knex')
+
+    const tableNames = Object.keys(this.databaseCleanupRules)
+    for (const tableName of tableNames) {
+      const rule = this.databaseCleanupRules[tableName]
+      if (rule) {
+        try {
+          /**
+           * NOTE: do not remove seemingly pointless interpolations such as '${'??'}'
+           * because they are necessary for preventing SQL injection attacks
+           */
+          await knex(tableName)
+            .whereRaw(
+              `?? + make_interval(0, 0, 0, 0, 0, 0, ??) + interval '${'??'}' < NOW()`,
+              [
+                rule.absoluteStartTimeColumnName,
+                rule.expirationOffsetColumnName,
+                `${rule.defaultExpirationOffsetDays} days`
+              ]
+            )
+            .del()
+        } catch (err) {
+          this.logger.warn(
+            { error: err.message, tableName },
+            'processDatabaseCleanup error'
+          )
+        }
+      }
+    }
   }
 }
