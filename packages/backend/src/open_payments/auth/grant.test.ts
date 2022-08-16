@@ -140,6 +140,7 @@ describe('Interval', (): void => {
         ${'2022-07-01T13:00:00Z'} | ${'2022-07-01T13:00:00Z/P1M'} | ${'at start'}
         ${'2022-07-10T13:00:00Z'} | ${'2022-07-01T13:00:00Z/P1M'} | ${'during first interval'}
         ${'2022-08-10T13:00:00Z'} | ${'2022-08-01T13:00:00Z/P1M'} | ${'during second interval'}
+        ${'2032-01-10T13:00:00Z'} | ${'2032-01-01T13:00:00Z/P1M'} | ${'far in future'}
       `('- $time', ({ target, expected }): void => {
         expect(getInterval(interval, new Date(target))).toEqual(
           expected ? Interval.fromISO(expected) : undefined
