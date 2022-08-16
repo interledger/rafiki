@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '14'
       # NB: --check-cache is an important security check, see https://yarnpkg.com/features/zero-installs#does-it-have-security-implications
-      - run: yarn install --immutable --immutable-cache --check-cache
+      - run: yarn install
       - run: yarn lint
       - run: yarn build
       - run: yarn test
