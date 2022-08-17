@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-    - main
+    - '*'
     tags:
     - '*'
 
@@ -11,30 +11,31 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
         with:
-          node-version: '14'
-
-      - name: Install dependencies
-        run: yarn install --immutable --immutable-cache
-
-      - name: build openapi
-        run: yarn workspace openapi build
-
-      - name: Build Docker Image
-        run: yarn docker build backend -t ghcr.io/${{ github.repository_owner }}/rafiki-backend:${{ github.sha }} -t ghcr.io/${{ github.repository_owner }}/rafiki-backend:latest
-        
-      - name: Tag Docker Image with Tag Name
-        if: github.ref_type == 'tag'
-        run: docker tag ghcr.io/${{ github.repository_owner }}/rafiki-backend:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/rafiki-backend:${{ github.ref_name }}
-
+          images: ghcr.io/${{ github.repository_owner }}/rafiki-backend
+          tags: |
+            type=raw,enable={{is_default_branch}},value=latest
+            type=raw,enable=true,value={{ sha }}
+            type=raw,enable=true,value={{ refs }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
       - name: Login to GHCR
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push Docker Image to GHCR
-        run: docker image push --all-tags ghcr.io/${{ github.repository_owner }}/rafiki-backend
+      - name: Build and push backend
+        uses: docker/build-push-action@v3
+        with:
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          file: packages/backend/Dockerfile
+          platforms: linux/amd64,linux/arm64
