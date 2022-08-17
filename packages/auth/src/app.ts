@@ -292,6 +292,8 @@ export class App {
             .del()
         } catch (err) {
           this.logger.warn(
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             { error: err.message, tableName },
             'processDatabaseCleanup error'
           )

@@ -3,12 +3,9 @@
   "main": "dist/server/index.js",
   "types": "dist/server/index.d.ts",
   "scripts": {
-    "lint": "yarn lint:local",
-    "format": "yarn format:local",
-    "format:check": "yarn format:check:local",
     "start": "node dist/server/index.js",
-    "test": "yarn test:local",
     "build": "tsc --build tsconfig.json"
+    "test": "jest --passWithNoTests"
   },
   "devDependencies": {
     "@koa/router": "^10.0.0",

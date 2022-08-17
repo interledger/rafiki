@@ -52,7 +52,7 @@ module.exports = async (globalConfig) => {
     BigInt
   )
   await knex.migrate.latest({
-    directory: './packages/backend/migrations'
+    directory: __dirname + '/migrations'
   })
 
   for (let i = 1; i <= workers; i++) {
