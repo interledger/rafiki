@@ -31,8 +31,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter frontend lint
-      - run: pnpm --filter frontend format:check
       - run: pnpm --filter frontend test
 
   rates:
@@ -41,8 +39,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter rates lint
-      - run: pnpm --filter rates format:check
       - run: pnpm --filter rates test
 
   auth:
@@ -51,8 +47,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter auth lint
-      - run: pnpm --filter auth format:check
       - run: pnpm --filter openapi build
       - run: pnpm --filter auth test
 
@@ -62,8 +56,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter openapi lint
-      - run: pnpm --filter openapi format:check
       - run: pnpm --filter openapi test
 
   build:
