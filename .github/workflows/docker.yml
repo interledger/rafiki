@@ -18,8 +18,8 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/rafiki-backend
           tags: |
             type=raw,enable={{is_default_branch}},value=latest
-            type=raw,enable=true,value={{ github.sha }}
-            type=raw,enable=true,value={{ github.ref_name }}
+            type=raw,enable=true,value={{ sha }}
+            type=raw,enable=true,value={{ refs }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
