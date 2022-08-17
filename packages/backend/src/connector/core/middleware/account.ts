@@ -45,7 +45,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
                 incomingAccount
               )
             } catch (err) {
-              // Don't complain if settlement account already exists.
+              // Don't complain if liquidity account already exists.
               if (
                 err instanceof CreateAccountError &&
                 err.code === CreateAccountErrorCode.exists

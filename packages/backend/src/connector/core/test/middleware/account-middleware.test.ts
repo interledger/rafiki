@@ -97,6 +97,35 @@ describe('Account Middleware', () => {
     expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
   })
 
+  test('create TB account for PENDING incoming payment', async () => {
+    const outgoingAccount = IncomingPaymentAccountFactory.build({
+      id: 'tbIncomingPayment',
+      state: 'PENDING'
+    })
+    await rafikiServices.accounting.create(outgoingAccount)
+    const middleware = createAccountMiddleware(ADDRESS)
+    const next = jest.fn()
+    const ctx = createILPContext({
+      state: {
+        incomingAccount,
+        streamDestination: 'tbIncomingPayment'
+      },
+      services: rafikiServices,
+      request: {
+        prepare: new ZeroCopyIlpPrepare(
+          IlpPrepareFactory.build({ destination: 'test.123' })
+        ),
+        rawPrepare: Buffer.alloc(0) // ignored
+      }
+    })
+
+    const spy = jest.spyOn(rafikiServices.accounting, 'createLiquidityAccount')
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
+    expect(ctx.accounts.incoming).toEqual(incomingAccount)
+    expect(spy).toHaveBeenCalled()
+  })
+
   test('return an error when the destination account is disabled', async () => {
     const outgoingAccount = IncomingPaymentAccountFactory.build({
       id: 'deactivatedIncomingPayment',
