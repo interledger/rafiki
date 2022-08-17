@@ -25,7 +25,7 @@ describe('Incoming Payment Resolver', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     accountService = await deps.use('accountService')
-  }, 10_000)
+  })
 
   afterAll(
     async (): Promise<void> => {

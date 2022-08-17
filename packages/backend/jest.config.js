@@ -7,6 +7,7 @@ const packageName = require('./package.json').name
 module.exports = {
   ...baseConfig,
   clearMocks: true,
+  testTimeout: 60000,
   roots: [`<rootDir>/packages/${packageName}`],
   globalSetup: `<rootDir>/packages/${packageName}/jest.setup.js`,
   globalTeardown: `<rootDir>/packages/${packageName}/jest.teardown.js`,
