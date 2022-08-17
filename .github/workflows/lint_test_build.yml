@@ -7,7 +7,7 @@ on:
       - opened
       - synchronize
 
-name: PR checks
+name: PR Checks
 
 jobs:
   checkout:
@@ -119,6 +119,8 @@ jobs:
       - backend
       - frontend
       - rates
+      - auth
+      - openapi
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -130,3 +132,11 @@ jobs:
           key: yarn-deps-${{ hashFiles('yarn.lock') }}
       - run: yarn install --immutable --immutable-cache
       - run: yarn build
+
+  all_pr_checks_passed:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - run: echo 'PR Checks Passed'
+
