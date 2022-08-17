@@ -12,7 +12,7 @@ runs:
       name: Install pnpm
       id: pnpm-install
       with:
-        version: 7.9.0
+        version: 7.9.1
         run_install: false
 
     - name: Get pnpm store directory
