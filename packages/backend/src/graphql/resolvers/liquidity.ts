@@ -204,7 +204,9 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
     const accountService = await ctx.container.use('accountService')
     const account = await accountService.get(args.input.accountId)
     if (!account) {
-      return responses[LiquidityError.UnknownAccount] as unknown as AccountWithdrawalMutationResponse
+      return (responses[
+        LiquidityError.UnknownAccount
+      ] as unknown) as AccountWithdrawalMutationResponse
     }
     const id = args.input.id
     const accountingService = await ctx.container.use('accountingService')
@@ -212,7 +214,9 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
     if (amount === undefined)
       throw new Error('missing incoming payment account')
     if (amount === BigInt(0)) {
-      return responses[LiquidityError.AmountZero] as unknown as AccountWithdrawalMutationResponse
+      return (responses[
+        LiquidityError.AmountZero
+      ] as unknown) as AccountWithdrawalMutationResponse
     }
     const error = await accountingService.createWithdrawal({
       id,
@@ -222,7 +226,9 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
     })
 
     if (error) {
-      return errorToResponse(error) as unknown as AccountWithdrawalMutationResponse
+      return (errorToResponse(
+        error
+      ) as unknown) as AccountWithdrawalMutationResponse
     }
     return {
       code: '200',

@@ -6,10 +6,8 @@
   "repository": "https://github.com/interledger/rafiki",
   "scripts": {
     "lint": "eslint --max-warnings=0 --fix .",
-    "lint:local": "eslint --max-warnings=0 --fix $INIT_CWD",
     "format": "prettier --write .",
-    "format:local": "prettier --write $INIT_CWD",
-    "format:check:local": "prettier --check $INIT_CWD",
+    "format:check": "prettier --check $INIT_CWD",
     "test": "jest --passWithNoTests",
     "test:local": "jest $INIT_CWD --passWithNoTests",
     "build": "tsc --build",

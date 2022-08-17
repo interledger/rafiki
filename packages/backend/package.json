@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "scripts": {
-    "lint": "pnmp lint:local",
+    "lint": "",
     "format": "pnmp format:local",
     "format:check": "pnmp format:check:local",
     "test": "jest --passWithNoTests --maxWorkers=2",
@@ -73,7 +73,7 @@
     "graphile-worker": "^0.10.0",
     "graphql": "^15.5.0",
     "graphql-scalars": "^1.10.0",
-    "graphql-tools": "^7.0.5",
+    "graphql-tools": "^8.3.3",
     "ilp-packet": "^3.1.2",
     "ilp-protocol-ccp": "^1.2.2",
     "ilp-protocol-ildcp": "^2.2.2",

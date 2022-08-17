@@ -15,11 +15,10 @@ import { ApolloServer } from 'apollo-server-koa'
 import { IAppConfig } from './config/app'
 import { MessageProducer } from './messaging/messageProducer'
 import { WorkerUtils } from 'graphile-worker'
-import {
-  addResolversToSchema,
-  GraphQLFileLoader,
-  loadSchemaSync
-} from 'graphql-tools'
+import { addResolversToSchema } from '@graphql-tools/schema'
+import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
+import { loadSchemaSync } from '@graphql-tools/load'
+
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
