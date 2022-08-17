@@ -68,25 +68,6 @@ services:
       - -c
       - | 
         set -ex
-        hostname -I
-        ls /var/lib/tigerbeetle
-        DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
-        /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=0.0.0.0:4342
-    depends_on:
-      tigerbeetle-init:
-        condition: service_completed_successfully # Let the init container create the data directory first
-  tigerbeetle-init: 
-    image: ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7 
-    privileged: true
-    networks:
-      rafiki:
-    volumes:
-      - tigerbeetle-data:/var/lib/tigerbeetle
-    entrypoint:
-      - /bin/sh
-      - -c
-      - | 
-        set -ex
         DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
         set +e
         ls $$DATA_FILE
@@ -96,6 +77,10 @@ services:
         if [ "$$DATA_FILE_EXISTS" != 0 ]; then 
           /opt/beta-beetle/tigerbeetle init --cluster=0 --replica=0 --directory=/var/lib/tigerbeetle; 
         fi
+        hostname -I
+        ls /var/lib/tigerbeetle
+        DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
+        /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=0.0.0.0:4342
   redis:
     image: "redis:5" # use latest official postgres version
     restart: unless-stopped
