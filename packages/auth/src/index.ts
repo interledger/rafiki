@@ -111,7 +111,8 @@ export function initIocContainer(
       accessTokenService: await deps.use('accessTokenService'),
       accessService: await deps.use('accessService'),
       logger: await deps.use('logger'),
-      config: await deps.use('config')
+      config: await deps.use('config'),
+      knex: await deps.use('knex')
     })
   })
 

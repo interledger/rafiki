@@ -1,8 +1,9 @@
 import * as crypto from 'crypto'
 import { URL } from 'url'
+import { TransactionOrKnex } from 'objection'
 import { AppContext } from '../app'
 import { GrantService, GrantRequest } from './service'
-import { GrantState } from './model'
+import { Grant, GrantState } from './model'
 import { Access } from '../access/model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
@@ -11,6 +12,7 @@ import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
 import { accessToBody } from '../shared/utils'
+import { AccessToken } from '../accessToken/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -18,6 +20,7 @@ interface ServiceDependencies extends BaseService {
   accessTokenService: AccessTokenService
   accessService: AccessService
   config: IAppConfig
+  knex: TransactionOrKnex
 }
 
 export interface GrantRoutes {
@@ -37,7 +40,8 @@ export function createGrantRoutes({
   accessTokenService,
   accessService,
   logger,
-  config
+  config,
+  knex
 }: ServiceDependencies): GrantRoutes {
   const log = logger.child({
     service: 'GrantRoutes'
@@ -49,7 +53,8 @@ export function createGrantRoutes({
     accessTokenService,
     accessService,
     logger: log,
-    config
+    config,
+    knex
   }
   return {
     create: (ctx: AppContext) => createGrantInitiation(deps, ctx),
@@ -325,54 +330,78 @@ async function updateGrant(
   ctx: AppContext
 ): Promise<void> {
   // TODO: httpsig validation
-  const { continueId } = ctx.params
   const continueToken = (ctx.headers['authorization'] as string)?.split(
     'GNAP '
   )[1]
   const {
     interact_ref: interactRef,
-    access_token: accessToken
+    access_token: accessUpdates
   } = ctx.request.body
+  const { config, accessService, knex } = deps
+  const trx = await knex.transaction()
 
-  if (
-    !continueId ||
-    !continueToken ||
-    !interactRef ||
-    !isAccessTokenUpdateParameter(accessToken)
-  ) {
+  if (!continueToken) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_request'
     }
   } else {
-    const { config, accessTokenService, grantService, accessService } = deps
-    const grant = await grantService.getByContinue(
-      continueId,
-      continueToken,
-      interactRef
-    )
+    try {
+      let grant = await Grant.query().findOne({ continueToken })
 
-    if (grant) {
-      await grantService.update(grant.id, accessToken.access)
-      const updatedAccessToken = await accessTokenService.create(grant.id)
-      const updatedAccess = await accessService.getByGrant(grant.id)
+      if (grant) {
+        const { id: grantId } = grant
+        const accessTokens = await AccessToken.query().where({ grantId })
+        let includeContinuationInResponse = grant.state === GrantState.Pending
 
-      // TODO: add "continue" to response if additional grant request steps are added
-      ctx.body = {
-        access_token: {
-          value: updatedAccessToken.value,
-          manage:
-            config.authServerDomain +
-            `/token/${updatedAccessToken.managementId}`,
-          access: updatedAccess.map((a: Access) => accessToBody(a)),
-          expiresIn: updatedAccessToken.expiresIn
+        if (isAccessTokenUpdateParameter(accessUpdates)) {
+          await Access.query(trx).where({ grantId }).del()
+          await accessService.createAccess(grantId, accessUpdates.access, trx)
+          includeContinuationInResponse = true
+        }
+
+        if (interactRef) {
+          grant = await Grant.query().patchAndFetchById(grantId, {
+            interactRef
+          })
+        }
+        const updatedAccess = await accessService.getByGrant(grantId)
+
+        await trx.commit()
+
+        ctx.response.body = {
+          access_token:
+            accessTokens.length > 0
+              ? accessTokens.map((accessToken) => {
+                  return {
+                    value: accessToken.value,
+                    manage: accessToken.managementId,
+                    access: updatedAccess.map((a: Access) => accessToBody(a)),
+                    expiresIn: accessToken.expiresIn
+                  }
+                })
+              : undefined,
+          continue: includeContinuationInResponse
+            ? {
+                access_token: {
+                  value: grant.continueToken
+                },
+                uri:
+                  config.authServerDomain +
+                  `/auth/continue/${grant.continueId}`,
+                wait: config.waitTimeSeconds
+              }
+            : undefined
+        }
+      } else {
+        ctx.status = 404
+        ctx.body = {
+          error: 'unknown_request'
         }
       }
-    } else {
-      ctx.status = 404
-      ctx.body = {
-        error: 'unknown_request'
-      }
+    } catch (err) {
+      await trx.rollback()
+      throw err
     }
   }
 }
