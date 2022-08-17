@@ -8,7 +8,7 @@
     "format:check": "yarn format:check:local",
     "start": "node dist/server/index.js",
     "test": "yarn test:local",
-    "build": "yarn clean && tsc --build tsconfig.json"
+    "build": "tsc --build tsconfig.json"
   },
   "devDependencies": {
     "@koa/router": "^10.0.0",
@@ -20,7 +20,8 @@
     "@types/sax": "^1.2.1",
     "koa": "^2.13.1",
     "nock": "^13.1.0",
-    "sax": "^1.2.4"
+    "sax": "^1.2.4",
+    "typescript": "^4.2.4"
   },
   "dependencies": {
     "axios": "^0.21.1",
