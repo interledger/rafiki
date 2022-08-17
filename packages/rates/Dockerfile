@@ -12,4 +12,4 @@ RUN yarn install --immutable
 RUN yarn workspaces foreach -ptvR --from rates run build \
   && yarn workspace rates build
 
-CMD ["node", "./packages/rates/dist/index.js"]
+CMD ["node", "./packages/rates/dist/server/index.js"]
