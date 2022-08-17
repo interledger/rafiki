@@ -21,7 +21,6 @@ import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment } from './model'
 import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
-import { AccountingService } from '../../../accounting/service'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { Amount } from '@interledger/pay/dist/src/open-payments'
@@ -31,7 +30,6 @@ describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let accountingService: AccountingService
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
 
@@ -62,7 +60,6 @@ describe('Incoming Payment Routes', (): void => {
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    accountingService = await deps.use('accountingService')
     jestOpenAPI(await deps.use('openApi'))
   })
 
@@ -181,25 +178,6 @@ describe('Incoming Payment Routes', (): void => {
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
       expect(sharedSecret).toEqual(base64url(sharedSecretBuffer))
-    })
-
-    test('returns 500 if TB account not found', async (): Promise<void> => {
-      jest
-        .spyOn(accountingService, 'getTotalReceived')
-        .mockResolvedValueOnce(undefined)
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        {
-          incomingPaymentId: incomingPayment.id,
-          accountId: paymentPointer.id
-        }
-      )
-      await expect(incomingPaymentRoutes.get(ctx)).rejects.toMatchObject({
-        status: 500,
-        message: `Error trying to get incoming payment`
-      })
     })
   })
   describe('create', (): void => {
