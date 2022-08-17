@@ -4,7 +4,11 @@
   "private": true,
   "license": "Apache-2.0",
   "repository": "https://github.com/interledger/rafiki",
+  "engines": {
+    "node": "14.20.0"
+  },
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "lint": "eslint --max-warnings=0 --fix .",
     "format": "prettier --write .",
     "format:check": "prettier --check $INIT_CWD",
