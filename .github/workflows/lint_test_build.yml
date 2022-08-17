@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
-      - uses: rafiki-env-setup@v1
+      - uses: ./.github/rafiki/env-setup@v1
       - run: pnpm --filter openapi build
       - run: pnpm --filter backend test
 
