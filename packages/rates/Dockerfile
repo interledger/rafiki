@@ -9,7 +9,7 @@ COPY .yarn ./.yarn
 COPY ./packages ./packages
 
 RUN yarn install --immutable
-RUN yarn workspaces foreach -ptvR --from auth run build \
-  && yarn workspace auth build
+RUN yarn workspaces foreach -ptvR --from rates run build \
+  && yarn workspace rates build
 
-CMD ["node", "./packages/auth/dist/index.js"]
+CMD ["node", "./packages/rates/dist/index.js"]
