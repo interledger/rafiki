@@ -34,8 +34,6 @@ jobs:
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install
@@ -50,8 +48,6 @@ jobs:
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
       - uses: pnpm/action-setup@v2.0.1
         name: Install pnpm
         id: pnpm-install
@@ -73,8 +69,6 @@ jobs:
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
       - uses: pnpm/action-setup@v2.0.1
         name: Install pnpm
         id: pnpm-install
@@ -95,8 +89,6 @@ jobs:
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
       - uses: pnpm/action-setup@v2.0.1
         name: Install pnpm
         id: pnpm-install
@@ -117,8 +109,6 @@ jobs:
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
       - uses: pnpm/action-setup@v2.0.1
         name: Install pnpm
         id: pnpm-install
@@ -140,8 +130,6 @@ jobs:
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
       - uses: pnpm/action-setup@v2.0.1
         name: Install pnpm
         id: pnpm-install
@@ -167,8 +155,6 @@ jobs:
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
       - uses: pnpm/action-setup@v2.0.1
         name: Install pnpm
         id: pnpm-install
