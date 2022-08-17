@@ -12,12 +12,14 @@ export const getPageTests = <Type extends BaseModel>({
   describe('Common BaseModel pagination', (): void => {
     let modelsCreated: Type[]
 
-    beforeEach(async (): Promise<void> => {
-      modelsCreated = []
-      for (let i = 0; i < 40; i++) {
-        modelsCreated.push(await createModel())
+    beforeEach(
+      async (): Promise<void> => {
+        modelsCreated = []
+        for (let i = 0; i < 40; i++) {
+          modelsCreated.push(await createModel())
+        }
       }
-    })
+    )
 
     test.each`
       pagination                   | expected                               | description

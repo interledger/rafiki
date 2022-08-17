@@ -10,10 +10,9 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint --max-warnings=0 --fix .",
+    "lint:check": "eslint --max-warnings=0 .",
     "format": "prettier --write .",
-    "format:check": "prettier --check $INIT_CWD",
-    "test": "jest --passWithNoTests",
-    "test:local": "jest $INIT_CWD --passWithNoTests",
+    "format:check": "prettier --check",
     "build": "tsc --build",
     "postinstall": "[ -d '.husky' ] && husky install || true"
   },
