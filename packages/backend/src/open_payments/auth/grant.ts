@@ -94,31 +94,18 @@ export class Grant {
 
   public getAccess({
     type,
-    identifier,
     action
   }: {
-    type?: AccessType
-    identifier?: string
-    action?: AccessAction
-  }): GrantAccess[] {
-    return this.access.filter((access) => {
-      if (type && access.type !== type) {
-        return false
-      }
-      if (identifier && access.identifier !== identifier) {
-        return false
-      }
-      if (action && !access.actions.includes(action)) {
-        return false
-      }
-      if (
-        access.interval &&
-        getInterval(access.interval, new Date()) === undefined
-      ) {
-        return false
-      }
-      return true
-    })
+    type: AccessType
+    action: AccessAction
+  }): GrantAccess | undefined {
+    const access = this.access[0]
+    if (
+      (!type || access.type === type) &&
+      (!action || access.actions.includes(action))
+    ) {
+      return { ...access }
+    }
   }
 
   public toJSON(): GrantJSON {

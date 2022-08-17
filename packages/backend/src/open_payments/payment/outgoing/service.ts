@@ -193,14 +193,17 @@ function validateAccess({
   access: GrantAccess
   payment: OutgoingPayment
   identifier: string
-}): boolean {
+}): PaymentAccess | undefined {
+  let paymentInterval: Interval | undefined
+  if (access.interval)
+    paymentInterval = getInterval(access.interval, payment.createdAt)
   if (
     (!access.identifier || access.identifier === identifier) &&
+    (!access.interval || paymentInterval !== undefined) &&
     (!access.limits || validateAccessLimits(payment, access.limits))
   ) {
-    return true
+    return { ...access, paymentInterval }
   }
-  return false
 }
 
 function validatePaymentAccess({
@@ -257,46 +260,6 @@ function validateAmountAssets(
   )
 }
 
-function estimateTotalAvailableAmounts<T extends GrantAccess>(
-  accessArray: T[],
-  payment: OutgoingPayment,
-  slippage: number
-) {
-  const availableSendAmount = accessArray.reduce(
-    (prev: bigint, access: T) =>
-      prev + (access.limits?.sendAmount?.value ?? BigInt(0)),
-    BigInt(0)
-  )
-
-  const availableReceiveAmount = accessArray.reduce(
-    (prev: bigint, access: T) =>
-      prev + (access.limits?.receiveAmount?.value ?? BigInt(0)),
-    BigInt(0)
-  )
-
-  const estTotalAvailableSendAmount =
-    availableSendAmount +
-    BigInt(
-      Math.floor(
-        (Number(payment.quote.lowEstimatedExchangeRate.b) /
-          Number(payment.quote.lowEstimatedExchangeRate.a)) *
-          (1 + slippage) *
-          Number(availableReceiveAmount)
-      )
-    )
-  const estTotalAvailableReceiveAmount =
-    availableReceiveAmount +
-    BigInt(
-      Math.floor(
-        (Number(payment.quote.lowEstimatedExchangeRate.a) /
-          Number(payment.quote.lowEstimatedExchangeRate.b)) *
-          (1 + slippage) *
-          Number(availableSendAmount)
-      )
-    )
-  return { estTotalAvailableSendAmount, estTotalAvailableReceiveAmount }
-}
-
 interface PaymentAccess extends GrantAccess {
   paymentInterval?: Interval
 }
@@ -317,66 +280,27 @@ async function validateGrant(
     return false
   }
 
-  // Find grant access(es) that authorize this payment (pending send/receive limits).
-  const paymentAccess: PaymentAccess[] = []
-  const unlimitedAccess: PaymentAccess[] = []
-  const unrelatedAccess: GrantAccess[] = []
-
-  for (const access of grantAccess) {
-    let paymentInterval: Interval | undefined
-    if (
-      validateAccess({
-        access,
-        payment,
-        identifier: `${deps.publicHost}/${payment.accountId}`
-      })
-    ) {
-      if (!access.limits?.sendAmount && !access.limits?.receiveAmount) {
-        return true
-      }
-      if (access.interval) {
-        paymentInterval = getInterval(access.interval, payment.createdAt)
-        assert.ok(paymentInterval)
-      }
-      paymentAccess.push({
-        ...access,
-        paymentInterval
-      })
-    } else {
-      if (access.limits) {
-        unrelatedAccess.push({
-          ...access
-        })
-      } else {
-        if (access.interval) {
-          paymentInterval = getInterval(access.interval, payment.createdAt)
-          assert.ok(paymentInterval)
-        }
-        unlimitedAccess.push({
-          ...access,
-          paymentInterval
-        })
-      }
-    }
-  }
-
-  if (paymentAccess.length === 0) {
+  const paymentAccess = validateAccess({
+    access: grantAccess,
+    payment,
+    identifier: `${deps.publicHost}/${payment.accountId}`
+  })
+  if (!paymentAccess) {
     return false
   }
-  let {
-    estTotalAvailableSendAmount,
-    estTotalAvailableReceiveAmount
-  } = estimateTotalAvailableAmounts<PaymentAccess>(
-    paymentAccess,
-    payment,
-    deps.slippage
-  )
-
   if (
-    estTotalAvailableSendAmount < payment.sendAmount.value ||
-    estTotalAvailableReceiveAmount < payment.receiveAmount.value
+    !paymentAccess.limits?.sendAmount &&
+    !paymentAccess.limits?.receiveAmount
   ) {
-    // Payment amount single-handedly exceeds amount limit(s)
+    return true
+  }
+  if (
+    (paymentAccess.limits.sendAmount &&
+      paymentAccess.limits.sendAmount.value < payment.sendAmount.value) ||
+    (paymentAccess.limits.receiveAmount &&
+      paymentAccess.limits.receiveAmount.value < payment.receiveAmount.value)
+  ) {
+    // Payment amount single-handedly exceeds amount limit
     return false
   }
 
@@ -394,110 +318,45 @@ async function validateGrant(
     return true
   }
 
-  const competingPayments: OutgoingPayment[] = []
+  let sentAmount = BigInt(0)
+  let receivedAmount = BigInt(0)
   for (const grantPayment of grantPayments) {
     if (
-      paymentAccess.find((access) =>
-        validatePaymentAccess({
-          access,
-          payment: grantPayment,
-          identifier: `${deps.publicHost}/${grantPayment.accountId}`
-        })
-      ) &&
-      !unlimitedAccess.find((access) =>
-        validatePaymentAccess({
-          access,
-          payment: grantPayment,
-          identifier: `${deps.publicHost}/${grantPayment.accountId}`
-        })
-      )
+      validatePaymentAccess({
+        access: paymentAccess,
+        payment: grantPayment,
+        identifier: `${deps.publicHost}/${grantPayment.accountId}`
+      })
     ) {
-      competingPayments.push(grantPayment)
-    }
-  }
-  if (!competingPayments) {
-    // The payment may use the entire amount limit(s)
-    return true
-  }
-
-  // Do paymentAccess limits support payment and competing existing payments?
-  for (const grantPayment of competingPayments) {
-    let sentAmount: bigint
-    let receivedAmount: bigint
-    if (grantPayment.state === OutgoingPaymentState.Failed) {
-      const totalSent = await deps.accountingService.getTotalSent(
-        grantPayment.id
-      )
-      assert.ok(totalSent !== undefined)
-      if (totalSent === BigInt(0)) {
-        continue
-      }
-      grantPayment.sentAmount = { ...grantPayment.sentAmount, value: totalSent }
-      sentAmount = totalSent
-      // Estimate delivered amount of failed payment
-      receivedAmount =
-        (grantPayment.receiveAmount.value * sentAmount) /
-        grantPayment.sendAmount.value
-    } else {
-      grantPayment.sentAmount = grantPayment.sendAmount
-      sentAmount = grantPayment.sendAmount.value
-      receivedAmount = grantPayment.receiveAmount.value
-    }
-
-    // Check if competing payment was created with (for current payment) unrelated access
-    for (const access of unrelatedAccess) {
-      if (
-        validateAccess({
-          access,
-          payment: grantPayment,
-          identifier: `${deps.publicHost}/${grantPayment.accountId}`
-        })
-      ) {
-        if (
-          !access.interval ||
-          !!getInterval(access.interval, payment.createdAt)
-        ) {
-          if (access.limits?.sendAmount) {
-            if (access.limits.sendAmount.value > sentAmount) {
-              access.limits.sendAmount.value -= sentAmount
-              sentAmount = BigInt(0)
-              receivedAmount = BigInt(0)
-            } else {
-              receivedAmount -=
-                (access.limits.sendAmount.value *
-                  grantPayment.receiveAmount.value) /
-                grantPayment.sentAmount.value
-              sentAmount -= access.limits.sendAmount.value
-              access.limits.sendAmount.value = BigInt(0)
-            }
-          } else if (access.limits?.receiveAmount) {
-            if (access.limits.receiveAmount.value > receivedAmount) {
-              access.limits.receiveAmount.value -= receivedAmount
-              receivedAmount = BigInt(0)
-              sentAmount = BigInt(0)
-            } else {
-              sentAmount -=
-                (access.limits.receiveAmount.value *
-                  grantPayment.sentAmount.value) /
-                grantPayment.receiveAmount.value
-              receivedAmount -= access.limits.receiveAmount.value
-              access.limits.receiveAmount.value = BigInt(0)
-            }
-          }
+      if (grantPayment.state === OutgoingPaymentState.Failed) {
+        const totalSent = await deps.accountingService.getTotalSent(
+          grantPayment.id
+        )
+        assert.ok(totalSent !== undefined)
+        if (totalSent === BigInt(0)) {
+          continue
         }
+        sentAmount += totalSent
+        // Estimate delivered amount of failed payment
+        receivedAmount +=
+          (grantPayment.receiveAmount.value * totalSent) /
+          grantPayment.sendAmount.value
+      } else {
+        sentAmount += grantPayment.sendAmount.value
+        receivedAmount += grantPayment.receiveAmount.value
       }
     }
-
-    estTotalAvailableSendAmount -= sentAmount
-    estTotalAvailableReceiveAmount -= receivedAmount
-    if (
-      estTotalAvailableSendAmount < payment.sendAmount.value ||
-      estTotalAvailableReceiveAmount < payment.receiveAmount.value
-    ) {
-      return false
-    }
   }
-
+  if (
+    (paymentAccess.limits.sendAmount &&
+      paymentAccess.limits.sendAmount.value - sentAmount <
+        payment.sendAmount.value) ||
+    (paymentAccess.limits.receiveAmount &&
+      paymentAccess.limits.receiveAmount.value - receivedAmount <
+        payment.receiveAmount.value)
+  ) {
+    return false
+  }
   return true
 }
 
