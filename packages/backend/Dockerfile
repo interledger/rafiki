@@ -8,7 +8,7 @@ COPY package.json yarn.lock tsconfig.build.json .yarnrc.yml ./
 COPY .yarn ./.yarn
 COPY ./packages ./packages
 
-RUN yarn install --immutable \
+RUN yarn install \
   && yarn workspaces foreach -ptvR --from backend run build \
   && yarn workspace backend build
 
