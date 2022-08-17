@@ -68,7 +68,7 @@ module.exports = async (globalConfig) => {
   if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
     const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
 
-    await new GenericContainer(
+    const tbContFormat = await new GenericContainer(
       'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b'
     )
       .withExposedPorts(TIGERBEETLE_PORT)
@@ -82,8 +82,13 @@ module.exports = async (globalConfig) => {
       ])
       .withWaitStrategy(Wait.forLogMessage(/allocating/)) //TODO @jason need to add more criteria
       .start()
+    const streamTbFormat = await tbContFormat.logs()
+    streamTbFormat
+      .on('data', (line) => console.log(line))
+      .on('err', (line) => console.error(line))
+      .on('end', () => console.log('Stream closed for [tb-format]'))
 
-    const tigerbeetleContainer = await new GenericContainer(
+    const tbContStart = await new GenericContainer(
       'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b'
     )
       .withExposedPorts(TIGERBEETLE_PORT)
@@ -97,11 +102,17 @@ module.exports = async (globalConfig) => {
       .withWaitStrategy(Wait.forLogMessage(/listening on/))
       .start()
 
+    const streamTbStart = await tbContStart.logs()
+    streamTbStart
+      .on('data', (line) => console.log(line))
+      .on('err', (line) => console.error(line))
+      .on('end', () => console.log('Stream closed for [tb-start]'))
+
     process.env.TIGERBEETLE_CLUSTER_ID = TIGERBEETLE_CLUSTER_ID
-    process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${tigerbeetleContainer.getMappedPort(
+    process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${tbContStart.getMappedPort(
       TIGERBEETLE_PORT
     )}]`
-    global.__BACKEND_TIGERBEETLE__ = tigerbeetleContainer
+    global.__BACKEND_TIGERBEETLE__ = tbContStart
   }
 
   if (!process.env.REDIS_URL) {
