@@ -43,6 +43,9 @@ jobs:
     needs: checkout
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14.20.0'
       - uses: pnpm/action-setup@v2.0.1
         name: Install pnpm
         id: pnpm-install
