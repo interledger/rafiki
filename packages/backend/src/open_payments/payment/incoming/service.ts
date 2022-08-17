@@ -120,39 +120,22 @@ async function createIncomingPayment(
       }
     }
   }
-  const invTrx = trx || (await IncomingPayment.startTransaction(deps.knex))
-  try {
-    const incomingPayment = await IncomingPayment.query(invTrx)
-      .insertAndFetch({
-        paymentPointerId,
-        assetId: paymentPointer.asset.id,
-        description,
-        expiresAt,
-        incomingAmount,
-        externalRef,
-        state: IncomingPaymentState.Pending,
-        processAt: expiresAt,
-        connectionId: uuid()
-      })
-      .withGraphFetched('asset')
 
-    // Incoming payment accounts are credited by the amounts received by the incoming payment.
-    // Credits are restricted such that the incoming payments cannot receive more than that amount.
-    await deps.accountingService.createLiquidityAccount(
-      incomingPayment,
-      AccountTypeCode.LiquidityIncoming
-    )
+  const incomingPayment = await IncomingPayment.query(trx || deps.knex)
+    .insertAndFetch({
+      paymentPointerId,
+      assetId: paymentPointer.asset.id,
+      description,
+      expiresAt,
+      incomingAmount,
+      externalRef,
+      state: IncomingPaymentState.Pending,
+      processAt: expiresAt,
+      connectionId: uuid()
+    })
+    .withGraphFetched('asset')
 
-    if (!trx) {
-      await invTrx.commit()
-    }
-    return await addReceivedAmount(deps, incomingPayment, BigInt(0))
-  } catch (err) {
-    if (!trx) {
-      await invTrx.rollback()
-    }
-    throw err
-  }
+  return await addReceivedAmount(deps, incomingPayment, BigInt(0))
 }
 
 // Fetch (and lock) an incoming payment for work.
@@ -326,17 +309,12 @@ async function addReceivedAmount(
 ): Promise<IncomingPayment> {
   const received =
     value || (await deps.accountingService.getTotalReceived(payment.id))
-  if (received !== undefined) {
-    payment.receivedAmount = {
-      value: received,
-      assetCode: payment.asset.code,
-      assetScale: payment.asset.scale
-    }
-  } else {
-    deps.logger.error({ incomingPayment: payment.id }, 'account not found')
-    throw new Error(
-      `Underlying TB account not found, payment id: ${payment.id}`
-    )
+
+  payment.receivedAmount = {
+    value: received || BigInt(0),
+    assetCode: payment.asset.code,
+    assetScale: payment.asset.scale
   }
+
   return payment
 }

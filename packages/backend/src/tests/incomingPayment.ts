@@ -13,5 +13,15 @@ export async function createIncomingPayment(
   const incomingPaymentService = await deps.use('incomingPaymentService')
   const incomingPaymentOrError = await incomingPaymentService.create(options)
   assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
+
+  const accountingService = await deps.use('accountingService')
+  await accountingService.createLiquidityAccount({
+    id: options.accountId,
+    asset: {
+      id: options.incomingAmount?.assetCode || 'USD',
+      unit: options.incomingAmount?.assetScale || 2
+    }
+  })
+
   return incomingPaymentOrError
 }

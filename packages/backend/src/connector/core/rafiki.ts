@@ -13,7 +13,7 @@ import {
 } from './middleware/ilp-packet'
 import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
-import { TransferError } from '../../accounting/errors'
+import { CreateAccountError, TransferError } from '../../accounting/errors'
 import { LiquidityAccount, Transaction } from '../../accounting/service'
 import { AssetOptions } from '../../asset/service'
 import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
@@ -55,6 +55,9 @@ export interface TransferOptions {
 
 export interface AccountingService {
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
+  createLiquidityAccount(
+    account: LiquidityAccount
+  ): Promise<LiquidityAccount | CreateAccountError>
 }
 
 export interface RafikiServices {

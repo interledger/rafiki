@@ -5,7 +5,11 @@ import {
 } from '../../rafiki'
 
 import { Transaction } from '../../../../accounting/service'
-import { TransferError } from '../../../../accounting/errors'
+import {
+  CreateAccountError,
+  TransferError
+} from '../../../../accounting/errors'
+import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 
 interface MockAccount {
   id: string
@@ -118,5 +122,19 @@ export class MockAccountingService implements AccountingService {
     for (const [, account] of this.accounts) {
       if (predicate(account)) return account
     }
+  }
+
+  async createLiquidityAccount(
+    account: MockIlpAccount
+  ): Promise<MockIlpAccount> {
+    // Conflict
+    if (account.id === '409') {
+      throw new CreateAccountError(CreateAccountErrorCode.exists)
+    }
+    // Internal Error
+    if (account.id === '409') {
+      throw new CreateAccountError(CreateAccountErrorCode.exists)
+    }
+    return account
   }
 }
