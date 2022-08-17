@@ -82,6 +82,10 @@ module.exports = async (globalConfig) => {
       ])
       .withWaitStrategy(Wait.forLogMessage(/allocating/)) //TODO @jason need to add more criteria
       .start()
+
+    // Give TB a chance to startup (no message currently to notify allocation is complete):
+    await new Promise((f) => setTimeout(f, 5000))
+
     const streamTbFormat = await tbContFormat.logs()
     streamTbFormat
       .on('data', (line) => console.log(line))

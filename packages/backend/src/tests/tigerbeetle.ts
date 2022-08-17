@@ -26,6 +26,9 @@ export async function startTigerbeetleContainer(
     .withWaitStrategy(Wait.forLogMessage(/allocating/)) //TODO @jason need to add more criteria (does not contain error)
     .start()
 
+  // Give TB a chance to startup (no message currently to notify allocation is complete):
+  await new Promise((f) => setTimeout(f, 5000))
+
   return await new GenericContainer(
     'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b'
   )
