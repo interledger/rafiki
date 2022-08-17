@@ -28,10 +28,10 @@ services:
       REDIS_URL: redis://redis:6379
       TIGERBEETLE_CLUSTER_ID: 0
       # Tigerbeetle will support DNS in future
-      TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.5:4342"]'
+      TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
       NONCE_REDIS_KEY: test
       AUTH_SERVER_GRANT_URL: http://rafiki-auth
-      AUTH_SERVER_INTROSPECTION_URL: http://rafiki-auth
+      AUTH_SERVER_INTROSPECTION_URL: http://auth:3006/introspect
       ILP_ADDRESS: test.rafiki
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
@@ -60,7 +60,7 @@ services:
       - tigerbeetle-data:/var/lib/tigerbeetle
     networks:
       rafiki:
-        ipv4_address: 10.5.0.5
+        ipv4_address: 10.5.0.50
     ports:
       - "4342:4342"
     entrypoint:
