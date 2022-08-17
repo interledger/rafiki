@@ -1,7 +1,7 @@
 version: '3'
 services:
   auth:
-    image: rafiki-auth
+    image: ghcr.io/interledger/rafiki-auth:latest
     restart: always
     networks:
       rafiki:
@@ -11,7 +11,36 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
   backend:
-    image: ghcr.io/interledger/rafiki-backend:40fe987fff0a7a154b0877fff26ea3345d010303
+    image: ghcr.io/interledger/rafiki-backend:latest
+    restart: always
+    privileged: true
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    networks:
+      rafiki:
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT: 3001
+      CONNECTOR_PORT: 3002
+      DATABASE_URL: postgresql://backend:backend@database/backend
+      REDIS_URL: redis://redis:6379
+      TIGERBEETLE_CLUSTER_ID: 0
+      # Tigerbeetle will support DNS in future
+      TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
+      NONCE_REDIS_KEY: test
+      AUTH_SERVER_GRANT_URL: http://rafiki-auth
+      AUTH_SERVER_INTROSPECTION_URL: http://auth:3006/introspect
+      ILP_ADDRESS: test.rafiki
+      STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      ADMIN_KEY: admin
+      PUBLIC_HOST: rafiki.test
+      WEBHOOK_URL: https://end3sf6r22xva.x.pipedream.net
+    depends_on:
+      - tigerbeetle
+  rates:
+    image: ghcr.io/interledger/rafiki-rates:latest
     restart: always
     privileged: true
     ports:
