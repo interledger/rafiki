@@ -4,9 +4,10 @@ module.exports = {
   development: {
     client: 'postgresql',
     connection: {
-      database: 'auth_development',
-      user: 'postgres',
-      password: 'password'
+      // The database, user and password here match those in the rafiki-docker-compose.yml file
+      database: 'auth',
+      user: 'auth',
+      password: 'auth'
     },
     pool: {
       min: 2,
@@ -14,6 +15,9 @@ module.exports = {
     },
     migrations: {
       tableName: 'auth_knex_migrations'
+    },
+    seeds: {
+      directory: './seeds/development'
     }
   },
 
