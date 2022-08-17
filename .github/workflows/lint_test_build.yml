@@ -62,8 +62,6 @@ jobs:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install
-      - run: pnpm --filter backend lint
-      - run: pnpm --filter backend format:check
       - run: pnpm --filter openapi build
       - run: pnpm --filter backend test
 

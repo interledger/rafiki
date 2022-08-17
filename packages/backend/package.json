@@ -1,9 +1,6 @@
 {
   "name": "backend",
   "scripts": {
-    "lint": "",
-    "format": "pnmp format:local",
-    "format:check": "pnmp format:check:local",
     "test": "jest --passWithNoTests --maxWorkers=2",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
