@@ -6,7 +6,19 @@ import { Errors } from 'ilp-packet'
 const { TransferTimedOutError } = Errors
 
 describe('Expire Middleware', function () {
-  jest.useFakeTimers()
+
+  beforeAll(
+    async (): Promise<void> => {
+      jest.useFakeTimers()
+    }
+  )
+
+  afterAll(
+    async (): Promise<void> => {
+      jest.useRealTimers()
+    }
+  )
+
 
   it('throws error if out of expiry window', async () => {
     const prepare = IlpPrepareFactory.build({

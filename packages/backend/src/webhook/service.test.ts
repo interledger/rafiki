@@ -76,7 +76,6 @@ describe('Webhook Service', (): void => {
 
   afterEach(
     async (): Promise<void> => {
-      jest.useFakeTimers()
       await truncateTables(knex)
     }
   )
