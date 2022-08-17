@@ -18,11 +18,11 @@ interface ServiceDependencies extends BaseService {
 }
 
 type ApiKeyOptions = {
-  accountId: string
+  paymentPointerId: string
 }
 
 type SessionOptions = {
-  accountId: string
+  paymentPointerId: string
   key: string
 }
 
@@ -53,12 +53,12 @@ export async function createApiKeyService({
 
 async function createApiKey(
   deps: ServiceDependencies,
-  { accountId }: ApiKeyOptions
+  { paymentPointerId }: ApiKeyOptions
 ): Promise<NewApiKey> {
   const key = uuid()
   const hashedKey = await bcrypt.hash(key, 10)
   const keyEntry = await ApiKey.query(deps.knex).insertAndFetch({
-    accountId,
+    paymentPointerId,
     hashedKey
   })
   const newKey = <NewApiKey>keyEntry
@@ -68,18 +68,18 @@ async function createApiKey(
 
 async function getApiKeys(
   deps: ServiceDependencies,
-  { accountId }: ApiKeyOptions
+  { paymentPointerId }: ApiKeyOptions
 ): Promise<ApiKey[]> {
-  return await ApiKey.query().where('accountId', accountId)
+  return await ApiKey.query().where('paymentPointerId', paymentPointerId)
 }
 
 async function redeemApiKey(
   deps: ServiceDependencies,
-  { accountId, key }: SessionOptions
+  { paymentPointerId, key }: SessionOptions
 ): Promise<Session | ApiKeyError> {
   const keys = await ApiKey.query()
     .select('hashedKey')
-    .where('accountId', accountId)
+    .where('paymentPointerId', paymentPointerId)
   for (const { hashedKey } of keys) {
     const match = await bcrypt.compare(key, hashedKey)
     if (match) {
@@ -91,7 +91,9 @@ async function redeemApiKey(
 
 async function deleteAllApiKeys(
   deps: ServiceDependencies,
-  { accountId }: ApiKeyOptions
+  { paymentPointerId }: ApiKeyOptions
 ): Promise<void> {
-  await ApiKey.query(deps.knex).delete().where('accountId', accountId)
+  await ApiKey.query(deps.knex)
+    .delete()
+    .where('paymentPointerId', paymentPointerId)
 }

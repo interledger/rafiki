@@ -33,7 +33,7 @@ import { toTigerbeetleId } from './utils'
 // The Tigerbeetle account id will be the model id.
 // Such models include:
 //   ../asset/model
-//   ../open_payments/account/model
+//   ../open_payments/payment_pointer/model
 //   ../open_payments/payment/incoming/model
 //   ../open_payments/payment/outgoing/model
 //   ../peer/model

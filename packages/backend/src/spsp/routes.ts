@@ -3,7 +3,7 @@ import { AppContext } from '../app'
 import { validateId } from '../shared/utils'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
-import { AccountService } from '../open_payments/account/service'
+import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
@@ -12,13 +12,13 @@ export interface SPSPRoutes {
 }
 
 interface ServiceDependencies extends Omit<BaseService, 'knex'> {
-  accountService: AccountService
+  paymentPointerService: PaymentPointerService
   streamServer: StreamServer
 }
 
 export async function createSPSPRoutes({
   logger,
-  accountService,
+  paymentPointerService,
   streamServer
 }: ServiceDependencies): Promise<SPSPRoutes> {
   const log = logger.child({
@@ -27,7 +27,7 @@ export async function createSPSPRoutes({
 
   const deps: ServiceDependencies = {
     logger: log,
-    accountService,
+    paymentPointerService,
     streamServer
   }
   return {
@@ -39,12 +39,12 @@ async function getPay(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { accountId } = ctx.params
+  const { accountId: paymentPointerId } = ctx.params
 
   ctx.assert(
-    validateId(accountId),
+    validateId(paymentPointerId),
     400,
-    'Failed to generate credentials: invalid account id'
+    'Failed to generate credentials: invalid payment pointer id'
   )
   ctx.assert(ctx.accepts(CONTENT_TYPE_V4), 406)
 
@@ -56,8 +56,8 @@ async function getPay(
     'Failed to generate credentials: receipt nonce and secret must accompany each other'
   )
 
-  const account = await deps.accountService.get(accountId)
-  if (!account) {
+  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
+  if (!paymentPointer) {
     ctx.status = 404
     ctx.set('Content-Type', CONTENT_TYPE_V4)
     ctx.body = JSON.stringify({
@@ -69,7 +69,7 @@ async function getPay(
 
   try {
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-      paymentTag: accountId,
+      paymentTag: paymentPointerId,
       receiptSetup:
         nonce && secret
           ? {
@@ -78,8 +78,8 @@ async function getPay(
             }
           : undefined,
       asset: {
-        code: account.asset.code,
-        scale: account.asset.scale
+        code: paymentPointer.asset.code,
+        scale: paymentPointer.asset.scale
       }
     })
 

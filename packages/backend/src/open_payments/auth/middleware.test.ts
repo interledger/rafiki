@@ -26,7 +26,7 @@ type IntrospectionBody = {
 describe('Auth Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let accountId: string
+  let paymentPointerId: string
   let authServerIntrospectionUrl: URL
   let middleware: AppMiddleware
   let ctx: AppContext
@@ -37,7 +37,7 @@ describe('Auth Middleware', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    accountId = `${Config.publicHost}/${uuid()}`
+    paymentPointerId = `${Config.publicHost}/${uuid()}`
     authServerIntrospectionUrl = new URL(Config.authServerIntrospectionUrl)
     middleware = createAuthMiddleware({
       type: AccessType.IncomingPayment,
@@ -59,7 +59,7 @@ describe('Auth Middleware', (): void => {
         }
       },
       {
-        accountId
+        paymentPointerId
       }
     )
     ctx.container = deps
@@ -165,7 +165,7 @@ describe('Auth Middleware', (): void => {
           {
             type: AccessType.IncomingPayment,
             actions: [AccessAction.Read],
-            identifier: limitAccount ? ctx.params.accountId : undefined
+            identifier: limitAccount ? ctx.params.paymentPointerId : undefined
           },
           {
             type: AccessType.OutgoingPayment,

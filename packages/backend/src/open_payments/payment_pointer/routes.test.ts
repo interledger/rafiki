@@ -3,24 +3,24 @@ import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../tests/context'
-import { AccountService } from './service'
+import { PaymentPointerService } from './service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config, IAppConfig } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
-import { AppServices, AccountContext } from '../../app'
+import { AppServices, PaymentPointerContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { randomAsset } from '../../tests/asset'
-import { AccountRoutes } from './routes'
+import { PaymentPointerRoutes } from './routes'
 import { faker } from '@faker-js/faker'
 
-describe('Account Routes', (): void => {
+describe('Payment Pointer Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let accountService: AccountService
+  let paymentPointerService: PaymentPointerService
   let config: IAppConfig
-  let accountRoutes: AccountRoutes
+  let paymentPointerRoutes: PaymentPointerRoutes
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -33,9 +33,9 @@ describe('Account Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    accountService = await deps.use('accountService')
+    paymentPointerService = await deps.use('paymentPointerService')
     config = await deps.use('config')
-    accountRoutes = await deps.use('accountRoutes')
+    paymentPointerRoutes = await deps.use('paymentPointerRoutes')
   })
 
   afterEach(async (): Promise<void> => {
@@ -47,36 +47,39 @@ describe('Account Routes', (): void => {
   })
 
   describe('get', (): void => {
-    test('returns 404 for nonexistent account', async (): Promise<void> => {
-      const ctx = createContext<AccountContext>(
+    test('returns 404 for nonexistent payment pointer', async (): Promise<void> => {
+      const ctx = createContext<PaymentPointerContext>(
         {
           headers: { Accept: 'application/json' }
         },
-        { accountId: uuid() }
+        { paymentPointerId: uuid() }
       )
-      await expect(accountRoutes.get(ctx)).rejects.toHaveProperty('status', 404)
+      await expect(paymentPointerRoutes.get(ctx)).rejects.toHaveProperty(
+        'status',
+        404
+      )
     })
 
-    test('returns 200 with an open payments account', async (): Promise<void> => {
+    test('returns 200 with an open payments payment pointer', async (): Promise<void> => {
       const asset = randomAsset()
       const publicName = faker.name.firstName()
-      const account = await accountService.create({
+      const paymentPointer = await paymentPointerService.create({
         publicName: publicName,
         asset: asset
       })
 
-      const ctx = createContext<AccountContext>(
+      const ctx = createContext<PaymentPointerContext>(
         {
           headers: { Accept: 'application/json' },
-          url: `/${account.id}`
+          url: `/${paymentPointer.id}`
         },
-        { accountId: account.id }
+        { paymentPointerId: paymentPointer.id }
       )
-      await expect(accountRoutes.get(ctx)).resolves.toBeUndefined()
+      await expect(paymentPointerRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: `https://wallet.example/${account.id}`,
-        publicName: account.publicName,
+        id: `https://wallet.example/${paymentPointer.id}`,
+        publicName: paymentPointer.publicName,
         assetCode: asset.code,
         assetScale: asset.scale,
         authServer: 'https://auth.wallet.example/authorize'

@@ -4,9 +4,9 @@
 
 The wallet creates a quote on behalf of a user by passing details to `Mutation.createQuote`.
 
-First, the recipient Open Payments account or incoming payment is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
+First, the recipient Open Payments payment pointer or incoming payment is resolved. Then, the STREAM sender quotes the payment to probe the exchange rate, compute a minimum rate, and discover the path maximum packet amount.
 
-The quote may fail in cases such as if the payment pointer or account URL was semantically invalid, the incoming payment was already paid, a terminal ILP Reject was encountered, or the rate was insufficient; or in the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available.
+The quote may fail in cases such as if the payment pointer was semantically invalid, the incoming payment was already paid, a terminal ILP Reject was encountered, or the rate was insufficient; or in the case of some transient errors, such as if the Open Payments HTTP query failed, the quote couldn't complete within the timeout, or no external exchange rate was available.
 
 If the STREAM sender successfully established a connection to the recipient and discovered rates and the path capacity, Rafiki sends the quote details to the wallet's configured quote endpoint. If the quote is acceptable and the `sendAmount.value` does not exceed sender's account balance, the wallet returns `201` with the quote. The wallet may also adjust quote amounts as follows:
 
@@ -79,11 +79,11 @@ Webhook event handlers must be idempotent and return `200` on success. Rafiki wi
 
 ### `EventType`
 
-#### `account.web_monetization`
+#### `payment_pointer.web_monetization`
 
 Account has web monetization balance to be withdrawn.
 
-Credit `account.received` to the wallet balance for `account.id`, and call `Mutation.withdrawEventLiquidity` with the event id.
+Credit `paymentPointer.received` to the wallet balance for `paymentPointer.id`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
 #### `incoming_payment.expired`
 
@@ -117,11 +117,11 @@ Credit `payment.balance` to the wallet balance for `payment.accountId`, and call
 
 ### Webhook Event
 
-| Name   | Optional | Type                                                                                                  | Description                                       |
-| :----- | :------- | :---------------------------------------------------------------------------------------------------- | :------------------------------------------------ |
-| `id`   | No       | `ID`                                                                                                  | Unique ID of the webhook event.                   |
-| `type` | No       | [`EventType`](#eventtype)                                                                             | Description of the event.                         |
-| `data` | No       | [`Account`](#account), [`IncomingPayment`](#incomingpayment) or [`OutgoingPayment`](#outgoingpayment) | Object containing data associated with the event. |
+| Name   | Optional | Type                                                                                                                | Description                                       |
+| :----- | :------- | :------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------ |
+| `id`   | No       | `ID`                                                                                                                | Unique ID of the webhook event.                   |
+| `type` | No       | [`EventType`](#eventtype)                                                                                           | Description of the event.                         |
+| `data` | No       | [`PaymentPointer`](#paymentPointer), [`IncomingPayment`](#incomingpayment) or [`OutgoingPayment`](#outgoingpayment) | Object containing data associated with the event. |
 
 ## Resources
 
@@ -137,7 +137,7 @@ The quote must be created with `receiver` and (`sendAmount` xor `receiveAmount`)
 | `minExchangeRate`          | No       | `Float`       | Aggregate exchange rate the payment is guaranteed to meet, as a ratio of destination base units to source base units. Corresponds to the minimum exchange rate enforced on each packet (_except for the final packet_) to ensure sufficient money gets delivered. For strict bookkeeping, use `sendAmount.value` instead. |
 | `lowExchangeRateEstimate`  | No       | `Float`       | Lower bound of probed exchange rate over the path (inclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                      |
 | `highExchangeRateEstimate` | No       | `Float`       | Upper bound of probed exchange rate over the path (exclusive). Ratio of destination base units to source base units.                                                                                                                                                                                                      |
-| `accountId`                | No       | `ID`          | Id of the payer's Open Payments account.                                                                                                                                                                                                                                                                                  |
+| `paymentPointer`           | No       | `ID`          | The payer's Open Payments payment pointer.                                                                                                                                                                                                                                                                                |
 | `sendAmount`               | No       | `Object`      |                                                                                                                                                                                                                                                                                                                           |
 | `sendAmount.value`         | No       | `UInt64`      | Fixed amount that will be sent in the base unit and asset of the sending account.                                                                                                                                                                                                                                         |
 | `sendAmount.assetScale`    | No       | `Integer`     |                                                                                                                                                                                                                                                                                                                           |
@@ -162,7 +162,7 @@ The payment must be created with `quoteId`.
 | `externalRef`              | Yes      | `String`               | A reference that can be used by external systems to reconcile this payment with their systems.                     |
 | `error`                    | Yes      | `String`               | Failure reason.                                                                                                    |
 | `stateAttempts`            | No       | `Integer`              | Retry number at current state.                                                                                     |
-| `accountId`                | No       | `ID`                   | Id of the payer's Open Payments account.                                                                           |
+| `paymentPointer`           | No       | `ID`                   | The payer's Open Payments payment pointer.                                                                         |
 | `quoteId`                  | No       | `ID`                   | Id of the payment's Open Payments quote.                                                                           |
 | `sendAmount`               | No       | `Object`               |                                                                                                                    |
 | `sendAmount.value`         | No       | `UInt64`               | Fixed amount that will be sent in the base unit and asset of the sending account.                                  |
@@ -197,7 +197,7 @@ The payment must be created with `quoteId`.
 | Name                        | Optional | Type                   | Description                                                                               |
 | :-------------------------- | :------- | :--------------------- | :---------------------------------------------------------------------------------------- |
 | `id`                        | No       | `ID`                   | Unique ID for this incoming payment, randomly generated by Rafiki.                        |
-| `accountId`                 | No       | `ID`                   | Id of the recipient's Open Payments account.                                              |
+| `paymentPointer`            | No       | `ID`                   | The recipient's Open Payments payment pointer.                                            |
 | `state`                     | No       | `IncomingPaymentState` | See [`IncomingPaymentState`](#incomingpaymentstate)                                       |
 | `incomingAmount`            | Yes      | `Object`               | The amount that is expected to be received.                                               |
 | `incomingAmount.value`      | No       | `UInt64`               | The amount that will be received in the base unit and asset of the receiving account.     |
@@ -219,10 +219,10 @@ The payment must be created with `quoteId`.
 - `COMPLETED`: The payment is either auto-completed once the received amount equals the expected `incomingAmount`, or it is completed manually via an API call.
 - `EXPIRED`: If the payment expires before it is completed then the state will move to `EXPIRED` and no further payments will be accepted.
 
-### `Account`
+### `PaymentPointer`
 
-| Name        | Optional | Type     | Description                                               |
-| :---------- | :------- | :------- | :-------------------------------------------------------- |
-| `id`        | No       | `ID`     | Unique ID for this account, randomly generated by Rafiki. |
-| `received`  | No       | `UInt64` | The amount received, in base units of the account asset.  |
-| `createdAt` | No       | `String` | ISO 8601 format.                                          |
+| Name        | Optional | Type     | Description                                                       |
+| :---------- | :------- | :------- | :---------------------------------------------------------------- |
+| `id`        | No       | `ID`     | Unique ID for this payment pointer, randomly generated by Rafiki. |
+| `received`  | No       | `UInt64` | The amount received, in base units of the account asset.          |
+| `createdAt` | No       | `String` | ISO 8601 format.                                                  |

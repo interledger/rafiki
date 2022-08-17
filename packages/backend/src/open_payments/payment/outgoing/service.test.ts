@@ -45,10 +45,10 @@ describe('OutgoingPaymentService', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let accountingService: AccountingService
   let knex: Knex
-  let accountId: string
-  let receivingAccount: string
+  let paymentPointerId: string
+  let receivingPaymentPointer: string
   let receiver: string
-  let receiverAccountId: string
+  let receiverPaymentPointerId: string
   let amtDelivered: bigint
   let config: IAppConfig
   let trx: Knex.Transaction
@@ -126,7 +126,9 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   function getIncomingPaymentId(receiver: string): string {
-    return receiver.slice(`${receivingAccount}/incoming-payments/`.length)
+    return receiver.slice(
+      `${receivingPaymentPointer}/incoming-payments/`.length
+    )
   }
 
   async function payIncomingPayment({
@@ -150,7 +152,7 @@ describe('OutgoingPaymentService', (): void => {
     ).resolves.toBeUndefined()
   }
 
-  function trackAmountDelivered(sourceAccountId: string): void {
+  function trackAmountDelivered(sourcePaymentPointerId: string): void {
     const { createTransfer } = accountingService
     jest
       .spyOn(accountingService, 'createTransfer')
@@ -158,7 +160,7 @@ describe('OutgoingPaymentService', (): void => {
         const trxOrError = await createTransfer(options)
         if (
           !isTransferError(trxOrError) &&
-          options.sourceAccount.id === sourceAccountId
+          options.sourceAccount.id === sourcePaymentPointerId
         ) {
           amtDelivered += options.destinationAmount || options.sourceAmount
         }
@@ -232,31 +234,31 @@ describe('OutgoingPaymentService', (): void => {
 
   beforeEach(async (): Promise<void> => {
     outgoingPaymentService = await deps.use('outgoingPaymentService')
-    const accountService = await deps.use('accountService')
-    accountId = (
-      await accountService.create({
+    const paymentPointerService = await deps.use('paymentPointerService')
+    paymentPointerId = (
+      await paymentPointerService.create({
         asset: {
           code: sendAmount.assetCode,
           scale: sendAmount.assetScale
         }
       })
     ).id
-    const destinationAccount = await accountService.create({
+    const destinationPaymentPointer = await paymentPointerService.create({
       asset: destinationAsset
     })
-    receiverAccountId = destinationAccount.id
+    receiverPaymentPointerId = destinationPaymentPointer.id
     await expect(
       accountingService.createDeposit({
         id: uuid(),
-        account: destinationAccount.asset,
+        account: destinationPaymentPointer.asset,
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingAccount = `${config.openPaymentsUrl}/${destinationAccount.id}`
+    receivingPaymentPointer = `${config.openPaymentsUrl}/${destinationPaymentPointer.id}`
     const incomingPayment = await createIncomingPayment(deps, {
-      accountId: receiverAccountId
+      paymentPointerId: receiverPaymentPointerId
     })
-    receiver = `${receivingAccount}/incoming-payments/${incomingPayment.id}`
+    receiver = `${receivingPaymentPointer}/incoming-payments/${incomingPayment.id}`
 
     amtDelivered = BigInt(0)
   })
@@ -277,12 +279,12 @@ describe('OutgoingPaymentService', (): void => {
 
     it('throws if no TB account found', async (): Promise<void> => {
       const quote = await createQuote(deps, {
-        accountId,
+        paymentPointerId,
         receiver,
         sendAmount
       })
       const options = {
-        accountId,
+        paymentPointerId,
         quoteId: quote.id,
         description: 'rent',
         externalRef: '202201'
@@ -311,12 +313,12 @@ describe('OutgoingPaymentService', (): void => {
         const peerFactory = new PeerFactory(peerService)
         const peer = await peerFactory.build()
         const quote = await createQuote(deps, {
-          accountId,
+          paymentPointerId,
           receiver,
           sendAmount
         })
         const options = {
-          accountId,
+          paymentPointerId,
           quoteId: quote.id,
           description: 'rent',
           externalRef: '202201'
@@ -330,7 +332,7 @@ describe('OutgoingPaymentService', (): void => {
         assert.ok(!isOutgoingPaymentError(payment))
         expect(payment).toMatchObject({
           id: quote.id,
-          accountId,
+          paymentPointerId,
           receiver: quote.receiver,
           sendAmount: quote.sendAmount,
           receiveAmount: quote.receiveAmount,
@@ -367,40 +369,40 @@ describe('OutgoingPaymentService', (): void => {
       }
     )
 
-    it('fails to create on unknown account', async () => {
+    it('fails to create on unknown payment pointer', async () => {
       const { id: quoteId } = await createQuote(deps, {
-        accountId,
+        paymentPointerId,
         receiver,
         sendAmount,
         validDestination: false
       })
       await expect(
         outgoingPaymentService.create({
-          accountId: uuid(),
+          paymentPointerId: uuid(),
           quoteId
         })
-      ).resolves.toEqual(OutgoingPaymentError.UnknownAccount)
+      ).resolves.toEqual(OutgoingPaymentError.UnknownPaymentPointer)
     })
 
     it('fails to create on unknown quote', async () => {
       await expect(
         outgoingPaymentService.create({
-          accountId,
+          paymentPointerId,
           quoteId: uuid()
         })
       ).resolves.toEqual(OutgoingPaymentError.UnknownQuote)
     })
 
-    it('fails to create on invalid quote account', async () => {
+    it('fails to create on invalid quote payment pointer', async () => {
       const quote = await createQuote(deps, {
-        accountId,
+        paymentPointerId,
         receiver,
         sendAmount,
         validDestination: false
       })
       await expect(
         outgoingPaymentService.create({
-          accountId: receiverAccountId,
+          paymentPointerId: receiverPaymentPointerId,
           quoteId: quote.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -408,7 +410,7 @@ describe('OutgoingPaymentService', (): void => {
 
     it('fails to create on expired quote', async () => {
       const quote = await createQuote(deps, {
-        accountId,
+        paymentPointerId,
         receiver,
         sendAmount,
         validDestination: false
@@ -418,7 +420,7 @@ describe('OutgoingPaymentService', (): void => {
       })
       await expect(
         outgoingPaymentService.create({
-          accountId,
+          paymentPointerId,
           quoteId: quote.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -437,7 +439,7 @@ describe('OutgoingPaymentService', (): void => {
       const quotes = await Promise.all(
         [0, 1].map(async (_) => {
           return await createQuote(deps, {
-            accountId,
+            paymentPointerId,
             receiver,
             sendAmount
           })
@@ -445,7 +447,7 @@ describe('OutgoingPaymentService', (): void => {
       )
       const options = quotes.map((quote) => {
         return {
-          accountId,
+          paymentPointerId,
           quoteId: quote.id,
           description: 'rent',
           externalRef: '202201',
@@ -473,12 +475,12 @@ describe('OutgoingPaymentService', (): void => {
       let interval: string
       beforeEach(async (): Promise<void> => {
         quote = await createQuote(deps, {
-          accountId,
+          paymentPointerId,
           receiver,
           sendAmount
         })
         options = {
-          accountId,
+          paymentPointerId,
           quoteId: quote.id,
           description: 'rent',
           externalRef: '202201'
@@ -522,7 +524,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.publicHost}/${accountId}`,
+                identifier: `${Config.publicHost}/${paymentPointerId}`,
                 limits: { ...limits, interval }
               }
             ]
@@ -555,7 +557,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.publicHost}/${accountId}`,
+                identifier: `${Config.publicHost}/${paymentPointerId}`,
                 limits: sendAmount
                   ? {
                       sendAmount: amount,
@@ -598,7 +600,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.publicHost}/${accountId}`,
+                identifier: `${Config.publicHost}/${paymentPointerId}`,
                 limits: {
                   sendAmount: sendAmount ? grantAmount : undefined,
                   receiveAmount: sendAmount ? undefined : grantAmount,
@@ -612,7 +614,7 @@ describe('OutgoingPaymentService', (): void => {
             value: BigInt(190)
           }
           const firstPayment = await createOutgoingPayment(deps, {
-            accountId,
+            paymentPointerId,
             receiver: `${
               Config.publicHost
             }/${uuid()}/incoming-payments/${uuid()}`,
@@ -651,7 +653,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.publicHost}/${accountId}`,
+                identifier: `${Config.publicHost}/${paymentPointerId}`,
                 limits
               }
             ]
@@ -696,7 +698,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.publicHost}/${accountId}`,
+                identifier: `${Config.publicHost}/${paymentPointerId}`,
                 limits: sendAmount
                   ? {
                       sendAmount: grantAmount,
@@ -715,7 +717,7 @@ describe('OutgoingPaymentService', (): void => {
               value: BigInt(7)
             }
             const firstPayment = await createOutgoingPayment(deps, {
-              accountId,
+              paymentPointerId,
               receiver: `${
                 Config.publicHost
               }/${uuid()}/incoming-payments/${uuid()}`,
@@ -753,7 +755,7 @@ describe('OutgoingPaymentService', (): void => {
       }
 
       async function setup(
-        opts: Omit<CreateQuoteOptions, 'accountId'>,
+        opts: Omit<CreateQuoteOptions, 'paymentPointerId'>,
         incomingAmount?: Amount
       ): Promise<string> {
         if (incomingAmount) {
@@ -767,7 +769,7 @@ describe('OutgoingPaymentService', (): void => {
           await incomingPayment.$query(knex).patch({ incomingAmount })
         }
         const payment = await createOutgoingPayment(deps, {
-          accountId,
+          paymentPointerId,
           ...opts
         })
 
@@ -1017,9 +1019,11 @@ describe('OutgoingPaymentService', (): void => {
           code: asset.code,
           scale: asset.scale + 1
         })
-        await OutgoingPayment.relatedQuery('account').for(paymentId).patch({
-          assetId
-        })
+        await OutgoingPayment.relatedQuery('paymentPointer')
+          .for(paymentId)
+          .patch({
+            assetId
+          })
 
         await processNext(
           paymentId,
@@ -1057,7 +1061,7 @@ describe('OutgoingPaymentService', (): void => {
 
     beforeEach(async (): Promise<void> => {
       payment = await createOutgoingPayment(deps, {
-        accountId,
+        paymentPointerId,
         receiver,
         sendAmount,
         validDestination: false
@@ -1125,22 +1129,25 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
-  describe('getAccountPage', (): void => {
+  describe('getPaymentPointerPage', (): void => {
     getPageTests({
       createModel: () =>
         createOutgoingPayment(deps, {
-          accountId,
+          paymentPointerId,
           receiver,
           sendAmount,
           validDestination: false
         }),
       getPage: (pagination: Pagination) =>
-        outgoingPaymentService.getAccountPage(accountId, pagination)
+        outgoingPaymentService.getPaymentPointerPage(
+          paymentPointerId,
+          pagination
+        )
     })
 
     it('throws if no TB account found', async (): Promise<void> => {
       const payment = await createOutgoingPayment(deps, {
-        accountId,
+        paymentPointerId,
         receiver,
         sendAmount,
         validDestination: false
@@ -1150,7 +1157,7 @@ describe('OutgoingPaymentService', (): void => {
         .spyOn(accountingService, 'getAccountsTotalSent')
         .mockResolvedValueOnce([undefined])
       await expect(
-        outgoingPaymentService.getAccountPage(accountId, {})
+        outgoingPaymentService.getPaymentPointerPage(paymentPointerId, {})
       ).rejects.toThrowError(
         `Underlying TB account not found, payment id: ${payment.id}`
       )

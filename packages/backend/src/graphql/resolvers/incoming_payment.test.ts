@@ -9,14 +9,14 @@ import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { truncateTables } from '../../tests/tableManager'
-import { AccountService } from '../../open_payments/account/service'
+import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let accountService: AccountService
+  let paymentPointerService: PaymentPointerService
   let knex: Knex
-  let accountId: string
+  let paymentPointerId: string
 
   const asset = randomAsset()
 
@@ -24,7 +24,7 @@ describe('Incoming Payment Resolver', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    accountService = await deps.use('accountService')
+    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   afterAll(async (): Promise<void> => {
@@ -33,16 +33,16 @@ describe('Incoming Payment Resolver', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Account incoming payments', (): void => {
+  describe('Payment pointer incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
-      accountId = (await accountService.create({ asset })).id
+      paymentPointerId = (await paymentPointerService.create({ asset })).id
     })
 
     getPageTests({
       getClient: () => appContainer.apolloClient,
       createModel: () =>
         createIncomingPayment(deps, {
-          accountId,
+          paymentPointerId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -54,8 +54,8 @@ describe('Incoming Payment Resolver', (): void => {
         }),
       pagedQuery: 'incomingPayments',
       parent: {
-        query: 'account',
-        getId: () => accountId
+        query: 'paymentPointer',
+        getId: () => paymentPointerId
       }
     })
   })

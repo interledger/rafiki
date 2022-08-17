@@ -1,5 +1,5 @@
 export enum IncomingPaymentError {
-  UnknownAccount = 'UnknownAccount',
+  UnknownPaymentPointer = 'UnknownPaymentPointer',
   InvalidAmount = 'InvalidAmount',
   UnknownPayment = 'UnknownPayment',
   InvalidState = 'InvalidState',
@@ -14,7 +14,7 @@ export const isIncomingPaymentError = (o: any): o is IncomingPaymentError =>
 export const errorToCode: {
   [key in IncomingPaymentError]: number
 } = {
-  [IncomingPaymentError.UnknownAccount]: 404,
+  [IncomingPaymentError.UnknownPaymentPointer]: 404,
   [IncomingPaymentError.InvalidAmount]: 400,
   [IncomingPaymentError.UnknownPayment]: 404,
   [IncomingPaymentError.InvalidState]: 400,
@@ -25,7 +25,7 @@ export const errorToCode: {
 export const errorToMessage: {
   [key in IncomingPaymentError]: string
 } = {
-  [IncomingPaymentError.UnknownAccount]: 'unknown account',
+  [IncomingPaymentError.UnknownPaymentPointer]: 'unknown payment pointer',
   [IncomingPaymentError.InvalidAmount]: 'invalid amount',
   [IncomingPaymentError.UnknownPayment]: 'unknown payment',
   [IncomingPaymentError.InvalidState]: 'invalid state',

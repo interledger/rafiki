@@ -59,7 +59,7 @@ async function createQuote(
   const { body } = ctx.request
   try {
     const quoteOrErr = await deps.quoteService.create({
-      accountId: ctx.params.accountId,
+      paymentPointerId: ctx.params.accountId,
       receiver: body.receiver,
       sendAmount: body.sendAmount && parseAmount(body.sendAmount),
       receiveAmount: body.receiveAmount && parseAmount(body.receiveAmount)
@@ -85,13 +85,16 @@ async function listQuotes(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  const { accountId } = ctx.params
+  const { accountId: paymentPointerId } = ctx.params
   const pagination = parsePaginationQueryParameters(ctx.request.query)
   try {
-    const page = await deps.quoteService.getAccountPage(accountId, pagination)
+    const page = await deps.quoteService.getPaymentPointerPage(
+      paymentPointerId,
+      pagination
+    )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        deps.quoteService.getAccountPage(accountId, pagination),
+        deps.quoteService.getPaymentPointerPage(paymentPointerId, pagination),
       page
     )
     const result = {
@@ -105,12 +108,14 @@ async function listQuotes(
 }
 
 function quoteToBody(deps: ServiceDependencies, quote: Quote) {
-  const accountId = `${deps.config.publicHost}/${quote.accountId}`
+  const accountId = `${deps.config.publicHost}/${quote.paymentPointerId}`
   return Object.fromEntries(
     Object.entries({
       ...quote.toJSON(),
       id: `${accountId}/quotes/${quote.id}`,
-      accountId
+      // paymentPointer
+      accountId,
+      paymentPointerId: undefined
     }).filter(([_, v]) => v != null)
   )
 }

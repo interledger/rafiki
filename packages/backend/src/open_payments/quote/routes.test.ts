@@ -26,8 +26,8 @@ describe('Quote Routes', (): void => {
   let quoteService: QuoteService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
-  let accountId: string
-  let accountUrl: string
+  let paymentPointerId: string
+  let paymentPointerUrl: string
 
   const receiver = `http://wallet2.example/bob/incoming-payments/${uuid()}`
   const asset = randomAsset()
@@ -37,9 +37,11 @@ describe('Quote Routes', (): void => {
     assetScale: asset.scale
   }
 
-  const createAccountQuote = async (accountId: string): Promise<Quote> => {
+  const createPaymentPointerQuote = async (
+    paymentPointerId: string
+  ): Promise<Quote> => {
     return await createQuote(deps, {
-      accountId,
+      paymentPointerId,
       receiver,
       sendAmount: {
         value: BigInt(56),
@@ -63,16 +65,16 @@ describe('Quote Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    const accountService = await deps.use('accountService')
-    accountId = (
-      await accountService.create({
+    const paymentPointerService = await deps.use('paymentPointerService')
+    paymentPointerId = (
+      await paymentPointerService.create({
         asset: {
           code: sendAmount.assetCode,
           scale: sendAmount.assetScale
         }
       })
     ).id
-    accountUrl = `${config.publicHost}/${accountId}`
+    paymentPointerUrl = `${config.publicHost}/${paymentPointerId}`
   })
 
   afterEach(async (): Promise<void> => {
@@ -91,30 +93,33 @@ describe('Quote Routes', (): void => {
         },
         {
           quoteId: uuid(),
-          accountId
+          // paymentPointerId
+          accountId: paymentPointerId
         }
       )
       await expect(quoteRoutes.get(ctx)).rejects.toHaveProperty('status', 404)
     })
 
     test('returns 200 with a quote', async (): Promise<void> => {
-      const quote = await createAccountQuote(accountId)
+      const quote = await createPaymentPointerQuote(paymentPointerId)
       const ctx = createContext<ReadContext>(
         {
           headers: { Accept: 'application/json' },
           method: 'GET',
-          url: `/${accountId}/quotes/${quote.id}`
+          url: `/${paymentPointerId}/quotes/${quote.id}`
         },
         {
           quoteId: quote.id,
-          accountId
+          // paymentPointerId
+          accountId: paymentPointerId
         }
       )
       await expect(quoteRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: `${accountUrl}/quotes/${quote.id}`,
-        accountId: accountUrl,
+        id: `${paymentPointerUrl}/quotes/${quote.id}`,
+        // paymentPointer: paymentPointerUrl,
+        accountId: paymentPointerUrl,
         receiver: quote.receiver,
         sendAmount: {
           ...quote.sendAmount,
@@ -143,9 +148,10 @@ describe('Quote Routes', (): void => {
             reqOpts.headers
           ),
           method: 'POST',
-          url: `/${accountId}/quotes`
+          url: `/${paymentPointerId}/quotes`
         },
-        { accountId }
+        // { paymentPointerId }
+        { accountId: paymentPointerId }
       )
       ctx.request.body = {
         ...options
@@ -218,7 +224,7 @@ describe('Quote Routes', (): void => {
             })
           await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
           expect(quoteSpy).toHaveBeenCalledWith({
-            accountId,
+            paymentPointerId,
             receiver,
             sendAmount: options.sendAmount && {
               ...options.sendAmount,
@@ -237,8 +243,9 @@ describe('Quote Routes', (): void => {
             .pop()
           assert.ok(quote)
           expect(ctx.response.body).toEqual({
-            id: `${accountUrl}/quotes/${quoteId}`,
-            accountId: accountUrl,
+            id: `${paymentPointerUrl}/quotes/${quoteId}`,
+            // paymentPointer: paymentPointerUrl,
+            accountId: paymentPointerUrl,
             receiver: quote.receiver,
             sendAmount: {
               ...quote.sendAmount,
@@ -271,7 +278,7 @@ describe('Quote Routes', (): void => {
           })
         await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
         expect(quoteSpy).toHaveBeenCalledWith({
-          accountId,
+          paymentPointerId,
           receiver
         })
         expect(ctx.response).toSatisfyApiSpec()
@@ -282,8 +289,9 @@ describe('Quote Routes', (): void => {
           .pop()
         assert.ok(quote)
         expect(ctx.response.body).toEqual({
-          id: `${accountUrl}/quotes/${quoteId}`,
-          accountId: accountUrl,
+          id: `${paymentPointerUrl}/quotes/${quoteId}`,
+          // paymentPointer: paymentPointerUrl,
+          accountId: paymentPointerUrl,
           receiver: options.receiver,
           sendAmount: {
             ...quote.sendAmount,
@@ -302,13 +310,14 @@ describe('Quote Routes', (): void => {
 
   describe('list', (): void => {
     listTests({
-      getAccountId: () => accountId,
-      getUrl: () => `/${accountId}/quotes`,
+      getPaymentPointerId: () => paymentPointerId,
+      getUrl: () => `/${paymentPointerId}/quotes`,
       createItem: async (_index) => {
-        const quote = await createAccountQuote(accountId)
+        const quote = await createPaymentPointerQuote(paymentPointerId)
         return {
-          id: `${accountUrl}/quotes/${quote.id}`,
-          accountId: accountUrl,
+          id: `${paymentPointerUrl}/quotes/${quote.id}`,
+          // paymentPointer: paymentPointerUrl,
+          accountId: paymentPointerUrl,
           receiver: quote.receiver,
           sendAmount: {
             ...quote.sendAmount,

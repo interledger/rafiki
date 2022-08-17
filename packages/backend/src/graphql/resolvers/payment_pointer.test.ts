@@ -11,30 +11,30 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
-  Account as AccountModel,
-  AccountEvent,
-  AccountEventType
-} from '../../open_payments/account/model'
-import { AccountService } from '../../open_payments/account/service'
+  PaymentPointer as PaymentPointerModel,
+  PaymentPointerEvent,
+  PaymentPointerEventType
+} from '../../open_payments/payment_pointer/model'
+import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 import { randomAsset } from '../../tests/asset'
 import {
-  CreateAccountInput,
-  CreateAccountMutationResponse,
-  TriggerAccountEventsMutationResponse,
-  Account
+  CreatePaymentPointerInput,
+  CreatePaymentPointerMutationResponse,
+  TriggerPaymentPointerEventsMutationResponse,
+  PaymentPointer
 } from '../generated/graphql'
 
-describe('Account Resolvers', (): void => {
+describe('Payment Pointer Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let accountService: AccountService
+  let paymentPointerService: PaymentPointerService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    accountService = await deps.use('accountService')
+    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -46,20 +46,20 @@ describe('Account Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create Account', (): void => {
-    test('Can create an account', async (): Promise<void> => {
-      const input: CreateAccountInput = {
+  describe('Create Payment Pointer', (): void => {
+    test('Can create a payment pointer', async (): Promise<void> => {
+      const input: CreatePaymentPointerInput = {
         asset: randomAsset()
       }
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccount($input: CreateAccountInput!) {
-              createAccount(input: $input) {
+            mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
+              createPaymentPointer(input: $input) {
                 code
                 success
                 message
-                account {
+                paymentPointer {
                   id
                   asset {
                     code
@@ -73,9 +73,9 @@ describe('Account Resolvers', (): void => {
             input
           }
         })
-        .then((query): CreateAccountMutationResponse => {
+        .then((query): CreatePaymentPointerMutationResponse => {
           if (query.data) {
-            return query.data.createAccount
+            return query.data.createPaymentPointer
           } else {
             throw new Error('Data was empty')
           }
@@ -83,10 +83,10 @@ describe('Account Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
-      assert(response.account)
-      expect(response.account).toEqual({
-        __typename: 'Account',
-        id: response.account.id,
+      assert(response.paymentPointer)
+      expect(response.paymentPointer).toEqual({
+        __typename: 'PaymentPointer',
+        id: response.paymentPointer.id,
         asset: {
           __typename: 'Asset',
           code: input.asset.code,
@@ -94,9 +94,9 @@ describe('Account Resolvers', (): void => {
         }
       })
       await expect(
-        accountService.get(response.account.id)
+        paymentPointerService.get(response.paymentPointer.id)
       ).resolves.toMatchObject({
-        id: response.account.id,
+        id: response.paymentPointer.id,
         asset: {
           code: input.asset.code,
           scale: input.asset.scale
@@ -106,22 +106,22 @@ describe('Account Resolvers', (): void => {
 
     test('500', async (): Promise<void> => {
       jest
-        .spyOn(accountService, 'create')
+        .spyOn(paymentPointerService, 'create')
         .mockImplementationOnce(async (_args) => {
           throw new Error('unexpected')
         })
-      const input: CreateAccountInput = {
+      const input: CreatePaymentPointerInput = {
         asset: randomAsset()
       }
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccount($input: CreateAccountInput!) {
-              createAccount(input: $input) {
+            mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
+              createPaymentPointer(input: $input) {
                 code
                 success
                 message
-                account {
+                paymentPointer {
                   id
                   asset {
                     code
@@ -135,28 +135,28 @@ describe('Account Resolvers', (): void => {
             input
           }
         })
-        .then((query): CreateAccountMutationResponse => {
+        .then((query): CreatePaymentPointerMutationResponse => {
           if (query.data) {
-            return query.data.createAccount
+            return query.data.createPaymentPointer
           } else {
             throw new Error('Data was empty')
           }
         })
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to create account')
+      expect(response.message).toBe('Error trying to create payment pointer')
     })
   })
 
-  describe('Account Queries', (): void => {
-    test('Can get an account', async (): Promise<void> => {
+  describe('Payment Pointer Queries', (): void => {
+    test('Can get an payment pointer', async (): Promise<void> => {
       const asset = randomAsset()
-      const account = await accountService.create({ asset })
+      const paymentPointer = await paymentPointerService.create({ asset })
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Account($accountId: String!) {
-              account(id: $accountId) {
+            query PaymentPointer($paymentPointerId: String!) {
+              paymentPointer(id: $paymentPointerId) {
                 id
                 asset {
                   code
@@ -166,45 +166,45 @@ describe('Account Resolvers', (): void => {
             }
           `,
           variables: {
-            accountId: account.id
+            paymentPointerId: paymentPointer.id
           }
         })
-        .then((query): Account => {
+        .then((query): PaymentPointer => {
           if (query.data) {
-            return query.data.account
+            return query.data.paymentPointer
           } else {
             throw new Error('Data was empty')
           }
         })
 
       expect(query).toEqual({
-        __typename: 'Account',
-        id: account.id,
+        __typename: 'PaymentPointer',
+        id: paymentPointer.id,
         asset: {
           __typename: 'Asset',
-          code: account.asset.code,
-          scale: account.asset.scale
+          code: paymentPointer.asset.code,
+          scale: paymentPointer.asset.scale
         }
       })
     })
 
-    test('Returns error for unknown account', async (): Promise<void> => {
+    test('Returns error for unknown payment pointer', async (): Promise<void> => {
       const gqlQuery = appContainer.apolloClient
         .query({
           query: gql`
-            query Account($accountId: String!) {
-              account(id: $accountId) {
+            query PaymentPointer($paymentPointerId: String!) {
+              paymentPointer(id: $paymentPointerId) {
                 id
               }
             }
           `,
           variables: {
-            accountId: uuid()
+            paymentPointerId: uuid()
           }
         })
-        .then((query): Account => {
+        .then((query): PaymentPointer => {
           if (query.data) {
-            return query.data.account
+            return query.data.paymentPointer
           } else {
             throw new Error('Data was empty')
           }
@@ -214,39 +214,39 @@ describe('Account Resolvers', (): void => {
     })
   })
 
-  describe('Trigger Account Events', (): void => {
+  describe('Trigger Payment Pointer Events', (): void => {
     test.each`
       limit | count
       ${1}  | ${1}
       ${5}  | ${2}
     `(
-      'Can trigger account events (limit: $limit)',
+      'Can trigger payment pointer events (limit: $limit)',
       async ({ limit, count }): Promise<void> => {
         const accountingService = await deps.use('accountingService')
-        const accounts: AccountModel[] = []
+        const paymentPointers: PaymentPointerModel[] = []
         const asset = randomAsset()
         const withdrawalAmount = BigInt(10)
         for (let i = 0; i < 3; i++) {
-          const account = await accountService.create({ asset })
+          const paymentPointer = await paymentPointerService.create({ asset })
           if (i) {
             await expect(
               accountingService.createDeposit({
                 id: uuid(),
-                account,
+                account: paymentPointer,
                 amount: withdrawalAmount
               })
             ).resolves.toBeUndefined()
-            await account.$query(knex).patch({
+            await paymentPointer.$query(knex).patch({
               processAt: new Date()
             })
           }
-          accounts.push(account)
+          paymentPointers.push(paymentPointer)
         }
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation TriggerAccountEvents($limit: Int!) {
-                triggerAccountEvents(limit: $limit) {
+              mutation TriggerPaymentPointerEvents($limit: Int!) {
+                triggerPaymentPointerEvents(limit: $limit) {
                   code
                   success
                   message
@@ -258,9 +258,9 @@ describe('Account Resolvers', (): void => {
               limit
             }
           })
-          .then((query): TriggerAccountEventsMutationResponse => {
+          .then((query): TriggerPaymentPointerEventsMutationResponse => {
             if (query.data) {
-              return query.data.triggerAccountEvents
+              return query.data.triggerPaymentPointerEvents
             } else {
               throw new Error('Data was empty')
             }
@@ -270,13 +270,13 @@ describe('Account Resolvers', (): void => {
         expect(response.code).toEqual('200')
         expect(response.count).toEqual(count)
         await expect(
-          AccountEvent.query(knex).where({
-            type: AccountEventType.AccountWebMonetization
+          PaymentPointerEvent.query(knex).where({
+            type: PaymentPointerEventType.PaymentPointerWebMonetization
           })
         ).resolves.toHaveLength(count)
         for (let i = 1; i <= count; i++) {
           await expect(
-            accountService.get(accounts[i].id)
+            paymentPointerService.get(paymentPointers[i].id)
           ).resolves.toMatchObject({
             processAt: null,
             totalEventsAmount: withdrawalAmount
@@ -287,13 +287,13 @@ describe('Account Resolvers', (): void => {
 
     test('500', async (): Promise<void> => {
       jest
-        .spyOn(accountService, 'triggerEvents')
+        .spyOn(paymentPointerService, 'triggerEvents')
         .mockRejectedValueOnce(new Error('unexpected'))
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation TriggerAccountEvents($limit: Int!) {
-              triggerAccountEvents(limit: $limit) {
+            mutation TriggerPaymentPointerEvents($limit: Int!) {
+              triggerPaymentPointerEvents(limit: $limit) {
                 code
                 success
                 message
@@ -305,16 +305,18 @@ describe('Account Resolvers', (): void => {
             limit: 1
           }
         })
-        .then((query): TriggerAccountEventsMutationResponse => {
+        .then((query): TriggerPaymentPointerEventsMutationResponse => {
           if (query.data) {
-            return query.data.triggerAccountEvents
+            return query.data.triggerPaymentPointerEvents
           } else {
             throw new Error('Data was empty')
           }
         })
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to trigger account events')
+      expect(response.message).toBe(
+        'Error trying to trigger payment pointer events'
+      )
       expect(response.count).toBeNull()
     })
   })

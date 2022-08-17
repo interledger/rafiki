@@ -7,7 +7,7 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { AccountService } from '../../open_payments/account/service'
+import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 import { randomAsset } from '../../tests/asset'
 import {
   CreateApiKeyInput,
@@ -24,7 +24,7 @@ describe('ApiKey Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let accountService: AccountService
+  let paymentPointerService: PaymentPointerService
   let apiKeyService: ApiKeyService
   let sessionService: SessionService
 
@@ -32,7 +32,7 @@ describe('ApiKey Resolvers', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    accountService = await deps.use('accountService')
+    paymentPointerService = await deps.use('paymentPointerService')
     apiKeyService = await deps.use('apiKeyService')
     sessionService = await deps.use('sessionService')
   })
@@ -48,11 +48,11 @@ describe('ApiKey Resolvers', (): void => {
 
   describe('Api Key Mutations', (): void => {
     test('Api key can be created', async (): Promise<void> => {
-      const { id: accountId } = await accountService.create({
+      const { id: paymentPointerId } = await paymentPointerService.create({
         asset: randomAsset()
       })
 
-      const input: CreateApiKeyInput = { accountId }
+      const input: CreateApiKeyInput = { paymentPointerId }
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -63,7 +63,7 @@ describe('ApiKey Resolvers', (): void => {
                 message
                 apiKey {
                   id
-                  accountId
+                  paymentPointerId
                   key
                   createdAt
                   updatedAt
@@ -86,14 +86,16 @@ describe('ApiKey Resolvers', (): void => {
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
       expect(response.apiKey?.id).not.toBeNull()
-      expect(response.apiKey?.accountId).not.toBeNull()
+      expect(response.apiKey?.paymentPointerId).not.toBeNull()
       expect(response.apiKey?.key).not.toBeNull()
       expect(response.apiKey?.createdAt).not.toBeNull()
       expect(response.apiKey?.updatedAt).not.toBeNull()
       if (response.apiKey) {
         const apiKeys = await apiKeyService.get(input)
         expect(response.apiKey.id).toEqual(apiKeys[0].id)
-        expect(response.apiKey.accountId).toEqual(apiKeys[0].accountId)
+        expect(response.apiKey.paymentPointerId).toEqual(
+          apiKeys[0].paymentPointerId
+        )
         expect(response.apiKey.createdAt).toEqual(
           new Date(apiKeys[0].createdAt).toISOString()
         )
@@ -109,12 +111,12 @@ describe('ApiKey Resolvers', (): void => {
     })
 
     test('API Key can be redeemed', async (): Promise<void> => {
-      const { id: accountId } = await accountService.create({
+      const { id: paymentPointerId } = await paymentPointerService.create({
         asset: randomAsset()
       })
-      const apiKey = await apiKeyService.create({ accountId })
+      const apiKey = await apiKeyService.create({ paymentPointerId })
       const input: RedeemApiKeyInput = {
-        accountId,
+        paymentPointerId,
         key: apiKey.key
       }
       const response = await appContainer.apolloClient
@@ -163,11 +165,11 @@ describe('ApiKey Resolvers', (): void => {
     })
 
     test('Api keys can be deleted', async (): Promise<void> => {
-      const { id: accountId } = await accountService.create({
+      const { id: paymentPointerId } = await paymentPointerService.create({
         asset: randomAsset()
       })
-      await apiKeyService.create({ accountId })
-      const input: DeleteAllApiKeysInput = { accountId }
+      await apiKeyService.create({ paymentPointerId })
+      const input: DeleteAllApiKeysInput = { paymentPointerId }
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`

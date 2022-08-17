@@ -1,5 +1,5 @@
 type Query {
-  account(id: String!): Account
+  paymentPointer(id: String!): PaymentPointer
 
   asset(id: String!): Asset
 
@@ -34,9 +34,13 @@ type Query {
 }
 
 type Mutation {
-  createAccount(input: CreateAccountInput!): CreateAccountMutationResponse!
+  createPaymentPointer(
+    input: CreatePaymentPointerInput!
+  ): CreatePaymentPointerMutationResponse!
 
-  triggerAccountEvents(limit: Int!): TriggerAccountEventsMutationResponse!
+  triggerPaymentPointerEvents(
+    limit: Int!
+  ): TriggerPaymentPointerEventsMutationResponse!
 
   "Create asset"
   createAsset(input: CreateAssetInput!): AssetMutationResponse!
@@ -71,10 +75,10 @@ type Mutation {
     input: CreateAssetLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
-  "Create liquidity withdrawal from Open Payments account"
-  createAccountWithdrawal(
-    input: CreateAccountWithdrawalInput!
-  ): AccountWithdrawalMutationResponse
+  "Create liquidity withdrawal from Open Payments payment pointer"
+  createPaymentPointerWithdrawal(
+    input: CreatePaymentPointerWithdrawalInput!
+  ): PaymentPointerWithdrawalMutationResponse
 
   "Finalize liquidity withdrawal"
   finalizeLiquidityWithdrawal(
@@ -235,9 +239,9 @@ input CreateAssetLiquidityWithdrawalInput {
   id: String!
 }
 
-input CreateAccountWithdrawalInput {
-  "The id of the Open Payments account to create the withdrawal for."
-  accountId: String!
+input CreatePaymentPointerWithdrawalInput {
+  "The id of the Open Payments payment pointer to create the withdrawal for."
+  paymentPointerId: String!
   "The id of the withdrawal."
   id: String!
 }
@@ -256,20 +260,20 @@ input AddKeyToClientInput {
 }
 
 input CreateApiKeyInput {
-  "Account API key is created for."
-  accountId: String!
+  "Payment pointer API key is created for."
+  paymentPointerId: String!
 }
 
 input DeleteAllApiKeysInput {
-  "Account API keys are deleted from."
-  accountId: String!
+  "Payment pointer API keys are deleted from."
+  paymentPointerId: String!
 }
 
 input RedeemApiKeyInput {
   "API key"
   key: String!
-  "Account API key was issued for."
-  accountId: String!
+  "Payment pointer API key was issued for."
+  paymentPointerId: String!
 }
 
 input RefreshSessionInput {
@@ -297,10 +301,10 @@ enum LiquidityError {
   InsufficientBalance
   InvalidId
   TransferExists
-  UnknownAccount
   UnknownAsset
   UnknownIncomingPayment
   UnknownPayment
+  UnknownPaymentPointer
   UnknownPeer
   UnknownTransfer
 }
@@ -323,7 +327,7 @@ type HttpOutgoing {
   endpoint: String!
 }
 
-type Account implements Model {
+type PaymentPointer implements Model {
   id: ID!
   asset: Asset!
   incomingPayments(
@@ -371,7 +375,7 @@ type IncomingPaymentEdge {
 
 type IncomingPayment implements Model {
   id: ID!
-  accountId: ID!
+  paymentPointerId: ID!
   state: IncomingPaymentState!
   expiresAt: String!
   incomingAmount: Amount
@@ -410,7 +414,7 @@ type OutgoingPaymentEdge {
 
 type OutgoingPayment implements Model {
   id: ID!
-  accountId: ID!
+  paymentPointerId: ID!
   state: OutgoingPaymentState!
   error: String
   stateAttempts: Int!
@@ -447,7 +451,7 @@ type QuoteEdge {
 
 type Quote {
   id: ID!
-  accountId: ID!
+  paymentPointerId: ID!
   receiver: String!
   sendAmount: Amount!
   receiveAmount: Amount!
@@ -466,7 +470,7 @@ input AmountInput {
 }
 
 input CreateQuoteInput {
-  accountId: String!
+  paymentPointerId: String!
   sendAmount: AmountInput
   receiveAmount: AmountInput
   receiver: String!
@@ -480,7 +484,7 @@ type QuoteResponse {
 }
 
 input CreateOutgoingPaymentInput {
-  accountId: String!
+  paymentPointerId: String!
   quoteId: String!
   description: String
   externalRef: String
@@ -493,7 +497,7 @@ type OutgoingPaymentResponse {
   payment: OutgoingPayment
 }
 
-input CreateAccountInput {
+input CreatePaymentPointerInput {
   asset: AssetInput!
   publicName: String
 }
@@ -517,7 +521,7 @@ type ClientKeys implements Model {
 
 type ApiKey implements Model {
   id: ID!
-  accountId: String!
+  paymentPointerId: String!
   key: String!
   createdAt: String!
   updatedAt: String!
@@ -528,10 +532,10 @@ type Session {
   expiresAt: String!
 }
 
-type AccountWithdrawal {
+type PaymentPointerWithdrawal {
   id: ID!
   amount: UInt64!
-  account: Account!
+  paymentPointer: PaymentPointer!
 }
 
 interface Model {
@@ -539,14 +543,14 @@ interface Model {
   createdAt: String!
 }
 
-type CreateAccountMutationResponse implements MutationResponse {
+type CreatePaymentPointerMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  account: Account
+  paymentPointer: PaymentPointer
 }
 
-type TriggerAccountEventsMutationResponse implements MutationResponse {
+type TriggerPaymentPointerEventsMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
@@ -593,12 +597,12 @@ type LiquidityMutationResponse implements MutationResponse {
   error: LiquidityError
 }
 
-type AccountWithdrawalMutationResponse implements MutationResponse {
+type PaymentPointerWithdrawalMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
   error: LiquidityError
-  withdrawal: AccountWithdrawal
+  withdrawal: PaymentPointerWithdrawal
 }
 
 type CreateClientMutationResponse implements MutationResponse {

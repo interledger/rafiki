@@ -14,7 +14,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { QuoteError, errorToMessage } from '../../open_payments/quote/errors'
 import { QuoteService } from '../../open_payments/quote/service'
 import { Quote as QuoteModel } from '../../open_payments/quote/model'
-import { AccountService } from '../../open_payments/account/service'
+import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 import { Amount } from '../../open_payments/amount'
 import { Quote, QuoteResponse } from '../generated/graphql'
 
@@ -23,10 +23,10 @@ describe('Quote Resolvers', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let quoteService: QuoteService
-  let accountService: AccountService
+  let paymentPointerService: PaymentPointerService
 
-  const receivingAccount = 'http://wallet2.example/bob'
-  const receiver = `${receivingAccount}/incoming-payments/${uuid()}`
+  const receivingPaymentPointer = 'http://wallet2.example/bob'
+  const receiver = `${receivingPaymentPointer}/incoming-payments/${uuid()}`
   const asset = randomAsset()
 
   beforeAll(async (): Promise<void> => {
@@ -34,7 +34,7 @@ describe('Quote Resolvers', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     quoteService = await deps.use('quoteService')
-    accountService = await deps.use('accountService')
+    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -47,9 +47,11 @@ describe('Quote Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  const createAccountQuote = async (accountId: string): Promise<QuoteModel> => {
+  const createPaymentPointerQuote = async (
+    paymentPointerId: string
+  ): Promise<QuoteModel> => {
     return await createQuote(deps, {
-      accountId,
+      paymentPointerId,
       receiver,
       sendAmount: {
         value: BigInt(56),
@@ -62,10 +64,10 @@ describe('Quote Resolvers', (): void => {
 
   describe('Query.quote', (): void => {
     test('200', async (): Promise<void> => {
-      const { id: accountId } = await accountService.create({
+      const { id: paymentPointerId } = await paymentPointerService.create({
         asset
       })
-      const quote = await createAccountQuote(accountId)
+      const quote = await createPaymentPointerQuote(paymentPointerId)
 
       const query = await appContainer.apolloClient
         .query({
@@ -73,7 +75,7 @@ describe('Quote Resolvers', (): void => {
             query Quote($quoteId: String!) {
               quote(id: $quoteId) {
                 id
-                accountId
+                paymentPointerId
                 receiver
                 sendAmount {
                   value
@@ -102,7 +104,7 @@ describe('Quote Resolvers', (): void => {
 
       expect(query).toEqual({
         id: quote.id,
-        accountId,
+        paymentPointerId,
         receiver: quote.receiver,
         sendAmount: {
           value: quote.sendAmount.value.toString(),
@@ -161,7 +163,7 @@ describe('Quote Resolvers', (): void => {
     }
 
     const input = {
-      accountId: uuid(),
+      paymentPointerId: uuid(),
       receiver,
       sendAmount
     }
@@ -172,11 +174,11 @@ describe('Quote Resolvers', (): void => {
       ${undefined}  | ${receiveAmount} | ${'fixed receive to incoming payment'}
       ${undefined}  | ${undefined}     | ${'incoming payment'}
     `('200 ($type)', async ({ sendAmount, receiveAmount }): Promise<void> => {
-      const { id: accountId } = await accountService.create({
+      const { id: paymentPointerId } = await paymentPointerService.create({
         asset
       })
       const input = {
-        accountId,
+        paymentPointerId,
         sendAmount,
         receiveAmount,
         receiver
@@ -236,7 +238,9 @@ describe('Quote Resolvers', (): void => {
         .then((query): QuoteResponse => query.data?.createQuote)
       expect(query.code).toBe('404')
       expect(query.success).toBe(false)
-      expect(query.message).toBe(errorToMessage[QuoteError.UnknownAccount])
+      expect(query.message).toBe(
+        errorToMessage[QuoteError.UnknownPaymentPointer]
+      )
       expect(query.quote).toBeNull()
     })
 
@@ -270,12 +274,12 @@ describe('Quote Resolvers', (): void => {
     })
   })
 
-  describe('Account quotes', (): void => {
-    let accountId: string
+  describe('Payment pointer quotes', (): void => {
+    let paymentPointerId: string
 
     beforeEach(async (): Promise<void> => {
-      accountId = (
-        await accountService.create({
+      paymentPointerId = (
+        await paymentPointerService.create({
           asset
         })
       ).id
@@ -283,11 +287,11 @@ describe('Quote Resolvers', (): void => {
 
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () => createAccountQuote(accountId),
+      createModel: () => createPaymentPointerQuote(paymentPointerId),
       pagedQuery: 'quotes',
       parent: {
-        query: 'account',
-        getId: () => accountId
+        query: 'paymentPointer',
+        getId: () => paymentPointerId
       }
     })
   })

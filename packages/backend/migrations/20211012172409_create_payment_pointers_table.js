@@ -1,5 +1,5 @@
 exports.up = function (knex) {
-  return knex.schema.createTable('accounts', function (table) {
+  return knex.schema.createTable('paymentPointers', function (table) {
     table.uuid('id').notNullable().primary()
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
@@ -7,7 +7,7 @@ exports.up = function (knex) {
     table.string('publicName').nullable()
 
     // The cumulative received amount tracked by
-    // `account.web_monetization` webhook events.
+    // `payment_pointer.web_monetization` webhook events.
     // The value should be equivalent to the following query:
     // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `account.id`
     table.bigInteger('totalEventsAmount').notNullable().defaultTo(0)
@@ -21,5 +21,5 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('accounts')
+  return knex.schema.dropTableIfExists('paymentPointers')
 }

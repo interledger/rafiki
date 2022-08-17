@@ -1,8 +1,12 @@
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { Account, AccountEvent, AccountEventType } from './model'
-import { AccountService } from './service'
+import {
+  PaymentPointer,
+  PaymentPointerEvent,
+  PaymentPointerEventType
+} from './model'
+import { PaymentPointerService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { randomAsset } from '../../tests/asset'
@@ -13,10 +17,10 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { faker } from '@faker-js/faker'
 
-describe('Open Payments Account Service', (): void => {
+describe('Open Payments Payment Pointer Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let accountService: AccountService
+  let paymentPointerService: PaymentPointerService
   let accountingService: AccountingService
   let knex: Knex
 
@@ -24,7 +28,7 @@ describe('Open Payments Account Service', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    accountService = await deps.use('accountService')
+    paymentPointerService = await deps.use('paymentPointerService')
     accountingService = await deps.use('accountingService')
   })
 
@@ -37,17 +41,19 @@ describe('Open Payments Account Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create or Get Account', (): void => {
-    test('Account can be created or fetched', async (): Promise<void> => {
+  describe('Create or Get Payment Pointer', (): void => {
+    test('Payment pointer can be created or fetched', async (): Promise<void> => {
       const options = {
         asset: randomAsset()
       }
-      const account = await accountService.create(options)
-      await expect(account).toMatchObject(options)
-      await expect(accountService.get(account.id)).resolves.toEqual(account)
+      const paymentPointer = await paymentPointerService.create(options)
+      await expect(paymentPointer).toMatchObject(options)
+      await expect(
+        paymentPointerService.get(paymentPointer.id)
+      ).resolves.toEqual(paymentPointer)
     })
 
-    test('Account with a public name can be created or fetched', async (): Promise<void> => {
+    test('Payment pointer with a public name can be created or fetched', async (): Promise<void> => {
       const publicName = faker.name.firstName()
 
       const options = {
@@ -55,26 +61,30 @@ describe('Open Payments Account Service', (): void => {
         asset: randomAsset()
       }
 
-      const account = await accountService.create(options)
-      await expect(account).toMatchObject(options)
-      await expect(accountService.get(account.id)).resolves.toEqual(account)
+      const paymentPointer = await paymentPointerService.create(options)
+      await expect(paymentPointer).toMatchObject(options)
+      await expect(
+        paymentPointerService.get(paymentPointer.id)
+      ).resolves.toEqual(paymentPointer)
     })
 
-    test('Creating an account creates an SPSP fallback account', async (): Promise<void> => {
-      const account = await accountService.create({ asset: randomAsset() })
+    test('Creating a payment pointer creates an SPSP fallback account', async (): Promise<void> => {
+      const paymentPointer = await paymentPointerService.create({
+        asset: randomAsset()
+      })
 
       const accountingService = await deps.use('accountingService')
-      await expect(accountingService.getBalance(account.id)).resolves.toEqual(
-        BigInt(0)
-      )
+      await expect(
+        accountingService.getBalance(paymentPointer.id)
+      ).resolves.toEqual(BigInt(0))
     })
   })
 
   describe('onCredit', (): void => {
-    let account: Account
+    let paymentPointer: PaymentPointer
 
     beforeEach(async (): Promise<void> => {
-      account = await accountService.create({
+      paymentPointer = await paymentPointerService.create({
         asset: randomAsset()
       })
     })
@@ -108,7 +118,7 @@ describe('Open Payments Account Service', (): void => {
             let thresholdProcessAt: Date | null = null
 
             beforeEach(async (): Promise<void> => {
-              await account.asset.$query(knex).patch({
+              await paymentPointer.asset.$query(knex).patch({
                 withdrawalThreshold
               })
               if (withdrawalThreshold !== null) {
@@ -124,7 +134,7 @@ describe('Open Payments Account Service', (): void => {
               'startingProcessAt: $startingProcessAt',
               ({ startingProcessAt }): void => {
                 beforeEach(async (): Promise<void> => {
-                  await account.$query(knex).patch({
+                  await paymentPointer.$query(knex).patch({
                     processAt: startingProcessAt
                   })
                 })
@@ -137,14 +147,14 @@ describe('Open Payments Account Service', (): void => {
                   'totalEventsAmount: $totalEventsAmount',
                   ({ totalEventsAmount }): void => {
                     beforeEach(async (): Promise<void> => {
-                      await account.$query(knex).patch({
+                      await paymentPointer.$query(knex).patch({
                         totalEventsAmount
                       })
                     })
                     if (withdrawalThreshold !== BigInt(0)) {
                       test("Balance doesn't meet withdrawal threshold", async (): Promise<void> => {
                         await expect(
-                          account.onCredit({
+                          paymentPointer.onCredit({
                             totalReceived: totalEventsAmount + BigInt(1),
                             withdrawalThrottleDelay
                           })
@@ -152,7 +162,7 @@ describe('Open Payments Account Service', (): void => {
                           processAt: startingProcessAt || delayProcessAt
                         })
                         await expect(
-                          accountService.get(account.id)
+                          paymentPointerService.get(paymentPointer.id)
                         ).resolves.toMatchObject({
                           processAt: startingProcessAt || delayProcessAt
                         })
@@ -168,14 +178,14 @@ describe('Open Payments Account Service', (): void => {
                         'Balance $description withdrawal threshold',
                         async ({ totalReceived }): Promise<void> => {
                           await expect(
-                            account.onCredit({
+                            paymentPointer.onCredit({
                               totalReceived
                             })
                           ).resolves.toMatchObject({
                             processAt: thresholdProcessAt
                           })
                           await expect(
-                            accountService.get(account.id)
+                            paymentPointerService.get(paymentPointer.id)
                           ).resolves.toMatchObject({
                             processAt: thresholdProcessAt
                           })
@@ -193,10 +203,10 @@ describe('Open Payments Account Service', (): void => {
   })
 
   describe('processNext', (): void => {
-    let account: Account
+    let paymentPointer: PaymentPointer
 
     beforeEach(async (): Promise<void> => {
-      account = await accountService.create({
+      paymentPointer = await paymentPointerService.create({
         asset: randomAsset()
       })
     })
@@ -206,11 +216,15 @@ describe('Open Payments Account Service', (): void => {
       ${null}                          | ${'not scheduled'}
       ${new Date(Date.now() + 60_000)} | ${'not ready'}
     `(
-      'Does not process account $description for withdrawal',
+      'Does not process payment pointer $description for withdrawal',
       async ({ processAt }): Promise<void> => {
-        await account.$query(knex).patch({ processAt })
-        await expect(accountService.processNext()).resolves.toBeUndefined()
-        await expect(accountService.get(account.id)).resolves.toEqual(account)
+        await paymentPointer.$query(knex).patch({ processAt })
+        await expect(
+          paymentPointerService.processNext()
+        ).resolves.toBeUndefined()
+        await expect(
+          paymentPointerService.get(paymentPointer.id)
+        ).resolves.toEqual(paymentPointer)
       }
     )
 
@@ -228,24 +242,28 @@ describe('Open Payments Account Service', (): void => {
         await expect(
           accountingService.createDeposit({
             id: uuid(),
-            account,
+            account: paymentPointer,
             amount: totalReceived
           })
         ).resolves.toBeUndefined()
-        await account.$query(knex).patch({
+        await paymentPointer.$query(knex).patch({
           processAt: new Date(),
           totalEventsAmount
         })
-        await expect(accountService.processNext()).resolves.toBe(account.id)
-        await expect(accountService.get(account.id)).resolves.toMatchObject({
+        await expect(paymentPointerService.processNext()).resolves.toBe(
+          paymentPointer.id
+        )
+        await expect(
+          paymentPointerService.get(paymentPointer.id)
+        ).resolves.toMatchObject({
           processAt: null,
           totalEventsAmount: totalEventsAmount + withdrawalAmount
         })
         await expect(
-          AccountEvent.query(knex).where({
-            type: AccountEventType.AccountWebMonetization,
-            withdrawalAccountId: account.id,
-            withdrawalAssetId: account.assetId,
+          PaymentPointerEvent.query(knex).where({
+            type: PaymentPointerEventType.PaymentPointerWebMonetization,
+            withdrawalAccountId: paymentPointer.id,
+            withdrawalAssetId: paymentPointer.assetId,
             withdrawalAmount
           })
         ).resolves.toHaveLength(1)
@@ -254,13 +272,13 @@ describe('Open Payments Account Service', (): void => {
   })
 
   describe('triggerEvents', (): void => {
-    let accounts: Account[]
+    let paymentPointers: PaymentPointer[]
     const asset = randomAsset()
 
     beforeEach(async (): Promise<void> => {
-      accounts = []
+      paymentPointers = []
       for (let i = 0; i < 5; i++) {
-        accounts.push(await accountService.create({ asset }))
+        paymentPointers.push(await paymentPointerService.create({ asset }))
       }
     })
 
@@ -269,12 +287,14 @@ describe('Open Payments Account Service', (): void => {
       ${null}                          | ${'not scheduled'}
       ${new Date(Date.now() + 60_000)} | ${'not ready'}
     `(
-      'Does not process account $description for withdrawal',
+      'Does not process payment pointer $description for withdrawal',
       async ({ processAt }): Promise<void> => {
-        for (let i = 1; i < accounts.length; i++) {
-          await accounts[i].$query(knex).patch({ processAt })
+        for (let i = 1; i < paymentPointers.length; i++) {
+          await paymentPointers[i].$query(knex).patch({ processAt })
         }
-        await expect(accountService.triggerEvents(10)).resolves.toEqual(0)
+        await expect(paymentPointerService.triggerEvents(10)).resolves.toEqual(
+          0
+        )
       }
     )
 
@@ -287,36 +307,38 @@ describe('Open Payments Account Service', (): void => {
       'Creates withdrawal webhook event(s) (limit: $limit)',
       async ({ limit, count }): Promise<void> => {
         const withdrawalAmount = BigInt(10)
-        for (let i = 1; i < accounts.length; i++) {
+        for (let i = 1; i < paymentPointers.length; i++) {
           await expect(
             accountingService.createDeposit({
               id: uuid(),
-              account: accounts[i],
+              account: paymentPointers[i],
               amount: withdrawalAmount
             })
           ).resolves.toBeUndefined()
-          await accounts[i].$query(knex).patch({
+          await paymentPointers[i].$query(knex).patch({
             processAt: new Date()
           })
         }
-        await expect(accountService.triggerEvents(limit)).resolves.toBe(count)
+        await expect(paymentPointerService.triggerEvents(limit)).resolves.toBe(
+          count
+        )
         await expect(
-          AccountEvent.query(knex).where({
-            type: AccountEventType.AccountWebMonetization
+          PaymentPointerEvent.query(knex).where({
+            type: PaymentPointerEventType.PaymentPointerWebMonetization
           })
         ).resolves.toHaveLength(count)
         for (let i = 1; i <= count; i++) {
           await expect(
-            accountService.get(accounts[i].id)
+            paymentPointerService.get(paymentPointers[i].id)
           ).resolves.toMatchObject({
             processAt: null,
             totalEventsAmount: withdrawalAmount
           })
         }
-        for (let i = count + 1; i < accounts.length; i++) {
-          await expect(accountService.get(accounts[i].id)).resolves.toEqual(
-            accounts[i]
-          )
+        for (let i = count + 1; i < paymentPointers.length; i++) {
+          await expect(
+            paymentPointerService.get(paymentPointers[i].id)
+          ).resolves.toEqual(paymentPointers[i])
         }
       }
     )

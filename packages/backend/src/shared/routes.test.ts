@@ -6,14 +6,14 @@ interface BaseResponse {
 }
 
 interface ListTestsOptions<Type> {
-  getAccountId: () => string
+  getPaymentPointerId: () => string
   getUrl: () => string
   createItem: (index: number) => Promise<Type>
   list: (ctx: ListContext) => Promise<void>
 }
 
 export const listTests = <Type extends BaseResponse>({
-  getAccountId,
+  getPaymentPointerId,
   getUrl,
   createItem,
   list
@@ -58,7 +58,7 @@ export const listTests = <Type extends BaseResponse>({
             query,
             url: getUrl()
           },
-          { accountId: getAccountId() }
+          { accountId: getPaymentPointerId() }
         )
         await expect(list(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()

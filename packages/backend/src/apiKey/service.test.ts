@@ -6,9 +6,9 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import { AccountService } from '../open_payments/account/service'
+import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 import { randomAsset } from '../tests/asset'
-import { Account } from '../open_payments/account/model'
+import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import bcrypt from 'bcrypt'
 import { ApiKeyError, isApiKeyError } from './errors'
 
@@ -16,8 +16,8 @@ describe('Api Key Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let apiKeyService: ApiKeyService
-  let accountService: AccountService
-  let account: Account
+  let paymentPointerService: PaymentPointerService
+  let paymentPointer: PaymentPointer
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
@@ -25,11 +25,13 @@ describe('Api Key Service', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     apiKeyService = await deps.use('apiKeyService')
-    accountService = await deps.use('accountService')
+    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   beforeEach(async (): Promise<void> => {
-    account = await accountService.create({ asset: randomAsset() })
+    paymentPointer = await paymentPointerService.create({
+      asset: randomAsset()
+    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -41,12 +43,12 @@ describe('Api Key Service', (): void => {
   })
 
   describe('Create / Get Api Key', (): void => {
-    test('An api key can be created/fetched for a certain account', async (): Promise<void> => {
-      const apiKeyOptions = { accountId: account.id }
+    test('An api key can be created/fetched for a certain payment pointer', async (): Promise<void> => {
+      const apiKeyOptions = { paymentPointerId: paymentPointer.id }
       const apiKey = await apiKeyService.create(apiKeyOptions)
       expect(apiKey.key).toBeDefined()
       expect(apiKey.hashedKey).toBeDefined()
-      expect(apiKey.accountId).toEqual(account.id)
+      expect(apiKey.paymentPointerId).toEqual(paymentPointer.id)
       expect(apiKey.createdAt).toBeDefined()
       expect(apiKey.updatedAt).toBeDefined()
       const match = await bcrypt.compare(apiKey.key, apiKey.hashedKey)
@@ -55,7 +57,7 @@ describe('Api Key Service', (): void => {
       const fetchedKeys = await apiKeyService.get(apiKeyOptions)
       expect(fetchedKeys.length).toEqual(1)
       expect(fetchedKeys[0].hashedKey).toEqual(apiKey.hashedKey)
-      expect(fetchedKeys[0].accountId).toEqual(apiKey.accountId)
+      expect(fetchedKeys[0].paymentPointerId).toEqual(apiKey.paymentPointerId)
       expect(fetchedKeys[0].createdAt).toEqual(apiKey.createdAt)
       expect(fetchedKeys[0].updatedAt).toEqual(apiKey.updatedAt)
       expect(fetchedKeys[0]).not.toHaveProperty('key')
@@ -64,9 +66,11 @@ describe('Api Key Service', (): void => {
 
   describe('Redeem Api Key for Session Key', (): void => {
     test('A valid api key can be redeemed for a session key', async (): Promise<void> => {
-      const apiKey = await apiKeyService.create({ accountId: account.id })
+      const apiKey = await apiKeyService.create({
+        paymentPointerId: paymentPointer.id
+      })
       const sessionKeyOrError = await apiKeyService.redeem({
-        accountId: account.id,
+        paymentPointerId: paymentPointer.id,
         key: apiKey.key
       })
       expect(isApiKeyError(sessionKeyOrError)).toEqual(false)
@@ -77,18 +81,18 @@ describe('Api Key Service', (): void => {
       }
     })
 
-    test('A session key cannot be acquired if no api key for account exists', async (): Promise<void> => {
+    test('A session key cannot be acquired if no api key for payment pointer exists', async (): Promise<void> => {
       const sessionKeyOrError = apiKeyService.redeem({
-        accountId: account.id,
+        paymentPointerId: paymentPointer.id,
         key: '123'
       })
       expect(sessionKeyOrError).resolves.toEqual(ApiKeyError.UnknownApiKey)
     })
 
     test('A session key cannot be acquired if api key is unknown', async (): Promise<void> => {
-      await apiKeyService.create({ accountId: account.id })
+      await apiKeyService.create({ paymentPointerId: paymentPointer.id })
       const sessionKeyOrError = apiKeyService.redeem({
-        accountId: account.id,
+        paymentPointerId: paymentPointer.id,
         key: '123'
       })
       expect(sessionKeyOrError).resolves.toEqual(ApiKeyError.UnknownApiKey)
@@ -96,8 +100,8 @@ describe('Api Key Service', (): void => {
   })
 
   describe('Delete Api Key', (): void => {
-    test('All api keys for an account can be deleted', async (): Promise<void> => {
-      const apiKeyOptions = { accountId: account.id }
+    test('All api keys for an payment pointer can be deleted', async (): Promise<void> => {
+      const apiKeyOptions = { paymentPointerId: paymentPointer.id }
       await apiKeyService.create(apiKeyOptions)
       await apiKeyService.create(apiKeyOptions)
       await apiKeyService.deleteAll(apiKeyOptions)

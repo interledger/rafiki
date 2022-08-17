@@ -21,9 +21,13 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
     return new MockAccountingService()
   })
   .attr('logger', TestLoggerFactory.build())
-  .attr('accounts', ['accounting'], (accounting: MockAccountingService) => ({
-    get: async (id: string) => await accounting._getAccount(id)
-  }))
+  .attr(
+    'paymentPointers',
+    ['accounting'],
+    (accounting: MockAccountingService) => ({
+      get: async (id: string) => await accounting._getAccount(id)
+    })
+  )
   .attr(
     'incomingPayments',
     ['accounting'],
