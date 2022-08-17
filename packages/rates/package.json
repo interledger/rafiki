@@ -4,7 +4,7 @@
   "types": "dist/server/index.d.ts",
   "scripts": {
     "start": "node dist/server/index.js",
-    "build": "tsc --build tsconfig.json"
+    "build": "tsc --build tsconfig.json",
     "test": "jest --passWithNoTests"
   },
   "devDependencies": {
