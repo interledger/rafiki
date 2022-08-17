@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "scripts": {
-    "test": "jest --passWithNoTests --maxWorkers=2",
+    "test": "jest --passWithNoTests",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
     "build": "tsc --build tsconfig.json && pnpm copy-files",
