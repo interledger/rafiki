@@ -4,10 +4,12 @@ WORKDIR /workspace
 
 RUN apt update
 RUN apt install -y curl
+COPY package.json yarn.lock tsconfig.build.json .yarnrc.yml ./
+COPY .yarn ./.yarn
+COPY ./packages ./packages
 
-COPY manifests ./
-RUN yarn install --immutable
-
-COPY packs ./
+RUN yarn install --immutable \
+  && yarn workspaces foreach -ptvR --from auth run build \
+  && yarn workspace auth build
 
 CMD ["node", "./packages/auth/dist/index.js"]

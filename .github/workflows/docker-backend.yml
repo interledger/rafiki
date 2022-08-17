@@ -5,7 +5,7 @@ on:
     tags:
     - '*'
 
-name: Release Docker Image
+name: Build / Release Backend Docker Image
 
 jobs:
   build-and-push:
