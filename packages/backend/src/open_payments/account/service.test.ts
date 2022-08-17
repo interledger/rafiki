@@ -114,7 +114,7 @@ describe('Open Payments Account Service', (): void => {
         let delayProcessAt: Date | null = null
 
         beforeEach((): void => {
-          jest.useFakeTimers('modern')
+          jest.useFakeTimers()
           jest.setSystemTime(new Date())
           if (withdrawalThrottleDelay !== undefined) {
             delayProcessAt = new Date(Date.now() + withdrawalThrottleDelay)

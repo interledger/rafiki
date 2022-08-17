@@ -284,7 +284,7 @@ describe('Incoming Payment Service', (): void => {
 
     test('Sets state of fully paid incoming payment to "completed"', async (): Promise<void> => {
       const now = new Date()
-      jest.useFakeTimers('modern')
+      jest.useFakeTimers()
       jest.setSystemTime(now)
       await expect(
         incomingPayment.onCredit({
@@ -352,7 +352,7 @@ describe('Incoming Payment Service', (): void => {
         ).resolves.toBeUndefined()
 
         const now = incomingPayment.expiresAt
-        jest.useFakeTimers('modern')
+        jest.useFakeTimers()
         jest.setSystemTime(now)
         await expect(incomingPaymentService.processNext()).resolves.toBe(
           incomingPayment.id
@@ -377,7 +377,7 @@ describe('Incoming Payment Service', (): void => {
           expiresAt: new Date(Date.now() + 30_000),
           externalRef: '#123'
         })
-        jest.useFakeTimers('modern')
+        jest.useFakeTimers()
         jest.setSystemTime(incomingPayment.expiresAt)
         await expect(incomingPaymentService.processNext()).resolves.toBe(
           incomingPayment.id
@@ -418,7 +418,7 @@ describe('Incoming Payment Service', (): void => {
               })
             ).resolves.toBeUndefined()
             if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
-              jest.useFakeTimers('modern')
+              jest.useFakeTimers()
               jest.setSystemTime(incomingPayment.expiresAt)
               await expect(incomingPaymentService.processNext()).resolves.toBe(
                 incomingPayment.id
@@ -454,7 +454,7 @@ describe('Incoming Payment Service', (): void => {
             })
           ).resolves.toHaveLength(0)
           assert.ok(incomingPayment.processAt)
-          jest.useFakeTimers('modern')
+          jest.useFakeTimers()
           jest.setSystemTime(incomingPayment.processAt)
           await expect(incomingPaymentService.processNext()).resolves.toBe(
             incomingPayment.id
@@ -595,7 +595,7 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toBeUndefined()
       const future = new Date(Date.now() + 40_000)
-      jest.useFakeTimers('modern')
+      jest.useFakeTimers()
       jest.setSystemTime(future)
       await expect(incomingPaymentService.processNext()).resolves.toBe(
         incomingPayment.id

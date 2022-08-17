@@ -4,7 +4,7 @@
     "lint": "pnmp lint:local",
     "format": "pnmp format:local",
     "format:check": "pnmp format:check:local",
-    "test": "jest --passWithNoTests",
+    "test": "jest --passWithNoTests --maxWorkers=2",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
     "build": "tsc --build tsconfig.json && pnpm copy-files",

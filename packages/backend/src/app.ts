@@ -362,6 +362,8 @@ export class App {
                 route
               )
             } else if (path === '/{accountId}' && method === HttpMethod.GET) {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
               this.publicRouter.get(
                 toRouterPath(path),
                 createValidatorMiddleware<AccountContext>(openApi, {
