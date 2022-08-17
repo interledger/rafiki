@@ -1,9 +1,6 @@
 {
   "name": "auth",
   "scripts": {
-    "lint": "pnpm lint:local",
-    "format": "pnpm format:local",
-    "format:check": "pnpm format:check:local",
     "knex": "knex",
     "build": "tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
