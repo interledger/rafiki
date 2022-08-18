@@ -11,8 +11,10 @@
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint --max-warnings=0 --fix .",
     "lint:check": "eslint --max-warnings=0 .",
+    "lint:check:hook": "eslint --max-warnings=0",
     "format": "prettier --write .",
-    "format:check": "prettier --check",
+    "format:check": "prettier --check .",
+    "format:check:hook": "prettier --check",
     "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "build": "tsc --build",
     "prepare": "husky install"

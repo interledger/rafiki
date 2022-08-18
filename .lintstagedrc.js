@@ -1,3 +1,4 @@
 module.exports = {
-  '*': () => ['pnpm lint', 'pnpm format']
+  '*': ['pnpm format:check:hook'],
+  '*.ts': ['pnpm lint:check:hook']
 }
