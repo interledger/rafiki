@@ -10,7 +10,7 @@ COPY ./packages ./packages
 COPY ./mock-servers ./mock-servers
 
 RUN yarn install --immutable
-RUN yarn workspaces foreach -ptvR --from backend run build \
-  && yarn workspace backend build
+RUN yarn workspaces foreach -ptvR --from mock-auth run build \
+  && yarn workspace mock-auth build
 
-CMD ["node", "./packages/backend/dist/index.js"]
+CMD ["node", "./mock-servers/auth/dist/index.js"]
