@@ -70,11 +70,18 @@ describe('Grant Service', (): void => {
     client: {
       display: {
         name: 'Test Client',
-        url: 'https://example.com'
+        uri: 'https://example.com'
       },
       key: {
         proof: 'httpsig',
         jwk: {
+          client: {
+            id: v4(),
+            name: 'Bob',
+            email: 'bob@bob.com',
+            image: 'a link to an image',
+            uri: 'https://bob.com'
+          },
           kid: KEY_REGISTRY_URL,
           x: 'test-public-key',
           kty: 'OKP',
