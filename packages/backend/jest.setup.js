@@ -79,13 +79,15 @@ module.exports = async (globalConfig) => {
         'format',
         `--cluster=${TIGERBEETLE_CLUSTER_ID}`,
         '--replica=0',
-        TIGERBEETLE_FILE
+        TIGERBEETLE_FILE //,
+        //' && ',
+        //'if $? -eq 0; then echo "success"'
       ])
       .withWaitStrategy(Wait.forLogMessage(/allocating/)) //TODO @jason need to add more criteria
       .start()
 
     // Give TB a chance to startup (no message currently to notify allocation is complete):
-    await new Promise((f) => setTimeout(f, 2000))
+    await new Promise((f) => setTimeout(f, 5000))
 
     const streamTbFormat = await tbContFormat.logs()
     streamTbFormat
