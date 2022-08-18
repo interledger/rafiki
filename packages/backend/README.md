@@ -38,7 +38,8 @@ pnpm -F backend test
 In order to build the docker container run the following command.
 
 ```shell
-pnpm docker build backend -t rafiki-backend
+# from the root
+docker build -f packages/backend/Dockerfile -t rafiki-backend .
 ```
 
 ## Configuration
