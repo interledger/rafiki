@@ -2,4 +2,9 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 pnpm --filter backend generate
+echo "Check for newly generated files"
+# https://stackoverflow.com/a/3879077
+git update-index --refresh
+git diff-index HEAD -- src/graphql/generated
+echo "Lint Staged"
 pnpm lint-staged
