@@ -9,7 +9,6 @@ import { CreateAccountError } from './errors'
 import { AccountId, toTigerbeetleId } from './utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
-const ACCOUNT_TYPE = 1
 
 // Credit and debit accounts can both send and receive
 // but are restricted by their respective Tigerbeetle flags.
@@ -24,7 +23,8 @@ export enum AccountType {
 export interface CreateAccountOptions {
   id: AccountId
   type: AccountType
-  unit: number
+  ledger: number
+  code: number
 }
 
 export async function createAccounts(
@@ -36,8 +36,8 @@ export async function createAccounts(
       id: toTigerbeetleId(account.id),
       user_data: 0n,
       reserved: ACCOUNT_RESERVED,
-      ledger: account.unit,
-      code: ACCOUNT_TYPE,
+      ledger: account.ledger,
+      code: account.code,
       flags:
         account.type === AccountType.Debit
           ? AccountFlags.credits_must_not_exceed_debits

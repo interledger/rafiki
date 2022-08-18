@@ -11,7 +11,7 @@ import {
 import {
   BalanceTransferError,
   CreateAccountError,
-  isAllTBAccountExistsErrors,
+  isAllAccountExistsErrors,
   TransferError,
   UnknownAccountError
 } from './errors'
@@ -19,6 +19,11 @@ import { CreateTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 import { toTigerbeetleId } from './utils'
+
+enum AccountCode {
+  Liquidity = 1,
+  Settlement
+}
 
 // Model classes that have a corresponding Tigerbeetle liquidity
 // account SHOULD implement this LiquidityAccount interface and call
@@ -36,7 +41,7 @@ export interface LiquidityAccount {
   id: string
   asset: {
     id: string
-    unit: number
+    ledger: number
   }
   onCredit?: (options: OnCreditOptions) => Promise<LiquidityAccount>
 }
@@ -126,7 +131,8 @@ export async function createLiquidityAccount(
     {
       id: account.id,
       type: AccountType.Credit,
-      unit: account.asset.unit
+      ledger: account.asset.ledger,
+      code: AccountCode.Liquidity
     }
   ])
   return account
@@ -134,14 +140,15 @@ export async function createLiquidityAccount(
 
 export async function createSettlementAccount(
   deps: ServiceDependencies,
-  unit: number
+  ledger: number
 ): Promise<void> {
   try {
     await createAccounts(deps, [
       {
-        id: unit,
+        id: ledger,
         type: AccountType.Debit,
-        unit
+        ledger,
+        code: AccountCode.Settlement
       }
     ])
   } catch (err) {
@@ -149,7 +156,7 @@ export async function createSettlementAccount(
     // This could change if TigerBeetle could be reset between tests.
     if (
       err instanceof CreateAccountError &&
-      isAllTBAccountExistsErrors(err.codes)
+      isAllAccountExistsErrors(err.codes)
     ) {
       return
     }
@@ -251,12 +258,12 @@ export async function createTransfer(
     sourceAccountId,
     destinationAccountId,
     amount,
-    unit
+    ledger
   }: {
     sourceAccountId: string
     destinationAccountId: string
     amount: bigint
-    unit: number
+    ledger: number
   }) => {
     transfers.push({
       id: uuid(),
@@ -265,12 +272,12 @@ export async function createTransfer(
       destinationAccountId,
       amount,
       timeout,
-      ledger: unit
+      ledger
     })
   }
 
   // Same asset
-  if (sourceAccount.asset.unit === destinationAccount.asset.unit) {
+  if (sourceAccount.asset.ledger === destinationAccount.asset.ledger) {
     addTransfer({
       sourceAccountId: sourceAccount.id,
       destinationAccountId: destinationAccount.id,
@@ -278,7 +285,7 @@ export async function createTransfer(
         destinationAmount && destinationAmount < sourceAmount
           ? destinationAmount
           : sourceAmount,
-      unit: sourceAccount.asset.unit
+      ledger: sourceAccount.asset.ledger
     })
     // Same asset, different amounts
     if (destinationAmount && sourceAmount !== destinationAmount) {
@@ -288,7 +295,7 @@ export async function createTransfer(
           sourceAccountId: sourceAccount.id,
           destinationAccountId: sourceAccount.asset.id,
           amount: sourceAmount - destinationAmount,
-          unit: sourceAccount.asset.unit
+          ledger: sourceAccount.asset.ledger
         })
         // Deliver excess destination amount from liquidity account
       } else {
@@ -296,7 +303,7 @@ export async function createTransfer(
           sourceAccountId: destinationAccount.asset.id,
           destinationAccountId: destinationAccount.id,
           amount: destinationAmount - sourceAmount,
-          unit: sourceAccount.asset.unit
+          ledger: sourceAccount.asset.ledger
         })
       }
     }
@@ -312,13 +319,13 @@ export async function createTransfer(
       sourceAccountId: sourceAccount.id,
       destinationAccountId: sourceAccount.asset.id,
       amount: sourceAmount,
-      unit: sourceAccount.asset.unit
+      ledger: sourceAccount.asset.ledger
     })
     addTransfer({
       sourceAccountId: destinationAccount.asset.id,
       destinationAccountId: destinationAccount.id,
       amount: destinationAmount,
-      unit: destinationAccount.asset.unit
+      ledger: destinationAccount.asset.ledger
     })
   }
   const error = await createTransfers(deps, transfers)
@@ -400,10 +407,10 @@ async function createAccountDeposit(
   const error = await createTransfers(deps, [
     {
       id,
-      sourceAccountId: account.asset.unit,
+      sourceAccountId: account.asset.ledger,
       destinationAccountId: account.id,
       amount,
-      ledger: account.asset.unit
+      ledger: account.asset.ledger
     }
   ])
   if (error) {
@@ -422,10 +429,10 @@ async function createAccountWithdrawal(
     {
       id,
       sourceAccountId: account.id,
-      destinationAccountId: account.asset.unit,
+      destinationAccountId: account.asset.ledger,
       amount,
       timeout,
-      ledger: account.asset.unit
+      ledger: account.asset.ledger
     }
   ])
   if (error) {
