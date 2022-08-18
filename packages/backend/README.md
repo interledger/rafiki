@@ -22,7 +22,7 @@
 - [`openapi`](https://github.com/interledger/rafiki/tree/main/packages/openapi):
 
 ```shell
-pnpm -F openapi build
+pnpm --filter openapi build
 ```
 
 ### Testing
@@ -30,7 +30,7 @@ pnpm -F openapi build
 From the monorepo root directory:
 
 ```shell
-pnpm -F backend test
+pnpm --filter backend test
 ```
 
 ## Docker build
@@ -38,13 +38,13 @@ pnpm -F backend test
 In order to build the docker container run the following command.
 
 ```shell
-# from the root
+# from the root:
 docker build -f packages/backend/Dockerfile -t rafiki-backend .
 ```
 
 ## Configuration
 
-### Redis connection
+### Redis Connection
 
 The connection can be configured by specifying the following environment variables.
 The config is passed to `ioredis` - see https://github.com/luin/ioredis#tls-options.
@@ -55,3 +55,40 @@ The config is passed to `ioredis` - see https://github.com/luin/ioredis#tls-opti
 | REDIS_TLS_CA_FILE_PATH   | Path to CA certificate - overrides well-known CAs. | ""                       |
 | REDIS_TLS_KEY_FILE_PATH  | Path to private key for client authentication.     | ""                       |
 | REDIS_TLS_CERT_FILE_PATH | Path to certificate for client authentication.     | ""                       |
+
+### Design
+
+[Source ->](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp1U8tuwjAQ_JXIBxQk-AEOSI3ooaeCmlObHkyyDRaJTR37ECH-vbt-5AE0B3s9M-udteMrK1UFbMNqzS-nJN8VMsGvs0cPHHl5Bll59E2WqhWyTmOw530L0iw9_W5NrYiOwZw-WGUgdWNAXspSWWnSMM9R2mgMI9d1gHoaA7IH0CkNYZ1nX2kuatAZgGlg-T1J3CHngm6AfQFH-HCgYo_E3fU7aGKjpLlretC4hkngggEmy4TS_FAzWa-3EwNPyOB2bsMxrsyk9KN8hIO3J7uMnY12HeF9z04vWfjjxXnYYzHaXcTkpBG_VlTC9AkPmRNvKJ1cFclxwhukw_xXP_fhWMq-_5Eck2dP1PH-56W38X_xMD4AtmIt6JaLCt_KleCCmROaK9gGw4rrc8EKeUOdvVTcwCv2qTTbGG1hxbg16qOXZVx7zU5wfGVtBC9cfiqFyx_edHD7AzbEK6M)
+<img alt="backend design" src="docs/backend.svg">
+
+### Chart Of Accounts
+
+#### Definitions
+
+| Definition | Description                                         |
+| ---------- | --------------------------------------------------- |
+| Account    | An account that may receive debit/credit transfers. |
+
+#### Overview
+
+| Number | User Story                                             |
+| ------ | ------------------------------------------------------ |
+| 1.     | Create liquidity account.                              |
+| 2.     | Create settlement account.                             |
+| 3.     | Transfer where source ledger match destination ledger. |
+
+#### Events
+
+`DR` - Debit account
+`CR` - Credit account
+`CA` - Create account
+
+```
+DR Participant A Settlement (C)                  30
+      CR Participant A Liquidity                          30
+
+DR Participant B Settlement (C)                 110
+      CR Participant B Liquidity                         110
+```
+
+##### Transfer

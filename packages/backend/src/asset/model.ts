@@ -9,15 +9,15 @@ export class Asset extends BaseModel implements LiquidityAccount {
   public readonly code!: string
   public readonly scale!: number
 
-  // TigerBeetle account 2 byte unit field representing account's asset
-  public readonly unit!: number
+  // TigerBeetle account 2 byte ledger field representing account's asset
+  public readonly ledger!: number
 
   public readonly withdrawalThreshold!: bigint | null
 
   public get asset(): LiquidityAccount['asset'] {
     return {
       id: this.id,
-      unit: this.unit
+      ledger: this.ledger
     }
   }
 }

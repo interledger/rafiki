@@ -107,7 +107,7 @@ async function createOutgoingPayment(
           id: payment.accountId,
           asset: {
             id: payment.assetId,
-            unit: payment.asset.unit
+            ledger: payment.asset.ledger
           }
         },
         unfulfillable: true

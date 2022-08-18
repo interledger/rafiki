@@ -10,34 +10,38 @@ export async function startTigerbeetleContainer(
   clusterId: number = Config.tigerbeetleClusterId
 ): Promise<StartedTestContainer> {
   const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
+  const tigerBeetleFile = `${TIGERBEETLE_DIR}/cluster_${clusterId}_replica_0_test.tigerbeetle`
 
   await new GenericContainer(
-    'ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7'
+    //'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b',//main-0.10.0
+    'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:c3a511fe7c697c3a107f839692d631ff6eea1efa731fab2f3e45fe763a9e331d' //Debug-0.10.0
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
     .withPrivilegedMode()
     .withCmd([
-      'init',
-      '--cluster=' + clusterId,
+      'format',
+      `--cluster=${clusterId}`,
       '--replica=0',
-      '--directory=' + TIGERBEETLE_DIR
+      tigerBeetleFile
     ])
-    .withWaitStrategy(Wait.forLogMessage(/initialized data file/))
+    .withWaitStrategy(Wait.forLogMessage(/allocating/)) //TODO @jason need to add more criteria (does not contain error)
     .start()
 
+  // Give TB a chance to startup (no message currently to notify allocation is complete):
+  await new Promise((f) => setTimeout(f, 5000))
+
   return await new GenericContainer(
-    'ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7'
+    //'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b',//main-0.10.0
+    'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:c3a511fe7c697c3a107f839692d631ff6eea1efa731fab2f3e45fe763a9e331d' //Debug-0.10.0
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
     .withPrivilegedMode()
     .withCmd([
       'start',
-      '--cluster=' + clusterId,
-      '--replica=0',
-      '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
-      '--directory=' + TIGERBEETLE_DIR
+      `--addresses=0.0.0.0:${TIGERBEETLE_PORT}`,
+      tigerBeetleFile
     ])
     .withWaitStrategy(Wait.forLogMessage(/listening on/))
     .start()

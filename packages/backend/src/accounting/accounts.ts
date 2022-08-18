@@ -23,7 +23,8 @@ export enum AccountType {
 export interface CreateAccountOptions {
   id: AccountId
   type: AccountType
-  unit: number
+  ledger: number
+  code: number
 }
 
 export async function createAccounts(
@@ -33,24 +34,24 @@ export async function createAccounts(
   const errors = await deps.tigerbeetle.createAccounts(
     accounts.map((account) => ({
       id: toTigerbeetleId(account.id),
-      user_data: BigInt(0),
+      user_data: 0n,
       reserved: ACCOUNT_RESERVED,
-      unit: account.unit,
-      code: 0,
+      ledger: account.ledger,
+      code: account.code,
       flags:
         account.type === AccountType.Debit
           ? AccountFlags.credits_must_not_exceed_debits
           : AccountFlags.debits_must_not_exceed_credits,
-      debits_accepted: BigInt(0),
-      debits_reserved: BigInt(0),
-      credits_accepted: BigInt(0),
-      credits_reserved: BigInt(0),
+      debits_pending: 0n,
+      debits_posted: 0n,
+      credits_pending: 0n,
+      credits_posted: 0n,
       timestamp: 0n
     }))
   )
   for (const { code } of errors) {
     if (code !== CreateAccountErrorCode.linked_event_failed) {
-      throw new CreateAccountError(code)
+      throw new CreateAccountError([code])
     }
   }
 }
@@ -66,16 +67,16 @@ export async function getAccounts(
 
 export function calculateBalance(account: Account): bigint {
   if (account.flags & AccountFlags.credits_must_not_exceed_debits) {
-    return (
+    return BigInt(
       account.debits_accepted -
-      account.credits_accepted +
-      account.debits_reserved
+        account.credits_accepted +
+        account.debits_reserved
     )
   } else {
-    return (
+    return BigInt(
       account.credits_accepted -
-      account.debits_accepted -
-      account.debits_reserved
+        account.debits_accepted -
+        account.debits_reserved
     )
   }
 }

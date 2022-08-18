@@ -13,6 +13,6 @@ export function randomAsset(): { code: string; scale: number } {
   }
 }
 
-export function randomUnit(): number {
+export function randomLedger(): number {
   return randomInt(2 ** 16)
 }

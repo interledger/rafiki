@@ -108,6 +108,7 @@ export class IncomingPayment
       assetScale: this.asset.scale
     }
   }
+
   public set receivedAmount(amount: Amount) {
     this.receivedAmountValue = amount.value
   }

@@ -1,22 +1,15 @@
 import {
-  Commit,
-  CommitFlags,
-  CommitTransferError as CommitTransferErrorCode,
   CreateTransferError as CreateTransferErrorCode,
   Transfer as TbTransfer,
   TransferFlags
 } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import {
-  CommitTransferError,
-  CreateTransferError,
-  TransferError
-} from './errors'
+import { CreateTransferError, TransferError } from './errors'
 import { ServiceDependencies } from './service'
 import { AccountId, toTigerbeetleId } from './utils'
 
-const TRANSFER_RESERVED = Buffer.alloc(32)
+const ACCOUNT_TYPE = 1
 
 type TransfersError = {
   index: number
@@ -24,16 +17,19 @@ type TransfersError = {
 }
 
 export interface CreateTransferOptions {
-  id?: string
+  id?: string | number
   sourceAccountId: AccountId
   destinationAccountId: AccountId
   amount: bigint
+  ledger: number
   timeout?: bigint
+  pendingId?: string | number
 }
 
 export async function createTransfers(
   deps: ServiceDependencies,
-  transfers: CreateTransferOptions[]
+  transfers: CreateTransferOptions[],
+  commit?: boolean
 ): Promise<void | TransfersError> {
   const tbTransfers: TbTransfer[] = []
   for (let i = 0; i < transfers.length; i++) {
@@ -43,7 +39,13 @@ export async function createTransfers(
     }
     let flags = 0
     if (transfer.timeout) {
-      flags |= TransferFlags.two_phase_commit
+      flags |= TransferFlags.pending
+    }
+    if (transfer.pendingId && commit === true) {
+      flags |= TransferFlags.post_pending_transfer
+    }
+    if (transfer.pendingId && commit === false) {
+      flags |= TransferFlags.void_pending_transfer
     }
     if (i < transfers.length - 1) {
       flags |= TransferFlags.linked
@@ -52,13 +54,15 @@ export async function createTransfers(
       id: toTigerbeetleId(transfers[i].id || uuid()),
       debit_account_id: toTigerbeetleId(transfer.sourceAccountId),
       credit_account_id: toTigerbeetleId(transfer.destinationAccountId),
-      amount: transfer.amount,
-      user_data: BigInt(0),
-      reserved: TRANSFER_RESERVED,
-      code: 0,
+      user_data: 0n,
+      reserved: 0n,
+      pending_id: transfer.pendingId ? toTigerbeetleId(transfer.pendingId) : 0n,
+      timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : 0n, // ms -> ns
+      ledger: transfer.ledger,
+      code: ACCOUNT_TYPE,
       flags,
-      timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : BigInt(0), // ms -> ns
-      timestamp: BigInt(0)
+      amount: transfer.amount,
+      timestamp: 0n
     })
   }
   const res = await deps.tigerbeetle.createTransfers(tbTransfers)
@@ -66,19 +70,18 @@ export async function createTransfers(
     switch (code) {
       case CreateTransferErrorCode.linked_event_failed:
         break
+      // 1st phase
       case CreateTransferErrorCode.exists:
       case CreateTransferErrorCode.exists_with_different_debit_account_id:
       case CreateTransferErrorCode.exists_with_different_credit_account_id:
       case CreateTransferErrorCode.exists_with_different_user_data:
-      case CreateTransferErrorCode.exists_with_different_reserved_field:
+      case CreateTransferErrorCode.exists_with_different_pending_id:
       case CreateTransferErrorCode.exists_with_different_code:
       case CreateTransferErrorCode.exists_with_different_amount:
       case CreateTransferErrorCode.exists_with_different_timeout:
       case CreateTransferErrorCode.exists_with_different_flags:
-      case CreateTransferErrorCode.exists_and_already_committed_and_accepted:
-      case CreateTransferErrorCode.exists_and_already_committed_and_rejected:
         return { index, error: TransferError.TransferExists }
-      case CreateTransferErrorCode.accounts_are_the_same:
+      case CreateTransferErrorCode.accounts_must_be_different:
         return { index, error: TransferError.SameAccounts }
       case CreateTransferErrorCode.debit_account_not_found:
         return { index, error: TransferError.UnknownSourceAccount }
@@ -88,84 +91,26 @@ export async function createTransfers(
         return { index, error: TransferError.InsufficientBalance }
       case CreateTransferErrorCode.exceeds_debits:
         return { index, error: TransferError.InsufficientDebitBalance }
-      case CreateTransferErrorCode.accounts_have_different_units:
+      case CreateTransferErrorCode.accounts_must_have_the_same_ledger:
         return { index, error: TransferError.DifferentAssets }
-      default:
-        throw new CreateTransferError(code)
-    }
-  }
-}
-
-export async function commitTransfers(
-  deps: ServiceDependencies,
-  transferIds: string[]
-): Promise<void | TransfersError> {
-  return await handleCommits({
-    deps,
-    commits: transferIds.map((id, idx) => {
-      return {
-        id: toTigerbeetleId(id),
-        flags: idx < transferIds.length - 1 ? 0 | CommitFlags.linked : 0,
-        reserved: TRANSFER_RESERVED,
-        code: 0,
-        timestamp: BigInt(0)
-      }
-    })
-  })
-}
-
-export async function rollbackTransfers(
-  deps: ServiceDependencies,
-  transferIds: string[]
-): Promise<void | TransfersError> {
-  return await handleCommits({
-    deps,
-    commits: transferIds.map((id, idx) => {
-      const flags = idx < transferIds.length - 1 ? 0 | CommitFlags.linked : 0
-      return {
-        id: toTigerbeetleId(id),
-        flags: flags | CommitFlags.reject,
-        reserved: TRANSFER_RESERVED,
-        code: 0,
-        timestamp: BigInt(0)
-      }
-    }),
-    reject: true
-  })
-}
-
-async function handleCommits({
-  deps,
-  commits,
-  reject
-}: {
-  deps: ServiceDependencies
-  commits: Commit[]
-  reject?: boolean
-}): Promise<void | TransfersError> {
-  const res = await deps.tigerbeetle.commitTransfers(commits)
-  for (const { index, code } of res) {
-    switch (code) {
-      case CommitTransferErrorCode.linked_event_failed:
-        break
-      case CommitTransferErrorCode.transfer_not_found:
+      // 2nd phase
+      case CreateTransferErrorCode.pending_transfer_not_found:
         return { index, error: TransferError.UnknownTransfer }
-      case CommitTransferErrorCode.transfer_expired:
+      case CreateTransferErrorCode.pending_transfer_expired:
         return { index, error: TransferError.TransferExpired }
-      case CommitTransferErrorCode.already_committed:
+      case CreateTransferErrorCode.pending_transfer_not_pending:
         return {
           index,
-          error: reject
-            ? TransferError.AlreadyRolledBack
-            : TransferError.AlreadyCommitted
+          error: commit
+            ? TransferError.AlreadyCommitted
+            : TransferError.AlreadyRolledBack
         }
-      case CommitTransferErrorCode.transfer_not_two_phase_commit:
-      case CommitTransferErrorCode.already_committed_but_accepted:
+      case CreateTransferErrorCode.pending_transfer_already_posted:
         return { index, error: TransferError.AlreadyCommitted }
-      case CommitTransferErrorCode.already_committed_but_rejected:
+      case CreateTransferErrorCode.pending_transfer_already_voided:
         return { index, error: TransferError.AlreadyRolledBack }
       default:
-        throw new CommitTransferError(code)
+        throw new CreateTransferError(code)
     }
   }
 }

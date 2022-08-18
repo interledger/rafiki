@@ -40,9 +40,9 @@ describe('Accounting Service', (): void => {
     send: jest.fn()
   }
 
-  let unit = 1
-  function newUnit() {
-    return unit++
+  let ledger = 1
+  function newLedger() {
+    return ledger++
   }
 
   beforeAll(
@@ -61,7 +61,7 @@ describe('Accounting Service', (): void => {
       messageProducer.setUtils(workerUtils)
       knex = await deps.use('knex')
       accountingService = await deps.use('accountingService')
-      accountFactory = new AccountFactory(accountingService, newUnit)
+      accountFactory = new AccountFactory(accountingService, newLedger)
     }
   )
 
@@ -86,7 +86,7 @@ describe('Accounting Service', (): void => {
         id: uuid(),
         asset: {
           id: uuid(),
-          unit: newUnit()
+          ledger: newLedger()
         }
       }
       await expect(
@@ -103,7 +103,7 @@ describe('Accounting Service', (): void => {
           id: 'not a uuid',
           asset: {
             id: uuid(),
-            unit: newUnit()
+            ledger: newLedger()
           }
         })
       ).rejects.toThrowError('unable to create account, invalid id')
@@ -114,7 +114,7 @@ describe('Accounting Service', (): void => {
       jest.spyOn(tigerbeetle, 'createAccounts').mockResolvedValueOnce([
         {
           index: 0,
-          code: CreateTbAccountError.exists_with_different_unit
+          code: CreateTbAccountError.exists_with_different_ledger
         }
       ])
 
@@ -123,11 +123,13 @@ describe('Accounting Service', (): void => {
           id: uuid(),
           asset: {
             id: uuid(),
-            unit: newUnit()
+            ledger: newLedger()
           }
         })
       ).rejects.toThrowError(
-        new CreateAccountError(CreateTbAccountError.exists_with_different_unit)
+        new CreateAccountError([
+          CreateTbAccountError.exists_with_different_ledger
+        ])
       )
     })
   })
@@ -260,32 +262,32 @@ describe('Accounting Service', (): void => {
 
   describe('Create Settlement Account', (): void => {
     test("Can create an asset's settlement account", async (): Promise<void> => {
-      const unit = newUnit()
+      const ledger = newLedger()
 
       await expect(
-        accountingService.getSettlementBalance(unit)
+        accountingService.getSettlementBalance(ledger)
       ).resolves.toBeUndefined()
 
-      await accountingService.createSettlementAccount(unit)
+      await accountingService.createSettlementAccount(ledger)
 
       await expect(
-        accountingService.getSettlementBalance(unit)
+        accountingService.getSettlementBalance(ledger)
       ).resolves.toEqual(BigInt(0))
     })
   })
 
   describe('Get Settlement Balance', (): void => {
     test("Can retrieve an asset's settlement account balance", async (): Promise<void> => {
-      const unit = newUnit()
-      await accountingService.createSettlementAccount(unit)
+      const ledger = newLedger()
+      await accountingService.createSettlementAccount(ledger)
       await expect(
-        accountingService.getSettlementBalance(unit)
+        accountingService.getSettlementBalance(ledger)
       ).resolves.toEqual(BigInt(0))
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
-        accountingService.getSettlementBalance(newUnit())
+        accountingService.getSettlementBalance(newLedger())
       ).resolves.toBeUndefined()
     })
   })
@@ -527,7 +529,7 @@ describe('Accounting Service', (): void => {
           BigInt(0)
         )
         await expect(
-          accountingService.getSettlementBalance(account.asset.unit)
+          accountingService.getSettlementBalance(account.asset.ledger)
         ).resolves.toEqual(BigInt(0))
       }
     )
@@ -540,7 +542,7 @@ describe('Accounting Service', (): void => {
         accountingService.getBalance(deposit.account.id)
       ).resolves.toEqual(deposit.amount)
       await expect(
-        accountingService.getSettlementBalance(deposit.account.asset.unit)
+        accountingService.getSettlementBalance(deposit.account.asset.ledger)
       ).resolves.toEqual(deposit.amount)
     })
 
@@ -607,7 +609,7 @@ describe('Accounting Service', (): void => {
           startingBalance
         )
         await expect(
-          accountingService.getSettlementBalance(account.asset.unit)
+          accountingService.getSettlementBalance(account.asset.ledger)
         ).resolves.toEqual(startingBalance)
       }
     )
@@ -629,7 +631,9 @@ describe('Accounting Service', (): void => {
           accountingService.getBalance(withdrawal.account.id)
         ).resolves.toEqual(startingBalance - withdrawal.amount)
         await expect(
-          accountingService.getSettlementBalance(withdrawal.account.asset.unit)
+          accountingService.getSettlementBalance(
+            withdrawal.account.asset.ledger
+          )
         ).resolves.toEqual(
           timeout ? startingBalance : startingBalance - withdrawal.amount
         )
@@ -703,7 +707,9 @@ describe('Accounting Service', (): void => {
           accountingService.getBalance(withdrawal.account.id)
         ).resolves.toEqual(startingBalance - withdrawal.amount)
         await expect(
-          accountingService.getSettlementBalance(withdrawal.account.asset.unit)
+          accountingService.getSettlementBalance(
+            withdrawal.account.asset.ledger
+          )
         ).resolves.toEqual(startingBalance - withdrawal.amount)
       })
 
@@ -770,7 +776,9 @@ describe('Accounting Service', (): void => {
           accountingService.getBalance(withdrawal.account.id)
         ).resolves.toEqual(startingBalance)
         await expect(
-          accountingService.getSettlementBalance(withdrawal.account.asset.unit)
+          accountingService.getSettlementBalance(
+            withdrawal.account.asset.ledger
+          )
         ).resolves.toEqual(startingBalance)
       })
 

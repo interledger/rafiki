@@ -1,12 +1,10 @@
-import {
-  CommitTransferError as CommitTransferErrorCode,
-  CreateTransferError as CreateTransferErrorCode
-} from 'tigerbeetle-node'
+import { CreateTransferError as CreateTransferErrorCode } from 'tigerbeetle-node'
 
 import { AccountId } from './utils'
+import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 
 export class CreateAccountError extends Error {
-  constructor(public code: number) {
+  constructor(public codes: number[]) {
     super()
     this.name = 'CreateAccountError'
   }
@@ -16,13 +14,6 @@ export class CreateTransferError extends Error {
   constructor(public code: CreateTransferErrorCode) {
     super()
     this.name = 'CreateTransferError'
-  }
-}
-
-export class CommitTransferError extends Error {
-  constructor(public code: CommitTransferErrorCode) {
-    super()
-    this.name = 'CommitTransferError'
   }
 }
 
@@ -48,6 +39,33 @@ export enum TransferError {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isTransferError = (o: any): o is TransferError =>
   Object.values(TransferError).includes(o)
+
+export function isAllAccountExistsErrors(
+  errors: CreateAccountErrorCode[]
+): boolean {
+  return isAllAccountErrors(errors, [
+    CreateAccountErrorCode.exists_with_different_flags,
+    CreateAccountErrorCode.exists_with_different_user_data,
+    CreateAccountErrorCode.exists_with_different_ledger,
+    CreateAccountErrorCode.exists_with_different_code,
+    CreateAccountErrorCode.exists_with_different_debits_pending,
+    CreateAccountErrorCode.exists_with_different_debits_posted,
+    CreateAccountErrorCode.exists_with_different_credits_pending,
+    CreateAccountErrorCode.exists_with_different_credits_posted,
+    CreateAccountErrorCode.exists
+  ])
+}
+
+export function isAllAccountErrors(
+  errors: CreateAccountErrorCode[],
+  errToVerify: CreateAccountErrorCode[]
+): boolean {
+  for (const verify of errToVerify) {
+    if (errors.includes(verify)) continue
+    return false
+  }
+  return true
+}
 
 export class BalanceTransferError extends Error {
   constructor(public error: TransferError) {
