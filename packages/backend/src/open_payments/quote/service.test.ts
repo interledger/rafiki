@@ -18,6 +18,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { AssetOptions } from '../../asset/service'
 import { Amount } from '../amount'
@@ -83,8 +84,7 @@ describe('QuoteService', (): void => {
 
   beforeEach(async (): Promise<void> => {
     quoteService = await deps.use('quoteService')
-    const paymentPointerService = await deps.use('paymentPointerService')
-    const paymentPointer = await paymentPointerService.create({
+    const paymentPointer = await createPaymentPointer(deps, {
       asset: {
         code: sendAmount.assetCode,
         scale: sendAmount.assetScale
@@ -92,7 +92,7 @@ describe('QuoteService', (): void => {
     })
     paymentPointerId = paymentPointer.id
     assetId = paymentPointer.assetId
-    const destinationPaymentPointer = await paymentPointerService.create({
+    const destinationPaymentPointer = await createPaymentPointer(deps, {
       asset: destinationAsset
     })
     receivingPaymentPointerId = destinationPaymentPointer.id

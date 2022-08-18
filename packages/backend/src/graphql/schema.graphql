@@ -330,6 +330,8 @@ type HttpOutgoing {
 type PaymentPointer implements Model {
   id: ID!
   asset: Asset!
+  url: String!
+  publicName: String
   incomingPayments(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -499,6 +501,7 @@ type OutgoingPaymentResponse {
 
 input CreatePaymentPointerInput {
   asset: AssetInput!
+  url: String!
   publicName: String
 }
 

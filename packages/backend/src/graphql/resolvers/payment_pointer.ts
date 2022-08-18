@@ -6,6 +6,12 @@ import {
   MutationResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
+import {
+  PaymentPointerError,
+  isPaymentPointerError,
+  errorToCode,
+  errorToMessage
+} from '../../open_payments/payment_pointer/errors'
 import { PaymentPointer } from '../../open_payments/payment_pointer/model'
 
 export const getPaymentPointer: QueryResolvers<ApolloContext>['paymentPointer'] =
@@ -15,7 +21,7 @@ export const getPaymentPointer: QueryResolvers<ApolloContext>['paymentPointer'] 
     )
     const paymentPointer = await paymentPointerService.get(args.id)
     if (!paymentPointer) {
-      throw new Error('No paymentPointer')
+      throw new Error('No payment pointer')
     }
     return paymentPointerToGraphql(paymentPointer)
   }
@@ -26,31 +32,30 @@ export const createPaymentPointer: MutationResolvers<ApolloContext>['createPayme
     args,
     ctx
   ): Promise<ResolversTypes['CreatePaymentPointerMutationResponse']> => {
-    try {
-      const paymentPointerService = await ctx.container.use(
-        'paymentPointerService'
+    const paymentPointerService = await ctx.container.use(
+      'paymentPointerService'
+    )
+    return paymentPointerService
+      .create(args.input)
+      .then((paymentPointerOrError: PaymentPointer | PaymentPointerError) =>
+        isPaymentPointerError(paymentPointerOrError)
+          ? {
+              code: errorToCode[paymentPointerOrError].toString(),
+              success: false,
+              message: errorToMessage[paymentPointerOrError]
+            }
+          : {
+              code: '200',
+              success: true,
+              message: 'Created payment pointer',
+              paymentPointer: paymentPointerToGraphql(paymentPointerOrError)
+            }
       )
-      const paymentPointer = await paymentPointerService.create(args.input)
-      return {
-        code: '200',
-        success: true,
-        message: 'Created PaymentPointer',
-        paymentPointer: paymentPointerToGraphql(paymentPointer)
-      }
-    } catch (error) {
-      ctx.logger.error(
-        {
-          options: args.input,
-          error
-        },
-        'error creating payment pointer'
-      )
-      return {
+      .catch(() => ({
         code: '500',
-        message: 'Error trying to create payment pointer',
-        success: false
-      }
-    }
+        success: false,
+        message: 'Error trying to create payment pointer'
+      }))
   }
 
 export const triggerPaymentPointerEvents: MutationResolvers<ApolloContext>['triggerPaymentPointerEvents'] =
@@ -90,6 +95,8 @@ export const paymentPointerToGraphql = (
   paymentPointer: PaymentPointer
 ): SchemaPaymentPointer => ({
   id: paymentPointer.id,
+  url: paymentPointer.url,
   asset: assetToGraphql(paymentPointer.asset),
+  publicName: paymentPointer.publicName ?? undefined,
   createdAt: new Date(+paymentPointer.createdAt).toISOString()
 })

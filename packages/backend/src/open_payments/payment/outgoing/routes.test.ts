@@ -22,6 +22,7 @@ import { isOutgoingPaymentError } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
+import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { AccountingService } from '../../../accounting/service'
 import { listTests } from '../../../shared/routes.test'
 
@@ -68,8 +69,7 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    const paymentPointerService = await deps.use('paymentPointerService')
-    paymentPointerId = (await paymentPointerService.create({ asset })).id
+    paymentPointerId = (await createPaymentPointer(deps, { asset })).id
     paymentPointerUrl = `${config.publicHost}/${paymentPointerId}`
   })
 

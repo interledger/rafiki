@@ -11,14 +11,13 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { v4 } from 'uuid'
 import { StreamServer } from '@interledger/stream-receiver'
+import { createPaymentPointer } from '../tests/paymentPointer'
 import { truncateTables } from '../tests/tableManager'
-import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 
 describe('SPSP Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let paymentPointerService: PaymentPointerService
   let spspRoutes: SPSPRoutes
   let streamServer: StreamServer
   const nonce = crypto.randomBytes(16).toString('base64')
@@ -33,7 +32,6 @@ describe('SPSP Routes', (): void => {
   beforeEach(async (): Promise<void> => {
     spspRoutes = await deps.use('spspRoutes')
     streamServer = await deps.use('streamServer')
-    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   afterAll(async (): Promise<void> => {
@@ -46,7 +44,7 @@ describe('SPSP Routes', (): void => {
 
     beforeEach(async (): Promise<void> => {
       paymentPointerId = (
-        await paymentPointerService.create({
+        await createPaymentPointer(deps, {
           asset: {
             scale: 6,
             code: 'USD'

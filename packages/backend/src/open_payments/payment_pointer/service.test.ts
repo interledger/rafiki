@@ -1,15 +1,22 @@
+import assert from 'assert'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
+import { isPaymentPointerError, PaymentPointerError } from './errors'
 import {
   PaymentPointer,
   PaymentPointerEvent,
   PaymentPointerEventType
 } from './model'
-import { PaymentPointerService } from './service'
+import {
+  CreateOptions,
+  FORBIDDEN_PATHS,
+  PaymentPointerService
+} from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { randomAsset } from '../../tests/asset'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -42,36 +49,52 @@ describe('Open Payments Payment Pointer Service', (): void => {
   })
 
   describe('Create or Get Payment Pointer', (): void => {
-    test('Payment pointer can be created or fetched', async (): Promise<void> => {
-      const options = {
-        asset: randomAsset()
+    const options: CreateOptions = {
+      url: 'https://alice.me/.well-known/pay',
+      asset: randomAsset()
+    }
+
+    test.each`
+      publicName                | description
+      ${undefined}              | ${''}
+      ${faker.name.firstName()} | ${'with publicName'}
+    `(
+      'Payment pointer can be created or fetched $description',
+      async ({ publicName }): Promise<void> => {
+        if (publicName) {
+          options.publicName = publicName
+        }
+        const paymentPointer = await paymentPointerService.create(options)
+        assert.ok(!isPaymentPointerError(paymentPointer))
+        await expect(paymentPointer).toMatchObject(options)
+        await expect(
+          paymentPointerService.get(paymentPointer.id)
+        ).resolves.toEqual(paymentPointer)
       }
-      const paymentPointer = await paymentPointerService.create(options)
-      await expect(paymentPointer).toMatchObject(options)
-      await expect(
-        paymentPointerService.get(paymentPointer.id)
-      ).resolves.toEqual(paymentPointer)
-    })
+    )
 
-    test('Payment pointer with a public name can be created or fetched', async (): Promise<void> => {
-      const publicName = faker.name.firstName()
-
-      const options = {
-        publicName: publicName,
-        asset: randomAsset()
+    test.each(FORBIDDEN_PATHS.map((path) => [path]))(
+      'Payment pointer cannot be created with forbidden url path (%s)',
+      async (path): Promise<void> => {
+        const url = `https://alice.me${path}`
+        await expect(
+          paymentPointerService.create({
+            ...options,
+            url
+          })
+        ).resolves.toEqual(PaymentPointerError.InvalidUrl)
+        await expect(
+          paymentPointerService.create({
+            ...options,
+            url: `${url}/more/path`
+          })
+        ).resolves.toEqual(PaymentPointerError.InvalidUrl)
       }
-
-      const paymentPointer = await paymentPointerService.create(options)
-      await expect(paymentPointer).toMatchObject(options)
-      await expect(
-        paymentPointerService.get(paymentPointer.id)
-      ).resolves.toEqual(paymentPointer)
-    })
+    )
 
     test('Creating a payment pointer creates an SPSP fallback account', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      const paymentPointer = await paymentPointerService.create(options)
+      assert.ok(!isPaymentPointerError(paymentPointer))
 
       const accountingService = await deps.use('accountingService')
       await expect(
@@ -84,9 +107,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
     let paymentPointer: PaymentPointer
 
     beforeEach(async (): Promise<void> => {
-      paymentPointer = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      paymentPointer = await createPaymentPointer(deps)
     })
 
     describe.each`
@@ -206,9 +227,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
     let paymentPointer: PaymentPointer
 
     beforeEach(async (): Promise<void> => {
-      paymentPointer = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      paymentPointer = await createPaymentPointer(deps)
     })
 
     test.each`
@@ -278,7 +297,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
     beforeEach(async (): Promise<void> => {
       paymentPointers = []
       for (let i = 0; i < 5; i++) {
-        paymentPointers.push(await paymentPointerService.create({ asset }))
+        paymentPointers.push(await createPaymentPointer(deps, { asset }))
       }
     })
 

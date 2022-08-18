@@ -6,8 +6,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import { PaymentPointerService } from '../open_payments/payment_pointer/service'
-import { randomAsset } from '../tests/asset'
+import { createPaymentPointer } from '../tests/paymentPointer'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import bcrypt from 'bcrypt'
 import { ApiKeyError, isApiKeyError } from './errors'
@@ -16,7 +15,6 @@ describe('Api Key Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let apiKeyService: ApiKeyService
-  let paymentPointerService: PaymentPointerService
   let paymentPointer: PaymentPointer
   let knex: Knex
 
@@ -25,13 +23,10 @@ describe('Api Key Service', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     apiKeyService = await deps.use('apiKeyService')
-    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   beforeEach(async (): Promise<void> => {
-    paymentPointer = await paymentPointerService.create({
-      asset: randomAsset()
-    })
+    paymentPointer = await createPaymentPointer(deps)
   })
 
   afterEach(async (): Promise<void> => {

@@ -19,9 +19,9 @@ import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { randomAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
+import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
-import { PaymentPointerService } from '../../payment_pointer/service'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -30,7 +30,6 @@ describe('Incoming Payment Service', (): void => {
   let knex: Knex
   let paymentPointerId: string
   let accountingService: AccountingService
-  let paymentPointerService: PaymentPointerService
   const asset = randomAsset()
 
   beforeAll(async (): Promise<void> => {
@@ -42,8 +41,7 @@ describe('Incoming Payment Service', (): void => {
 
   beforeEach(async (): Promise<void> => {
     incomingPaymentService = await deps.use('incomingPaymentService')
-    paymentPointerService = await deps.use('paymentPointerService')
-    paymentPointerId = (await paymentPointerService.create({ asset })).id
+    paymentPointerId = (await createPaymentPointer(deps, { asset })).id
   })
 
   afterEach(async (): Promise<void> => {

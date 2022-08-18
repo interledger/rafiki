@@ -25,6 +25,7 @@ export class PaymentPointer
     }
   }
 
+  public url!: string
   public publicName?: string
 
   public readonly assetId!: string

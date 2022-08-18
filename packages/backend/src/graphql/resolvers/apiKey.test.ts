@@ -7,8 +7,7 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
-import { randomAsset } from '../../tests/asset'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import {
   CreateApiKeyInput,
   CreateApiKeyMutationResponse,
@@ -24,7 +23,6 @@ describe('ApiKey Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let paymentPointerService: PaymentPointerService
   let apiKeyService: ApiKeyService
   let sessionService: SessionService
 
@@ -32,7 +30,6 @@ describe('ApiKey Resolvers', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    paymentPointerService = await deps.use('paymentPointerService')
     apiKeyService = await deps.use('apiKeyService')
     sessionService = await deps.use('sessionService')
   })
@@ -48,9 +45,7 @@ describe('ApiKey Resolvers', (): void => {
 
   describe('Api Key Mutations', (): void => {
     test('Api key can be created', async (): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      const { id: paymentPointerId } = await createPaymentPointer(deps)
 
       const input: CreateApiKeyInput = { paymentPointerId }
       const response = await appContainer.apolloClient
@@ -111,9 +106,7 @@ describe('ApiKey Resolvers', (): void => {
     })
 
     test('API Key can be redeemed', async (): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      const { id: paymentPointerId } = await createPaymentPointer(deps)
       const apiKey = await apiKeyService.create({ paymentPointerId })
       const input: RedeemApiKeyInput = {
         paymentPointerId,
@@ -165,9 +158,7 @@ describe('ApiKey Resolvers', (): void => {
     })
 
     test('Api keys can be deleted', async (): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      const { id: paymentPointerId } = await createPaymentPointer(deps)
       await apiKeyService.create({ paymentPointerId })
       const input: DeleteAllApiKeysInput = { paymentPointerId }
       const response = await appContainer.apolloClient

@@ -34,6 +34,7 @@ import { Peer } from '../../peer/model'
 import { randomAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { PeerFactory } from '../../tests/peerFactory'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEvent } from '../../webhook/model'
@@ -881,10 +882,7 @@ describe('Liquidity Resolvers', (): void => {
     const amount = BigInt(100)
 
     beforeEach(async (): Promise<void> => {
-      const paymentPointerService = await deps.use('paymentPointerService')
-      paymentPointer = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      paymentPointer = await createPaymentPointer(deps)
 
       await expect(
         accountingService.createDeposit({
@@ -1502,10 +1500,7 @@ describe('Liquidity Resolvers', (): void => {
     let payment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
-      const paymentPointerService = await deps.use('paymentPointerService')
-      paymentPointer = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      paymentPointer = await createPaymentPointer(deps)
       const paymentPointerId = paymentPointer.id
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId,

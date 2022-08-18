@@ -7,8 +7,7 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
-import { randomAsset } from '../../tests/asset'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import {
   RefreshSessionInput,
   RefreshSessionMutationResponse,
@@ -23,7 +22,6 @@ describe('Session Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let paymentPointerService: PaymentPointerService
   let apiKeyService: ApiKeyService
   let sessionService: SessionService
 
@@ -31,7 +29,6 @@ describe('Session Resolvers', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    paymentPointerService = await deps.use('paymentPointerService')
     apiKeyService = await deps.use('apiKeyService')
     sessionService = await deps.use('sessionService')
   })
@@ -47,9 +44,7 @@ describe('Session Resolvers', (): void => {
 
   describe('Session Mutations', (): void => {
     test('Session can be refreshed', async (): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      const { id: paymentPointerId } = await createPaymentPointer(deps)
       const apiKey = await apiKeyService.create({ paymentPointerId })
       const sessionOrError = await apiKeyService.redeem({
         paymentPointerId,
@@ -108,9 +103,7 @@ describe('Session Resolvers', (): void => {
     })
 
     test('Session can be revoked', async (): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
-        asset: randomAsset()
-      })
+      const { id: paymentPointerId } = await createPaymentPointer(deps)
       const apiKey = await apiKeyService.create({ paymentPointerId })
       const sessionOrError = await apiKeyService.redeem({
         paymentPointerId,

@@ -3,7 +3,6 @@ import { Knex } from 'knex'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { createTestApp, TestContainer } from '../tests/app'
-import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import { IncomingPaymentService } from '../open_payments/payment/incoming/service'
 import { Config, IAppConfig } from '../config/app'
@@ -15,6 +14,7 @@ import { QuoteService } from '../open_payments/quote/service'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createQuote } from '../tests/quote'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
+import { createPaymentPointer } from '../tests/paymentPointer'
 import { Amount } from '@interledger/pay/dist/src/open-payments'
 import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
@@ -26,7 +26,6 @@ describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let paymentPointerService: PaymentPointerService
   let incomingPaymentService: IncomingPaymentService
   let outgoingPaymentService: OutgoingPaymentService
   let quoteService: QuoteService
@@ -65,24 +64,20 @@ describe('Pagination', (): void => {
   })
   describe('getPageInfo', (): void => {
     describe('payment pointer resources', (): void => {
-      let asset: { code: string; scale: number }
       let defaultPaymentPointer: PaymentPointer
       let secondaryPaymentPointer: PaymentPointer
-      let secondaryPaymentPointerId: string
       let sendAmount: Amount
 
       beforeEach(async (): Promise<void> => {
-        paymentPointerService = await deps.use('paymentPointerService')
         incomingPaymentService = await deps.use('incomingPaymentService')
         outgoingPaymentService = await deps.use('outgoingPaymentService')
         quoteService = await deps.use('quoteService')
 
-        asset = randomAsset()
-        defaultPaymentPointer = await paymentPointerService.create({ asset })
-        secondaryPaymentPointer = await paymentPointerService.create({
+        const asset = randomAsset()
+        defaultPaymentPointer = await createPaymentPointer(deps, { asset })
+        secondaryPaymentPointer = await createPaymentPointer(deps, {
           asset
         })
-        secondaryPaymentPointerId = `${config.publicHost}/${secondaryPaymentPointer.id}`
         sendAmount = {
           value: BigInt(42),
           assetCode: asset.code,
@@ -164,7 +159,7 @@ describe('Pagination', (): void => {
             for (let i = 0; i < num; i++) {
               const payment = await createOutgoingPayment(deps, {
                 paymentPointerId: defaultPaymentPointer.id,
-                receiver: secondaryPaymentPointerId,
+                receiver: secondaryPaymentPointer.url,
                 sendAmount,
                 validDestination: false
               })
@@ -218,7 +213,7 @@ describe('Pagination', (): void => {
             for (let i = 0; i < num; i++) {
               const quote = await createQuote(deps, {
                 paymentPointerId: defaultPaymentPointer.id,
-                receiver: secondaryPaymentPointerId,
+                receiver: secondaryPaymentPointer.url,
                 sendAmount,
                 validDestination: false
               })

@@ -5,7 +5,6 @@ import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../../tests/context'
-import { PaymentPointerService } from '../../payment_pointer/service'
 import { PaymentPointer } from '../../payment_pointer/model'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
@@ -24,6 +23,7 @@ import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
 import { AccountingService } from '../../../accounting/service'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
+import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { Amount } from '@interledger/pay/dist/src/open-payments'
 import { listTests } from '../../../shared/routes.test'
 
@@ -31,7 +31,6 @@ describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let paymentPointerService: PaymentPointerService
   let accountingService: AccountingService
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
@@ -79,12 +78,11 @@ describe('Incoming Payment Routes', (): void => {
   let externalRef: string
 
   beforeEach(async (): Promise<void> => {
-    paymentPointerService = await deps.use('paymentPointerService')
     config = await deps.use('config')
     incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
 
     expiresAt = new Date(Date.now() + 30_000)
-    paymentPointer = await paymentPointerService.create({ asset })
+    paymentPointer = await createPaymentPointer(deps, { asset })
     paymentPointerId = `https://wallet.example/${paymentPointer.id}`
     incomingAmount = {
       value: BigInt('123'),

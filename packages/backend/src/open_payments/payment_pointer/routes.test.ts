@@ -3,14 +3,13 @@ import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../tests/context'
-import { PaymentPointerService } from './service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config, IAppConfig } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices, PaymentPointerContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
-import { randomAsset } from '../../tests/asset'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { PaymentPointerRoutes } from './routes'
 import { faker } from '@faker-js/faker'
 
@@ -18,7 +17,6 @@ describe('Payment Pointer Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let paymentPointerService: PaymentPointerService
   let config: IAppConfig
   let paymentPointerRoutes: PaymentPointerRoutes
 
@@ -33,7 +31,6 @@ describe('Payment Pointer Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    paymentPointerService = await deps.use('paymentPointerService')
     config = await deps.use('config')
     paymentPointerRoutes = await deps.use('paymentPointerRoutes')
   })
@@ -61,11 +58,8 @@ describe('Payment Pointer Routes', (): void => {
     })
 
     test('returns 200 with an open payments payment pointer', async (): Promise<void> => {
-      const asset = randomAsset()
-      const publicName = faker.name.firstName()
-      const paymentPointer = await paymentPointerService.create({
-        publicName: publicName,
-        asset: asset
+      const paymentPointer = await createPaymentPointer(deps, {
+        publicName: faker.name.firstName()
       })
 
       const ctx = createContext<PaymentPointerContext>(
@@ -78,10 +72,11 @@ describe('Payment Pointer Routes', (): void => {
       await expect(paymentPointerRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
+        // id: paymentPointer.url,
         id: `https://wallet.example/${paymentPointer.id}`,
         publicName: paymentPointer.publicName,
-        assetCode: asset.code,
-        assetScale: asset.scale,
+        assetCode: paymentPointer.asset.code,
+        assetScale: paymentPointer.asset.scale,
         authServer: 'https://auth.wallet.example/authorize'
       })
     })

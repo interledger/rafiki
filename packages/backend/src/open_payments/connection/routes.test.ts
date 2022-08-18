@@ -11,9 +11,9 @@ import { initIocContainer } from '../../'
 import { ConnectionRoutes } from './routes'
 import { createContext } from '../../tests/context'
 import { PaymentPointer } from '../payment_pointer/model'
-import { PaymentPointerService } from '../payment_pointer/service'
 import { IncomingPayment } from '../payment/incoming/model'
 import { createIncomingPayment } from '../../tests/incomingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import base64url from 'base64url'
 
 describe('Connection Routes', (): void => {
@@ -21,7 +21,6 @@ describe('Connection Routes', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let config: IAppConfig
-  let paymentPointerService: PaymentPointerService
   let connectionRoutes: ConnectionRoutes
 
   beforeAll(async (): Promise<void> => {
@@ -44,8 +43,7 @@ describe('Connection Routes', (): void => {
     connectionRoutes = await deps.use('connectionRoutes')
     config = await deps.use('config')
 
-    paymentPointerService = await deps.use('paymentPointerService')
-    paymentPointer = await paymentPointerService.create({ asset })
+    paymentPointer = await createPaymentPointer(deps, { asset })
     incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: paymentPointer.id,
       description: 'hello world',

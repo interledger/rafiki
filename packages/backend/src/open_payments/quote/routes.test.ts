@@ -16,6 +16,7 @@ import { Quote } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
 import { Amount } from '../amount'
 import { randomAsset } from '../../tests/asset'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
 import { listTests } from '../../shared/routes.test'
 
@@ -65,15 +66,14 @@ describe('Quote Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    const paymentPointerService = await deps.use('paymentPointerService')
-    paymentPointerId = (
-      await paymentPointerService.create({
-        asset: {
-          code: sendAmount.assetCode,
-          scale: sendAmount.assetScale
-        }
-      })
-    ).id
+    const paymentPointer = await createPaymentPointer(deps, {
+      asset: {
+        code: sendAmount.assetCode,
+        scale: sendAmount.assetScale
+      }
+    })
+    paymentPointerId = paymentPointer.id
+    // paymentPointerUrl = paymentPointer.url
     paymentPointerUrl = `${config.publicHost}/${paymentPointerId}`
   })
 

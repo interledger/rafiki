@@ -15,6 +15,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { IAppConfig, Config } from '../../../config/app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
+import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { PeerFactory } from '../../../tests/peerFactory'
 import { createQuote } from '../../../tests/quote'
 import { IocContract } from '@adonisjs/fold'
@@ -234,16 +235,15 @@ describe('OutgoingPaymentService', (): void => {
 
   beforeEach(async (): Promise<void> => {
     outgoingPaymentService = await deps.use('outgoingPaymentService')
-    const paymentPointerService = await deps.use('paymentPointerService')
     paymentPointerId = (
-      await paymentPointerService.create({
+      await createPaymentPointer(deps, {
         asset: {
           code: sendAmount.assetCode,
           scale: sendAmount.assetScale
         }
       })
     ).id
-    const destinationPaymentPointer = await paymentPointerService.create({
+    const destinationPaymentPointer = await createPaymentPointer(deps, {
       asset: destinationAsset
     })
     receiverPaymentPointerId = destinationPaymentPointer.id

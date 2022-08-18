@@ -12,6 +12,7 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import {
   OutgoingPaymentError,
@@ -23,7 +24,6 @@ import {
   OutgoingPaymentState
 } from '../../open_payments/payment/outgoing/model'
 import { AccountingService } from '../../accounting/service'
-import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
@@ -36,7 +36,6 @@ describe('OutgoingPayment Resolvers', (): void => {
   let knex: Knex
   let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
-  let paymentPointerService: PaymentPointerService
 
   const asset = randomAsset()
 
@@ -46,7 +45,6 @@ describe('OutgoingPayment Resolvers', (): void => {
     knex = await deps.use('knex')
     accountingService = await deps.use('accountingService')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
-    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -85,7 +83,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       ${undefined} | ${'202201'}  | ${'externalRef'}
     `('$desc', ({ description, externalRef }): void => {
       beforeEach(async (): Promise<void> => {
-        const { id: paymentPointerId } = await paymentPointerService.create({
+        const { id: paymentPointerId } = await createPaymentPointer(deps, {
           asset
         })
         payment = await createPayment({
@@ -239,7 +237,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       ${'rent'}    | ${undefined} | ${'description'}
       ${undefined} | ${'202201'}  | ${'externalRef'}
     `('200 ($desc)', async ({ description, externalRef }): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
+      const { id: paymentPointerId } = await createPaymentPointer(deps, {
         asset
       })
       const payment = await createPayment({
@@ -372,7 +370,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
     beforeEach(async (): Promise<void> => {
       paymentPointerId = (
-        await paymentPointerService.create({
+        await createPaymentPointer(deps, {
           asset
         })
       ).id

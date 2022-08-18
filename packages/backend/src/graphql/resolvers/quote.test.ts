@@ -9,12 +9,12 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
 import { truncateTables } from '../../tests/tableManager'
 import { QuoteError, errorToMessage } from '../../open_payments/quote/errors'
 import { QuoteService } from '../../open_payments/quote/service'
 import { Quote as QuoteModel } from '../../open_payments/quote/model'
-import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 import { Amount } from '../../open_payments/amount'
 import { Quote, QuoteResponse } from '../generated/graphql'
 
@@ -23,7 +23,6 @@ describe('Quote Resolvers', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let quoteService: QuoteService
-  let paymentPointerService: PaymentPointerService
 
   const receivingPaymentPointer = 'http://wallet2.example/bob'
   const receiver = `${receivingPaymentPointer}/incoming-payments/${uuid()}`
@@ -34,7 +33,6 @@ describe('Quote Resolvers', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     quoteService = await deps.use('quoteService')
-    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -64,7 +62,7 @@ describe('Quote Resolvers', (): void => {
 
   describe('Query.quote', (): void => {
     test('200', async (): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
+      const { id: paymentPointerId } = await createPaymentPointer(deps, {
         asset
       })
       const quote = await createPaymentPointerQuote(paymentPointerId)
@@ -174,7 +172,7 @@ describe('Quote Resolvers', (): void => {
       ${undefined}  | ${receiveAmount} | ${'fixed receive to incoming payment'}
       ${undefined}  | ${undefined}     | ${'incoming payment'}
     `('200 ($type)', async ({ sendAmount, receiveAmount }): Promise<void> => {
-      const { id: paymentPointerId } = await paymentPointerService.create({
+      const { id: paymentPointerId } = await createPaymentPointer(deps, {
         asset
       })
       const input = {
@@ -279,7 +277,7 @@ describe('Quote Resolvers', (): void => {
 
     beforeEach(async (): Promise<void> => {
       paymentPointerId = (
-        await paymentPointerService.create({
+        await createPaymentPointer(deps, {
           asset
         })
       ).id

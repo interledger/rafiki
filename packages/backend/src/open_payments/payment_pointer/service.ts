@@ -1,5 +1,6 @@
 import { TransactionOrKnex } from 'objection'
 
+import { PaymentPointerError } from './errors'
 import {
   PaymentPointer,
   PaymentPointerEvent,
@@ -10,12 +11,13 @@ import { AccountingService } from '../../accounting/service'
 import { AssetService, AssetOptions } from '../../asset/service'
 
 export interface CreateOptions {
+  url: string
   asset: AssetOptions
   publicName?: string
 }
 
 export interface PaymentPointerService {
-  create(options: CreateOptions): Promise<PaymentPointer>
+  create(options: CreateOptions): Promise<PaymentPointer | PaymentPointerError>
   get(id: string): Promise<PaymentPointer | undefined>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
@@ -50,14 +52,33 @@ export async function createPaymentPointerService({
   }
 }
 
+export const FORBIDDEN_PATHS = [
+  '/incoming-payments',
+  '/outgoing-payments',
+  '/quotes'
+]
+
+function isValidPaymentPointer(paymentPointer: string): boolean {
+  for (const path of FORBIDDEN_PATHS) {
+    if (paymentPointer.includes(path)) {
+      return false
+    }
+  }
+  return true
+}
+
 async function createPaymentPointer(
   deps: ServiceDependencies,
   options: CreateOptions
-): Promise<PaymentPointer> {
+): Promise<PaymentPointer | PaymentPointerError> {
+  if (!isValidPaymentPointer(options.url)) {
+    return PaymentPointerError.InvalidUrl
+  }
   const asset = await deps.assetService.getOrCreate(options.asset)
   return await PaymentPointer.transaction(deps.knex, async (trx) => {
     const paymentPointer = await PaymentPointer.query(trx)
       .insertAndFetch({
+        url: options.url,
         publicName: options.publicName,
         assetId: asset.id
       })

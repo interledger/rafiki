@@ -175,6 +175,7 @@ export type CreateOutgoingPaymentInput = {
 
 export type CreatePaymentPointerInput = {
   asset: AssetInput;
+  url: Scalars['String'];
   publicName?: Maybe<Scalars['String']>;
 };
 
@@ -577,6 +578,8 @@ export type PaymentPointer = Model & {
   __typename?: 'PaymentPointer';
   id: Scalars['ID'];
   asset: Asset;
+  url: Scalars['String'];
+  publicName?: Maybe<Scalars['String']>;
   incomingPayments?: Maybe<IncomingPaymentConnection>;
   quotes?: Maybe<QuoteConnection>;
   outgoingPayments?: Maybe<OutgoingPaymentConnection>;
@@ -1316,6 +1319,8 @@ export type PageInfoResolvers<ContextType = any, ParentType extends ResolversPar
 export type PaymentPointerResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentPointer'] = ResolversParentTypes['PaymentPointer']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
+  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   incomingPayments?: Resolver<Maybe<ResolversTypes['IncomingPaymentConnection']>, ParentType, ContextType, RequireFields<PaymentPointerIncomingPaymentsArgs, never>>;
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, RequireFields<PaymentPointerQuotesArgs, never>>;
   outgoingPayments?: Resolver<Maybe<ResolversTypes['OutgoingPaymentConnection']>, ParentType, ContextType, RequireFields<PaymentPointerOutgoingPaymentsArgs, never>>;

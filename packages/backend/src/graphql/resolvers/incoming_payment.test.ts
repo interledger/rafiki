@@ -8,13 +8,12 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
-import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let paymentPointerService: PaymentPointerService
   let knex: Knex
   let paymentPointerId: string
 
@@ -24,7 +23,6 @@ describe('Incoming Payment Resolver', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   afterAll(async (): Promise<void> => {
@@ -35,7 +33,7 @@ describe('Incoming Payment Resolver', (): void => {
 
   describe('Payment pointer incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
-      paymentPointerId = (await paymentPointerService.create({ asset })).id
+      paymentPointerId = (await createPaymentPointer(deps, { asset })).id
     })
 
     getPageTests({
