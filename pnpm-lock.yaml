@@ -274,6 +274,73 @@ importers:
   packages/frontend:
     specifiers: {}
 
+  packages/mock-account-provider:
+    specifiers:
+      '@adonisjs/fold': ^8.1.0
+      '@koa/cors': ^3.1.0
+      '@koa/router': ^10.0.0
+      '@types/jest': ^27.4.1
+      '@types/koa': 2.13.4
+      '@types/koa-bodyparser': ^4.3.7
+      '@types/koa-session': ^5.10.6
+      '@types/koa__cors': ^3.1.1
+      '@types/koa__router': ^8.0.11
+      '@types/nock': ^11.1.0
+      '@types/pino': ^7.0.5
+      '@types/uuid': ^8.3.0
+      ajv: ^8.11.0
+      axios: ^0.26.1
+      jest-openapi: ^0.14.2
+      jose: ^4.7.0
+      koa: ^2.13.4
+      koa-bodyparser: ^4.3.0
+      koa-session: ^6.2.0
+      nock: ^13.2.4
+      node-mocks-http: ^1.11.0
+      objection: ^2.2.15
+      objection-db-errors: ^1.1.2
+      openapi: workspace:../openapi
+      openapi-types: ^12.0.0
+      pg: ^8.6.0
+      pino: ^7.10.0
+      pino-pretty: ^7.6.1
+      testcontainers: ^8.9.0
+      typescript: ^4.2.4
+      uuid: ^8.3.2
+    dependencies:
+      '@adonisjs/fold': 8.2.0
+      '@koa/cors': 3.3.0
+      '@koa/router': 10.1.1
+      ajv: 8.11.0
+      axios: 0.26.1
+      jose: 4.8.3
+      koa: 2.13.4
+      koa-bodyparser: 4.3.0
+      koa-session: 6.2.0
+      node-mocks-http: 1.11.0
+      objection: 2.2.18_knex@0.21.21
+      objection-db-errors: 1.1.2_objection@2.2.18
+      openapi: link:../openapi
+      pg: 8.7.3
+      pino: 7.11.0
+      pino-pretty: 7.6.1
+      testcontainers: 8.12.0
+      uuid: 8.3.2
+    devDependencies:
+      '@types/jest': 27.5.2
+      '@types/koa': 2.13.4
+      '@types/koa-bodyparser': 4.3.7
+      '@types/koa-session': 5.10.6
+      '@types/koa__cors': 3.3.0
+      '@types/koa__router': 8.0.11
+      '@types/nock': 11.1.0
+      '@types/pino': 7.0.5
+      '@types/uuid': 8.3.4
+      jest-openapi: 0.14.2
+      nock: 13.2.9
+      openapi-types: 12.0.0
+      typescript: 4.7.4
+
   packages/openapi:
     specifiers:
       '@apidevtools/json-schema-ref-parser': ^9.0.9

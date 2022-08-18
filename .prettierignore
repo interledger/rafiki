@@ -1,6 +1,4 @@
-.yarn/*
 .github/*
-.pnp.cjs
 .next
 public
 generated
