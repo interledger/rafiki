@@ -6,7 +6,7 @@ Rafiki is a collection of four services that are run together; each one can be s
 
 - [`backend`](../packages/backend): The main service, handling business logic and external communication.
 - [`auth`](../packages/auth): The service used for Grant Authorization and authentication. Rafiki provides this as a reference implementation, with the understanding that Rafiki operators can use and deploy their own service for authorization and authentication.
-- [`rates`](../packages/rates): The service is used to calculate Exchange rates and fees for the quoting mechanism. This is an example service provided for testing, and Rafiki operators are expected to deploy their own business logic for applying fees.
+- [`rates`](../packages/rates): The service is used to calculate exchange rates and fees for the quoting mechanism. This is an example service provided for testing, and Rafiki operators are expected to deploy their own business logic for applying fees.
 - [`frontend`](../packages/frontend): Internal admin interface, not yet developed. Eventually, Rafiki operators will be able to manage their Rafiki instance with it.
 
 These services rely on four databases:
