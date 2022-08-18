@@ -178,4 +178,23 @@ describe('Grant Service', (): void => {
       expect(fetchedGrant?.interactRef).toEqual(interactRef)
     })
   })
+
+  test('Can fetch a grant by its interaction information', async (): Promise<void> => {
+    const fetchedGrant = await grantService.getByInteraction(grant.interactId)
+    expect(fetchedGrant?.id).toEqual(grant.id)
+    expect(fetchedGrant?.interactId).toEqual(grant.interactId)
+  })
+
+  describe('deny', (): void => {
+    test('Can deny a grant', async (): Promise<void> => {
+      const deniedGrant = await grantService.denyGrant(grant.id)
+      expect(deniedGrant?.id).toEqual(grant.id)
+      expect(deniedGrant?.state).toEqual(GrantState.Denied)
+    })
+
+    test("Cannot deny a grant that doesn't exist", async (): Promise<void> => {
+      const deniedGrant = await grantService.denyGrant(v4())
+      expect(deniedGrant).toBeUndefined()
+    })
+  })
 })

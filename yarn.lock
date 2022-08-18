@@ -13031,6 +13031,7 @@ __metadata:
     nock: ^13.1.0
     pino: ^6.11.3
     sax: ^1.2.4
+    typescript: ^4.2.4
   languageName: unknown
   linkType: soft
 
