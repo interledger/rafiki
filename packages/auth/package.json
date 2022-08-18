@@ -2,7 +2,7 @@
   "name": "auth",
   "scripts": {
     "knex": "knex",
-    "build:deps": "pnpm -F openapi build",
+    "build:deps": "pnpm --filter openapi build",
     "build": "pnpm build:deps && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
     "test": "jest --passWithNoTests --maxWorkers=50%",
