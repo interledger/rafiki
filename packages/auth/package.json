@@ -2,7 +2,8 @@
   "name": "auth",
   "scripts": {
     "knex": "knex",
-    "build": "tsc --build tsconfig.json",
+    "build:deps": "pnpm -F openapi build",
+    "build": "pnpm build:deps && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
     "test": "jest",
     "prepack": "pnpm build"

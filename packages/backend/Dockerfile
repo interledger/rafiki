@@ -6,16 +6,14 @@ RUN apt update
 RUN apt install -y curl xz-utils python3 build-essential
 
 # version in curl is not the version used. Dependent on the last command
-RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm@latest-7 \
+RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm@7.9.3
 
-# Files required by pnpm install
-COPY .npmrc package.json pnpm-lock.yaml .pnpmfile.cjs ./
+# pnpm fetch does require only lockfile
+COPY pnpm-lock.yaml ./
+RUN pnpm fetch
 
-RUN pnpm install --frozen-lockfile --prod
-
-# Bundle app source
-COPY ./packages ./packages
-COPY ./mock-servers ./mock-servers
+ADD . ./
+RUN pnpm install -r --offline
 
 RUN pnpm -F backend build
 
