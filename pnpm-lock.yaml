@@ -117,7 +117,7 @@ importers:
     specifiers:
       '@adonisjs/fold': ^8.2.0
       '@apollo/client': ^3.3.20
-      '@faker-js/faker': ^6.0.0
+      '@faker-js/faker': ^7.4.0
       '@graphql-codegen/cli': 1.21.5
       '@graphql-codegen/introspection': 1.18.2
       '@graphql-codegen/typescript': 1.22.2
@@ -192,7 +192,7 @@ importers:
     dependencies:
       '@adonisjs/fold': 8.2.0
       '@apollo/client': 3.6.9_77h5kg6422vos5a7c32osaaxh4
-      '@faker-js/faker': 6.3.1
+      '@faker-js/faker': 7.4.0
       '@graphql-tools/graphql-file-loader': 7.5.2_graphql@15.8.0
       '@graphql-tools/load': 7.7.4_graphql@15.8.0
       '@graphql-tools/schema': 8.5.1_graphql@15.8.0
@@ -1531,8 +1531,8 @@ packages:
       - supports-color
     dev: true
 
-  /@faker-js/faker/6.3.1:
-    resolution: {integrity: sha512-8YXBE2ZcU/pImVOHX7MWrSR/X5up7t6rPWZlk34RwZEcdr3ua6X+32pSd6XuOQRN+vbuvYNfA6iey8NbrjuMFQ==}
+  /@faker-js/faker/7.4.0:
+    resolution: {integrity: sha512-xDd3Tvkt2jgkx1LkuwwxpNBy/Oe+LkZBTwkgEFTiWpVSZgQ5sc/LenbHKRHbFl0dq/KFeeq/szyyPtpJRKY0fg==}
     engines: {node: '>=14.0.0', npm: '>=6.0.0'}
     dev: false
 
