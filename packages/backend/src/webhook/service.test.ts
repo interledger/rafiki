@@ -94,7 +94,7 @@ describe('Webhook Service', (): void => {
     })
   })
 
-  describe('processNext', (): void => {
+  describe.skip('processNext', (): void => {
     function mockWebhookServer(status = 200): nock.Scope {
       return nock(webhookUrl.origin)
         .post(webhookUrl.pathname, function (this: Definition, body) {
