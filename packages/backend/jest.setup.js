@@ -70,7 +70,7 @@ module.exports = async (globalConfig) => {
 
     const tbContFormat = await new GenericContainer(
       //'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b',//main-0.10.0
-      'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:015898c5716e88c9c8c3d19f0f6609a62e9bed118d79037f26a09379034fcf49' //Debug-0.10.0
+      'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:c3a511fe7c697c3a107f839692d631ff6eea1efa731fab2f3e45fe763a9e331d' //Debug-0.10.0
     )
       .withExposedPorts(TIGERBEETLE_PORT)
       .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
@@ -97,7 +97,7 @@ module.exports = async (globalConfig) => {
 
     const tbContStart = await new GenericContainer(
       //'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b',//main-0.10.0
-      'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:015898c5716e88c9c8c3d19f0f6609a62e9bed118d79037f26a09379034fcf49' //Debug-0.10.0
+      'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:c3a511fe7c697c3a107f839692d631ff6eea1efa731fab2f3e45fe763a9e331d' //Debug-0.10.0
     )
       .withExposedPorts(TIGERBEETLE_PORT)
       .withPrivilegedMode()
