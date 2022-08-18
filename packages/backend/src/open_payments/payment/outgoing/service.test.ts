@@ -488,8 +488,7 @@ describe('OutgoingPaymentService', (): void => {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
                 identifier: `${Config.publicHost}/${accountId}`,
-                interval: `R0/${start.toISOString()}/P1M`,
-                limits
+                limits: { ...limits, interval: `R0/${start.toISOString()}/P1M` }
               }
             ]
           })
@@ -522,10 +521,15 @@ describe('OutgoingPaymentService', (): void => {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
                 identifier: `${Config.publicHost}/${accountId}`,
-                interval: `R0/${start.toISOString()}/P1M`,
                 limits: sendAmount
-                  ? { sendAmount: amount }
-                  : { receiveAmount: amount }
+                  ? {
+                      sendAmount: amount,
+                      interval: `R0/${start.toISOString()}/P1M`
+                    }
+                  : {
+                      receiveAmount: amount,
+                      interval: `R0/${start.toISOString()}/P1M`
+                    }
               }
             ]
           })
@@ -560,10 +564,10 @@ describe('OutgoingPaymentService', (): void => {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
                 identifier: `${Config.publicHost}/${accountId}`,
-                interval: `R0/${start.toISOString()}/P1M`,
                 limits: {
                   sendAmount: sendAmount ? grantAmount : undefined,
-                  receiveAmount: sendAmount ? undefined : grantAmount
+                  receiveAmount: sendAmount ? undefined : grantAmount,
+                  interval: `R0/${start.toISOString()}/P1M`
                 }
               }
             ]
@@ -598,44 +602,31 @@ describe('OutgoingPaymentService', (): void => {
           ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
         }
       )
-      test('succeeds if grant access has no limits', async (): Promise<void> => {
-        const grant = new Grant({
-          active: true,
-          grant: uuid(),
-          access: [
-            {
-              type: AccessType.OutgoingPayment,
-              actions: [AccessAction.Create, AccessAction.Read],
-              identifier: `${Config.publicHost}/${accountId}`,
-              interval: `R0/${start.toISOString()}/P1M`,
-              limits: undefined
-            }
-          ]
-        })
-        await expect(
-          outgoingPaymentService.create({ ...options, grant })
-        ).resolves.toBeInstanceOf(OutgoingPayment)
-      })
-      test('succeeds if grant limits do not specify send or receive amount', async (): Promise<void> => {
-        const grant = new Grant({
-          active: true,
-          grant: uuid(),
-          access: [
-            {
-              type: AccessType.OutgoingPayment,
-              actions: [AccessAction.Create, AccessAction.Read],
-              identifier: `${Config.publicHost}/${accountId}`,
-              interval: `R0/${start.toISOString()}/P1M`,
-              limits: {
-                receiver
+      test.each`
+        limits          | description
+        ${undefined}    | ${'has no limits'}
+        ${{ receiver }} | ${'limits do not specify send or receive amount'}
+      `(
+        'succeeds if grant access $description',
+        async ({ limits }): Promise<void> => {
+          const grant = new Grant({
+            active: true,
+            grant: uuid(),
+            access: [
+              {
+                type: AccessType.OutgoingPayment,
+                actions: [AccessAction.Create, AccessAction.Read],
+                identifier: `${Config.publicHost}/${accountId}`,
+                limits
               }
-            }
-          ]
-        })
-        await expect(
-          outgoingPaymentService.create({ ...options, grant })
-        ).resolves.toBeInstanceOf(OutgoingPayment)
-      })
+            ]
+          })
+          await expect(
+            outgoingPaymentService.create({ ...options, grant })
+          ).resolves.toBeInstanceOf(OutgoingPayment)
+        }
+      )
+
       test.each`
         sendAmount | competingPayment | failed       | half     | description
         ${true}    | ${false}         | ${undefined} | ${false} | ${'sendAmount w/o competing payment'}
@@ -673,8 +664,14 @@ describe('OutgoingPaymentService', (): void => {
                 identifier: `${Config.publicHost}/${accountId}`,
                 interval: `R0/${start.toISOString()}/P1M`,
                 limits: sendAmount
-                  ? { sendAmount: grantAmount }
-                  : { receiveAmount: grantAmount }
+                  ? {
+                      sendAmount: grantAmount,
+                      interval: `R0/${start.toISOString()}/P1M`
+                    }
+                  : {
+                      receiveAmount: grantAmount,
+                      interval: `R0/${start.toISOString()}/P1M`
+                    }
               }
             ]
           })
