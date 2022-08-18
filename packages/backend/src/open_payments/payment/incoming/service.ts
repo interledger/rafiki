@@ -308,7 +308,9 @@ async function addReceivedAmount(
   value?: bigint
 ): Promise<IncomingPayment> {
   const received =
-    value || (await deps.accountingService.getTotalReceived(payment.id))
+    value !== undefined
+      ? value
+      : await deps.accountingService.getTotalReceived(payment.id)
 
   payment.receivedAmount = {
     value: received || BigInt(0),

@@ -9,6 +9,8 @@ import {
 } from '../../factories'
 import { createAccountMiddleware } from '../../middleware/account'
 import { ZeroCopyIlpPrepare } from '../..'
+import { CreateAccountError } from '../../../../accounting/errors'
+import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 
 describe('Account Middleware', () => {
   const ADDRESS = 'test.rafiki'
@@ -21,134 +23,62 @@ describe('Account Middleware', () => {
     await rafikiServices.accounting.create(incomingAccount)
   })
 
-  test('set the accounts according to state and destination', async () => {
-    const outgoingAccount = OutgoingPeerFactory.build({
-      id: 'outgoingPeer'
-    })
-    await rafikiServices.accounting.create(outgoingAccount)
+  test.each`
+    name                                                                            | factory                          | id                              | state          | called   | createThrows                                                     | error
+    ${'set the accounts according to state and destination'}                        | ${OutgoingPeerFactory}           | ${'outgoingPeer'}               | ${'PENDING'}   | ${true}  | ${undefined}                                                     | ${''}
+    ${'set the accounts according to state and streamDestination incoming payment'} | ${IncomingPaymentAccountFactory} | ${'outgoingIncomingPayment'}    | ${'PENDING'}   | ${true}  | ${undefined}                                                     | ${''}
+    ${'set the accounts according to state and streamDestination SPSP fallback'}    | ${AccountFactory}                | ${'spspFallback'}               | ${'PENDING'}   | ${true}  | ${undefined}                                                     | ${''}
+    ${'create TB account for PENDING incoming payment throws exists'}               | ${IncomingPaymentAccountFactory} | ${'tbIncomingPayment'}          | ${'PENDING'}   | ${true}  | ${new CreateAccountError(CreateAccountErrorCode.exists)}         | ${''}
+    ${'create TB account for PENDING incoming payment throws error'}                | ${IncomingPaymentAccountFactory} | ${'tbIncomingPayment'}          | ${'PENDING'}   | ${true}  | ${new CreateAccountError(CreateAccountErrorCode.reserved_field)} | ${'CreateAccountError code=10'}
+    ${'return an error when the destination account is disabled'}                   | ${IncomingPaymentAccountFactory} | ${'deactivatedIncomingPayment'} | ${'COMPLETED'} | ${false} | ${undefined}                                                     | ${'destination account is disabled'}
+  `(
+    '$name',
+    async ({
+      id,
+      factory,
+      state,
+      called,
+      createThrows,
+      error
+    }): Promise<void> => {
+      const outgoingAccount = factory.build({
+        id: id,
+        state: state
+      })
+      await rafikiServices.accounting.create(outgoingAccount)
+      const middleware = createAccountMiddleware(ADDRESS)
+      const next = jest.fn()
+      const ctx = createILPContext({
+        state: {
+          incomingAccount,
+          streamDestination: id
+        },
+        services: rafikiServices,
+        request: {
+          prepare: new ZeroCopyIlpPrepare(
+            IlpPrepareFactory.build({ destination: 'test.123' })
+          ),
+          rawPrepare: Buffer.alloc(0) // ignored
+        }
+      })
 
-    const middleware = createAccountMiddleware(ADDRESS)
-    const next = jest.fn()
-    const ctx = createILPContext({
-      state: { incomingAccount },
-      services: rafikiServices,
-      request: {
-        prepare: new ZeroCopyIlpPrepare(
-          IlpPrepareFactory.build({ destination: 'test.outgoingPeer.123' })
-        ),
-        rawPrepare: Buffer.alloc(0) // ignored
+      const spy = jest.spyOn(
+        rafikiServices.accounting,
+        'createLiquidityAccount'
+      )
+      if (createThrows) {
+        spy.mockRejectedValueOnce(createThrows)
       }
-    })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-    expect(ctx.accounts.incoming).toEqual(incomingAccount)
-    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
-  })
-
-  test('set the accounts according to state and streamDestination incoming payment', async () => {
-    const outgoingAccount = IncomingPaymentAccountFactory.build({
-      id: 'outgoingIncomingPayment'
-    })
-    await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
-    const next = jest.fn()
-    const ctx = createILPContext({
-      state: {
-        incomingAccount,
-        streamDestination: outgoingAccount.id
-      },
-      services: rafikiServices,
-      request: {
-        prepare: new ZeroCopyIlpPrepare(
-          IlpPrepareFactory.build({ destination: 'test.123' })
-        ),
-        rawPrepare: Buffer.alloc(0) // ignored
+      if (error) {
+        await expect(middleware(ctx, next)).rejects.toThrowError(error)
+      } else {
+        await expect(middleware(ctx, next)).resolves.toBeUndefined()
+        expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
+        expect(ctx.accounts.incoming).toEqual(incomingAccount)
       }
-    })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-    expect(ctx.accounts.incoming).toEqual(incomingAccount)
-    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
-  })
-
-  test('set the accounts according to state and streamDestination SPSP fallback', async () => {
-    const outgoingAccount = AccountFactory.build({
-      id: 'spspFallback'
-    })
-    await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
-    const next = jest.fn()
-    const ctx = createILPContext({
-      state: {
-        incomingAccount,
-        streamDestination: outgoingAccount.id
-      },
-      services: rafikiServices,
-      request: {
-        prepare: new ZeroCopyIlpPrepare(
-          IlpPrepareFactory.build({ destination: 'test.123' })
-        ),
-        rawPrepare: Buffer.alloc(0) // ignored
+      if (called) {
+        expect(spy).toHaveBeenCalled()
       }
-    })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-    expect(ctx.accounts.incoming).toEqual(incomingAccount)
-    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
-  })
-
-  test('create TB account for PENDING incoming payment', async () => {
-    const outgoingAccount = IncomingPaymentAccountFactory.build({
-      id: 'tbIncomingPayment',
-      state: 'PENDING'
-    })
-    await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
-    const next = jest.fn()
-    const ctx = createILPContext({
-      state: {
-        incomingAccount,
-        streamDestination: 'tbIncomingPayment'
-      },
-      services: rafikiServices,
-      request: {
-        prepare: new ZeroCopyIlpPrepare(
-          IlpPrepareFactory.build({ destination: 'test.123' })
-        ),
-        rawPrepare: Buffer.alloc(0) // ignored
-      }
-    })
-
-    const spy = jest.spyOn(rafikiServices.accounting, 'createLiquidityAccount')
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
-    expect(ctx.accounts.incoming).toEqual(incomingAccount)
-    expect(spy).toHaveBeenCalled()
-  })
-
-  test('return an error when the destination account is disabled', async () => {
-    const outgoingAccount = IncomingPaymentAccountFactory.build({
-      id: 'deactivatedIncomingPayment',
-      state: 'COMPLETED'
-    })
-    await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
-    const next = jest.fn()
-    const ctx = createILPContext({
-      state: {
-        incomingAccount,
-        streamDestination: outgoingAccount.id
-      },
-      services: rafikiServices,
-      request: {
-        prepare: new ZeroCopyIlpPrepare(
-          IlpPrepareFactory.build({ destination: 'test.123' })
-        ),
-        rawPrepare: Buffer.alloc(0) // ignored
-      }
-    })
-    await expect(middleware(ctx, next)).rejects.toThrowError(
-      'destination account is disabled'
-    )
-  })
+    }
+  )
 })

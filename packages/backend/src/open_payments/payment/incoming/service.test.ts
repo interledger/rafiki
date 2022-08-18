@@ -454,7 +454,7 @@ describe('Incoming Payment Service', (): void => {
 
     beforeEach(
       async (): Promise<void> => {
-        const incomingPaymentOrError = await incomingPaymentService.create({
+        const incomingPaymentOrError = await createIncomingPayment(deps, {
           paymentPointerId,
           description: 'Test incoming payment',
           incomingAmount: {
@@ -467,7 +467,6 @@ describe('Incoming Payment Service', (): void => {
         })
         assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
         incomingPayment = incomingPaymentOrError
-        await accountingService.createLiquidityAccount(incomingPayment)
       }
     )
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
