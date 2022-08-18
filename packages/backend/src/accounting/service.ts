@@ -276,7 +276,7 @@ export async function createTransfer(
     })
   }
 
-  // Same asset
+  // Same asset / ledger:
   if (sourceAccount.asset.ledger === destinationAccount.asset.ledger) {
     addTransfer({
       sourceAccountId: sourceAccount.id,
@@ -307,7 +307,7 @@ export async function createTransfer(
         })
       }
     }
-    // Different assets
+    // Different assets / ledgers:
   } else {
     // must specify destination amount
     if (!destinationAmount) {

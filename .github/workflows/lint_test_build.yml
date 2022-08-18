@@ -24,7 +24,7 @@ jobs:
             ./**/node_modules
             ./.yarn
           key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install
+      - run: yarn install --immutable --immutable-cache
 
   backend:
     runs-on: ubuntu-latest
