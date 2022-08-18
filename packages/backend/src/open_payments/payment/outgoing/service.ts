@@ -195,7 +195,7 @@ function validateAccessLimits(
   }
 }
 
-function validatePaymentLimits({
+function validatePaymentInterval({
   limits,
   payment
 }: {
@@ -203,11 +203,9 @@ function validatePaymentLimits({
   payment: OutgoingPayment
 }): boolean {
   if (
-    (!limits.receiver || payment.receiver === limits?.receiver) &&
-    validateAmountAssets(payment, limits) &&
-    (!limits.paymentInterval ||
-      (limits.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
-        payment.createdAt.getTime() < limits.paymentInterval.end.toMillis()))
+    !limits.paymentInterval ||
+    (limits.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
+      payment.createdAt.getTime() < limits.paymentInterval.end.toMillis())
   ) {
     return true
   }
@@ -278,7 +276,7 @@ async function validateGrant(
   let receivedAmount = BigInt(0)
   for (const grantPayment of grantPayments) {
     if (
-      validatePaymentLimits({
+      validatePaymentInterval({
         limits: paymentLimits,
         payment: grantPayment
       })
