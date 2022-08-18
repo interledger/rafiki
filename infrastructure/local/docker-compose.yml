@@ -12,7 +12,7 @@ services:
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
   mock-account-provider:
     build:
-      context: ./
+      context: ../..
       dockerfile: ./packages/mock-account-provider/Dockerfile
     restart: always
     networks:
