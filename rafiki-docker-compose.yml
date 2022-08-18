@@ -10,6 +10,19 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
+  mock-auth:
+    build:
+      context: ./
+      dockerfile: ./mock-servers/auth/Dockerfile
+    restart: always
+    networks:
+      rafiki:
+    ports:
+      - "1337:1337"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT: 1337
   backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     restart: always
