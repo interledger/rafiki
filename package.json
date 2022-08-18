@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/interledger/rafiki",
   "engines": {
-    "node": "14.20.0"
+    "node": "16"
   },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
@@ -13,6 +13,7 @@
     "lint:check": "eslint --max-warnings=0 .",
     "format": "prettier --write .",
     "format:check": "prettier --check",
+    "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "build": "tsc --build",
     "postinstall": "[ -d '.husky' ] && husky install || true"
   },
