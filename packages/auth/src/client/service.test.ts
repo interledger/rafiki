@@ -12,12 +12,11 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { ClientService } from './service'
 import { v4 } from 'uuid'
-import { createContext } from '../tests/context'
+import { createContext, createContextWithSigHeaders } from '../tests/context'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessType, Action } from '../access/types'
-import { generateSigHeaders } from '../tests/signature'
 import { TEST_CLIENT_KEY } from '../grant/routes.test'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
@@ -90,14 +89,14 @@ describe('Client Service', (): void => {
             'Content-Length': '1234',
             'Signature-Input': sigInputHeader,
             Authorization: 'GNAP test-access-token'
-          }
+          },
+          method: 'GET',
+          url: '/test'
         },
         {}
       )
 
       ctx.request.body = { foo: 'bar' }
-      ctx.method = 'GET'
-      ctx.request.url = '/test'
 
       const challenge = clientService.sigInputToChallenge(sigInputHeader, ctx)
       expect(challenge).toEqual(
@@ -108,117 +107,40 @@ describe('Client Service', (): void => {
       )
     })
 
-    test('fails to construct signature input if a component is not in lower case', (): void => {
-      const sigInputHeader =
-        'sig1=("@METHOD" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"'
-      const ctx = createContext(
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Digest': 'sha-256=:test-hash:',
-            'Content-Length': '1234',
-            'Signature-Input': sigInputHeader,
-            Authorization: 'GNAP test-access-token'
-          }
-        },
-        {}
-      )
+    test.each`
+      title                                                                               | sigInputHeader
+      ${'fails if a component is not in lower case'}                                      | ${'sig1=("@METHOD" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"'}
+      ${'fails @method is missing'}                                                       | ${'sig1=("@target-uri" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'}
+      ${'fails if @target-uri is missing'}                                                | ${'sig1=("@method" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'}
+      ${'fails if @content-digest is missing while body is present'}                      | ${'sig1=("@method" "@target-uri" "content-length" "content-type");created=1618884473;keyid="gnap-key"'}
+      ${'fails if authorization header is present in headers but not in signature input'} | ${'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'}
+    `(
+      'constructs signature input and $title',
+      async ({ sigInputHeader }): Promise<void> => {
+        const ctx = createContext(
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Digest': 'sha-256=:test-hash:',
+              'Content-Length': '1234',
+              'Signature-Input': sigInputHeader,
+              Authorization: 'GNAP test-access-token'
+            },
+            method: 'GET',
+            url: '/test'
+          },
+          {}
+        )
 
-      ctx.request.body = { foo: 'bar' }
-      ctx.method = 'GET'
-      ctx.request.url = '/test'
+        ctx.request.body = { foo: 'bar' }
+        ctx.method = 'GET'
+        ctx.request.url = '/test'
 
-      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
-    })
-
-    test('fails to construct signature input if @method is missing', (): void => {
-      const sigInputHeader =
-        'sig1=("@target-uri" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'
-      const ctx = createContext(
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Digest': 'sha-256=:test-hash:',
-            'Content-Length': '1234',
-            'Signature-Input': sigInputHeader
-          }
-        },
-        {}
-      )
-
-      ctx.request.body = { foo: 'bar' }
-      ctx.method = 'GET'
-      ctx.request.url = '/test'
-
-      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
-    })
-
-    test('fails to construct signature input if @target-uri is missing', (): void => {
-      const sigInputHeader =
-        'sig1=("@method" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'
-      const ctx = createContext(
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Digest': 'sha-256=:test-hash:',
-            'Content-Length': '1234',
-            'Signature-Input': sigInputHeader
-          }
-        },
-        {}
-      )
-
-      ctx.request.body = { foo: 'bar' }
-      ctx.method = 'GET'
-      ctx.request.url = '/test'
-
-      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
-    })
-
-    test('fails to construct signature input if request body is present but content-digest is not', (): void => {
-      const sigInputHeader =
-        'sig1=("@method" "@target-uri" "content-length" "content-type");created=1618884473;keyid="gnap-key"'
-      const ctx = createContext(
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Digest': 'sha-256=:test-hash:',
-            'Content-Length': '1234',
-            'Signature-Input': sigInputHeader
-          }
-        },
-        {}
-      )
-
-      ctx.request.body = { foo: 'bar' }
-      ctx.method = 'GET'
-      ctx.request.url = '/test'
-
-      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
-    })
-
-    test('fails to construct signature input if authorization header is present but not in signature input', (): void => {
-      const sigInputHeader =
-        'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-key"'
-      const ctx = createContext(
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Digest': 'sha-256=:test-hash:',
-            'Content-Length': '1234',
-            'Signature-Input': sigInputHeader,
-            Authorization: 'GNAP test-access-token'
-          }
-        },
-        {}
-      )
-
-      ctx.request.body = { foo: 'bar' }
-      ctx.method = 'GET'
-      ctx.request.url = '/test'
-
-      expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
-    })
+        expect(clientService.sigInputToChallenge(sigInputHeader, ctx)).toBe(
+          null
+        )
+      }
+    )
   })
 
   describe('Signature middleware', (): void => {
@@ -300,42 +222,62 @@ describe('Client Service', (): void => {
       }
     )
 
+    test('Validate POST / request with middleware', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(TEST_KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY.jwk],
+          ...TEST_CLIENT_DISPLAY
+        })
+
+      const ctx = await createContextWithSigHeaders(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {},
+        {
+          client: {
+            display: TEST_CLIENT_DISPLAY,
+            key: TEST_CLIENT_KEY
+          }
+        }
+      )
+
+      await clientService.tokenHttpsigMiddleware(ctx, next)
+
+      expect(next).toHaveBeenCalled()
+      expect(ctx.response.status).toEqual(200)
+
+      scope.isDone()
+    })
+
     test('Validate /introspect request with middleware', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk]
         })
-      const url = '/introspect'
-      const method = 'POST'
 
-      const requestBody = {
-        access_token: token.value,
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
-
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        requestBody
-      )
-
-      const ctx = createContext(
+      const ctx = await createContextWithSigHeaders(
         {
           headers: {
-            Accept: 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            Accept: 'application/json'
           },
-          url,
-          method
+          url: '/introspect',
+          method: 'POST'
         },
-        {}
+        {},
+        {
+          access_token: token.value,
+          proof: 'httpsig',
+          resource_server: 'test'
+        }
       )
 
-      ctx.request.body = requestBody
       await clientService.tokenHttpsigMiddleware(ctx, next)
 
       expect(next).toHaveBeenCalled()
@@ -350,35 +292,23 @@ describe('Client Service', (): void => {
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk]
         })
-      const method = 'DELETE'
 
-      const requestBody = {
-        access_token: token.value,
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
-
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        tokenManagementUrl,
-        method,
-        requestBody
-      )
-
-      const ctx = createContext(
+      const ctx = await createContextWithSigHeaders(
         {
           headers: {
-            Accept: 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            Accept: 'application/json'
           },
           url: tokenManagementUrl,
-          method
+          method: 'DELETE'
         },
-        { managementId }
+        { managementId },
+        {
+          access_token: token.value,
+          proof: 'httpsig',
+          resource_server: 'test'
+        }
       )
 
-      ctx.request.body = requestBody
       await clientService.tokenHttpsigMiddleware(ctx, next)
 
       expect(next).toHaveBeenCalled()
@@ -388,36 +318,42 @@ describe('Client Service', (): void => {
     })
 
     test('httpsig middleware fails if client is invalid', async () => {
-      const url = '/introspect'
-      const method = 'POST'
-
-      const requestBody = {
-        access_token: token.value,
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
-
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        tokenManagementUrl,
-        method,
-        requestBody
-      )
-
-      const ctx = createContext(
+      const grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT,
+        continueToken: crypto.randomBytes(8).toString('hex'),
+        continueId: v4(),
+        interactId: v4(),
+        interactNonce: crypto.randomBytes(8).toString('hex'),
+        interactRef: v4(),
+        clientKeyId: 'https://openpayments.network/wrong-key'
+      })
+      await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_ACCESS
+      })
+      const token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN,
+        value: crypto.randomBytes(8).toString('hex'),
+        managementId: v4()
+      })
+      const ctx = await createContextWithSigHeaders(
         {
           headers: {
-            Accept: 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            Accept: 'application/json'
           },
-          url,
-          method
+          url: '/introspect',
+          method: 'POST'
         },
-        { managementId }
+        { managementId },
+        {
+          access_token: token.value,
+          proof: 'httpsig',
+          resource_server: 'test',
+          test: 'middleware fail'
+        }
       )
 
-      ctx.request.body = requestBody
       await clientService.tokenHttpsigMiddleware(ctx, next)
 
       expect(next).toHaveBeenCalled()
@@ -432,12 +368,6 @@ describe('Client Service', (): void => {
         })
       const method = 'DELETE'
 
-      const requestBody = {
-        access_token: token.value,
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
-
       const ctx = createContext(
         {
           headers: {
@@ -449,7 +379,11 @@ describe('Client Service', (): void => {
         { managementId }
       )
 
-      ctx.request.body = requestBody
+      ctx.request.body = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
       await clientService.tokenHttpsigMiddleware(ctx, next)
 
       expect(next).toHaveBeenCalled()

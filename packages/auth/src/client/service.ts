@@ -50,7 +50,7 @@ interface ServiceDependencies extends BaseService {
   config: IAppConfig
 }
 
-interface VerifySigFromBoundKeyResult {
+interface VerifySigResult {
   success: boolean
   status?: number
   error?: string
@@ -170,23 +170,13 @@ async function verifySig(
   return crypto.verify(null, data, publicKey, Buffer.from(sig, 'base64'))
 }
 
-async function verifySigFromBoundKey(
+async function verifySigAndChallenge(
   deps: ServiceDependencies,
   sig: string,
   sigInput: string,
-  grant: Grant,
+  clientKey: JWKWithRequired,
   ctx: AppContext
-): Promise<VerifySigFromBoundKeyResult> {
-  const registryData = await getRegistryDataByKid(deps, grant.clientKeyId)
-  if (!registryData)
-    return {
-      success: false,
-      error: 'invalid_client',
-      status: 401
-    }
-  const { keys } = registryData
-  const clientKey = keys[0]
-
+): Promise<VerifySigResult> {
   const challenge = sigInputToChallenge(sigInput, ctx)
   if (!challenge) {
     return {
@@ -205,6 +195,26 @@ async function verifySigFromBoundKey(
       challenge
     )
   }
+}
+
+async function verifySigFromBoundKey(
+  deps: ServiceDependencies,
+  sig: string,
+  sigInput: string,
+  grant: Grant,
+  ctx: AppContext
+): Promise<VerifySigResult> {
+  const registryData = await getRegistryDataByKid(deps, grant.clientKeyId)
+  if (!registryData)
+    return {
+      success: false,
+      error: 'invalid_client',
+      status: 401
+    }
+  const { keys } = registryData
+  const clientKey = keys[0]
+
+  return verifySigAndChallenge(deps, sig, sigInput, clientKey, ctx)
 }
 
 async function validateClient(
@@ -326,8 +336,7 @@ async function tokenHttpsigMiddleware(
 
   const { body } = ctx.request
   const { path, method } = ctx
-  // TODO: replace with HttpMethod types instead of string literals
-  let grant: Grant
+  let verified: VerifySigResult
   if (
     path.includes('/introspect') &&
     method === HttpMethod.POST.toUpperCase()
@@ -337,14 +346,17 @@ async function tokenHttpsigMiddleware(
       body['access_token']
     )
     if (!accessToken) {
-      ctx.status = 404
+      ctx.status = 401
       ctx.body = {
         error: 'invalid_client',
-        message: 'token not found'
+        message: 'invalid access token'
       }
+
+      return
     }
 
-    grant = await Grant.query().findById(accessToken.grantId)
+    const grant = await Grant.query().findById(accessToken.grantId)
+    verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
   } else if (
     path.includes('/token') &&
     method === HttpMethod.DELETE.toUpperCase()
@@ -354,22 +366,48 @@ async function tokenHttpsigMiddleware(
       ctx.params['managementId']
     )
     if (!accessToken) {
-      ctx.status = 404
+      ctx.status = 401
       ctx.body = {
         error: 'invalid_client',
-        message: 'token not found'
+        message: 'invalid access token'
       }
+      return
     }
 
-    grant = await Grant.query().findById(accessToken.grantId)
+    const grant = await Grant.query().findById(accessToken.grantId)
+    verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
   } else if (path.includes('/continue')) {
-    grant = await Grant.query().findOne('interactId', ctx.params['interactId'])
+    const grant = await Grant.query().findOne(
+      'interactId',
+      ctx.params['interactId']
+    )
+    if (!grant) {
+      ctx.status = 401
+      ctx.body = {
+        error: 'invalid_interaction',
+        message: 'invalid grant'
+      }
+      return
+    }
+    verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
+  } else if (path === '/' && method === HttpMethod.POST.toUpperCase()) {
+    if (!(await validateClientWithRegistry(deps, body.client))) {
+      ctx.status = 401
+      ctx.body = { error: 'invalid_client' }
+      return
+    }
+    verified = await verifySigAndChallenge(
+      deps,
+      sig,
+      sigInput,
+      body.client.key.jwk,
+      ctx
+    )
   } else {
+    // route does not need httpsig verification
     next()
     return
   }
-
-  const verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
 
   if (!verified.success) {
     ctx.status = verified.status || 401

@@ -125,10 +125,6 @@ describe('Access Token Routes', (): void => {
       }
     )
     test('Cannot introspect fake token', async (): Promise<void> => {
-      const requestBody = {
-        access_token: v4(),
-        resource_server: 'test'
-      }
       const ctx = createContext(
         {
           headers: {
@@ -139,7 +135,10 @@ describe('Access Token Routes', (): void => {
         },
         {}
       )
-      ctx.request.body = requestBody
+      ctx.request.body = {
+        access_token: v4(),
+        resource_server: 'test'
+      }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)
       expect(ctx.body).toMatchObject({
@@ -180,7 +179,10 @@ describe('Access Token Routes', (): void => {
         {}
       )
 
-      ctx.request.body = requestBody
+      ctx.request.body = {
+        access_token: token.value,
+        resource_server: 'test'
+      }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
@@ -233,7 +235,10 @@ describe('Access Token Routes', (): void => {
         {}
       )
 
-      ctx.request.body = requestBody
+      ctx.request.body = {
+        access_token: token.value,
+        resource_server: 'test'
+      }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
@@ -294,11 +299,6 @@ describe('Access Token Routes', (): void => {
           keys: [TEST_CLIENT_KEY.jwk]
         })
 
-      const requestBody = {
-        access_token: token.value,
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
       const ctx = createContext(
         {
           headers: {
@@ -310,7 +310,11 @@ describe('Access Token Routes', (): void => {
         { id: managementId }
       )
 
-      ctx.request.body = requestBody
+      ctx.request.body = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
       await token.$query(trx).patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
@@ -324,11 +328,6 @@ describe('Access Token Routes', (): void => {
           keys: [TEST_CLIENT_KEY.jwk]
         })
 
-      const requestBody = {
-        access_token: token.value,
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
       const ctx = createContext(
         {
           headers: {
@@ -340,7 +339,11 @@ describe('Access Token Routes', (): void => {
         { id: managementId }
       )
 
-      ctx.request.body = requestBody
+      ctx.request.body = {
+        access_token: token.value,
+        proof: 'httpsig',
+        resource_server: 'test'
+      }
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)

@@ -90,62 +90,10 @@ async function createGrantInitiation(
   }
 
   const { body } = ctx.request
-  const { grantService, clientService, config } = deps
+  const { grantService, config } = deps
   if (!validateGrantRequest(body)) {
     ctx.status = 400
     ctx.body = { error: 'invalid_request' }
-    return
-  }
-
-  const isValidClient = await clientService.validateClient(body.client)
-  if (!isValidClient) {
-    ctx.status = 400
-    ctx.body = { error: 'invalid_client' }
-    return
-  }
-
-  try {
-    const sig = ctx.headers['signature']
-    const sigInput = ctx.headers['signature-input']
-
-    if (
-      !sig ||
-      !sigInput ||
-      typeof sig !== 'string' ||
-      typeof sigInput !== 'string'
-    ) {
-      ctx.status = 400
-      ctx.body = {
-        error: 'invalid_request'
-      }
-      return
-    }
-    const challenge = deps.clientService.sigInputToChallenge(sigInput, ctx)
-
-    if (!challenge) {
-      ctx.status = 400
-      ctx.body = {
-        error: 'invalid_request'
-      }
-      return
-    }
-
-    const verified = deps.clientService.verifySig(
-      sig.replace('sig1=', ''),
-      body.client.key.jwk,
-      challenge
-    )
-    if (!verified) {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client'
-      }
-    }
-  } catch (err) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_client'
-    }
     return
   }
 

@@ -647,49 +647,6 @@ describe('Grant Routes', (): void => {
       expect(ctx.body).toEqual({ error: 'invalid_request' })
     })
 
-    test('Cannot initiate grant with invalid client', async (): Promise<void> => {
-      const body = {
-        ...BASE_GRANT_REQUEST,
-        client: {
-          display: TEST_CLIENT_DISPLAY,
-          key: {
-            proof: 'httpsig',
-            jwk: {
-              ...TEST_CLIENT_KEY.jwk,
-              kid: 'https://openpayments.network/wrong-key'
-            }
-          }
-        }
-      }
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        body
-      )
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = body
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-      expect(ctx.body).toEqual({
-        error: 'invalid_client'
-      })
-    })
-
     test('Cannot initiate grant with invalid grant request', async (): Promise<void> => {
       const expDate = new Date()
       expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
@@ -706,7 +663,19 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const body = {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          url,
+          method
+        },
+        {}
+      )
+
+      ctx.request.body = {
         ...BASE_GRANT_REQUEST,
         access_token: {
           access: [
@@ -717,28 +686,6 @@ describe('Grant Routes', (): void => {
           ]
         }
       }
-
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        body
-      )
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = body
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(400)
