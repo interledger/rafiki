@@ -1,10 +1,11 @@
 {
   "name": "backend",
   "scripts": {
-    "test": "jest --passWithNoTests",
+    "test": "jest --passWithNoTests --maxWorkers=50%",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
-    "build": "tsc --build tsconfig.json && pnpm copy-files",
+    "build:deps": "pnpm -F openapi build",
+    "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/",
     "prepack": "pnpm build"

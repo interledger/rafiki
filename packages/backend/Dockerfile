@@ -1,16 +1,22 @@
-FROM node:14-slim as builder
+FROM node:16-slim as builder
 
 WORKDIR /workspace
 
 RUN apt update
 RUN apt install -y curl xz-utils python3 build-essential
-COPY package.json yarn.lock tsconfig.build.json .yarnrc.yml ./
-COPY .yarn ./.yarn
+
+# version in curl is not the version used. Dependent on the last command
+RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm@latest-7 \
+
+# Files required by pnpm install
+COPY .npmrc package.json pnpm-lock.yaml .pnpmfile.cjs ./
+
+RUN pnpm install --frozen-lockfile --prod
+
+# Bundle app source
 COPY ./packages ./packages
 COPY ./mock-servers ./mock-servers
 
-RUN yarn install --immutable
-RUN yarn workspaces foreach -ptvR --from backend run build \
-  && yarn workspace backend build
+RUN pnpm -F backend build
 
 CMD ["node", "./packages/backend/dist/index.js"]
