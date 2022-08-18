@@ -37,7 +37,7 @@ describe('Rates service', function () {
       deps = await initIocContainer(config)
       deps.bind('messageProducer', async () => mockMessageProducer)
       appContainer = await createTestApp(deps)
-      jest.useFakeTimers('modern')
+      jest.useFakeTimers()
       jest.setSystemTime(1600000000000)
     }
   )

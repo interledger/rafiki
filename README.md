@@ -43,3 +43,39 @@ Or dial: ‪(US) +1 408-831-2432‬ PIN: ‪472 676 485‬#
 More phone numbers: https://tel.meet/rdx-xoqn-iiq?pin=3263008843276
 
 [Add to Google Calendar](https://calendar.google.com/event?action=TEMPLATE&tmeid=NXVsMWhsb3NnbG9hbDFkazE0dTBhZGZ1Z25fMjAyMjAzMjFUMTcwMDAwWiBjX2NqMDI3Z21oc3VqazkxZXZpMjRkOXB2bXQ0QGc&tmsrc=c_cj027gmhsujk91evi24d9pvmt4%40group.calendar.google.com&scp=ALL)
+
+## Local Development Enironment
+
+### Prequisits
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [NVM](https://github.com/nvm-sh/nvm)
+
+### Environment Setup
+
+```sh
+# install node 16
+nvm install lts/gallium
+nvm use lts/gallium
+
+# install pnpm
+corepack enable
+
+# if moving from yarn run
+pnpm clean
+
+# install dependencies
+pnpm i
+
+# build all the packages in the repo
+pnpm -r build
+
+# run individual tests
+pnpm --filter backend test
+pnpm --filter auth test
+pnpm --filter rates test
+pnpm --filter open-api test
+
+# run all tests
+pnpm -r --workspace-concurrency=2 test
+```

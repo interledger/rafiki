@@ -20,12 +20,14 @@ describe('Incoming Payment Resolver', (): void => {
 
   const asset = randomAsset()
 
-  beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
-    appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
-    accountService = await deps.use('accountService')
-  }, 10_000)
+  beforeAll(
+    async (): Promise<void> => {
+      deps = await initIocContainer(Config)
+      appContainer = await createTestApp(deps)
+      knex = await deps.use('knex')
+      accountService = await deps.use('accountService')
+    }
+  )
 
   afterAll(
     async (): Promise<void> => {

@@ -10,10 +10,10 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
-  mock-auth:
+  mock-account-provider:
     build:
       context: ./
-      dockerfile: ./mock-servers/auth/Dockerfile
+      dockerfile: ./packages/mock-account-provider/Dockerfile
     restart: always
     networks:
       rafiki:
@@ -79,7 +79,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
   tigerbeetle:
-    image: ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7 
+    image: ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7
     restart: unless-stopped
     privileged: true
     volumes:
