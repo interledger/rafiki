@@ -1,3 +1,3 @@
 module.exports = {
-  '*': () => ['yarn lint', 'yarn format']
+  '*': () => ['pnpm lint', 'pnpm format']
 }

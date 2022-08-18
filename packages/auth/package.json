@@ -5,7 +5,7 @@
     "build:deps": "pnpm -F openapi build",
     "build": "pnpm build:deps && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
-    "test": "jest",
+    "test": "jest --passWithNoTests --maxWorkers=50%",
     "prepack": "pnpm build"
   },
   "dependencies": {

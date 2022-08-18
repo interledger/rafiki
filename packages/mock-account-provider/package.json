@@ -1,17 +1,14 @@
 {
-  "name": "mock-auth",
+  "name": "mock-account-provider",
   "entry": {
     "main": "dist/index.js"
   },
   "scripts": {
-    "lint": "yarn lint:local",
-    "format": "yarn format:local",
     "dev": "node dist/index.js",
-    "format:check": "yarn format:check:local",
-    "build": "yarn clean && tsc --build tsconfig.json",
+    "build": "pnpm clean && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
-    "test": "yarn test:local",
-    "prepack": "yarn build"
+    "test": "jest --passWithNoTests --maxWorkers=50%",
+    "prepack": "pnpm build"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",
