@@ -17,7 +17,7 @@ Implements Open Payments authorization endpoints in accordance with the GNAP spe
 In order to build the docker container run the following command.
 
 ```shell
-yarn docker build auth -t rafiki-auth
+pnpm docker build auth -t rafiki-auth
 ```
 
 ## GNAP Endpoints

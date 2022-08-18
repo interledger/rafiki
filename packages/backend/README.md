@@ -22,7 +22,7 @@
 - [`openapi`](https://github.com/interledger/rafiki/tree/main/packages/openapi):
 
 ```shell
-yarn workspace openapi build
+pnpm -F openapi build
 ```
 
 ### Testing
@@ -30,7 +30,7 @@ yarn workspace openapi build
 From the monorepo root directory:
 
 ```shell
-yarn workspace backend test
+pnpm -F backend test
 ```
 
 ## Docker build
@@ -38,7 +38,7 @@ yarn workspace backend test
 In order to build the docker container run the following command.
 
 ```shell
-yarn docker build backend -t rafiki-backend
+pnpm docker build backend -t rafiki-backend
 ```
 
 ## Configuration
