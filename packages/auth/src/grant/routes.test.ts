@@ -18,7 +18,6 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { GrantRequest } from '../grant/service'
 import { AccessToken } from '../accessToken/model'
-import { generateSigHeaders } from '../tests/signature'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const TEST_KID_PATH = '/keys/base-test-key'
@@ -199,19 +198,11 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        incomingPaymentGrantRequest
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url,
           method
@@ -251,19 +242,11 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        outgoingPaymentGrantRequest
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url,
           method
@@ -302,19 +285,11 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        accountGrantRequest
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url,
           method
@@ -353,19 +328,11 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        quoteGrantRequest
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url,
           method
@@ -405,19 +372,11 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        incomingPaymentGrantRequest
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url: '/',
           method: 'POST'
@@ -456,19 +415,11 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        outgoingPaymentGrantRequest
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url,
           method
@@ -507,19 +458,11 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        incomingPaymentGrantRequest
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url,
           method
@@ -558,19 +501,11 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        incomingPaymentGrantRequest
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url,
           method
@@ -592,19 +527,11 @@ describe('Grant Routes', (): void => {
     const method = 'POST'
 
     test('accepts json only', async (): Promise<void> => {
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        BASE_GRANT_REQUEST
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'text/plain',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url,
           method
@@ -620,19 +547,11 @@ describe('Grant Routes', (): void => {
     })
 
     test('sends json body only', async (): Promise<void> => {
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        BASE_GRANT_REQUEST
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'text/plain',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'text/plain'
           },
           url,
           method
@@ -712,19 +631,11 @@ describe('Grant Routes', (): void => {
           revoked: false
         })
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        BASE_GRANT_REQUEST
-      )
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Content-Digest': contentDigest,
-            Signature: signature,
-            'Signature-Input': sigInput
+            'Content-Type': 'application/json'
           },
           url,
           method
