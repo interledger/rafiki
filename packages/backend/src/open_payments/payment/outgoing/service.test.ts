@@ -451,39 +451,7 @@ describe('OutgoingPaymentService', (): void => {
           start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
         }
       )
-      test('fails if grant type does not match', async (): Promise<void> => {
-        const grant = new Grant({
-          active: true,
-          grant: uuid(),
-          access: [
-            {
-              type: AccessType.IncomingPayment,
-              actions: [AccessAction.Create, AccessAction.Read],
-              identifier: `${Config.publicHost}/${uuid()}`
-            }
-          ]
-        })
-        await expect(
-          outgoingPaymentService.create({ ...options, grant })
-        ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
-      })
-      test('fails if grant identifier does not match', async (): Promise<void> => {
-        const grant = new Grant({
-          active: true,
-          grant: uuid(),
-          access: [
-            {
-              type: AccessType.OutgoingPayment,
-              actions: [AccessAction.Create, AccessAction.Read],
-              identifier: `${Config.publicHost}/${uuid()}`
-            }
-          ]
-        })
-        await expect(
-          outgoingPaymentService.create({ ...options, grant })
-        ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
-      })
-      test('fails if grant interval does not cover now', async (): Promise<void> => {
+      test('fails if grant limits interval does not cover now', async (): Promise<void> => {
         const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
         const grant = new Grant({
           active: true,
@@ -492,7 +460,10 @@ describe('OutgoingPaymentService', (): void => {
             {
               type: AccessType.OutgoingPayment,
               actions: [AccessAction.Create, AccessAction.Read],
-              interval: `R0/${start.toISOString()}/P1M`
+              limits: {
+                sendAmount,
+                interval: `R0/${start.toISOString()}/P1M`
+              }
             }
           ]
         })
@@ -502,9 +473,6 @@ describe('OutgoingPaymentService', (): void => {
       })
       test.each`
         limits                                                                         | description
-        ${{ receiver: `${Config.publicHost}/${uuid()}/incoming-payments/${uuid()}` }}  | ${'receiver'}
-        ${{ description: 'hello world' }}                                              | ${'description'}
-        ${{ externalRef: 'hello world' }}                                              | ${'externalRef'}
         ${{ sendAmount: { assetCode: 'EUR', assetScale: asset.scale } }}               | ${'sendAmount asset code'}
         ${{ sendAmount: { assetCode: asset.code, assetScale: 2 } }}                    | ${'sendAmount asset scale'}
         ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${'receiveAmount asset code'}

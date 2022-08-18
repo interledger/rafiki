@@ -29,8 +29,7 @@ export interface AccessLimits {
   receiver?: string
   sendAmount?: Amount
   receiveAmount?: Amount
-  description?: string
-  externalRef?: string
+  interval?: string
 }
 
 interface AccessLimitsJSON {
@@ -86,26 +85,8 @@ export class Grant {
       (access) =>
         access.type === type &&
         (!access.identifier || access.identifier === identifier) &&
-        access.actions.includes(action) &&
-        (!access.interval ||
-          getInterval(access.interval, new Date()) !== undefined)
+        access.actions.includes(action)
     )
-  }
-
-  public getAccess({
-    type,
-    action
-  }: {
-    type: AccessType
-    action: AccessAction
-  }): GrantAccess | undefined {
-    const access = this.access[0]
-    if (
-      (!type || access.type === type) &&
-      (!action || access.actions.includes(action))
-    ) {
-      return { ...access }
-    }
   }
 
   public toJSON(): GrantJSON {

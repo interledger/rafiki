@@ -16,14 +16,7 @@ import {
 } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
-import {
-  Grant,
-  GrantAccess,
-  AccessType,
-  AccessAction,
-  AccessLimits,
-  getInterval
-} from '../../auth/grant'
+import { Grant, AccessLimits, getInterval } from '../../auth/grant'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -185,57 +178,36 @@ async function createOutgoingPayment(
   }
 }
 
-function validateAccess({
-  access,
-  payment,
-  identifier
-}: {
-  access: GrantAccess
-  payment: OutgoingPayment
-  identifier: string
-}): PaymentAccess | undefined {
-  let paymentInterval: Interval | undefined
-  if (access.interval)
-    paymentInterval = getInterval(access.interval, payment.createdAt)
-  if (
-    (!access.identifier || access.identifier === identifier) &&
-    (!access.interval || paymentInterval !== undefined) &&
-    (!access.limits || validateAccessLimits(payment, access.limits))
-  ) {
-    return { ...access, paymentInterval }
-  }
-}
-
-function validatePaymentAccess({
-  access,
-  payment,
-  identifier
-}: {
-  access: PaymentAccess
-  payment: OutgoingPayment
-  identifier: string
-}): boolean {
-  if (
-    (!access.identifier || access.identifier === identifier) &&
-    (!access.paymentInterval ||
-      (access.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
-        payment.createdAt.getTime() < access.paymentInterval.end.toMillis())) &&
-    (!access.limits || validateAccessLimits(payment, access.limits))
-  ) {
-    return true
-  }
-  return false
-}
-
 function validateAccessLimits(
   payment: OutgoingPayment,
   limits: AccessLimits
-): boolean {
+): PaymentLimits | undefined {
   if (
     (!limits.receiver || payment.receiver === limits?.receiver) &&
-    (!limits.description || payment.description === limits?.description) &&
-    (!limits.externalRef || payment.externalRef === limits?.externalRef) &&
     validateAmountAssets(payment, limits)
+  ) {
+    let paymentInterval: Interval | undefined
+    if (limits.interval)
+      paymentInterval = getInterval(limits.interval, payment.createdAt)
+    if (!limits.interval || !!paymentInterval) {
+      return { ...limits, paymentInterval }
+    }
+  }
+}
+
+function validatePaymentLimits({
+  limits,
+  payment
+}: {
+  limits: PaymentLimits
+  payment: OutgoingPayment
+}): boolean {
+  if (
+    (!limits.receiver || payment.receiver === limits?.receiver) &&
+    validateAmountAssets(payment, limits) &&
+    (!limits.paymentInterval ||
+      (limits.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
+        payment.createdAt.getTime() < limits.paymentInterval.end.toMillis()))
   ) {
     return true
   }
@@ -260,7 +232,7 @@ function validateAmountAssets(
   )
 }
 
-interface PaymentAccess extends GrantAccess {
+interface PaymentLimits extends AccessLimits {
   paymentInterval?: Interval
 }
 
@@ -270,35 +242,19 @@ async function validateGrant(
   payment: OutgoingPayment,
   grant: Grant
 ): Promise<boolean> {
-  const grantAccess = grant.getAccess({
-    type: AccessType.OutgoingPayment,
-    action: AccessAction.Create
-  })
-
-  if (!grantAccess) {
-    // log?
-    return false
-  }
-
-  const paymentAccess = validateAccess({
-    access: grantAccess,
-    payment,
-    identifier: `${deps.publicHost}/${payment.accountId}`
-  })
-  if (!paymentAccess) {
-    return false
-  }
-  if (
-    !paymentAccess.limits?.sendAmount &&
-    !paymentAccess.limits?.receiveAmount
-  ) {
+  const grantAccess = grant.access[0]
+  if (!grantAccess.limits?.sendAmount && !grantAccess.limits?.receiveAmount) {
     return true
   }
+  const paymentLimits = validateAccessLimits(payment, grantAccess.limits)
+  if (!paymentLimits) {
+    return false
+  }
   if (
-    (paymentAccess.limits.sendAmount &&
-      paymentAccess.limits.sendAmount.value < payment.sendAmount.value) ||
-    (paymentAccess.limits.receiveAmount &&
-      paymentAccess.limits.receiveAmount.value < payment.receiveAmount.value)
+    (paymentLimits.sendAmount &&
+      paymentLimits.sendAmount.value < payment.sendAmount.value) ||
+    (paymentLimits.receiveAmount &&
+      paymentLimits.receiveAmount.value < payment.receiveAmount.value)
   ) {
     // Payment amount single-handedly exceeds amount limit
     return false
@@ -322,10 +278,9 @@ async function validateGrant(
   let receivedAmount = BigInt(0)
   for (const grantPayment of grantPayments) {
     if (
-      validatePaymentAccess({
-        access: paymentAccess,
-        payment: grantPayment,
-        identifier: `${deps.publicHost}/${grantPayment.accountId}`
+      validatePaymentLimits({
+        limits: paymentLimits,
+        payment: grantPayment
       })
     ) {
       if (grantPayment.state === OutgoingPaymentState.Failed) {
@@ -348,11 +303,10 @@ async function validateGrant(
     }
   }
   if (
-    (paymentAccess.limits.sendAmount &&
-      paymentAccess.limits.sendAmount.value - sentAmount <
-        payment.sendAmount.value) ||
-    (paymentAccess.limits.receiveAmount &&
-      paymentAccess.limits.receiveAmount.value - receivedAmount <
+    (paymentLimits.sendAmount &&
+      paymentLimits.sendAmount.value - sentAmount < payment.sendAmount.value) ||
+    (paymentLimits.receiveAmount &&
+      paymentLimits.receiveAmount.value - receivedAmount <
         payment.receiveAmount.value)
   ) {
     return false
