@@ -59,7 +59,6 @@ importers:
       '@types/koa-session': ^5.10.6
       '@types/koa__cors': ^3.1.1
       '@types/koa__router': ^8.0.11
-      '@types/nock': ^11.1.0
       '@types/pino': ^7.0.5
       '@types/uuid': ^8.3.0
       ajv: ^8.11.0
@@ -109,7 +108,6 @@ importers:
       '@types/koa-session': 5.10.6
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
-      '@types/nock': 11.1.0
       '@types/pino': 7.0.5
       '@types/uuid': 8.3.4
       jest-openapi: 0.14.2
@@ -144,7 +142,6 @@ importers:
       '@types/koa__router': ^8.0.11
       '@types/lodash': ^4.14.175
       '@types/luxon': ^1.26.4
-      '@types/nock': ^11.1.0
       '@types/pino': ^6.3.7
       '@types/react': ^18.0.17
       '@types/rosie': ^0.0.40
@@ -255,7 +252,6 @@ importers:
       '@types/koa__router': 8.0.11
       '@types/lodash': 4.14.182
       '@types/luxon': 1.27.1
-      '@types/nock': 11.1.0
       '@types/pino': 6.3.12
       '@types/react': 18.0.17
       '@types/rosie': 0.0.40
@@ -288,7 +284,6 @@ importers:
       '@types/koa-session': ^5.10.6
       '@types/koa__cors': ^3.1.1
       '@types/koa__router': ^8.0.11
-      '@types/nock': ^11.1.0
       '@types/pino': ^7.0.5
       '@types/uuid': ^8.3.0
       ajv: ^8.11.0
@@ -336,7 +331,6 @@ importers:
       '@types/koa-session': 5.10.6
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
-      '@types/nock': 11.1.0
       '@types/pino': 7.0.5
       '@types/uuid': 8.3.4
       jest-openapi: 0.14.2
@@ -385,7 +379,6 @@ importers:
       '@types/jest': ^26.0.22
       '@types/koa': 2.13.4
       '@types/koa__router': ^8.0.11
-      '@types/nock': ^11.1.0
       '@types/pino': ^6.3.7
       '@types/sax': ^1.2.1
       axios: ^0.21.1
@@ -402,7 +395,6 @@ importers:
       '@types/jest': 26.0.24
       '@types/koa': 2.13.4
       '@types/koa__router': 8.0.11
-      '@types/nock': 11.1.0
       '@types/pino': 6.3.12
       '@types/sax': 1.2.4
       koa: 2.13.4
@@ -3108,15 +3100,6 @@ packages:
 
   /@types/ms/0.7.31:
     resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
-
-  /@types/nock/11.1.0:
-    resolution: {integrity: sha512-jI/ewavBQ7X5178262JQR0ewicPAcJhXS/iFaNJl0VHLfyosZ/kwSrsa6VNQNSO8i9d8SqdRgOtZSOKJ/+iNMw==}
-    deprecated: This is a stub types definition. nock provides its own type definitions, so you do not need this installed.
-    dependencies:
-      nock: 13.2.9
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
 
   /@types/node/10.17.60:
     resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==}
