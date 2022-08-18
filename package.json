@@ -16,7 +16,8 @@
     "postinstall": "[ -d '.husky' ] && husky install || true"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "mock-servers/*"
   ],
   "devDependencies": {
     "@commitlint/cli": "^12.1.1",
