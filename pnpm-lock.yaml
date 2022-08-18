@@ -16,7 +16,7 @@ importers:
       eslint: ^7.24.0
       eslint-config-prettier: ^8.2.0
       eslint-plugin-react: ^7.23.2
-      husky: '>=6'
+      husky: ^8.0.0
       jest: ^28.1
       lint-staged: '>=10'
       prettier: 2.2.1

@@ -1,5 +1,5 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-yarn workspace backend generate
-yarn lint-staged
+pnpm --filter backend generate
+pnpm lint-staged

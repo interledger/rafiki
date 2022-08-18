@@ -15,7 +15,7 @@
     "format:check": "prettier --check",
     "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "build": "tsc --build",
-    "postinstall": "[ -d '.husky' ] && husky install || true"
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@commitlint/cli": "^12.1.1",
@@ -28,13 +28,13 @@
     "eslint": "^7.24.0",
     "eslint-config-prettier": "^8.2.0",
     "eslint-plugin-react": "^7.23.2",
-    "husky": ">=6",
     "jest": "^28.1",
     "lint-staged": ">=10",
     "prettier": "2.2.1",
     "ts-jest": "^28.0",
     "ts-node-dev": "^1.1.6",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "husky": "^8.0.0"
   },
   "dependenciesMeta": {
     "tigerbeetle-node": {
