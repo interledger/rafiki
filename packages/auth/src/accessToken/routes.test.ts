@@ -214,16 +214,7 @@ describe('Access Token Routes', (): void => {
       const now = new Date(new Date().getTime() + 4000)
       jest.useFakeTimers()
       jest.setSystemTime(now)
-      const requestBody = {
-        access_token: token.value,
-        resource_server: 'test'
-      }
 
-      const { signature, sigInput, contentDigest } = await generateSigHeaders(
-        url,
-        method,
-        requestBody
-      )
       const ctx = createContext(
         {
           headers: {
