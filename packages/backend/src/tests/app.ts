@@ -3,7 +3,6 @@ import createLogger from 'pino'
 import Knex from 'knex'
 import nock from 'nock'
 import fetch from 'cross-fetch'
-import 'react'
 import { IocContract } from '@adonisjs/fold'
 import {
   ApolloClient,
