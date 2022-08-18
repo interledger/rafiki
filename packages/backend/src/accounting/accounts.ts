@@ -68,15 +68,11 @@ export async function getAccounts(
 export function calculateBalance(account: Account): bigint {
   if (account.flags & AccountFlags.credits_must_not_exceed_debits) {
     return BigInt(
-      account.debits_accepted -
-        account.credits_accepted +
-        account.debits_reserved
+      account.debits_posted - account.credits_posted + account.debits_pending
     )
   } else {
     return BigInt(
-      account.credits_accepted -
-        account.debits_accepted -
-        account.debits_reserved
+      account.credits_posted - account.debits_posted - account.debits_pending
     )
   }
 }
