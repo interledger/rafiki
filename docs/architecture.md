@@ -2,34 +2,34 @@
 
 ![Architecture diagram](./img/rafiki-architecture.png)
 
-Rafiki is a collection of four applications that are run together; each one can be scaled horizontally. These applications are 
+Rafiki is a collection of four applications that are run together; each one can be scaled horizontally. These applications are
 
-* [`backend`](../packages/backend): The main application handling business logic and external communication 
-* [`auth`](../packages/auth): Authorization and authentication
-* [`rates`](../packages/rates): Exchange rates and fees
-* [`frontend`](../packages/frontend): Internal admin service
+- [`backend`](../packages/backend): The main application handling business logic and external communication
+- [`auth`](../packages/auth): Authorization and authentication
+- [`rates`](../packages/rates): Exchange rates and fees
+- [`frontend`](../packages/frontend): Internal admin service
 
 These applications rely on four databases:
 
-* A postgres database used by the `backend`
-* A separate postgres database used by `auth`.
-* [Tigerbeetle](https://github.com/coilhq/tigerbeetle) used by `backend` for accounting balances at the ILP layer.
-* Redis used by `backend` as a cache to share STREAM connection details across processes.
+- A postgres database used by the `backend`
+- A separate postgres database used by `auth`.
+- [Tigerbeetle](https://github.com/coilhq/tigerbeetle) used by `backend` for accounting balances at the ILP layer.
+- Redis used by `backend` as a cache to share STREAM connection details across processes.
 
 ## Backend
 
-The `backend` application has four responsibilities: 
+The `backend` application has four responsibilities:
 
-* Expose Open Payments API endpoints for public clients to perform account management tasks.
-* Expose an internal Admin API for service operators to manage accounts and application settings like peering relationships.
-* Expose an ILP server to send and receive STREAM packets with peers.
-* Business logic to manage accounts and track balances.
+- Expose Open Payments API endpoints for public clients to perform account management tasks.
+- Expose an internal Admin API for service operators to manage accounts and application settings like peering relationships.
+- Expose an ILP server to send and receive STREAM packets with peers.
+- Business logic to manage accounts and track balances.
 
 The `backend`'s ILP functionality includes:
 
 - Accepting ILP packets over an HTTP interface and authenticating them against ILP account credentials
 - Routing ILP packets to the correct destination account
-- Converting currencies 
+- Converting currencies
 - Sending out ILP packets over HTTP for destinations that are not local
 - Fulfilling packets with an internal STREAM server
 
