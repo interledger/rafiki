@@ -22,7 +22,7 @@
 - [`openapi`](https://github.com/interledger/rafiki/tree/main/packages/openapi):
 
 ```shell
-pnpm -F openapi build
+pnpm --filter openapi build
 ```
 
 ### Testing
@@ -30,7 +30,7 @@ pnpm -F openapi build
 From the monorepo root directory:
 
 ```shell
-pnpm -F backend test
+pnpm --filter backend test
 ```
 
 ## Docker build

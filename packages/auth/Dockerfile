@@ -15,6 +15,6 @@ RUN pnpm fetch
 ADD . ./
 RUN pnpm install -r --offline
 
-RUN pnpm -F auth build
+RUN pnpm --filter auth build
 
 CMD ["node", "./packages/auth/dist/index.js"]

@@ -5,7 +5,7 @@
 ### Building
 
 ```shell
-pnpm -F openapi build
+pnpm --filter openapi build
 ```
 
 ### Testing
@@ -13,5 +13,5 @@ pnpm -F openapi build
 From the monorepo root directory:
 
 ```shell
-pnpm -F openapi test
+pnpm --filter openapi test
 ```
