@@ -87,7 +87,7 @@ describe('Asset Service', (): void => {
         await expect(asset).toMatchObject({
           ...options,
           id: asset.id,
-          unit: asset.unit,
+          ledger: asset.ledger,
           withdrawalThreshold: withdrawalThreshold || null
         })
         await expect(assetService.get(asset)).resolves.toEqual(asset)
@@ -110,13 +110,13 @@ describe('Asset Service', (): void => {
       assert.ok(!isAssetError(asset))
 
       expect(liquiditySpy).toHaveBeenCalledWith(asset)
-      expect(settlementSpy).toHaveBeenCalledWith(asset.unit)
+      expect(settlementSpy).toHaveBeenCalledWith(asset.ledger)
 
       await expect(accountingService.getBalance(asset.id)).resolves.toEqual(
         BigInt(0)
       )
       await expect(
-        accountingService.getSettlementBalance(asset.unit)
+        accountingService.getSettlementBalance(asset.ledger)
       ).resolves.toEqual(BigInt(0))
     })
 
@@ -130,7 +130,7 @@ describe('Asset Service', (): void => {
       await expect(asset).toMatchObject({
         ...options,
         id: asset.id,
-        unit: asset.unit
+        ledger: asset.ledger
       })
       await expect(assetService.get(asset)).resolves.toEqual(asset)
       await expect(assetService.getOrCreate(asset)).resolves.toEqual(asset)
@@ -154,7 +154,7 @@ describe('Asset Service', (): void => {
       await expect(asset).toMatchObject({
         ...options,
         id: asset.id,
-        unit: asset.unit
+        ledger: asset.ledger
       })
       await expect(assetService.get(asset)).resolves.toEqual(asset)
       await expect(assetService.getOrCreate(asset)).resolves.toEqual(asset)

@@ -36,7 +36,7 @@ enum AccountCode {
 //   ../open_payments/payment/outgoing/model
 //   ../peer/model
 // Asset settlement Tigerbeetle accounts are the only exception.
-// Their account id is the corresponding asset's unit value.
+// Their account id is the corresponding asset's ledger value.
 export interface LiquidityAccount {
   id: string
   asset: {
@@ -76,13 +76,13 @@ export interface Transaction {
 
 export interface AccountingService {
   createLiquidityAccount(account: LiquidityAccount): Promise<LiquidityAccount>
-  createSettlementAccount(unit: number): Promise<void>
+  createSettlementAccount(ledger: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
   getTotalReceived(id: string): Promise<bigint | undefined>
   getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]>
-  getSettlementBalance(unit: number): Promise<bigint | undefined>
+  getSettlementBalance(ledger: number): Promise<bigint | undefined>
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(deposit: Deposit): Promise<void | TransferError>
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>
@@ -104,13 +104,13 @@ export function createAccountingService(
   }
   return {
     createLiquidityAccount: (options) => createLiquidityAccount(deps, options),
-    createSettlementAccount: (unit) => createSettlementAccount(deps, unit),
+    createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
-    getSettlementBalance: (unit) => getSettlementBalance(deps, unit),
+    getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
@@ -224,9 +224,9 @@ export async function getAccountsTotalReceived(
 
 export async function getSettlementBalance(
   deps: ServiceDependencies,
-  unit: number
+  ledger: number
 ): Promise<bigint | undefined> {
-  const assetAccount = (await getAccounts(deps, [unit]))[0]
+  const assetAccount = (await getAccounts(deps, [ledger]))[0]
 
   if (assetAccount) {
     return calculateBalance(assetAccount)

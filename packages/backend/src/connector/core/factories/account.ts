@@ -14,10 +14,10 @@ const accountAttrs = {
     id: faker.datatype.uuid(),
     code: assetCode,
     scale: assetScale,
-    unit: faker.datatype.number(),
+    ledger: faker.datatype.number(),
     asset: {
       id: faker.datatype.uuid(),
-      unit: faker.datatype.number()
+      ledger: faker.datatype.number()
     }
   },
   balance: 0n
