@@ -81,7 +81,7 @@ async function rotateToken(
   const result = await deps.accessTokenService.rotate(
     ctx.params['managementId']
   )
-  if (result.success) {
+  if (result.success == true) {
     ctx.status = 200
     ctx.body = {
       access_token: {

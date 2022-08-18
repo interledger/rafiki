@@ -1,5 +1,10 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-yarn workspace backend generate
-yarn lint-staged
+pnpm --filter backend generate
+echo "Check for newly generated backend graphql files"
+# https://stackoverflow.com/a/3879077
+git update-index --refresh
+git diff-index HEAD -- src/graphql/generated
+echo "ESLint and Prettier on staged files"
+pnpm lint-staged

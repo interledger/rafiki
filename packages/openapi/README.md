@@ -5,7 +5,7 @@
 ### Building
 
 ```shell
-yarn workspace openapi build
+pnpm -F openapi build
 ```
 
 ### Testing
@@ -13,5 +13,5 @@ yarn workspace openapi build
 From the monorepo root directory:
 
 ```shell
-yarn workspace openapi test
+pnpm -F openapi test
 ```

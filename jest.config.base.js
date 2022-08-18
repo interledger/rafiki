@@ -3,12 +3,14 @@
 module.exports = {
   globals: {
     'ts-jest': {
-      tsconfig: 'tsconfig.build.json'
+      tsconfig: '<rootDir>/tsconfig.build.json'
     }
   },
   transform: {
     '^.+\\.tsx?$': 'ts-jest'
   },
   preset: 'ts-jest',
-  testEnvironment: 'node'
+  testEnvironment: 'node',
+  moduleDirectories: ['node_modules', './'],
+  modulePaths: ['node_modules', './']
 }

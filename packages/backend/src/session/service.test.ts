@@ -23,7 +23,7 @@ describe('Session Key Service', (): void => {
 
   beforeEach(
     async (): Promise<void> => {
-      jest.useFakeTimers('modern')
+      jest.useFakeTimers()
     }
   )
 

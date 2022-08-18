@@ -14,104 +14,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-      - uses: actions/cache@v2
-        id: cache-build
-        with:
-          path: | 
-            ./**/node_modules
-            ./.yarn
-          key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm format:check
+      - run: pnpm lint:check
 
   backend:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: |
-            ./**/node_modules
-            ./.yarn
-          key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
-      - run: yarn workspace backend lint
-      - run: yarn workspace backend format:check
-      - run: yarn workspace openapi build
-      - run: yarn workspace backend test
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter openapi build
+      - run: pnpm --filter backend test
 
   frontend:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: |
-            ./**/node_modules
-            ./.yarn
-          key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
-      - run: yarn workspace frontend lint
-      - run: yarn workspace frontend format:check
-      - run: yarn workspace frontend test
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter frontend test
 
   rates:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: |
-            ./**/node_modules
-            ./.yarn
-          key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
-      - run: yarn workspace rates lint
-      - run: yarn workspace rates format:check
-      - run: yarn workspace rates test
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter rates test
 
   auth:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: |
-            ./**/node_modules
-            ./.yarn
-          key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
-      - run: yarn workspace auth lint
-      - run: yarn workspace auth format:check
-      - run: yarn workspace openapi build
-      - run: yarn workspace auth test
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter openapi build
+      - run: pnpm --filter auth test
 
   openapi:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: |
-            ./**/node_modules
-            ./.yarn
-          key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
-      - run: yarn workspace openapi lint
-      - run: yarn workspace openapi format:check
-      - run: yarn workspace openapi test
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter openapi test
 
   build:
     runs-on: ubuntu-latest
@@ -123,15 +70,8 @@ jobs:
       - openapi
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: |
-            ./**/node_modules
-            ./.yarn
-          key: yarn-deps-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --immutable --immutable-cache
-      - run: yarn build
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm build
 
   all_pr_checks_passed:
     runs-on: ubuntu-latest

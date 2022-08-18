@@ -15,6 +15,6 @@ RUN pnpm fetch
 ADD . ./
 RUN pnpm install -r --offline
 
-RUN pnpm -F auth build
+RUN pnpm -F mock-account-provider build
 
-CMD ["node", "./packages/auth/dist/index.js"]
+CMD ["node", "./packages/mock-account-provider/dist/index.js"]

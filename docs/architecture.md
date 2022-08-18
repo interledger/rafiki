@@ -2,6 +2,7 @@
 
 ![Architecture diagram](./img/rafiki-architecture.png)
 
+
 Rafiki is a collection of four services that are run together; each one can be scaled horizontally. These applications are
 
 - [`backend`](../packages/backend): The main service, handling business logic and external communication.
