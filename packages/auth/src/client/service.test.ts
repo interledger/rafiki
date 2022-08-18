@@ -28,20 +28,16 @@ describe('Client Service', (): void => {
   let appContainer: TestContainer
   let clientService: ClientService
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      clientService = await deps.use('clientService')
-      appContainer = await createTestApp(deps)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    clientService = await deps.use('clientService')
+    appContainer = await createTestApp(deps)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      nock.restore()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    nock.restore()
+    await appContainer.shutdown()
+  })
 
   describe('Registry Validation', (): void => {
     const expDate = new Date()

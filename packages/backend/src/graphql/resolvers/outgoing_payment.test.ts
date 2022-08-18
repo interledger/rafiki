@@ -40,30 +40,24 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   const asset = randomAsset()
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      accountingService = await deps.use('accountingService')
-      outgoingPaymentService = await deps.use('outgoingPaymentService')
-      accountService = await deps.use('accountService')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    accountingService = await deps.use('accountingService')
+    outgoingPaymentService = await deps.use('outgoingPaymentService')
+    accountService = await deps.use('accountService')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      jest.restoreAllMocks()
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    jest.restoreAllMocks()
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.apolloClient.stop()
+    await appContainer.shutdown()
+  })
 
   const createPayment = async (options: {
     accountId: string
@@ -90,27 +84,23 @@ describe('OutgoingPayment Resolvers', (): void => {
       ${'rent'}    | ${undefined} | ${'description'}
       ${undefined} | ${'202201'}  | ${'externalRef'}
     `('$desc', ({ description, externalRef }): void => {
-      beforeEach(
-        async (): Promise<void> => {
-          const { id: accountId } = await accountService.create({
-            asset
-          })
-          payment = await createPayment({
-            accountId,
-            description,
-            externalRef
-          })
-        }
-      )
+      beforeEach(async (): Promise<void> => {
+        const { id: accountId } = await accountService.create({
+          asset
+        })
+        payment = await createPayment({
+          accountId,
+          description,
+          externalRef
+        })
+      })
 
       // Query with each payment state with and without an error
-      const states: [
-        OutgoingPaymentState,
-        PaymentError | null
-      ][] = Object.values(OutgoingPaymentState).flatMap((state) => [
-        [state, null],
-        [state, Pay.PaymentError.ReceiverProtocolViolation]
-      ])
+      const states: [OutgoingPaymentState, PaymentError | null][] =
+        Object.values(OutgoingPaymentState).flatMap((state) => [
+          [state, null],
+          [state, Pay.PaymentError.ReceiverProtocolViolation]
+        ])
       test.each(states)(
         '200 - %s, error: %s',
         async (state, error): Promise<void> => {
@@ -208,8 +198,10 @@ describe('OutgoingPayment Resolvers', (): void => {
               id: payment.quote.id,
               maxPacketAmount: payment.quote.maxPacketAmount.toString(),
               minExchangeRate: payment.quote.minExchangeRate.valueOf(),
-              lowEstimatedExchangeRate: payment.quote.lowEstimatedExchangeRate.valueOf(),
-              highEstimatedExchangeRate: payment.quote.highEstimatedExchangeRate.valueOf(),
+              lowEstimatedExchangeRate:
+                payment.quote.lowEstimatedExchangeRate.valueOf(),
+              highEstimatedExchangeRate:
+                payment.quote.highEstimatedExchangeRate.valueOf(),
               createdAt: payment.quote.createdAt.toISOString(),
               expiresAt: payment.quote.expiresAt.toISOString(),
               __typename: 'Quote'
@@ -246,57 +238,53 @@ describe('OutgoingPayment Resolvers', (): void => {
       description  | externalRef  | desc
       ${'rent'}    | ${undefined} | ${'description'}
       ${undefined} | ${'202201'}  | ${'externalRef'}
-    `(
-      '200 ($desc)',
-      async ({ description, externalRef }): Promise<void> => {
-        const { id: accountId } = await accountService.create({
-          asset
-        })
-        const payment = await createPayment({
-          accountId,
-          description,
-          externalRef
-        })
+    `('200 ($desc)', async ({ description, externalRef }): Promise<void> => {
+      const { id: accountId } = await accountService.create({
+        asset
+      })
+      const payment = await createPayment({
+        accountId,
+        description,
+        externalRef
+      })
 
-        const createSpy = jest
-          .spyOn(outgoingPaymentService, 'create')
-          .mockResolvedValueOnce(payment)
+      const createSpy = jest
+        .spyOn(outgoingPaymentService, 'create')
+        .mockResolvedValueOnce(payment)
 
-        const input = {
-          accountId: payment.accountId,
-          quoteId: payment.quote.id
-        }
+      const input = {
+        accountId: payment.accountId,
+        quoteId: payment.quote.id
+      }
 
-        const query = await appContainer.apolloClient
-          .query({
-            query: gql`
-              mutation CreateOutgoingPayment(
-                $input: CreateOutgoingPaymentInput!
-              ) {
-                createOutgoingPayment(input: $input) {
-                  code
-                  success
-                  payment {
-                    id
-                    state
-                  }
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CreateOutgoingPayment(
+              $input: CreateOutgoingPaymentInput!
+            ) {
+              createOutgoingPayment(input: $input) {
+                code
+                success
+                payment {
+                  id
+                  state
                 }
               }
-            `,
-            variables: { input }
-          })
-          .then(
-            (query): OutgoingPaymentResponse =>
-              query.data?.createOutgoingPayment
-          )
+            }
+          `,
+          variables: { input }
+        })
+        .then(
+          (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
+        )
 
-        expect(createSpy).toHaveBeenCalledWith(input)
-        expect(query.code).toBe('200')
-        expect(query.success).toBe(true)
-        expect(query.payment?.id).toBe(payment.id)
-        expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
-      }
-    )
+      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(query.code).toBe('200')
+      expect(query.success).toBe(true)
+      expect(query.payment?.id).toBe(payment.id)
+      expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
+    })
 
     test('400', async (): Promise<void> => {
       const createSpy = jest
@@ -382,15 +370,13 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Account outgoingPayments', (): void => {
     let accountId: string
 
-    beforeEach(
-      async (): Promise<void> => {
-        accountId = (
-          await accountService.create({
-            asset
-          })
-        ).id
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      accountId = (
+        await accountService.create({
+          asset
+        })
+      ).id
+    })
 
     getPageTests({
       getClient: () => appContainer.apolloClient,

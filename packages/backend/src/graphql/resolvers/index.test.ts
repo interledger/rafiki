@@ -9,18 +9,14 @@ describe('Rafiki Graphql', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   test('graphql endpoint not exposed on /api/graphql', async (): Promise<void> => {
     const introspection = got.post(

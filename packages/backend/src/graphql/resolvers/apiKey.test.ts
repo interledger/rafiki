@@ -28,29 +28,23 @@ describe('ApiKey Resolvers', (): void => {
   let apiKeyService: ApiKeyService
   let sessionService: SessionService
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      accountService = await deps.use('accountService')
-      apiKeyService = await deps.use('apiKeyService')
-      sessionService = await deps.use('sessionService')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    accountService = await deps.use('accountService')
+    apiKeyService = await deps.use('apiKeyService')
+    sessionService = await deps.use('sessionService')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.apolloClient.stop()
+    await appContainer.shutdown()
+  })
 
   describe('Api Key Mutations', (): void => {
     test('Api key can be created', async (): Promise<void> => {
@@ -81,15 +75,13 @@ describe('ApiKey Resolvers', (): void => {
             input
           }
         })
-        .then(
-          (query): CreateApiKeyMutationResponse => {
-            if (query.data) {
-              return query.data.createApiKey
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): CreateApiKeyMutationResponse => {
+          if (query.data) {
+            return query.data.createApiKey
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -144,15 +136,13 @@ describe('ApiKey Resolvers', (): void => {
             input
           }
         })
-        .then(
-          (query): RedeemApiKeyMutationResponse => {
-            if (query.data) {
-              return query.data.redeemApiKey
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): RedeemApiKeyMutationResponse => {
+          if (query.data) {
+            return query.data.redeemApiKey
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -193,15 +183,13 @@ describe('ApiKey Resolvers', (): void => {
             input
           }
         })
-        .then(
-          (query): DeleteAllApiKeysMutationResponse => {
-            if (query.data) {
-              return query.data.deleteAllApiKeys
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): DeleteAllApiKeysMutationResponse => {
+          if (query.data) {
+            return query.data.deleteAllApiKeys
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')

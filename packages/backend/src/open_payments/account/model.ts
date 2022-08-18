@@ -8,7 +8,8 @@ import { WebhookEvent } from '../../webhook/model'
 
 export class Account
   extends BaseModel
-  implements ConnectorAccount, LiquidityAccount {
+  implements ConnectorAccount, LiquidityAccount
+{
   public static get tableName(): string {
     return 'accounts'
   }

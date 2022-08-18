@@ -63,66 +63,58 @@ describe('QuoteService', (): void => {
     assetScale: destinationAsset.scale
   }
 
-  beforeAll(
-    async (): Promise<void> => {
-      Config.pricesUrl = 'https://test.prices'
-      Config.signatureSecret = SIGNATURE_SECRET
-      nock(Config.pricesUrl)
-        .get('/')
-        .reply(200, () => ({
-          USD: 1.0, // base
-          XRP: 2.0
-        }))
-        .persist()
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
+  beforeAll(async (): Promise<void> => {
+    Config.pricesUrl = 'https://test.prices'
+    Config.signatureSecret = SIGNATURE_SECRET
+    nock(Config.pricesUrl)
+      .get('/')
+      .reply(200, () => ({
+        USD: 1.0, // base
+        XRP: 2.0
+      }))
+      .persist()
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
 
-      knex = await deps.use('knex')
-      config = await deps.use('config')
-      quoteUrl = new URL(Config.quoteUrl)
-    }
-  )
+    knex = await deps.use('knex')
+    config = await deps.use('config')
+    quoteUrl = new URL(Config.quoteUrl)
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      quoteService = await deps.use('quoteService')
-      const accountService = await deps.use('accountService')
-      const account = await accountService.create({
-        asset: {
-          code: sendAmount.assetCode,
-          scale: sendAmount.assetScale
-        }
+  beforeEach(async (): Promise<void> => {
+    quoteService = await deps.use('quoteService')
+    const accountService = await deps.use('accountService')
+    const account = await accountService.create({
+      asset: {
+        code: sendAmount.assetCode,
+        scale: sendAmount.assetScale
+      }
+    })
+    accountId = account.id
+    assetId = account.assetId
+    const destinationAccount = await accountService.create({
+      asset: destinationAsset
+    })
+    receivingAccountId = destinationAccount.id
+    const accountingService = await deps.use('accountingService')
+    await expect(
+      accountingService.createDeposit({
+        id: uuid(),
+        account: destinationAccount.asset,
+        amount: BigInt(123)
       })
-      accountId = account.id
-      assetId = account.assetId
-      const destinationAccount = await accountService.create({
-        asset: destinationAsset
-      })
-      receivingAccountId = destinationAccount.id
-      const accountingService = await deps.use('accountingService')
-      await expect(
-        accountingService.createDeposit({
-          id: uuid(),
-          account: destinationAccount.asset,
-          amount: BigInt(123)
-        })
-      ).resolves.toBeUndefined()
-      receivingAccount = `${config.publicHost}/${destinationAccount.id}`
-    }
-  )
+    ).resolves.toBeUndefined()
+    receivingAccount = `${config.publicHost}/${destinationAccount.id}`
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      jest.restoreAllMocks()
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    jest.restoreAllMocks()
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   describe('get', (): void => {
     it('returns undefined when no quote exists', async () => {
@@ -230,24 +222,22 @@ describe('QuoteService', (): void => {
         let receiver: string
         let expected: ExpectedQuote
 
-        beforeEach(
-          async (): Promise<void> => {
-            incomingPayment = await createIncomingPayment(deps, {
-              accountId: receivingAccountId,
-              incomingAmount
-            })
-            options = {
-              accountId,
-              receiver: `${receivingAccount}/incoming-payments/${incomingPayment.id}`,
-              sendAmount,
-              receiveAmount
-            }
-            expected = {
-              ...options,
-              paymentType
-            }
+        beforeEach(async (): Promise<void> => {
+          incomingPayment = await createIncomingPayment(deps, {
+            accountId: receivingAccountId,
+            incomingAmount
+          })
+          options = {
+            accountId,
+            receiver: `${receivingAccount}/incoming-payments/${incomingPayment.id}`,
+            sendAmount,
+            receiveAmount
           }
-        )
+          expected = {
+            ...options,
+            paymentType
+          }
+        })
 
         if (!sendAmount && !receiveAmount && !incomingAmount) {
           it('fails without receiver.incomingAmount', async (): Promise<void> => {

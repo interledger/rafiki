@@ -194,14 +194,12 @@ async function addIncomingHttpTokens({
   tokens: string[]
   trx: Transaction
 }): Promise<void | PeerError> {
-  const incomingTokens = tokens.map(
-    (token: string): HttpTokenOptions => {
-      return {
-        peerId,
-        token
-      }
+  const incomingTokens = tokens.map((token: string): HttpTokenOptions => {
+    return {
+      peerId,
+      token
     }
-  )
+  })
 
   const err = await deps.httpTokenService.create(incomingTokens, trx)
   if (err) {

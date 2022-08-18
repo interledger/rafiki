@@ -37,7 +37,7 @@ export function createStreamController(): ILPMiddleware {
       .multi()
       .incrby(
         connectionKey,
-        (request.prepare.amount.toString() as unknown) as number
+        request.prepare.amount.toString() as unknown as number
       )
       .expire(connectionKey, CONNECTION_EXPIRY)
       .exec()

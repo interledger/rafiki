@@ -65,23 +65,21 @@ describe('Incoming Payment Routes', (): void => {
     return ctx
   }
 
-  beforeAll(
-    async (): Promise<void> => {
-      config = Config
-      config.publicHost = 'https://wallet.example'
-      deps = await initIocContainer(config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      accountingService = await deps.use('accountingService')
-      jestOpenAPI(await deps.use('openApi'))
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    config = Config
+    config.publicHost = 'https://wallet.example'
+    deps = await initIocContainer(config)
+    deps.bind('messageProducer', async () => mockMessageProducer)
+    appContainer = await createTestApp(deps)
+    workerUtils = await makeWorkerUtils({
+      connectionString: appContainer.connectionUrl
+    })
+    await workerUtils.migrate()
+    messageProducer.setUtils(workerUtils)
+    knex = await deps.use('knex')
+    accountingService = await deps.use('accountingService')
+    jestOpenAPI(await deps.use('openApi'))
+  })
 
   const asset = {
     code: 'USD',
@@ -94,52 +92,44 @@ describe('Incoming Payment Routes', (): void => {
   let description: string
   let externalRef: string
 
-  beforeEach(
-    async (): Promise<void> => {
-      accountService = await deps.use('accountService')
-      config = await deps.use('config')
-      incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
+  beforeEach(async (): Promise<void> => {
+    accountService = await deps.use('accountService')
+    config = await deps.use('config')
+    incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
 
-      expiresAt = new Date(Date.now() + 30_000)
-      account = await accountService.create({ asset })
-      accountId = `https://wallet.example/${account.id}`
-      incomingAmount = {
-        value: BigInt('123'),
-        assetScale: asset.scale,
-        assetCode: asset.code
-      }
-      description = 'hello world'
-      externalRef = '#123'
+    expiresAt = new Date(Date.now() + 30_000)
+    account = await accountService.create({ asset })
+    accountId = `https://wallet.example/${account.id}`
+    incomingAmount = {
+      value: BigInt('123'),
+      assetScale: asset.scale,
+      assetCode: asset.code
     }
-  )
+    description = 'hello world'
+    externalRef = '#123'
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await resetGraphileDb(knex)
+    await appContainer.shutdown()
+    await workerUtils.release()
+  })
 
   describe('get', (): void => {
     let incomingPayment: IncomingPayment
-    beforeEach(
-      async (): Promise<void> => {
-        incomingPayment = await createIncomingPayment(deps, {
-          accountId: account.id,
-          description,
-          expiresAt,
-          incomingAmount,
-          externalRef
-        })
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      incomingPayment = await createIncomingPayment(deps, {
+        accountId: account.id,
+        description,
+        expiresAt,
+        incomingAmount,
+        externalRef
+      })
+    })
 
     test('returns 404 on unknown incoming payment', async (): Promise<void> => {
       const ctx = createContext<ReadContext>(
@@ -172,9 +162,11 @@ describe('Incoming Payment Routes', (): void => {
       await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
 
-      const sharedSecret = ((ctx.response.body as Record<string, unknown>)[
-        'ilpStreamConnection'
-      ] as Record<string, unknown>)['sharedSecret']
+      const sharedSecret = (
+        (ctx.response.body as Record<string, unknown>)[
+          'ilpStreamConnection'
+        ] as Record<string, unknown>
+      )['sharedSecret']
 
       expect(ctx.body).toEqual({
         id: `${accountId}/incoming-payments/${incomingPayment.id}`,
@@ -269,15 +261,18 @@ describe('Incoming Payment Routes', (): void => {
         )
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
-        const incomingPaymentId = ((ctx.response.body as Record<
-          string,
-          unknown
-        >)['id'] as string)
+        const incomingPaymentId = (
+          (ctx.response.body as Record<string, unknown>)['id'] as string
+        )
           .split('/')
           .pop()
-        const connectionId = (((ctx.response.body as Record<string, unknown>)[
-          'ilpStreamConnection'
-        ] as Record<string, unknown>)['id'] as string)
+        const connectionId = (
+          (
+            (ctx.response.body as Record<string, unknown>)[
+              'ilpStreamConnection'
+            ] as Record<string, unknown>
+          )['id'] as string
+        )
           .split('/')
           .pop()
         expect(ctx.response.body).toEqual({
@@ -309,17 +304,15 @@ describe('Incoming Payment Routes', (): void => {
 
   describe('complete', (): void => {
     let incomingPayment: IncomingPayment
-    beforeEach(
-      async (): Promise<void> => {
-        incomingPayment = await createIncomingPayment(deps, {
-          accountId: account.id,
-          description,
-          expiresAt,
-          incomingAmount,
-          externalRef
-        })
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      incomingPayment = await createIncomingPayment(deps, {
+        accountId: account.id,
+        description,
+        expiresAt,
+        incomingAmount,
+        externalRef
+      })
+    })
     test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
       const ctx = setup<CompleteContext>(
         {

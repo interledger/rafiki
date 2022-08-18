@@ -50,7 +50,8 @@ export class IncomingPaymentEvent extends WebhookEvent {
 
 export class IncomingPayment
   extends BaseModel
-  implements ConnectorAccount, LiquidityAccount {
+  implements ConnectorAccount, LiquidityAccount
+{
   public static get tableName(): string {
     return 'incomingPayments'
   }

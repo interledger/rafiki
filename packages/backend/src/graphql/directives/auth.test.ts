@@ -15,11 +15,10 @@ describe('auth Directive', (): void => {
   let server: ApolloServer
   let client: ApolloClient<NormalizedCacheObject>
 
-  beforeAll(
-    async (): Promise<void> => {
-      const schema = makeExecutableSchema({
-        typeDefs: [
-          `
+  beforeAll(async (): Promise<void> => {
+    const schema = makeExecutableSchema({
+      typeDefs: [
+        `
         type Query {
           hello: QueryResponse @auth
         }
@@ -32,60 +31,57 @@ describe('auth Directive', (): void => {
 
         directive @auth on OBJECT | FIELD_DEFINITION
       `
-        ],
-        resolvers: {
-          Query: {
-            hello: () => {
-              return {
-                code: '200',
-                success: true,
-                message: 'Hello World!'
-              }
+      ],
+      resolvers: {
+        Query: {
+          hello: () => {
+            return {
+              code: '200',
+              success: true,
+              message: 'Hello World!'
             }
           }
         }
-      })
+      }
+    })
 
-      const schemaWithDirectives = authDirectiveTransformer(schema)
+    const schemaWithDirectives = authDirectiveTransformer(schema)
 
-      server = new ApolloServer({
-        schema: schemaWithDirectives,
-        context: ({ req }): { session: Session | undefined } => {
-          const key = req.headers['authorization']
-          switch (key) {
-            case 'validKey':
-              return {
-                session: {
-                  key,
-                  expiresAt: new Date(Date.now() + 30 * 60 * 1000)
-                }
+    server = new ApolloServer({
+      schema: schemaWithDirectives,
+      context: ({ req }): { session: Session | undefined } => {
+        const key = req.headers['authorization']
+        switch (key) {
+          case 'validKey':
+            return {
+              session: {
+                key,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000)
               }
-          }
-          return { session: undefined }
+            }
         }
-      })
-      await server.listen(3010)
-      const httpLink = createHttpLink({
-        uri: 'http://localhost:3010/graphql',
-        fetch
-      })
-      client = new ApolloClient({
-        link: httpLink,
-        cache: new InMemoryCache(),
-        defaultOptions: {
-          query: {
-            fetchPolicy: 'no-cache'
-          }
+        return { session: undefined }
+      }
+    })
+    await server.listen(3010)
+    const httpLink = createHttpLink({
+      uri: 'http://localhost:3010/graphql',
+      fetch
+    })
+    client = new ApolloClient({
+      link: httpLink,
+      cache: new InMemoryCache(),
+      defaultOptions: {
+        query: {
+          fetchPolicy: 'no-cache'
         }
-      })
-    }
-  )
+      }
+    })
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await server.stop()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await server.stop()
+  })
 
   describe('Auth Directive Query', (): void => {
     test('should not succeed without session key', async (): Promise<void> => {
