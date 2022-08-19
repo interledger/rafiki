@@ -59,6 +59,7 @@ services:
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
       PRICES_URL: http://rates:3005/prices
       REDIS_URL: redis://redis:6379
+      QUOTE_URL: http://mock-account-provider:1337/quote
     depends_on:
       - tigerbeetle
       - database

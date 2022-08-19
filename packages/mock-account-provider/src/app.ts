@@ -1,13 +1,13 @@
-import { Server } from 'http'
 import { EventEmitter } from 'events'
+import { Server } from 'http'
 
 import { IocContract } from '@adonisjs/fold'
 
-import Koa, { DefaultState, DefaultContext } from 'koa'
+import Router from '@koa/router'
+import Koa, { DefaultContext, DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
 import { Logger } from 'pino'
-import Router from '@koa/router'
 
 import { IAppConfig } from './config/app'
 
@@ -126,6 +126,11 @@ export class App {
     this.router.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
       ctx.body = 'OK'
+    })
+
+    this.router.post('/quote', (ctx: AppContext): void => {
+      ctx.status = 201
+      ctx.body = ctx.request.body
     })
 
     this.router.get('(.*)', (ctx: AppContext): void => {
