@@ -1,8 +1,5 @@
 lockfileVersion: 5.4
 
-overrides:
-  '@types/koa': 2.13.4
-
 importers:
 
   .:

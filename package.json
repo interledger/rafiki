@@ -46,9 +46,6 @@
       "built": true
     }
   },
-  "resolutions": {
-    "@types/koa": "2.13.4"
-  },
   "prettier": {
     "semi": false,
     "singleQuote": true,
