@@ -69,13 +69,13 @@ describe('Client Service', (): void => {
       const challenge = 'test-challenge'
       const privateJwk = (await importJWK(TEST_PRIVATE_KEY)) as crypto.KeyLike
       const signature = crypto.sign(null, Buffer.from(challenge), privateJwk)
-      const verified = await clientService.verifySig(
-        signature.toString('base64'),
-        TEST_PUBLIC_KEY,
-        challenge
-      )
-
-      expect(verified).toBe(true)
+      await expect(
+        clientService.verifySig(
+          signature.toString('base64'),
+          TEST_PUBLIC_KEY,
+          challenge
+        )
+      ).resolves.toBe(true)
     })
 
     test('can construct a challenge from signature input', (): void => {
@@ -182,7 +182,7 @@ describe('Client Service', (): void => {
 
     const BASE_TOKEN = {
       value: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      managementId: 'https://example.com/manage/12345',
+      managementId: v4(),
       expiresIn: 3600
     }
 

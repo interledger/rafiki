@@ -251,9 +251,7 @@ describe('Access Token Service', (): void => {
       expect(token.value).not.toBe(originalTokenValue)
     })
     test('Cannot rotate nonexistent token', async (): Promise<void> => {
-      const result = await accessTokenService.rotate(
-        'https://example.com/manage/some-nonexistent-id'
-      )
+      const result = await accessTokenService.rotate(v4())
       expect(result.success).toBe(false)
     })
   })

@@ -87,7 +87,7 @@ async function rotateToken(
       access_token: {
         access: result.access.map((a) => accessToBody(a)),
         value: result.value,
-        manage: result.managementId,
+        manage: deps.config.authServerDomain + `/token${result.managementId}`,
         expires_in: result.expiresIn
       }
     }

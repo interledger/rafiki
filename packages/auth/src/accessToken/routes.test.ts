@@ -97,7 +97,7 @@ describe('Access Token Routes', (): void => {
 
   const BASE_TOKEN = {
     value: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    managementId: 'https://example.com/manage/12345',
+    managementId: v4(),
     expiresIn: 3600
   }
 
