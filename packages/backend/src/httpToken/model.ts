@@ -1,6 +1,7 @@
 import { Model } from 'objection'
 import { Peer } from '../peer/model'
 import { BaseModel } from '../shared/baseModel'
+import { join } from 'path'
 
 export class HttpToken extends BaseModel {
   public static get tableName(): string {
@@ -10,7 +11,7 @@ export class HttpToken extends BaseModel {
   static relationMappings = {
     peer: {
       relation: Model.HasOneRelation,
-      modelClass: Peer,
+      modelClass: join(__dirname, '../peer/model.ts'),
       join: {
         from: 'httpTokens.peerId',
         to: 'peers.id'

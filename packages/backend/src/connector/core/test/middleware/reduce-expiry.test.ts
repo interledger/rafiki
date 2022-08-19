@@ -68,7 +68,9 @@ describe('Outgoing Reduce Expiry Middleware', function () {
   })
 
   test('throws error if packet has already expired', async () => {
-    const prepare = IlpPrepareFactory.build({ expiresAt: new Date(now - 1000) })
+    const prepare = IlpPrepareFactory.build({
+      expiresAt: new Date(now - 1000)
+    })
     const next = jest.fn()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
 
