@@ -220,7 +220,6 @@ function validateAmountAssets(
     return false
   }
   return (
-    (!limits.sendAmount && !limits.receiveAmount) ||
     !limits.receiveAmount ||
     (limits.receiveAmount.assetCode === payment.receiveAmount.assetCode &&
       limits.receiveAmount.assetScale === payment.receiveAmount.assetScale)
@@ -245,6 +244,7 @@ async function validateGrant(
   if (!paymentLimits) {
     return false
   }
+  if (!paymentLimits.sendAmount && !paymentLimits.receiveAmount) return true
   if (
     (paymentLimits.sendAmount &&
       paymentLimits.sendAmount.value < payment.sendAmount.value) ||
