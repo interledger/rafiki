@@ -18,7 +18,7 @@
     "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "build": "tsc --build",
     "prepare": "husky install",
-    "localenv": "docker compose -f ./infrastructure/local/docker-compose.yml -f ./infrastructure/local/peer-docker-compose.yml",
+    "localenv": "docker compose -f ./infrastructure/local/docker-compose.yml -f ./infrastructure/local/peer-docker-compose.yml up",
     "localenv:seed:auth": "pnpm -C ./packages/auth knex seed:run --env=development --connection=postgresql://auth:auth@localhost/auth && pnpm -C ./packages/auth knex seed:run  --env=development --connection=postgresql://peerauth:peerauth@localhost/peerauth"
   },
   "devDependencies": {

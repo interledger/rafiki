@@ -79,3 +79,16 @@ pnpm --filter open-api test
 # run all tests
 pnpm -r --workspace-concurrency=2 test
 ```
+
+### Local Development
+
+The [infrastructure/local](infrastructure/local) directory contains resources for setting up Rafiki in
+common configurations.
+
+```sh
+# set up two instances of Rafiki
+pnpm run localenv
+
+# seed the postgres databases with the auth data creating an admin token
+pnpm run localenv:seed:auth
+```
