@@ -5,14 +5,12 @@ services:
     restart: always
     networks:
       rafiki:
-    ports:
-      - "3006:3006"
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
   mock-account-provider:
     build:
-      context: ./
+      context: ../..
       dockerfile: ./packages/mock-account-provider/Dockerfile
     restart: always
     networks:
@@ -53,13 +51,12 @@ services:
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml
       PRICES_URL: http://rates:3005/prices
+      REDIS_URL: redis://redis:6379
     depends_on:
       - tigerbeetle
   rates:
     image: ghcr.io/interledger/rafiki-rates:latest
     restart: always
-    ports:
-      - "3005:3005"
     networks:
       rafiki:
     environment:
@@ -87,8 +84,6 @@ services:
     networks:
       rafiki:
         ipv4_address: 10.5.0.50
-    ports:
-      - "4342:4342"
     entrypoint:
       - /bin/sh
       - -c
@@ -112,8 +107,6 @@ services:
     restart: unless-stopped
     networks:
       rafiki:
-    ports:
-      - "6379:6379"
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
   tigerbeetle-data: # named volumes can be managed easier using docker-compose
@@ -123,5 +116,5 @@ networks:
     driver: bridge
     ipam:
      config:
-       - subnet: 10.5.0.0/16
+       - subnet: 10.5.0.0/24
          gateway: 10.5.0.1
