@@ -59,7 +59,7 @@
     "add": "^2.0.6",
     "ajv": "^8.11.0",
     "apollo-server-koa": "^2.25.1",
-    "axios": "^0.21.4",
+    "axios": "^0.27.2",
     "base64url": "^3.0.1",
     "bcrypt": "^5.0.1",
     "extensible-error": "^1.0.2",

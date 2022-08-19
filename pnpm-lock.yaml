@@ -58,7 +58,7 @@ importers:
       '@types/koa__router': ^8.0.11
       '@types/uuid': ^8.3.0
       ajv: ^8.11.0
-      axios: ^0.26.1
+      axios: ^0.27.2
       jest-openapi: ^0.14.2
       jose: ^4.9.0
       knex: ^0.21.17
@@ -82,7 +82,7 @@ importers:
       '@koa/cors': 3.3.0
       '@koa/router': 12.0.0
       ajv: 8.11.0
-      axios: 0.26.1
+      axios: 0.27.2
       jose: 4.9.0
       knex: 0.21.21_pg@8.7.3
       koa: 2.13.4
@@ -145,7 +145,7 @@ importers:
       ajv: ^8.11.0
       apollo-server: ^3.5.0
       apollo-server-koa: ^2.25.1
-      axios: ^0.21.4
+      axios: ^0.27.2
       base64url: ^3.0.1
       bcrypt: ^5.0.1
       cross-fetch: ^3.1.4
@@ -203,7 +203,7 @@ importers:
       add: 2.0.6
       ajv: 8.11.0
       apollo-server-koa: 2.25.4_graphql@15.8.0
-      axios: 0.21.4
+      axios: 0.27.2
       base64url: 3.0.1
       bcrypt: 5.0.1
       extensible-error: 1.0.2
@@ -279,7 +279,7 @@ importers:
       '@types/koa__router': ^8.0.11
       '@types/uuid': ^8.3.0
       ajv: ^8.11.0
-      axios: ^0.26.1
+      axios: ^0.27.2
       jest-openapi: ^0.14.2
       jose: ^4.9.0
       koa: ^2.13.4
@@ -302,7 +302,7 @@ importers:
       '@koa/cors': 3.3.0
       '@koa/router': 12.0.0
       ajv: 8.11.0
-      axios: 0.26.1
+      axios: 0.27.2
       jose: 4.9.0
       koa: 2.13.4
       koa-bodyparser: 4.3.0
@@ -371,14 +371,14 @@ importers:
       '@types/koa': 2.13.5
       '@types/koa__router': ^8.0.11
       '@types/sax': ^1.2.1
-      axios: ^0.21.1
+      axios: ^0.27.2
       koa: ^2.13.1
       nock: ^13.1.0
       pino: ^8.4.1
       sax: ^1.2.4
       typescript: ^4.2.4
     dependencies:
-      axios: 0.21.4
+      axios: 0.27.2
       pino: 8.4.1
     devDependencies:
       '@koa/router': 12.0.0
@@ -4118,7 +4118,6 @@ packages:
 
   /asynckit/0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
-    dev: true
 
   /at-least-node/1.0.0:
     resolution: {integrity: sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==}
@@ -4147,11 +4146,13 @@ packages:
       follow-redirects: 1.15.1
     transitivePeerDependencies:
       - debug
+    dev: true
 
-  /axios/0.26.1:
-    resolution: {integrity: sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==}
+  /axios/0.27.2:
+    resolution: {integrity: sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==}
     dependencies:
       follow-redirects: 1.15.1
+      form-data: 4.0.0
     transitivePeerDependencies:
       - debug
     dev: false
@@ -4796,7 +4797,6 @@ packages:
     engines: {node: '>= 0.8'}
     dependencies:
       delayed-stream: 1.0.0
-    dev: true
 
   /combos/0.2.0:
     resolution: {integrity: sha512-Z6YfvgiTCERWJTj3wQiXamFhssdvz1n4ok447rS330lw3uL72WAx8IvrLU7xiE71uyb5WF8JEP+BWB5KhOoGeg==}
@@ -5264,7 +5264,6 @@ packages:
   /delayed-stream/1.0.0:
     resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
     engines: {node: '>=0.4.0'}
-    dev: true
 
   /delegates/1.0.0:
     resolution: {integrity: sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==}
@@ -6107,7 +6106,6 @@ packages:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       mime-types: 2.1.35
-    dev: true
 
   /forwarded/0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
