@@ -43,7 +43,6 @@ export interface ServiceDependencies extends BaseService {
   peerService: PeerService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
   publicHost: string
-  slippage: number
 }
 
 export async function createOutgoingPaymentService(
