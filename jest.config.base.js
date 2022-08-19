@@ -7,7 +7,7 @@ module.exports = {
     }
   },
   transform: {
-    '^.+\\.tsx?$': 'ts-jest'
+    '^.+\\.tsx?$': ['@swc/jest']
   },
   preset: 'ts-jest',
   testEnvironment: 'node',
