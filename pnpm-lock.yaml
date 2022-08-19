@@ -54,7 +54,7 @@ importers:
       '@koa/cors': ^3.1.0
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.7
       '@types/koa-session': ^5.10.6
       '@types/koa__cors': ^3.1.1
@@ -102,7 +102,7 @@ importers:
       uuid: 8.3.2
     devDependencies:
       '@types/jest': 28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.7
       '@types/koa-session': 5.10.6
       '@types/koa__cors': 3.3.0
@@ -134,11 +134,11 @@ importers:
       '@types/bcrypt': ^5.0.0
       '@types/ioredis': ^4.22.3
       '@types/jest': ^28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa__cors': ^3.0.2
       '@types/koa__router': ^8.0.11
-      '@types/lodash': ^4.14.183
+      '@types/lodash': ^4.14.184
       '@types/luxon': ^3.0.0
       '@types/react': ^18.0.17
       '@types/rosie': ^0.0.40
@@ -243,11 +243,11 @@ importers:
       '@graphql-codegen/typescript-resolvers': 1.19.3_graphql@15.8.0
       '@types/ioredis': 4.28.10
       '@types/jest': 28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.7
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
-      '@types/lodash': 4.14.183
+      '@types/lodash': 4.14.184
       '@types/luxon': 3.0.0
       '@types/react': 18.0.17
       '@types/rosie': 0.0.40
@@ -275,7 +275,7 @@ importers:
       '@koa/cors': ^3.1.0
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.7
       '@types/koa-session': ^5.10.6
       '@types/koa__cors': ^3.1.1
@@ -321,7 +321,7 @@ importers:
       uuid: 8.3.2
     devDependencies:
       '@types/jest': 28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.7
       '@types/koa-session': 5.10.6
       '@types/koa__cors': 3.3.0
@@ -336,7 +336,7 @@ importers:
     specifiers:
       '@apidevtools/json-schema-ref-parser': ^9.0.9
       '@types/jest': ^28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/uuid': ^8.3.4
       ajv: ^8.11.0
       ajv-formats: ^2.1.1
@@ -360,7 +360,7 @@ importers:
       openapi-types: 11.1.0
     devDependencies:
       '@types/jest': 28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/uuid': 8.3.4
       koa: 2.13.4
       node-mocks-http: 1.11.0
@@ -371,7 +371,7 @@ importers:
     specifiers:
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/koa__router': ^8.0.11
       '@types/sax': ^1.2.1
       axios: ^0.21.1
@@ -386,7 +386,7 @@ importers:
     devDependencies:
       '@koa/router': 12.0.0
       '@types/jest': 28.1.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       '@types/koa__router': 8.0.11
       '@types/sax': 1.2.4
       koa: 2.13.4
@@ -3077,6 +3077,19 @@ packages:
       '@types/koa-compose': 3.2.5
       '@types/node': 18.7.6
 
+  /@types/koa/2.13.5:
+    resolution: {integrity: sha512-HSUOdzKz3by4fnqagwthW/1w/yJspTgppyyalPVbgZf8jQWvdIXcVW5h2DGtw4zYntOaeRGx49r1hxoPWrD4aA==}
+    dependencies:
+      '@types/accepts': 1.3.5
+      '@types/content-disposition': 0.5.5
+      '@types/cookies': 0.7.7
+      '@types/http-assert': 1.5.3
+      '@types/http-errors': 1.8.2
+      '@types/keygrip': 1.0.2
+      '@types/koa-compose': 3.2.5
+      '@types/node': 18.7.6
+    dev: true
+
   /@types/koa__cors/2.2.3:
     resolution: {integrity: sha512-RfG2EuSc+nv/E+xbDSLW8KCoeri/3AkqwVPuENfF/DctllRoXhooboO//Sw7yFtkLvj7nG7O1H3JcZmoTQz8nQ==}
     dependencies:
@@ -3095,8 +3108,8 @@ packages:
       '@types/koa': 2.13.4
     dev: true
 
-  /@types/lodash/4.14.183:
-    resolution: {integrity: sha512-UXavyuxzXKMqJPEpFPri6Ku5F9af6ZJXUneHhvQJxavrEjuHkFp2YnDWHcxJiG7hk8ZkWqjcyNeW1s/smZv5cw==}
+  /@types/lodash/4.14.184:
+    resolution: {integrity: sha512-RoZphVtHbxPZizt4IcILciSWiC6dcn+eZ8oX9IWEYfDMcocdd42f7NPI6fQj+6zI8y4E0L7gu2pcZKLGTRaV9Q==}
     dev: true
 
   /@types/long/4.0.1:

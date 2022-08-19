@@ -10,7 +10,7 @@
   "devDependencies": {
     "@koa/router": "^12.0.0",
     "@types/jest": "^28.1.7",
-    "@types/koa": "2.13.4",
+    "@types/koa": "2.13.5",
     "@types/koa__router": "^8.0.11",
     "@types/sax": "^1.2.1",
     "koa": "^2.13.1",

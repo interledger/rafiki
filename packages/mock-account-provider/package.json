@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@types/jest": "^28.1.7",
-    "@types/koa": "2.13.4",
+    "@types/koa": "2.13.5",
     "@types/koa-bodyparser": "^4.3.7",
     "@types/koa-session": "^5.10.6",
     "@types/koa__cors": "^3.1.1",
