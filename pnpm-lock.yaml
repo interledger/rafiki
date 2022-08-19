@@ -153,7 +153,7 @@ importers:
       bcrypt: ^5.0.1
       cross-fetch: ^3.1.4
       extensible-error: ^1.0.2
-      fishery: ^1.2.0
+      fishery: ^2.2.2
       got: ^11.8.2
       graphile-scheduler: ^0.8.0
       graphile-worker: ^0.10.0
@@ -210,7 +210,7 @@ importers:
       base64url: 3.0.1
       bcrypt: 5.0.1
       extensible-error: 1.0.2
-      fishery: 1.4.0
+      fishery: 2.2.2
       got: 11.8.5
       graphile-scheduler: 0.8.0
       graphile-worker: 0.10.0
@@ -6041,8 +6041,8 @@ packages:
       parse-filepath: 1.0.2
     dev: false
 
-  /fishery/1.4.0:
-    resolution: {integrity: sha512-uzPsEWtoHluyqgk9hC/MzMbm42NPWmDWjbdzMRLuJ+jxmAHo+nDbiI3zk2S+HQFXme/VlNnPsNYZQBryrbCTLw==}
+  /fishery/2.2.2:
+    resolution: {integrity: sha512-jeU0nDhPHJkupmjX+r9niKgVMTBDB8X+U/pktoGHAiWOSyNlMd0HhmqnjrpjUOCDPJYaSSu4Ze16h6dZOKSp2w==}
     dependencies:
       lodash.mergewith: 4.6.2
     dev: false
