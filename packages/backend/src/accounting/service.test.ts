@@ -229,7 +229,7 @@ describe('Accounting Service', (): void => {
             sourceAccount: account,
             sourceAmount: BigInt(10 * (i + 1)),
             destinationAccount: receivingAccount,
-            timeout: BigInt(10000)
+            timeout: 0n
           })
           assert.ok(!isTransferError(transfer))
           await transfer.commit()

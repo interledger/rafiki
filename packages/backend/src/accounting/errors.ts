@@ -40,10 +40,10 @@ export enum TransferError {
 export const isTransferError = (o: any): o is TransferError =>
   Object.values(TransferError).includes(o)
 
-export function isAllAccountExistsErrors(
+export function areAllAccountExistsErrors(
   errors: CreateAccountErrorCode[]
 ): boolean {
-  return isAllAccountErrors(errors, [
+  return areAllOfTypeAccountErrors(errors, [
     CreateAccountErrorCode.exists_with_different_flags,
     CreateAccountErrorCode.exists_with_different_user_data,
     CreateAccountErrorCode.exists_with_different_ledger,
@@ -56,12 +56,12 @@ export function isAllAccountExistsErrors(
   ])
 }
 
-export function isAllAccountErrors(
-  errors: CreateAccountErrorCode[],
+export function areAllOfTypeAccountErrors(
+  errorsOccurred: CreateAccountErrorCode[],
   errToVerify: CreateAccountErrorCode[]
 ): boolean {
-  for (const verify of errToVerify) {
-    if (errors.includes(verify)) continue
+  for (const occurred of errorsOccurred) {
+    if (errToVerify.includes(occurred)) continue
     return false
   }
   return true

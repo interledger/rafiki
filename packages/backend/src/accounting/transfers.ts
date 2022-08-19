@@ -43,9 +43,10 @@ export async function createTransfers(
     }
     if (transfer.pendingId && commit === true) {
       flags |= TransferFlags.post_pending_transfer
-    }
-    if (transfer.pendingId && commit === false) {
+    } else if (transfer.pendingId && commit === false) {
       flags |= TransferFlags.void_pending_transfer
+    } else {
+      transfer.pendingId = 0
     }
     if (i < transfers.length - 1) {
       flags |= TransferFlags.linked

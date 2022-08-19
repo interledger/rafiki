@@ -9,9 +9,9 @@ import {
   getAccounts
 } from './accounts'
 import {
+  areAllAccountExistsErrors,
   BalanceTransferError,
   CreateAccountError,
-  isAllAccountExistsErrors,
   TransferError,
   UnknownAccountError
 } from './errors'
@@ -156,7 +156,7 @@ export async function createSettlementAccount(
     // This could change if TigerBeetle could be reset between tests.
     if (
       err instanceof CreateAccountError &&
-      isAllAccountExistsErrors(err.codes)
+      areAllAccountExistsErrors(err.codes)
     ) {
       return
     }
