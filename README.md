@@ -67,8 +67,10 @@ pnpm clean
 # install dependencies
 pnpm i
 
-# build all the packages in the repo
+# build all the packages in the repo:
 pnpm -r build
+# build specific package (backend):
+pnpm --filter backend test
 
 # run individual tests
 pnpm --filter backend test
@@ -78,4 +80,9 @@ pnpm --filter open-api test
 
 # run all tests
 pnpm -r --workspace-concurrency=2 test
+
+# format code:
+pnpm format
+# verify code formatting:
+pnpm format:check
 ```
