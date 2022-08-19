@@ -139,7 +139,7 @@ importers:
       '@types/koa__cors': ^3.0.2
       '@types/koa__router': ^8.0.11
       '@types/lodash': ^4.14.183
-      '@types/luxon': ^1.26.4
+      '@types/luxon': ^3.0.0
       '@types/react': ^18.0.17
       '@types/rosie': ^0.0.40
       '@types/tmp': ^0.2.3
@@ -248,7 +248,7 @@ importers:
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
       '@types/lodash': 4.14.183
-      '@types/luxon': 1.27.1
+      '@types/luxon': 3.0.0
       '@types/react': 18.0.17
       '@types/rosie': 0.0.40
       '@types/tmp': 0.2.3
@@ -3111,8 +3111,8 @@ packages:
   /@types/long/4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
 
-  /@types/luxon/1.27.1:
-    resolution: {integrity: sha512-cPiXpOvPFDr2edMnOXlz3UBDApwUfR+cpizvxCy0n3vp9bz/qe8BWzHPIEFcy+ogUOyjKuCISgyq77ELZPmkkg==}
+  /@types/luxon/3.0.0:
+    resolution: {integrity: sha512-Lx+EZoJxUKw4dp8uei9XiUVNlgkYmax5+ovqt6Xf3LzJOnWhlfJw/jLBmqfGVwOP/pDr4HT8bI1WtxK0IChMLw==}
     dev: true
 
   /@types/mime/3.0.1:
