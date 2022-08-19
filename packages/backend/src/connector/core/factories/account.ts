@@ -63,14 +63,13 @@ export const OutgoingPeerFactory = Factory.define<MockOutgoingAccount>(
     return `test.${id}`
   })
 
-export const IncomingPaymentAccountFactory = Factory.define<MockOutgoingAccount>(
-  'IncomingPaymentAccountFactory'
-)
-  .extend(OutgoingAccountFactory)
-  .option('amount', BigInt(0))
-  .attrs({
-    state: 'PENDING'
-  })
+export const IncomingPaymentAccountFactory =
+  Factory.define<MockOutgoingAccount>('IncomingPaymentAccountFactory')
+    .extend(OutgoingAccountFactory)
+    .option('amount', BigInt(0))
+    .attrs({
+      state: 'PENDING'
+    })
 
 export const AccountFactory = Factory.define<MockOutgoingAccount>(
   'AccountFactory'

@@ -47,28 +47,22 @@ describe('Peer Resolvers', (): void => {
     staticIlpAddress: 'test.' + uuid()
   })
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      peerService = await deps.use('peerService')
-      peerFactory = new PeerFactory(peerService)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    peerService = await deps.use('peerService')
+    peerFactory = new PeerFactory(peerService)
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.apolloClient.stop()
+    await appContainer.shutdown()
+  })
 
   describe('Create Peer', (): void => {
     test('Can create a peer', async (): Promise<void> => {
@@ -103,15 +97,13 @@ describe('Peer Resolvers', (): void => {
             input: peer
           }
         })
-        .then(
-          (query): CreatePeerMutationResponse => {
-            if (query.data) {
-              return query.data.createPeer
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): CreatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.createPeer
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -155,15 +147,13 @@ describe('Peer Resolvers', (): void => {
             input: peer
           }
         })
-        .then(
-          (query): CreatePeerMutationResponse => {
-            if (query.data) {
-              return query.data.createPeer
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): CreatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.createPeer
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
@@ -191,15 +181,13 @@ describe('Peer Resolvers', (): void => {
             input: peer
           }
         })
-        .then(
-          (query): CreatePeerMutationResponse => {
-            if (query.data) {
-              return query.data.createPeer
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): CreatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.createPeer
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
@@ -231,15 +219,13 @@ describe('Peer Resolvers', (): void => {
             input: randomPeer()
           }
         })
-        .then(
-          (query): CreatePeerMutationResponse => {
-            if (query.data) {
-              return query.data.createPeer
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): CreatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.createPeer
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
       expect(response.message).toBe('Error trying to create peer')
@@ -274,15 +260,13 @@ describe('Peer Resolvers', (): void => {
             peerId: peer.id
           }
         })
-        .then(
-          (query): Peer => {
-            if (query.data) {
-              return query.data.peer
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): Peer => {
+          if (query.data) {
+            return query.data.peer
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(query).toEqual({
         __typename: 'Peer',
@@ -322,15 +306,13 @@ describe('Peer Resolvers', (): void => {
             peerId: uuid()
           }
         })
-        .then(
-          (query): Peer => {
-            if (query.data) {
-              return query.data.peer
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): Peer => {
+          if (query.data) {
+            return query.data.peer
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
@@ -377,15 +359,13 @@ describe('Peer Resolvers', (): void => {
             }
           `
         })
-        .then(
-          (query): PeersConnection => {
-            if (query.data) {
-              return query.data.peers
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): PeersConnection => {
+          if (query.data) {
+            return query.data.peers
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(query.edges).toHaveLength(2)
       query.edges.forEach((edge, idx) => {
@@ -416,11 +396,9 @@ describe('Peer Resolvers', (): void => {
   describe('Update Peer', (): void => {
     let peer: PeerModel
 
-    beforeEach(
-      async (): Promise<void> => {
-        peer = await peerFactory.build()
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      peer = await peerFactory.build()
+    })
 
     test('Can update a peer', async (): Promise<void> => {
       const updateOptions = {
@@ -464,15 +442,13 @@ describe('Peer Resolvers', (): void => {
             input: updateOptions
           }
         })
-        .then(
-          (query): UpdatePeerMutationResponse => {
-            if (query.data) {
-              return query.data.updatePeer
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): UpdatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.updatePeer
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -520,15 +496,13 @@ describe('Peer Resolvers', (): void => {
             input: updateOptions
           }
         })
-        .then(
-          (query): UpdatePeerMutationResponse => {
-            if (query.data) {
-              return query.data.updatePeer
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): UpdatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.updatePeer
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
@@ -561,15 +535,13 @@ describe('Peer Resolvers', (): void => {
             input: updateOptions
           }
         })
-        .then(
-          (query): UpdatePeerMutationResponse => {
-            if (query.data) {
-              return query.data.updatePeer
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): UpdatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.updatePeer
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')

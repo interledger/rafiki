@@ -14,11 +14,10 @@ describe('isAdmin Directive', (): void => {
   let server: ApolloServer
   let client: ApolloClient<NormalizedCacheObject>
 
-  beforeAll(
-    async (): Promise<void> => {
-      const schema = makeExecutableSchema({
-        typeDefs: [
-          `
+  beforeAll(async (): Promise<void> => {
+    const schema = makeExecutableSchema({
+      typeDefs: [
+        `
         type Query {
           hello: QueryResponse @isAdmin
         }
@@ -31,52 +30,49 @@ describe('isAdmin Directive', (): void => {
 
         directive @isAdmin on OBJECT | FIELD_DEFINITION
       `
-        ],
-        resolvers: {
-          Query: {
-            hello: () => {
-              return {
-                code: '200',
-                success: true,
-                message: 'Hello World!'
-              }
+      ],
+      resolvers: {
+        Query: {
+          hello: () => {
+            return {
+              code: '200',
+              success: true,
+              message: 'Hello World!'
             }
           }
         }
-      })
+      }
+    })
 
-      const schemaWithDirectives = isAdminDirectiveTransformer(schema)
+    const schemaWithDirectives = isAdminDirectiveTransformer(schema)
 
-      server = new ApolloServer({
-        schema: schemaWithDirectives,
-        context: ({ req }): { admin: boolean } => {
-          return {
-            admin: req.headers['x-api-key'] == 'qwertyuiop1234567890'
-          }
+    server = new ApolloServer({
+      schema: schemaWithDirectives,
+      context: ({ req }): { admin: boolean } => {
+        return {
+          admin: req.headers['x-api-key'] == 'qwertyuiop1234567890'
         }
-      })
-      await server.listen(3011)
-      const httpLink = createHttpLink({
-        uri: 'http://localhost:3011/graphql',
-        fetch
-      })
-      client = new ApolloClient({
-        link: httpLink,
-        cache: new InMemoryCache(),
-        defaultOptions: {
-          query: {
-            fetchPolicy: 'no-cache'
-          }
+      }
+    })
+    await server.listen(3011)
+    const httpLink = createHttpLink({
+      uri: 'http://localhost:3011/graphql',
+      fetch
+    })
+    client = new ApolloClient({
+      link: httpLink,
+      cache: new InMemoryCache(),
+      defaultOptions: {
+        query: {
+          fetchPolicy: 'no-cache'
         }
-      })
-    }
-  )
+      }
+    })
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await server.stop()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await server.stop()
+  })
 
   describe('isAdmin Directive Query', (): void => {
     test('should not succeed without admin API key', async (): Promise<void> => {

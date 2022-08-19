@@ -32,52 +32,44 @@ describe('SPSP Routes', (): void => {
     send: jest.fn()
   }
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    deps.bind('messageProducer', async () => mockMessageProducer)
+    appContainer = await createTestApp(deps)
+    workerUtils = await makeWorkerUtils({
+      connectionString: appContainer.connectionUrl
+    })
+    await workerUtils.migrate()
+    messageProducer.setUtils(workerUtils)
+    knex = await deps.use('knex')
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      spspRoutes = await deps.use('spspRoutes')
-      streamServer = await deps.use('streamServer')
-      accountService = await deps.use('accountService')
-    }
-  )
+  beforeEach(async (): Promise<void> => {
+    spspRoutes = await deps.use('spspRoutes')
+    streamServer = await deps.use('streamServer')
+    accountService = await deps.use('accountService')
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await truncateTables(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await resetGraphileDb(knex)
+    await truncateTables(knex)
+    await appContainer.shutdown()
+    await workerUtils.release()
+  })
 
   describe('GET /:id handler', (): void => {
     let accountId: string
 
-    beforeEach(
-      async (): Promise<void> => {
-        accountId = (
-          await accountService.create({
-            asset: {
-              scale: 6,
-              code: 'USD'
-            }
-          })
-        ).id
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      accountId = (
+        await accountService.create({
+          asset: {
+            scale: 6,
+            code: 'USD'
+          }
+        })
+      ).id
+    })
 
     test('invalid account id; returns 400', async () => {
       const ctx = createContext(

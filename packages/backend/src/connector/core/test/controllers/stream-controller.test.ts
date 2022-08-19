@@ -35,12 +35,10 @@ describe('Stream Controller', function () {
 
   test('constructs a reply for a receive account', async () => {
     const bob = IncomingPaymentAccountFactory.build()
-    const {
-      ilpAddress,
-      sharedSecret
-    } = services.streamServer.generateCredentials({
-      paymentTag: 'foo'
-    })
+    const { ilpAddress, sharedSecret } =
+      services.streamServer.generateCredentials({
+        paymentTag: 'foo'
+      })
     const ctx = createILPContext({
       services,
       accounts: {

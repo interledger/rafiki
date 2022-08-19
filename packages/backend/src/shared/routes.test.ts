@@ -23,14 +23,12 @@ export const listTests = <Type extends BaseResponse>({
 
     const getCursor = (index: number) => items[index].id.split('/').pop()
 
-    beforeEach(
-      async (): Promise<void> => {
-        items = []
-        for (let i = 0; i < 3; i++) {
-          items.push(await createItem(i))
-        }
+    beforeEach(async (): Promise<void> => {
+      items = []
+      for (let i = 0; i < 3; i++) {
+        items.push(await createItem(i))
       }
-    )
+    })
 
     test.each`
       query            | cursorIndex | pagination                                        | startIndex | endIndex | description

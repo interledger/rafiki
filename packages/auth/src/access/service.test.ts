@@ -19,27 +19,21 @@ describe('Access Service', (): void => {
   let knex: Knex
   let trx: Transaction
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      accessService = await deps.use('accessService')
-      knex = await deps.use('knex')
-      appContainer = await createTestApp(deps)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    accessService = await deps.use('accessService')
+    knex = await deps.use('knex')
+    appContainer = await createTestApp(deps)
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      nock.restore()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    nock.restore()
+    await appContainer.shutdown()
+  })
 
   const BASE_GRANT = {
     state: GrantState.Pending,

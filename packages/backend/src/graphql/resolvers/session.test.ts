@@ -27,29 +27,23 @@ describe('Session Resolvers', (): void => {
   let apiKeyService: ApiKeyService
   let sessionService: SessionService
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      accountService = await deps.use('accountService')
-      apiKeyService = await deps.use('apiKeyService')
-      sessionService = await deps.use('sessionService')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    accountService = await deps.use('accountService')
+    apiKeyService = await deps.use('apiKeyService')
+    sessionService = await deps.use('sessionService')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.apolloClient.stop()
+    await appContainer.shutdown()
+  })
 
   describe('Session Mutations', (): void => {
     test('Session can be refreshed', async (): Promise<void> => {
@@ -86,15 +80,13 @@ describe('Session Resolvers', (): void => {
               input
             }
           })
-          .then(
-            (query): RefreshSessionMutationResponse => {
-              if (query.data) {
-                return query.data.refreshSession
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): RefreshSessionMutationResponse => {
+            if (query.data) {
+              return query.data.refreshSession
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
@@ -145,15 +137,13 @@ describe('Session Resolvers', (): void => {
               input
             }
           })
-          .then(
-            (query): RevokeSessionMutationResponse => {
-              if (query.data) {
-                return query.data.revokeSession
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): RevokeSessionMutationResponse => {
+            if (query.data) {
+              return query.data.revokeSession
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')

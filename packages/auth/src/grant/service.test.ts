@@ -21,52 +21,44 @@ describe('Grant Service', (): void => {
 
   let grant: Grant
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      grantService = await deps.use('grantService')
-      knex = await deps.use('knex')
-      appContainer = await createTestApp(deps)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    grantService = await deps.use('grantService')
+    knex = await deps.use('knex')
+    appContainer = await createTestApp(deps)
+  })
 
   const KEY_REGISTRY_URL = 'https://openpayments.network/keys/test-key'
 
-  beforeEach(
-    async (): Promise<void> => {
-      grant = await Grant.query().insert({
-        state: GrantState.Pending,
-        startMethod: [StartMethod.Redirect],
-        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        continueId: v4(),
-        finishMethod: FinishMethod.Redirect,
-        finishUri: 'https://example.com',
-        clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        clientKeyId: KEY_REGISTRY_URL,
-        interactId: v4(),
-        interactRef: v4(),
-        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
-      })
+  beforeEach(async (): Promise<void> => {
+    grant = await Grant.query().insert({
+      state: GrantState.Pending,
+      startMethod: [StartMethod.Redirect],
+      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      continueId: v4(),
+      finishMethod: FinishMethod.Redirect,
+      finishUri: 'https://example.com',
+      clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      clientKeyId: KEY_REGISTRY_URL,
+      interactId: v4(),
+      interactRef: v4(),
+      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    })
 
-      await Access.query().insert({
-        ...BASE_GRANT_ACCESS,
-        type: AccessType.IncomingPayment,
-        grantId: grant.id
-      })
-    }
-  )
+    await Access.query().insert({
+      ...BASE_GRANT_ACCESS,
+      type: AccessType.IncomingPayment,
+      grantId: grant.id
+    })
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   const BASE_GRANT_ACCESS = {
     actions: [Action.Create, Action.Read, Action.List],

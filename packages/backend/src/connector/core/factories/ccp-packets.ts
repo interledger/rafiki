@@ -28,14 +28,13 @@ export const RouteUpdatePreparePacketFactory = {
     )
 }
 
-export const RouteControlRequestFactory = Factory.define<CcpRouteControlRequest>(
-  'RouteControlRequest'
-).attrs({
-  features: new Array<string>(),
-  lastKnownEpoch: 0,
-  lastKnownRoutingTableId: faker.datatype.uuid,
-  mode: faker.datatype.number({ min: 0, max: 1 })
-})
+export const RouteControlRequestFactory =
+  Factory.define<CcpRouteControlRequest>('RouteControlRequest').attrs({
+    features: new Array<string>(),
+    lastKnownEpoch: 0,
+    lastKnownRoutingTableId: faker.datatype.uuid,
+    mode: faker.datatype.number({ min: 0, max: 1 })
+  })
 
 export const RouteControlPreparePacketFactory = {
   build: (): IlpPrepare =>

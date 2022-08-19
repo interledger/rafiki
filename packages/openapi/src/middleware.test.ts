@@ -41,11 +41,9 @@ const SPEC =
 describe('OpenAPI Validator', (): void => {
   let openApi: OpenAPI
 
-  beforeAll(
-    async (): Promise<void> => {
-      openApi = await createOpenAPI(SPEC)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    openApi = await createOpenAPI(SPEC)
+  })
 
   describe('createValidatorMiddleware', (): void => {
     let next: jest.MockedFunction<() => Promise<void>>

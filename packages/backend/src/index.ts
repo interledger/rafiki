@@ -103,13 +103,10 @@ export function initIocContainer(
     return knex
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
-  container.singleton(
-    'redis',
-    async (deps): Promise<IORedis.Redis> => {
-      const config = await deps.use('config')
-      return new IORedis(config.redisUrl, { tls: config.redisTls })
-    }
-  )
+  container.singleton('redis', async (deps): Promise<IORedis.Redis> => {
+    const config = await deps.use('config')
+    return new IORedis(config.redisUrl, { tls: config.redisTls })
+  })
   container.singleton('streamServer', async (deps) => {
     const config = await deps.use('config')
     return new StreamServer({
@@ -260,11 +257,9 @@ export function initIocContainer(
       sourceAccount,
       unfulfillable = false
     }: IlpPluginOptions): IlpPlugin => {
-      return createIlpPlugin(
-        (data: Buffer): Promise<Buffer> => {
-          return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
-        }
-      )
+      return createIlpPlugin((data: Buffer): Promise<Buffer> => {
+        return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
+      })
     }
   })
 
@@ -376,51 +371,45 @@ export const start = async (
 ): Promise<void> => {
   let shuttingDown = false
   const logger = await container.use('logger')
-  process.on(
-    'SIGINT',
-    async (): Promise<void> => {
-      logger.info('received SIGINT attempting graceful shutdown')
-      try {
-        if (shuttingDown) {
-          logger.warn(
-            'received second SIGINT during graceful shutdown, exiting forcefully.'
-          )
-          process.exit(1)
-        }
-
-        shuttingDown = true
-
-        // Graceful shutdown
-        await gracefulShutdown(container, app)
-        logger.info('completed graceful shutdown.')
-        process.exit(0)
-      } catch (err) {
-        const errInfo =
-          err && typeof err === 'object' && err.stack ? err.stack : err
-        logger.error({ error: errInfo }, 'error while shutting down')
+  process.on('SIGINT', async (): Promise<void> => {
+    logger.info('received SIGINT attempting graceful shutdown')
+    try {
+      if (shuttingDown) {
+        logger.warn(
+          'received second SIGINT during graceful shutdown, exiting forcefully.'
+        )
         process.exit(1)
       }
-    }
-  )
 
-  process.on(
-    'SIGTERM',
-    async (): Promise<void> => {
-      logger.info('received SIGTERM attempting graceful shutdown')
+      shuttingDown = true
 
-      try {
-        // Graceful shutdown
-        await gracefulShutdown(container, app)
-        logger.info('completed graceful shutdown.')
-        process.exit(0)
-      } catch (err) {
-        const errInfo =
-          err && typeof err === 'object' && err.stack ? err.stack : err
-        logger.error({ error: errInfo }, 'error while shutting down')
-        process.exit(1)
-      }
+      // Graceful shutdown
+      await gracefulShutdown(container, app)
+      logger.info('completed graceful shutdown.')
+      process.exit(0)
+    } catch (err) {
+      const errInfo =
+        err && typeof err === 'object' && err.stack ? err.stack : err
+      logger.error({ error: errInfo }, 'error while shutting down')
+      process.exit(1)
     }
-  )
+  })
+
+  process.on('SIGTERM', async (): Promise<void> => {
+    logger.info('received SIGTERM attempting graceful shutdown')
+
+    try {
+      // Graceful shutdown
+      await gracefulShutdown(container, app)
+      logger.info('completed graceful shutdown.')
+      process.exit(0)
+    } catch (err) {
+      const errInfo =
+        err && typeof err === 'object' && err.stack ? err.stack : err
+      logger.error({ error: errInfo }, 'error while shutting down')
+      process.exit(1)
+    }
+  })
 
   // Do migrations
   const knex = await container.use('knex')
@@ -447,11 +436,9 @@ export const start = async (
 
 // If this script is run directly, start the server
 if (!module.parent) {
-  start(container, app).catch(
-    async (e): Promise<void> => {
-      const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
-      const logger = await container.use('logger')
-      logger.error(errInfo)
-    }
-  )
+  start(container, app).catch(async (e): Promise<void> => {
+    const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
+    const logger = await container.use('logger')
+    logger.error(errInfo)
+  })
 }

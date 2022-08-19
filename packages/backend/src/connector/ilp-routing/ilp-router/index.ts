@@ -166,9 +166,8 @@ export class Router {
         // if we can apply DRAGON filtering.
         //
         // Note that we do this check *after* we have added the new route above.
-        const subPrefixes = this.forwardingRoutingTable.getKeysStartingWith(
-          prefix
-        )
+        const subPrefixes =
+          this.forwardingRoutingTable.getKeysStartingWith(prefix)
 
         for (const subPrefix of subPrefixes) {
           if (subPrefix === prefix) continue

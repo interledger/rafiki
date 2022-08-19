@@ -39,7 +39,7 @@ export function createILPContext<StateT = any>(
   options: Partial<ILPContext<StateT>>
 ): ILPContext<StateT> {
   // If the caller needs more parameters they can provide them.
-  return ({
+  return {
     request: {},
     response: {},
     state: {},
@@ -47,5 +47,5 @@ export function createILPContext<StateT = any>(
       throw new Errors.BadRequestError(msg)
     },
     ...options
-  } as unknown) as ILPContext<StateT>
+  } as unknown as ILPContext<StateT>
 }

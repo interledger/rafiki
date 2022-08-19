@@ -28,41 +28,33 @@ describe('Api Key Service', (): void => {
     send: jest.fn()
   }
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      apiKeyService = await deps.use('apiKeyService')
-      accountService = await deps.use('accountService')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    deps.bind('messageProducer', async () => mockMessageProducer)
+    appContainer = await createTestApp(deps)
+    workerUtils = await makeWorkerUtils({
+      connectionString: appContainer.connectionUrl
+    })
+    await workerUtils.migrate()
+    messageProducer.setUtils(workerUtils)
+    knex = await deps.use('knex')
+    apiKeyService = await deps.use('apiKeyService')
+    accountService = await deps.use('accountService')
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      account = await accountService.create({ asset: randomAsset() })
-    }
-  )
+  beforeEach(async (): Promise<void> => {
+    account = await accountService.create({ asset: randomAsset() })
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await resetGraphileDb(knex)
+    await appContainer.shutdown()
+    await workerUtils.release()
+  })
 
   describe('Create / Get Api Key', (): void => {
     test('An api key can be created/fetched for a certain account', async (): Promise<void> => {
