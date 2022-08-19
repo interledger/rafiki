@@ -43,7 +43,9 @@ async function getOutgoingPayment(
 ): Promise<void> {
   let outgoingPayment: OutgoingPayment | undefined
   try {
-    outgoingPayment = await deps.outgoingPaymentService.get(ctx.params.id)
+    outgoingPayment = await deps.outgoingPaymentService.get(
+      ctx.params.outgoingPaymentId
+    )
   } catch (_) {
     ctx.throw(500, 'Error trying to get outgoing payment')
   }

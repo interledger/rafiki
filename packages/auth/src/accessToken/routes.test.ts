@@ -2,6 +2,7 @@ import nock from 'nock'
 import Knex, { Transaction } from 'knex'
 import crypto from 'crypto'
 import { v4 } from 'uuid'
+import jestOpenAPI from 'jest-openapi'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
@@ -41,6 +42,7 @@ describe('Access Token Routes', (): void => {
       appContainer = await createTestApp(deps)
       knex = await deps.use('knex')
       accessTokenRoutes = await deps.use('accessTokenRoutes')
+      jestOpenAPI(await deps.use('openApi'))
     }
   )
 
@@ -113,7 +115,9 @@ describe('Access Token Routes', (): void => {
     test('Cannot introspect fake token', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: '/introspect',
+          method: 'POST'
         },
         {}
       )
@@ -131,7 +135,9 @@ describe('Access Token Routes', (): void => {
     test('Cannot introspect if no token passed', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: '/introspect',
+          method: 'POST'
         },
         {}
       )
@@ -153,7 +159,9 @@ describe('Access Token Routes', (): void => {
         })
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: '/introspect',
+          method: 'POST'
         },
         {}
       )
@@ -163,6 +171,7 @@ describe('Access Token Routes', (): void => {
         resource_server: 'test'
       }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -184,11 +193,13 @@ describe('Access Token Routes', (): void => {
 
     test('Successfully introspects expired token', async (): Promise<void> => {
       const now = new Date(new Date().getTime() + 4000)
-      jest.useFakeTimers('modern')
+      jest.useFakeTimers()
       jest.setSystemTime(now)
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: '/introspect',
+          method: 'POST'
         },
         {}
       )
@@ -198,6 +209,7 @@ describe('Access Token Routes', (): void => {
         resource_server: 'test'
       }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -226,25 +238,27 @@ describe('Access Token Routes', (): void => {
       }
     )
 
-    test('Returns status 404 if token does not exist', async (): Promise<void> => {
+    test('Returns status 204 even if token does not exist', async (): Promise<void> => {
       id = v4()
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/token/${id}`,
+          method: 'DELETE'
         },
         { id }
       )
 
-      await expect(accessTokenRoutes.revoke(ctx)).rejects.toMatchObject({
-        status: 404,
-        message: 'token not found'
-      })
+      await accessTokenRoutes.revoke(ctx)
+      expect(ctx.response.status).toBe(204)
     })
 
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/token/${id}`,
+          method: 'DELETE'
         },
         { id }
       )
@@ -257,7 +271,9 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 if token has expired', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          url: `/token/${id}`,
+          method: 'DELETE'
         },
         { id }
       )
@@ -265,6 +281,109 @@ describe('Access Token Routes', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
+    })
+  })
+
+  describe('Rotation', (): void => {
+    let grant: Grant
+    let access: Access
+    let token: AccessToken
+    let managementId: string
+
+    beforeEach(
+      async (): Promise<void> => {
+        grant = await Grant.query(trx).insertAndFetch({
+          ...BASE_GRANT
+        })
+        access = await Access.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_ACCESS
+        })
+        token = await AccessToken.query(trx).insertAndFetch({
+          grantId: grant.id,
+          ...BASE_TOKEN
+        })
+        managementId = BASE_TOKEN.managementId
+      }
+    )
+
+    test('Cannot rotate nonexistent token', async (): Promise<void> => {
+      managementId = v4()
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' }
+        },
+        { managementId }
+      )
+
+      await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
+        status: 404,
+        message: 'token not found'
+      })
+    })
+
+    test('Can rotate token', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' },
+          url: `/token/${token.id}`,
+          method: 'POST'
+        },
+        { managementId }
+      )
+
+      await accessTokenRoutes.rotate(ctx)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+      expect(ctx.body).toMatchObject({
+        access_token: {
+          access: [
+            {
+              type: access.type,
+              actions: access.actions,
+              limits: access.limits
+            }
+          ],
+          value: expect.anything(),
+          manage: expect.anything(),
+          expires_in: token.expiresIn
+        }
+      })
+      expect(ctx.response).toSatisfyApiSpec()
+    })
+
+    test('Can rotate an expired token', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' },
+          url: `/token/${token.id}`,
+          method: 'POST'
+        },
+        { managementId }
+      )
+
+      await token.$query(trx).patch({ expiresIn: -1 })
+      await accessTokenRoutes.rotate(ctx)
+      expect(ctx.response.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+      expect(ctx.body).toMatchObject({
+        access_token: {
+          access: [
+            {
+              type: access.type,
+              actions: access.actions,
+              limits: access.limits
+            }
+          ],
+          value: expect.anything(),
+          manage: expect.anything(),
+          expires_in: token.expiresIn
+        }
+      })
+      expect(ctx.response).toSatisfyApiSpec()
     })
   })
 })

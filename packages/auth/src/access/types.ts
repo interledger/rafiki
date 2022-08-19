@@ -1,7 +1,7 @@
 export enum AccessType {
   Account = 'account',
-  IncomingPayment = 'incomingPayment',
-  OutgoingPayment = 'outgoingPayment',
+  IncomingPayment = 'incoming-payment',
+  OutgoingPayment = 'outgoing-payment',
   Quote = 'quote'
 }
 
@@ -109,6 +109,8 @@ export function isAccessRequest(
   )
 }
 
+// value should hold bigint, serialized as string for requests
+// & storage as jsonb (postgresql.org/docs/current/datatype-json.html) field in postgres
 export interface PaymentAmount {
   value: string
   assetCode: string

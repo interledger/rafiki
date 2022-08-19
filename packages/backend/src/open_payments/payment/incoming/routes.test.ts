@@ -147,7 +147,7 @@ describe('Incoming Payment Routes', (): void => {
           headers: { Accept: 'application/json' }
         },
         {
-          id: uuid(),
+          incomingPaymentId: uuid(),
           accountId: account.id
         }
       )
@@ -165,20 +165,21 @@ describe('Incoming Payment Routes', (): void => {
           url: `/${account.id}/incoming-payments/${incomingPayment.id}`
         },
         {
-          id: incomingPayment.id,
+          incomingPaymentId: incomingPayment.id,
           accountId: account.id
         }
       )
       await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
 
-      const sharedSecret = (ctx.response.body as Record<string, unknown>)[
-        'sharedSecret'
-      ]
+      const sharedSecret = ((ctx.response.body as Record<string, unknown>)[
+        'ilpStreamConnection'
+      ] as Record<string, unknown>)['sharedSecret']
 
       expect(ctx.body).toEqual({
         id: `${accountId}/incoming-payments/${incomingPayment.id}`,
         accountId,
+        completed: false,
         incomingAmount: {
           value: '123',
           assetCode: asset.code,
@@ -194,9 +195,13 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
-        completed: false,
-        ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret
+        ilpStreamConnection: {
+          id: `${config.publicHost}/connections/${incomingPayment.connectionId}`,
+          ilpAddress: expect.stringMatching(
+            /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+          ),
+          sharedSecret
+        }
       })
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)
@@ -212,7 +217,7 @@ describe('Incoming Payment Routes', (): void => {
           headers: { Accept: 'application/json' }
         },
         {
-          id: incomingPayment.id,
+          incomingPaymentId: incomingPayment.id,
           accountId: account.id
         }
       )
@@ -270,6 +275,11 @@ describe('Incoming Payment Routes', (): void => {
         >)['id'] as string)
           .split('/')
           .pop()
+        const connectionId = (((ctx.response.body as Record<string, unknown>)[
+          'ilpStreamConnection'
+        ] as Record<string, unknown>)['id'] as string)
+          .split('/')
+          .pop()
         expect(ctx.response.body).toEqual({
           id: `${accountId}/incoming-payments/${incomingPaymentId}`,
           accountId,
@@ -285,10 +295,13 @@ describe('Incoming Payment Routes', (): void => {
           },
           externalRef,
           completed: false,
-          ilpAddress: expect.stringMatching(
-            /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-          ),
-          sharedSecret: expect.any(String)
+          ilpStreamConnection: {
+            id: `${config.publicHost}/connections/${connectionId}`,
+            ilpAddress: expect.stringMatching(
+              /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+            ),
+            sharedSecret: expect.any(String)
+          }
         })
       }
     )
@@ -315,7 +328,7 @@ describe('Incoming Payment Routes', (): void => {
           url: `/${account.id}/incoming-payments/${incomingPayment.id}/complete`
         },
         {
-          id: incomingPayment.id,
+          incomingPaymentId: incomingPayment.id,
           accountId: account.id
         }
       )
@@ -339,7 +352,8 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
-        completed: true
+        completed: true,
+        ilpStreamConnection: `${config.publicHost}/connections/${incomingPayment.connectionId}`
       })
     })
   })
@@ -366,7 +380,8 @@ describe('Incoming Payment Routes', (): void => {
           completed: false,
           expiresAt: expiresAt.toISOString(),
           createdAt: payment.createdAt.toISOString(),
-          updatedAt: payment.updatedAt.toISOString()
+          updatedAt: payment.updatedAt.toISOString(),
+          ilpStreamConnection: `${config.publicHost}/connections/${payment.connectionId}`
         }
       },
       list: (ctx: ListContext) => incomingPaymentRoutes.list(ctx)

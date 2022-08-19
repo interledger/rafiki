@@ -6,16 +6,22 @@ import { BaseService } from '../shared/baseService'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { ClientInfo } from '../client/service'
-import { IAppConfig } from '../config/app'
 import { AccessService } from '../access/service'
 
 export interface GrantService {
-  initiateGrant(grantRequest: GrantRequest): Promise<GrantResponse>
+  initiateGrant(grantRequest: GrantRequest): Promise<Grant>
+  getByInteraction(interactId: string): Promise<Grant>
+  issueGrant(grantId: string): Promise<Grant>
+  getByContinue(
+    continueId: string,
+    continueToken: string,
+    interactRef: string
+  ): Promise<Grant | null>
+  denyGrant(grantId: string): Promise<Grant | null>
 }
 
 interface ServiceDependencies extends BaseService {
   accessService: AccessService
-  config: IAppConfig
   knex: TransactionOrKnex
 }
 
@@ -52,7 +58,6 @@ export interface GrantResponse {
 export async function createGrantService({
   logger,
   accessService,
-  config,
   knex
 }: ServiceDependencies): Promise<GrantService> {
   const log = logger.child({
@@ -61,21 +66,46 @@ export async function createGrantService({
   const deps: ServiceDependencies = {
     logger: log,
     accessService,
-    config,
     knex
   }
   return {
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
-      initiateGrant(deps, grantRequest, trx)
+      initiateGrant(deps, grantRequest, trx),
+    getByInteraction: (interactId: string) => getByInteraction(interactId),
+    issueGrant: (grantId: string) => issueGrant(deps, grantId),
+    getByContinue: (
+      continueId: string,
+      continueToken: string,
+      interactRef: string
+    ) => getByContinue(continueId, continueToken, interactRef),
+    denyGrant: (grantId: string) => denyGrant(deps, grantId)
   }
+}
+
+async function issueGrant(
+  deps: ServiceDependencies,
+  grantId: string
+): Promise<Grant> {
+  return Grant.query().patchAndFetchById(grantId, {
+    state: GrantState.Granted
+  })
+}
+
+async function denyGrant(
+  deps: ServiceDependencies,
+  grantId: string
+): Promise<Grant | null> {
+  return Grant.query(deps.knex).patchAndFetchById(grantId, {
+    state: GrantState.Denied
+  })
 }
 
 async function initiateGrant(
   deps: ServiceDependencies,
   grantRequest: GrantRequest,
   trx?: Transaction
-): Promise<GrantResponse> {
-  const { accessService, knex, config } = deps
+): Promise<Grant> {
+  const { accessService, knex } = deps
 
   const {
     access_token: { access },
@@ -87,9 +117,9 @@ async function initiateGrant(
     }
   } = grantRequest
 
-  const invTrx = trx || (await Grant.startTransaction(knex))
+  const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
-    const grant = await Grant.query(invTrx).insert({
+    const grant = await Grant.query(grantTrx).insert({
       state: GrantState.Pending,
       startMethod: start,
       finishMethod: finish?.method,
@@ -104,30 +134,36 @@ async function initiateGrant(
     })
 
     // Associate provided accesses with grant
-    await accessService.createAccess(grant.id, access, invTrx)
+    await accessService.createAccess(grant.id, access, grantTrx)
 
     if (!trx) {
-      await invTrx.commit()
+      await grantTrx.commit()
     }
 
-    return {
-      interact: {
-        redirect: config.resourceServerDomain + `/interact/${grant.interactId}`,
-        finish: grant.interactNonce
-      },
-      continue: {
-        access_token: {
-          value: grant.continueToken
-        },
-        uri: config.authServerDomain + `/auth/continue/${grant.continueId}`,
-        wait: config.waitTime
-      }
-    }
+    return grant
   } catch (err) {
     if (!trx) {
-      await invTrx.commit()
+      await grantTrx.rollback()
     }
 
     throw err
   }
+}
+
+async function getByInteraction(interactId: string): Promise<Grant> {
+  return Grant.query().findOne({ interactId })
+}
+
+async function getByContinue(
+  continueId: string,
+  continueToken: string,
+  interactRef: string
+): Promise<Grant | null> {
+  const grant = await Grant.query().findOne({ interactRef })
+  if (
+    continueId !== grant?.continueId ||
+    continueToken !== grant?.continueToken
+  )
+    return null
+  return grant
 }

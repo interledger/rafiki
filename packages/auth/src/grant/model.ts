@@ -14,7 +14,8 @@ export enum FinishMethod {
 export enum GrantState {
   Pending = 'pending',
   Granted = 'granted',
-  Revoked = 'revoked'
+  Revoked = 'revoked',
+  Denied = 'denied'
 }
 
 export class Grant extends BaseModel {

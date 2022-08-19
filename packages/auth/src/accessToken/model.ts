@@ -22,5 +22,5 @@ export class AccessToken extends BaseModel {
   public value!: string
   public managementId!: string
   public grantId!: string
-  public expiresIn?: number
+  public expiresIn!: number
 }

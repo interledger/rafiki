@@ -21,6 +21,8 @@ export function createContext<StateT = unknown, CustomT = unknown>(
   const app = options.app || new Koa<StateT, CustomT>()
   const req = new MockIncomingMessage(options.req || {})
   const res = new MockServerResponse(req, options.res)
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   const context = app.createContext<StateT>(req, res)
 
   Object.keys(options).forEach((key) => {

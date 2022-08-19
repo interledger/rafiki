@@ -110,7 +110,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       expect(query.pageInfo.hasPreviousPage).toBeFalsy()
       expect(query.pageInfo.startCursor).toEqual(models[0].id)
       expect(query.pageInfo.endCursor).toEqual(models[19].id)
-    }, 10_000)
+    })
 
     test('No models, but models requested', async (): Promise<void> => {
       const query = await apolloClient
@@ -173,7 +173,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       expect(query.pageInfo.hasPreviousPage).toBeFalsy()
       expect(query.pageInfo.startCursor).toEqual(models[0].id)
       expect(query.pageInfo.endCursor).toEqual(models[9].id)
-    }, 10_000)
+    })
 
     test('pageInfo is correct on pagination from middle', async (): Promise<void> => {
       const models = await createModels()
@@ -206,7 +206,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       expect(query.pageInfo.hasPreviousPage).toBeTruthy()
       expect(query.pageInfo.startCursor).toEqual(models[20].id)
       expect(query.pageInfo.endCursor).toEqual(models[39].id)
-    }, 10_000)
+    })
 
     test('pageInfo is correct on pagination near end', async (): Promise<void> => {
       const models = await createModels()
@@ -239,7 +239,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       expect(query.pageInfo.hasPreviousPage).toBeTruthy()
       expect(query.pageInfo.startCursor).toEqual(models[45].id)
       expect(query.pageInfo.endCursor).toEqual(models[49].id)
-    }, 10_000)
+    })
   })
 }
 

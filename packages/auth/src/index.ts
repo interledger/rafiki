@@ -12,6 +12,7 @@ import { createGrantService } from './grant/service'
 import { createAccessTokenService } from './accessToken/service'
 import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
+import { createOpenAPI } from 'openapi'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -79,6 +80,7 @@ export function initIocContainer(
 
   container.singleton('accessTokenService', async (deps) => {
     return await createAccessTokenService({
+      config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       clientService: await deps.use('clientService')
@@ -95,7 +97,6 @@ export function initIocContainer(
     'grantService',
     async (deps: IocContract<AppServices>) => {
       return createGrantService({
-        config: await deps.use('config'),
         logger: await deps.use('logger'),
         accessService: await deps.use('accessService'),
         knex: await deps.use('knex')
@@ -107,8 +108,16 @@ export function initIocContainer(
     return createGrantRoutes({
       grantService: await deps.use('grantService'),
       clientService: await deps.use('clientService'),
-      logger: await deps.use('logger')
+      accessTokenService: await deps.use('accessTokenService'),
+      accessService: await deps.use('accessService'),
+      logger: await deps.use('logger'),
+      config: await deps.use('config')
     })
+  })
+
+  container.singleton('openApi', async (deps) => {
+    const config = await deps.use('config')
+    return await createOpenAPI(config.authServerSpec)
   })
 
   return container
@@ -153,6 +162,8 @@ export const start = async (
         logger.info('completed graceful shutdown.')
         process.exit(0)
       } catch (err) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         const errInfo =
           err && typeof err === 'object' && err.stack ? err.stack : err
         logger.error({ error: errInfo }, 'error while shutting down')
@@ -172,6 +183,8 @@ export const start = async (
         logger.info('completed graceful shutdown.')
         process.exit(0)
       } catch (err) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         const errInfo =
           err && typeof err === 'object' && err.stack ? err.stack : err
         logger.error({ error: errInfo }, 'error while shutting down')

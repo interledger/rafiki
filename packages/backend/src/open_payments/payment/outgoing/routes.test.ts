@@ -112,7 +112,7 @@ describe('Outgoing Payment Routes', (): void => {
           headers: { Accept: 'application/json' }
         },
         {
-          id: uuid(),
+          outgoingPaymentId: uuid(),
           accountId
         }
       )
@@ -135,7 +135,7 @@ describe('Outgoing Payment Routes', (): void => {
           headers: { Accept: 'application/json' }
         },
         {
-          id: outgoingPayment.id,
+          outgoingPaymentId: outgoingPayment.id,
           accountId
         }
       )
@@ -169,7 +169,7 @@ describe('Outgoing Payment Routes', (): void => {
             url: `/${accountId}/outgoing-payments/${outgoingPayment.id}`
           },
           {
-            id: outgoingPayment.id,
+            outgoingPaymentId: outgoingPayment.id,
             accountId
           }
         )

@@ -15,11 +15,10 @@ import { ApolloServer } from 'apollo-server-koa'
 import { IAppConfig } from './config/app'
 import { MessageProducer } from './messaging/messageProducer'
 import { WorkerUtils } from 'graphile-worker'
-import {
-  addResolversToSchema,
-  GraphQLFileLoader,
-  loadSchemaSync
-} from 'graphql-tools'
+import { addResolversToSchema } from '@graphql-tools/schema'
+import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
+import { loadSchemaSync } from '@graphql-tools/load'
+
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
@@ -84,8 +83,18 @@ export type AccountContext = Context<AppRequest<'id'>>
 
 // Account subresources
 export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>
-export type ReadContext = Context<AppRequest<'accountId' | 'id'>>
-export type CompleteContext = Context<AppRequest<'accountId' | 'id'>>
+export type ReadContext = Context<
+  AppRequest<
+    | 'accountId'
+    | 'incomingPaymentId'
+    | 'outgoingPaymentId'
+    | 'quoteId'
+    | 'connectionId'
+  >
+>
+export type CompleteContext = Context<
+  AppRequest<'accountId' | 'incomingPaymentId'>
+>
 export type ListContext = Context<
   AppRequest<'accountId', never, PageQueryParams>
 >
@@ -290,6 +299,7 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
+    const connectionRoutes = await this.container.use('connectionRoutes')
     const openApi = await this.container.use('openApi')
     const toRouterPath = (path: string): string =>
       path.replace(/{/g, ':').replace(/}/g, '')
@@ -303,7 +313,7 @@ export class App {
     }): AccessAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
-          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
+          return path.endsWith('Id}') ? AccessAction.Read : AccessAction.List
         case HttpMethod.POST:
           return path.endsWith('/complete')
             ? AccessAction.Complete
@@ -340,7 +350,19 @@ export class App {
             type = AccessType.Quote
             route = quoteRoutes[actionToRoute[action]]
           } else {
-            if (path === '/{id}' && method === HttpMethod.GET) {
+            if (path.includes('connections')) {
+              route = connectionRoutes.get
+              this.publicRouter[method](
+                toRouterPath(path),
+                createValidatorMiddleware<ContextType<typeof route>>(openApi, {
+                  path,
+                  method
+                }),
+                route
+              )
+            } else if (path === '/{accountId}' && method === HttpMethod.GET) {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
               this.publicRouter.get(
                 toRouterPath(path),
                 createValidatorMiddleware<AccountContext>(openApi, {
