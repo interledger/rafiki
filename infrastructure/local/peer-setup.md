@@ -226,7 +226,7 @@ Query Variables (substitute the ID from the "create peer" response for `INSERT_P
   "input": {
     "peerId": "INSERT_PEER_ID",
     "amount": "10000",
-    "id": "a09b730d-8610-4fda-98fa-ec7acb19c775"
+    "id": "b09b734d-8610-4fda-98fa-ec7acb19c775"
   }
 }
 ```
