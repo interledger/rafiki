@@ -1,6 +1,6 @@
 ## Peering between development instances
 
-This document assumes that you are running both the primary and peer instances
+This document assumes that you are running both the primary and secondary instances
 of rafiki using the docker compose files in this directory. It describes the process for
 setting up peering between them. If at any time your Rafiki instances become misconfigured,
 the only way to get back to a working state covered in this document is to destroy the
@@ -11,7 +11,7 @@ followed by `pnpm localenv:dbvolumes:remove`).
 
 The graphql playground is the UI for sending graphql requests to the `backend` services.
 The [graphql playground for the primary Rafiki instance](http://localhost:3001)
-is on port 3001 on localhost. The [graphql playground for the peer instance](http://localhost:4001)
+is on port 3001 on localhost. The [graphql playground for the secondary instance](http://localhost:4001)
 is on port 4001.
 
 ### Create Peers
@@ -32,7 +32,7 @@ the response, which should always contain `"success": true` if things are workin
 #### On the Primary Instance
 
 On the [primary instance](http://localhost:3001), execute the following query to create
-a peer record for the peer instance:
+a peer record for the secondary instance:
 
 Query:
 
@@ -94,7 +94,7 @@ Example Successful Response
 }
 ```
 
-Next, run the following query to add liquidity for the peer instance
+Next, run the following query to add liquidity for the secondary instance
 
 Query:
 
@@ -138,8 +138,8 @@ Example successful response:
 
 #### On the Peer Instance
 
-Next, run the reciprocal commands on the [peer instance](http://localhost:4001). These commands are similar but
-are directed _from_ the peer instance _to_ the primary instance, so if you simply
+Next, run the reciprocal commands on the [secondary instance](http://localhost:4001). These commands are similar but
+are directed _from_ the secondary instance _to_ the primary instance, so if you simply
 copy the commands above it will not work.
 
 Execute the following query to create a peer record for the primary instance:
@@ -245,3 +245,147 @@ Example successful response:
   }
 }
 ```
+
+### Create Payment Pointers to Send and Receive Payments
+
+In this step we will provision payment pointers on the primary and secondary Rafiki instances.
+Payment pointers are not accounts. Rafiki operators must supply their own "account provider"
+service for actually "holding" currency. Rafiki provides payment pointers--addresses within the
+ILP network to which other nodes on the network can send payments, which will then be routed
+to the account provider system and into the appropriate account. A payment pointer is a string that
+
+At the end of this step, we will have two payment pointer IDs: one provisioned on the primary
+instance and one provisioned on the secondary instance. We will use these payment pointer IDs in
+subsequent steps to send payments between the Rafiki instances.
+
+#### On the Primary Instance
+
+On the [primary instance](http://localhost:3001) execute the following command to create a payment
+pointer ID:
+
+Query
+
+```
+mutation CreateAccount ($input: CreateAccountInput!) {
+  createAccount(input: $input) {
+    code
+    success
+    message
+    account {
+      id
+      asset {
+        id
+        code
+        scale
+        withdrawalThreshold
+      }
+    }
+  }
+}
+```
+
+Query variables
+
+```
+{
+  "input": {
+    "asset": {
+      "code": "710",
+      "scale": 2
+    },
+    "publicName": "test-primary"
+  }
+}
+```
+
+Example successful response
+
+```
+{
+  "data": {
+    "createAccount": {
+      "code": "200",
+      "success": true,
+      "message": "Created Account",
+      "account": {
+        "id": "afb2b1de-d819-4e85-b901-859c27445936",
+        "asset": {
+          "id": "5a27f8ec-17a5-4388-8d1e-8243d1926778",
+          "code": "710",
+          "scale": 2,
+          "withdrawalThreshold": null
+        }
+      }
+    }
+  }
+}
+```
+
+#### On the Secondary Instance
+
+On the [secondary instance](http://localhost:4001) execute the following command to create a payment
+pointer ID:
+
+Query
+
+```
+mutation CreateAccount ($input: CreateAccountInput!) {
+  createAccount(input: $input) {
+    code
+    success
+    message
+    account {
+      id
+      asset {
+        id
+        code
+        scale
+        withdrawalThreshold
+      }
+    }
+  }
+}
+```
+
+Query variables
+
+```
+{
+  "input": {
+    "asset": {
+      "code": "710",
+      "scale": 2
+    },
+    "publicName": "test-secondary"
+  }
+}
+```
+
+Example successful response
+
+```
+{
+  "data": {
+    "createAccount": {
+      "code": "200",
+      "success": true,
+      "message": "Created Account",
+      "account": {
+        "id": "7e8b99f5-0861-49bd-95ab-e871c021d84d",
+        "asset": {
+          "id": "209fe717-bf02-4deb-826f-b7ed4f179713",
+          "code": "710",
+          "scale": 2,
+          "withdrawalThreshold": null
+        }
+      }
+    }
+  }
+}
+```
+
+#### Note the Payment Pointer IDs
+
+The `data.createAccount.account.id` field in the response is the payment pointer ID, which we will
+use in the next steps. In this example, the primary payment pointer ID is `afb2b1de-d819-4e85-b901-859c27445936`,
+and the secondary payment pointer ID is `7e8b99f5-0861-49bd-95ab-e871c021d84d`.
