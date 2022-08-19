@@ -25,8 +25,9 @@ export function initIocContainer(
   container.singleton('config', async () => config)
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')
-    const logger = createLogger()
-    logger.level = config.logLevel
+    const logger = createLogger({
+      level: config.logLevel
+    })
     return logger
   })
 
