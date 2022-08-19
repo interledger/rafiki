@@ -14,7 +14,7 @@ export async function startTigerbeetleContainer(
 
   await new GenericContainer(
     //'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b',//main-0.10.0
-    'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:c3a511fe7c697c3a107f839692d631ff6eea1efa731fab2f3e45fe763a9e331d' //Debug-0.10.0
+    'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:a8c0fb6c7f50acc5a83784ba8d7f96a749e2267da2e4135c97df65868f02cfb0' //Debug-0.10.0
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
@@ -33,7 +33,7 @@ export async function startTigerbeetleContainer(
 
   return await new GenericContainer(
     //'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b',//main-0.10.0
-    'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:c3a511fe7c697c3a107f839692d631ff6eea1efa731fab2f3e45fe763a9e331d' //Debug-0.10.0
+    'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:a8c0fb6c7f50acc5a83784ba8d7f96a749e2267da2e4135c97df65868f02cfb0' //Debug-0.10.0
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)

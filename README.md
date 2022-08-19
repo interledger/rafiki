@@ -70,7 +70,7 @@ pnpm i
 # build all the packages in the repo:
 pnpm -r build
 # build specific package (backend):
-pnpm --filter backend test
+pnpm --filter backend build
 
 # run individual tests
 pnpm --filter backend test
