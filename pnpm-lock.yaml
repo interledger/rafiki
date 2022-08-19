@@ -153,7 +153,7 @@ importers:
       fishery: ^2.2.2
       got: ^11.8.2
       graphile-scheduler: ^0.8.0
-      graphile-worker: ^0.10.0
+      graphile-worker: ^0.13.0
       graphql: ^15.5.0
       graphql-scalars: ^1.10.0
       graphql-tools: ^8.3.3
@@ -210,7 +210,7 @@ importers:
       fishery: 2.2.2
       got: 11.8.5
       graphile-scheduler: 0.8.0
-      graphile-worker: 0.10.0
+      graphile-worker: 0.13.0
       graphql: 15.8.0
       graphql-scalars: 1.18.0_graphql@15.8.0
       graphql-tools: 8.3.3_o264z5epwuajru7y4dsijkqr44
@@ -1525,6 +1525,10 @@ packages:
   /@faker-js/faker/7.4.0:
     resolution: {integrity: sha512-xDd3Tvkt2jgkx1LkuwwxpNBy/Oe+LkZBTwkgEFTiWpVSZgQ5sc/LenbHKRHbFl0dq/KFeeq/szyyPtpJRKY0fg==}
     engines: {node: '>=14.0.0', npm: '>=6.0.0'}
+    dev: false
+
+  /@graphile/logger/0.2.0:
+    resolution: {integrity: sha512-jjcWBokl9eb1gVJ85QmoaQ73CQ52xAaOCF29ukRbYNl6lY+ts0ErTaDYOBlejcbUs2OpaiqYLO5uDhyLFzWw4w==}
     dev: false
 
   /@graphql-codegen/cli/1.21.5_h5eoywvcjsa4emif44kddonyyu:
@@ -3146,6 +3150,14 @@ packages:
 
   /@types/pg/7.14.11:
     resolution: {integrity: sha512-EnZkZ1OMw9DvNfQkn2MTJrwKmhJYDEs5ujWrPfvseWNoI95N8B4HzU/Ltrq5ZfYxDX/Zg8mTzwr6UAyTjjFvXA==}
+    dependencies:
+      '@types/node': 18.7.6
+      pg-protocol: 1.5.0
+      pg-types: 2.2.0
+    dev: false
+
+  /@types/pg/8.6.5:
+    resolution: {integrity: sha512-tOkGtAqRVkHa/PVZicq67zuujI4Oorfglsr2IbKofDwBSysnaqSx7W1mDqFqdkGE6Fbgh+PZAl0r/BWON/mozw==}
     dependencies:
       '@types/node': 18.7.6
       pg-protocol: 1.5.0
@@ -6432,13 +6444,14 @@ packages:
       - pg-native
     dev: false
 
-  /graphile-worker/0.10.0:
-    resolution: {integrity: sha512-TGIBXb6SZYoyGgPXwsQZkOxIaLUoxkwtrttFDe6mXZhkx20mLU4La3OrmP0lJQ6T63eXu0m5Knj/A26ECZ77hw==}
+  /graphile-worker/0.13.0:
+    resolution: {integrity: sha512-8Hl5XV6hkabZRhYzvbUfvjJfPFR5EPxYRVWlzQC2rqYHrjULTLBgBYZna5R9ukbnsbWSvn4vVrzOBIOgIC1jjw==}
     engines: {node: '>=10.0.0'}
     hasBin: true
     dependencies:
+      '@graphile/logger': 0.2.0
       '@types/debug': 4.1.7
-      '@types/pg': 7.14.11
+      '@types/pg': 8.6.5
       chokidar: 3.5.3
       cosmiconfig: 7.0.1
       json5: 2.2.1
