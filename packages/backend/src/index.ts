@@ -425,7 +425,7 @@ export const start = async (
 
   const config = await container.use('config')
   await app.boot()
-  app.listen(config.port)
+  await app.startServer(config.port)
   logger.info(`Listening on ${app.getPort()}`)
 
   const connectorApp = await container.use('connectorApp')

@@ -138,14 +138,11 @@ export interface AppServices {
 export type AppContainer = IocContract<AppServices>
 
 export class App {
-  private koa!: Koa<DefaultState, AppContext>
-  private publicRouter!: Router<DefaultState, AppContext>
   private server!: Server
   public apolloServer!: ApolloServer
   public closeEmitter!: EventEmitter
   public isShuttingDown = false
   private logger!: Logger
-  private messageProducer!: MessageProducer
   private config!: IAppConfig
   private outgoingPaymentTimer!: NodeJS.Timer
   private deactivateInvoiceTimer!: NodeJS.Timer
@@ -160,35 +157,8 @@ export class App {
    */
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
-    this.koa = new Koa<DefaultState, AppContext>()
     this.closeEmitter = await this.container.use('closeEmitter')
     this.logger = await this.container.use('logger')
-    this.koa.context.container = this.container
-    this.koa.context.logger = await this.container.use('logger')
-    this.koa.context.closeEmitter = await this.container.use('closeEmitter')
-    this.messageProducer = await this.container.use('messageProducer')
-    this.publicRouter = new Router()
-
-    this.koa.use(
-      async (
-        ctx: {
-          status: number
-          set: (arg0: string, arg1: string) => void
-          body: string
-        },
-        next: () => void | PromiseLike<void>
-      ): Promise<void> => {
-        if (this.isShuttingDown) {
-          ctx.status = 503
-          ctx.set('Connection', 'close')
-          ctx.body = 'Server is in the process of restarting'
-        } else {
-          return next()
-        }
-      }
-    )
-    this._setupGraphql()
-    await this._setupRoutes()
 
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
@@ -207,33 +177,32 @@ export class App {
     }
   }
 
-  public listen(port: number | string): void {
-    this.server = this.koa.listen(port)
-  }
+  public async startServer(port: number | string): Promise<void> {
+    const koa = new Koa<DefaultState, AppContext>()
 
-  public async shutdown(): Promise<void> {
-    return new Promise((resolve): void => {
-      if (this.server) {
-        this.isShuttingDown = true
-        this.closeEmitter.emit('shutdown')
-        this.server.close((): void => {
-          resolve()
-        })
-      } else {
-        resolve()
+    koa.context.container = this.container
+    koa.context.closeEmitter = await this.container.use('closeEmitter')
+    koa.context.logger = await this.container.use('logger')
+
+    koa.use(
+      async (
+        ctx: {
+          status: number
+          set: (arg0: string, arg1: string) => void
+          body: string
+        },
+        next: () => void | PromiseLike<void>
+      ): Promise<void> => {
+        if (this.isShuttingDown) {
+          ctx.status = 503
+          ctx.set('Connection', 'close')
+          ctx.body = 'Server is in the process of restarting'
+        } else {
+          return next()
+        }
       }
-    })
-  }
+    )
 
-  public getPort(): number {
-    const address = this.server?.address()
-    if (address && !(typeof address == 'string')) {
-      return address.port
-    }
-    return 0
-  }
-
-  private _setupGraphql(): void {
     // Load schema from the file
     const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
       loaders: [new GraphQLFileLoader()]
@@ -258,7 +227,7 @@ export class App {
         const admin = this._isAdmin(ctx)
         const session = await this._getSession(ctx)
         return {
-          messageProducer: this.messageProducer,
+          messageProducer: await this.container.use('messageProducer'),
           container: this.container,
           logger: await this.container.use('logger'),
           admin,
@@ -267,26 +236,9 @@ export class App {
       }
     })
 
-    this.koa.use(this.apolloServer.getMiddleware())
-  }
-
-  private _isAdmin(ctx: Koa.Context): boolean {
-    return ctx.request.header['x-api-key'] == this.config.adminKey
-  }
-
-  private async _getSession(ctx: Koa.Context): Promise<Session | undefined> {
-    const key = ctx.request.header.authorization || ''
-    if (key && key.length) {
-      const sessionService = await this.container.use('sessionService')
-      return await sessionService.get(key)
-    } else {
-      return undefined
-    }
-  }
-
-  private async _setupRoutes(): Promise<void> {
-    this.publicRouter.use(bodyParser())
-    this.publicRouter.get('/healthz', (ctx: AppContext): void => {
+    const router = new Router<DefaultState, AppContext>()
+    router.use(bodyParser())
+    router.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
 
@@ -352,7 +304,7 @@ export class App {
           } else {
             if (path.includes('connections')) {
               route = connectionRoutes.get
-              this.publicRouter[method](
+              router[method](
                 toRouterPath(path),
                 createValidatorMiddleware<ContextType<typeof route>>(openApi, {
                   path,
@@ -363,7 +315,7 @@ export class App {
             } else if (path === '/{accountId}' && method === HttpMethod.GET) {
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore
-              this.publicRouter.get(
+              router.get(
                 toRouterPath(path),
                 createValidatorMiddleware<AccountContext>(openApi, {
                   path,
@@ -384,7 +336,7 @@ export class App {
             }
             continue
           }
-          this.publicRouter[method](
+          router[method](
             toRouterPath(path),
             createAuthMiddleware({
               type,
@@ -400,7 +352,46 @@ export class App {
       }
     }
 
-    this.koa.use(this.publicRouter.middleware())
+    koa.use(router.routes())
+    koa.use(this.apolloServer.getMiddleware())
+
+    this.server = koa.listen(port)
+  }
+
+  public async shutdown(): Promise<void> {
+    return new Promise((resolve): void => {
+      if (this.server) {
+        this.isShuttingDown = true
+        this.closeEmitter.emit('shutdown')
+        this.server.close((): void => {
+          resolve()
+        })
+      } else {
+        resolve()
+      }
+    })
+  }
+
+  public getPort(): number {
+    const address = this.server?.address()
+    if (address && !(typeof address == 'string')) {
+      return address.port
+    }
+    return 0
+  }
+
+  private _isAdmin(ctx: Koa.Context): boolean {
+    return ctx.request.header['x-api-key'] == this.config.adminKey
+  }
+
+  private async _getSession(ctx: Koa.Context): Promise<Session | undefined> {
+    const key = ctx.request.header.authorization || ''
+    if (key && key.length) {
+      const sessionService = await this.container.use('sessionService')
+      return await sessionService.get(key)
+    } else {
+      return undefined
+    }
   }
 
   private async processAccount(): Promise<void> {
