@@ -32,7 +32,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 ## Planning Calls
 
-Our planning calls are open to our community. We have them every Monday at 17:00 GMT, via Google Meet.
+Our planning calls are open to our community. We have them every Monday at 16:00 GMT, via Google Meet.
 
 **Google Meet joining info**
 
