@@ -22,7 +22,7 @@
     "openapi-types": "^11.0.1"
   },
   "devDependencies": {
-    "@types/jest": "^27.5.1",
+    "@types/jest": "^28.1.7",
     "@types/koa": "2.13.4",
     "@types/uuid": "^8.3.4",
     "koa": "^2.13.4",
