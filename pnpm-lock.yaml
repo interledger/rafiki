@@ -132,7 +132,7 @@ importers:
       '@types/ioredis': ^4.22.3
       '@types/jest': ^28.1.7
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.0
+      '@types/koa-bodyparser': ^4.3.7
       '@types/koa__cors': ^3.0.2
       '@types/koa__router': ^8.0.11
       '@types/lodash': ^4.14.184
@@ -587,7 +587,7 @@ packages:
     dependencies:
       '@types/express': 4.17.13
       '@types/fs-capacitor': 2.0.0
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
       busboy: 0.3.1
       fs-capacitor: 2.0.4
       graphql: 15.8.0
@@ -3048,7 +3048,7 @@ packages:
   /@types/koa-bodyparser/4.3.7:
     resolution: {integrity: sha512-21NhEp7LjZm4zbNV5alHHmrNY4J+S7B8lYTO6CzRL8ShTMnl20Gd14dRgVhAxraLaW5iZMofox+BycbuiDvj2Q==}
     dependencies:
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
 
   /@types/koa-compose/3.2.5:
     resolution: {integrity: sha512-B8nG/OoE1ORZqCkBVsup/AKcvjdgoHnfi4pZMn5UwAPCbhk/96xyv284eBYW8JlQbQ7zDmnpFr68I/40mFoIBQ==}
@@ -3085,7 +3085,6 @@ packages:
       '@types/keygrip': 1.0.2
       '@types/koa-compose': 3.2.5
       '@types/node': 18.7.6
-    dev: true
 
   /@types/koa__cors/2.2.3:
     resolution: {integrity: sha512-RfG2EuSc+nv/E+xbDSLW8KCoeri/3AkqwVPuENfF/DctllRoXhooboO//Sw7yFtkLvj7nG7O1H3JcZmoTQz8nQ==}
