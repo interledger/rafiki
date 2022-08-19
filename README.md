@@ -94,6 +94,9 @@ pnpm localenv:seed:auth
 
 # tear down
 pnpm localenv down
+
+# delete database volumes (containers must be removed first with e.g. pnpm localenv down)
+pnpm localenv:dbvolumes:remove
 ```
 
 The local environment consists of a primary Rafiki instance and a peer Rafiki instance, each with

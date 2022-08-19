@@ -21,6 +21,7 @@
     "prepare": "husky install",
     "localenv": "docker compose -f ./infrastructure/local/docker-compose.yml -f ./infrastructure/local/peer-docker-compose.yml",
     "localenv:seed:auth": "pnpm -C ./packages/auth knex seed:run --env=development && pnpm -C ./packages/auth knex seed:run --env=peerdevelopment",
+    "localenv:dbvolumes:remove": "docker volume rm local_database-data && docker volume rm local_tigerbeetle-data",
     "sanity": "pnpm -r build && pnpm -r test"
   },
   "devDependencies": {

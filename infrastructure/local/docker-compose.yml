@@ -8,6 +8,9 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
+    depends_on:
+      - tigerbeetle
+      - database
   mock-account-provider:
     build:
       context: ../..
@@ -57,6 +60,8 @@ services:
       REDIS_URL: redis://redis:6379
     depends_on:
       - tigerbeetle
+      - database
+      - redis
   rates:
     image: ghcr.io/interledger/rafiki-rates:latest
     restart: always
