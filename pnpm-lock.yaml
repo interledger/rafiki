@@ -179,7 +179,7 @@ importers:
       pino: ^8.4.1
       pino-pretty: ^9.0.1
       raw-body: ^2.4.1
-      react: '17.0'
+      react: ~18.2.0
       rosie: ^2.1.0
       testcontainers: ^7.20.4
       tigerbeetle-node: ^0.6.0
@@ -188,7 +188,7 @@ importers:
       uuid: ^8.3.2
     dependencies:
       '@adonisjs/fold': 8.2.0
-      '@apollo/client': 3.6.9_77h5kg6422vos5a7c32osaaxh4
+      '@apollo/client': 3.6.9_o264z5epwuajru7y4dsijkqr44
       '@faker-js/faker': 7.4.0
       '@graphql-tools/graphql-file-loader': 7.5.2_graphql@15.8.0
       '@graphql-tools/load': 7.7.4_graphql@15.8.0
@@ -213,7 +213,7 @@ importers:
       graphile-worker: 0.10.0
       graphql: 15.8.0
       graphql-scalars: 1.18.0_graphql@15.8.0
-      graphql-tools: 8.3.3_77h5kg6422vos5a7c32osaaxh4
+      graphql-tools: 8.3.3_o264z5epwuajru7y4dsijkqr44
       ilp-packet: 3.1.3
       ilp-protocol-ccp: 1.2.3
       ilp-protocol-ildcp: 2.2.3
@@ -257,7 +257,7 @@ importers:
       nock: 13.2.9
       node-mocks-http: 1.11.0
       openapi-types: 12.0.0
-      react: 17.0.2
+      react: 18.2.0
       rosie: 2.1.0
       testcontainers: 7.24.0
       tmp: 0.2.1
@@ -416,7 +416,7 @@ packages:
       js-yaml: 4.1.0
     dev: false
 
-  /@apollo/client/3.6.9_77h5kg6422vos5a7c32osaaxh4:
+  /@apollo/client/3.6.9_o264z5epwuajru7y4dsijkqr44:
     resolution: {integrity: sha512-Y1yu8qa2YeaCUBVuw08x8NHenFi0sw2I3KCu7Kw9mDSu86HmmtHJkCAifKVrN2iPgDTW/BbP3EpSV8/EQCcxZA==}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
@@ -440,7 +440,7 @@ packages:
       hoist-non-react-statics: 3.3.2
       optimism: 0.16.1
       prop-types: 15.8.1
-      react: 17.0.2
+      react: 18.2.0
       symbol-observable: 4.0.0
       ts-invariant: 0.10.3
       tslib: 2.4.0
@@ -6561,7 +6561,7 @@ packages:
       uuid: 3.4.0
     dev: false
 
-  /graphql-tools/8.3.3_77h5kg6422vos5a7c32osaaxh4:
+  /graphql-tools/8.3.3_o264z5epwuajru7y4dsijkqr44:
     resolution: {integrity: sha512-p9ynDqcrzO20I4PFln6e2rhR7vEzb6a5FcBw04qwuDGqD1jVxIXmN5w5RUl+sSB+HcoOD1czMuZz5LNYJ3LIIg==}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
@@ -6570,7 +6570,7 @@ packages:
       graphql: 15.8.0
       tslib: 2.4.0
     optionalDependencies:
-      '@apollo/client': 3.6.9_77h5kg6422vos5a7c32osaaxh4
+      '@apollo/client': 3.6.9_o264z5epwuajru7y4dsijkqr44
     transitivePeerDependencies:
       - graphql-ws
       - react
@@ -9672,12 +9672,11 @@ packages:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
     dev: true
 
-  /react/17.0.2:
-    resolution: {integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==}
+  /react/18.2.0:
+    resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
     engines: {node: '>=0.10.0'}
     dependencies:
       loose-envify: 1.4.0
-      object-assign: 4.1.1
 
   /read-pkg-up/7.0.1:
     resolution: {integrity: sha512-zK0TB7Xd6JpCLmlLmufqykGE+/TlOePD6qKClNW7hHDKFh/J7/7gCWGR7joEQEW1bKq3a3yUZSObOoWLFQ4ohg==}
