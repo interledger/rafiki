@@ -13,7 +13,7 @@ import { TransactionOrKnex } from 'objection'
 import { PaymentPointerService } from '../../payment_pointer/service'
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
-import { parse, end } from 'iso8601-duration'
+import { end, parse } from 'iso8601-duration'
 import { uuid } from '../../../connector/core'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
@@ -268,9 +268,12 @@ async function getPaymentPointerPage(
         assetScale: payment.asset.scale
       }
     } catch (_) {
-      deps.logger.error({ payment: payment.id }, 'account not found')
+      deps.logger.error(
+        { payment: payment.id },
+        'incoming payment account not found'
+      )
       throw new Error(
-        `Underlying TB account not found, payment id: ${payment.id}`
+        `Underlying TB account not found, incoming payment id: ${payment.id}`
       )
     }
     return payment

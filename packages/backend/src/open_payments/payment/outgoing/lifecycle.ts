@@ -154,8 +154,16 @@ export const sendWebhookEvent = async (
   payment: OutgoingPayment,
   type: PaymentEventType
 ): Promise<void> => {
-  const amountSent = await deps.accountingService.getTotalSent(payment.id)
-  const balance = await deps.accountingService.getBalance(payment.id)
+  // Tigerbeetle accounts are only created as the OutgoingPayment is funded.
+  // So default the amountSent and balance to 0 for outgoing payments still in the funding state
+  const pendingZeroOrUndefined =
+    payment.state === OutgoingPaymentState.Funding ? BigInt(0) : undefined
+  const amountSent =
+    (await deps.accountingService.getTotalSent(payment.id)) ||
+    pendingZeroOrUndefined
+  const balance =
+    (await deps.accountingService.getBalance(payment.id)) ||
+    pendingZeroOrUndefined
   if (amountSent === undefined || balance === undefined) {
     throw LifecycleError.MissingBalance
   }

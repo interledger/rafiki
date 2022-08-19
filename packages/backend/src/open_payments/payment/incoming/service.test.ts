@@ -444,7 +444,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.getPaymentPointerPage(paymentPointerId, {})
       ).rejects.toThrowError(
-        `Underlying TB account not found, payment id: ${payment.id}`
+        `Underlying TB account not found, incoming payment id: ${payment.id}`
       )
     })
   })

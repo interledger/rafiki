@@ -187,14 +187,15 @@ describe('OutgoingPaymentService', (): void => {
   ) {
     if (amountSent !== undefined) {
       expect(payment.sentAmount.value).toEqual(amountSent)
+      await expect(accountingService.getTotalSent(payment.id)).resolves.toBe(
+        payment.sentAmount.value
+      )
     }
-    await expect(accountingService.getTotalSent(payment.id)).resolves.toBe(
-      payment.sentAmount.value
-    )
+
     if (amountDelivered !== undefined) {
       expect(amtDelivered).toEqual(amountDelivered)
     }
-    if (accountBalance !== undefined) {
+    if (accountBalance !== undefined && accountBalance > 0) {
       await expect(accountingService.getBalance(payment.id)).resolves.toEqual(
         accountBalance
       )
@@ -275,29 +276,6 @@ describe('OutgoingPaymentService', (): void => {
   describe('get', (): void => {
     it('returns undefined when no payment exists', async () => {
       await expect(outgoingPaymentService.get(uuid())).resolves.toBeUndefined()
-    })
-
-    it('throws if no TB account found', async (): Promise<void> => {
-      const quote = await createQuote(deps, {
-        paymentPointerId,
-        receiver,
-        sendAmount
-      })
-      const options = {
-        paymentPointerId,
-        quoteId: quote.id,
-        description: 'rent',
-        externalRef: '202201'
-      }
-      const payment = await outgoingPaymentService.create(options)
-      assert.ok(!isOutgoingPaymentError(payment))
-
-      jest
-        .spyOn(accountingService, 'getTotalSent')
-        .mockResolvedValueOnce(undefined)
-      await expect(outgoingPaymentService.get(payment.id)).rejects.toThrowError(
-        `Underlying TB account not found, payment id: ${payment.id}`
-      )
     })
   })
 
