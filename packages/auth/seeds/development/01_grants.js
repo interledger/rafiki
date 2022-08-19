@@ -12,7 +12,7 @@ exports.seed = function (knex) {
           finishMethod: 'redirect',
           finishUri: 'https://example.com/finish',
           clientNonce: 'example-client-nonce',
-          clientKeyId: 'https://example.com/key',
+          clientKeyId: 'http://mock-account-provider:1337/keys/1234',
           interactId: 'example-interact-id',
           interactRef: 'exmaple-interact-ref',
           interactNonce: 'example-interact-nonce',

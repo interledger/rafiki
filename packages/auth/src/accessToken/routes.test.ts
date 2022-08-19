@@ -193,7 +193,7 @@ describe('Access Token Routes', (): void => {
 
     test('Successfully introspects expired token', async (): Promise<void> => {
       const now = new Date(new Date().getTime() + 4000)
-      jest.useFakeTimers('modern')
+      jest.useFakeTimers()
       jest.setSystemTime(now)
       const ctx = createContext(
         {

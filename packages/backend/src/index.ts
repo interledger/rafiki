@@ -426,7 +426,7 @@ export const start = async (
   const knex = await container.use('knex')
   await knex.migrate
     .latest({
-      directory: './packages/backend/migrations'
+      directory: __dirname + '/../migrations'
     })
     .catch((error): void => {
       logger.error({ error: error.message }, 'error migrating database')

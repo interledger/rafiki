@@ -16,6 +16,7 @@ export async function startTigerbeetleContainer(
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+    .withPrivilegedMode()
     .withCmd([
       'init',
       '--cluster=' + clusterId,
@@ -30,6 +31,7 @@ export async function startTigerbeetleContainer(
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+    .withPrivilegedMode()
     .withCmd([
       'start',
       '--cluster=' + clusterId,

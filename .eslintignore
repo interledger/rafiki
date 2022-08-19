@@ -1,5 +1,3 @@
-.yarn/*
-.pnp.js
 .next
 public
 generated
