@@ -23,6 +23,7 @@ export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {
   port: number
+  openPaymentsPort: number
   app: App
   knex: Knex
   apolloClient: ApolloClient<NormalizedCacheObject>
@@ -35,6 +36,7 @@ export const createTestApp = async (
 ): Promise<TestContainer> => {
   const config = await container.use('config')
   config.port = 0
+  config.openPaymentsPort = 0
   config.connectorPort = 0
   config.publicHost = 'https://wallet.example'
   const logger = createLogger({
@@ -143,6 +145,7 @@ export const createTestApp = async (
   return {
     app,
     port: app.getPort(),
+    openPaymentsPort: app.getOpenPaymentsPort(),
     knex,
     apolloClient: client,
     connectionUrl: config.databaseUrl,

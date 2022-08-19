@@ -138,6 +138,7 @@ export interface AppServices {
 export type AppContainer = IocContract<AppServices>
 
 export class App {
+  private openPaymentsServer!: Server
   private server!: Server
   public apolloServer!: ApolloServer
   public closeEmitter!: EventEmitter
@@ -235,6 +236,37 @@ export class App {
         }
       }
     })
+
+    koa.use(this.apolloServer.getMiddleware())
+
+    this.server = koa.listen(port)
+  }
+
+  public async startOpenPaymentsServer(port: number | string): Promise<void> {
+    const koa = new Koa<DefaultState, AppContext>()
+
+    koa.context.container = this.container
+    koa.context.closeEmitter = await this.container.use('closeEmitter')
+    koa.context.logger = await this.container.use('logger')
+
+    koa.use(
+      async (
+        ctx: {
+          status: number
+          set: (arg0: string, arg1: string) => void
+          body: string
+        },
+        next: () => void | PromiseLike<void>
+      ): Promise<void> => {
+        if (this.isShuttingDown) {
+          ctx.status = 503
+          ctx.set('Connection', 'close')
+          ctx.body = 'Server is in the process of restarting'
+        } else {
+          return next()
+        }
+      }
+    )
 
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
@@ -353,17 +385,19 @@ export class App {
     }
 
     koa.use(router.routes())
-    koa.use(this.apolloServer.getMiddleware())
 
-    this.server = koa.listen(port)
+    this.openPaymentsServer = koa.listen(port)
   }
 
   public async shutdown(): Promise<void> {
     return new Promise((resolve): void => {
-      if (this.server) {
+      if (this.openPaymentsServer) {
         this.isShuttingDown = true
         this.closeEmitter.emit('shutdown')
         this.server.close((): void => {
+          resolve()
+        })
+        this.openPaymentsServer.close((): void => {
           resolve()
         })
       } else {
@@ -374,6 +408,14 @@ export class App {
 
   public getPort(): number {
     const address = this.server?.address()
+    if (address && !(typeof address == 'string')) {
+      return address.port
+    }
+    return 0
+  }
+
+  public getOpenPaymentsPort(): number {
+    const address = this.openPaymentsServer.address()
     if (address && !(typeof address == 'string')) {
       return address.port
     }
