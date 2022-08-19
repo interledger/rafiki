@@ -434,7 +434,7 @@ describe('OutgoingPaymentService', (): void => {
     describe('validateGrant', (): void => {
       let quote: Quote
       let options: CreateOutgoingPaymentOptions
-      let start: Date
+      let interval: string
       beforeEach(
         async (): Promise<void> => {
           quote = await createQuote(deps, {
@@ -448,7 +448,8 @@ describe('OutgoingPaymentService', (): void => {
             description: 'rent',
             externalRef: '202201'
           }
-          start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+          const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+          interval = `R0/${start.toISOString()}/P1M`
         }
       )
       test('fails if grant limits interval does not cover now', async (): Promise<void> => {
@@ -488,7 +489,7 @@ describe('OutgoingPaymentService', (): void => {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
                 identifier: `${Config.publicHost}/${accountId}`,
-                limits: { ...limits, interval: `R0/${start.toISOString()}/P1M` }
+                limits: { ...limits, interval }
               }
             ]
           })
@@ -524,11 +525,11 @@ describe('OutgoingPaymentService', (): void => {
                 limits: sendAmount
                   ? {
                       sendAmount: amount,
-                      interval: `R0/${start.toISOString()}/P1M`
+                      interval
                     }
                   : {
                       receiveAmount: amount,
-                      interval: `R0/${start.toISOString()}/P1M`
+                      interval
                     }
               }
             ]
@@ -567,7 +568,7 @@ describe('OutgoingPaymentService', (): void => {
                 limits: {
                   sendAmount: sendAmount ? grantAmount : undefined,
                   receiveAmount: sendAmount ? undefined : grantAmount,
-                  interval: `R0/${start.toISOString()}/P1M`
+                  interval
                 }
               }
             ]
@@ -662,15 +663,14 @@ describe('OutgoingPaymentService', (): void => {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
                 identifier: `${Config.publicHost}/${accountId}`,
-                interval: `R0/${start.toISOString()}/P1M`,
                 limits: sendAmount
                   ? {
                       sendAmount: grantAmount,
-                      interval: `R0/${start.toISOString()}/P1M`
+                      interval
                     }
                   : {
                       receiveAmount: grantAmount,
-                      interval: `R0/${start.toISOString()}/P1M`
+                      interval
                     }
               }
             ]
