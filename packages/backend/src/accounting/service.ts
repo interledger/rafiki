@@ -357,10 +357,10 @@ export async function createTransfer(
           return {
             ...transfer,
             timeout: undefined,
-            pendingId: transfer.id,
-            commit: true
+            pendingId: transfer.id
           }
-        })
+        }),
+        true // <- commit
       )
       if (error) {
         return error.error
@@ -384,10 +384,10 @@ export async function createTransfer(
           return {
             ...transfer,
             timeout: undefined,
-            pendingId: transfer.id,
-            commit: false
+            pendingId: transfer.id
           }
-        })
+        }),
+        false // <- rollback
       )
       if (error) {
         return error.error
@@ -454,9 +454,9 @@ async function rollbackAccountWithdrawal(
     deps,
     [
       {
-        id: Number(transfers[0].id),
-        sourceAccountId: Number(transfers[0].debit_account_id),
-        destinationAccountId: Number(transfers[0].credit_account_id),
+        pendingId: transfers[0].id,
+        sourceAccountId: transfers[0].debit_account_id,
+        destinationAccountId: transfers[0].credit_account_id,
         amount: transfers[0].amount,
         ledger: transfers[0].ledger
       }
@@ -482,9 +482,9 @@ async function commitAccountWithdrawal(
     deps,
     [
       {
-        id: Number(transfers[0].id),
-        sourceAccountId: Number(transfers[0].debit_account_id),
-        destinationAccountId: Number(transfers[0].credit_account_id),
+        pendingId: transfers[0].id,
+        sourceAccountId: transfers[0].debit_account_id,
+        destinationAccountId: transfers[0].credit_account_id,
         amount: transfers[0].amount,
         ledger: transfers[0].ledger
       }

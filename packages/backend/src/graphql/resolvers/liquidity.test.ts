@@ -612,7 +612,7 @@ describe('Liquidity Resolvers', (): void => {
         accountingService.createDeposit({
           id,
           account: peer,
-          amount: BigInt(10)
+          amount: 10n
         })
       ).resolves.toBeUndefined()
       const response = await appContainer.apolloClient

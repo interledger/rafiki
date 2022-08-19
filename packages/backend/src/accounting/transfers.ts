@@ -17,13 +17,13 @@ type TransfersError = {
 }
 
 export interface CreateTransferOptions {
-  id?: string | number
+  id?: string | bigint
   sourceAccountId: AccountId
   destinationAccountId: AccountId
   amount: bigint
   ledger: number
   timeout?: bigint
-  pendingId?: string | number
+  pendingId?: string | bigint
 }
 
 export async function createTransfers(
@@ -43,10 +43,12 @@ export async function createTransfers(
     }
     if (transfer.pendingId && commit === true) {
       flags |= TransferFlags.post_pending_transfer
+      transfer.id = uuid()
     } else if (transfer.pendingId && commit === false) {
       flags |= TransferFlags.void_pending_transfer
+      transfer.id = uuid()
     } else {
-      transfer.pendingId = 0
+      transfer.pendingId = 0n
     }
     if (i < transfers.length - 1) {
       flags |= TransferFlags.linked
@@ -72,6 +74,18 @@ export async function createTransfers(
       case CreateTransferErrorCode.linked_event_failed:
         break
       // 1st phase
+      // TODO @jason: This needs to be removed: =========>
+      case 13: //debit_account_not_found,
+        return { index, error: TransferError.UnknownSourceAccount }
+      case 14: //credit_account_not_found,
+        return { index, error: TransferError.UnknownDestinationAccount }
+      case 17: //exists_with_different_flags,
+        return { index, error: TransferError.TransferExists }
+      case 32: //exceeds_credits
+        return { index, error: TransferError.InsufficientBalance }
+      case 33: //exceeds_debits
+        return { index, error: TransferError.InsufficientDebitBalance }
+      // TODO @jason: stop ==============================>
       case CreateTransferErrorCode.exists:
       case CreateTransferErrorCode.exists_with_different_debit_account_id:
       case CreateTransferErrorCode.exists_with_different_credit_account_id:
@@ -111,6 +125,34 @@ export async function createTransfers(
       case CreateTransferErrorCode.pending_transfer_already_voided:
         return { index, error: TransferError.AlreadyRolledBack }
       default:
+        // TODO @jason: This needs to be removed: =========>
+        switch (code) {
+          case 39:
+            return { index, error: TransferError.UnknownTransfer } //pending_transfer_not_found
+          case 40:
+            return {
+              //pending_transfer_not_pending
+              index,
+              error: commit
+                ? TransferError.AlreadyCommitted
+                : TransferError.AlreadyRolledBack
+            }
+          case 47:
+            return { index, error: TransferError.AlreadyCommitted } //pending_transfer_already_posted,
+          case 48:
+            return { index, error: TransferError.AlreadyRolledBack } //pending_transfer_already_voided,
+        }
+
+        if (commit === true || commit == false) {
+          const lookupIds = tbTransfers.map((ac) => ac.pending_id)
+          const existingTransfers = await deps.tigerbeetle.lookupTransfers(
+            lookupIds
+          )
+          console.log(existingTransfers)
+        }
+
+        // TODO @jason: stop ==============================>
+
         throw new CreateTransferError(code)
     }
   }

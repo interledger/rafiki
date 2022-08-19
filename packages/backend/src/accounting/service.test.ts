@@ -34,7 +34,7 @@ describe('Accounting Service', (): void => {
   let accountingService: AccountingService
   let accountFactory: AccountFactory
   let tigerbeetleContainer: StartedTestContainer
-  const timeout = BigInt(10_000) // 10 seconds
+  const timeout = 10_000n // 10 seconds
   const messageProducer = new GraphileProducer()
   const mockMessageProducer = {
     send: jest.fn()
