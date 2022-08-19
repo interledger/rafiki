@@ -87,10 +87,13 @@ common configurations.
 
 ```sh
 # set up two instances of Rafiki
-pnpm run localenv
+pnpm localenv up -d
 
 # seed the postgres databases with the auth data creating an admin token
-pnpm run localenv:seed:auth
+pnpm localenv:seed:auth
+
+# tear down
+pnpm localenv down
 ```
 
 The local environment consists of a primary Rafiki instance and a peer Rafiki instance, each with
