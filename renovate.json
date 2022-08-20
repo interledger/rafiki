@@ -5,7 +5,7 @@
   "branchConcurrentLimit": 0,
   "branchPrefix": "renovate-",
   "prHourlyLimit": 1,
-  "rangeStrategy": "bump",
+  "rangeStrategy": "update-lockfile",
   "prCreation": "status-success",
   "draftPR": true
 }
