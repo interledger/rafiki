@@ -5,7 +5,7 @@
   "branchConcurrentLimit": 0,
   "branchPrefix": "renovate-",
   "prHourlyLimit": 1,
-  "rangeStrategy": "update-lockfile",
+  "rangeStrategy": "bump",
   "prCreation": "status-success",
   "docker": {
     "enabled": false
