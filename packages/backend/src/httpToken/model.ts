@@ -11,7 +11,7 @@ export class HttpToken extends BaseModel {
   static relationMappings = {
     peer: {
       relation: Model.HasOneRelation,
-      modelClass: join(__dirname, '../peer/model.ts'),
+      modelClass: join(__dirname, '../peer/model'),
       join: {
         from: 'httpTokens.peerId',
         to: 'peers.id'
