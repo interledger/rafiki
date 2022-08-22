@@ -20,7 +20,7 @@ describe('Rafiki Graphql', (): void => {
 
   test('graphql endpoint not exposed on /api/graphql', async (): Promise<void> => {
     const introspection = got.post(
-      `http://localhost:${appContainer.port}/api/graphql`,
+      `http://localhost:${appContainer.adminPort}/api/graphql`,
       {
         json: {
           query: `

@@ -249,7 +249,7 @@ describe('OutgoingPaymentService', (): void => {
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingAccount = `${config.publicHost}/${destinationAccount.id}`
+    receivingAccount = `${config.openPaymentsUrl}/${destinationAccount.id}`
     const incomingPayment = await createIncomingPayment(deps, {
       accountId: receiverAccountId
     })
