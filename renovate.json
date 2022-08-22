@@ -7,5 +7,5 @@
   "prHourlyLimit": 1,
   "rangeStrategy": "update-lockfile",
   "prCreation": "status-success",
-  "draftPR": true
+  "enabledManagers": ["pnpm"]
 }
