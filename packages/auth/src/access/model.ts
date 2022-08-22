@@ -12,7 +12,7 @@ export class Access extends BaseModel {
   static relationMappings = () => ({
     grant: {
       relation: Model.HasOneRelation,
-      modelClass: join(__dirname, '../grant/model.ts'),
+      modelClass: join(__dirname, '../grant/model'),
       join: {
         from: 'accesses.grantId',
         to: 'grants.id'
