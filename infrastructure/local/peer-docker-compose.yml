@@ -15,6 +15,7 @@ services:
     ports:
       - "4001:3001"
       - "4002:3002"
+      - "4003:3003"
     networks:
       rafiki:
     environment:
@@ -22,6 +23,7 @@ services:
       LOG_LEVEL: debug
       PORT: 3001
       CONNECTOR_PORT: 3002
+      OPEN_PAYMENTS_PORT: 3003
       DATABASE_URL: postgresql://peerbackend:peerbackend@database/peerbackend
       TIGERBEETLE_CLUSTER_ID: 0
       # Tigerbeetle will support DNS in future
@@ -33,6 +35,7 @@ services:
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
       PUBLIC_HOST: rafiki.peer
+      OPEN_PAYMENTS_URL: op.rafiki.peer
       WEBHOOK_URL: https://end3sf6r22xva.x.pipedream.net
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml
