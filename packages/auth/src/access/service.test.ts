@@ -117,12 +117,4 @@ describe('Access Service', (): void => {
     expect(access[0].type).toEqual(AccessType.OutgoingPayment)
     expect(access[0].limits).toEqual(outgoingPaymentLimit)
   })
-
-  test("Doesn't create anything if an empty array is passed", async (): Promise<void> => {
-    const grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
-
-    await expect(accessService.createAccess(grant.id, [])).rejects.toThrow(
-      'The query is empty'
-    )
-  })
 })
