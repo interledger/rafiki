@@ -6,7 +6,7 @@
   "branchPrefix": "renovate-",
   "prHourlyLimit": 1,
   "rangeStrategy": "bump",
-  "prCreation": "status-success",
+  "prCreation": "not-pending",
   "docker": {
     "enabled": false
   },
