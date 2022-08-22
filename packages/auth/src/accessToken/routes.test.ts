@@ -20,12 +20,12 @@ import {
   generateSigHeaders
 } from '../tests/signature'
 import {
-  TEST_KID_PATH,
-  KEY_REGISTRY_ORIGIN
+  KID_PATH,
+  KID_ORIGIN
 } from '../grant/routes.test'
 
 const TEST_JWK = {
-  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+  kid: KID_ORIGIN + KID_PATH,
   x: 'test-public-key',
   kty: 'OKP',
   alg: 'EdDSA',
@@ -76,7 +76,7 @@ describe('Access Token Routes', (): void => {
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+    clientKeyId: KID_ORIGIN + KID_PATH,
     interactId: v4(),
     interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
     interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -150,21 +150,11 @@ describe('Access Token Routes', (): void => {
         .createHash('sha256')
         .update(TEST_CLIENT_KEY.client.id)
         .digest('hex')
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
-        .reply(200, TEST_CLIENT_KEY)
-      const ctx = createContext(
-        {
-          headers: { Accept: 'application/json' },
-          url: '/introspect',
-          method: 'POST'
-        },
-        {}
-      )
-      ctx.request.body = {
-        access_token: token.value,
-        resource_server: 'test'
-      }
+      const scope = nock(KID_ORIGIN)
+        .get(KID_PATH)
+        .reply(200, {
+          keys: [TEST_CLIENT_KEY]
+        })
 
       const ctx = createContext(
         {
@@ -204,8 +194,8 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Successfully introspects expired token', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+      const scope = nock(KID_ORIGIN)
+        .get(KID_PATH)
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk]
         })
@@ -280,8 +270,8 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+      const scope = nock(KID_ORIGIN)
+        .get(KID_PATH)
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk]
         })
@@ -309,8 +299,8 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Returns status 204 if token has expired', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+      const scope = nock(KID_ORIGIN)
+        .get(KID_PATH)
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk]
         })

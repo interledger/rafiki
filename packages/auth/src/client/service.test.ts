@@ -17,9 +17,8 @@ import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessType, Action } from '../access/types'
-import { TEST_CLIENT_KEY } from '../grant/routes.test'
+import { KID_ORIGIN, TEST_CLIENT_KEY } from '../grant/routes.test'
 
-const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
   uri: 'https://example.com'
@@ -34,7 +33,7 @@ const TEST_CLIENT_KEY = {
     image: 'a link to an image',
     uri: TEST_CLIENT_DISPLAY.uri
   },
-  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+  kid: KID_ORIGIN + TEST_KID_PATH,
   x: 'hin88zzQxp79OOqIFNCME26wMiz0yqjzgkcBe0MW8pE',
   kty: 'OKP',
   alg: 'EdDSA',
@@ -161,7 +160,7 @@ describe('Client Service', (): void => {
       finishMethod: FinishMethod.Redirect,
       finishUri: 'https://example.com/finish',
       clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+      clientKeyId: KID_ORIGIN + TEST_KID_PATH,
       interactId: v4(),
       interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
       interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -217,7 +216,7 @@ describe('Client Service', (): void => {
     })
 
     test('Validate POST / request with middleware', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KID_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk],
@@ -250,7 +249,7 @@ describe('Client Service', (): void => {
     })
 
     test('Validate /introspect request with middleware', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KID_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk]
@@ -281,7 +280,7 @@ describe('Client Service', (): void => {
     })
 
     test('Validate DEL /token request with middleware', async () => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KID_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk]
@@ -355,7 +354,7 @@ describe('Client Service', (): void => {
     })
 
     test('httpsig middleware fails if headers are invalid', async () => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KID_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
           keys: [TEST_CLIENT_KEY.jwk]
@@ -395,7 +394,7 @@ describe('Client Service', (): void => {
     nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
     describe('Client Properties', (): void => {
       test('Can validate client properties with registry', async (): Promise<void> => {
-        const scope = nock(KEY_REGISTRY_ORIGIN)
+        const scope = nock(KID_ORIGIN)
           .get('/keys/correct')
           .reply(200, {
             ...TEST_CLIENT_KEY,
@@ -411,7 +410,7 @@ describe('Client Service', (): void => {
             proof: 'httpsig',
             jwk: {
               ...TEST_PUBLIC_KEY,
-              kid: KEY_REGISTRY_ORIGIN + '/keys/correct'
+              kid: KID_ORIGIN + '/keys/correct'
             }
           }
         })
@@ -421,7 +420,7 @@ describe('Client Service', (): void => {
       })
 
       test('Cannot validate client with incorrect display name', async (): Promise<void> => {
-        const scope = nock(KEY_REGISTRY_ORIGIN)
+        const scope = nock(KID_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
             ...TEST_CLIENT_KEY,
@@ -443,7 +442,7 @@ describe('Client Service', (): void => {
       })
 
       test('Cannot validate client with incorrect uri', async (): Promise<void> => {
-        const scope = nock(KEY_REGISTRY_ORIGIN)
+        const scope = nock(KID_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
             ...TEST_CLIENT_KEY,
@@ -466,7 +465,7 @@ describe('Client Service', (): void => {
     })
 
     test('Cannot validate client with kid that doesnt resolve', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN).get('/wrong').reply(200)
+      const scope = nock(KID_ORIGIN).get('/wrong').reply(200)
 
       const validClientKid = await clientService.validateClient({
         display: TEST_CLIENT_DISPLAY,
@@ -484,7 +483,7 @@ describe('Client Service', (): void => {
     })
 
     test('Cannot validate client with jwk that doesnt have a public key', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KID_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY,
@@ -569,7 +568,7 @@ describe('Client Service', (): void => {
     test('Cannot validate client with key that is not ready', async (): Promise<void> => {
       const futureDate = new Date()
       futureDate.setTime(futureDate.getTime() + 1000 * 60 * 60)
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KID_ORIGIN)
         .get('/keys/notready')
         .reply(200, {
           ...TEST_CLIENT_KEY,
@@ -584,7 +583,7 @@ describe('Client Service', (): void => {
           proof: 'httpsig',
           jwk: {
             ...TEST_PUBLIC_KEY,
-            kid: KEY_REGISTRY_ORIGIN + '/keys/notready'
+            kid: KID_ORIGIN + '/keys/notready'
           }
         }
       })
@@ -594,7 +593,7 @@ describe('Client Service', (): void => {
     })
 
     test('Cannot validate client with expired key', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KID_ORIGIN)
         .get('/keys/invalidclient')
         .reply(200, {
           ...TEST_CLIENT_KEY,
@@ -609,7 +608,7 @@ describe('Client Service', (): void => {
           proof: 'httpsig',
           jwk: {
             ...TEST_PUBLIC_KEY,
-            kid: KEY_REGISTRY_ORIGIN + '/keys/invalidclient'
+            kid: KID_ORIGIN + '/keys/invalidclient'
           }
         }
       })
@@ -619,7 +618,7 @@ describe('Client Service', (): void => {
     })
 
     test('Cannot validate client with revoked key', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KID_ORIGIN)
         .get('/keys/revoked')
         .reply(200, {
           ...TEST_CLIENT_KEY,
@@ -634,7 +633,7 @@ describe('Client Service', (): void => {
           proof: 'httpsig',
           jwk: {
             ...TEST_PUBLIC_KEY,
-            kid: KEY_REGISTRY_ORIGIN + '/keys/revoked'
+            kid: KID_ORIGIN + '/keys/revoked'
           }
         }
       })
