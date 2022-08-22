@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { Transaction } from 'knex'
+import { Knex } from 'knex'
 import { NotFoundError, UniqueViolationError } from 'objection'
 
 import { AssetError, isAssetError } from './errors'
@@ -25,9 +25,9 @@ export interface UpdateOptions {
 export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
-  get(asset: AssetOptions, trx?: Transaction): Promise<void | Asset>
+  get(asset: AssetOptions, trx?: Knex.Transaction): Promise<void | Asset>
   getOrCreate(asset: AssetOptions): Promise<Asset>
-  getById(id: string, trx?: Transaction): Promise<void | Asset>
+  getById(id: string, trx?: Knex.Transaction): Promise<void | Asset>
   getPage(pagination?: Pagination): Promise<Asset[]>
 }
 
@@ -108,7 +108,7 @@ async function updateAsset(
 async function getAsset(
   deps: ServiceDependencies,
   { code, scale }: AssetOptions,
-  trx?: Transaction
+  trx?: Knex.Transaction
 ): Promise<void | Asset> {
   return await Asset.query(trx || deps.knex).findOne({ code, scale })
 }
@@ -130,7 +130,7 @@ async function getOrCreateAsset(
 async function getAssetById(
   deps: ServiceDependencies,
   id: string,
-  trx?: Transaction
+  trx?: Knex.Transaction
 ): Promise<void | Asset> {
   return await Asset.query(trx || deps.knex).findById(id)
 }

@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { createContext } from '../tests/context'
 import { AppServices } from '../app'
 

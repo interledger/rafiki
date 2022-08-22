@@ -8,7 +8,7 @@ import { AccountingService } from '../../../accounting/service'
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
-import { Transaction } from 'knex'
+import { Knex } from 'knex'
 import { TransactionOrKnex } from 'objection'
 import { AccountService } from '../../account/service'
 import { Amount } from '../../amount'
@@ -36,7 +36,7 @@ export interface IncomingPaymentService {
   get(id: string): Promise<IncomingPayment | undefined>
   create(
     options: CreateIncomingPaymentOptions,
-    trx?: Transaction
+    trx?: Knex.Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
   complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
   getAccountPage(
@@ -96,7 +96,7 @@ async function createIncomingPayment(
     incomingAmount,
     externalRef
   }: CreateIncomingPaymentOptions,
-  trx?: Transaction
+  trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
   if (!expiresAt) {
     expiresAt = end(EXPIRY)

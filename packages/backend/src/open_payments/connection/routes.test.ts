@@ -1,6 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { makeWorkerUtils, WorkerUtils } from 'graphile-worker'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import jestOpenAPI from 'jest-openapi'
 import { v4 as uuid } from 'uuid'
 

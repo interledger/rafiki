@@ -1,5 +1,5 @@
 import assert from 'assert'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
