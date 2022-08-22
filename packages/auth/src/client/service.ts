@@ -153,9 +153,9 @@ function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
     }
   }
 
-  signatureBase += `"@signature-params": ${(ctx.headers[
-    'signature-input'
-  ] as string)?.replace('sig1=', '')}`
+  signatureBase += `"@signature-params": ${(
+    ctx.headers['signature-input'] as string
+  )?.replace('sig1=', '')}`
   return signatureBase
 }
 

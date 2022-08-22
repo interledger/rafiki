@@ -109,21 +109,19 @@ describe('Access Token Routes', (): void => {
     const url = '/introspect'
     const method = 'POST'
 
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
-        })
-        access = await Access.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_ACCESS
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN
-        })
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT
+      })
+      access = await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_ACCESS
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN
+      })
+    })
     test('Cannot introspect fake token', async (): Promise<void> => {
       const ctx = createContext(
         {
@@ -252,19 +250,17 @@ describe('Access Token Routes', (): void => {
 
     const method = 'DELETE'
 
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN
-        })
-        managementId = token.managementId
-        url = `/token/${managementId}`
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN
+      })
+      managementId = token.managementId
+      url = `/token/${managementId}`
+    })
 
     test('Returns status 204 even if token does not exist', async (): Promise<void> => {
       managementId = v4()

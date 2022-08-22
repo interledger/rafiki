@@ -90,28 +90,26 @@ describe('Access Token Service', (): void => {
   let grant: Grant
   let access: Access
   let token: AccessToken
-  beforeEach(
-    async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        continueId: v4(),
-        interactId: v4(),
-        interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
-      })
-      access = await Access.query(trx).insertAndFetch({
-        grantId: grant.id,
-        ...BASE_ACCESS
-      })
-      token = await AccessToken.query(trx).insertAndFetch({
-        grantId: grant.id,
-        ...BASE_TOKEN,
-        value: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        managementId: v4()
-      })
-    }
-  )
+  beforeEach(async (): Promise<void> => {
+    grant = await Grant.query(trx).insertAndFetch({
+      ...BASE_GRANT,
+      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      continueId: v4(),
+      interactId: v4(),
+      interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    })
+    access = await Access.query(trx).insertAndFetch({
+      grantId: grant.id,
+      ...BASE_ACCESS
+    })
+    token = await AccessToken.query(trx).insertAndFetch({
+      grantId: grant.id,
+      ...BASE_TOKEN,
+      value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      managementId: v4()
+    })
+  })
 
   describe('Create', (): void => {
     test('Can create access token', async (): Promise<void> => {
@@ -167,24 +165,22 @@ describe('Access Token Service', (): void => {
   describe('Revoke', (): void => {
     let grant: Grant
     let token: AccessToken
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT,
-          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-          continueId: v4(),
-          interactId: v4(),
-          interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN,
-          value: crypto.randomBytes(8).toString('hex').toUpperCase(),
-          managementId: v4()
-        })
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT,
+        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        continueId: v4(),
+        interactId: v4(),
+        interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN,
+        value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        managementId: v4()
+      })
+    })
     test('Can revoke un-expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
       const result = await accessTokenService.revoke(token.managementId)
@@ -212,28 +208,26 @@ describe('Access Token Service', (): void => {
     let grant: Grant
     let token: AccessToken
     let originalTokenValue: string
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT,
-          continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
-          interactId: v4(),
-          interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-          interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
-        })
-        await Access.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_ACCESS
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN,
-          value: crypto.randomBytes(8).toString('hex').toUpperCase(),
-          managementId: v4()
-        })
-        originalTokenValue = token.value
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT,
+        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        interactId: v4(),
+        interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+      })
+      await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_ACCESS
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN,
+        value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        managementId: v4()
+      })
+      originalTokenValue = token.value
+    })
 
     test('Can rotate un-expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: 1000000 })

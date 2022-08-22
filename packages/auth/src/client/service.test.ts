@@ -186,41 +186,35 @@ describe('Client Service', (): void => {
       expiresIn: 3600
     }
 
-    beforeAll(
-      async (): Promise<void> => {
-        knex = await deps.use('knex')
-      }
-    )
+    beforeAll(async (): Promise<void> => {
+      knex = await deps.use('knex')
+    })
 
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
-        })
-        await Access.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_ACCESS
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN
-        })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        next = jest.fn(async function (): Promise<any> {
-          return null
-        })
+    beforeEach(async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT
+      })
+      await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_ACCESS
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      next = jest.fn(async function (): Promise<any> {
+        return null
+      })
 
-        managementId = token.managementId
-        tokenManagementUrl = `/token/${managementId}`
-      }
-    )
+      managementId = token.managementId
+      tokenManagementUrl = `/token/${managementId}`
+    })
 
-    afterEach(
-      async (): Promise<void> => {
-        jest.useRealTimers()
-        await truncateTables(knex)
-      }
-    )
+    afterEach(async (): Promise<void> => {
+      jest.useRealTimers()
+      await truncateTables(knex)
+    })
 
     test('Validate POST / request with middleware', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
