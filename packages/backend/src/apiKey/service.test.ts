@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { ApiKeyService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'

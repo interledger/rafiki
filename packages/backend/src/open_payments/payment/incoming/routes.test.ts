@@ -1,7 +1,7 @@
 import * as httpMocks from 'node-mocks-http'
 import jestOpenAPI from 'jest-openapi'
 import base64url from 'base64url'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../../tests/context'

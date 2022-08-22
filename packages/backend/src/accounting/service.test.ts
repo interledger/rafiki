@@ -1,5 +1,5 @@
 import assert from 'assert'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'

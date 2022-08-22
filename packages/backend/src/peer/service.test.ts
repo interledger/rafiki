@@ -1,6 +1,6 @@
 import assert from 'assert'
 import { faker } from '@faker-js/faker'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { isPeerError, PeerError } from './errors'

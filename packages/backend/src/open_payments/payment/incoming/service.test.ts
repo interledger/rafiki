@@ -1,5 +1,5 @@
 import assert from 'assert'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { IncomingPaymentService } from './service'

@@ -1,5 +1,5 @@
 import assert from 'assert'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { createTestApp, TestContainer } from '../tests/app'
