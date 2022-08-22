@@ -460,13 +460,15 @@ describe('OutgoingPaymentService', (): void => {
           grant
         }
       })
-      const payments = await Promise.all(
-        options.map(async (option) => {
-          return await outgoingPaymentService.create(option)
-        })
+      await expect(
+        Promise.all(
+          options.map(async (option) => {
+            return await outgoingPaymentService.create(option)
+          })
+        )
+      ).rejects.toThrowError(
+        'Defined query timeout of 5000ms exceeded when running query.'
       )
-      expect(payments[0]).toBeInstanceOf(OutgoingPayment)
-      expect(payments[1]).toEqual(OutgoingPaymentError.GrantLocked)
     })
     describe('validateGrant', (): void => {
       let quote: Quote

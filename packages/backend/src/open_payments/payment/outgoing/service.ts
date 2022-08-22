@@ -187,7 +187,8 @@ async function createOutgoingPayment(
     } else if (isOutgoingPaymentError(err)) {
       return err
     } else if (err instanceof KnexTimeoutError) {
-      return OutgoingPaymentError.GrantLocked
+      deps.logger.error({ grant: options.grant.grant }, 'grant locked')
+      throw err
     }
     throw err
   }
