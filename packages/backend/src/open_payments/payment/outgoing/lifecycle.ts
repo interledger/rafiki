@@ -18,10 +18,11 @@ export async function handleSending(
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
 
-  const destination = await Pay.setupPayment({
-    plugin,
-    destinationPayment: payment.receiver
-  })
+  const destination = await deps.setupPaymentService.setupPayment(
+    payment.receiver,
+    'TODO GNAP TOKEN',
+    plugin
+  )
 
   if (!destination.destinationPaymentDetails) {
     throw LifecycleError.MissingIncomingPayment

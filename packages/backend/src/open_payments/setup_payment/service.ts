@@ -1,8 +1,13 @@
 import assert from 'assert'
 import axios from 'axios'
 import { Logger } from 'pino'
-import { IncomingPaymentJSON } from '../../open_payments/payment/incoming/model'
+import {
+  IncomingPaymentJSON,
+  IlpStreamConnectionJSON
+} from '../../open_payments/payment/incoming/model'
 import { PaymentError } from '@interledger/pay'
+import { IlpPlugin } from '../../shared/ilp_plugin'
+import * as Pay from '@interledger/pay'
 
 import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
 
@@ -11,11 +16,11 @@ export interface SetupPaymentService {
     url: string,
     token: string
   ): Promise<IncomingPaymentJSON | PaymentError>
+  setupPayment(destinationPayment: string, gnapToken: string, plugin: IlpPlugin)
 }
 
 interface ServiceDependencies {
-  authServerIntrospectionUrl: string
-  authOpenApi: OpenAPI
+  openApi: OpenAPI
   logger: Logger
   validateResponse: ValidateFunction<IncomingPaymentJSON>
 }
@@ -26,10 +31,10 @@ export async function createSetupPaymentService(
   const log = deps_.logger.child({
     service: 'SetupPaymentService'
   })
-  const validateResponse = deps_.authOpenApi.createResponseValidator<IncomingPaymentJSON>(
+  const validateResponse = deps_.openApi.createResponseValidator<IncomingPaymentJSON>(
     {
       path: '/{accountId}/incoming-payments/{incomingPaymentId}',
-      method: HttpMethod.POST
+      method: HttpMethod.GET
     }
   )
   const deps: ServiceDependencies = {
@@ -49,45 +54,69 @@ export async function createSetupPaymentService(
     }
   }
 
+  const setupPayment = async (
+    incomingPaymentUrl: string,
+    gnapToken: string,
+    plugin: IlpPlugin
+  ): Promise<Pay.ResolvedPayment> => {
+    const incomingPayment = await queryIncomingPayment(
+      incomingPaymentUrl,
+      gnapToken
+    )
+    return await Pay.setupPayment({
+      plugin,
+      destinationAddress: (incomingPayment.ilpStreamConnection as IlpStreamConnectionJSON)
+        .ilpAddress,
+      sharedSecret: Buffer.from(
+        (incomingPayment.ilpStreamConnection as IlpStreamConnectionJSON)
+          .sharedSecret,
+        'base64'
+      )
+    })
+  }
+
   const queryIncomingPayment = async (
     url: string,
     token: string
-  ): Promise<IncomingPaymentJSON | PaymentError> => {
+  ): Promise<IncomingPaymentJSON> => {
     if (!createHttpUrl(url)) {
       console.log('destinationPayment query failed: URL not HTTP/HTTPS.')
-      return PaymentError.QueryFailed
+      throw new Error(PaymentError.QueryFailed)
     }
     const requestHeaders = {
       Authorization: `GNAP ${token}`,
       'Content-Type': 'application/json'
-      // TODO:
-      // 'Signature-Input': 'sig1=...'
-      // 'Signature': 'sig1=...'
-      // 'Digest': 'sha256=...'
     }
 
-    const { status, data } = await axios.post(
-      url,
-      {},
-      {
-        headers: requestHeaders,
-        validateStatus: (status) => status === 200
-      }
-    )
+    const { status, data } = await axios.get(url, {
+      headers: requestHeaders,
+      validateStatus: (status) => status === 200
+    })
 
-    assert.ok(
-      deps.validateResponse({
-        status,
-        body: data
-      })
-    )
-    if (!data.ilpStreamConnection.id) {
-      return PaymentError.QueryFailed
+    try {
+      assert.ok(
+        deps.validateResponse({
+          status,
+          body: data
+        })
+      )
+    } catch (_) {
+      throw new Error(PaymentError.QueryFailed)
+    }
+    // GET requests to the Incoming Payment should always
+    // return an ilpConnectionStream object that has
+    // an `id` attribute. but for list requests,
+    // the ilpStreamConnection attribute can be a string.
+    // This checks to make sure we've gotten the right kind
+    // of response.
+    if (data.ilpStreamConnection !== Object(data.ilpStreamConnection)) {
+      throw new Error(PaymentError.QueryFailed)
     }
     return data
   }
 
   return {
-    queryIncomingPayment
+    queryIncomingPayment,
+    setupPayment
   }
 }

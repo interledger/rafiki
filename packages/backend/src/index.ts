@@ -14,6 +14,7 @@ import { GraphileProducer } from './messaging/graphileProducer'
 import { createRatesService } from './rates/service'
 import { createQuoteRoutes } from './open_payments/quote/routes'
 import { createQuoteService } from './open_payments/quote/service'
+import { createSetupPaymentService } from './open_payments/setup_payment/service'
 import { createOutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
 import { createOutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import {
@@ -275,7 +276,15 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       accountService: await deps.use('accountService'),
+      setupPaymentService: await deps.use('setupPaymentService'),
       ratesService: await deps.use('ratesService')
+    })
+  })
+
+  container.singleton('setupPaymentService', async (deps) => {
+    return await createSetupPaymentService({
+      logger: await deps.use('logger'),
+      openApi: await deps.use('openApi')
     })
   })
   container.singleton('quoteRoutes', async (deps) => {
@@ -290,6 +299,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
+      setupPaymentService: await deps.use('setupPaymentService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       accountService: await deps.use('accountService'),
       peerService: await deps.use('peerService')
