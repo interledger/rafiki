@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import * as crypto from 'crypto'
 import { IocContract } from '@adonisjs/fold'

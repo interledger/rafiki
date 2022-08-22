@@ -1,7 +1,7 @@
 import assert from 'assert'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { WebhookEvent } from './model'

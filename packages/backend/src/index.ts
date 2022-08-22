@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { Server } from 'http'
 import createLogger from 'pino'
-import Knex from 'knex'
+import { knex } from 'knex'
 import { Model } from 'objection'
 import { makeWorkerUtils } from 'graphile-worker'
 import { Ioc, IocContract } from '@adonisjs/fold'
@@ -82,7 +82,7 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const config = await deps.use('config')
     logger.info({ msg: 'creating knex' })
-    const knex = Knex({
+    const db = knex({
       client: 'postgresql',
       connection: config.databaseUrl,
       pool: {
@@ -95,12 +95,12 @@ export function initIocContainer(
       }
     })
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
-    knex.client.driver.types.setTypeParser(
-      knex.client.driver.types.builtins.INT8,
+    db.client.driver.types.setTypeParser(
+      db.client.driver.types.builtins.INT8,
       'text',
       BigInt
     )
-    return knex
+    return db
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
   container.singleton('redis', async (deps): Promise<IORedis.Redis> => {

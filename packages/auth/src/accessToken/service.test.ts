@@ -1,6 +1,6 @@
 import nock from 'nock'
 import assert from 'assert'
-import Knex, { Transaction } from 'knex'
+import { Knex } from 'knex'
 import crypto from 'crypto'
 import { v4 } from 'uuid'
 
@@ -32,7 +32,7 @@ describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let trx: Transaction
+  let trx: Knex.Transaction
   let accessTokenService: AccessTokenService
 
   beforeAll(async (): Promise<void> => {

@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { IocContract } from '@adonisjs/fold'
 import createLogger from 'pino'
 

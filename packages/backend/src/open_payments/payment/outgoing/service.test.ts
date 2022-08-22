@@ -1,6 +1,6 @@
 import assert from 'assert'
 import nock from 'nock'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import * as Pay from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 
