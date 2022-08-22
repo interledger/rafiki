@@ -128,9 +128,15 @@ export class App {
       ctx.body = 'OK'
     })
 
-    this.router.post('/quote', (ctx: AppContext): void => {
+    this.router.post('/quotes', (ctx: AppContext): void => {
+      console.log('received quote: ', JSON.stringify(ctx.request.body))
       ctx.status = 201
       ctx.body = ctx.request.body
+    })
+
+    this.router.post('/webhooks', (ctx: AppContext): void => {
+      console.log('received webhook:', JSON.stringify(ctx.request.body))
+      ctx.status = 200
     })
 
     this.router.get('(.*)', (ctx: AppContext): void => {
