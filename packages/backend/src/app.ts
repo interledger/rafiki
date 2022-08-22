@@ -139,7 +139,7 @@ export type AppContainer = IocContract<AppServices>
 
 export class App {
   private openPaymentsServer!: Server
-  private server!: Server
+  private adminServer!: Server
   public apolloServer!: ApolloServer
   public closeEmitter!: EventEmitter
   public isShuttingDown = false
@@ -178,7 +178,7 @@ export class App {
     }
   }
 
-  public async startServer(port: number | string): Promise<void> {
+  public async startAdminServer(port: number | string): Promise<void> {
     const koa = new Koa<DefaultState, AppContext>()
 
     koa.context.container = this.container
@@ -239,7 +239,7 @@ export class App {
 
     koa.use(this.apolloServer.getMiddleware())
 
-    this.server = koa.listen(port)
+    this.adminServer = koa.listen(port)
   }
 
   public async startOpenPaymentsServer(port: number | string): Promise<void> {
@@ -394,7 +394,7 @@ export class App {
       if (this.openPaymentsServer) {
         this.isShuttingDown = true
         this.closeEmitter.emit('shutdown')
-        this.server.close((): void => {
+        this.adminServer.close((): void => {
           resolve()
         })
         this.openPaymentsServer.close((): void => {
@@ -406,8 +406,8 @@ export class App {
     })
   }
 
-  public getPort(): number {
-    const address = this.server?.address()
+  public getAdminPort(): number {
+    const address = this.adminServer?.address()
     if (address && !(typeof address == 'string')) {
       return address.port
     }

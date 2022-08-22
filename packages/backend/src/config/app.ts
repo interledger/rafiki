@@ -28,7 +28,7 @@ export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   // publicHost is for open payments URLs.
   publicHost: envString('PUBLIC_HOST', 'http://127.0.0.1:3001'),
-  port: envInt('PORT', 3001),
+  adminPort: envInt('ADMIN_PORT', 3001),
   openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3003'),
   openPaymentsPort: envInt('OPEN_PAYMENTS_PORT', 3003),
   connectorPort: envInt('CONNECTOR_PORT', 3002),

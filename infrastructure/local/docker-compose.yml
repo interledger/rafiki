@@ -34,7 +34,7 @@ services:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      PORT: 3001
+      ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 3003
       DATABASE_URL: postgresql://backend:backend@database/backend

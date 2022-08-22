@@ -22,7 +22,7 @@ import { Grant, AccessAction, AccessType } from '../open_payments/auth/grant'
 export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {
-  port: number
+  adminPort: number
   openPaymentsPort: number
   app: App
   knex: Knex
@@ -35,7 +35,7 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
-  config.port = 0
+  config.adminPort = 0
   config.openPaymentsPort = 0
   config.connectorPort = 0
   config.publicHost = 'https://wallet.example'
@@ -100,7 +100,7 @@ export const createTestApp = async (
   const knex = await container.use('knex')
 
   const httpLink = createHttpLink({
-    uri: `http://localhost:${app.getPort()}/graphql`,
+    uri: `http://localhost:${app.getAdminPort()}/graphql`,
     fetch
   })
   const errorLink = onError(({ graphQLErrors }) => {
@@ -145,7 +145,7 @@ export const createTestApp = async (
 
   return {
     app,
-    port: app.getPort(),
+    adminPort: app.getAdminPort(),
     openPaymentsPort: app.getOpenPaymentsPort(),
     knex,
     apolloClient: client,
