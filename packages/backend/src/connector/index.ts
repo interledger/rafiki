@@ -1,4 +1,4 @@
-import IORedis from 'ioredis'
+import Redis from 'ioredis'
 import { StreamServer } from '@interledger/stream-receiver'
 
 import {
@@ -29,7 +29,7 @@ import { RatesService } from '../rates/service'
 import { BaseService } from '../shared/baseService'
 
 interface ServiceDependencies extends BaseService {
-  redis: IORedis.Redis
+  redis: Redis
   ratesService: RatesService
   accountingService: AccountingService
   accountService: AccountService
