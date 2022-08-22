@@ -1,14 +1,11 @@
 import { IocContract } from '@adonisjs/fold'
-import { makeWorkerUtils, WorkerUtils } from 'graphile-worker'
-import { Knex } from 'knex'
+import Knex from 'knex'
 import jestOpenAPI from 'jest-openapi'
 import { v4 as uuid } from 'uuid'
 
 import { AppServices, ReadContext } from '../../app'
 import { Config, IAppConfig } from '../../config/app'
-import { GraphileProducer } from '../../messaging/graphileProducer'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { resetGraphileDb } from '../../tests/graphileDb'
 import { truncateTables } from '../../tests/tableManager'
 import { initIocContainer } from '../../'
 import { ConnectionRoutes } from './routes'
@@ -23,27 +20,16 @@ describe('Connection Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let workerUtils: WorkerUtils
   let config: IAppConfig
   let accountService: AccountService
   let connectionRoutes: ConnectionRoutes
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
   beforeAll(async (): Promise<void> => {
     config = Config
     config.publicHost = 'https://wallet.example'
     config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
     deps = await initIocContainer(config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    workerUtils = await makeWorkerUtils({
-      connectionString: appContainer.connectionUrl
-    })
-    await workerUtils.migrate()
-    messageProducer.setUtils(workerUtils)
     knex = await deps.use('knex')
     jestOpenAPI(await deps.use('openApi'))
   })
@@ -78,9 +64,7 @@ describe('Connection Routes', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await resetGraphileDb(knex)
     await appContainer.shutdown()
-    await workerUtils.release()
   })
 
   describe('get', (): void => {

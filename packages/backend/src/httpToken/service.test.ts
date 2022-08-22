@@ -1,14 +1,11 @@
-import { Knex } from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import Knex from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { HttpTokenService } from './service'
 import { HttpTokenError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
-import { resetGraphileDb } from '../tests/graphileDb'
 import { PeerFactory } from '../tests/peerFactory'
 import { truncateTables } from '../tests/tableManager'
-import { GraphileProducer } from '../messaging/graphileProducer'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -18,25 +15,14 @@ import { Peer } from '../peer/model'
 describe('HTTP Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let workerUtils: WorkerUtils
   let httpTokenService: HttpTokenService
   let peerFactory: PeerFactory
   let peer: Peer
   let knex: Knex
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    workerUtils = await makeWorkerUtils({
-      connectionString: appContainer.connectionUrl
-    })
-    await workerUtils.migrate()
-    messageProducer.setUtils(workerUtils)
     knex = await deps.use('knex')
     httpTokenService = await deps.use('httpTokenService')
     const peerService = await deps.use('peerService')
@@ -52,9 +38,7 @@ describe('HTTP Token Service', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await resetGraphileDb(knex)
     await appContainer.shutdown()
-    await workerUtils.release()
   })
 
   describe('Create or Get Tokens', (): void => {
