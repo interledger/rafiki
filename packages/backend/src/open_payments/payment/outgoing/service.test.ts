@@ -36,6 +36,8 @@ import { AssetOptions } from '../../../asset/service'
 import { CreateQuoteOptions } from '../../quote/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Amount } from '../../amount'
+import { Pagination } from '../../../shared/baseModel'
+import { getPageTests } from '../../../shared/baseModel.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
 import { Quote } from '../../quote/model'
 
@@ -194,7 +196,7 @@ describe('OutgoingPaymentService', (): void => {
     if (amountDelivered !== undefined) {
       expect(amtDelivered).toEqual(amountDelivered)
     }
-    if (accountBalance !== undefined && accountBalance > 0) {
+    if (accountBalance !== undefined) {
       await expect(accountingService.getBalance(payment.id)).resolves.toEqual(
         accountBalance
       )
@@ -320,7 +322,6 @@ describe('OutgoingPaymentService', (): void => {
           quote,
           peerId: outgoingPeer ? peer.id : null
         })
-        await expectOutcome(payment, { accountBalance: BigInt(0) })
 
         await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
           payment

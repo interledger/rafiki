@@ -452,23 +452,19 @@ describe('Incoming Payment Service', (): void => {
   describe('complete', (): void => {
     let incomingPayment: IncomingPayment
 
-    beforeEach(
-      async (): Promise<void> => {
-        const incomingPaymentOrError = await createIncomingPayment(deps, {
-          paymentPointerId,
-          description: 'Test incoming payment',
-          incomingAmount: {
-            value: BigInt(123),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          expiresAt: new Date(Date.now() + 30_000),
-          externalRef: '#123'
-        })
-        assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
-        incomingPayment = incomingPaymentOrError
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      incomingPayment = await createIncomingPayment(deps, {
+        paymentPointerId,
+        description: 'Test incoming payment',
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        externalRef: '#123'
+      })
+    })
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
       const now = new Date()
       jest.spyOn(global.Date, 'now').mockImplementation(() => now.valueOf())

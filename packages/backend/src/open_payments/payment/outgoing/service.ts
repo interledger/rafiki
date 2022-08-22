@@ -344,8 +344,8 @@ async function fundPayment(
     }
     if (amount !== payment.sendAmount.value) return FundingError.InvalidAmount
 
+    // Create the outgoing payment liquidity account before trying to transfer funds to it.
     try {
-      // Create the outgoing payment liquidity account before trying to transfer funds to it.
       await deps.accountingService.createLiquidityAccount({
         id: id,
         asset: payment.asset
@@ -393,18 +393,14 @@ async function getPaymentPointerPage(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: OutgoingPayment, i: number) => {
     try {
-      if (payment.state == OutgoingPaymentState.Funding) {
-        payment.sentAmount = {
-          value: BigInt(0),
-          assetCode: payment.asset.code,
-          assetScale: payment.asset.scale
-        }
-      } else {
-        payment.sentAmount = {
-          value: BigInt(amounts[i]),
-          assetCode: payment.asset.code,
-          assetScale: payment.asset.scale
-        }
+      assert.ok(
+        amounts[i] !== undefined ||
+          payment.state === OutgoingPaymentState.Funding
+      )
+      payment.sentAmount = {
+        value: amounts[i] ? BigInt(amounts[i]) : BigInt(0),
+        assetCode: payment.asset.code,
+        assetScale: payment.asset.scale
       }
     } catch (err) {
       deps.logger.error(
@@ -426,7 +422,7 @@ async function addSentAmount(
   value?: bigint
 ): Promise<OutgoingPayment> {
   const fundingZeroOrUndefined =
-    payment.state == OutgoingPaymentState.Funding ? BigInt(0) : undefined
+    payment.state === OutgoingPaymentState.Funding ? BigInt(0) : undefined
   let sent = value || (await deps.accountingService.getTotalSent(payment.id))
   if (sent === undefined) {
     sent = fundingZeroOrUndefined
@@ -444,7 +440,7 @@ async function addSentAmount(
       'account not found for addSentAmount'
     )
     throw new Error(
-      `Underlying TB account not found, outgoing payment id: ${payment.id}, ${payment.state}, ${value}, ${sent}, ${fundingZeroOrUndefined}`
+      `Underlying TB account not found, outgoing payment id: ${payment.id}`
     )
   }
   return payment

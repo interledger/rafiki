@@ -131,10 +131,6 @@ export class MockAccountingService implements AccountingService {
     if (account.id === '409') {
       throw new CreateAccountError(CreateAccountErrorCode.exists)
     }
-    // Internal Error
-    if (account.id === '409') {
-      throw new CreateAccountError(CreateAccountErrorCode.exists)
-    }
     return account
   }
 }
