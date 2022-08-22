@@ -75,6 +75,7 @@
     "ilp-protocol-ildcp": "^2.2.2",
     "ioredis": "^4.26.0",
     "iso8601-duration": "^2.1.1",
+    "json-canonicalize": "^1.0.4",
     "knex": "^0.21.17",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
