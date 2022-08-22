@@ -450,6 +450,10 @@ async function rollbackAccountWithdrawal(
   const transfers = await deps.tigerbeetle.lookupTransfers([
     toTigerbeetleId(withdrawalId)
   ])
+  if (!transfers.length) {
+    return TransferError.UnknownTransfer
+  }
+
   const error = await createTransfers(
     deps,
     [
@@ -478,6 +482,10 @@ async function commitAccountWithdrawal(
   const transfers = await deps.tigerbeetle.lookupTransfers([
     toTigerbeetleId(withdrawalId)
   ])
+  if (!transfers.length) {
+    return TransferError.UnknownTransfer
+  }
+
   const error = await createTransfers(
     deps,
     [

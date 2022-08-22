@@ -81,6 +81,8 @@ export async function createTransfers(
         return { index, error: TransferError.UnknownDestinationAccount }
       case 17: //exists_with_different_flags,
         return { index, error: TransferError.TransferExists }
+      case 19: //exists_with_different_credit_account_id,
+        return { index, error: TransferError.TransferExists }
       case 32: //exceeds_credits
         return { index, error: TransferError.InsufficientBalance }
       case 33: //exceeds_debits
@@ -127,20 +129,21 @@ export async function createTransfers(
       default:
         // TODO @jason: This needs to be removed: =========>
         switch (code) {
-          case 39:
-            return { index, error: TransferError.UnknownTransfer } //pending_transfer_not_found
-          case 40:
+          case 39: //pending_transfer_not_found
+            return { index, error: TransferError.UnknownTransfer }
+          case 40: //pending_transfer_not_pending
             return {
-              //pending_transfer_not_pending
               index,
               error: commit
                 ? TransferError.AlreadyCommitted
                 : TransferError.AlreadyRolledBack
             }
-          case 47:
-            return { index, error: TransferError.AlreadyCommitted } //pending_transfer_already_posted,
-          case 48:
-            return { index, error: TransferError.AlreadyRolledBack } //pending_transfer_already_voided,
+          case 47: //pending_transfer_already_posted,
+            return { index, error: TransferError.AlreadyCommitted }
+          case 48: //pending_transfer_already_voided,
+            return { index, error: TransferError.AlreadyRolledBack }
+          case 49: //pending_transfer_expired,
+            return { index, error: TransferError.TransferExpired }
         }
 
         if (commit === true || commit == false) {

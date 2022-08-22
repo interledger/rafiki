@@ -1925,9 +1925,9 @@ describe('Liquidity Resolvers', (): void => {
               )
 
             expect(response.success).toBe(false)
-            expect(response.code).toEqual('403')
-            expect(response.message).toEqual('Insufficient balance')
-            expect(response.error).toEqual(LiquidityError.InsufficientBalance)
+            expect(response.code).toEqual('409')
+            expect(response.message).toEqual('Transfer exists')
+            expect(response.error).toEqual(LiquidityError.TransferExists)
           })
         }
       )
