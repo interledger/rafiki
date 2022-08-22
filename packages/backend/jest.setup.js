@@ -10,7 +10,7 @@ const POSTGRES_PORT = 5432
 const TIGERBEETLE_CLUSTER_ID = 0
 const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
-const TIGERBEETLE_FILE = `${TIGERBEETLE_DIR}/cluster_${TIGERBEETLE_CLUSTER_ID}_replica_0.tigerbeetle`
+//TODO const TIGERBEETLE_FILE = `${TIGERBEETLE_DIR}/cluster_${TIGERBEETLE_CLUSTER_ID}_replica_0.tigerbeetle`
 
 const REDIS_PORT = 6379
 
