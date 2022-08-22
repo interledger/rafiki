@@ -469,6 +469,8 @@ describe('OutgoingPaymentService', (): void => {
       ).rejects.toThrowError(
         'Defined query timeout of 5000ms exceeded when running query.'
       )
+      const payments = await OutgoingPayment.query(trx)
+      expect(payments.length).toEqual(1)
     })
     describe('validateGrant', (): void => {
       let quote: Quote
