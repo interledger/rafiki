@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import nock from 'nock'
-import Knex, { Transaction } from 'knex'
+import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
@@ -17,7 +17,7 @@ describe('Access Service', (): void => {
   let appContainer: TestContainer
   let accessService: AccessService
   let knex: Knex
-  let trx: Transaction
+  let trx: Knex.Transaction
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -121,7 +121,8 @@ describe('Access Service', (): void => {
   test("Doesn't create anything if an empty array is passed", async (): Promise<void> => {
     const grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
 
-    const access = await accessService.createAccess(grant.id, [])
-    expect(access.length).toEqual(0)
+    await expect(accessService.createAccess(grant.id, [])).rejects.toThrow(
+      'The query is empty'
+    )
   })
 })

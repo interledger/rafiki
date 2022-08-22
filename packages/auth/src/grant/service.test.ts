@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import Knex, { Transaction } from 'knex'
+import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
@@ -17,7 +17,7 @@ describe('Grant Service', (): void => {
   let appContainer: TestContainer
   let grantService: GrantService
   let knex: Knex
-  let trx: Transaction
+  let trx: Knex.Transaction
 
   let grant: Grant
 

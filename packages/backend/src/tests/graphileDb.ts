@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 
 export async function resetGraphileDb(knex: Knex): Promise<void> {
   await knex.raw('drop schema if exists graphile_worker cascade;')

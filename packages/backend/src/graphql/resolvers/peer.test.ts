@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { gql } from 'apollo-server-koa'
 import assert from 'assert'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
 

@@ -1,7 +1,7 @@
 import * as httpMocks from 'node-mocks-http'
 import jestOpenAPI from 'jest-openapi'
 import base64url from 'base64url'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 

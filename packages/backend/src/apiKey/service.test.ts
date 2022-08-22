@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { ApiKeyService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
