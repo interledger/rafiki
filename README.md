@@ -32,7 +32,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 ## Planning Calls
 
-Our planning calls are open to our community. We have them every Monday at 17:00 GMT, via Google Meet.
+Our planning calls are open to our community. We have them every Monday at 16:00 GMT, via Google Meet.
 
 **Google Meet joining info**
 
@@ -86,3 +86,24 @@ pnpm format
 # verify code formatting:
 pnpm format:check
 ```
+
+### Local Development
+
+The [infrastructure/local](infrastructure/local) directory contains resources for setting up Rafiki in
+common configurations.
+
+```sh
+# set up two instances of Rafiki
+pnpm run localenv
+
+# seed the postgres databases with the auth data creating an admin token
+pnpm run localenv:seed:auth
+```
+
+The local environment consists of a primary Rafiki instance and a peer Rafiki instance, each with
+its own docker compose files ([primary](infrastructure/local/docker-compose.yml), [peer](infrastructure/local/peer-docker-compose.yml)).
+The primary `docker-compose.yml` includes the main Rafiki services `backend`, `auth`, and `rates`, as well
+as the required data stores tigerbeetle, redis, and postgres, so it can be run on its own.
+The `peer-docker-compose.yml` includes only the Rafiki services, not the data stores. It uses the
+data stores created by the primary Rafiki instance so it can't be run by itself.
+The `pnpm run localenv` command starts both the primary instance and the peer.

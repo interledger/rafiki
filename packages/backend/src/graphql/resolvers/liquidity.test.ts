@@ -49,34 +49,28 @@ describe('Liquidity Resolvers', (): void => {
   let knex: Knex
   const timeout = BigInt(10_000) // 10 seconds
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      accountingService = await deps.use('accountingService')
-      assetService = await deps.use('assetService')
-      const peerService = await deps.use('peerService')
-      peerFactory = new PeerFactory(peerService)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    accountingService = await deps.use('accountingService')
+    assetService = await deps.use('assetService')
+    const peerService = await deps.use('peerService')
+    peerFactory = new PeerFactory(peerService)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-      await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await truncateTables(knex)
+    await appContainer.apolloClient.stop()
+    await appContainer.shutdown()
+  })
 
   describe('Add peer liquidity', (): void => {
     let peer: Peer
 
-    beforeEach(
-      async (): Promise<void> => {
-        peer = await peerFactory.build()
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      peer = await peerFactory.build()
+    })
 
     test('Can add liquidity to peer', async (): Promise<void> => {
       const response = await appContainer.apolloClient
@@ -99,15 +93,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addPeerLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addPeerLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -135,15 +127,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addPeerLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addPeerLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
@@ -172,15 +162,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addPeerLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addPeerLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
@@ -217,15 +205,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addPeerLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addPeerLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
@@ -254,15 +240,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addPeerLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addPeerLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
@@ -274,11 +258,9 @@ describe('Liquidity Resolvers', (): void => {
   describe('Add asset liquidity', (): void => {
     let asset: Asset
 
-    beforeEach(
-      async (): Promise<void> => {
-        asset = await assetService.getOrCreate(randomAsset())
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      asset = await assetService.getOrCreate(randomAsset())
+    })
 
     test('Can add liquidity to asset', async (): Promise<void> => {
       const response = await appContainer.apolloClient
@@ -301,15 +283,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addAssetLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addAssetLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -337,15 +317,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addAssetLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addAssetLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
@@ -374,15 +352,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addAssetLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addAssetLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
@@ -419,15 +395,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addAssetLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addAssetLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
@@ -456,15 +430,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.addAssetLiquidity
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.addAssetLiquidity
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
@@ -477,18 +449,16 @@ describe('Liquidity Resolvers', (): void => {
     let peer: Peer
     const startingBalance = BigInt(100)
 
-    beforeEach(
-      async (): Promise<void> => {
-        peer = await peerFactory.build()
-        await expect(
-          accountingService.createDeposit({
-            id: uuid(),
-            account: peer,
-            amount: startingBalance
-          })
-        ).resolves.toBeUndefined()
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      peer = await peerFactory.build()
+      await expect(
+        accountingService.createDeposit({
+          id: uuid(),
+          account: peer,
+          amount: startingBalance
+        })
+      ).resolves.toBeUndefined()
+    })
 
     test('Can create liquidity withdrawal from peer', async (): Promise<void> => {
       const response = await appContainer.apolloClient
@@ -513,15 +483,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.createPeerLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.createPeerLiquidityWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -551,15 +519,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.createPeerLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.createPeerLiquidityWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
@@ -590,15 +556,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.createPeerLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.createPeerLiquidityWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
@@ -637,15 +601,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.createPeerLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.createPeerLiquidityWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Transfer exists')
@@ -681,15 +643,13 @@ describe('Liquidity Resolvers', (): void => {
               }
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.createPeerLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createPeerLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual(code)
@@ -703,18 +663,16 @@ describe('Liquidity Resolvers', (): void => {
     let asset: Asset
     const startingBalance = BigInt(100)
 
-    beforeEach(
-      async (): Promise<void> => {
-        asset = await assetService.getOrCreate(randomAsset())
-        await expect(
-          accountingService.createDeposit({
-            id: uuid(),
-            account: asset,
-            amount: startingBalance
-          })
-        ).resolves.toBeUndefined()
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      asset = await assetService.getOrCreate(randomAsset())
+      await expect(
+        accountingService.createDeposit({
+          id: uuid(),
+          account: asset,
+          amount: startingBalance
+        })
+      ).resolves.toBeUndefined()
+    })
 
     test('Can create liquidity withdrawal from asset', async (): Promise<void> => {
       const response = await appContainer.apolloClient
@@ -739,15 +697,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.createAssetLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.createAssetLiquidityWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -777,15 +733,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.createAssetLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.createAssetLiquidityWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
@@ -816,15 +770,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.createAssetLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.createAssetLiquidityWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
@@ -863,15 +815,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.createAssetLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): LiquidityMutationResponse => {
+          if (query.data) {
+            return query.data.createAssetLiquidityWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Transfer exists')
@@ -907,15 +857,13 @@ describe('Liquidity Resolvers', (): void => {
               }
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.createAssetLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createAssetLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual(code)
@@ -929,22 +877,20 @@ describe('Liquidity Resolvers', (): void => {
     let account: Account
     const amount = BigInt(100)
 
-    beforeEach(
-      async (): Promise<void> => {
-        const accountService = await deps.use('accountService')
-        account = await accountService.create({
-          asset: randomAsset()
-        })
+    beforeEach(async (): Promise<void> => {
+      const accountService = await deps.use('accountService')
+      account = await accountService.create({
+        asset: randomAsset()
+      })
 
-        await expect(
-          accountingService.createDeposit({
-            id: uuid(),
-            account,
-            amount
-          })
-        ).resolves.toBeUndefined()
-      }
-    )
+      await expect(
+        accountingService.createDeposit({
+          id: uuid(),
+          account,
+          amount
+        })
+      ).resolves.toBeUndefined()
+    })
 
     test('Can create withdrawal from account', async (): Promise<void> => {
       const id = uuid()
@@ -976,15 +922,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): AccountWithdrawalMutationResponse => {
-            if (query.data) {
-              return query.data.createAccountWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): AccountWithdrawalMutationResponse => {
+          if (query.data) {
+            return query.data.createAccountWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -1023,15 +967,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): AccountWithdrawalMutationResponse => {
-            if (query.data) {
-              return query.data.createAccountWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): AccountWithdrawalMutationResponse => {
+          if (query.data) {
+            return query.data.createAccountWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
@@ -1065,15 +1007,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): AccountWithdrawalMutationResponse => {
-            if (query.data) {
-              return query.data.createAccountWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): AccountWithdrawalMutationResponse => {
+          if (query.data) {
+            return query.data.createAccountWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
@@ -1115,15 +1055,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): AccountWithdrawalMutationResponse => {
-            if (query.data) {
-              return query.data.createAccountWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): AccountWithdrawalMutationResponse => {
+          if (query.data) {
+            return query.data.createAccountWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
       expect(response.message).toEqual('Transfer exists')
@@ -1164,15 +1102,13 @@ describe('Liquidity Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): AccountWithdrawalMutationResponse => {
-            if (query.data) {
-              return query.data.createAccountWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): AccountWithdrawalMutationResponse => {
+          if (query.data) {
+            return query.data.createAccountWithdrawal
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
       expect(response.message).toEqual('Amount is zero')
@@ -1186,28 +1122,26 @@ describe('Liquidity Resolvers', (): void => {
     (type): void => {
       let withdrawalId: string
 
-      beforeEach(
-        async (): Promise<void> => {
-          const peer = await peerFactory.build()
-          const deposit = {
-            id: uuid(),
-            account: type === 'peer' ? peer : peer.asset,
-            amount: BigInt(100)
-          }
-          await expect(
-            accountingService.createDeposit(deposit)
-          ).resolves.toBeUndefined()
-          withdrawalId = uuid()
-          await expect(
-            accountingService.createWithdrawal({
-              ...deposit,
-              id: withdrawalId,
-              amount: BigInt(10),
-              timeout
-            })
-          ).resolves.toBeUndefined()
+      beforeEach(async (): Promise<void> => {
+        const peer = await peerFactory.build()
+        const deposit = {
+          id: uuid(),
+          account: type === 'peer' ? peer : peer.asset,
+          amount: BigInt(100)
         }
-      )
+        await expect(
+          accountingService.createDeposit(deposit)
+        ).resolves.toBeUndefined()
+        withdrawalId = uuid()
+        await expect(
+          accountingService.createWithdrawal({
+            ...deposit,
+            id: withdrawalId,
+            amount: BigInt(10),
+            timeout
+          })
+        ).resolves.toBeUndefined()
+      })
 
       test(`Can finalize a(n) ${type} liquidity withdrawal`, async (): Promise<void> => {
         const response = await appContainer.apolloClient
@@ -1226,15 +1160,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.finalizeLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.finalizeLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
@@ -1258,15 +1190,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId: uuid()
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.finalizeLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.finalizeLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('404')
@@ -1291,15 +1221,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId: 'not a uuid'
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.finalizeLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.finalizeLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('400')
@@ -1327,15 +1255,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.finalizeLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.finalizeLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
@@ -1363,15 +1289,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.finalizeLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.finalizeLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
@@ -1386,28 +1310,26 @@ describe('Liquidity Resolvers', (): void => {
     (type): void => {
       let withdrawalId: string
 
-      beforeEach(
-        async (): Promise<void> => {
-          const peer = await peerFactory.build()
-          const deposit = {
-            id: uuid(),
-            account: type === 'peer' ? peer : peer.asset,
-            amount: BigInt(100)
-          }
-          await expect(
-            accountingService.createDeposit(deposit)
-          ).resolves.toBeUndefined()
-          withdrawalId = uuid()
-          await expect(
-            accountingService.createWithdrawal({
-              ...deposit,
-              id: withdrawalId,
-              amount: BigInt(10),
-              timeout
-            })
-          ).resolves.toBeUndefined()
+      beforeEach(async (): Promise<void> => {
+        const peer = await peerFactory.build()
+        const deposit = {
+          id: uuid(),
+          account: type === 'peer' ? peer : peer.asset,
+          amount: BigInt(100)
         }
-      )
+        await expect(
+          accountingService.createDeposit(deposit)
+        ).resolves.toBeUndefined()
+        withdrawalId = uuid()
+        await expect(
+          accountingService.createWithdrawal({
+            ...deposit,
+            id: withdrawalId,
+            amount: BigInt(10),
+            timeout
+          })
+        ).resolves.toBeUndefined()
+      })
 
       test(`Can rollback a(n) ${type} liquidity withdrawal`, async (): Promise<void> => {
         const response = await appContainer.apolloClient
@@ -1426,15 +1348,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.rollbackLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.rollbackLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
@@ -1458,15 +1378,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId: uuid()
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.rollbackLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.rollbackLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('404')
@@ -1491,15 +1409,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId: 'not a uuid'
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.rollbackLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.rollbackLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('400')
@@ -1527,15 +1443,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.rollbackLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.rollbackLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
@@ -1563,15 +1477,13 @@ describe('Liquidity Resolvers', (): void => {
               withdrawalId
             }
           })
-          .then(
-            (query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.rollbackLiquidityWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.rollbackLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
@@ -1586,40 +1498,36 @@ describe('Liquidity Resolvers', (): void => {
     let incomingPayment: IncomingPayment
     let payment: OutgoingPayment
 
-    beforeEach(
-      async (): Promise<void> => {
-        const accountService = await deps.use('accountService')
-        account = await accountService.create({
-          asset: randomAsset()
-        })
-        const accountId = account.id
-        incomingPayment = await createIncomingPayment(deps, {
-          accountId,
-          incomingAmount: {
-            value: BigInt(56),
-            assetCode: account.asset.code,
-            assetScale: account.asset.scale
-          },
-          expiresAt: new Date(Date.now() + 60 * 1000),
-          description: 'description!'
-        })
-        payment = await createOutgoingPayment(deps, {
-          accountId,
-          receiver: `${
-            Config.publicHost
-          }/${uuid()}/incoming-payments/${uuid()}`,
-          sendAmount: {
-            value: BigInt(456),
-            assetCode: account.asset.code,
-            assetScale: account.asset.scale
-          },
-          validDestination: false
-        })
-        await expect(accountingService.getBalance(payment.id)).resolves.toEqual(
-          BigInt(0)
-        )
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      const accountService = await deps.use('accountService')
+      account = await accountService.create({
+        asset: randomAsset()
+      })
+      const accountId = account.id
+      incomingPayment = await createIncomingPayment(deps, {
+        accountId,
+        incomingAmount: {
+          value: BigInt(56),
+          assetCode: account.asset.code,
+          assetScale: account.asset.scale
+        },
+        expiresAt: new Date(Date.now() + 60 * 1000),
+        description: 'description!'
+      })
+      payment = await createOutgoingPayment(deps, {
+        accountId,
+        receiver: `${Config.publicHost}/${uuid()}/incoming-payments/${uuid()}`,
+        sendAmount: {
+          value: BigInt(456),
+          assetCode: account.asset.code,
+          assetScale: account.asset.scale
+        },
+        validDestination: false
+      })
+      await expect(accountingService.getBalance(payment.id)).resolves.toEqual(
+        BigInt(0)
+      )
+    })
 
     describe('depositEventLiquidity', (): void => {
       describe.each(Object.values(DepositEventType).map((type) => [type]))(
@@ -1627,19 +1535,17 @@ describe('Liquidity Resolvers', (): void => {
         (type): void => {
           let eventId: string
 
-          beforeEach(
-            async (): Promise<void> => {
-              eventId = uuid()
-              await PaymentEvent.query(knex).insertAndFetch({
-                id: eventId,
-                type,
-                data: payment.toData({
-                  amountSent: BigInt(0),
-                  balance: BigInt(0)
-                })
+          beforeEach(async (): Promise<void> => {
+            eventId = uuid()
+            await PaymentEvent.query(knex).insertAndFetch({
+              id: eventId,
+              type,
+              data: payment.toData({
+                amountSent: BigInt(0),
+                balance: BigInt(0)
               })
-            }
-          )
+            })
+          })
 
           test('Can deposit account liquidity', async (): Promise<void> => {
             const depositSpy = jest.spyOn(accountingService, 'createDeposit')
@@ -1659,15 +1565,13 @@ describe('Liquidity Resolvers', (): void => {
                   eventId
                 }
               })
-              .then(
-                (query): LiquidityMutationResponse => {
-                  if (query.data) {
-                    return query.data.depositEventLiquidity
-                  } else {
-                    throw new Error('Data was empty')
-                  }
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.depositEventLiquidity
+                } else {
+                  throw new Error('Data was empty')
                 }
-              )
+              })
 
             expect(response.success).toBe(true)
             expect(response.code).toEqual('200')
@@ -1700,15 +1604,13 @@ describe('Liquidity Resolvers', (): void => {
                   eventId: uuid()
                 }
               })
-              .then(
-                (query): LiquidityMutationResponse => {
-                  if (query.data) {
-                    return query.data.depositEventLiquidity
-                  } else {
-                    throw new Error('Data was empty')
-                  }
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.depositEventLiquidity
+                } else {
+                  throw new Error('Data was empty')
                 }
-              )
+              })
 
             expect(response.success).toBe(false)
             expect(response.code).toEqual('400')
@@ -1740,15 +1642,13 @@ describe('Liquidity Resolvers', (): void => {
                   eventId
                 }
               })
-              .then(
-                (query): LiquidityMutationResponse => {
-                  if (query.data) {
-                    return query.data.depositEventLiquidity
-                  } else {
-                    throw new Error('Data was empty')
-                  }
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.depositEventLiquidity
+                } else {
+                  throw new Error('Data was empty')
                 }
-              )
+              })
 
             expect(response.success).toBe(false)
             expect(response.code).toEqual('409')
@@ -1782,52 +1682,50 @@ describe('Liquidity Resolvers', (): void => {
           let eventId: string
           let withdrawal: Withdrawal
 
-          beforeEach(
-            async (): Promise<void> => {
-              eventId = uuid()
-              const amount = BigInt(10)
-              let liquidityAccount: LiquidityAccount
-              let data: Record<string, unknown>
-              if (isPaymentEventType(type)) {
-                liquidityAccount = payment
-                data = payment.toData({
-                  amountSent: BigInt(0),
-                  balance: amount
-                })
-              } else if (isIncomingPaymentEventType(type)) {
-                liquidityAccount = incomingPayment
-                data = incomingPayment.toData(amount)
-              } else {
-                liquidityAccount = account
-                data = account.toData(amount)
-              }
-              await WebhookEvent.query(knex).insertAndFetch({
-                id: eventId,
-                type,
-                data,
-                withdrawal: {
-                  accountId: liquidityAccount.id,
-                  assetId: liquidityAccount.asset.id,
-                  amount
-                }
+          beforeEach(async (): Promise<void> => {
+            eventId = uuid()
+            const amount = BigInt(10)
+            let liquidityAccount: LiquidityAccount
+            let data: Record<string, unknown>
+            if (isPaymentEventType(type)) {
+              liquidityAccount = payment
+              data = payment.toData({
+                amountSent: BigInt(0),
+                balance: amount
               })
-              await expect(
-                accountingService.createDeposit({
-                  id: uuid(),
-                  account: liquidityAccount,
-                  amount
-                })
-              ).resolves.toBeUndefined()
-              await expect(
-                accountingService.getBalance(liquidityAccount.id)
-              ).resolves.toEqual(amount)
-              withdrawal = {
-                id: eventId,
-                account: liquidityAccount,
+            } else if (isIncomingPaymentEventType(type)) {
+              liquidityAccount = incomingPayment
+              data = incomingPayment.toData(amount)
+            } else {
+              liquidityAccount = account
+              data = account.toData(amount)
+            }
+            await WebhookEvent.query(knex).insertAndFetch({
+              id: eventId,
+              type,
+              data,
+              withdrawal: {
+                accountId: liquidityAccount.id,
+                assetId: liquidityAccount.asset.id,
                 amount
               }
+            })
+            await expect(
+              accountingService.createDeposit({
+                id: uuid(),
+                account: liquidityAccount,
+                amount
+              })
+            ).resolves.toBeUndefined()
+            await expect(
+              accountingService.getBalance(liquidityAccount.id)
+            ).resolves.toEqual(amount)
+            withdrawal = {
+              id: eventId,
+              account: liquidityAccount,
+              amount
             }
-          )
+          })
 
           test('Can withdraw account liquidity', async (): Promise<void> => {
             const response = await appContainer.apolloClient
@@ -1846,15 +1744,13 @@ describe('Liquidity Resolvers', (): void => {
                   eventId
                 }
               })
-              .then(
-                (query): LiquidityMutationResponse => {
-                  if (query.data) {
-                    return query.data.withdrawEventLiquidity
-                  } else {
-                    throw new Error('Data was empty')
-                  }
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.withdrawEventLiquidity
+                } else {
+                  throw new Error('Data was empty')
                 }
-              )
+              })
 
             expect(response.success).toBe(true)
             expect(response.code).toEqual('200')
@@ -1878,15 +1774,13 @@ describe('Liquidity Resolvers', (): void => {
                   eventId: uuid()
                 }
               })
-              .then(
-                (query): LiquidityMutationResponse => {
-                  if (query.data) {
-                    return query.data.withdrawEventLiquidity
-                  } else {
-                    throw new Error('Data was empty')
-                  }
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.withdrawEventLiquidity
+                } else {
+                  throw new Error('Data was empty')
                 }
-              )
+              })
 
             expect(response.success).toBe(false)
             expect(response.code).toEqual('400')
@@ -1914,15 +1808,13 @@ describe('Liquidity Resolvers', (): void => {
                   eventId
                 }
               })
-              .then(
-                (query): LiquidityMutationResponse => {
-                  if (query.data) {
-                    return query.data.withdrawEventLiquidity
-                  } else {
-                    throw new Error('Data was empty')
-                  }
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.withdrawEventLiquidity
+                } else {
+                  throw new Error('Data was empty')
                 }
-              )
+              })
 
             expect(response.success).toBe(false)
             expect(response.code).toEqual('409')

@@ -7,7 +7,8 @@ import { BaseModel } from '../shared/baseModel'
 
 export class Peer
   extends BaseModel
-  implements ConnectorAccount, LiquidityAccount {
+  implements ConnectorAccount, LiquidityAccount
+{
   public static get tableName(): string {
     return 'peers'
   }

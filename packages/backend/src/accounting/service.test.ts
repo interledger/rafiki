@@ -45,40 +45,34 @@ describe('Accounting Service', (): void => {
     return ledger++
   }
 
-  beforeAll(
-    async (): Promise<void> => {
-      tigerbeetleContainer = await startTigerbeetleContainer()
-      Config.tigerbeetleReplicaAddresses = [
-        tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
-      ]
-      deps = await initIocContainer(Config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      accountingService = await deps.use('accountingService')
-      accountFactory = new AccountFactory(accountingService, newLedger)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    tigerbeetleContainer = await startTigerbeetleContainer()
+    Config.tigerbeetleReplicaAddresses = [
+      tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
+    ]
+    deps = await initIocContainer(Config)
+    deps.bind('messageProducer', async () => mockMessageProducer)
+    appContainer = await createTestApp(deps)
+    workerUtils = await makeWorkerUtils({
+      connectionString: appContainer.connectionUrl
+    })
+    await workerUtils.migrate()
+    messageProducer.setUtils(workerUtils)
+    knex = await deps.use('knex')
+    accountingService = await deps.use('accountingService')
+    accountFactory = new AccountFactory(accountingService, newLedger)
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-      await tigerbeetleContainer.stop()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await resetGraphileDb(knex)
+    await appContainer.shutdown()
+    await workerUtils.release()
+    await tigerbeetleContainer.stop()
+  })
 
   describe('Create Liquidity Account', (): void => {
     test('Can create a liquidity account', async (): Promise<void> => {
@@ -303,23 +297,21 @@ describe('Accounting Service', (): void => {
       const startingSourceBalance = BigInt(10)
       const startingDestinationLiquidity = BigInt(100)
 
-      beforeEach(
-        async (): Promise<void> => {
-          sourceAccount = await accountFactory.build({
-            balance: startingSourceBalance
+      beforeEach(async (): Promise<void> => {
+        sourceAccount = await accountFactory.build({
+          balance: startingSourceBalance
+        })
+        destinationAccount = await accountFactory.build({
+          asset: sameAsset ? sourceAccount.asset : undefined
+        })
+        await expect(
+          accountingService.createDeposit({
+            id: uuid(),
+            account: destinationAccount.asset,
+            amount: startingDestinationLiquidity
           })
-          destinationAccount = await accountFactory.build({
-            asset: sameAsset ? sourceAccount.asset : undefined
-          })
-          await expect(
-            accountingService.createDeposit({
-              id: uuid(),
-              account: destinationAccount.asset,
-              amount: startingDestinationLiquidity
-            })
-          ).resolves.toBeUndefined()
-        }
-      )
+        ).resolves.toBeUndefined()
+      })
 
       describe.each`
         sourceAmount | destinationAmount | description
@@ -331,99 +323,94 @@ describe('Accounting Service', (): void => {
           commit   | description
           ${true}  | ${'commit'}
           ${false} | ${'rollback'}
-        `(
-          '$description',
-          async ({ commit }): Promise<void> => {
-            const trxOrError = await accountingService.createTransfer({
-              sourceAccount,
-              destinationAccount,
-              sourceAmount,
-              destinationAmount,
-              timeout
-            })
-            assert.ok(!isTransferError(trxOrError))
-            const amountDiff = BigInt(destinationAmount - sourceAmount)
+        `('$description', async ({ commit }): Promise<void> => {
+          const trxOrError = await accountingService.createTransfer({
+            sourceAccount,
+            destinationAccount,
+            sourceAmount,
+            destinationAmount,
+            timeout
+          })
+          assert.ok(!isTransferError(trxOrError))
+          const amountDiff = BigInt(destinationAmount - sourceAmount)
 
+          await expect(
+            accountingService.getBalance(sourceAccount.id)
+          ).resolves.toEqual(startingSourceBalance - sourceAmount)
+
+          if (sameAsset) {
             await expect(
-              accountingService.getBalance(sourceAccount.id)
-            ).resolves.toEqual(startingSourceBalance - sourceAmount)
-
-            if (sameAsset) {
-              await expect(
-                accountingService.getBalance(sourceAccount.asset.id)
-              ).resolves.toEqual(
-                sourceAmount < destinationAmount
-                  ? startingDestinationLiquidity - amountDiff
-                  : startingDestinationLiquidity
-              )
-            } else {
-              await expect(
-                accountingService.getBalance(sourceAccount.asset.id)
-              ).resolves.toEqual(BigInt(0))
-
-              await expect(
-                accountingService.getBalance(destinationAccount.asset.id)
-              ).resolves.toEqual(
-                startingDestinationLiquidity - destinationAmount
-              )
-            }
-
+              accountingService.getBalance(sourceAccount.asset.id)
+            ).resolves.toEqual(
+              sourceAmount < destinationAmount
+                ? startingDestinationLiquidity - amountDiff
+                : startingDestinationLiquidity
+            )
+          } else {
             await expect(
-              accountingService.getBalance(destinationAccount.id)
+              accountingService.getBalance(sourceAccount.asset.id)
             ).resolves.toEqual(BigInt(0))
 
-            if (commit) {
-              await expect(trxOrError.commit()).resolves.toBeUndefined()
-            } else {
-              await expect(trxOrError.rollback()).resolves.toBeUndefined()
-            }
-
             await expect(
-              accountingService.getBalance(sourceAccount.id)
+              accountingService.getBalance(destinationAccount.asset.id)
+            ).resolves.toEqual(startingDestinationLiquidity - destinationAmount)
+          }
+
+          await expect(
+            accountingService.getBalance(destinationAccount.id)
+          ).resolves.toEqual(BigInt(0))
+
+          if (commit) {
+            await expect(trxOrError.commit()).resolves.toBeUndefined()
+          } else {
+            await expect(trxOrError.rollback()).resolves.toBeUndefined()
+          }
+
+          await expect(
+            accountingService.getBalance(sourceAccount.id)
+          ).resolves.toEqual(
+            commit
+              ? startingSourceBalance - sourceAmount
+              : startingSourceBalance
+          )
+
+          if (sameAsset) {
+            await expect(
+              accountingService.getBalance(sourceAccount.asset.id)
             ).resolves.toEqual(
               commit
-                ? startingSourceBalance - sourceAmount
-                : startingSourceBalance
+                ? startingDestinationLiquidity - amountDiff
+                : startingDestinationLiquidity
             )
-
-            if (sameAsset) {
-              await expect(
-                accountingService.getBalance(sourceAccount.asset.id)
-              ).resolves.toEqual(
-                commit
-                  ? startingDestinationLiquidity - amountDiff
-                  : startingDestinationLiquidity
-              )
-            } else {
-              await expect(
-                accountingService.getBalance(sourceAccount.asset.id)
-              ).resolves.toEqual(commit ? sourceAmount : BigInt(0))
-
-              await expect(
-                accountingService.getBalance(destinationAccount.asset.id)
-              ).resolves.toEqual(
-                commit
-                  ? startingDestinationLiquidity - destinationAmount
-                  : startingDestinationLiquidity
-              )
-            }
+          } else {
+            await expect(
+              accountingService.getBalance(sourceAccount.asset.id)
+            ).resolves.toEqual(commit ? sourceAmount : BigInt(0))
 
             await expect(
-              accountingService.getBalance(destinationAccount.id)
-            ).resolves.toEqual(commit ? destinationAmount : BigInt(0))
-
-            await expect(trxOrError.commit()).resolves.toEqual(
+              accountingService.getBalance(destinationAccount.asset.id)
+            ).resolves.toEqual(
               commit
-                ? TransferError.AlreadyCommitted
-                : TransferError.AlreadyRolledBack
-            )
-            await expect(trxOrError.rollback()).resolves.toEqual(
-              commit
-                ? TransferError.AlreadyCommitted
-                : TransferError.AlreadyRolledBack
+                ? startingDestinationLiquidity - destinationAmount
+                : startingDestinationLiquidity
             )
           }
-        )
+
+          await expect(
+            accountingService.getBalance(destinationAccount.id)
+          ).resolves.toEqual(commit ? destinationAmount : BigInt(0))
+
+          await expect(trxOrError.commit()).resolves.toEqual(
+            commit
+              ? TransferError.AlreadyCommitted
+              : TransferError.AlreadyRolledBack
+          )
+          await expect(trxOrError.rollback()).resolves.toEqual(
+            commit
+              ? TransferError.AlreadyCommitted
+              : TransferError.AlreadyRolledBack
+          )
+        })
       })
 
       test('Returns error for insufficient source balance', async (): Promise<void> => {
@@ -517,22 +504,20 @@ describe('Accounting Service', (): void => {
   describe('Create deposit', (): void => {
     let deposit: Deposit
 
-    beforeEach(
-      async (): Promise<void> => {
-        const account = await accountFactory.build()
-        deposit = {
-          id: uuid(),
-          account,
-          amount: BigInt(10)
-        }
-        await expect(accountingService.getBalance(account.id)).resolves.toEqual(
-          BigInt(0)
-        )
-        await expect(
-          accountingService.getSettlementBalance(account.asset.ledger)
-        ).resolves.toEqual(BigInt(0))
+    beforeEach(async (): Promise<void> => {
+      const account = await accountFactory.build()
+      deposit = {
+        id: uuid(),
+        account,
+        amount: BigInt(10)
       }
-    )
+      await expect(accountingService.getBalance(account.id)).resolves.toEqual(
+        BigInt(0)
+      )
+      await expect(
+        accountingService.getSettlementBalance(account.asset.ledger)
+      ).resolves.toEqual(BigInt(0))
+    })
 
     test('A deposit can be created', async (): Promise<void> => {
       await expect(
@@ -594,25 +579,23 @@ describe('Accounting Service', (): void => {
     let withdrawal: Withdrawal
     const startingBalance = BigInt(10)
 
-    beforeEach(
-      async (): Promise<void> => {
-        const account = await accountFactory.build({
-          balance: startingBalance
-        })
-        withdrawal = {
-          id: uuid(),
-          account,
-          amount: BigInt(1),
-          timeout
-        }
-        await expect(accountingService.getBalance(account.id)).resolves.toEqual(
-          startingBalance
-        )
-        await expect(
-          accountingService.getSettlementBalance(account.asset.ledger)
-        ).resolves.toEqual(startingBalance)
+    beforeEach(async (): Promise<void> => {
+      const account = await accountFactory.build({
+        balance: startingBalance
+      })
+      withdrawal = {
+        id: uuid(),
+        account,
+        amount: BigInt(1),
+        timeout
       }
-    )
+      await expect(accountingService.getBalance(account.id)).resolves.toEqual(
+        startingBalance
+      )
+      await expect(
+        accountingService.getSettlementBalance(account.asset.ledger)
+      ).resolves.toEqual(startingBalance)
+    })
 
     describe.each`
       timeout      | description
@@ -691,13 +674,11 @@ describe('Accounting Service', (): void => {
     })
 
     describe('Commit', (): void => {
-      beforeEach(
-        async (): Promise<void> => {
-          await expect(
-            accountingService.createWithdrawal(withdrawal)
-          ).resolves.toBeUndefined()
-        }
-      )
+      beforeEach(async (): Promise<void> => {
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toBeUndefined()
+      })
 
       test('A withdrawal can be committed', async (): Promise<void> => {
         await expect(
@@ -760,13 +741,11 @@ describe('Accounting Service', (): void => {
     })
 
     describe('Rollback', (): void => {
-      beforeEach(
-        async (): Promise<void> => {
-          await expect(
-            accountingService.createWithdrawal(withdrawal)
-          ).resolves.toBeUndefined()
-        }
-      )
+      beforeEach(async (): Promise<void> => {
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toBeUndefined()
+      })
 
       test('A withdrawal can be rolled back', async (): Promise<void> => {
         await expect(

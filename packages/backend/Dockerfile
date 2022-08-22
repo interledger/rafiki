@@ -15,6 +15,6 @@ RUN pnpm fetch
 ADD . ./
 RUN pnpm install -r --offline
 
-RUN pnpm -F backend build
+RUN pnpm --filter backend build
 
 CMD ["node", "./packages/backend/dist/index.js"]

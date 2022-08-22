@@ -34,40 +34,34 @@ describe('Asset Service', (): void => {
     send: jest.fn()
   }
 
-  beforeAll(
-    async (): Promise<void> => {
-      tigerbeetleContainer = await startTigerbeetleContainer()
-      Config.tigerbeetleReplicaAddresses = [
-        tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
-      ]
+  beforeAll(async (): Promise<void> => {
+    tigerbeetleContainer = await startTigerbeetleContainer()
+    Config.tigerbeetleReplicaAddresses = [
+      tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
+    ]
 
-      deps = await initIocContainer(Config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      assetService = await deps.use('assetService')
-    }
-  )
+    deps = await initIocContainer(Config)
+    deps.bind('messageProducer', async () => mockMessageProducer)
+    appContainer = await createTestApp(deps)
+    workerUtils = await makeWorkerUtils({
+      connectionString: appContainer.connectionUrl
+    })
+    await workerUtils.migrate()
+    messageProducer.setUtils(workerUtils)
+    knex = await deps.use('knex')
+    assetService = await deps.use('assetService')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-      await tigerbeetleContainer.stop()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await resetGraphileDb(knex)
+    await appContainer.shutdown()
+    await workerUtils.release()
+    await tigerbeetleContainer.stop()
+  })
 
   describe('create', (): void => {
     test.each`
@@ -196,17 +190,15 @@ describe('Asset Service', (): void => {
       ({ withdrawalThreshold }): void => {
         let assetId: string
 
-        beforeEach(
-          async (): Promise<void> => {
-            const asset = await assetService.create({
-              ...randomAsset(),
-              withdrawalThreshold
-            })
-            assert.ok(!isAssetError(asset))
-            await expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
-            assetId = asset.id
-          }
-        )
+        beforeEach(async (): Promise<void> => {
+          const asset = await assetService.create({
+            ...randomAsset(),
+            withdrawalThreshold
+          })
+          assert.ok(!isAssetError(asset))
+          await expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
+          assetId = asset.id
+        })
 
         test.each`
           withdrawalThreshold

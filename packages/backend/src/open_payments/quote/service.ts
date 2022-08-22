@@ -234,10 +234,12 @@ export async function startQuote(
   assert.ok(quoteOptions.destination.destinationPaymentDetails)
   if (options.sendAmount) {
     quoteOptions.amountToSend = options.sendAmount.value
-    quoteOptions.destination.destinationPaymentDetails.incomingAmount = undefined
+    quoteOptions.destination.destinationPaymentDetails.incomingAmount =
+      undefined
   } else if (options.receiveAmount) {
     quoteOptions.amountToDeliver = options.receiveAmount.value
-    quoteOptions.destination.destinationPaymentDetails.incomingAmount = undefined
+    quoteOptions.destination.destinationPaymentDetails.incomingAmount =
+      undefined
   }
   const quote = await Pay.startQuote({
     ...quoteOptions,

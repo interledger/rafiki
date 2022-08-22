@@ -38,9 +38,13 @@ export const createTestApp = async (
   config.connectorPort = 0
   config.publicHost = 'https://wallet.example'
   const logger = createLogger({
-    prettyPrint: {
-      translateTime: true,
-      ignore: 'pid,hostname'
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        translateTime: true,
+        ignore: 'pid,hostname'
+      }
     },
     level: process.env.LOG_LEVEL || 'error',
     name: 'test-logger'

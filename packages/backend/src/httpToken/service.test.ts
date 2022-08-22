@@ -28,42 +28,34 @@ describe('HTTP Token Service', (): void => {
     send: jest.fn()
   }
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      httpTokenService = await deps.use('httpTokenService')
-      const peerService = await deps.use('peerService')
-      peerFactory = new PeerFactory(peerService)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    deps.bind('messageProducer', async () => mockMessageProducer)
+    appContainer = await createTestApp(deps)
+    workerUtils = await makeWorkerUtils({
+      connectionString: appContainer.connectionUrl
+    })
+    await workerUtils.migrate()
+    messageProducer.setUtils(workerUtils)
+    knex = await deps.use('knex')
+    httpTokenService = await deps.use('httpTokenService')
+    const peerService = await deps.use('peerService')
+    peerFactory = new PeerFactory(peerService)
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      peer = await peerFactory.build()
-    }
-  )
+  beforeEach(async (): Promise<void> => {
+    peer = await peerFactory.build()
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await resetGraphileDb(knex)
+    await appContainer.shutdown()
+    await workerUtils.release()
+  })
 
   describe('Create or Get Tokens', (): void => {
     test('Tokens can be created and fetched', async (): Promise<void> => {

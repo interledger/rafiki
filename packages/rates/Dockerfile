@@ -15,6 +15,6 @@ RUN pnpm fetch
 ADD . ./
 RUN pnpm install -r --offline
 
-RUN pnpm -F rates build
+RUN pnpm --filter rates build
 
 CMD ["node", "./packages/rates/dist/server/index.js"]

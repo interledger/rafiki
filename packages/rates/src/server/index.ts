@@ -27,10 +27,8 @@ export async function shutdownApp(app: App): Promise<void> {
 
 // If this script is run directly, start the server
 if (!module.parent) {
-  createApp(envConfig).catch(
-    async (e): Promise<void> => {
-      const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
-      console.error(errInfo)
-    }
-  )
+  createApp(envConfig).catch(async (e): Promise<void> => {
+    const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
+    console.error(errInfo)
+  })
 }

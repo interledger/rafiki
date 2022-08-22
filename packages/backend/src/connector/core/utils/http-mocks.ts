@@ -20,9 +20,9 @@ export interface MockIncomingMessageOptions {
 export class MockIncomingMessage extends Transform {
   // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
   id: string | number | Record<string, unknown>
-  httpVersion: '1.1' = '1.1'
-  httpVersionMajor: 1 = 1
-  httpVersionMinor: 1 = 1
+  httpVersion: '1.1'
+  httpVersionMajor: 1
+  httpVersionMinor: 1
   aborted = false
   complete = false
   // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.

@@ -30,27 +30,21 @@ describe('Account Resolvers', (): void => {
   let knex: Knex
   let accountService: AccountService
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      accountService = await deps.use('accountService')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    accountService = await deps.use('accountService')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.apolloClient.stop()
+    await appContainer.shutdown()
+  })
 
   describe('Create Account', (): void => {
     test('Can create an account', async (): Promise<void> => {
@@ -79,15 +73,13 @@ describe('Account Resolvers', (): void => {
             input
           }
         })
-        .then(
-          (query): CreateAccountMutationResponse => {
-            if (query.data) {
-              return query.data.createAccount
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): CreateAccountMutationResponse => {
+          if (query.data) {
+            return query.data.createAccount
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -143,15 +135,13 @@ describe('Account Resolvers', (): void => {
             input
           }
         })
-        .then(
-          (query): CreateAccountMutationResponse => {
-            if (query.data) {
-              return query.data.createAccount
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): CreateAccountMutationResponse => {
+          if (query.data) {
+            return query.data.createAccount
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
       expect(response.message).toBe('Error trying to create account')
@@ -179,15 +169,13 @@ describe('Account Resolvers', (): void => {
             accountId: account.id
           }
         })
-        .then(
-          (query): Account => {
-            if (query.data) {
-              return query.data.account
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): Account => {
+          if (query.data) {
+            return query.data.account
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(query).toEqual({
         __typename: 'Account',
@@ -214,15 +202,13 @@ describe('Account Resolvers', (): void => {
             accountId: uuid()
           }
         })
-        .then(
-          (query): Account => {
-            if (query.data) {
-              return query.data.account
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): Account => {
+          if (query.data) {
+            return query.data.account
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
@@ -272,15 +258,13 @@ describe('Account Resolvers', (): void => {
               limit
             }
           })
-          .then(
-            (query): TriggerAccountEventsMutationResponse => {
-              if (query.data) {
-                return query.data.triggerAccountEvents
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): TriggerAccountEventsMutationResponse => {
+            if (query.data) {
+              return query.data.triggerAccountEvents
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
@@ -321,15 +305,13 @@ describe('Account Resolvers', (): void => {
             limit: 1
           }
         })
-        .then(
-          (query): TriggerAccountEventsMutationResponse => {
-            if (query.data) {
-              return query.data.triggerAccountEvents
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): TriggerAccountEventsMutationResponse => {
+          if (query.data) {
+            return query.data.triggerAccountEvents
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
       expect(response.message).toBe('Error trying to trigger account events')

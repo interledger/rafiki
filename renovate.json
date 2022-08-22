@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "prConcurrentLimit": 10,
+  "branchConcurrentLimit": 0,
+  "branchPrefix": "renovate-",
+  "prHourlyLimit": 1,
+  "rangeStrategy": "bump",
+  "prCreation": "status-success",
+  "docker": {
+    "enabled": false
+  },
+  "packageRules": [
+    {
+      "matchPackageNames": ["@types/node", "node"],
+      "allowedVersions": "<17.0.0"
+    }
+  ]
+}

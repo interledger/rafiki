@@ -11,7 +11,8 @@ import { WebhookEvent } from '../../../webhook/model'
 
 export class OutgoingPayment
   extends BaseModel
-  implements ConnectorAccount, LiquidityAccount {
+  implements ConnectorAccount, LiquidityAccount
+{
   public static readonly tableName = 'outgoingPayments'
 
   static get virtualAttributes(): string[] {
