@@ -13,9 +13,7 @@ export async function startTigerbeetleContainer(
   // TODO const tigerBeetleFile = `${TIGERBEETLE_DIR}/cluster_${clusterId}_replica_0_test.tigerbeetle`
 
   await new GenericContainer(
-    'tb-prior-lsm-test-local' //local image
-    //'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b',//main-0.10.0
-    //'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:a8c0fb6c7f50acc5a83784ba8d7f96a749e2267da2e4135c97df65868f02cfb0' //Debug-0.10.0
+    'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
@@ -33,9 +31,7 @@ export async function startTigerbeetleContainer(
   await new Promise((f) => setTimeout(f, 1000))
 
   return await new GenericContainer(
-    'tb-prior-lsm-test-local' //local image
-    //'ghcr.io/coilhq/tigerbeetle@sha256:6b1ab1b0355ef254f22fe68a23b92c9559828061190218c7203a8f65d04e395b',//main-0.10.0
-    //'ghcr.io/coilhq/tigerbeetle:debug-build-no-rel-safe@sha256:a8c0fb6c7f50acc5a83784ba8d7f96a749e2267da2e4135c97df65868f02cfb0' //Debug-0.10.0
+    'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
