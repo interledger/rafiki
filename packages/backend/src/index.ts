@@ -37,6 +37,8 @@ import { createApiKeyService } from './apiKey/service'
 import { createOpenAPI } from 'openapi'
 import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
+import { createClientKeysService } from './clientKeys/service'
+import { createClientService } from './clients/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -227,6 +229,19 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       pricesUrl: config.pricesUrl,
       pricesLifetime: config.pricesLifetime
+    })
+  })
+
+  container.singleton('clientKeysService', async (deps) => {
+    return createClientKeysService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
+    })
+  })
+  container.singleton('clientService', async (deps) => {
+    return createClientService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
     })
   })
 

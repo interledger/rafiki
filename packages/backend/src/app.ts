@@ -44,6 +44,8 @@ import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
+import { ClientKeysService } from './clientKeys/service'
+import { ClientService } from './clients/service'
 
 export interface AppContextData {
   logger: Logger
@@ -128,6 +130,8 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
+  clientService: Promise<ClientService>
+  clientKeysService: Promise<ClientKeysService>
 }
 
 export type AppContainer = IocContract<AppServices>

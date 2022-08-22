@@ -1,5 +1,10 @@
 {
   "name": "auth",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "knex": "knex",
     "build:deps": "pnpm --filter openapi build",

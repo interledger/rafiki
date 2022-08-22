@@ -14,6 +14,7 @@ import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createOpenAPI } from 'openapi'
 
+export { JWKWithRequired } from './client/service'
 const container = initIocContainer(Config)
 const app = new App(container)
 
