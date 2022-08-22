@@ -214,8 +214,8 @@ export class App {
               route = grantRoutes.create
             } else {
               this.logger.warn({ path, method }, 'unexpected path/method')
+              continue
             }
-            continue
           }
           if (route) {
             this.publicRouter[method](
