@@ -431,6 +431,43 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
     })
+    test.skip('fails to create if grant is locked', async () => {
+      const grant = new Grant({
+        active: true,
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [AccessAction.Create, AccessAction.Read]
+          }
+        ]
+      })
+      const quotes = await Promise.all(
+        [0, 1].map(async (_) => {
+          return await createQuote(deps, {
+            accountId,
+            receiver,
+            sendAmount
+          })
+        })
+      )
+      const options = quotes.map((quote) => {
+        return {
+          accountId,
+          quoteId: quote.id,
+          description: 'rent',
+          externalRef: '202201',
+          grant
+        }
+      })
+      const payments = await Promise.all(
+        options.map(async (option) => {
+          return await outgoingPaymentService.create(option)
+        })
+      )
+      expect(payments[0]).toBeInstanceOf(OutgoingPayment)
+      expect(payments[1]).toEqual(OutgoingPaymentError.GrantLocked)
+    })
     describe('validateGrant', (): void => {
       let quote: Quote
       let options: CreateOutgoingPaymentOptions

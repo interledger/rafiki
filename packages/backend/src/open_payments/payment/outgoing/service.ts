@@ -11,6 +11,7 @@ import {
 } from './errors'
 import {
   OutgoingPayment,
+  Grant as GrantModel,
   OutgoingPaymentState,
   PaymentEventType
 } from './model'
@@ -21,6 +22,7 @@ import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { Interval } from 'luxon'
+import { KnexTimeoutError } from 'knex'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
@@ -88,6 +90,18 @@ async function createOutgoingPayment(
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
+      if (options.grant) {
+        await GrantModel.query(trx)
+          .insert({
+            id: options.grant.grant
+          })
+          .onConflict('id')
+          .ignore()
+          .forUpdate()
+          .timeout(5000)
+        // uncomment for running test 'fails to create if grant is locked'
+        // await new Promise((f) => setTimeout(f, 5000))
+      }
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
@@ -95,7 +109,7 @@ async function createOutgoingPayment(
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Funding,
-          grant: options.grant?.grant
+          grantId: options.grant?.grant
         })
         .withGraphFetched('[quote.asset]')
 
@@ -172,6 +186,8 @@ async function createOutgoingPayment(
       }
     } else if (isOutgoingPaymentError(err)) {
       return err
+    } else if (err instanceof KnexTimeoutError) {
+      return OutgoingPaymentError.GrantLocked
     }
     throw err
   }
@@ -255,10 +271,9 @@ async function validateGrant(
     return false
   }
 
-  // TODO: lock to prevent multiple grant payments from being created concurrently?
   const grantPayments = await OutgoingPayment.query(deps.knex)
     .where({
-      grant: grant.grant
+      grantId: grant.grant
     })
     .andWhereNot({
       id: payment.id

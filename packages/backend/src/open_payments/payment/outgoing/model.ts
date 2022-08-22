@@ -8,6 +8,15 @@ import { Quote } from '../../quote/model'
 import { Amount, AmountJSON } from '../../amount'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
+import { DbErrors } from 'objection-db-errors'
+
+export class Grant extends DbErrors(Model) {
+  public static get modelPaths(): string[] {
+    return [__dirname]
+  }
+  public static readonly tableName = 'grants'
+  public id!: string
+}
 
 export class OutgoingPayment
   extends BaseModel
@@ -22,7 +31,7 @@ export class OutgoingPayment
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
-  public grant?: string
+  public grantId?: string
 
   public get receiver(): string {
     return this.quote.receiver

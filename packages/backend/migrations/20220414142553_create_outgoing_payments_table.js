@@ -9,7 +9,7 @@ exports.up = function (knex) {
     table.string('description').nullable()
     table.string('externalRef').nullable()
 
-    table.string('grant').nullable().index()
+    table.string('grantId').nullable().index()
 
     // Open payments account corresponding to wallet account
     // from which to request funds for payment
