@@ -4,16 +4,16 @@
       "path": "packages/openapi"
     },
     {
-      "path": "packages/backend"
-    },
-    {
-      "path": "packages/frontend"
+      "path": "packages/auth"
     },
     {
       "path": "packages/rates"
     },
     {
-      "path": "packages/auth"
+      "path": "packages/backend"
+    },
+    {
+      "path": "packages/frontend"
     }
   ],
   "files": [],
