@@ -7,7 +7,9 @@
   "prHourlyLimit": 1,
   "rangeStrategy": "update-lockfile",
   "prCreation": "status-success",
-  "enabledManagers": ["pnpm"],
+  "docker": {
+    "enabled": false
+  },
   "packageRules": [
     {
       "matchPackageNames": ["@types/node", "node"],
