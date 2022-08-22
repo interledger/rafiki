@@ -34,7 +34,6 @@ import { isTransferError } from '../../../accounting/errors'
 import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
 import { CreateQuoteOptions } from '../../quote/service'
-import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Amount } from '../../amount'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
@@ -1107,38 +1106,17 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
-  describe('getPaymentPointerPage', (): void => {
+  describe('getAccountPage', (): void => {
     getPageTests({
       createModel: () =>
         createOutgoingPayment(deps, {
-          paymentPointerId,
+          accountId,
           receiver,
           sendAmount,
           validDestination: false
         }),
       getPage: (pagination: Pagination) =>
-        outgoingPaymentService.getPaymentPointerPage(
-          paymentPointerId,
-          pagination
-        )
-    })
-
-    it('throws if no TB account found', async (): Promise<void> => {
-      const payment = await createOutgoingPayment(deps, {
-        paymentPointerId,
-        receiver,
-        sendAmount,
-        validDestination: false
-      })
-
-      jest
-        .spyOn(accountingService, 'getAccountsTotalSent')
-        .mockResolvedValueOnce([undefined])
-      await expect(
-        outgoingPaymentService.getPaymentPointerPage(paymentPointerId, {})
-      ).rejects.toThrowError(
-        `Underlying TB account not found, payment id: ${payment.id}`
-      )
+        outgoingPaymentService.getAccountPage(accountId, pagination)
     })
   })
 })
