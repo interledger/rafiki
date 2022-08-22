@@ -39,6 +39,7 @@ export const createTestApp = async (
   config.openPaymentsPort = 0
   config.connectorPort = 0
   config.publicHost = 'https://wallet.example'
+  config.openPaymentsUrl = 'https://op.example'
   const logger = createLogger({
     transport: {
       target: 'pino-pretty',
@@ -82,7 +83,7 @@ export const createTestApp = async (
     .persist()
 
   // Since payment pointers MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
-  nock(config.publicHost)
+  nock(config.openPaymentsUrl)
     .get(/.*/)
     .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
     .reply(200, function (path) {
@@ -90,7 +91,7 @@ export const createTestApp = async (
       if (!headers['authorization']) {
         headers.authorization = `GNAP ${testAccessToken}`
       }
-      return Axios.get(`http://localhost:${app.getPort()}${path}`, {
+      return Axios.get(`http://localhost:${app.getOpenPaymentsPort()}${path}`, {
         headers
       }).then((res) => res.data)
     })
