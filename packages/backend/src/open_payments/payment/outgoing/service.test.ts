@@ -473,6 +473,7 @@ describe('OutgoingPaymentService', (): void => {
       )
       const payments = await OutgoingPayment.query(trx)
       expect(payments.length).toEqual(1)
+      expect([quotes[0].id, quotes[1].id]).toContain(payments[0].id)
     })
     describe('validateGrant', (): void => {
       let quote: Quote
