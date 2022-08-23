@@ -46,8 +46,8 @@ services:
       ILP_ADDRESS: test.rafiki
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
-      ADMIN_URL: http://rafiki.test:3001
-      OPEN_PAYMENTS_URL: http://wallet.rafiki.test:3003
+      ADMIN_HOST: rafiki.test:3001
+      OPEN_PAYMENTS_HOST: wallet.rafiki.test:3003
       WEBHOOK_URL: https://end3sf6r22xva.x.pipedream.net
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml

@@ -28,14 +28,14 @@ export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
 
   // adminHost is for the admin API.
-  adminHost: parseHost(envString('ADMIN_URL', 'http://127.0.0.1:3001')),
-  adminPort: parsePort(envString('ADMIN_URL', 'http://127.0.0.1:3001')),
+  adminHost: parseHostname(envString('ADMIN_HOST', '127.0.0.1:3001')),
+  adminPort: parsePort(envString('ADMIN_HOST', '127.0.0.1:3001')),
 
-  openPaymentsHost: parseHost(
-    envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3003')
+  openPaymentsHost: parseHostname(
+    envString('OPEN_PAYMENTS_HOST', '127.0.0.1:3003')
   ),
   openPaymentsPort: parsePort(
-    envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3003')
+    envString('OPEN_PAYMENTS_HOST', '127.0.0.1:3003')
   ),
 
   connectorPort: envInt('CONNECTOR_PORT', 3002),
@@ -144,12 +144,17 @@ function parseRedisTlsConfig(
   return Object.keys(options).length > 0 ? options : undefined
 }
 
-function parsePort(url: string): number {
-  const parsed = new URL(url)
-  return +parsed.port
+function parsePort(host: string): number {
+  const port = host.split(':')[1]
+  if (!port) {
+    return 0
+  }
 }
 
-function parseHost(url: string): string {
-  const parsed = new URL(url)
-  return parsed.host
+function parseHostname(host: string): string {
+  const hostname = host.split(':')[0]
+  if (!hostname) {
+    return ''
+  }
+  return hostname
 }
