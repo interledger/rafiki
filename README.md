@@ -46,7 +46,7 @@ More phone numbers: https://tel.meet/rdx-xoqn-iiq?pin=3263008843276
 
 ## Local Development Enironment
 
-### Prequisits
+### Prequisites
 
 - [Docker](https://docs.docker.com/get-docker/)
 - [NVM](https://github.com/nvm-sh/nvm)
