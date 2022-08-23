@@ -27,7 +27,7 @@ export interface SeedInstance {
 
 const config: SeedInstance = parse(
   readFileSync(
-    process.env.SEED_FILE_LOCATION || `${__dirname}/../seed.yml`
+    process.env.SEED_FILE_LOCATION || `${__dirname}/../seed.example.yml`
   ).toString('utf8')
 )
 
