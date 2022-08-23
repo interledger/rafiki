@@ -1,8 +1,7 @@
 import {
-  CommitTransferError as CommitTransferErrorCode,
+  CreateAccountError as CreateAccountErrorCode,
   CreateTransferError as CreateTransferErrorCode
 } from 'tigerbeetle-node'
-
 import { AccountId } from './utils'
 
 export class CreateAccountError extends Error {
@@ -16,13 +15,6 @@ export class CreateTransferError extends Error {
   constructor(public code: CreateTransferErrorCode) {
     super()
     this.name = 'CreateTransferError'
-  }
-}
-
-export class CommitTransferError extends Error {
-  constructor(public code: CommitTransferErrorCode) {
-    super()
-    this.name = 'CommitTransferError'
   }
 }
 
@@ -48,6 +40,28 @@ export enum TransferError {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isTransferError = (o: any): o is TransferError =>
   Object.values(TransferError).includes(o)
+
+export function areAllAccountExistsErrors(
+  errors: CreateAccountErrorCode[]
+): boolean {
+  return areAllOfTypeAccountErrors(errors, [
+    CreateAccountErrorCode.exists_with_different_debits_pending,
+    CreateAccountErrorCode.exists_with_different_debits_posted,
+    CreateAccountErrorCode.exists_with_different_credits_pending,
+    CreateAccountErrorCode.exists_with_different_credits_posted,
+    CreateAccountErrorCode.exists
+  ])
+}
+
+export function areAllOfTypeAccountErrors(
+  errorsOccurred: CreateAccountErrorCode[],
+  errToVerify: CreateAccountErrorCode[]
+): boolean {
+  for (const occurred of errorsOccurred) {
+    if (!errToVerify.includes(occurred)) return false
+  }
+  return true
+}
 
 export class BalanceTransferError extends Error {
   constructor(public error: TransferError) {

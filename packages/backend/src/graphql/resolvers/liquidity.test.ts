@@ -576,7 +576,7 @@ describe('Liquidity Resolvers', (): void => {
         accountingService.createDeposit({
           id,
           account: peer,
-          amount: BigInt(10)
+          amount: 10n
         })
       ).resolves.toBeUndefined()
       const response = await appContainer.apolloClient
@@ -1817,9 +1817,9 @@ describe('Liquidity Resolvers', (): void => {
               })
 
             expect(response.success).toBe(false)
-            expect(response.code).toEqual('403')
-            expect(response.message).toEqual('Insufficient balance')
-            expect(response.error).toEqual(LiquidityError.InsufficientBalance)
+            expect(response.code).toEqual('409')
+            expect(response.message).toEqual('Transfer exists')
+            expect(response.error).toEqual(LiquidityError.TransferExists)
           })
         }
       )

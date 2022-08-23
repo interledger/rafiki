@@ -181,7 +181,7 @@ importers:
       react: ~18.2.0
       rosie: ^2.1.0
       testcontainers: ^8.12.0
-      tigerbeetle-node: ^0.6.0
+      tigerbeetle-node: ^0.10.0
       tmp: ^0.2.1
       typescript: ^4.2.4
       uuid: ^8.3.2
@@ -229,7 +229,7 @@ importers:
       pino: 8.4.2
       pino-pretty: 9.0.1
       raw-body: 2.5.1
-      tigerbeetle-node: 0.6.0
+      tigerbeetle-node: 0.10.0
       uuid: 8.3.2
     devDependencies:
       '@graphql-codegen/cli': 1.21.5_h5eoywvcjsa4emif44kddonyyu
@@ -13822,8 +13822,8 @@ packages:
       readable-stream: 3.6.0
     dev: true
 
-  /tigerbeetle-node/0.6.0:
-    resolution: {integrity: sha512-FTN0N8OcltAd4Ex1UcxpBQqRB7efbor7j/hvH8ZedWwGT1+Q3sQxKbGyxAogKlTGSlN1F5WJ/9c75UURE0zFCA==}
+  /tigerbeetle-node/0.10.0:
+    resolution: {integrity: sha512-2R6VrgnAWo1n9jNccmeqo9mojUY6XJQtdUJqVhb+cG30pNVtmCsqdkdteTt1s/LCg7j90F6kaNzZGp0sCUtgsQ==}
     engines: {node: '>=14.0.0'}
     requiresBuild: true
     dev: false

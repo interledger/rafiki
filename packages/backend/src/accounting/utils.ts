@@ -2,11 +2,14 @@ import assert from 'assert'
 
 import { validateId } from '../shared/utils'
 
-export type AccountId = string | number
+export type AccountId = string | number | bigint
 
 export function toTigerbeetleId(id: AccountId): bigint {
   if (typeof id === 'number') {
     return BigInt(id)
+  }
+  if (typeof id === 'bigint') {
+    return id
   }
   assert.ok(validateId(id))
   return uuidToBigInt(id)

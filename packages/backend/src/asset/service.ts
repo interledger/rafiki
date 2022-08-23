@@ -6,7 +6,7 @@ import { AssetError, isAssetError } from './errors'
 import { Asset } from './model'
 import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
-import { AccountingService } from '../accounting/service'
+import { AccountingService, AccountTypeCode } from '../accounting/service'
 
 export interface AssetOptions {
   code: string
@@ -63,11 +63,11 @@ async function createAsset(
   { code, scale, withdrawalThreshold }: CreateOptions
 ): Promise<Asset | AssetError> {
   try {
-    // Asset rows include a smallserial 'unit' column that would have sequence gaps
+    // Asset rows include a smallserial 'ledger' column that would have sequence gaps
     // if a transaction is rolled back.
     // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
     //
-    // However, we need to know the 'unit' column value from the inserted asset row
+    // However, we need to know the 'ledger' column value from the inserted asset row
     // before we can create the liquidity and settlement tigerbeetle balances.
     return await Asset.transaction(async (trx) => {
       const asset = await Asset.query(trx).insertAndFetch({
@@ -75,8 +75,11 @@ async function createAsset(
         scale,
         withdrawalThreshold
       })
-      await deps.accountingService.createLiquidityAccount(asset)
-      await deps.accountingService.createSettlementAccount(asset.unit)
+      await deps.accountingService.createLiquidityAccount(
+        asset,
+        AccountTypeCode.LiquidityAsset
+      )
+      await deps.accountingService.createSettlementAccount(asset.ledger)
 
       return asset
     })

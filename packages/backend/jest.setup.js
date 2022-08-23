@@ -7,9 +7,12 @@ const tmp = require('tmp')
 
 const POSTGRES_PORT = 5432
 
-const TIGERBEETLE_CLUSTER_ID = 1
+const TIGERBEETLE_CLUSTER_ID = 0
 const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
+const TIGERBEETLE_CONTAINER_LOG = false
+//TODO @jason: https://github.com/interledger/rafiki/issues/518
+//TODO @jason const TIGERBEETLE_FILE = `${TIGERBEETLE_DIR}/cluster_${TIGERBEETLE_CLUSTER_ID}_replica_0.tigerbeetle`
 
 const REDIS_PORT = 6379
 
@@ -70,8 +73,8 @@ module.exports = async (globalConfig) => {
     if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
       const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
 
-      await new GenericContainer(
-        'ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7'
+      const tbContFormat = await new GenericContainer(
+        'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
       )
         .withExposedPorts(TIGERBEETLE_PORT)
         .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
@@ -85,8 +88,19 @@ module.exports = async (globalConfig) => {
         .withWaitStrategy(Wait.forLogMessage(/initialized data file/))
         .start()
 
-      const tigerbeetleContainer = await new GenericContainer(
-        'ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7'
+      const streamTbFormat = await tbContFormat.logs()
+      if (TIGERBEETLE_CONTAINER_LOG) {
+        streamTbFormat
+          .on('data', (line) => console.log(line))
+          .on('err', (line) => console.error(line))
+          .on('end', () => console.log('Stream closed for [tb-format]'))
+      }
+
+      // Give TB a chance to startup (no message currently to notify allocation is complete):
+      await new Promise((f) => setTimeout(f, 1000))
+
+      const tbContStart = await new GenericContainer(
+        'ghcr.io/coilhq/tigerbeetle:dj-request-dirty-prepare@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
       )
         .withExposedPorts(TIGERBEETLE_PORT)
         .withPrivilegedMode()
@@ -101,11 +115,19 @@ module.exports = async (globalConfig) => {
         .withWaitStrategy(Wait.forLogMessage(/listening on/))
         .start()
 
+      const streamTbStart = await tbContStart.logs()
+      if (TIGERBEETLE_CONTAINER_LOG) {
+        streamTbStart
+          .on('data', (line) => console.log(line))
+          .on('err', (line) => console.error(line))
+          .on('end', () => console.log('Stream closed for [tb-start]'))
+      }
+
       process.env.TIGERBEETLE_CLUSTER_ID = TIGERBEETLE_CLUSTER_ID
-      process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${tigerbeetleContainer.getMappedPort(
+      process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${tbContStart.getMappedPort(
         TIGERBEETLE_PORT
       )}]`
-      global.__BACKEND_TIGERBEETLE__ = tigerbeetleContainer
+      global.__BACKEND_TIGERBEETLE__ = tbContStart
     }
   }
 

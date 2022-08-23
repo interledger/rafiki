@@ -10,9 +10,10 @@ export async function startTigerbeetleContainer(
   clusterId: number = Config.tigerbeetleClusterId
 ): Promise<StartedTestContainer> {
   const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
+  // TODO const @jason (waiting for TB 0.10.0): tigerBeetleFile = `${TIGERBEETLE_DIR}/cluster_${clusterId}_replica_0_test.tigerbeetle`
 
   await new GenericContainer(
-    'ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7'
+    'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
@@ -26,8 +27,11 @@ export async function startTigerbeetleContainer(
     .withWaitStrategy(Wait.forLogMessage(/initialized data file/))
     .start()
 
+  // Give TB a chance to startup (no message currently to notify allocation is complete):
+  await new Promise((f) => setTimeout(f, 1000))
+
   return await new GenericContainer(
-    'ghcr.io/coilhq/tigerbeetle@sha256:56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7'
+    'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
