@@ -74,7 +74,7 @@ importers:
       pg: ^8.6.0
       pino: ^8.4.2
       pino-pretty: ^9.0.1
-      testcontainers: ^8.9.0
+      testcontainers: ^8.12.0
       typescript: ^4.2.4
       uuid: ^8.3.2
     dependencies:
@@ -180,7 +180,7 @@ importers:
       raw-body: ^2.4.1
       react: ~18.2.0
       rosie: ^2.1.0
-      testcontainers: ^7.20.4
+      testcontainers: ^8.12.0
       tigerbeetle-node: ^0.6.0
       tmp: ^0.2.1
       typescript: ^4.2.4
@@ -257,7 +257,7 @@ importers:
       openapi-types: 12.0.0
       react: 18.2.0
       rosie: 2.1.0
-      testcontainers: 7.24.0
+      testcontainers: 8.12.0
       tmp: 0.2.1
       typescript: 4.7.4
 
@@ -292,7 +292,7 @@ importers:
       pg: ^8.6.0
       pino: ^8.4.2
       pino-pretty: ^9.0.1
-      testcontainers: ^8.9.0
+      testcontainers: ^8.12.0
       typescript: ^4.2.4
       uuid: ^8.3.2
     dependencies:
@@ -1371,7 +1371,6 @@ packages:
 
   /@balena/dockerignore/1.0.2:
     resolution: {integrity: sha512-wMue2Sy4GAVTk6Ic4tJVcnfdau+gx2EnG7S+uAEe+TWJFqE4YoWN4/H8MSLj4eYJKxGg26lZwboEniNiNwZQ6Q==}
-    dev: false
 
   /@bcoe/v8-coverage/0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
@@ -2943,14 +2942,14 @@ packages:
   /@types/docker-modem/3.0.2:
     resolution: {integrity: sha512-qC7prjoEYR2QEe6SmCVfB1x3rfcQtUr1n4x89+3e0wSTMQ/KYCyf+/RAA9n2tllkkNc6//JMUZePdFRiGIWfaQ==}
     dependencies:
-      '@types/node': 18.7.6
+      '@types/node': 18.7.11
       '@types/ssh2': 1.11.5
 
   /@types/dockerode/3.3.9:
     resolution: {integrity: sha512-SYRN5FF/qmwpxUT6snJP5D8k0wgoUKOGVs625XvpRJOOUi6s//UYI4F0tbyE3OmzpI70Fo1+aqpzX27zCrInww==}
     dependencies:
       '@types/docker-modem': 3.0.2
-      '@types/node': 18.7.6
+      '@types/node': 18.7.11
 
   /@types/express-serve-static-core/4.17.30:
     resolution: {integrity: sha512-gstzbTWro2/nFed1WXtf+TtrpwxH7Ggs4RLYTLbeVgIkUQOI3WG/JKjgeOU1zXDvezllupjrf8OPIdvTbIaVOQ==}
@@ -2977,7 +2976,7 @@ packages:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
     dependencies:
       '@types/minimatch': 3.0.5
-      '@types/node': 18.7.6
+      '@types/node': 18.7.11
 
   /@types/graceful-fs/4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}
@@ -3141,7 +3140,6 @@ packages:
 
   /@types/node/18.7.11:
     resolution: {integrity: sha512-KZhFpSLlmK/sdocfSAjqPETTMd0ug6HIMIAwkwUpU79olnZdQtMxpQP+G1wDzCH7na+FltSIhbaZuKdwZ8RDrw==}
-    dev: true
 
   /@types/node/18.7.6:
     resolution: {integrity: sha512-EdxgKRXgYsNITy5mjjXjVE/CS8YENSdhiagGrLqjG0pvA2owgJ6i4l7wy/PFZGC0B1/H20lWKN7ONVDNYDZm7A==}
@@ -3208,18 +3206,18 @@ packages:
   /@types/ssh2-streams/0.1.9:
     resolution: {integrity: sha512-I2J9jKqfmvXLR5GomDiCoHrEJ58hAOmFrekfFqmCFd+A6gaEStvWnPykoWUwld1PNg4G5ag1LwdA+Lz1doRJqg==}
     dependencies:
-      '@types/node': 18.7.6
+      '@types/node': 18.7.11
 
   /@types/ssh2/0.5.52:
     resolution: {integrity: sha512-lbLLlXxdCZOSJMCInKH2+9V/77ET2J6NPQHpFI0kda61Dd1KglJs+fPQBchizmzYSOJBgdTajhPqBO1xxLywvg==}
     dependencies:
-      '@types/node': 18.7.6
+      '@types/node': 18.7.11
       '@types/ssh2-streams': 0.1.9
 
   /@types/ssh2/1.11.5:
     resolution: {integrity: sha512-RaBsPKr+YP/slH8iR7XfC7chyomU+V57F/gJ5cMSP2n6/YWKVmeRLx7lrkgw4YYLpEW5lXLAdfZJqGo0PXboSA==}
     dependencies:
-      '@types/node': 18.7.6
+      '@types/node': 18.7.11
 
   /@types/stack-utils/2.0.1:
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
@@ -5158,8 +5156,8 @@ packages:
     dependencies:
       yaml: 1.10.2
 
-  /docker-modem/3.0.5:
-    resolution: {integrity: sha512-x1E6jxWdtoK3+ifAUWj4w5egPdTDGBpesSCErm+aKET5BnnEOvDtTP6GxcnMB1zZiv2iQ0qJZvJie+1wfIRg6Q==}
+  /docker-modem/3.0.6:
+    resolution: {integrity: sha512-h0Ow21gclbYsZ3mkHDfsYNDqtRhXS8fXr51bU0qr1dxgTMJj0XufbzX+jhNOvA8KuEEzn6JbvLVhXyv+fny9Uw==}
     engines: {node: '>= 8.0'}
     dependencies:
       debug: 4.3.4
@@ -5169,11 +5167,12 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /dockerode/3.3.3:
-    resolution: {integrity: sha512-lvKV6/NGf2/CYLt5V4c0fd6Fl9XZSCo1Z2HBT9ioKrKLMB2o+gA62Uza8RROpzGvYv57KJx2dKu+ZwSpB//OIA==}
+  /dockerode/3.3.4:
+    resolution: {integrity: sha512-3EUwuXnCU+RUlQEheDjmBE0B7q66PV9Rw5NiH1sXwINq0M9c5ERP9fxgkw36ZHOtzf4AGEEYySnkx/sACC9EgQ==}
     engines: {node: '>= 8.0'}
     dependencies:
-      docker-modem: 3.0.5
+      '@balena/dockerignore': 1.0.2
+      docker-modem: 3.0.6
       tar-fs: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -8983,7 +8982,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       mkdirp: 1.0.4
-    dev: false
 
   /proxy-addr/2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
@@ -9941,25 +9939,6 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /testcontainers/7.24.0:
-    resolution: {integrity: sha512-/Hm/iUc2F6cPYh84abVPiy/suW9D9SseKq/RAZpZqYFxJ0VuETnzzZ/KRtf3o9b35G0xOuxSKRISomTXiIUr8Q==}
-    dependencies:
-      '@types/archiver': 5.3.1
-      '@types/dockerode': 3.3.9
-      archiver: 5.3.1
-      byline: 5.0.0
-      debug: 4.3.4
-      docker-compose: 0.23.17
-      dockerode: 3.3.3
-      get-port: 5.1.1
-      glob: 7.2.3
-      slash: 3.0.0
-      ssh-remote-port-forward: 1.0.4
-      tar-fs: 2.1.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /testcontainers/8.12.0:
     resolution: {integrity: sha512-6qQqKirdURAXH/V6sVnfbgqLAJK/vxP2ED6qcwiLfsZ6McPkF5TGDAPzkVZUmdrx62H3RzuTTdXGoPcLP7KG6g==}
     dependencies:
@@ -9970,14 +9949,13 @@ packages:
       byline: 5.0.0
       debug: 4.3.4
       docker-compose: 0.23.17
-      dockerode: 3.3.3
+      dockerode: 3.3.4
       get-port: 5.1.1
       properties-reader: 2.2.0
       ssh-remote-port-forward: 1.0.4
       tar-fs: 2.1.1
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /text-extensions/1.9.0:
     resolution: {integrity: sha512-wiBrwC1EhBelW12Zy26JeOUkQ5mRu+5o8rpsJk5+2t+Y5vE7e842qtZDQ2g1NpX/29HdyFeJ4nSIhI47ENSxlQ==}
