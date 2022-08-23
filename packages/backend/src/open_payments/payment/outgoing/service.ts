@@ -82,6 +82,7 @@ export interface CreateOutgoingPaymentOptions {
   description?: string
   externalRef?: string
   grant?: Grant
+  callback?: (f: unknown) => NodeJS.Timeout
 }
 
 async function createOutgoingPayment(
@@ -99,8 +100,7 @@ async function createOutgoingPayment(
           .ignore()
           .forUpdate()
           .timeout(5000)
-        // uncomment for running test 'fails to create if grant is locked'
-        // await new Promise((f) => setTimeout(f, 5000))
+        if (options.callback) await new Promise(options.callback)
       }
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({

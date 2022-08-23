@@ -431,7 +431,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
     })
-    test.skip('fails to create if grant is locked', async () => {
+    test('fails to create if grant is locked', async () => {
       const grant = new Grant({
         active: true,
         grant: uuid(),
@@ -457,7 +457,9 @@ describe('OutgoingPaymentService', (): void => {
           quoteId: quote.id,
           description: 'rent',
           externalRef: '202201',
-          grant
+          grant,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          callback: (f: any) => setTimeout(f, 5000)
         }
       })
       await expect(
