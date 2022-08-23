@@ -293,7 +293,7 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       peerService: await deps.use('peerService'),
-      publicHost: config.publicHost
+      openPaymentsHost: config.openPaymentsHost
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {
