@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import nock from 'nock'
 import { importJWK } from 'jose'
 import { v4 } from 'uuid'
-import Knex, { Transaction } from 'knex'
+import { Knex } from 'knex'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
@@ -146,7 +146,7 @@ describe('Client Service', (): void => {
     let grant: Grant
     let token: AccessToken
     let knex: Knex
-    let trx: Transaction
+    let trx: Knex.Transaction
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let next: () => Promise<any>
     let managementId: string

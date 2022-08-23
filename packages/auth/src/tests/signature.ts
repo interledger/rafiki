@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { importJWK } from 'jose'
-import { KEY_REGISTRY_ORIGIN, TEST_KID_PATH } from '../grant/routes.test'
+import { KID_ORIGIN, KID_PATH } from '../grant/routes.test'
 
 export const SIGNATURE_METHOD = 'GET'
 export const SIGNATURE_TARGET_URI = '/test'
@@ -8,7 +8,7 @@ export const SIGNATURE_TARGET_URI = '/test'
 export const TEST_CLIENT_KEY = {
   proof: 'httpsig',
   jwk: {
-    kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+    kid: KID_ORIGIN + KID_PATH,
     x: 'hin88zzQxp79OOqIFNCME26wMiz0yqjzgkcBe0MW8pE',
     kty: 'OKP',
     alg: 'EdDSA',
