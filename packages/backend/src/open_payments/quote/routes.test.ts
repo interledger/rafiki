@@ -1,15 +1,12 @@
 import assert from 'assert'
 import jestOpenAPI from 'jest-openapi'
 import * as httpMocks from 'node-mocks-http'
-import Knex from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
 import { createContext } from '../../tests/context'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { resetGraphileDb } from '../../tests/graphileDb'
-import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices, CreateContext, ReadContext, ListContext } from '../../app'
@@ -26,17 +23,12 @@ describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let workerUtils: WorkerUtils
   let quoteService: QuoteService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
   let accountId: string
   let accountUrl: string
 
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
   const receiver = `http://wallet2.example/bob/incoming-payments/${uuid()}`
   const asset = randomAsset()
   const sendAmount: Amount = {
@@ -62,13 +54,7 @@ describe('Quote Routes', (): void => {
     config = Config
     config.publicHost = 'https://wallet.example'
     deps = await initIocContainer(config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    workerUtils = await makeWorkerUtils({
-      connectionString: appContainer.connectionUrl
-    })
-    await workerUtils.migrate()
-    messageProducer.setUtils(workerUtils)
     knex = await deps.use('knex')
     config = await deps.use('config')
     quoteRoutes = await deps.use('quoteRoutes')
@@ -94,9 +80,7 @@ describe('Quote Routes', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await resetGraphileDb(knex)
     await appContainer.shutdown()
-    await workerUtils.release()
   })
 
   describe('get', (): void => {

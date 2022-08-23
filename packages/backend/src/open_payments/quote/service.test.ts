@@ -1,6 +1,6 @@
 import assert from 'assert'
 import nock, { Definition } from 'nock'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import * as Pay from '@interledger/pay'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
@@ -104,7 +104,7 @@ describe('QuoteService', (): void => {
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingAccount = `${config.publicHost}/${destinationAccount.id}`
+    receivingAccount = `${config.openPaymentsUrl}/${destinationAccount.id}`
   })
 
   afterEach(async (): Promise<void> => {

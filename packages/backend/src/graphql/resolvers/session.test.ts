@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-koa'
-import Knex from 'knex'
+import { Knex } from 'knex'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'

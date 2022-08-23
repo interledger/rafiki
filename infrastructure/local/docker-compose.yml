@@ -28,13 +28,15 @@ services:
     ports:
       - "3001:3001"
       - "3002:3002"
+      - "3003:3003"
     networks:
       rafiki:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      PORT: 3001
+      ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
+      OPEN_PAYMENTS_PORT: 3003
       DATABASE_URL: postgresql://backend:backend@database/backend
       REDIS_URL: redis://redis:6379
       TIGERBEETLE_CLUSTER_ID: 0

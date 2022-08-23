@@ -4,7 +4,7 @@ import { AccountId } from './utils'
 import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 
 export class CreateAccountError extends Error {
-  constructor(public codes: number[]) {
+  constructor(public code: number) {
     super()
     this.name = 'CreateAccountError'
   }
@@ -44,10 +44,6 @@ export function areAllAccountExistsErrors(
   errors: CreateAccountErrorCode[]
 ): boolean {
   return areAllOfTypeAccountErrors(errors, [
-    CreateAccountErrorCode.exists_with_different_flags,
-    CreateAccountErrorCode.exists_with_different_user_data,
-    CreateAccountErrorCode.exists_with_different_ledger,
-    CreateAccountErrorCode.exists_with_different_code,
     CreateAccountErrorCode.exists_with_different_debits_pending,
     CreateAccountErrorCode.exists_with_different_debits_posted,
     CreateAccountErrorCode.exists_with_different_credits_pending,
@@ -61,8 +57,7 @@ export function areAllOfTypeAccountErrors(
   errToVerify: CreateAccountErrorCode[]
 ): boolean {
   for (const occurred of errorsOccurred) {
-    if (errToVerify.includes(occurred)) continue
-    return false
+    if (!errToVerify.includes(occurred)) return false
   }
   return true
 }

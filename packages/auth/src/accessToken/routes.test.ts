@@ -1,5 +1,5 @@
 import nock from 'nock'
-import Knex, { Transaction } from 'knex'
+import { Knex } from 'knex'
 import crypto from 'crypto'
 import { v4 } from 'uuid'
 import jestOpenAPI from 'jest-openapi'
@@ -33,7 +33,7 @@ describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let trx: Transaction
+  let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
 
   beforeAll(async (): Promise<void> => {

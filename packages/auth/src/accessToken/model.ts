@@ -11,7 +11,7 @@ export class AccessToken extends BaseModel {
   static relationMappings = {
     grant: {
       relation: Model.HasOneRelation,
-      modelClass: join(__dirname, '../grant/model.ts'),
+      modelClass: join(__dirname, '../grant/model'),
       join: {
         from: 'accessTokens.grantId',
         to: 'grants.id'

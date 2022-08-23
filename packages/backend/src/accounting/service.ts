@@ -22,7 +22,7 @@ import { toTigerbeetleId } from './utils'
 
 enum AccountCode {
   Liquidity = 1,
-  Settlement
+  Settlement = 2
 }
 
 // Model classes that have a corresponding Tigerbeetle liquidity
@@ -156,7 +156,7 @@ export async function createSettlementAccount(
     // This could change if TigerBeetle could be reset between tests.
     if (
       err instanceof CreateAccountError &&
-      areAllAccountExistsErrors(err.codes)
+      areAllAccountExistsErrors([err.code])
     ) {
       return
     }

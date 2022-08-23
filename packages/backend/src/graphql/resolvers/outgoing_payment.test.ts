@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-koa'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { PaymentError } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'

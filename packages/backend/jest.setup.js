@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const Knex = require('knex')
+const { knex } = require('knex')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { GenericContainer, Wait } = require('testcontainers')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -35,7 +35,7 @@ module.exports = async (globalConfig) => {
       global.__BACKEND_POSTGRES__ = postgresContainer
     }
 
-    const knex = Knex({
+    const db = knex({
       client: 'postgresql',
       connection: process.env.DATABASE_URL,
       pool: {
@@ -48,23 +48,23 @@ module.exports = async (globalConfig) => {
     })
 
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
-    knex.client.driver.types.setTypeParser(
-      knex.client.driver.types.builtins.INT8,
+    db.client.driver.types.setTypeParser(
+      db.client.driver.types.builtins.INT8,
       'text',
       BigInt
     )
-    await knex.migrate.latest({
+    await db.migrate.latest({
       directory: __dirname + '/migrations'
     })
 
     for (let i = 1; i <= workers; i++) {
       const workerDatabaseName = `testing_${i}`
 
-      await knex.raw(`DROP DATABASE IF EXISTS ${workerDatabaseName}`)
-      await knex.raw(`CREATE DATABASE ${workerDatabaseName} TEMPLATE testing`)
+      await db.raw(`DROP DATABASE IF EXISTS ${workerDatabaseName}`)
+      await db.raw(`CREATE DATABASE ${workerDatabaseName} TEMPLATE testing`)
     }
 
-    global.__BACKEND_KNEX__ = knex
+    global.__BACKEND_KNEX__ = db
   }
 
   const setupTigerbeetle = async () => {

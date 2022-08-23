@@ -1,6 +1,5 @@
 import assert from 'assert'
-import Knex from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { Knex } from 'knex'
 import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
@@ -13,8 +12,6 @@ import {
 } from './service'
 import { CreateAccountError, TransferError, isTransferError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
-import { resetGraphileDb } from '../tests/graphileDb'
-import { GraphileProducer } from '../messaging/graphileProducer'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -30,15 +27,10 @@ describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let workerUtils: WorkerUtils
   let accountingService: AccountingService
   let accountFactory: AccountFactory
   let tigerbeetleContainer: StartedTestContainer
-  const timeout = 10_000n // 10 seconds
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
+  const timeout = BigInt(10_000) // 10 seconds
 
   let ledger = 1
   function newLedger() {
@@ -51,13 +43,7 @@ describe('Accounting Service', (): void => {
       tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
     ]
     deps = await initIocContainer(Config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    workerUtils = await makeWorkerUtils({
-      connectionString: appContainer.connectionUrl
-    })
-    await workerUtils.migrate()
-    messageProducer.setUtils(workerUtils)
     knex = await deps.use('knex')
     accountingService = await deps.use('accountingService')
     accountFactory = new AccountFactory(accountingService, newLedger)
@@ -68,9 +54,7 @@ describe('Accounting Service', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await resetGraphileDb(knex)
     await appContainer.shutdown()
-    await workerUtils.release()
     await tigerbeetleContainer.stop()
   })
 
@@ -121,9 +105,9 @@ describe('Accounting Service', (): void => {
           }
         })
       ).rejects.toThrowError(
-        new CreateAccountError([
+        new CreateAccountError(
           CreateTbAccountError.exists_with_different_ledger
-        ])
+        )
       )
     })
   })

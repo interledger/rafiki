@@ -51,7 +51,7 @@ export async function createAccounts(
   )
   for (const { code } of errors) {
     if (code !== CreateAccountErrorCode.linked_event_failed) {
-      throw new CreateAccountError([code])
+      throw new CreateAccountError(code)
     }
   }
 }

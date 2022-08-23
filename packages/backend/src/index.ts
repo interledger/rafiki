@@ -1,16 +1,14 @@
 import { EventEmitter } from 'events'
 import { Server } from 'http'
 import createLogger from 'pino'
-import Knex from 'knex'
+import { knex } from 'knex'
 import { Model } from 'objection'
-import { makeWorkerUtils } from 'graphile-worker'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import IORedis from 'ioredis'
 import { createClient } from 'tigerbeetle-node'
 
 import { App, AppServices } from './app'
 import { Config } from './config/app'
-import { GraphileProducer } from './messaging/graphileProducer'
 import { createRatesService } from './rates/service'
 import { createQuoteRoutes } from './open_payments/quote/routes'
 import { createQuoteService } from './open_payments/quote/service'
@@ -53,36 +51,17 @@ export function initIocContainer(
 ): IocContract<AppServices> {
   const container: IocContract<AppServices> = new Ioc()
   container.singleton('config', async () => config)
-  container.singleton('workerUtils', async (deps: IocContract<AppServices>) => {
-    const config = await deps.use('config')
-    const logger = await deps.use('logger')
-    logger.info({ msg: 'creating graphile worker utils' })
-    const workerUtils = await makeWorkerUtils({
-      connectionString: config.databaseUrl
-    })
-    await workerUtils.migrate()
-    return workerUtils
-  })
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')
     const logger = createLogger()
     logger.level = config.logLevel
     return logger
   })
-  container.singleton(
-    'messageProducer',
-    async (deps: IocContract<AppServices>) => {
-      const logger = await deps.use('logger')
-      const workerUtils = await deps.use('workerUtils')
-      logger.info({ msg: 'creating graphile producer' })
-      return new GraphileProducer(workerUtils)
-    }
-  )
   container.singleton('knex', async (deps: IocContract<AppServices>) => {
     const logger = await deps.use('logger')
     const config = await deps.use('config')
     logger.info({ msg: 'creating knex' })
-    const knex = Knex({
+    const db = knex({
       client: 'postgresql',
       connection: config.databaseUrl,
       pool: {
@@ -95,12 +74,12 @@ export function initIocContainer(
       }
     })
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
-    knex.client.driver.types.setTypeParser(
-      knex.client.driver.types.builtins.INT8,
+    db.client.driver.types.setTypeParser(
+      db.client.driver.types.builtins.INT8,
       'text',
       BigInt
     )
-    return knex
+    return db
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
   container.singleton('redis', async (deps): Promise<IORedis.Redis> => {
@@ -357,8 +336,6 @@ export const gracefulShutdown = async (
   }
   const knex = await container.use('knex')
   await knex.destroy()
-  const workerUtils = await container.use('workerUtils')
-  await workerUtils.release()
   const tigerbeetle = await container.use('tigerbeetle')
   await tigerbeetle.destroy()
   const redis = await container.use('redis')
@@ -425,8 +402,9 @@ export const start = async (
 
   const config = await container.use('config')
   await app.boot()
-  app.listen(config.port)
-  logger.info(`Listening on ${app.getPort()}`)
+  await app.startAdminServer(config.adminPort)
+  await app.startOpenPaymentsServer(config.openPaymentsPort)
+  logger.info(`Listening on ${app.getAdminPort()}`)
 
   const connectorApp = await container.use('connectorApp')
   connectorServer = connectorApp.listenPublic(config.connectorPort)

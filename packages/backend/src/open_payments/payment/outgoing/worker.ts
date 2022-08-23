@@ -1,4 +1,4 @@
-import * as knex from 'knex'
+import { Knex } from 'knex'
 
 import { ServiceDependencies } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
@@ -37,7 +37,7 @@ export async function processPendingPayment(
 // Fetch (and lock) a payment for work.
 // Exported for testing.
 export async function getPendingPayment(
-  trx: knex.Transaction
+  trx: Knex.Transaction
 ): Promise<OutgoingPayment | undefined> {
   const now = new Date(Date.now()).toISOString()
   const payments = await OutgoingPayment.query(trx)
@@ -48,7 +48,7 @@ export async function getPendingPayment(
     .skipLocked()
     .whereIn('state', [OutgoingPaymentState.Sending])
     // Back off between retries.
-    .andWhere((builder: knex.QueryBuilder) => {
+    .andWhere((builder: Knex.QueryBuilder) => {
       builder
         .where('stateAttempts', 0)
         .orWhereRaw(

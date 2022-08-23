@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { createContext } from '../tests/context'
 import { AppServices } from '../app'
 
@@ -7,11 +7,8 @@ import { SPSPRoutes } from './routes'
 import { createTestApp, TestContainer } from '../tests/app'
 import { initIocContainer } from '../'
 import { Config } from '../config/app'
-import { GraphileProducer } from '../messaging/graphileProducer'
-import { resetGraphileDb } from '../tests/graphileDb'
 
 import { IocContract } from '@adonisjs/fold'
-import { makeWorkerUtils, WorkerUtils } from 'graphile-worker'
 import { v4 } from 'uuid'
 import { StreamServer } from '@interledger/stream-receiver'
 import { truncateTables } from '../tests/tableManager'
@@ -21,26 +18,15 @@ describe('SPSP Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let workerUtils: WorkerUtils
   let accountService: AccountService
   let spspRoutes: SPSPRoutes
   let streamServer: StreamServer
   const nonce = crypto.randomBytes(16).toString('base64')
   const secret = crypto.randomBytes(32).toString('base64')
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    workerUtils = await makeWorkerUtils({
-      connectionString: appContainer.connectionUrl
-    })
-    await workerUtils.migrate()
-    messageProducer.setUtils(workerUtils)
     knex = await deps.use('knex')
   })
 
@@ -51,10 +37,8 @@ describe('SPSP Routes', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await resetGraphileDb(knex)
     await truncateTables(knex)
     await appContainer.shutdown()
-    await workerUtils.release()
   })
 
   describe('GET /:id handler', (): void => {

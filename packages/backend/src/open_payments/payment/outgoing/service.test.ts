@@ -1,6 +1,6 @@
 import assert from 'assert'
 import nock from 'nock'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import * as Pay from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 
@@ -249,7 +249,7 @@ describe('OutgoingPaymentService', (): void => {
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingAccount = `${config.publicHost}/${destinationAccount.id}`
+    receivingAccount = `${config.openPaymentsUrl}/${destinationAccount.id}`
     const incomingPayment = await createIncomingPayment(deps, {
       accountId: receiverAccountId
     })
