@@ -98,6 +98,7 @@ async function introspect(
       .createHash('sha256')
       .update(key.client.id)
       .digest('hex')
+    delete key.client
     return {
       active: true,
       ...grant,

@@ -19,6 +19,14 @@ import { createContext } from '../tests/context'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_KID_PATH = '/keys/test-key'
+const TEST_JWK = {
+  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+  x: 'test-public-key',
+  kty: 'OKP',
+  alg: 'EdDSA',
+  crv: 'Ed25519',
+  use: 'sig'
+}
 const TEST_CLIENT_KEY = {
   client: {
     id: v4(),
@@ -27,13 +35,7 @@ const TEST_CLIENT_KEY = {
     image: 'a link to an image',
     uri: 'https://bob.com'
   },
-  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-  x: 'test-public-key',
-  kty: 'OKP',
-  alg: 'EdDSA',
-  crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
-  use: 'sig'
+  ...TEST_JWK
 }
 
 describe('Access Token Routes', (): void => {
@@ -187,7 +189,7 @@ describe('Access Token Routes', (): void => {
             limits: access.limits
           }
         ],
-        key: { proof: 'httpsig', jwk: TEST_CLIENT_KEY },
+        key: { proof: 'httpsig', jwk: TEST_JWK },
         client_id: clientId
       })
       scope.isDone()
