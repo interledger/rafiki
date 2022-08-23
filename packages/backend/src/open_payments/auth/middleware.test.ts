@@ -37,7 +37,7 @@ describe('Auth Middleware', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    accountId = `${Config.publicHost}/${uuid()}`
+    accountId = `${Config.adminUrl}/${uuid()}`
     authServerIntrospectionUrl = new URL(Config.authServerIntrospectionUrl)
     middleware = createAuthMiddleware({
       type: AccessType.IncomingPayment,

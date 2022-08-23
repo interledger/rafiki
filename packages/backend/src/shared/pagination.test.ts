@@ -34,7 +34,7 @@ describe('Pagination', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
+    config.adminUrl = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -80,7 +80,7 @@ describe('Pagination', (): void => {
         asset = randomAsset()
         defaultAccount = await accountService.create({ asset })
         secondaryAccount = await accountService.create({ asset })
-        secondaryAccountId = `${config.publicHost}/${secondaryAccount.id}`
+        secondaryAccountId = `${config.adminUrl}/${secondaryAccount.id}`
         sendAmount = {
           value: BigInt(42),
           assetCode: asset.code,

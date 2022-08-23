@@ -59,7 +59,7 @@ describe('Incoming Payment Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
+    config.adminUrl = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -172,7 +172,7 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         ilpStreamConnection: {
-          id: `${config.publicHost}/connections/${incomingPayment.connectionId}`,
+          id: `${config.adminUrl}/connections/${incomingPayment.connectionId}`,
           ilpAddress: expect.stringMatching(
             /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
           ),
@@ -275,7 +275,7 @@ describe('Incoming Payment Routes', (): void => {
           externalRef,
           completed: false,
           ilpStreamConnection: {
-            id: `${config.publicHost}/connections/${connectionId}`,
+            id: `${config.adminUrl}/connections/${connectionId}`,
             ilpAddress: expect.stringMatching(
               /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
             ),
@@ -330,7 +330,7 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         completed: true,
-        ilpStreamConnection: `${config.publicHost}/connections/${incomingPayment.connectionId}`
+        ilpStreamConnection: `${config.adminUrl}/connections/${incomingPayment.connectionId}`
       })
     })
   })
@@ -358,7 +358,7 @@ describe('Incoming Payment Routes', (): void => {
           expiresAt: expiresAt.toISOString(),
           createdAt: payment.createdAt.toISOString(),
           updatedAt: payment.updatedAt.toISOString(),
-          ilpStreamConnection: `${config.publicHost}/connections/${payment.connectionId}`
+          ilpStreamConnection: `${config.adminUrl}/connections/${payment.connectionId}`
         }
       },
       list: (ctx: ListContext) => incomingPaymentRoutes.list(ctx)

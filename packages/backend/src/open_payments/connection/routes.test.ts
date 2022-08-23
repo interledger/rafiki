@@ -26,7 +26,7 @@ describe('Connection Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
+    config.adminUrl = 'https://wallet.example'
     config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
@@ -102,7 +102,7 @@ describe('Connection Routes', (): void => {
       ]
 
       expect(ctx.body).toEqual({
-        id: `${config.publicHost}/connections/${incomingPayment.connectionId}`,
+        id: `${config.adminUrl}/connections/${incomingPayment.connectionId}`,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })
