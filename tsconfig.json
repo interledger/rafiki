@@ -7,9 +7,6 @@
       "path": "packages/auth"
     },
     {
-      "path": "packages/rates"
-    },
-    {
       "path": "packages/backend"
     },
     {
