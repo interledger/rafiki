@@ -87,16 +87,22 @@ common configurations.
 
 ```sh
 # set up two instances of Rafiki
-pnpm run localenv
+pnpm localenv up -d
 
 # seed the postgres databases with the auth data creating an admin token
-pnpm run localenv:seed:auth
+pnpm localenv:seed:auth
+
+# tear down
+pnpm localenv down
+
+# delete database volumes (containers must be removed first with e.g. pnpm localenv down)
+pnpm localenv:dbvolumes:remove
 ```
 
-The local environment consists of a primary Rafiki instance and a peer Rafiki instance, each with
-its own docker compose files ([primary](infrastructure/local/docker-compose.yml), [peer](infrastructure/local/peer-docker-compose.yml)).
+The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
+its own docker compose files ([primary](infrastructure/local/docker-compose.yml), [secondary](infrastructure/local/peer-docker-compose.yml)).
 The primary `docker-compose.yml` includes the main Rafiki services `backend`, `auth`, and `rates`, as well
 as the required data stores tigerbeetle, redis, and postgres, so it can be run on its own.
 The `peer-docker-compose.yml` includes only the Rafiki services, not the data stores. It uses the
 data stores created by the primary Rafiki instance so it can't be run by itself.
-The `pnpm run localenv` command starts both the primary instance and the peer.
+The `pnpm run localenv` command starts both the primary instance and the secondary.

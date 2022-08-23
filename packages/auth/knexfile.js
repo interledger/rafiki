@@ -4,10 +4,30 @@ module.exports = {
   development: {
     client: 'postgresql',
     connection: {
-      // The database, user and password here match those in the rafiki-docker-compose.yml file
+      // The database, user and password here match those in the infrastructure/local/docker-compose.yml file
       database: 'auth',
       user: 'auth',
       password: 'auth'
+    },
+    pool: {
+      min: 2,
+      max: 10
+    },
+    migrations: {
+      tableName: 'auth_knex_migrations'
+    },
+    seeds: {
+      directory: './seeds/development'
+    }
+  },
+
+  peerdevelopment: {
+    client: 'postgresql',
+    connection: {
+      // The database, user and password here match those in the infrastructure/local/peer-docker-compose.yml file
+      database: 'peerauth',
+      user: 'peerauth',
+      password: 'peerauth'
     },
     pool: {
       min: 2,

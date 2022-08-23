@@ -23,6 +23,14 @@ exports.seed = function (knex) {
           grantId: '051208da-f6b6-4ed0-b49b-8b00439003bc',
           createdAt: new Date(),
           updatedAt: new Date()
+        },
+        {
+          id: v4(),
+          type: 'quote',
+          actions: ['create', 'read'],
+          grantId: '051208da-f6b6-4ed0-b49b-8b00439003bc',
+          createdAt: new Date(),
+          updatedAt: new Date()
         }
       ])
     })
