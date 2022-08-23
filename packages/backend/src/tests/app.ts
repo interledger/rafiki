@@ -38,8 +38,8 @@ export const createTestApp = async (
   config.adminPort = 0
   config.openPaymentsPort = 0
   config.connectorPort = 0
-  config.adminUrl = 'https://wallet.example'
-  config.openPaymentsUrl = 'https://op.example'
+  config.adminHost = 'https://example'
+  config.openPaymentsHost = 'https://wallet.example'
   const logger = createLogger({
     transport: {
       target: 'pino-pretty',
@@ -83,7 +83,7 @@ export const createTestApp = async (
     .persist()
 
   // Since payment pointers MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
-  nock(config.openPaymentsUrl)
+  nock(config.openPaymentsHost)
     .get(/.*/)
     .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
     .reply(200, function (path) {

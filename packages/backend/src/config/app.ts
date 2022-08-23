@@ -26,11 +26,18 @@ export type IAppConfig = typeof Config
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
-  // adminUrl is for the admin API.
-  adminUrl: envString('ADMIN_URL', 'http://127.0.0.1:3001'),
-  adminPort: envInt('ADMIN_PORT', 3001),
-  openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3003'),
-  openPaymentsPort: envInt('OPEN_PAYMENTS_PORT', 3003),
+
+  // adminHost is for the admin API.
+  adminHost: parseHost(envString('ADMIN_URL', 'http://127.0.0.1:3001')),
+  adminPort: parsePort(envString('ADMIN_URL', 'http://127.0.0.1:3001')),
+
+  openPaymentsHost: parseHost(
+    envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3003')
+  ),
+  openPaymentsPort: parsePort(
+    envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3003')
+  ),
+
   connectorPort: envInt('CONNECTOR_PORT', 3002),
   databaseUrl:
     process.env.NODE_ENV === 'test'
@@ -135,4 +142,14 @@ function parseRedisTlsConfig(
   }
 
   return Object.keys(options).length > 0 ? options : undefined
+}
+
+function parsePort(url: string): number {
+  const parsed = new URL(url)
+  return +parsed.port
+}
+
+function parseHost(url: string): string {
+  const parsed = new URL(url)
+  return parsed.host
 }

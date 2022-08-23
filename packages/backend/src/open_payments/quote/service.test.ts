@@ -104,7 +104,7 @@ describe('QuoteService', (): void => {
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingAccount = `${config.openPaymentsUrl}/${destinationAccount.id}`
+    receivingAccount = `${config.openPaymentsHost}/${destinationAccount.id}`
   })
 
   afterEach(async (): Promise<void> => {

@@ -52,7 +52,7 @@ describe('Quote Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.adminUrl = 'https://wallet.example'
+    config.openPaymentsHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -72,7 +72,7 @@ describe('Quote Routes', (): void => {
         }
       })
     ).id
-    accountUrl = `${config.adminUrl}/${accountId}`
+    accountUrl = `${config.openPaymentsHost}/${accountId}`
   })
 
   afterEach(async (): Promise<void> => {

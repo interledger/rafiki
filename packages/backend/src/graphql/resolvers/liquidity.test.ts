@@ -1516,7 +1516,9 @@ describe('Liquidity Resolvers', (): void => {
       })
       payment = await createOutgoingPayment(deps, {
         accountId,
-        receiver: `${Config.adminUrl}/${uuid()}/incoming-payments/${uuid()}`,
+        receiver: `${
+          Config.openPaymentsHost
+        }/${uuid()}/incoming-payments/${uuid()}`,
         sendAmount: {
           value: BigInt(456),
           assetCode: account.asset.code,
