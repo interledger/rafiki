@@ -69,8 +69,8 @@ async function revokeToken(
 ): Promise<void> {
   //TODO: verify accessToken with httpsig method
 
-  const { id } = ctx.params
-  await deps.accessTokenService.revoke(id)
+  const { id: managementId } = ctx.params
+  await deps.accessTokenService.revoke(managementId)
   ctx.status = 204
 }
 
