@@ -4,7 +4,7 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
-import { AccountingService } from '../../../accounting/service'
+import { AccountingService, AccountTypeCode } from '../../../accounting/service'
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
@@ -138,7 +138,10 @@ async function createIncomingPayment(
 
     // Incoming payment accounts are credited by the amounts received by the incoming payment.
     // Credits are restricted such that the incoming payments cannot receive more than that amount.
-    await deps.accountingService.createLiquidityAccount(incomingPayment)
+    await deps.accountingService.createLiquidityAccount(
+      incomingPayment,
+      AccountTypeCode.LiquidityIncoming
+    )
 
     if (!trx) {
       await invTrx.commit()

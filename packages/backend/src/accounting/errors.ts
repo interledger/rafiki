@@ -1,7 +1,8 @@
-import { CreateTransferError as CreateTransferErrorCode } from 'tigerbeetle-node'
-
+import {
+  CreateAccountError as CreateAccountErrorCode,
+  CreateTransferError as CreateTransferErrorCode
+} from 'tigerbeetle-node'
 import { AccountId } from './utils'
-import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 
 export class CreateAccountError extends Error {
   constructor(public code: number) {

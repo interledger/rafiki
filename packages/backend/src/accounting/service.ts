@@ -20,9 +20,13 @@ import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 import { toTigerbeetleId } from './utils'
 
-enum AccountCode {
+export enum AccountTypeCode {
   Liquidity = 1,
-  Settlement = 2
+  LiquidityAsset = 2,
+  LiquidityPeer = 3,
+  LiquidityIncoming = 4,
+  LiquidityOutgoing = 5,
+  Settlement = 101
 }
 
 // Model classes that have a corresponding Tigerbeetle liquidity
@@ -75,7 +79,10 @@ export interface Transaction {
 }
 
 export interface AccountingService {
-  createLiquidityAccount(account: LiquidityAccount): Promise<LiquidityAccount>
+  createLiquidityAccount(
+    account: LiquidityAccount,
+    accTypeCode?: AccountTypeCode
+  ): Promise<LiquidityAccount>
   createSettlementAccount(ledger: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
@@ -103,7 +110,8 @@ export function createAccountingService(
     logger: deps_.logger.child({ service: 'AccountingService' })
   }
   return {
-    createLiquidityAccount: (options) => createLiquidityAccount(deps, options),
+    createLiquidityAccount: (options, accTypeCode) =>
+      createLiquidityAccount(deps, options, accTypeCode),
     createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
@@ -121,7 +129,8 @@ export function createAccountingService(
 
 export async function createLiquidityAccount(
   deps: ServiceDependencies,
-  account: LiquidityAccount
+  account: LiquidityAccount,
+  accTypeCode?: AccountTypeCode
 ): Promise<LiquidityAccount> {
   if (!validateId(account.id)) {
     throw new Error('unable to create account, invalid id')
@@ -132,7 +141,7 @@ export async function createLiquidityAccount(
       id: account.id,
       type: AccountType.Credit,
       ledger: account.asset.ledger,
-      code: AccountCode.Liquidity
+      code: accTypeCode ? accTypeCode : AccountTypeCode.Liquidity
     }
   ])
   return account
@@ -148,7 +157,7 @@ export async function createSettlementAccount(
         id: ledger,
         type: AccountType.Debit,
         ledger,
-        code: AccountCode.Settlement
+        code: AccountTypeCode.Settlement
       }
     ])
   } catch (err) {
@@ -357,6 +366,7 @@ export async function createTransfer(
           return {
             ...transfer,
             timeout: undefined,
+            id: undefined,
             pendingId: transfer.id
           }
         }),

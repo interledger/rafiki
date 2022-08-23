@@ -18,6 +18,7 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
+import { AccountTypeCode } from '../accounting/service'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -87,7 +88,10 @@ describe('Asset Service', (): void => {
       const asset = await assetService.create(randomAsset())
       assert.ok(!isAssetError(asset))
 
-      expect(liquiditySpy).toHaveBeenCalledWith(asset)
+      expect(liquiditySpy).toHaveBeenCalledWith(
+        asset,
+        AccountTypeCode.LiquidityAsset
+      )
       expect(settlementSpy).toHaveBeenCalledWith(asset.ledger)
 
       await expect(accountingService.getBalance(asset.id)).resolves.toEqual(

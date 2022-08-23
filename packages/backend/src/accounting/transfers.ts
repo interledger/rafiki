@@ -146,14 +146,6 @@ export async function createTransfers(
             return { index, error: TransferError.TransferExpired }
         }
 
-        if (commit === true || commit == false) {
-          const lookupIds = tbTransfers.map((ac) => ac.pending_id)
-          const existingTransfers = await deps.tigerbeetle.lookupTransfers(
-            lookupIds
-          )
-          console.log(existingTransfers)
-        }
-
         // TODO @jason: stop ==============================>
 
         throw new CreateTransferError(code)

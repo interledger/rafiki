@@ -10,6 +10,7 @@ const POSTGRES_PORT = 5432
 const TIGERBEETLE_CLUSTER_ID = 0
 const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
+const TIGERBEETLE_CONTAINER_LOG = false
 //TODO const TIGERBEETLE_FILE = `${TIGERBEETLE_DIR}/cluster_${TIGERBEETLE_CLUSTER_ID}_replica_0.tigerbeetle`
 
 const REDIS_PORT = 6379
@@ -87,10 +88,12 @@ module.exports = async (globalConfig) => {
         .start()
 
       const streamTbFormat = await tbContFormat.logs()
-      streamTbFormat
-        .on('data', (line) => console.log(line))
-        .on('err', (line) => console.error(line))
-        .on('end', () => console.log('Stream closed for [tb-format]'))
+      if (TIGERBEETLE_CONTAINER_LOG) {
+        streamTbFormat
+          .on('data', (line) => console.log(line))
+          .on('err', (line) => console.error(line))
+          .on('end', () => console.log('Stream closed for [tb-format]'))
+      }
 
       // Give TB a chance to startup (no message currently to notify allocation is complete):
       await new Promise((f) => setTimeout(f, 1000))
@@ -112,10 +115,12 @@ module.exports = async (globalConfig) => {
         .start()
 
       const streamTbStart = await tbContStart.logs()
-      streamTbStart
-        .on('data', (line) => console.log(line))
-        .on('err', (line) => console.error(line))
-        .on('end', () => console.log('Stream closed for [tb-start]'))
+      if (TIGERBEETLE_CONTAINER_LOG) {
+        streamTbStart
+          .on('data', (line) => console.log(line))
+          .on('err', (line) => console.error(line))
+          .on('end', () => console.log('Stream closed for [tb-start]'))
+      }
 
       process.env.TIGERBEETLE_CLUSTER_ID = TIGERBEETLE_CLUSTER_ID
       process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${tbContStart.getMappedPort(

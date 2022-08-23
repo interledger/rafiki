@@ -13,7 +13,7 @@ import {
   OutgoingPaymentState,
   PaymentEventType
 } from './model'
-import { AccountingService } from '../../../accounting/service'
+import { AccountingService, AccountTypeCode } from '../../../accounting/service'
 import { AccountService } from '../../account/service'
 import { PeerService } from '../../../peer/service'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
@@ -131,10 +131,13 @@ async function createOutgoingPayment(
       }
 
       // TODO: move to fundPayment
-      await deps.accountingService.createLiquidityAccount({
-        id: payment.id,
-        asset: payment.asset
-      })
+      await deps.accountingService.createLiquidityAccount(
+        {
+          id: payment.id,
+          asset: payment.asset
+        },
+        AccountTypeCode.LiquidityOutgoing
+      )
       await sendWebhookEvent(
         {
           ...deps,
