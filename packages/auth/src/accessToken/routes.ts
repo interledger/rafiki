@@ -69,7 +69,8 @@ async function revokeToken(
 ): Promise<void> {
   //TODO: verify accessToken with httpsig method
 
-  await deps.accessTokenService.revoke(ctx.params['id'])
+  const { id } = ctx.params
+  await deps.accessTokenService.revoke(id)
   ctx.status = 204
 }
 
@@ -78,9 +79,8 @@ async function rotateToken(
   ctx: AppContext
 ): Promise<void> {
   //TODO: verify accessToken with httpsig method
-  const result = await deps.accessTokenService.rotate(
-    ctx.params['managementId']
-  )
+  const { id: managementId } = ctx.params
+  const result = await deps.accessTokenService.rotate(managementId)
   if (result.success == true) {
     ctx.status = 200
     ctx.body = {
