@@ -28,6 +28,7 @@ import {
 } from './liquidity'
 import { GraphQLBigInt } from '../scalars'
 import { refreshSession, revokeSession } from './session'
+import { addKeyToClient, createClient } from './clientKeys'
 
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
@@ -47,6 +48,8 @@ export const resolvers: Resolvers = {
   },
   Mutation: {
     createAccount,
+    createClient,
+    addKeyToClient,
     triggerAccountEvents,
     createAsset,
     updateAssetWithdrawalThreshold,

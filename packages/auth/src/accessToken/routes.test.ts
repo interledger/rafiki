@@ -20,6 +20,13 @@ import { createContext } from '../tests/context'
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_KID_PATH = '/keys/test-key'
 const TEST_CLIENT_KEY = {
+  client: {
+    id: v4(),
+    name: 'Bob',
+    email: 'bob@bob.com',
+    image: 'a link to an image',
+    uri: 'https://bob.com'
+  },
   kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
   x: 'test-public-key',
   kty: 'OKP',
@@ -146,9 +153,7 @@ describe('Access Token Routes', (): void => {
     test('Successfully introspects valid token', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
-        .reply(200, {
-          keys: [TEST_CLIENT_KEY]
-        })
+        .reply(200, TEST_CLIENT_KEY)
       const ctx = createContext(
         {
           headers: { Accept: 'application/json' },

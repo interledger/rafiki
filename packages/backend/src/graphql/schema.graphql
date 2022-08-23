@@ -100,6 +100,12 @@ type Mutation {
   "Withdraw webhook event liquidity"
   withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
 
+  "Create Client"
+  createClient(input: CreateClientInput!): CreateClientMutationResponse
+
+  "Add Key to Client"
+  addKeyToClient(input: AddKeyToClientInput!): AddKeyToClientMutationResponse
+
   "Create API Key"
   createApiKey(input: CreateApiKeyInput!): CreateApiKeyMutationResponse
 
@@ -234,6 +240,19 @@ input CreateAccountWithdrawalInput {
   accountId: String!
   "The id of the withdrawal."
   id: String!
+}
+
+input CreateClientInput {
+  name: String!
+  uri: String!
+  image: String!
+  email: String!
+}
+
+input AddKeyToClientInput {
+  id: String!
+  clientId: String!
+  jwk: String!
 }
 
 input CreateApiKeyInput {
@@ -479,6 +498,23 @@ input CreateAccountInput {
   publicName: String
 }
 
+type Client implements Model {
+  id: ID!
+  name: String!
+  uri: String!
+  image: String!
+  email: String!
+  keys: [ClientKeys!]!
+  createdAt: String!
+}
+
+type ClientKeys implements Model {
+  id: ID!
+  clientId: String!
+  jwk: String!
+  createdAt: String!
+}
+
 type ApiKey implements Model {
   id: ID!
   accountId: String!
@@ -563,6 +599,20 @@ type AccountWithdrawalMutationResponse implements MutationResponse {
   message: String!
   error: LiquidityError
   withdrawal: AccountWithdrawal
+}
+
+type CreateClientMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  client: Client
+}
+
+type AddKeyToClientMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  client: Client
 }
 
 type CreateApiKeyMutationResponse implements MutationResponse {
