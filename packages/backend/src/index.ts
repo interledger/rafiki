@@ -4,7 +4,7 @@ import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
-import IORedis from 'ioredis'
+import Redis from 'ioredis'
 import { createClient } from 'tigerbeetle-node'
 
 import { App, AppServices } from './app'
@@ -82,9 +82,9 @@ export function initIocContainer(
     return db
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
-  container.singleton('redis', async (deps): Promise<IORedis.Redis> => {
+  container.singleton('redis', async (deps): Promise<Redis> => {
     const config = await deps.use('config')
-    return new IORedis(config.redisUrl, { tls: config.redisTls })
+    return new Redis(config.redisUrl, { tls: config.redisTls })
   })
   container.singleton('streamServer', async (deps) => {
     const config = await deps.use('config')

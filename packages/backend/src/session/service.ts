@@ -1,6 +1,6 @@
 import { BaseService } from '../shared/baseService'
 import { uuid } from '../connector/core'
-import IORedis from 'ioredis'
+import Redis from 'ioredis'
 import { Session } from './util'
 
 export interface SessionService {
@@ -11,7 +11,7 @@ export interface SessionService {
 }
 
 interface ServiceDependencies extends BaseService {
-  redis: IORedis.Redis
+  redis: Redis
   sessionLength: number
 }
 
