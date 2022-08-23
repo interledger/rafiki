@@ -1,7 +1,7 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
-import { Grant } from '../grant/model'
 import { LimitData, AccessType, Action } from './types'
+import { join } from 'path'
 
 export class Access extends BaseModel {
   public static get tableName(): string {
@@ -12,7 +12,7 @@ export class Access extends BaseModel {
   static relationMappings = () => ({
     grant: {
       relation: Model.HasOneRelation,
-      modelClass: Grant,
+      modelClass: join(__dirname, '../grant/model'),
       join: {
         from: 'accesses.grantId',
         to: 'grants.id'

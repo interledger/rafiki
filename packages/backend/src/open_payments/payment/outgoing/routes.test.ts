@@ -1,14 +1,11 @@
 import assert from 'assert'
 import jestOpenAPI from 'jest-openapi'
 import * as httpMocks from 'node-mocks-http'
-import Knex from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../../tests/context'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { resetGraphileDb } from '../../../tests/graphileDb'
-import { GraphileProducer } from '../../../messaging/graphileProducer'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -32,17 +29,12 @@ describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let workerUtils: WorkerUtils
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let accountId: string
   let accountUrl: string
   let accountingService: AccountingService
 
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
   const receivingAccount = `https://wallet.example/${uuid()}`
   const asset = randomAsset()
 
@@ -63,47 +55,31 @@ describe('Outgoing Payment Routes', (): void => {
     })
   }
 
-  beforeAll(
-    async (): Promise<void> => {
-      config = Config
-      config.publicHost = 'https://wallet.example'
-      deps = await initIocContainer(config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      config = await deps.use('config')
-      outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
-      accountingService = await deps.use('accountingService')
-      jestOpenAPI(await deps.use('openApi'))
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    config = Config
+    config.publicHost = 'https://wallet.example'
+    deps = await initIocContainer(config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    config = await deps.use('config')
+    outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
+    accountingService = await deps.use('accountingService')
+    jestOpenAPI(await deps.use('openApi'))
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
-      accountId = (await accountService.create({ asset })).id
-      accountUrl = `${config.publicHost}/${accountId}`
-    }
-  )
+  beforeEach(async (): Promise<void> => {
+    const accountService = await deps.use('accountService')
+    accountId = (await accountService.create({ asset })).id
+    accountUrl = `${config.publicHost}/${accountId}`
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   describe('get', (): void => {
     test('returns 404 for nonexistent outgoing payment', async (): Promise<void> => {
@@ -205,13 +181,11 @@ describe('Outgoing Payment Routes', (): void => {
   describe('create', (): void => {
     let options: Omit<CreateOutgoingPaymentOptions, 'accountId'>
 
-    beforeEach(
-      async (): Promise<void> => {
-        options = {
-          quoteId: `https://wallet.example/${accountId}/quotes/${uuid()}`
-        }
+    beforeEach(async (): Promise<void> => {
+      options = {
+        quoteId: `https://wallet.example/${accountId}/quotes/${uuid()}`
       }
-    )
+    })
 
     function setup(
       reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
@@ -261,10 +235,9 @@ describe('Outgoing Payment Routes', (): void => {
           externalRef
         })
         expect(ctx.response).toSatisfyApiSpec()
-        const outgoingPaymentId = ((ctx.response.body as Record<
-          string,
-          unknown
-        >)['id'] as string)
+        const outgoingPaymentId = (
+          (ctx.response.body as Record<string, unknown>)['id'] as string
+        )
           .split('/')
           .pop()
         expect(ctx.response.body).toEqual({

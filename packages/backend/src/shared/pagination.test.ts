@@ -1,6 +1,5 @@
 import assert from 'assert'
-import Knex from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { Knex } from 'knex'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -8,10 +7,8 @@ import { AccountService } from '../open_payments/account/service'
 import { Account } from '../open_payments/account/model'
 import { IncomingPaymentService } from '../open_payments/payment/incoming/service'
 import { Config, IAppConfig } from '../config/app'
-import { GraphileProducer } from '../messaging/graphileProducer'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { resetGraphileDb } from '../tests/graphileDb'
 import { initIocContainer } from '..'
 import { OutgoingPaymentService } from '../open_payments/payment/outgoing/service'
 import { QuoteService } from '../open_payments/quote/service'
@@ -29,46 +26,27 @@ describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let workerUtils: WorkerUtils
   let accountService: AccountService
   let incomingPaymentService: IncomingPaymentService
   let outgoingPaymentService: OutgoingPaymentService
   let quoteService: QuoteService
   let config: IAppConfig
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
-  beforeAll(
-    async (): Promise<void> => {
-      config = Config
-      config.publicHost = 'https://wallet.example'
-      deps = await initIocContainer(config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    config = Config
+    config.publicHost = 'https://wallet.example'
+    deps = await initIocContainer(config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
   describe('parsePaginationQueryParameters', (): void => {
     test.each`
       first        | last         | cursor   | result
@@ -93,24 +71,22 @@ describe('Pagination', (): void => {
       let secondaryAccountId: string
       let sendAmount: Amount
 
-      beforeEach(
-        async (): Promise<void> => {
-          accountService = await deps.use('accountService')
-          incomingPaymentService = await deps.use('incomingPaymentService')
-          outgoingPaymentService = await deps.use('outgoingPaymentService')
-          quoteService = await deps.use('quoteService')
+      beforeEach(async (): Promise<void> => {
+        accountService = await deps.use('accountService')
+        incomingPaymentService = await deps.use('incomingPaymentService')
+        outgoingPaymentService = await deps.use('outgoingPaymentService')
+        quoteService = await deps.use('quoteService')
 
-          asset = randomAsset()
-          defaultAccount = await accountService.create({ asset })
-          secondaryAccount = await accountService.create({ asset })
-          secondaryAccountId = `${config.publicHost}/${secondaryAccount.id}`
-          sendAmount = {
-            value: BigInt(42),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          }
+        asset = randomAsset()
+        defaultAccount = await accountService.create({ asset })
+        secondaryAccount = await accountService.create({ asset })
+        secondaryAccountId = `${config.publicHost}/${secondaryAccount.id}`
+        sendAmount = {
+          value: BigInt(42),
+          assetCode: asset.code,
+          assetScale: asset.scale
         }
-      )
+      })
 
       describe('incoming payments', (): void => {
         test.each`
@@ -273,13 +249,11 @@ describe('Pagination', (): void => {
       let assetService: AssetService
       let peerService: PeerService
       let peerFactory: PeerFactory
-      beforeEach(
-        async (): Promise<void> => {
-          assetService = await deps.use('assetService')
-          peerService = await deps.use('peerService')
-          peerFactory = new PeerFactory(peerService)
-        }
-      )
+      beforeEach(async (): Promise<void> => {
+        assetService = await deps.use('assetService')
+        peerService = await deps.use('peerService')
+        peerFactory = new PeerFactory(peerService)
+      })
       describe('assets', (): void => {
         test.each`
           num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage

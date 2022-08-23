@@ -1,6 +1,5 @@
 import assert from 'assert'
-import Knex from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { Knex } from 'knex'
 import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
@@ -10,13 +9,11 @@ import { Pagination } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { randomAsset } from '../tests/asset'
-import { resetGraphileDb } from '../tests/graphileDb'
 import { truncateTables } from '../tests/tableManager'
 import {
   startTigerbeetleContainer,
   TIGERBEETLE_PORT
 } from '../tests/tigerbeetle'
-import { GraphileProducer } from '../messaging/graphileProducer'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -25,49 +22,30 @@ import { AppServices } from '../app'
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let workerUtils: WorkerUtils
   let assetService: AssetService
   let knex: Knex
   let tigerbeetleContainer: StartedTestContainer
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
-  beforeAll(
-    async (): Promise<void> => {
-      tigerbeetleContainer = await startTigerbeetleContainer()
-      Config.tigerbeetleReplicaAddresses = [
-        tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
-      ]
+  beforeAll(async (): Promise<void> => {
+    tigerbeetleContainer = await startTigerbeetleContainer()
+    Config.tigerbeetleReplicaAddresses = [
+      tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
+    ]
 
-      deps = await initIocContainer(Config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      assetService = await deps.use('assetService')
-    }
-  )
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    assetService = await deps.use('assetService')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-      await tigerbeetleContainer.stop()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+    await tigerbeetleContainer.stop()
+  })
 
   describe('create', (): void => {
     test.each`
@@ -196,17 +174,15 @@ describe('Asset Service', (): void => {
       ({ withdrawalThreshold }): void => {
         let assetId: string
 
-        beforeEach(
-          async (): Promise<void> => {
-            const asset = await assetService.create({
-              ...randomAsset(),
-              withdrawalThreshold
-            })
-            assert.ok(!isAssetError(asset))
-            await expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
-            assetId = asset.id
-          }
-        )
+        beforeEach(async (): Promise<void> => {
+          const asset = await assetService.create({
+            ...randomAsset(),
+            withdrawalThreshold
+          })
+          assert.ok(!isAssetError(asset))
+          await expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
+          assetId = asset.id
+        })
 
         test.each`
           withdrawalThreshold

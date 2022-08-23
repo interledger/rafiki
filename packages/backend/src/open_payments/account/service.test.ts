@@ -1,5 +1,4 @@
-import Knex from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { Account, AccountEvent, AccountEventType } from './model'
@@ -7,9 +6,7 @@ import { AccountService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { randomAsset } from '../../tests/asset'
-import { resetGraphileDb } from '../../tests/graphileDb'
 import { truncateTables } from '../../tests/tableManager'
-import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
@@ -19,45 +16,26 @@ import { faker } from '@faker-js/faker'
 describe('Open Payments Account Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let workerUtils: WorkerUtils
   let accountService: AccountService
   let accountingService: AccountingService
   let knex: Knex
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      accountService = await deps.use('accountService')
-      accountingService = await deps.use('accountingService')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    accountService = await deps.use('accountService')
+    accountingService = await deps.use('accountingService')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      jest.useRealTimers()
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    jest.useRealTimers()
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   describe('Create or Get Account', (): void => {
     test('Account can be created or fetched', async (): Promise<void> => {
@@ -95,13 +73,11 @@ describe('Open Payments Account Service', (): void => {
   describe('onCredit', (): void => {
     let account: Account
 
-    beforeEach(
-      async (): Promise<void> => {
-        account = await accountService.create({
-          asset: randomAsset()
-        })
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      account = await accountService.create({
+        asset: randomAsset()
+      })
+    })
 
     describe.each`
       withdrawalThrottleDelay
@@ -131,16 +107,14 @@ describe('Open Payments Account Service', (): void => {
           ({ withdrawalThreshold }): void => {
             let thresholdProcessAt: Date | null = null
 
-            beforeEach(
-              async (): Promise<void> => {
-                await account.asset.$query(knex).patch({
-                  withdrawalThreshold
-                })
-                if (withdrawalThreshold !== null) {
-                  thresholdProcessAt = new Date()
-                }
+            beforeEach(async (): Promise<void> => {
+              await account.asset.$query(knex).patch({
+                withdrawalThreshold
+              })
+              if (withdrawalThreshold !== null) {
+                thresholdProcessAt = new Date()
               }
-            )
+            })
 
             describe.each`
               startingProcessAt
@@ -149,13 +123,11 @@ describe('Open Payments Account Service', (): void => {
             `(
               'startingProcessAt: $startingProcessAt',
               ({ startingProcessAt }): void => {
-                beforeEach(
-                  async (): Promise<void> => {
-                    await account.$query(knex).patch({
-                      processAt: startingProcessAt
-                    })
-                  }
-                )
+                beforeEach(async (): Promise<void> => {
+                  await account.$query(knex).patch({
+                    processAt: startingProcessAt
+                  })
+                })
 
                 describe.each`
                   totalEventsAmount
@@ -164,13 +136,11 @@ describe('Open Payments Account Service', (): void => {
                 `(
                   'totalEventsAmount: $totalEventsAmount',
                   ({ totalEventsAmount }): void => {
-                    beforeEach(
-                      async (): Promise<void> => {
-                        await account.$query(knex).patch({
-                          totalEventsAmount
-                        })
-                      }
-                    )
+                    beforeEach(async (): Promise<void> => {
+                      await account.$query(knex).patch({
+                        totalEventsAmount
+                      })
+                    })
                     if (withdrawalThreshold !== BigInt(0)) {
                       test("Balance doesn't meet withdrawal threshold", async (): Promise<void> => {
                         await expect(
@@ -225,13 +195,11 @@ describe('Open Payments Account Service', (): void => {
   describe('processNext', (): void => {
     let account: Account
 
-    beforeEach(
-      async (): Promise<void> => {
-        account = await accountService.create({
-          asset: randomAsset()
-        })
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      account = await accountService.create({
+        asset: randomAsset()
+      })
+    })
 
     test.each`
       processAt                        | description
@@ -289,14 +257,12 @@ describe('Open Payments Account Service', (): void => {
     let accounts: Account[]
     const asset = randomAsset()
 
-    beforeEach(
-      async (): Promise<void> => {
-        accounts = []
-        for (let i = 0; i < 5; i++) {
-          accounts.push(await accountService.create({ asset }))
-        }
+    beforeEach(async (): Promise<void> => {
+      accounts = []
+      for (let i = 0; i < 5; i++) {
+        accounts.push(await accountService.create({ asset }))
       }
-    )
+    })
 
     test.each`
       processAt                        | description

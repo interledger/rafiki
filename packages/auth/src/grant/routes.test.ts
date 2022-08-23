@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import * as crypto from 'crypto'
 import { IocContract } from '@adonisjs/fold'
@@ -131,39 +131,31 @@ describe('Grant Routes', (): void => {
   let config: IAppConfig
 
   let grant: Grant
-  beforeEach(
-    async (): Promise<void> => {
-      grant = await Grant.query().insert(generateBaseGrant())
+  beforeEach(async (): Promise<void> => {
+    grant = await Grant.query().insert(generateBaseGrant())
 
-      await Access.query().insert({
-        ...BASE_GRANT_ACCESS,
-        grantId: grant.id
-      })
-    }
-  )
+    await Access.query().insert({
+      ...BASE_GRANT_ACCESS,
+      grantId: grant.id
+    })
+  })
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      grantRoutes = await deps.use('grantRoutes')
-      config = await deps.use('config')
-      knex = await deps.use('knex')
-      appContainer = await createTestApp(deps)
-      jestOpenAPI(await deps.use('openApi'))
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    grantRoutes = await deps.use('grantRoutes')
+    config = await deps.use('config')
+    knex = await deps.use('knex')
+    appContainer = await createTestApp(deps)
+    jestOpenAPI(await deps.use('openApi'))
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   describe('Grant validation', (): void => {
     const expDate = new Date()

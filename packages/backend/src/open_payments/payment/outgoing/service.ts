@@ -22,7 +22,7 @@ import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { Interval } from 'luxon'
-import { KnexTimeoutError } from 'knex'
+import { knex } from 'knex'
 
 export interface OutgoingPaymentService {
   get(id: string): Promise<OutgoingPayment | undefined>
@@ -186,9 +186,8 @@ async function createOutgoingPayment(
       }
     } else if (isOutgoingPaymentError(err)) {
       return err
-    } else if (err instanceof KnexTimeoutError) {
+    } else if (err instanceof knex.KnexTimeoutError) {
       deps.logger.error({ grant: options.grant.grant }, 'grant locked')
-      throw err
     }
     throw err
   }

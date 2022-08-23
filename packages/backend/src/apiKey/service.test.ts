@@ -1,13 +1,10 @@
-import Knex from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { Knex } from 'knex'
 import { ApiKeyService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
-import { GraphileProducer } from '../messaging/graphileProducer'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { resetGraphileDb } from '../tests/graphileDb'
 import { truncateTables } from '../tests/tableManager'
 import { AccountService } from '../open_payments/account/service'
 import { randomAsset } from '../tests/asset'
@@ -18,51 +15,30 @@ import { ApiKeyError, isApiKeyError } from './errors'
 describe('Api Key Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let workerUtils: WorkerUtils
   let apiKeyService: ApiKeyService
   let accountService: AccountService
   let account: Account
   let knex: Knex
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      apiKeyService = await deps.use('apiKeyService')
-      accountService = await deps.use('accountService')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    apiKeyService = await deps.use('apiKeyService')
+    accountService = await deps.use('accountService')
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      account = await accountService.create({ asset: randomAsset() })
-    }
-  )
+  beforeEach(async (): Promise<void> => {
+    account = await accountService.create({ asset: randomAsset() })
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   describe('Create / Get Api Key', (): void => {
     test('An api key can be created/fetched for a certain account', async (): Promise<void> => {

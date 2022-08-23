@@ -1,5 +1,5 @@
 import nock from 'nock'
-import Knex, { Transaction } from 'knex'
+import { Knex } from 'knex'
 import crypto from 'crypto'
 import { v4 } from 'uuid'
 import jestOpenAPI from 'jest-openapi'
@@ -33,32 +33,26 @@ describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let trx: Transaction
+  let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      accessTokenRoutes = await deps.use('accessTokenRoutes')
-      jestOpenAPI(await deps.use('openApi'))
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    accessTokenRoutes = await deps.use('accessTokenRoutes')
+    jestOpenAPI(await deps.use('openApi'))
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      jest.useRealTimers()
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    jest.useRealTimers()
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      nock.restore()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    nock.restore()
+    await appContainer.shutdown()
+  })
 
   const BASE_GRANT = {
     state: GrantState.Pending,
@@ -97,21 +91,19 @@ describe('Access Token Routes', (): void => {
     let grant: Grant
     let access: Access
     let token: AccessToken
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
-        })
-        access = await Access.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_ACCESS
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN
-        })
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT
+      })
+      access = await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_ACCESS
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN
+      })
+    })
     test('Cannot introspect fake token', async (): Promise<void> => {
       const ctx = createContext(
         {
@@ -225,18 +217,16 @@ describe('Access Token Routes', (): void => {
     let token: AccessToken
     let id: string
 
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN
-        })
-        id = token.id
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN
+      })
+      id = token.id
+    })
 
     test('Returns status 204 even if token does not exist', async (): Promise<void> => {
       id = v4()
@@ -290,22 +280,20 @@ describe('Access Token Routes', (): void => {
     let token: AccessToken
     let managementId: string
 
-    beforeEach(
-      async (): Promise<void> => {
-        grant = await Grant.query(trx).insertAndFetch({
-          ...BASE_GRANT
-        })
-        access = await Access.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_ACCESS
-        })
-        token = await AccessToken.query(trx).insertAndFetch({
-          grantId: grant.id,
-          ...BASE_TOKEN
-        })
-        managementId = BASE_TOKEN.managementId
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT
+      })
+      access = await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_ACCESS
+      })
+      token = await AccessToken.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...BASE_TOKEN
+      })
+      managementId = BASE_TOKEN.managementId
+    })
 
     test('Cannot rotate nonexistent token', async (): Promise<void> => {
       managementId = v4()

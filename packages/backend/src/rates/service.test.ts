@@ -12,9 +12,6 @@ describe('Rates service', function () {
   let appContainer: TestContainer
   let service: RatesService
   let requestCount = 0
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
   const pricesLifetime = 100
   const koa = new Koa()
   koa.use(function (ctx) {
@@ -29,37 +26,30 @@ describe('Rates service', function () {
   })
   const server = koa.listen(3210)
 
-  beforeAll(
-    async (): Promise<void> => {
-      const config = Config
-      config.pricesLifetime = pricesLifetime
-      config.pricesUrl = 'http://127.0.0.1:3210/'
-      deps = await initIocContainer(config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      jest.useFakeTimers()
-      jest.setSystemTime(1600000000000)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    const config = Config
+    config.pricesLifetime = pricesLifetime
+    config.pricesUrl = 'http://127.0.0.1:3210/'
+    deps = await initIocContainer(config)
+    appContainer = await createTestApp(deps)
+    jest.useFakeTimers()
+    jest.setSystemTime(1600000000000)
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      // Fast-forward to reset the cache between tests.
-      jest.setSystemTime(Date.now() + pricesLifetime + 1)
-      service = await deps.use('ratesService')
-      requestCount = 0
-    }
-  )
+  beforeEach(async (): Promise<void> => {
+    // Fast-forward to reset the cache between tests.
+    jest.setSystemTime(Date.now() + pricesLifetime + 1)
+    service = await deps.use('ratesService')
+    requestCount = 0
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      jest.useRealTimers()
-      await new Promise((resolve, reject) => {
-        server.close((err?: Error) => (err ? reject(err) : resolve(null)))
-      })
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    jest.useRealTimers()
+    await new Promise((resolve, reject) => {
+      server.close((err?: Error) => (err ? reject(err) : resolve(null)))
+    })
+    await appContainer.shutdown()
+  })
 
   describe('convert', function () {
     it('returns the source amount when assets are alike', async () => {

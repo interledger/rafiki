@@ -1,6 +1,7 @@
 import assert from 'assert'
 import axios from 'axios'
 import { createHmac } from 'crypto'
+import { canonicalize } from 'json-canonicalize'
 
 import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
@@ -82,18 +83,18 @@ async function sendWebhookEvent(
       'Content-Type': 'application/json'
     }
 
-    if (deps.config.signatureSecret) {
-      requestHeaders['Rafiki-Signature'] = generateWebhookSignature(
-        event,
-        deps.config.signatureSecret,
-        deps.config.signatureVersion
-      )
-    }
-
     const body = {
       id: event.id,
       type: event.type,
       data: event.data
+    }
+
+    if (deps.config.signatureSecret) {
+      requestHeaders['Rafiki-Signature'] = generateWebhookSignature(
+        body,
+        deps.config.signatureSecret,
+        deps.config.signatureVersion
+      )
     }
 
     await axios.post(deps.config.webhookUrl, body, {
@@ -126,14 +127,20 @@ async function sendWebhookEvent(
   }
 }
 
+export type EventPayload = Pick<WebhookEvent, 'id' | 'type' | 'data'>
+
 export function generateWebhookSignature(
-  event: WebhookEvent,
+  event: EventPayload,
   secret: string,
   version: number
 ): string {
   const timestamp = Math.round(new Date().getTime() / 1000)
 
-  const payload = `${timestamp}.${event}`
+  const payload = `${timestamp}.${canonicalize({
+    id: event.id,
+    type: event.type,
+    data: event.data
+  })}`
   const hmac = createHmac('sha256', secret)
   hmac.update(payload)
   const digest = hmac.digest('hex')

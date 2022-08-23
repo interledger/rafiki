@@ -1,15 +1,12 @@
 import assert from 'assert'
 import jestOpenAPI from 'jest-openapi'
 import * as httpMocks from 'node-mocks-http'
-import Knex from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
 import { createContext } from '../../tests/context'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { resetGraphileDb } from '../../tests/graphileDb'
-import { GraphileProducer } from '../../messaging/graphileProducer'
 import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices, CreateContext, ReadContext, ListContext } from '../../app'
@@ -26,17 +23,12 @@ describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let workerUtils: WorkerUtils
   let quoteService: QuoteService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
   let accountId: string
   let accountUrl: string
 
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
   const receiver = `http://wallet2.example/bob/incoming-payments/${uuid()}`
   const asset = randomAsset()
   const sendAmount: Amount = {
@@ -58,54 +50,38 @@ describe('Quote Routes', (): void => {
     })
   }
 
-  beforeAll(
-    async (): Promise<void> => {
-      config = Config
-      config.publicHost = 'https://wallet.example'
-      deps = await initIocContainer(config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
+  beforeAll(async (): Promise<void> => {
+    config = Config
+    config.publicHost = 'https://wallet.example'
+    deps = await initIocContainer(config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    config = await deps.use('config')
+    quoteRoutes = await deps.use('quoteRoutes')
+    quoteService = await deps.use('quoteService')
+    jestOpenAPI(await deps.use('openApi'))
+  })
+
+  beforeEach(async (): Promise<void> => {
+    const accountService = await deps.use('accountService')
+    accountId = (
+      await accountService.create({
+        asset: {
+          code: sendAmount.assetCode,
+          scale: sendAmount.assetScale
+        }
       })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      config = await deps.use('config')
-      quoteRoutes = await deps.use('quoteRoutes')
-      quoteService = await deps.use('quoteService')
-      jestOpenAPI(await deps.use('openApi'))
-    }
-  )
+    ).id
+    accountUrl = `${config.publicHost}/${accountId}`
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
-      accountId = (
-        await accountService.create({
-          asset: {
-            code: sendAmount.assetCode,
-            scale: sendAmount.assetScale
-          }
-        })
-      ).id
-      accountUrl = `${config.publicHost}/${accountId}`
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
-
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   describe('get', (): void => {
     test('returns 404 for nonexistent quote', async (): Promise<void> => {
@@ -254,9 +230,9 @@ describe('Quote Routes', (): void => {
             }
           })
           expect(ctx.response).toSatisfyApiSpec()
-          const quoteId = ((ctx.response.body as Record<string, unknown>)[
-            'id'
-          ] as string)
+          const quoteId = (
+            (ctx.response.body as Record<string, unknown>)['id'] as string
+          )
             .split('/')
             .pop()
           assert.ok(quote)
@@ -299,9 +275,9 @@ describe('Quote Routes', (): void => {
           receiver
         })
         expect(ctx.response).toSatisfyApiSpec()
-        const quoteId = ((ctx.response.body as Record<string, unknown>)[
-          'id'
-        ] as string)
+        const quoteId = (
+          (ctx.response.body as Record<string, unknown>)['id'] as string
+        )
           .split('/')
           .pop()
         assert.ok(quote)

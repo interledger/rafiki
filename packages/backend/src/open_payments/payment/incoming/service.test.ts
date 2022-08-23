@@ -1,6 +1,5 @@
 import assert from 'assert'
-import Knex from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { IncomingPaymentService } from './service'
@@ -12,8 +11,6 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
-import { resetGraphileDb } from '../../../tests/graphileDb'
-import { GraphileProducer } from '../../../messaging/graphileProducer'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -29,55 +26,34 @@ import { AccountService } from '../../account/service'
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let workerUtils: WorkerUtils
   let incomingPaymentService: IncomingPaymentService
   let knex: Knex
   let accountId: string
   let accountingService: AccountingService
   let accountService: AccountService
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
   const asset = randomAsset()
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      accountingService = await deps.use('accountingService')
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    accountingService = await deps.use('accountingService')
+    knex = await deps.use('knex')
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      incomingPaymentService = await deps.use('incomingPaymentService')
-      accountService = await deps.use('accountService')
-      accountId = (await accountService.create({ asset })).id
-    }
-  )
+  beforeEach(async (): Promise<void> => {
+    incomingPaymentService = await deps.use('incomingPaymentService')
+    accountService = await deps.use('accountService')
+    accountId = (await accountService.create({ asset })).id
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      jest.useRealTimers()
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    jest.useRealTimers()
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   describe('Create/Get IncomingPayment', (): void => {
     test('An incoming payment can be created and fetched', async (): Promise<void> => {
@@ -246,23 +222,21 @@ describe('Incoming Payment Service', (): void => {
   describe('onCredit', (): void => {
     let incomingPayment: IncomingPayment
 
-    beforeEach(
-      async (): Promise<void> => {
-        const incomingPaymentOrError = await incomingPaymentService.create({
-          accountId,
-          description: 'Test incoming payment',
-          incomingAmount: {
-            value: BigInt(123),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          expiresAt: new Date(Date.now() + 30_000),
-          externalRef: '#123'
-        })
-        assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
-        incomingPayment = incomingPaymentOrError
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      const incomingPaymentOrError = await incomingPaymentService.create({
+        accountId,
+        description: 'Test incoming payment',
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        externalRef: '#123'
+      })
+      assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
+      incomingPayment = incomingPaymentOrError
+    })
 
     test('Sets state of partially paid incoming payment to "processing"', async (): Promise<void> => {
       await expect(
@@ -397,55 +371,53 @@ describe('Incoming Payment Service', (): void => {
       ({ eventType, expiresAt, amountReceived }): void => {
         let incomingPayment: IncomingPayment
 
-        beforeEach(
-          async (): Promise<void> => {
-            incomingPayment = await createIncomingPayment(deps, {
-              accountId,
-              incomingAmount: {
-                value: BigInt(123),
-                assetCode: asset.code,
-                assetScale: asset.scale
-              },
-              expiresAt,
-              description: 'Test incoming payment',
-              externalRef: '#123'
+        beforeEach(async (): Promise<void> => {
+          incomingPayment = await createIncomingPayment(deps, {
+            accountId,
+            incomingAmount: {
+              value: BigInt(123),
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            expiresAt,
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          })
+          await expect(
+            accountingService.createDeposit({
+              id: uuid(),
+              account: incomingPayment,
+              amount: amountReceived
             })
-            await expect(
-              accountingService.createDeposit({
-                id: uuid(),
-                account: incomingPayment,
-                amount: amountReceived
-              })
-            ).resolves.toBeUndefined()
-            if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
-              jest.useFakeTimers()
-              jest.setSystemTime(incomingPayment.expiresAt)
-              await expect(incomingPaymentService.processNext()).resolves.toBe(
-                incomingPayment.id
-              )
-            } else {
-              await incomingPayment.onCredit({
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                totalReceived: incomingPayment.incomingAmount!.value
-              })
-            }
-            incomingPayment = (await incomingPaymentService.get(
+          ).resolves.toBeUndefined()
+          if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
+            jest.useFakeTimers()
+            jest.setSystemTime(incomingPayment.expiresAt)
+            await expect(incomingPaymentService.processNext()).resolves.toBe(
               incomingPayment.id
-            )) as IncomingPayment
-            expect(incomingPayment.processAt).not.toBeNull()
-            if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
-              expect(incomingPayment.state).toBe(IncomingPaymentState.Expired)
-            } else {
-              expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
-            }
-            await expect(
-              accountingService.getTotalReceived(incomingPayment.id)
-            ).resolves.toEqual(amountReceived)
-            await expect(
-              accountingService.getBalance(incomingPayment.id)
-            ).resolves.toEqual(amountReceived)
+            )
+          } else {
+            await incomingPayment.onCredit({
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              totalReceived: incomingPayment.incomingAmount!.value
+            })
           }
-        )
+          incomingPayment = (await incomingPaymentService.get(
+            incomingPayment.id
+          )) as IncomingPayment
+          expect(incomingPayment.processAt).not.toBeNull()
+          if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
+            expect(incomingPayment.state).toBe(IncomingPaymentState.Expired)
+          } else {
+            expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
+          }
+          await expect(
+            accountingService.getTotalReceived(incomingPayment.id)
+          ).resolves.toEqual(amountReceived)
+          await expect(
+            accountingService.getBalance(incomingPayment.id)
+          ).resolves.toEqual(amountReceived)
+        })
 
         test('Creates webhook event', async (): Promise<void> => {
           await expect(
@@ -521,23 +493,21 @@ describe('Incoming Payment Service', (): void => {
   describe('complete', (): void => {
     let incomingPayment: IncomingPayment
 
-    beforeEach(
-      async (): Promise<void> => {
-        const incomingPaymentOrError = await incomingPaymentService.create({
-          accountId,
-          description: 'Test incoming payment',
-          incomingAmount: {
-            value: BigInt(123),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          expiresAt: new Date(Date.now() + 30_000),
-          externalRef: '#123'
-        })
-        assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
-        incomingPayment = incomingPaymentOrError
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      const incomingPaymentOrError = await incomingPaymentService.create({
+        accountId,
+        description: 'Test incoming payment',
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        externalRef: '#123'
+      })
+      assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
+      incomingPayment = incomingPaymentOrError
+    })
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
       const now = new Date()
       jest.spyOn(global.Date, 'now').mockImplementation(() => now.valueOf())
@@ -637,22 +607,20 @@ describe('Incoming Payment Service', (): void => {
   describe('getByConnection', (): void => {
     let incomingPayment: IncomingPayment
 
-    beforeEach(
-      async (): Promise<void> => {
-        incomingPayment = (await incomingPaymentService.create({
-          accountId,
-          description: 'Test incoming payment',
-          incomingAmount: {
-            value: BigInt(123),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          expiresAt: new Date(Date.now() + 30_000),
-          externalRef: '#123'
-        })) as IncomingPayment
-        assert.ok(!isIncomingPaymentError(incomingPayment))
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      incomingPayment = (await incomingPaymentService.create({
+        accountId,
+        description: 'Test incoming payment',
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        externalRef: '#123'
+      })) as IncomingPayment
+      assert.ok(!isIncomingPaymentError(incomingPayment))
+    })
     test('returns incoming payment id on correct connectionId', async (): Promise<void> => {
       await expect(
         incomingPaymentService.getByConnection(incomingPayment.connectionId)

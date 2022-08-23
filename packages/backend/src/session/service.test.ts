@@ -12,34 +12,26 @@ describe('Session Key Service', (): void => {
   let sessionService: SessionService
   let redis: Redis
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      sessionService = await deps.use('sessionService')
-      redis = await deps.use('redis')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    sessionService = await deps.use('sessionService')
+    redis = await deps.use('redis')
+  })
 
-  beforeEach(
-    async (): Promise<void> => {
-      jest.useFakeTimers()
-    }
-  )
+  beforeEach(async (): Promise<void> => {
+    jest.useFakeTimers()
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      jest.useRealTimers()
-      await redis.flushdb()
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    jest.useRealTimers()
+    await redis.flushdb()
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await redis.disconnect()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await redis.disconnect()
+    await appContainer.shutdown()
+  })
 
   describe('Create / Get Session', (): void => {
     test('Can create and fetch session', async (): Promise<void> => {

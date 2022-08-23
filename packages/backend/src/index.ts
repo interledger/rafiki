@@ -1,16 +1,14 @@
 import { EventEmitter } from 'events'
 import { Server } from 'http'
 import createLogger from 'pino'
-import Knex from 'knex'
+import { knex } from 'knex'
 import { Model } from 'objection'
-import { makeWorkerUtils } from 'graphile-worker'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import IORedis from 'ioredis'
 import { createClient } from 'tigerbeetle-node'
 
 import { App, AppServices } from './app'
 import { Config } from './config/app'
-import { GraphileProducer } from './messaging/graphileProducer'
 import { createRatesService } from './rates/service'
 import { createQuoteRoutes } from './open_payments/quote/routes'
 import { createQuoteService } from './open_payments/quote/service'
@@ -53,36 +51,17 @@ export function initIocContainer(
 ): IocContract<AppServices> {
   const container: IocContract<AppServices> = new Ioc()
   container.singleton('config', async () => config)
-  container.singleton('workerUtils', async (deps: IocContract<AppServices>) => {
-    const config = await deps.use('config')
-    const logger = await deps.use('logger')
-    logger.info({ msg: 'creating graphile worker utils' })
-    const workerUtils = await makeWorkerUtils({
-      connectionString: config.databaseUrl
-    })
-    await workerUtils.migrate()
-    return workerUtils
-  })
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')
     const logger = createLogger()
     logger.level = config.logLevel
     return logger
   })
-  container.singleton(
-    'messageProducer',
-    async (deps: IocContract<AppServices>) => {
-      const logger = await deps.use('logger')
-      const workerUtils = await deps.use('workerUtils')
-      logger.info({ msg: 'creating graphile producer' })
-      return new GraphileProducer(workerUtils)
-    }
-  )
   container.singleton('knex', async (deps: IocContract<AppServices>) => {
     const logger = await deps.use('logger')
     const config = await deps.use('config')
     logger.info({ msg: 'creating knex' })
-    const knex = Knex({
+    const db = knex({
       client: 'postgresql',
       connection: config.databaseUrl,
       pool: {
@@ -95,21 +74,18 @@ export function initIocContainer(
       }
     })
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
-    knex.client.driver.types.setTypeParser(
-      knex.client.driver.types.builtins.INT8,
+    db.client.driver.types.setTypeParser(
+      db.client.driver.types.builtins.INT8,
       'text',
       BigInt
     )
-    return knex
+    return db
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
-  container.singleton(
-    'redis',
-    async (deps): Promise<IORedis.Redis> => {
-      const config = await deps.use('config')
-      return new IORedis(config.redisUrl, { tls: config.redisTls })
-    }
-  )
+  container.singleton('redis', async (deps): Promise<IORedis.Redis> => {
+    const config = await deps.use('config')
+    return new IORedis(config.redisUrl, { tls: config.redisTls })
+  })
   container.singleton('streamServer', async (deps) => {
     const config = await deps.use('config')
     return new StreamServer({
@@ -260,11 +236,9 @@ export function initIocContainer(
       sourceAccount,
       unfulfillable = false
     }: IlpPluginOptions): IlpPlugin => {
-      return createIlpPlugin(
-        (data: Buffer): Promise<Buffer> => {
-          return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
-        }
-      )
+      return createIlpPlugin((data: Buffer): Promise<Buffer> => {
+        return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
+      })
     }
   })
 
@@ -363,8 +337,6 @@ export const gracefulShutdown = async (
   }
   const knex = await container.use('knex')
   await knex.destroy()
-  const workerUtils = await container.use('workerUtils')
-  await workerUtils.release()
   const tigerbeetle = await container.use('tigerbeetle')
   await tigerbeetle.destroy()
   const redis = await container.use('redis')
@@ -377,51 +349,45 @@ export const start = async (
 ): Promise<void> => {
   let shuttingDown = false
   const logger = await container.use('logger')
-  process.on(
-    'SIGINT',
-    async (): Promise<void> => {
-      logger.info('received SIGINT attempting graceful shutdown')
-      try {
-        if (shuttingDown) {
-          logger.warn(
-            'received second SIGINT during graceful shutdown, exiting forcefully.'
-          )
-          process.exit(1)
-        }
-
-        shuttingDown = true
-
-        // Graceful shutdown
-        await gracefulShutdown(container, app)
-        logger.info('completed graceful shutdown.')
-        process.exit(0)
-      } catch (err) {
-        const errInfo =
-          err && typeof err === 'object' && err.stack ? err.stack : err
-        logger.error({ error: errInfo }, 'error while shutting down')
+  process.on('SIGINT', async (): Promise<void> => {
+    logger.info('received SIGINT attempting graceful shutdown')
+    try {
+      if (shuttingDown) {
+        logger.warn(
+          'received second SIGINT during graceful shutdown, exiting forcefully.'
+        )
         process.exit(1)
       }
-    }
-  )
 
-  process.on(
-    'SIGTERM',
-    async (): Promise<void> => {
-      logger.info('received SIGTERM attempting graceful shutdown')
+      shuttingDown = true
 
-      try {
-        // Graceful shutdown
-        await gracefulShutdown(container, app)
-        logger.info('completed graceful shutdown.')
-        process.exit(0)
-      } catch (err) {
-        const errInfo =
-          err && typeof err === 'object' && err.stack ? err.stack : err
-        logger.error({ error: errInfo }, 'error while shutting down')
-        process.exit(1)
-      }
+      // Graceful shutdown
+      await gracefulShutdown(container, app)
+      logger.info('completed graceful shutdown.')
+      process.exit(0)
+    } catch (err) {
+      const errInfo =
+        err && typeof err === 'object' && err.stack ? err.stack : err
+      logger.error({ error: errInfo }, 'error while shutting down')
+      process.exit(1)
     }
-  )
+  })
+
+  process.on('SIGTERM', async (): Promise<void> => {
+    logger.info('received SIGTERM attempting graceful shutdown')
+
+    try {
+      // Graceful shutdown
+      await gracefulShutdown(container, app)
+      logger.info('completed graceful shutdown.')
+      process.exit(0)
+    } catch (err) {
+      const errInfo =
+        err && typeof err === 'object' && err.stack ? err.stack : err
+      logger.error({ error: errInfo }, 'error while shutting down')
+      process.exit(1)
+    }
+  })
 
   // Do migrations
   const knex = await container.use('knex')
@@ -437,8 +403,9 @@ export const start = async (
 
   const config = await container.use('config')
   await app.boot()
-  app.listen(config.port)
-  logger.info(`Listening on ${app.getPort()}`)
+  await app.startAdminServer(config.adminPort)
+  await app.startOpenPaymentsServer(config.openPaymentsPort)
+  logger.info(`Listening on ${app.getAdminPort()}`)
 
   const connectorApp = await container.use('connectorApp')
   connectorServer = connectorApp.listenPublic(config.connectorPort)
@@ -448,11 +415,9 @@ export const start = async (
 
 // If this script is run directly, start the server
 if (!module.parent) {
-  start(container, app).catch(
-    async (e): Promise<void> => {
-      const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
-      const logger = await container.use('logger')
-      logger.error(errInfo)
-    }
-  )
+  start(container, app).catch(async (e): Promise<void> => {
+    const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
+    const logger = await container.use('logger')
+    logger.error(errInfo)
+  })
 }

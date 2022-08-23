@@ -1,6 +1,6 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
-import { Grant } from '../grant/model'
+import { join } from 'path'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-3.2.1
 export class AccessToken extends BaseModel {
@@ -11,7 +11,7 @@ export class AccessToken extends BaseModel {
   static relationMappings = {
     grant: {
       relation: Model.HasOneRelation,
-      modelClass: Grant,
+      modelClass: join(__dirname, '../grant/model'),
       join: {
         from: 'accessTokens.grantId',
         to: 'grants.id'

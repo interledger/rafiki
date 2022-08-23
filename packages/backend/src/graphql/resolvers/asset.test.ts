@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-koa'
 import assert from 'assert'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
@@ -34,33 +34,27 @@ describe('Asset Resolvers', (): void => {
   let assetService: AssetService
   let tigerbeetleContainer: StartedTestContainer
 
-  beforeAll(
-    async (): Promise<void> => {
-      tigerbeetleContainer = await startTigerbeetleContainer()
-      Config.tigerbeetleReplicaAddresses = [
-        tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
-      ]
+  beforeAll(async (): Promise<void> => {
+    tigerbeetleContainer = await startTigerbeetleContainer()
+    Config.tigerbeetleReplicaAddresses = [
+      tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
+    ]
 
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      assetService = await deps.use('assetService')
-    }
-  )
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    assetService = await deps.use('assetService')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-      await tigerbeetleContainer.stop()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.apolloClient.stop()
+    await appContainer.shutdown()
+    await tigerbeetleContainer.stop()
+  })
 
   describe('Create Asset', (): void => {
     test.each`
@@ -100,15 +94,13 @@ describe('Asset Resolvers', (): void => {
               input
             }
           })
-          .then(
-            (query): AssetMutationResponse => {
-              if (query.data) {
-                return query.data.createAsset
-              } else {
-                throw new Error('Data was empty')
-              }
+          .then((query): AssetMutationResponse => {
+            if (query.data) {
+              return query.data.createAsset
+            } else {
+              throw new Error('Data was empty')
             }
-          )
+          })
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
@@ -150,15 +142,13 @@ describe('Asset Resolvers', (): void => {
             input
           }
         })
-        .then(
-          (query): AssetMutationResponse => {
-            if (query.data) {
-              return query.data.createAsset
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): AssetMutationResponse => {
+          if (query.data) {
+            return query.data.createAsset
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('409')
@@ -188,15 +178,13 @@ describe('Asset Resolvers', (): void => {
             input: randomAsset()
           }
         })
-        .then(
-          (query): AssetMutationResponse => {
-            if (query.data) {
-              return query.data.createAsset
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): AssetMutationResponse => {
+          if (query.data) {
+            return query.data.createAsset
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
       expect(response.message).toBe('Error trying to create asset')
@@ -228,15 +216,13 @@ describe('Asset Resolvers', (): void => {
             assetId: asset.id
           }
         })
-        .then(
-          (query): Asset => {
-            if (query.data) {
-              return query.data.asset
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): Asset => {
+          if (query.data) {
+            return query.data.asset
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(query).toEqual({
         __typename: 'Asset',
@@ -262,15 +248,13 @@ describe('Asset Resolvers', (): void => {
             assetId: uuid()
           }
         })
-        .then(
-          (query): Asset => {
-            if (query.data) {
-              return query.data.asset
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): Asset => {
+          if (query.data) {
+            return query.data.asset
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
@@ -315,15 +299,13 @@ describe('Asset Resolvers', (): void => {
             }
           `
         })
-        .then(
-          (query): AssetsConnection => {
-            if (query.data) {
-              return query.data.assets
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): AssetsConnection => {
+          if (query.data) {
+            return query.data.assets
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
       expect(query.edges).toHaveLength(2)
       query.edges.forEach((edge, idx) => {
         const asset = assets[idx]
@@ -349,15 +331,13 @@ describe('Asset Resolvers', (): void => {
     `('from $withdrawalThreshold', ({ withdrawalThreshold }): void => {
       let asset: AssetModel
 
-      beforeEach(
-        async (): Promise<void> => {
-          asset = (await assetService.create({
-            ...randomAsset(),
-            withdrawalThreshold
-          })) as AssetModel
-          assert.ok(!isAssetError(asset))
-        }
-      )
+      beforeEach(async (): Promise<void> => {
+        asset = (await assetService.create({
+          ...randomAsset(),
+          withdrawalThreshold
+        })) as AssetModel
+        assert.ok(!isAssetError(asset))
+      })
 
       test.each`
         withdrawalThreshold
@@ -393,15 +373,13 @@ describe('Asset Resolvers', (): void => {
                 }
               }
             })
-            .then(
-              (query): AssetMutationResponse => {
-                if (query.data) {
-                  return query.data.updateAssetWithdrawalThreshold
-                } else {
-                  throw new Error('Data was empty')
-                }
+            .then((query): AssetMutationResponse => {
+              if (query.data) {
+                return query.data.updateAssetWithdrawalThreshold
+              } else {
+                throw new Error('Data was empty')
               }
-            )
+            })
 
           expect(response.success).toBe(true)
           expect(response.code).toEqual('200')
@@ -444,15 +422,13 @@ describe('Asset Resolvers', (): void => {
             }
           }
         })
-        .then(
-          (query): AssetMutationResponse => {
-            if (query.data) {
-              return query.data.updateAssetWithdrawalThreshold
-            } else {
-              throw new Error('Data was empty')
-            }
+        .then((query): AssetMutationResponse => {
+          if (query.data) {
+            return query.data.updateAssetWithdrawalThreshold
+          } else {
+            throw new Error('Data was empty')
           }
-        )
+        })
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')

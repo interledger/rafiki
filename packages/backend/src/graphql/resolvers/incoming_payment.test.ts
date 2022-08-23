@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -20,29 +20,23 @@ describe('Incoming Payment Resolver', (): void => {
 
   const asset = randomAsset()
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      accountService = await deps.use('accountService')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    accountService = await deps.use('accountService')
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-      await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await truncateTables(knex)
+    await appContainer.apolloClient.stop()
+    await appContainer.shutdown()
+  })
 
   describe('Account incoming payments', (): void => {
-    beforeEach(
-      async (): Promise<void> => {
-        accountId = (await accountService.create({ asset })).id
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      accountId = (await accountService.create({ asset })).id
+    })
 
     getPageTests({
       getClient: () => appContainer.apolloClient,

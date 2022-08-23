@@ -34,23 +34,21 @@ describe('Auth Middleware', (): void => {
   let validateRequest: ValidateFunction<IntrospectionBody>
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      accountId = `${Config.publicHost}/${uuid()}`
-      authServerIntrospectionUrl = new URL(Config.authServerIntrospectionUrl)
-      middleware = createAuthMiddleware({
-        type: AccessType.IncomingPayment,
-        action: AccessAction.Read
-      })
-      const authOpenApi = await deps.use('authOpenApi')
-      validateRequest = authOpenApi.createRequestValidator({
-        path: '/introspect',
-        method: HttpMethod.POST
-      })
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    accountId = `${Config.publicHost}/${uuid()}`
+    authServerIntrospectionUrl = new URL(Config.authServerIntrospectionUrl)
+    middleware = createAuthMiddleware({
+      type: AccessType.IncomingPayment,
+      action: AccessAction.Read
+    })
+    const authOpenApi = await deps.use('authOpenApi')
+    validateRequest = authOpenApi.createRequestValidator({
+      path: '/introspect',
+      method: HttpMethod.POST
+    })
+  })
 
   beforeEach((): void => {
     ctx = createContext(
@@ -68,11 +66,9 @@ describe('Auth Middleware', (): void => {
     next = jest.fn()
   })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   function mockAuthServer(
     grant: GrantJSON | string | undefined = undefined
@@ -124,20 +120,17 @@ describe('Auth Middleware', (): void => {
     ${undefined}     | ${'unknown token/grant'}
     ${'bad grant'}   | ${'invalid grant'}
     ${inactiveGrant} | ${'inactive grant'}
-  `(
-    'Returns 401 for $description',
-    async ({ grant }): Promise<void> => {
-      const scope = mockAuthServer(grant)
-      await expect(middleware(ctx, next)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(ctx.message).toEqual('Invalid Token')
-      expect(ctx.response.get('WWW-Authenticate')).toBe(
-        `GNAP as_uri=${Config.authServerGrantUrl}`
-      )
-      expect(next).not.toHaveBeenCalled()
-      scope.isDone()
-    }
-  )
+  `('Returns 401 for $description', async ({ grant }): Promise<void> => {
+    const scope = mockAuthServer(grant)
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.status).toBe(401)
+    expect(ctx.message).toEqual('Invalid Token')
+    expect(ctx.response.get('WWW-Authenticate')).toBe(
+      `GNAP as_uri=${Config.authServerGrantUrl}`
+    )
+    expect(next).not.toHaveBeenCalled()
+    scope.isDone()
+  })
 
   test('returns 403 for unauthorized request', async (): Promise<void> => {
     const scope = mockAuthServer({

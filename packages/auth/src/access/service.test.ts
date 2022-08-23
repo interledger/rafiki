@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import nock from 'nock'
-import Knex, { Transaction } from 'knex'
+import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
@@ -17,29 +17,23 @@ describe('Access Service', (): void => {
   let appContainer: TestContainer
   let accessService: AccessService
   let knex: Knex
-  let trx: Transaction
+  let trx: Knex.Transaction
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      accessService = await deps.use('accessService')
-      knex = await deps.use('knex')
-      appContainer = await createTestApp(deps)
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    accessService = await deps.use('accessService')
+    knex = await deps.use('knex')
+    appContainer = await createTestApp(deps)
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      nock.restore()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    nock.restore()
+    await appContainer.shutdown()
+  })
 
   const BASE_GRANT = {
     state: GrantState.Pending,
@@ -122,12 +116,5 @@ describe('Access Service', (): void => {
     expect(access[0].grantId).toEqual(grant.id)
     expect(access[0].type).toEqual(AccessType.OutgoingPayment)
     expect(access[0].limits).toEqual(outgoingPaymentLimit)
-  })
-
-  test("Doesn't create anything if an empty array is passed", async (): Promise<void> => {
-    const grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
-
-    const access = await accessService.createAccess(grant.id, [])
-    expect(access.length).toEqual(0)
   })
 })

@@ -1,14 +1,11 @@
 import { IocContract } from '@adonisjs/fold'
-import { makeWorkerUtils, WorkerUtils } from 'graphile-worker'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import jestOpenAPI from 'jest-openapi'
 import { v4 as uuid } from 'uuid'
 
 import { AppServices, ReadContext } from '../../app'
 import { Config, IAppConfig } from '../../config/app'
-import { GraphileProducer } from '../../messaging/graphileProducer'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { resetGraphileDb } from '../../tests/graphileDb'
 import { truncateTables } from '../../tests/tableManager'
 import { initIocContainer } from '../../'
 import { ConnectionRoutes } from './routes'
@@ -23,32 +20,19 @@ describe('Connection Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let workerUtils: WorkerUtils
   let config: IAppConfig
   let accountService: AccountService
   let connectionRoutes: ConnectionRoutes
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
-  beforeAll(
-    async (): Promise<void> => {
-      config = Config
-      config.publicHost = 'https://wallet.example'
-      config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
-      deps = await initIocContainer(config)
-      deps.bind('messageProducer', async () => mockMessageProducer)
-      appContainer = await createTestApp(deps)
-      workerUtils = await makeWorkerUtils({
-        connectionString: appContainer.connectionUrl
-      })
-      await workerUtils.migrate()
-      messageProducer.setUtils(workerUtils)
-      knex = await deps.use('knex')
-      jestOpenAPI(await deps.use('openApi'))
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    config = Config
+    config.publicHost = 'https://wallet.example'
+    config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
+    deps = await initIocContainer(config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    jestOpenAPI(await deps.use('openApi'))
+  })
 
   const asset = {
     code: 'USD',
@@ -56,40 +40,32 @@ describe('Connection Routes', (): void => {
   }
   let account: Account
   let incomingPayment: IncomingPayment
-  beforeEach(
-    async (): Promise<void> => {
-      connectionRoutes = await deps.use('connectionRoutes')
-      config = await deps.use('config')
+  beforeEach(async (): Promise<void> => {
+    connectionRoutes = await deps.use('connectionRoutes')
+    config = await deps.use('config')
 
-      accountService = await deps.use('accountService')
-      account = await accountService.create({ asset })
-      incomingPayment = await createIncomingPayment(deps, {
-        accountId: account.id,
-        description: 'hello world',
-        expiresAt: new Date(Date.now() + 30_000),
-        incomingAmount: {
-          value: BigInt('123'),
-          assetScale: asset.scale,
-          assetCode: asset.code
-        },
-        externalRef: '#123'
-      })
-    }
-  )
+    accountService = await deps.use('accountService')
+    account = await accountService.create({ asset })
+    incomingPayment = await createIncomingPayment(deps, {
+      accountId: account.id,
+      description: 'hello world',
+      expiresAt: new Date(Date.now() + 30_000),
+      incomingAmount: {
+        value: BigInt('123'),
+        assetScale: asset.scale,
+        assetCode: asset.code
+      },
+      externalRef: '#123'
+    })
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await resetGraphileDb(knex)
-      await appContainer.shutdown()
-      await workerUtils.release()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
 
   describe('get', (): void => {
     test('returns 404 for nonexistent connection id on incoming payment', async (): Promise<void> => {

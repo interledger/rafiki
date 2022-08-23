@@ -1,6 +1,6 @@
 import Axios from 'axios'
 import createLogger from 'pino'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import nock from 'nock'
 import fetch from 'cross-fetch'
 import { IocContract } from '@adonisjs/fold'
@@ -22,7 +22,8 @@ import { Grant, AccessAction, AccessType } from '../open_payments/auth/grant'
 export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {
-  port: number
+  adminPort: number
+  openPaymentsPort: number
   app: App
   knex: Knex
   apolloClient: ApolloClient<NormalizedCacheObject>
@@ -34,13 +35,19 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
-  config.port = 0
+  config.adminPort = 0
+  config.openPaymentsPort = 0
   config.connectorPort = 0
   config.publicHost = 'https://wallet.example'
+  config.openPaymentsUrl = 'https://op.example'
   const logger = createLogger({
-    prettyPrint: {
-      translateTime: true,
-      ignore: 'pid,hostname'
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        translateTime: true,
+        ignore: 'pid,hostname'
+      }
     },
     level: process.env.LOG_LEVEL || 'error',
     name: 'test-logger'
@@ -76,7 +83,7 @@ export const createTestApp = async (
     .persist()
 
   // Since payment pointers MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
-  nock(config.publicHost)
+  nock(config.openPaymentsUrl)
     .get(/.*/)
     .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
     .reply(200, function (path) {
@@ -84,7 +91,7 @@ export const createTestApp = async (
       if (!headers['authorization']) {
         headers.authorization = `GNAP ${testAccessToken}`
       }
-      return Axios.get(`http://localhost:${app.getPort()}${path}`, {
+      return Axios.get(`http://localhost:${app.getOpenPaymentsPort()}${path}`, {
         headers
       }).then((res) => res.data)
     })
@@ -93,7 +100,7 @@ export const createTestApp = async (
   const knex = await container.use('knex')
 
   const httpLink = createHttpLink({
-    uri: `http://localhost:${app.getPort()}/graphql`,
+    uri: `http://localhost:${app.getAdminPort()}/graphql`,
     fetch
   })
   const errorLink = onError(({ graphQLErrors }) => {
@@ -138,7 +145,8 @@ export const createTestApp = async (
 
   return {
     app,
-    port: app.getPort(),
+    adminPort: app.getAdminPort(),
+    openPaymentsPort: app.getOpenPaymentsPort(),
     knex,
     apolloClient: client,
     connectionUrl: config.databaseUrl,

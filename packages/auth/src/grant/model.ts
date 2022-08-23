@@ -1,7 +1,7 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
-import { AccessToken } from '../accessToken/model'
 import { Access } from '../access/model'
+import { join } from 'path'
 
 export enum StartMethod {
   Redirect = 'redirect'
@@ -27,7 +27,7 @@ export class Grant extends BaseModel {
   static relationMappings = () => ({
     accessTokens: {
       relation: Model.HasManyRelation,
-      modelClass: AccessToken,
+      modelClass: join(__dirname, '../accessToken/model'),
       join: {
         from: 'grants.id',
         to: 'accessTokens.grantId'
@@ -35,7 +35,7 @@ export class Grant extends BaseModel {
     },
     access: {
       relation: Model.HasManyRelation,
-      modelClass: Access,
+      modelClass: join(__dirname, '../access/model'),
       join: {
         from: 'grants.id',
         to: 'accesses.grantId'

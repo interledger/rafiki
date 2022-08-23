@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-koa'
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
@@ -29,29 +29,23 @@ describe('Quote Resolvers', (): void => {
   const receiver = `${receivingAccount}/incoming-payments/${uuid()}`
   const asset = randomAsset()
 
-  beforeAll(
-    async (): Promise<void> => {
-      deps = await initIocContainer(Config)
-      appContainer = await createTestApp(deps)
-      knex = await deps.use('knex')
-      quoteService = await deps.use('quoteService')
-      accountService = await deps.use('accountService')
-    }
-  )
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    knex = await deps.use('knex')
+    quoteService = await deps.use('quoteService')
+    accountService = await deps.use('accountService')
+  })
 
-  afterEach(
-    async (): Promise<void> => {
-      jest.restoreAllMocks()
-      await truncateTables(knex)
-    }
-  )
+  afterEach(async (): Promise<void> => {
+    jest.restoreAllMocks()
+    await truncateTables(knex)
+  })
 
-  afterAll(
-    async (): Promise<void> => {
-      await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-    }
-  )
+  afterAll(async (): Promise<void> => {
+    await appContainer.apolloClient.stop()
+    await appContainer.shutdown()
+  })
 
   const createAccountQuote = async (accountId: string): Promise<QuoteModel> => {
     return await createQuote(deps, {
@@ -177,53 +171,50 @@ describe('Quote Resolvers', (): void => {
       ${sendAmount} | ${undefined}     | ${'fixed send to incoming payment'}
       ${undefined}  | ${receiveAmount} | ${'fixed receive to incoming payment'}
       ${undefined}  | ${undefined}     | ${'incoming payment'}
-    `(
-      '200 ($type)',
-      async ({ sendAmount, receiveAmount }): Promise<void> => {
-        const { id: accountId } = await accountService.create({
-          asset
-        })
-        const input = {
-          accountId,
-          sendAmount,
-          receiveAmount,
-          receiver
-        }
+    `('200 ($type)', async ({ sendAmount, receiveAmount }): Promise<void> => {
+      const { id: accountId } = await accountService.create({
+        asset
+      })
+      const input = {
+        accountId,
+        sendAmount,
+        receiveAmount,
+        receiver
+      }
 
-        let quote: QuoteModel | undefined
-        const createSpy = jest
-          .spyOn(quoteService, 'create')
-          .mockImplementationOnce(async (opts) => {
-            quote = await createQuote(deps, {
-              ...opts,
-              validDestination: false
-            })
-            return quote
+      let quote: QuoteModel | undefined
+      const createSpy = jest
+        .spyOn(quoteService, 'create')
+        .mockImplementationOnce(async (opts) => {
+          quote = await createQuote(deps, {
+            ...opts,
+            validDestination: false
           })
+          return quote
+        })
 
-        const query = await appContainer.apolloClient
-          .query({
-            query: gql`
-              mutation CreateQuote($input: CreateQuoteInput!) {
-                createQuote(input: $input) {
-                  code
-                  success
-                  quote {
-                    id
-                  }
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CreateQuote($input: CreateQuoteInput!) {
+              createQuote(input: $input) {
+                code
+                success
+                quote {
+                  id
                 }
               }
-            `,
-            variables: { input }
-          })
-          .then((query): QuoteResponse => query.data?.createQuote)
+            }
+          `,
+          variables: { input }
+        })
+        .then((query): QuoteResponse => query.data?.createQuote)
 
-        expect(createSpy).toHaveBeenCalledWith(input)
-        expect(query.code).toBe('200')
-        expect(query.success).toBe(true)
-        expect(query.quote?.id).toBe(quote?.id)
-      }
-    )
+      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(query.code).toBe('200')
+      expect(query.success).toBe(true)
+      expect(query.quote?.id).toBe(quote?.id)
+    })
 
     test('400', async (): Promise<void> => {
       const query = await appContainer.apolloClient
@@ -282,15 +273,13 @@ describe('Quote Resolvers', (): void => {
   describe('Account quotes', (): void => {
     let accountId: string
 
-    beforeEach(
-      async (): Promise<void> => {
-        accountId = (
-          await accountService.create({
-            asset
-          })
-        ).id
-      }
-    )
+    beforeEach(async (): Promise<void> => {
+      accountId = (
+        await accountService.create({
+          asset
+        })
+      ).id
+    })
 
     getPageTests({
       getClient: () => appContainer.apolloClient,

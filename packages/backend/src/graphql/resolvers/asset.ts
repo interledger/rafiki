@@ -43,92 +43,94 @@ export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
   return assetToGraphql(asset)
 }
 
-export const createAsset: MutationResolvers<ApolloContext>['createAsset'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['AssetMutationResponse']> => {
-  try {
-    const assetService = await ctx.container.use('assetService')
-    const assetOrError = await assetService.create(args.input)
-    if (isAssetError(assetOrError)) {
-      switch (assetOrError) {
-        case AssetError.DuplicateAsset:
-          return {
-            code: '409',
-            message: 'Asset already exists',
-            success: false
-          }
-        default:
-          throw new Error(`AssetError: ${assetOrError}`)
+export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['AssetMutationResponse']> => {
+    try {
+      const assetService = await ctx.container.use('assetService')
+      const assetOrError = await assetService.create(args.input)
+      if (isAssetError(assetOrError)) {
+        switch (assetOrError) {
+          case AssetError.DuplicateAsset:
+            return {
+              code: '409',
+              message: 'Asset already exists',
+              success: false
+            }
+          default:
+            throw new Error(`AssetError: ${assetOrError}`)
+        }
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Created Asset',
+        asset: assetToGraphql(assetOrError)
+      }
+    } catch (error) {
+      ctx.logger.error(
+        {
+          options: args.input,
+          error
+        },
+        'error creating asset'
+      )
+      return {
+        code: '500',
+        message: 'Error trying to create asset',
+        success: false
       }
     }
-    return {
-      code: '200',
-      success: true,
-      message: 'Created Asset',
-      asset: assetToGraphql(assetOrError)
-    }
-  } catch (error) {
-    ctx.logger.error(
-      {
-        options: args.input,
-        error
-      },
-      'error creating asset'
-    )
-    return {
-      code: '500',
-      message: 'Error trying to create asset',
-      success: false
-    }
   }
-}
 
-export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['updateAssetWithdrawalThreshold'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['AssetMutationResponse']> => {
-  try {
-    const assetService = await ctx.container.use('assetService')
-    const assetOrError = await assetService.update({
-      id: args.input.id,
-      withdrawalThreshold: args.input.withdrawalThreshold ?? null
-    })
-    if (isAssetError(assetOrError)) {
-      switch (assetOrError) {
-        case AssetError.UnknownAsset:
-          return {
-            code: '404',
-            message: 'Unknown asset',
-            success: false
-          }
-        default:
-          throw new Error(`AssetError: ${assetOrError}`)
+export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['updateAssetWithdrawalThreshold'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['AssetMutationResponse']> => {
+    try {
+      const assetService = await ctx.container.use('assetService')
+      const assetOrError = await assetService.update({
+        id: args.input.id,
+        withdrawalThreshold: args.input.withdrawalThreshold ?? null
+      })
+      if (isAssetError(assetOrError)) {
+        switch (assetOrError) {
+          case AssetError.UnknownAsset:
+            return {
+              code: '404',
+              message: 'Unknown asset',
+              success: false
+            }
+          default:
+            throw new Error(`AssetError: ${assetOrError}`)
+        }
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Updated Asset Withdrawal Threshold',
+        asset: assetToGraphql(assetOrError)
+      }
+    } catch (error) {
+      ctx.logger.error(
+        {
+          options: args.input,
+          error
+        },
+        'error updating asset'
+      )
+      return {
+        code: '400',
+        message: 'Error trying to update asset withdrawal threshold',
+        success: false
       }
     }
-    return {
-      code: '200',
-      success: true,
-      message: 'Updated Asset Withdrawal Threshold',
-      asset: assetToGraphql(assetOrError)
-    }
-  } catch (error) {
-    ctx.logger.error(
-      {
-        options: args.input,
-        error
-      },
-      'error updating asset'
-    )
-    return {
-      code: '400',
-      message: 'Error trying to update asset withdrawal threshold',
-      success: false
-    }
   }
-}
 
 export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   id: asset.id,
