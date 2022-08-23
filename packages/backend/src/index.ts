@@ -265,13 +265,14 @@ export function initIocContainer(
     })
   })
   container.singleton('outgoingPaymentService', async (deps) => {
+    const config = await deps.use('config')
     return await createOutgoingPaymentService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      accountService: await deps.use('accountService'),
-      peerService: await deps.use('peerService')
+      peerService: await deps.use('peerService'),
+      publicHost: config.publicHost
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {
