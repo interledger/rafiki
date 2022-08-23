@@ -144,6 +144,7 @@ importers:
       ajv: ^8.11.0
       apollo-server: ^3.5.0
       apollo-server-koa: ^2.25.1
+      auth: workspace:../auth
       axios: ^0.27.2
       base64url: ^3.0.1
       bcrypt: ^5.0.1
@@ -247,6 +248,7 @@ importers:
       '@types/tmp': 0.2.3
       '@types/uuid': 8.3.4
       apollo-server: 3.10.1_graphql@15.8.0
+      auth: link:../auth
       cross-fetch: 3.1.5
       ilp-protocol-stream: 2.7.1
       jest-openapi: 0.14.2

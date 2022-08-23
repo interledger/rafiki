@@ -23,11 +23,18 @@ export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const TEST_KID_PATH = '/keys/base-test-key'
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
-  url: 'https://example.com'
+  uri: 'https://example.com'
 }
 export const TEST_CLIENT_KEY = {
   proof: 'httpsig',
   jwk: {
+    client: {
+      id: v4(),
+      name: TEST_CLIENT_DISPLAY.name,
+      email: 'bob@bob.com',
+      image: 'a link to an image',
+      uri: TEST_CLIENT_DISPLAY.uri
+    },
     kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
     x: 'test-public-key',
     kty: 'OKP',
@@ -181,15 +188,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
       const ctx = createContext(
         {
@@ -229,15 +231,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
       const ctx = createContext(
         {
@@ -276,15 +273,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
       const ctx = createContext(
         {
@@ -323,15 +315,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
       const ctx = createContext(
         {
@@ -371,15 +358,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
       const ctx = createContext(
         {
@@ -418,15 +400,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
       const ctx = createContext(
         {
@@ -465,15 +442,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
       const ctx = createContext(
         {
@@ -512,15 +484,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
       const ctx = createContext(
         {
@@ -622,15 +589,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
 
       const ctx = createContext(
@@ -676,15 +638,10 @@ describe('Grant Routes', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_DISPLAY,
-          keys: [
-            {
-              ...TEST_CLIENT_KEY.jwk,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            }
-          ]
+          ...TEST_CLIENT_KEY.jwk,
+          exp: Math.round(expDate.getTime() / 1000),
+          nbf: Math.round(nbfDate.getTime() / 1000),
+          revoked: false
         })
       const ctx = createContext(
         {
@@ -727,13 +684,8 @@ describe('Grant Routes', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
-            ...TEST_CLIENT_DISPLAY,
-            keys: [
-              {
-                ...TEST_CLIENT_KEY.jwk,
-                revoked: false
-              }
-            ]
+            ...TEST_CLIENT_KEY.jwk,
+            revoked: false
           })
 
         const ctx = createContext(
@@ -794,13 +746,8 @@ describe('Grant Routes', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
-            ...TEST_CLIENT_DISPLAY,
-            keys: [
-              {
-                ...TEST_CLIENT_KEY.jwk,
-                revoked: false
-              }
-            ]
+            ...TEST_CLIENT_KEY.jwk,
+            revoked: false
           })
 
         const ctx = createContext(
@@ -815,7 +762,7 @@ describe('Grant Routes', (): void => {
 
         const redirectUrl = new URL(config.identityServerDomain)
         redirectUrl.searchParams.set('clientName', TEST_CLIENT_DISPLAY.name)
-        redirectUrl.searchParams.set('clientUri', TEST_CLIENT_DISPLAY.url)
+        redirectUrl.searchParams.set('clientUri', TEST_CLIENT_DISPLAY.uri)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
         await expect(
