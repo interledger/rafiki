@@ -21,7 +21,6 @@ services:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      CONNECTOR_PORT: 3002
       DATABASE_URL: postgresql://peerbackend:peerbackend@database/peerbackend
       TIGERBEETLE_CLUSTER_ID: 0
       # Tigerbeetle will support DNS in future
@@ -34,6 +33,7 @@ services:
       ADMIN_KEY: admin
       ADMIN_HOST: rafiki.peer:3001
       OPEN_PAYMENTS_HOST: wallet.rafiki.peer:3003
+      CONNECTOR_HOST: ilp.rafiki.peer:3002
       WEBHOOK_URL: https://end3sf6r22xva.x.pipedream.net
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml

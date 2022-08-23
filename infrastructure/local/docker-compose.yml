@@ -34,7 +34,6 @@ services:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      CONNECTOR_PORT: 3002
       DATABASE_URL: postgresql://backend:backend@database/backend
       REDIS_URL: redis://redis:6379
       TIGERBEETLE_CLUSTER_ID: 0
@@ -48,6 +47,7 @@ services:
       ADMIN_KEY: admin
       ADMIN_HOST: rafiki.test:3001
       OPEN_PAYMENTS_HOST: wallet.rafiki.test:3003
+      CONNECTOR_HOST: ilp.rafiki.test:3002
       WEBHOOK_URL: https://end3sf6r22xva.x.pipedream.net
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml

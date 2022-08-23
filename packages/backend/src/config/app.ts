@@ -38,7 +38,8 @@ export const Config = {
     envString('OPEN_PAYMENTS_HOST', '127.0.0.1:3003')
   ),
 
-  connectorPort: envInt('CONNECTOR_PORT', 3002),
+  connectorPort: parsePort(envString('CONNECTOR_HOST', '127.0.0.1:3002')),
+
   databaseUrl:
     process.env.NODE_ENV === 'test'
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
