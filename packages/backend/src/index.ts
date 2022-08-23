@@ -27,6 +27,7 @@ import { createAuthService } from './open_payments/auth/service'
 import { createAccountService } from './open_payments/account/service'
 import { createSPSPRoutes } from './spsp/routes'
 import { createAccountRoutes } from './open_payments/account/routes'
+import { createClientKeysRoutes } from './clientKeys/routes'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -206,6 +207,11 @@ export function initIocContainer(
     return createAccountRoutes({
       config: await deps.use('config'),
       accountService: await deps.use('accountService')
+    })
+  })
+  container.singleton('clientKeysRoutes', async (deps) => {
+    return createClientKeysRoutes({
+      clientKeysService: await deps.use('clientKeysService')
     })
   })
   container.singleton('connectionService', async (deps) => {

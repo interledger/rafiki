@@ -7,7 +7,7 @@ export class ClientKeys extends BaseModel {
     return 'clientKeys'
   }
 
-  // The id should be the same as the kid.
+  // The id should be the same as the id in the kid.
   public id!: string
   public clientId!: string
 
