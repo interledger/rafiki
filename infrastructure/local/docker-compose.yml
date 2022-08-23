@@ -60,14 +60,6 @@ services:
       - tigerbeetle
       - database
       - redis
-  rates:
-    image: ghcr.io/interledger/rafiki-rates:latest
-    restart: always
-    networks:
-      rafiki:
-    environment:
-      NODE_ENV: development
-      PORT: 80
   database:
     image: "postgres" # use latest official postgres version
     restart: unless-stopped
