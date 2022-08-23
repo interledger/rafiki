@@ -1,14 +1,26 @@
 import * as crypto from 'crypto'
 import Axios from 'axios'
 import { importJWK, JWK } from 'jose'
-import { URL } from 'url'
 
 import { BaseService } from '../shared/baseService'
 import { IAppConfig } from '../config/app'
 
+export interface JWKWithRequired extends JWK {
+  // client is the custom field representing a client in the backend
+  client: ClientDetails
+  kid: string
+  x: string
+  alg: string
+  kty: string
+  crv: string
+  exp?: number
+  nbf?: number
+  revoked?: boolean
+}
+
 interface DisplayInfo {
   name: string
-  url: string
+  uri: string
 }
 
 export interface KeyInfo {
@@ -21,27 +33,12 @@ export interface ClientInfo {
   key: KeyInfo
 }
 
-interface RegistryData {
+interface ClientDetails {
   id: string
   name: string
   image: string
-  url: string
+  uri: string
   email: string
-  keys: JWKWithRequired[]
-}
-
-interface JWKWithRequired extends JWK {
-  kid: string
-  x: string
-  alg: string
-  kty: string
-  crv: string
-}
-
-interface RegistryKey extends JWK {
-  exp?: number
-  nbf?: number
-  revoked?: boolean
 }
 
 interface ServiceDependencies extends BaseService {
@@ -54,8 +51,8 @@ export interface ClientService {
     jwk: JWKWithRequired,
     challenge: string
   ): Promise<boolean>
-  validateClientWithRegistry(clientInfo: ClientInfo): Promise<boolean>
-  getRegistryDataByKid(kid: string): Promise<RegistryData>
+  validateClient(clientInfo: ClientInfo): Promise<boolean>
+  getKeyByKid(kid: string): Promise<JWKWithRequired>
 }
 
 export async function createClientService({
@@ -74,9 +71,9 @@ export async function createClientService({
   return {
     verifySig: (sig: string, jwk: JWKWithRequired, challenge: string) =>
       verifySig(deps, sig, jwk, challenge),
-    validateClientWithRegistry: (clientInfo: ClientInfo) =>
-      validateClientWithRegistry(deps, clientInfo),
-    getRegistryDataByKid: (kid: string) => getRegistryDataByKid(deps, kid)
+    validateClient: (clientInfo: ClientInfo) =>
+      validateClient(deps, clientInfo),
+    getKeyByKid: (kid: string) => getKeyByKid(deps, kid)
   }
 }
 
@@ -91,56 +88,39 @@ async function verifySig(
   return crypto.verify(null, data, publicKey, Buffer.from(sig))
 }
 
-function validateRequiredJwkProperties(jwk: JWKWithRequired): boolean {
-  if (
-    jwk.kty !== 'OKP' ||
-    (jwk.use && jwk.use !== 'sig') ||
-    (jwk.key_ops &&
-      (!jwk.key_ops.includes('sign') || !jwk.key_ops.includes('verify'))) ||
-    jwk.alg !== 'EdDSA' ||
-    jwk.crv !== 'Ed25519'
-  ) {
+async function validateClient(
+  deps: ServiceDependencies,
+  clientInfo: ClientInfo
+): Promise<boolean> {
+  if (!isClientInfo(clientInfo)) return false
+
+  const { jwk } = clientInfo.key
+
+  const key = await getKeyByKid(deps, jwk.kid)
+
+  if (!key || !isJWKWithRequired(key) || jwk.x !== key.x || key.revoked)
     return false
-  }
+
+  if (
+    jwk.client.name !== key.client.name ||
+    jwk.client.uri !== key.client.uri ||
+    jwk.client.id !== key.client.id ||
+    clientInfo.display.name !== key.client.name ||
+    clientInfo.display.uri !== key.client.uri
+  )
+    return false
+
+  if (key.exp && new Date() >= new Date(key.exp * 1000)) return false
+  if (key.nbf && new Date() < new Date(key.nbf * 1000)) return false
 
   return true
 }
 
-async function validateClientWithRegistry(
-  deps: ServiceDependencies,
-  clientInfo: ClientInfo
-): Promise<boolean> {
-  const { config } = deps
-  const { jwk } = clientInfo.key
-  const { keyRegistries } = config
-
-  // No key registries in list means no validation
-  if (keyRegistries.length === 0) return true
-  if (!validateRequiredJwkProperties(jwk)) return false
-
-  const kidUrl = new URL(jwk.kid)
-  if (!keyRegistries.includes(kidUrl.origin)) return false
-
-  const { keys, ...registryClientInfo } = await getRegistryDataByKid(
-    deps,
-    jwk.kid
-  )
-
-  if (!keys || !keys[0].kid || !keys[0].x) {
-    return false
-  }
-
-  return !!(
-    verifyClientDisplay(clientInfo.display, registryClientInfo) &&
-    verifyJwk(jwk, keys[0])
-  )
-}
-
-async function getRegistryDataByKid(
+async function getKeyByKid(
   deps: ServiceDependencies,
   kid: string
-): Promise<RegistryData> {
-  const registryData = await Axios.get(kid)
+): Promise<JWKWithRequired> {
+  return Axios.get(kid)
     .then((res) => res.data)
     .catch((err) => {
       deps.logger.error(
@@ -152,28 +132,40 @@ async function getRegistryDataByKid(
       )
       return false
     })
-
-  return registryData
 }
 
-function verifyClientDisplay(
-  displayInfo: DisplayInfo,
-  registryClientInfo: DisplayInfo
-): boolean {
-  return (
-    displayInfo.name === registryClientInfo.name &&
-    displayInfo.url === registryClientInfo.url
+function isJWKWithRequired(
+  jwkWithRequired: unknown
+): jwkWithRequired is JWKWithRequired {
+  const jwk = jwkWithRequired as JWKWithRequired
+  return !(
+    jwk.kty !== 'OKP' ||
+    (jwk.use && jwk.use !== 'sig') ||
+    (jwk.key_ops &&
+      (!jwk.key_ops.includes('sign') || !jwk.key_ops.includes('verify'))) ||
+    jwk.alg !== 'EdDSA' ||
+    jwk.crv !== 'Ed25519' ||
+    jwk.client === undefined
   )
 }
 
-function verifyJwk(jwk: JWKWithRequired, keys: RegistryKey): boolean {
-  // TODO: update this to reflect eventual shape of response from registry
-  return !!(
-    !keys.revoked &&
-    keys.exp &&
-    new Date() < new Date(keys.exp * 1000) &&
-    keys.nbf &&
-    new Date() >= new Date(keys.nbf * 1000) &&
-    keys.x === jwk.x
+function isDisplayInfo(display: unknown): display is DisplayInfo {
+  return (
+    (display as DisplayInfo).name !== undefined &&
+    (display as DisplayInfo).uri !== undefined
+  )
+}
+
+function isKeyInfo(key: unknown): key is KeyInfo {
+  return (
+    (key as KeyInfo).proof !== undefined &&
+    isJWKWithRequired((key as KeyInfo).jwk)
+  )
+}
+
+function isClientInfo(client: unknown): client is ClientInfo {
+  return (
+    isDisplayInfo((client as ClientInfo).display) &&
+    isKeyInfo((client as ClientInfo).key)
   )
 }

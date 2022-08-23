@@ -96,9 +96,7 @@ async function createGrantInitiation(
     return
   }
 
-  const isValidClient = await clientService.validateClientWithRegistry(
-    body.client
-  )
+  const isValidClient = await clientService.validateClient(body.client)
   if (!isValidClient) {
     ctx.status = 400
     ctx.body = { error: 'invalid_client' }
@@ -141,11 +139,9 @@ async function startInteraction(
 
   ctx.session.interactId = grant.interactId
 
-  const registryData = await clientService.getRegistryDataByKid(
-    grant.clientKeyId
-  )
+  const key = await clientService.getKeyByKid(grant.clientKeyId)
 
-  if (!registryData) {
+  if (!key) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_client'
@@ -154,8 +150,8 @@ async function startInteraction(
   }
 
   const interactionUrl = new URL(config.identityServerDomain)
-  interactionUrl.searchParams.set('clientName', registryData.name)
-  interactionUrl.searchParams.set('clientUri', registryData.url)
+  interactionUrl.searchParams.set('clientName', key.client.name)
+  interactionUrl.searchParams.set('clientUri', key.client.uri)
 
   ctx.redirect(interactionUrl.toString())
 }

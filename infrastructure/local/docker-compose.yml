@@ -8,6 +8,10 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
+      AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
+    depends_on:
+      - tigerbeetle
+      - database
   mock-account-provider:
     build:
       context: ../..
@@ -15,20 +19,16 @@ services:
     restart: always
     networks:
       rafiki:
-    ports:
-      - "1337:1337"
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      PORT: 1337
+      PORT: 80
   backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     restart: always
     privileged: true
     ports:
-      - "3001:3001"
-      - "3002:3002"
-      - "3003:3003"
+      - "3001:80"
     networks:
       rafiki:
     environment:
@@ -40,7 +40,7 @@ services:
       # Tigerbeetle will support DNS in future
       TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
       NONCE_REDIS_KEY: test
-      AUTH_SERVER_GRANT_URL: http://rafiki-auth
+      AUTH_SERVER_GRANT_URL: http://auth:3006
       AUTH_SERVER_INTROSPECTION_URL: http://auth:3006/introspect
       ILP_ADDRESS: test.rafiki
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
@@ -50,11 +50,14 @@ services:
       CONNECTOR_HOST: ilp.rafiki.test:3002
       WEBHOOK_URL: https://end3sf6r22xva.x.pipedream.net
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
-      AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml
-      PRICES_URL: http://rates:3005/prices
+      AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
+      PRICES_URL: http://rates/prices
       REDIS_URL: redis://redis:6379
+      QUOTE_URL: http://mock-account-provider/quotes
     depends_on:
       - tigerbeetle
+      - database
+      - redis
   rates:
     image: ghcr.io/interledger/rafiki-rates:latest
     restart: always
@@ -62,7 +65,7 @@ services:
       rafiki:
     environment:
       NODE_ENV: development
-      PORT: 3005
+      PORT: 80
   database:
     image: "postgres" # use latest official postgres version
     restart: unless-stopped

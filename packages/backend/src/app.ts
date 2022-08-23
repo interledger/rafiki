@@ -30,6 +30,7 @@ import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { AccountRoutes } from './open_payments/account/routes'
+import { ClientKeysRoutes } from './clientKeys/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
@@ -44,6 +45,8 @@ import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
+import { ClientKeysService } from './clientKeys/service'
+import { ClientService } from './clients/service'
 
 export interface AppContextData {
   logger: Logger
@@ -75,6 +78,8 @@ export type AppRequest<
 type Context<T> = Omit<AppContext, 'request'> & {
   request: T
 }
+
+export type ClientKeysContext = Context<AppRequest<'keyId'>>
 
 export type AccountContext = Context<AppRequest<'id'>>
 
@@ -119,6 +124,7 @@ export interface AppServices {
   outgoingPaymentRoutes: Promise<OutgoingPaymentRoutes>
   quoteRoutes: Promise<QuoteRoutes>
   accountRoutes: Promise<AccountRoutes>
+  clientKeysRoutes: Promise<ClientKeysRoutes>
   incomingPaymentService: Promise<IncomingPaymentService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
@@ -128,6 +134,8 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
+  clientService: Promise<ClientService>
+  clientKeysService: Promise<ClientKeysService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -270,6 +278,7 @@ export class App {
 
     const spspRoutes = await this.container.use('spspRoutes')
     const accountRoutes = await this.container.use('accountRoutes')
+    const clientKeysRoutes = await this.container.use('clientKeysRoutes')
     const incomingPaymentRoutes = await this.container.use(
       'incomingPaymentRoutes'
     )
@@ -377,6 +386,10 @@ export class App {
         }
       }
     }
+    router.get(
+      '/keys/{keyId}',
+      (ctx: ClientKeysContext): Promise<void> => clientKeysRoutes.get(ctx)
+    )
 
     koa.use(router.routes())
 

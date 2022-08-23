@@ -10,7 +10,7 @@ import {
   OutgoingPaymentError,
   isOutgoingPaymentError
 } from './errors'
-import { OutgoingPaymentService } from './service'
+import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { IAppConfig, Config } from '../../../config/app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
@@ -36,6 +36,8 @@ import { CreateQuoteOptions } from '../../quote/service'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Amount } from '../../amount'
+import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { Quote } from '../../quote/model'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -49,6 +51,7 @@ describe('OutgoingPaymentService', (): void => {
   let receiverAccountId: string
   let amtDelivered: bigint
   let config: IAppConfig
+  let trx: Knex.Transaction
 
   const asset: AssetOptions = {
     scale: 9,
@@ -419,6 +422,325 @@ describe('OutgoingPaymentService', (): void => {
           quoteId: quote.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
+    })
+    test('fails to create if grant is locked', async () => {
+      const grant = new Grant({
+        active: true,
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [AccessAction.Create, AccessAction.Read]
+          }
+        ]
+      })
+      const quotes = await Promise.all(
+        [0, 1].map(async (_) => {
+          return await createQuote(deps, {
+            accountId,
+            receiver,
+            sendAmount
+          })
+        })
+      )
+      const options = quotes.map((quote) => {
+        return {
+          accountId,
+          quoteId: quote.id,
+          description: 'rent',
+          externalRef: '202201',
+          grant,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          callback: (f: any) => setTimeout(f, 5000)
+        }
+      })
+      await expect(
+        Promise.all(
+          options.map(async (option) => {
+            return await outgoingPaymentService.create(option)
+          })
+        )
+      ).rejects.toThrowError(
+        'Defined query timeout of 5000ms exceeded when running query.'
+      )
+      const payments = await OutgoingPayment.query(trx)
+      expect(payments.length).toEqual(1)
+      expect([quotes[0].id, quotes[1].id]).toContain(payments[0].id)
+    })
+    describe('validateGrant', (): void => {
+      let quote: Quote
+      let options: CreateOutgoingPaymentOptions
+      let interval: string
+      beforeEach(async (): Promise<void> => {
+        quote = await createQuote(deps, {
+          accountId,
+          receiver,
+          sendAmount
+        })
+        options = {
+          accountId,
+          quoteId: quote.id,
+          description: 'rent',
+          externalRef: '202201'
+        }
+        const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+        interval = `R0/${start.toISOString()}/P1M`
+      })
+      test('fails if grant limits interval does not cover now', async (): Promise<void> => {
+        const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
+        const grant = new Grant({
+          active: true,
+          grant: uuid(),
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
+              limits: {
+                sendAmount,
+                interval: `R0/${start.toISOString()}/P1M`
+              }
+            }
+          ]
+        })
+        await expect(
+          outgoingPaymentService.create({ ...options, grant })
+        ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
+      })
+      test.each`
+        limits                                                                         | description
+        ${{ sendAmount: { assetCode: 'EUR', assetScale: asset.scale } }}               | ${'sendAmount asset code'}
+        ${{ sendAmount: { assetCode: asset.code, assetScale: 2 } }}                    | ${'sendAmount asset scale'}
+        ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${'receiveAmount asset code'}
+        ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${'receiveAmount asset scale'}
+      `(
+        'fails if grant limits do not match payment - $description',
+        async ({ limits }): Promise<void> => {
+          const grant = new Grant({
+            active: true,
+            grant: uuid(),
+            access: [
+              {
+                type: AccessType.OutgoingPayment,
+                actions: [AccessAction.Create, AccessAction.Read],
+                identifier: `${Config.publicHost}/${accountId}`,
+                limits: { ...limits, interval }
+              }
+            ]
+          })
+          await expect(
+            outgoingPaymentService.create({ ...options, grant })
+          ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
+        }
+      )
+      test.each`
+        sendAmount | description
+        ${true}    | ${'sendAmount'}
+        ${false}   | ${'receiveAmount'}
+      `(
+        'fails if grant limit $description is not enough for payment ',
+        async ({ sendAmount }): Promise<void> => {
+          const amount = {
+            value: BigInt(12),
+            assetCode: sendAmount
+              ? quote.asset.code
+              : quote.receiveAmount.assetCode,
+            assetScale: sendAmount
+              ? quote.asset.scale
+              : quote.receiveAmount.assetScale
+          }
+          const grant = new Grant({
+            active: true,
+            grant: uuid(),
+            access: [
+              {
+                type: AccessType.OutgoingPayment,
+                actions: [AccessAction.Create, AccessAction.Read],
+                identifier: `${Config.publicHost}/${accountId}`,
+                limits: sendAmount
+                  ? {
+                      sendAmount: amount,
+                      interval
+                    }
+                  : {
+                      receiveAmount: amount,
+                      interval
+                    }
+              }
+            ]
+          })
+          await expect(
+            outgoingPaymentService.create({ ...options, grant })
+          ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
+        }
+      )
+      test.each`
+        sendAmount | failed   | description
+        ${true}    | ${false} | ${'sendAmount'}
+        ${false}   | ${false} | ${'receiveAmount'}
+        ${true}    | ${true}  | ${'sendAmount'}
+        ${false}   | ${true}  | ${'receiveAmount'}
+      `(
+        'fails if limit was already used up - $description',
+        async ({ sendAmount, failed }): Promise<void> => {
+          const grantAmount = {
+            value: BigInt(200),
+            assetCode: sendAmount
+              ? quote.asset.code
+              : quote.receiveAmount.assetCode,
+            assetScale: sendAmount
+              ? quote.asset.scale
+              : quote.receiveAmount.assetScale
+          }
+          const grant = new Grant({
+            active: true,
+            grant: uuid(),
+            access: [
+              {
+                type: AccessType.OutgoingPayment,
+                actions: [AccessAction.Create, AccessAction.Read],
+                identifier: `${Config.publicHost}/${accountId}`,
+                limits: {
+                  sendAmount: sendAmount ? grantAmount : undefined,
+                  receiveAmount: sendAmount ? undefined : grantAmount,
+                  interval
+                }
+              }
+            ]
+          })
+          const paymentAmount = {
+            ...grantAmount,
+            value: BigInt(190)
+          }
+          const firstPayment = await createOutgoingPayment(deps, {
+            accountId,
+            receiver: `${
+              Config.publicHost
+            }/${uuid()}/incoming-payments/${uuid()}`,
+            sendAmount: sendAmount ? paymentAmount : undefined,
+            receiveAmount: sendAmount ? undefined : paymentAmount,
+            grant,
+            validDestination: false
+          })
+          assert.ok(firstPayment)
+          if (failed) {
+            await firstPayment
+              .$query(trx)
+              .patch({ state: OutgoingPaymentState.Failed })
+
+            jest
+              .spyOn(accountingService, 'getTotalSent')
+              .mockResolvedValueOnce(sendAmount ? BigInt(188) : BigInt(188 * 2))
+          }
+
+          await expect(
+            outgoingPaymentService.create({ ...options, grant })
+          ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
+        }
+      )
+      test.each`
+        limits          | description
+        ${undefined}    | ${'has no limits'}
+        ${{ receiver }} | ${'limits do not specify send or receive amount'}
+      `(
+        'succeeds if grant access $description',
+        async ({ limits }): Promise<void> => {
+          const grant = new Grant({
+            active: true,
+            grant: uuid(),
+            access: [
+              {
+                type: AccessType.OutgoingPayment,
+                actions: [AccessAction.Create, AccessAction.Read],
+                identifier: `${Config.publicHost}/${accountId}`,
+                limits
+              }
+            ]
+          })
+          await expect(
+            outgoingPaymentService.create({ ...options, grant })
+          ).resolves.toBeInstanceOf(OutgoingPayment)
+        }
+      )
+
+      test.each`
+        sendAmount | competingPayment | failed       | half     | description
+        ${true}    | ${false}         | ${undefined} | ${false} | ${'sendAmount w/o competing payment'}
+        ${false}   | ${false}         | ${undefined} | ${false} | ${'receiveAmount w/o competing payment'}
+        ${true}    | ${true}          | ${false}     | ${false} | ${'sendAmount w/ competing payment'}
+        ${false}   | ${true}          | ${false}     | ${false} | ${'receiveAmount w/ competing payment'}
+        ${true}    | ${true}          | ${true}      | ${false} | ${'sendAmount w/ failed competing payment'}
+        ${false}   | ${true}          | ${true}      | ${false} | ${'receiveAmount w/ failed competing payment'}
+        ${true}    | ${true}          | ${true}      | ${true}  | ${'sendAmount w/ half-way failed competing payment'}
+        ${false}   | ${true}          | ${true}      | ${true}  | ${'receiveAmount half-way w/ failed competing payment'}
+      `(
+        'succeeds if grant limit is enough for payment - $description',
+        async ({
+          sendAmount,
+          competingPayment,
+          failed,
+          half
+        }): Promise<void> => {
+          const grantAmount = {
+            value: BigInt(1234567),
+            assetCode: sendAmount
+              ? quote.asset.code
+              : quote.receiveAmount.assetCode,
+            assetScale: sendAmount
+              ? quote.asset.scale
+              : quote.receiveAmount.assetScale
+          }
+          const grant = new Grant({
+            active: true,
+            grant: uuid(),
+            access: [
+              {
+                type: AccessType.OutgoingPayment,
+                actions: [AccessAction.Create, AccessAction.Read],
+                identifier: `${Config.publicHost}/${accountId}`,
+                limits: sendAmount
+                  ? {
+                      sendAmount: grantAmount,
+                      interval
+                    }
+                  : {
+                      receiveAmount: grantAmount,
+                      interval
+                    }
+              }
+            ]
+          })
+          if (competingPayment) {
+            const paymentAmount = {
+              ...grantAmount,
+              value: BigInt(7)
+            }
+            const firstPayment = await createOutgoingPayment(deps, {
+              accountId,
+              receiver: `${
+                Config.publicHost
+              }/${uuid()}/incoming-payments/${uuid()}`,
+              sendAmount: sendAmount ? paymentAmount : undefined,
+              receiveAmount: sendAmount ? undefined : paymentAmount,
+              grant,
+              validDestination: false
+            })
+            assert.ok(firstPayment)
+            if (failed) {
+              await firstPayment
+                .$query(trx)
+                .patch({ state: OutgoingPaymentState.Failed })
+              if (half) {
+                jest
+                  .spyOn(accountingService, 'getTotalSent')
+                  .mockResolvedValueOnce(BigInt(100))
+              }
+            }
+          }
+          await expect(
+            outgoingPaymentService.create({ ...options, grant })
+          ).resolves.toBeInstanceOf(OutgoingPayment)
+        }
+      )
     })
   })
 

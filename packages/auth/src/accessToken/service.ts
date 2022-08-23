@@ -92,11 +92,8 @@ async function introspect(
     if (grant.state === GrantState.Revoked) {
       return { active: false }
     }
-    const registryData = await deps.clientService.getRegistryDataByKid(
-      grant.clientKeyId
-    )
-    const { keys } = registryData
-    return { active: true, ...grant, key: { proof: 'httpsig', jwk: keys[0] } }
+    const key = await deps.clientService.getKeyByKid(grant.clientKeyId)
+    return { active: true, ...grant, key: { proof: 'httpsig', jwk: key } }
   }
 }
 
