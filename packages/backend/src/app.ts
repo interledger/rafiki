@@ -182,30 +182,7 @@ export class App {
   }
 
   public async startAdminServer(port: number | string): Promise<void> {
-    const koa = new Koa<DefaultState, AppContext>()
-
-    koa.context.container = this.container
-    koa.context.closeEmitter = await this.container.use('closeEmitter')
-    koa.context.logger = await this.container.use('logger')
-
-    koa.use(
-      async (
-        ctx: {
-          status: number
-          set: (arg0: string, arg1: string) => void
-          body: string
-        },
-        next: () => void | PromiseLike<void>
-      ): Promise<void> => {
-        if (this.isShuttingDown) {
-          ctx.status = 503
-          ctx.set('Connection', 'close')
-          ctx.body = 'Server is in the process of restarting'
-        } else {
-          return next()
-        }
-      }
-    )
+    const koa = await this.createKoaServer()
 
     // Load schema from the file
     const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
@@ -245,30 +222,7 @@ export class App {
   }
 
   public async startOpenPaymentsServer(port: number | string): Promise<void> {
-    const koa = new Koa<DefaultState, AppContext>()
-
-    koa.context.container = this.container
-    koa.context.closeEmitter = await this.container.use('closeEmitter')
-    koa.context.logger = await this.container.use('logger')
-
-    koa.use(
-      async (
-        ctx: {
-          status: number
-          set: (arg0: string, arg1: string) => void
-          body: string
-        },
-        next: () => void | PromiseLike<void>
-      ): Promise<void> => {
-        if (this.isShuttingDown) {
-          ctx.status = 503
-          ctx.set('Connection', 'close')
-          ctx.body = 'Server is in the process of restarting'
-        } else {
-          return next()
-        }
-      }
-    )
+    const koa = await this.createKoaServer()
 
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
@@ -480,6 +434,35 @@ export class App {
             this.config.outgoingPaymentWorkerIdle
           ).unref()
       })
+  }
+
+  private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
+    const koa = new Koa<DefaultState, AppContext>()
+
+    koa.context.container = this.container
+    koa.context.closeEmitter = await this.container.use('closeEmitter')
+    koa.context.logger = await this.container.use('logger')
+
+    koa.use(
+      async (
+        ctx: {
+          status: number
+          set: (arg0: string, arg1: string) => void
+          body: string
+        },
+        next: () => void | PromiseLike<void>
+      ): Promise<void> => {
+        if (this.isShuttingDown) {
+          ctx.status = 503
+          ctx.set('Connection', 'close')
+          ctx.body = 'Server is in the process of restarting'
+        } else {
+          return next()
+        }
+      }
+    )
+
+    return koa
   }
 
   private async processIncomingPayment(): Promise<void> {
