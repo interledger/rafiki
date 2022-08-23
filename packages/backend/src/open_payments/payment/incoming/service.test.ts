@@ -1,6 +1,5 @@
 import assert from 'assert'
 import { Knex } from 'knex'
-import { WorkerUtils, makeWorkerUtils } from 'graphile-worker'
 import { v4 as uuid } from 'uuid'
 
 import { IncomingPaymentService } from './service'
@@ -12,8 +11,6 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
-import { resetGraphileDb } from '../../../tests/graphileDb'
-import { GraphileProducer } from '../../../messaging/graphileProducer'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -29,28 +26,17 @@ import { AccountService } from '../../account/service'
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let workerUtils: WorkerUtils
   let incomingPaymentService: IncomingPaymentService
   let knex: Knex
   let accountId: string
   let accountingService: AccountingService
   let accountService: AccountService
-  const messageProducer = new GraphileProducer()
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
   const asset = randomAsset()
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    workerUtils = await makeWorkerUtils({
-      connectionString: appContainer.connectionUrl
-    })
     accountingService = await deps.use('accountingService')
-    await workerUtils.migrate()
-    messageProducer.setUtils(workerUtils)
     knex = await deps.use('knex')
   })
 
@@ -66,9 +52,7 @@ describe('Incoming Payment Service', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await resetGraphileDb(knex)
     await appContainer.shutdown()
-    await workerUtils.release()
   })
 
   describe('Create/Get IncomingPayment', (): void => {

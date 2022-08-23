@@ -12,9 +12,6 @@ describe('Rates service', function () {
   let appContainer: TestContainer
   let service: RatesService
   let requestCount = 0
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
   const pricesLifetime = 100
   const koa = new Koa()
   koa.use(function (ctx) {
@@ -34,7 +31,6 @@ describe('Rates service', function () {
     config.pricesLifetime = pricesLifetime
     config.pricesUrl = 'http://127.0.0.1:3210/'
     deps = await initIocContainer(config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
     jest.useFakeTimers()
     jest.setSystemTime(1600000000000)
