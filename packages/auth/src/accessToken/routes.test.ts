@@ -151,6 +151,10 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Successfully introspects valid token', async (): Promise<void> => {
+      const clientId = crypto
+        .createHash('sha256')
+        .update(TEST_CLIENT_KEY.client.id)
+        .digest('hex')
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, TEST_CLIENT_KEY)
@@ -183,7 +187,8 @@ describe('Access Token Routes', (): void => {
             limits: access.limits
           }
         ],
-        key: { proof: 'httpsig', jwk: TEST_CLIENT_KEY }
+        key: { proof: 'httpsig', jwk: TEST_CLIENT_KEY },
+        client_id: clientId
       })
       scope.isDone()
     })

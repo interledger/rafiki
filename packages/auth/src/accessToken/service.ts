@@ -25,6 +25,7 @@ interface ServiceDependencies extends BaseService {
 export interface Introspection extends Partial<Grant> {
   active: boolean
   key?: KeyInfo
+  clientId?: string
 }
 
 interface AccessTokenOpts {
@@ -93,7 +94,16 @@ async function introspect(
       return { active: false }
     }
     const key = await deps.clientService.getKeyByKid(grant.clientKeyId)
-    return { active: true, ...grant, key: { proof: 'httpsig', jwk: key } }
+    const clientId = crypto
+      .createHash('sha256')
+      .update(key.client.id)
+      .digest('hex')
+    return {
+      active: true,
+      ...grant,
+      key: { proof: 'httpsig', jwk: key },
+      clientId
+    }
   }
 }
 
