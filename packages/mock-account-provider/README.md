@@ -54,3 +54,11 @@ rm -rf app
 # copy your app over
 cp -R ../my-old-remix-app/app app
 ```
+# Mock Account Provider
+
+## Seed file
+
+The default [seed file](./seed.yml) contains the seed data for the demo rafiki
+configuration.
+
+Build the code locally with `pnpm build`.
