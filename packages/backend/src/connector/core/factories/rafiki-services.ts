@@ -1,6 +1,6 @@
 import * as crypto from 'crypto'
 import { Factory } from 'rosie'
-import IORedis from 'ioredis'
+import Redis from 'ioredis'
 import { StreamServer } from '@interledger/stream-receiver'
 import { RafikiServices } from '../rafiki'
 import { MockAccountingService } from '../test/mocks/accounting-service'
@@ -49,7 +49,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   .attr(
     'redis',
     () =>
-      new IORedis(`${process.env.REDIS_URL}/${process.env.JEST_WORKER_ID}`, {
+      new Redis(`${process.env.REDIS_URL}/${process.env.JEST_WORKER_ID}`, {
         // lazyConnect so that tests that don't use Redis don't have to disconnect it when they're finished.
         lazyConnect: true,
         stringNumbers: true
