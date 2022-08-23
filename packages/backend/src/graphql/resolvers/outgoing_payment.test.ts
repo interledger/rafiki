@@ -12,6 +12,7 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { randomAsset } from '../../tests/asset'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import {
   OutgoingPaymentError,
@@ -23,7 +24,6 @@ import {
   OutgoingPaymentState
 } from '../../open_payments/payment/outgoing/model'
 import { AccountingService } from '../../accounting/service'
-import { AccountService } from '../../open_payments/account/service'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
@@ -36,7 +36,6 @@ describe('OutgoingPayment Resolvers', (): void => {
   let knex: Knex
   let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
-  let accountService: AccountService
 
   const asset = randomAsset()
 
@@ -46,7 +45,6 @@ describe('OutgoingPayment Resolvers', (): void => {
     knex = await deps.use('knex')
     accountingService = await deps.use('accountingService')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
-    accountService = await deps.use('accountService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -60,7 +58,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   })
 
   const createPayment = async (options: {
-    accountId: string
+    paymentPointerId: string
     description?: string
     externalRef?: string
   }): Promise<OutgoingPaymentModel> => {
@@ -85,11 +83,11 @@ describe('OutgoingPayment Resolvers', (): void => {
       ${undefined} | ${'202201'}  | ${'externalRef'}
     `('$desc', ({ description, externalRef }): void => {
       beforeEach(async (): Promise<void> => {
-        const { id: accountId } = await accountService.create({
+        const { id: paymentPointerId } = await createPaymentPointer(deps, {
           asset
         })
         payment = await createPayment({
-          accountId,
+          paymentPointerId,
           description,
           externalRef
         })
@@ -126,7 +124,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                 query OutgoingPayment($paymentId: String!) {
                   outgoingPayment(id: $paymentId) {
                     id
-                    accountId
+                    paymentPointerId
                     state
                     error
                     stateAttempts
@@ -169,7 +167,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
           expect(query).toEqual({
             id: payment.id,
-            accountId: payment.accountId,
+            paymentPointerId: payment.paymentPointerId,
             state,
             error,
             stateAttempts: 0,
@@ -239,11 +237,11 @@ describe('OutgoingPayment Resolvers', (): void => {
       ${'rent'}    | ${undefined} | ${'description'}
       ${undefined} | ${'202201'}  | ${'externalRef'}
     `('200 ($desc)', async ({ description, externalRef }): Promise<void> => {
-      const { id: accountId } = await accountService.create({
+      const { id: paymentPointerId } = await createPaymentPointer(deps, {
         asset
       })
       const payment = await createPayment({
-        accountId,
+        paymentPointerId,
         description,
         externalRef
       })
@@ -253,7 +251,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockResolvedValueOnce(payment)
 
       const input = {
-        accountId: payment.accountId,
+        paymentPointerId: payment.paymentPointerId,
         quoteId: payment.quote.id
       }
 
@@ -289,10 +287,10 @@ describe('OutgoingPayment Resolvers', (): void => {
     test('400', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
-        .mockResolvedValueOnce(OutgoingPaymentError.UnknownAccount)
+        .mockResolvedValueOnce(OutgoingPaymentError.UnknownPaymentPointer)
 
       const input = {
-        accountId: uuid(),
+        paymentPointerId: uuid(),
         quoteId: uuid()
       }
 
@@ -321,7 +319,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       expect(query.code).toBe('404')
       expect(query.success).toBe(false)
       expect(query.message).toBe(
-        errorToMessage[OutgoingPaymentError.UnknownAccount]
+        errorToMessage[OutgoingPaymentError.UnknownPaymentPointer]
       )
       expect(query.payment).toBeNull()
       expect(createSpy).toHaveBeenCalledWith(input)
@@ -333,7 +331,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        accountId: uuid(),
+        paymentPointerId: uuid(),
         quoteId: uuid()
       }
 
@@ -367,12 +365,12 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
   })
 
-  describe('Account outgoingPayments', (): void => {
-    let accountId: string
+  describe('Payment pointer outgoingPayments', (): void => {
+    let paymentPointerId: string
 
     beforeEach(async (): Promise<void> => {
-      accountId = (
-        await accountService.create({
+      paymentPointerId = (
+        await createPaymentPointer(deps, {
           asset
         })
       ).id
@@ -382,12 +380,12 @@ describe('OutgoingPayment Resolvers', (): void => {
       getClient: () => appContainer.apolloClient,
       createModel: () =>
         createPayment({
-          accountId
+          paymentPointerId
         }),
       pagedQuery: 'outgoingPayments',
       parent: {
-        query: 'account',
-        getId: () => accountId
+        query: 'paymentPointer',
+        getId: () => paymentPointerId
       }
     })
   })

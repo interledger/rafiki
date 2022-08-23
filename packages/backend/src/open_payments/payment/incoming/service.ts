@@ -10,7 +10,7 @@ import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
 import { Knex } from 'knex'
 import { TransactionOrKnex } from 'objection'
-import { AccountService } from '../../account/service'
+import { PaymentPointerService } from '../../payment_pointer/service'
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { parse, end } from 'iso8601-duration'
@@ -25,7 +25,7 @@ export const RETRY_BACKOFF_MS = 10_000
 export const EXPIRY = parse('P90D') // 90 days in future
 
 export interface CreateIncomingPaymentOptions {
-  accountId: string
+  paymentPointerId: string
   description?: string
   expiresAt?: Date
   incomingAmount?: Amount
@@ -39,8 +39,8 @@ export interface IncomingPaymentService {
     trx?: Knex.Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
   complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
-  getAccountPage(
-    accountId: string,
+  getPaymentPointerPage(
+    paymentPointerId: string,
     pagination?: Pagination
   ): Promise<IncomingPayment[]>
   processNext(): Promise<string | undefined>
@@ -50,7 +50,7 @@ export interface IncomingPaymentService {
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
-  accountService: AccountService
+  paymentPointerService: PaymentPointerService
 }
 
 export async function createIncomingPaymentService(
@@ -67,8 +67,8 @@ export async function createIncomingPaymentService(
     get: (id) => getIncomingPayment(deps, 'id', id),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     complete: (id) => completeIncomingPayment(deps, id),
-    getAccountPage: (accountId, pagination) =>
-      getAccountPage(deps, accountId, pagination),
+    getPaymentPointerPage: (paymentPointerId, pagination) =>
+      getPaymentPointerPage(deps, paymentPointerId, pagination),
     processNext: () => processNextIncomingPayment(deps),
     getByConnection: (connectionId) =>
       getIncomingPayment(deps, 'connectionId', connectionId)
@@ -90,7 +90,7 @@ async function getIncomingPayment(
 async function createIncomingPayment(
   deps: ServiceDependencies,
   {
-    accountId,
+    paymentPointerId,
     description,
     expiresAt,
     incomingAmount,
@@ -103,9 +103,9 @@ async function createIncomingPayment(
   } else if (expiresAt.getTime() <= Date.now()) {
     return IncomingPaymentError.InvalidExpiry
   }
-  const account = await deps.accountService.get(accountId)
-  if (!account) {
-    return IncomingPaymentError.UnknownAccount
+  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
+  if (!paymentPointer) {
+    return IncomingPaymentError.UnknownPaymentPointer
   }
   if (incomingAmount) {
     if (incomingAmount.value <= 0) {
@@ -113,8 +113,8 @@ async function createIncomingPayment(
     }
     if (incomingAmount.assetCode || incomingAmount.assetScale) {
       if (
-        incomingAmount.assetCode !== account.asset.code ||
-        incomingAmount.assetScale !== account.asset.scale
+        incomingAmount.assetCode !== paymentPointer.asset.code ||
+        incomingAmount.assetScale !== paymentPointer.asset.scale
       ) {
         return IncomingPaymentError.InvalidAmount
       }
@@ -124,8 +124,8 @@ async function createIncomingPayment(
   try {
     const incomingPayment = await IncomingPayment.query(invTrx)
       .insertAndFetch({
-        accountId,
-        assetId: account.asset.id,
+        paymentPointerId,
+        assetId: paymentPointer.asset.id,
         description,
         expiresAt,
         incomingAmount,
@@ -261,15 +261,15 @@ async function handleDeactivated(
   }
 }
 
-async function getAccountPage(
+async function getPaymentPointerPage(
   deps: ServiceDependencies,
-  accountId: string,
+  paymentPointerId: string,
   pagination?: Pagination
 ): Promise<IncomingPayment[]> {
   const page = await IncomingPayment.query(deps.knex)
     .getPage(pagination)
     .where({
-      accountId
+      paymentPointerId
     })
     .withGraphFetched('asset')
 

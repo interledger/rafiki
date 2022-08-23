@@ -3,7 +3,7 @@ import { Model, Pojo } from 'objection'
 import * as Pay from '@interledger/pay'
 
 import { Amount, AmountJSON } from '../amount'
-import { Account } from '../account/model'
+import { PaymentPointer } from '../payment_pointer/model'
 import { Asset } from '../../asset/model'
 import { BaseModel } from '../../shared/baseModel'
 
@@ -20,21 +20,21 @@ export class Quote extends BaseModel {
     ]
   }
 
-  // Open payments account id of the sender
-  public accountId!: string
-  public account?: Account
+  // Open payments payment pointer id of the sender
+  public paymentPointerId!: string
+  public paymentPointer?: PaymentPointer
 
   // Asset id of the sender
   public assetId!: string
   public asset!: Asset
 
   static relationMappings = {
-    account: {
+    paymentPointer: {
       relation: Model.HasOneRelation,
-      modelClass: Account,
+      modelClass: PaymentPointer,
       join: {
-        from: 'quotes.accountId',
-        to: 'accounts.id'
+        from: 'quotes.paymentPointerId',
+        to: 'paymentPointers.id'
       }
     },
     asset: {
@@ -142,7 +142,7 @@ export class Quote extends BaseModel {
     json = super.$formatJson(json)
     return {
       id: json.id,
-      accountId: json.accountId,
+      paymentPointerId: json.paymentPointerId,
       receiver: json.receiver,
       sendAmount: {
         ...json.sendAmount,
@@ -160,7 +160,7 @@ export class Quote extends BaseModel {
 
 export type QuoteJSON = {
   id: string
-  accountId: string
+  paymentPointerId: string
   receiver: string
   sendAmount: AmountJSON
   receiveAmount: AmountJSON

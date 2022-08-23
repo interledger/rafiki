@@ -33,8 +33,8 @@ export interface OutgoingPaymentService {
     options: FundOutgoingPaymentOptions
   ): Promise<OutgoingPayment | FundingError>
   processNext(): Promise<string | undefined>
-  getAccountPage(
-    accountId: string,
+  getPaymentPointerPage(
+    paymentPointerId: string,
     pagination?: Pagination
   ): Promise<OutgoingPayment[]>
 }
@@ -60,8 +60,8 @@ export async function createOutgoingPaymentService(
       createOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
-    getAccountPage: (accountId, pagination) =>
-      getAccountPage(deps, accountId, pagination)
+    getPaymentPointerPage: (paymentPointerId, pagination) =>
+      getPaymentPointerPage(deps, paymentPointerId, pagination)
   }
 }
 
@@ -77,7 +77,7 @@ async function getOutgoingPayment(
 }
 
 export interface CreateOutgoingPaymentOptions {
-  accountId: string
+  paymentPointerId: string
   quoteId: string
   description?: string
   externalRef?: string
@@ -105,7 +105,7 @@ async function createOutgoingPayment(
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
-          accountId: options.accountId,
+          paymentPointerId: options.paymentPointerId,
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Funding,
@@ -114,7 +114,7 @@ async function createOutgoingPayment(
         .withGraphFetched('[quote.asset]')
 
       if (
-        payment.accountId !== payment.quote.accountId ||
+        payment.paymentPointerId !== payment.quote.paymentPointerId ||
         payment.quote.expiresAt.getTime() <= payment.createdAt.getTime()
       ) {
         throw OutgoingPaymentError.InvalidQuote
@@ -136,7 +136,7 @@ async function createOutgoingPayment(
       }
       const plugin = deps.makeIlpPlugin({
         sourceAccount: {
-          id: payment.accountId,
+          id: payment.paymentPointerId,
           asset: {
             id: payment.assetId,
             ledger: payment.asset.ledger
@@ -184,8 +184,10 @@ async function createOutgoingPayment(
     if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'outgoingpayments_id_foreign') {
         return OutgoingPaymentError.UnknownQuote
-      } else if (err.constraint === 'outgoingpayments_accountid_foreign') {
-        return OutgoingPaymentError.UnknownAccount
+      } else if (
+        err.constraint === 'outgoingpayments_paymentpointerid_foreign'
+      ) {
+        return OutgoingPaymentError.UnknownPaymentPointer
       }
     } else if (isOutgoingPaymentError(err)) {
       return err
@@ -360,15 +362,15 @@ async function fundPayment(
   })
 }
 
-async function getAccountPage(
+async function getPaymentPointerPage(
   deps: ServiceDependencies,
-  accountId: string,
+  paymentPointerId: string,
   pagination?: Pagination
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
     .getPage(pagination)
     .where({
-      accountId
+      paymentPointerId
     })
     .withGraphFetched('quote.asset')
 

@@ -7,8 +7,7 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { AccountService } from '../../open_payments/account/service'
-import { randomAsset } from '../../tests/asset'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import {
   RefreshSessionInput,
   RefreshSessionMutationResponse,
@@ -23,7 +22,6 @@ describe('Session Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let accountService: AccountService
   let apiKeyService: ApiKeyService
   let sessionService: SessionService
 
@@ -31,7 +29,6 @@ describe('Session Resolvers', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    accountService = await deps.use('accountService')
     apiKeyService = await deps.use('apiKeyService')
     sessionService = await deps.use('sessionService')
   })
@@ -47,12 +44,10 @@ describe('Session Resolvers', (): void => {
 
   describe('Session Mutations', (): void => {
     test('Session can be refreshed', async (): Promise<void> => {
-      const { id: accountId } = await accountService.create({
-        asset: randomAsset()
-      })
-      const apiKey = await apiKeyService.create({ accountId })
+      const { id: paymentPointerId } = await createPaymentPointer(deps)
+      const apiKey = await apiKeyService.create({ paymentPointerId })
       const sessionOrError = await apiKeyService.redeem({
-        accountId,
+        paymentPointerId,
         key: apiKey.key
       })
       if (isApiKeyError(sessionOrError)) {
@@ -108,12 +103,10 @@ describe('Session Resolvers', (): void => {
     })
 
     test('Session can be revoked', async (): Promise<void> => {
-      const { id: accountId } = await accountService.create({
-        asset: randomAsset()
-      })
-      const apiKey = await apiKeyService.create({ accountId })
+      const { id: paymentPointerId } = await createPaymentPointer(deps)
+      const apiKey = await apiKeyService.create({ paymentPointerId })
       const sessionOrError = await apiKeyService.redeem({
-        accountId,
+        paymentPointerId,
         key: apiKey.key
       })
       if (isApiKeyError(sessionOrError)) {

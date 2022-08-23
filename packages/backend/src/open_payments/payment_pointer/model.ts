@@ -6,12 +6,12 @@ import { Asset } from '../../asset/model'
 import { BaseModel } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 
-export class Account
+export class PaymentPointer
   extends BaseModel
   implements ConnectorAccount, LiquidityAccount
 {
   public static get tableName(): string {
-    return 'accounts'
+    return 'paymentPointers'
   }
 
   static relationMappings = {
@@ -19,30 +19,31 @@ export class Account
       relation: Model.HasOneRelation,
       modelClass: Asset,
       join: {
-        from: 'accounts.assetId',
+        from: 'paymentPointers.assetId',
         to: 'assets.id'
       }
     }
   }
 
+  public url!: string
   public publicName?: string
 
   public readonly assetId!: string
   public asset!: Asset
 
   // The cumulative received amount tracked by
-  // `account.web_monetization` webhook events.
+  // `payment_pointer.web_monetization` webhook events.
   // The value should be equivalent to the following query:
-  // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `account.id`
+  // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `paymentPointer.id`
   public totalEventsAmount!: bigint
   public processAt!: Date | null
 
   public async onCredit({
     totalReceived,
     withdrawalThrottleDelay
-  }: OnCreditOptions): Promise<Account> {
+  }: OnCreditOptions): Promise<PaymentPointer> {
     if (this.asset.withdrawalThreshold !== null) {
-      const account = await Account.query()
+      const paymentPointer = await PaymentPointer.query()
         .patchAndFetchById(this.id, {
           processAt: new Date()
         })
@@ -51,8 +52,8 @@ export class Account
           totalReceived - this.asset.withdrawalThreshold
         ])
         .withGraphFetched('asset')
-      if (account) {
-        return account
+      if (paymentPointer) {
+        return paymentPointer
       }
     }
     if (withdrawalThrottleDelay !== undefined && !this.processAt) {
@@ -63,9 +64,9 @@ export class Account
     return this
   }
 
-  public toData(received: bigint): AccountData {
+  public toData(received: bigint): PaymentPointerData {
     return {
-      account: {
+      paymentPointer: {
         id: this.id,
         createdAt: new Date(+this.createdAt).toISOString(),
         received: received.toString()
@@ -74,19 +75,19 @@ export class Account
   }
 }
 
-export enum AccountEventType {
-  AccountWebMonetization = 'account.web_monetization'
+export enum PaymentPointerEventType {
+  PaymentPointerWebMonetization = 'payment_pointer.web_monetization'
 }
 
-export type AccountData = {
-  account: {
+export type PaymentPointerData = {
+  paymentPointer: {
     id: string
     createdAt: string
     received: string
   }
 }
 
-export class AccountEvent extends WebhookEvent {
-  public type!: AccountEventType
-  public data!: AccountData
+export class PaymentPointerEvent extends WebhookEvent {
+  public type!: PaymentPointerEventType
+  public data!: PaymentPointerData
 }

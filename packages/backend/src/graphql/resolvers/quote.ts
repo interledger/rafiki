@@ -1,7 +1,7 @@
 import {
   MutationResolvers,
   Quote as SchemaQuote,
-  AccountResolvers,
+  PaymentPointerResolvers,
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
@@ -52,14 +52,14 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
       }))
   }
 
-export const getAccountQuotes: AccountResolvers<ApolloContext>['quotes'] =
+export const getPaymentPointerQuotes: PaymentPointerResolvers<ApolloContext>['quotes'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
-    if (!parent.id) throw new Error('missing account id')
+    if (!parent.id) throw new Error('missing payment pointer id')
     const quoteService = await ctx.container.use('quoteService')
-    const quotes = await quoteService.getAccountPage(parent.id, args)
+    const quotes = await quoteService.getPaymentPointerPage(parent.id, args)
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        quoteService.getAccountPage(parent.id as string, pagination),
+        quoteService.getPaymentPointerPage(parent.id as string, pagination),
       quotes
     )
     return {
@@ -74,7 +74,7 @@ export const getAccountQuotes: AccountResolvers<ApolloContext>['quotes'] =
 export function quoteToGraphql(quote: Quote): SchemaQuote {
   return {
     id: quote.id,
-    accountId: quote.accountId,
+    paymentPointerId: quote.paymentPointerId,
     receiver: quote.receiver,
     sendAmount: quote.sendAmount,
     receiveAmount: quote.receiveAmount,

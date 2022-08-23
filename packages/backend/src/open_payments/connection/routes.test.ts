@@ -10,10 +10,10 @@ import { truncateTables } from '../../tests/tableManager'
 import { initIocContainer } from '../../'
 import { ConnectionRoutes } from './routes'
 import { createContext } from '../../tests/context'
-import { Account } from '../account/model'
-import { AccountService } from '../account/service'
+import { PaymentPointer } from '../payment_pointer/model'
 import { IncomingPayment } from '../payment/incoming/model'
 import { createIncomingPayment } from '../../tests/incomingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import base64url from 'base64url'
 
 describe('Connection Routes', (): void => {
@@ -21,7 +21,6 @@ describe('Connection Routes', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let config: IAppConfig
-  let accountService: AccountService
   let connectionRoutes: ConnectionRoutes
 
   beforeAll(async (): Promise<void> => {
@@ -38,16 +37,15 @@ describe('Connection Routes', (): void => {
     code: 'USD',
     scale: 2
   }
-  let account: Account
+  let paymentPointer: PaymentPointer
   let incomingPayment: IncomingPayment
   beforeEach(async (): Promise<void> => {
     connectionRoutes = await deps.use('connectionRoutes')
     config = await deps.use('config')
 
-    accountService = await deps.use('accountService')
-    account = await accountService.create({ asset })
+    paymentPointer = await createPaymentPointer(deps, { asset })
     incomingPayment = await createIncomingPayment(deps, {
-      accountId: account.id,
+      paymentPointerId: paymentPointer.id,
       description: 'hello world',
       expiresAt: new Date(Date.now() + 30_000),
       incomingAmount: {

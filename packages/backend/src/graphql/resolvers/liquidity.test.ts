@@ -16,7 +16,10 @@ import {
 } from '../../accounting/service'
 import { Asset } from '../../asset/model'
 import { AssetService } from '../../asset/service'
-import { Account, AccountEventType } from '../../open_payments/account/model'
+import {
+  PaymentPointer,
+  PaymentPointerEventType
+} from '../../open_payments/payment_pointer/model'
 import {
   IncomingPayment,
   IncomingPaymentEventType
@@ -31,13 +34,14 @@ import { Peer } from '../../peer/model'
 import { randomAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { PeerFactory } from '../../tests/peerFactory'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEvent } from '../../webhook/model'
 import {
   LiquidityError,
   LiquidityMutationResponse,
-  AccountWithdrawalMutationResponse
+  PaymentPointerWithdrawalMutationResponse
 } from '../generated/graphql'
 
 describe('Liquidity Resolvers', (): void => {
@@ -873,34 +877,31 @@ describe('Liquidity Resolvers', (): void => {
     )
   })
 
-  describe('Create account withdrawal', (): void => {
-    let account: Account
+  describe('Create payment pointer withdrawal', (): void => {
+    let paymentPointer: PaymentPointer
     const amount = BigInt(100)
 
     beforeEach(async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
-      account = await accountService.create({
-        asset: randomAsset()
-      })
+      paymentPointer = await createPaymentPointer(deps)
 
       await expect(
         accountingService.createDeposit({
           id: uuid(),
-          account,
+          account: paymentPointer,
           amount
         })
       ).resolves.toBeUndefined()
     })
 
-    test('Can create withdrawal from account', async (): Promise<void> => {
+    test('Can create withdrawal from payment pointer', async (): Promise<void> => {
       const id = uuid()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountWithdrawal(
-              $input: CreateAccountWithdrawalInput!
+            mutation CreatePaymentPointerWithdrawal(
+              $input: CreatePaymentPointerWithdrawalInput!
             ) {
-              createAccountWithdrawal(input: $input) {
+              createPaymentPointerWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -908,7 +909,7 @@ describe('Liquidity Resolvers', (): void => {
                 withdrawal {
                   id
                   amount
-                  account {
+                  paymentPointer {
                     id
                   }
                 }
@@ -918,13 +919,13 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id,
-              accountId: account.id
+              paymentPointerId: paymentPointer.id
             }
           }
         })
-        .then((query): AccountWithdrawalMutationResponse => {
+        .then((query): PaymentPointerWithdrawalMutationResponse => {
           if (query.data) {
-            return query.data.createAccountWithdrawal
+            return query.data.createPaymentPointerWithdrawal
           } else {
             throw new Error('Data was empty')
           }
@@ -936,20 +937,20 @@ describe('Liquidity Resolvers', (): void => {
       expect(response.withdrawal).toMatchObject({
         id,
         amount: amount.toString(),
-        account: {
-          id: account.id
+        paymentPointer: {
+          id: paymentPointer.id
         }
       })
     })
 
-    test('Returns an error for unknown account', async (): Promise<void> => {
+    test('Returns an error for unknown payment pointer', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountWithdrawal(
-              $input: CreateAccountWithdrawalInput!
+            mutation CreatePaymentPointerWithdrawal(
+              $input: CreatePaymentPointerWithdrawalInput!
             ) {
-              createAccountWithdrawal(input: $input) {
+              createPaymentPointerWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -963,13 +964,13 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              accountId: uuid()
+              paymentPointerId: uuid()
             }
           }
         })
-        .then((query): AccountWithdrawalMutationResponse => {
+        .then((query): PaymentPointerWithdrawalMutationResponse => {
           if (query.data) {
-            return query.data.createAccountWithdrawal
+            return query.data.createPaymentPointerWithdrawal
           } else {
             throw new Error('Data was empty')
           }
@@ -977,8 +978,8 @@ describe('Liquidity Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
-      expect(response.message).toEqual('Unknown account')
-      expect(response.error).toEqual(LiquidityError.UnknownAccount)
+      expect(response.message).toEqual('Unknown payment pointer')
+      expect(response.error).toEqual(LiquidityError.UnknownPaymentPointer)
       expect(response.withdrawal).toBeNull()
     })
 
@@ -986,10 +987,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountWithdrawal(
-              $input: CreateAccountWithdrawalInput!
+            mutation CreatePaymentPointerWithdrawal(
+              $input: CreatePaymentPointerWithdrawalInput!
             ) {
-              createAccountWithdrawal(input: $input) {
+              createPaymentPointerWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -1003,13 +1004,13 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid',
-              accountId: account.id
+              paymentPointerId: paymentPointer.id
             }
           }
         })
-        .then((query): AccountWithdrawalMutationResponse => {
+        .then((query): PaymentPointerWithdrawalMutationResponse => {
           if (query.data) {
-            return query.data.createAccountWithdrawal
+            return query.data.createPaymentPointerWithdrawal
           } else {
             throw new Error('Data was empty')
           }
@@ -1027,17 +1028,17 @@ describe('Liquidity Resolvers', (): void => {
       await expect(
         accountingService.createDeposit({
           id,
-          account,
+          account: paymentPointer,
           amount: BigInt(10)
         })
       ).resolves.toBeUndefined()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountWithdrawal(
-              $input: CreateAccountWithdrawalInput!
+            mutation CreatePaymentPointerWithdrawal(
+              $input: CreatePaymentPointerWithdrawalInput!
             ) {
-              createAccountWithdrawal(input: $input) {
+              createPaymentPointerWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -1051,13 +1052,13 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id,
-              accountId: account.id
+              paymentPointerId: paymentPointer.id
             }
           }
         })
-        .then((query): AccountWithdrawalMutationResponse => {
+        .then((query): PaymentPointerWithdrawalMutationResponse => {
           if (query.data) {
-            return query.data.createAccountWithdrawal
+            return query.data.createPaymentPointerWithdrawal
           } else {
             throw new Error('Data was empty')
           }
@@ -1073,7 +1074,7 @@ describe('Liquidity Resolvers', (): void => {
       await expect(
         accountingService.createWithdrawal({
           id: uuid(),
-          account,
+          account: paymentPointer,
           amount,
           timeout
         })
@@ -1081,10 +1082,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreateAccountWithdrawal(
-              $input: CreateAccountWithdrawalInput!
+            mutation CreatePaymentPointerWithdrawal(
+              $input: CreatePaymentPointerWithdrawalInput!
             ) {
-              createAccountWithdrawal(input: $input) {
+              createPaymentPointerWithdrawal(input: $input) {
                 code
                 success
                 message
@@ -1098,13 +1099,13 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              accountId: account.id
+              paymentPointerId: paymentPointer.id
             }
           }
         })
-        .then((query): AccountWithdrawalMutationResponse => {
+        .then((query): PaymentPointerWithdrawalMutationResponse => {
           if (query.data) {
-            return query.data.createAccountWithdrawal
+            return query.data.createPaymentPointerWithdrawal
           } else {
             throw new Error('Data was empty')
           }
@@ -1494,33 +1495,30 @@ describe('Liquidity Resolvers', (): void => {
   )
 
   {
-    let account: Account
+    let paymentPointer: PaymentPointer
     let incomingPayment: IncomingPayment
     let payment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
-      const accountService = await deps.use('accountService')
-      account = await accountService.create({
-        asset: randomAsset()
-      })
-      const accountId = account.id
+      paymentPointer = await createPaymentPointer(deps)
+      const paymentPointerId = paymentPointer.id
       incomingPayment = await createIncomingPayment(deps, {
-        accountId,
+        paymentPointerId,
         incomingAmount: {
           value: BigInt(56),
-          assetCode: account.asset.code,
-          assetScale: account.asset.scale
+          assetCode: paymentPointer.asset.code,
+          assetScale: paymentPointer.asset.scale
         },
         expiresAt: new Date(Date.now() + 60 * 1000),
         description: 'description!'
       })
       payment = await createOutgoingPayment(deps, {
-        accountId,
+        paymentPointerId,
         receiver: `${Config.publicHost}/${uuid()}/incoming-payments/${uuid()}`,
         sendAmount: {
           value: BigInt(456),
-          assetCode: account.asset.code,
-          assetScale: account.asset.scale
+          assetCode: paymentPointer.asset.code,
+          assetScale: paymentPointer.asset.scale
         },
         validDestination: false
       })
@@ -1660,12 +1658,12 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     const WithdrawEventType = {
-      ...AccountEventType,
+      ...PaymentPointerEventType,
       ...IncomingPaymentEventType,
       ...PaymentWithdrawType
     }
     type WithdrawEventType =
-      | AccountEventType
+      | PaymentPointerEventType
       | IncomingPaymentEventType
       | PaymentWithdrawType
 
@@ -1697,8 +1695,8 @@ describe('Liquidity Resolvers', (): void => {
               liquidityAccount = incomingPayment
               data = incomingPayment.toData(amount)
             } else {
-              liquidityAccount = account
-              data = account.toData(amount)
+              liquidityAccount = paymentPointer
+              data = paymentPointer.toData(amount)
             }
             await WebhookEvent.query(knex).insertAndFetch({
               id: eventId,

@@ -67,8 +67,8 @@ export const Config = {
   slippage: envFloat('SLIPPAGE', 0.01),
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
 
-  accountWorkers: envInt('ACCOUNT_WORKERS', 1),
-  accountWorkerIdle: envInt('ACCOUNT_WORKER_IDLE', 200), // milliseconds
+  paymentPointerWorkers: envInt('PAYMENT_POINTER_WORKERS', 1),
+  paymentPointerWorkerIdle: envInt('PAYMENT_POINTER_WORKER_IDLE', 200), // milliseconds
 
   authServerGrantUrl: envString(
     'AUTH_SERVER_GRANT_URL',

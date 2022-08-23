@@ -26,7 +26,7 @@ export enum IncomingPaymentState {
 
 export interface IncomingPaymentResponse {
   id: string
-  accountId: string
+  paymentPointerId: string
   description?: string
   createdAt: string
   updatedAt: string
@@ -71,8 +71,8 @@ export class IncomingPayment
     }
   }
 
-  // Open payments account id this incoming payment is for
-  public accountId!: string
+  // Open payments paymentPointer id this incoming payment is for
+  public paymentPointerId!: string
   public description?: string
   public expiresAt!: Date
   public state!: IncomingPaymentState
@@ -149,7 +149,7 @@ export class IncomingPayment
     const data: IncomingPaymentData = {
       incomingPayment: {
         id: this.id,
-        accountId: this.accountId,
+        paymentPointerId: this.paymentPointerId,
         createdAt: new Date(+this.createdAt).toISOString(),
         expiresAt: this.expiresAt.toISOString(),
         receivedAmount: {
@@ -182,7 +182,7 @@ export class IncomingPayment
     json = super.$formatJson(json)
     return {
       id: json.id,
-      accountId: json.accountId,
+      // paymentPointer: json.paymentPointer,
       incomingAmount: this.incomingAmount
         ? {
             ...json.incomingAmount,
@@ -206,7 +206,7 @@ export class IncomingPayment
 
 export type IncomingPaymentJSON = {
   id: string
-  accountId: string
+  paymentPointer: string
   incomingAmount: AmountJSON | null
   receivedAmount: AmountJSON
   completed: boolean

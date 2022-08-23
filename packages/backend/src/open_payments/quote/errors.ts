@@ -1,5 +1,5 @@
 export enum QuoteError {
-  UnknownAccount = 'UnknownAccount',
+  UnknownPaymentPointer = 'UnknownPaymentPointer',
   InvalidAmount = 'InvalidAmount',
   InvalidDestination = 'InvalidDestination'
 }
@@ -11,7 +11,7 @@ export const isQuoteError = (o: any): o is QuoteError =>
 export const errorToCode: {
   [key in QuoteError]: number
 } = {
-  [QuoteError.UnknownAccount]: 404,
+  [QuoteError.UnknownPaymentPointer]: 404,
   [QuoteError.InvalidAmount]: 400,
   [QuoteError.InvalidDestination]: 400
 }
@@ -19,7 +19,7 @@ export const errorToCode: {
 export const errorToMessage: {
   [key in QuoteError]: string
 } = {
-  [QuoteError.UnknownAccount]: 'unknown account',
+  [QuoteError.UnknownPaymentPointer]: 'unknown payment pointer',
   [QuoteError.InvalidAmount]: 'invalid amount',
   [QuoteError.InvalidDestination]: 'invalid destination'
 }

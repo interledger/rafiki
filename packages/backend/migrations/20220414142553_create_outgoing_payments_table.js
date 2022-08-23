@@ -11,10 +11,10 @@ exports.up = function (knex) {
 
     table.string('grantId').nullable().index()
 
-    // Open payments account corresponding to wallet account
+    // Open payments payment pointer corresponding to wallet account
     // from which to request funds for payment
-    table.uuid('accountId').notNullable()
-    table.foreign('accountId').references('accounts.id')
+    table.uuid('paymentPointerId').notNullable()
+    table.foreign('paymentPointerId').references('paymentPointers.id')
 
     table.uuid('peerId').nullable()
     table.foreign('peerId').references('peers.id')
@@ -22,7 +22,7 @@ exports.up = function (knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
-    table.index(['accountId', 'createdAt', 'id'])
+    table.index(['paymentPointerId', 'createdAt', 'id'])
   })
 }
 
