@@ -3,14 +3,12 @@ import { Server } from 'http'
 import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
-import { makeWorkerUtils } from 'graphile-worker'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import IORedis from 'ioredis'
 import { createClient } from 'tigerbeetle-node'
 
 import { App, AppServices } from './app'
 import { Config } from './config/app'
-import { GraphileProducer } from './messaging/graphileProducer'
 import { createRatesService } from './rates/service'
 import { createQuoteRoutes } from './open_payments/quote/routes'
 import { createQuoteService } from './open_payments/quote/service'
@@ -53,31 +51,12 @@ export function initIocContainer(
 ): IocContract<AppServices> {
   const container: IocContract<AppServices> = new Ioc()
   container.singleton('config', async () => config)
-  container.singleton('workerUtils', async (deps: IocContract<AppServices>) => {
-    const config = await deps.use('config')
-    const logger = await deps.use('logger')
-    logger.info({ msg: 'creating graphile worker utils' })
-    const workerUtils = await makeWorkerUtils({
-      connectionString: config.databaseUrl
-    })
-    await workerUtils.migrate()
-    return workerUtils
-  })
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')
     const logger = createLogger()
     logger.level = config.logLevel
     return logger
   })
-  container.singleton(
-    'messageProducer',
-    async (deps: IocContract<AppServices>) => {
-      const logger = await deps.use('logger')
-      const workerUtils = await deps.use('workerUtils')
-      logger.info({ msg: 'creating graphile producer' })
-      return new GraphileProducer(workerUtils)
-    }
-  )
   container.singleton('knex', async (deps: IocContract<AppServices>) => {
     const logger = await deps.use('logger')
     const config = await deps.use('config')
@@ -357,8 +336,6 @@ export const gracefulShutdown = async (
   }
   const knex = await container.use('knex')
   await knex.destroy()
-  const workerUtils = await container.use('workerUtils')
-  await workerUtils.release()
   const tigerbeetle = await container.use('tigerbeetle')
   await tigerbeetle.destroy()
   const redis = await container.use('redis')

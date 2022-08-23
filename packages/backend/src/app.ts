@@ -13,8 +13,6 @@ import Router from '@koa/router'
 import { ApolloServer } from 'apollo-server-koa'
 
 import { IAppConfig } from './config/app'
-import { MessageProducer } from './messaging/messageProducer'
-import { WorkerUtils } from 'graphile-worker'
 import { addResolversToSchema } from '@graphql-tools/schema'
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { loadSchemaSync } from '@graphql-tools/load'
@@ -57,7 +55,6 @@ export interface AppContextData {
 }
 
 export interface ApolloContext {
-  messageProducer: MessageProducer
   container: IocContract<AppServices>
   logger: Logger
   admin: boolean
@@ -108,11 +105,9 @@ type ContextType<T> = T extends (
 
 export interface AppServices {
   logger: Promise<Logger>
-  messageProducer: Promise<MessageProducer>
   knex: Promise<Knex>
   closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
-  workerUtils: Promise<WorkerUtils>
   httpTokenService: Promise<HttpTokenService>
   assetService: Promise<AssetService>
   accountingService: Promise<AccountingService>
@@ -228,7 +223,6 @@ export class App {
         const admin = this._isAdmin(ctx)
         const session = await this._getSession(ctx)
         return {
-          messageProducer: await this.container.use('messageProducer'),
           container: this.container,
           logger: await this.container.use('logger'),
           admin,
