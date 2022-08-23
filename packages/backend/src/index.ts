@@ -4,7 +4,7 @@ import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
-import IORedis from 'ioredis'
+import Redis from 'ioredis'
 import { createClient } from 'tigerbeetle-node'
 
 import { App, AppServices } from './app'
@@ -27,6 +27,7 @@ import { createAuthService } from './open_payments/auth/service'
 import { createAccountService } from './open_payments/account/service'
 import { createSPSPRoutes } from './spsp/routes'
 import { createAccountRoutes } from './open_payments/account/routes'
+import { createClientKeysRoutes } from './clientKeys/routes'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -37,6 +38,8 @@ import { createApiKeyService } from './apiKey/service'
 import { createOpenAPI } from 'openapi'
 import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
+import { createClientKeysService } from './clientKeys/service'
+import { createClientService } from './clients/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -82,9 +85,9 @@ export function initIocContainer(
     return db
   })
   container.singleton('closeEmitter', async () => new EventEmitter())
-  container.singleton('redis', async (deps): Promise<IORedis.Redis> => {
+  container.singleton('redis', async (deps): Promise<Redis> => {
     const config = await deps.use('config')
-    return new IORedis(config.redisUrl, { tls: config.redisTls })
+    return new Redis(config.redisUrl, { tls: config.redisTls })
   })
   container.singleton('streamServer', async (deps) => {
     const config = await deps.use('config')
@@ -206,6 +209,11 @@ export function initIocContainer(
       accountService: await deps.use('accountService')
     })
   })
+  container.singleton('clientKeysRoutes', async (deps) => {
+    return createClientKeysRoutes({
+      clientKeysService: await deps.use('clientKeysService')
+    })
+  })
   container.singleton('connectionService', async (deps) => {
     return await createConnectionService({
       logger: await deps.use('logger'),
@@ -227,6 +235,19 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       pricesUrl: config.pricesUrl,
       pricesLifetime: config.pricesLifetime
+    })
+  })
+
+  container.singleton('clientKeysService', async (deps) => {
+    return createClientKeysService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
+    })
+  })
+  container.singleton('clientService', async (deps) => {
+    return createClientService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
     })
   })
 
@@ -265,13 +286,14 @@ export function initIocContainer(
     })
   })
   container.singleton('outgoingPaymentService', async (deps) => {
+    const config = await deps.use('config')
     return await createOutgoingPaymentService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      accountService: await deps.use('accountService'),
-      peerService: await deps.use('peerService')
+      peerService: await deps.use('peerService'),
+      publicHost: config.publicHost
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {

@@ -1,5 +1,5 @@
 import { IocContract } from '@adonisjs/fold'
-import got from 'got'
+import axios from 'axios'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { Config } from '../../config/app'
@@ -19,7 +19,7 @@ describe('Rafiki Graphql', (): void => {
   })
 
   test('graphql endpoint not exposed on /api/graphql', async (): Promise<void> => {
-    const introspection = got.post(
+    const introspection = axios.post(
       `http://localhost:${appContainer.adminPort}/api/graphql`,
       {
         json: {
@@ -37,7 +37,8 @@ describe('Rafiki Graphql', (): void => {
         }
       }
     )
-
-    await expect(introspection).rejects.toThrow('Response code 404 (Not Found)')
+    await expect(introspection).rejects.toThrow(
+      'Request failed with status code 404'
+    )
   })
 })

@@ -8,20 +8,19 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://peerauth:peerauth@database/peerauth
+      AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
   peer-backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     restart: always
     privileged: true
     ports:
-      - "4001:3001"
-      - "4002:3002"
-      - "4003:3003"
+      - "4001:80"
     networks:
       rafiki:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      ADMIN_PORT: 3001
+      ADMIN_PORT: 80
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 3003
       DATABASE_URL: postgresql://peerbackend:peerbackend@database/peerbackend
@@ -29,18 +28,19 @@ services:
       # Tigerbeetle will support DNS in future
       TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
       NONCE_REDIS_KEY: test
-      AUTH_SERVER_GRANT_URL: http://peer-auth
+      AUTH_SERVER_GRANT_URL: http://peer-auth:3006
       AUTH_SERVER_INTROSPECTION_URL: http://peer-auth:3006/introspect
       ILP_ADDRESS: test.peer
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
-      PUBLIC_HOST: rafiki.peer
+      PUBLIC_HOST: http://peer-backend
+      WEBHOOK_URL: http://mock-account-provider/webhooks
       OPEN_PAYMENTS_URL: op.rafiki.peer
-      WEBHOOK_URL: https://end3sf6r22xva.x.pipedream.net
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
-      AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/auth-server-open-api-spec.yaml
-      PRICES_URL: http://peer-rates:3005/prices
+      AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
+      PRICES_URL: http://peer-rates/prices
       REDIS_URL: redis://redis:6379
+      QUOTE_URL: http://mock-account-provider/quote
   peer-rates:
     image: ghcr.io/interledger/rafiki-rates:latest
     restart: always
@@ -48,4 +48,4 @@ services:
       rafiki:
     environment:
       NODE_ENV: development
-      PORT: 3005
+      PORT: 80
