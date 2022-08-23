@@ -1,4 +1,4 @@
 module.exports = {
-  '*': ['pnpm format:check:hook'],
-  '!(*graphql).ts': ['pnpm lint:check:hook']
+  '!(*$*).*': ['pnpm format:check:hook'],
+  '!(*$*)!(*graphql).ts|x': ['pnpm lint:check:hook']
 }
