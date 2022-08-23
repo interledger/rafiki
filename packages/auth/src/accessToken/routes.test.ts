@@ -306,7 +306,7 @@ describe('Access Token Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { managementId }
+        { id: managementId }
       )
 
       await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
@@ -322,7 +322,7 @@ describe('Access Token Routes', (): void => {
           url: `/token/${token.id}`,
           method: 'POST'
         },
-        { managementId }
+        { id: managementId }
       )
 
       await accessTokenRoutes.rotate(ctx)
@@ -353,7 +353,7 @@ describe('Access Token Routes', (): void => {
           url: `/token/${token.id}`,
           method: 'POST'
         },
-        { managementId }
+        { id: managementId }
       )
 
       await token.$query(trx).patch({ expiresIn: -1 })
