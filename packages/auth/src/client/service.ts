@@ -299,9 +299,10 @@ function isClientInfo(client: unknown): client is ClientInfo {
 }
 
 function isJwkViable(keys: RegistryKey): boolean {
+  const currentDate = new Date()
   return !!(
-    (!keys.exp || new Date() < new Date(keys.exp * 1000)) &&
-    (!keys.nbf || new Date() >= new Date(keys.nbf * 1000))
+    (!keys.exp || currentDate < new Date(keys.exp * 1000)) &&
+    (!keys.nbf || currentDate >= new Date(keys.nbf * 1000))
   )
 }
 
