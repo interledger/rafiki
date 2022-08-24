@@ -31,6 +31,7 @@ describe('Incoming Payment Service', (): void => {
   let paymentPointerId: string
   let accountingService: AccountingService
   const asset = randomAsset()
+  let clientId
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -42,6 +43,7 @@ describe('Incoming Payment Service', (): void => {
   beforeEach(async (): Promise<void> => {
     incomingPaymentService = await deps.use('incomingPaymentService')
     paymentPointerId = (await createPaymentPointer(deps, { asset })).id
+    clientId = uuid()
   })
 
   afterEach(async (): Promise<void> => {
@@ -53,10 +55,11 @@ describe('Incoming Payment Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create/Get IncomingPayment', (): void => {
-    test('An incoming payment can be created and fetched', async (): Promise<void> => {
+  describe('Create IncomingPayment', (): void => {
+    test('An incoming payment can be created', async (): Promise<void> => {
       const incomingPayment = await incomingPaymentService.create({
         paymentPointerId,
+        clientId,
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
@@ -69,21 +72,17 @@ describe('Incoming Payment Service', (): void => {
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
         id: incomingPayment.id,
+        clientId,
         asset,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
-      const retrievedIncomingPayment = await incomingPaymentService.get(
-        incomingPayment.id
-      )
-      if (!retrievedIncomingPayment)
-        throw new Error('incoming payment not found')
-      expect(retrievedIncomingPayment).toEqual(incomingPayment)
     })
 
     test('Cannot create incoming payment for nonexistent payment pointer', async (): Promise<void> => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId: uuid(),
+          clientId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -100,6 +99,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
+          clientId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: 'ABC',
@@ -113,6 +113,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
+          clientId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -129,6 +130,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
+          clientId,
           incomingAmount: {
             value: BigInt(0),
             assetCode: 'ABC',
@@ -142,6 +144,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
+          clientId,
           incomingAmount: {
             value: BigInt(-13),
             assetCode: 'ABC',
@@ -158,6 +161,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
+          clientId,
           incomingAmount: {
             value: BigInt(0),
             assetCode: 'ABC',
@@ -175,12 +179,55 @@ describe('Incoming Payment Service', (): void => {
     })
   })
 
+  describe('Get incoming payment', (): void => {
+    let incomingPayment: IncomingPayment
+    beforeEach(async (): Promise<void> => {
+      incomingPayment = (await incomingPaymentService.create({
+        paymentPointerId,
+        clientId,
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        description: 'Test incoming payment',
+        externalRef: '#123'
+      })) as IncomingPayment
+      assert.ok(!isIncomingPaymentError(incomingPayment))
+    })
+    test('get an incoming payment', async (): Promise<void> => {
+      const retrievedIncomingPayment = await incomingPaymentService.get(
+        incomingPayment.id
+      )
+      assert.ok(retrievedIncomingPayment)
+      expect(retrievedIncomingPayment).toEqual(incomingPayment)
+    })
+    test('get an incoming payment for client id', async (): Promise<void> => {
+      const retrievedIncomingPayment = await incomingPaymentService.get(
+        incomingPayment.id,
+        clientId
+      )
+      assert.ok(retrievedIncomingPayment)
+      expect(retrievedIncomingPayment).toEqual(incomingPayment)
+    })
+    test("cannot get incoming payment if client id doesn't match", async (): Promise<void> => {
+      const clientId = uuid()
+      const retrievedIncomingPayment = await incomingPaymentService.get(
+        incomingPayment.id,
+        clientId
+      )
+      expect(retrievedIncomingPayment).toBeUndefined()
+    })
+  })
+
   describe('onCredit', (): void => {
     let incomingPayment: IncomingPayment
 
     beforeEach(async (): Promise<void> => {
       const incomingPaymentOrError = await incomingPaymentService.create({
         paymentPointerId,
+        clientId,
         description: 'Test incoming payment',
         incomingAmount: {
           value: BigInt(123),
@@ -239,6 +286,7 @@ describe('Incoming Payment Service', (): void => {
     test('Does not process not-expired pending incoming payment', async (): Promise<void> => {
       const incomingPaymentOrError = await incomingPaymentService.create({
         paymentPointerId,
+        clientId,
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
@@ -264,6 +312,7 @@ describe('Incoming Payment Service', (): void => {
       test('Deactivates an expired incoming payment with received money', async (): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           paymentPointerId,
+          clientId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -298,6 +347,7 @@ describe('Incoming Payment Service', (): void => {
       test('Deletes an expired incoming payment (and account) with no money', async (): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           paymentPointerId,
+          clientId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -330,6 +380,7 @@ describe('Incoming Payment Service', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId,
+            clientId,
             incomingAmount: {
               value: BigInt(123),
               assetCode: asset.code,
@@ -409,6 +460,7 @@ describe('Incoming Payment Service', (): void => {
       createModel: () =>
         createIncomingPayment(deps, {
           paymentPointerId,
+          clientId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -428,6 +480,7 @@ describe('Incoming Payment Service', (): void => {
     it('throws if no TB account found', async (): Promise<void> => {
       const payment = await createIncomingPayment(deps, {
         paymentPointerId,
+        clientId,
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
@@ -455,6 +508,7 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId,
+        clientId,
         description: 'Test incoming payment',
         incomingAmount: {
           value: BigInt(123),
@@ -567,6 +621,7 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = (await incomingPaymentService.create({
         paymentPointerId,
+        clientId,
         description: 'Test incoming payment',
         incomingAmount: {
           value: BigInt(123),

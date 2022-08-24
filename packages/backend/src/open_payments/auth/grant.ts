@@ -21,8 +21,10 @@ export enum AccessType {
 export enum AccessAction {
   Create = 'create',
   Read = 'read',
+  ReadAll = 'read-all',
   Complete = 'complete',
-  List = 'list'
+  List = 'list',
+  ListAll = 'list-all'
 }
 
 export interface AccessLimits {
@@ -53,6 +55,7 @@ export type GrantAccessJSON = Omit<GrantAccess, 'limits'> & {
 export interface GrantOptions {
   active: boolean
   grant: string
+  clientId: string
   access?: GrantAccess[]
 }
 
@@ -66,11 +69,13 @@ export class Grant {
     this.active = options.active
     this.grant = options.grant
     this.access = options.access || []
+    this.clientId = options.clientId
   }
 
   public readonly active: boolean
   public readonly grant: string
   public readonly access: GrantAccess[]
+  public readonly clientId: string
 
   public includesAccess({
     type,
@@ -93,6 +98,7 @@ export class Grant {
     return {
       active: this.active,
       grant: this.grant,
+      clientId: this.clientId,
       access: this.access?.map((access) => {
         return {
           ...access,

@@ -271,8 +271,10 @@ export class App {
     } = {
       [AccessAction.Create]: 'create',
       [AccessAction.Read]: 'get',
+      [AccessAction.ReadAll]: 'get',
       [AccessAction.Complete]: 'complete',
-      [AccessAction.List]: 'list'
+      [AccessAction.List]: 'list',
+      [AccessAction.ListAll]: 'list'
     }
 
     for (const path in openApi.paths) {

@@ -78,6 +78,7 @@ export class IncomingPayment
   public state!: IncomingPaymentState
   public externalRef?: string
   public connectionId!: string
+  public clientId!: string
 
   public processAt!: Date | null
 

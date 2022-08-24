@@ -23,6 +23,7 @@ import {
 } from '../../../shared/pagination'
 import { Pagination } from '../../../shared/baseModel'
 import { ConnectionService } from '../../connection/service'
+import { AccessAction } from '../../auth/grant'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -63,9 +64,15 @@ async function getIncomingPayment(
   ctx: ReadContext
 ): Promise<void> {
   let incomingPayment: IncomingPayment | undefined
+  const clientId = ctx.grant
+    ? ctx.grant?.access[0].actions.includes(AccessAction.ReadAll)
+      ? undefined
+      : ctx.grant.clientId
+    : undefined
   try {
     incomingPayment = await deps.incomingPaymentService.get(
-      ctx.params.incomingPaymentId
+      ctx.params.incomingPaymentId,
+      clientId
     )
   } catch (err) {
     ctx.throw(500, 'Error trying to get incoming payment')
@@ -98,6 +105,7 @@ async function createIncomingPayment(
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     paymentPointerId: ctx.params.accountId,
+    clientId: ctx.grant.clientId,
     description: body.description,
     externalRef: body.externalRef,
     expiresAt,
@@ -149,16 +157,24 @@ async function listIncomingPayments(
 ): Promise<void> {
   const { accountId: paymentPointerId } = ctx.params
   const pagination = parsePaginationQueryParameters(ctx.request.query)
+  const clientId = ctx.grant
+    ? ctx.grant.access[0].actions.includes(AccessAction.ListAll)
+      ? undefined
+      : ctx.grant.clientId
+    : undefined
   try {
     const page = await deps.incomingPaymentService.getPaymentPointerPage(
       paymentPointerId,
-      pagination
+      pagination,
+      clientId
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
         deps.incomingPaymentService.getPaymentPointerPage(
           paymentPointerId,
-          pagination
+
+          pagination,
+          clientId
         ),
       page
     )

@@ -1,11 +1,13 @@
 import { Grant, AccessType, AccessAction, getInterval } from './grant'
 import { Interval } from 'luxon'
+import { v4 as uuid } from 'uuid'
 
 describe('Grant', (): void => {
   describe('includesAccess', (): void => {
     let grant: Grant
     const type = AccessType.IncomingPayment
     const action = AccessAction.Create
+    const clientId = uuid()
 
     describe.each`
       identifier                        | description
@@ -16,6 +18,7 @@ describe('Grant', (): void => {
         grant = new Grant({
           active: true,
           grant: 'PRY5NM33OM4TB8N6BW7',
+          clientId,
           access: [
             {
               type: AccessType.OutgoingPayment,

@@ -1,12 +1,37 @@
-import { ListContext } from '../app'
+import * as httpMocks from 'node-mocks-http'
+import { AppContext, ListContext } from '../app'
+import { Grant } from '../open_payments/auth/grant'
 import { createContext } from '../tests/context'
 
 interface BaseResponse {
   id: string
 }
 
+export const setup = <T extends AppContext>(
+  reqOpts: httpMocks.RequestOptions,
+  params: Record<string, string>,
+  grant?: Grant
+): T => {
+  const ctx = createContext<T>(
+    {
+      ...reqOpts,
+      headers: Object.assign(
+        { Accept: 'application/json', 'Content-Type': 'application/json' },
+        reqOpts.headers
+      )
+    },
+    params
+  )
+  if (reqOpts.body !== undefined) {
+    ctx.request.body = reqOpts.body
+  }
+  if (grant) ctx.grant = grant
+  return ctx
+}
+
 interface ListTestsOptions<Type> {
   getPaymentPointerId: () => string
+  getGrant: () => Grant | undefined
   getUrl: () => string
   createItem: (index: number) => Promise<Type>
   list: (ctx: ListContext) => Promise<void>
@@ -14,6 +39,7 @@ interface ListTestsOptions<Type> {
 
 export const listTests = <Type extends BaseResponse>({
   getPaymentPointerId,
+  getGrant,
   getUrl,
   createItem,
   list
@@ -51,14 +77,15 @@ export const listTests = <Type extends BaseResponse>({
         }
         pagination['startCursor'] = getCursor(startIndex)
         pagination['endCursor'] = getCursor(endIndex)
-        const ctx = createContext<ListContext>(
+        const ctx = setup<ListContext>(
           {
             headers: { Accept: 'application/json' },
             method: 'GET',
             query,
             url: getUrl()
           },
-          { accountId: getPaymentPointerId() }
+          { accountId: getPaymentPointerId() },
+          getGrant()
         )
         await expect(list(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
