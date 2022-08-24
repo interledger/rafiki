@@ -1,14 +1,9 @@
-import * as crypto from 'crypto'
 import Axios from 'axios'
-import { importJWK, JWK } from 'jose'
+import { JWK } from 'jose'
 import { URL } from 'url'
-import { HttpMethod } from 'openapi'
 
 import { BaseService } from '../shared/baseService'
 import { IAppConfig } from '../config/app'
-import { AppContext } from '../app'
-import { AccessToken } from '../accessToken/model'
-import { Grant } from '../grant/model'
 
 export interface JWKWithRequired extends JWK {
   // client is the custom field representing a client in the backend
@@ -50,35 +45,9 @@ interface ServiceDependencies extends BaseService {
   config: IAppConfig
 }
 
-interface VerifySigResult {
-  success: boolean
-  status?: number
-  error?: string
-  message?: string
-}
-
 export interface ClientService {
-  verifySig(
-    sig: string,
-    jwk: JWKWithRequired,
-    challenge: string
-  ): Promise<boolean>
   validateClient(clientInfo: ClientInfo): Promise<boolean>
   getKeyByKid(kid: string): Promise<JWKWithRequired>
-  verifySigFromBoundKey(
-    sig: string,
-    sigInput: string,
-    accessTokenKey: string,
-    accessTokenValue: string,
-    ctx: AppContext
-  ): Promise<VerifySigFromBoundKeyResult>
-  sigInputToChallenge(sigInput: string, ctx: AppContext): string
-  getRegistryDataByKid(kid: string): Promise<RegistryData>
-  tokenHttpsigMiddleware(
-    ctx: AppContext,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    next: () => Promise<any>
-  ): Promise<void>
 }
 
 export async function createClientService({
@@ -95,26 +64,9 @@ export async function createClientService({
   }
 
   return {
-    verifySig: (sig: string, jwk: JWKWithRequired, challenge: string) =>
-      verifySig(deps, sig, jwk, challenge),
     validateClient: (clientInfo: ClientInfo) =>
       validateClient(deps, clientInfo),
     getKeyByKid: (kid: string) => getKeyByKid(deps, kid),
-    verifySigFromBoundKey: (sig: string, sigInput: string, grant: Grant, ctx: AppContext) =>
-      verifySigFromBoundKey(
-        deps,
-        sig,
-        sigInput,
-        grant
-        ctx
-      ),
-    validateClientWithRegistry: (clientInfo: ClientInfo) =>
-      validateClientWithRegistry(deps, clientInfo),
-    sigInputToChallenge: (sigInput: string, ctx: AppContext) =>
-      sigInputToChallenge(sigInput, ctx),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tokenHttpsigMiddleware: (ctx: AppContext, next: () => Promise<any>) =>
-      tokenHttpsigMiddleware(deps, ctx, next)
   }
 }
 
@@ -309,116 +261,4 @@ function isJwkViable(keys: RegistryKey): boolean {
 function verifyJwk(jwk: JWKWithRequired, keys: RegistryKey): boolean {
   // TODO: update this to reflect eventual shape of response from registry
   return !!(!keys.revoked && isJwkViable(keys) && keys.x === jwk.x)
-}
-
-async function tokenHttpsigMiddleware(
-  deps: ServiceDependencies,
-  ctx: AppContext,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  next: () => Promise<any>
-): Promise<void> {
-  const sig = ctx.headers['signature']
-  const sigInput = ctx.headers['signature-input']
-
-  if (
-    !sig ||
-    !sigInput ||
-    typeof sig !== 'string' ||
-    typeof sigInput !== 'string'
-  ) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid signature headers'
-    }
-    next()
-    return
-  }
-
-  const { body } = ctx.request
-  const { path, method } = ctx
-  let verified: VerifySigResult
-  if (
-    path.includes('/introspect') &&
-    method === HttpMethod.POST.toUpperCase()
-  ) {
-    const accessToken = await AccessToken.query().findOne(
-      'value',
-      body['access_token']
-    )
-    if (!accessToken) {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client',
-        message: 'invalid access token'
-      }
-
-      return
-    }
-
-    const grant = await Grant.query().findById(accessToken.grantId)
-    verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
-  } else if (
-    path.includes('/token') &&
-    method === HttpMethod.DELETE.toUpperCase()
-  ) {
-    const accessToken = await AccessToken.query().findOne(
-      'managementId',
-      ctx.params['managementId']
-    )
-    if (!accessToken) {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client',
-        message: 'invalid access token'
-      }
-      return
-    }
-
-    const grant = await Grant.query().findById(accessToken.grantId)
-    verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
-  } else if (path.includes('/continue')) {
-    const grant = await Grant.query().findOne(
-      'interactId',
-      ctx.params['interactId']
-    )
-    if (!grant) {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_interaction',
-        message: 'invalid grant'
-      }
-      return
-    }
-    verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
-  } else if (path === '/' && method === HttpMethod.POST.toUpperCase()) {
-    if (!(await validateClientWithRegistry(deps, body.client))) {
-      ctx.status = 401
-      ctx.body = { error: 'invalid_client' }
-      return
-    }
-    verified = await verifySigAndChallenge(
-      deps,
-      sig,
-      sigInput,
-      body.client.key.jwk,
-      ctx
-    )
-  } else {
-    // route does not need httpsig verification
-    next()
-    return
-  }
-
-  if (!verified.success) {
-    ctx.status = verified.status || 401
-    ctx.body = {
-      error: verified.error || 'request_denied',
-      message: verified.message || null
-    }
-    next()
-    return
-  }
-
-  next()
 }

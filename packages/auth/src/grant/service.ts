@@ -9,6 +9,7 @@ import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
 
 export interface GrantService {
+  get(grantId: string): Promise<Grant>
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
   getByInteraction(interactId: string): Promise<Grant>
   issueGrant(grantId: string): Promise<Grant>
@@ -69,6 +70,7 @@ export async function createGrantService({
     knex
   }
   return {
+    get: (grantId: string) => get(grantId),
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
       initiateGrant(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
@@ -80,6 +82,10 @@ export async function createGrantService({
     ) => getByContinue(continueId, continueToken, interactRef),
     denyGrant: (grantId: string) => denyGrant(deps, grantId)
   }
+}
+
+async function get(grantId: string): Promise<Grant> {
+  return Grant.query().findById(grantId)
 }
 
 async function issueGrant(

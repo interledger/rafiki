@@ -122,6 +122,34 @@ describe('Access Token Service', (): void => {
     })
   })
 
+  describe('Get', (): void => {
+    let accessToken: AccessToken
+    beforeEach(async (): Promise<void> => {
+      accessToken = await AccessToken.query(trx).insert({
+        value: 'test-access-token',
+        managementId: v4(),
+        grantId: grant.id,
+        expiresIn: 1234
+      })
+    })
+
+    test('Can get an access token by its value', async (): Promise<void> => {
+      const fetchedToken = await accessTokenService.get(accessToken.value)
+      expect(fetchedToken.value).toEqual(accessToken.value)
+      expect(fetchedToken.managementId).toEqual(accessToken.managementId)
+      expect(fetchedToken.grantId).toEqual(accessToken.grantId)
+    })
+
+    test('Can get an access token by its managementId', async (): Promise<void> => {
+      const fetchedToken = await accessTokenService.getByManagementId(
+        accessToken.managementId
+      )
+      expect(fetchedToken.value).toEqual(accessToken.value)
+      expect(fetchedToken.managementId).toEqual(accessToken.managementId)
+      expect(fetchedToken.grantId).toEqual(accessToken.grantId)
+    })
+  })
+
   describe('Introspect', (): void => {
     test('Can introspect active token', async (): Promise<void> => {
       const clientId = crypto

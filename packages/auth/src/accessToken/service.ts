@@ -10,6 +10,8 @@ import { IAppConfig } from '../config/app'
 import { Access } from '../access/model'
 
 export interface AccessTokenService {
+  get(token: string): Promise<AccessToken>
+  getByManagementId(managementId: string): Promise<AccessToken>
   introspect(token: string): Promise<Introspection | undefined>
   revoke(id: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
@@ -64,6 +66,9 @@ export async function createAccessTokenService({
   }
 
   return {
+    get: (token: string) => get(token),
+    getByManagementId: (managementId: string) =>
+      getByManagementId(managementId),
     introspect: (token: string) => introspect(deps, token),
     revoke: (id: string) => revoke(deps, id),
     create: (grantId: string, opts?: AccessTokenOpts) =>
@@ -76,6 +81,14 @@ function isTokenExpired(token: AccessToken): boolean {
   const now = new Date(Date.now())
   const expiresAt = token.createdAt.getTime() + token.expiresIn
   return expiresAt < now.getTime()
+}
+
+async function get(token: string): Promise<AccessToken> {
+  return AccessToken.query().findOne('value', token)
+}
+
+async function getByManagementId(managementId: string): Promise<AccessToken> {
+  return AccessToken.query().findOne('managementId', managementId)
 }
 
 async function introspect(

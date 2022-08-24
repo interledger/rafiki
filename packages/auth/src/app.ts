@@ -185,7 +185,7 @@ export class App {
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
     const grantRoutes = await this.container.use('grantRoutes')
-    const clientService = await this.container.use('clientService')
+    const signatureService = await this.container.use('signatureService')
 
     const openApi = await this.container.use('openApi')
     const toRouterPath = (path: string): string =>
@@ -225,7 +225,7 @@ export class App {
                 path,
                 method
               }),
-              clientService.tokenHttpsigMiddleware,
+              signatureService.tokenHttpsigMiddleware,
               route
             )
             // TODO: remove once all endpoints are implemented
