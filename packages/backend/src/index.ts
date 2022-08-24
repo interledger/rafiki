@@ -425,8 +425,9 @@ export const start = async (
   const config = await container.use('config')
   await app.boot()
   await app.startAdminServer(parsePort(config.adminHost))
+  logger.info(`Admin server listening on ${app.getAdminPort()}`)
   await app.startOpenPaymentsServer(parsePort(config.openPaymentsHost))
-  logger.info(`Listening on ${app.getAdminPort()}`)
+  logger.info(`Open Payments server listening on ${app.getOpenPaymentsPort()}`)
 
   const connectorApp = await container.use('connectorApp')
   connectorServer = connectorApp.listenPublic(config.connectorPort)
