@@ -9,11 +9,9 @@ export interface GraphqlQueryConfig {
 }
 
 export interface GraphqlResponseElement {
-  data: [{ code: string }]
-}
-
-export interface GraphqlResponseArray {
-  [index: number]: GraphqlResponseElement
+  data: {
+    [key: string]: { code: string }
+  }
 }
 
 function testGraphqlElementSuccess(el: GraphqlResponseElement) {
@@ -28,13 +26,6 @@ function testGraphqlElementSuccess(el: GraphqlResponseElement) {
       )
     }
   })
-}
-
-function isGraphqlArray(a: GraphqlResponseElement | GraphqlResponseArray) {
-  if (_.isArray(a)) {
-    return a as GraphqlResponseArray
-  }
-  return a as GraphqlResponseElement
 }
 
 export async function graphqlQuery(options: GraphqlQueryConfig) {
@@ -53,12 +44,8 @@ export async function graphqlQuery(options: GraphqlQueryConfig) {
       }
       return response.json()
     })
-    .then((response: GraphqlResponseElement | GraphqlResponseArray) => {
-      if (isGraphqlArray(response)) {
-        _.each(response, testGraphqlElementSuccess)
-      } else {
-        testGraphqlElementSuccess(response as GraphqlResponseElement)
-      }
+    .then((response: GraphqlResponseElement) => {
+      testGraphqlElementSuccess(response as GraphqlResponseElement)
       return response
     })
     .catch((e) => {
@@ -73,7 +60,7 @@ export async function createPeer(
   outgoingEndpoint: string,
   assetCode: string,
   assetScale: number
-): Promise<object> {
+): Promise<PeerResponseElement> {
   const createPeerQuery = `
   mutation CreatePeer ($input: CreatePeerInput!) {
     createPeer (input: $input) {
@@ -109,7 +96,7 @@ export async function createPeer(
     method: 'post',
     query: createPeerQuery,
     variables: createPeerInput
-  })) as unknown as [PeerResponseElement]
+  })) as PeerResponseElement
 }
 
 export interface PeerResponseElement {
@@ -133,10 +120,9 @@ export interface PeerResponseElement {
 export async function addPeerLiquidity(
   backendUrl: string,
   peerId: string,
-  outgoingEndpoint: string,
-  assetCode: string,
-  assetScale: number
-): Promise<object> {
+  amount: string,
+  transferUid: string
+): Promise<PeerLiquidityResponse> {
   const addPeerLiquidityQuery = `
 	mutation AddPeerLiquidity ($input: AddPeerLiquidityInput!) {
 		addPeerLiquidity(input: $input) {
@@ -149,15 +135,26 @@ export async function addPeerLiquidity(
 	`
   const addPeerLiquidityInput = {
     input: {
-      peerId: 'INSERT_PEER_ID',
-      amount: '10000',
-      id: 'a09b730d-8610-4fda-98fa-ec7acb19c775'
+      peerId: peerId,
+      amount: amount,
+      id: transferUid
     }
   }
-  return graphqlQuery({
+  return (await graphqlQuery({
     resource: backendUrl,
     method: 'post',
     query: addPeerLiquidityQuery,
     variables: addPeerLiquidityInput
-  })
+  })) as PeerLiquidityResponse
+}
+
+export interface PeerLiquidityResponse {
+  data: {
+    addPeerLiquidity: {
+      code: string
+      success: boolean
+      message: string
+      error: null | string
+    }
+  }
 }
