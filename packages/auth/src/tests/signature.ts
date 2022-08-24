@@ -1,7 +1,8 @@
 import crypto from 'crypto'
 import { v4 } from 'uuid'
-import { JWK, importJWK, exportJWK } from 'jose'
+import { importJWK, exportJWK } from 'jose'
 import { KID_ORIGIN } from '../grant/routes.test'
+import { JWKWithRequired } from '../client/service'
 
 export const SIGNATURE_METHOD = 'GET'
 export const SIGNATURE_TARGET_URI = '/test'
@@ -29,8 +30,8 @@ const BASE_TEST_KEY = {
 
 export async function generateTestKeys(): Promise<{
   keyId: string
-  publicKey: JWK
-  privateKey: JWK
+  publicKey: JWKWithRequired
+  privateKey: JWKWithRequired
 }> {
   const { privateKey } = crypto.generateKeyPairSync('ed25519')
 
@@ -53,10 +54,10 @@ export async function generateTestKeys(): Promise<{
 }
 
 export async function generateSigHeaders(
+  privateKey: JWKWithRequired,
   url: string,
   method: string,
-  body?: unknown,
-  privateKey: JWK
+  body?: unknown
 ): Promise<{ sigInput: string; signature: string; contentDigest?: string }> {
   const sigInput = body
     ? 'sig1=("@method" "@target-uri" "content-digest");created=1618884473;keyid="gnap-key"'

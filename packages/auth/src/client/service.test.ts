@@ -10,8 +10,8 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { ClientService } from './service'
 import { v4 } from 'uuid'
+import { ClientService, JWKWithRequired } from './service'
 import { createContext, createContextWithSigHeaders } from '../tests/context'
 import { generateTestKeys } from '../tests/signature'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
@@ -26,41 +26,17 @@ const TEST_CLIENT_DISPLAY = {
 }
 
 const TEST_KID_PATH = '/keys/test-key'
-<<<<<<< HEAD
-const TEST_CLIENT_KEY = {
-  client: {
-    id: v4(),
-    name: TEST_CLIENT_DISPLAY.name,
-    email: 'bob@bob.com',
-    image: 'a link to an image',
-    uri: TEST_CLIENT_DISPLAY.uri
-  },
-  kid: KID_ORIGIN + TEST_KID_PATH,
-  x: 'hin88zzQxp79OOqIFNCME26wMiz0yqjzgkcBe0MW8pE',
-  kty: 'OKP',
-  alg: 'EdDSA',
-  crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
-  use: 'sig'
-}
-
-const TEST_PRIVATE_KEY = {
-  ...TEST_PUBLIC_KEY,
-  d: 'v6gr9N9Nf3AUyuTgU5pk7gyNULQnzNJCBNMPp5OkiqA'
-}
-=======
->>>>>>> cb4eb4d8 (feat: dynamically generate keys for tests)
 
 describe('Client Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let clientService: ClientService
   let keyPath: string
-  let publicKey: JWK
-  let privateKey: JWK
+  let publicKey: JWKWithRequired
+  let privateKey: JWKWithRequired
   let testClientKey: {
     proof: string
-    jwk: JWK
+    jwk: JWKWithRequired
   }
 
   beforeAll(async (): Promise<void> => {

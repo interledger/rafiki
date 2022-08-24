@@ -2,10 +2,10 @@ import EventEmitter from 'events'
 import * as httpMocks from 'node-mocks-http'
 import Koa from 'koa'
 import session from 'koa-session'
-import { JWK } from 'jose'
 
 import { AppContext, AppContextData } from '../app'
 import { generateSigHeaders } from './signature'
+import { JWKWithRequired } from '../client/service'
 
 export function createContext(
   reqOpts: httpMocks.RequestOptions,
@@ -38,14 +38,14 @@ export async function createContextWithSigHeaders(
   reqOpts: httpMocks.RequestOptions,
   params: Record<string, unknown>,
   requestBody: Record<string, unknown>,
-  privateKey: JWK
+  privateKey: JWKWithRequired
 ): Promise<AppContext> {
   const { headers, url, method } = reqOpts
   const { signature, sigInput, contentDigest } = await generateSigHeaders(
+    privateKey,
     url as string,
     method as string,
-    requestBody,
-    privateKey
+    requestBody
   )
 
   const ctx = createContext(
