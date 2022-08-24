@@ -6,13 +6,13 @@ import { renderToPipeableStream } from 'react-dom/server'
 import { runSeed } from '../src/run_seed'
 
 declare global {
-  var seeded: boolean
+  let __seeded: boolean | undefined
 }
 
-if (!global.seeded) {
+if (!global.__seeded) {
   runSeed()
     .then(() => {
-      global.seeded = true
+      global.__seeded = true
     })
     .catch((e) => {
       console.log(
