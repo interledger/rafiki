@@ -10,9 +10,15 @@ declare global {
 }
 
 if (!global.seeded) {
-  runSeed().then(() => {
-    global.seeded = true
-  })
+  runSeed()
+    .then(() => {
+      global.seeded = true
+    })
+    .catch((e) => {
+      console.log(
+        `seeding failed with ${e}. If seeding has already completed this can probably be ignored`
+      )
+    })
 }
 
 const ABORT_DELAY = 5000
