@@ -34,9 +34,7 @@ export async function getPaymentPointer(
 
   const config = await deps.config
   ctx.body = {
-    id: `${config.openPaymentsHostname}/${encodeURIComponent(
-      paymentPointer.id
-    )}`,
+    id: `${config.openPaymentsHost}/${encodeURIComponent(paymentPointer.id)}`,
     publicName: paymentPointer.publicName ?? undefined,
     assetCode: paymentPointer.asset.code,
     assetScale: paymentPointer.asset.scale,

@@ -254,7 +254,7 @@ describe('OutgoingPaymentService', (): void => {
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingPaymentPointer = `${config.openPaymentsHostname}/${destinationPaymentPointer.id}`
+    receivingPaymentPointer = `${config.openPaymentsHost}/${destinationPaymentPointer.id}`
     const incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: receiverPaymentPointerId
     })
@@ -524,7 +524,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.openPaymentsHostname}/${paymentPointerId}`,
+                identifier: `${Config.openPaymentsHost}/${paymentPointerId}`,
                 limits: { ...limits, interval }
               }
             ]
@@ -557,7 +557,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.openPaymentsHostname}/${paymentPointerId}`,
+                identifier: `${Config.openPaymentsHost}/${paymentPointerId}`,
                 limits: sendAmount
                   ? {
                       sendAmount: amount,
@@ -600,7 +600,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.openPaymentsHostname}/${paymentPointerId}`,
+                identifier: `${Config.openPaymentsHost}/${paymentPointerId}`,
                 limits: {
                   sendAmount: sendAmount ? grantAmount : undefined,
                   receiveAmount: sendAmount ? undefined : grantAmount,
@@ -616,7 +616,7 @@ describe('OutgoingPaymentService', (): void => {
           const firstPayment = await createOutgoingPayment(deps, {
             paymentPointerId,
             receiver: `${
-              Config.openPaymentsHostname
+              Config.openPaymentsHost
             }/${uuid()}/incoming-payments/${uuid()}`,
             sendAmount: sendAmount ? paymentAmount : undefined,
             receiveAmount: sendAmount ? undefined : paymentAmount,
@@ -653,7 +653,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.openPaymentsHostname}/${paymentPointerId}`,
+                identifier: `${Config.openPaymentsHost}/${paymentPointerId}`,
                 limits
               }
             ]
@@ -698,7 +698,7 @@ describe('OutgoingPaymentService', (): void => {
               {
                 type: AccessType.OutgoingPayment,
                 actions: [AccessAction.Create, AccessAction.Read],
-                identifier: `${Config.openPaymentsHostname}/${paymentPointerId}`,
+                identifier: `${Config.openPaymentsHost}/${paymentPointerId}`,
                 limits: sendAmount
                   ? {
                       sendAmount: grantAmount,
@@ -719,7 +719,7 @@ describe('OutgoingPaymentService', (): void => {
             const firstPayment = await createOutgoingPayment(deps, {
               paymentPointerId,
               receiver: `${
-                Config.openPaymentsHostname
+                Config.openPaymentsHost
               }/${uuid()}/incoming-payments/${uuid()}`,
               sendAmount: sendAmount ? paymentAmount : undefined,
               receiveAmount: sendAmount ? undefined : paymentAmount,

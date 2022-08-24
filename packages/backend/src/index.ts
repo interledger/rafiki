@@ -8,7 +8,7 @@ import Redis from 'ioredis'
 import { createClient } from 'tigerbeetle-node'
 
 import { App, AppServices } from './app'
-import { Config } from './config/app'
+import { Config, parsePort } from './config/app'
 import { createRatesService } from './rates/service'
 import { createQuoteRoutes } from './open_payments/quote/routes'
 import { createQuoteService } from './open_payments/quote/service'
@@ -293,7 +293,7 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       peerService: await deps.use('peerService'),
-      openPaymentsHostname: config.openPaymentsHostname
+      openPaymentsHost: config.openPaymentsHost
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {
@@ -424,8 +424,8 @@ export const start = async (
 
   const config = await container.use('config')
   await app.boot()
-  await app.startAdminServer(config.adminPort)
-  await app.startOpenPaymentsServer(config.openPaymentsPort)
+  await app.startAdminServer(parsePort(config.adminHost))
+  await app.startOpenPaymentsServer(parsePort(config.openPaymentsHost))
   logger.info(`Listening on ${app.getAdminPort()}`)
 
   const connectorApp = await container.use('connectorApp')

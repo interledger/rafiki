@@ -58,7 +58,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.openPaymentsHostname = 'https://wallet.example'
+    config.openPaymentsHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -70,7 +70,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     paymentPointerId = (await createPaymentPointer(deps, { asset })).id
-    paymentPointerUrl = `${config.openPaymentsHostname}/${paymentPointerId}`
+    paymentPointerUrl = `${config.openPaymentsHost}/${paymentPointerId}`
   })
 
   afterEach(async (): Promise<void> => {

@@ -16,8 +16,7 @@ export async function createPaymentPointer(
   const paymentPointerOrError = await paymentPointerService.create({
     ...options,
     url:
-      options.url ||
-      `${(await deps.use('config')).openPaymentsHostname}/${uuid()}`,
+      options.url || `${(await deps.use('config')).openPaymentsHost}/${uuid()}`,
     asset: options.asset || randomAsset()
   })
   assert.ok(!isPaymentPointerError(paymentPointerOrError))

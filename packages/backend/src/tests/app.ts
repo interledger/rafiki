@@ -35,11 +35,9 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
-  config.adminPort = 0
-  config.openPaymentsPort = 0
   config.connectorPort = 0
-  config.adminHostname = 'https://example'
-  config.openPaymentsHostname = 'https://wallet.example'
+  config.adminHost = 'https://example'
+  config.openPaymentsHost = 'https://wallet.example'
   const logger = createLogger({
     transport: {
       target: 'pino-pretty',
@@ -83,7 +81,7 @@ export const createTestApp = async (
     .persist()
 
   // Since payment pointers MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
-  nock(config.openPaymentsHostname)
+  nock(config.openPaymentsHost)
     .get(/.*/)
     .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
     .reply(200, function (path) {

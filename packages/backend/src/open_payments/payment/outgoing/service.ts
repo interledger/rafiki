@@ -44,7 +44,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   peerService: PeerService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
-  openPaymentsHostname: string
+  openPaymentsHost: string
 }
 
 export async function createOutgoingPaymentService(

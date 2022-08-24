@@ -108,7 +108,7 @@ async function listQuotes(
 }
 
 function quoteToBody(deps: ServiceDependencies, quote: Quote) {
-  const accountId = `${deps.config.openPaymentsHostname}/${quote.paymentPointerId}`
+  const accountId = `${deps.config.openPaymentsHost}/${quote.paymentPointerId}`
   return Object.fromEntries(
     Object.entries({
       ...quote.toJSON(),
