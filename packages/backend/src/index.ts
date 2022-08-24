@@ -412,13 +412,12 @@ export const start = async (
 
   // Do migrations
   const knex = await container.use('knex')
-  await knex.migrate
-    .latest({
+  // Needs a wrapped inline function
+  await callWithRetry(async () => {
+    await knex.migrate.latest({
       directory: __dirname + '/../migrations'
     })
-    .catch((error): void => {
-      logger.error({ error: error.message }, 'error migrating database')
-    })
+  })
 
   Model.knex(knex)
 
@@ -441,4 +440,20 @@ if (!module.parent) {
     const logger = await container.use('logger')
     logger.error(errInfo)
   })
+}
+
+// Used for running migrations in a try loop with exponential backoff
+const callWithRetry = async (fn, depth = 0) => {
+  const wait = (ms) => new Promise((res) => setTimeout(res, ms))
+
+  try {
+    return await fn()
+  } catch (e) {
+    if (depth > 7) {
+      throw e
+    }
+    await wait(2 ** depth * 30)
+
+    return callWithRetry(fn, depth + 1)
+  }
 }
