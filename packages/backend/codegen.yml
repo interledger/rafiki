@@ -1,10 +1,20 @@
 overwrite: true
-schema: "./src/graphql/schema.graphql"
+schema: './src/graphql/schema.graphql'
 generates:
   src/graphql/generated/graphql.ts:
     plugins:
-      - "typescript"
-      - "typescript-resolvers"
+      - 'typescript'
+      - 'typescript-resolvers'
+    config:
+      defaultMapper: Partial<{T}>
+      # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
+      maybeValue: T | undefined
+      scalars:
+        UInt64: bigint
+  ../mock-account-provider/generated/graphql.ts:
+    plugins:
+      - 'typescript'
+      - 'typescript-resolvers'
     config:
       defaultMapper: Partial<{T}>
       # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
@@ -13,4 +23,4 @@ generates:
         UInt64: bigint
   src/graphql/generated/graphql.schema.json:
     plugins:
-      - "introspection"
+      - 'introspection'

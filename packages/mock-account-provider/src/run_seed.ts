@@ -7,12 +7,11 @@ async function setupFromSeed(config: SeedInstance): Promise<void> {
   const peers = await Promise.all(
     _.map(config.peers, (peer: Peering) => {
       return createPeer(
-        config.self.graphqlUrl,
         peer.peerIlpAddress,
         peer.peerUrl,
         peer.asset,
         peer.scale
-      )
+      ).then((response) => response.peer)
     })
   )
   console.log(JSON.stringify(peers, null, 2))

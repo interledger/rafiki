@@ -266,6 +266,7 @@ importers:
 
   packages/mock-account-provider:
     specifiers:
+      '@apollo/client': ^3.3.20
       '@remix-run/dev': ^1.6.8
       '@remix-run/eslint-config': ^1.6.8
       '@remix-run/node': ^1.6.8
@@ -278,6 +279,7 @@ importers:
       '@types/react-dom': ^18.0.6
       '@types/uuid': ^8.3.4
       eslint: ^8.20.0
+      graphql: ^15.5.0
       lodash: ^4.17.21
       node-fetch: ^2.0.0
       react: ^18.2.0
@@ -286,12 +288,14 @@ importers:
       uuid: ^8.3.2
       yaml: ^2.1.1
     dependencies:
+      '@apollo/client': 3.6.9_o264z5epwuajru7y4dsijkqr44
       '@remix-run/node': 1.6.8_biqbaboplfbrettd7655fr4n2y
       '@remix-run/react': 1.6.8_biqbaboplfbrettd7655fr4n2y
       '@remix-run/serve': 1.6.8_biqbaboplfbrettd7655fr4n2y
       '@types/node': 18.7.12
       '@types/node-fetch': 2.6.2
       '@types/uuid': 8.3.4
+      graphql: 15.8.0
       lodash: 4.17.21
       node-fetch: 2.6.7
       react: 18.2.0

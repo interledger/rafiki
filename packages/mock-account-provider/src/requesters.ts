@@ -1,5 +1,8 @@
 import fetch from 'node-fetch'
 import * as _ from 'lodash'
+import { gql } from '@apollo/client'
+import type { CreatePeerMutationResponse } from '../generated/graphql'
+import { apolloClient } from './apolloClient'
 
 export interface GraphqlQueryConfig {
   resource: string
@@ -68,28 +71,27 @@ export async function graphqlQuery(options: GraphqlQueryConfig) {
 }
 
 export async function createPeer(
-  backendUrl: string,
   staticIlpAddress: string,
   outgoingEndpoint: string,
   assetCode: string,
   assetScale: number
-): Promise<object> {
-  const createPeerQuery = `
-  mutation CreatePeer ($input: CreatePeerInput!) {
-    createPeer (input: $input) {
-      code
-      success
-      message
-      peer {
-        id
-        asset {
-          code
-          scale
+): Promise<CreatePeerMutationResponse> {
+  const createPeerMutation = gql`
+    mutation CreatePeer($input: CreatePeerInput!) {
+      createPeer(input: $input) {
+        code
+        success
+        message
+        peer {
+          id
+          asset {
+            code
+            scale
+          }
+          staticIlpAddress
         }
-        staticIlpAddress
       }
     }
-  }
   `
   const createPeerInput = {
     input: {
@@ -104,30 +106,17 @@ export async function createPeer(
       }
     }
   }
-  return (await graphqlQuery({
-    resource: backendUrl,
-    method: 'post',
-    query: createPeerQuery,
-    variables: createPeerInput
-  })) as unknown as [PeerResponseElement]
-}
-
-export interface PeerResponseElement {
-  data: {
-    createPeer: {
-      code: string
-      success: boolean
-      message: string
-      peer: {
-        id: string
-        asset: {
-          code: string
-          scale: number
-        }
-        staticIlpAddress: string
+  return apolloClient
+    .mutate({
+      mutation: createPeerMutation,
+      variables: createPeerInput
+    })
+    .then(({ data }): CreatePeerMutationResponse => {
+      if (!data.success) {
+        throw new Error('Data was empty')
       }
-    }
-  }
+      return data
+    })
 }
 
 export async function addPeerLiquidity(
