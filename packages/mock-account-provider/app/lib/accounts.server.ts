@@ -69,15 +69,14 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
+    if (acc.credits_pending - amount < 0 || acc.credits_posted + amount < 0) {
+      return new Error('invalid amount, credits pending cannot be less than 0')
+    }
+
     acc.credits_posted += amount
     if (clearPending) {
       acc.credits_pending -= amount
     }
-    if (acc.credits_pending < 0 || acc.credits_posted < 0) {
-      return new Error('invalid amount, credits pending cannot be less than 0')
-    }
-
-    this.accounts.set(id, acc)
   }
 
   async debit(
@@ -95,15 +94,17 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
+    if (
+      (clearPending && acc.debits_pending - amount < 0) ||
+      acc.debits_posted + amount < 0
+    ) {
+      return new Error('invalid amount, debits pending cannot be less than 0')
+    }
+
     acc.debits_posted += amount
     if (clearPending) {
       acc.debits_pending -= amount
     }
-    if (acc.debits_pending < 0 || acc.debits_posted < 0) {
-      return new Error('invalid amount, debits pending cannot be less than 0')
-    }
-
-    this.accounts.set(id, acc)
   }
 
   async pendingCredit(id: string, amount: bigint): Promise<void | Error> {
@@ -117,8 +118,6 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
     acc.credits_pending += amount
-
-    this.accounts.set(id, acc)
   }
 
   async pendingDebit(id: string, amount: bigint): Promise<void | Error> {
@@ -132,8 +131,6 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
     acc.debits_pending += amount
-
-    this.accounts.set(id, acc)
   }
 
   async voidPendingDebit(id: string, amount: bigint): Promise<void | Error> {
@@ -147,12 +144,11 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
-    acc.debits_pending -= amount
-    if (acc.debits_pending < 0) {
+    if (acc.debits_pending - amount < 0) {
       return new Error('invalid amount, debits pending cannot be less than 0')
     }
 
-    this.accounts.set(id, acc)
+    acc.debits_pending -= amount
   }
 
   async voidPendingCredit(id: string, amount: bigint): Promise<void | Error> {
@@ -166,12 +162,11 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
-    acc.credits_pending -= amount
-    if (acc.debits_pending < 0) {
+    if (acc.debits_pending - amount < 0) {
       return new Error('invalid amount, credits pending cannot be less than 0')
     }
 
-    this.accounts.set(id, acc)
+    acc.credits_pending -= amount
   }
 }
 
