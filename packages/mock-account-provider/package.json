@@ -2,7 +2,7 @@
   "name": "mock-account-provider",
   "sideEffects": false,
   "scripts": {
-    "build-seed": "tsc src/run_seed.ts --lib ES6,dom --outDir dist",
+    "build-seed": "tsc src/* --lib ES6,dom --outDir dist",
     "build": "remix build",
     "dev": "remix dev",
     "start": "remix-serve build"
