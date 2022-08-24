@@ -139,6 +139,29 @@ describe('Open Payments Payment Pointer Service', (): void => {
     })
   })
 
+  describe('Get Payment Pointer By Url', (): void => {
+    test('Can retrieve payment pointer by url', async (): Promise<void> => {
+      const paymentPointer = await createPaymentPointer(deps)
+      await expect(
+        paymentPointerService.getByUrl(paymentPointer.url)
+      ).resolves.toEqual(paymentPointer)
+
+      await expect(
+        paymentPointerService.getByUrl(paymentPointer.url + '/path')
+      ).resolves.toBeUndefined()
+
+      await expect(
+        paymentPointerService.getByUrl('prefix+' + paymentPointer.url)
+      ).resolves.toBeUndefined()
+    })
+
+    test('Returns undefined if no payment pointer exists with url', async (): Promise<void> => {
+      await expect(
+        paymentPointerService.getByUrl('test.nope')
+      ).resolves.toBeUndefined()
+    })
+  })
+
   describe('onCredit', (): void => {
     let paymentPointer: PaymentPointer
 

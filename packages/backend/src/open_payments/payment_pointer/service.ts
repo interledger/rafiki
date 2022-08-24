@@ -20,6 +20,7 @@ export interface CreateOptions {
 export interface PaymentPointerService {
   create(options: CreateOptions): Promise<PaymentPointer | PaymentPointerError>
   get(id: string): Promise<PaymentPointer | undefined>
+  getByUrl(url: string): Promise<PaymentPointer | undefined>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
 }
@@ -48,6 +49,7 @@ export async function createPaymentPointerService({
   return {
     create: (options) => createPaymentPointer(deps, options),
     get: (id) => getPaymentPointer(deps, id),
+    getByUrl: (url) => getPaymentPointerByUrl(deps, url),
     processNext: () => processNextPaymentPointer(deps),
     triggerEvents: (limit) => triggerPaymentPointerEvents(deps, limit)
   }
@@ -110,6 +112,16 @@ async function getPaymentPointer(
   return await PaymentPointer.query(deps.knex)
     .findById(id)
     .withGraphJoined('asset')
+}
+
+async function getPaymentPointerByUrl(
+  deps: ServiceDependencies,
+  url: string
+): Promise<PaymentPointer | undefined> {
+  const paymentPointer = await PaymentPointer.query(deps.knex)
+    .findOne({ url })
+    .withGraphJoined('asset')
+  return paymentPointer || undefined
 }
 
 // Returns the id of the processed payment pointer (if any).
