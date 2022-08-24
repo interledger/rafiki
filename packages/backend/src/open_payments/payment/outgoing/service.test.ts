@@ -13,6 +13,7 @@ import {
 import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { IAppConfig, Config } from '../../../config/app'
+import { CreateQuoteOptions } from '../../quote/service'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
@@ -33,10 +34,9 @@ import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../../../accounting/errors'
 import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
-import { CreateQuoteOptions } from '../../quote/service'
+import { Amount } from '../../amount'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
-import { Amount } from '../../amount'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
 import { Quote } from '../../quote/model'
 
@@ -187,10 +187,11 @@ describe('OutgoingPaymentService', (): void => {
   ) {
     if (amountSent !== undefined) {
       expect(payment.sentAmount.value).toEqual(amountSent)
+      await expect(accountingService.getTotalSent(payment.id)).resolves.toBe(
+        payment.sentAmount.value
+      )
     }
-    await expect(accountingService.getTotalSent(payment.id)).resolves.toBe(
-      payment.sentAmount.value
-    )
+
     if (amountDelivered !== undefined) {
       expect(amtDelivered).toEqual(amountDelivered)
     }
@@ -276,29 +277,6 @@ describe('OutgoingPaymentService', (): void => {
     it('returns undefined when no payment exists', async () => {
       await expect(outgoingPaymentService.get(uuid())).resolves.toBeUndefined()
     })
-
-    it('throws if no TB account found', async (): Promise<void> => {
-      const quote = await createQuote(deps, {
-        paymentPointerId,
-        receiver,
-        sendAmount
-      })
-      const options = {
-        paymentPointerId,
-        quoteId: quote.id,
-        description: 'rent',
-        externalRef: '202201'
-      }
-      const payment = await outgoingPaymentService.create(options)
-      assert.ok(!isOutgoingPaymentError(payment))
-
-      jest
-        .spyOn(accountingService, 'getTotalSent')
-        .mockResolvedValueOnce(undefined)
-      await expect(outgoingPaymentService.get(payment.id)).rejects.toThrowError(
-        `Underlying TB account not found, payment id: ${payment.id}`
-      )
-    })
   })
 
   describe('create', (): void => {
@@ -343,7 +321,6 @@ describe('OutgoingPaymentService', (): void => {
           quote,
           peerId: outgoingPeer ? peer.id : null
         })
-        await expectOutcome(payment, { accountBalance: BigInt(0) })
 
         await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
           payment
@@ -1143,24 +1120,6 @@ describe('OutgoingPaymentService', (): void => {
           paymentPointerId,
           pagination
         )
-    })
-
-    it('throws if no TB account found', async (): Promise<void> => {
-      const payment = await createOutgoingPayment(deps, {
-        paymentPointerId,
-        receiver,
-        sendAmount,
-        validDestination: false
-      })
-
-      jest
-        .spyOn(accountingService, 'getAccountsTotalSent')
-        .mockResolvedValueOnce([undefined])
-      await expect(
-        outgoingPaymentService.getPaymentPointerPage(paymentPointerId, {})
-      ).rejects.toThrowError(
-        `Underlying TB account not found, payment id: ${payment.id}`
-      )
     })
   })
 })

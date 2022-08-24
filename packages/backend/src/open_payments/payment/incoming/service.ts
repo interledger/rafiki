@@ -4,7 +4,7 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
-import { AccountingService, AccountTypeCode } from '../../../accounting/service'
+import { AccountingService } from '../../../accounting/service'
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
@@ -13,7 +13,7 @@ import { TransactionOrKnex } from 'objection'
 import { PaymentPointerService } from '../../payment_pointer/service'
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
-import { parse, end } from 'iso8601-duration'
+import { end, parse } from 'iso8601-duration'
 import { uuid } from '../../../connector/core'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
@@ -120,39 +120,22 @@ async function createIncomingPayment(
       }
     }
   }
-  const invTrx = trx || (await IncomingPayment.startTransaction(deps.knex))
-  try {
-    const incomingPayment = await IncomingPayment.query(invTrx)
-      .insertAndFetch({
-        paymentPointerId,
-        assetId: paymentPointer.asset.id,
-        description,
-        expiresAt,
-        incomingAmount,
-        externalRef,
-        state: IncomingPaymentState.Pending,
-        processAt: expiresAt,
-        connectionId: uuid()
-      })
-      .withGraphFetched('asset')
 
-    // Incoming payment accounts are credited by the amounts received by the incoming payment.
-    // Credits are restricted such that the incoming payments cannot receive more than that amount.
-    await deps.accountingService.createLiquidityAccount(
-      incomingPayment,
-      AccountTypeCode.LiquidityIncoming
-    )
+  const incomingPayment = await IncomingPayment.query(trx || deps.knex)
+    .insertAndFetch({
+      paymentPointerId,
+      assetId: paymentPointer.asset.id,
+      description,
+      expiresAt,
+      incomingAmount,
+      externalRef,
+      state: IncomingPaymentState.Pending,
+      processAt: expiresAt,
+      connectionId: uuid()
+    })
+    .withGraphFetched('asset')
 
-    if (!trx) {
-      await invTrx.commit()
-    }
-    return await addReceivedAmount(deps, incomingPayment, BigInt(0))
-  } catch (err) {
-    if (!trx) {
-      await invTrx.rollback()
-    }
-    throw err
-  }
+  return await addReceivedAmount(deps, incomingPayment, BigInt(0))
 }
 
 // Fetch (and lock) an incoming payment for work.
@@ -285,9 +268,12 @@ async function getPaymentPointerPage(
         assetScale: payment.asset.scale
       }
     } catch (_) {
-      deps.logger.error({ payment: payment.id }, 'account not found')
+      deps.logger.error(
+        { payment: payment.id },
+        'incoming payment account not found'
+      )
       throw new Error(
-        `Underlying TB account not found, payment id: ${payment.id}`
+        `Underlying TB account not found, incoming payment id: ${payment.id}`
       )
     }
     return payment
@@ -325,18 +311,13 @@ async function addReceivedAmount(
   value?: bigint
 ): Promise<IncomingPayment> {
   const received =
-    value || (await deps.accountingService.getTotalReceived(payment.id))
-  if (received !== undefined) {
-    payment.receivedAmount = {
-      value: received,
-      assetCode: payment.asset.code,
-      assetScale: payment.asset.scale
-    }
-  } else {
-    deps.logger.error({ incomingPayment: payment.id }, 'account not found')
-    throw new Error(
-      `Underlying TB account not found, payment id: ${payment.id}`
-    )
+    value ?? (await deps.accountingService.getTotalReceived(payment.id))
+
+  payment.receivedAmount = {
+    value: received || BigInt(0),
+    assetCode: payment.asset.code,
+    assetScale: payment.asset.scale
   }
+
   return payment
 }

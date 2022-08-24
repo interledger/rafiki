@@ -1,4 +1,3 @@
-import assert from 'assert'
 import jestOpenAPI from 'jest-openapi'
 import * as httpMocks from 'node-mocks-http'
 import { Knex } from 'knex'
@@ -18,12 +17,10 @@ import {
 import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { CreateOutgoingPaymentOptions } from './service'
-import { isOutgoingPaymentError } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { AccountingService } from '../../../accounting/service'
 import { listTests } from '../../../shared/routes.test'
 
 describe('Outgoing Payment Routes', (): void => {
@@ -34,7 +31,6 @@ describe('Outgoing Payment Routes', (): void => {
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let paymentPointerId: string
   let paymentPointerUrl: string
-  let accountingService: AccountingService
 
   const receivingPaymentPointer = `https://wallet.example/${uuid()}`
   const asset = randomAsset()
@@ -64,7 +60,6 @@ describe('Outgoing Payment Routes', (): void => {
     knex = await deps.use('knex')
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
-    accountingService = await deps.use('accountingService')
     jestOpenAPI(await deps.use('openApi'))
   })
 
@@ -97,30 +92,6 @@ describe('Outgoing Payment Routes', (): void => {
         'status',
         404
       )
-    })
-
-    test('returns 500 if TB account not found', async (): Promise<void> => {
-      const outgoingPayment = await createPayment({
-        paymentPointerId
-      })
-      assert.ok(!isOutgoingPaymentError(outgoingPayment))
-      jest
-        .spyOn(accountingService, 'getTotalSent')
-        .mockResolvedValueOnce(undefined)
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        {
-          outgoingPaymentId: outgoingPayment.id,
-          // paymentPointerId
-          accountId: paymentPointerId
-        }
-      )
-      await expect(outgoingPaymentRoutes.get(ctx)).rejects.toMatchObject({
-        status: 500,
-        message: `Error trying to get outgoing payment`
-      })
     })
 
     test.each`

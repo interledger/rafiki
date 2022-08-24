@@ -80,24 +80,6 @@ describe('Incoming Payment Service', (): void => {
       expect(retrievedIncomingPayment).toEqual(incomingPayment)
     })
 
-    test('Creating an incoming payment creates a liquidity account', async (): Promise<void> => {
-      const incomingPayment = await incomingPaymentService.create({
-        paymentPointerId,
-        description: 'IncomingPayment',
-        expiresAt: new Date(Date.now() + 30_000),
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        externalRef: '#123'
-      })
-      assert.ok(!isIncomingPaymentError(incomingPayment))
-      await expect(
-        accountingService.getBalance(incomingPayment.id)
-      ).resolves.toEqual(BigInt(0))
-    })
-
     test('Cannot create incoming payment for nonexistent payment pointer', async (): Promise<void> => {
       await expect(
         incomingPaymentService.create({
@@ -190,30 +172,6 @@ describe('Incoming Payment Service', (): void => {
 
     test('Cannot fetch a bogus incoming payment', async (): Promise<void> => {
       await expect(incomingPaymentService.get(uuid())).resolves.toBeUndefined()
-    })
-
-    test('throws if no TB account found', async (): Promise<void> => {
-      const incomingPaymentOrError = await incomingPaymentService.create({
-        paymentPointerId,
-        description: 'Test incoming payment',
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        expiresAt: new Date(Date.now() + 30_000),
-        externalRef: '#123'
-      })
-      assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
-
-      jest
-        .spyOn(accountingService, 'getTotalReceived')
-        .mockResolvedValueOnce(undefined)
-      await expect(
-        incomingPaymentService.get(incomingPaymentOrError.id)
-      ).rejects.toThrowError(
-        `Underlying TB account not found, payment id: ${incomingPaymentOrError.id}`
-      )
     })
   })
 
@@ -486,7 +444,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.getPaymentPointerPage(paymentPointerId, {})
       ).rejects.toThrowError(
-        `Underlying TB account not found, payment id: ${payment.id}`
+        `Underlying TB account not found, incoming payment id: ${payment.id}`
       )
     })
   })
@@ -495,7 +453,7 @@ describe('Incoming Payment Service', (): void => {
     let incomingPayment: IncomingPayment
 
     beforeEach(async (): Promise<void> => {
-      const incomingPaymentOrError = await incomingPaymentService.create({
+      incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId,
         description: 'Test incoming payment',
         incomingAmount: {
@@ -506,8 +464,6 @@ describe('Incoming Payment Service', (): void => {
         expiresAt: new Date(Date.now() + 30_000),
         externalRef: '#123'
       })
-      assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
-      incomingPayment = incomingPaymentOrError
     })
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
       const now = new Date()

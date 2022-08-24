@@ -6,7 +6,7 @@ import { AccountId } from './utils'
 
 export class CreateAccountError extends Error {
   constructor(public code: number) {
-    super()
+    super('CreateAccountError code=' + code)
     this.name = 'CreateAccountError'
   }
 }

@@ -13,5 +13,9 @@ export async function createIncomingPayment(
   const incomingPaymentService = await deps.use('incomingPaymentService')
   const incomingPaymentOrError = await incomingPaymentService.create(options)
   assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
+
+  const accountingService = await deps.use('accountingService')
+  await accountingService.createLiquidityAccount(incomingPaymentOrError)
+
   return incomingPaymentOrError
 }

@@ -8,6 +8,10 @@ import {
 import { AuthState } from './auth'
 import { validateId } from '../../../shared/utils'
 import { IncomingPaymentState } from '../../../open_payments/payment/incoming/model'
+import {
+  areAllAccountExistsErrors,
+  CreateAccountError
+} from '../../../accounting/errors'
 
 const UUID_LENGTH = 36
 
@@ -34,6 +38,27 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           ) {
             throw new Errors.UnreachableError('destination account is disabled')
           }
+
+          // Create the tigerbeetle account if not exists.
+          // The incoming payment state will be PENDING until payments are received.
+          if (incomingPayment.state === IncomingPaymentState.Pending) {
+            try {
+              await ctx.services.accounting.createLiquidityAccount(
+                incomingAccount
+              )
+            } catch (err) {
+              // Don't complain if liquidity account already exists.
+              if (
+                err instanceof CreateAccountError &&
+                areAllAccountExistsErrors([err.code])
+              ) {
+                // Do nothing.
+              } else {
+                throw err
+              }
+            }
+          }
+
           return incomingPayment
         }
         // Open Payments SPSP fallback account

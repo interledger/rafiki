@@ -6,8 +6,8 @@ import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import {
   FundingError,
-  OutgoingPaymentError,
-  isOutgoingPaymentError
+  isOutgoingPaymentError,
+  OutgoingPaymentError
 } from './errors'
 import {
   OutgoingPayment,
@@ -15,12 +15,16 @@ import {
   OutgoingPaymentState,
   PaymentEventType
 } from './model'
-import { AccountingService, AccountTypeCode } from '../../../accounting/service'
+import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
+import {
+  areAllAccountExistsErrors,
+  CreateAccountError
+} from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
 
@@ -162,14 +166,6 @@ async function createOutgoingPayment(
         })
       }
 
-      // TODO: move to fundPayment
-      await deps.accountingService.createLiquidityAccount(
-        {
-          id: payment.id,
-          asset: payment.asset
-        },
-        AccountTypeCode.LiquidityOutgoing
-      )
       await sendWebhookEvent(
         {
           ...deps,
@@ -349,6 +345,25 @@ async function fundPayment(
       return FundingError.WrongState
     }
     if (amount !== payment.sendAmount.value) return FundingError.InvalidAmount
+
+    // Create the outgoing payment liquidity account before trying to transfer funds to it.
+    try {
+      await deps.accountingService.createLiquidityAccount({
+        id: id,
+        asset: payment.asset
+      })
+    } catch (err) {
+      // Don't complain if liquidity account already exists.
+      if (
+        err instanceof CreateAccountError &&
+        areAllAccountExistsErrors([err.code])
+      ) {
+        // Do nothing.
+      } else {
+        throw err
+      }
+    }
+
     const error = await deps.accountingService.createDeposit({
       id: transferId,
       account: payment,
@@ -380,15 +395,23 @@ async function getPaymentPointerPage(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: OutgoingPayment, i: number) => {
     try {
+      assert.ok(
+        amounts[i] !== undefined ||
+          payment.state === OutgoingPaymentState.Funding
+      )
       payment.sentAmount = {
-        value: BigInt(amounts[i]),
+        value: amounts[i] ?? BigInt(0),
         assetCode: payment.asset.code,
         assetScale: payment.asset.scale
       }
-    } catch (_) {
-      deps.logger.error({ payment: payment.id }, 'account not found')
+    } catch (err) {
+      deps.logger.error(
+        { payment: payment.id },
+        'outgoing account not found',
+        err
+      )
       throw new Error(
-        `Underlying TB account not found, payment id: ${payment.id}`
+        `Underlying TB account not found, outgoing payment id: ${payment.id}`
       )
     }
     return payment
@@ -400,18 +423,26 @@ async function addSentAmount(
   payment: OutgoingPayment,
   value?: bigint
 ): Promise<OutgoingPayment> {
-  const received =
-    value || (await deps.accountingService.getTotalSent(payment.id))
-  if (received !== undefined) {
+  const fundingZeroOrUndefined =
+    payment.state === OutgoingPaymentState.Funding ? BigInt(0) : undefined
+  let sent = value || (await deps.accountingService.getTotalSent(payment.id))
+  if (sent === undefined) {
+    sent = fundingZeroOrUndefined
+  }
+
+  if (sent !== undefined) {
     payment.sentAmount = {
-      value: received,
+      value: sent,
       assetCode: payment.asset.code,
       assetScale: payment.asset.scale
     }
   } else {
-    deps.logger.error({ outgoingPayment: payment.id }, 'account not found')
+    deps.logger.error(
+      { outgoingPayment: payment.id, state: payment.state, sent: sent },
+      'account not found for addSentAmount'
+    )
     throw new Error(
-      `Underlying TB account not found, payment id: ${payment.id}`
+      `Underlying TB account not found, outgoing payment id: ${payment.id}`
     )
   }
   return payment

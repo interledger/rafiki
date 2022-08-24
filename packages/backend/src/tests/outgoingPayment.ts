@@ -36,5 +36,9 @@ export async function createOutgoingPayment(
     quoteId: quote.id
   })
   assert.ok(!isOutgoingPaymentError(outgoingPaymentOrError))
+
+  const accountingService = await deps.use('accountingService')
+  await accountingService.createLiquidityAccount(outgoingPaymentOrError)
+
   return outgoingPaymentOrError
 }
