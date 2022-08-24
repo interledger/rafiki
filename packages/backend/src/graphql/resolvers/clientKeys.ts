@@ -74,7 +74,7 @@ export const addKeyToClient: MutationResolvers<ApolloContext>['addKeyToClient'] 
 export const clientToGraphql = (client: Client): SchemaClient => ({
   id: client.id,
   name: client.name,
-  uri: client.name,
+  uri: client.uri,
   email: client.email,
   image: client.image,
   keys:
