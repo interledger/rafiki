@@ -29,14 +29,13 @@ async function setupFromSeed(config: SeedInstance): Promise<void> {
   console.log(JSON.stringify(peerResponses, null, 2))
   const accountResponses = await Promise.all(
     _.map(config.accounts, async (account: Account) => {
-      const createAccountResponse = await createAccount(
+      return createAccount(
         config.self.graphqlUrl,
         account.name,
         account.url,
         account.asset,
         account.scale
       )
-      return createAccountResponse
     })
   )
   console.log(JSON.stringify(accountResponses, null, 2))

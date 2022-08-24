@@ -1,5 +1,3 @@
-import fetch from 'node-fetch'
-import * as _ from 'lodash'
 import { gql } from '@apollo/client'
 import type {
   CreatePeerMutationResponse,
@@ -19,46 +17,6 @@ export interface GraphqlResponseElement {
   data: {
     [key: string]: { code: string }
   }
-}
-
-function testGraphqlElementSuccess(el: GraphqlResponseElement) {
-  _.each(el.data, (v, k) => {
-    if (v.code !== '200') {
-      throw new Error(
-        `graphql response for ${k} contained non-200 code: \n${JSON.stringify(
-          el,
-          null,
-          2
-        )}`
-      )
-    }
-  })
-}
-
-export async function graphqlQuery(options: GraphqlQueryConfig) {
-  return await fetch(options.resource, {
-    method: options.method,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ query: options.query, variables: options.variables })
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(
-          `response not ok: ${response.status} ${response.statusText}`
-        )
-      }
-      return response.json()
-    })
-    .then((response: GraphqlResponseElement) => {
-      testGraphqlElementSuccess(response as GraphqlResponseElement)
-      return response
-    })
-    .catch((e) => {
-      console.log(e)
-      throw e
-    })
 }
 
 export async function createPeer(
