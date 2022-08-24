@@ -1,7 +1,11 @@
 import fetch from 'node-fetch'
 import * as _ from 'lodash'
 import { gql } from '@apollo/client'
-import type { CreatePeerMutationResponse } from '../generated/graphql'
+import type {
+  CreatePeerMutationResponse,
+  LiquidityMutationResponse,
+  CreatePaymentPointerMutationResponse
+} from '../generated/graphql'
 import { apolloClient } from './apolloClient'
 
 export interface GraphqlQueryConfig {
@@ -112,17 +116,17 @@ export async function addPeerLiquidity(
   peerId: string,
   amount: string,
   transferUid: string
-): Promise<PeerLiquidityResponse> {
-  const addPeerLiquidityQuery = `
-	mutation AddPeerLiquidity ($input: AddPeerLiquidityInput!) {
-		addPeerLiquidity(input: $input) {
-			code
-			success
-			message
-			error
-		}
-	}
-	`
+): Promise<LiquidityMutationResponse> {
+  const addPeerLiquidityMutation = gql`
+    mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
+      addPeerLiquidity(input: $input) {
+        code
+        success
+        message
+        error
+      }
+    }
+  `
   const addPeerLiquidityInput = {
     input: {
       peerId: peerId,
@@ -130,55 +134,61 @@ export async function addPeerLiquidity(
       id: transferUid
     }
   }
-  return (await graphqlQuery({
-    resource: backendUrl,
-    method: 'post',
-    query: addPeerLiquidityQuery,
-    variables: addPeerLiquidityInput
-  })) as PeerLiquidityResponse
-}
-
-export interface PeerLiquidityResponse {
-  data: {
-    addPeerLiquidity: {
-      code: string
-      success: boolean
-      message: string
-      error: null | string
-    }
-  }
+  return apolloClient
+    .mutate({
+      mutation: addPeerLiquidityMutation,
+      variables: addPeerLiquidityInput
+    })
+    .then(({ data }): LiquidityMutationResponse => {
+      console.log(data)
+      if (!data.addPeerLiquidity.success) {
+        throw new Error('Data was empty')
+      }
+      return data.addPeerLiquidity
+    })
 }
 
 export async function createAccount(
   backendUrl: string,
   accountName: string,
+  accountUrl: string,
   assetCode: string,
-  assetScale: string
-): Promise<PeerLiquidityResponse> {
-  const createAccountQuery = `
-	mutation CreateAccount ($input: CreateAccountInput!) {
-		createAccount(input: $input) {
-			code
-			success
-			message
-			account
-      error
-		}
-	}
-	`
-  const createAccountInput = {
+  assetScale: number
+): Promise<CreatePaymentPointerMutationResponse> {
+  const createPaymentPointerMutation = gql`
+    mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
+      createPaymentPointer(input: $input) {
+        code
+        success
+        message
+        paymentPointer {
+          id
+          url
+          publicName
+        }
+      }
+    }
+  `
+  const createPaymentPointerInput = {
     input: {
       asset: {
         code: assetCode,
         scale: assetScale
       },
+      url: accountUrl,
       publicName: accountName
     }
   }
-  return (await graphqlQuery({
-    resource: backendUrl,
-    method: 'post',
-    query: createAccountQuery,
-    variables: createAccountInput
-  })) as PeerLiquidityResponse
+  return apolloClient
+    .mutate({
+      mutation: createPaymentPointerMutation,
+      variables: createPaymentPointerInput
+    })
+    .then(({ data }): CreatePaymentPointerMutationResponse => {
+      console.log(data)
+      if (!data.createPaymentPointer.success) {
+        throw new Error('Data was empty')
+      }
+      return data.createPaymentPointer
+    })
 }

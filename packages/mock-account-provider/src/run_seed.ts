@@ -32,8 +32,9 @@ async function setupFromSeed(config: SeedInstance): Promise<void> {
       const createAccountResponse = await createAccount(
         config.self.graphqlUrl,
         account.name,
+        account.url,
         account.asset,
-        account.scale.toString()
+        account.scale
       )
       return createAccountResponse
     })

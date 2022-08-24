@@ -21,6 +21,7 @@ export interface Account {
   asset: string
   scale: number
   initialBalance: string
+  url: string
 }
 
 export interface SeedInstance {
