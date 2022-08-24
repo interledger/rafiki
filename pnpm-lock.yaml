@@ -276,12 +276,14 @@ importers:
       '@types/node-fetch': ^2.6.2
       '@types/react': ^18.0.15
       '@types/react-dom': ^18.0.6
+      '@types/uuid': ^8.3.4
       eslint: ^8.20.0
       lodash: ^4.17.21
       node-fetch: ^2.0.0
       react: ^18.2.0
       react-dom: ^18.2.0
       typescript: ^4.7.4
+      uuid: ^8.3.2
       yaml: ^2.1.1
     dependencies:
       '@remix-run/node': 1.6.8_biqbaboplfbrettd7655fr4n2y
@@ -289,10 +291,12 @@ importers:
       '@remix-run/serve': 1.6.8_biqbaboplfbrettd7655fr4n2y
       '@types/node': 18.7.12
       '@types/node-fetch': 2.6.2
+      '@types/uuid': 8.3.4
       lodash: 4.17.21
       node-fetch: 2.6.7
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      uuid: 8.3.2
       yaml: 2.1.1
     devDependencies:
       '@remix-run/dev': 1.6.8_cgxlqhaetfbjollwaaytbbpdmu
@@ -4657,7 +4661,6 @@ packages:
 
   /@types/uuid/8.3.4:
     resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
-    dev: true
 
   /@types/websocket/1.0.2:
     resolution: {integrity: sha512-B5m9aq7cbbD/5/jThEr33nUY8WEfVi6A2YKCTOvw5Ldy7mtsOkqRvGjnzy6g7iMMDsgu7xREuCzqATLDLQVKcQ==}

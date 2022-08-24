@@ -8,8 +8,36 @@ export interface GraphqlQueryConfig {
   variables: object
 }
 
+export interface GraphqlResponseElement {
+  data: [{ code: string }]
+}
+
+export interface GraphqlResponseArray {
+  [index: number]: GraphqlResponseElement
+}
+
+function testGraphqlElementSuccess(el: GraphqlResponseElement) {
+  _.each(el.data, (v, k) => {
+    if (v.code !== '200') {
+      throw new Error(
+        `graphql response for ${k} contained non-200 code: \n${JSON.stringify(
+          el,
+          null,
+          2
+        )}`
+      )
+    }
+  })
+}
+
+function isGraphqlArray(a: GraphqlResponseElement | GraphqlResponseArray) {
+  if (_.isArray(a)) {
+    return a as GraphqlResponseArray
+  }
+  return a as GraphqlResponseElement
+}
+
 export async function graphqlQuery(options: GraphqlQueryConfig) {
-  console.log(options.resource)
   return await fetch(options.resource, {
     method: options.method,
     headers: {
@@ -25,19 +53,13 @@ export async function graphqlQuery(options: GraphqlQueryConfig) {
       }
       return response.json()
     })
-    .then((data: { data: [{ code: string }] }) => {
-      _.each(data.data, (v, k) => {
-        if (v.code !== '200') {
-          throw new Error(
-            `graphql response for ${k} contained non-200 code: \n${JSON.stringify(
-              data,
-              null,
-              2
-            )}`
-          )
-        }
-      })
-      return data
+    .then((response: GraphqlResponseElement | GraphqlResponseArray) => {
+      if (isGraphqlArray(response)) {
+        _.each(response, testGraphqlElementSuccess)
+      } else {
+        testGraphqlElementSuccess(response as GraphqlResponseElement)
+      }
+      return response
     })
     .catch((e) => {
       console.log(e)
@@ -82,10 +104,60 @@ export async function createPeer(
       }
     }
   }
-  return graphqlQuery({
+  return (await graphqlQuery({
     resource: backendUrl,
     method: 'post',
     query: createPeerQuery,
     variables: createPeerInput
+  })) as unknown as [PeerResponseElement]
+}
+
+export interface PeerResponseElement {
+  data: {
+    createPeer: {
+      code: string
+      success: boolean
+      message: 'string'
+      peer: {
+        id: string
+        asset: {
+          code: string
+          scale: number
+        }
+        staticIlpAddress: string
+      }
+    }
+  }
+}
+
+export async function addPeerLiquidity(
+  backendUrl: string,
+  peerId: string,
+  outgoingEndpoint: string,
+  assetCode: string,
+  assetScale: number
+): Promise<object> {
+  const addPeerLiquidityQuery = `
+	mutation AddPeerLiquidity ($input: AddPeerLiquidityInput!) {
+		addPeerLiquidity(input: $input) {
+			code
+			success
+			message
+			error
+		}
+	}
+	`
+  const addPeerLiquidityInput = {
+    input: {
+      peerId: 'INSERT_PEER_ID',
+      amount: '10000',
+      id: 'a09b730d-8610-4fda-98fa-ec7acb19c775'
+    }
+  }
+  return graphqlQuery({
+    resource: backendUrl,
+    method: 'post',
+    query: addPeerLiquidityQuery,
+    variables: addPeerLiquidityInput
   })
 }
