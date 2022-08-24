@@ -248,7 +248,7 @@ async function continueGrant(
   ctx: AppContext
 ): Promise<void> {
   // TODO: httpsig validation
-  const { continueId } = ctx.params
+  const { id: continueId } = ctx.params
   const continueToken = (ctx.headers['authorization'] as string)?.split(
     'GNAP '
   )[1]

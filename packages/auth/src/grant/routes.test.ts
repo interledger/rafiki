@@ -960,7 +960,7 @@ describe('Grant Routes', (): void => {
           method: 'POST'
         },
         {
-          continueId: grant.continueId
+          id: grant.continueId
         }
       )
 
@@ -1005,7 +1005,7 @@ describe('Grant Routes', (): void => {
           }
         },
         {
-          continueId: v4()
+          id: v4()
         }
       )
 
@@ -1035,7 +1035,7 @@ describe('Grant Routes', (): void => {
           }
         },
         {
-          continueId: grant.continueId
+          id: grant.continueId
         }
       )
 
@@ -1060,7 +1060,7 @@ describe('Grant Routes', (): void => {
           }
         },
         {
-          continueId: grant.continueId
+          id: grant.continueId
         }
       )
 
@@ -1082,7 +1082,7 @@ describe('Grant Routes', (): void => {
           }
         },
         {
-          continueId: grant.continueId
+          id: grant.continueId
         }
       )
 
