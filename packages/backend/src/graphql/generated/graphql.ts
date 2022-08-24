@@ -659,6 +659,7 @@ export type Query = {
   peers: PeersConnection;
   quote?: Maybe<Quote>;
   outgoingPayment?: Maybe<OutgoingPayment>;
+  client?: Maybe<Client>;
 };
 
 
@@ -699,6 +700,11 @@ export type QueryQuoteArgs = {
 
 
 export type QueryOutgoingPaymentArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryClientArgs = {
   id: Scalars['String'];
 };
 
@@ -1374,6 +1380,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, RequireFields<QueryPeersArgs, never>>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id'>>;
   outgoingPayment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType, RequireFields<QueryOutgoingPaymentArgs, 'id'>>;
+  client?: Resolver<Maybe<ResolversTypes['Client']>, ParentType, ContextType, RequireFields<QueryClientArgs, 'id'>>;
 };
 
 export type QuoteResolvers<ContextType = any, ParentType extends ResolversParentTypes['Quote'] = ResolversParentTypes['Quote']> = {
