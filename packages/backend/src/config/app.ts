@@ -143,11 +143,3 @@ export function parsePort(host: string): number {
     return 0
   }
 }
-
-export function parseHostname(host: string): string {
-  const hostname = host.split(':')[0]
-  if (!hostname) {
-    return ''
-  }
-  return hostname
-}
