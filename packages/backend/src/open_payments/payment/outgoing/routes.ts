@@ -129,8 +129,8 @@ function outgoingPaymentToBody(
     Object.entries({
       ...outgoingPayment.toJSON(),
       // paymentPointer: `${deps.config.publicHost}/${outgoingPayment.paymentPointerId}`,
-      accountId: `${deps.config.openPaymentsHost}/${outgoingPayment.paymentPointerId}`,
-      id: `${deps.config.openPaymentsHost}/${outgoingPayment.paymentPointerId}/outgoing-payments/${outgoingPayment.id}`,
+      accountId: `${deps.config.openPaymentsHostname}/${outgoingPayment.paymentPointerId}`,
+      id: `${deps.config.openPaymentsHostname}/${outgoingPayment.paymentPointerId}/outgoing-payments/${outgoingPayment.id}`,
       state: null,
       failed: outgoingPayment.state === OutgoingPaymentState.Failed
     }).filter(([_, v]) => v != null)

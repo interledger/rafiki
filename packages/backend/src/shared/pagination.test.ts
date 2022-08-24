@@ -33,7 +33,7 @@ describe('Pagination', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.openPaymentsHost = 'https://wallet.example'
+    config.openPaymentsHostname = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')

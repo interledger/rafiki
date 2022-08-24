@@ -55,7 +55,7 @@ describe('Quote Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.openPaymentsHost = 'https://wallet.example'
+    config.openPaymentsHostname = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -74,7 +74,7 @@ describe('Quote Routes', (): void => {
     })
     paymentPointerId = paymentPointer.id
     // paymentPointerUrl = paymentPointer.url
-    paymentPointerUrl = `${config.openPaymentsHost}/${paymentPointerId}`
+    paymentPointerUrl = `${config.openPaymentsHostname}/${paymentPointerId}`
   })
 
   afterEach(async (): Promise<void> => {

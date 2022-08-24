@@ -58,7 +58,7 @@ describe('Incoming Payment Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.openPaymentsHost = 'https://wallet.example'
+    config.openPaymentsHostname = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -171,7 +171,7 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         ilpStreamConnection: {
-          id: `${config.openPaymentsHost}/connections/${incomingPayment.connectionId}`,
+          id: `${config.openPaymentsHostname}/connections/${incomingPayment.connectionId}`,
           ilpAddress: expect.stringMatching(
             /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
           ),
@@ -275,7 +275,7 @@ describe('Incoming Payment Routes', (): void => {
           externalRef,
           completed: false,
           ilpStreamConnection: {
-            id: `${config.openPaymentsHost}/connections/${connectionId}`,
+            id: `${config.openPaymentsHostname}/connections/${connectionId}`,
             ilpAddress: expect.stringMatching(
               /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
             ),
@@ -331,7 +331,7 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         completed: true,
-        ilpStreamConnection: `${config.openPaymentsHost}/connections/${incomingPayment.connectionId}`
+        ilpStreamConnection: `${config.openPaymentsHostname}/connections/${incomingPayment.connectionId}`
       })
     })
   })
@@ -360,7 +360,7 @@ describe('Incoming Payment Routes', (): void => {
           expiresAt: expiresAt.toISOString(),
           createdAt: payment.createdAt.toISOString(),
           updatedAt: payment.updatedAt.toISOString(),
-          ilpStreamConnection: `${config.openPaymentsHost}/connections/${payment.connectionId}`
+          ilpStreamConnection: `${config.openPaymentsHostname}/connections/${payment.connectionId}`
         }
       },
       list: (ctx: ListContext) => incomingPaymentRoutes.list(ctx)

@@ -22,7 +22,7 @@ describe('Payment Pointer Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.openPaymentsHost = 'https://wallet.example'
+    config.openPaymentsHostname = 'https://wallet.example'
     config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)

@@ -38,7 +38,7 @@ async function getConnection(
 
   const streamCredentials = deps.connectionService.get(incomingPayment)
   ctx.body = {
-    id: `${deps.config.openPaymentsHost}/connections/${id}`,
+    id: `${deps.config.openPaymentsHostname}/connections/${id}`,
     ilpAddress: streamCredentials.ilpAddress,
     sharedSecret: base64url(streamCredentials.sharedSecret)
   }

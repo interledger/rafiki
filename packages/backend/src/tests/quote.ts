@@ -34,8 +34,10 @@ export async function createQuote(
   const config = await deps.use('config')
   let receiveAsset: AssetOptions | undefined
   if (validDestination) {
-    assert.ok(receiver.startsWith(config.openPaymentsHost))
-    const path = receiver.slice(config.openPaymentsHost.length + 1).split('/')
+    assert.ok(receiver.startsWith(config.openPaymentsHostname))
+    const path = receiver
+      .slice(config.openPaymentsHostname.length + 1)
+      .split('/')
     assert.ok(path.length === 3)
     const incomingPaymentService = await deps.use('incomingPaymentService')
     const incomingPayment = await incomingPaymentService.get(path[2])

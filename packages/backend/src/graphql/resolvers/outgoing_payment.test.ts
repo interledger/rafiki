@@ -64,7 +64,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   }): Promise<OutgoingPaymentModel> => {
     return await createOutgoingPayment(deps, {
       ...options,
-      receiver: `${Config.openPaymentsHost}/${uuid()}`,
+      receiver: `${Config.openPaymentsHostname}/${uuid()}`,
       sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,

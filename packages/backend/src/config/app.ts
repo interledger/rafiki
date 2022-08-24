@@ -28,10 +28,10 @@ export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
 
   // adminHost is for the admin API.
-  adminHost: parseHostname(envString('ADMIN_HOST', '127.0.0.1:3001')),
+  adminHostname: parseHostname(envString('ADMIN_HOST', '127.0.0.1:3001')),
   adminPort: parsePort(envString('ADMIN_HOST', '127.0.0.1:3001')),
 
-  openPaymentsHost: parseHostname(
+  openPaymentsHostname: parseHostname(
     envString('OPEN_PAYMENTS_HOST', '127.0.0.1:3003')
   ),
   openPaymentsPort: parsePort(

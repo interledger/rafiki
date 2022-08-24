@@ -183,15 +183,15 @@ function incomingPaymentToBody(
     Object.entries({
       ...incomingPayment.toJSON(),
       // paymentPointer: `${deps.config.publicHost}/${incomingPayment.paymentPointerId}`,
-      accountId: `${deps.config.openPaymentsHost}/${incomingPayment.paymentPointerId}`,
-      id: `${deps.config.openPaymentsHost}/${incomingPayment.paymentPointerId}/incoming-payments/${incomingPayment.id}`,
+      accountId: `${deps.config.openPaymentsHostname}/${incomingPayment.paymentPointerId}`,
+      id: `${deps.config.openPaymentsHostname}/${incomingPayment.paymentPointerId}/incoming-payments/${incomingPayment.id}`,
       ilpStreamConnection: streamCredentials
         ? {
-            id: `${deps.config.openPaymentsHost}/connections/${incomingPayment.connectionId}`,
+            id: `${deps.config.openPaymentsHostname}/connections/${incomingPayment.connectionId}`,
             ilpAddress: streamCredentials.ilpAddress,
             sharedSecret: base64url(streamCredentials.sharedSecret)
           }
-        : `${deps.config.openPaymentsHost}/connections/${incomingPayment.connectionId}`,
+        : `${deps.config.openPaymentsHostname}/connections/${incomingPayment.connectionId}`,
       state: null,
       completed: incomingPayment.state === IncomingPaymentState.Completed
     }).filter(([_, v]) => v != null)
