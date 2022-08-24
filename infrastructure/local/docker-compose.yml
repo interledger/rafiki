@@ -48,7 +48,7 @@ services:
       ADMIN_HOST: rafiki.test:80
       OPEN_PAYMENTS_HOST: wallet.rafiki.test:3003
       CONNECTOR_HOST: ilp.rafiki.test:3002
-      WEBHOOK_URL: https://end3sf6r22xva.x.pipedream.net
+      WEBHOOK_URL: http://mock-account-provider/webhooks
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
       PRICES_URL: http://rates/prices
