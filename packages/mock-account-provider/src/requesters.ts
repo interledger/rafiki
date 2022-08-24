@@ -117,7 +117,7 @@ export interface PeerResponseElement {
     createPeer: {
       code: string
       success: boolean
-      message: 'string'
+      message: string
       peer: {
         id: string
         asset: {
