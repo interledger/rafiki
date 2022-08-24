@@ -1,33 +1,63 @@
 import crypto from 'crypto'
-import { importJWK } from 'jose'
-import { KID_ORIGIN, KID_PATH } from '../grant/routes.test'
+import { v4 } from 'uuid'
+import { JWK, importJWK, exportJWK } from 'jose'
+import { KID_ORIGIN } from '../grant/routes.test'
 
 export const SIGNATURE_METHOD = 'GET'
 export const SIGNATURE_TARGET_URI = '/test'
 
-export const TEST_CLIENT_KEY = {
-  proof: 'httpsig',
-  jwk: {
-    kid: KID_ORIGIN + KID_PATH,
-    x: 'hin88zzQxp79OOqIFNCME26wMiz0yqjzgkcBe0MW8pE',
-    kty: 'OKP',
-    alg: 'EdDSA',
-    crv: 'Ed25519',
-    key_ops: ['sign', 'verify'],
-    use: 'sig'
+const TEST_CLIENT_DISPLAY = {
+  name: 'Test Client',
+  uri: 'https://example.com'
+}
+
+// TODO: refactor any oustanding key-using tests to generate them from here
+const BASE_TEST_KEY = {
+  kty: 'OKP',
+  alg: 'EdDSA',
+  crv: 'Ed25519',
+  key_ops: ['sign', 'verify'],
+  use: 'sig',
+  client: {
+    id: v4(),
+    name: TEST_CLIENT_DISPLAY.name,
+    email: 'bob@bob.com',
+    image: 'a link to an image',
+    uri: TEST_CLIENT_DISPLAY.uri
+  }
+}
+
+export async function generateTestKeys(): Promise<{
+  keyId: string
+  publicKey: JWK
+  privateKey: JWK
+}> {
+  const { privateKey } = crypto.generateKeyPairSync('ed25519')
+
+  const { x, d } = await exportJWK(privateKey)
+  const keyId = v4()
+  return {
+    keyId,
+    publicKey: {
+      ...BASE_TEST_KEY,
+      kid: KID_ORIGIN + '/' + keyId,
+      x
+    },
+    privateKey: {
+      ...BASE_TEST_KEY,
+      kid: KID_ORIGIN + '/' + keyId,
+      x,
+      d
+    }
   }
 }
 
 export async function generateSigHeaders(
   url: string,
   method: string,
-  body?: unknown
+  body?: unknown,
+  privateKey: JWK
 ): Promise<{ sigInput: string; signature: string; contentDigest?: string }> {
-  const privateKey = {
-    ...TEST_CLIENT_KEY.jwk,
-    d: 'v6gr9N9Nf3AUyuTgU5pk7gyNULQnzNJCBNMPp5OkiqA'
-  }
-
   const sigInput = body
     ? 'sig1=("@method" "@target-uri" "content-digest");created=1618884473;keyid="gnap-key"'
     : 'sig1=("@method" "@target-uri");created=1618884473;keyid="gnap-key"'
