@@ -6,18 +6,20 @@ import { v4 } from 'uuid'
 
 async function setupFromSeed(config: SeedInstance): Promise<void> {
   const responses = await Promise.all(
-    _.map(config.peers, async (peer: Peering): Promise<Array<object>> => {
+    _.map(config.peers, async (peer: Peering) => {
       const peerResponse = await createPeer(
-        config.self.graphqlUrl,
         peer.peerIlpAddress,
         peer.peerUrl,
         peer.asset,
         peer.scale
-      )
+      ).then((response) => response.peer)
+      if (!peerResponse) {
+        throw new Error('peer response not defined')
+      }
       const transferUid = v4()
       const liquidity = await addPeerLiquidity(
         config.self.graphqlUrl,
-        peerResponse.data.createPeer.peer.id,
+        peerResponse.id,
         peer.initialLiquidity.toString(),
         transferUid
       )
