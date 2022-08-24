@@ -32,7 +32,7 @@ import {
 } from './liquidity'
 import { GraphQLBigInt } from '../scalars'
 import { refreshSession, revokeSession } from './session'
-import { addKeyToClient, createClient } from './clientKeys'
+import { addKeyToClient, createClient, getClient } from './clientKeys'
 
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
@@ -43,7 +43,8 @@ export const resolvers: Resolvers = {
     outgoingPayment: getOutgoingPayment,
     peer: getPeer,
     peers: getPeers,
-    quote: getQuote
+    quote: getQuote,
+    client: getClient
   },
   PaymentPointer: {
     incomingPayments: getPaymentPointerIncomingPayments,
