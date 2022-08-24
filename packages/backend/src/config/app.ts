@@ -28,7 +28,7 @@ export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
 
   // adminHost is for the admin API.
-  adminHost: envString('ADMIN_HOST', '127.0.0.1:3001'),
+  adminHost: envString('ADMIN_HOST', '127.0.0.1:80'),
   openPaymentsHost: envString('OPEN_PAYMENTS_HOST', '127.0.0.1:3003'),
   connectorPort: parsePort(envString('CONNECTOR_HOST', '127.0.0.1:3002')),
 
