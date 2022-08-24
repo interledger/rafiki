@@ -22,6 +22,7 @@ import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
+import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
 import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
 import { createAuthMiddleware } from './open_payments/auth/middleware'
@@ -55,6 +56,7 @@ export interface AppContextData {
   // Set by @koa/router.
   params: { [key: string]: string }
   grant?: Grant
+  paymentPointer?: PaymentPointer
 }
 
 export interface ApolloContext {
