@@ -89,7 +89,7 @@ export async function handleSending(
   const quote: Pay.Quote = {
     ...payment.quote,
     paymentType: Pay.PaymentType.FixedDelivery,
-    // Adjust quoted amounts to account for prior partial payment.
+    // Adjust quoted amounts to paymentPointer for prior partial payment.
     maxSourceAmount: newMaxSourceAmount,
     minDeliveryAmount: newMinDeliveryAmount,
     lowEstimatedExchangeRate,
@@ -179,7 +179,7 @@ const validateAssets = (
   payment: OutgoingPayment,
   destination: Pay.ResolvedPayment
 ): void => {
-  if (payment.assetId !== payment.account?.assetId) {
+  if (payment.assetId !== payment.paymentPointer?.assetId) {
     throw LifecycleError.SourceAssetConflict
   }
   if (payment.receiveAmount) {

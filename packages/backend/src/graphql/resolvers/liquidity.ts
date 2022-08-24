@@ -1,11 +1,11 @@
 import assert from 'assert'
-import { accountToGraphql } from './account'
+import { paymentPointerToGraphql } from './payment_pointer'
 import {
   ResolversTypes,
   MutationResolvers,
   LiquidityError,
   LiquidityMutationResponse,
-  AccountWithdrawalMutationResponse
+  PaymentPointerWithdrawalMutationResponse
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
@@ -199,33 +199,37 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     }
   }
 
-export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAccountWithdrawal'] =
+export const createPaymentPointerWithdrawal: MutationResolvers<ApolloContext>['createPaymentPointerWithdrawal'] =
   async (
     parent,
     args,
     ctx
-  ): Promise<ResolversTypes['AccountWithdrawalMutationResponse']> => {
+  ): Promise<ResolversTypes['PaymentPointerWithdrawalMutationResponse']> => {
     try {
-      const accountService = await ctx.container.use('accountService')
-      const account = await accountService.get(args.input.accountId)
-      if (!account) {
+      const paymentPointerService = await ctx.container.use(
+        'paymentPointerService'
+      )
+      const paymentPointer = await paymentPointerService.get(
+        args.input.paymentPointerId
+      )
+      if (!paymentPointer) {
         return responses[
-          LiquidityError.UnknownAccount
-        ] as unknown as AccountWithdrawalMutationResponse
+          LiquidityError.UnknownPaymentPointer
+        ] as unknown as PaymentPointerWithdrawalMutationResponse
       }
       const id = args.input.id
       const accountingService = await ctx.container.use('accountingService')
-      const amount = await accountingService.getBalance(account.id)
+      const amount = await accountingService.getBalance(paymentPointer.id)
       if (amount === undefined)
-        throw new Error('missing incoming payment account')
+        throw new Error('missing incoming payment payment pointer')
       if (amount === BigInt(0)) {
         return responses[
           LiquidityError.AmountZero
-        ] as unknown as AccountWithdrawalMutationResponse
+        ] as unknown as PaymentPointerWithdrawalMutationResponse
       }
       const error = await accountingService.createWithdrawal({
         id,
-        account: account,
+        account: paymentPointer,
         amount,
         timeout: BigInt(60e9) // 1 minute
       })
@@ -233,7 +237,7 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
       if (error) {
         return errorToResponse(
           error
-        ) as unknown as AccountWithdrawalMutationResponse
+        ) as unknown as PaymentPointerWithdrawalMutationResponse
       }
       return {
         code: '200',
@@ -242,7 +246,7 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
         withdrawal: {
           id,
           amount,
-          account: accountToGraphql(account)
+          paymentPointer: paymentPointerToGraphql(paymentPointer)
         }
       }
     } catch (error) {
@@ -251,11 +255,11 @@ export const createAccountWithdrawal: MutationResolvers<ApolloContext>['createAc
           input: args.input,
           error
         },
-        'error creating account withdrawal'
+        'error creating payment pointer withdrawal'
       )
       return {
         code: '500',
-        message: 'Error trying to create account withdrawal',
+        message: 'Error trying to create payment pointer withdrawal',
         success: false
       }
     }
@@ -448,11 +452,11 @@ const responses: {
     success: false,
     error: LiquidityError.TransferExists
   },
-  [LiquidityError.UnknownAccount]: {
+  [LiquidityError.UnknownPaymentPointer]: {
     code: '404',
-    message: 'Unknown account',
+    message: 'Unknown payment pointer',
     success: false,
-    error: LiquidityError.UnknownAccount
+    error: LiquidityError.UnknownPaymentPointer
   },
   [LiquidityError.UnknownAsset]: {
     code: '404',

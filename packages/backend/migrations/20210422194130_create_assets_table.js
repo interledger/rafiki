@@ -2,8 +2,8 @@ exports.up = function (knex) {
   return knex.schema.createTable('assets', function (table) {
     table.uuid('id').notNullable().primary()
 
-    // TigerBeetle account 2 byte unit field representing account's asset
-    table.specificType('unit', 'smallserial').notNullable()
+    // TigerBeetle account 2 byte ledger field representing account's asset
+    table.specificType('ledger', 'smallserial').notNullable()
     table.string('code').notNullable()
     table.integer('scale').notNullable()
 

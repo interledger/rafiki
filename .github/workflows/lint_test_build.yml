@@ -12,6 +12,7 @@ name: PR Checks
 jobs:
   checkout:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
@@ -21,6 +22,7 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     needs: checkout
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
@@ -31,22 +33,16 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     needs: checkout
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter frontend test
 
-  rates:
-    runs-on: ubuntu-latest
-    needs: checkout
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter rates test
-
   auth:
     runs-on: ubuntu-latest
     needs: checkout
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
@@ -56,6 +52,7 @@ jobs:
   openapi:
     runs-on: ubuntu-latest
     needs: checkout
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
@@ -63,10 +60,10 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs:
       - backend
       - frontend
-      - rates
       - auth
       - openapi
     steps:

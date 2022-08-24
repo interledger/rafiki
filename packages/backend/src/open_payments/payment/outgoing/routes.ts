@@ -74,7 +74,7 @@ async function createOutgoingPayment(
   }
 
   const paymentOrErr = await deps.outgoingPaymentService.create({
-    accountId: ctx.params.accountId,
+    paymentPointerId: ctx.params.accountId,
     quoteId,
     description: body.description,
     externalRef: body.externalRef,
@@ -94,16 +94,19 @@ async function listOutgoingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  const { accountId } = ctx.params
+  const { accountId: paymentPointerId } = ctx.params
   const pagination = parsePaginationQueryParameters(ctx.request.query)
   try {
-    const page = await deps.outgoingPaymentService.getAccountPage(
-      accountId,
+    const page = await deps.outgoingPaymentService.getPaymentPointerPage(
+      paymentPointerId,
       pagination
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        deps.outgoingPaymentService.getAccountPage(accountId, pagination),
+        deps.outgoingPaymentService.getPaymentPointerPage(
+          paymentPointerId,
+          pagination
+        ),
       page
     )
     const result = {
@@ -125,8 +128,9 @@ function outgoingPaymentToBody(
   return Object.fromEntries(
     Object.entries({
       ...outgoingPayment.toJSON(),
-      accountId: `${deps.config.openPaymentsHost}/${outgoingPayment.accountId}`,
-      id: `${deps.config.openPaymentsHost}/${outgoingPayment.accountId}/outgoing-payments/${outgoingPayment.id}`,
+      // paymentPointer: `${deps.config.publicHost}/${outgoingPayment.paymentPointerId}`,
+      accountId: `${deps.config.openPaymentsHost}/${outgoingPayment.paymentPointerId}`,
+      id: `${deps.config.openPaymentsHost}/${outgoingPayment.paymentPointerId}/outgoing-payments/${outgoingPayment.id}`,
       state: null,
       failed: outgoingPayment.state === OutgoingPaymentState.Failed
     }).filter(([_, v]) => v != null)

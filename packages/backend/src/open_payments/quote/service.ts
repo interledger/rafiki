@@ -9,7 +9,7 @@ import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
 import { Amount } from '../amount'
-import { AccountService } from '../account/service'
+import { PaymentPointerService } from '../payment_pointer/service'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
 
@@ -18,7 +18,10 @@ const MAX_INT64 = BigInt('9223372036854775807')
 export interface QuoteService {
   get(id: string): Promise<Quote | undefined>
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
-  getAccountPage(accountId: string, pagination?: Pagination): Promise<Quote[]>
+  getPaymentPointerPage(
+    paymentPointerId: string,
+    pagination?: Pagination
+  ): Promise<Quote[]>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -28,7 +31,7 @@ export interface ServiceDependencies extends BaseService {
   quoteLifespan: number // milliseconds
   signatureSecret?: string
   signatureVersion: number
-  accountService: AccountService
+  paymentPointerService: PaymentPointerService
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
 }
@@ -43,8 +46,8 @@ export async function createQuoteService(
   return {
     get: (id) => getQuote(deps, id),
     create: (options: CreateQuoteOptions) => createQuote(deps, options),
-    getAccountPage: (accountId, pagination) =>
-      getAccountPage(deps, accountId, pagination)
+    getPaymentPointerPage: (paymentPointerId, pagination) =>
+      getPaymentPointerPage(deps, paymentPointerId, pagination)
   }
 }
 
@@ -56,7 +59,7 @@ async function getQuote(
 }
 
 export interface CreateQuoteOptions {
-  accountId: string
+  paymentPointerId: string
   sendAmount?: Amount
   receiveAmount?: Amount
   receiver: string
@@ -69,15 +72,17 @@ async function createQuote(
   if (options.sendAmount && options.receiveAmount) {
     return QuoteError.InvalidAmount
   }
-  const account = await deps.accountService.get(options.accountId)
-  if (!account) {
-    return QuoteError.UnknownAccount
+  const paymentPointer = await deps.paymentPointerService.get(
+    options.paymentPointerId
+  )
+  if (!paymentPointer) {
+    return QuoteError.UnknownPaymentPointer
   }
   if (options.sendAmount) {
     if (
       options.sendAmount.value <= BigInt(0) ||
-      options.sendAmount.assetCode !== account.asset.code ||
-      options.sendAmount.assetScale !== account.asset.scale
+      options.sendAmount.assetCode !== paymentPointer.asset.code ||
+      options.sendAmount.assetScale !== paymentPointer.asset.scale
     ) {
       return QuoteError.InvalidAmount
     }
@@ -88,7 +93,7 @@ async function createQuote(
   }
 
   const plugin = deps.makeIlpPlugin({
-    sourceAccount: account,
+    sourceAccount: paymentPointer,
     unfulfillable: true
   })
 
@@ -107,8 +112,8 @@ async function createQuote(
       plugin,
       destination,
       sourceAsset: {
-        scale: account.asset.scale,
-        code: account.asset.code
+        scale: paymentPointer.asset.scale,
+        code: paymentPointer.asset.code
       }
     })
 
@@ -116,13 +121,13 @@ async function createQuote(
       assert.ok(destination.destinationPaymentDetails)
       const quote = await Quote.query(trx)
         .insertAndFetch({
-          accountId: options.accountId,
-          assetId: account.assetId,
+          paymentPointerId: options.paymentPointerId,
+          assetId: paymentPointer.assetId,
           receiver: options.receiver,
           sendAmount: {
             value: ilpQuote.maxSourceAmount,
-            assetCode: account.asset.code,
-            assetScale: account.asset.scale
+            assetCode: paymentPointer.asset.code,
+            assetScale: paymentPointer.asset.scale
           },
           receiveAmount: {
             value: ilpQuote.minDeliveryAmount,
@@ -351,15 +356,15 @@ export function generateQuoteSignature(
   return `t=${timestamp}, v${version}=${digest}`
 }
 
-async function getAccountPage(
+async function getPaymentPointerPage(
   deps: ServiceDependencies,
-  accountId: string,
+  paymentPointerId: string,
   pagination?: Pagination
 ): Promise<Quote[]> {
   return await Quote.query(deps.knex)
     .getPage(pagination)
     .where({
-      accountId
+      paymentPointerId
     })
     .withGraphFetched('asset')
 }

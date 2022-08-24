@@ -18,6 +18,14 @@ import { Access } from '../access/model'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_KID_PATH = '/keys/test-key'
+const TEST_JWK = {
+  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+  x: 'test-public-key',
+  kty: 'OKP',
+  alg: 'EdDSA',
+  crv: 'Ed25519',
+  use: 'sig'
+}
 const TEST_CLIENT_KEY = {
   client: {
     id: v4(),
@@ -26,13 +34,7 @@ const TEST_CLIENT_KEY = {
     image: 'a link to an image',
     uri: 'https://bob.com'
   },
-  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-  x: 'test-public-key',
-  kty: 'OKP',
-  alg: 'EdDSA',
-  crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
-  use: 'sig'
+  ...TEST_JWK
 }
 
 describe('Access Token Service', (): void => {
@@ -122,6 +124,10 @@ describe('Access Token Service', (): void => {
 
   describe('Introspect', (): void => {
     test('Can introspect active token', async (): Promise<void> => {
+      const clientId = crypto
+        .createHash('sha256')
+        .update(TEST_CLIENT_KEY.client.id)
+        .digest('hex')
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, TEST_CLIENT_KEY)
@@ -131,7 +137,8 @@ describe('Access Token Service', (): void => {
       expect(introspection).toMatchObject({
         ...grant,
         access: [access],
-        key: { proof: 'httpsig', jwk: TEST_CLIENT_KEY }
+        key: { proof: 'httpsig', jwk: TEST_JWK },
+        clientId
       })
       scope.isDone()
     })

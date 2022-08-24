@@ -5,6 +5,6 @@ export class ApiKey extends BaseModel {
     return 'apiKeys'
   }
 
-  public accountId!: string // Refers to which account this API key is for
+  public paymentPointerId!: string // Refers to which payment pointer this API key is for
   public hashedKey!: string // Refers to the bcrypted API key
 }

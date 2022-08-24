@@ -11,14 +11,13 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { v4 } from 'uuid'
 import { StreamServer } from '@interledger/stream-receiver'
+import { createPaymentPointer } from '../tests/paymentPointer'
 import { truncateTables } from '../tests/tableManager'
-import { AccountService } from '../open_payments/account/service'
 
 describe('SPSP Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let accountService: AccountService
   let spspRoutes: SPSPRoutes
   let streamServer: StreamServer
   const nonce = crypto.randomBytes(16).toString('base64')
@@ -33,7 +32,6 @@ describe('SPSP Routes', (): void => {
   beforeEach(async (): Promise<void> => {
     spspRoutes = await deps.use('spspRoutes')
     streamServer = await deps.use('streamServer')
-    accountService = await deps.use('accountService')
   })
 
   afterAll(async (): Promise<void> => {
@@ -42,11 +40,11 @@ describe('SPSP Routes', (): void => {
   })
 
   describe('GET /:id handler', (): void => {
-    let accountId: string
+    let paymentPointerId: string
 
     beforeEach(async (): Promise<void> => {
-      accountId = (
-        await accountService.create({
+      paymentPointerId = (
+        await createPaymentPointer(deps, {
           asset: {
             scale: 6,
             code: 'USD'
@@ -55,12 +53,13 @@ describe('SPSP Routes', (): void => {
       ).id
     })
 
-    test('invalid account id; returns 400', async () => {
+    test('invalid payment ointer id; returns 400', async () => {
       const ctx = createContext(
         {
           headers: { Accept: 'application/spsp4+json' }
         },
-        { accountId: 'not_a_uuid' }
+        // { paymentPointerId: 'not_a_uuid' }
+        { accountId: 'not a uuid' }
       )
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
@@ -70,7 +69,8 @@ describe('SPSP Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { accountId }
+        // { paymentPointerId }
+        { accountId: paymentPointerId }
       )
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 406)
     })
@@ -80,7 +80,8 @@ describe('SPSP Routes', (): void => {
         {
           headers: { Accept: 'application/spsp4+json', 'Receipt-Nonce': nonce }
         },
-        { accountId }
+        // { paymentPointerId }
+        { accountId: paymentPointerId }
       )
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
@@ -93,7 +94,8 @@ describe('SPSP Routes', (): void => {
             'Receipt-Secret': secret
           }
         },
-        { accountId }
+        // { paymentPointerId }
+        { accountId: paymentPointerId }
       )
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
@@ -107,14 +109,16 @@ describe('SPSP Routes', (): void => {
             'Receipt-Secret': secret
           }
         },
-        { accountId }
+        // { paymentPointerId }
+        { accountId: paymentPointerId }
       )
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
 
-    test('no account; returns 404', async () => {
+    test('no payment pointer; returns 404', async () => {
       const ctx = createContext(
         { headers: { Accept: 'application/spsp4+json' } },
+        // { paymentPointerId: v4() }
         { accountId: v4() }
       )
       await expect(spspRoutes.get(ctx)).resolves.toBeUndefined()
@@ -126,28 +130,11 @@ describe('SPSP Routes', (): void => {
       })
     })
 
-    /*
-    test('disabled account; returns 404', async () => {
-      const ctx = createContext({})
-      await expect(handle(ctx, next)).resolves.toBeUndefined()
-      expect(ctx.response.status).toBe(404)
-      expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
-      expect(JSON.parse(ctx.body as string)).toEqual({
-        id: 'InvalidReceiverError',
-        message: 'Invalid receiver ID'
-      })
-    })
-
-    test('disabled stream; returns 400', async () => {
-      const ctx = createContext({})
-      await expect(handle(ctx, next)).rejects.toHaveProperty('status', 400)
-    })
-  */
-
     test('receipts disabled', async () => {
       const ctx = createContext(
         { headers: { Accept: 'application/spsp4+json' } },
-        { accountId }
+        // { paymentPointerId }
+        { accountId: paymentPointerId }
       )
       await expect(spspRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
@@ -162,7 +149,7 @@ describe('SPSP Routes', (): void => {
         res.destination_account
       )
       expect(connectionDetails).toEqual({
-        paymentTag: accountId,
+        paymentTag: paymentPointerId,
         asset: {
           code: 'USD',
           scale: 6
@@ -179,7 +166,8 @@ describe('SPSP Routes', (): void => {
             'Receipt-Secret': secret
           }
         },
-        { accountId }
+        // { paymentPointerId }
+        { accountId: paymentPointerId }
       )
       await expect(spspRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
@@ -195,7 +183,7 @@ describe('SPSP Routes', (): void => {
         res.destination_account
       )
       expect(connectionDetails).toEqual({
-        paymentTag: accountId,
+        paymentTag: paymentPointerId,
         asset: {
           code: 'USD',
           scale: 6

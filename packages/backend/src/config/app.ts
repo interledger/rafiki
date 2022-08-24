@@ -64,7 +64,7 @@ export const Config = {
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
     : crypto.randomBytes(32),
 
-  tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 1),
+  tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
   tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
     : ['3004'],
@@ -75,8 +75,8 @@ export const Config = {
   slippage: envFloat('SLIPPAGE', 0.01),
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
 
-  accountWorkers: envInt('ACCOUNT_WORKERS', 1),
-  accountWorkerIdle: envInt('ACCOUNT_WORKER_IDLE', 200), // milliseconds
+  paymentPointerWorkers: envInt('PAYMENT_POINTER_WORKERS', 1),
+  paymentPointerWorkerIdle: envInt('PAYMENT_POINTER_WORKER_IDLE', 200), // milliseconds
 
   authServerGrantUrl: envString(
     'AUTH_SERVER_GRANT_URL',

@@ -3,7 +3,7 @@ import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
-import { Account } from '../../account/model'
+import { PaymentPointer } from '../../payment_pointer/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON } from '../../amount'
 import { BaseModel } from '../../../shared/baseModel'
@@ -61,9 +61,9 @@ export class OutgoingPayment
   public description?: string
   public externalRef?: string
 
-  // Open payments account id of the sender
-  public accountId!: string
-  public account?: Account
+  // Open payments payment pointer id of the sender
+  public paymentPointerId!: string
+  public paymentPointer?: PaymentPointer
 
   public quote!: Quote
 
@@ -79,12 +79,12 @@ export class OutgoingPayment
   public peerId?: string
 
   static relationMappings = {
-    account: {
+    paymentPointer: {
       relation: Model.HasOneRelation,
-      modelClass: Account,
+      modelClass: PaymentPointer,
       join: {
-        from: 'outgoingPayments.accountId',
-        to: 'accounts.id'
+        from: 'outgoingPayments.paymentPointerId',
+        to: 'paymentPointers.id'
       }
     },
     quote: {
@@ -116,7 +116,7 @@ export class OutgoingPayment
     const data: PaymentData = {
       payment: {
         id: this.id,
-        accountId: this.accountId,
+        paymentPointerId: this.paymentPointerId,
         state: this.state,
         receiver: this.receiver,
         sendAmount: {
@@ -156,7 +156,7 @@ export class OutgoingPayment
     json = super.$formatJson(json)
     return {
       id: json.id,
-      accountId: json.accountId,
+      // paymentPointer: json.paymentPointer,
       state: json.state,
       receiver: json.receiver,
       sendAmount: {
@@ -211,7 +211,7 @@ export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
 export interface OutgoingPaymentResponse {
   id: string
-  accountId: string
+  paymentPointerId: string
   createdAt: string
   receiver: string
   sendAmount: AmountJSON
@@ -248,7 +248,7 @@ export class PaymentEvent extends WebhookEvent {
 
 export type OutgoingPaymentJSON = {
   id: string
-  accountId: string
+  paymentPointer: string
   receiver: string
   sendAmount: AmountJSON
   sentAmount: AmountJSON

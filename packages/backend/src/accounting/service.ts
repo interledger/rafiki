@@ -1,8 +1,5 @@
 import assert from 'assert'
-import {
-  Client,
-  CreateAccountError as CreateAccountErrorCode
-} from 'tigerbeetle-node'
+import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import {
@@ -12,20 +9,25 @@ import {
   getAccounts
 } from './accounts'
 import {
+  areAllAccountExistsErrors,
   BalanceTransferError,
   CreateAccountError,
   TransferError,
   UnknownAccountError
 } from './errors'
-import {
-  CreateTransferOptions,
-  createTransfers,
-  commitTransfers,
-  rollbackTransfers
-} from './transfers'
+import { CreateTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 import { toTigerbeetleId } from './utils'
+
+export enum AccountTypeCode {
+  Liquidity = 1,
+  LiquidityAsset = 2,
+  LiquidityPeer = 3,
+  LiquidityIncoming = 4,
+  LiquidityOutgoing = 5,
+  Settlement = 101
+}
 
 // Model classes that have a corresponding Tigerbeetle liquidity
 // account SHOULD implement this LiquidityAccount interface and call
@@ -33,17 +35,17 @@ import { toTigerbeetleId } from './utils'
 // The Tigerbeetle account id will be the model id.
 // Such models include:
 //   ../asset/model
-//   ../open_payments/account/model
+//   ../open_payments/payment_pointer/model
 //   ../open_payments/payment/incoming/model
 //   ../open_payments/payment/outgoing/model
 //   ../peer/model
 // Asset settlement Tigerbeetle accounts are the only exception.
-// Their account id is the corresponding asset's unit value.
+// Their account id is the corresponding asset's ledger value.
 export interface LiquidityAccount {
   id: string
   asset: {
     id: string
-    unit: number
+    ledger: number
   }
   onCredit?: (options: OnCreditOptions) => Promise<LiquidityAccount>
 }
@@ -77,14 +79,17 @@ export interface Transaction {
 }
 
 export interface AccountingService {
-  createLiquidityAccount(account: LiquidityAccount): Promise<LiquidityAccount>
-  createSettlementAccount(unit: number): Promise<void>
+  createLiquidityAccount(
+    account: LiquidityAccount,
+    accTypeCode?: AccountTypeCode
+  ): Promise<LiquidityAccount>
+  createSettlementAccount(ledger: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
   getTotalReceived(id: string): Promise<bigint | undefined>
   getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]>
-  getSettlementBalance(unit: number): Promise<bigint | undefined>
+  getSettlementBalance(ledger: number): Promise<bigint | undefined>
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(deposit: Deposit): Promise<void | TransferError>
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>
@@ -105,14 +110,15 @@ export function createAccountingService(
     logger: deps_.logger.child({ service: 'AccountingService' })
   }
   return {
-    createLiquidityAccount: (options) => createLiquidityAccount(deps, options),
-    createSettlementAccount: (unit) => createSettlementAccount(deps, unit),
+    createLiquidityAccount: (options, accTypeCode) =>
+      createLiquidityAccount(deps, options, accTypeCode),
+    createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
-    getSettlementBalance: (unit) => getSettlementBalance(deps, unit),
+    getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
@@ -123,7 +129,8 @@ export function createAccountingService(
 
 export async function createLiquidityAccount(
   deps: ServiceDependencies,
-  account: LiquidityAccount
+  account: LiquidityAccount,
+  accTypeCode?: AccountTypeCode
 ): Promise<LiquidityAccount> {
   if (!validateId(account.id)) {
     throw new Error('unable to create account, invalid id')
@@ -133,7 +140,8 @@ export async function createLiquidityAccount(
     {
       id: account.id,
       type: AccountType.Credit,
-      unit: account.asset.unit
+      ledger: account.asset.ledger,
+      code: accTypeCode ? accTypeCode : AccountTypeCode.Liquidity
     }
   ])
   return account
@@ -141,14 +149,15 @@ export async function createLiquidityAccount(
 
 export async function createSettlementAccount(
   deps: ServiceDependencies,
-  unit: number
+  ledger: number
 ): Promise<void> {
   try {
     await createAccounts(deps, [
       {
-        id: unit,
+        id: ledger,
         type: AccountType.Debit,
-        unit
+        ledger,
+        code: AccountTypeCode.Settlement
       }
     ])
   } catch (err) {
@@ -156,7 +165,7 @@ export async function createSettlementAccount(
     // This could change if TigerBeetle could be reset between tests.
     if (
       err instanceof CreateAccountError &&
-      err.code === CreateAccountErrorCode.exists
+      areAllAccountExistsErrors([err.code])
     ) {
       return
     }
@@ -180,7 +189,7 @@ export async function getAccountTotalSent(
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [id]))[0]
   if (account) {
-    return account.debits_accepted
+    return account.debits_posted
   }
 }
 
@@ -193,7 +202,7 @@ export async function getAccountsTotalSent(
     return ids.map(
       (id) =>
         accounts.find((account) => account.id === toTigerbeetleId(id))
-          ?.debits_accepted
+          ?.debits_posted
     )
   } else return []
 }
@@ -204,7 +213,7 @@ export async function getAccountTotalReceived(
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [id]))[0]
   if (account) {
-    return account.credits_accepted
+    return account.credits_posted
   }
 }
 
@@ -217,16 +226,16 @@ export async function getAccountsTotalReceived(
     return ids.map(
       (id) =>
         accounts.find((account) => account.id === toTigerbeetleId(id))
-          ?.credits_accepted
+          ?.credits_posted
     )
   } else return []
 }
 
 export async function getSettlementBalance(
   deps: ServiceDependencies,
-  unit: number
+  ledger: number
 ): Promise<bigint | undefined> {
-  const assetAccount = (await getAccounts(deps, [unit]))[0]
+  const assetAccount = (await getAccounts(deps, [ledger]))[0]
 
   if (assetAccount) {
     return calculateBalance(assetAccount)
@@ -257,30 +266,35 @@ export async function createTransfer(
   const addTransfer = ({
     sourceAccountId,
     destinationAccountId,
-    amount
+    amount,
+    ledger
   }: {
     sourceAccountId: string
     destinationAccountId: string
     amount: bigint
+    ledger: number
   }) => {
     transfers.push({
       id: uuid(),
+      pendingId: '0',
       sourceAccountId,
       destinationAccountId,
       amount,
-      timeout
+      timeout,
+      ledger
     })
   }
 
-  // Same asset
-  if (sourceAccount.asset.unit === destinationAccount.asset.unit) {
+  // Same asset / ledger:
+  if (sourceAccount.asset.ledger === destinationAccount.asset.ledger) {
     addTransfer({
       sourceAccountId: sourceAccount.id,
       destinationAccountId: destinationAccount.id,
       amount:
         destinationAmount && destinationAmount < sourceAmount
           ? destinationAmount
-          : sourceAmount
+          : sourceAmount,
+      ledger: sourceAccount.asset.ledger
     })
     // Same asset, different amounts
     if (destinationAmount && sourceAmount !== destinationAmount) {
@@ -289,18 +303,20 @@ export async function createTransfer(
         addTransfer({
           sourceAccountId: sourceAccount.id,
           destinationAccountId: sourceAccount.asset.id,
-          amount: sourceAmount - destinationAmount
+          amount: sourceAmount - destinationAmount,
+          ledger: sourceAccount.asset.ledger
         })
         // Deliver excess destination amount from liquidity account
       } else {
         addTransfer({
           sourceAccountId: destinationAccount.asset.id,
           destinationAccountId: destinationAccount.id,
-          amount: destinationAmount - sourceAmount
+          amount: destinationAmount - sourceAmount,
+          ledger: sourceAccount.asset.ledger
         })
       }
     }
-    // Different assets
+    // Different assets / ledgers:
   } else {
     // must specify destination amount
     if (!destinationAmount) {
@@ -311,12 +327,14 @@ export async function createTransfer(
     addTransfer({
       sourceAccountId: sourceAccount.id,
       destinationAccountId: sourceAccount.asset.id,
-      amount: sourceAmount
+      amount: sourceAmount,
+      ledger: sourceAccount.asset.ledger
     })
     addTransfer({
       sourceAccountId: destinationAccount.asset.id,
       destinationAccountId: destinationAccount.id,
-      amount: destinationAmount
+      amount: destinationAmount,
+      ledger: destinationAccount.asset.ledger
     })
   }
   const error = await createTransfers(deps, transfers)
@@ -342,9 +360,17 @@ export async function createTransfer(
 
   const trx: Transaction = {
     commit: async (): Promise<void | TransferError> => {
-      const error = await commitTransfers(
+      const error = await createTransfers(
         deps,
-        transfers.map((transfer) => transfer.id)
+        transfers.map((transfer) => {
+          return {
+            ...transfer,
+            timeout: undefined,
+            id: undefined,
+            pendingId: transfer.id
+          }
+        }),
+        true // <- commit
       )
       if (error) {
         return error.error
@@ -362,9 +388,16 @@ export async function createTransfer(
       }
     },
     rollback: async (): Promise<void | TransferError> => {
-      const error = await rollbackTransfers(
+      const error = await createTransfers(
         deps,
-        transfers.map((transfer) => transfer.id)
+        transfers.map((transfer) => {
+          return {
+            ...transfer,
+            timeout: undefined,
+            pendingId: transfer.id
+          }
+        }),
+        false // <- rollback
       )
       if (error) {
         return error.error
@@ -384,9 +417,10 @@ async function createAccountDeposit(
   const error = await createTransfers(deps, [
     {
       id,
-      sourceAccountId: account.asset.unit,
+      sourceAccountId: account.asset.ledger,
       destinationAccountId: account.id,
-      amount
+      amount,
+      ledger: account.asset.ledger
     }
   ])
   if (error) {
@@ -405,9 +439,10 @@ async function createAccountWithdrawal(
     {
       id,
       sourceAccountId: account.id,
-      destinationAccountId: account.asset.unit,
+      destinationAccountId: account.asset.ledger,
       amount,
-      timeout
+      timeout,
+      ledger: account.asset.ledger
     }
   ])
   if (error) {
@@ -422,7 +457,26 @@ async function rollbackAccountWithdrawal(
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const error = await rollbackTransfers(deps, [withdrawalId])
+  const transfers = await deps.tigerbeetle.lookupTransfers([
+    toTigerbeetleId(withdrawalId)
+  ])
+  if (!transfers.length) {
+    return TransferError.UnknownTransfer
+  }
+
+  const error = await createTransfers(
+    deps,
+    [
+      {
+        pendingId: transfers[0].id,
+        sourceAccountId: transfers[0].debit_account_id,
+        destinationAccountId: transfers[0].credit_account_id,
+        amount: transfers[0].amount,
+        ledger: transfers[0].ledger
+      }
+    ],
+    false
+  )
   if (error) {
     return error.error
   }
@@ -435,7 +489,26 @@ async function commitAccountWithdrawal(
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const error = await commitTransfers(deps, [withdrawalId])
+  const transfers = await deps.tigerbeetle.lookupTransfers([
+    toTigerbeetleId(withdrawalId)
+  ])
+  if (!transfers.length) {
+    return TransferError.UnknownTransfer
+  }
+
+  const error = await createTransfers(
+    deps,
+    [
+      {
+        pendingId: transfers[0].id,
+        sourceAccountId: transfers[0].debit_account_id,
+        destinationAccountId: transfers[0].credit_account_id,
+        amount: transfers[0].amount,
+        ledger: transfers[0].ledger
+      }
+    ],
+    true
+  )
   if (error) {
     return error.error
   }

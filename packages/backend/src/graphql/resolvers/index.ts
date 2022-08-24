@@ -1,17 +1,21 @@
 import { Resolvers } from '../generated/graphql'
-import { getAccount, createAccount, triggerAccountEvents } from './account'
+import {
+  getPaymentPointer,
+  createPaymentPointer,
+  triggerPaymentPointerEvents
+} from './payment_pointer'
 import {
   getAsset,
   getAssets,
   createAsset,
   updateAssetWithdrawalThreshold
 } from './asset'
-import { getAccountIncomingPayments } from './incoming_payment'
-import { getQuote, createQuote, getAccountQuotes } from './quote'
+import { getPaymentPointerIncomingPayments } from './incoming_payment'
+import { getQuote, createQuote, getPaymentPointerQuotes } from './quote'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
-  getAccountOutgoingPayments
+  getPaymentPointerOutgoingPayments
 } from './outgoing_payment'
 import { createApiKey, deleteAllApiKeys, redeemApiKey } from './apiKey'
 import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
@@ -20,7 +24,7 @@ import {
   addPeerLiquidity,
   createAssetLiquidityWithdrawal,
   createPeerLiquidityWithdrawal,
-  createAccountWithdrawal,
+  createPaymentPointerWithdrawal,
   finalizeLiquidityWithdrawal,
   rollbackLiquidityWithdrawal,
   depositEventLiquidity,
@@ -33,7 +37,7 @@ import { addKeyToClient, createClient } from './clientKeys'
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
   Query: {
-    account: getAccount,
+    paymentPointer: getPaymentPointer,
     asset: getAsset,
     assets: getAssets,
     outgoingPayment: getOutgoingPayment,
@@ -41,16 +45,16 @@ export const resolvers: Resolvers = {
     peers: getPeers,
     quote: getQuote
   },
-  Account: {
-    incomingPayments: getAccountIncomingPayments,
-    outgoingPayments: getAccountOutgoingPayments,
-    quotes: getAccountQuotes
+  PaymentPointer: {
+    incomingPayments: getPaymentPointerIncomingPayments,
+    outgoingPayments: getPaymentPointerOutgoingPayments,
+    quotes: getPaymentPointerQuotes
   },
   Mutation: {
-    createAccount,
     createClient,
     addKeyToClient,
-    triggerAccountEvents,
+    createPaymentPointer,
+    triggerPaymentPointerEvents,
     createAsset,
     updateAssetWithdrawalThreshold,
     createQuote,
@@ -67,7 +71,7 @@ export const resolvers: Resolvers = {
     addPeerLiquidity: addPeerLiquidity,
     createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
-    createAccountWithdrawal,
+    createPaymentPointerWithdrawal,
     finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
     rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal,
     depositEventLiquidity,

@@ -24,10 +24,10 @@ import { createAssetService } from './asset/service'
 import { createAccountingService } from './accounting/service'
 import { createPeerService } from './peer/service'
 import { createAuthService } from './open_payments/auth/service'
-import { createAccountService } from './open_payments/account/service'
+import { createPaymentPointerService } from './open_payments/payment_pointer/service'
 import { createSPSPRoutes } from './spsp/routes'
-import { createAccountRoutes } from './open_payments/account/routes'
 import { createClientKeysRoutes } from './clientKeys/routes'
+import { createPaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -160,10 +160,10 @@ export function initIocContainer(
       authOpenApi: await deps.use('authOpenApi')
     })
   })
-  container.singleton('accountService', async (deps) => {
+  container.singleton('paymentPointerService', async (deps) => {
     const logger = await deps.use('logger')
     const assetService = await deps.use('assetService')
-    return await createAccountService({
+    return await createPaymentPointerService({
       knex: await deps.use('knex'),
       logger: logger,
       accountingService: await deps.use('accountingService'),
@@ -173,10 +173,10 @@ export function initIocContainer(
   container.singleton('spspRoutes', async (deps) => {
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
-    const accountService = await deps.use('accountService')
+    const paymentPointerService = await deps.use('paymentPointerService')
     return await createSPSPRoutes({
       logger: logger,
-      accountService: accountService,
+      paymentPointerService: paymentPointerService,
       streamServer: streamServer
     })
   })
@@ -192,7 +192,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
-      accountService: await deps.use('accountService')
+      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
   container.singleton('incomingPaymentRoutes', async (deps) => {
@@ -203,10 +203,10 @@ export function initIocContainer(
       connectionService: await deps.use('connectionService')
     })
   })
-  container.singleton('accountRoutes', async (deps) => {
-    return createAccountRoutes({
+  container.singleton('paymentPointerRoutes', async (deps) => {
+    return createPaymentPointerRoutes({
       config: await deps.use('config'),
-      accountService: await deps.use('accountService')
+      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
   container.singleton('clientKeysRoutes', async (deps) => {
@@ -274,7 +274,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      accountService: await deps.use('accountService'),
+      paymentPointerService: await deps.use('paymentPointerService'),
       ratesService: await deps.use('ratesService')
     })
   })
@@ -331,7 +331,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),
-      accountService: await deps.use('accountService'),
+      paymentPointerService: await deps.use('paymentPointerService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),

@@ -19,9 +19,9 @@ exports.up = function (knex) {
 
     table.timestamp('expiresAt').notNullable()
 
-    // Open Payments account from which this quote's payment would be sent
-    table.uuid('accountId').notNullable()
-    table.foreign('accountId').references('accounts.id')
+    // Open Payments payment pointer from which this quote's payment would be sent
+    table.uuid('paymentPointerId').notNullable()
+    table.foreign('paymentPointerId').references('paymentPointers.id')
 
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
@@ -29,7 +29,7 @@ exports.up = function (knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
-    table.index(['accountId', 'createdAt', 'id'])
+    table.index(['paymentPointerId', 'createdAt', 'id'])
   })
 }
 

@@ -17,4 +17,4 @@ RUN pnpm install -r --offline
 
 RUN pnpm --filter mock-account-provider build
 
-CMD ["node", "./packages/mock-account-provider/dist/index.js"]
+CMD ["pnpm", "start"]

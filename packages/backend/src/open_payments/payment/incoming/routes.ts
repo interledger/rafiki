@@ -97,7 +97,7 @@ async function createIncomingPayment(
   }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
-    accountId: ctx.params.accountId,
+    paymentPointerId: ctx.params.accountId,
     description: body.description,
     externalRef: body.externalRef,
     expiresAt,
@@ -147,16 +147,19 @@ async function listIncomingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  const { accountId } = ctx.params
+  const { accountId: paymentPointerId } = ctx.params
   const pagination = parsePaginationQueryParameters(ctx.request.query)
   try {
-    const page = await deps.incomingPaymentService.getAccountPage(
-      accountId,
+    const page = await deps.incomingPaymentService.getPaymentPointerPage(
+      paymentPointerId,
       pagination
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        deps.incomingPaymentService.getAccountPage(accountId, pagination),
+        deps.incomingPaymentService.getPaymentPointerPage(
+          paymentPointerId,
+          pagination
+        ),
       page
     )
     const result = {
@@ -179,8 +182,9 @@ function incomingPaymentToBody(
   return Object.fromEntries(
     Object.entries({
       ...incomingPayment.toJSON(),
-      accountId: `${deps.config.openPaymentsHost}/${incomingPayment.accountId}`,
-      id: `${deps.config.openPaymentsHost}/${incomingPayment.accountId}/incoming-payments/${incomingPayment.id}`,
+      // paymentPointer: `${deps.config.publicHost}/${incomingPayment.paymentPointerId}`,
+      accountId: `${deps.config.openPaymentsHost}/${incomingPayment.paymentPointerId}`,
+      id: `${deps.config.openPaymentsHost}/${incomingPayment.paymentPointerId}/incoming-payments/${incomingPayment.id}`,
       ilpStreamConnection: streamCredentials
         ? {
             id: `${deps.config.openPaymentsHost}/connections/${incomingPayment.connectionId}`,

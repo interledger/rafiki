@@ -39,11 +39,3 @@ services:
       PRICES_URL: http://peer-rates/prices
       REDIS_URL: redis://redis:6379
       QUOTE_URL: http://mock-account-provider/quote
-  peer-rates:
-    image: ghcr.io/interledger/rafiki-rates:latest
-    restart: always
-    networks:
-      rafiki:
-    environment:
-      NODE_ENV: development
-      PORT: 80

@@ -18,6 +18,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { AssetOptions } from '../../asset/service'
 import { Amount } from '../amount'
@@ -33,10 +34,10 @@ describe('QuoteService', (): void => {
   let appContainer: TestContainer
   let quoteService: QuoteService
   let knex: Knex
-  let accountId: string
+  let paymentPointerId: string
   let assetId: string
-  let receivingAccount: string
-  let receivingAccountId: string
+  let receivingPaymentPointer: string
+  let receivingPaymentPointerId: string
   let config: IAppConfig
   let quoteUrl: URL
   const SIGNATURE_SECRET = 'test secret'
@@ -83,28 +84,27 @@ describe('QuoteService', (): void => {
 
   beforeEach(async (): Promise<void> => {
     quoteService = await deps.use('quoteService')
-    const accountService = await deps.use('accountService')
-    const account = await accountService.create({
+    const paymentPointer = await createPaymentPointer(deps, {
       asset: {
         code: sendAmount.assetCode,
         scale: sendAmount.assetScale
       }
     })
-    accountId = account.id
-    assetId = account.assetId
-    const destinationAccount = await accountService.create({
+    paymentPointerId = paymentPointer.id
+    assetId = paymentPointer.assetId
+    const destinationPaymentPointer = await createPaymentPointer(deps, {
       asset: destinationAsset
     })
-    receivingAccountId = destinationAccount.id
+    receivingPaymentPointerId = destinationPaymentPointer.id
     const accountingService = await deps.use('accountingService')
     await expect(
       accountingService.createDeposit({
         id: uuid(),
-        account: destinationAccount.asset,
+        account: destinationPaymentPointer.asset,
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingAccount = `${config.openPaymentsHost}/${destinationAccount.id}`
+    receivingPaymentPointer = `${config.openPaymentsHost}/${destinationPaymentPointer.id}`
   })
 
   afterEach(async (): Promise<void> => {
@@ -157,7 +157,7 @@ describe('QuoteService', (): void => {
           try {
             expect(body).toEqual({
               id: expect.any(String),
-              accountId,
+              paymentPointerId,
               receiver: expected.receiver || expect.any(String),
               sendAmount: {
                 value:
@@ -210,7 +210,7 @@ describe('QuoteService', (): void => {
       incomingAmount    | description
       ${undefined}      | ${'receiver'}
       ${incomingAmount} | ${'receiver.incomingAmount'}
-    `('$description', ({ toAccount, incomingAmount }): void => {
+    `('$description', ({ toPaymentPointer, incomingAmount }): void => {
       describe.each`
         sendAmount    | receiveAmount    | paymentType                      | description
         ${sendAmount} | ${undefined}     | ${Pay.PaymentType.FixedSend}     | ${'sendAmount'}
@@ -224,12 +224,12 @@ describe('QuoteService', (): void => {
 
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
-            accountId: receivingAccountId,
+            paymentPointerId: receivingPaymentPointerId,
             incomingAmount
           })
           options = {
-            accountId,
-            receiver: `${receivingAccount}/incoming-payments/${incomingPayment.id}`,
+            paymentPointerId,
+            receiver: `${receivingPaymentPointer}/incoming-payments/${incomingPayment.id}`,
             sendAmount,
             receiveAmount
           }
@@ -242,7 +242,7 @@ describe('QuoteService', (): void => {
         if (!sendAmount && !receiveAmount && !incomingAmount) {
           it('fails without receiver.incomingAmount', async (): Promise<void> => {
             await expect(quoteService.create(options)).resolves.toEqual(
-              toAccount
+              toPaymentPointer
                 ? QuoteError.InvalidAmount
                 : QuoteError.InvalidDestination
             )
@@ -257,7 +257,7 @@ describe('QuoteService', (): void => {
               assert.ok(!isQuoteError(quote))
               walletScope.isDone()
               expect(quote).toMatchObject({
-                accountId,
+                paymentPointerId,
                 receiver: receiver || quote.receiver,
                 sendAmount: sendAmount || {
                   value: BigInt(
@@ -422,7 +422,7 @@ describe('QuoteService', (): void => {
               assert.ok(!isQuoteError(quote))
               walletScope.isDone()
               expect(quote).toMatchObject({
-                accountId,
+                paymentPointerId,
                 receiver: options.receiver,
                 sendAmount,
                 receiveAmount: receiveAmount || incomingAmount,
@@ -471,7 +471,7 @@ describe('QuoteService', (): void => {
             walletScope.isDone()
           })
 
-          if (!toAccount) {
+          if (!toPaymentPointer) {
             test.each`
               state                             | error
               ${IncomingPaymentState.Completed} | ${Pay.PaymentError.IncomingPaymentCompleted}
@@ -496,21 +496,21 @@ describe('QuoteService', (): void => {
       })
     })
 
-    it('fails on unknown account', async (): Promise<void> => {
+    it('fails on unknown payment pointer', async (): Promise<void> => {
       await expect(
         quoteService.create({
-          accountId: uuid(),
-          receiver: `${receivingAccount}/incoming-payments/${uuid()}`,
+          paymentPointerId: uuid(),
+          receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
           sendAmount
         })
-      ).resolves.toEqual(QuoteError.UnknownAccount)
+      ).resolves.toEqual(QuoteError.UnknownPaymentPointer)
     })
 
     it('fails on invalid receiver', async (): Promise<void> => {
       await expect(
         quoteService.create({
-          accountId,
-          receiver: `${receivingAccount}/incoming-payments/${uuid()}`,
+          paymentPointerId,
+          receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
           sendAmount
         })
       ).resolves.toEqual(QuoteError.InvalidDestination)
@@ -530,11 +530,11 @@ describe('QuoteService', (): void => {
       async ({ sendAmount, receiveAmount }): Promise<void> => {
         await expect(
           quoteService.create({
-            accountId,
-            receiver: `${receivingAccount}/incoming-payments/${
+            paymentPointerId,
+            receiver: `${receivingPaymentPointer}/incoming-payments/${
               (
                 await createIncomingPayment(deps, {
-                  accountId: receivingAccountId
+                  paymentPointerId: receivingPaymentPointerId
                 })
               ).id
             }`,
@@ -552,11 +552,11 @@ describe('QuoteService', (): void => {
         .mockImplementation(() => Promise.reject(new Error('fail')))
       await expect(
         quoteService.create({
-          accountId,
-          receiver: `${receivingAccount}/incoming-payments/${
+          paymentPointerId,
+          receiver: `${receivingPaymentPointer}/incoming-payments/${
             (
               await createIncomingPayment(deps, {
-                accountId: receivingAccountId
+                paymentPointerId: receivingPaymentPointerId
               })
             ).id
           }`,
@@ -566,13 +566,13 @@ describe('QuoteService', (): void => {
     })
   })
 
-  describe('getAccountPage', (): void => {
+  describe('getPaymentPointerPage', (): void => {
     getPageTests({
       createModel: async () =>
         Quote.query(knex).insertAndFetch({
-          accountId,
+          paymentPointerId,
           assetId,
-          receiver: `${receivingAccount}/incoming-payments/${uuid()}`,
+          receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
           sendAmount,
           receiveAmount,
           maxPacketAmount: BigInt('9223372036854775807'),
@@ -591,7 +591,7 @@ describe('QuoteService', (): void => {
           expiresAt: new Date(Date.now() + config.quoteLifespan)
         }),
       getPage: (pagination: Pagination) =>
-        quoteService.getAccountPage(accountId, pagination)
+        quoteService.getPaymentPointerPage(paymentPointerId, pagination)
     })
   })
 })

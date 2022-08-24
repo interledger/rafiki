@@ -3,7 +3,7 @@ import * as Pay from '@interledger/pay'
 import { TransferError } from '../../../accounting/errors'
 
 export enum OutgoingPaymentError {
-  UnknownAccount = 'UnknownAccount',
+  UnknownPaymentPointer = 'UnknownPaymentPointer',
   UnknownPayment = 'UnknownPayment',
   UnknownQuote = 'UnknownQuote',
   WrongState = 'WrongState',
@@ -18,7 +18,7 @@ export const isOutgoingPaymentError = (o: any): o is OutgoingPaymentError =>
 export const errorToCode: {
   [key in OutgoingPaymentError]: number
 } = {
-  [OutgoingPaymentError.UnknownAccount]: 404,
+  [OutgoingPaymentError.UnknownPaymentPointer]: 404,
   [OutgoingPaymentError.UnknownPayment]: 404,
   [OutgoingPaymentError.UnknownQuote]: 404,
   [OutgoingPaymentError.WrongState]: 409,
@@ -29,7 +29,7 @@ export const errorToCode: {
 export const errorToMessage: {
   [key in OutgoingPaymentError]: string
 } = {
-  [OutgoingPaymentError.UnknownAccount]: 'unknown account',
+  [OutgoingPaymentError.UnknownPaymentPointer]: 'unknown payment pointer',
   [OutgoingPaymentError.UnknownPayment]: 'unknown payment',
   [OutgoingPaymentError.UnknownQuote]: 'unknown quote',
   [OutgoingPaymentError.WrongState]: 'wrong state',

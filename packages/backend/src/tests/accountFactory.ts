@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid'
 
 import { AccountingService, LiquidityAccount } from '../accounting/service'
-import { randomUnit } from './asset'
+import { randomLedger } from './asset'
 
 type BuildOptions = Partial<LiquidityAccount> & {
   balance?: bigint
@@ -10,10 +10,10 @@ type BuildOptions = Partial<LiquidityAccount> & {
 export type FactoryAccount = Omit<LiquidityAccount, 'asset'> & {
   asset: {
     id: string
-    unit: number
+    ledger: number
     asset: {
       id: string
-      unit: number
+      ledger: number
     }
   }
 }
@@ -21,22 +21,22 @@ export type FactoryAccount = Omit<LiquidityAccount, 'asset'> & {
 export class AccountFactory {
   public constructor(
     private accounts: AccountingService,
-    private unitGenerator: () => number = randomUnit
+    private ledgerGenerator: () => number = randomLedger
   ) {}
 
   public async build(options: BuildOptions = {}): Promise<FactoryAccount> {
     const assetId = options.asset?.id || uuid()
-    const unit = options.asset?.unit || this.unitGenerator()
+    const ledger = options.asset?.ledger || this.ledgerGenerator()
     const asset = {
       id: assetId,
-      unit,
+      ledger,
       asset: {
         id: assetId,
-        unit
+        ledger
       }
     }
     if (!options.asset) {
-      await this.accounts.createSettlementAccount(asset.unit)
+      await this.accounts.createSettlementAccount(asset.ledger)
       await this.accounts.createLiquidityAccount(asset)
     }
     const account = {

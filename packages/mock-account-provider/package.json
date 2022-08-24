@@ -1,46 +1,27 @@
 {
   "name": "mock-account-provider",
-  "entry": {
-    "main": "dist/index.js"
-  },
+  "sideEffects": false,
   "scripts": {
-    "dev": "node dist/index.js",
-    "build": "pnpm clean && tsc --build tsconfig.json",
-    "clean": "rm -fr dist/",
-    "test": "jest --passWithNoTests --maxWorkers=50%",
-    "prepack": "pnpm build"
-  },
-  "devDependencies": {
-    "@types/jest": "^28.1.7",
-    "@types/koa": "2.13.5",
-    "@types/koa-bodyparser": "^4.3.7",
-    "@types/koa-session": "^5.10.6",
-    "@types/koa__cors": "^3.1.1",
-    "@types/koa__router": "^8.0.11",
-    "@types/uuid": "^8.3.4",
-    "jest-openapi": "^0.14.2",
-    "nock": "^13.2.4",
-    "openapi-types": "^12.0.0",
-    "typescript": "^4.2.4"
+    "build": "remix build",
+    "dev": "remix dev",
+    "start": "remix-serve build"
   },
   "dependencies": {
-    "@adonisjs/fold": "^8.1.0",
-    "@koa/cors": "^3.1.0",
-    "@koa/router": "^12.0.0",
-    "ajv": "^8.11.0",
-    "axios": "^0.27.2",
-    "jose": "^4.9.0",
-    "koa": "^2.13.4",
-    "koa-bodyparser": "^4.3.0",
-    "koa-session": "^6.2.0",
-    "node-mocks-http": "^1.11.0",
-    "objection": "^3.0.1",
-    "objection-db-errors": "^1.1.2",
-    "openapi": "workspace:../openapi",
-    "pg": "^8.6.0",
-    "pino": "^8.4.2",
-    "pino-pretty": "^9.0.1",
-    "testcontainers": "^8.9.0",
-    "uuid": "^8.3.2"
+    "@remix-run/node": "^1.6.8",
+    "@remix-run/react": "^1.6.8",
+    "@remix-run/serve": "^1.6.8",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "^1.6.8",
+    "@remix-run/eslint-config": "^1.6.8",
+    "@types/react": "^18.0.15",
+    "@types/react-dom": "^18.0.6",
+    "eslint": "^8.20.0",
+    "typescript": "^4.7.4"
+  },
+  "engines": {
+    "node": ">=14"
   }
 }

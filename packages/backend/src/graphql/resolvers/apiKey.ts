@@ -15,7 +15,7 @@ export const createApiKey: MutationResolvers['createApiKey'] = async (
       message: 'Created Api Key',
       apiKey: {
         id: apiKey.id,
-        accountId: apiKey.accountId,
+        paymentPointerId: apiKey.paymentPointerId,
         key: apiKey.key,
         createdAt: apiKey.createdAt.toISOString(),
         updatedAt: apiKey.updatedAt.toISOString()
@@ -49,7 +49,8 @@ export const deleteAllApiKeys: MutationResolvers['deleteAllApiKeys'] = async (
       code: '200',
       success: true,
       message:
-        'Deleted all Api Keys for account with id=' + args.input?.accountId
+        'Deleted all Api Keys for payment pointer with id=' +
+        args.input?.paymentPointerId
     }
   } catch (error) {
     ctx.logger.error(
@@ -80,7 +81,9 @@ export const redeemApiKey: MutationResolvers['redeemApiKey'] = async (
         case ApiKeyError.UnknownApiKey:
           return {
             code: '404',
-            message: 'Api key not found. accountId=' + args.input?.accountId,
+            message:
+              'Api key not found. paymentPointerId=' +
+              args.input?.paymentPointerId,
             success: false
           }
       }

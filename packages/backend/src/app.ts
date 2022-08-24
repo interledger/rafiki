@@ -22,15 +22,15 @@ import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
-import { AccountService } from './open_payments/account/service'
+import { PaymentPointerService } from './open_payments/payment_pointer/service'
 import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
 import { createAuthMiddleware } from './open_payments/auth/middleware'
 import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
-import { AccountRoutes } from './open_payments/account/routes'
 import { ClientKeysRoutes } from './clientKeys/routes'
+import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
@@ -81,9 +81,9 @@ type Context<T> = Omit<AppContext, 'request'> & {
 
 export type ClientKeysContext = Context<AppRequest<'keyId'>>
 
-export type AccountContext = Context<AppRequest<'id'>>
+export type PaymentPointerContext = Context<AppRequest<'id'>>
 
-// Account subresources
+// Payment pointer subresources
 export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>
 export type ReadContext = Context<
   AppRequest<
@@ -118,13 +118,13 @@ export interface AppServices {
   accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
   authService: Promise<AuthService>
-  accountService: Promise<AccountService>
+  paymentPointerService: Promise<PaymentPointerService>
   spspRoutes: Promise<SPSPRoutes>
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
   outgoingPaymentRoutes: Promise<OutgoingPaymentRoutes>
   quoteRoutes: Promise<QuoteRoutes>
-  accountRoutes: Promise<AccountRoutes>
   clientKeysRoutes: Promise<ClientKeysRoutes>
+  paymentPointerRoutes: Promise<PaymentPointerRoutes>
   incomingPaymentService: Promise<IncomingPaymentService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
@@ -166,8 +166,8 @@ export class App {
 
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
-      for (let i = 0; i < this.config.accountWorkers; i++) {
-        process.nextTick(() => this.processAccount())
+      for (let i = 0; i < this.config.paymentPointerWorkers; i++) {
+        process.nextTick(() => this.processPaymentPointer())
       }
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
         process.nextTick(() => this.processOutgoingPayment())
@@ -182,30 +182,7 @@ export class App {
   }
 
   public async startAdminServer(port: number | string): Promise<void> {
-    const koa = new Koa<DefaultState, AppContext>()
-
-    koa.context.container = this.container
-    koa.context.closeEmitter = await this.container.use('closeEmitter')
-    koa.context.logger = await this.container.use('logger')
-
-    koa.use(
-      async (
-        ctx: {
-          status: number
-          set: (arg0: string, arg1: string) => void
-          body: string
-        },
-        next: () => void | PromiseLike<void>
-      ): Promise<void> => {
-        if (this.isShuttingDown) {
-          ctx.status = 503
-          ctx.set('Connection', 'close')
-          ctx.body = 'Server is in the process of restarting'
-        } else {
-          return next()
-        }
-      }
-    )
+    const koa = await this.createKoaServer()
 
     // Load schema from the file
     const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
@@ -245,30 +222,7 @@ export class App {
   }
 
   public async startOpenPaymentsServer(port: number | string): Promise<void> {
-    const koa = new Koa<DefaultState, AppContext>()
-
-    koa.context.container = this.container
-    koa.context.closeEmitter = await this.container.use('closeEmitter')
-    koa.context.logger = await this.container.use('logger')
-
-    koa.use(
-      async (
-        ctx: {
-          status: number
-          set: (arg0: string, arg1: string) => void
-          body: string
-        },
-        next: () => void | PromiseLike<void>
-      ): Promise<void> => {
-        if (this.isShuttingDown) {
-          ctx.status = 503
-          ctx.set('Connection', 'close')
-          ctx.body = 'Server is in the process of restarting'
-        } else {
-          return next()
-        }
-      }
-    )
+    const koa = await this.createKoaServer()
 
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
@@ -277,8 +231,10 @@ export class App {
     })
 
     const spspRoutes = await this.container.use('spspRoutes')
-    const accountRoutes = await this.container.use('accountRoutes')
     const clientKeysRoutes = await this.container.use('clientKeysRoutes')
+    const paymentPointerRoutes = await this.container.use(
+      'paymentPointerRoutes'
+    )
     const incomingPaymentRoutes = await this.container.use(
       'incomingPaymentRoutes'
     )
@@ -352,14 +308,14 @@ export class App {
               // @ts-ignore
               router.get(
                 toRouterPath(path),
-                createValidatorMiddleware<AccountContext>(openApi, {
+                createValidatorMiddleware<PaymentPointerContext>(openApi, {
                   path,
                   method
                 }),
-                async (ctx: AccountContext): Promise<void> => {
+                async (ctx: PaymentPointerContext): Promise<void> => {
                   // Fall back to legacy protocols if client doesn't support Open Payments.
                   if (ctx.accepts('application/json'))
-                    await accountRoutes.get(ctx)
+                    await paymentPointerRoutes.get(ctx)
                   //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
                   else if (ctx.accepts('application/spsp4+json'))
                     await spspRoutes.get(ctx)
@@ -443,20 +399,22 @@ export class App {
     }
   }
 
-  private async processAccount(): Promise<void> {
-    const accountService = await this.container.use('accountService')
-    return accountService
+  private async processPaymentPointer(): Promise<void> {
+    const paymentPointerService = await this.container.use(
+      'paymentPointerService'
+    )
+    return paymentPointerService
       .processNext()
       .catch((err) => {
-        this.logger.warn({ error: err.message }, 'processAccount error')
+        this.logger.warn({ error: err.message }, 'processPaymentPointer error')
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processAccount())
+        if (hasMoreWork) process.nextTick(() => this.processPaymentPointer())
         else
           setTimeout(
-            () => this.processAccount(),
-            this.config.accountWorkerIdle
+            () => this.processPaymentPointer(),
+            this.config.paymentPointerWorkerIdle
           ).unref()
       })
   }
@@ -480,6 +438,35 @@ export class App {
             this.config.outgoingPaymentWorkerIdle
           ).unref()
       })
+  }
+
+  private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
+    const koa = new Koa<DefaultState, AppContext>()
+
+    koa.context.container = this.container
+    koa.context.closeEmitter = await this.container.use('closeEmitter')
+    koa.context.logger = await this.container.use('logger')
+
+    koa.use(
+      async (
+        ctx: {
+          status: number
+          set: (arg0: string, arg1: string) => void
+          body: string
+        },
+        next: () => void | PromiseLike<void>
+      ): Promise<void> => {
+        if (this.isShuttingDown) {
+          ctx.status = 503
+          ctx.set('Connection', 'close')
+          ctx.body = 'Server is in the process of restarting'
+        } else {
+          return next()
+        }
+      }
+    )
+
+    return koa
   }
 
   private async processIncomingPayment(): Promise<void> {

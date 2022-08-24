@@ -15,20 +15,20 @@ export type CreateTestQuoteOptions = CreateQuoteOptions & {
 export async function createQuote(
   deps: IocContract<AppServices>,
   {
-    accountId,
+    paymentPointerId,
     receiver,
     sendAmount,
     receiveAmount,
     validDestination = true
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
-  const accountService = await deps.use('accountService')
-  const account = await accountService.get(accountId)
-  assert.ok(account)
+  const paymentPointerService = await deps.use('paymentPointerService')
+  const paymentPointer = await paymentPointerService.get(paymentPointerId)
+  assert.ok(paymentPointer)
   assert.ok(
     !sendAmount ||
-      (account.asset.code === sendAmount.assetCode &&
-        account.asset.scale === sendAmount.assetScale)
+      (paymentPointer.asset.code === sendAmount.assetCode &&
+        paymentPointer.asset.scale === sendAmount.assetScale)
   )
 
   const config = await deps.use('config')
@@ -85,15 +85,15 @@ export async function createQuote(
       value: BigInt(
         Math.ceil(Number(receiveAmount.value) * 2 * (1 + config.slippage))
       ),
-      assetCode: account.asset.code,
-      assetScale: account.asset.scale
+      assetCode: paymentPointer.asset.code,
+      assetScale: paymentPointer.asset.scale
     }
   }
 
   return await Quote.query()
     .insertAndFetch({
-      accountId,
-      assetId: account.assetId,
+      paymentPointerId,
+      assetId: paymentPointer.assetId,
       receiver,
       sendAmount,
       receiveAmount,

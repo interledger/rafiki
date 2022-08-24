@@ -22,6 +22,7 @@ import { isOutgoingPaymentError } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
+import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { AccountingService } from '../../../accounting/service'
 import { listTests } from '../../../shared/routes.test'
 
@@ -31,21 +32,21 @@ describe('Outgoing Payment Routes', (): void => {
   let knex: Knex
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
-  let accountId: string
-  let accountUrl: string
+  let paymentPointerId: string
+  let paymentPointerUrl: string
   let accountingService: AccountingService
 
-  const receivingAccount = `https://wallet.example/${uuid()}`
+  const receivingPaymentPointer = `https://wallet.example/${uuid()}`
   const asset = randomAsset()
 
   const createPayment = async (options: {
-    accountId: string
+    paymentPointerId: string
     description?: string
     externalRef?: string
   }): Promise<OutgoingPayment> => {
     return await createOutgoingPayment(deps, {
       ...options,
-      receiver: `${receivingAccount}/incoming-payments/${uuid()}`,
+      receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
       sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,
@@ -68,9 +69,8 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    const accountService = await deps.use('accountService')
-    accountId = (await accountService.create({ asset })).id
-    accountUrl = `${config.openPaymentsHost}/${accountId}`
+    paymentPointerId = (await createPaymentPointer(deps, { asset })).id
+    paymentPointerUrl = `${config.openPaymentsHost}/${paymentPointerId}`
   })
 
   afterEach(async (): Promise<void> => {
@@ -89,7 +89,8 @@ describe('Outgoing Payment Routes', (): void => {
         },
         {
           outgoingPaymentId: uuid(),
-          accountId
+          // paymentPointerId
+          accountId: paymentPointerId
         }
       )
       await expect(outgoingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
@@ -100,7 +101,7 @@ describe('Outgoing Payment Routes', (): void => {
 
     test('returns 500 if TB account not found', async (): Promise<void> => {
       const outgoingPayment = await createPayment({
-        accountId
+        paymentPointerId
       })
       assert.ok(!isOutgoingPaymentError(outgoingPayment))
       jest
@@ -112,7 +113,8 @@ describe('Outgoing Payment Routes', (): void => {
         },
         {
           outgoingPaymentId: outgoingPayment.id,
-          accountId
+          // paymentPointerId
+          accountId: paymentPointerId
         }
       )
       await expect(outgoingPaymentRoutes.get(ctx)).rejects.toMatchObject({
@@ -129,7 +131,7 @@ describe('Outgoing Payment Routes', (): void => {
       'returns the $description outgoing payment on success',
       async ({ failed }): Promise<void> => {
         const outgoingPayment = await createPayment({
-          accountId,
+          paymentPointerId,
           description: 'rent',
           externalRef: '202201'
         })
@@ -142,18 +144,20 @@ describe('Outgoing Payment Routes', (): void => {
           {
             headers: { Accept: 'application/json' },
             method: 'GET',
-            url: `/${accountId}/outgoing-payments/${outgoingPayment.id}`
+            url: `/${paymentPointerId}/outgoing-payments/${outgoingPayment.id}`
           },
           {
             outgoingPaymentId: outgoingPayment.id,
-            accountId
+            // paymentPointerId
+            accountId: paymentPointerId
           }
         )
         await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.body).toEqual({
-          id: `${accountUrl}/outgoing-payments/${outgoingPayment.id}`,
-          accountId: accountUrl,
+          id: `${paymentPointerUrl}/outgoing-payments/${outgoingPayment.id}`,
+          // paymentPointer: paymentPointerUrl,
+          accountId: paymentPointerUrl,
           receiver: outgoingPayment.receiver,
           sendAmount: {
             ...outgoingPayment.sendAmount,
@@ -179,11 +183,11 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   describe('create', (): void => {
-    let options: Omit<CreateOutgoingPaymentOptions, 'accountId'>
+    let options: Omit<CreateOutgoingPaymentOptions, 'paymentPointerId'>
 
     beforeEach(async (): Promise<void> => {
       options = {
-        quoteId: `https://wallet.example/${accountId}/quotes/${uuid()}`
+        quoteId: `https://wallet.example/${paymentPointerId}/quotes/${uuid()}`
       }
     })
 
@@ -197,9 +201,10 @@ describe('Outgoing Payment Routes', (): void => {
             reqOpts.headers
           ),
           method: 'POST',
-          url: `/${accountId}/outgoing-payments`
+          url: `/${paymentPointerId}/outgoing-payments`
         },
-        { accountId }
+        // { paymentPointerId }
+        { accountId: paymentPointerId }
       )
       ctx.request.body = options
       return ctx
@@ -213,12 +218,12 @@ describe('Outgoing Payment Routes', (): void => {
       'returns the outgoing payment on success ($desc)',
       async ({ description, externalRef }): Promise<void> => {
         const payment = await createPayment({
-          accountId,
+          paymentPointerId,
           description,
           externalRef
         })
         options = {
-          quoteId: `https://wallet.example/${accountId}/quotes/${payment.quote.id}`,
+          quoteId: `https://wallet.example/${paymentPointerId}/quotes/${payment.quote.id}`,
           description,
           externalRef
         }
@@ -229,7 +234,7 @@ describe('Outgoing Payment Routes', (): void => {
           .mockResolvedValueOnce(payment)
         await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(createSpy).toHaveBeenCalledWith({
-          accountId,
+          paymentPointerId,
           quoteId: payment.quote.id,
           description,
           externalRef
@@ -241,8 +246,9 @@ describe('Outgoing Payment Routes', (): void => {
           .split('/')
           .pop()
         expect(ctx.response.body).toEqual({
-          id: `${accountUrl}/outgoing-payments/${outgoingPaymentId}`,
-          accountId: accountUrl,
+          id: `${paymentPointerUrl}/outgoing-payments/${outgoingPaymentId}`,
+          // paymentPointer: paymentPointerUrl,
+          accountId: paymentPointerUrl,
           receiver: payment.receiver,
           sendAmount: {
             ...payment.sendAmount,
@@ -269,16 +275,17 @@ describe('Outgoing Payment Routes', (): void => {
 
   describe('list', (): void => {
     listTests({
-      getAccountId: () => accountId,
-      getUrl: () => `/${accountId}/outgoing-payments`,
+      getPaymentPointerId: () => paymentPointerId,
+      getUrl: () => `/${paymentPointerId}/outgoing-payments`,
       createItem: async (index: number) => {
         const payment = await createPayment({
-          accountId,
+          paymentPointerId,
           description: `p${index}`
         })
         return {
-          id: `${accountUrl}/outgoing-payments/${payment.id}`,
-          accountId: accountUrl,
+          id: `${paymentPointerUrl}/outgoing-payments/${payment.id}`,
+          // paymentPointer: paymentPointerUrl,
+          accountId: paymentPointerUrl,
           receiver: payment.receiver,
           sendAmount: {
             ...payment.sendAmount,
@@ -305,13 +312,14 @@ describe('Outgoing Payment Routes', (): void => {
     test('returns 500 for unexpected error', async (): Promise<void> => {
       const outgoingPaymentService = await deps.use('outgoingPaymentService')
       jest
-        .spyOn(outgoingPaymentService, 'getAccountPage')
+        .spyOn(outgoingPaymentService, 'getPaymentPointerPage')
         .mockRejectedValueOnce(new Error('unexpected'))
       const ctx = createContext<ListContext>(
         {
           headers: { Accept: 'application/json' }
         },
-        { accountId }
+        // { paymentPointerId }
+        { accountId: paymentPointerId }
       )
       await expect(outgoingPaymentRoutes.list(ctx)).rejects.toMatchObject({
         status: 500,
