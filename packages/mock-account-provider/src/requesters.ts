@@ -148,3 +148,37 @@ export interface PeerLiquidityResponse {
     }
   }
 }
+
+export async function createAccount(
+  backendUrl: string,
+  accountName: string,
+  assetCode: string,
+  assetScale: string
+): Promise<PeerLiquidityResponse> {
+  const createAccountQuery = `
+	mutation CreateAccount ($input: CreateAccountInput!) {
+		createAccount(input: $input) {
+			code
+			success
+			message
+			account
+      error
+		}
+	}
+	`
+  const createAccountInput = {
+    input: {
+      asset: {
+        code: assetCode,
+        scale: assetScale
+      },
+      publicName: accountName
+    }
+  }
+  return (await graphqlQuery({
+    resource: backendUrl,
+    method: 'post',
+    query: createAccountQuery,
+    variables: createAccountInput
+  })) as PeerLiquidityResponse
+}
