@@ -1,23 +1,46 @@
 import * as _ from 'lodash'
 import { CONFIG } from './parse_config'
-import type { SeedInstance, Peering } from './parse_config'
-import { createPeer } from './requesters'
+import type { SeedInstance, Account, Peering } from './parse_config'
+import { createPeer, addPeerLiquidity, createAccount } from './requesters'
+import { v4 } from 'uuid'
 
-async function setupFromSeed(config: SeedInstance): Promise<void> {
-  const peers = await Promise.all(
-    _.map(config.peers, (peer: Peering) => {
-      return createPeer(
-        config.self.graphqlUrl,
+export async function setupFromSeed(config: SeedInstance): Promise<void> {
+  const peerResponses = await Promise.all(
+    _.map(config.peers, async (peer: Peering) => {
+      const peerResponse = await createPeer(
         peer.peerIlpAddress,
         peer.peerUrl,
         peer.asset,
         peer.scale
+      ).then((response) => response.peer)
+      if (!peerResponse) {
+        throw new Error('peer response not defined')
+      }
+      const transferUid = v4()
+      const liquidity = await addPeerLiquidity(
+        config.self.graphqlUrl,
+        peerResponse.id,
+        peer.initialLiquidity.toString(),
+        transferUid
+      )
+      return [peerResponse, liquidity]
+    })
+  )
+  console.log(JSON.stringify(peerResponses, null, 2))
+  const accountResponses = await Promise.all(
+    _.map(config.accounts, async (account: Account) => {
+      return createAccount(
+        config.self.graphqlUrl,
+        account.name,
+        account.url,
+        account.asset,
+        account.scale
       )
     })
   )
-  console.log(JSON.stringify(peers, null, 2))
+  console.log(JSON.stringify(accountResponses, null, 2))
 }
 
-setupFromSeed(CONFIG).then((data) => {
-  console.log(data)
-})
+export async function runSeed(): Promise<void> {
+  return setupFromSeed(CONFIG)
+}

@@ -18,7 +18,10 @@ export interface Peering {
 export interface Account {
   name: string
   id: string
+  asset: string
+  scale: number
   initialBalance: string
+  url: string
 }
 
 export interface SeedInstance {
