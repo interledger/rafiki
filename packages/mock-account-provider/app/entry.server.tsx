@@ -3,6 +3,17 @@ import type { EntryContext } from '@remix-run/node'
 import { Response } from '@remix-run/node'
 import { RemixServer } from '@remix-run/react'
 import { renderToPipeableStream } from 'react-dom/server'
+import { runSeed } from '../src/run_seed'
+
+declare global {
+  var seeded: boolean
+}
+
+if (!global.seeded) {
+  runSeed().then(() => {
+    global.seeded = true
+  })
+}
 
 const ABORT_DELAY = 5000
 

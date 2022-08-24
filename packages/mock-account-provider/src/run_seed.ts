@@ -4,7 +4,7 @@ import type { SeedInstance, Account, Peering } from './parse_config'
 import { createPeer, addPeerLiquidity, createAccount } from './requesters'
 import { v4 } from 'uuid'
 
-async function setupFromSeed(config: SeedInstance): Promise<void> {
+export async function setupFromSeed(config: SeedInstance): Promise<void> {
   const peerResponses = await Promise.all(
     _.map(config.peers, async (peer: Peering) => {
       const peerResponse = await createPeer(
@@ -41,6 +41,6 @@ async function setupFromSeed(config: SeedInstance): Promise<void> {
   console.log(JSON.stringify(accountResponses, null, 2))
 }
 
-setupFromSeed(CONFIG).then((data) => {
-  console.log(data)
-})
+export async function runSeed(): Promise<void> {
+  return setupFromSeed(CONFIG)
+}
