@@ -5,6 +5,8 @@ services:
     restart: always
     networks:
       rafiki:
+    ports:
+      - "4006:3006"
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://peerauth:peerauth@database/peerauth
@@ -14,15 +16,16 @@ services:
     restart: always
     privileged: true
     ports:
-      - "4001:80"
+      - "4000:80"
+      - "4001:3001"
     networks:
       rafiki:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      ADMIN_PORT: 80
+      ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
-      OPEN_PAYMENTS_PORT: 3003
+      OPEN_PAYMENTS_PORT: 80
       DATABASE_URL: postgresql://peerbackend:peerbackend@database/peerbackend
       TIGERBEETLE_CLUSTER_ID: 0
       # Tigerbeetle will support DNS in future
@@ -34,10 +37,21 @@ services:
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
       PUBLIC_HOST: http://peer-backend
-      WEBHOOK_URL: http://mock-account-provider/webhooks
-      OPEN_PAYMENTS_URL: op.rafiki.peer
+      WEBHOOK_URL: http://local-bank/webhooks
+      OPEN_PAYMENTS_URL: http://local-bank
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
-      PRICES_URL: http://peer-rates/prices
-      REDIS_URL: redis://redis:6379
-      QUOTE_URL: http://mock-account-provider/quote
+      PRICES_URL: http://local-bank/prices
+      REDIS_URL: redis://redis:6379/1
+      QUOTE_URL: http://local-bank/quote
+  local-bank:
+    build:
+      context: ../..
+      dockerfile: ./packages/mock-account-provider/Dockerfile
+    restart: always
+    networks:
+      rafiki:
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT: 80
