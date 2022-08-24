@@ -54,3 +54,17 @@ rm -rf app
 # copy your app over
 cp -R ../my-old-remix-app/app app
 ```
+
+# Mock Account Provider
+
+## Seed file
+
+The default [seed file](./seed.yml) contains the seed data for the demo rafiki
+configuration.
+
+Make sure the demo stack is running and not previously seeded.
+
+Build the code locally with `pnpm build-seed`. Run it with
+`pnpm node dist/run_seed.js`. To use a different config file, set the
+`SEED_FILE_LOCATION` environment variable, e.g.
+`SEED_FILE_LOCATION=<path to seed file> pnpm node dist/run_seed.js``
