@@ -1,10 +1,35 @@
 import {
   ResolversTypes,
   Client as SchemaClient,
-  MutationResolvers
+  MutationResolvers,
+  QueryResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import { Client } from '../../clients/model'
+
+export const getClient: QueryResolvers<ApolloContext>['client'] = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['Client']> => {
+  try {
+    const clientService = await ctx.container.use('clientService')
+    const client = await clientService.getClient(args.id)
+    if (!client) {
+      throw new Error('Client not found')
+    }
+
+    return clientToGraphql(client)
+  } catch (err) {
+    ctx.logger.error(
+      {
+        options: args.id,
+        err
+      },
+      'Error getting client'
+    )
+  }
+}
 
 export const createClient: MutationResolvers<ApolloContext>['createClient'] =
   async (

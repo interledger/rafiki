@@ -13,6 +13,7 @@ import { ClientService } from '../../clients/service'
 import {
   AddKeyToClientInput,
   AddKeyToClientMutationResponse,
+  Client,
   CreateClientInput,
   CreateClientMutationResponse
 } from '../generated/graphql'
@@ -61,6 +62,52 @@ describe('Client Resolvers', (): void => {
   afterAll(async (): Promise<void> => {
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
+  })
+
+  describe('Client Queries', (): void => {
+    test('Can get a client', async (): Promise<void> => {
+      const client = await clientService.createClient(TEST_CLIENT)
+
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query Client($clientId: String!) {
+              client(id: $clientId) {
+                id
+                name
+                uri
+                image
+                email
+                keys {
+                  id
+                }
+                createdAt
+              }
+            }
+          `,
+          variables: {
+            clientId: client.id
+          }
+        })
+        .then((query): Client => {
+          if (query.data) {
+            return query.data.client
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(query).toEqual({
+        __typename: 'Client',
+        id: client.id,
+        name: client.name,
+        uri: client.uri,
+        image: client.image,
+        email: client.email,
+        keys: [],
+        createdAt: client.createdAt.toISOString()
+      })
+    })
   })
 
   describe('Create Client', (): void => {
