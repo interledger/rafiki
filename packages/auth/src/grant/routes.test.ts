@@ -19,7 +19,7 @@ import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { GrantRequest } from '../grant/service'
 import { AccessToken } from '../accessToken/model'
 
-export const KID_ORIGIN = 'https://openpayments.network'
+export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const KID_PATH = '/keys/base-test-key'
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -37,7 +37,7 @@ export const TEST_CLIENT_KEY = {
       image: 'a link to an image',
       uri: TEST_CLIENT_DISPLAY.uri
     },
-    kid: KID_ORIGIN + KID_PATH,
+    kid: KEY_REGISTRY_ORIGIN + KID_PATH,
     x: 'hin88zzQxp79OOqIFNCME26wMiz0yqjzgkcBe0MW8pE',
     kty: 'OKP',
     alg: 'EdDSA',
@@ -126,7 +126,7 @@ const generateBaseGrant = () => ({
   finishMethod: FinishMethod.Redirect,
   finishUri: 'https://example.com',
   clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-  clientKeyId: KID_ORIGIN + KID_PATH,
+  clientKeyId: KEY_REGISTRY_ORIGIN + KID_PATH,
   interactId: v4(),
   interactRef: v4(),
   interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -189,7 +189,7 @@ describe('Grant Routes', (): void => {
         }
       }
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -233,7 +233,7 @@ describe('Grant Routes', (): void => {
         }
       }
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -276,7 +276,7 @@ describe('Grant Routes', (): void => {
         }
       }
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -319,7 +319,7 @@ describe('Grant Routes', (): void => {
         }
       }
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -363,7 +363,7 @@ describe('Grant Routes', (): void => {
         }
       }
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -406,7 +406,7 @@ describe('Grant Routes', (): void => {
         }
       }
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -449,7 +449,7 @@ describe('Grant Routes', (): void => {
         }
       }
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -492,7 +492,7 @@ describe('Grant Routes', (): void => {
         }
       }
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -573,7 +573,7 @@ describe('Grant Routes', (): void => {
       const nbfDate = new Date()
       nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -622,7 +622,7 @@ describe('Grant Routes', (): void => {
       const nbfDate = new Date()
       nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
 
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
@@ -669,7 +669,7 @@ describe('Grant Routes', (): void => {
   describe('interaction', (): void => {
     describe('interaction start', (): void => {
       test('Interaction start fails if grant is invalid', async (): Promise<void> => {
-        const scope = nock(KID_ORIGIN)
+        const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(KID_PATH)
           .reply(200, {
             ...TEST_CLIENT_KEY.jwk,
@@ -703,7 +703,7 @@ describe('Grant Routes', (): void => {
           finishMethod: FinishMethod.Redirect,
           finishUri: 'https://example.com',
           clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-          clientKeyId: KID_ORIGIN + '/wrong-key',
+          clientKeyId: KEY_REGISTRY_ORIGIN + '/wrong-key',
           interactId: v4(),
           interactRef: v4(),
           interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -731,7 +731,7 @@ describe('Grant Routes', (): void => {
       })
 
       test('Can start an interaction', async (): Promise<void> => {
-        const scope = nock(KID_ORIGIN)
+        const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(KID_PATH)
           .reply(200, {
             ...TEST_CLIENT_KEY.jwk,

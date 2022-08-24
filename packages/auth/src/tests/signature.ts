@@ -1,13 +1,13 @@
 import crypto from 'crypto'
 import { v4 } from 'uuid'
 import { importJWK, exportJWK } from 'jose'
-import { KID_ORIGIN } from '../grant/routes.test'
+import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
 import { JWKWithRequired } from '../client/service'
 
 export const SIGNATURE_METHOD = 'GET'
 export const SIGNATURE_TARGET_URI = '/test'
 
-const TEST_CLIENT_DISPLAY = {
+export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
   uri: 'https://example.com'
 }
@@ -41,12 +41,12 @@ export async function generateTestKeys(): Promise<{
     keyId,
     publicKey: {
       ...BASE_TEST_KEY,
-      kid: KID_ORIGIN + '/' + keyId,
+      kid: KEY_REGISTRY_ORIGIN + '/' + keyId,
       x
     },
     privateKey: {
       ...BASE_TEST_KEY,
-      kid: KID_ORIGIN + '/' + keyId,
+      kid: KEY_REGISTRY_ORIGIN + '/' + keyId,
       x,
       d
     }

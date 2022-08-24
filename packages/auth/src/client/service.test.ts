@@ -5,10 +5,9 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { v4 } from 'uuid'
 import { ClientService, JWKWithRequired } from './service'
 import { generateTestKeys } from '../tests/signature'
-import { KID_ORIGIN } from '../grant/routes.test'
+import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
 
 const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -32,11 +31,6 @@ describe('Client Service', (): void => {
     const keys = await generateTestKeys()
     keyPath = '/' + keys.keyId
     publicKey = keys.publicKey
-    privateKey = keys.privateKey
-    testClientKey = {
-      proof: 'httpsig',
-      jwk: publicKey
-    }
   })
 
   afterAll(async (): Promise<void> => {
@@ -52,7 +46,7 @@ describe('Client Service', (): void => {
     nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
     describe('Client Properties', (): void => {
       test('Can validate client properties with registry', async (): Promise<void> => {
-        const scope = nock(KID_ORIGIN)
+        const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(keyPath)
           .reply(200, {
             ...publicKey,
@@ -68,7 +62,7 @@ describe('Client Service', (): void => {
             proof: 'httpsig',
             jwk: {
               ...publicKey,
-              kid: KID_ORIGIN + keyPath
+              kid: KEY_REGISTRY_ORIGIN + keyPath
             }
           }
         })
@@ -78,7 +72,7 @@ describe('Client Service', (): void => {
       })
 
       test('Cannot validate client with incorrect display name', async (): Promise<void> => {
-        const scope = nock(KID_ORIGIN)
+        const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
             ...publicKey,
@@ -100,7 +94,7 @@ describe('Client Service', (): void => {
       })
 
       test('Cannot validate client with incorrect uri', async (): Promise<void> => {
-        const scope = nock(KID_ORIGIN)
+        const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
             ...publicKey,
@@ -123,7 +117,7 @@ describe('Client Service', (): void => {
     })
 
     test('Cannot validate client with kid that doesnt resolve', async (): Promise<void> => {
-      const scope = nock(KID_ORIGIN).get('/wrong').reply(200)
+      const scope = nock(KEY_REGISTRY_ORIGIN).get('/wrong').reply(200)
 
       const validClientKid = await clientService.validateClient({
         display: TEST_CLIENT_DISPLAY,
@@ -141,7 +135,7 @@ describe('Client Service', (): void => {
     })
 
     test('Cannot validate client with jwk that doesnt have a public key', async (): Promise<void> => {
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
           ...publicKey,
@@ -226,7 +220,7 @@ describe('Client Service', (): void => {
     test('Cannot validate client with key that is not ready', async (): Promise<void> => {
       const futureDate = new Date()
       futureDate.setTime(futureDate.getTime() + 1000 * 60 * 60)
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get('/keys/notready')
         .reply(200, {
           ...publicKey,
@@ -241,7 +235,7 @@ describe('Client Service', (): void => {
           proof: 'httpsig',
           jwk: {
             ...publicKey,
-            kid: KID_ORIGIN + '/keys/notready'
+            kid: KEY_REGISTRY_ORIGIN + '/keys/notready'
           }
         }
       })
@@ -251,7 +245,7 @@ describe('Client Service', (): void => {
     })
 
     test('Cannot validate client with expired key', async (): Promise<void> => {
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get('/keys/invalidclient')
         .reply(200, {
           ...publicKey,
@@ -266,7 +260,7 @@ describe('Client Service', (): void => {
           proof: 'httpsig',
           jwk: {
             ...publicKey,
-            kid: KID_ORIGIN + '/keys/invalidclient'
+            kid: KEY_REGISTRY_ORIGIN + '/keys/invalidclient'
           }
         }
       })
@@ -276,7 +270,7 @@ describe('Client Service', (): void => {
     })
 
     test('Cannot validate client with revoked key', async (): Promise<void> => {
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get('/keys/revoked')
         .reply(200, {
           ...publicKey,
@@ -291,7 +285,7 @@ describe('Client Service', (): void => {
           proof: 'httpsig',
           jwk: {
             ...publicKey,
-            kid: KID_ORIGIN + '/keys/revoked'
+            kid: KEY_REGISTRY_ORIGIN + '/keys/revoked'
           }
         }
       })

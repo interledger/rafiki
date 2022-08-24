@@ -113,19 +113,15 @@ async function verifySigFromBoundKey(
   grant: Grant,
   ctx: AppContext
 ): Promise<VerifySigResult> {
-  const registryData = await deps.clientService.getRegistryDataByKid(
-    grant.clientKeyId
-  )
-  if (!registryData)
+  const key = await deps.clientService.getKeyByKid(grant.clientKeyId)
+  if (!key)
     return {
       success: false,
       error: 'invalid_client',
       status: 401
     }
-  const { keys } = registryData
-  const clientKey = keys[0]
 
-  return verifySigAndChallenge(deps, sig, sigInput, clientKey, ctx)
+  return verifySigAndChallenge(deps, sig, sigInput, key, ctx)
 }
 
 function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
@@ -245,7 +241,7 @@ async function tokenHttpsigMiddleware(
     }
     verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
   } else if (path === '/' && method === HttpMethod.POST.toUpperCase()) {
-    if (!(await deps.clientService.validateClientWithRegistry(body.client))) {
+    if (!(await deps.clientService.validateClient(body.client))) {
       ctx.status = 401
       ctx.body = { error: 'invalid_client' }
       return

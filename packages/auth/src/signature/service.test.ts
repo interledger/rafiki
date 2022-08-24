@@ -13,17 +13,12 @@ import { AppServices } from '../app'
 import { SignatureService } from './service'
 import { JWKWithRequired } from '../client/service'
 import { createContext, createContextWithSigHeaders } from '../tests/context'
-import { generateTestKeys } from '../tests/signature'
+import { TEST_CLIENT_DISPLAY, generateTestKeys } from '../tests/signature'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessType, Action } from '../access/types'
-import { KID_ORIGIN } from '../grant/routes.test'
-
-const TEST_CLIENT_DISPLAY = {
-  name: 'Test Client',
-  url: 'https://example.com'
-}
+import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -188,7 +183,7 @@ describe('Signature Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: KID_ORIGIN + keyPath
+        clientKeyId: KEY_REGISTRY_ORIGIN + keyPath
       })
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -213,12 +208,9 @@ describe('Signature Service', (): void => {
     })
 
     test('Validate POST / request with middleware', async (): Promise<void> => {
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
-        .reply(200, {
-          keys: [testClientKey.jwk],
-          ...TEST_CLIENT_DISPLAY
-        })
+        .reply(200, testClientKey.jwk)
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -232,7 +224,10 @@ describe('Signature Service', (): void => {
         {
           client: {
             display: TEST_CLIENT_DISPLAY,
-            key: testClientKey
+            key: {
+              proof: 'httpsig',
+              jwk: testClientKey.jwk
+            }
           }
         },
         privateKey
@@ -247,11 +242,9 @@ describe('Signature Service', (): void => {
     })
 
     test('Validate /introspect request with middleware', async (): Promise<void> => {
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
-        .reply(200, {
-          keys: [testClientKey.jwk]
-        })
+        .reply(200, testClientKey.jwk)
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -279,11 +272,9 @@ describe('Signature Service', (): void => {
     })
 
     test('Validate DEL /token request with middleware', async () => {
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
-        .reply(200, {
-          keys: [testClientKey.jwk]
-        })
+        .reply(200, testClientKey.jwk)
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -342,8 +333,7 @@ describe('Signature Service', (): void => {
         {
           access_token: token.value,
           proof: 'httpsig',
-          resource_server: 'test',
-          test: 'middleware fail'
+          resource_server: 'test'
         },
         privateKey
       )
@@ -355,11 +345,9 @@ describe('Signature Service', (): void => {
     })
 
     test('httpsig middleware fails if headers are invalid', async () => {
-      const scope = nock(KID_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
-        .reply(200, {
-          keys: [testClientKey.jwk]
-        })
+        .reply(200, testClientKey.jwk)
       const method = 'DELETE'
 
       const ctx = createContext(
