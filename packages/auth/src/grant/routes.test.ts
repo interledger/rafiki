@@ -1035,7 +1035,7 @@ describe('Grant Routes', (): void => {
           }
         },
         {
-          continueId: grant.continueId
+          id: grant.continueId
         }
       )
 
@@ -1060,7 +1060,7 @@ describe('Grant Routes', (): void => {
           }
         },
         {
-          continueId: grant.continueId
+          id: grant.continueId
         }
       )
 
