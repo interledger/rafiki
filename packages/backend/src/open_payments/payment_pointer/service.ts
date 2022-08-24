@@ -1,4 +1,5 @@
 import { TransactionOrKnex } from 'objection'
+import { URL } from 'url'
 
 import { PaymentPointerError } from './errors'
 import {
@@ -58,20 +59,28 @@ export const FORBIDDEN_PATHS = [
   '/quotes'
 ]
 
-function isValidPaymentPointer(paymentPointer: string): boolean {
-  for (const path of FORBIDDEN_PATHS) {
-    if (paymentPointer.includes(path)) {
+function isValidPaymentPointerUrl(paymentPointerUrl: string): boolean {
+  try {
+    const url = new URL(paymentPointerUrl)
+    if (url.pathname === '/') {
       return false
     }
+    for (const path of FORBIDDEN_PATHS) {
+      if (url.pathname.includes(path)) {
+        return false
+      }
+    }
+    return true
+  } catch (_) {
+    return false
   }
-  return true
 }
 
 async function createPaymentPointer(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<PaymentPointer | PaymentPointerError> {
-  if (!isValidPaymentPointer(options.url)) {
+  if (!isValidPaymentPointerUrl(options.url)) {
     return PaymentPointerError.InvalidUrl
   }
   const asset = await deps.assetService.getOrCreate(options.asset)

@@ -73,6 +73,42 @@ describe('Open Payments Payment Pointer Service', (): void => {
       }
     )
 
+    test.each`
+      url                    | description
+      ${'not a url'}         | ${'without a valid url'}
+      ${'https://alice.me'}  | ${'with a url without a path'}
+      ${'https://alice.me/'} | ${'with a url without a path'}
+    `(
+      'Payment pointer cannot be created %description (%url)',
+      async ({ url }): Promise<void> => {
+        await expect(
+          paymentPointerService.create({
+            ...options,
+            url
+          })
+        ).resolves.toEqual(PaymentPointerError.InvalidUrl)
+      }
+    )
+
+    test.each(FORBIDDEN_PATHS.map((path) => [path]))(
+      'Payment pointer cannot be created with forbidden url path (%s)',
+      async (path): Promise<void> => {
+        const url = `https://alice.me${path}`
+        await expect(
+          paymentPointerService.create({
+            ...options,
+            url
+          })
+        ).resolves.toEqual(PaymentPointerError.InvalidUrl)
+        await expect(
+          paymentPointerService.create({
+            ...options,
+            url: `${url}/more/path`
+          })
+        ).resolves.toEqual(PaymentPointerError.InvalidUrl)
+      }
+    )
+
     test.each(FORBIDDEN_PATHS.map((path) => [path]))(
       'Payment pointer cannot be created with forbidden url path (%s)',
       async (path): Promise<void> => {
