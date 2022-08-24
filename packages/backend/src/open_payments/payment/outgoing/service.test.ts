@@ -13,6 +13,7 @@ import {
 import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { IAppConfig, Config } from '../../../config/app'
+import { CreateQuoteOptions } from '../../quote/service'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
@@ -33,8 +34,6 @@ import { RETRY_BACKOFF_SECONDS } from './worker'
 import { isTransferError } from '../../../accounting/errors'
 import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
-import { CreateQuoteOptions } from '../../quote/service'
-import { getPageTests } from '../../../shared/baseModel.test'
 import { Amount } from '../../amount'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
@@ -1107,17 +1106,20 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
-  describe('getAccountPage', (): void => {
+  describe('getPaymentPointerPage', (): void => {
     getPageTests({
       createModel: () =>
         createOutgoingPayment(deps, {
-          accountId,
+          paymentPointerId,
           receiver,
           sendAmount,
           validDestination: false
         }),
       getPage: (pagination: Pagination) =>
-        outgoingPaymentService.getAccountPage(accountId, pagination)
+        outgoingPaymentService.getPaymentPointerPage(
+          paymentPointerId,
+          pagination
+        )
     })
   })
 })

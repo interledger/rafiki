@@ -8,8 +8,10 @@ import {
 import { AuthState } from './auth'
 import { validateId } from '../../../shared/utils'
 import { IncomingPaymentState } from '../../../open_payments/payment/incoming/model'
-import { CreateAccountError } from '../../../accounting/errors'
-import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
+import {
+  areAllAccountExistsErrors,
+  CreateAccountError
+} from '../../../accounting/errors'
 
 const UUID_LENGTH = 36
 
@@ -48,7 +50,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               // Don't complain if liquidity account already exists.
               if (
                 err instanceof CreateAccountError &&
-                err.code === CreateAccountErrorCode.exists
+                areAllAccountExistsErrors([err.code])
               ) {
                 // Do nothing.
               } else {

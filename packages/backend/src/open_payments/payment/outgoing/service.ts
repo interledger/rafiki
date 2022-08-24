@@ -15,14 +15,16 @@ import {
   OutgoingPaymentState,
   PaymentEventType
 } from './model'
-import { AccountingService, AccountTypeCode } from '../../../accounting/service'
+import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
-import { CreateAccountError } from '../../../accounting/errors'
-import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
+import {
+  areAllAccountExistsErrors,
+  CreateAccountError
+} from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
 
@@ -354,7 +356,7 @@ async function fundPayment(
       // Don't complain if liquidity account already exists.
       if (
         err instanceof CreateAccountError &&
-        err.code === CreateAccountErrorCode.exists
+        areAllAccountExistsErrors([err.code])
       ) {
         // Do nothing.
       } else {
@@ -398,7 +400,7 @@ async function getPaymentPointerPage(
           payment.state === OutgoingPaymentState.Funding
       )
       payment.sentAmount = {
-        value: amounts[i] ? BigInt(amounts[i]) : BigInt(0),
+        value: amounts[i] ?? BigInt(0),
         assetCode: payment.asset.code,
         assetScale: payment.asset.scale
       }

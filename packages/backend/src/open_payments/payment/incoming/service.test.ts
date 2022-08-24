@@ -80,7 +80,7 @@ describe('Incoming Payment Service', (): void => {
       expect(retrievedIncomingPayment).toEqual(incomingPayment)
     })
 
-    test('Cannot create incoming payment for nonexistent account', async (): Promise<void> => {
+    test('Cannot create incoming payment for nonexistent payment pointer', async (): Promise<void> => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId: uuid(),

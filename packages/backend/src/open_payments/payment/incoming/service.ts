@@ -4,7 +4,7 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
-import { AccountingService, AccountTypeCode } from '../../../accounting/service'
+import { AccountingService } from '../../../accounting/service'
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
@@ -311,9 +311,7 @@ async function addReceivedAmount(
   value?: bigint
 ): Promise<IncomingPayment> {
   const received =
-    value !== undefined
-      ? value
-      : await deps.accountingService.getTotalReceived(payment.id)
+    value ?? (await deps.accountingService.getTotalReceived(payment.id))
 
   payment.receivedAmount = {
     value: received || BigInt(0),
