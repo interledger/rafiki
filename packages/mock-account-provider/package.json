@@ -2,6 +2,7 @@
   "name": "mock-account-provider",
   "sideEffects": false,
   "scripts": {
+    "build-seed": "tsc src/run_seed.ts --lib ES6,dom --outDir dist",
     "build": "remix build",
     "dev": "remix dev",
     "start": "remix-serve build"
@@ -10,12 +11,18 @@
     "@remix-run/node": "^1.6.8",
     "@remix-run/react": "^1.6.8",
     "@remix-run/serve": "^1.6.8",
+    "@types/node": "^18.7.12",
+    "@types/node-fetch": "^2.6.2",
+    "lodash": "^4.17.21",
+    "node-fetch": "^2.0.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "yaml": "^2.1.1"
   },
   "devDependencies": {
     "@remix-run/dev": "^1.6.8",
     "@remix-run/eslint-config": "^1.6.8",
+    "@types/lodash": "^4.14.184",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
     "eslint": "^8.20.0",

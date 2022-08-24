@@ -1,11 +1,13 @@
 self:
-  hostname: 'primary-backend'
+  graphqlUrl: http://localhost:3001/graphql
+  hostname: 'backend'
   mapHostname: 'primary-map'
 peers:
-  asset: USD
-  scale: 2
-  initialLiquidity: 100000
-  peerHostname: 'secondary-backend'
+  - asset: USD
+    scale: 2
+    initialLiquidity: 100000
+    peerUrl: http://peer-backend:3002
+    peerIlpAddress: test.peer
 accounts:
   - name: "Grace Franklin"
     id: 742ab7cd-1624-4d2e-af6e-e15a71638669
