@@ -263,7 +263,7 @@ async function getPaymentPointerPage(
   return page.map((payment: IncomingPayment, i: number) => {
     try {
       payment.receivedAmount = {
-        value: BigInt(amounts[i]),
+        value: amounts[i] || BigInt(0),
         assetCode: payment.asset.code,
         assetScale: payment.asset.scale
       }
