@@ -55,3 +55,8 @@ services:
       NODE_ENV: development
       LOG_LEVEL: debug
       PORT: 80
+      SEED_FILE_LOCATION: /workspace/seed.peer.yml
+    volumes:
+      - ./seed.peer.yml:/workspace/seed.peer.yml
+    depends_on:
+      - peer-backend
