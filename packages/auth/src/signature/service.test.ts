@@ -13,7 +13,11 @@ import { AppServices } from '../app'
 import { SignatureService } from './service'
 import { JWKWithRequired } from '../client/service'
 import { createContext, createContextWithSigHeaders } from '../tests/context'
-import { TEST_CLIENT_DISPLAY, generateTestKeys } from '../tests/signature'
+import {
+  TEST_CLIENT_DISPLAY,
+  generateTestKeys,
+  TEST_CLIENT
+} from '../tests/signature'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
@@ -208,9 +212,10 @@ describe('Signature Service', (): void => {
     })
 
     test('Validate POST / request with middleware', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(keyPath)
-        .reply(200, testClientKey.jwk)
+      const scope = nock(KEY_REGISTRY_ORIGIN).get(keyPath).reply(200, {
+        key: testClientKey.jwk,
+        client: TEST_CLIENT
+      })
 
       const ctx = await createContextWithSigHeaders(
         {

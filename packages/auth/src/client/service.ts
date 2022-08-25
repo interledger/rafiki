@@ -15,6 +15,11 @@ export interface JWKWithRequired extends JWK {
   revoked?: boolean
 }
 
+export interface jWKandClient {
+  key: JWKWithRequired
+  client: ClientDetails
+}
+
 interface DisplayInfo {
   name: string
   uri: string
@@ -44,7 +49,7 @@ interface ServiceDependencies extends BaseService {
 
 export interface ClientService {
   validateClient(clientInfo: ClientInfo): Promise<boolean>
-  getKeyByKid(kid: string): Promise<JWKWithRequired>
+  getKeyByKid(kid: string): Promise<jWKandClient>
 }
 
 export async function createClientService({
@@ -75,17 +80,14 @@ async function validateClient(
 
   const { jwk } = clientInfo.key
 
-  const key = await getKeyByKid(deps, jwk.kid)
+  const { key, client } = await getKeyByKid(deps, jwk.kid)
 
   if (!key || !isJWKWithRequired(key) || jwk.x !== key.x || key.revoked)
     return false
 
   if (
-    jwk.client.name !== key.client.name ||
-    jwk.client.uri !== key.client.uri ||
-    jwk.client.id !== key.client.id ||
-    clientInfo.display.name !== key.client.name ||
-    clientInfo.display.uri !== key.client.uri
+    clientInfo.display.name !== client.name ||
+    clientInfo.display.uri !== client.uri
   )
     return false
 
@@ -99,7 +101,7 @@ async function validateClient(
 async function getKeyByKid(
   deps: ServiceDependencies,
   kid: string
-): Promise<JWKWithRequired> {
+): Promise<jWKandClient> {
   return Axios.get(kid)
     .then((res) => res.data)
     .catch((err) => {
@@ -124,8 +126,7 @@ function isJWKWithRequired(
     (jwk.key_ops &&
       (!jwk.key_ops.includes('sign') || !jwk.key_ops.includes('verify'))) ||
     jwk.alg !== 'EdDSA' ||
-    jwk.crv !== 'Ed25519' ||
-    jwk.client === undefined
+    jwk.crv !== 'Ed25519'
   )
 }
 

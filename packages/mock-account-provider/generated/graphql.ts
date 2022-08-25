@@ -707,6 +707,11 @@ export type QueryQuoteArgs = {
   id: Scalars['String'];
 };
 
+
+export type QueryClientArgs = {
+  id: Scalars['String'];
+};
+
 export type Quote = {
   __typename?: 'Quote';
   createdAt: Scalars['String'];

@@ -6,7 +6,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { ClientService, JWKWithRequired } from './service'
-import { generateTestKeys } from '../tests/signature'
+import { generateTestKeys, TEST_CLIENT } from '../tests/signature'
 import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
 
 const TEST_CLIENT_DISPLAY = {
@@ -49,11 +49,14 @@ describe('Client Service', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(keyPath)
           .reply(200, {
-            ...publicKey,
-            kid: KEY_REGISTRY_ORIGIN + '/keys/correct',
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
+            key: {
+              ...publicKey,
+              kid: KEY_REGISTRY_ORIGIN + '/keys/correct',
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            },
+            client: TEST_CLIENT
           })
 
         const validClient = await clientService.validateClient({
