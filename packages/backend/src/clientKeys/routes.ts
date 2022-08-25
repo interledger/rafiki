@@ -1,8 +1,10 @@
 import { ClientKeysContext } from '../app'
+import { ClientService } from '../clients/service'
 import { ClientKeysService } from './service'
 
 interface ServiceDependencies {
   clientKeysService: ClientKeysService
+  clientService: ClientService
 }
 
 export interface ClientKeysRoutes {
@@ -26,5 +28,10 @@ export async function getKeyById(
     ctx.throw(404)
   }
 
-  ctx.body = key
+  // const clientDetails = await deps.clientService.getClient(key.clientId)
+  // if (!clientDetails) {
+  //   ctx.throw(404)
+  // }
+
+  ctx.body = key.jwk
 }

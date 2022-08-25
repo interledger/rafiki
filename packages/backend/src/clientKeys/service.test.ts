@@ -21,10 +21,6 @@ const TEST_CLIENT = {
 const KEY_UUID = uuid()
 const TEST_KID_PATH = '/keys/' + KEY_UUID
 const TEST_CLIENT_KEY = {
-  client: {
-    id: uuid(),
-    ...TEST_CLIENT
-  },
   kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
   x: 'test-public-key',
   kty: 'OKP',
@@ -81,7 +77,7 @@ describe('Client Key Service', (): void => {
       }
       await clientService.addKeyToClient(keyOption)
       const key = await clientKeysService.getKeyById(KEY_UUID)
-      await expect(key.client.id).toEqual(client.id)
+      await expect(key.clientId).toEqual(client.id)
     })
   })
 })

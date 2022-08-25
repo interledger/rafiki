@@ -5,8 +5,6 @@ import { BaseService } from '../shared/baseService'
 import { IAppConfig } from '../config/app'
 
 export interface JWKWithRequired extends JWK {
-  // client is the custom field representing a client in the backend
-  client: ClientDetails
   kid: string
   x: string
   alg: string
