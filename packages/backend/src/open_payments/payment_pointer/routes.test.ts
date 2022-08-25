@@ -2,16 +2,16 @@ import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { createContext } from '../../tests/context'
-import { createTestApp, TestContainer } from '../../tests/app'
-import { Config, IAppConfig } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
+import { faker } from '@faker-js/faker'
 import { initIocContainer } from '../../'
 import { AppServices, PaymentPointerContext } from '../../app'
-import { truncateTables } from '../../tests/tableManager'
+import { Config, IAppConfig } from '../../config/app'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
+import { truncateTables } from '../../tests/tableManager'
 import { PaymentPointerRoutes } from './routes'
-import { faker } from '@faker-js/faker'
 
 describe('Payment Pointer Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -49,7 +49,7 @@ describe('Payment Pointer Routes', (): void => {
         {
           headers: { Accept: 'application/json' }
         },
-        { paymentPointerId: uuid() }
+        { accountId: uuid() }
       )
       await expect(paymentPointerRoutes.get(ctx)).rejects.toHaveProperty(
         'status',
@@ -67,7 +67,7 @@ describe('Payment Pointer Routes', (): void => {
           headers: { Accept: 'application/json' },
           url: `/${paymentPointer.id}`
         },
-        { paymentPointerId: paymentPointer.id }
+        { accountId: paymentPointer.id }
       )
       await expect(paymentPointerRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()

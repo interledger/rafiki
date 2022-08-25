@@ -5,6 +5,8 @@ services:
     restart: always
     networks:
       rafiki:
+    ports:
+      - "3006:3006"
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
@@ -12,7 +14,7 @@ services:
     depends_on:
       - tigerbeetle
       - database
-  mock-account-provider:
+  fynbos:
     build:
       context: ../..
       dockerfile: ./packages/mock-account-provider/Dockerfile
@@ -28,15 +30,16 @@ services:
     restart: always
     privileged: true
     ports:
-      - "3001:80"
+      - "3000:80"
+      - "3001:3001"
     networks:
       rafiki:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      ADMIN_PORT: 80
+      ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
-      OPEN_PAYMENTS_PORT: 3003
+      OPEN_PAYMENTS_PORT: 80
       DATABASE_URL: postgresql://backend:backend@database/backend
       REDIS_URL: redis://redis:6379
       TIGERBEETLE_CLUSTER_ID: 0
@@ -44,18 +47,18 @@ services:
       TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
       NONCE_REDIS_KEY: test
       AUTH_SERVER_GRANT_URL: http://auth:3006
-      AUTH_SERVER_INTROSPECTION_URL: http://auth:3006/introspect
+      AUTH_SERVER_INTROSPECTION_URL: http://auth:3006/auth/introspect
       ILP_ADDRESS: test.rafiki
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
       PUBLIC_HOST: http://backend
-      OPEN_PAYMENTS_URL: op.rafiki.test
-      WEBHOOK_URL: http://mock-account-provider/webhooks
+      OPEN_PAYMENTS_URL: http://backend
+      WEBHOOK_URL: http://fynbos/webhooks
       OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
-      PRICES_URL: http://rates/prices
-      REDIS_URL: redis://redis:6379
-      QUOTE_URL: http://mock-account-provider/quotes
+      PRICES_URL: http://fynbos/prices
+      REDIS_URL: redis://redis:6379/0
+      QUOTE_URL: http://fynbos/quotes
     depends_on:
       - tigerbeetle
       - database

@@ -17,4 +17,4 @@ RUN pnpm install -r --offline
 
 RUN pnpm --filter mock-account-provider build
 
-CMD ["pnpm", "start"]
+CMD pnpm --filter mock-account-provider start
