@@ -10,6 +10,7 @@ import { randomAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
+import { uuid } from '../../connector/core'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -41,6 +42,7 @@ describe('Incoming Payment Resolver', (): void => {
       createModel: () =>
         createIncomingPayment(deps, {
           paymentPointerId,
+          clientId: uuid(),
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,

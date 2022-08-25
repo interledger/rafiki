@@ -21,6 +21,7 @@ import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
 import { PeerFactory } from '../tests/peerFactory'
 import { isAssetError } from '../asset/errors'
+import { uuid } from '../connector/core'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -107,7 +108,8 @@ describe('Pagination', (): void => {
             const paymentIds: string[] = []
             for (let i = 0; i < num; i++) {
               const payment = await createIncomingPayment(deps, {
-                paymentPointerId: defaultPaymentPointer.id
+                paymentPointerId: defaultPaymentPointer.id,
+                clientId: uuid()
               })
               paymentIds.push(payment.id)
             }

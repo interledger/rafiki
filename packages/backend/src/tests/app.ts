@@ -18,6 +18,7 @@ import { URL } from 'url'
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
 import { Grant, AccessAction, AccessType } from '../open_payments/auth/grant'
+import { uuid } from '../connector/core'
 
 export const testAccessToken = 'test-app-access'
 
@@ -60,6 +61,7 @@ export const createTestApp = async (
 
   const grant = new Grant({
     active: true,
+    clientId: uuid(),
     grant: 'PRY5NM33OM4TB8N6BW7',
     access: [
       {

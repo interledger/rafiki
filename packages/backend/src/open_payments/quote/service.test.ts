@@ -225,6 +225,7 @@ describe('QuoteService', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId: receivingPaymentPointerId,
+            clientId: uuid(),
             incomingAmount
           })
           options = {
@@ -534,7 +535,8 @@ describe('QuoteService', (): void => {
             receiver: `${receivingPaymentPointer}/incoming-payments/${
               (
                 await createIncomingPayment(deps, {
-                  paymentPointerId: receivingPaymentPointerId
+                  paymentPointerId: receivingPaymentPointerId,
+                  clientId: uuid()
                 })
               ).id
             }`,
@@ -556,7 +558,8 @@ describe('QuoteService', (): void => {
           receiver: `${receivingPaymentPointer}/incoming-payments/${
             (
               await createIncomingPayment(deps, {
-                paymentPointerId: receivingPaymentPointerId
+                paymentPointerId: receivingPaymentPointerId,
+                clientId: uuid()
               })
             ).id
           }`,

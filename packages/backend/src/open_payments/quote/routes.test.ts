@@ -311,6 +311,7 @@ describe('Quote Routes', (): void => {
   describe('list', (): void => {
     listTests({
       getPaymentPointerId: () => paymentPointerId,
+      getGrant: () => undefined,
       getUrl: () => `/${paymentPointerId}/quotes`,
       createItem: async (_index) => {
         const quote = await createPaymentPointerQuote(paymentPointerId)

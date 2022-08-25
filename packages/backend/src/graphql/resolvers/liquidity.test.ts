@@ -1504,6 +1504,7 @@ describe('Liquidity Resolvers', (): void => {
       const paymentPointerId = paymentPointer.id
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId,
+        clientId: uuid(),
         incomingAmount: {
           value: BigInt(56),
           assetCode: paymentPointer.asset.code,

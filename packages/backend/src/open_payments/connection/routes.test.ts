@@ -46,6 +46,7 @@ describe('Connection Routes', (): void => {
     paymentPointer = await createPaymentPointer(deps, { asset })
     incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: paymentPointer.id,
+      clientId: uuid(),
       description: 'hello world',
       expiresAt: new Date(Date.now() + 30_000),
       incomingAmount: {

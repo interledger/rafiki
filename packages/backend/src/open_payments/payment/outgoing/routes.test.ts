@@ -247,6 +247,7 @@ describe('Outgoing Payment Routes', (): void => {
   describe('list', (): void => {
     listTests({
       getPaymentPointerId: () => paymentPointerId,
+      getGrant: () => undefined,
       getUrl: () => `/${paymentPointerId}/outgoing-payments`,
       createItem: async (index: number) => {
         const payment = await createPayment({

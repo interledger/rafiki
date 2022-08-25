@@ -135,6 +135,7 @@ describe('Auth Middleware', (): void => {
   test('returns 403 for unauthorized request', async (): Promise<void> => {
     const scope = mockAuthServer({
       active: true,
+      clientId: uuid(),
       grant: 'PRY5NM33OM4TB8N6BW7',
       access: [
         {
@@ -160,6 +161,7 @@ describe('Auth Middleware', (): void => {
     async ({ limitAccount }): Promise<void> => {
       const grant = new Grant({
         active: true,
+        clientId: uuid(),
         grant: 'PRY5NM33OM4TB8N6BW7',
         access: [
           {
