@@ -24,9 +24,8 @@ export async function getPaymentPointer(
   deps: ServiceDependencies,
   ctx: PaymentPointerContext
 ): Promise<void> {
-  const paymentPointer = await deps.paymentPointerService.get(
-    ctx.params.paymentPointerId
-  )
+  const { accountId: paymentPointerId } = ctx.params
+  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
   if (!paymentPointer) {
     ctx.throw(404)
     return // unreachable, but satisfies typescript
