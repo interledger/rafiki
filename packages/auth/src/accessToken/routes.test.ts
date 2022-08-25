@@ -16,11 +16,9 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
-import {
-  KID_PATH,
-  KEY_REGISTRY_ORIGIN,
-  TEST_CLIENT_KEY
-} from '../grant/routes.test'
+import { KID_PATH, KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
+import { generateTestKeys, TEST_CLIENT } from '../tests/signature'
+import { ClientKey, JWKWithRequired } from '../client/service'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -28,6 +26,8 @@ describe('Access Token Routes', (): void => {
   let knex: Knex
   let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
+  let testJwk: JWKWithRequired
+  let keyId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -35,6 +35,10 @@ describe('Access Token Routes', (): void => {
     knex = await deps.use('knex')
     accessTokenRoutes = await deps.use('accessTokenRoutes')
     jestOpenAPI(await deps.use('openApi'))
+
+    const keys = await generateTestKeys()
+    testJwk = keys.publicKey
+    keyId = keys.keyId
   })
 
   afterEach(async (): Promise<void> => {
@@ -90,7 +94,8 @@ describe('Access Token Routes', (): void => {
 
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT
+        ...BASE_GRANT,
+        clientKeyId: testJwk.kid
       })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -127,11 +132,20 @@ describe('Access Token Routes', (): void => {
     test('Successfully introspects valid token', async (): Promise<void> => {
       const clientId = crypto
         .createHash('sha256')
-        .update(TEST_CLIENT_KEY.jwk.client.id)
+        .update(TEST_CLIENT.id)
         .digest('hex')
+
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, TEST_CLIENT_KEY.jwk)
+        .get('/' + keyId)
+        .reply(200, {
+          client: TEST_CLIENT,
+          jwk: {
+            ...testJwk,
+            exp: Math.floor(Date.now() / 1000) + 3600,
+            nbf: Math.floor(Date.now() / 1000) - 3600,
+            revoked: false
+          }
+        } as ClientKey)
 
       const ctx = createContext(
         {
@@ -155,8 +169,6 @@ describe('Access Token Routes', (): void => {
         'application/json; charset=utf-8'
       )
 
-      const testKeyWithoutClient = TEST_CLIENT_KEY.jwk
-      delete testKeyWithoutClient.client
       expect(ctx.body).toEqual({
         active: true,
         grant: grant.id,
@@ -170,7 +182,7 @@ describe('Access Token Routes', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...testKeyWithoutClient,
+            ...testJwk,
             exp: expect.any(Number),
             nbf: expect.any(Number),
             revoked: false
@@ -184,7 +196,10 @@ describe('Access Token Routes', (): void => {
     test('Successfully introspects expired token', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
-        .reply(200, TEST_CLIENT_KEY.jwk)
+        .reply(200, {
+          client: TEST_CLIENT,
+          jwk: testJwk
+        } as ClientKey)
       const now = new Date(new Date().getTime() + 4000)
       jest.useFakeTimers()
       jest.setSystemTime(now)
@@ -258,7 +273,10 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
-        .reply(200, TEST_CLIENT_KEY.jwk)
+        .reply(200, {
+          client: TEST_CLIENT,
+          jwk: testJwk
+        } as ClientKey)
 
       const ctx = createContext(
         {
@@ -285,7 +303,10 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 if token has expired', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
-        .reply(200, TEST_CLIENT_KEY.jwk)
+        .reply(200, {
+          client: TEST_CLIENT,
+          jwk: testJwk
+        } as ClientKey)
 
       const ctx = createContext(
         {
