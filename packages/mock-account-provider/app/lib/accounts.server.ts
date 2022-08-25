@@ -167,15 +167,13 @@ export class AccountProvider implements AccountsServer {
   }
 }
 
-let mockAccounts: AccountsServer
-
 declare global {
-  var __mockAccounts: AccountsServer | undefined
+  let __mockAccounts: AccountsServer | undefined
 }
 
 if (!global.__mockAccounts) {
   global.__mockAccounts = new AccountProvider()
 }
-mockAccounts = global.__mockAccounts
+const mockAccounts = global.__mockAccounts
 
 export { mockAccounts }
