@@ -64,7 +64,6 @@ configuration.
 
 Make sure the demo stack is running and not previously seeded.
 
-Build the code locally with `pnpm build-seed`. Run it with
-`pnpm node dist/run_seed.js`. To use a different config file, set the
-`SEED_FILE_LOCATION` environment variable, e.g.
-`SEED_FILE_LOCATION=<path to seed file> pnpm node dist/run_seed.js``
+Build the code locally with `pnpm build`. Run it with `pnpm run`. To use a
+different config file, set the `SEED_FILE_LOCATION` environment variable, e.g.
+`SEED_FILE_LOCATION=<path to seed file> pnpm run`

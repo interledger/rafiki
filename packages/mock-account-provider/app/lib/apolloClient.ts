@@ -8,11 +8,9 @@ import {
 import { setContext } from '@apollo/client/link/context'
 import { CONFIG } from './parse_config'
 import { onError } from '@apollo/client/link/error'
-import fetch from 'cross-fetch'
 
 const httpLink = createHttpLink({
-  uri: CONFIG.self.graphqlUrl,
-  fetch
+  uri: CONFIG.self.graphqlUrl
 })
 
 const errorLink = onError(({ graphQLErrors }) => {
