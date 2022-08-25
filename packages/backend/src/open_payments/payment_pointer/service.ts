@@ -64,7 +64,7 @@ export const FORBIDDEN_PATHS = [
 function isValidPaymentPointerUrl(paymentPointerUrl: string): boolean {
   try {
     const url = new URL(paymentPointerUrl)
-    if (url.pathname === '/') {
+    if (url.protocol !== 'https:' || url.pathname === '/') {
       return false
     }
     for (const path of FORBIDDEN_PATHS) {
