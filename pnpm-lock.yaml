@@ -111,7 +111,7 @@ importers:
   packages/backend:
     specifiers:
       '@adonisjs/fold': ^8.2.0
-      '@apollo/client': ^3.3.20
+      '@apollo/client': ^3.6.9
       '@faker-js/faker': ^7.4.0
       '@graphql-codegen/cli': 2.11.7
       '@graphql-codegen/introspection': 2.2.1
@@ -264,7 +264,7 @@ importers:
 
   packages/mock-account-provider:
     specifiers:
-      '@apollo/client': ^3.3.20
+      '@apollo/client': ^3.6.9
       '@remix-run/dev': ^1.6.8
       '@remix-run/eslint-config': ^1.6.8
       '@remix-run/node': ^1.6.8
