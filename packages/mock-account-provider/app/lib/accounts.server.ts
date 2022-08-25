@@ -10,31 +10,28 @@ export interface Account {
 }
 
 export interface AccountsServer {
-  create(id: string, name: string): Promise<void | Error>
+  clearAccounts(): Promise<void>
+  create(id: string, name: string): Promise<void>
   listAll(): Promise<Account[]>
   get(id: string): Promise<Account | undefined>
-  voidPendingDebit(id: string, amount: bigint): Promise<void | Error>
-  voidPendingCredit(id: string, amount: bigint): Promise<void | Error>
-  pendingDebit(id: string, amount: bigint): Promise<void | Error>
-  pendingCredit(id: string, amount: bigint): Promise<void | Error>
-  debit(
-    id: string,
-    amount: bigint,
-    clearPending: boolean
-  ): Promise<void | Error>
-
-  credit(
-    id: string,
-    amount: bigint,
-    clearPending: boolean
-  ): Promise<void | Error>
+  voidPendingDebit(id: string, amount: bigint): Promise<void>
+  voidPendingCredit(id: string, amount: bigint): Promise<void>
+  pendingDebit(id: string, amount: bigint): Promise<void>
+  pendingCredit(id: string, amount: bigint): Promise<void>
+  debit(id: string, amount: bigint, clearPending: boolean): Promise<void>
+  credit(id: string, amount: bigint, clearPending: boolean): Promise<void>
 }
 
 export class AccountProvider implements AccountsServer {
   accounts = new Map<string, Account>()
-  async create(id: string, name: string): Promise<void | Error> {
+
+  async clearAccounts(): Promise<void> {
+    this.accounts.clear()
+  }
+
+  async create(id: string, name: string): Promise<void> {
     if (!this.accounts.has(id)) {
-      return new Error('account already exists')
+      throw new Error('account already exists')
     }
     this.accounts.set(id, {
       id,
@@ -58,19 +55,19 @@ export class AccountProvider implements AccountsServer {
     id: string,
     amount: bigint,
     clearPending: boolean
-  ): Promise<void | Error> {
+  ): Promise<void> {
     if (!this.accounts.has(id)) {
-      return new Error('account does not exist')
+      throw new Error('account does not exist')
     }
     if (amount < 0) {
-      return new Error('invalid credit amount')
+      throw new Error('invalid credit amount')
     }
 
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
     if (acc.credits_pending - amount < 0 || acc.credits_posted + amount < 0) {
-      return new Error('invalid amount, credits pending cannot be less than 0')
+      throw new Error('invalid amount, credits pending cannot be less than 0')
     }
 
     acc.credits_posted += amount
@@ -83,12 +80,12 @@ export class AccountProvider implements AccountsServer {
     id: string,
     amount: bigint,
     clearPending: boolean
-  ): Promise<void | Error> {
+  ): Promise<void> {
     if (!this.accounts.has(id)) {
-      return new Error('account does not exist')
+      throw new Error('account does not exist')
     }
     if (amount < 0) {
-      return new Error('invalid debit amount')
+      throw new Error('invalid debit amount')
     }
 
     const acc = this.accounts.get(id)
@@ -98,7 +95,7 @@ export class AccountProvider implements AccountsServer {
       (clearPending && acc.debits_pending - amount < 0) ||
       acc.debits_posted + amount < 0
     ) {
-      return new Error('invalid amount, debits pending cannot be less than 0')
+      throw new Error('invalid amount, debits pending cannot be less than 0')
     }
 
     acc.debits_posted += amount
@@ -107,12 +104,12 @@ export class AccountProvider implements AccountsServer {
     }
   }
 
-  async pendingCredit(id: string, amount: bigint): Promise<void | Error> {
+  async pendingCredit(id: string, amount: bigint): Promise<void> {
     if (!this.accounts.has(id)) {
-      return new Error('account does not exist')
+      throw new Error('account does not exist')
     }
     if (amount < 0) {
-      return new Error('invalid pending credit amount')
+      throw new Error('invalid pending credit amount')
     }
 
     const acc = this.accounts.get(id)
@@ -120,12 +117,12 @@ export class AccountProvider implements AccountsServer {
     acc.credits_pending += amount
   }
 
-  async pendingDebit(id: string, amount: bigint): Promise<void | Error> {
+  async pendingDebit(id: string, amount: bigint): Promise<void> {
     if (!this.accounts.has(id)) {
-      return new Error('account does not exist')
+      throw new Error('account does not exist')
     }
     if (amount < 0) {
-      return new Error('invalid pending debit amount')
+      throw new Error('invalid pending debit amount')
     }
 
     const acc = this.accounts.get(id)
@@ -133,50 +130,52 @@ export class AccountProvider implements AccountsServer {
     acc.debits_pending += amount
   }
 
-  async voidPendingDebit(id: string, amount: bigint): Promise<void | Error> {
+  async voidPendingDebit(id: string, amount: bigint): Promise<void> {
     if (!this.accounts.has(id)) {
-      return new Error('account does not exist')
+      throw new Error('account does not exist')
     }
     if (amount < 0) {
-      return new Error('invalid void pending debit amount')
+      throw new Error('invalid void pending debit amount')
     }
 
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
     if (acc.debits_pending - amount < 0) {
-      return new Error('invalid amount, debits pending cannot be less than 0')
+      throw new Error('invalid amount, debits pending cannot be less than 0')
     }
 
     acc.debits_pending -= amount
   }
 
-  async voidPendingCredit(id: string, amount: bigint): Promise<void | Error> {
+  async voidPendingCredit(id: string, amount: bigint): Promise<void> {
     if (!this.accounts.has(id)) {
-      return new Error('account does not exist')
+      throw new Error('account does not exist')
     }
     if (amount < 0) {
-      return new Error('invalid void pending credit amount')
+      throw new Error('invalid void pending credit amount')
     }
 
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
     if (acc.debits_pending - amount < 0) {
-      return new Error('invalid amount, credits pending cannot be less than 0')
+      throw new Error('invalid amount, credits pending cannot be less than 0')
     }
 
     acc.credits_pending -= amount
   }
 }
 
+let mockAccounts: AccountsServer
+
 declare global {
-  let __mockAccounts: AccountProvider | undefined
+  var __mockAccounts: AccountsServer | undefined
 }
 
 if (!global.__mockAccounts) {
   global.__mockAccounts = new AccountProvider()
 }
-const mockAccounts = global.__mockAccounts
+mockAccounts = global.__mockAccounts
 
 export { mockAccounts }

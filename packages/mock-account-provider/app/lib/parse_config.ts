@@ -20,7 +20,7 @@ export interface Account {
   id: string
   asset: string
   scale: number
-  initialBalance: string
+  initialBalance: bigint
   url: string
 }
 
@@ -31,7 +31,7 @@ export interface SeedInstance {
 }
 
 export const CONFIG: SeedInstance = parse(
-  readFileSync(
-    process.env.SEED_FILE_LOCATION || `${__dirname}/../seed.example.yml`
-  ).toString('utf8')
+  readFileSync(process.env.SEED_FILE_LOCATION || `./seed.example.yml`).toString(
+    'utf8'
+  )
 )

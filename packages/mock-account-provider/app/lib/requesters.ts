@@ -3,7 +3,7 @@ import type {
   CreatePeerMutationResponse,
   LiquidityMutationResponse,
   CreatePaymentPointerMutationResponse
-} from '../generated/graphql'
+} from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
 
 export interface GraphqlQueryConfig {
