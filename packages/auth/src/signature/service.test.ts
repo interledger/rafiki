@@ -160,8 +160,9 @@ describe('Signature Service', (): void => {
     const BASE_ACCESS = {
       type: AccessType.OutgoingPayment,
       actions: [Action.Read, Action.Create],
+      identifier: v4(),
       limits: {
-        receivingAccount: 'https://wallet.com/alice',
+        receiver: 'https://wallet.com/alice',
         sendAmount: {
           value: '400',
           assetCode: 'USD',

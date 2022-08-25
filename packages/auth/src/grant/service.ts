@@ -12,13 +12,17 @@ export interface GrantService {
   get(grantId: string): Promise<Grant>
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
   getByInteraction(interactId: string): Promise<Grant>
+  getByInteractionSession(
+    interactId: string,
+    interactNonce: string
+  ): Promise<Grant>
   issueGrant(grantId: string): Promise<Grant>
   getByContinue(
     continueId: string,
     continueToken: string,
     interactRef: string
   ): Promise<Grant | null>
-  denyGrant(grantId: string): Promise<Grant | null>
+  rejectGrant(grantId: string): Promise<Grant | null>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -74,13 +78,15 @@ export async function createGrantService({
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
       initiateGrant(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
+    getByInteractionSession: (interactId: string, interactNonce: string) =>
+      getByInteractionSession(interactId, interactNonce),
     issueGrant: (grantId: string) => issueGrant(deps, grantId),
     getByContinue: (
       continueId: string,
       continueToken: string,
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
-    denyGrant: (grantId: string) => denyGrant(deps, grantId)
+    rejectGrant: (grantId: string) => rejectGrant(deps, grantId)
   }
 }
 
@@ -97,12 +103,12 @@ async function issueGrant(
   })
 }
 
-async function denyGrant(
+async function rejectGrant(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<Grant | null> {
   return Grant.query(deps.knex).patchAndFetchById(grantId, {
-    state: GrantState.Denied
+    state: GrantState.Rejected
   })
 }
 
@@ -158,6 +164,15 @@ async function initiateGrant(
 
 async function getByInteraction(interactId: string): Promise<Grant> {
   return Grant.query().findOne({ interactId })
+}
+
+async function getByInteractionSession(
+  interactId: string,
+  interactNonce: string
+): Promise<Grant> {
+  return Grant.query()
+    .findOne({ interactId, interactNonce })
+    .withGraphFetched('access')
 }
 
 async function getByContinue(

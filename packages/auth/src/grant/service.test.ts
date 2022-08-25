@@ -190,16 +190,16 @@ describe('Grant Service', (): void => {
     })
   })
 
-  describe('deny', (): void => {
-    test('Can deny a grant', async (): Promise<void> => {
-      const deniedGrant = await grantService.denyGrant(grant.id)
-      expect(deniedGrant?.id).toEqual(grant.id)
-      expect(deniedGrant?.state).toEqual(GrantState.Denied)
+  describe('reject', (): void => {
+    test('Can reject a grant', async (): Promise<void> => {
+      const rejectedGrant = await grantService.rejectGrant(grant.id)
+      expect(rejectedGrant?.id).toEqual(grant.id)
+      expect(rejectedGrant?.state).toEqual(GrantState.Rejected)
     })
 
-    test("Cannot deny a grant that doesn't exist", async (): Promise<void> => {
-      const deniedGrant = await grantService.denyGrant(v4())
-      expect(deniedGrant).toBeUndefined()
+    test("Cannot reject a grant that doesn't exist", async (): Promise<void> => {
+      const rejectedGrant = await grantService.rejectGrant(v4())
+      expect(rejectedGrant).toBeUndefined()
     })
   })
 })

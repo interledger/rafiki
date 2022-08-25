@@ -96,8 +96,7 @@ describe('Access Service', (): void => {
       expiresAt: new Date().toISOString(),
       description: 'this is a test',
       externalRef: v4(),
-      receivingAccount: 'test-account',
-      receivingPayment: 'test-payment'
+      receiver: 'test-account'
     }
 
     const outgoingPaymentAccess: AccessRequest = {

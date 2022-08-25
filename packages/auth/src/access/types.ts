@@ -125,20 +125,12 @@ export interface IncomingPaymentLimit {
 }
 
 export type OutgoingPaymentLimit = {
+  receiver: string
   sendAmount?: PaymentAmount
   receiveAmount?: PaymentAmount
   description?: string
   externalRef?: string
-} & (
-  | {
-      receivingAccount: string
-      receivingPayment?: string
-    }
-  | {
-      receivingAccount?: string
-      receivingPayment: string
-    }
-)
+}
 
 export type LimitData = IncomingPaymentLimit | OutgoingPaymentLimit
 
@@ -169,11 +161,8 @@ export function isOutgoingPaymentLimit(
   return (
     typeof limit.description === 'string' &&
     typeof limit.externalRef === 'string' &&
+    typeof limit.receiver === 'string' &&
     isPaymentAmount(limit.sendAmount) &&
-    isPaymentAmount(limit.receiveAmount) &&
-    ((!limit.receivingAccount &&
-      limit.receivingPayment !== undefined &&
-      typeof limit.receivingPayment === 'string') ||
-      typeof limit.receivingAccount === 'string')
+    isPaymentAmount(limit.receiveAmount)
   )
 }
