@@ -208,7 +208,8 @@ export function initIocContainer(
   })
   container.singleton('clientKeysRoutes', async (deps) => {
     return createClientKeysRoutes({
-      clientKeysService: await deps.use('clientKeysService')
+      clientKeysService: await deps.use('clientKeysService'),
+      clientService: await deps.use('clientService')
     })
   })
   container.singleton('connectionService', async (deps) => {

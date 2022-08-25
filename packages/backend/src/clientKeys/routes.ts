@@ -28,10 +28,19 @@ export async function getKeyById(
     ctx.throw(404)
   }
 
-  // const clientDetails = await deps.clientService.getClient(key.clientId)
-  // if (!clientDetails) {
-  //   ctx.throw(404)
-  // }
+  const clientDetails = await deps.clientService.getClient(key.clientId)
+  if (!clientDetails) {
+    ctx.throw(404)
+  }
 
-  ctx.body = key.jwk
+  ctx.body = {
+    key: key.jwk,
+    client: {
+      id: clientDetails.id,
+      name: clientDetails.name,
+      uri: clientDetails.uri,
+      email: clientDetails.email,
+      image: clientDetails.image
+    }
+  }
 }

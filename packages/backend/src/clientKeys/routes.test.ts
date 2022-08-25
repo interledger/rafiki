@@ -15,6 +15,7 @@ import { ClientService } from '../clients/service'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_CLIENT = {
+  id: uuid(),
   name: faker.name.firstName(),
   uri: faker.internet.url(),
   email: faker.internet.exampleEmail(),
@@ -97,7 +98,10 @@ describe('Client Keys Routes', (): void => {
       )
 
       await expect(clientKeysRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.body).toEqual(TEST_CLIENT_KEY)
+      expect(ctx.body).toEqual({
+        key: TEST_CLIENT_KEY,
+        client: TEST_CLIENT
+      })
     })
   })
 })
