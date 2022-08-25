@@ -11,7 +11,10 @@ export function loader({ request }: LoaderArgs) {
       alg: 'EdDSA',
       crv: 'Ed25519',
       key_ops: ['sign', 'verify'],
-      use: 'sig'
+      use: 'sig',
+      client: {
+        id: "73bc0345-f03f-4627-903c-5abb55656d15"
+      },
     },
     { status: 200 }
   )
