@@ -22,6 +22,7 @@ import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
+import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
 import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
@@ -248,6 +249,8 @@ export class App {
     const openApi = await this.container.use('openApi')
     const toRouterPath = (path: string): string =>
       path.replace(/{/g, ':').replace(/}/g, '')
+    const toPaymentPointerPath = (path: string): string =>
+      `/:paymentPointerPath+${path}`
 
     const toAction = ({
       path,
@@ -305,11 +308,12 @@ export class App {
                 }),
                 route
               )
-            } else if (path === '/{accountId}' && method === HttpMethod.GET) {
+            } else if (path === '/' && method === HttpMethod.GET) {
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore
               router.get(
-                toRouterPath(path),
+                toPaymentPointerPath(path),
+                createPaymentPointerMiddleware(),
                 createValidatorMiddleware<PaymentPointerContext>(openApi, {
                   path,
                   method
@@ -330,7 +334,8 @@ export class App {
             continue
           }
           router[method](
-            toRouterPath(path),
+            toPaymentPointerPath(toRouterPath(path)),
+            createPaymentPointerMiddleware(),
             createAuthMiddleware({
               type,
               action

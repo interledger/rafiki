@@ -1,4 +1,5 @@
 import { ListContext } from '../app'
+import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import { createContext } from '../tests/context'
 
 interface BaseResponse {
@@ -6,14 +7,14 @@ interface BaseResponse {
 }
 
 interface ListTestsOptions<Type> {
-  getPaymentPointerId: () => string
+  getPaymentPointer: () => PaymentPointer
   getUrl: () => string
   createItem: (index: number) => Promise<Type>
   list: (ctx: ListContext) => Promise<void>
 }
 
 export const listTests = <Type extends BaseResponse>({
-  getPaymentPointerId,
+  getPaymentPointer,
   getUrl,
   createItem,
   list
@@ -51,15 +52,13 @@ export const listTests = <Type extends BaseResponse>({
         }
         pagination['startCursor'] = getCursor(startIndex)
         pagination['endCursor'] = getCursor(endIndex)
-        const ctx = createContext<ListContext>(
-          {
-            headers: { Accept: 'application/json' },
-            method: 'GET',
-            query,
-            url: getUrl()
-          },
-          { accountId: getPaymentPointerId() }
-        )
+        const ctx = createContext<ListContext>({
+          headers: { Accept: 'application/json' },
+          method: 'GET',
+          query,
+          url: getUrl()
+        })
+        ctx.paymentPointer = getPaymentPointer()
         await expect(list(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.body).toEqual({

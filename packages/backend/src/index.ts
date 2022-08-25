@@ -173,10 +173,8 @@ export function initIocContainer(
   container.singleton('spspRoutes', async (deps) => {
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
-    const paymentPointerService = await deps.use('paymentPointerService')
     return await createSPSPRoutes({
       logger: logger,
-      paymentPointerService: paymentPointerService,
       streamServer: streamServer
     })
   })
@@ -205,8 +203,7 @@ export function initIocContainer(
   })
   container.singleton('paymentPointerRoutes', async (deps) => {
     return createPaymentPointerRoutes({
-      config: await deps.use('config'),
-      paymentPointerService: await deps.use('paymentPointerService')
+      config: await deps.use('config')
     })
   })
   container.singleton('clientKeysRoutes', async (deps) => {

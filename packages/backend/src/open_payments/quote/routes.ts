@@ -41,7 +41,7 @@ async function getQuote(
 ): Promise<void> {
   const quote = await deps.quoteService.get(ctx.params.quoteId)
   if (!quote) return ctx.throw(404)
-
+  quote.paymentPointer = ctx.paymentPointer
   const body = quoteToBody(deps, quote)
   ctx.body = body
 }
@@ -59,7 +59,7 @@ async function createQuote(
   const { body } = ctx.request
   try {
     const quoteOrErr = await deps.quoteService.create({
-      paymentPointerId: ctx.params.accountId,
+      paymentPointerId: ctx.paymentPointer.id,
       receiver: body.receiver,
       sendAmount: body.sendAmount && parseAmount(body.sendAmount),
       receiveAmount: body.receiveAmount && parseAmount(body.receiveAmount)
@@ -70,6 +70,7 @@ async function createQuote(
     }
 
     ctx.status = 201
+    quoteOrErr.paymentPointer = ctx.paymentPointer
     const res = quoteToBody(deps, quoteOrErr)
     ctx.body = res
   } catch (err) {
@@ -85,21 +86,26 @@ async function listQuotes(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  const { accountId: paymentPointerId } = ctx.params
   const pagination = parsePaginationQueryParameters(ctx.request.query)
   try {
     const page = await deps.quoteService.getPaymentPointerPage(
-      paymentPointerId,
+      ctx.paymentPointer.id,
       pagination
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        deps.quoteService.getPaymentPointerPage(paymentPointerId, pagination),
+        deps.quoteService.getPaymentPointerPage(
+          ctx.paymentPointer.id,
+          pagination
+        ),
       page
     )
     const result = {
       pagination: pageInfo,
-      result: page.map((item: Quote) => quoteToBody(deps, item))
+      result: page.map((item: Quote) => {
+        item.paymentPointer = ctx.paymentPointer
+        return quoteToBody(deps, item)
+      })
     }
     ctx.body = result
   } catch (_) {
@@ -108,13 +114,11 @@ async function listQuotes(
 }
 
 function quoteToBody(deps: ServiceDependencies, quote: Quote) {
-  const accountId = `${deps.config.publicHost}/${quote.paymentPointerId}`
   return Object.fromEntries(
     Object.entries({
       ...quote.toJSON(),
-      id: `${accountId}/quotes/${quote.id}`,
-      // paymentPointer
-      accountId,
+      id: `${quote.paymentPointer.url}/quotes/${quote.id}`,
+      paymentPointer: quote.paymentPointer.url,
       paymentPointerId: undefined
     }).filter(([_, v]) => v != null)
   )

@@ -156,7 +156,7 @@ export class OutgoingPayment
     json = super.$formatJson(json)
     return {
       id: json.id,
-      // paymentPointer: json.paymentPointer,
+      paymentPointerId: json.paymentPointerId,
       state: json.state,
       receiver: json.receiver,
       sendAmount: {

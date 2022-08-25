@@ -35,7 +35,7 @@ describe('Incoming Payment Routes', (): void => {
 
   const setup = <T extends AppContext>(
     reqOpts: httpMocks.RequestOptions,
-    params: Record<string, string>
+    params: Record<string, string> = {}
   ): T => {
     const ctx = createContext<T>(
       {
@@ -68,7 +68,6 @@ describe('Incoming Payment Routes', (): void => {
     scale: 2
   }
   let paymentPointer: PaymentPointer
-  let paymentPointerId: string
   let expiresAt: Date
   let incomingAmount: Amount
   let description: string
@@ -79,8 +78,9 @@ describe('Incoming Payment Routes', (): void => {
     incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
 
     expiresAt = new Date(Date.now() + 30_000)
-    paymentPointer = await createPaymentPointer(deps, { asset })
-    paymentPointerId = `https://wallet.example/${paymentPointer.id}`
+    paymentPointer = await createPaymentPointer(deps, {
+      asset
+    })
     incomingAmount = {
       value: BigInt('123'),
       assetScale: asset.scale,
@@ -116,8 +116,7 @@ describe('Incoming Payment Routes', (): void => {
           headers: { Accept: 'application/json' }
         },
         {
-          incomingPaymentId: uuid(),
-          accountId: paymentPointer.id
+          incomingPaymentId: uuid()
         }
       )
       await expect(incomingPaymentRoutes.get(ctx)).rejects.toMatchObject({
@@ -131,13 +130,13 @@ describe('Incoming Payment Routes', (): void => {
         {
           headers: { Accept: 'application/json' },
           method: 'GET',
-          url: `/${paymentPointer.id}/incoming-payments/${incomingPayment.id}`
+          url: `/incoming-payments/${incomingPayment.id}`
         },
         {
-          incomingPaymentId: incomingPayment.id,
-          accountId: paymentPointer.id
+          incomingPaymentId: incomingPayment.id
         }
       )
+      ctx.paymentPointer = paymentPointer
       await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
 
@@ -148,9 +147,8 @@ describe('Incoming Payment Routes', (): void => {
       )['sharedSecret']
 
       expect(ctx.body).toEqual({
-        id: `${paymentPointerId}/incoming-payments/${incomingPayment.id}`,
-        // paymentPointer: paymentPointerId,
-        accountId: paymentPointerId,
+        id: `${paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+        paymentPointer: paymentPointer.url,
         completed: false,
         incomingAmount: {
           value: '123',
@@ -182,10 +180,8 @@ describe('Incoming Payment Routes', (): void => {
   })
   describe('create', (): void => {
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
-      const ctx = setup<CreateContext<CreateBody>>(
-        { body: {} },
-        { accountId: paymentPointer.id }
-      )
+      const ctx = setup<CreateContext<CreateBody>>({ body: {} })
+      ctx.paymentPointer = paymentPointer
       ctx.request.body['expiresAt'] = new Date(
         Date.now() + MAX_EXPIRY + 1000
       ).toISOString()
@@ -207,19 +203,17 @@ describe('Incoming Payment Routes', (): void => {
         externalRef,
         expiresAt
       }): Promise<void> => {
-        const ctx = setup<CreateContext<CreateBody>>(
-          {
-            body: {
-              incomingAmount,
-              description,
-              externalRef,
-              expiresAt
-            },
-            method: 'POST',
-            url: `/${paymentPointer.id}/incoming-payments`
+        const ctx = setup<CreateContext<CreateBody>>({
+          body: {
+            incomingAmount,
+            description,
+            externalRef,
+            expiresAt
           },
-          { accountId: paymentPointer.id }
-        )
+          method: 'POST',
+          url: `/incoming-payments`
+        })
+        ctx.paymentPointer = paymentPointer
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (
@@ -237,9 +231,8 @@ describe('Incoming Payment Routes', (): void => {
           .split('/')
           .pop()
         expect(ctx.response.body).toEqual({
-          id: `${paymentPointerId}/incoming-payments/${incomingPaymentId}`,
-          // paymentPointer: paymentPointerId,
-          accountId: paymentPointerId,
+          id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
+          paymentPointer: paymentPointer.url,
           incomingAmount,
           description,
           expiresAt: expiresAt || expect.any(String),
@@ -280,19 +273,18 @@ describe('Incoming Payment Routes', (): void => {
         {
           headers: { Accept: 'application/json' },
           method: 'POST',
-          url: `/${paymentPointer.id}/incoming-payments/${incomingPayment.id}/complete`
+          url: `/incoming-payments/${incomingPayment.id}/complete`
         },
         {
-          incomingPaymentId: incomingPayment.id,
-          accountId: paymentPointer.id
+          incomingPaymentId: incomingPayment.id
         }
       )
+      ctx.paymentPointer = paymentPointer
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: `${paymentPointerId}/incoming-payments/${incomingPayment.id}`,
-        // paymentPointer: paymentPointerId,
-        accountId: paymentPointerId,
+        id: `${paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+        paymentPointer: paymentPointer.url,
         incomingAmount: {
           value: '123',
           assetCode: asset.code,
@@ -316,8 +308,8 @@ describe('Incoming Payment Routes', (): void => {
 
   describe('list', (): void => {
     listTests({
-      getPaymentPointerId: () => paymentPointer.id,
-      getUrl: () => `/${paymentPointer.id}/incoming-payments`,
+      getPaymentPointer: () => paymentPointer,
+      getUrl: () => `/incoming-payments`,
       createItem: async (index: number) => {
         const payment = await createIncomingPayment(deps, {
           paymentPointerId: paymentPointer.id,
@@ -325,9 +317,8 @@ describe('Incoming Payment Routes', (): void => {
           expiresAt
         })
         return {
-          id: `${paymentPointerId}/incoming-payments/${payment.id}`,
-          // paymentPointer: paymentPointerId,
-          accountId: paymentPointerId,
+          id: `${paymentPointer.url}/incoming-payments/${payment.id}`,
+          paymentPointer: paymentPointer.url,
           receivedAmount: {
             value: '0',
             assetCode: asset.code,
@@ -349,12 +340,10 @@ describe('Incoming Payment Routes', (): void => {
       jest
         .spyOn(incomingPaymentService, 'getPaymentPointerPage')
         .mockRejectedValueOnce(new Error('unexpected'))
-      const ctx = createContext<ListContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { accountId: paymentPointerId }
-      )
+      const ctx = createContext<ListContext>({
+        headers: { Accept: 'application/json' }
+      })
+      ctx.paymentPointer = paymentPointer
       await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
         status: 500,
         message: `Error trying to list incoming payments`
