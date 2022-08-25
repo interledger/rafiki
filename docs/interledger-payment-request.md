@@ -1,5 +1,8 @@
 # Interledger Payment Request (IPR)
 
+# OUTDATED Needs to be updated
+See [Update Account Interledger Payment Request](https://github.com/interledger/rafiki/issues/551)
+
 - [Interledger Payment Request (IPR)](#interledger-payment-request-ipr)
 - [Overview](#overview)
   - [Glossary](#glossary)
