@@ -25,7 +25,8 @@ export const Config = {
         ),
   authServerSpec: envString(
     'AUTH_SERVER_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/aa2984d389eaac8532b09de4a65aa838afae2d26/auth-server-open-api-spec.yaml'
+    // TODO: replace with commit on main once it's merged in
+    'https://raw.githubusercontent.com/interledger/open-payments/0551bb8929931750e298ae177f6459118d8936e3/auth-server-open-api-spec.yaml'
   ),
   identityServerDomain: envString(
     'IDENTITY_SERVER_DOMAIN',

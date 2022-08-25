@@ -4,6 +4,8 @@ import Koa from 'koa'
 import session from 'koa-session'
 
 import { AppContext, AppContextData } from '../app'
+import { generateSigHeaders } from './signature'
+import { JWKWithRequired } from '../client/service'
 
 export function createContext(
   reqOpts: httpMocks.RequestOptions,
@@ -29,5 +31,37 @@ export function createContext(
   ctx.params = params
   ctx.session = { ...req.session }
   ctx.closeEmitter = new EventEmitter()
+  return ctx as AppContext
+}
+
+export async function createContextWithSigHeaders(
+  reqOpts: httpMocks.RequestOptions,
+  params: Record<string, unknown>,
+  requestBody: Record<string, unknown>,
+  privateKey: JWKWithRequired
+): Promise<AppContext> {
+  const { headers, url, method } = reqOpts
+  const { signature, sigInput, contentDigest } = await generateSigHeaders(
+    privateKey,
+    url as string,
+    method as string,
+    requestBody
+  )
+
+  const ctx = createContext(
+    {
+      ...reqOpts,
+      headers: {
+        ...headers,
+        'Content-Digest': contentDigest,
+        Signature: signature,
+        'Signature-Input': sigInput
+      }
+    },
+    params
+  )
+
+  ctx.request.body = requestBody
+
   return ctx as AppContext
 }

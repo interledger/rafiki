@@ -1,6 +1,5 @@
-import * as crypto from 'crypto'
 import Axios from 'axios'
-import { importJWK, JWK } from 'jose'
+import { JWK } from 'jose'
 
 import { BaseService } from '../shared/baseService'
 import { IAppConfig } from '../config/app'
@@ -46,11 +45,6 @@ interface ServiceDependencies extends BaseService {
 }
 
 export interface ClientService {
-  verifySig(
-    sig: string,
-    jwk: JWKWithRequired,
-    challenge: string
-  ): Promise<boolean>
   validateClient(clientInfo: ClientInfo): Promise<boolean>
   getKeyByKid(kid: string): Promise<JWKWithRequired>
 }
@@ -69,23 +63,10 @@ export async function createClientService({
   }
 
   return {
-    verifySig: (sig: string, jwk: JWKWithRequired, challenge: string) =>
-      verifySig(deps, sig, jwk, challenge),
     validateClient: (clientInfo: ClientInfo) =>
       validateClient(deps, clientInfo),
     getKeyByKid: (kid: string) => getKeyByKid(deps, kid)
   }
-}
-
-async function verifySig(
-  deps: ServiceDependencies,
-  sig: string,
-  jwk: JWKWithRequired,
-  challenge: string
-): Promise<boolean> {
-  const publicKey = (await importJWK(jwk)) as crypto.KeyLike
-  const data = Buffer.from(challenge)
-  return crypto.verify(null, data, publicKey, Buffer.from(sig))
 }
 
 async function validateClient(
@@ -110,8 +91,9 @@ async function validateClient(
   )
     return false
 
-  if (key.exp && new Date() >= new Date(key.exp * 1000)) return false
-  if (key.nbf && new Date() < new Date(key.nbf * 1000)) return false
+  const currentDate = new Date()
+  if (key.exp && currentDate >= new Date(key.exp * 1000)) return false
+  if (key.nbf && currentDate < new Date(key.nbf * 1000)) return false
 
   return true
 }

@@ -88,18 +88,12 @@ async function createGrantInitiation(
     }
     return
   }
+
   const { body } = ctx.request
-  const { grantService, clientService, config } = deps
+  const { grantService, config } = deps
   if (!validateGrantRequest(body)) {
     ctx.status = 400
     ctx.body = { error: 'invalid_request' }
-    return
-  }
-
-  const isValidClient = await clientService.validateClient(body.client)
-  if (!isValidClient) {
-    ctx.status = 400
-    ctx.body = { error: 'invalid_client' }
     return
   }
 

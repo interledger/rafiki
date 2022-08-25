@@ -178,10 +178,16 @@ describe('Grant Service', (): void => {
     })
   })
 
-  test('Can fetch a grant by its interaction information', async (): Promise<void> => {
-    const fetchedGrant = await grantService.getByInteraction(grant.interactId)
-    expect(fetchedGrant?.id).toEqual(grant.id)
-    expect(fetchedGrant?.interactId).toEqual(grant.interactId)
+  describe('get', (): void => {
+    test('Can fetch a grant by id', async () => {
+      const fetchedGrant = await grantService.get(grant.id)
+      expect(fetchedGrant?.id).toEqual(grant.id)
+    })
+    test('Can fetch a grant by its interaction information', async (): Promise<void> => {
+      const fetchedGrant = await grantService.getByInteraction(grant.interactId)
+      expect(fetchedGrant?.id).toEqual(grant.id)
+      expect(fetchedGrant?.interactId).toEqual(grant.interactId)
+    })
   })
 
   describe('deny', (): void => {

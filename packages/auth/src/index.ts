@@ -13,6 +13,7 @@ import { createAccessTokenService } from './accessToken/service'
 import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createOpenAPI } from 'openapi'
+import { createSignatureService } from './signature/service'
 
 export { JWKWithRequired } from './client/service'
 const container = initIocContainer(Config)
@@ -80,21 +81,6 @@ export function initIocContainer(
     }
   )
 
-  container.singleton('accessTokenService', async (deps) => {
-    return await createAccessTokenService({
-      config: await deps.use('config'),
-      logger: await deps.use('logger'),
-      knex: await deps.use('knex'),
-      clientService: await deps.use('clientService')
-    })
-  })
-  container.singleton('accessTokenRoutes', async (deps) => {
-    return await createAccessTokenRoutes({
-      config: await deps.use('config'),
-      logger: await deps.use('logger'),
-      accessTokenService: await deps.use('accessTokenService')
-    })
-  })
   container.singleton(
     'grantService',
     async (deps: IocContract<AppServices>) => {
@@ -121,6 +107,42 @@ export function initIocContainer(
     const config = await deps.use('config')
     return await createOpenAPI(config.authServerSpec)
   })
+
+  container.singleton(
+    'accessTokenService',
+    async (deps: IocContract<AppServices>) => {
+      return await createAccessTokenService({
+        logger: await deps.use('logger'),
+        config: await deps.use('config'),
+        knex: await deps.use('knex'),
+        clientService: await deps.use('clientService')
+      })
+    }
+  )
+  container.singleton(
+    'accessTokenRoutes',
+    async (deps: IocContract<AppServices>) => {
+      return await createAccessTokenRoutes({
+        config: await deps.use('config'),
+        logger: await deps.use('logger'),
+        accessTokenService: await deps.use('accessTokenService'),
+        clientService: await deps.use('clientService')
+      })
+    }
+  )
+
+  container.singleton(
+    'signatureService',
+    async (deps: IocContract<AppServices>) => {
+      return createSignatureService({
+        config: await deps.use('config'),
+        logger: await deps.use('logger'),
+        clientService: await deps.use('clientService'),
+        grantService: await deps.use('grantService'),
+        accessTokenService: await deps.use('accessTokenService')
+      })
+    }
+  )
 
   return container
 }

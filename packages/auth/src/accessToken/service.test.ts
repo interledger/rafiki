@@ -84,7 +84,6 @@ describe('Access Token Service', (): void => {
   }
 
   const BASE_TOKEN = {
-    managementId: 'https://example.com/manage/12345',
     expiresIn: 3600
   }
 
@@ -107,7 +106,8 @@ describe('Access Token Service', (): void => {
     token = await AccessToken.query(trx).insertAndFetch({
       grantId: grant.id,
       ...BASE_TOKEN,
-      value: crypto.randomBytes(8).toString('hex').toUpperCase()
+      value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      managementId: v4()
     })
   })
 
@@ -119,6 +119,34 @@ describe('Access Token Service', (): void => {
         managementId: expect.any(String),
         value: expect.any(String)
       })
+    })
+  })
+
+  describe('Get', (): void => {
+    let accessToken: AccessToken
+    beforeEach(async (): Promise<void> => {
+      accessToken = await AccessToken.query(trx).insert({
+        value: 'test-access-token',
+        managementId: v4(),
+        grantId: grant.id,
+        expiresIn: 1234
+      })
+    })
+
+    test('Can get an access token by its value', async (): Promise<void> => {
+      const fetchedToken = await accessTokenService.get(accessToken.value)
+      expect(fetchedToken.value).toEqual(accessToken.value)
+      expect(fetchedToken.managementId).toEqual(accessToken.managementId)
+      expect(fetchedToken.grantId).toEqual(accessToken.grantId)
+    })
+
+    test('Can get an access token by its managementId', async (): Promise<void> => {
+      const fetchedToken = await accessTokenService.getByManagementId(
+        accessToken.managementId
+      )
+      expect(fetchedToken.value).toEqual(accessToken.value)
+      expect(fetchedToken.managementId).toEqual(accessToken.managementId)
+      expect(fetchedToken.grantId).toEqual(accessToken.grantId)
     })
   })
 
@@ -177,19 +205,20 @@ describe('Access Token Service', (): void => {
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
-        value: crypto.randomBytes(8).toString('hex').toUpperCase()
+        value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        managementId: v4()
       })
     })
     test('Can revoke un-expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
-      const result = await accessTokenService.revoke(token.id)
+      const result = await accessTokenService.revoke(token.managementId)
       expect(result).toBeUndefined()
       token = await AccessToken.query(trx).findById(token.id)
       expect(token).toBeUndefined()
     })
     test('Can revoke even if token has already expired', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: -1 })
-      const result = await accessTokenService.revoke(token.id)
+      const result = await accessTokenService.revoke(token.managementId)
       expect(result).toBeUndefined()
       token = await AccessToken.query(trx).findById(token.id)
       expect(token).toBeUndefined()
@@ -200,9 +229,6 @@ describe('Access Token Service', (): void => {
       expect(result).toBeUndefined()
       token = await AccessToken.query(trx).findById(token.id)
       expect(token).toBeUndefined()
-    })
-    test('Cannot revoke nonexistent token', async (): Promise<void> => {
-      expect(accessTokenService.revoke('uuid')).rejects.toBeInstanceOf(Error)
     })
   })
 
@@ -225,10 +251,12 @@ describe('Access Token Service', (): void => {
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
-        value: crypto.randomBytes(8).toString('hex').toUpperCase()
+        value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        managementId: v4()
       })
       originalTokenValue = token.value
     })
+
     test('Can rotate un-expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
       const result = await accessTokenService.rotate(token.managementId)
@@ -245,9 +273,7 @@ describe('Access Token Service', (): void => {
       expect(token.value).not.toBe(originalTokenValue)
     })
     test('Cannot rotate nonexistent token', async (): Promise<void> => {
-      const result = await accessTokenService.rotate(
-        'https://example.com/manage/some-nonexistent-id'
-      )
+      const result = await accessTokenService.rotate(v4())
       expect(result.success).toBe(false)
     })
   })

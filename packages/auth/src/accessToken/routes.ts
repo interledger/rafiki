@@ -4,11 +4,13 @@ import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService, Introspection } from './service'
 import { accessToBody } from '../shared/utils'
+import { ClientService } from '../client/service'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   accessTokenService: AccessTokenService
+  clientService: ClientService
 }
 
 export interface AccessTokenRoutes {
@@ -35,19 +37,19 @@ async function introspectToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  // TODO: request validation
   const { body } = ctx.request
-  if (body['access_token']) {
-    const introspectionResult = await deps.accessTokenService.introspect(
-      body['access_token']
-    )
-    if (introspectionResult) {
-      ctx.body = introspectionToBody(introspectionResult)
-    } else {
-      return ctx.throw(404, 'token not found')
-    }
+  const introspectionResult = await deps.accessTokenService.introspect(
+    body['access_token']
+  )
+  if (introspectionResult) {
+    ctx.body = introspectionToBody(introspectionResult)
   } else {
-    return ctx.throw(400, 'invalid introspection request')
+    ctx.status = 404
+    ctx.body = {
+      error: 'invalid_request',
+      message: 'token not found'
+    }
+    return
   }
 }
 
@@ -68,8 +70,6 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  //TODO: verify accessToken with httpsig method
-
   const { id: managementId } = ctx.params
   await deps.accessTokenService.revoke(managementId)
   ctx.status = 204
@@ -79,7 +79,6 @@ async function rotateToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  //TODO: verify accessToken with httpsig method
   const { id: managementId } = ctx.params
   const result = await deps.accessTokenService.rotate(managementId)
   if (result.success == true) {
@@ -88,7 +87,7 @@ async function rotateToken(
       access_token: {
         access: result.access.map((a) => accessToBody(a)),
         value: result.value,
-        manage: result.managementId,
+        manage: deps.config.authServerDomain + `/token/${result.managementId}`,
         expires_in: result.expiresIn
       }
     }

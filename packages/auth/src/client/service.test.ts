@@ -1,45 +1,36 @@
 import nock from 'nock'
+
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { ClientService } from './service'
-import { v4 } from 'uuid'
+import { ClientService, JWKWithRequired } from './service'
+import { generateTestKeys } from '../tests/signature'
+import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
 
-const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
   uri: 'https://example.com'
 }
 
 const TEST_KID_PATH = '/keys/test-key'
-const TEST_CLIENT_KEY = {
-  client: {
-    id: v4(),
-    name: TEST_CLIENT_DISPLAY.name,
-    email: 'bob@bob.com',
-    image: 'a link to an image',
-    uri: TEST_CLIENT_DISPLAY.uri
-  },
-  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-  x: 'test-public-key',
-  kty: 'OKP',
-  alg: 'EdDSA',
-  crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
-  use: 'sig'
-}
 
 describe('Client Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let clientService: ClientService
+  let keyPath: string
+  let publicKey: JWKWithRequired
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     clientService = await deps.use('clientService')
     appContainer = await createTestApp(deps)
+
+    const keys = await generateTestKeys()
+    keyPath = '/' + keys.keyId
+    publicKey = keys.publicKey
   })
 
   afterAll(async (): Promise<void> => {
@@ -56,9 +47,9 @@ describe('Client Service', (): void => {
     describe('Client Properties', (): void => {
       test('Can validate client properties with registry', async (): Promise<void> => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
-          .get('/keys/correct')
+          .get(keyPath)
           .reply(200, {
-            ...TEST_CLIENT_KEY,
+            ...publicKey,
             kid: KEY_REGISTRY_ORIGIN + '/keys/correct',
             exp: Math.round(expDate.getTime() / 1000),
             nbf: Math.round(nbfDate.getTime() / 1000),
@@ -70,8 +61,8 @@ describe('Client Service', (): void => {
           key: {
             proof: 'httpsig',
             jwk: {
-              ...TEST_CLIENT_KEY,
-              kid: KEY_REGISTRY_ORIGIN + '/keys/correct'
+              ...publicKey,
+              kid: KEY_REGISTRY_ORIGIN + keyPath
             }
           }
         })
@@ -84,7 +75,7 @@ describe('Client Service', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
-            ...TEST_CLIENT_KEY,
+            ...publicKey,
             exp: Math.round(expDate.getTime() / 1000),
             nbf: Math.round(nbfDate.getTime() / 1000),
             revoked: false
@@ -94,7 +85,7 @@ describe('Client Service', (): void => {
           display: { name: 'Bob', uri: TEST_CLIENT_DISPLAY.uri },
           key: {
             proof: 'httpsig',
-            jwk: TEST_CLIENT_KEY
+            jwk: publicKey
           }
         })
 
@@ -106,7 +97,7 @@ describe('Client Service', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
-            ...TEST_CLIENT_KEY,
+            ...publicKey,
             exp: Math.round(expDate.getTime() / 1000),
             nbf: Math.round(nbfDate.getTime() / 1000),
             revoked: false
@@ -116,7 +107,7 @@ describe('Client Service', (): void => {
           display: { name: TEST_CLIENT_DISPLAY.name, uri: 'Bob' },
           key: {
             proof: 'httpsig',
-            jwk: TEST_CLIENT_KEY
+            jwk: publicKey
           }
         })
 
@@ -133,7 +124,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...publicKey,
             kid: 'https://openpayments.network/wrong'
           }
         }
@@ -147,7 +138,7 @@ describe('Client Service', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...TEST_CLIENT_KEY,
+          ...publicKey,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
@@ -158,7 +149,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...publicKey,
             x: 'wrong public key'
           }
         }
@@ -175,7 +166,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...publicKey,
             kty: 'EC'
           }
         }
@@ -189,7 +180,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...publicKey,
             key_ops: ['wrapKey']
           }
         }
@@ -203,7 +194,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...publicKey,
             alg: 'RS256'
           }
         }
@@ -217,7 +208,7 @@ describe('Client Service', (): void => {
         key: {
           proof: 'httpsig',
           jwk: {
-            ...TEST_CLIENT_KEY,
+            ...publicKey,
             crv: 'P-256'
           }
         }
@@ -230,9 +221,9 @@ describe('Client Service', (): void => {
       const futureDate = new Date()
       futureDate.setTime(futureDate.getTime() + 1000 * 60 * 60)
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get('/keys/notready')
         .reply(200, {
-          ...TEST_CLIENT_KEY,
+          ...publicKey,
           exp: Math.round(futureDate.getTime() / 1000),
           nbf: Math.round(futureDate.getTime() / 1000),
           revoked: false
@@ -242,7 +233,10 @@ describe('Client Service', (): void => {
         display: TEST_CLIENT_DISPLAY,
         key: {
           proof: 'httpsig',
-          jwk: TEST_CLIENT_KEY
+          jwk: {
+            ...publicKey,
+            kid: KEY_REGISTRY_ORIGIN + '/keys/notready'
+          }
         }
       })
 
@@ -252,9 +246,9 @@ describe('Client Service', (): void => {
 
     test('Cannot validate client with expired key', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get('/keys/invalidclient')
         .reply(200, {
-          ...TEST_CLIENT_KEY,
+          ...publicKey,
           exp: Math.round(nbfDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
@@ -264,7 +258,10 @@ describe('Client Service', (): void => {
         display: TEST_CLIENT_DISPLAY,
         key: {
           proof: 'httpsig',
-          jwk: TEST_CLIENT_KEY
+          jwk: {
+            ...publicKey,
+            kid: KEY_REGISTRY_ORIGIN + '/keys/invalidclient'
+          }
         }
       })
 
@@ -274,9 +271,9 @@ describe('Client Service', (): void => {
 
     test('Cannot validate client with revoked key', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get('/keys/revoked')
         .reply(200, {
-          ...TEST_CLIENT_KEY,
+          ...publicKey,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: true
@@ -286,7 +283,10 @@ describe('Client Service', (): void => {
         display: TEST_CLIENT_DISPLAY,
         key: {
           proof: 'httpsig',
-          jwk: TEST_CLIENT_KEY
+          jwk: {
+            ...publicKey,
+            kid: KEY_REGISTRY_ORIGIN + '/keys/revoked'
+          }
         }
       })
 

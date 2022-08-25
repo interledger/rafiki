@@ -185,6 +185,7 @@ export class App {
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
     const grantRoutes = await this.container.use('grantRoutes')
+    const signatureService = await this.container.use('signatureService')
 
     const openApi = await this.container.use('openApi')
     const toRouterPath = (path: string): string =>
@@ -224,6 +225,7 @@ export class App {
                 path,
                 method
               }),
+              signatureService.tokenHttpsigMiddleware,
               route
             )
             // TODO: remove once all endpoints are implemented
@@ -257,13 +259,6 @@ export class App {
 
     // Token management
     this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
-
-    this.publicRouter.post('/auth/token/:id', (ctx: AppContext): void => {
-      // TODO: tokenService.rotate
-      ctx.status = 200
-    })
-
-    this.publicRouter.del('/auth/token/:id', accessTokenRoutes.revoke)
 
     this.koa.use(this.publicRouter.middleware())
   }

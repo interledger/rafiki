@@ -20,11 +20,13 @@ import { GrantRequest } from '../grant/service'
 import { AccessToken } from '../accessToken/model'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
-export const TEST_KID_PATH = '/keys/base-test-key'
+export const KID_PATH = '/keys/base-test-key'
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
   uri: 'https://example.com'
 }
+
+// TODO: figure out why factoring this out causes tests to break, then factor out test client consts
 export const TEST_CLIENT_KEY = {
   proof: 'httpsig',
   jwk: {
@@ -35,8 +37,8 @@ export const TEST_CLIENT_KEY = {
       image: 'a link to an image',
       uri: TEST_CLIENT_DISPLAY.uri
     },
-    kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-    x: 'test-public-key',
+    kid: KEY_REGISTRY_ORIGIN + KID_PATH,
+    x: 'hin88zzQxp79OOqIFNCME26wMiz0yqjzgkcBe0MW8pE',
     kty: 'OKP',
     alg: 'EdDSA',
     crv: 'Ed25519',
@@ -124,7 +126,7 @@ const generateBaseGrant = () => ({
   finishMethod: FinishMethod.Redirect,
   finishUri: 'https://example.com',
   clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-  clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+  clientKeyId: KEY_REGISTRY_ORIGIN + KID_PATH,
   interactId: v4(),
   interactRef: v4(),
   interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -170,6 +172,8 @@ describe('Grant Routes', (): void => {
 
     const nbfDate = new Date()
     nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
+    const url = '/'
+    const method = 'POST'
 
     test('Valid incoming payment grant', async (): Promise<void> => {
       const incomingPaymentGrantRequest: GrantRequest = {
@@ -186,21 +190,22 @@ describe('Grant Routes', (): void => {
       }
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -229,21 +234,22 @@ describe('Grant Routes', (): void => {
       }
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -271,21 +277,22 @@ describe('Grant Routes', (): void => {
       }
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -313,21 +320,22 @@ describe('Grant Routes', (): void => {
       }
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -356,13 +364,14 @@ describe('Grant Routes', (): void => {
       }
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
       const ctx = createContext(
         {
           headers: {
@@ -398,21 +407,22 @@ describe('Grant Routes', (): void => {
       }
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -440,21 +450,22 @@ describe('Grant Routes', (): void => {
       }
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -482,21 +493,22 @@ describe('Grant Routes', (): void => {
       }
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -511,12 +523,18 @@ describe('Grant Routes', (): void => {
   })
 
   describe('/create', (): void => {
+    const url = '/'
+    const method = 'POST'
+
     test('accepts json only', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'text/plain', 'Content-Type': 'application/json' },
-          url: '/',
-          method: 'POST'
+          headers: {
+            Accept: 'text/plain',
+            'Content-Type': 'application/json'
+          },
+          url,
+          method
         },
         {}
       )
@@ -531,9 +549,12 @@ describe('Grant Routes', (): void => {
     test('sends json body only', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json', 'Content-Type': 'text/plain' },
-          url: '/',
-          method: 'POST'
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'text/plain'
+          },
+          url,
+          method
         },
         {}
       )
@@ -545,40 +566,6 @@ describe('Grant Routes', (): void => {
       expect(ctx.body).toEqual({ error: 'invalid_request' })
     })
 
-    test('Cannot initiate grant with invalid client', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url: '/',
-          method: 'POST'
-        },
-        {}
-      )
-
-      ctx.request.body = {
-        ...BASE_GRANT_REQUEST,
-        client: {
-          display: TEST_CLIENT_DISPLAY,
-          key: {
-            proof: 'httpsig',
-            jwk: {
-              ...TEST_CLIENT_KEY.jwk,
-              kid: 'https://openpayments.network/wrong-key'
-            }
-          }
-        }
-      }
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-      expect(ctx.body).toEqual({
-        error: 'invalid_client'
-      })
-    })
-
     test('Cannot initiate grant with invalid grant request', async (): Promise<void> => {
       const expDate = new Date()
       expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
@@ -587,7 +574,7 @@ describe('Grant Routes', (): void => {
       nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
@@ -601,8 +588,8 @@ describe('Grant Routes', (): void => {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -636,21 +623,22 @@ describe('Grant Routes', (): void => {
       nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+        .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
           exp: Math.round(expDate.getTime() / 1000),
           nbf: Math.round(nbfDate.getTime() / 1000),
           revoked: false
         })
+
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          url: '/',
-          method: 'POST'
+          url,
+          method
         },
         {}
       )
@@ -682,7 +670,7 @@ describe('Grant Routes', (): void => {
     describe('interaction start', (): void => {
       test('Interaction start fails if grant is invalid', async (): Promise<void> => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
-          .get(TEST_KID_PATH)
+          .get(KID_PATH)
           .reply(200, {
             ...TEST_CLIENT_KEY.jwk,
             revoked: false
@@ -744,7 +732,7 @@ describe('Grant Routes', (): void => {
 
       test('Can start an interaction', async (): Promise<void> => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
-          .get(TEST_KID_PATH)
+          .get(KID_PATH)
           .reply(200, {
             ...TEST_CLIENT_KEY.jwk,
             revoked: false
