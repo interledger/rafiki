@@ -15,7 +15,6 @@
     "@types/node": "^18.7.12",
     "@types/node-fetch": "^2.6.2",
     "@types/uuid": "^8.3.4",
-    "cross-fetch": "^3.1.4",
     "graphql": "^15.5.0",
     "lodash": "^4.17.21",
     "node-fetch": "^2.0.0",
