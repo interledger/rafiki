@@ -15,8 +15,8 @@ export interface JWKWithRequired extends JWK {
   revoked?: boolean
 }
 
-export interface jWKandClient {
-  key: JWKWithRequired
+export interface ClientKey {
+  jwk: JWKWithRequired
   client: ClientDetails
 }
 
@@ -49,7 +49,7 @@ interface ServiceDependencies extends BaseService {
 
 export interface ClientService {
   validateClient(clientInfo: ClientInfo): Promise<boolean>
-  getKeyByKid(kid: string): Promise<jWKandClient>
+  getKeyByKid(kid: string): Promise<ClientKey>
 }
 
 export async function createClientService({
@@ -80,20 +80,27 @@ async function validateClient(
 
   const { jwk } = clientInfo.key
 
-  const { key, client } = await getKeyByKid(deps, jwk.kid)
+  const clientKey = await getKeyByKid(deps, jwk.kid)
 
-  if (!key || !isJWKWithRequired(key) || jwk.x !== key.x || key.revoked)
+  if (
+    !clientKey ||
+    !isJWKWithRequired(clientKey.jwk) ||
+    jwk.x !== clientKey.jwk.x ||
+    clientKey.jwk.revoked
+  )
     return false
 
   if (
-    clientInfo.display.name !== client.name ||
-    clientInfo.display.uri !== client.uri
+    clientInfo.display.name !== clientKey.client.name ||
+    clientInfo.display.uri !== clientKey.client.uri
   )
     return false
 
   const currentDate = new Date()
-  if (key.exp && currentDate >= new Date(key.exp * 1000)) return false
-  if (key.nbf && currentDate < new Date(key.nbf * 1000)) return false
+  if (clientKey.jwk.exp && currentDate >= new Date(clientKey.jwk.exp * 1000))
+    return false
+  if (clientKey.jwk.nbf && currentDate < new Date(clientKey.jwk.nbf * 1000))
+    return false
 
   return true
 }
@@ -101,7 +108,7 @@ async function validateClient(
 async function getKeyByKid(
   deps: ServiceDependencies,
   kid: string
-): Promise<jWKandClient> {
+): Promise<ClientKey> {
   return Axios.get(kid)
     .then((res) => res.data)
     .catch((err) => {
