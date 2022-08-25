@@ -219,6 +219,7 @@ export class App {
       }
     })
 
+    await this.apolloServer.start()
     koa.use(this.apolloServer.getMiddleware())
 
     this.adminServer = koa.listen(port)

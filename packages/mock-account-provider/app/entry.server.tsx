@@ -3,7 +3,7 @@ import type { EntryContext } from '@remix-run/node'
 import { Response } from '@remix-run/node'
 import { RemixServer } from '@remix-run/react'
 import { renderToPipeableStream } from 'react-dom/server'
-import { runSeed } from '../src/run_seed'
+import { runSeed } from './lib/run_seed'
 
 declare global {
   let __seeded: boolean | undefined
