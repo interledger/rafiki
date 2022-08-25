@@ -225,7 +225,7 @@ describe('QuoteService', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId: receivingPaymentPointerId,
-            clientId: uuid(),
+            clientId: appContainer.clientId,
             incomingAmount
           })
           options = {
@@ -536,7 +536,7 @@ describe('QuoteService', (): void => {
               (
                 await createIncomingPayment(deps, {
                   paymentPointerId: receivingPaymentPointerId,
-                  clientId: uuid()
+                  clientId: appContainer.clientId
                 })
               ).id
             }`,
@@ -552,17 +552,15 @@ describe('QuoteService', (): void => {
       jest
         .spyOn(ratesService, 'prices')
         .mockImplementation(() => Promise.reject(new Error('fail')))
+      const incomingPayment = await createIncomingPayment(deps, {
+        paymentPointerId: receivingPaymentPointerId,
+        clientId: appContainer.clientId
+      })
+      assert.ok(incomingPayment)
       await expect(
         quoteService.create({
           paymentPointerId,
-          receiver: `${receivingPaymentPointer}/incoming-payments/${
-            (
-              await createIncomingPayment(deps, {
-                paymentPointerId: receivingPaymentPointerId,
-                clientId: uuid()
-              })
-            ).id
-          }`,
+          receiver: `${receivingPaymentPointer}/incoming-payments/${incomingPayment.id}`,
           sendAmount
         })
       ).rejects.toThrow('missing prices')

@@ -258,7 +258,7 @@ describe('OutgoingPaymentService', (): void => {
     receivingPaymentPointer = `${config.openPaymentsUrl}/${destinationPaymentPointer.id}`
     const incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: receiverPaymentPointerId,
-      clientId: uuid()
+      clientId: appContainer.clientId
     })
     receiver = `${receivingPaymentPointer}/incoming-payments/${incomingPayment.id}`
 
@@ -406,7 +406,7 @@ describe('OutgoingPaymentService', (): void => {
     test('fails to create if grant is locked', async () => {
       const grant = new Grant({
         active: true,
-        clientId: uuid(),
+        clientId: appContainer.clientId,
         grant: uuid(),
         access: [
           {
@@ -471,7 +471,7 @@ describe('OutgoingPaymentService', (): void => {
         const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
         const grant = new Grant({
           active: true,
-          clientId: uuid(),
+          clientId: appContainer.clientId,
           grant: uuid(),
           access: [
             {
@@ -499,7 +499,7 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            clientId: uuid(),
+            clientId: appContainer.clientId,
             grant: uuid(),
             access: [
               {
@@ -533,7 +533,7 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            clientId: uuid(),
+            clientId: appContainer.clientId,
             grant: uuid(),
             access: [
               {
@@ -577,7 +577,7 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            clientId: uuid(),
+            clientId: appContainer.clientId,
             grant: uuid(),
             access: [
               {
@@ -631,7 +631,7 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            clientId: uuid(),
+            clientId: appContainer.clientId,
             grant: uuid(),
             access: [
               {
@@ -677,7 +677,7 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            clientId: uuid(),
+            clientId: appContainer.clientId,
             grant: uuid(),
             access: [
               {

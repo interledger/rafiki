@@ -31,7 +31,7 @@ describe('Incoming Payment Service', (): void => {
   let paymentPointerId: string
   let accountingService: AccountingService
   const asset = randomAsset()
-  let clientId
+  let clientId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
