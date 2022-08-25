@@ -1,7 +1,11 @@
 import * as _ from 'lodash'
 import { CONFIG } from './parse_config'
 import type { SeedInstance, Account, Peering } from './parse_config'
-import { createPeer, addPeerLiquidity, createAccount } from './requesters'
+import {
+  createPeer,
+  addPeerLiquidity,
+  createPaymentPointer
+} from './requesters'
 import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
 
@@ -38,13 +42,21 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
       if (account.initialBalance) {
         await mockAccounts.debit(account.id, account.initialBalance, false)
       }
-      return createAccount(
+      const pp = await createPaymentPointer(
         config.self.graphqlUrl,
         account.name,
         account.url,
         account.asset,
         account.scale
       )
+
+      await mockAccounts.setPaymentPointer(
+        account.id,
+        pp.paymentPointer?.id,
+        pp.paymentPointer?.url
+      )
+
+      return pp
     })
   )
   console.log(JSON.stringify(accountResponses, null, 2))

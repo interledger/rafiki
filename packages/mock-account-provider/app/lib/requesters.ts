@@ -106,7 +106,7 @@ export async function addPeerLiquidity(
     })
 }
 
-export async function createAccount(
+export async function createPaymentPointer(
   backendUrl: string,
   accountName: string,
   accountUrl: string,

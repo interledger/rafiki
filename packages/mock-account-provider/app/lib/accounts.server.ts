@@ -3,17 +3,25 @@ import assert from 'assert'
 export interface Account {
   id: string
   name: string
-  debits_pending: bigint
-  debits_posted: bigint
-  credits_pending: bigint
-  credits_posted: bigint
+  paymentPointerID: string
+  paymentPointer: string
+  debitsPending: bigint
+  debitsPosted: bigint
+  creditsPending: bigint
+  creditsPosted: bigint
 }
 
 export interface AccountsServer {
   clearAccounts(): Promise<void>
+  setPaymentPointer(
+    id: string,
+    pointerID: string,
+    paymentPointer: string
+  ): Promise<void>
   create(id: string, name: string): Promise<void>
   listAll(): Promise<Account[]>
   get(id: string): Promise<Account | undefined>
+  getByPaymentPointer(paymentPointer: string): Promise<Account | undefined>
   voidPendingDebit(id: string, amount: bigint): Promise<void>
   voidPendingCredit(id: string, amount: bigint): Promise<void>
   pendingDebit(id: string, amount: bigint): Promise<void>
@@ -29,6 +37,22 @@ export class AccountProvider implements AccountsServer {
     this.accounts.clear()
   }
 
+  async setPaymentPointer(
+    id: string,
+    pointerID: string,
+    paymentPointer: string
+  ): Promise<void> {
+    if (!this.accounts.has(id)) {
+      throw new Error('account already exists')
+    }
+
+    const acc = this.accounts.get(id)
+    assert.ok(acc)
+
+    acc.paymentPointer = paymentPointer
+    acc.paymentPointerID = pointerID
+  }
+
   async create(id: string, name: string): Promise<void> {
     if (!this.accounts.has(id)) {
       throw new Error('account already exists')
@@ -36,10 +60,12 @@ export class AccountProvider implements AccountsServer {
     this.accounts.set(id, {
       id,
       name,
-      credits_pending: BigInt(0),
-      credits_posted: BigInt(0),
-      debits_pending: BigInt(0),
-      debits_posted: BigInt(0)
+      paymentPointer: '',
+      paymentPointerID: '',
+      creditsPending: BigInt(0),
+      creditsPosted: BigInt(0),
+      debitsPending: BigInt(0),
+      debitsPosted: BigInt(0)
     })
   }
 
@@ -49,6 +75,16 @@ export class AccountProvider implements AccountsServer {
 
   async get(id: string): Promise<Account | undefined> {
     return this.accounts.get(id)
+  }
+
+  async getByPaymentPointer(
+    paymentPointer: string
+  ): Promise<Account | undefined> {
+    for (const acc of this.accounts.values()) {
+      if (acc.paymentPointer == paymentPointer) {
+        return acc
+      }
+    }
   }
 
   async credit(
@@ -66,13 +102,13 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
-    if (acc.credits_pending - amount < 0 || acc.credits_posted + amount < 0) {
+    if (acc.creditsPending - amount < 0 || acc.creditsPosted + amount < 0) {
       throw new Error('invalid amount, credits pending cannot be less than 0')
     }
 
-    acc.credits_posted += amount
+    acc.creditsPosted += amount
     if (clearPending) {
-      acc.credits_pending -= amount
+      acc.creditsPending -= amount
     }
   }
 
@@ -92,15 +128,15 @@ export class AccountProvider implements AccountsServer {
     assert.ok(acc)
 
     if (
-      (clearPending && acc.debits_pending - amount < 0) ||
-      acc.debits_posted + amount < 0
+      (clearPending && acc.debitsPending - amount < 0) ||
+      acc.debitsPosted + amount < 0
     ) {
       throw new Error('invalid amount, debits pending cannot be less than 0')
     }
 
-    acc.debits_posted += amount
+    acc.debitsPosted += amount
     if (clearPending) {
-      acc.debits_pending -= amount
+      acc.debitsPending -= amount
     }
   }
 
@@ -114,7 +150,7 @@ export class AccountProvider implements AccountsServer {
 
     const acc = this.accounts.get(id)
     assert.ok(acc)
-    acc.credits_pending += amount
+    acc.creditsPending += amount
   }
 
   async pendingDebit(id: string, amount: bigint): Promise<void> {
@@ -127,7 +163,7 @@ export class AccountProvider implements AccountsServer {
 
     const acc = this.accounts.get(id)
     assert.ok(acc)
-    acc.debits_pending += amount
+    acc.debitsPending += amount
   }
 
   async voidPendingDebit(id: string, amount: bigint): Promise<void> {
@@ -141,11 +177,11 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
-    if (acc.debits_pending - amount < 0) {
+    if (acc.debitsPending - amount < 0) {
       throw new Error('invalid amount, debits pending cannot be less than 0')
     }
 
-    acc.debits_pending -= amount
+    acc.debitsPending -= amount
   }
 
   async voidPendingCredit(id: string, amount: bigint): Promise<void> {
@@ -159,11 +195,11 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
-    if (acc.debits_pending - amount < 0) {
+    if (acc.debitsPending - amount < 0) {
       throw new Error('invalid amount, credits pending cannot be less than 0')
     }
 
-    acc.credits_pending -= amount
+    acc.creditsPending -= amount
   }
 }
 
