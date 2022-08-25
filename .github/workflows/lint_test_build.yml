@@ -16,8 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm format:check
-      - run: pnpm lint:check
+      - run: pnpm checks
 
   backend:
     runs-on: ubuntu-latest
