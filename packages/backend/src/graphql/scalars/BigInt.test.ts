@@ -96,7 +96,7 @@ describe('BigInt', () => {
   }
 
   it('2.1', async () => {
-    const { data, errors } = await graphql(schema, invalidQuery)
+    const { data, errors } = await graphql({ schema, source: invalidQuery })
 
     expect(errors).toHaveLength(1)
     expect(errors).toBeDefined()
@@ -105,7 +105,7 @@ describe('BigInt', () => {
     expect(data).toBeUndefined()
   })
   it('2.2', async () => {
-    const { data, errors } = await graphql(schema, invalidQuery2)
+    const { data, errors } = await graphql({ schema, source: invalidQuery2 })
 
     expect(errors).toHaveLength(1)
     expect(errors).toBeDefined()
@@ -114,7 +114,7 @@ describe('BigInt', () => {
     expect(data).toBeNull()
   })
   it('3', async () => {
-    const { data, errors } = await graphql(schema, validQuery)
+    const { data, errors } = await graphql({ schema, source: validQuery })
     expect(errors).toEqual(undefined)
     expect(data).toEqual({
       a: BigInt(2),
@@ -126,13 +126,13 @@ describe('BigInt', () => {
     })
   })
   it('4', async () => {
-    const { data, errors } = await graphql(
+    const { data, errors } = await graphql({
       schema,
-      validMutation,
-      null,
-      null,
-      validVariables
-    )
+      source: validMutation,
+      rootValue: null,
+      contextValue: null,
+      variableValues: validVariables
+    })
     expect(errors).toEqual(undefined)
     expect(data).toEqual({
       a: { result: BigInt(2147483647) },
