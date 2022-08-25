@@ -118,7 +118,7 @@ async function startInteraction(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { interactId } = ctx.params
+  const { id: interactId } = ctx.params
   const { config, grantService, clientService } = deps
   const grant = await grantService.getByInteraction(interactId)
 
@@ -154,7 +154,7 @@ async function finishInteraction(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { interactId } = ctx.params
+  const { id: interactId } = ctx.params
   const interactSession = ctx.session.interactId
 
   if (!interactSession || !interactId || interactSession !== interactId) {

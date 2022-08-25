@@ -683,7 +683,7 @@ describe('Grant Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { interactId: 'unknown_interaction' }
+          { id: 'unknown_interaction' }
         )
 
         await expect(
@@ -720,7 +720,7 @@ describe('Grant Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { interactId: grantWithInvalidClient.interactId }
+          { id: grantWithInvalidClient.interactId }
         )
 
         await expect(
@@ -745,7 +745,7 @@ describe('Grant Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { interactId: grant.interactId }
+          { id: grant.interactId }
         )
 
         const redirectUrl = new URL(config.identityServerDomain)
@@ -815,7 +815,7 @@ describe('Grant Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { interactId: fakeInteractId }
+          { id: fakeInteractId }
         )
 
         ctx.session.interactId = fakeInteractId
@@ -836,7 +836,7 @@ describe('Grant Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { interactId: grant.interactId }
+          { id: grant.interactId }
         )
 
         ctx.session.interactId = grant.interactId

@@ -210,6 +210,38 @@ export class App {
             route = accessTokenRoutes[tokenMethodToRoute[method]]
           } else if (path.includes('introspect')) {
             route = accessTokenRoutes.introspect
+          } else if (path.includes('interact')) {
+            if (path.endsWith('/finish')) {
+              route = grantRoutes.interaction.finish
+            } else {
+              route = grantRoutes.interaction.start
+            }
+          } else if (path.includes('grant')) {
+            if (path.endsWith('/accept')) {
+              // TODO: replace with call to implementation function
+              route = async (ctx) => {
+                ctx.status = 500
+                ctx.body = {
+                  error: 'not_implemented'
+                }
+              }
+            } else if (path.endsWith('/reject')) {
+              // TODO: replace with call to implementation function
+              route = async (ctx) => {
+                ctx.status = 500
+                ctx.body = {
+                  error: 'not_implemented'
+                }
+              }
+            } else {
+              // TODO: replace with call to implementation function
+              route = async (ctx) => {
+                ctx.status = 500
+                ctx.body = {
+                  error: 'not_implemented'
+                }
+              }
+            }
           } else {
             if (path === '/' && method === HttpMethod.POST) {
               route = grantRoutes.create
@@ -240,22 +272,6 @@ export class App {
         }
       }
     }
-
-    // Interaction
-    this.publicRouter.get(
-      '/interact/:interactId',
-      grantRoutes.interaction.start
-    )
-
-    this.publicRouter.post(
-      '/interact/:interactId/login',
-      grantRoutes.interaction.finish
-    )
-
-    this.publicRouter.del(
-      '/interact/:interactId/login',
-      grantRoutes.interaction.deny
-    )
 
     // Token management
     this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
