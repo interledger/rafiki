@@ -1,17 +1,17 @@
 import { Errors } from 'ilp-packet'
 import {
-  IncomingAccount,
-  OutgoingAccount,
-  ILPContext,
-  ILPMiddleware
-} from '../rafiki'
-import { AuthState } from './auth'
-import { validateId } from '../../../shared/utils'
-import { IncomingPaymentState } from '../../../open_payments/payment/incoming/model'
-import {
   areAllAccountExistsErrors,
   CreateAccountError
 } from '../../../accounting/errors'
+import { IncomingPaymentState } from '../../../open_payments/payment/incoming/model'
+import { validateId } from '../../../shared/utils'
+import {
+  ILPContext,
+  ILPMiddleware,
+  IncomingAccount,
+  OutgoingAccount
+} from '../rafiki'
+import { AuthState } from './auth'
 
 const UUID_LENGTH = 36
 
@@ -44,7 +44,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           if (incomingPayment.state === IncomingPaymentState.Pending) {
             try {
               await ctx.services.accounting.createLiquidityAccount(
-                incomingAccount
+                incomingPayment
               )
             } catch (err) {
               // Don't complain if liquidity account already exists.

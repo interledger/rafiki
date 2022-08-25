@@ -1,4 +1,6 @@
-import { createILPContext } from '../../utils'
+import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
+import { ZeroCopyIlpPrepare } from '../..'
+import { CreateAccountError } from '../../../../accounting/errors'
 import {
   AccountFactory,
   IlpPrepareFactory,
@@ -8,9 +10,7 @@ import {
   RafikiServicesFactory
 } from '../../factories'
 import { createAccountMiddleware } from '../../middleware/account'
-import { ZeroCopyIlpPrepare } from '../..'
-import { CreateAccountError } from '../../../../accounting/errors'
-import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
+import { createILPContext } from '../../utils'
 
 describe('Account Middleware', () => {
   const ADDRESS = 'test.rafiki'
@@ -163,6 +163,6 @@ describe('Account Middleware', () => {
       expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
       expect(ctx.accounts.incoming).toEqual(incomingAccount)
     }
-    expect(spy).toHaveBeenCalled()
+    expect(spy).toHaveBeenCalledWith(outgoingAccount)
   })
 })
