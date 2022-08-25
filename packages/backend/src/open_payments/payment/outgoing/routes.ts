@@ -130,7 +130,6 @@ function outgoingPaymentToBody(
       ...outgoingPayment.toJSON(),
       id: `${outgoingPayment.paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
       paymentPointer: outgoingPayment.paymentPointer.url,
-      paymentPointerId: undefined,
       state: null,
       failed: outgoingPayment.state === OutgoingPaymentState.Failed
     }).filter(([_, v]) => v != null)

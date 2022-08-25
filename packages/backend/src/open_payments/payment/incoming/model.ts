@@ -71,7 +71,7 @@ export class IncomingPayment
       }
     },
     paymentPointer: {
-      relation: Model.HasOneRelation,
+      relation: Model.BelongsToOneRelation,
       modelClass: PaymentPointer,
       join: {
         from: 'incomingPayments.paymentPointerId',

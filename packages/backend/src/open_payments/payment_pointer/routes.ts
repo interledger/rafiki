@@ -23,8 +23,7 @@ export async function getPaymentPointer(
   ctx: PaymentPointerContext
 ): Promise<void> {
   if (!ctx.paymentPointer) {
-    ctx.throw(404)
-    return // unreachable, but satisfies typescript
+    return ctx.throw(404)
   }
 
   ctx.body = {
