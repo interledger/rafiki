@@ -25,6 +25,11 @@ services:
       NODE_ENV: development
       LOG_LEVEL: debug
       PORT: 80
+      SEED_FILE_LOCATION: /workspace/seed.primary.yml
+    volumes:
+      - ./seed.primary.yml:/workspace/seed.primary.yml
+    depends_on:
+      - backend
   backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     restart: always

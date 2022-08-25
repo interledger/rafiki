@@ -1,7 +1,8 @@
 import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 
-export function action({ request }: ActionArgs) {
-  console.log('received quote: ', JSON.stringify(request.body))
-  return json(request.body, { status: 201 })
+export async function action({ request }: ActionArgs) {
+  const receivedQuote = await request.json()
+  console.log('received quote: ', JSON.stringify(receivedQuote))
+  return json(receivedQuote, { status: 201 })
 }

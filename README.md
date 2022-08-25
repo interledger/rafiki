@@ -75,16 +75,22 @@ pnpm --filter backend build
 # run individual tests
 pnpm --filter backend test
 pnpm --filter auth test
-pnpm --filter rates test
 pnpm --filter open-api test
 
 # run all tests
 pnpm -r --workspace-concurrency=2 test
 
-# format code:
+# format and lint code:
 pnpm format
+
+# check lint and formatting
+pnpm checks
+
 # verify code formatting:
-pnpm format:check
+pnpm check:format
+
+# verify lint
+pnpm check:lint
 ```
 
 ### Local Development
