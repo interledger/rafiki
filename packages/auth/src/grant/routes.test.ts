@@ -51,18 +51,7 @@ const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
   actions: [Action.Create, Action.Read, Action.List],
   locations: ['https://example.com'],
-  identifier: 'test-identifier'
-}
-
-const INCOMING_PAYMENT_LIMIT = {
-  incomingAmount: {
-    value: '1000000000',
-    assetCode: 'usd',
-    assetScale: 9
-  },
-  expiresAt: new Date().toISOString(),
-  description: 'this is a test',
-  externalRef: v4()
+  identifier: `https://example.com/${v4()}`
 }
 
 const OUTGOING_PAYMENT_LIMIT = {
@@ -77,10 +66,7 @@ const OUTGOING_PAYMENT_LIMIT = {
     assetScale: 9
   },
   expiresAt: new Date().toISOString(),
-  description: 'this is a test',
-  externalRef: v4(),
-  receivingAccount: 'test-account',
-  receivingPayment: 'test-payment'
+  receiver: 'https://wallet.com/alice'
 }
 
 const BASE_GRANT_REQUEST = {
@@ -90,17 +76,7 @@ const BASE_GRANT_REQUEST = {
         type: AccessType.IncomingPayment,
         actions: [Action.Create, Action.Read, Action.List],
         locations: ['https://example.com'],
-        identifier: 'test-identifier',
-        limits: {
-          incomingAmount: {
-            value: '1000000000',
-            assetCode: 'usd',
-            assetScale: 9
-          },
-          expiresAt: new Date().toISOString(),
-          description: 'this is a test',
-          externalRef: v4()
-        }
+        identifier: `https://example.com/${v4()}`
       }
     ]
   },
@@ -182,8 +158,7 @@ describe('Grant Routes', (): void => {
           access: [
             {
               ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
+              type: AccessType.IncomingPayment
             }
           ]
         }
@@ -349,49 +324,6 @@ describe('Grant Routes', (): void => {
       scope.isDone()
     })
 
-    test('Cannot create incoming payment grant with unexpected limit payload', async (): Promise<void> => {
-      const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url: '/',
-          method: 'POST'
-        },
-        {}
-      )
-
-      ctx.request.body = incomingPaymentGrantRequest
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-
-      scope.isDone()
-    })
-
     test('Cannot create outgoing payment grant with unexpected limit payload', async (): Promise<void> => {
       const outgoingPaymentGrantRequest = {
         ...BASE_GRANT_REQUEST,
@@ -400,7 +332,7 @@ describe('Grant Routes', (): void => {
             {
               ...BASE_GRANT_ACCESS,
               type: AccessType.OutgoingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
+              limits: { wrongLimitField: 'wrong' }
             }
           ]
         }
@@ -666,6 +598,7 @@ describe('Grant Routes', (): void => {
     })
   })
 
+  // TODO: validate that routes satisfy API spec
   describe('interaction', (): void => {
     describe('interaction start', (): void => {
       test('Interaction start fails if grant is invalid', async (): Promise<void> => {
@@ -683,7 +616,7 @@ describe('Grant Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { id: 'unknown_interaction' }
+          { id: 'unknown_interaction', nonce: grant.interactNonce }
         )
 
         await expect(
@@ -720,7 +653,10 @@ describe('Grant Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { id: grantWithInvalidClient.interactId }
+          {
+            id: grantWithInvalidClient.interactId,
+            nonce: grantWithInvalidClient.interactNonce
+          }
         )
 
         await expect(
@@ -745,20 +681,22 @@ describe('Grant Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { id: grant.interactId }
+          { id: grant.interactId, nonce: grant.interactNonce }
         )
 
         const redirectUrl = new URL(config.identityServerDomain)
-        redirectUrl.searchParams.set('clientName', TEST_CLIENT_DISPLAY.name)
-        redirectUrl.searchParams.set('clientUri', TEST_CLIENT_DISPLAY.uri)
+        redirectUrl.searchParams.set('interactRef', grant.interactRef)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
         await expect(
           grantRoutes.interaction.start(ctx)
         ).resolves.toBeUndefined()
+
+        redirectUrl.searchParams.set('nonce', grant.interactNonce as string)
+
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
-        expect(ctx.session.interactId).toEqual(grant.interactId)
+        expect(ctx.session.nonce).toEqual(grant.interactNonce)
 
         scope.isDone()
       })
@@ -771,30 +709,34 @@ describe('Grant Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json'
+            },
+            session: {
+              nonce: grant.interactNonce
             }
           },
-          { interactId: '' }
+          { id: '', nonce: grant.interactNonce }
         )
 
-        ctx.session.interactId = grant.interactId
         await expect(
           grantRoutes.interaction.finish(ctx)
         ).resolves.toBeUndefined()
-        expect(ctx.status).toBe(401)
+        expect(ctx.status).toBe(404)
         expect(ctx.body).toEqual({
-          error: 'invalid_request'
+          error: 'unknown_request'
         })
       })
 
       test('Cannot finish interaction with invalid session', async (): Promise<void> => {
+        const invalidNonce = crypto.randomBytes(8).toString('hex')
         const ctx = createContext(
           {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json'
-            }
+            },
+            session: { nonce: invalidNonce }
           },
-          { interactId: grant.interactId }
+          { nonce: grant.interactNonce, id: grant.interactId }
         )
 
         await expect(
@@ -813,12 +755,12 @@ describe('Grant Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json'
-            }
+            },
+            session: { nonce: grant.interactNonce }
           },
-          { id: fakeInteractId }
+          { id: fakeInteractId, nonce: grant.interactNonce }
         )
 
-        ctx.session.interactId = fakeInteractId
         await expect(
           grantRoutes.interaction.finish(ctx)
         ).resolves.toBeUndefined()
@@ -828,18 +770,29 @@ describe('Grant Routes', (): void => {
         })
       })
 
-      test('Can finish interaction', async (): Promise<void> => {
+      test('Can finish accepted interaction', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          ...generateBaseGrant(),
+          state: GrantState.Granted
+        })
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grant.id
+        })
+
         const ctx = createContext(
           {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json'
+            },
+            session: {
+              nonce: grant.interactNonce
             }
           },
-          { id: grant.interactId }
+          { id: grant.interactId, nonce: grant.interactNonce }
         )
-
-        ctx.session.interactId = grant.interactId
 
         const clientRedirectUri = new URL(grant.finishUri)
         const { clientNonce, interactNonce, interactRef } = grant
@@ -858,70 +811,260 @@ describe('Grant Routes', (): void => {
         ).resolves.toBeUndefined()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+      })
 
-        const issuedGrant = await Grant.query().findById(grant.id)
-        expect(issuedGrant.state).toEqual(GrantState.Granted)
+      test('Can finish rejected interaction', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          ...generateBaseGrant(),
+          state: GrantState.Rejected
+        })
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grant.id
+        })
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            session: {
+              nonce: grant.interactNonce
+            }
+          },
+          { id: grant.interactId, nonce: grant.interactNonce }
+        )
+
+        const clientRedirectUri = new URL(grant.finishUri)
+        clientRedirectUri.searchParams.set('result', 'grant_rejected')
+
+        const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
+        expect(ctx.status).toBe(302)
+        expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+      })
+
+      test('Cannot finish invalid interaction', async (): Promise<void> => {
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            session: {
+              nonce: grant.interactNonce
+            }
+          },
+          { id: grant.interactId, nonce: grant.interactNonce }
+        )
+
+        const clientRedirectUri = new URL(grant.finishUri)
+        clientRedirectUri.searchParams.set('result', 'grant_invalid')
+
+        const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+        await expect(
+          grantRoutes.interaction.finish(ctx)
+        ).resolves.toBeUndefined()
+        expect(ctx.status).toBe(302)
+        expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
       })
     })
   })
 
-  describe('Deny interaction', (): void => {
-    test('Cannot deny interaction without interaction id', async (): Promise<void> => {
+  describe('accept grant', (): void => {
+    test('cannot accept grant without secret', async (): Promise<void> => {
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
-          },
-          session: {
-            interactId: grant.interactId
+          }
+        },
+        { id: grant.interactId, nonce: grant.interactNonce }
+      )
+
+      await expect(grantRoutes.interaction.accept(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(401)
+      expect(ctx.body).toEqual({
+        error: 'invalid_interaction'
+      })
+    })
+
+    test('can accept grant', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'x-idp-secret': Config.identityServerSecret
+          }
+        },
+        { id: grant.interactId, nonce: grant.interactNonce }
+      )
+
+      await expect(grantRoutes.interaction.accept(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+
+      const issuedGrant = await Grant.query().findById(grant.id)
+      expect(issuedGrant.state).toEqual(GrantState.Granted)
+
+      expect(ctx.body).toEqual({
+        redirectUri:
+          Config.authServerDomain +
+          `/${issuedGrant.interactId}/${issuedGrant.interactNonce}/finish`
+      })
+    })
+  })
+
+  describe('reject grant', (): void => {
+    test('Cannot reject grant without secret', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
           }
         },
         {}
       )
 
-      await expect(grantRoutes.interaction.deny(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.interaction.reject(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
+      expect(ctx.body).toEqual({
+        error: 'invalid_interaction'
+      })
     })
 
-    test('Cannot deny interaction if grant does not exist', async (): Promise<void> => {
+    test('Cannot reject grant if grant does not exist', async (): Promise<void> => {
       const interactId = v4()
+      const nonce = crypto.randomBytes(8).toString('hex').toUpperCase()
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          session: {
-            interactId
+            'Content-Type': 'application/json',
+            'x-idp-secret': Config.identityServerSecret
           }
         },
-        { interactId }
+        { id: interactId, nonce }
       )
 
-      await expect(grantRoutes.interaction.deny(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.interaction.reject(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)
     })
 
-    test('Can deny interaction', async (): Promise<void> => {
+    test('Can reject grant', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'x-idp-secret': Config.identityServerSecret
+          }
+        },
+        { id: grant.interactId, nonce: grant.interactNonce }
+      )
+
+      await expect(grantRoutes.interaction.reject(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+
+      const issuedGrant = await Grant.query().findById(grant.id)
+      expect(issuedGrant.state).toEqual(GrantState.Rejected)
+
+      expect(ctx.body).toEqual({
+        redirectUri:
+          Config.authServerDomain +
+          `/${issuedGrant.interactId}/${issuedGrant.interactNonce}/finish`
+      })
+    })
+  })
+
+  describe('Grant details', (): void => {
+    let grant: Grant
+    let access: Access
+
+    beforeAll(async (): Promise<void> => {
+      grant = await Grant.query().insert({
+        ...generateBaseGrant()
+      })
+
+      access = await Access.query().insertAndFetch({
+        ...BASE_GRANT_ACCESS,
+        grantId: grant.id
+      })
+    })
+
+    test('Can get grant details', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'x-idp-secret': Config.identityServerSecret
+          },
+          url: `/grant/${grant.interactId}/${grant.interactNonce}`,
+          method: 'GET'
+        },
+        { id: grant.interactId, nonce: grant.interactNonce }
+      )
+
+      const formattedAccess = access
+      delete formattedAccess.id
+      delete formattedAccess.createdAt
+      delete formattedAccess.updatedAt
+      await expect(
+        grantRoutes.interaction.details(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.body).toEqual({ access: [formattedAccess] })
+      expect(ctx.response).toSatisfyApiSpec()
+    })
+
+    test('Cannot get grant details for nonexistent grant', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'x-idp-secret': Config.identityServerSecret
+          },
+          url: `/grant/${grant.interactId}/${grant.interactNonce}`,
+          method: 'GET'
+        },
+        { id: v4(), nonce: grant.interactNonce }
+      )
+      await expect(
+        grantRoutes.interaction.details(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.status).toBe(404)
+      expect(ctx.response).toSatisfyApiSpec()
+    })
+
+    test('Cannot get grant details without secret', async (): Promise<void> => {
       const ctx = createContext(
         {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json'
           },
-          session: {
-            interactId: grant.interactId
-          }
+          url: `/grant/${grant.interactId}/${grant.interactNonce}`,
+          method: 'GET'
         },
-        { interactId: grant.interactId }
+        { id: grant.interactId, nonce: grant.interactNonce }
       )
 
-      await expect(grantRoutes.interaction.deny(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
-
-      const issuedGrant = await Grant.query().findById(grant.id)
-      expect(issuedGrant.state).toEqual(GrantState.Denied)
+      await expect(
+        grantRoutes.interaction.details(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.status).toBe(401)
+      // TODO: add this response to spec
+      // expect(ctx.response).toSatisfyApiSpec()
     })
   })
 
@@ -932,7 +1075,7 @@ describe('Grant Routes', (): void => {
         state: GrantState.Granted
       })
 
-      await Access.query().insert({
+      const access = await Access.query().insert({
         ...BASE_GRANT_ACCESS,
         grantId: grant.id
       })
@@ -973,7 +1116,7 @@ describe('Grant Routes', (): void => {
           access: expect.arrayContaining([
             {
               actions: expect.arrayContaining(['create', 'read', 'list']),
-              identifier: 'test-identifier',
+              identifier: access.identifier,
               locations: expect.arrayContaining(['https://example.com']),
               type: 'incoming-payment'
             }

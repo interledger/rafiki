@@ -68,8 +68,9 @@ describe('Access Token Routes', (): void => {
   const BASE_ACCESS = {
     type: AccessType.OutgoingPayment,
     actions: [Action.Read, Action.Create],
+    identifier: `https://example.com/${v4()}`,
     limits: {
-      receivingAccount: 'https://wallet.com/alice',
+      receiver: 'https://wallet.com/alice',
       sendAmount: {
         value: '400',
         assetCode: 'USD',
@@ -176,7 +177,8 @@ describe('Access Token Routes', (): void => {
           {
             type: access.type,
             actions: access.actions,
-            limits: access.limits
+            limits: access.limits,
+            identifier: access.identifier
           }
         ],
         key: {

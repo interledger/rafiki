@@ -107,6 +107,7 @@ export class App {
       session(
         {
           key: 'sessionId',
+          // TODO: make this time shorter?
           maxAge: 60 * 1000,
           signed: true
         },
@@ -218,29 +219,11 @@ export class App {
             }
           } else if (path.includes('grant')) {
             if (path.endsWith('/accept')) {
-              // TODO: replace with call to implementation function
-              route = async (ctx) => {
-                ctx.status = 500
-                ctx.body = {
-                  error: 'not_implemented'
-                }
-              }
+              route = grantRoutes.interaction.accept
             } else if (path.endsWith('/reject')) {
-              // TODO: replace with call to implementation function
-              route = async (ctx) => {
-                ctx.status = 500
-                ctx.body = {
-                  error: 'not_implemented'
-                }
-              }
+              route = grantRoutes.interaction.reject
             } else {
-              // TODO: replace with call to implementation function
-              route = async (ctx) => {
-                ctx.status = 500
-                ctx.body = {
-                  error: 'not_implemented'
-                }
-              }
+              route = grantRoutes.interaction.details
             }
           } else {
             if (path === '/' && method === HttpMethod.POST) {
@@ -273,9 +256,6 @@ export class App {
       }
     }
 
-    // Token management
-    this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
-
     this.koa.use(this.publicRouter.middleware())
   }
 
@@ -303,8 +283,6 @@ export class App {
             .del()
         } catch (err) {
           this.logger.warn(
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
             { error: err.message, tableName },
             'processDatabaseCleanup error'
           )

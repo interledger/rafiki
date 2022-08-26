@@ -63,7 +63,7 @@ describe('Grant Service', (): void => {
   const BASE_GRANT_ACCESS = {
     actions: [Action.Create, Action.Read, Action.List],
     locations: ['https://example.com'],
-    identifier: 'test-identifier'
+    identifier: `https://example.com/${v4()}`
   }
 
   const BASE_GRANT_REQUEST = {
@@ -95,17 +95,6 @@ describe('Grant Service', (): void => {
     }
   }
 
-  const INCOMING_PAYMENT_LIMIT = {
-    incomingAmount: {
-      value: '1000000000',
-      assetCode: 'usd',
-      assetScale: 9
-    },
-    expiresAt: new Date().toISOString(),
-    description: 'this is a test',
-    externalRef: v4()
-  }
-
   describe('create', (): void => {
     test('Can create a grant', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
@@ -114,8 +103,7 @@ describe('Grant Service', (): void => {
           access: [
             {
               ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
+              type: AccessType.IncomingPayment
             }
           ]
         }
@@ -144,7 +132,6 @@ describe('Grant Service', (): void => {
         .first()
 
       expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
-      expect(dbAccessGrant.limits).toEqual(INCOMING_PAYMENT_LIMIT)
     })
   })
 
@@ -183,16 +170,16 @@ describe('Grant Service', (): void => {
     })
   })
 
-  describe('deny', (): void => {
-    test('Can deny a grant', async (): Promise<void> => {
-      const deniedGrant = await grantService.denyGrant(grant.id)
-      expect(deniedGrant?.id).toEqual(grant.id)
-      expect(deniedGrant?.state).toEqual(GrantState.Denied)
+  describe('reject', (): void => {
+    test('Can reject a grant', async (): Promise<void> => {
+      const rejectedGrant = await grantService.rejectGrant(grant.id)
+      expect(rejectedGrant?.id).toEqual(grant.id)
+      expect(rejectedGrant?.state).toEqual(GrantState.Rejected)
     })
 
-    test("Cannot deny a grant that doesn't exist", async (): Promise<void> => {
-      const deniedGrant = await grantService.denyGrant(v4())
-      expect(deniedGrant).toBeUndefined()
+    test("Cannot reject a grant that doesn't exist", async (): Promise<void> => {
+      const rejectedGrant = await grantService.rejectGrant(v4())
+      expect(rejectedGrant).toBeUndefined()
     })
   })
 })
