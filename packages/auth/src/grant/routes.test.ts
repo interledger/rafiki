@@ -54,17 +54,6 @@ const BASE_GRANT_ACCESS = {
   identifier: `https://example.com/${v4()}`
 }
 
-const INCOMING_PAYMENT_LIMIT = {
-  incomingAmount: {
-    value: '1000000000',
-    assetCode: 'usd',
-    assetScale: 9
-  },
-  expiresAt: new Date().toISOString(),
-  description: 'this is a test',
-  externalRef: v4()
-}
-
 const OUTGOING_PAYMENT_LIMIT = {
   sendAmount: {
     value: '1000000000',
@@ -77,8 +66,6 @@ const OUTGOING_PAYMENT_LIMIT = {
     assetScale: 9
   },
   expiresAt: new Date().toISOString(),
-  description: 'this is a test',
-  externalRef: v4(),
   receiver: 'test-account'
 }
 
@@ -89,17 +76,7 @@ const BASE_GRANT_REQUEST = {
         type: AccessType.IncomingPayment,
         actions: [Action.Create, Action.Read, Action.List],
         locations: ['https://example.com'],
-        identifier: `https://example.com/${v4()}`,
-        limits: {
-          incomingAmount: {
-            value: '1000000000',
-            assetCode: 'usd',
-            assetScale: 9
-          },
-          expiresAt: new Date().toISOString(),
-          description: 'this is a test',
-          externalRef: v4()
-        }
+        identifier: `https://example.com/${v4()}`
       }
     ]
   },
@@ -181,8 +158,7 @@ describe('Grant Routes', (): void => {
           access: [
             {
               ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
+              type: AccessType.IncomingPayment
             }
           ]
         }
@@ -348,49 +324,6 @@ describe('Grant Routes', (): void => {
       scope.isDone()
     })
 
-    test('Cannot create incoming payment grant with unexpected limit payload', async (): Promise<void> => {
-      const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url: '/',
-          method: 'POST'
-        },
-        {}
-      )
-
-      ctx.request.body = incomingPaymentGrantRequest
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-
-      scope.isDone()
-    })
-
     test('Cannot create outgoing payment grant with unexpected limit payload', async (): Promise<void> => {
       const outgoingPaymentGrantRequest = {
         ...BASE_GRANT_REQUEST,
@@ -399,7 +332,7 @@ describe('Grant Routes', (): void => {
             {
               ...BASE_GRANT_ACCESS,
               type: AccessType.OutgoingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
+              limits: { wrongLimitField: 'wrong' }
             }
           ]
         }

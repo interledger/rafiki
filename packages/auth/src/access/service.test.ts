@@ -50,25 +50,13 @@ describe('Access Service', (): void => {
   }
 
   test('Can create incoming payment access', async (): Promise<void> => {
-    const incomingPaymentLimit = {
-      incomingAmount: {
-        value: '1000000000',
-        assetCode: 'usd',
-        assetScale: 9
-      },
-      expiresAt: new Date().toISOString(),
-      description: 'this is a test',
-      externalRef: v4()
-    }
-
     const grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT
     })
 
     const incomingPaymentAccess: AccessRequest = {
       type: AccessType.IncomingPayment,
-      actions: [Action.Create, Action.Read, Action.List],
-      limits: incomingPaymentLimit
+      actions: [Action.Create, Action.Read, Action.List]
     }
 
     const access = await accessService.createAccess(grant.id, [
@@ -78,7 +66,6 @@ describe('Access Service', (): void => {
     expect(access.length).toEqual(1)
     expect(access[0].grantId).toEqual(grant.id)
     expect(access[0].type).toEqual(AccessType.IncomingPayment)
-    expect(access[0].limits).toEqual(incomingPaymentLimit)
   })
 
   test('Can create outgoing payment access', async (): Promise<void> => {
@@ -94,8 +81,6 @@ describe('Access Service', (): void => {
         assetScale: 9
       },
       expiresAt: new Date().toISOString(),
-      description: 'this is a test',
-      externalRef: v4(),
       receiver: 'test-account'
     }
 

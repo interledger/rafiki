@@ -21,7 +21,6 @@ interface BaseAccessRequest {
 
 interface IncomingPaymentRequest extends BaseAccessRequest {
   type: AccessType.IncomingPayment
-  limits?: IncomingPaymentLimit
 }
 
 interface OutgoingPaymentRequest extends BaseAccessRequest {
@@ -63,8 +62,7 @@ function isIncomingPaymentAccessRequest(
 ): accessRequest is IncomingPaymentRequest {
   return (
     accessRequest.type === AccessType.IncomingPayment &&
-    isAction(accessRequest.actions) &&
-    (!accessRequest.limits || isIncomingPaymentLimit(accessRequest.limits))
+    isAction(accessRequest.actions)
   )
 }
 
@@ -117,18 +115,13 @@ export interface PaymentAmount {
   assetScale: number
 }
 
-export interface IncomingPaymentLimit {
-  incomingAmount?: PaymentAmount
-  expiresAt?: string
-}
-
 export type OutgoingPaymentLimit = {
   receiver: string
   sendAmount?: PaymentAmount
   receiveAmount?: PaymentAmount
 }
 
-export type LimitData = IncomingPaymentLimit | OutgoingPaymentLimit
+export type LimitData = OutgoingPaymentLimit
 
 function isPaymentAmount(
   paymentAmount: PaymentAmount | undefined
@@ -137,14 +130,6 @@ function isPaymentAmount(
     paymentAmount?.value !== undefined &&
     paymentAmount?.assetCode !== undefined &&
     paymentAmount?.assetScale !== undefined
-  )
-}
-
-export function isIncomingPaymentLimit(
-  limit: IncomingPaymentLimit
-): limit is IncomingPaymentLimit {
-  return (
-    typeof limit.expiresAt === 'string' && isPaymentAmount(limit.incomingAmount)
   )
 }
 

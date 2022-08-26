@@ -102,17 +102,6 @@ describe('Grant Service', (): void => {
     }
   }
 
-  const INCOMING_PAYMENT_LIMIT = {
-    incomingAmount: {
-      value: '1000000000',
-      assetCode: 'usd',
-      assetScale: 9
-    },
-    expiresAt: new Date().toISOString(),
-    description: 'this is a test',
-    externalRef: v4()
-  }
-
   describe('create', (): void => {
     test('Can create a grant', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
@@ -121,8 +110,7 @@ describe('Grant Service', (): void => {
           access: [
             {
               ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
+              type: AccessType.IncomingPayment
             }
           ]
         }
@@ -151,7 +139,6 @@ describe('Grant Service', (): void => {
         .first()
 
       expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
-      expect(dbAccessGrant.limits).toEqual(INCOMING_PAYMENT_LIMIT)
     })
   })
 
