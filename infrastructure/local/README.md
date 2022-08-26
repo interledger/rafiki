@@ -40,7 +40,11 @@ Run through the following requests in the `Peer-to-peer transfer` folder to:
 ![Docker compose environment](./local-dev.png)
 
 a - accessible at http://localhost:3001/graphql
+
 b - accessible at http://localhost:3000
+
 c - accessible at http://localhost:4001/graphql
+
 d - accessible at http://localhost:4000
+
 e - accessible at localhost:5432
