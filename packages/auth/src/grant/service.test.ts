@@ -63,7 +63,7 @@ describe('Grant Service', (): void => {
   const BASE_GRANT_ACCESS = {
     actions: [Action.Create, Action.Read, Action.List],
     locations: ['https://example.com'],
-    identifier: 'test-identifier'
+    identifier: `https://example.com/${v4()}`
   }
 
   const BASE_GRANT_REQUEST = {

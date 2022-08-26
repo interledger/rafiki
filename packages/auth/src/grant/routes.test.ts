@@ -51,7 +51,7 @@ const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
   actions: [Action.Create, Action.Read, Action.List],
   locations: ['https://example.com'],
-  identifier: 'test-identifier'
+  identifier: `https://example.com/${v4()}`
 }
 
 const INCOMING_PAYMENT_LIMIT = {
@@ -89,7 +89,7 @@ const BASE_GRANT_REQUEST = {
         type: AccessType.IncomingPayment,
         actions: [Action.Create, Action.Read, Action.List],
         locations: ['https://example.com'],
-        identifier: 'test-identifier',
+        identifier: `https://example.com/${v4()}`,
         limits: {
           incomingAmount: {
             value: '1000000000',
@@ -1183,7 +1183,7 @@ describe('Grant Routes', (): void => {
           access: expect.arrayContaining([
             {
               actions: expect.arrayContaining(['create', 'read', 'list']),
-              identifier: 'test-identifier',
+              identifier: `https://example.com/${v4()}`,
               locations: expect.arrayContaining(['https://example.com']),
               type: 'incoming-payment'
             }
