@@ -11,9 +11,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { SignatureService } from './service'
-import { JWKWithRequired } from '../client/service'
+import { ClientKey, JWKWithRequired } from '../client/service'
 import { createContext, createContextWithSigHeaders } from '../tests/context'
-import { TEST_CLIENT_DISPLAY, generateTestKeys } from '../tests/signature'
+import {
+  TEST_CLIENT_DISPLAY,
+  generateTestKeys,
+  TEST_CLIENT
+} from '../tests/signature'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
@@ -210,7 +214,10 @@ describe('Signature Service', (): void => {
     test('Validate POST / request with middleware', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
-        .reply(200, testClientKey.jwk)
+        .reply(200, {
+          jwk: testClientKey.jwk,
+          client: TEST_CLIENT
+        } as ClientKey)
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -244,7 +251,10 @@ describe('Signature Service', (): void => {
     test('Validate /introspect request with middleware', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
-        .reply(200, testClientKey.jwk)
+        .reply(200, {
+          jwk: testClientKey.jwk,
+          client: TEST_CLIENT
+        } as ClientKey)
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -274,7 +284,10 @@ describe('Signature Service', (): void => {
     test('Validate DEL /token request with middleware', async () => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
-        .reply(200, testClientKey.jwk)
+        .reply(200, {
+          jwk: testClientKey.jwk,
+          client: TEST_CLIENT
+        } as ClientKey)
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -347,7 +360,10 @@ describe('Signature Service', (): void => {
     test('httpsig middleware fails if headers are invalid', async () => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
-        .reply(200, testClientKey.jwk)
+        .reply(200, {
+          jwk: testClientKey.jwk,
+          client: TEST_CLIENT
+        } as ClientKey)
       const method = 'DELETE'
 
       const ctx = createContext(

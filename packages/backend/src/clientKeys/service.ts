@@ -4,7 +4,7 @@ import { ClientKeys } from './model'
 import { BaseService } from '../shared/baseService'
 
 export interface ClientKeysService {
-  getKeyById(keyId: string): Promise<ClientKeys['jwk']>
+  getKeyById(keyId: string): Promise<ClientKeys>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -31,8 +31,8 @@ async function getKeyById(
   deps: ServiceDependencies,
   // In the form https://somedomain/keys/{keyId}
   keyId: string
-): Promise<ClientKeys['jwk']> {
+): Promise<ClientKeys> {
   const key = await ClientKeys.query(deps.knex).findById(keyId)
   if (!key) return null
-  return key.jwk
+  return key
 }
