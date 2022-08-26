@@ -223,7 +223,7 @@ export class App {
             } else if (path.endsWith('/reject')) {
               route = grantRoutes.interaction.reject
             } else {
-              route = grantRoutes.interaction.info
+              route = grantRoutes.interaction.details
             }
           } else {
             if (path === '/' && method === HttpMethod.POST) {
