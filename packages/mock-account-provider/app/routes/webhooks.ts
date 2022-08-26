@@ -42,7 +42,8 @@ export async function action({ request }: ActionArgs) {
 }
 
 export async function handleOutgoingPaymentCompleted(wh: WebHook) {
-  const pp = wh.data['paymentPointer'] as string
+  assert.equal(wh.eventType, EventType.OutgoingPaymentCompleted)
+  const pp = wh.data['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
   assert.ok(acc)
 
@@ -53,7 +54,8 @@ export async function handleOutgoingPaymentCompleted(wh: WebHook) {
 }
 
 export async function handleOutgoingPaymentCreated(wh: WebHook) {
-  const pp = wh.data['paymentPointer'] as string
+  assert.equal(wh.eventType, EventType.OutgoingPaymentCreated)
+  const pp = wh.data['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
   assert.ok(acc)
 
@@ -89,7 +91,8 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
 }
 
 export async function handleIncomingPaymentCompleted(wh: WebHook) {
-  const pp = wh.data['paymentPointer'] as string
+  assert.equal(wh.eventType, EventType.IncomingPaymentCompleted)
+  const pp = wh.data['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
   assert.ok(acc)
 
