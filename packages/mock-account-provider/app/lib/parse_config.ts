@@ -22,7 +22,6 @@ export interface Account {
   asset: string
   scale: number
   initialBalance: bigint
-  url: string
   path: string
   postmanEnvVar: string
 }
