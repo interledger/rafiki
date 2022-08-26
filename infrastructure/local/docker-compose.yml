@@ -6,7 +6,7 @@ services:
     networks:
       rafiki:
     ports:
-      - "3006:3006"
+      - '3006:3006'
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
@@ -21,6 +21,8 @@ services:
     restart: always
     networks:
       rafiki:
+    ports:
+      - '3030:80'
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
@@ -35,8 +37,8 @@ services:
     restart: always
     privileged: true
     ports:
-      - "3000:80"
-      - "3001:3001"
+      - '3000:80'
+      - '3001:3001'
     networks:
       rafiki:
     environment:
@@ -46,7 +48,6 @@ services:
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 80
       DATABASE_URL: postgresql://backend:backend@database/backend
-      REDIS_URL: redis://redis:6379
       TIGERBEETLE_CLUSTER_ID: 0
       # Tigerbeetle will support DNS in future
       TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
@@ -69,7 +70,7 @@ services:
       - database
       - redis
   database:
-    image: "postgres" # use latest official postgres version
+    image: 'postgres' # use latest official postgres version
     restart: unless-stopped
     networks:
       rafiki:
@@ -77,7 +78,7 @@ services:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
       - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
@@ -93,7 +94,7 @@ services:
     entrypoint:
       - /bin/sh
       - -c
-      - | 
+      - |
         set -ex
         DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
         set +e
@@ -109,7 +110,7 @@ services:
         DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
         /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=0.0.0.0:4342
   redis:
-    image: "redis:5" # use latest official postgres version
+    image: 'redis:5' # use latest official postgres version
     restart: unless-stopped
     networks:
       rafiki:
@@ -121,6 +122,6 @@ networks:
   rafiki:
     driver: bridge
     ipam:
-     config:
-       - subnet: 10.5.0.0/24
-         gateway: 10.5.0.1
+      config:
+        - subnet: 10.5.0.0/24
+          gateway: 10.5.0.1
