@@ -21,6 +21,7 @@ interface BaseAccessRequest {
 
 interface IncomingPaymentRequest extends BaseAccessRequest {
   type: AccessType.IncomingPayment
+  limits?: undefined
 }
 
 interface OutgoingPaymentRequest extends BaseAccessRequest {
@@ -62,7 +63,8 @@ function isIncomingPaymentAccessRequest(
 ): accessRequest is IncomingPaymentRequest {
   return (
     accessRequest.type === AccessType.IncomingPayment &&
-    isAction(accessRequest.actions)
+    isAction(accessRequest.actions) &&
+    !accessRequest.limits
   )
 }
 
