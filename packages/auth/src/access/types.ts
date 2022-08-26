@@ -21,7 +21,7 @@ interface BaseAccessRequest {
 
 interface IncomingPaymentRequest extends BaseAccessRequest {
   type: AccessType.IncomingPayment
-  limits?: undefined
+  limits?: never
 }
 
 interface OutgoingPaymentRequest extends BaseAccessRequest {
@@ -31,12 +31,12 @@ interface OutgoingPaymentRequest extends BaseAccessRequest {
 
 interface AccountRequest extends BaseAccessRequest {
   type: AccessType.Account
-  limits?: undefined
+  limits?: never
 }
 
 interface QuoteRequest extends BaseAccessRequest {
   type: AccessType.Quote
-  limits?: undefined
+  limits?: never
 }
 
 export type AccessRequest =

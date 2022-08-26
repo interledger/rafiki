@@ -66,7 +66,7 @@ const OUTGOING_PAYMENT_LIMIT = {
     assetScale: 9
   },
   expiresAt: new Date().toISOString(),
-  receiver: 'test-account'
+  receiver: 'https://wallet.com/alice'
 }
 
 const BASE_GRANT_REQUEST = {
@@ -886,7 +886,7 @@ describe('Grant Routes', (): void => {
             'Content-Type': 'application/json'
           }
         },
-        { id: grant.interactId }
+        { id: grant.interactId, nonce: grant.interactNonce }
       )
 
       await expect(grantRoutes.interaction.accept(ctx)).resolves.toBeUndefined()

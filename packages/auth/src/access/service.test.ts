@@ -81,7 +81,7 @@ describe('Access Service', (): void => {
         assetScale: 9
       },
       expiresAt: new Date().toISOString(),
-      receiver: 'test-account'
+      receiver: 'https://wallet.com/alice'
     }
 
     const outgoingPaymentAccess: AccessRequest = {
