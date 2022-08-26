@@ -103,11 +103,11 @@ export class App {
     }
 
     this.koa.keys = [this.config.cookieKey]
-    // TODO: make this shorter?
     this.koa.use(
       session(
         {
           key: 'sessionId',
+          // TODO: make this time shorter?
           maxAge: 60 * 1000,
           signed: true
         },
