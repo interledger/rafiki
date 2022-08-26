@@ -8,6 +8,13 @@ export interface Self {
   openPaymentPublishedPort: number
 }
 
+export interface Fees {
+  fixed: number
+  percentage: number
+  asset: string
+  scale: number
+}
+
 export interface Peering {
   peerUrl: string
   peerIlpAddress: string
@@ -30,6 +37,7 @@ export interface SeedInstance {
   self: Self
   peers: Array<Peering>
   accounts: Array<Account>
+  fees: Array<Fees>
 }
 
 export const CONFIG: SeedInstance = parse(
