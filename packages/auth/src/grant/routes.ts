@@ -126,6 +126,7 @@ async function getGrantDetails(
   const secret = ctx.headers?.['x-idp-secret']
   const { config, grantService } = deps
   if (
+    !ctx.headers['x-idp-secret'] ||
     !crypto.timingSafeEqual(
       Buffer.from(secret as string),
       Buffer.from(config.identityServerSecret)
@@ -196,6 +197,7 @@ async function acceptGrant(
   const { config, grantService } = deps
 
   if (
+    !ctx.headers['x-idp-secret'] ||
     !crypto.timingSafeEqual(
       Buffer.from(ctx.headers['x-idp-secret'] as string),
       Buffer.from(deps.config.identityServerSecret)
@@ -306,6 +308,7 @@ async function rejectGrant(
   const { grantService, config } = deps
 
   if (
+    !ctx.headers['x-idp-secret'] ||
     !crypto.timingSafeEqual(
       Buffer.from(ctx.headers['x-idp-secret'] as string),
       Buffer.from(deps.config.identityServerSecret)
