@@ -5,6 +5,7 @@ export interface Self {
   graphqlUrl: string
   hostname: string
   mapHostname: string
+  openPaymentPublishedPort: number
 }
 
 export interface Peering {
@@ -22,6 +23,7 @@ export interface Account {
   scale: number
   initialBalance: bigint
   url: string
+  postmanEnvVar: string
 }
 
 export interface SeedInstance {
