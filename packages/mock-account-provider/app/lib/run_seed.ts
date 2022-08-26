@@ -41,7 +41,7 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
     _.map(config.accounts, async (account: Account) => {
       await mockAccounts.create(account.id, account.name)
       if (account.initialBalance) {
-        await mockAccounts.debit(
+        await mockAccounts.credit(
           account.id,
           BigInt(account.initialBalance),
           false

@@ -111,7 +111,7 @@ export async function handleIncomingPaymentCompleted(wh: WebHook) {
   assert.ok(acc)
 
   const amt = wh.data['receiveAmount'] as Amount
-  mockAccounts.credit(acc.id, amt.value, false)
+  await mockAccounts.credit(acc.id, amt.value, false)
 
   await apolloClient
     .mutate({

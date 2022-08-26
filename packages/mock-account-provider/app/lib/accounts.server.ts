@@ -134,6 +134,12 @@ export class AccountProvider implements AccountsServer {
       throw new Error('invalid amount, debits pending cannot be less than 0')
     }
 
+    if (
+      !clearPending &&
+      acc.creditsPosted < acc.debitsPosted + acc.debitsPending + amount
+    ) {
+      throw new Error('invalid debit, insufficient funds')
+    }
     acc.debitsPosted += amount
     if (clearPending) {
       acc.debitsPending -= amount
@@ -163,6 +169,11 @@ export class AccountProvider implements AccountsServer {
 
     const acc = this.accounts.get(id)
     assert.ok(acc)
+
+    if (acc.creditsPosted < acc.debitsPosted + acc.debitsPending + amount) {
+      throw new Error('invalid pending debit amount, insufficient funds')
+    }
+
     acc.debitsPending += amount
   }
 
