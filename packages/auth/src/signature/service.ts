@@ -246,6 +246,7 @@ async function tokenHttpsigMiddleware(
       ctx.body = { error: 'invalid_client' }
       return
     }
+
     verified = await verifySigAndChallenge(
       deps,
       sig,
@@ -255,7 +256,7 @@ async function tokenHttpsigMiddleware(
     )
   } else {
     // route does not need httpsig verification
-    next()
+    await next()
     return
   }
 
@@ -265,9 +266,9 @@ async function tokenHttpsigMiddleware(
       error: verified.error || 'request_denied',
       message: verified.message || null
     }
-    next()
+    await next()
     return
   }
 
-  next()
+  await next()
 }
