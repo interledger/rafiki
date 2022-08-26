@@ -87,23 +87,13 @@ describe('Client Key Service', (): void => {
       const keyOption: AddKeyToClientOptions = {
         id: KEY_UUID,
         clientId: client.id,
-        jwk: {
-          ...TEST_CLIENT_KEY,
-          client: {
-            id: client.id,
-            name: client.name,
-            uri: client.uri,
-            image: '',
-            email: ''
-          }
-        }
+        jwk: TEST_CLIENT_KEY
       }
       await clientService.addKeyToClient(keyOption)
-      const key = await clientKeysService.getKeyById(KEY_UUID)
-      await clientKeysService.revokeKey(key)
+
+      await clientKeysService.revokeKeyById(KEY_UUID)
       const revokedKey = await clientKeysService.getKeyById(KEY_UUID)
 
-      expect(key.id).toEqual(revokedKey.id)
       expect(revokedKey.jwk.revoked).toEqual(true)
     })
   })

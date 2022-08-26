@@ -5,7 +5,7 @@ import { BaseService } from '../shared/baseService'
 
 export interface ClientKeysService {
   getKeyById(keyId: string): Promise<ClientKeys>
-  revokeKey(key: ClientKeys): Promise<ClientKeys>
+  revokeKeyById(keyId: string): Promise<string>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -25,7 +25,7 @@ export async function createClientKeysService({
   }
   return {
     getKeyById: (keyId) => getKeyById(deps, keyId),
-    revokeKey: (key) => revokeKey(deps, key)
+    revokeKeyById: (keyId) => revokeKeyById(deps, keyId)
   }
 }
 
@@ -39,10 +39,12 @@ async function getKeyById(
   return key
 }
 
-async function revokeKey(
+async function revokeKeyById(
   deps: ServiceDependencies,
-  key: ClientKeys
-): Promise<ClientKeys> {
+  keyId: string
+): Promise<string> {
+  const key = await ClientKeys.query(deps.knex).findById(keyId)
+
   const revokedJwk = key.jwk
   revokedJwk.revoked = true
 
@@ -51,7 +53,7 @@ async function revokeKey(
       .$query(deps.knex)
       .patchAndFetch({ jwk: revokedJwk })
 
-    return revokedKey
+    return revokedKey.id
   } catch (error) {
     deps.logger.error(
       {
