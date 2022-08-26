@@ -54,7 +54,7 @@ export class AccountProvider implements AccountsServer {
   }
 
   async create(id: string, name: string): Promise<void> {
-    if (!this.accounts.has(id)) {
+    if (this.accounts.has(id)) {
       throw new Error('account already exists')
     }
     this.accounts.set(id, {
