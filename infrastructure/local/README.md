@@ -34,8 +34,13 @@ pnpm localenv logs -f fynbos local-bank
 Run through the following requests in the `Peer-to-peer transfer` folder to:
 - Create an incoming payment on Philip Fry's payment pointer.
 - Create a quote on Grace Fry's payment pointer.
-  - double check the expiry
 - Create an outgoing payment on Grace Fry's payment pointer.
 
 ## Environment overview
 ![Docker compose environment](./local-dev.png)
+
+a - accessible at http://localhost:3001/graphql
+b - accessible at http://localhost:3000
+c - accessible at http://localhost:4001/graphql
+d - accessible at http://localhost:4000
+e - accessible at localhost:5432
