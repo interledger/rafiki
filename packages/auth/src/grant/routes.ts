@@ -125,7 +125,12 @@ async function getGrantDetails(
 ): Promise<void> {
   const secret = ctx.headers?.['x-idp-secret']
   const { config, grantService } = deps
-  if (secret !== config.identityServerSecret) {
+  if (
+    !crypto.timingSafeEqual(
+      Buffer.from(secret as string),
+      Buffer.from(config.identityServerSecret)
+    )
+  ) {
     ctx.status = 401
     return
   }
@@ -190,7 +195,12 @@ async function acceptGrant(
   const { id: interactId, nonce } = ctx.params
   const { config, grantService } = deps
 
-  if (ctx.headers['x-idp-secret'] !== deps.config.identityServerSecret) {
+  if (
+    !crypto.timingSafeEqual(
+      Buffer.from(ctx.headers['x-idp-secret'] as string),
+      Buffer.from(deps.config.identityServerSecret)
+    )
+  ) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_interaction'
@@ -295,7 +305,12 @@ async function rejectGrant(
 
   const { grantService, config } = deps
 
-  if (ctx.headers['x-idp-secret'] !== deps.config.identityServerSecret) {
+  if (
+    !crypto.timingSafeEqual(
+      Buffer.from(ctx.headers['x-idp-secret'] as string),
+      Buffer.from(deps.config.identityServerSecret)
+    )
+  ) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_interaction'
