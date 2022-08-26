@@ -9,7 +9,8 @@ import { apolloClient } from '~/lib/apolloClient'
 export enum EventType {
   IncomingPaymentCompleted = 'incoming_payment.completed',
   OutgoingPaymentCreated = 'outgoing_payment.created',
-  OutgoingPaymentCompleted = 'outgoing_payment.completed'
+  OutgoingPaymentCompleted = 'outgoing_payment.completed',
+  OutgoingPaymentFailed = 'outgoing_payment.failed'
 }
 
 export interface WebHook {
@@ -33,7 +34,8 @@ export async function action({ request }: ActionArgs) {
     case EventType.OutgoingPaymentCreated:
       return handleOutgoingPaymentCreated(wh)
     case EventType.OutgoingPaymentCompleted:
-      return handleOutgoingPaymentCompleted(wh)
+    case EventType.OutgoingPaymentFailed:
+      return handleOutgoingPaymentCompletedFailed(wh)
     case EventType.IncomingPaymentCompleted:
       return handleIncomingPaymentCompleted(wh)
   }
@@ -41,14 +43,26 @@ export async function action({ request }: ActionArgs) {
   return json(undefined, { status: 200 })
 }
 
-export async function handleOutgoingPaymentCompleted(wh: WebHook) {
-  assert.equal(wh.eventType, EventType.OutgoingPaymentCompleted)
+export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
+  if (
+    wh.eventType !== EventType.OutgoingPaymentCompleted &&
+    wh.eventType !== EventType.OutgoingPaymentFailed
+  ) {
+    assert.fail('invalid event type')
+  }
   const pp = wh.data['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
   assert.ok(acc)
 
-  const amt = wh.data['sentAmount'] as Amount
-  await mockAccounts.debit(acc.id, amt.value, true)
+  const amtSend = wh.data['sendAmount'] as Amount
+  const amtSent = wh.data['sentAmount'] as Amount
+
+  const toVoid = amtSend.value - amtSent.value
+
+  await mockAccounts.debit(acc.id, amtSent.value, true)
+  if (toVoid > 0) {
+    await mockAccounts.voidPendingDebit(acc.id, toVoid)
+  }
 
   return json(undefined, { status: 200 })
 }

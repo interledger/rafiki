@@ -78,13 +78,10 @@ export class AccountProvider implements AccountsServer {
   }
 
   async getByPaymentPointer(
-    paymentPointer: string
+    paymentPointerId: string
   ): Promise<Account | undefined> {
     for (const acc of this.accounts.values()) {
-      if (
-        acc.paymentPointer == paymentPointer ||
-        acc.paymentPointerID == paymentPointer
-      ) {
+      if (acc.paymentPointerID == paymentPointerId) {
         return acc
       }
     }
