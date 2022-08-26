@@ -50,7 +50,7 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
       const pp = await createPaymentPointer(
         config.self.graphqlUrl,
         account.name,
-        account.url,
+        `https://${CONFIG.self.hostname}/${account.path}`,
         account.asset,
         account.scale
       )
@@ -65,18 +65,8 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
     })
   )
   console.log(JSON.stringify(accountResponses, null, 2))
-  const envVarStrings = _.map(accountResponses, (response) => {
-    if (!response.paymentPointer) {
-      return
-    }
-    const envVarName = (
-      _.find(config.accounts, (account) => {
-        if (response.paymentPointer) {
-          return account.name === response.paymentPointer.publicName
-        }
-      }) as Account
-    ).postmanEnvVar
-    return `${envVarName}: http://localhost:${CONFIG.self.openPaymentPublishedPort}/${response.paymentPointer.id}`
+  const envVarStrings = _.map(config.accounts, (account) => {
+    return `${account.postmanEnvVar}: http://localhost:${CONFIG.self.openPaymentPublishedPort}/${account.path} hostname: ${CONFIG.self.hostname}`
   })
   console.log(envVarStrings.join('\n'))
 }

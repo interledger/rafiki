@@ -11,7 +11,7 @@ peers:
     peerIlpAddress: test.peer
 accounts:
   - name: "Grace Franklin"
-    url: http://backend/accounts/gfranklin
+    path: accounts/gfranklin
     id: 742ab7cd-1624-4d2e-af6e-e15a71638669
     initialBalance: 4000
     asset: USD
@@ -22,12 +22,12 @@ accounts:
     initialBalance: 4000
     asset: USD
     scale: 2
-    url: http://backend/accounts/bhamchest
+    path: accounts/bhamchest
     postmanEnvVar: bhamchestPaymentPointer
   - name: "World's Best Donut Co"
     id: 5726eefe-8737-459d-a36b-0acce152cb90
     initialBalance: 2000
     asset: USD
     scale: 2
-    url: http://backend/accounts/wbdc
+    path: accounts/wbdc
     postmanEnvVar: wbdcPaymentPointer
