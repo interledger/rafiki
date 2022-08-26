@@ -15,23 +15,23 @@ The following should be run from the root of the project.
 pnpm localenv down && pnpm localenv:dbvolumes:remove
 
 // Start the local environment
-pnpm localenv up -d
+pnpm localenv up -d --build
 
 // Seed auth tokens
 pnpm localenv:seed:auth
 ```
 
 ## P2P payment
-This will demonstrate a P2P payment from Grace Franklin (Fynbos account) to Philip Fry (local bank account).
+This will demonstrate a P2P payment from Grace Franklin (Fynbos account) to Philip Fry (local bank account) using
+the requests in the `Peer-to-peer transfer` folder of the Postman collection.
 
+Grace's payment pointer can be found in the logs for `fynbos` and must be used to set the `gfranklinPaymentPointer` variable in a Postman environment.
+Philip's payment pointer can be found in the `local-bank` logs and used to set the `pfryPaymentPointer` Postman environment variable.
 ```
-// look up payment pointer for Grace Franklin and set in Postman environment
-pnpm localenv logs fynbos
-
-// look up payment pointer for Philip Fry and set in Postman environment
-pnpm localenv logs local-bank
+pnpm localenv logs -f fynbos local-bank
 ```
 
+Run through the following requests in the `Peer-to-peer transfer` folder to:
 - Create an incoming payment on Philip Fry's payment pointer.
 - Create a quote on Grace Fry's payment pointer.
   - double check the expiry
