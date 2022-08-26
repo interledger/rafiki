@@ -1,23 +1,54 @@
 import assert from 'assert'
+import axios from 'axios'
 import { IocContract } from '@adonisjs/fold'
-import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
+import nock from 'nock'
+import { URL } from 'url'
 
+import { testAccessToken } from './app'
 import { randomAsset } from './asset'
 import { AppServices } from '../app'
 import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
-import { CreateOptions } from '../open_payments/payment_pointer/service'
+import { CreateOptions as BaseCreateOptions } from '../open_payments/payment_pointer/service'
+
+interface CreateOptions extends Partial<BaseCreateOptions> {
+  mockServerPort?: number
+}
+
+export type MockPaymentPointer = PaymentPointer & {
+  scope?: nock.Scope
+}
 
 export async function createPaymentPointer(
   deps: IocContract<AppServices>,
   options: Partial<CreateOptions> = {}
-): Promise<PaymentPointer> {
+): Promise<MockPaymentPointer> {
   const paymentPointerService = await deps.use('paymentPointerService')
-  const paymentPointerOrError = await paymentPointerService.create({
+  const paymentPointerOrError = (await paymentPointerService.create({
     ...options,
-    url: options.url || `${(await deps.use('config')).publicHost}/${uuid()}`,
+    url:
+      options.url || `https://${faker.internet.domainName()}/.well-known/pay`,
     asset: options.asset || randomAsset()
-  })
+  })) as MockPaymentPointer
   assert.ok(!isPaymentPointerError(paymentPointerOrError))
+  if (options.mockServerPort) {
+    const url = new URL(paymentPointerOrError.url)
+    paymentPointerOrError.scope = nock(url.origin)
+      .get((uri) => uri.startsWith(url.pathname))
+      .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
+      .reply(200, function (path) {
+        const headers = this.req.headers
+        if (!headers['authorization']) {
+          headers.authorization = `GNAP ${testAccessToken}`
+        }
+        return axios
+          .get(`http://localhost:${options.mockServerPort}${path}`, {
+            headers
+          })
+          .then((res) => res.data)
+      })
+      .persist()
+  }
   return paymentPointerOrError
 }

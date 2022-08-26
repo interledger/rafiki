@@ -71,7 +71,7 @@ async function getIncomingPayment(
     ctx.throw(500, 'Error trying to get incoming payment')
   }
   if (!incomingPayment) return ctx.throw(404)
-
+  incomingPayment.paymentPointer = ctx.paymentPointer
   const streamCredentials = deps.connectionService.get(incomingPayment)
   ctx.body = incomingPaymentToBody(deps, incomingPayment, streamCredentials)
 }
@@ -97,7 +97,7 @@ async function createIncomingPayment(
   }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
-    paymentPointerId: ctx.params.accountId,
+    paymentPointerId: ctx.paymentPointer.id,
     description: body.description,
     externalRef: body.externalRef,
     expiresAt,
@@ -112,6 +112,7 @@ async function createIncomingPayment(
   }
 
   ctx.status = 201
+  incomingPaymentOrError.paymentPointer = ctx.paymentPointer
   const streamCredentials = deps.connectionService.get(incomingPaymentOrError)
   ctx.body = incomingPaymentToBody(
     deps,
@@ -139,7 +140,7 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-
+  incomingPaymentOrError.paymentPointer = ctx.paymentPointer
   ctx.body = incomingPaymentToBody(deps, incomingPaymentOrError)
 }
 
@@ -147,26 +148,26 @@ async function listIncomingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  const { accountId: paymentPointerId } = ctx.params
   const pagination = parsePaginationQueryParameters(ctx.request.query)
   try {
     const page = await deps.incomingPaymentService.getPaymentPointerPage(
-      paymentPointerId,
+      ctx.paymentPointer.id,
       pagination
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
         deps.incomingPaymentService.getPaymentPointerPage(
-          paymentPointerId,
+          ctx.paymentPointer.id,
           pagination
         ),
       page
     )
     const result = {
       pagination: pageInfo,
-      result: page.map((item: IncomingPayment) =>
-        incomingPaymentToBody(deps, item)
-      )
+      result: page.map((item: IncomingPayment) => {
+        item.paymentPointer = ctx.paymentPointer
+        return incomingPaymentToBody(deps, item)
+      })
     }
     ctx.body = result
   } catch (_) {
@@ -182,9 +183,8 @@ function incomingPaymentToBody(
   return Object.fromEntries(
     Object.entries({
       ...incomingPayment.toJSON(),
-      // paymentPointer: `${deps.config.publicHost}/${incomingPayment.paymentPointerId}`,
-      accountId: `${deps.config.publicHost}/${incomingPayment.paymentPointerId}`,
-      id: `${deps.config.publicHost}/${incomingPayment.paymentPointerId}/incoming-payments/${incomingPayment.id}`,
+      id: `${incomingPayment.paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+      paymentPointer: incomingPayment.paymentPointer.url,
       ilpStreamConnection: streamCredentials
         ? {
             id: `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`,

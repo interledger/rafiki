@@ -30,7 +30,7 @@ export class Quote extends BaseModel {
 
   static relationMappings = {
     paymentPointer: {
-      relation: Model.HasOneRelation,
+      relation: Model.BelongsToOneRelation,
       modelClass: PaymentPointer,
       join: {
         from: 'quotes.paymentPointerId',

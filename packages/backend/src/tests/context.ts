@@ -5,7 +5,7 @@ import { AppContext, AppContextData, AppRequest } from '../app'
 
 export function createContext<T extends AppContext>(
   reqOpts: httpMocks.RequestOptions,
-  params: Record<string, string>
+  params: Record<string, string> = {}
 ): T {
   const req = httpMocks.createRequest(reqOpts)
   const res = httpMocks.createResponse({ req })

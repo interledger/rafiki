@@ -80,7 +80,7 @@ export class OutgoingPayment
 
   static relationMappings = {
     paymentPointer: {
-      relation: Model.HasOneRelation,
+      relation: Model.BelongsToOneRelation,
       modelClass: PaymentPointer,
       join: {
         from: 'outgoingPayments.paymentPointerId',
@@ -156,7 +156,6 @@ export class OutgoingPayment
     json = super.$formatJson(json)
     return {
       id: json.id,
-      // paymentPointer: json.paymentPointer,
       state: json.state,
       receiver: json.receiver,
       sendAmount: {

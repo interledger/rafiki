@@ -1,6 +1,5 @@
 import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
-import { v4 as uuid } from 'uuid'
 
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
@@ -22,7 +21,6 @@ describe('Payment Pointer Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
     config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
@@ -45,12 +43,9 @@ describe('Payment Pointer Routes', (): void => {
 
   describe('get', (): void => {
     test('returns 404 for nonexistent payment pointer', async (): Promise<void> => {
-      const ctx = createContext<PaymentPointerContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { accountId: uuid() }
-      )
+      const ctx = createContext<PaymentPointerContext>({
+        headers: { Accept: 'application/json' }
+      })
       await expect(paymentPointerRoutes.get(ctx)).rejects.toHaveProperty(
         'status',
         404
@@ -62,18 +57,15 @@ describe('Payment Pointer Routes', (): void => {
         publicName: faker.name.firstName()
       })
 
-      const ctx = createContext<PaymentPointerContext>(
-        {
-          headers: { Accept: 'application/json' },
-          url: `/${paymentPointer.id}`
-        },
-        { accountId: paymentPointer.id }
-      )
+      const ctx = createContext<PaymentPointerContext>({
+        headers: { Accept: 'application/json' },
+        url: '/'
+      })
+      ctx.paymentPointer = paymentPointer
       await expect(paymentPointerRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        // id: paymentPointer.url,
-        id: `https://wallet.example/${paymentPointer.id}`,
+        id: paymentPointer.url,
         publicName: paymentPointer.publicName,
         assetCode: paymentPointer.asset.code,
         assetScale: paymentPointer.asset.scale,

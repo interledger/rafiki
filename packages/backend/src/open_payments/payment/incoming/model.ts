@@ -1,5 +1,6 @@
 import { Model, Pojo } from 'objection'
 import { Amount, AmountJSON } from '../../amount'
+import { PaymentPointer } from '../../payment_pointer/model'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
@@ -68,11 +69,20 @@ export class IncomingPayment
         from: 'incomingPayments.assetId',
         to: 'assets.id'
       }
+    },
+    paymentPointer: {
+      relation: Model.BelongsToOneRelation,
+      modelClass: PaymentPointer,
+      join: {
+        from: 'incomingPayments.paymentPointerId',
+        to: 'paymentPointers.id'
+      }
     }
   }
 
   // Open payments paymentPointer id this incoming payment is for
   public paymentPointerId!: string
+  public paymentPointer?: PaymentPointer
   public description?: string
   public expiresAt!: Date
   public state!: IncomingPaymentState
@@ -182,7 +192,6 @@ export class IncomingPayment
     json = super.$formatJson(json)
     return {
       id: json.id,
-      // paymentPointer: json.paymentPointer,
       incomingAmount: this.incomingAmount
         ? {
             ...json.incomingAmount,
