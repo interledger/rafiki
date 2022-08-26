@@ -102,7 +102,7 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
-    if (acc.creditsPending - amount < 0 || acc.creditsPosted + amount < 0) {
+    if (clearPending && acc.creditsPending - amount < 0) {
       throw new Error('invalid amount, credits pending cannot be less than 0')
     }
 
