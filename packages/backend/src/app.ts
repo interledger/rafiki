@@ -111,6 +111,8 @@ type ContextType<T> = T extends (
   ? Context
   : never
 
+const PAYMENT_POINTER_PATH = '/:paymentPointerPath+'
+
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
@@ -250,8 +252,6 @@ export class App {
     const openApi = await this.container.use('openApi')
     const toRouterPath = (path: string): string =>
       path.replace(/{/g, ':').replace(/}/g, '')
-    const toPaymentPointerPath = (path: string): string =>
-      `/:paymentPointerPath+${path}`
 
     const toAction = ({
       path,
@@ -309,33 +309,14 @@ export class App {
                 }),
                 route
               )
-            } else if (path === '/' && method === HttpMethod.GET) {
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
-              router.get(
-                toPaymentPointerPath(path),
-                createPaymentPointerMiddleware(),
-                createValidatorMiddleware<PaymentPointerContext>(openApi, {
-                  path,
-                  method
-                }),
-                async (ctx: PaymentPointerContext): Promise<void> => {
-                  // Fall back to legacy protocols if client doesn't support Open Payments.
-                  if (ctx.accepts('application/json'))
-                    await paymentPointerRoutes.get(ctx)
-                  //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
-                  else if (ctx.accepts('application/spsp4+json'))
-                    await spspRoutes.get(ctx)
-                  else ctx.throw(406, 'no accepted Content-Type available')
-                }
-              )
-            } else {
+            } else if (path !== '/' || method !== HttpMethod.GET) {
+              // The payment pointer query route is added last below
               this.logger.warn({ path, method }, 'unexpected path/method')
             }
             continue
           }
           router[method](
-            toPaymentPointerPath(toRouterPath(path)),
+            PAYMENT_POINTER_PATH + toRouterPath(path),
             createPaymentPointerMiddleware(),
             createAuthMiddleware({
               type,
@@ -353,6 +334,27 @@ export class App {
     router.get(
       '/keys/{keyId}',
       (ctx: ClientKeysContext): Promise<void> => clientKeysRoutes.get(ctx)
+    )
+
+    // Add the payment pointer query route last.
+    // Otherwise it will be matched instead of other Open Payments endpoints.
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    router.get(
+      PAYMENT_POINTER_PATH,
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<PaymentPointerContext>(openApi, {
+        path: '/',
+        method: HttpMethod.GET
+      }),
+      async (ctx: PaymentPointerContext): Promise<void> => {
+        // Fall back to legacy protocols if client doesn't support Open Payments.
+        if (ctx.accepts('application/json')) await paymentPointerRoutes.get(ctx)
+        //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
+        else if (ctx.accepts('application/spsp4+json'))
+          await spspRoutes.get(ctx)
+        else ctx.throw(406, 'no accepted Content-Type available')
+      }
     )
 
     koa.use(router.routes())
