@@ -1142,7 +1142,7 @@ describe('Grant Routes', (): void => {
         state: GrantState.Granted
       })
 
-      await Access.query().insert({
+      const access = await Access.query().insert({
         ...BASE_GRANT_ACCESS,
         grantId: grant.id
       })
@@ -1183,7 +1183,7 @@ describe('Grant Routes', (): void => {
           access: expect.arrayContaining([
             {
               actions: expect.arrayContaining(['create', 'read', 'list']),
-              identifier: `https://example.com/${v4()}`,
+              identifier: access.identifier,
               locations: expect.arrayContaining(['https://example.com']),
               type: 'incoming-payment'
             }
