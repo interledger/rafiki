@@ -23,6 +23,7 @@ export interface Account {
   scale: number
   initialBalance: bigint
   url: string
+  path: string
   postmanEnvVar: string
 }
 

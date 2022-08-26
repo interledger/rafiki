@@ -11,7 +11,7 @@ peers:
     peerIlpAddress: test.rafiki
 accounts:
   - name: "Philip Fry"
-    url: http://peer-backend/accounts/pfry
+    path: accounts/pfry
     id: 97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
     initialBalance: 1
     asset: USD
@@ -22,5 +22,5 @@ accounts:
     initialBalance: 2000
     asset: USD
     scale: 2
-    url: http://peer-backend/accounts/planex
+    path: accounts/planex
     postmanEnvVar: planexPaymentPointer
