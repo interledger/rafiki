@@ -81,7 +81,10 @@ export class AccountProvider implements AccountsServer {
     paymentPointer: string
   ): Promise<Account | undefined> {
     for (const acc of this.accounts.values()) {
-      if (acc.paymentPointer == paymentPointer) {
+      if (
+        acc.paymentPointer == paymentPointer ||
+        acc.paymentPointerID == paymentPointer
+      ) {
         return acc
       }
     }
