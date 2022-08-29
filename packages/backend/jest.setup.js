@@ -133,7 +133,7 @@ module.exports = async (globalConfig) => {
 
   const setupRedis = async () => {
     if (!process.env.REDIS_URL) {
-      const redisContainer = await new GenericContainer('redis')
+      const redisContainer = await new GenericContainer('redis:7')
         .withExposedPorts(REDIS_PORT)
         .start()
 

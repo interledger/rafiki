@@ -11,7 +11,7 @@ services:
     environment:
       POSTGRES_PASSWORD: password
   redis:
-    image: "redis:5" # use latest official postgres version
+    image: "redis:7"
     restart: unless-stopped
     ports:
       - "6379:6379"
