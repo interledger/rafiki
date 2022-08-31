@@ -15,7 +15,8 @@ import {
   AddKeyToClientMutationResponse,
   Client,
   CreateClientInput,
-  CreateClientMutationResponse
+  CreateClientMutationResponse,
+  RevokeClientKeyMutationResponse
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
 
@@ -313,6 +314,45 @@ describe('Client Resolvers', (): void => {
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
       expect(response.message).toBe('Error trying to add key to client')
+    })
+  })
+
+  describe('Revoke key', (): void => {
+    test('Can revoke a key', async (): Promise<void> => {
+      const client = await clientService.createClient(TEST_CLIENT)
+      await clientService.addKeyToClient({
+        id: KEY_UUID,
+        clientId: client.id,
+        jwk: TEST_CLIENT_KEY
+      })
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation revokeClientKey($keyId: String!) {
+              revokeClientKey(keyId: $keyId) {
+                code
+                success
+                message
+                keyId
+              }
+            }
+          `,
+          variables: {
+            keyId: KEY_UUID
+          }
+        })
+        .then((query): RevokeClientKeyMutationResponse => {
+          if (query.data) {
+            return query.data.revokeClientKey
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(true)
+      expect(response.code).toBe('200')
+      expect(response.keyId).toBe(KEY_UUID)
     })
   })
 })
