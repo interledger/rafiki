@@ -9,7 +9,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { faker } from '@faker-js/faker'
-import { ClientService } from '../clients/service'
+import { AddKeyToClientOptions, ClientService } from '../clients/service'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_CLIENT = {
@@ -78,6 +78,23 @@ describe('Client Key Service', (): void => {
       await clientService.addKeyToClient(keyOption)
       const key = await clientKeysService.getKeyById(KEY_UUID)
       await expect(key.clientId).toEqual(client.id)
+    })
+  })
+
+  describe('Revoke Client Keys', (): void => {
+    test('Can revoke a key', async (): Promise<void> => {
+      const client = await clientService.createClient(TEST_CLIENT)
+      const keyOption: AddKeyToClientOptions = {
+        id: KEY_UUID,
+        clientId: client.id,
+        jwk: TEST_CLIENT_KEY
+      }
+      await clientService.addKeyToClient(keyOption)
+
+      await clientKeysService.revokeKeyById(KEY_UUID)
+      const revokedKey = await clientKeysService.getKeyById(KEY_UUID)
+
+      expect(revokedKey.jwk.revoked).toEqual(true)
     })
   })
 })

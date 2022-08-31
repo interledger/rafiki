@@ -62,6 +62,38 @@ export const createClient: MutationResolvers<ApolloContext>['createClient'] =
     }
   }
 
+export const revokeClientKey: MutationResolvers<ApolloContext>['revokeClientKey'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['RevokeClientKeyMutationResponse']> => {
+    try {
+      const clientKeysService = await ctx.container.use('clientKeysService')
+      const keyId = await clientKeysService.revokeKeyById(args.keyId)
+      return {
+        code: '200',
+        success: true,
+        message: 'Client key revoked',
+        keyId: keyId
+      }
+    } catch (error) {
+      ctx.logger.error(
+        {
+          options: args.keyId,
+          error
+        },
+        'error revoking client key'
+      )
+      return {
+        code: '500',
+        message: 'Error trying to revoke client key',
+        success: false,
+        keyId: args.keyId
+      }
+    }
+  }
+
 export const addKeyToClient: MutationResolvers<ApolloContext>['addKeyToClient'] =
   async (
     parent,
