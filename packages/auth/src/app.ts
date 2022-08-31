@@ -210,7 +210,18 @@ export class App {
           } else if (path.includes('token')) {
             route = accessTokenRoutes[tokenMethodToRoute[method]]
           } else if (path.includes('introspect')) {
-            route = accessTokenRoutes.introspect
+            this.publicRouter[method](
+              toRouterPath(path),
+              createValidatorMiddleware<ContextType<typeof route>>(openApi, {
+                path,
+                method
+              }),
+              this.config.introspectionHttpsig
+                ? signatureService.tokenHttpsigMiddleware
+                : (ctx, next) => next(),
+              accessTokenRoutes.introspect
+            )
+            continue
           } else if (path.includes('interact')) {
             if (path.endsWith('/finish')) {
               route = grantRoutes.interaction.finish

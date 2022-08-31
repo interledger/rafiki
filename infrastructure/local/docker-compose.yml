@@ -11,6 +11,7 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
+      INTROSPECTION_HTTPSIG: false
     depends_on:
       - tigerbeetle
       - database
