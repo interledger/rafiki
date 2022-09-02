@@ -1,6 +1,7 @@
-import { BaseService } from '../shared/baseService'
-import { uuid } from '../connector/core'
 import Redis from 'ioredis'
+import { v4 as uuid } from 'uuid'
+
+import { BaseService } from '../shared/baseService'
 import { Session } from './util'
 
 export interface SessionService {

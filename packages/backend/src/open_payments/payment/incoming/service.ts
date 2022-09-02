@@ -14,7 +14,7 @@ import { PaymentPointerService } from '../../payment_pointer/service'
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { end, parse } from 'iso8601-duration'
-import { uuid } from '../../../connector/core'
+import { v4 as uuid } from 'uuid'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
