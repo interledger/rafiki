@@ -182,7 +182,7 @@ describe('Grant Service', (): void => {
       const fetchedGrant = await grantService.getByContinue(
         continueId,
         continueToken,
-        interactRef
+        interactRef as string
       )
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.continueId).toEqual(continueId)
