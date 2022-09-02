@@ -176,18 +176,16 @@ function incomingPaymentToBody(
   incomingPayment: IncomingPayment,
   streamCredentials?: StreamCredentials
 ) {
-  return Object.fromEntries(
-    Object.entries({
-      ...incomingPayment.toJSON(),
-      id: incomingPayment.url,
-      paymentPointer: incomingPayment.paymentPointer.url,
-      ilpStreamConnection: streamCredentials
-        ? {
-            id: `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`,
-            ilpAddress: streamCredentials.ilpAddress,
-            sharedSecret: base64url(streamCredentials.sharedSecret)
-          }
-        : `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`
-    }).filter(([_, v]) => v != null)
-  )
+  return {
+    ...incomingPayment.toJSON(),
+    id: incomingPayment.url,
+    paymentPointer: incomingPayment.paymentPointer.url,
+    ilpStreamConnection: streamCredentials
+      ? {
+          id: `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`,
+          ilpAddress: streamCredentials.ilpAddress,
+          sharedSecret: base64url(streamCredentials.sharedSecret)
+        }
+      : `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`
+  }
 }

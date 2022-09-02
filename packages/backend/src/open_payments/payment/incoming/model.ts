@@ -205,17 +205,17 @@ export class IncomingPayment
             ...json.incomingAmount,
             value: json.incomingAmount.value.toString()
           }
-        : null,
+        : undefined,
       receivedAmount: {
         ...json.receivedAmount,
         value: json.receivedAmount.value.toString()
       },
       completed: json.completed,
-      description: json.description,
-      externalRef: json.externalRef,
+      description: json.description ?? undefined,
+      externalRef: json.externalRef ?? undefined,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,
-      expiresAt: json.expiresAt.toISOString(),
+      expiresAt: json.expiresAt?.toISOString(),
       ilpStreamConnection: json.connectionId
     }
   }
