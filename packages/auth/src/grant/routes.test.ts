@@ -146,8 +146,6 @@ describe('Grant Routes', (): void => {
 
     const nbfDate = new Date()
     nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-    const url = '/'
-    const method = 'POST'
 
     test('Valid incoming payment grant', async (): Promise<void> => {
       const incomingPaymentGrantRequest: GrantRequest = {
@@ -212,57 +210,6 @@ describe('Grant Routes', (): void => {
       }
 
       expect(validateGrantRequest(quoteGrantRequest)).toBe(true)
-    })
-
-    test('Cannot create outgoing payment grant with unexpected limit payload', async (): Promise<void> => {
-      const outgoingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.OutgoingPayment,
-              limits: { wrongLimitField: 'wrong' }
-            }
-          ]
-        }
-      }
-
-      expect(validateGrantRequest(outgoingPaymentGrantRequest)).toBe(false)
-    })
-
-    test('Cannot create account grant with unexpected limit payload', async (): Promise<void> => {
-      const accountGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Account,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      expect(validateGrantRequest(accountGrantRequest)).toBe(false)
-    })
-
-    test('Cannot create quote grant with unexpected limit payload', async (): Promise<void> => {
-      const quoteGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Quote,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      expect(validateGrantRequest(quoteGrantRequest)).toBe(false)
     })
   })
 
