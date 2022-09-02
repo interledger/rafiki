@@ -96,7 +96,7 @@ describe('Grant Service', (): void => {
   }
 
   describe('create', (): void => {
-    test('Can create a grant', async (): Promise<void> => {
+    test('Can initiate a grant', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
         access_token: {
@@ -125,11 +125,44 @@ describe('Grant Service', (): void => {
         startMethod: expect.arrayContaining([StartMethod.Redirect])
       })
 
-      const dbAccessGrant = await Access.query(trx)
+      const dbAccessGrant = (await Access.query(trx)
         .where({
           grantId: grant.id
         })
-        .first()
+        .first()) as Access
+
+      expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
+    })
+    test('Can issue a grant without interaction', async (): Promise<void> => {
+      const grantRequest: GrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.IncomingPayment
+            }
+          ]
+        }
+      }
+
+      const grant = await grantService.issueNoInteractionGrant(grantRequest)
+
+      expect(grant).toMatchObject({
+        state: GrantState.Granted,
+        continueId: expect.any(String),
+        continueToken: expect.any(String),
+        finishMethod: FinishMethod.Redirect,
+        finishUri: BASE_GRANT_REQUEST.interact.finish.uri,
+        clientKeyId: BASE_GRANT_REQUEST.client.key.jwk.kid,
+        startMethod: expect.arrayContaining([StartMethod.Redirect])
+      })
+
+      const dbAccessGrant = (await Access.query(trx)
+        .where({
+          grantId: grant.id
+        })
+        .first()) as Access
 
       expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
     })
@@ -164,7 +197,10 @@ describe('Grant Service', (): void => {
       expect(fetchedGrant?.id).toEqual(grant.id)
     })
     test('Can fetch a grant by its interaction information', async (): Promise<void> => {
-      const fetchedGrant = await grantService.getByInteraction(grant.interactId)
+      const fetchedGrant = await grantService.getByInteraction(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        grant.interactId!
+      )
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.interactId).toEqual(grant.interactId)
     })

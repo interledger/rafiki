@@ -38,5 +38,7 @@ export const Config = {
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
   accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30),
-  introspectionHttpsig: process.env.INTROSPECTION_HTTPSIG === 'true'
+  introspectionHttpsig: process.env.INTROSPECTION_HTTPSIG === 'true',
+  incomingPaymentInteraction:
+    process.env.INCOMING_PAYMENT_INTERACTION === 'true'
 }

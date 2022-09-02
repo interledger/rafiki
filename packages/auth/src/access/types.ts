@@ -19,7 +19,7 @@ interface BaseAccessRequest {
   interval?: string
 }
 
-interface IncomingPaymentRequest extends BaseAccessRequest {
+export interface IncomingPaymentRequest extends BaseAccessRequest {
   type: AccessType.IncomingPayment
   limits?: never
 }
@@ -58,7 +58,7 @@ export function isAction(actions: Action[]): actions is Action[] {
   return true
 }
 
-function isIncomingPaymentAccessRequest(
+export function isIncomingPaymentAccessRequest(
   accessRequest: IncomingPaymentRequest
 ): accessRequest is IncomingPaymentRequest {
   return (

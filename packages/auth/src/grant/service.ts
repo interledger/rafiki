@@ -11,6 +11,7 @@ import { AccessService } from '../access/service'
 export interface GrantService {
   get(grantId: string): Promise<Grant>
   initiateGrant(grantRequest: GrantRequest): Promise<Grant>
+  issueNoInteractionGrant(grantRequest: GrantRequest): Promise<Grant>
   getByInteraction(interactId: string): Promise<Grant>
   getByInteractionSession(
     interactId: string,
@@ -76,7 +77,9 @@ export async function createGrantService({
   return {
     get: (grantId: string) => get(grantId),
     initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
-      initiateGrant(deps, grantRequest, trx),
+      initiateGrant(deps, grantRequest, true, trx),
+    issueNoInteractionGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
+      initiateGrant(deps, grantRequest, false, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
     getByInteractionSession: (interactId: string, interactNonce: string) =>
       getByInteractionSession(interactId, interactNonce),
@@ -115,6 +118,7 @@ async function rejectGrant(
 async function initiateGrant(
   deps: ServiceDependencies,
   grantRequest: GrantRequest,
+  interaction: boolean,
   trx?: Transaction
 ): Promise<Grant> {
   const { accessService, knex } = deps
@@ -132,15 +136,17 @@ async function initiateGrant(
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grant = await Grant.query(grantTrx).insert({
-      state: GrantState.Pending,
+      state: interaction ? GrantState.Pending : GrantState.Granted,
       startMethod: start,
       finishMethod: finish?.method,
       finishUri: finish?.uri,
       clientNonce: finish?.nonce,
       clientKeyId: kid,
-      interactId: v4(),
-      interactRef: v4(),
-      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
+      interactId: interaction ? v4() : undefined,
+      interactRef: interaction ? v4() : undefined,
+      interactNonce: interaction
+        ? crypto.randomBytes(8).toString('hex').toUpperCase()
+        : undefined, // TODO: factor out nonce generation
       continueId: v4(),
       continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
     })
