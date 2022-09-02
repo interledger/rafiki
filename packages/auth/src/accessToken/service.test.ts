@@ -207,21 +207,21 @@ describe('Access Token Service', (): void => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
       const result = await accessTokenService.revoke(token.managementId)
       expect(result).toBeUndefined()
-      token = await AccessToken.query(trx).findById(token.id)
+      token = (await AccessToken.query(trx).findById(token.id)) as AccessToken
       expect(token).toBeUndefined()
     })
     test('Can revoke even if token has already expired', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: -1 })
       const result = await accessTokenService.revoke(token.managementId)
       expect(result).toBeUndefined()
-      token = await AccessToken.query(trx).findById(token.id)
+      token = (await AccessToken.query(trx).findById(token.id)) as AccessToken
       expect(token).toBeUndefined()
     })
     test('Can revoke even if token has already been revoked', async (): Promise<void> => {
       await token.$query(trx).delete()
       const result = await accessTokenService.revoke(token.id)
       expect(result).toBeUndefined()
-      token = await AccessToken.query(trx).findById(token.id)
+      token = (await AccessToken.query(trx).findById(token.id)) as AccessToken
       expect(token).toBeUndefined()
     })
   })
@@ -234,6 +234,7 @@ describe('Access Token Service', (): void => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
         continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        continueId: v4(),
         interactId: v4(),
         interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
         interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -261,9 +262,9 @@ describe('Access Token Service', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       const result = await accessTokenService.rotate(token.managementId)
       expect(result.success).toBe(true)
-      token = await AccessToken.query(trx).findOne({
+      token = (await AccessToken.query(trx).findOne({
         managementId: result.success && result.managementId
-      })
+      })) as AccessToken
       expect(token.value).not.toBe(originalTokenValue)
     })
     test('Cannot rotate nonexistent token', async (): Promise<void> => {
