@@ -258,7 +258,7 @@ describe('OutgoingPaymentService', (): void => {
     const incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: receiverPaymentPointer.id
     })
-    receiver = `${receiverPaymentPointer.url}/incoming-payments/${incomingPayment.id}`
+    receiver = incomingPayment.url
 
     amtDelivered = BigInt(0)
   })
