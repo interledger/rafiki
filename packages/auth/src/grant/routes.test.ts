@@ -334,8 +334,18 @@ describe('Grant Routes', (): void => {
         {}
       )
 
-      ctx.request.body = BASE_GRANT_REQUEST
-      ctx.request.body.access_token.access[0].type = AccessType.OutgoingPayment
+      ctx.request.body = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [Action.Create, Action.Read, Action.List],
+              identifier: `https://example.com/${v4()}`
+            }
+          ]
+        }
+      }
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
