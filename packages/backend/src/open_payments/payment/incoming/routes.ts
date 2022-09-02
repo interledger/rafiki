@@ -9,7 +9,7 @@ import {
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment, IncomingPaymentState } from './model'
+import { IncomingPayment } from './model'
 import {
   errorToCode,
   errorToMessage,
@@ -71,7 +71,6 @@ async function getIncomingPayment(
     ctx.throw(500, 'Error trying to get incoming payment')
   }
   if (!incomingPayment) return ctx.throw(404)
-  incomingPayment.paymentPointer = ctx.paymentPointer
   const streamCredentials = deps.connectionService.get(incomingPayment)
   ctx.body = incomingPaymentToBody(deps, incomingPayment, streamCredentials)
 }
@@ -112,7 +111,6 @@ async function createIncomingPayment(
   }
 
   ctx.status = 201
-  incomingPaymentOrError.paymentPointer = ctx.paymentPointer
   const streamCredentials = deps.connectionService.get(incomingPaymentOrError)
   ctx.body = incomingPaymentToBody(
     deps,
@@ -140,7 +138,6 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-  incomingPaymentOrError.paymentPointer = ctx.paymentPointer
   ctx.body = incomingPaymentToBody(deps, incomingPaymentOrError)
 }
 
@@ -165,7 +162,6 @@ async function listIncomingPayments(
     const result = {
       pagination: pageInfo,
       result: page.map((item: IncomingPayment) => {
-        item.paymentPointer = ctx.paymentPointer
         return incomingPaymentToBody(deps, item)
       })
     }
@@ -183,7 +179,7 @@ function incomingPaymentToBody(
   return Object.fromEntries(
     Object.entries({
       ...incomingPayment.toJSON(),
-      id: `${incomingPayment.paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+      id: incomingPayment.url,
       paymentPointer: incomingPayment.paymentPointer.url,
       ilpStreamConnection: streamCredentials
         ? {
@@ -191,9 +187,7 @@ function incomingPaymentToBody(
             ilpAddress: streamCredentials.ilpAddress,
             sharedSecret: base64url(streamCredentials.sharedSecret)
           }
-        : `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`,
-      state: null,
-      completed: incomingPayment.state === IncomingPaymentState.Completed
+        : `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`
     }).filter(([_, v]) => v != null)
   )
 }

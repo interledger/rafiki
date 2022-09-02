@@ -12,8 +12,6 @@ exports.up = function (knex) {
     table.string('externalRef').nullable()
     table.uuid('connectionId').notNullable()
 
-    table.uuid('assetId').notNullable()
-    table.foreign('assetId').references('assets.id')
     table.timestamp('processAt').nullable()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())

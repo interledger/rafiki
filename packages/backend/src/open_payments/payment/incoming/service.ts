@@ -9,12 +9,11 @@ import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
 import { Knex } from 'knex'
-import { TransactionOrKnex } from 'objection'
+import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import { PaymentPointerService } from '../../payment_pointer/service'
 import { Amount } from '../../amount'
-import { IncomingPaymentError } from './errors'
+import { IncomingPaymentError, isIncomingPaymentError } from './errors'
 import { end, parse } from 'iso8601-duration'
-import { v4 as uuid } from 'uuid'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -82,7 +81,7 @@ async function getIncomingPayment(
 ): Promise<IncomingPayment | undefined> {
   const incomingPayment = await IncomingPayment.query(deps.knex)
     .findOne(key, value)
-    .withGraphFetched('asset')
+    .withGraphFetched('paymentPointer.asset')
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
   else return
 }
@@ -103,39 +102,49 @@ async function createIncomingPayment(
   } else if (expiresAt.getTime() <= Date.now()) {
     return IncomingPaymentError.InvalidExpiry
   }
-  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
-  if (!paymentPointer) {
-    return IncomingPaymentError.UnknownPaymentPointer
+  if (incomingAmount && incomingAmount.value <= 0) {
+    return IncomingPaymentError.InvalidAmount
   }
-  if (incomingAmount) {
-    if (incomingAmount.value <= 0) {
-      return IncomingPaymentError.InvalidAmount
-    }
-    if (incomingAmount.assetCode || incomingAmount.assetScale) {
+  const invTrx = trx || (await IncomingPayment.startTransaction(deps.knex))
+  try {
+    const incomingPayment = await IncomingPayment.query(invTrx)
+      .insertAndFetch({
+        paymentPointerId,
+        description,
+        expiresAt,
+        incomingAmount,
+        externalRef,
+        state: IncomingPaymentState.Pending,
+        processAt: expiresAt
+      })
+      .withGraphFetched('paymentPointer.asset')
+    if (incomingAmount) {
       if (
-        incomingAmount.assetCode !== paymentPointer.asset.code ||
-        incomingAmount.assetScale !== paymentPointer.asset.scale
+        incomingAmount.assetCode !==
+          incomingPayment.paymentPointer.asset.code ||
+        incomingAmount.assetScale !== incomingPayment.paymentPointer.asset.scale
       ) {
-        return IncomingPaymentError.InvalidAmount
+        throw IncomingPaymentError.InvalidAmount
       }
     }
+    if (!trx) {
+      await invTrx.commit()
+    }
+    return await addReceivedAmount(deps, incomingPayment, BigInt(0))
+  } catch (err) {
+    if (!trx) {
+      await invTrx.rollback()
+    }
+    if (
+      err instanceof ForeignKeyViolationError &&
+      err.constraint === 'incomingpayments_paymentpointerid_foreign'
+    ) {
+      return IncomingPaymentError.UnknownPaymentPointer
+    } else if (isIncomingPaymentError(err)) {
+      return err
+    }
+    throw err
   }
-
-  const incomingPayment = await IncomingPayment.query(trx || deps.knex)
-    .insertAndFetch({
-      paymentPointerId,
-      assetId: paymentPointer.asset.id,
-      description,
-      expiresAt,
-      incomingAmount,
-      externalRef,
-      state: IncomingPaymentState.Pending,
-      processAt: expiresAt,
-      connectionId: uuid()
-    })
-    .withGraphFetched('asset')
-
-  return await addReceivedAmount(deps, incomingPayment, BigInt(0))
 }
 
 // Fetch (and lock) an incoming payment for work.
@@ -152,7 +161,7 @@ async function processNextIncomingPayment(
       // If an incoming payment is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-      .withGraphFetched('asset')
+      .withGraphFetched('paymentPointer.asset')
 
     const incomingPayment = incomingPayments[0]
     if (!incomingPayment) return
@@ -231,7 +240,7 @@ async function handleDeactivated(
       data: incomingPayment.toData(amountReceived),
       withdrawal: {
         accountId: incomingPayment.id,
-        assetId: incomingPayment.assetId,
+        assetId: incomingPayment.asset.id,
         amount: amountReceived
       }
     })
@@ -254,7 +263,7 @@ async function getPaymentPointerPage(
     .where({
       paymentPointerId
     })
-    .withGraphFetched('asset')
+    .withGraphFetched('paymentPointer.asset')
 
   const amounts = await deps.accountingService.getAccountsTotalReceived(
     page.map((payment: IncomingPayment) => payment.id)
@@ -288,7 +297,7 @@ async function completeIncomingPayment(
     const payment = await IncomingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('asset')
+      .withGraphFetched('paymentPointer.asset')
     if (!payment) return IncomingPaymentError.UnknownPayment
     if (
       ![IncomingPaymentState.Pending, IncomingPaymentState.Processing].includes(
