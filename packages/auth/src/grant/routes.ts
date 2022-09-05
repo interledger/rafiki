@@ -109,12 +109,12 @@ async function createGrantInitiation(
   }
 
   if (
+    !deps.config.incomingPaymentInteraction &&
     body.access_token.access
       .map((acc) => {
         return isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
       })
-      .every((el) => el === true) &&
-    !deps.config.incomingPaymentInteraction
+      .every((el) => el === true)
   ) {
     const grant = await grantService.issueNoInteractionGrant(body)
     const accessToken = await deps.accessTokenService.create(grant.id)
