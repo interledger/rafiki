@@ -125,13 +125,15 @@ describe('Grant Service', (): void => {
         startMethod: expect.arrayContaining([StartMethod.Redirect])
       })
 
-      const dbAccessGrant = (await Access.query(trx)
-        .where({
-          grantId: grant.id
-        })
-        .first()) as Access
-
-      expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
+      await expect(
+        Access.query(trx)
+          .where({
+            grantId: grant.id
+          })
+          .first()
+      ).resolves.toMatchObject({
+        type: AccessType.IncomingPayment
+      })
     })
     test('Can issue a grant without interaction', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
