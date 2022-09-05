@@ -10,6 +10,10 @@ function envInt(name: string, value: number): number {
   return envValue == null ? value : parseInt(envValue)
 }
 
+function envBool(name: string, value: boolean): boolean {
+  const envValue = process.env[name]
+  return envValue == null ? value : envValue === 'true'
+}
 export type IAppConfig = typeof Config
 
 export const Config = {
@@ -38,7 +42,6 @@ export const Config = {
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
   accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30),
-  introspectionHttpsig: process.env.INTROSPECTION_HTTPSIG === 'true',
-  incomingPaymentInteraction:
-    process.env.INCOMING_PAYMENT_INTERACTION === 'true'
+  introspectionHttpsig: envBool('INTROSPECTION_HTTPSIG', false),
+  incomingPaymentInteraction: envBool('INCOMING_PAYMENT_INTERACTION', false)
 }
