@@ -111,7 +111,7 @@ services:
         DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
         /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=0.0.0.0:4342
   redis:
-    image: 'redis:5' # use latest official postgres version
+    image: 'redis:7'
     restart: unless-stopped
     networks:
       rafiki:
