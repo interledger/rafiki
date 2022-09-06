@@ -192,7 +192,7 @@ The payment must be created with `quoteId`.
 - `FIXED_SEND`: Fixed source amount.
 - `FIXED_DELIVERY`: Incoming payment, fixed delivery amount.
 
-### `Incoming Payment`
+### `IncomingPayment`
 
 | Name                        | Optional | Type                   | Description                                                                               |
 | :-------------------------- | :------- | :--------------------- | :---------------------------------------------------------------------------------------- |

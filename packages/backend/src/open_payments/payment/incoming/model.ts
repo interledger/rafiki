@@ -2,6 +2,7 @@ import { Model, Pojo } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON } from '../../amount'
+import { ConnectionJSON } from '../../connection/service'
 import { PaymentPointer } from '../../payment_pointer/model'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
@@ -38,8 +39,6 @@ export interface IncomingPaymentResponse {
   receivedAmount: AmountJSON
   externalRef?: string
   completed: boolean
-  ilpAddress?: string
-  sharedSecret?: string
 }
 
 export type IncomingPaymentData = {
@@ -134,6 +133,13 @@ export class IncomingPayment
     return `${this.paymentPointer.url}/incoming-payments/${this.id}`
   }
 
+  public get hasConnection(): boolean {
+    return ![
+      IncomingPaymentState.Completed,
+      IncomingPaymentState.Expired
+    ].includes(this.state)
+  }
+
   public async onCredit({
     totalReceived
   }: OnCreditOptions): Promise<IncomingPayment> {
@@ -205,39 +211,45 @@ export class IncomingPayment
 
   $formatJson(json: Pojo): Pojo {
     json = super.$formatJson(json)
-    return {
+    const payment: Pojo = {
       id: json.id,
-      incomingAmount: this.incomingAmount
-        ? {
-            ...json.incomingAmount,
-            value: json.incomingAmount.value.toString()
-          }
-        : null,
       receivedAmount: {
         ...json.receivedAmount,
         value: json.receivedAmount.value.toString()
       },
       completed: json.completed,
-      description: json.description,
-      externalRef: json.externalRef,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,
-      expiresAt: json.expiresAt.toISOString(),
-      ilpStreamConnection: json.connectionId
+      expiresAt: json.expiresAt.toISOString()
     }
+    if (json.incomingAmount) {
+      payment.incomingAmount = {
+        ...json.incomingAmount,
+        value: json.incomingAmount.value.toString()
+      }
+    }
+    if (json.description) {
+      payment.description = json.description
+    }
+    if (json.externalRef) {
+      payment.externalRef = json.externalRef
+    }
+    return payment
   }
 }
 
+// TODO: disallow undefined
+// https://github.com/interledger/rafiki/issues/594
 export type IncomingPaymentJSON = {
   id: string
   paymentPointer: string
-  incomingAmount: AmountJSON | null
+  incomingAmount?: AmountJSON
   receivedAmount: AmountJSON
   completed: boolean
-  description: string | null
-  externalRef: string | null
+  description?: string
+  externalRef?: string
   createdAt: string
   updatedAt: string
   expiresAt: string
-  ilpStreamConnection: string
+  ilpStreamConnection?: ConnectionJSON | string
 }

@@ -213,14 +213,15 @@ export function initIocContainer(
     })
   })
   container.singleton('connectionService', async (deps) => {
+    const config = await deps.use('config')
     return await createConnectionService({
       logger: await deps.use('logger'),
+      publicHost: config.publicHost,
       streamServer: await deps.use('streamServer')
     })
   })
   container.singleton('connectionRoutes', async (deps) => {
     return createConnectionRoutes({
-      config: await deps.use('config'),
       logger: await deps.use('logger'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       connectionService: await deps.use('connectionService')

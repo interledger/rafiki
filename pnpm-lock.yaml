@@ -152,7 +152,7 @@ importers:
       graphql: ^16.6.0
       graphql-scalars: ^1.18.0
       graphql-tools: ^8.3.3
-      ilp-packet: ^3.1.2
+      ilp-packet: 3.1.4-alpha.1
       ilp-protocol-ccp: ^1.2.2
       ilp-protocol-ildcp: ^2.2.2
       ilp-protocol-stream: ^2.7.0
@@ -208,7 +208,7 @@ importers:
       graphql: 16.6.0
       graphql-scalars: 1.18.0_graphql@16.6.0
       graphql-tools: 8.3.3_onqnqwb3ubg5opvemcqf7c2qhy
-      ilp-packet: 3.1.3
+      ilp-packet: 3.1.4-alpha.1
       ilp-protocol-ccp: 1.2.3
       ilp-protocol-ildcp: 2.2.3
       ioredis: 5.2.2
