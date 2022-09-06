@@ -11,7 +11,10 @@ import { initIocContainer } from '../../'
 import { ConnectionRoutes } from './routes'
 import { createContext } from '../../tests/context'
 import { PaymentPointer } from '../payment_pointer/model'
-import { IncomingPayment } from '../payment/incoming/model'
+import {
+  IncomingPayment,
+  IncomingPaymentState
+} from '../payment/incoming/model'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import base64url from 'base64url'
@@ -81,6 +84,34 @@ describe('Connection Routes', (): void => {
         404
       )
     })
+
+    test.each`
+      state
+      ${IncomingPaymentState.Completed}
+      ${IncomingPaymentState.Expired}
+    `(
+      `returns 404 for $state incoming payment`,
+      async ({ state }): Promise<void> => {
+        await incomingPayment.$query(knex).patch({
+          state,
+          expiresAt:
+            state === IncomingPaymentState.Expired ? new Date() : undefined
+        })
+        const ctx = createContext<ReadContext>(
+          {
+            headers: { Accept: 'application/json' },
+            url: `/connections/${incomingPayment.connectionId}`
+          },
+          {
+            connectionId: incomingPayment.connectionId
+          }
+        )
+        await expect(connectionRoutes.get(ctx)).rejects.toHaveProperty(
+          'status',
+          404
+        )
+      }
+    )
 
     test('returns 200 for correct connection id', async (): Promise<void> => {
       const ctx = createContext<ReadContext>(

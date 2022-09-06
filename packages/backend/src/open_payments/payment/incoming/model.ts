@@ -2,6 +2,7 @@ import { Model, Pojo } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON } from '../../amount'
+import { ConnectionJSON } from '../../connection/service'
 import { PaymentPointer } from '../../payment_pointer/model'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
@@ -60,7 +61,13 @@ export class IncomingPayment
   }
 
   static get virtualAttributes(): string[] {
-    return ['completed', 'incomingAmount', 'receivedAmount', 'url']
+    return [
+      'completed',
+      'ilpStreamConnection',
+      'incomingAmount',
+      'receivedAmount',
+      'url'
+    ]
   }
 
   static relationMappings = {
@@ -125,6 +132,13 @@ export class IncomingPayment
 
   public get url(): string {
     return `${this.paymentPointer.url}/incoming-payments/${this.id}`
+  }
+
+  public get hasConnection(): boolean {
+    return ![
+      IncomingPaymentState.Completed,
+      IncomingPaymentState.Expired
+    ].includes(this.state)
   }
 
   public async onCredit({
@@ -215,8 +229,7 @@ export class IncomingPayment
       externalRef: json.externalRef ?? undefined,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,
-      expiresAt: json.expiresAt?.toISOString(),
-      ilpStreamConnection: json.connectionId
+      expiresAt: json.expiresAt?.toISOString()
     }
   }
 }
@@ -232,5 +245,5 @@ export type IncomingPaymentJSON = {
   createdAt: string
   updatedAt: string
   expiresAt: string
-  ilpStreamConnection: string
+  ilpStreamConnection?: ConnectionJSON | string
 }
