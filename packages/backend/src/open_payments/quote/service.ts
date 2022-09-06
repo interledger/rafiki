@@ -9,7 +9,10 @@ import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
 import { Amount } from '../amount'
+import { OpenPaymentsClientService } from '../client/service'
+import { PaymentPointer } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
+import { isReceiver, Receiver, toResolvedPayment } from '../shared/receiver'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
 
@@ -31,6 +34,7 @@ export interface ServiceDependencies extends BaseService {
   quoteLifespan: number // milliseconds
   signatureSecret?: string
   signatureVersion: number
+  clientService: OpenPaymentsClientService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
@@ -92,33 +96,15 @@ async function createQuote(
     }
   }
 
-  const plugin = deps.makeIlpPlugin({
-    sourceAccount: paymentPointer,
-    unfulfillable: true
-  })
-
   try {
-    await plugin.connect()
-
-    const destination = await resolveDestination(deps, options, plugin)
-
-    const receivingPaymentValue = destination.destinationPaymentDetails
-      ?.incomingAmount
-      ? destination.destinationPaymentDetails.incomingAmount.value -
-        destination.destinationPaymentDetails.receivedAmount.value
-      : undefined
-
-    const ilpQuote = await startQuote(deps, options, {
-      plugin,
-      destination,
-      sourceAsset: {
-        scale: paymentPointer.asset.scale,
-        code: paymentPointer.asset.code
-      }
+    const incomingPayment = await resolveReceiver(deps, options)
+    const ilpQuote = await startQuote(deps, {
+      ...options,
+      paymentPointer,
+      incomingPayment
     })
 
     return await Quote.transaction(deps.knex, async (trx) => {
-      assert.ok(destination.destinationPaymentDetails)
       const quote = await Quote.query(trx)
         .insertAndFetch({
           paymentPointerId: options.paymentPointerId,
@@ -131,8 +117,8 @@ async function createQuote(
           },
           receiveAmount: {
             value: ilpQuote.minDeliveryAmount,
-            assetCode: destination.destinationAsset.code,
-            assetScale: destination.destinationAsset.scale
+            assetCode: incomingPayment.receivedAmount.assetCode,
+            assetScale: incomingPayment.receivedAmount.assetScale
           },
           // Cap at MAX_INT64 because of postgres type limits.
           maxPacketAmount:
@@ -149,6 +135,10 @@ async function createQuote(
 
       let maxReceiveAmountValue: bigint | undefined
       if (options.sendAmount) {
+        const receivingPaymentValue = incomingPayment?.incomingAmount
+          ? BigInt(incomingPayment.incomingAmount.value) -
+            BigInt(incomingPayment.receivedAmount.value)
+          : undefined
         maxReceiveAmountValue =
           receivingPaymentValue &&
           receivingPaymentValue < quote.receiveAmount.value
@@ -170,109 +160,111 @@ async function createQuote(
       return err
     }
     throw err
+  }
+}
+
+export async function resolveReceiver(
+  deps: ServiceDependencies,
+  options: CreateQuoteOptions
+): Promise<Receiver> {
+  const incomingPayment = await deps.clientService.incomingPayment.get(
+    options.receiver
+  )
+  if (!incomingPayment || !isReceiver(incomingPayment)) {
+    throw QuoteError.InvalidDestination
+  }
+  if (options.receiveAmount) {
+    if (
+      options.receiveAmount.assetScale !==
+        incomingPayment.receivedAmount.assetScale ||
+      options.receiveAmount.assetCode !==
+        incomingPayment.receivedAmount.assetCode
+    ) {
+      throw QuoteError.InvalidAmount
+    }
+    if (incomingPayment.incomingAmount) {
+      const receivingPaymentValue =
+        BigInt(incomingPayment.incomingAmount.value) -
+        BigInt(incomingPayment.receivedAmount.value)
+      if (receivingPaymentValue < options.receiveAmount.value) {
+        throw QuoteError.InvalidAmount
+      }
+    }
+  } else if (!options.sendAmount && !incomingPayment.incomingAmount) {
+    throw QuoteError.InvalidDestination
+  }
+  return incomingPayment
+}
+
+export interface StartQuoteOptions {
+  paymentPointer: PaymentPointer
+  sendAmount?: Amount
+  receiveAmount?: Amount
+  incomingPayment: Receiver
+}
+
+export async function startQuote(
+  deps: ServiceDependencies,
+  options: StartQuoteOptions
+): Promise<Pay.Quote> {
+  const prices = await deps.ratesService.prices().catch((_err: Error) => {
+    throw new Error('missing prices')
+  })
+
+  const plugin = deps.makeIlpPlugin({
+    sourceAccount: options.paymentPointer,
+    unfulfillable: true
+  })
+
+  try {
+    await plugin.connect()
+    const quoteOptions: Pay.QuoteOptions = {
+      plugin,
+      destination: toResolvedPayment(options.incomingPayment),
+      sourceAsset: {
+        scale: options.paymentPointer.asset.scale,
+        code: options.paymentPointer.asset.code
+      }
+    }
+    if (options.sendAmount) {
+      quoteOptions.amountToSend = options.sendAmount.value
+    } else {
+      quoteOptions.amountToDeliver =
+        options.receiveAmount?.value ||
+        BigInt(options.incomingPayment.incomingAmount.value)
+    }
+    const quote = await Pay.startQuote({
+      ...quoteOptions,
+      slippage: deps.slippage,
+      prices
+    }).finally(() => {
+      return Pay.closeConnection(
+        quoteOptions.plugin,
+        quoteOptions.destination
+      ).catch((err) => {
+        deps.logger.warn(
+          {
+            destination: quoteOptions.destination.destinationAddress,
+            error: err.message
+          },
+          'close quote connection failed'
+        )
+      })
+    })
+
+    // Pay.startQuote should return PaymentError.InvalidSourceAmount or
+    // PaymentError.InvalidDestinationAmount for non-positive amounts.
+    // Outgoing payments' sendAmount or receiveAmount should never be
+    // zero or negative.
+    assert.ok(quote.maxSourceAmount > BigInt(0))
+    assert.ok(quote.minDeliveryAmount > BigInt(0))
+
+    return quote
   } finally {
     plugin.disconnect().catch((err: Error) => {
       deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
     })
   }
-}
-
-export async function resolveDestination(
-  deps: ServiceDependencies,
-  options: CreateQuoteOptions,
-  plugin: IlpPlugin
-): Promise<Pay.ResolvedPayment> {
-  let destination: Pay.ResolvedPayment
-  try {
-    destination = await Pay.setupPayment({
-      plugin,
-      destinationPayment: options.receiver
-    })
-  } catch (err) {
-    if (err === Pay.PaymentError.QueryFailed) {
-      throw QuoteError.InvalidDestination
-    }
-    throw err
-  }
-  if (!destination.destinationPaymentDetails) {
-    deps.logger.warn(
-      {
-        options
-      },
-      'missing incoming payment'
-    )
-    throw new Error('missing incoming payment')
-  }
-
-  if (options.receiveAmount) {
-    if (
-      options.receiveAmount.assetScale !== destination.destinationAsset.scale ||
-      options.receiveAmount.assetCode !== destination.destinationAsset.code
-    ) {
-      throw QuoteError.InvalidAmount
-    }
-    if (destination.destinationPaymentDetails.incomingAmount) {
-      const receivingPaymentValue =
-        destination.destinationPaymentDetails.incomingAmount.value -
-        destination.destinationPaymentDetails.receivedAmount.value
-      if (receivingPaymentValue < options.receiveAmount.value) {
-        throw QuoteError.InvalidAmount
-      }
-    }
-  } else if (
-    !options.sendAmount &&
-    !destination.destinationPaymentDetails.incomingAmount
-  ) {
-    throw QuoteError.InvalidDestination
-  }
-  return destination
-}
-
-export async function startQuote(
-  deps: ServiceDependencies,
-  options: CreateQuoteOptions,
-  quoteOptions: Pay.QuoteOptions
-): Promise<Pay.Quote> {
-  const prices = await deps.ratesService.prices().catch((_err: Error) => {
-    throw new Error('missing prices')
-  })
-  assert.ok(quoteOptions.destination.destinationPaymentDetails)
-  if (options.sendAmount) {
-    quoteOptions.amountToSend = options.sendAmount.value
-    quoteOptions.destination.destinationPaymentDetails.incomingAmount =
-      undefined
-  } else if (options.receiveAmount) {
-    quoteOptions.amountToDeliver = options.receiveAmount.value
-    quoteOptions.destination.destinationPaymentDetails.incomingAmount =
-      undefined
-  }
-  const quote = await Pay.startQuote({
-    ...quoteOptions,
-    slippage: deps.slippage,
-    prices
-  }).finally(() => {
-    return Pay.closeConnection(
-      quoteOptions.plugin,
-      quoteOptions.destination
-    ).catch((err) => {
-      deps.logger.warn(
-        {
-          destination: quoteOptions.destination.destinationAddress,
-          error: err.message
-        },
-        'close quote connection failed'
-      )
-    })
-  })
-
-  // Pay.startQuote should return PaymentError.InvalidSourceAmount or
-  // PaymentError.InvalidDestinationAmount for non-positive amounts.
-  // Outgoing payments' sendAmount or receiveAmount should never be
-  // zero or negative.
-  assert.ok(quote.maxSourceAmount > BigInt(0))
-  assert.ok(quote.minDeliveryAmount > BigInt(0))
-
-  return quote
 }
 
 export async function finalizeQuote(

@@ -34,6 +34,7 @@ import {
   PaymentEventType
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
+import { IncomingPaymentState } from '../incoming/model'
 import { isTransferError } from '../../../accounting/errors'
 import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
@@ -407,6 +408,36 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
     })
+    it.each`
+      state
+      ${IncomingPaymentState.Completed}
+      ${IncomingPaymentState.Expired}
+    `(
+      `fails to create on $state quote receiver`,
+      async ({ state }): Promise<void> => {
+        const quote = await createQuote(deps, {
+          paymentPointerId,
+          receiver,
+          sendAmount
+        })
+        const incomingPaymentService = await deps.use('incomingPaymentService')
+        const incomingPayment = await incomingPaymentService.get(
+          getIncomingPaymentId(receiver)
+        )
+        assert.ok(incomingPayment)
+        await incomingPayment.$query(knex).patch({
+          state,
+          expiresAt:
+            state === IncomingPaymentState.Expired ? new Date() : undefined
+        })
+        await expect(
+          outgoingPaymentService.create({
+            paymentPointerId,
+            quoteId: quote.id
+          })
+        ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
+      }
+    )
     test('fails to create if grant is locked', async () => {
       const grant = new Grant({
         active: true,
@@ -781,12 +812,10 @@ describe('OutgoingPaymentService', (): void => {
           receiveAmount
         })
 
-        let scope: nock.Scope | undefined
         const payment = await processNext(
           paymentId,
           OutgoingPaymentState.Completed
         )
-        scope?.isDone()
         if (!payment.sendAmount) throw 'no sendAmount'
         const amountSent = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {
@@ -936,8 +965,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       // Caused by retry after failed SENDING→COMPLETED transition commit.
-      // TODO: https://github.com/interledger/rafiki/issues/581
-      it.skip('COMPLETED (FixedSend, already fully paid)', async (): Promise<void> => {
+      it('COMPLETED (FixedSend, already fully paid)', async (): Promise<void> => {
         const paymentId = await setup(
           {
             receiver,
@@ -964,7 +992,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       // Caused by retry after failed SENDING→COMPLETED transition commit.
-      it.skip('COMPLETED (already fully paid)', async (): Promise<void> => {
+      it('COMPLETED (already fully paid)', async (): Promise<void> => {
         const paymentId = await setup(
           {
             receiver,

@@ -12,7 +12,7 @@ export interface ConnectionOptions extends StreamCredentials {
 
 export type ConnectionJSON = {
   id: string
-  ilpAddress: string
+  ilpAddress: IlpAddress
   sharedSecret: string
 }
 

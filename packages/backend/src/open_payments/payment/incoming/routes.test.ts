@@ -5,6 +5,7 @@ import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../../tests/context'
+import { Amount } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
@@ -23,7 +24,6 @@ import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { Amount } from '@interledger/pay/dist/src/open-payments'
 import { listTests } from '../../../shared/routes.test'
 
 describe('Incoming Payment Routes', (): void => {
