@@ -5,8 +5,8 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { ClientService, JWKWithRequired } from './service'
-import { generateTestKeys } from '../tests/signature'
+import { ClientKey, ClientService, JWKWithRequired } from './service'
+import { generateTestKeys, TEST_CLIENT } from '../tests/signature'
 import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
 
 const TEST_CLIENT_DISPLAY = {
@@ -49,12 +49,15 @@ describe('Client Service', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(keyPath)
           .reply(200, {
-            ...publicKey,
-            kid: KEY_REGISTRY_ORIGIN + '/keys/correct',
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          })
+            jwk: {
+              ...publicKey,
+              kid: KEY_REGISTRY_ORIGIN + '/keys/correct',
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            },
+            client: TEST_CLIENT
+          } as ClientKey)
 
         const validClient = await clientService.validateClient({
           display: TEST_CLIENT_DISPLAY,
@@ -75,11 +78,14 @@ describe('Client Service', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
-            ...publicKey,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          })
+            jwk: {
+              ...publicKey,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            },
+            client: TEST_CLIENT
+          } as ClientKey)
 
         const validClient = await clientService.validateClient({
           display: { name: 'Bob', uri: TEST_CLIENT_DISPLAY.uri },
@@ -97,11 +103,14 @@ describe('Client Service', (): void => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(TEST_KID_PATH)
           .reply(200, {
-            ...publicKey,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          })
+            jwk: {
+              ...publicKey,
+              exp: Math.round(expDate.getTime() / 1000),
+              nbf: Math.round(nbfDate.getTime() / 1000),
+              revoked: false
+            },
+            client: TEST_CLIENT
+          } as ClientKey)
 
         const validClient = await clientService.validateClient({
           display: { name: TEST_CLIENT_DISPLAY.name, uri: 'Bob' },
@@ -138,11 +147,14 @@ describe('Client Service', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
-          ...publicKey,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
+          jwk: {
+            ...publicKey,
+            exp: Math.round(expDate.getTime() / 1000),
+            nbf: Math.round(nbfDate.getTime() / 1000),
+            revoked: false
+          },
+          client: TEST_CLIENT
+        } as ClientKey)
 
       const validClientX = await clientService.validateClient({
         display: TEST_CLIENT_DISPLAY,
@@ -223,10 +235,13 @@ describe('Client Service', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get('/keys/notready')
         .reply(200, {
-          ...publicKey,
-          exp: Math.round(futureDate.getTime() / 1000),
-          nbf: Math.round(futureDate.getTime() / 1000),
-          revoked: false
+          jwk: {
+            ...publicKey,
+            exp: Math.round(futureDate.getTime() / 1000),
+            nbf: Math.round(futureDate.getTime() / 1000),
+            revoked: false
+          },
+          client: TEST_CLIENT
         })
 
       const validKeyKid = await clientService.validateClient({
@@ -248,11 +263,14 @@ describe('Client Service', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get('/keys/invalidclient')
         .reply(200, {
-          ...publicKey,
-          exp: Math.round(nbfDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
+          jwk: {
+            ...publicKey,
+            exp: Math.round(nbfDate.getTime() / 1000),
+            nbf: Math.round(nbfDate.getTime() / 1000),
+            revoked: false
+          },
+          client: TEST_CLIENT
+        } as ClientKey)
 
       const validClient = await clientService.validateClient({
         display: TEST_CLIENT_DISPLAY,
@@ -273,11 +291,14 @@ describe('Client Service', (): void => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get('/keys/revoked')
         .reply(200, {
-          ...publicKey,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: true
-        })
+          jwk: {
+            ...publicKey,
+            exp: Math.round(expDate.getTime() / 1000),
+            nbf: Math.round(nbfDate.getTime() / 1000),
+            revoked: true
+          },
+          client: TEST_CLIENT
+        } as ClientKey)
 
       const validClient = await clientService.validateClient({
         display: TEST_CLIENT_DISPLAY,

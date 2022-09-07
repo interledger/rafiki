@@ -12,6 +12,8 @@ import { AppContext, AppServices } from '../../app'
 import { HttpMethod, ValidateFunction } from 'openapi'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
+import { createPaymentPointer } from '../../tests/paymentPointer'
+import { truncateTables } from '../../tests/tableManager'
 
 type AppMiddleware = (
   ctx: AppContext,
@@ -26,7 +28,6 @@ type IntrospectionBody = {
 describe('Auth Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let paymentPointerId: string
   let authServerIntrospectionUrl: URL
   let middleware: AppMiddleware
   let ctx: AppContext
@@ -37,7 +38,6 @@ describe('Auth Middleware', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    paymentPointerId = `${Config.publicHost}/${uuid()}`
     authServerIntrospectionUrl = new URL(Config.authServerIntrospectionUrl)
     middleware = createAuthMiddleware({
       type: AccessType.IncomingPayment,
@@ -50,23 +50,20 @@ describe('Auth Middleware', (): void => {
     })
   })
 
-  beforeEach((): void => {
-    ctx = createContext(
-      {
-        headers: {
-          Accept: 'application/json',
-          Authorization: `GNAP ${token}`
-        }
-      },
-      {
-        paymentPointerId
+  beforeEach(async (): Promise<void> => {
+    ctx = createContext({
+      headers: {
+        Accept: 'application/json',
+        Authorization: `GNAP ${token}`
       }
-    )
+    })
     ctx.container = deps
+    ctx.paymentPointer = await createPaymentPointer(deps)
     next = jest.fn()
   })
 
   afterAll(async (): Promise<void> => {
+    await truncateTables(await deps.use('knex'))
     await appContainer.shutdown()
   })
 

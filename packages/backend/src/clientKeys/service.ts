@@ -4,7 +4,8 @@ import { ClientKeys } from './model'
 import { BaseService } from '../shared/baseService'
 
 export interface ClientKeysService {
-  getKeyById(keyId: string): Promise<ClientKeys['jwk']>
+  getKeyById(keyId: string): Promise<ClientKeys>
+  revokeKeyById(keyId: string): Promise<string>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -23,7 +24,8 @@ export async function createClientKeysService({
     knex
   }
   return {
-    getKeyById: (keyId) => getKeyById(deps, keyId)
+    getKeyById: (keyId) => getKeyById(deps, keyId),
+    revokeKeyById: (keyId) => revokeKeyById(deps, keyId)
   }
 }
 
@@ -31,8 +33,34 @@ async function getKeyById(
   deps: ServiceDependencies,
   // In the form https://somedomain/keys/{keyId}
   keyId: string
-): Promise<ClientKeys['jwk']> {
+): Promise<ClientKeys> {
   const key = await ClientKeys.query(deps.knex).findById(keyId)
   if (!key) return null
-  return key.jwk
+  return key
+}
+
+async function revokeKeyById(
+  deps: ServiceDependencies,
+  keyId: string
+): Promise<string> {
+  const key = await ClientKeys.query(deps.knex).findById(keyId)
+
+  const revokedJwk = key.jwk
+  revokedJwk.revoked = true
+
+  try {
+    const revokedKey = await key
+      .$query(deps.knex)
+      .patchAndFetch({ jwk: revokedJwk })
+
+    return revokedKey.id
+  } catch (error) {
+    deps.logger.error(
+      {
+        error
+      },
+      'error revoking key'
+    )
+    throw error
+  }
 }

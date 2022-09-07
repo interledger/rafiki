@@ -45,7 +45,6 @@ describe('Incoming Payment Routes', (): void => {
     scale: 2
   }
   let paymentPointer: PaymentPointer
-  let paymentPointerId: string
   let expiresAt: Date
   let incomingAmount: Amount
   let description: string
@@ -57,8 +56,9 @@ describe('Incoming Payment Routes', (): void => {
     incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
 
     expiresAt = new Date(Date.now() + 30_000)
-    paymentPointer = await createPaymentPointer(deps, { asset })
-    paymentPointerId = `https://wallet.example/${paymentPointer.id}`
+    paymentPointer = await createPaymentPointer(deps, {
+      asset
+    })
     incomingAmount = {
       value: BigInt('123'),
       assetScale: asset.scale,
@@ -113,8 +113,9 @@ describe('Incoming Payment Routes', (): void => {
           },
           {
             incomingPaymentId: uuid(),
-            accountId: paymentPointer.id
+            paymentPointer: paymentPointer.id
           },
+          paymentPointer,
           withGrant ? grant : undefined
         )
         await expect(incomingPaymentRoutes.get(ctx)).rejects.toMatchObject({
@@ -128,12 +129,13 @@ describe('Incoming Payment Routes', (): void => {
           {
             headers: { Accept: 'application/json' },
             method: 'GET',
-            url: `/${paymentPointer.id}/incoming-payments/${incomingPayment.id}`
+            url: `/incoming-payments/${incomingPayment.id}`
           },
           {
             incomingPaymentId: incomingPayment.id,
-            accountId: paymentPointer.id
+            paymentPointer: paymentPointer.id
           },
+          paymentPointer,
           withGrant ? grant : undefined
         )
         await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
@@ -146,9 +148,8 @@ describe('Incoming Payment Routes', (): void => {
         )['sharedSecret']
 
         expect(ctx.body).toEqual({
-          id: `${paymentPointerId}/incoming-payments/${incomingPayment.id}`,
-          // paymentPointer: paymentPointerId,
-          accountId: paymentPointerId,
+          id: `${paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+          paymentPointer: paymentPointer.url,
           completed: false,
           incomingAmount: {
             value: '123',
@@ -182,7 +183,8 @@ describe('Incoming Payment Routes', (): void => {
       test('returns error on distant-future expiresAt', async (): Promise<void> => {
         const ctx = setup<CreateContext<CreateBody>>(
           { body: {} },
-          { accountId: paymentPointer.id }
+          { paymentPointer: paymentPointer.id },
+          paymentPointer
         )
         ctx.request.body['expiresAt'] = new Date(
           Date.now() + MAX_EXPIRY + 1000
@@ -225,9 +227,10 @@ describe('Incoming Payment Routes', (): void => {
                 expiresAt
               },
               method: 'POST',
-              url: `/${paymentPointer.id}/incoming-payments`
+              url: `/incoming-payments`
             },
-            { accountId: paymentPointer.id },
+            { paymentPointer: paymentPointer.id },
+            paymentPointer,
             grant
           )
           await expect(
@@ -249,9 +252,8 @@ describe('Incoming Payment Routes', (): void => {
             .split('/')
             .pop()
           expect(ctx.response.body).toEqual({
-            id: `${paymentPointerId}/incoming-payments/${incomingPaymentId}`,
-            // paymentPointer: paymentPointerId,
-            accountId: paymentPointerId,
+            id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
+            paymentPointer: paymentPointer.url,
             incomingAmount,
             description,
             expiresAt: expiresAt || expect.any(String),
@@ -293,21 +295,21 @@ describe('Incoming Payment Routes', (): void => {
           {
             headers: { Accept: 'application/json' },
             method: 'POST',
-            url: `/${paymentPointer.id}/incoming-payments/${incomingPayment.id}/complete`
+            url: `/incoming-payments/${incomingPayment.id}/complete`
           },
           {
             incomingPaymentId: incomingPayment.id,
-            accountId: paymentPointer.id
-          }
+            paymentPointer: paymentPointer.id
+          },
+          paymentPointer
         )
         await expect(
           incomingPaymentRoutes.complete(ctx)
         ).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.body).toEqual({
-          id: `${paymentPointerId}/incoming-payments/${incomingPayment.id}`,
-          // paymentPointer: paymentPointerId,
-          accountId: paymentPointerId,
+          id: `${paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+          paymentPointer: paymentPointer.url,
           incomingAmount: {
             value: '123',
             assetCode: asset.code,
@@ -351,9 +353,9 @@ describe('Incoming Payment Routes', (): void => {
       ${true}   | ${'with grant'}
     `('$description', ({ withGrant }): void => {
       listTests({
-        getPaymentPointerId: () => paymentPointer.id,
+        getPaymentPointer: () => paymentPointer,
         getGrant: () => (withGrant ? grant : undefined),
-        getUrl: () => `/${paymentPointer.id}/incoming-payments`,
+        getUrl: () => `/incoming-payments`,
         createItem: async (index: number) => {
           const payment = await createIncomingPayment(deps, {
             paymentPointerId: paymentPointer.id,
@@ -362,9 +364,8 @@ describe('Incoming Payment Routes', (): void => {
             expiresAt
           })
           return {
-            id: `${paymentPointerId}/incoming-payments/${payment.id}`,
-            // paymentPointer: paymentPointerId,
-            accountId: paymentPointerId,
+            id: `${paymentPointer.url}/incoming-payments/${payment.id}`,
+            paymentPointer: paymentPointer.url,
             receivedAmount: {
               value: '0',
               assetCode: asset.code,
@@ -390,7 +391,7 @@ describe('Incoming Payment Routes', (): void => {
           {
             headers: { Accept: 'application/json' }
           },
-          { accountId: paymentPointerId },
+          { paymentPointer: paymentPointer.id },
           withGrant ? grant : undefined
         )
         await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({

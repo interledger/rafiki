@@ -476,30 +476,6 @@ describe('Incoming Payment Service', (): void => {
           pagination
         )
     })
-
-    it('throws if no TB account found', async (): Promise<void> => {
-      const payment = await createIncomingPayment(deps, {
-        paymentPointerId,
-        clientId,
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        expiresAt: new Date(Date.now() + 30_000),
-        description: 'IncomingPayment',
-        externalRef: '#123'
-      })
-
-      jest
-        .spyOn(accountingService, 'getAccountsTotalReceived')
-        .mockResolvedValueOnce([undefined])
-      await expect(
-        incomingPaymentService.getPaymentPointerPage(paymentPointerId, {})
-      ).rejects.toThrowError(
-        `Underlying TB account not found, incoming payment id: ${payment.id}`
-      )
-    })
   })
 
   describe('complete', (): void => {

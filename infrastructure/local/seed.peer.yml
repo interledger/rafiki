@@ -2,6 +2,7 @@ self:
   graphqlUrl: http://peer-backend:3001/graphql
   hostname: 'backend'
   mapHostname: 'primary-map'
+  openPaymentPublishedPort: 4000
 peers:
   - asset: USD
     scale: 2
@@ -9,15 +10,22 @@ peers:
     peerUrl: http://backend:3002
     peerIlpAddress: test.rafiki
 accounts:
-  - name: "Philip Fry"
-    url: http://peer-backend/accounts/cbaker
-    id: 742ab7cd-1624-4d2e-af6e-e15a71638669
+  - name: 'Philip Fry'
+    path: accounts/pfry
+    id: 97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
     initialBalance: 1
     asset: USD
     scale: 2
-  - name: "PlanEx Corp"
-    id: 5726eefe-8737-459d-a36b-0acce152cb90
+    postmanEnvVar: pfryPaymentPointer
+  - name: 'PlanEx Corp'
+    id: a455cc54-b583-455b-836a-e5275c5c05b7
     initialBalance: 2000
     asset: USD
     scale: 2
-    url: http://peer-backend/accounts/planex
+    path: accounts/planex
+    postmanEnvVar: planexPaymentPointer
+fees:
+  - fixed: 1
+    percentage: 0.02
+    asset: USD
+    scale: 2

@@ -12,11 +12,14 @@ import {
 } from './errors'
 import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { IAppConfig, Config } from '../../../config/app'
+import { Config } from '../../../config/app'
 import { CreateQuoteOptions } from '../../quote/service'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
-import { createPaymentPointer } from '../../../tests/paymentPointer'
+import {
+  createPaymentPointer,
+  MockPaymentPointer
+} from '../../../tests/paymentPointer'
 import { PeerFactory } from '../../../tests/peerFactory'
 import { createQuote } from '../../../tests/quote'
 import { IocContract } from '@adonisjs/fold'
@@ -47,11 +50,9 @@ describe('OutgoingPaymentService', (): void => {
   let accountingService: AccountingService
   let knex: Knex
   let paymentPointerId: string
-  let receivingPaymentPointer: string
+  let receiverPaymentPointer: MockPaymentPointer
   let receiver: string
-  let receiverPaymentPointerId: string
   let amtDelivered: bigint
-  let config: IAppConfig
   let trx: Knex.Transaction
 
   const asset: AssetOptions = {
@@ -128,7 +129,7 @@ describe('OutgoingPaymentService', (): void => {
 
   function getIncomingPaymentId(receiver: string): string {
     return receiver.slice(
-      `${receivingPaymentPointer}/incoming-payments/`.length
+      `${receiverPaymentPointer.url}/incoming-payments/`.length
     )
   }
 
@@ -231,7 +232,6 @@ describe('OutgoingPaymentService', (): void => {
     accountingService = await deps.use('accountingService')
 
     knex = await deps.use('knex')
-    config = await deps.use('config')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -244,29 +244,29 @@ describe('OutgoingPaymentService', (): void => {
         }
       })
     ).id
-    const destinationPaymentPointer = await createPaymentPointer(deps, {
-      asset: destinationAsset
+    receiverPaymentPointer = await createPaymentPointer(deps, {
+      asset: destinationAsset,
+      mockServerPort: appContainer.openPaymentsPort
     })
-    receiverPaymentPointerId = destinationPaymentPointer.id
     await expect(
       accountingService.createDeposit({
         id: uuid(),
-        account: destinationPaymentPointer.asset,
+        account: receiverPaymentPointer.asset,
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingPaymentPointer = `${config.openPaymentsUrl}/${destinationPaymentPointer.id}`
     const incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId: receiverPaymentPointerId,
+      paymentPointerId: receiverPaymentPointer.id,
       clientId: appContainer.clientId
     })
-    receiver = `${receivingPaymentPointer}/incoming-payments/${incomingPayment.id}`
+    receiver = `${receiverPaymentPointer.url}/incoming-payments/${incomingPayment.id}`
 
     amtDelivered = BigInt(0)
   })
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
+    receiverPaymentPointer.scope?.persist(false)
     await truncateTables(knex)
   })
 
@@ -380,7 +380,7 @@ describe('OutgoingPaymentService', (): void => {
       })
       await expect(
         outgoingPaymentService.create({
-          paymentPointerId: receiverPaymentPointerId,
+          paymentPointerId: receiverPaymentPointer.id,
           quoteId: quote.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)

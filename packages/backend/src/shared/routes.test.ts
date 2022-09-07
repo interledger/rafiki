@@ -1,5 +1,6 @@
 import * as httpMocks from 'node-mocks-http'
 import { AppContext, ListContext } from '../app'
+import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import { Grant } from '../open_payments/auth/grant'
 import { createContext } from '../tests/context'
 
@@ -10,6 +11,7 @@ interface BaseResponse {
 export const setup = <T extends AppContext>(
   reqOpts: httpMocks.RequestOptions,
   params: Record<string, string>,
+  paymentPointer: PaymentPointer,
   grant?: Grant
 ): T => {
   const ctx = createContext<T>(
@@ -25,12 +27,15 @@ export const setup = <T extends AppContext>(
   if (reqOpts.body !== undefined) {
     ctx.request.body = reqOpts.body
   }
+  if (paymentPointer !== undefined) {
+    ctx.paymentPointer = paymentPointer
+  }
   if (grant) ctx.grant = grant
   return ctx
 }
 
 interface ListTestsOptions<Type> {
-  getPaymentPointerId: () => string
+  getPaymentPointer: () => PaymentPointer
   getGrant: () => Grant | undefined
   getUrl: () => string
   createItem: (index: number) => Promise<Type>
@@ -38,7 +43,7 @@ interface ListTestsOptions<Type> {
 }
 
 export const listTests = <Type extends BaseResponse>({
-  getPaymentPointerId,
+  getPaymentPointer,
   getGrant,
   getUrl,
   createItem,
@@ -84,7 +89,8 @@ export const listTests = <Type extends BaseResponse>({
             query,
             url: getUrl()
           },
-          { accountId: getPaymentPointerId() },
+          { paymentPointer: getPaymentPointer().id },
+          getPaymentPointer(),
           getGrant()
         )
         await expect(list(ctx)).resolves.toBeUndefined()

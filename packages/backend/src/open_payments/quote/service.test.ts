@@ -18,7 +18,10 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import {
+  createPaymentPointer,
+  MockPaymentPointer
+} from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { AssetOptions } from '../../asset/service'
 import { Amount } from '../amount'
@@ -36,8 +39,7 @@ describe('QuoteService', (): void => {
   let knex: Knex
   let paymentPointerId: string
   let assetId: string
-  let receivingPaymentPointer: string
-  let receivingPaymentPointerId: string
+  let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
   const SIGNATURE_SECRET = 'test secret'
@@ -92,23 +94,23 @@ describe('QuoteService', (): void => {
     })
     paymentPointerId = paymentPointer.id
     assetId = paymentPointer.assetId
-    const destinationPaymentPointer = await createPaymentPointer(deps, {
-      asset: destinationAsset
+    receivingPaymentPointer = await createPaymentPointer(deps, {
+      asset: destinationAsset,
+      mockServerPort: appContainer.openPaymentsPort
     })
-    receivingPaymentPointerId = destinationPaymentPointer.id
     const accountingService = await deps.use('accountingService')
     await expect(
       accountingService.createDeposit({
         id: uuid(),
-        account: destinationPaymentPointer.asset,
+        account: receivingPaymentPointer.asset,
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingPaymentPointer = `${config.openPaymentsUrl}/${destinationPaymentPointer.id}`
   })
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
+    receivingPaymentPointer.scope?.persist(false)
     await truncateTables(knex)
   })
 
@@ -224,13 +226,13 @@ describe('QuoteService', (): void => {
 
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
-            paymentPointerId: receivingPaymentPointerId,
+            paymentPointerId: receivingPaymentPointer.id,
             clientId: appContainer.clientId,
             incomingAmount
           })
           options = {
             paymentPointerId,
-            receiver: `${receivingPaymentPointer}/incoming-payments/${incomingPayment.id}`,
+            receiver: `${receivingPaymentPointer.url}/incoming-payments/${incomingPayment.id}`,
             sendAmount,
             receiveAmount
           }
@@ -501,7 +503,9 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           paymentPointerId: uuid(),
-          receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
+          receiver: `${
+            receivingPaymentPointer.url
+          }/incoming-payments/${uuid()}`,
           sendAmount
         })
       ).resolves.toEqual(QuoteError.UnknownPaymentPointer)
@@ -511,7 +515,9 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           paymentPointerId,
-          receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
+          receiver: `${
+            receivingPaymentPointer.url
+          }/incoming-payments/${uuid()}`,
           sendAmount
         })
       ).resolves.toEqual(QuoteError.InvalidDestination)
@@ -532,10 +538,10 @@ describe('QuoteService', (): void => {
         await expect(
           quoteService.create({
             paymentPointerId,
-            receiver: `${receivingPaymentPointer}/incoming-payments/${
+            receiver: `${receivingPaymentPointer.url}/incoming-payments/${
               (
                 await createIncomingPayment(deps, {
-                  paymentPointerId: receivingPaymentPointerId,
+                  paymentPointerId: receivingPaymentPointer.id,
                   clientId: appContainer.clientId
                 })
               ).id
@@ -553,14 +559,14 @@ describe('QuoteService', (): void => {
         .spyOn(ratesService, 'prices')
         .mockImplementation(() => Promise.reject(new Error('fail')))
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: receivingPaymentPointerId,
+        paymentPointerId: receivingPaymentPointer.id,
         clientId: appContainer.clientId
       })
       assert.ok(incomingPayment)
       await expect(
         quoteService.create({
           paymentPointerId,
-          receiver: `${receivingPaymentPointer}/incoming-payments/${incomingPayment.id}`,
+          receiver: `${receivingPaymentPointer.url}/incoming-payments/${incomingPayment.id}`,
           sendAmount
         })
       ).rejects.toThrow('missing prices')
@@ -573,7 +579,9 @@ describe('QuoteService', (): void => {
         Quote.query(knex).insertAndFetch({
           paymentPointerId,
           assetId,
-          receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
+          receiver: `${
+            receivingPaymentPointer.url
+          }/incoming-payments/${uuid()}`,
           sendAmount,
           receiveAmount,
           maxPacketAmount: BigInt('9223372036854775807'),

@@ -1,5 +1,9 @@
 # Rafiki Account Service API
 
+# OUTDATED Needs to be updated
+
+See [Update Account Services API Docs](https://github.com/interledger/rafiki/issues/550)
+
 - [Rafiki Account Service API](#rafiki-account-service-api)
 - [Parties](#parties)
   - [**Permissioning**](#permissioning)

@@ -1,6 +1,7 @@
 import assert from 'assert'
 import { IocContract } from '@adonisjs/fold'
 import * as Pay from '@interledger/pay'
+import { URL } from 'url'
 
 import { randomAsset } from './asset'
 import { AppServices } from '../app'
@@ -34,11 +35,12 @@ export async function createQuote(
   const config = await deps.use('config')
   let receiveAsset: AssetOptions | undefined
   if (validDestination) {
-    assert.ok(receiver.startsWith(config.openPaymentsUrl))
-    const path = receiver.slice(config.openPaymentsUrl.length + 1).split('/')
-    assert.ok(path.length === 3)
+    const receiverUrl = new URL(receiver)
+    const receiverUrlPathParts = receiverUrl.pathname.split('/')
+    const incomingPaymentId =
+      receiverUrlPathParts.pop() || receiverUrlPathParts.pop() // handle trailing slash
     const incomingPaymentService = await deps.use('incomingPaymentService')
-    const incomingPayment = await incomingPaymentService.get(path[2])
+    const incomingPayment = await incomingPaymentService.get(incomingPaymentId)
     assert.ok(incomingPayment)
     assert.ok(incomingPayment.incomingAmount || receiveAmount || sendAmount)
     if (receiveAmount) {

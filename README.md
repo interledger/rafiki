@@ -78,7 +78,7 @@ pnpm --filter auth test
 pnpm --filter open-api test
 
 # run all tests
-pnpm -r --workspace-concurrency=2 test
+pnpm -r --workspace-concurrency=1 test
 
 # format and lint code:
 pnpm format

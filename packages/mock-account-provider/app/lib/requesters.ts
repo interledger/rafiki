@@ -3,7 +3,7 @@ import type {
   CreatePeerMutationResponse,
   LiquidityMutationResponse,
   CreatePaymentPointerMutationResponse
-} from '../generated/graphql'
+} from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
 
 export interface GraphqlQueryConfig {
@@ -106,7 +106,7 @@ export async function addPeerLiquidity(
     })
 }
 
-export async function createAccount(
+export async function createPaymentPointer(
   backendUrl: string,
   accountName: string,
   accountUrl: string,

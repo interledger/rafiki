@@ -15,6 +15,7 @@ import { ClientService } from '../clients/service'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_CLIENT = {
+  id: uuid(),
   name: faker.name.firstName(),
   uri: faker.internet.url(),
   email: faker.internet.exampleEmail(),
@@ -23,10 +24,6 @@ const TEST_CLIENT = {
 const KEY_UUID = uuid()
 const TEST_KID_PATH = '/keys/' + KEY_UUID
 const TEST_CLIENT_KEY = {
-  client: {
-    id: uuid(),
-    ...TEST_CLIENT
-  },
   kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
   x: 'test-public-key',
   kty: 'OKP',
@@ -85,20 +82,10 @@ describe('Client Keys Routes', (): void => {
 
     test('returns 200 with JWK set as body for valid key', async (): Promise<void> => {
       const client = await clientService.createClient(TEST_CLIENT)
-      const keyWithClient = {
-        ...TEST_CLIENT_KEY,
-        client: {
-          id: client.id,
-          name: client.name,
-          uri: client.uri,
-          image: '',
-          email: ''
-        }
-      }
       const keyOption = {
         id: KEY_UUID,
         clientId: client.id,
-        jwk: keyWithClient
+        jwk: TEST_CLIENT_KEY
       }
       await clientService.addKeyToClient(keyOption)
 
@@ -111,7 +98,10 @@ describe('Client Keys Routes', (): void => {
       )
 
       await expect(clientKeysRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.body).toEqual(keyWithClient)
+      expect(ctx.body).toEqual({
+        key: TEST_CLIENT_KEY,
+        client: TEST_CLIENT
+      })
     })
   })
 })

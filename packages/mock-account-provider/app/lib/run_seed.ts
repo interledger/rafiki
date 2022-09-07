@@ -1,8 +1,13 @@
 import * as _ from 'lodash'
 import { CONFIG } from './parse_config'
 import type { SeedInstance, Account, Peering } from './parse_config'
-import { createPeer, addPeerLiquidity, createAccount } from './requesters'
+import {
+  createPeer,
+  addPeerLiquidity,
+  createPaymentPointer
+} from './requesters'
 import { v4 } from 'uuid'
+import { mockAccounts } from './accounts.server'
 
 export async function setupFromSeed(config: SeedInstance): Promise<void> {
   const peerResponses = await Promise.all(
@@ -26,21 +31,47 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
       return [peerResponse, liquidity]
     })
   )
+
   console.log(JSON.stringify(peerResponses, null, 2))
+
+  // Clear the accounts before seeding.
+  await mockAccounts.clearAccounts()
+
   const accountResponses = await Promise.all(
     _.map(config.accounts, async (account: Account) => {
-      return createAccount(
+      await mockAccounts.create(account.id, account.name)
+      if (account.initialBalance) {
+        await mockAccounts.credit(
+          account.id,
+          BigInt(account.initialBalance),
+          false
+        )
+      }
+      const pp = await createPaymentPointer(
         config.self.graphqlUrl,
         account.name,
-        account.url,
+        `https://${CONFIG.self.hostname}/${account.path}`,
         account.asset,
         account.scale
       )
+
+      await mockAccounts.setPaymentPointer(
+        account.id,
+        pp.paymentPointer?.id,
+        pp.paymentPointer?.url
+      )
+
+      return pp
     })
   )
   console.log(JSON.stringify(accountResponses, null, 2))
+  const envVarStrings = _.map(config.accounts, (account) => {
+    return `${account.postmanEnvVar}: http://localhost:${CONFIG.self.openPaymentPublishedPort}/${account.path} hostname: ${CONFIG.self.hostname}`
+  })
+  console.log(envVarStrings.join('\n'))
 }
 
 export async function runSeed(): Promise<void> {
+  console.log('calling run_seed')
   return setupFromSeed(CONFIG)
 }

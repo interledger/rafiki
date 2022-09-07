@@ -28,7 +28,7 @@ export function createAuthMiddleware({
         !grant.includesAccess({
           type,
           action,
-          identifier: ctx.params.paymentPointerId
+          identifier: ctx.paymentPointer.url
         })
       ) {
         ctx.throw(403, 'Insufficient Grant')

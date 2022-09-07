@@ -173,10 +173,8 @@ export function initIocContainer(
   container.singleton('spspRoutes', async (deps) => {
     const logger = await deps.use('logger')
     const streamServer = await deps.use('streamServer')
-    const paymentPointerService = await deps.use('paymentPointerService')
     return await createSPSPRoutes({
       logger: logger,
-      paymentPointerService: paymentPointerService,
       streamServer: streamServer
     })
   })
@@ -205,13 +203,13 @@ export function initIocContainer(
   })
   container.singleton('paymentPointerRoutes', async (deps) => {
     return createPaymentPointerRoutes({
-      config: await deps.use('config'),
-      paymentPointerService: await deps.use('paymentPointerService')
+      config: await deps.use('config')
     })
   })
   container.singleton('clientKeysRoutes', async (deps) => {
     return createClientKeysRoutes({
-      clientKeysService: await deps.use('clientKeysService')
+      clientKeysService: await deps.use('clientKeysService'),
+      clientService: await deps.use('clientService')
     })
   })
   container.singleton('connectionService', async (deps) => {
@@ -425,7 +423,8 @@ export const start = async (
   await app.boot()
   await app.startAdminServer(config.adminPort)
   await app.startOpenPaymentsServer(config.openPaymentsPort)
-  logger.info(`Listening on ${app.getAdminPort()}`)
+  logger.info(`Admin listening on ${app.getAdminPort()}`)
+  logger.info(`Open Payments listening on ${app.getOpenPaymentsPort()}`)
 
   const connectorApp = await container.use('connectorApp')
   connectorServer = connectorApp.listenPublic(config.connectorPort)
