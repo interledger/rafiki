@@ -392,6 +392,7 @@ describe('Incoming Payment Routes', (): void => {
             headers: { Accept: 'application/json' }
           },
           { paymentPointer: paymentPointer.id },
+          paymentPointer,
           withGrant ? grant : undefined
         )
         await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({

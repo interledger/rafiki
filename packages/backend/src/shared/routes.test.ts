@@ -27,9 +27,7 @@ export const setup = <T extends AppContext>(
   if (reqOpts.body !== undefined) {
     ctx.request.body = reqOpts.body
   }
-  if (paymentPointer !== undefined) {
-    ctx.paymentPointer = paymentPointer
-  }
+  ctx.paymentPointer = paymentPointer
   if (grant) ctx.grant = grant
   return ctx
 }
