@@ -171,7 +171,7 @@ export async function resolveReceiver(
     options.receiver
   )
   if (!incomingPayment || !isReceiver(incomingPayment)) {
-    throw QuoteError.InvalidDestination
+    throw QuoteError.InvalidReceiver
   }
   if (options.receiveAmount) {
     if (
@@ -191,7 +191,7 @@ export async function resolveReceiver(
       }
     }
   } else if (!options.sendAmount && !incomingPayment.incomingAmount) {
-    throw QuoteError.InvalidDestination
+    throw QuoteError.InvalidReceiver
   }
   return incomingPayment
 }

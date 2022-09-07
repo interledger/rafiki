@@ -246,7 +246,7 @@ describe('QuoteService', (): void => {
             await expect(quoteService.create(options)).resolves.toEqual(
               toPaymentPointer
                 ? QuoteError.InvalidAmount
-                : QuoteError.InvalidDestination
+                : QuoteError.InvalidReceiver
             )
           })
         } else {
@@ -479,7 +479,7 @@ describe('QuoteService', (): void => {
               ${IncomingPaymentState.Completed}
               ${IncomingPaymentState.Expired}
             `(
-              `returns ${QuoteError.InvalidDestination} on $state receiver`,
+              `returns ${QuoteError.InvalidReceiver} on $state receiver`,
               async ({ state }): Promise<void> => {
                 await incomingPayment.$query(knex).patch({
                   state,
@@ -489,7 +489,7 @@ describe('QuoteService', (): void => {
                       : undefined
                 })
                 await expect(quoteService.create(options)).resolves.toEqual(
-                  QuoteError.InvalidDestination
+                  QuoteError.InvalidReceiver
                 )
               }
             )
@@ -519,7 +519,7 @@ describe('QuoteService', (): void => {
           }/incoming-payments/${uuid()}`,
           sendAmount
         })
-      ).resolves.toEqual(QuoteError.InvalidDestination)
+      ).resolves.toEqual(QuoteError.InvalidReceiver)
     })
 
     test.each`
