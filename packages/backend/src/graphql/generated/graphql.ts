@@ -168,6 +168,7 @@ export type CreateClientMutationResponse = MutationResponse & {
 export type CreateOutgoingPaymentInput = {
   description?: InputMaybe<Scalars['String']>;
   externalRef?: InputMaybe<Scalars['String']>;
+  grant: Scalars['String'];
   paymentPointerId: Scalars['String'];
   quoteId: Scalars['String'];
 };

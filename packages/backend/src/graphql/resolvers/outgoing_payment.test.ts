@@ -262,7 +262,8 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       const input = {
         paymentPointerId: payment.paymentPointerId,
-        quoteId: payment.quote.id
+        quoteId: payment.quote.id,
+        grant: grant.id
       }
 
       const query = await appContainer.apolloClient
@@ -301,7 +302,8 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       const input = {
         paymentPointerId: uuid(),
-        quoteId: uuid()
+        quoteId: uuid(),
+        grant: grant.id
       }
 
       const query = await appContainer.apolloClient
@@ -342,7 +344,8 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       const input = {
         paymentPointerId: uuid(),
-        quoteId: uuid()
+        quoteId: uuid(),
+        grant: grant.id
       }
 
       const query = await appContainer.apolloClient
