@@ -1,4 +1,6 @@
 import { Model, Pojo } from 'objection'
+import { v4 as uuid } from 'uuid'
+
 import { Amount, AmountJSON } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
 import { Asset } from '../../../asset/model'
@@ -58,7 +60,7 @@ export class IncomingPayment
   }
 
   static get virtualAttributes(): string[] {
-    return ['incomingAmount', 'receivedAmount']
+    return ['completed', 'incomingAmount', 'receivedAmount', 'url']
   }
 
   static relationMappings = {
@@ -82,7 +84,7 @@ export class IncomingPayment
 
   // Open payments paymentPointer id this incoming payment is for
   public paymentPointerId!: string
-  public paymentPointer?: PaymentPointer
+  public paymentPointer!: PaymentPointer
   public description?: string
   public expiresAt!: Date
   public state!: IncomingPaymentState
@@ -96,6 +98,10 @@ export class IncomingPayment
 
   private incomingAmountValue?: bigint | null
   private receivedAmountValue?: bigint
+
+  public get completed(): boolean {
+    return this.state === IncomingPaymentState.Completed
+  }
 
   public get incomingAmount(): Amount | undefined {
     if (this.incomingAmountValue) {
@@ -122,6 +128,10 @@ export class IncomingPayment
 
   public set receivedAmount(amount: Amount) {
     this.receivedAmountValue = amount.value
+  }
+
+  public get url(): string {
+    return `${this.paymentPointer.url}/incoming-payments/${this.id}`
   }
 
   public async onCredit({
@@ -167,7 +177,7 @@ export class IncomingPayment
           assetCode: this.asset.code,
           assetScale: this.asset.scale
         },
-        completed: this.state === IncomingPaymentState.Completed,
+        completed: this.completed,
         updatedAt: new Date(+this.updatedAt).toISOString()
       }
     }
@@ -188,6 +198,11 @@ export class IncomingPayment
     return data
   }
 
+  public $beforeInsert(context): void {
+    super.$beforeInsert(context)
+    this.connectionId = this.connectionId || uuid()
+  }
+
   $formatJson(json: Pojo): Pojo {
     json = super.$formatJson(json)
     return {
@@ -202,7 +217,7 @@ export class IncomingPayment
         ...json.receivedAmount,
         value: json.receivedAmount.value.toString()
       },
-      completed: !!(this.state === IncomingPaymentState.Completed),
+      completed: json.completed,
       description: json.description,
       externalRef: json.externalRef,
       createdAt: json.createdAt,

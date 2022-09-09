@@ -147,7 +147,7 @@ describe('Incoming Payment Routes', (): void => {
       )['sharedSecret']
 
       expect(ctx.body).toEqual({
-        id: `${paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+        id: incomingPayment.url,
         paymentPointer: paymentPointer.url,
         completed: false,
         incomingAmount: {
@@ -283,7 +283,7 @@ describe('Incoming Payment Routes', (): void => {
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: `${paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+        id: incomingPayment.url,
         paymentPointer: paymentPointer.url,
         incomingAmount: {
           value: '123',
@@ -317,7 +317,7 @@ describe('Incoming Payment Routes', (): void => {
           expiresAt
         })
         return {
-          id: `${paymentPointer.url}/incoming-payments/${payment.id}`,
+          id: payment.url,
           paymentPointer: paymentPointer.url,
           receivedAmount: {
             value: '0',

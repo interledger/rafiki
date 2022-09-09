@@ -231,7 +231,7 @@ describe('QuoteService', (): void => {
           })
           options = {
             paymentPointerId,
-            receiver: `${receivingPaymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+            receiver: incomingPayment.url,
             sendAmount,
             receiveAmount
           }
@@ -537,13 +537,11 @@ describe('QuoteService', (): void => {
         await expect(
           quoteService.create({
             paymentPointerId,
-            receiver: `${receivingPaymentPointer.url}/incoming-payments/${
-              (
-                await createIncomingPayment(deps, {
-                  paymentPointerId: receivingPaymentPointer.id
-                })
-              ).id
-            }`,
+            receiver: (
+              await createIncomingPayment(deps, {
+                paymentPointerId: receivingPaymentPointer.id
+              })
+            ).url,
             sendAmount,
             receiveAmount
           })
@@ -559,13 +557,11 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           paymentPointerId,
-          receiver: `${receivingPaymentPointer.url}/incoming-payments/${
-            (
-              await createIncomingPayment(deps, {
-                paymentPointerId: receivingPaymentPointer.id
-              })
-            ).id
-          }`,
+          receiver: (
+            await createIncomingPayment(deps, {
+              paymentPointerId: receivingPaymentPointer.id
+            })
+          ).url,
           sendAmount
         })
       ).rejects.toThrow('missing prices')
