@@ -30,6 +30,7 @@ export interface TestContainer {
   apolloClient: ApolloClient<NormalizedCacheObject>
   connectionUrl: string
   shutdown: () => Promise<void>
+  grantId: string
   clientId: string
 }
 
@@ -157,6 +158,7 @@ export const createTestApp = async (
       nock.cleanAll()
       await gracefulShutdown(container, app)
     },
+    grantId: grant.grant,
     clientId: grant.clientId
   }
 }

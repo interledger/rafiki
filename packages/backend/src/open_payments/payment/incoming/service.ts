@@ -26,7 +26,7 @@ export const EXPIRY = parse('P90D') // 90 days in future
 
 export interface CreateIncomingPaymentOptions {
   paymentPointerId: string
-  clientId: string
+  grantId: string
   description?: string
   expiresAt?: Date
   incomingAmount?: Amount
@@ -83,16 +83,16 @@ async function getIncomingPayment(
   value: string,
   clientId?: string
 ): Promise<IncomingPayment | undefined> {
-  let incomingPayment
+  let incomingPayment: IncomingPayment
   if (!clientId) {
     incomingPayment = await IncomingPayment.query(deps.knex)
       .findOne(key, value)
       .withGraphFetched('asset')
   } else {
     incomingPayment = await IncomingPayment.query(deps.knex)
-      .findOne(key, value)
-      .where({ clientId })
-      .withGraphFetched('asset')
+      .findOne(`incomingPayments.${key}`, value)
+      .withGraphJoined('[asset, grant]')
+      .where('grant.clientId', clientId)
   }
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
   else return
@@ -102,7 +102,7 @@ async function createIncomingPayment(
   deps: ServiceDependencies,
   {
     paymentPointerId,
-    clientId,
+    grantId,
     description,
     expiresAt,
     incomingAmount,
@@ -136,7 +136,7 @@ async function createIncomingPayment(
   const incomingPayment = await IncomingPayment.query(trx || deps.knex)
     .insertAndFetch({
       paymentPointerId,
-      clientId,
+      grantId,
       assetId: paymentPointer.asset.id,
       description,
       expiresAt,
@@ -264,21 +264,16 @@ async function getPaymentPointerPage(
   clientId?: string
 ): Promise<IncomingPayment[]> {
   let page: IncomingPayment[]
-  if (!clientId) {
-    page = await IncomingPayment.query(deps.knex)
-      .getPage(pagination)
-      .where({
-        paymentPointerId
-      })
-      .withGraphFetched('asset')
-  } else {
-    page = await IncomingPayment.query(deps.knex)
-      .getPage(pagination)
-      .where({
-        paymentPointerId
-      })
-      .andWhere({ clientId })
-      .withGraphFetched('asset')
+  page = await IncomingPayment.query(deps.knex)
+    .getPage(pagination)
+    .where({
+      paymentPointerId
+    })
+    .withGraphFetched('[asset, grant]')
+  if (clientId) {
+    page = page.filter(
+      (payment: IncomingPayment) => payment.grant.clientId === clientId
+    )
   }
 
   const amounts = await deps.accountingService.getAccountsTotalReceived(

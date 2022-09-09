@@ -41,6 +41,7 @@ import { Amount } from '../../amount'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { Grant as GrantModel } from '../../auth/grantModel'
 import { Quote } from '../../quote/model'
 
 describe('OutgoingPaymentService', (): void => {
@@ -54,6 +55,7 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
+  let referenceGrant: GrantModel
 
   const asset: AssetOptions = {
     scale: 9,
@@ -255,9 +257,14 @@ describe('OutgoingPaymentService', (): void => {
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
+
+    referenceGrant = await GrantModel.query().insert({
+      id: uuid(),
+      clientId: appContainer.clientId
+    })
     const incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: receiverPaymentPointer.id,
-      clientId: appContainer.clientId
+      grantId: referenceGrant.id
     })
     receiver = `${receiverPaymentPointer.url}/incoming-payments/${incomingPayment.id}`
 
@@ -299,6 +306,7 @@ describe('OutgoingPaymentService', (): void => {
         const options = {
           paymentPointerId,
           quoteId: quote.id,
+          grant: referenceGrant.id,
           description: 'rent',
           externalRef: '202201'
         }
@@ -357,7 +365,8 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.create({
           paymentPointerId: uuid(),
-          quoteId
+          quoteId,
+          grant: referenceGrant.id
         })
       ).resolves.toEqual(OutgoingPaymentError.UnknownPaymentPointer)
     })
@@ -366,7 +375,8 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.create({
           paymentPointerId,
-          quoteId: uuid()
+          quoteId: uuid(),
+          grant: referenceGrant.id
         })
       ).resolves.toEqual(OutgoingPaymentError.UnknownQuote)
     })
@@ -381,7 +391,8 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.create({
           paymentPointerId: receiverPaymentPointer.id,
-          quoteId: quote.id
+          quoteId: quote.id,
+          grant: referenceGrant.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
     })
@@ -399,19 +410,24 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.create({
           paymentPointerId,
-          quoteId: quote.id
+          quoteId: quote.id,
+          grant: referenceGrant.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
     })
     test('fails to create if grant is locked', async () => {
       const grant = new Grant({
         active: true,
-        clientId: appContainer.clientId,
-        grant: uuid(),
+        clientId: referenceGrant.clientId,
+        grant: referenceGrant.id,
         access: [
           {
             type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create, AccessAction.Read]
+            actions: [AccessAction.Create, AccessAction.Read],
+            limits: {
+              receiver,
+              sendAmount
+            }
           }
         ]
       })
@@ -450,7 +466,7 @@ describe('OutgoingPaymentService', (): void => {
     })
     describe('validateGrant', (): void => {
       let quote: Quote
-      let options: CreateOutgoingPaymentOptions
+      let options: Omit<CreateOutgoingPaymentOptions, 'grant'>
       let interval: string
       beforeEach(async (): Promise<void> => {
         quote = await createQuote(deps, {
@@ -471,8 +487,8 @@ describe('OutgoingPaymentService', (): void => {
         const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
         const grant = new Grant({
           active: true,
-          clientId: appContainer.clientId,
-          grant: uuid(),
+          clientId: referenceGrant.clientId,
+          grant: referenceGrant.id,
           access: [
             {
               type: AccessType.OutgoingPayment,
@@ -499,8 +515,8 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            clientId: appContainer.clientId,
-            grant: uuid(),
+            clientId: referenceGrant.clientId,
+            grant: referenceGrant.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -533,8 +549,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            clientId: appContainer.clientId,
-            grant: uuid(),
+            clientId: referenceGrant.clientId,
+            grant: referenceGrant.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -561,8 +577,8 @@ describe('OutgoingPaymentService', (): void => {
         sendAmount | failed   | description
         ${true}    | ${false} | ${'sendAmount'}
         ${false}   | ${false} | ${'receiveAmount'}
-        ${true}    | ${true}  | ${'sendAmount'}
-        ${false}   | ${true}  | ${'receiveAmount'}
+        ${true}    | ${true}  | ${'sendAmount, failed first payment'}
+        ${false}   | ${true}  | ${'receiveAmount, failed first payment'}
       `(
         'fails if limit was already used up - $description',
         async ({ sendAmount, failed }): Promise<void> => {
@@ -577,8 +593,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            clientId: appContainer.clientId,
-            grant: uuid(),
+            clientId: referenceGrant.clientId,
+            grant: referenceGrant.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -631,8 +647,8 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            clientId: appContainer.clientId,
-            grant: uuid(),
+            clientId: referenceGrant.clientId,
+            grant: referenceGrant.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -677,8 +693,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            clientId: appContainer.clientId,
-            grant: uuid(),
+            clientId: referenceGrant.clientId,
+            grant: referenceGrant.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -755,6 +771,7 @@ describe('OutgoingPaymentService', (): void => {
         }
         const payment = await createOutgoingPayment(deps, {
           paymentPointerId,
+          grant: referenceGrant.id,
           ...opts
         })
 
@@ -1047,6 +1064,7 @@ describe('OutgoingPaymentService', (): void => {
     beforeEach(async (): Promise<void> => {
       payment = await createOutgoingPayment(deps, {
         paymentPointerId,
+        grant: referenceGrant.id,
         receiver,
         sendAmount,
         validDestination: false
@@ -1119,6 +1137,7 @@ describe('OutgoingPaymentService', (): void => {
       createModel: () =>
         createOutgoingPayment(deps, {
           paymentPointerId,
+          grant: referenceGrant.id,
           receiver,
           sendAmount,
           validDestination: false

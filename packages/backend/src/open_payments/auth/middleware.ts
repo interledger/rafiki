@@ -1,5 +1,6 @@
 import { AccessType, AccessAction } from './grant'
 import { AppContext } from '../../app'
+import { Grant } from './grantModel'
 
 export function createAuthMiddleware({
   type,
@@ -33,6 +34,13 @@ export function createAuthMiddleware({
       ) {
         ctx.throw(403, 'Insufficient Grant')
       }
+      await Grant.query()
+        .insert({
+          id: grant.grant,
+          clientId: grant.clientId
+        })
+        .onConflict('id')
+        .ignore()
       ctx.grant = grant
       await next()
     } catch (err) {

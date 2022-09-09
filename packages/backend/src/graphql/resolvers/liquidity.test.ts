@@ -43,6 +43,7 @@ import {
   LiquidityMutationResponse,
   PaymentPointerWithdrawalMutationResponse
 } from '../generated/graphql'
+import { Grant } from '../../open_payments/auth/grantModel'
 
 describe('Liquidity Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -1498,13 +1499,18 @@ describe('Liquidity Resolvers', (): void => {
     let paymentPointer: PaymentPointer
     let incomingPayment: IncomingPayment
     let payment: OutgoingPayment
+    let grant: Grant
 
     beforeEach(async (): Promise<void> => {
       paymentPointer = await createPaymentPointer(deps)
       const paymentPointerId = paymentPointer.id
+      grant = await Grant.query().insert({
+        id: uuid(),
+        clientId: uuid()
+      })
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId,
-        clientId: uuid(),
+        grantId: grant.id,
         incomingAmount: {
           value: BigInt(56),
           assetCode: paymentPointer.asset.code,
@@ -1515,6 +1521,7 @@ describe('Liquidity Resolvers', (): void => {
       })
       payment = await createOutgoingPayment(deps, {
         paymentPointerId,
+        grant: grant.id,
         receiver: `${Config.publicHost}/${uuid()}/incoming-payments/${uuid()}`,
         sendAmount: {
           value: BigInt(456),

@@ -11,13 +11,13 @@ import {
 } from './errors'
 import {
   OutgoingPayment,
-  Grant as GrantModel,
   OutgoingPaymentState,
   PaymentEventType
 } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
+import { Grant as GrantModel } from '../../auth/grantModel'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -83,9 +83,9 @@ async function getOutgoingPayment(
 export interface CreateOutgoingPaymentOptions {
   paymentPointerId: string
   quoteId: string
+  grant: Grant | string
   description?: string
   externalRef?: string
-  grant?: Grant
   callback?: (f: unknown) => NodeJS.Timeout
 }
 
@@ -93,19 +93,10 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
+  const grantId =
+    typeof options.grant === 'string' ? options.grant : options.grant.grant
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
-      if (options.grant) {
-        await GrantModel.query(trx)
-          .insert({
-            id: options.grant.grant
-          })
-          .onConflict('id')
-          .ignore()
-          .forUpdate()
-          .timeout(5000)
-        if (options.callback) await new Promise(options.callback)
-      }
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
@@ -113,7 +104,7 @@ async function createOutgoingPayment(
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Funding,
-          grantId: options.grant?.grant
+          grantId
         })
         .withGraphFetched('[quote.asset]')
 
@@ -124,7 +115,7 @@ async function createOutgoingPayment(
         throw OutgoingPaymentError.InvalidQuote
       }
 
-      if (options.grant) {
+      if (typeof options.grant !== 'string') {
         if (
           !(await validateGrant(
             {
@@ -138,6 +129,7 @@ async function createOutgoingPayment(
           throw OutgoingPaymentError.InsufficientGrant
         }
       }
+
       const plugin = deps.makeIlpPlugin({
         sourceAccount: {
           id: payment.paymentPointerId,
@@ -188,7 +180,7 @@ async function createOutgoingPayment(
     } else if (isOutgoingPaymentError(err)) {
       return err
     } else if (err instanceof knex.KnexTimeoutError) {
-      deps.logger.error({ grant: options.grant.grant }, 'grant locked')
+      deps.logger.error({ grant: grantId }, 'grant locked')
     }
     throw err
   }
@@ -251,7 +243,8 @@ interface PaymentLimits extends AccessLimits {
 async function validateGrant(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  grant: Grant
+  grant: Grant,
+  callback?: (f: unknown) => NodeJS.Timeout
 ): Promise<boolean> {
   const grantAccess = grant.access[0]
   if (!grantAccess.limits) {
@@ -271,6 +264,13 @@ async function validateGrant(
     // Payment amount single-handedly exceeds amount limit
     return false
   }
+
+  //lock grant
+  await GrantModel.query(deps.knex)
+    .findById(grant.grant)
+    .forUpdate()
+    .timeout(5000)
+  if (callback) await new Promise(callback)
 
   const grantPayments = await OutgoingPayment.query(deps.knex)
     .where({

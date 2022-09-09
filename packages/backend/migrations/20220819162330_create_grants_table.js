@@ -1,6 +1,7 @@
 exports.up = function (knex) {
   return knex.schema.createTable('grants', function (table) {
     table.string('id').notNullable().primary()
+    table.string('clientId').notNullable()
   })
 }
 

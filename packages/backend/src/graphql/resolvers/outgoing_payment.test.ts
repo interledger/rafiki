@@ -29,6 +29,7 @@ import {
   OutgoingPaymentResponse,
   OutgoingPaymentState as SchemaPaymentState
 } from '../generated/graphql'
+import { Grant } from '../../open_payments/auth/grantModel'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -36,6 +37,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let knex: Knex
   let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
+  let grant: Grant
 
   const asset = randomAsset()
 
@@ -45,6 +47,13 @@ describe('OutgoingPayment Resolvers', (): void => {
     knex = await deps.use('knex')
     accountingService = await deps.use('accountingService')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    grant = await Grant.query().insert({
+      id: uuid(),
+      clientId: uuid()
+    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -64,6 +73,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   }): Promise<OutgoingPaymentModel> => {
     return await createOutgoingPayment(deps, {
       ...options,
+      grant: grant.id,
       receiver: `${Config.publicHost}/${uuid()}`,
       sendAmount: {
         value: BigInt(56),

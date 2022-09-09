@@ -23,6 +23,8 @@ import { PaymentPointer } from '../../payment_pointer/model'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { listTests } from '../../../shared/routes.test'
+import { Grant } from '../../auth/grant'
+import { Grant as GrantModel } from '../../auth/grantModel'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -31,12 +33,14 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let paymentPointer: PaymentPointer
+  let grant: GrantModel
 
   const receivingPaymentPointer = `https://wallet.example/${uuid()}`
   const asset = randomAsset()
 
   const createPayment = async (options: {
     paymentPointerId: string
+    grant: Grant | string
     description?: string
     externalRef?: string
   }): Promise<OutgoingPayment> => {
@@ -65,6 +69,10 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     paymentPointer = await createPaymentPointer(deps, { asset })
+    grant = await GrantModel.query().insert({
+      id: uuid(),
+      clientId: uuid()
+    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -101,6 +109,7 @@ describe('Outgoing Payment Routes', (): void => {
       async ({ failed }): Promise<void> => {
         const outgoingPayment = await createPayment({
           paymentPointerId: paymentPointer.id,
+          grant: grant.id,
           description: 'rent',
           externalRef: '202201'
         })
@@ -154,6 +163,7 @@ describe('Outgoing Payment Routes', (): void => {
 
     beforeEach(async (): Promise<void> => {
       options = {
+        grant: grant.id,
         quoteId: `${paymentPointer.url}/quotes/${uuid()}`
       }
     })
@@ -183,11 +193,13 @@ describe('Outgoing Payment Routes', (): void => {
       async ({ description, externalRef }): Promise<void> => {
         const payment = await createPayment({
           paymentPointerId: paymentPointer.id,
+          grant: grant.id,
           description,
           externalRef
         })
         options = {
           quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
+          grant: grant.id,
           description,
           externalRef
         }
@@ -244,6 +256,7 @@ describe('Outgoing Payment Routes', (): void => {
       createItem: async (index: number) => {
         const payment = await createPayment({
           paymentPointerId: paymentPointer.id,
+          grant: grant.id,
           description: `p${index}`
         })
         return {

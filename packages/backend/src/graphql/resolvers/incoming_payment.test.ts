@@ -11,12 +11,14 @@ import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { uuid } from '../../connector/core'
+import { Grant } from '../../open_payments/auth/grantModel'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
   let paymentPointerId: string
+  let grant: Grant
 
   const asset = randomAsset()
 
@@ -35,6 +37,10 @@ describe('Incoming Payment Resolver', (): void => {
   describe('Payment pointer incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
       paymentPointerId = (await createPaymentPointer(deps, { asset })).id
+      grant = await Grant.query().insert({
+        id: uuid(),
+        clientId: uuid()
+      })
     })
 
     getPageTests({
@@ -42,7 +48,7 @@ describe('Incoming Payment Resolver', (): void => {
       createModel: () =>
         createIncomingPayment(deps, {
           paymentPointerId,
-          clientId: uuid(),
+          grantId: grant.id,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,

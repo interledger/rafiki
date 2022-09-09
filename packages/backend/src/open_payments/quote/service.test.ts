@@ -31,6 +31,7 @@ import {
 } from '../payment/incoming/model'
 import { Pagination } from '../../shared/baseModel'
 import { getPageTests } from '../../shared/baseModel.test'
+import { Grant } from '../auth/grantModel'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -42,6 +43,7 @@ describe('QuoteService', (): void => {
   let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
+  let grant: Grant
   const SIGNATURE_SECRET = 'test secret'
 
   const asset: AssetOptions = {
@@ -97,6 +99,10 @@ describe('QuoteService', (): void => {
     receivingPaymentPointer = await createPaymentPointer(deps, {
       asset: destinationAsset,
       mockServerPort: appContainer.openPaymentsPort
+    })
+    grant = await Grant.query().insert({
+      id: uuid(),
+      clientId: appContainer.clientId
     })
     const accountingService = await deps.use('accountingService')
     await expect(
@@ -227,7 +233,7 @@ describe('QuoteService', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId: receivingPaymentPointer.id,
-            clientId: appContainer.clientId,
+            grantId: grant.id,
             incomingAmount
           })
           options = {
@@ -542,7 +548,7 @@ describe('QuoteService', (): void => {
               (
                 await createIncomingPayment(deps, {
                   paymentPointerId: receivingPaymentPointer.id,
-                  clientId: appContainer.clientId
+                  grantId: grant.id
                 })
               ).id
             }`,
@@ -560,7 +566,7 @@ describe('QuoteService', (): void => {
         .mockImplementation(() => Promise.reject(new Error('fail')))
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: receivingPaymentPointer.id,
-        clientId: appContainer.clientId
+        grantId: grant.id
       })
       assert.ok(incomingPayment)
       await expect(
