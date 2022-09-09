@@ -1,8 +1,9 @@
+import bcrypt from 'bcrypt'
+import { v4 as uuid } from 'uuid'
+
 import { BaseService } from '../shared/baseService'
 import { SessionService } from '../session/service'
 import { ApiKey } from './model'
-import { uuid } from '../connector/core'
-import bcrypt from 'bcrypt'
 import { Session } from '../session/util'
 import { ApiKeyError } from './errors'
 

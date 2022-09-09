@@ -18,8 +18,7 @@ import { URL } from 'url'
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
 import { Grant, AccessAction, AccessType } from '../open_payments/auth/grant'
-import { uuid } from '../connector/core'
-
+import { v4 as uuid } from 'uuid'
 export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {

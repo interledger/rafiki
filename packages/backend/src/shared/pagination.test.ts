@@ -21,7 +21,7 @@ import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
 import { PeerFactory } from '../tests/peerFactory'
 import { isAssetError } from '../asset/errors'
-import { uuid } from '../connector/core'
+import { v4 as uuid } from 'uuid'
 import { Grant } from '../open_payments/auth/grantModel'
 
 describe('Pagination', (): void => {

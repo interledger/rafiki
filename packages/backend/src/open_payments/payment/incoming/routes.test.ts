@@ -152,7 +152,7 @@ describe('Incoming Payment Routes', (): void => {
         )['sharedSecret']
 
         expect(ctx.body).toEqual({
-          id: `${paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+          id: incomingPayment.url,
           paymentPointer: paymentPointer.url,
           completed: false,
           incomingAmount: {
@@ -183,155 +183,153 @@ describe('Incoming Payment Routes', (): void => {
         expect(sharedSecret).toEqual(base64url(sharedSecretBuffer))
       })
     })
-    describe('create', (): void => {
-      test('returns error on distant-future expiresAt', async (): Promise<void> => {
-        const ctx = setup<CreateContext<CreateBody>>(
-          { body: {} },
-          { paymentPointer: paymentPointer.id },
-          paymentPointer
-        )
-        ctx.request.body['expiresAt'] = new Date(
-          Date.now() + MAX_EXPIRY + 1000
-        ).toISOString()
-        await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-          'message',
-          'expiry too high'
-        )
-      })
+  })
 
-      test.each`
-        incomingAmount                                     | description  | externalRef  | expiresAt
-        ${{ value: '2', assetCode: 'USD', assetScale: 2 }} | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
-        ${undefined}                                       | ${undefined} | ${undefined} | ${undefined}
-      `(
-        'returns the incoming payment on success',
-        async ({
-          incomingAmount,
-          description,
-          externalRef,
-          expiresAt
-        }): Promise<void> => {
-          const grant = new Grant({
-            active: true,
-            grant: referenceGrant.id,
-            clientId: referenceGrant.clientId,
-            access: [
-              {
-                type: AccessType.IncomingPayment,
-                actions: [AccessAction.Create]
-              }
-            ]
-          })
-          const ctx = setup<CreateContext<CreateBody>>(
-            {
-              body: {
-                incomingAmount,
-                description,
-                externalRef,
-                expiresAt
-              },
-              method: 'POST',
-              url: `/incoming-payments`
-            },
-            { paymentPointer: paymentPointer.id },
-            paymentPointer,
-            grant
-          )
-          await expect(
-            incomingPaymentRoutes.create(ctx)
-          ).resolves.toBeUndefined()
-          expect(ctx.response).toSatisfyApiSpec()
-          const incomingPaymentId = (
-            (ctx.response.body as Record<string, unknown>)['id'] as string
-          )
-            .split('/')
-            .pop()
-          const connectionId = (
-            (
-              (ctx.response.body as Record<string, unknown>)[
-                'ilpStreamConnection'
-              ] as Record<string, unknown>
-            )['id'] as string
-          )
-            .split('/')
-            .pop()
-          expect(ctx.response.body).toEqual({
-            id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
-            paymentPointer: paymentPointer.url,
-            incomingAmount,
-            description,
-            expiresAt: expiresAt || expect.any(String),
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
-            receivedAmount: {
-              value: '0',
-              assetCode: asset.code,
-              assetScale: asset.scale
-            },
-            externalRef,
-            completed: false,
-            ilpStreamConnection: {
-              id: `${config.publicHost}/connections/${connectionId}`,
-              ilpAddress: expect.stringMatching(
-                /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-              ),
-              sharedSecret: expect.any(String)
-            }
-          })
-        }
+  describe('create', (): void => {
+    test('returns error on distant-future expiresAt', async (): Promise<void> => {
+      const ctx = setup<CreateContext<CreateBody>>(
+        { body: {} },
+        { paymentPointer: paymentPointer.id },
+        paymentPointer
+      )
+      ctx.request.body['expiresAt'] = new Date(
+        Date.now() + MAX_EXPIRY + 1000
+      ).toISOString()
+      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
+        'message',
+        'expiry too high'
       )
     })
 
-    describe('complete', (): void => {
-      let incomingPayment: IncomingPayment
-      beforeEach(async (): Promise<void> => {
-        incomingPayment = await createIncomingPayment(deps, {
-          paymentPointerId: paymentPointer.id,
-          grantId: referenceGrant.id,
-          description,
-          expiresAt,
-          incomingAmount,
-          externalRef
+    test.each`
+      incomingAmount                                     | description  | externalRef  | expiresAt
+      ${{ value: '2', assetCode: 'USD', assetScale: 2 }} | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
+      ${undefined}                                       | ${undefined} | ${undefined} | ${undefined}
+    `(
+      'returns the incoming payment on success',
+      async ({
+        incomingAmount,
+        description,
+        externalRef,
+        expiresAt
+      }): Promise<void> => {
+        const grant = new Grant({
+          active: true,
+          grant: referenceGrant.id,
+          clientId: referenceGrant.clientId,
+          access: [
+            {
+              type: AccessType.IncomingPayment,
+              actions: [AccessAction.Create]
+            }
+          ]
         })
-      })
-      test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
-        const ctx = setup<CompleteContext>(
+        const ctx = setup<CreateContext<CreateBody>>(
           {
-            headers: { Accept: 'application/json' },
+            body: {
+              incomingAmount,
+              description,
+              externalRef,
+              expiresAt
+            },
             method: 'POST',
-            url: `/incoming-payments/${incomingPayment.id}/complete`
+            url: `/incoming-payments`
           },
-          {
-            incomingPaymentId: incomingPayment.id,
-            paymentPointer: paymentPointer.id
-          },
-          paymentPointer
+          { paymentPointer: paymentPointer.id },
+          paymentPointer,
+          grant
         )
-        await expect(
-          incomingPaymentRoutes.complete(ctx)
-        ).resolves.toBeUndefined()
+        await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
-        expect(ctx.body).toEqual({
-          id: `${paymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+        const incomingPaymentId = (
+          (ctx.response.body as Record<string, unknown>)['id'] as string
+        )
+          .split('/')
+          .pop()
+        const connectionId = (
+          (
+            (ctx.response.body as Record<string, unknown>)[
+              'ilpStreamConnection'
+            ] as Record<string, unknown>
+          )['id'] as string
+        )
+          .split('/')
+          .pop()
+        expect(ctx.response.body).toEqual({
+          id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
           paymentPointer: paymentPointer.url,
-          incomingAmount: {
-            value: '123',
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          description: incomingPayment.description,
-          expiresAt: expiresAt.toISOString(),
-          createdAt: incomingPayment.createdAt.toISOString(),
+          incomingAmount,
+          description,
+          expiresAt: expiresAt || expect.any(String),
+          createdAt: expect.any(String),
           updatedAt: expect.any(String),
           receivedAmount: {
             value: '0',
             assetCode: asset.code,
             assetScale: asset.scale
           },
-          externalRef: '#123',
-          completed: true,
-          ilpStreamConnection: `${config.publicHost}/connections/${incomingPayment.connectionId}`
+          externalRef,
+          completed: false,
+          ilpStreamConnection: {
+            id: `${config.publicHost}/connections/${connectionId}`,
+            ilpAddress: expect.stringMatching(
+              /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+            ),
+            sharedSecret: expect.any(String)
+          }
         })
+      }
+    )
+  })
+
+  describe('complete', (): void => {
+    let incomingPayment: IncomingPayment
+    beforeEach(async (): Promise<void> => {
+      incomingPayment = await createIncomingPayment(deps, {
+        paymentPointerId: paymentPointer.id,
+        grantId: referenceGrant.id,
+        description,
+        expiresAt,
+        incomingAmount,
+        externalRef
+      })
+    })
+    test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
+      const ctx = setup<CompleteContext>(
+        {
+          headers: { Accept: 'application/json' },
+          method: 'POST',
+          url: `/incoming-payments/${incomingPayment.id}/complete`
+        },
+        {
+          incomingPaymentId: incomingPayment.id,
+          paymentPointer: paymentPointer.id
+        },
+        paymentPointer
+      )
+      ctx.paymentPointer = paymentPointer
+      await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.body).toEqual({
+        id: incomingPayment.url,
+        paymentPointer: paymentPointer.url,
+        incomingAmount: {
+          value: '123',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        description: incomingPayment.description,
+        expiresAt: expiresAt.toISOString(),
+        createdAt: incomingPayment.createdAt.toISOString(),
+        updatedAt: expect.any(String),
+        receivedAmount: {
+          value: '0',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        externalRef: '#123',
+        completed: true,
+        ilpStreamConnection: `${config.publicHost}/connections/${incomingPayment.connectionId}`
       })
     })
   })
@@ -368,7 +366,7 @@ describe('Incoming Payment Routes', (): void => {
             expiresAt
           })
           return {
-            id: `${paymentPointer.url}/incoming-payments/${payment.id}`,
+            id: payment.url,
             paymentPointer: paymentPointer.url,
             receivedAmount: {
               value: '0',

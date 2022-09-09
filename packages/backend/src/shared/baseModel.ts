@@ -108,7 +108,8 @@ export abstract class BaseModel extends DbErrors(Model) {
   public createdAt!: Date
   public updatedAt!: Date
 
-  public $beforeInsert(): void {
+  public $beforeInsert(context): void {
+    super.$beforeInsert(context)
     this.id = this.id || uuid()
     this.createdAt = new Date()
     this.updatedAt = new Date()

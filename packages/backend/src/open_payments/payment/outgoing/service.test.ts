@@ -266,7 +266,7 @@ describe('OutgoingPaymentService', (): void => {
       paymentPointerId: receiverPaymentPointer.id,
       grantId: referenceGrant.id
     })
-    receiver = `${receiverPaymentPointer.url}/incoming-payments/${incomingPayment.id}`
+    receiver = incomingPayment.url
 
     amtDelivered = BigInt(0)
   })

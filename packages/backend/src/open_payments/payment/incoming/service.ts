@@ -14,7 +14,6 @@ import { PaymentPointerService } from '../../payment_pointer/service'
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { end, parse } from 'iso8601-duration'
-import { uuid } from '../../../connector/core'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -87,11 +86,11 @@ async function getIncomingPayment(
   if (!clientId) {
     incomingPayment = await IncomingPayment.query(deps.knex)
       .findOne(key, value)
-      .withGraphFetched('asset')
+      .withGraphFetched('[asset, paymentPointer]')
   } else {
     incomingPayment = await IncomingPayment.query(deps.knex)
       .findOne(`incomingPayments.${key}`, value)
-      .withGraphJoined('[asset, grant]')
+      .withGraphJoined('[asset, paymentPointer, grant]')
       .where('grant.clientId', clientId)
   }
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
@@ -115,24 +114,21 @@ async function createIncomingPayment(
   } else if (expiresAt.getTime() <= Date.now()) {
     return IncomingPaymentError.InvalidExpiry
   }
+  if (incomingAmount && incomingAmount.value <= 0) {
+    return IncomingPaymentError.InvalidAmount
+  }
   const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
   if (!paymentPointer) {
     return IncomingPaymentError.UnknownPaymentPointer
   }
   if (incomingAmount) {
-    if (incomingAmount.value <= 0) {
+    if (
+      incomingAmount.assetCode !== paymentPointer.asset.code ||
+      incomingAmount.assetScale !== paymentPointer.asset.scale
+    ) {
       return IncomingPaymentError.InvalidAmount
     }
-    if (incomingAmount.assetCode || incomingAmount.assetScale) {
-      if (
-        incomingAmount.assetCode !== paymentPointer.asset.code ||
-        incomingAmount.assetScale !== paymentPointer.asset.scale
-      ) {
-        return IncomingPaymentError.InvalidAmount
-      }
-    }
   }
-
   const incomingPayment = await IncomingPayment.query(trx || deps.knex)
     .insertAndFetch({
       paymentPointerId,
@@ -143,10 +139,9 @@ async function createIncomingPayment(
       incomingAmount,
       externalRef,
       state: IncomingPaymentState.Pending,
-      processAt: expiresAt,
-      connectionId: uuid()
+      processAt: expiresAt
     })
-    .withGraphFetched('asset')
+    .withGraphFetched('[asset, paymentPointer]')
 
   return await addReceivedAmount(deps, incomingPayment, BigInt(0))
 }
@@ -165,7 +160,7 @@ async function processNextIncomingPayment(
       // If an incoming payment is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-      .withGraphFetched('asset')
+      .withGraphFetched('[asset, paymentPointer]')
 
     const incomingPayment = incomingPayments[0]
     if (!incomingPayment) return
@@ -269,7 +264,7 @@ async function getPaymentPointerPage(
     .where({
       paymentPointerId
     })
-    .withGraphFetched('[asset, grant]')
+    .withGraphFetched('[asset, paymentPointer, grant]')
   if (clientId) {
     page = page.filter(
       (payment: IncomingPayment) => payment.grant.clientId === clientId
@@ -308,7 +303,7 @@ async function completeIncomingPayment(
     const payment = await IncomingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('asset')
+      .withGraphFetched('[asset, paymentPointer]')
     if (!payment) return IncomingPaymentError.UnknownPayment
     if (
       ![IncomingPaymentState.Pending, IncomingPaymentState.Processing].includes(

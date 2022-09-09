@@ -10,7 +10,7 @@ import { randomAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
-import { uuid } from '../../connector/core'
+import { v4 as uuid } from 'uuid'
 import { Grant } from '../../open_payments/auth/grantModel'
 
 describe('Incoming Payment Resolver', (): void => {
