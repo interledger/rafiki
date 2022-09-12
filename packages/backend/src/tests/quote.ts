@@ -1,7 +1,6 @@
 import assert from 'assert'
 import { IocContract } from '@adonisjs/fold'
 import * as Pay from '@interledger/pay'
-import { URL } from 'url'
 
 import { randomAsset } from './asset'
 import { AppServices } from '../app'
@@ -17,7 +16,7 @@ export async function createQuote(
   deps: IocContract<AppServices>,
   {
     paymentPointerId,
-    receiver,
+    receiver: receiverUrl,
     sendAmount,
     receiveAmount,
     validDestination = true
@@ -35,30 +34,23 @@ export async function createQuote(
   const config = await deps.use('config')
   let receiveAsset: AssetOptions | undefined
   if (validDestination) {
-    const receiverUrl = new URL(receiver)
-    const receiverUrlPathParts = receiverUrl.pathname.split('/')
-    const incomingPaymentId =
-      receiverUrlPathParts.pop() || receiverUrlPathParts.pop() // handle trailing slash
-    const incomingPaymentService = await deps.use('incomingPaymentService')
-    const incomingPayment = await incomingPaymentService.get(incomingPaymentId)
-    assert.ok(incomingPayment)
-    assert.ok(incomingPayment.incomingAmount || receiveAmount || sendAmount)
+    const clientService = await deps.use('openPaymentsClientService')
+    const receiver = await clientService.receiver.get(receiverUrl)
+    assert.ok(receiver)
+    assert.ok(receiver.incomingAmount || receiveAmount || sendAmount)
     if (receiveAmount) {
       assert.ok(
-        incomingPayment.asset.code === receiveAmount.assetCode &&
-          incomingPayment.asset.scale === receiveAmount.assetScale
+        receiver.assetCode === receiveAmount.assetCode &&
+          receiver.assetScale === receiveAmount.assetScale
       )
       assert.ok(
-        !incomingPayment.incomingAmount ||
-          receiveAmount.value <= incomingPayment.incomingAmount.value
+        !receiver.incomingAmount ||
+          receiveAmount.value <= receiver.incomingAmount.value
       )
     } else {
-      receiveAsset = {
-        code: incomingPayment.asset.code,
-        scale: incomingPayment.asset.scale
-      }
+      receiveAsset = receiver.asset
       if (!sendAmount) {
-        receiveAmount = incomingPayment.incomingAmount
+        receiveAmount = receiver.incomingAmount
       }
     }
   } else {
@@ -96,7 +88,7 @@ export async function createQuote(
     .insertAndFetch({
       paymentPointerId,
       assetId: paymentPointer.assetId,
-      receiver,
+      receiver: receiverUrl,
       sendAmount,
       receiveAmount,
       maxPacketAmount: BigInt('9223372036854775807'),

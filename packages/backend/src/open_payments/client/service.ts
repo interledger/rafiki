@@ -137,6 +137,34 @@ export async function createOpenPaymentsClientService(
   }
 }
 
+async function getConnection(
+  deps: ServiceDependencies,
+  url: string
+): Promise<ConnectionJSON | undefined> {
+  const requestHeaders = {
+    Authorization: `GNAP ${deps.accessToken}`,
+    'Content-Type': 'application/json'
+  }
+  try {
+    const { status, data } = await axios.get(url, {
+      headers: requestHeaders,
+      timeout: REQUEST_TIMEOUT,
+      validateStatus: (status) => status === 200
+    })
+    if (
+      !deps.validateConnection({
+        status,
+        body: data
+      })
+    ) {
+      throw new Error('unreachable')
+    }
+    return data
+  } catch (_) {
+    return undefined
+  }
+}
+
 async function getIncomingPayment(
   deps: ServiceDependencies,
   url: string
@@ -174,11 +202,10 @@ async function getReceiver(
   url: string
 ): Promise<Receiver | undefined> {
   if (url.match(CONNECTION_URL_REGEX)) {
-    // TODO
-    // const connection = await getConnection(deps, url)
-    // if (connection) {
-    //   return Receiver.fromConnection(connection)
-    // }
+    const connection = await getConnection(deps, url)
+    if (connection) {
+      return Receiver.fromConnection(connection)
+    }
   } else if (url.match(INCOMING_PAYMENT_URL_REGEX)) {
     const incomingPayment = await getIncomingPayment(deps, url)
     if (incomingPayment) {
