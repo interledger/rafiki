@@ -64,11 +64,15 @@ async function getIncomingPayment(
   ctx: ReadContext
 ): Promise<void> {
   let incomingPayment: IncomingPayment | undefined
-  const clientId = ctx.grant
-    ? ctx.grant?.access[0].actions.includes(AccessAction.ReadAll)
+  let clientId = undefined
+  const incomingAccess = ctx.grant?.access.filter(
+    (access) => access.type === 'incoming-payment'
+  )
+  if (incomingAccess && incomingAccess.length === 1) {
+    clientId = incomingAccess[0].actions.includes(AccessAction.ReadAll)
       ? undefined
       : ctx.grant.clientId
-    : undefined
+  }
   try {
     incomingPayment = await deps.incomingPaymentService.get(
       ctx.params.incomingPaymentId,
@@ -154,11 +158,15 @@ async function listIncomingPayments(
   ctx: ListContext
 ): Promise<void> {
   const pagination = parsePaginationQueryParameters(ctx.request.query)
-  const clientId = ctx.grant
-    ? ctx.grant.access[0].actions.includes(AccessAction.ListAll)
+  let clientId = undefined
+  const incomingAccess = ctx.grant?.access.filter(
+    (access) => access.type === 'incoming-payment'
+  )
+  if (incomingAccess && incomingAccess.length === 1) {
+    clientId = incomingAccess[0].actions.includes(AccessAction.ListAll)
       ? undefined
       : ctx.grant.clientId
-    : undefined
+  }
   try {
     const page = await deps.incomingPaymentService.getPaymentPointerPage(
       ctx.paymentPointer.id,

@@ -100,7 +100,7 @@ describe('Incoming Payment Routes', (): void => {
         access: [
           {
             type: AccessType.IncomingPayment,
-            actions: [AccessAction.ReadAll]
+            actions: [AccessAction.Read]
           }
         ]
       })
@@ -349,7 +349,7 @@ describe('Incoming Payment Routes', (): void => {
         access: [
           {
             type: AccessType.IncomingPayment,
-            actions: [AccessAction.ListAll]
+            actions: [AccessAction.List]
           }
         ]
       })
@@ -366,6 +366,7 @@ describe('Incoming Payment Routes', (): void => {
         createItem: async (index: number) => {
           const payment = await createIncomingPayment(deps, {
             paymentPointerId: paymentPointer.id,
+            grantId: withGrant ? referenceGrant.id : undefined,
             description: `p${index}`,
             expiresAt
           })
