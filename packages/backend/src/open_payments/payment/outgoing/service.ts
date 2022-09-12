@@ -126,7 +126,8 @@ async function createOutgoingPayment(
               knex: trx
             },
             payment,
-            options.grant
+            options.grant,
+            options.callback
           ))
         ) {
           throw OutgoingPaymentError.InsufficientGrant
@@ -269,9 +270,12 @@ async function validateGrant(
   }
 
   //lock grant
-  await GrantModel.query(deps.knex)
-    .findById(grant.grant)
-    .forUpdate()
+  //TODO: update to use objection once it supports forNoKeyUpdate
+  await deps
+    .knex<GrantModel>('grants')
+    .select()
+    .where('id', grant.grant)
+    .forNoKeyUpdate()
     .timeout(5000)
   if (callback) await new Promise(callback)
 
