@@ -259,16 +259,19 @@ async function getPaymentPointerPage(
   clientId?: string
 ): Promise<IncomingPayment[]> {
   let page: IncomingPayment[]
-  page = await IncomingPayment.query(deps.knex)
-    .getPage(pagination)
-    .where({
-      paymentPointerId
-    })
-    .withGraphFetched('[asset, paymentPointer, grant]')
-  if (clientId) {
-    page = page.filter(
-      (payment: IncomingPayment) => payment.grant.clientId === clientId
-    )
+  if (!clientId) {
+    page = await IncomingPayment.query(deps.knex)
+      .getPage(pagination)
+      .where({
+        paymentPointerId
+      })
+      .withGraphFetched('[asset, paymentPointer, grant]')
+  } else {
+    page = await IncomingPayment.query(deps.knex)
+      .getPage(pagination)
+      .where('incomingPayments.paymentPointerId', paymentPointerId)
+      .andWhere('grant.clientId', clientId)
+      .withGraphJoined('[asset, paymentPointer, grant]')
   }
 
   const amounts = await deps.accountingService.getAccountsTotalReceived(

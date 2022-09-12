@@ -46,6 +46,7 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
    * @returns Model[] An array of Models that form a page.
    */
   getPage(pagination?: Pagination): this {
+    const tableName = this.modelClass().tableName
     if (
       typeof pagination?.before === 'undefined' &&
       typeof pagination?.last === 'number'
@@ -62,7 +63,7 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
      */
     if (typeof pagination?.after === 'string') {
       return this.whereRaw(
-        '("createdAt", "id") > (select "createdAt" :: TIMESTAMP, "id" from ?? where "id" = ?)',
+        `("${tableName}"."createdAt", "${tableName}"."id") > (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
         [this.modelClass().tableName, pagination.after]
       )
         .orderBy([
@@ -77,7 +78,7 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
      */
     if (typeof pagination?.before === 'string') {
       return this.whereRaw(
-        '("createdAt", "id") < (select "createdAt" :: TIMESTAMP, "id" from ?? where "id" = ?)',
+        `("${tableName}"."createdAt", "${tableName}"."id") < (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
         [this.modelClass().tableName, pagination.before]
       )
         .orderBy([
