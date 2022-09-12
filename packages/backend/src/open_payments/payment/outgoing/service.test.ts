@@ -306,7 +306,6 @@ describe('OutgoingPaymentService', (): void => {
         const options = {
           paymentPointerId,
           quoteId: quote.id,
-          grant: referenceGrant.id,
           description: 'rent',
           externalRef: '202201'
         }
@@ -365,8 +364,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.create({
           paymentPointerId: uuid(),
-          quoteId,
-          grant: referenceGrant.id
+          quoteId
         })
       ).resolves.toEqual(OutgoingPaymentError.UnknownPaymentPointer)
     })
@@ -375,8 +373,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.create({
           paymentPointerId,
-          quoteId: uuid(),
-          grant: referenceGrant.id
+          quoteId: uuid()
         })
       ).resolves.toEqual(OutgoingPaymentError.UnknownQuote)
     })
@@ -391,8 +388,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.create({
           paymentPointerId: receiverPaymentPointer.id,
-          quoteId: quote.id,
-          grant: referenceGrant.id
+          quoteId: quote.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
     })
@@ -410,8 +406,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.create({
           paymentPointerId,
-          quoteId: quote.id,
-          grant: referenceGrant.id
+          quoteId: quote.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
     })
@@ -771,7 +766,6 @@ describe('OutgoingPaymentService', (): void => {
         }
         const payment = await createOutgoingPayment(deps, {
           paymentPointerId,
-          grant: referenceGrant.id,
           ...opts
         })
 
@@ -1064,7 +1058,6 @@ describe('OutgoingPaymentService', (): void => {
     beforeEach(async (): Promise<void> => {
       payment = await createOutgoingPayment(deps, {
         paymentPointerId,
-        grant: referenceGrant.id,
         receiver,
         sendAmount,
         validDestination: false
@@ -1137,7 +1130,6 @@ describe('OutgoingPaymentService', (): void => {
       createModel: () =>
         createOutgoingPayment(deps, {
           paymentPointerId,
-          grant: referenceGrant.id,
           receiver,
           sendAmount,
           validDestination: false

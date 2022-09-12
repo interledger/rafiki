@@ -40,7 +40,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   const createPayment = async (options: {
     paymentPointerId: string
-    grant: Grant | string
+    grant?: Grant | string
     description?: string
     externalRef?: string
   }): Promise<OutgoingPayment> => {
@@ -109,7 +109,6 @@ describe('Outgoing Payment Routes', (): void => {
       async ({ failed }): Promise<void> => {
         const outgoingPayment = await createPayment({
           paymentPointerId: paymentPointer.id,
-          grant: grant.id,
           description: 'rent',
           externalRef: '202201'
         })

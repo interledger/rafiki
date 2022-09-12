@@ -562,11 +562,6 @@ describe('QuoteService', (): void => {
       jest
         .spyOn(ratesService, 'prices')
         .mockImplementation(() => Promise.reject(new Error('fail')))
-      const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: receivingPaymentPointer.id,
-        grantId: grant.id
-      })
-      assert.ok(incomingPayment)
       await expect(
         quoteService.create({
           paymentPointerId,

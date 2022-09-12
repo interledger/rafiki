@@ -100,8 +100,8 @@ export class IncomingPayment
   public externalRef?: string
   public connectionId!: string
 
-  public grantId!: string
-  public grant!: Grant
+  public grantId?: string
+  public grant?: Grant
 
   public processAt!: Date | null
 

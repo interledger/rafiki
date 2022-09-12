@@ -185,7 +185,11 @@ describe('Incoming Payment Routes', (): void => {
     })
   })
 
-  describe('create', (): void => {
+  describe.each`
+    withGrant | description
+    ${false}  | ${'without grant'}
+    ${true}   | ${'with grant'}
+  `('create - $description', ({ withGrant }): void => {
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
       const ctx = setup<CreateContext<CreateBody>>(
         { body: {} },
@@ -213,17 +217,19 @@ describe('Incoming Payment Routes', (): void => {
         externalRef,
         expiresAt
       }): Promise<void> => {
-        const grant = new Grant({
-          active: true,
-          grant: referenceGrant.id,
-          clientId: referenceGrant.clientId,
-          access: [
-            {
-              type: AccessType.IncomingPayment,
-              actions: [AccessAction.Create]
-            }
-          ]
-        })
+        const grant = withGrant
+          ? new Grant({
+              active: true,
+              grant: referenceGrant.id,
+              clientId: referenceGrant.clientId,
+              access: [
+                {
+                  type: AccessType.IncomingPayment,
+                  actions: [AccessAction.Create]
+                }
+              ]
+            })
+          : undefined
         const ctx = setup<CreateContext<CreateBody>>(
           {
             body: {
@@ -287,7 +293,6 @@ describe('Incoming Payment Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        grantId: referenceGrant.id,
         description,
         expiresAt,
         incomingAmount,
@@ -361,7 +366,6 @@ describe('Incoming Payment Routes', (): void => {
         createItem: async (index: number) => {
           const payment = await createIncomingPayment(deps, {
             paymentPointerId: paymentPointer.id,
-            grantId: referenceGrant.id,
             description: `p${index}`,
             expiresAt
           })

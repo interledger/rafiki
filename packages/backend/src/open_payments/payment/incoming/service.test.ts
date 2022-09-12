@@ -32,7 +32,6 @@ describe('Incoming Payment Service', (): void => {
   let paymentPointerId: string
   let accountingService: AccountingService
   const asset = randomAsset()
-  let grant: Grant
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -44,10 +43,6 @@ describe('Incoming Payment Service', (): void => {
   beforeEach(async (): Promise<void> => {
     incomingPaymentService = await deps.use('incomingPaymentService')
     paymentPointerId = (await createPaymentPointer(deps, { asset })).id
-    grant = await Grant.query().insert({
-      id: uuid(),
-      clientId: uuid()
-    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -63,6 +58,30 @@ describe('Incoming Payment Service', (): void => {
     test('An incoming payment can be created', async (): Promise<void> => {
       const incomingPayment = await incomingPaymentService.create({
         paymentPointerId,
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        description: 'Test incoming payment',
+        externalRef: '#123'
+      })
+      assert.ok(!isIncomingPaymentError(incomingPayment))
+      expect(incomingPayment).toMatchObject({
+        id: incomingPayment.id,
+        asset,
+        processAt: new Date(incomingPayment.expiresAt.getTime())
+      })
+    })
+
+    test('An incoming payment with corresponding grant can be created', async (): Promise<void> => {
+      const grant = await Grant.query().insert({
+        id: uuid(),
+        clientId: uuid()
+      })
+      const incomingPayment = await incomingPaymentService.create({
+        paymentPointerId,
         grantId: grant.id,
         incomingAmount: {
           value: BigInt(123),
@@ -76,7 +95,6 @@ describe('Incoming Payment Service', (): void => {
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
         id: incomingPayment.id,
-        grantId: grant.id,
         asset,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
@@ -86,7 +104,6 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId: uuid(),
-          grantId: grant.id,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -103,7 +120,6 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
-          grantId: grant.id,
           incomingAmount: {
             value: BigInt(123),
             assetCode: 'ABC',
@@ -117,7 +133,6 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
-          grantId: grant.id,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -134,7 +149,6 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
-          grantId: grant.id,
           incomingAmount: {
             value: BigInt(0),
             assetCode: 'ABC',
@@ -148,7 +162,6 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
-          grantId: grant.id,
           incomingAmount: {
             value: BigInt(-13),
             assetCode: 'ABC',
@@ -165,7 +178,6 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           paymentPointerId,
-          grantId: grant.id,
           incomingAmount: {
             value: BigInt(0),
             assetCode: 'ABC',
@@ -185,7 +197,12 @@ describe('Incoming Payment Service', (): void => {
 
   describe('Get incoming payment', (): void => {
     let incomingPayment: IncomingPayment
+    let grant: Grant
     beforeEach(async (): Promise<void> => {
+      grant = await Grant.query().insert({
+        id: uuid(),
+        clientId: uuid()
+      })
       incomingPayment = (await incomingPaymentService.create({
         paymentPointerId,
         grantId: grant.id,
@@ -231,7 +248,6 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       const incomingPaymentOrError = await incomingPaymentService.create({
         paymentPointerId,
-        grantId: grant.id,
         description: 'Test incoming payment',
         incomingAmount: {
           value: BigInt(123),
@@ -290,7 +306,6 @@ describe('Incoming Payment Service', (): void => {
     test('Does not process not-expired pending incoming payment', async (): Promise<void> => {
       const incomingPaymentOrError = await incomingPaymentService.create({
         paymentPointerId,
-        grantId: grant.id,
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
@@ -316,7 +331,6 @@ describe('Incoming Payment Service', (): void => {
       test('Deactivates an expired incoming payment with received money', async (): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           paymentPointerId,
-          grantId: grant.id,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -351,7 +365,6 @@ describe('Incoming Payment Service', (): void => {
       test('Deletes an expired incoming payment (and account) with no money', async (): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           paymentPointerId,
-          grantId: grant.id,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -384,7 +397,6 @@ describe('Incoming Payment Service', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId,
-            grantId: grant.id,
             incomingAmount: {
               value: BigInt(123),
               assetCode: asset.code,
@@ -464,6 +476,13 @@ describe('Incoming Payment Service', (): void => {
     ${false} | ${'without client'}
     ${true}  | ${'with client'}
   `('Incoming payment pagination - $description', ({ client }): void => {
+    let grant: Grant
+    beforeEach(async (): Promise<void> => {
+      grant = await Grant.query().insert({
+        id: uuid(),
+        clientId: uuid()
+      })
+    })
     getPageTests({
       createModel: () =>
         createIncomingPayment(deps, {
@@ -493,7 +512,6 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId,
-        grantId: grant.id,
         description: 'Test incoming payment',
         incomingAmount: {
           value: BigInt(123),
@@ -606,7 +624,6 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = (await incomingPaymentService.create({
         paymentPointerId,
-        grantId: grant.id,
         description: 'Test incoming payment',
         incomingAmount: {
           value: BigInt(123),

@@ -21,8 +21,6 @@ import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
 import { PeerFactory } from '../tests/peerFactory'
 import { isAssetError } from '../asset/errors'
-import { v4 as uuid } from 'uuid'
-import { Grant } from '../open_payments/auth/grantModel'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -32,7 +30,6 @@ describe('Pagination', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let quoteService: QuoteService
   let config: IAppConfig
-  let grant: Grant
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -86,10 +83,6 @@ describe('Pagination', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale
         }
-        grant = await Grant.query().insert({
-          id: uuid(),
-          clientId: uuid()
-        })
       })
 
       describe('incoming payments', (): void => {
@@ -114,8 +107,7 @@ describe('Pagination', (): void => {
             const paymentIds: string[] = []
             for (let i = 0; i < num; i++) {
               const payment = await createIncomingPayment(deps, {
-                paymentPointerId: defaultPaymentPointer.id,
-                grantId: grant.id
+                paymentPointerId: defaultPaymentPointer.id
               })
               paymentIds.push(payment.id)
             }
@@ -167,7 +159,6 @@ describe('Pagination', (): void => {
             for (let i = 0; i < num; i++) {
               const payment = await createOutgoingPayment(deps, {
                 paymentPointerId: defaultPaymentPointer.id,
-                grant: grant.id,
                 receiver: secondaryPaymentPointer.url,
                 sendAmount,
                 validDestination: false

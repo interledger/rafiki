@@ -25,7 +25,7 @@ export const EXPIRY = parse('P90D') // 90 days in future
 
 export interface CreateIncomingPaymentOptions {
   paymentPointerId: string
-  grantId: string
+  grantId?: string
   description?: string
   expiresAt?: Date
   incomingAmount?: Amount

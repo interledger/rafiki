@@ -491,7 +491,6 @@ type QuoteResponse {
 input CreateOutgoingPaymentInput {
   paymentPointerId: String!
   quoteId: String!
-  grant: String!
   description: String
   externalRef: String
 }

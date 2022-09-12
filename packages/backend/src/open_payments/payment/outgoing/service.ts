@@ -83,7 +83,7 @@ async function getOutgoingPayment(
 export interface CreateOutgoingPaymentOptions {
   paymentPointerId: string
   quoteId: string
-  grant: Grant | string
+  grant?: Grant | string
   description?: string
   externalRef?: string
   callback?: (f: unknown) => NodeJS.Timeout
@@ -93,8 +93,11 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
-  const grantId =
-    typeof options.grant === 'string' ? options.grant : options.grant.grant
+  const grantId = options.grant
+    ? typeof options.grant === 'string'
+      ? options.grant
+      : options.grant.grant
+    : undefined
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const payment = await OutgoingPayment.query(trx)
@@ -115,7 +118,7 @@ async function createOutgoingPayment(
         throw OutgoingPaymentError.InvalidQuote
       }
 
-      if (typeof options.grant !== 'string') {
+      if (options.grant && typeof options.grant !== 'string') {
         if (
           !(await validateGrant(
             {

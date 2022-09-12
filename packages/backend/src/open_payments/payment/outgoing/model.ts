@@ -25,8 +25,8 @@ export class OutgoingPayment
   public error?: string | null
   public stateAttempts!: number
 
-  public grantId!: string
-  public grant!: Grant
+  public grantId?: string
+  public grant?: Grant
 
   public get receiver(): string {
     return this.quote.receiver
