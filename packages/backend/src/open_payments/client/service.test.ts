@@ -35,7 +35,7 @@ describe('Open Payments Client Service', (): void => {
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
   })
-  describe('incomingPayment.get', (): void => {
+  describe('receiver.get', (): void => {
     test.each`
       incomingAmount | description  | externalRef
       ${undefined}   | ${undefined} | ${undefined}
@@ -56,22 +56,14 @@ describe('Open Payments Client Service', (): void => {
           },
           externalRef
         })
-        const resolvedPayment = await clientService.incomingPayment.get(
-          incomingPayment.url
-        )
+        const receiver = await clientService.receiver.get(incomingPayment.url)
         paymentPointer.scope.isDone()
-        expect(resolvedPayment).toEqual({
-          ...incomingPayment.toJSON(),
-          id: incomingPayment.url,
-          paymentPointer: incomingPayment.paymentPointer.url,
-          ilpStreamConnection: {
-            id: `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
-            ilpAddress: expect.any(String),
-            sharedSecret: expect.any(String),
-            assetCode: incomingPayment.asset.code,
-            assetScale: incomingPayment.asset.scale
-          }
-        })
+        expect(receiver.assetCode).toEqual(paymentPointer.asset.code)
+        expect(receiver.assetScale).toEqual(paymentPointer.asset.scale)
+        expect(receiver.incomingAmount).toEqual(incomingPayment.incomingAmount)
+        expect(receiver.receivedAmount).toEqual(incomingPayment.receivedAmount)
+        expect(receiver.ilpAddress).toEqual(expect.any(String))
+        expect(receiver.sharedSecret).toEqual(expect.any(Buffer))
       }
     )
     test.each`
@@ -89,7 +81,7 @@ describe('Open Payments Client Service', (): void => {
           .reply(statusCode)
         scope.isDone()
         await expect(
-          clientService.incomingPayment.get(incomingPaymentUrl.href)
+          clientService.receiver.get(incomingPaymentUrl.href)
         ).resolves.toBeUndefined()
       }
     )
@@ -104,7 +96,7 @@ describe('Open Payments Client Service', (): void => {
         }))
       scope.isDone()
       await expect(
-        clientService.incomingPayment.get(incomingPaymentUrl.href)
+        clientService.receiver.get(incomingPaymentUrl.href)
       ).resolves.toBeUndefined()
     })
   })

@@ -9,10 +9,9 @@ import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
 import { Amount } from '../amount'
-import { OpenPaymentsClientService } from '../client/service'
+import { OpenPaymentsClientService, Receiver } from '../client/service'
 import { PaymentPointer } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
-import { isReceiver, Receiver, toResolvedPayment } from '../shared/receiver'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
 
@@ -97,11 +96,11 @@ async function createQuote(
   }
 
   try {
-    const incomingPayment = await resolveReceiver(deps, options)
+    const receiver = await resolveReceiver(deps, options)
     const ilpQuote = await startQuote(deps, {
       ...options,
       paymentPointer,
-      incomingPayment
+      receiver
     })
 
     return await Quote.transaction(deps.knex, async (trx) => {
@@ -117,8 +116,8 @@ async function createQuote(
           },
           receiveAmount: {
             value: ilpQuote.minDeliveryAmount,
-            assetCode: incomingPayment.receivedAmount.assetCode,
-            assetScale: incomingPayment.receivedAmount.assetScale
+            assetCode: receiver.assetCode,
+            assetScale: receiver.assetScale
           },
           // Cap at MAX_INT64 because of postgres type limits.
           maxPacketAmount:
@@ -135,9 +134,8 @@ async function createQuote(
 
       let maxReceiveAmountValue: bigint | undefined
       if (options.sendAmount) {
-        const receivingPaymentValue = incomingPayment?.incomingAmount
-          ? BigInt(incomingPayment.incomingAmount.value) -
-            BigInt(incomingPayment.receivedAmount.value)
+        const receivingPaymentValue = receiver.incomingAmount
+          ? receiver.incomingAmount.value - receiver.receivedAmount.value
           : undefined
         maxReceiveAmountValue =
           receivingPaymentValue &&
@@ -167,40 +165,35 @@ export async function resolveReceiver(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Receiver> {
-  const incomingPayment = await deps.clientService.incomingPayment.get(
-    options.receiver
-  )
-  if (!incomingPayment || !isReceiver(incomingPayment)) {
+  const receiver = await deps.clientService.receiver.get(options.receiver)
+  if (!receiver) {
     throw QuoteError.InvalidReceiver
   }
   if (options.receiveAmount) {
     if (
-      options.receiveAmount.assetScale !==
-        incomingPayment.receivedAmount.assetScale ||
-      options.receiveAmount.assetCode !==
-        incomingPayment.receivedAmount.assetCode
+      options.receiveAmount.assetScale !== receiver.assetScale ||
+      options.receiveAmount.assetCode !== receiver.assetCode
     ) {
       throw QuoteError.InvalidAmount
     }
-    if (incomingPayment.incomingAmount) {
+    if (receiver.incomingAmount) {
       const receivingPaymentValue =
-        BigInt(incomingPayment.incomingAmount.value) -
-        BigInt(incomingPayment.receivedAmount.value)
+        receiver.incomingAmount.value - receiver.receivedAmount.value
       if (receivingPaymentValue < options.receiveAmount.value) {
         throw QuoteError.InvalidAmount
       }
     }
-  } else if (!options.sendAmount && !incomingPayment.incomingAmount) {
+  } else if (!options.sendAmount && !receiver.incomingAmount) {
     throw QuoteError.InvalidReceiver
   }
-  return incomingPayment
+  return receiver
 }
 
 export interface StartQuoteOptions {
   paymentPointer: PaymentPointer
   sendAmount?: Amount
   receiveAmount?: Amount
-  incomingPayment: Receiver
+  receiver: Receiver
 }
 
 export async function startQuote(
@@ -220,7 +213,7 @@ export async function startQuote(
     await plugin.connect()
     const quoteOptions: Pay.QuoteOptions = {
       plugin,
-      destination: toResolvedPayment(options.incomingPayment),
+      destination: options.receiver.toResolvedPayment(),
       sourceAsset: {
         scale: options.paymentPointer.asset.scale,
         code: options.paymentPointer.asset.code
@@ -230,8 +223,7 @@ export async function startQuote(
       quoteOptions.amountToSend = options.sendAmount.value
     } else {
       quoteOptions.amountToDeliver =
-        options.receiveAmount?.value ||
-        BigInt(options.incomingPayment.incomingAmount.value)
+        options.receiveAmount?.value || options.receiver.incomingAmount.value
     }
     const quote = await Pay.startQuote({
       ...quoteOptions,

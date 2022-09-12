@@ -1,6 +1,6 @@
 import base64url from 'base64url'
 import { IlpAddress } from 'ilp-packet'
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamCredentials, StreamServer } from '@interledger/stream-receiver'
 
 import { BaseService } from '../../shared/baseService'
 import { IncomingPayment } from '../payment/incoming/model'
@@ -13,15 +13,41 @@ export type ConnectionJSON = {
   assetScale: number
 }
 
-export class Connection {
-  public constructor(
-    public readonly id: string,
+export abstract class ConnectionBase {
+  protected constructor(
     public readonly ilpAddress: IlpAddress,
     public readonly sharedSecret: Buffer,
     public readonly assetCode: string,
-    public readonly assetScale: number,
-    private readonly openPaymentsUrl: string
+    public readonly assetScale: number
   ) {}
+}
+
+export class Connection extends ConnectionBase {
+  static fromPayment(options: {
+    payment: IncomingPayment
+    credentials: StreamCredentials
+    openPaymentsUrl: string
+  }): Connection {
+    return new this(
+      options.payment.connectionId,
+      options.openPaymentsUrl,
+      options.credentials.ilpAddress,
+      options.credentials.sharedSecret,
+      options.payment.asset.code,
+      options.payment.asset.scale
+    )
+  }
+
+  private constructor(
+    public readonly id: string,
+    private readonly openPaymentsUrl: string,
+    ilpAddress: IlpAddress,
+    sharedSecret: Buffer,
+    assetCode: string,
+    assetScale: number
+  ) {
+    super(ilpAddress, sharedSecret, assetCode, assetScale)
+  }
 
   public get url(): string {
     return `${this.openPaymentsUrl}/connections/${this.id}`
@@ -71,21 +97,18 @@ function getConnection(
   if (!payment.connectionId) {
     return undefined
   }
-  const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
+  const credentials = deps.streamServer.generateCredentials({
     paymentTag: payment.id,
     asset: {
       code: payment.asset.code,
       scale: payment.asset.scale
     }
   })
-  return new Connection(
-    payment.connectionId,
-    ilpAddress,
-    sharedSecret,
-    payment.asset.code,
-    payment.asset.scale,
-    deps.openPaymentsUrl
-  )
+  return Connection.fromPayment({
+    payment,
+    credentials,
+    openPaymentsUrl: deps.openPaymentsUrl
+  })
 }
 
 function getConnectionUrl(

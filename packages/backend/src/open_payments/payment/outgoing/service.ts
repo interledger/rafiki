@@ -18,7 +18,6 @@ import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
 import { OpenPaymentsClientService } from '../../client/service'
-import { isReceiver } from '../../shared/receiver'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -139,14 +138,12 @@ async function createOutgoingPayment(
           throw OutgoingPaymentError.InsufficientGrant
         }
       }
-      const incomingPayment = await deps.clientService.incomingPayment.get(
-        payment.receiver
-      )
-      if (!isReceiver(incomingPayment)) {
+      const receiver = await deps.clientService.receiver.get(payment.receiver)
+      if (!receiver) {
         throw OutgoingPaymentError.InvalidQuote
       }
       const peer = await deps.peerService.getByDestinationAddress(
-        incomingPayment.ilpStreamConnection.ilpAddress
+        receiver.ilpAddress
       )
       if (peer) {
         await payment.$query(trx).patch({ peerId: peer.id })

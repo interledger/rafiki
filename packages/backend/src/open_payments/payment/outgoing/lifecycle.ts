@@ -8,8 +8,7 @@ import {
   PaymentEventType
 } from './model'
 import { ServiceDependencies } from './service'
-import { IncomingPaymentJSON } from '../incoming/model'
-import { isReceiver, toResolvedPayment } from '../../shared/receiver'
+import { Receiver } from '../../client/service'
 import { IlpPlugin } from '../../../shared/ilp_plugin'
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -20,15 +19,7 @@ export async function handleSending(
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
 
-  const incomingPayment = await deps.clientService.incomingPayment.get(
-    payment.receiver
-  )
-
-  if (!incomingPayment) {
-    throw LifecycleError.MissingIncomingPayment
-  }
-
-  validateAssets(deps, payment, incomingPayment)
+  const receiver = await deps.clientService.receiver.get(payment.receiver)
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
@@ -36,27 +27,27 @@ export async function handleSending(
     throw LifecycleError.MissingBalance
   }
 
-  if (!isReceiver(incomingPayment)) {
+  if (!receiver) {
     // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the incoming payment could have been paid by a totally different payment in the time since the quote.
     deps.logger.warn(
       {
-        amountSent,
-        incomingPayment
+        amountSent
       },
-      'handleSending payment was already paid'
+      'handleSending missing or completed/expired receiver'
     )
     await handleCompleted(deps, payment)
     return
   }
 
+  validateAssets(deps, payment, receiver)
+
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
   const newMaxSourceAmount = payment.sendAmount.value - amountSent
 
   let newMinDeliveryAmount
-  if (incomingPayment.incomingAmount) {
+  if (receiver.incomingAmount) {
     newMinDeliveryAmount =
-      BigInt(incomingPayment.incomingAmount.value) -
-      BigInt(incomingPayment.receivedAmount.value)
+      receiver.incomingAmount.value - receiver.receivedAmount.value
   } else {
     // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
     // eslint-disable-next-line no-case-declarations
@@ -75,7 +66,7 @@ export async function handleSending(
         newMaxSourceAmount,
         newMinDeliveryAmount,
         amountSent,
-        incomingPayment
+        receiver
       },
       'handleSending payment was already paid'
     )
@@ -111,7 +102,7 @@ export async function handleSending(
     minExchangeRate
   }
 
-  const destination = toResolvedPayment(incomingPayment)
+  const destination = receiver.toResolvedPayment()
   const receipt = await Pay.pay({ plugin, destination, quote }).finally(() => {
     return Pay.closeConnection(plugin, destination).catch((err) => {
       // Ignore connection close failures, all of the money was delivered.
@@ -201,19 +192,19 @@ export const sendWebhookEvent = async (
 const validateAssets = (
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  receiver: IncomingPaymentJSON
+  receiver: Receiver
 ): void => {
   if (payment.assetId !== payment.paymentPointer?.assetId) {
     throw LifecycleError.SourceAssetConflict
   }
   if (
-    payment.receiveAmount.assetScale !== receiver.receivedAmount.assetScale ||
-    payment.receiveAmount.assetCode !== receiver.receivedAmount.assetCode
+    payment.receiveAmount.assetScale !== receiver.assetScale ||
+    payment.receiveAmount.assetCode !== receiver.assetCode
   ) {
     deps.logger.warn(
       {
         oldAsset: payment.receiveAmount,
-        newAsset: receiver.receivedAmount
+        newAsset: receiver.asset
       },
       'receiver asset changed'
     )
