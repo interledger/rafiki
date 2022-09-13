@@ -340,7 +340,7 @@ describe('Incoming Payment Routes', (): void => {
   })
 
   describe('list', (): void => {
-    let grant
+    let grant: Grant
     beforeEach(async (): Promise<void> => {
       grant = new Grant({
         active: true,

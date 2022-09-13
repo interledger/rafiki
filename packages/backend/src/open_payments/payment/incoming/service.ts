@@ -265,7 +265,7 @@ async function getPaymentPointerPage(
       .where({
         paymentPointerId
       })
-      .withGraphFetched('[asset, paymentPointer, grant]')
+      .withGraphFetched('[asset, paymentPointer]')
   } else {
     page = await IncomingPayment.query(deps.knex)
       .getPage(pagination)
