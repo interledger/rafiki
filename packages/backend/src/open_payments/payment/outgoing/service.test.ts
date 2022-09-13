@@ -1125,11 +1125,23 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
-  describe('getPaymentPointerPage', (): void => {
+  describe.each`
+    client   | description
+    ${false} | ${'without client'}
+    ${true}  | ${'with client'}
+  `('Outgoing payment pagination - $description', ({ client }): void => {
+    let grant: GrantModel
+    beforeEach(async (): Promise<void> => {
+      grant = await GrantModel.query().insert({
+        id: uuid(),
+        clientId: uuid()
+      })
+    })
     getPageTests({
       createModel: () =>
         createOutgoingPayment(deps, {
           paymentPointerId,
+          grant: grant.id,
           receiver,
           sendAmount,
           validDestination: false
@@ -1137,7 +1149,8 @@ describe('OutgoingPaymentService', (): void => {
       getPage: (pagination: Pagination) =>
         outgoingPaymentService.getPaymentPointerPage(
           paymentPointerId,
-          pagination
+          pagination,
+          client ? grant.clientId : undefined
         )
     })
   })

@@ -29,7 +29,7 @@ import { Interval } from 'luxon'
 import { knex } from 'knex'
 
 export interface OutgoingPaymentService {
-  get(id: string): Promise<OutgoingPayment | undefined>
+  get(id: string, clientId?: string): Promise<OutgoingPayment | undefined>
   create(
     options: CreateOutgoingPaymentOptions
   ): Promise<OutgoingPayment | OutgoingPaymentError>
@@ -39,7 +39,8 @@ export interface OutgoingPaymentService {
   processNext(): Promise<string | undefined>
   getPaymentPointerPage(
     paymentPointerId: string,
-    pagination?: Pagination
+    pagination?: Pagination,
+    clientId?: string
   ): Promise<OutgoingPayment[]>
 }
 
@@ -59,23 +60,32 @@ export async function createOutgoingPaymentService(
     logger: deps_.logger.child({ service: 'OutgoingPaymentService' })
   }
   return {
-    get: (id) => getOutgoingPayment(deps, id),
+    get: (id, clientId) => getOutgoingPayment(deps, id, clientId),
     create: (options: CreateOutgoingPaymentOptions) =>
       createOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
-    getPaymentPointerPage: (paymentPointerId, pagination) =>
-      getPaymentPointerPage(deps, paymentPointerId, pagination)
+    getPaymentPointerPage: (paymentPointerId, pagination, clientId) =>
+      getPaymentPointerPage(deps, paymentPointerId, pagination, clientId)
   }
 }
 
 async function getOutgoingPayment(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  clientId?: string
 ): Promise<OutgoingPayment | undefined> {
-  const outgoingPayment = await OutgoingPayment.query(deps.knex)
-    .findById(id)
-    .withGraphJoined('quote.asset')
+  let outgoingPayment: OutgoingPayment
+  if (!clientId) {
+    outgoingPayment = await OutgoingPayment.query(deps.knex)
+      .findById(id)
+      .withGraphJoined('quote.asset')
+  } else {
+    outgoingPayment = await OutgoingPayment.query(deps.knex)
+      .findById(id)
+      .withGraphJoined('[quote.asset, grant]')
+      .where('grant.clientId', clientId)
+  }
   if (outgoingPayment) return await addSentAmount(deps, outgoingPayment)
   else return
 }
@@ -387,14 +397,24 @@ async function fundPayment(
 async function getPaymentPointerPage(
   deps: ServiceDependencies,
   paymentPointerId: string,
-  pagination?: Pagination
+  pagination?: Pagination,
+  clientId?: string
 ): Promise<OutgoingPayment[]> {
-  const page = await OutgoingPayment.query(deps.knex)
-    .getPage(pagination)
-    .where({
-      paymentPointerId
-    })
-    .withGraphFetched('quote.asset')
+  let page: OutgoingPayment[]
+  if (!clientId) {
+    page = await OutgoingPayment.query(deps.knex)
+      .getPage(pagination)
+      .where({
+        paymentPointerId
+      })
+      .withGraphFetched('quote.asset')
+  } else {
+    page = await OutgoingPayment.query(deps.knex)
+      .getPage(pagination)
+      .where('outgoingPayments.paymentPointerId', paymentPointerId)
+      .andWhere('grant.clientId', clientId)
+      .withGraphJoined('[quote.asset, grant]')
+  }
 
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
