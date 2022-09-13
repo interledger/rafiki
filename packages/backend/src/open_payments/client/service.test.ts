@@ -65,7 +65,7 @@ describe('Open Payments Client Service', (): void => {
           id: incomingPayment.url,
           paymentPointer: incomingPayment.paymentPointer.url,
           ilpStreamConnection: {
-            id: `${Config.publicHost}/connections/${incomingPayment.connectionId}`,
+            id: `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
             ilpAddress: expect.any(String),
             sharedSecret: expect.any(String)
           }

@@ -7,7 +7,7 @@ import { IncomingPayment } from '../payment/incoming/model'
 
 export interface ConnectionOptions extends StreamCredentials {
   id: string
-  publicHost: string
+  openPaymentsUrl: string
 }
 
 export type ConnectionJSON = {
@@ -21,17 +21,17 @@ export class Connection {
     this.id = options.id
     this.ilpAddress = options.ilpAddress
     this.sharedSecret = options.sharedSecret
-    this.publicHost = options.publicHost
+    this.openPaymentsUrl = options.openPaymentsUrl
   }
 
   public readonly id: string
   public readonly ilpAddress: IlpAddress
   public readonly sharedSecret: Buffer
 
-  private readonly publicHost: string
+  private readonly openPaymentsUrl: string
 
   public get url(): string {
-    return `${this.publicHost}/connections/${this.id}`
+    return `${this.openPaymentsUrl}/connections/${this.id}`
   }
 
   public toJSON(): ConnectionJSON {
@@ -49,7 +49,7 @@ export interface ConnectionService {
 }
 
 export interface ServiceDependencies extends BaseService {
-  publicHost: string
+  openPaymentsUrl: string
   streamServer: StreamServer
 }
 
@@ -87,7 +87,7 @@ function getConnection(
     id: payment.connectionId,
     ilpAddress,
     sharedSecret,
-    publicHost: deps.publicHost
+    openPaymentsUrl: deps.openPaymentsUrl
   })
 }
 
@@ -98,5 +98,5 @@ function getConnectionUrl(
   if (!payment.connectionId) {
     return undefined
   }
-  return `${deps.publicHost}/connections/${payment.connectionId}`
+  return `${deps.openPaymentsUrl}/connections/${payment.connectionId}`
 }

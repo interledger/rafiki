@@ -53,7 +53,7 @@ describe('Connection Service', (): void => {
         sharedSecret: expect.any(Buffer)
       })
       expect(connection.url).toEqual(
-        `${Config.publicHost}/connections/${incomingPayment.connectionId}`
+        `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
       )
       expect(connection.toJSON()).toEqual({
         id: connection.url,
@@ -82,7 +82,7 @@ describe('Connection Service', (): void => {
   describe('getUrl', (): void => {
     test('returns connection url for incoming payment', (): void => {
       expect(connectionService.getUrl(incomingPayment)).toEqual(
-        `${Config.publicHost}/connections/${incomingPayment.connectionId}`
+        `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
       )
     })
 
