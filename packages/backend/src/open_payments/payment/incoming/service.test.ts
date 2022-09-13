@@ -224,13 +224,15 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: new Date(now.getTime() + 30_000),
+        connectionId: null
       })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: new Date(now.getTime() + 30_000),
+        connectionId: null
       })
     })
   })
@@ -291,7 +293,8 @@ describe('Incoming Payment Service', (): void => {
           incomingPaymentService.get(incomingPayment.id)
         ).resolves.toMatchObject({
           state: IncomingPaymentState.Expired,
-          processAt: new Date(now.getTime() + 30_000)
+          processAt: new Date(now.getTime() + 30_000),
+          connectionId: null
         })
       })
 
@@ -361,12 +364,14 @@ describe('Incoming Payment Service', (): void => {
           incomingPayment = (await incomingPaymentService.get(
             incomingPayment.id
           )) as IncomingPayment
-          expect(incomingPayment.processAt).not.toBeNull()
-          if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
-            expect(incomingPayment.state).toBe(IncomingPaymentState.Expired)
-          } else {
-            expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
-          }
+          expect(incomingPayment).toMatchObject({
+            state:
+              eventType === IncomingPaymentEventType.IncomingPaymentExpired
+                ? IncomingPaymentState.Expired
+                : IncomingPaymentState.Completed,
+            processAt: expect.any(Date),
+            connectionId: null
+          })
           await expect(
             accountingService.getTotalReceived(incomingPayment.id)
           ).resolves.toEqual(amountReceived)
@@ -450,13 +455,15 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: new Date(now.getTime() + 30_000),
+        connectionId: null
       })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: new Date(now.getTime() + 30_000),
+        connectionId: null
       })
     })
 
@@ -480,13 +487,15 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
+        processAt: new Date(incomingPayment.expiresAt.getTime()),
+        connectionId: null
       })
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
+        processAt: new Date(incomingPayment.expiresAt.getTime()),
+        connectionId: null
       })
     })
 
@@ -507,7 +516,8 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Expired
+        state: IncomingPaymentState.Expired,
+        connectionId: null
       })
       await expect(
         incomingPaymentService.complete(incomingPayment.id)
@@ -515,7 +525,8 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Expired
+        state: IncomingPaymentState.Expired,
+        connectionId: null
       })
     })
 
@@ -526,7 +537,8 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Completed
+        state: IncomingPaymentState.Completed,
+        connectionId: null
       })
       await expect(
         incomingPaymentService.complete(incomingPayment.id)
@@ -534,7 +546,8 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.get(incomingPayment.id)
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Completed
+        state: IncomingPaymentState.Completed,
+        connectionId: null
       })
     })
   })

@@ -73,7 +73,7 @@ function getConnection(
   deps: ServiceDependencies,
   payment: IncomingPayment
 ): Connection | undefined {
-  if (!payment.hasConnection) {
+  if (!payment.connectionId) {
     return undefined
   }
   const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
@@ -95,7 +95,7 @@ function getConnectionUrl(
   deps: ServiceDependencies,
   payment: IncomingPayment
 ): string | undefined {
-  if (!payment.hasConnection) {
+  if (!payment.connectionId) {
     return undefined
   }
   return `${deps.publicHost}/connections/${payment.connectionId}`
