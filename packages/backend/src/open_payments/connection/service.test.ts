@@ -58,7 +58,9 @@ describe('Connection Service', (): void => {
       expect(connection.toJSON()).toEqual({
         id: connection.url,
         ilpAddress: connection.ilpAddress,
-        sharedSecret: base64url(connection.sharedSecret)
+        sharedSecret: base64url(connection.sharedSecret),
+        assetCode: incomingPayment.asset.code,
+        assetScale: incomingPayment.asset.scale
       })
     })
 

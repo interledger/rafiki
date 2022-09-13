@@ -1,34 +1,27 @@
 import base64url from 'base64url'
 import { IlpAddress } from 'ilp-packet'
-import { StreamCredentials, StreamServer } from '@interledger/stream-receiver'
+import { StreamServer } from '@interledger/stream-receiver'
 
 import { BaseService } from '../../shared/baseService'
 import { IncomingPayment } from '../payment/incoming/model'
-
-export interface ConnectionOptions extends StreamCredentials {
-  id: string
-  openPaymentsUrl: string
-}
 
 export type ConnectionJSON = {
   id: string
   ilpAddress: IlpAddress
   sharedSecret: string
+  assetCode: string
+  assetScale: number
 }
 
 export class Connection {
-  constructor(options: ConnectionOptions) {
-    this.id = options.id
-    this.ilpAddress = options.ilpAddress
-    this.sharedSecret = options.sharedSecret
-    this.openPaymentsUrl = options.openPaymentsUrl
-  }
-
-  public readonly id: string
-  public readonly ilpAddress: IlpAddress
-  public readonly sharedSecret: Buffer
-
-  private readonly openPaymentsUrl: string
+  public constructor(
+    public readonly id: string,
+    public readonly ilpAddress: IlpAddress,
+    public readonly sharedSecret: Buffer,
+    public readonly assetCode: string,
+    public readonly assetScale: number,
+    private readonly openPaymentsUrl: string
+  ) {}
 
   public get url(): string {
     return `${this.openPaymentsUrl}/connections/${this.id}`
@@ -38,7 +31,9 @@ export class Connection {
     return {
       id: this.url,
       ilpAddress: this.ilpAddress,
-      sharedSecret: base64url(this.sharedSecret)
+      sharedSecret: base64url(this.sharedSecret),
+      assetCode: this.assetCode,
+      assetScale: this.assetScale
     }
   }
 }
@@ -83,12 +78,14 @@ function getConnection(
       scale: payment.asset.scale
     }
   })
-  return new Connection({
-    id: payment.connectionId,
+  return new Connection(
+    payment.connectionId,
     ilpAddress,
     sharedSecret,
-    openPaymentsUrl: deps.openPaymentsUrl
-  })
+    payment.asset.code,
+    payment.asset.scale,
+    deps.openPaymentsUrl
+  )
 }
 
 function getConnectionUrl(

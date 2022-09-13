@@ -169,7 +169,9 @@ describe('Incoming Payment Routes', (): void => {
           ilpAddress: expect.stringMatching(
             /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
           ),
-          sharedSecret
+          sharedSecret,
+          assetCode: asset.code,
+          assetScale: asset.scale
         }
       })
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
@@ -249,7 +251,9 @@ describe('Incoming Payment Routes', (): void => {
             ilpAddress: expect.stringMatching(
               /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
             ),
-            sharedSecret: expect.any(String)
+            sharedSecret: expect.any(String),
+            assetCode: asset.code,
+            assetScale: asset.scale
           }
         })
       }
