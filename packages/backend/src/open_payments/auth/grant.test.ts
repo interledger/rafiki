@@ -43,6 +43,34 @@ describe('Grant', (): void => {
           })
         ).toBe(true)
       })
+      test.each`
+        superAction             | subAction            | description
+        ${AccessAction.ReadAll} | ${AccessAction.Read} | ${'read'}
+        ${AccessAction.ListAll} | ${AccessAction.List} | ${'list'}
+      `(
+        'Returns true for $description super access',
+        async ({ superAction, subAction }): Promise<void> => {
+          const grant = new Grant({
+            active: true,
+            grant: 'PRY5NM33OM4TB8N6BW7',
+            clientId,
+            access: [
+              {
+                type,
+                actions: [superAction],
+                identifier
+              }
+            ]
+          })
+          expect(
+            grant.includesAccess({
+              type,
+              action: subAction,
+              identifier
+            })
+          ).toBe(true)
+        }
+      )
 
       test.each`
         type                          | action                   | identifier    | description
