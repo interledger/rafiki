@@ -1136,6 +1136,21 @@ describe('OutgoingPaymentService', (): void => {
         id: uuid(),
         clientId: uuid()
       })
+      if (client) {
+        const secondGrant = await GrantModel.query().insert({
+          id: uuid(),
+          clientId: uuid()
+        })
+        for (let i = 0; i < 10; i++) {
+          await createOutgoingPayment(deps, {
+            paymentPointerId,
+            grant: secondGrant.id,
+            receiver,
+            sendAmount,
+            validDestination: false
+          })
+        }
+      }
     })
     getPageTests({
       createModel: () =>

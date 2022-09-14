@@ -482,6 +482,26 @@ describe('Incoming Payment Service', (): void => {
         id: uuid(),
         clientId: uuid()
       })
+      if (client) {
+        const secondGrant = await Grant.query().insert({
+          id: uuid(),
+          clientId: uuid()
+        })
+        for (let i = 0; i < 10; i++) {
+          await createIncomingPayment(deps, {
+            paymentPointerId,
+            grantId: secondGrant.id,
+            incomingAmount: {
+              value: BigInt(789),
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            expiresAt: new Date(Date.now() + 30_000),
+            description: 'IncomingPayment',
+            externalRef: '#456'
+          })
+        }
+      }
     })
     getPageTests({
       createModel: () =>
