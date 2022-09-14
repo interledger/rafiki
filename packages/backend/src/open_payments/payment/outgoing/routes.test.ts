@@ -104,16 +104,16 @@ describe('Outgoing Payment Routes', (): void => {
       ${true}   | ${'with grant'}
     `('$description', ({ withGrant }): void => {
       test('returns 404 for nonexistent outgoing payment', async (): Promise<void> => {
-        const ctx = setup<ReadContext>(
-          {
+        const ctx = setup<ReadContext>({
+          reqOpts: {
             headers: { Accept: 'application/json' }
           },
-          {
+          params: {
             outgoingPaymentId: uuid()
           },
           paymentPointer,
-          withGrant ? grant : undefined
-        )
+          grant: withGrant ? grant : undefined
+        })
         await expect(outgoingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
           'status',
           404
@@ -138,18 +138,18 @@ describe('Outgoing Payment Routes', (): void => {
               .$query(knex)
               .patch({ state: OutgoingPaymentState.Failed })
           }
-          const ctx = setup<ReadContext>(
-            {
+          const ctx = setup<ReadContext>({
+            reqOpts: {
               headers: { Accept: 'application/json' },
               method: 'GET',
               url: `/outgoing-payments/${outgoingPayment.id}`
             },
-            {
+            params: {
               outgoingPaymentId: outgoingPayment.id
             },
             paymentPointer,
-            withGrant ? grant : undefined
-          )
+            grant: withGrant ? grant : undefined
+          })
           await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
           expect(ctx.response).toSatisfyApiSpec()
           expect(ctx.body).toEqual({

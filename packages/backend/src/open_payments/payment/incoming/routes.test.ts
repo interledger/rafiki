@@ -111,17 +111,16 @@ describe('Incoming Payment Routes', (): void => {
       ${true}   | ${'with grant'}
     `('$description', ({ withGrant }): void => {
       test('returns 404 on unknown incoming payment', async (): Promise<void> => {
-        const ctx = setup<ReadContext>(
-          {
+        const ctx = setup<ReadContext>({
+          reqOpts: {
             headers: { Accept: 'application/json' }
           },
-          {
-            incomingPaymentId: uuid(),
-            paymentPointer: paymentPointer.id
+          params: {
+            incomingPaymentId: uuid()
           },
           paymentPointer,
-          withGrant ? grant : undefined
-        )
+          grant: withGrant ? grant : undefined
+        })
         await expect(incomingPaymentRoutes.get(ctx)).rejects.toMatchObject({
           status: 404,
           message: 'Not Found'
@@ -129,18 +128,18 @@ describe('Incoming Payment Routes', (): void => {
       })
 
       test('returns 200 with an open payments incoming payment', async (): Promise<void> => {
-        const ctx = setup<ReadContext>(
-          {
+        const ctx = setup<ReadContext>({
+          reqOpts: {
             headers: { Accept: 'application/json' },
             method: 'GET',
             url: `/incoming-payments/${incomingPayment.id}`
           },
-          {
+          params: {
             incomingPaymentId: incomingPayment.id
           },
           paymentPointer,
-          withGrant ? grant : undefined
-        )
+          grant: withGrant ? grant : undefined
+        })
         await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
 
@@ -190,11 +189,10 @@ describe('Incoming Payment Routes', (): void => {
     ${true}   | ${'with grant'}
   `('create - $description', ({ withGrant }): void => {
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
-      const ctx = setup<CreateContext<CreateBody>>(
-        { body: {} },
-        {},
+      const ctx = setup<CreateContext<CreateBody>>({
+        reqOpts: { body: {} },
         paymentPointer
-      )
+      })
       ctx.request.body['expiresAt'] = new Date(
         Date.now() + MAX_EXPIRY + 1000
       ).toISOString()
@@ -229,8 +227,8 @@ describe('Incoming Payment Routes', (): void => {
               ]
             })
           : undefined
-        const ctx = setup<CreateContext<CreateBody>>(
-          {
+        const ctx = setup<CreateContext<CreateBody>>({
+          reqOpts: {
             body: {
               incomingAmount,
               description,
@@ -240,10 +238,9 @@ describe('Incoming Payment Routes', (): void => {
             method: 'POST',
             url: `/incoming-payments`
           },
-          {},
           paymentPointer,
           grant
-        )
+        })
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (
@@ -299,17 +296,17 @@ describe('Incoming Payment Routes', (): void => {
       })
     })
     test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
-      const ctx = setup<CompleteContext>(
-        {
+      const ctx = setup<CompleteContext>({
+        reqOpts: {
           headers: { Accept: 'application/json' },
           method: 'POST',
           url: `/incoming-payments/${incomingPayment.id}/complete`
         },
-        {
+        params: {
           incomingPaymentId: incomingPayment.id
         },
         paymentPointer
-      )
+      })
       ctx.paymentPointer = paymentPointer
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
@@ -392,14 +389,13 @@ describe('Incoming Payment Routes', (): void => {
         jest
           .spyOn(incomingPaymentService, 'getPaymentPointerPage')
           .mockRejectedValueOnce(new Error('unexpected'))
-        const ctx = setup<ListContext>(
-          {
+        const ctx = setup<ListContext>({
+          reqOpts: {
             headers: { Accept: 'application/json' }
           },
-          {},
           paymentPointer,
-          withGrant ? grant : undefined
-        )
+          grant: withGrant ? grant : undefined
+        })
         await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
           status: 500,
           message: `Error trying to list incoming payments`
