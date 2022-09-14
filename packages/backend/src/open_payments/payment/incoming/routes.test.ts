@@ -136,8 +136,7 @@ describe('Incoming Payment Routes', (): void => {
             url: `/incoming-payments/${incomingPayment.id}`
           },
           {
-            incomingPaymentId: incomingPayment.id,
-            paymentPointer: paymentPointer.id
+            incomingPaymentId: incomingPayment.id
           },
           paymentPointer,
           withGrant ? grant : undefined
@@ -193,7 +192,7 @@ describe('Incoming Payment Routes', (): void => {
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
       const ctx = setup<CreateContext<CreateBody>>(
         { body: {} },
-        { paymentPointer: paymentPointer.id },
+        {},
         paymentPointer
       )
       ctx.request.body['expiresAt'] = new Date(
@@ -241,7 +240,7 @@ describe('Incoming Payment Routes', (): void => {
             method: 'POST',
             url: `/incoming-payments`
           },
-          { paymentPointer: paymentPointer.id },
+          {},
           paymentPointer,
           grant
         )
@@ -307,8 +306,7 @@ describe('Incoming Payment Routes', (): void => {
           url: `/incoming-payments/${incomingPayment.id}/complete`
         },
         {
-          incomingPaymentId: incomingPayment.id,
-          paymentPointer: paymentPointer.id
+          incomingPaymentId: incomingPayment.id
         },
         paymentPointer
       )
@@ -398,7 +396,7 @@ describe('Incoming Payment Routes', (): void => {
           {
             headers: { Accept: 'application/json' }
           },
-          { paymentPointer: paymentPointer.id },
+          {},
           paymentPointer,
           withGrant ? grant : undefined
         )

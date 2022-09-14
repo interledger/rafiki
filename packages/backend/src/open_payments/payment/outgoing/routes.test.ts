@@ -109,8 +109,7 @@ describe('Outgoing Payment Routes', (): void => {
             headers: { Accept: 'application/json' }
           },
           {
-            outgoingPaymentId: uuid(),
-            paymentPointer: paymentPointer.id
+            outgoingPaymentId: uuid()
           },
           paymentPointer,
           withGrant ? grant : undefined
@@ -146,8 +145,7 @@ describe('Outgoing Payment Routes', (): void => {
               url: `/outgoing-payments/${outgoingPayment.id}`
             },
             {
-              outgoingPaymentId: outgoingPayment.id,
-              paymentPointer: paymentPointer.id
+              outgoingPaymentId: outgoingPayment.id
             },
             paymentPointer,
             withGrant ? grant : undefined
