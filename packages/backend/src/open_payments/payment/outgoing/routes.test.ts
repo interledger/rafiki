@@ -33,14 +33,14 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let paymentPointer: PaymentPointer
-  let referenceGrant: GrantModel
+  let grant: Grant
 
   const receivingPaymentPointer = `https://wallet.example/${uuid()}`
   const asset = randomAsset()
 
   const createPayment = async (options: {
     paymentPointerId: string
-    grant?: Grant | string
+    grant?: Grant
     description?: string
     externalRef?: string
   }): Promise<OutgoingPayment> => {
@@ -69,9 +69,20 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     paymentPointer = await createPaymentPointer(deps, { asset })
-    referenceGrant = await GrantModel.query().insert({
-      id: uuid(),
-      clientId: uuid()
+    grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.OutgoingPayment,
+          actions: [AccessAction.Create, AccessAction.Read]
+        }
+      ]
+    })
+    await GrantModel.query().insert({
+      id: grant.grant,
+      clientId: grant.clientId
     })
   })
 
@@ -84,20 +95,6 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   describe('get', (): void => {
-    let grant: Grant
-    beforeEach(async (): Promise<void> => {
-      grant = new Grant({
-        active: true,
-        grant: referenceGrant.id,
-        clientId: referenceGrant.clientId,
-        access: [
-          {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Read]
-          }
-        ]
-      })
-    })
     describe.each`
       withGrant | description
       ${false}  | ${'without grant'}
@@ -129,7 +126,7 @@ describe('Outgoing Payment Routes', (): void => {
         async ({ failed }): Promise<void> => {
           const outgoingPayment = await createPayment({
             paymentPointerId: paymentPointer.id,
-            grant: referenceGrant.id,
+            grant,
             description: 'rent',
             externalRef: '202201'
           })
@@ -185,7 +182,7 @@ describe('Outgoing Payment Routes', (): void => {
 
     beforeEach(async (): Promise<void> => {
       options = {
-        grant: referenceGrant.id,
+        grant,
         quoteId: `${paymentPointer.url}/quotes/${uuid()}`
       }
     })
@@ -215,13 +212,13 @@ describe('Outgoing Payment Routes', (): void => {
       async ({ description, externalRef }): Promise<void> => {
         const payment = await createPayment({
           paymentPointerId: paymentPointer.id,
-          grant: referenceGrant.id,
+          grant,
           description,
           externalRef
         })
         options = {
           quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
-          grant: referenceGrant.id,
+          grant,
           description,
           externalRef
         }
@@ -271,20 +268,6 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   describe('list', (): void => {
-    let grant: Grant
-    beforeEach(async (): Promise<void> => {
-      grant = new Grant({
-        active: true,
-        grant: referenceGrant.id,
-        clientId: referenceGrant.clientId,
-        access: [
-          {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.List]
-          }
-        ]
-      })
-    })
     describe.each`
       withGrant | description
       ${false}  | ${'without grant'}
@@ -297,7 +280,7 @@ describe('Outgoing Payment Routes', (): void => {
         createItem: async (index: number) => {
           const payment = await createPayment({
             paymentPointerId: paymentPointer.id,
-            grant: referenceGrant.id,
+            grant,
             description: `p${index}`
           })
           return {

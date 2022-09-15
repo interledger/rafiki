@@ -1130,21 +1130,39 @@ describe('OutgoingPaymentService', (): void => {
     ${false} | ${'without client'}
     ${true}  | ${'with client'}
   `('Outgoing payment pagination - $description', ({ client }): void => {
-    let grant: GrantModel
+    let grant: Grant
     beforeEach(async (): Promise<void> => {
-      grant = await GrantModel.query().insert({
-        id: uuid(),
-        clientId: uuid()
+      grant = new Grant({
+        active: true,
+        clientId: referenceGrant.clientId,
+        grant: referenceGrant.id,
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [AccessAction.Create, AccessAction.Read]
+          }
+        ]
       })
       if (client) {
-        const secondGrant = await GrantModel.query().insert({
-          id: uuid(),
-          clientId: uuid()
+        const secondGrant = new Grant({
+          active: true,
+          clientId: uuid(),
+          grant: uuid(),
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read]
+            }
+          ]
+        })
+        await GrantModel.query().insert({
+          id: secondGrant.grant,
+          clientId: secondGrant.clientId
         })
         for (let i = 0; i < 10; i++) {
           await createOutgoingPayment(deps, {
             paymentPointerId,
-            grant: secondGrant.id,
+            grant: secondGrant,
             receiver,
             sendAmount,
             validDestination: false
@@ -1156,7 +1174,7 @@ describe('OutgoingPaymentService', (): void => {
       createModel: () =>
         createOutgoingPayment(deps, {
           paymentPointerId,
-          grant: grant.id,
+          grant: grant,
           receiver,
           sendAmount,
           validDestination: false
