@@ -90,8 +90,8 @@ async function getIncomingPayment(
   } else {
     incomingPayment = await IncomingPayment.query(deps.knex)
       .findOne(`incomingPayments.${key}`, value)
-      .withGraphJoined('[asset, paymentPointer, grant]')
-      .where('grant.clientId', clientId)
+      .withGraphJoined('[asset, paymentPointer, grantRef]')
+      .where('grantRef.clientId', clientId)
   }
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
   else return
@@ -270,8 +270,8 @@ async function getPaymentPointerPage(
     page = await IncomingPayment.query(deps.knex)
       .getPage(pagination)
       .where('incomingPayments.paymentPointerId', paymentPointerId)
-      .andWhere('grant.clientId', clientId)
-      .withGraphJoined('[asset, paymentPointer, grant]')
+      .andWhere('grantRef.clientId', clientId)
+      .withGraphJoined('[asset, paymentPointer, grantRef]')
   }
 
   const amounts = await deps.accountingService.getAccountsTotalReceived(

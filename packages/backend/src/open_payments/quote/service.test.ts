@@ -31,7 +31,7 @@ import {
 } from '../payment/incoming/model'
 import { Pagination } from '../../shared/baseModel'
 import { getPageTests } from '../../shared/baseModel.test'
-import { Grant } from '../auth/grantModel'
+import { GrantReference } from '../grantReference/model'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -43,7 +43,7 @@ describe('QuoteService', (): void => {
   let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
-  let grant: Grant
+  let grantRef: GrantReference
   const SIGNATURE_SECRET = 'test secret'
 
   const asset: AssetOptions = {
@@ -100,7 +100,7 @@ describe('QuoteService', (): void => {
       asset: destinationAsset,
       mockServerPort: appContainer.openPaymentsPort
     })
-    grant = await Grant.query().insert({
+    grantRef = await GrantReference.query().insert({
       id: uuid(),
       clientId: appContainer.clientId
     })
@@ -233,7 +233,7 @@ describe('QuoteService', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId: receivingPaymentPointer.id,
-            grantId: grant.id,
+            grantId: grantRef.id,
             incomingAmount
           })
           options = {
@@ -547,7 +547,7 @@ describe('QuoteService', (): void => {
             receiver: (
               await createIncomingPayment(deps, {
                 paymentPointerId: receivingPaymentPointer.id,
-                grantId: grant.id
+                grantId: grantRef.id
               })
             ).url,
             sendAmount,
@@ -568,7 +568,7 @@ describe('QuoteService', (): void => {
           receiver: (
             await createIncomingPayment(deps, {
               paymentPointerId: receivingPaymentPointer.id,
-              grantId: grant.id
+              grantId: grantRef.id
             })
           ).url,
           sendAmount

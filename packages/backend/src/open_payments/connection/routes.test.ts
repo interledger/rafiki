@@ -15,7 +15,7 @@ import { IncomingPayment } from '../payment/incoming/model'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import base64url from 'base64url'
-import { Grant } from '../auth/grantModel'
+import { GrantReference } from '../grantReference/model'
 
 describe('Connection Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -23,7 +23,7 @@ describe('Connection Routes', (): void => {
   let knex: Knex
   let config: IAppConfig
   let connectionRoutes: ConnectionRoutes
-  let grant: Grant
+  let grantRef: GrantReference
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -46,13 +46,13 @@ describe('Connection Routes', (): void => {
     config = await deps.use('config')
 
     paymentPointer = await createPaymentPointer(deps, { asset })
-    grant = await Grant.query().insert({
+    grantRef = await GrantReference.query().insert({
       id: uuid(),
       clientId: uuid()
     })
     incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: paymentPointer.id,
-      grantId: grant.id,
+      grantId: grantRef.id,
       description: 'hello world',
       expiresAt: new Date(Date.now() + 30_000),
       incomingAmount: {

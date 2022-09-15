@@ -22,7 +22,7 @@ import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
-import { Grant } from '../../auth/grantModel'
+import { GrantReference } from '../../grantReference/model'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -76,7 +76,7 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test('An incoming payment with corresponding grant can be created', async (): Promise<void> => {
-      const grant = await Grant.query().insert({
+      const grant = await GrantReference.query().insert({
         id: uuid(),
         clientId: uuid()
       })
@@ -197,15 +197,15 @@ describe('Incoming Payment Service', (): void => {
 
   describe('Get incoming payment', (): void => {
     let incomingPayment: IncomingPayment
-    let grant: Grant
+    let grantRef: GrantReference
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query().insert({
+      grantRef = await GrantReference.query().insert({
         id: uuid(),
         clientId: uuid()
       })
       incomingPayment = (await incomingPaymentService.create({
         paymentPointerId,
-        grantId: grant.id,
+        grantId: grantRef.id,
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
@@ -227,10 +227,13 @@ describe('Incoming Payment Service', (): void => {
     test('get an incoming payment for client id', async (): Promise<void> => {
       const retrievedIncomingPayment = await incomingPaymentService.get(
         incomingPayment.id,
-        grant.clientId
+        grantRef.clientId
       )
       assert.ok(retrievedIncomingPayment)
-      expect(retrievedIncomingPayment).toEqual({ ...incomingPayment, grant })
+      expect(retrievedIncomingPayment).toEqual({
+        ...incomingPayment,
+        grantRef: grantRef
+      })
     })
     test('cannot get incoming payment if client id does not match', async (): Promise<void> => {
       const clientId = uuid()
@@ -476,14 +479,14 @@ describe('Incoming Payment Service', (): void => {
     ${false} | ${'without client'}
     ${true}  | ${'with client'}
   `('Incoming payment pagination - $description', ({ client }): void => {
-    let grant: Grant
+    let grantRef: GrantReference
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query().insert({
+      grantRef = await GrantReference.query().insert({
         id: uuid(),
         clientId: uuid()
       })
       if (client) {
-        const secondGrant = await Grant.query().insert({
+        const secondGrant = await GrantReference.query().insert({
           id: uuid(),
           clientId: uuid()
         })
@@ -507,7 +510,7 @@ describe('Incoming Payment Service', (): void => {
       createModel: () =>
         createIncomingPayment(deps, {
           paymentPointerId,
-          grantId: grant.id,
+          grantId: grantRef.id,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -521,7 +524,7 @@ describe('Incoming Payment Service', (): void => {
         incomingPaymentService.getPaymentPointerPage(
           paymentPointerId,
           pagination,
-          client ? grant.clientId : undefined
+          client ? grantRef.clientId : undefined
         )
     })
   })

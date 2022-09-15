@@ -1,6 +1,6 @@
 import { AccessType, AccessAction } from './grant'
 import { AppContext } from '../../app'
-import { Grant } from './grantModel'
+import { GrantReference } from '../grantReference/model'
 
 export function createAuthMiddleware({
   type,
@@ -34,13 +34,13 @@ export function createAuthMiddleware({
       ) {
         ctx.throw(403, 'Insufficient Grant')
       }
-      const grantRef = await Grant.query().findById(grant.grant)
+      const grantRef = await GrantReference.query().findById(grant.grant)
       if (grantRef) {
         if (grantRef.clientId !== grant.clientId) {
           ctx.throw(409, 'Unknown Client ID')
         }
       } else {
-        await Grant.query().insert({
+        await GrantReference.query().insert({
           id: grant.grant,
           clientId: grant.clientId
         })

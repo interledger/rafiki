@@ -23,7 +23,7 @@ import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { Amount } from '@interledger/pay/dist/src/open-payments'
 import { listTests, setup } from '../../../shared/routes.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
-import { Grant as GrantModel } from '../../auth/grantModel'
+import { GrantReference as GrantModel } from '../../grantReference/model'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>

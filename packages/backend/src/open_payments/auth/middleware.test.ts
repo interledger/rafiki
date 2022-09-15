@@ -14,7 +14,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
-import { Grant as GrantModel } from './grantModel'
+import { GrantReference } from '../grantReference/model'
 
 type AppMiddleware = (
   ctx: AppContext,
@@ -162,7 +162,7 @@ describe('Auth Middleware', (): void => {
         }
       ]
     })
-    await GrantModel.query().insert({
+    await GrantReference.query().insert({
       id: grant.grant,
       clientId: uuid()
     })
@@ -226,7 +226,9 @@ describe('Auth Middleware', (): void => {
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
-      await expect(GrantModel.query().findById(grant.grant)).resolves.toEqual({
+      await expect(
+        GrantReference.query().findById(grant.grant)
+      ).resolves.toEqual({
         id: grant.grant,
         clientId: grant.clientId
       })
@@ -247,7 +249,7 @@ describe('Auth Middleware', (): void => {
         }
       ]
     })
-    await GrantModel.query().insert({
+    await GrantReference.query().insert({
       id: grant.grant,
       clientId: grant.clientId
     })

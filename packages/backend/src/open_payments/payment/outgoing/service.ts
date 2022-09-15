@@ -17,7 +17,7 @@ import {
 import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
-import { Grant as GrantModel } from '../../auth/grantModel'
+import { GrantReference } from '../../grantReference/model'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -83,8 +83,8 @@ async function getOutgoingPayment(
   } else {
     outgoingPayment = await OutgoingPayment.query(deps.knex)
       .findById(id)
-      .withGraphJoined('[quote.asset, grant]')
-      .where('grant.clientId', clientId)
+      .withGraphJoined('[quote.asset, grantRef]')
+      .where('grantRef.clientId', clientId)
   }
   if (outgoingPayment) return await addSentAmount(deps, outgoingPayment)
   else return
@@ -278,7 +278,7 @@ async function validateGrant(
   //lock grant
   //TODO: update to use objection once it supports forNoKeyUpdate
   await deps
-    .knex<GrantModel>('grants')
+    .knex<GrantReference>('grantReferences')
     .select()
     .where('id', grant.grant)
     .forNoKeyUpdate()
@@ -408,8 +408,8 @@ async function getPaymentPointerPage(
     page = await OutgoingPayment.query(deps.knex)
       .getPage(pagination)
       .where('outgoingPayments.paymentPointerId', paymentPointerId)
-      .andWhere('grant.clientId', clientId)
-      .withGraphJoined('[quote.asset, grant]')
+      .andWhere('grantRef.clientId', clientId)
+      .withGraphJoined('[quote.asset, grantRef]')
   }
 
   const amounts = await deps.accountingService.getAccountsTotalSent(

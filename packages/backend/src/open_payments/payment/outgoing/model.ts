@@ -8,7 +8,7 @@ import { Quote } from '../../quote/model'
 import { Amount, AmountJSON } from '../../amount'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
-import { Grant } from '../../auth/grantModel'
+import { GrantReference } from '../../grantReference/model'
 
 export class OutgoingPayment
   extends BaseModel
@@ -26,7 +26,7 @@ export class OutgoingPayment
   public stateAttempts!: number
 
   public grantId?: string
-  public grant?: Grant
+  public grantRef?: GrantReference
 
   public get receiver(): string {
     return this.quote.receiver
@@ -89,12 +89,12 @@ export class OutgoingPayment
         to: 'quotes.id'
       }
     },
-    grant: {
+    grantRef: {
       relation: Model.HasOneRelation,
-      modelClass: Grant,
+      modelClass: GrantReference,
       join: {
         from: 'outgoingPayments.grantId',
-        to: 'grants.id'
+        to: 'grantReferences.id'
       }
     }
   }

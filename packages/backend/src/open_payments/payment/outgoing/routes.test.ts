@@ -24,7 +24,7 @@ import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { listTests, setup } from '../../../shared/routes.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
-import { Grant as GrantModel } from '../../auth/grantModel'
+import { GrantReference as GrantModel } from '../../grantReference/model'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>

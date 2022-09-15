@@ -41,7 +41,7 @@ import { Amount } from '../../amount'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
-import { Grant as GrantModel } from '../../auth/grantModel'
+import { GrantReference } from '../../grantReference/model'
 import { Quote } from '../../quote/model'
 
 describe('OutgoingPaymentService', (): void => {
@@ -55,7 +55,7 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
-  let grantRef: GrantModel
+  let grantRef: GrantReference
 
   const asset: AssetOptions = {
     scale: 9,
@@ -258,7 +258,7 @@ describe('OutgoingPaymentService', (): void => {
       })
     ).resolves.toBeUndefined()
 
-    grantRef = await GrantModel.query().insert({
+    grantRef = await GrantReference.query().insert({
       id: uuid(),
       clientId: appContainer.clientId
     })
@@ -1155,7 +1155,7 @@ describe('OutgoingPaymentService', (): void => {
             }
           ]
         })
-        await GrantModel.query().insert({
+        await GrantReference.query().insert({
           id: secondGrant.grant,
           clientId: secondGrant.clientId
         })

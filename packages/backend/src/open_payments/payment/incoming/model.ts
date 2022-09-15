@@ -8,7 +8,7 @@ import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
-import { Grant } from '../../auth/grantModel'
+import { GrantReference } from '../../grantReference/model'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incoming_payment.expired',
@@ -81,12 +81,12 @@ export class IncomingPayment
         to: 'paymentPointers.id'
       }
     },
-    grant: {
+    grantRef: {
       relation: Model.HasOneRelation,
-      modelClass: Grant,
+      modelClass: GrantReference,
       join: {
         from: 'incomingPayments.grantId',
-        to: 'grants.id'
+        to: 'grantReferences.id'
       }
     }
   }
@@ -101,7 +101,7 @@ export class IncomingPayment
   public connectionId!: string
 
   public grantId?: string
-  public grant?: Grant
+  public grantRef?: GrantReference
 
   public processAt!: Date | null
 
