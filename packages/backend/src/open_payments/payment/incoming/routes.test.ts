@@ -50,7 +50,7 @@ describe('Incoming Payment Routes', (): void => {
   let incomingAmount: Amount
   let description: string
   let externalRef: string
-  let referenceGrant: GrantModel
+  let grantRef: GrantModel
 
   beforeEach(async (): Promise<void> => {
     config = await deps.use('config')
@@ -67,7 +67,7 @@ describe('Incoming Payment Routes', (): void => {
     }
     description = 'hello world'
     externalRef = '#123'
-    referenceGrant = await GrantModel.query().insert({
+    grantRef = await GrantModel.query().insert({
       id: uuid(),
       clientId: uuid()
     })
@@ -87,7 +87,7 @@ describe('Incoming Payment Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        grantId: referenceGrant.id,
+        grantId: grantRef.id,
         description,
         expiresAt,
         incomingAmount,
@@ -95,8 +95,8 @@ describe('Incoming Payment Routes', (): void => {
       })
       grant = new Grant({
         active: true,
-        grant: referenceGrant.id,
-        clientId: referenceGrant.clientId,
+        grant: grantRef.id,
+        clientId: grantRef.clientId,
         access: [
           {
             type: AccessType.IncomingPayment,
@@ -217,8 +217,8 @@ describe('Incoming Payment Routes', (): void => {
         const grant = withGrant
           ? new Grant({
               active: true,
-              grant: referenceGrant.id,
-              clientId: referenceGrant.clientId,
+              grant: grantRef.id,
+              clientId: grantRef.clientId,
               access: [
                 {
                   type: AccessType.IncomingPayment,
@@ -339,8 +339,8 @@ describe('Incoming Payment Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = new Grant({
         active: true,
-        grant: referenceGrant.id,
-        clientId: referenceGrant.clientId,
+        grant: grantRef.id,
+        clientId: grantRef.clientId,
         access: [
           {
             type: AccessType.IncomingPayment,
@@ -361,7 +361,7 @@ describe('Incoming Payment Routes', (): void => {
         createItem: async (index: number) => {
           const payment = await createIncomingPayment(deps, {
             paymentPointerId: paymentPointer.id,
-            grantId: withGrant ? referenceGrant.id : undefined,
+            grantId: withGrant ? grantRef.id : undefined,
             description: `p${index}`,
             expiresAt
           })

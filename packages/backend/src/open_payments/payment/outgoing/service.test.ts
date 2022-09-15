@@ -55,7 +55,7 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
-  let referenceGrant: GrantModel
+  let grantRef: GrantModel
 
   const asset: AssetOptions = {
     scale: 9,
@@ -258,13 +258,13 @@ describe('OutgoingPaymentService', (): void => {
       })
     ).resolves.toBeUndefined()
 
-    referenceGrant = await GrantModel.query().insert({
+    grantRef = await GrantModel.query().insert({
       id: uuid(),
       clientId: appContainer.clientId
     })
     const incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: receiverPaymentPointer.id,
-      grantId: referenceGrant.id
+      grantId: grantRef.id
     })
     receiver = incomingPayment.url
 
@@ -413,8 +413,8 @@ describe('OutgoingPaymentService', (): void => {
     test('fails to create if grant is locked', async () => {
       const grant = new Grant({
         active: true,
-        clientId: referenceGrant.clientId,
-        grant: referenceGrant.id,
+        clientId: grantRef.clientId,
+        grant: grantRef.id,
         access: [
           {
             type: AccessType.OutgoingPayment,
@@ -482,8 +482,8 @@ describe('OutgoingPaymentService', (): void => {
         const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
         const grant = new Grant({
           active: true,
-          clientId: referenceGrant.clientId,
-          grant: referenceGrant.id,
+          clientId: grantRef.clientId,
+          grant: grantRef.id,
           access: [
             {
               type: AccessType.OutgoingPayment,
@@ -510,8 +510,8 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            clientId: referenceGrant.clientId,
-            grant: referenceGrant.id,
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -544,8 +544,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            clientId: referenceGrant.clientId,
-            grant: referenceGrant.id,
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -588,8 +588,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            clientId: referenceGrant.clientId,
-            grant: referenceGrant.id,
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -642,8 +642,8 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            clientId: referenceGrant.clientId,
-            grant: referenceGrant.id,
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -688,8 +688,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            clientId: referenceGrant.clientId,
-            grant: referenceGrant.id,
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -1134,8 +1134,8 @@ describe('OutgoingPaymentService', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = new Grant({
         active: true,
-        clientId: referenceGrant.clientId,
-        grant: referenceGrant.id,
+        clientId: grantRef.clientId,
+        grant: grantRef.id,
         access: [
           {
             type: AccessType.OutgoingPayment,
