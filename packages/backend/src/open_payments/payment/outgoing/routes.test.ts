@@ -54,7 +54,6 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')

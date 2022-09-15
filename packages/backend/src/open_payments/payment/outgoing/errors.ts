@@ -66,7 +66,6 @@ const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
   // Lifecycle errors
   PricesUnavailable: true,
   // From @interledger/pay's PaymentError:
-  QueryFailed: true,
   ConnectorError: true,
   EstablishmentFailed: true,
   InsufficientExchangeRate: true,

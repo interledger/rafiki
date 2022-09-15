@@ -34,6 +34,7 @@ import {
   PaymentEventType
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
+import { IncomingPaymentState } from '../incoming/model'
 import { isTransferError } from '../../../accounting/errors'
 import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
@@ -152,6 +153,11 @@ describe('OutgoingPaymentService', (): void => {
         amount
       })
     ).resolves.toBeUndefined()
+    await incomingPayment.onCredit({
+      totalReceived: await accountingService.getTotalReceived(
+        incomingPayment.id
+      )
+    })
   }
 
   function trackAmountDelivered(sourcePaymentPointerId: string): void {
@@ -402,6 +408,36 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
     })
+    it.each`
+      state
+      ${IncomingPaymentState.Completed}
+      ${IncomingPaymentState.Expired}
+    `(
+      `fails to create on $state quote receiver`,
+      async ({ state }): Promise<void> => {
+        const quote = await createQuote(deps, {
+          paymentPointerId,
+          receiver,
+          sendAmount
+        })
+        const incomingPaymentService = await deps.use('incomingPaymentService')
+        const incomingPayment = await incomingPaymentService.get(
+          getIncomingPaymentId(receiver)
+        )
+        assert.ok(incomingPayment)
+        await incomingPayment.$query(knex).patch({
+          state,
+          expiresAt:
+            state === IncomingPaymentState.Expired ? new Date() : undefined
+        })
+        await expect(
+          outgoingPaymentService.create({
+            paymentPointerId,
+            quoteId: quote.id
+          })
+        ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
+      }
+    )
     test('fails to create if grant is locked', async () => {
       const grant = new Grant({
         active: true,
@@ -776,12 +812,10 @@ describe('OutgoingPaymentService', (): void => {
           receiveAmount
         })
 
-        let scope: nock.Scope | undefined
         const payment = await processNext(
           paymentId,
           OutgoingPaymentState.Completed
         )
-        scope?.isDone()
         if (!payment.sendAmount) throw 'no sendAmount'
         const amountSent = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {

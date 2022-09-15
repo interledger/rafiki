@@ -1,6 +1,5 @@
 import assert from 'assert'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
-import * as Pay from '@interledger/pay'
 
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
@@ -18,6 +17,8 @@ import {
 import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
+import { OpenPaymentsClientService } from '../../client/service'
+import { isReceiver } from '../../shared/receiver'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -46,9 +47,9 @@ export interface OutgoingPaymentService {
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
+  clientService: OpenPaymentsClientService
   peerService: PeerService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
-  publicHost: string
 }
 
 export async function createOutgoingPaymentService(
@@ -138,32 +139,17 @@ async function createOutgoingPayment(
           throw OutgoingPaymentError.InsufficientGrant
         }
       }
-      const plugin = deps.makeIlpPlugin({
-        sourceAccount: {
-          id: payment.paymentPointerId,
-          asset: {
-            id: payment.assetId,
-            ledger: payment.asset.ledger
-          }
-        },
-        unfulfillable: true
-      })
-      try {
-        await plugin.connect()
-        const destination = await Pay.setupPayment({
-          plugin,
-          destinationPayment: payment.receiver
-        })
-        const peer = await deps.peerService.getByDestinationAddress(
-          destination.destinationAddress
-        )
-        if (peer) {
-          await payment.$query(trx).patch({ peerId: peer.id })
-        }
-      } finally {
-        plugin.disconnect().catch((err: Error) => {
-          deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
-        })
+      const incomingPayment = await deps.clientService.incomingPayment.get(
+        payment.receiver
+      )
+      if (!isReceiver(incomingPayment)) {
+        throw OutgoingPaymentError.InvalidQuote
+      }
+      const peer = await deps.peerService.getByDestinationAddress(
+        incomingPayment.ilpStreamConnection.ilpAddress
+      )
+      if (peer) {
+        await payment.$query(trx).patch({ peerId: peer.id })
       }
 
       await sendWebhookEvent(

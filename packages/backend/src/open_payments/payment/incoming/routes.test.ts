@@ -5,6 +5,7 @@ import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../../tests/context'
+import { Amount } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
@@ -18,12 +19,11 @@ import {
   ListContext
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
-import { IncomingPayment } from './model'
+import { IncomingPayment, IncomingPaymentJSON } from './model'
 import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { AppContext } from '../../../app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { Amount } from '@interledger/pay/dist/src/open-payments'
 import { listTests } from '../../../shared/routes.test'
 
 describe('Incoming Payment Routes', (): void => {
@@ -56,7 +56,6 @@ describe('Incoming Payment Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -166,7 +165,7 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         ilpStreamConnection: {
-          id: `${config.publicHost}/connections/${incomingPayment.connectionId}`,
+          id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
           ilpAddress: expect.stringMatching(
             /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
           ),
@@ -246,7 +245,7 @@ describe('Incoming Payment Routes', (): void => {
           externalRef,
           completed: false,
           ilpStreamConnection: {
-            id: `${config.publicHost}/connections/${connectionId}`,
+            id: `${config.openPaymentsUrl}/connections/${connectionId}`,
             ilpAddress: expect.stringMatching(
               /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
             ),
@@ -281,6 +280,11 @@ describe('Incoming Payment Routes', (): void => {
       )
       ctx.paymentPointer = paymentPointer
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
+      // Delete undefined ilpStreamConnection to satisfy toSatisfyApiSpec
+      expect(
+        (ctx.body as IncomingPaymentJSON).ilpStreamConnection
+      ).toBeUndefined()
+      delete (ctx.body as IncomingPaymentJSON).ilpStreamConnection
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         id: incomingPayment.url,
@@ -300,8 +304,7 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
-        completed: true,
-        ilpStreamConnection: `${config.publicHost}/connections/${incomingPayment.connectionId}`
+        completed: true
       })
     })
   })
@@ -329,7 +332,7 @@ describe('Incoming Payment Routes', (): void => {
           expiresAt: expiresAt.toISOString(),
           createdAt: payment.createdAt.toISOString(),
           updatedAt: payment.updatedAt.toISOString(),
-          ilpStreamConnection: `${config.publicHost}/connections/${payment.connectionId}`
+          ilpStreamConnection: `${config.openPaymentsUrl}/connections/${payment.connectionId}`
         }
       },
       list: (ctx: ListContext) => incomingPaymentRoutes.list(ctx)
