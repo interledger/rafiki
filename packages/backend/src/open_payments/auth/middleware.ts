@@ -34,13 +34,17 @@ export function createAuthMiddleware({
       ) {
         ctx.throw(403, 'Insufficient Grant')
       }
-      await Grant.query()
-        .insert({
+      const grantRef = await Grant.query().findById(grant.grant)
+      if (grantRef) {
+        if (grantRef.clientId !== grant.clientId) {
+          ctx.throw(409, 'Unknown Client ID')
+        }
+      } else {
+        await Grant.query().insert({
           id: grant.grant,
           clientId: grant.clientId
         })
-        .onConflict('id')
-        .ignore()
+      }
       ctx.grant = grant
       await next()
     } catch (err) {

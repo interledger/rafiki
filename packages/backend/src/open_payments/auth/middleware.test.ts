@@ -14,6 +14,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
+import { Grant as GrantModel } from './grantModel'
 
 type AppMiddleware = (
   ctx: AppContext,
@@ -109,7 +110,7 @@ describe('Auth Middleware', (): void => {
 
   const inactiveGrant = {
     active: false,
-    grant: 'PRY5NM33OM4TB8N6BW7'
+    grant: uuid()
   }
 
   test.each`
@@ -133,7 +134,7 @@ describe('Auth Middleware', (): void => {
     const scope = mockAuthServer({
       active: true,
       clientId: uuid(),
-      grant: 'PRY5NM33OM4TB8N6BW7',
+      grant: uuid(),
       access: [
         {
           type: AccessType.OutgoingPayment,
@@ -144,6 +145,31 @@ describe('Auth Middleware', (): void => {
     await expect(middleware(ctx, next)).rejects.toMatchObject({
       status: 403,
       message: 'Insufficient Grant'
+    })
+    expect(next).not.toHaveBeenCalled()
+    scope.isDone()
+  })
+  test('returns 409 for not matching clientId', async (): Promise<void> => {
+    const grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.IncomingPayment,
+          actions: [AccessAction.Read],
+          identifier: ctx.params.paymentPointerId
+        }
+      ]
+    })
+    await GrantModel.query().insert({
+      id: grant.grant,
+      clientId: uuid()
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 409,
+      message: 'Unknown Client ID'
     })
     expect(next).not.toHaveBeenCalled()
     scope.isDone()
@@ -159,7 +185,7 @@ describe('Auth Middleware', (): void => {
       const grant = new Grant({
         active: true,
         clientId: uuid(),
-        grant: 'PRY5NM33OM4TB8N6BW7',
+        grant: uuid(),
         access: [
           {
             type: AccessType.IncomingPayment,
@@ -200,7 +226,35 @@ describe('Auth Middleware', (): void => {
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
+      await expect(GrantModel.query().findById(grant.grant)).resolves.toEqual({
+        id: grant.grant,
+        clientId: grant.clientId
+      })
       scope.isDone()
     }
   )
+
+  test('sets the context and calls next if grant has been seen before', async (): Promise<void> => {
+    const grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.IncomingPayment,
+          actions: [AccessAction.Read],
+          identifier: ctx.params.paymentPointerId
+        }
+      ]
+    })
+    await GrantModel.query().insert({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(next).toHaveBeenCalled()
+    expect(ctx.grant).toEqual(grant)
+    scope.isDone()
+  })
 })
