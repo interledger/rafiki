@@ -40,6 +40,7 @@ import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createClientKeysService } from './clientKeys/service'
 import { createClientService } from './clients/service'
+import { createGrantReferenceService } from './open_payments/grantReference/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -283,12 +284,19 @@ export function initIocContainer(
       quoteService: await deps.use('quoteService')
     })
   })
+  container.singleton('grantReferenceService', async (deps) => {
+    return createGrantReferenceService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
+    })
+  })
   container.singleton('outgoingPaymentService', async (deps) => {
     const config = await deps.use('config')
     return await createOutgoingPaymentService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
+      grantReferenceService: await deps.use('grantReferenceService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       peerService: await deps.use('peerService'),
       publicHost: config.publicHost

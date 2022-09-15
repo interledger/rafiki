@@ -17,7 +17,6 @@ import {
 import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
-import { GrantReference } from '../../grantReference/model'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -27,6 +26,7 @@ import {
 } from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
+import { GrantReferenceService } from '../../grantReference/service'
 
 export interface OutgoingPaymentService {
   get(id: string, clientId?: string): Promise<OutgoingPayment | undefined>
@@ -48,6 +48,7 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   peerService: PeerService
+  grantReferenceService: GrantReferenceService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
   publicHost: string
 }
@@ -276,13 +277,8 @@ async function validateGrant(
   }
 
   //lock grant
-  //TODO: update to use objection once it supports forNoKeyUpdate
-  await deps
-    .knex<GrantReference>('grantReferences')
-    .select()
-    .where('id', grant.grant)
-    .forNoKeyUpdate()
-    .timeout(5000)
+  await deps.grantReferenceService.lock(deps.knex, grant.grant)
+
   if (callback) await new Promise(callback)
 
   const grantPayments = await OutgoingPayment.query(deps.knex)

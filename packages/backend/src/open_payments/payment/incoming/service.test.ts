@@ -23,6 +23,7 @@ import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
 import { GrantReference } from '../../grantReference/model'
+import { GrantReferenceService } from '../../grantReference/service'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -31,6 +32,7 @@ describe('Incoming Payment Service', (): void => {
   let knex: Knex
   let paymentPointerId: string
   let accountingService: AccountingService
+  let grantReferenceService: GrantReferenceService
   const asset = randomAsset()
 
   beforeAll(async (): Promise<void> => {
@@ -38,6 +40,7 @@ describe('Incoming Payment Service', (): void => {
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     knex = await deps.use('knex')
+    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -76,7 +79,7 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test('An incoming payment with corresponding grant can be created', async (): Promise<void> => {
-      const grant = await GrantReference.query().insert({
+      const grant = await grantReferenceService.create({
         id: uuid(),
         clientId: uuid()
       })
@@ -199,7 +202,7 @@ describe('Incoming Payment Service', (): void => {
     let incomingPayment: IncomingPayment
     let grantRef: GrantReference
     beforeEach(async (): Promise<void> => {
-      grantRef = await GrantReference.query().insert({
+      grantRef = await grantReferenceService.create({
         id: uuid(),
         clientId: uuid()
       })
@@ -481,12 +484,12 @@ describe('Incoming Payment Service', (): void => {
   `('Incoming payment pagination - $description', ({ client }): void => {
     let grantRef: GrantReference
     beforeEach(async (): Promise<void> => {
-      grantRef = await GrantReference.query().insert({
+      grantRef = await grantReferenceService.create({
         id: uuid(),
         clientId: uuid()
       })
       if (client) {
-        const secondGrant = await GrantReference.query().insert({
+        const secondGrant = await grantReferenceService.create({
           id: uuid(),
           clientId: uuid()
         })

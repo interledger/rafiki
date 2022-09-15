@@ -32,6 +32,7 @@ import {
 import { Pagination } from '../../shared/baseModel'
 import { getPageTests } from '../../shared/baseModel.test'
 import { GrantReference } from '../grantReference/model'
+import { GrantReferenceService } from '../grantReference/service'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -43,6 +44,7 @@ describe('QuoteService', (): void => {
   let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
+  let grantReferenceService: GrantReferenceService
   let grantRef: GrantReference
   const SIGNATURE_SECRET = 'test secret'
 
@@ -84,6 +86,7 @@ describe('QuoteService', (): void => {
     knex = await deps.use('knex')
     config = await deps.use('config')
     quoteUrl = new URL(Config.quoteUrl)
+    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -100,7 +103,7 @@ describe('QuoteService', (): void => {
       asset: destinationAsset,
       mockServerPort: appContainer.openPaymentsPort
     })
-    grantRef = await GrantReference.query().insert({
+    grantRef = await grantReferenceService.create({
       id: uuid(),
       clientId: appContainer.clientId
     })

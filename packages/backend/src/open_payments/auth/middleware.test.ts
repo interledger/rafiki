@@ -15,6 +15,7 @@ import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { GrantReference } from '../grantReference/model'
+import { GrantReferenceService } from '../grantReference/service'
 
 type AppMiddleware = (
   ctx: AppContext,
@@ -34,6 +35,7 @@ describe('Auth Middleware', (): void => {
   let ctx: AppContext
   let next: jest.MockedFunction<() => Promise<void>>
   let validateRequest: ValidateFunction<IntrospectionBody>
+  let grantReferenceService: GrantReferenceService
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
 
   beforeAll(async (): Promise<void> => {
@@ -49,6 +51,7 @@ describe('Auth Middleware', (): void => {
       path: '/introspect',
       method: HttpMethod.POST
     })
+    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -162,7 +165,7 @@ describe('Auth Middleware', (): void => {
         }
       ]
     })
-    await GrantReference.query().insert({
+    await grantReferenceService.create({
       id: grant.grant,
       clientId: uuid()
     })
@@ -249,7 +252,7 @@ describe('Auth Middleware', (): void => {
         }
       ]
     })
-    await GrantReference.query().insert({
+    await grantReferenceService.create({
       id: grant.grant,
       clientId: grant.clientId
     })

@@ -43,6 +43,7 @@ import { getPageTests } from '../../../shared/baseModel.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
 import { GrantReference } from '../../grantReference/model'
 import { Quote } from '../../quote/model'
+import { GrantReferenceService } from '../../grantReference/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -55,6 +56,7 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
+  let grantReferenceService: GrantReferenceService
   let grantRef: GrantReference
 
   const asset: AssetOptions = {
@@ -232,7 +234,7 @@ describe('OutgoingPaymentService', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
-
+    grantReferenceService = await deps.use('grantReferenceService')
     knex = await deps.use('knex')
   })
 
@@ -258,7 +260,7 @@ describe('OutgoingPaymentService', (): void => {
       })
     ).resolves.toBeUndefined()
 
-    grantRef = await GrantReference.query().insert({
+    grantRef = await grantReferenceService.create({
       id: uuid(),
       clientId: appContainer.clientId
     })
@@ -1155,7 +1157,7 @@ describe('OutgoingPaymentService', (): void => {
             }
           ]
         })
-        await GrantReference.query().insert({
+        await grantReferenceService.create({
           id: secondGrant.grant,
           clientId: secondGrant.clientId
         })

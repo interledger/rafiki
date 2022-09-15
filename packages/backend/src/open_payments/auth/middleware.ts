@@ -1,6 +1,5 @@
 import { AccessType, AccessAction } from './grant'
 import { AppContext } from '../../app'
-import { GrantReference } from '../grantReference/model'
 
 export function createAuthMiddleware({
   type,
@@ -14,6 +13,9 @@ export function createAuthMiddleware({
     next: () => Promise<unknown>
   ): Promise<void> => {
     const config = await ctx.container.use('config')
+    const grantReferenceService = await ctx.container.use(
+      'grantReferenceService'
+    )
     try {
       const parts = ctx.request.headers.authorization?.split(' ')
       if (parts?.length !== 2 || parts[0] !== 'GNAP') {
@@ -34,13 +36,13 @@ export function createAuthMiddleware({
       ) {
         ctx.throw(403, 'Insufficient Grant')
       }
-      const grantRef = await GrantReference.query().findById(grant.grant)
+      const grantRef = await grantReferenceService.get(grant.grant)
       if (grantRef) {
         if (grantRef.clientId !== grant.clientId) {
           ctx.throw(409, 'Unknown Client ID')
         }
       } else {
-        await GrantReference.query().insert({
+        await grantReferenceService.create({
           id: grant.grant,
           clientId: grant.clientId
         })
