@@ -8,14 +8,14 @@ interface BaseResponse {
   id: string
 }
 
-interface setupOptions {
+interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
   params?: Record<string, string>
   paymentPointer: PaymentPointer
   grant?: Grant
 }
 
-export const setup = <T extends AppContext>(options: setupOptions): T => {
+export const setup = <T extends AppContext>(options: SetupOptions): T => {
   const ctx = createContext<T>(
     {
       ...options.reqOpts,

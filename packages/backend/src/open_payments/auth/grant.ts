@@ -91,12 +91,10 @@ export class Grant {
         access.type === type &&
         (!access.identifier || access.identifier === identifier) &&
         (access.actions.includes(action) ||
-          (action === AccessAction.Read
-            ? access.actions.includes(AccessAction.ReadAll)
-            : false) ||
-          (action === AccessAction.List
-            ? access.actions.includes(AccessAction.ListAll)
-            : false))
+          (action === AccessAction.Read &&
+            access.actions.includes(AccessAction.ReadAll)) ||
+          (action === AccessAction.List &&
+            access.actions.includes(AccessAction.ListAll)))
     )
   }
 
