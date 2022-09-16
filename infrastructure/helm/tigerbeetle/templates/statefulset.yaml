@@ -1,0 +1,224 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "tigerbeetle.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "tigerbeetle.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.statefulset.replicas }}
+  serviceName: {{ template "tigerbeetle.fullname" . }}
+  updateStrategy: {{- toYaml .Values.statefulset.updateStrategy | nindent 4 }}
+  podManagementPolicy: {{ .Values.statefulset.podManagementPolicy | quote }}
+  selector:
+    matchLabels:
+      {{- include "tigerbeetle.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.statefulset.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tigerbeetle.selectorLabels" . | nindent 8 }}
+        {{- toYaml .Values.statefulset.labels | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "tigerbeetle.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.statefulset.securityContext | nindent 8 }}
+      initContainers:
+        - name: init-tigerbeetle
+          image: "{{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - | 
+              set -ex
+              REPLICA=${HOSTNAME##*-} 
+              FMT_CLUSTER=$(echo $CLUSTER | awk '{ printf("%010d\n", $1) }')
+              FMT_REPLICA=$(echo $REPLICA | awk '{ printf("%03d\n", $1) }')
+              ls /var/lib/tigerbeetle
+              DATA_FILE=/var/lib/tigerbeetle/cluster_${FMT_CLUSTER}_replica_${FMT_REPLICA}.tigerbeetle
+              if [ ! -f "$DATA_FILE" ]; then 
+                /opt/beta-beetle/tigerbeetle init --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle; 
+              fi
+          env:
+            - name: CLUSTER
+              value: "{{ .Values.statefulset.clusterId }}"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/tigerbeetle
+    {{- if or .Values.statefulset.nodeAffinity .Values.statefulset.podAffinity .Values.statefulset.podAntiAffinity }}
+      affinity:
+      {{- with .Values.statefulset.nodeAffinity }}
+        nodeAffinity: {{- toYaml . | nindent 10 }}
+      {{- end }}
+      {{- with .Values.statefulset.podAffinity }}
+        podAffinity: {{- toYaml . | nindent 10 }}
+      {{- end }}
+      {{- if .Values.statefulset.podAntiAffinity }}
+        podAntiAffinity:
+        {{- if .Values.statefulset.podAntiAffinity.type }}
+        {{- if eq .Values.statefulset.podAntiAffinity.type "hard" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: {{ .Values.statefulset.podAntiAffinity.topologyKey }}
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: {{ include "tigerbeetle.name" . }}
+                  app.kubernetes.io/instance: {{ .Release.Name | quote }}
+                {{- with .Values.statefulset.labels }}
+                  {{- toYaml . | nindent 18 }}
+                {{- end }}
+        {{- else if eq .Values.statefulset.podAntiAffinity.type "soft" }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .Values.statefulset.podAntiAffinity.weight | int64 }}
+              podAffinityTerm:
+                topologyKey: {{ .Values.statefulset.podAntiAffinity.topologyKey }}
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: {{ include "tigerbeetle.name" . }}
+                    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+                  {{- with .Values.statefulset.labels }}
+                    {{- toYaml . | nindent 20 }}
+                  {{- end }}
+        {{- end }}
+        {{- else }}
+          {{- toYaml .Values.statefulset.podAntiAffinity | nindent 10 }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- if semverCompare ">=1.16-0" .Capabilities.KubeVersion.Version }}
+      topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: {{ include "tigerbeetle.name" . }}
+            app.kubernetes.io/instance: {{ .Release.Name | quote }}
+          {{- with .Values.statefulset.labels }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.statefulset.topologySpreadConstraints }}
+        maxSkew: {{ .maxSkew }}
+        topologyKey: {{ .topologyKey }}
+        whenUnsatisfiable: {{ .whenUnsatisfiable }}
+      {{- end }}
+    {{- end }}
+    {{- with .Values.statefulset.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.statefulset.priorityClassName }}
+      priorityClassName: {{ .Values.statefulset.priorityClassName }}
+    {{- end }}
+    {{- with .Values.statefulset.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+    {{- end }}
+      # TODO is this correct? No pre-stop hook is required, a SIGTERM plus some time is all that's
+      # needed for graceful shutdown of a node.
+      restartPolicy: Always
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -ex; 
+              REPLICA=${HOSTNAME##*-}
+              ADDRESSES=""
+              for n in $(seq 0 {{sub .Values.statefulset.replicas 1}})
+              do
+                if [ "$n" != "$REPLICA" ]
+                then 
+                  ADDRESSES="$ADDRESSES,127.0.0.1:300$n"
+                else
+                  ADDRESSES="$ADDRESSES,0.0.0.0:4242"
+                fi
+              done
+              ADDRESSES=${ADDRESSES#?}
+              /opt/beta-beetle/tigerbeetle start --cluster=$CLUSTER --replica=$REPLICA --directory=/var/lib/tigerbeetle --addresses=$ADDRESSES
+          env:
+            - name: CLUSTER
+              value: "{{ .Values.statefulset.clusterId }}"
+          ports:
+            - containerPort: 4242
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/tigerbeetle
+        - name: {{ .Chart.Name }}-nginx-proxy
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.statefulset.proxyImage.repository }}:{{ .Values.statefulset.proxyImage.tag | default "1.23.1" }}"
+          imagePullPolicy: {{ .Values.statefulset.proxyImage.pullPolicy }}
+          volumeMounts:
+            - name: {{ .Chart.Name }}-nginx-startup-scripts
+              mountPath: /docker-entrypoint.d/nginx-prestart.sh
+              # using subPath here to mount the single file is necessary for the mounted file to have the correct filetype to be noticed by the nginx startup script.
+              subPath: nginx-prestart.sh
+          #livenessProbe:
+          #  httpGet:
+          #    path: /
+          #    port: http
+          #readinessProbe:
+          #  httpGet:
+          #    path: /
+          #    port: http
+          resources:
+            {{- toYaml .Values.statefulset.resources | nindent 12 }}
+      volumes:
+        - name: {{ .Chart.Name }}-nginx-startup-scripts
+          configMap:
+            name: {{ .Chart.Name }}-nginx-proxy
+            defaultMode: 0555
+            items:
+              - key: nginx-prestart.sh
+                path: nginx-prestart.sh
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app.kubernetes.io/name: {{ include "tigerbeetle.name" . }}
+          app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        {{- with .Values.storage.persistentVolume.labels }}
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.labels }}
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.storage.persistentVolume.annotations }}
+        annotations: {{- toYaml . | nindent 10 }}
+      {{- end }}
+      spec:
+        accessModes: ["ReadWriteOnce"]
+      {{- if .Values.storage.persistentVolume.storageClass }}
+      {{- if (eq "-" .Values.storage.persistentVolume.storageClass) }}
+        storageClassName: ""
+      {{- else }}
+        storageClassName: {{ .Values.storage.persistentVolume.storageClass | quote}}
+      {{- end }}
+      {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.storage.persistentVolume.size | quote }}

@@ -1,12 +1,9 @@
-import base64url from 'base64url'
 import { Logger } from 'pino'
 import { ReadContext } from '../../app'
-import { IAppConfig } from '../../config/app'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { ConnectionService } from './service'
 
 interface ServiceDependencies {
-  config: IAppConfig
   logger: Logger
   incomingPaymentService: IncomingPaymentService
   connectionService: ConnectionService
@@ -36,10 +33,7 @@ async function getConnection(
   const incomingPayment = await deps.incomingPaymentService.getByConnection(id)
   if (!incomingPayment) return ctx.throw(404)
 
-  const streamCredentials = deps.connectionService.get(incomingPayment)
-  ctx.body = {
-    id: `${deps.config.publicHost}/connections/${id}`,
-    ilpAddress: streamCredentials.ilpAddress,
-    sharedSecret: base64url(streamCredentials.sharedSecret)
-  }
+  const connection = deps.connectionService.get(incomingPayment)
+  if (!connection) return ctx.throw(404)
+  ctx.body = connection.toJSON()
 }

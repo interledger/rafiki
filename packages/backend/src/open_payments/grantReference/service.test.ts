@@ -72,7 +72,7 @@ describe('Grant Reference Service', (): void => {
         return await GrantReference.transaction(knex, async (trx) => {
           await grantReferenceService.lock(grantRef.id, trx)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await new Promise((f: any) => setTimeout(f, 5000))
+          await new Promise((f: any) => setTimeout(f, 6000))
           await grantReferenceService.get(grantRef.id, trx)
         })
       }

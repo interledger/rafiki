@@ -11,7 +11,10 @@ import { initIocContainer } from '../../'
 import { ConnectionRoutes } from './routes'
 import { createContext } from '../../tests/context'
 import { PaymentPointer } from '../payment_pointer/model'
-import { IncomingPayment } from '../payment/incoming/model'
+import {
+  IncomingPayment,
+  IncomingPaymentState
+} from '../payment/incoming/model'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import base64url from 'base64url'
@@ -29,7 +32,6 @@ describe('Connection Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
     config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
@@ -92,6 +94,34 @@ describe('Connection Routes', (): void => {
       )
     })
 
+    test.each`
+      state
+      ${IncomingPaymentState.Completed}
+      ${IncomingPaymentState.Expired}
+    `(
+      `returns 404 for $state incoming payment`,
+      async ({ state }): Promise<void> => {
+        await incomingPayment.$query(knex).patch({
+          state,
+          expiresAt:
+            state === IncomingPaymentState.Expired ? new Date() : undefined
+        })
+        const ctx = createContext<ReadContext>(
+          {
+            headers: { Accept: 'application/json' },
+            url: `/connections/${incomingPayment.connectionId}`
+          },
+          {
+            connectionId: incomingPayment.connectionId
+          }
+        )
+        await expect(connectionRoutes.get(ctx)).rejects.toHaveProperty(
+          'status',
+          404
+        )
+      }
+    )
+
     test('returns 200 for correct connection id', async (): Promise<void> => {
       const ctx = createContext<ReadContext>(
         {
@@ -110,7 +140,7 @@ describe('Connection Routes', (): void => {
       ]
 
       expect(ctx.body).toEqual({
-        id: `${config.publicHost}/connections/${incomingPayment.connectionId}`,
+        id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret
       })

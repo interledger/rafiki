@@ -238,6 +238,14 @@ describe('Auth Middleware', (): void => {
       scope.isDone()
     }
   )
+  test('bypasses token introspection for configured DEV_ACCESS_TOKEN', async (): Promise<void> => {
+    ctx.headers.authorization = `GNAP ${Config.devAccessToken}`
+    const authService = await deps.use('authService')
+    const introspectSpy = jest.spyOn(authService, 'introspect')
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(introspectSpy).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
+  })
 
   test('sets the context and calls next if grant has been seen before', async (): Promise<void> => {
     const grant = new Grant({
