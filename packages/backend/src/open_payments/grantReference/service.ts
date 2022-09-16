@@ -1,11 +1,14 @@
-import { TransactionOrKnex } from 'objection'
+import { Transaction, TransactionOrKnex } from 'objection'
 import { BaseService } from '../../shared/baseService'
 import { GrantReference } from './model'
 
 export interface GrantReferenceService {
-  get(grantId: string): Promise<GrantReference>
-  create(options: CreateGrantReferenceOptions): Promise<GrantReference>
-  lock(trx: TransactionOrKnex, grantId: string): Promise<void>
+  get(grantId: string, trx?: Transaction): Promise<GrantReference>
+  create(
+    options: CreateGrantReferenceOptions,
+    trx?: Transaction
+  ): Promise<GrantReference>
+  lock(grantId: string, trx?: TransactionOrKnex): Promise<void>
 }
 
 export async function createGrantReferenceService(
@@ -19,14 +22,18 @@ export async function createGrantReferenceService(
     logger: log
   }
   return {
-    get: (grantId) => getGrantReference(deps, grantId),
-    create: (options) => createGrantReference(deps, options),
-    lock: (trx, grantId) => lockGrantReference(trx, grantId)
+    get: (grantId, trx) => getGrantReference(deps, grantId, trx),
+    create: (options, trx) => createGrantReference(deps, options, trx),
+    lock: (grantId, trx) => lockGrantReference(deps, grantId, trx)
   }
 }
 
-async function getGrantReference(deps: BaseService, grantId: string) {
-  return await GrantReference.query(deps.knex).findById(grantId)
+async function getGrantReference(
+  deps: BaseService,
+  grantId: string,
+  trx?: Transaction
+) {
+  return await GrantReference.query(trx || deps.knex).findById(grantId)
 }
 
 interface CreateGrantReferenceOptions {
@@ -36,14 +43,20 @@ interface CreateGrantReferenceOptions {
 
 async function createGrantReference(
   deps: BaseService,
-  options: CreateGrantReferenceOptions
+  options: CreateGrantReferenceOptions,
+  trx?: Transaction
 ) {
-  return await GrantReference.query(deps.knex).insertAndFetch(options)
+  return await GrantReference.query(trx || deps.knex).insertAndFetch(options)
 }
 
-async function lockGrantReference(trx: TransactionOrKnex, grantId: string) {
+async function lockGrantReference(
+  deps: BaseService,
+  grantId: string,
+  trx?: TransactionOrKnex
+) {
+  const transaction = trx || deps.knex
   // TODO: update to use objection once it supports forNoKeyUpdate
-  await trx<GrantReference>('grantReferences')
+  await transaction<GrantReference>('grantReferences')
     .select()
     .where('id', grantId)
     .forNoKeyUpdate()

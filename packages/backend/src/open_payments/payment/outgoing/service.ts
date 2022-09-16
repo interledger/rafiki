@@ -277,7 +277,7 @@ async function validateGrant(
   }
 
   //lock grant
-  await deps.grantReferenceService.lock(deps.knex, grant.grant)
+  await deps.grantReferenceService.lock(grant.grant, deps.knex)
 
   if (callback) await new Promise(callback)
 
