@@ -14,6 +14,7 @@ import { CreateOptions as BaseCreateOptions } from '../open_payments/payment_poi
 
 interface CreateOptions extends Partial<BaseCreateOptions> {
   mockServerPort?: number
+  createLiquidityAccount?: boolean
 }
 
 export type MockPaymentPointer = PaymentPointer & {
@@ -32,6 +33,13 @@ export async function createPaymentPointer(
     asset: options.asset || randomAsset()
   })) as MockPaymentPointer
   assert.ok(!isPaymentPointerError(paymentPointerOrError))
+  if (options.createLiquidityAccount) {
+    const accountingService = await deps.use('accountingService')
+    await accountingService.createLiquidityAccount({
+      id: paymentPointerOrError.id,
+      asset: paymentPointerOrError.asset
+    })
+  }
   if (options.mockServerPort) {
     const url = new URL(paymentPointerOrError.url)
     paymentPointerOrError.scope = nock(url.origin)
