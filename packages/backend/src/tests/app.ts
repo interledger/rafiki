@@ -87,12 +87,8 @@ export const createTestApp = async (
     .get(/.*/)
     .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
     .reply(200, function (path) {
-      const headers = this.req.headers
-      if (!headers['authorization']) {
-        headers.authorization = `GNAP ${testAccessToken}`
-      }
       return Axios.get(`http://localhost:${app.getOpenPaymentsPort()}${path}`, {
-        headers
+        headers: this.req.headers
       }).then((res) => res.data)
     })
     .persist()
