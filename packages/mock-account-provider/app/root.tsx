@@ -1,4 +1,4 @@
-import type { MetaFunction } from '@remix-run/node'
+import type { LinksFunction, MetaFunction } from '@remix-run/node'
 import {
   Links,
   LiveReload,
@@ -7,13 +7,16 @@ import {
   Scripts,
   ScrollRestoration
 } from '@remix-run/react'
-import ConsentScreen from './consent-screen'
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
   title: 'New Remix App',
   viewport: 'width=device-width,initial-scale=1'
 })
+
+export const links: LinksFunction = () => {
+  return [{ rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css' }];
+}
 
 export default function App() {
   return (
@@ -27,7 +30,6 @@ export default function App() {
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
-        <ConsentScreen />
       </body>
     </html>
   )
