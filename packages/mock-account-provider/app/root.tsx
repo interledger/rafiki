@@ -15,7 +15,12 @@ export const meta: MetaFunction = () => ({
 })
 
 export const links: LinksFunction = () => {
-  return [{ rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css' }];
+  return [
+    {
+      rel: 'stylesheet',
+      href: 'https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css'
+    }
+  ]
 }
 
 export default function App() {

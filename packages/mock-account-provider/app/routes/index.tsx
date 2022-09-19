@@ -2,9 +2,7 @@
 import ConsentScreen from '~/consent-screen'
 
 export default function Index() {
-  return (
-    <ConsentScreen />
-  )
+  return <ConsentScreen />
 }
 
 export function links() {

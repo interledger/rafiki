@@ -14,21 +14,25 @@ interface ApiResponse {
 }
 
 class ApiSteps {
-  
   /*
    * flow overview:
    *    1. start interaction --> GET /interact/:id/:nonce
    *    2. get grant --> GET /grant/:id/:nonce
    *    3. user makes choice --> POST /grant/:id/:nonce/accept or /grant/:id/:nonce/reject
    *    4. end interaction --> GET /interact/:id/:nonce/finish
-  */
+   */
 
   public static BaseUrl = 'http://localhost:9977'
-  
-  public static async startInteraction(params: Record<string, string>): Promise<ApiResponse> {
+
+  public static async startInteraction(
+    params: Record<string, string>
+  ): Promise<ApiResponse> {
     // start interaction --> GET /interact/:id/:nonce
     const { interactId, nonce } = params
-    const response = await ApiSteps.apiCall('GET', `/interact/${interactId}/${nonce}`)
+    const response = await ApiSteps.apiCall(
+      'GET',
+      `/interact/${interactId}/${nonce}`
+    )
     if (response.ok) {
       return {
         isFailure: false,
@@ -46,12 +50,19 @@ class ApiSteps {
     }
   }
 
-  public static async getGrant(params: Record<string, string>): Promise<ApiResponse> {
+  public static async getGrant(
+    params: Record<string, string>
+  ): Promise<ApiResponse> {
     // get grant --> GET /grant/:id/:nonce
     const { interactId, nonce } = params
-    const response = await ApiSteps.apiCall('GET', `/grant/${interactId}/${nonce}`, undefined, {
-      'x-idp-secret': 'replace-me'
-    })
+    const response = await ApiSteps.apiCall(
+      'GET',
+      `/grant/${interactId}/${nonce}`,
+      undefined,
+      {
+        'x-idp-secret': 'replace-me'
+      }
+    )
     if (response.ok) {
       const grant = JSON.parse(response.responseText)
       return {
@@ -73,33 +84,21 @@ class ApiSteps {
     }
   }
 
-  public static async chooseConsent(params: Record<string, string>): Promise<ApiResponse> {
+  public static async chooseConsent(
+    params: Record<string, string>
+  ): Promise<ApiResponse> {
     // make choice --> POST /grant/:id/:nonce/accept or /grant/:id/:nonce/reject
     const { interactId, nonce, acceptanceDecision } = params
-    const acceptanceSubPath = acceptanceDecision === 'true' ? 'accept' : 'reject'
-    const response = await ApiSteps.apiCall('POST', `/grant/${interactId}/${nonce}/${acceptanceSubPath}`, undefined, {
-      'x-idp-secret': 'replace-me'
-    })
-    if (response.ok) {
-      return {
-        isFailure: false
+    const acceptanceSubPath =
+      acceptanceDecision === 'true' ? 'accept' : 'reject'
+    const response = await ApiSteps.apiCall(
+      'POST',
+      `/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
+      undefined,
+      {
+        'x-idp-secret': 'replace-me'
       }
-    } else {
-      return {
-        payload: {
-          error: `status ${response.status}: ${response.responseText}`
-        },
-        isFailure: true
-      }
-    }
-  }
-  
-  public static async endInteraction(params: Record<string, string>): Promise<ApiResponse> {
-    // end interaction --> GET /interact/:id/:nonce/finish
-    const { interactId, nonce } = params
-    const response = await ApiSteps.apiCall('GET', `/interact/${interactId}/${nonce}/finish`, undefined, {
-      'x-idp-secret': 'replace-me'
-    })
+    )
     if (response.ok) {
       return {
         isFailure: false
@@ -114,7 +113,39 @@ class ApiSteps {
     }
   }
 
-  private static apiCall(apiMethod: 'GET' | 'POST', apiPath: string, payload?: any, headers?: { [headerName: string]: string }): Promise<{
+  public static async endInteraction(
+    params: Record<string, string>
+  ): Promise<ApiResponse> {
+    // end interaction --> GET /interact/:id/:nonce/finish
+    const { interactId, nonce } = params
+    const response = await ApiSteps.apiCall(
+      'GET',
+      `/interact/${interactId}/${nonce}/finish`,
+      undefined,
+      {
+        'x-idp-secret': 'replace-me'
+      }
+    )
+    if (response.ok) {
+      return {
+        isFailure: false
+      }
+    } else {
+      return {
+        payload: {
+          error: `status ${response.status}: ${response.responseText}`
+        },
+        isFailure: true
+      }
+    }
+  }
+
+  private static apiCall(
+    apiMethod: 'GET' | 'POST',
+    apiPath: string,
+    payload?: any,
+    headers?: { [headerName: string]: string }
+  ): Promise<{
     readonly responseText: string
     readonly status: number
     readonly ok: boolean
@@ -126,13 +157,17 @@ class ApiSteps {
         xhr.setRequestHeader('signature', 'signature')
         xhr.setRequestHeader('signature-input', 'signature-input')
         if (headers) {
-          Object.keys(headers).forEach(h => {
+          Object.keys(headers).forEach((h) => {
             xhr.setRequestHeader(h, headers[h])
           })
         }
         xhr.onreadystatechange = function (ev) {
           if (this.readyState === 4) {
-            resolve({responseText: this.responseText, status: this.status, ok: this.status >= 200 && this.status <= 399 })
+            resolve({
+              responseText: this.responseText,
+              status: this.status,
+              ok: this.status >= 200 && this.status <= 399
+            })
           }
         }
         xhr.send(payload === undefined ? undefined : JSON.stringify(payload))
@@ -145,48 +180,80 @@ class ApiSteps {
 
 type StepStatus = 'pending' | 'succeeded' | 'failed' | 'not-started'
 
-function OutputArea({ title, serializableValue }: { title: string, serializableValue: any }) {
-  const prettyContent = serializableValue === null
-    ? '(null)'
-    : serializableValue === undefined
-    ? '(no body)'
-    : Array.isArray(serializableValue) || typeof serializableValue === 'object'
-    ? JSON.stringify(serializableValue, null, 2)
-    : `${serializableValue}`
+function OutputArea({
+  title,
+  serializableValue
+}: {
+  title: string
+  serializableValue: any
+}) {
+  const prettyContent =
+    serializableValue === null
+      ? '(null)'
+      : serializableValue === undefined
+      ? '(no body)'
+      : Array.isArray(serializableValue) ||
+        typeof serializableValue === 'object'
+      ? JSON.stringify(serializableValue, null, 2)
+      : `${serializableValue}`
   return (
     <div>
       <div>{title}</div>
-      <pre style={{ backgroundColor: 'gainsboro', padding: '0.5em', borderRadius: 5 }}>{prettyContent}</pre>
+      <pre
+        style={{
+          backgroundColor: 'gainsboro',
+          padding: '0.5em',
+          borderRadius: 5
+        }}
+      >
+        {prettyContent}
+      </pre>
     </div>
   )
 }
 
 function StepStatusBullet({ stepStatus }: { stepStatus: StepStatus }) {
-  return (
-    stepStatus === 'failed'
-    ? <>&#10060;</> // cross
-    : stepStatus === 'succeeded'
-    ? <>&#10004;</> // checkmark
-    : <>&nbsp;&nbsp;&nbsp;</>)
+  return stepStatus === 'failed' ? (
+    <>&#10060;</> // cross
+  ) : stepStatus === 'succeeded' ? (
+    <>&#10004;</> // checkmark
+  ) : (
+    <>&nbsp;&nbsp;&nbsp;</>
+  )
 }
 
-function StepStatusRow({ stepIndex, currentStep, stepTexts, stepStatuses }: { stepIndex: number, currentStep: number, stepTexts: Array<string>, stepStatuses: Array<StepStatus> }) {
+function StepStatusRow({
+  stepIndex,
+  currentStep,
+  stepTexts,
+  stepStatuses
+}: {
+  stepIndex: number
+  currentStep: number
+  stepTexts: Array<string>
+  stepStatuses: Array<StepStatus>
+}) {
   const isActiveStep = currentStep === stepIndex
   return (
-    <div style={{ fontWeight: isActiveStep ? 'bold' : 'normal'}}>
-        <StepStatusBullet stepStatus={stepStatuses[stepIndex]}></StepStatusBullet>
-        <>&nbsp;</>
-        {stepTexts[stepIndex]}
-        <>&nbsp;</>
-        {isActiveStep ? <>&larr;</> : <></>}
-      </div>
+    <div style={{ fontWeight: isActiveStep ? 'bold' : 'normal' }}>
+      <StepStatusBullet stepStatus={stepStatuses[stepIndex]}></StepStatusBullet>
+      <>&nbsp;</>
+      {stepTexts[stepIndex]}
+      <>&nbsp;</>
+      {isActiveStep ? <>&larr;</> : <></>}
+    </div>
   )
 }
 
 export default function ConsentScreen() {
   const [ctx, setCtx] = useState({
     currentStep: 0,
-    stepStatuses: ['pending', 'not-started', 'not-started', 'not-started'] as Array<StepStatus>,
+    stepStatuses: [
+      'pending',
+      'not-started',
+      'not-started',
+      'not-started'
+    ] as Array<StepStatus>,
     stepTexts: [
       'Start interaction',
       'Get grant',
@@ -218,7 +285,9 @@ export default function ConsentScreen() {
       isBusy: true
     })
 
-    let apiHandler: (params: Record<string, string>) => Promise<ApiResponse> = async (params) => {
+    let apiHandler: (
+      params: Record<string, string>
+    ) => Promise<ApiResponse> = async (params) => {
       return {
         isFailure: false
       }
@@ -289,55 +358,135 @@ export default function ConsentScreen() {
                     <h5 className='card-title'>Parameters</h5>
                     <form>
                       <div className='form-group'>
-                        <label htmlFor='consent-screen-interactId' style={{ display: 'block' }}>interactId</label>
-                        <input className='form-control' id='consent-screen-interactId' type='text' spellCheck={false} value={ctx.interactId} onChange={(event) => {
-                          setCtx({
-                            ...ctx,
-                            interactId: event.target.value
-                          })
-                        }}></input>
+                        <label
+                          htmlFor='consent-screen-interactId'
+                          style={{ display: 'block' }}
+                        >
+                          interactId
+                        </label>
+                        <input
+                          className='form-control'
+                          id='consent-screen-interactId'
+                          type='text'
+                          spellCheck={false}
+                          value={ctx.interactId}
+                          onChange={(event) => {
+                            setCtx({
+                              ...ctx,
+                              interactId: event.target.value
+                            })
+                          }}
+                        ></input>
                       </div>
                       <div className='form-group'>
-                        <label htmlFor='consent-screen-nonce' style={{ display: 'block' }}>nonce</label>
-                        <input className='form-control' id='consent-screen-nonce' type='text' spellCheck={false} value={ctx.nonce} onChange={(event) => {
-                          setCtx({
-                            ...ctx,
-                            nonce: event.target.value
-                          })
-                        }}></input>
+                        <label
+                          htmlFor='consent-screen-nonce'
+                          style={{ display: 'block' }}
+                        >
+                          nonce
+                        </label>
+                        <input
+                          className='form-control'
+                          id='consent-screen-nonce'
+                          type='text'
+                          spellCheck={false}
+                          value={ctx.nonce}
+                          onChange={(event) => {
+                            setCtx({
+                              ...ctx,
+                              nonce: event.target.value
+                            })
+                          }}
+                        ></input>
                       </div>
                       <div className='form-group'>
                         <label style={{ display: 'block' }}>decision</label>
 
                         <div className='form-check form-check-inline'>
-                          <input className='form-check-input' type='radio' id='consent-screen-decision-accept' name='consent-screen-decision' disabled={ctx.currentStep > StepNames.chooseConsent} defaultChecked={ctx.acceptanceDecision} onChange={(event) => {
-                            setCtx({
-                              ...ctx,
-                              acceptanceDecision: event.target.checked
-                            })
-                          }}></input>
-                          <label className='form-check-label' htmlFor='consent-screen-decision-accept'>accept</label>
+                          <input
+                            className='form-check-input'
+                            type='radio'
+                            id='consent-screen-decision-accept'
+                            name='consent-screen-decision'
+                            disabled={ctx.currentStep > StepNames.chooseConsent}
+                            defaultChecked={ctx.acceptanceDecision}
+                            onChange={(event) => {
+                              setCtx({
+                                ...ctx,
+                                acceptanceDecision: event.target.checked
+                              })
+                            }}
+                          ></input>
+                          <label
+                            className='form-check-label'
+                            htmlFor='consent-screen-decision-accept'
+                          >
+                            accept
+                          </label>
                         </div>
                         <div className='form-check form-check-inline'>
-                          <input className='form-check-input' type='radio' id='consent-screen-decision-reject' name='consent-screen-decision' disabled={ctx.currentStep > StepNames.chooseConsent} defaultChecked={!ctx.acceptanceDecision} onChange={(event) => {
-                            setCtx({
-                              ...ctx,
-                              acceptanceDecision: !event.target.checked
-                            })
-                          }}></input>
-                          <label className='form-check-label' htmlFor='consent-screen-decision-reject'>reject</label>
+                          <input
+                            className='form-check-input'
+                            type='radio'
+                            id='consent-screen-decision-reject'
+                            name='consent-screen-decision'
+                            disabled={ctx.currentStep > StepNames.chooseConsent}
+                            defaultChecked={!ctx.acceptanceDecision}
+                            onChange={(event) => {
+                              setCtx({
+                                ...ctx,
+                                acceptanceDecision: !event.target.checked
+                              })
+                            }}
+                          ></input>
+                          <label
+                            className='form-check-label'
+                            htmlFor='consent-screen-decision-reject'
+                          >
+                            reject
+                          </label>
                         </div>
                       </div>
                     </form>
                   </div>
                   <div className='col-6'>
                     <h5 className='card-title'>Flow</h5>
-                    <StepStatusRow stepIndex={StepNames.startInteraction} currentStep={ctx.currentStep} stepTexts={ctx.stepTexts} stepStatuses={ctx.stepStatuses}></StepStatusRow>
-                    <StepStatusRow stepIndex={StepNames.getGrant} currentStep={ctx.currentStep} stepTexts={ctx.stepTexts} stepStatuses={ctx.stepStatuses}></StepStatusRow>
-                    <StepStatusRow stepIndex={StepNames.chooseConsent} currentStep={ctx.currentStep} stepTexts={ctx.stepTexts} stepStatuses={ctx.stepStatuses}></StepStatusRow>
-                    <StepStatusRow stepIndex={StepNames.endInteraction} currentStep={ctx.currentStep} stepTexts={ctx.stepTexts} stepStatuses={ctx.stepStatuses}></StepStatusRow>
-                    <br></br><br></br>
-                    <button type='button' className={disableButton ? 'btn btn-secondary' : 'btn btn-primary'} disabled={disableButton} onClick={() => advanceStep()}>{ ctx.isBusy ? 'awaiting response...' : 'Begin step' }</button>
+                    <StepStatusRow
+                      stepIndex={StepNames.startInteraction}
+                      currentStep={ctx.currentStep}
+                      stepTexts={ctx.stepTexts}
+                      stepStatuses={ctx.stepStatuses}
+                    ></StepStatusRow>
+                    <StepStatusRow
+                      stepIndex={StepNames.getGrant}
+                      currentStep={ctx.currentStep}
+                      stepTexts={ctx.stepTexts}
+                      stepStatuses={ctx.stepStatuses}
+                    ></StepStatusRow>
+                    <StepStatusRow
+                      stepIndex={StepNames.chooseConsent}
+                      currentStep={ctx.currentStep}
+                      stepTexts={ctx.stepTexts}
+                      stepStatuses={ctx.stepStatuses}
+                    ></StepStatusRow>
+                    <StepStatusRow
+                      stepIndex={StepNames.endInteraction}
+                      currentStep={ctx.currentStep}
+                      stepTexts={ctx.stepTexts}
+                      stepStatuses={ctx.stepStatuses}
+                    ></StepStatusRow>
+                    <br></br>
+                    <br></br>
+                    <button
+                      type='button'
+                      className={
+                        disableButton ? 'btn btn-secondary' : 'btn btn-primary'
+                      }
+                      disabled={disableButton}
+                      onClick={() => advanceStep()}
+                    >
+                      {ctx.isBusy ? 'awaiting response...' : 'Begin step'}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -347,10 +496,22 @@ export default function ConsentScreen() {
                 <h5 className='card-title'>Outputs</h5>
                 <div className='row'>
                   <div className='col-6'>
-                    <OutputArea title='latest API response' serializableValue={ctx.isBusy ? '(XHR in progress. Please wait...)' : ctx.currentStep > 0 ? ctx.previousStepResponse : '--'}></OutputArea>
+                    <OutputArea
+                      title='latest API response'
+                      serializableValue={
+                        ctx.isBusy
+                          ? '(XHR in progress. Please wait...)'
+                          : ctx.currentStep > 0
+                          ? ctx.previousStepResponse
+                          : '--'
+                      }
+                    ></OutputArea>
                   </div>
                   <div className='col-6'>
-                    <OutputArea title='grant' serializableValue={ctx.grant}></OutputArea>
+                    <OutputArea
+                      title='grant'
+                      serializableValue={ctx.grant}
+                    ></OutputArea>
                   </div>
                 </div>
               </div>
