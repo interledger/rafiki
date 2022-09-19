@@ -8,7 +8,7 @@ export interface GrantReferenceService {
     options: CreateGrantReferenceOptions,
     trx?: Transaction
   ): Promise<GrantReference>
-  lock(grantId: string, trx?: TransactionOrKnex): Promise<void>
+  lock(grantId: string, trx: TransactionOrKnex): Promise<void>
 }
 
 export async function createGrantReferenceService(
@@ -24,7 +24,7 @@ export async function createGrantReferenceService(
   return {
     get: (grantId, trx) => getGrantReference(deps, grantId, trx),
     create: (options, trx) => createGrantReference(deps, options, trx),
-    lock: (grantId, trx) => lockGrantReference(deps, grantId, trx)
+    lock: (grantId, trx) => lockGrantReference(grantId, trx)
   }
 }
 
@@ -49,14 +49,9 @@ async function createGrantReference(
   return await GrantReference.query(trx || deps.knex).insertAndFetch(options)
 }
 
-async function lockGrantReference(
-  deps: BaseService,
-  grantId: string,
-  trx?: TransactionOrKnex
-) {
-  const transaction = trx || deps.knex
+async function lockGrantReference(grantId: string, trx: TransactionOrKnex) {
   // TODO: update to use objection once it supports forNoKeyUpdate
-  await transaction<GrantReference>('grantReferences')
+  await trx<GrantReference>('grantReferences')
     .select()
     .where('id', grantId)
     .forNoKeyUpdate()
