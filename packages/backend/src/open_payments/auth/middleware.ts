@@ -16,6 +16,7 @@ export function createAuthMiddleware({
     const grantReferenceService = await ctx.container.use(
       'grantReferenceService'
     )
+    const logger = await ctx.container.use('logger')
     try {
       const parts = ctx.request.headers.authorization?.split(' ')
       if (parts?.length !== 2 || parts[0] !== 'GNAP') {
@@ -46,7 +47,10 @@ export function createAuthMiddleware({
       const grantRef = await grantReferenceService.get(grant.grant)
       if (grantRef) {
         if (grantRef.clientId !== grant.clientId) {
-          ctx.throw(409, 'Unknown Client ID')
+          logger.debug(
+            `clientID ${grant.clientId} for grant ${grant.grant} does not match internal reference clientId ${grantRef.clientId}.`
+          )
+          ctx.throw(500)
         }
       } else {
         await grantReferenceService.create({

@@ -152,7 +152,7 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
     scope.isDone()
   })
-  test('returns 409 for not matching clientId', async (): Promise<void> => {
+  test('returns 500 for not matching clientId', async (): Promise<void> => {
     const grant = new Grant({
       active: true,
       clientId: uuid(),
@@ -171,8 +171,7 @@ describe('Auth Middleware', (): void => {
     })
     const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).rejects.toMatchObject({
-      status: 409,
-      message: 'Unknown Client ID'
+      status: 500
     })
     expect(next).not.toHaveBeenCalled()
     scope.isDone()
