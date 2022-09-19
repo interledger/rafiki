@@ -1,5 +1,7 @@
 import { AccessType, AccessAction } from './grant'
 import { AppContext } from '../../app'
+import { Transaction } from 'objection'
+import { GrantReference } from '../grantReference/model'
 
 export function createAuthMiddleware({
   type,
@@ -44,22 +46,27 @@ export function createAuthMiddleware({
       ) {
         ctx.throw(403, 'Insufficient Grant')
       }
-      const grantRef = await grantReferenceService.get(grant.grant)
-      if (grantRef) {
-        if (grantRef.clientId !== grant.clientId) {
-          logger.debug(
-            `clientID ${grant.clientId} for grant ${grant.grant} does not match internal reference clientId ${grantRef.clientId}.`
+      await GrantReference.transaction(async (trx: Transaction) => {
+        const grantRef = await grantReferenceService.get(grant.grant, trx)
+        if (grantRef) {
+          if (grantRef.clientId !== grant.clientId) {
+            logger.debug(
+              `clientID ${grant.clientId} for grant ${grant.grant} does not match internal reference clientId ${grantRef.clientId}.`
+            )
+            ctx.throw(500)
+          }
+        } else {
+          await grantReferenceService.create(
+            {
+              id: grant.grant,
+              clientId: grant.clientId
+            },
+            trx
           )
-          ctx.throw(500)
         }
-      } else {
-        await grantReferenceService.create({
-          id: grant.grant,
-          clientId: grant.clientId
-        })
-      }
-      ctx.grant = grant
-      await next()
+        ctx.grant = grant
+        await next()
+      })
     } catch (err) {
       if (err.status === 401) {
         ctx.status = 401
