@@ -10,7 +10,6 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
-      AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
       INTROSPECTION_HTTPSIG: false
     depends_on:
       - tigerbeetle
@@ -61,8 +60,6 @@ services:
       PUBLIC_HOST: http://backend
       OPEN_PAYMENTS_URL: http://backend
       WEBHOOK_URL: http://fynbos/webhooks
-      OPEN_PAYMENTS_SPEC: https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml
-      AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
       PRICES_URL: http://fynbos/prices
       REDIS_URL: redis://redis:6379/0
       QUOTE_URL: http://fynbos/quotes
