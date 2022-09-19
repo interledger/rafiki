@@ -141,13 +141,11 @@ async function getConnection(
   deps: ServiceDependencies,
   url: string
 ): Promise<ConnectionJSON | undefined> {
-  const requestHeaders = {
-    Authorization: `GNAP ${deps.accessToken}`,
-    'Content-Type': 'application/json'
-  }
   try {
     const { status, data } = await axios.get(url, {
-      headers: requestHeaders,
+      headers: {
+        'Content-Type': 'application/json'
+      },
       timeout: REQUEST_TIMEOUT,
       validateStatus: (status) => status === 200
     })
