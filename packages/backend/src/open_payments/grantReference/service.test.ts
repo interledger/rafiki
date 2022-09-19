@@ -15,7 +15,6 @@ describe('Grant Reference Service', (): void => {
   let appContainer: TestContainer
   let grantReferenceService: GrantReferenceService
   let knex: Knex
-  let knexTrx: Knex.Transaction
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -44,19 +43,30 @@ describe('Grant Reference Service', (): void => {
     `(
       'a grant reference can be created and fetched - transaction: $transaction',
       async ({ transaction }): Promise<void> => {
-        const trx = transaction ? knexTrx : undefined
-        const id = uuid()
-        const grantRef = await grantReferenceService.create(
-          {
+        await GrantReference.transaction(async (trx) => {
+          const id = uuid()
+          const grantRef = await grantReferenceService.create(
+            {
+              id,
+              clientId: uuid()
+            },
+            transaction ? trx : undefined
+          )
+          const retrievedRef = await grantReferenceService.get(
             id,
-            clientId: uuid()
-          },
-          trx
-        )
-        const retrievedRef = await grantReferenceService.get(id, trx)
-        expect(grantRef).toEqual(retrievedRef)
+            transaction ? trx : undefined
+          )
+          expect(grantRef).toEqual(retrievedRef)
+          if (transaction) {
+            await trx.rollback()
+            await expect(
+              await grantReferenceService.get(id)
+            ).resolves.toBeUndefined()
+          }
+        })
       }
     )
+
     test('cannot fetch non-existing grant reference', async (): Promise<void> => {
       await expect(grantReferenceService.get(uuid())).resolves.toBeUndefined()
     })
