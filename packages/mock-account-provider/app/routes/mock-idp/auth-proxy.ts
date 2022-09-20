@@ -23,15 +23,13 @@ export function loader({ request }: LoaderArgs): Promise<Response> {
       forwardUrl = searchParams.get('target')
       forwardHostname = searchParams.get('hostname')
       forwardPort = searchParams.get('port')
-      if (searchParams.has('method')) {
-        forwardMethod = searchParams.get('method')!
-      }
+      forwardMethod = searchParams.get('method') || request.method
     }
 
     if (forwardUrl && forwardHostname && forwardPort) {
       const proxyHeaders: http.OutgoingHttpHeaders = {}
       request.headers.forEach((value, key) => {
-        if (/^[^\(\)<>@,;:\\"\/\[\]\?=\{\}]{1,}$/g.test(key)) {
+        if (/^[^()<>@,;:\\"/[\]?={}]{1,}$/g.test(key)) {
           proxyHeaders[key] = value
         }
       })

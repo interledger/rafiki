@@ -8,8 +8,10 @@ const StepNames = {
 }
 
 interface ApiResponse {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   readonly payload?: any
   readonly isFailure: boolean
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   readonly contextUpdates?: { [key: string]: any }
 }
 
@@ -143,6 +145,7 @@ class ApiSteps {
   private static apiCall(
     apiMethod: 'GET' | 'POST',
     apiPath: string,
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     payload?: any,
     headers?: { [headerName: string]: string }
   ): Promise<{
@@ -190,6 +193,7 @@ function OutputArea({
   serializableValue
 }: {
   title: string
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   serializableValue: any
 }) {
   const prettyContent =

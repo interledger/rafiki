@@ -6,8 +6,9 @@ export function loader({ request }: LoaderArgs) {
   const responseHeaders: Record<string, string> = {}
 
   includeHeaders.forEach((h) => {
-    if (request.headers.has(h)) {
-      responseHeaders[h] = request.headers.get(h)!
+    const header = request.headers.get(h)
+    if (header) {
+      responseHeaders[h] = header
     }
   })
 
