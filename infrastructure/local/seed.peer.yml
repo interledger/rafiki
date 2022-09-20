@@ -1,6 +1,6 @@
 self:
   graphqlUrl: http://peer-backend:3001/graphql
-  hostname: 'backend'
+  hostname: 'peer-backend'
   mapHostname: 'primary-map'
   openPaymentPublishedPort: 4000
 peers:
