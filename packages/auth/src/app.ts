@@ -13,7 +13,7 @@ import { IAppConfig } from './config/app'
 import { ClientService } from './client/service'
 import { GrantService } from './grant/service'
 import { AccessTokenRoutes } from './accessToken/routes'
-import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
+import { createValidatorMiddleware, HttpMethod } from 'openapi'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -193,7 +193,9 @@ export class App {
     // Grant Initiation
     this.publicRouter.post(
       '/',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/',
         method: HttpMethod.POST
       }),
@@ -204,7 +206,9 @@ export class App {
     // Grant Continue
     this.publicRouter.post(
       '/continue/id',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/continue/{id}',
         method: HttpMethod.POST
       }),
@@ -215,7 +219,9 @@ export class App {
     // Token Rotation
     this.publicRouter.post(
       '/token/:id',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/token/{id}',
         method: HttpMethod.POST
       }),
@@ -226,7 +232,9 @@ export class App {
     // Token Revocation
     this.publicRouter.delete(
       '/token/:id',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/token/{id}',
         method: HttpMethod.DELETE
       }),
@@ -238,7 +246,9 @@ export class App {
     // Token Introspection
     this.publicRouter.post(
       '/introspect',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/introspect',
         method: HttpMethod.POST
       }),
@@ -250,11 +260,13 @@ export class App {
 
     /* Front Channel Routes */
     // TODO: update front-channel routes to have /frontend prefix here and in openapi spec
-    
+
     // Interaction start
     this.publicRouter.get(
       '/interact/:id/:nonce',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/interact/{id}/{nonce}',
         method: HttpMethod.GET
       }),
@@ -264,7 +276,9 @@ export class App {
     // Interaction finish
     this.publicRouter.get(
       '/interact/:id/:nonce/finish',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/interact/{id}/{nonce}/finish',
         method: HttpMethod.GET
       }),
@@ -274,7 +288,9 @@ export class App {
     // Grant lookup
     this.publicRouter.get(
       '/grant/:id/:nonce',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/grant/{id}/{nonce}',
         method: HttpMethod.GET
       }),
@@ -284,7 +300,9 @@ export class App {
     // Grant accept
     this.publicRouter.post(
       '/grant/:id/:nonce/accept',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/grant/{id}/{nonce}/{choice}',
         method: HttpMethod.POST
       }),
@@ -294,7 +312,9 @@ export class App {
     // Grant reject
     this.publicRouter.post(
       '/grant/:id/:nonce/reject',
-      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+      createValidatorMiddleware<
+        ContextType<(ctx: AppContext) => Promise<void>>
+      >(openApi, {
         path: '/grant/{id}/{nonce}/{choice}',
         method: HttpMethod.POST
       }),
