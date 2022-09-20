@@ -45,13 +45,6 @@ export interface DatabaseCleanupRule {
   defaultExpirationOffsetDays: number
 }
 
-type ContextType<T> = T extends (
-  ctx: infer Context
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-) => any
-  ? Context
-  : never
-
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
@@ -203,7 +196,7 @@ export class App {
 
     // Grant Continue
     this.publicRouter.post(
-      '/continue/id',
+      '/continue/:id',
       createValidatorMiddleware(openApi, {
         path: '/continue/{id}',
         method: HttpMethod.POST
