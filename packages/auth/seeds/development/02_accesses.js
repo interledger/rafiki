@@ -20,6 +20,7 @@ exports.seed = function (knex) {
           id: v4(),
           type: 'outgoing-payment',
           actions: ['create', 'read', 'list'],
+          identifier: 'https://backend/accounts/gfranklin',
           grantId: '051208da-f6b6-4ed0-b49b-8b00439003bc',
           createdAt: new Date(),
           updatedAt: new Date()

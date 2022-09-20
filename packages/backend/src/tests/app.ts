@@ -18,7 +18,7 @@ import { URL } from 'url'
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
 import { Grant, AccessAction, AccessType } from '../open_payments/auth/grant'
-
+import { v4 as uuid } from 'uuid'
 export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {
@@ -29,6 +29,8 @@ export interface TestContainer {
   apolloClient: ApolloClient<NormalizedCacheObject>
   connectionUrl: string
   shutdown: () => Promise<void>
+  grantId: string
+  clientId: string
 }
 
 export const createTestApp = async (
@@ -60,6 +62,7 @@ export const createTestApp = async (
 
   const grant = new Grant({
     active: true,
+    clientId: uuid(),
     grant: 'PRY5NM33OM4TB8N6BW7',
     access: [
       {
@@ -149,6 +152,8 @@ export const createTestApp = async (
     shutdown: async () => {
       nock.cleanAll()
       await gracefulShutdown(container, app)
-    }
+    },
+    grantId: grant.grant,
+    clientId: grant.clientId
   }
 }

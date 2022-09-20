@@ -252,7 +252,9 @@ describe('Payment Pointer Resolvers', (): void => {
         const paymentPointers: PaymentPointerModel[] = []
         const withdrawalAmount = BigInt(10)
         for (let i = 0; i < 3; i++) {
-          const paymentPointer = await createPaymentPointer(deps)
+          const paymentPointer = await createPaymentPointer(deps, {
+            createLiquidityAccount: true
+          })
           if (i) {
             await expect(
               accountingService.createDeposit({
