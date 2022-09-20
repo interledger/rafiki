@@ -1,4 +1,5 @@
-import { LoaderArgs, Response } from '@remix-run/node'
+import type { LoaderArgs} from '@remix-run/node';
+import { Response } from '@remix-run/node'
 import * as http from 'http'
 import * as url from 'url'
 
