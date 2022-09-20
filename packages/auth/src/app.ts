@@ -189,83 +189,117 @@ export class App {
     const signatureService = await this.container.use('signatureService')
 
     const openApi = await this.container.use('openApi')
-    const toRouterPath = (path: string): string =>
-      path.replace(/{/g, ':').replace(/}/g, '')
-    const grantMethodToRoute = {
-      [HttpMethod.POST]: 'continue',
-      [HttpMethod.PATCH]: 'update',
-      [HttpMethod.DELETE]: 'cancel'
-    }
-    const tokenMethodToRoute = {
-      [HttpMethod.POST]: 'rotate',
-      [HttpMethod.DELETE]: 'revoke'
-    }
+    /* Back-channel GNAP Routes */
+    // Grant Initiation
+    this.publicRouter.post(
+      '/',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/',
+        method: HttpMethod.POST
+      }),
+      signatureService.tokenHttpsigMiddleware,
+      grantRoutes.create
+    )
 
-    for (const path in openApi.paths) {
-      for (const method in openApi.paths[path]) {
-        if (isHttpMethod(method)) {
-          let route: (ctx: AppContext) => Promise<void>
-          if (path.includes('continue')) {
-            route = grantRoutes[grantMethodToRoute[method]]
-          } else if (path.includes('token')) {
-            route = accessTokenRoutes[tokenMethodToRoute[method]]
-          } else if (path.includes('introspect')) {
-            this.publicRouter[method](
-              toRouterPath(path),
-              createValidatorMiddleware<ContextType<typeof route>>(openApi, {
-                path,
-                method
-              }),
-              this.config.introspectionHttpsig
-                ? signatureService.tokenHttpsigMiddleware
-                : (ctx, next) => next(),
-              accessTokenRoutes.introspect
-            )
-            continue
-          } else if (path.includes('interact')) {
-            if (path.endsWith('/finish')) {
-              route = grantRoutes.interaction.finish
-            } else {
-              route = grantRoutes.interaction.start
-            }
-          } else if (path.includes('grant')) {
-            if (path.endsWith('/accept')) {
-              route = grantRoutes.interaction.accept
-            } else if (path.endsWith('/reject')) {
-              route = grantRoutes.interaction.reject
-            } else {
-              route = grantRoutes.interaction.details
-            }
-          } else {
-            if (path === '/' && method === HttpMethod.POST) {
-              route = grantRoutes.create
-            } else {
-              this.logger.warn({ path, method }, 'unexpected path/method')
-              continue
-            }
-          }
-          if (route) {
-            this.publicRouter[method](
-              toRouterPath(path),
-              createValidatorMiddleware<ContextType<typeof route>>(openApi, {
-                path,
-                method
-              }),
-              signatureService.tokenHttpsigMiddleware,
-              route
-            )
-            // TODO: remove once all endpoints are implemented
-          } else {
-            this.publicRouter[method](
-              toRouterPath(path),
-              (ctx: AppContext): void => {
-                ctx.status = 200
-              }
-            )
-          }
-        }
-      }
-    }
+    // Grant Continue
+    this.publicRouter.post(
+      '/continue/id',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/continue/{id}',
+        method: HttpMethod.POST
+      }),
+      signatureService.tokenHttpsigMiddleware,
+      grantRoutes.continue
+    )
+
+    // Token Rotation
+    this.publicRouter.post(
+      '/token/:id',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/token/{id}',
+        method: HttpMethod.POST
+      }),
+      signatureService.tokenHttpsigMiddleware,
+      accessTokenRoutes.rotate
+    )
+
+    // Token Revocation
+    this.publicRouter.delete(
+      '/token/:id',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/token/{id}',
+        method: HttpMethod.DELETE
+      }),
+      signatureService.tokenHttpsigMiddleware,
+      accessTokenRoutes.revoke
+    )
+
+    /* AS <-> RS Routes */
+    // Token Introspection
+    this.publicRouter.post(
+      '/introspect',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/introspect',
+        method: HttpMethod.POST
+      }),
+      this.config.introspectionHttpsig
+        ? signatureService.tokenHttpsigMiddleware
+        : (ctx, next) => next(),
+      accessTokenRoutes.introspect
+    )
+
+    /* Front Channel Routes */
+    // TODO: update front-channel routes to have /frontend prefix here and in openapi spec
+    
+    // Interaction start
+    this.publicRouter.get(
+      '/interact/:id/:nonce',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/interact/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
+      grantRoutes.interaction.start
+    )
+
+    // Interaction finish
+    this.publicRouter.get(
+      '/interact/:id/:nonce/finish',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/interact/{id}/{nonce}/finish',
+        method: HttpMethod.GET
+      }),
+      grantRoutes.interaction.finish
+    )
+
+    // Grant lookup
+    this.publicRouter.get(
+      '/grant/:id/:nonce',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/grant/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
+      grantRoutes.interaction.details
+    )
+
+    // Grant accept
+    this.publicRouter.post(
+      '/grant/:id/:nonce/accept',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/grant/{id}/{nonce}/{choice}',
+        method: HttpMethod.POST
+      }),
+      grantRoutes.interaction.accept
+    )
+
+    // Grant reject
+    this.publicRouter.post(
+      '/grant/:id/:nonce/reject',
+      createValidatorMiddleware<ContextType<(ctx: AppContext) => Promise<void>>>(openApi, {
+        path: '/grant/{id}/{nonce}/{choice}',
+        method: HttpMethod.POST
+      }),
+      grantRoutes.interaction.reject
+    )
 
     this.koa.use(this.publicRouter.middleware())
   }
