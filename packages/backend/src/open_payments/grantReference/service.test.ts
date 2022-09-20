@@ -36,36 +36,24 @@ describe('Grant Reference Service', (): void => {
   })
 
   describe('Create and Get GrantReference', (): void => {
-    test.each`
-      transaction
-      ${false}
-      ${true}
-    `(
-      'a grant reference can be created and fetched - transaction: $transaction',
-      async ({ transaction }): Promise<void> => {
-        await GrantReference.transaction(async (trx) => {
-          const id = uuid()
-          const grantRef = await grantReferenceService.create(
-            {
-              id,
-              clientId: uuid()
-            },
-            transaction ? trx : undefined
-          )
-          const retrievedRef = await grantReferenceService.get(
+    test('a grant reference can be created and fetched', async (): Promise<void> => {
+      await GrantReference.transaction(async (trx) => {
+        const id = uuid()
+        const grantRef = await grantReferenceService.create(
+          {
             id,
-            transaction ? trx : undefined
-          )
-          expect(grantRef).toEqual(retrievedRef)
-          if (transaction) {
-            await trx.rollback()
-            await expect(
-              await grantReferenceService.get(id)
-            ).resolves.toBeUndefined()
-          }
-        })
-      }
-    )
+            clientId: uuid()
+          },
+          trx
+        )
+        const retrievedRef = await grantReferenceService.get(id, trx)
+        expect(grantRef).toEqual(retrievedRef)
+        await trx.rollback()
+        await expect(
+          await grantReferenceService.get(id)
+        ).resolves.toBeUndefined()
+      })
+    })
 
     test('cannot fetch non-existing grant reference', async (): Promise<void> => {
       await expect(grantReferenceService.get(uuid())).resolves.toBeUndefined()
@@ -79,7 +67,7 @@ describe('Grant Reference Service', (): void => {
         clientId: uuid()
       })
       const lock = async (): Promise<void> => {
-        return await GrantReference.transaction(knex, async (trx) => {
+        return await GrantReference.transaction(async (trx) => {
           await grantReferenceService.lock(grantRef.id, trx)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await new Promise((f: any) => setTimeout(f, 6000))

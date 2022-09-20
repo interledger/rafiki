@@ -1,5 +1,4 @@
 import { Transaction, TransactionOrKnex } from 'objection'
-import { BaseService } from '../../shared/baseService'
 import { GrantReference } from './model'
 
 export interface GrantReferenceService {
@@ -11,29 +10,16 @@ export interface GrantReferenceService {
   lock(grantId: string, trx: TransactionOrKnex): Promise<void>
 }
 
-export async function createGrantReferenceService(
-  deps_: BaseService
-): Promise<GrantReferenceService> {
-  const log = deps_.logger.child({
-    service: 'GrantReferenceService'
-  })
-  const deps: BaseService = {
-    ...deps_,
-    logger: log
-  }
+export async function createGrantReferenceService(): Promise<GrantReferenceService> {
   return {
-    get: (grantId, trx) => getGrantReference(deps, grantId, trx),
-    create: (options, trx) => createGrantReference(deps, options, trx),
+    get: (grantId, trx) => getGrantReference(grantId, trx),
+    create: (options, trx) => createGrantReference(options, trx),
     lock: (grantId, trx) => lockGrantReference(grantId, trx)
   }
 }
 
-async function getGrantReference(
-  deps: BaseService,
-  grantId: string,
-  trx?: Transaction
-) {
-  return await GrantReference.query(trx || deps.knex).findById(grantId)
+async function getGrantReference(grantId: string, trx: Transaction) {
+  return await GrantReference.query(trx).findById(grantId)
 }
 
 interface CreateGrantReferenceOptions {
@@ -42,11 +28,10 @@ interface CreateGrantReferenceOptions {
 }
 
 async function createGrantReference(
-  deps: BaseService,
   options: CreateGrantReferenceOptions,
-  trx?: Transaction
+  trx: Transaction
 ) {
-  return await GrantReference.query(trx || deps.knex).insertAndFetch(options)
+  return await GrantReference.query(trx).insertAndFetch(options)
 }
 
 async function lockGrantReference(grantId: string, trx: TransactionOrKnex) {

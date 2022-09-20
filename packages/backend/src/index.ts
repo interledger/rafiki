@@ -296,11 +296,8 @@ export function initIocContainer(
       quoteService: await deps.use('quoteService')
     })
   })
-  container.singleton('grantReferenceService', async (deps) => {
-    return createGrantReferenceService({
-      logger: await deps.use('logger'),
-      knex: await deps.use('knex')
-    })
+  container.singleton('grantReferenceService', async () => {
+    return createGrantReferenceService()
   })
   container.singleton('outgoingPaymentService', async (deps) => {
     return await createOutgoingPaymentService({
