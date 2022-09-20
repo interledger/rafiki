@@ -22,7 +22,7 @@ class ApiSteps {
    *    4. end interaction --> GET /interact/:id/:nonce/finish
    */
 
-  public static BaseUrl = 'http://localhost:9977'
+  public static BaseUrl = '/mock-idp/auth-proxy?hostname=localhost&port=3006'
 
   public static async startInteraction(
     params: Record<string, string>
@@ -152,8 +152,13 @@ class ApiSteps {
   }> {
     return new Promise((resolve, reject) => {
       try {
+        const fullUrl =
+          ApiSteps.BaseUrl +
+          `&method=${apiMethod}&target=${encodeURIComponent(
+            apiPath.replace(/^\//, '')
+          )}`
         const xhr = new XMLHttpRequest()
-        xhr.open(apiMethod, ApiSteps.BaseUrl + apiPath)
+        xhr.open('GET', fullUrl)
         xhr.setRequestHeader('signature', 'signature')
         xhr.setRequestHeader('signature-input', 'signature-input')
         if (headers) {
