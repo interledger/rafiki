@@ -1,7 +1,9 @@
 version: '3'
 services:
   peer-auth:
-    image: ghcr.io/interledger/rafiki-auth:latest
+    build:
+      context: ../..
+      dockerfile: ./packages/auth/Dockerfile
     restart: always
     networks:
       rafiki:
@@ -13,7 +15,9 @@ services:
       AUTH_SERVER_SPEC: https://raw.githubusercontent.com/interledger/open-payments/fefe62d738e5178bad88fba04856e41430181eac/auth-server-open-api-spec.yaml
       INTROSPECTION_HTTPSIG: false
   peer-backend:
-    image: ghcr.io/interledger/rafiki-backend:latest
+    build:
+      context: ../..
+      dockerfile: ./packages/backend/Dockerfile
     restart: always
     privileged: true
     ports:

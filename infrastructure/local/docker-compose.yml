@@ -1,7 +1,9 @@
 version: '3'
 services:
   auth:
-    image: ghcr.io/interledger/rafiki-auth:latest
+    build:
+      context: ../..
+      dockerfile: ./packages/auth/Dockerfile
     restart: always
     networks:
       rafiki:
@@ -34,7 +36,9 @@ services:
     depends_on:
       - backend
   backend:
-    image: ghcr.io/interledger/rafiki-backend:latest
+    build:
+      context: ../..
+      dockerfile: ./packages/backend/Dockerfile
     restart: always
     privileged: true
     ports:
