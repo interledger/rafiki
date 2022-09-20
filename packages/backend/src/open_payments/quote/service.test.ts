@@ -31,6 +31,8 @@ import {
 } from '../payment/incoming/model'
 import { Pagination } from '../../shared/baseModel'
 import { getPageTests } from '../../shared/baseModel.test'
+import { GrantReference } from '../grantReference/model'
+import { GrantReferenceService } from '../grantReference/service'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -42,6 +44,8 @@ describe('QuoteService', (): void => {
   let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
+  let grantReferenceService: GrantReferenceService
+  let grantRef: GrantReference
   const SIGNATURE_SECRET = 'test secret'
 
   const asset: AssetOptions = {
@@ -82,6 +86,7 @@ describe('QuoteService', (): void => {
     knex = await deps.use('knex')
     config = await deps.use('config')
     quoteUrl = new URL(Config.quoteUrl)
+    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -97,6 +102,10 @@ describe('QuoteService', (): void => {
     receivingPaymentPointer = await createPaymentPointer(deps, {
       asset: destinationAsset,
       mockServerPort: appContainer.openPaymentsPort
+    })
+    grantRef = await grantReferenceService.create({
+      id: uuid(),
+      clientId: appContainer.clientId
     })
     const accountingService = await deps.use('accountingService')
     await expect(
@@ -227,6 +236,7 @@ describe('QuoteService', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId: receivingPaymentPointer.id,
+            grantId: grantRef.id,
             incomingAmount
           })
           options = {
@@ -539,7 +549,8 @@ describe('QuoteService', (): void => {
             paymentPointerId,
             receiver: (
               await createIncomingPayment(deps, {
-                paymentPointerId: receivingPaymentPointer.id
+                paymentPointerId: receivingPaymentPointer.id,
+                grantId: grantRef.id
               })
             ).url,
             sendAmount,
@@ -559,7 +570,8 @@ describe('QuoteService', (): void => {
           paymentPointerId,
           receiver: (
             await createIncomingPayment(deps, {
-              paymentPointerId: receivingPaymentPointer.id
+              paymentPointerId: receivingPaymentPointer.id,
+              grantId: grantRef.id
             })
           ).url,
           sendAmount

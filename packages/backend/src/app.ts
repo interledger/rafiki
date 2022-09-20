@@ -49,6 +49,7 @@ import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { ClientKeysService } from './clientKeys/service'
 import { ClientService } from './clients/service'
+import { GrantReferenceService } from './open_payments/grantReference/service'
 
 export interface AppContextData {
   logger: Logger
@@ -141,6 +142,7 @@ export interface AppServices {
   sessionService: Promise<SessionService>
   clientService: Promise<ClientService>
   clientKeysService: Promise<ClientKeysService>
+  grantReferenceService: Promise<GrantReferenceService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -277,8 +279,10 @@ export class App {
     } = {
       [AccessAction.Create]: 'create',
       [AccessAction.Read]: 'get',
+      [AccessAction.ReadAll]: 'get',
       [AccessAction.Complete]: 'complete',
-      [AccessAction.List]: 'list'
+      [AccessAction.List]: 'list',
+      [AccessAction.ListAll]: 'list'
     }
 
     for (const path in openApi.paths) {
