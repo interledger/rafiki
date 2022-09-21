@@ -7,7 +7,7 @@ exports.up = function (knex) {
     table.specificType('locations', 'text[]')
     table.integer('interval')
     table.jsonb('limits')
-    table.uuid('grantId').notNullable()
+    table.uuid('grantId')
     table.foreign('grantId').references('grants.id').onDelete('CASCADE')
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())

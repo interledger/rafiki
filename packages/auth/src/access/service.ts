@@ -10,6 +10,11 @@ export interface AccessService {
     accessRequests: AccessRequest[],
     trx?: Transaction
   ): Promise<Access[]>
+  createAccessForResourceSet(
+    resourceId: string,
+    accessRequests: AccessRequest[],
+    trx?: Transaction
+  ): Promise<Access[]>
   getByGrant(grantId: string): Promise<Access[]>
 }
 
@@ -35,22 +40,33 @@ export async function createAccessService({
       grantId: string,
       accessRequests: AccessRequest[],
       trx?: Transaction
-    ) => createAccess(deps, grantId, accessRequests, trx),
+    ) => createAccess(deps, accessRequests, grantId, undefined, trx),
+    createAccessForResourceSet: (
+      resourceId: string,
+      accessRequests: AccessRequest[],
+      trx?: Transaction
+    ) => createAccess(deps, accessRequests, undefined, resourceId, trx),
     getByGrant: (grantId: string) => getByGrant(grantId)
   }
 }
 
 async function createAccess(
   deps: ServiceDependencies,
-  grantId: string,
   accessRequests: AccessRequest[],
+  grantId?: string,
+  resourceId?: string,
   trx?: Transaction
 ): Promise<Access[]> {
-  const accessRequestsWithGrant = accessRequests.map((access) => {
-    return { grantId, ...access }
+  if (!grantId && !resourceId) {
+    throw new Error('Missing required properties')
+  }
+  const accessRequestsWithGrantOrResource = accessRequests.map((access) => {
+    return { grantId, resourceId, ...access }
   })
 
-  return Access.query(trx || deps.knex).insert(accessRequestsWithGrant)
+  return Access.query(trx || deps.knex).insert(
+    accessRequestsWithGrantOrResource
+  )
 }
 
 async function getByGrant(grantId: string): Promise<Access[]> {

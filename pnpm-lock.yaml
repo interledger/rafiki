@@ -50,16 +50,16 @@ importers:
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.7
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.7
-      '@types/koa-session': ^5.10.6
       '@types/koa__cors': ^3.1.1
       '@types/koa__router': ^8.0.11
+      '@types/koa-bodyparser': ^4.3.7
+      '@types/koa-session': ^5.10.6
       '@types/uuid': ^8.3.4
       ajv: ^8.11.0
       axios: ^0.27.2
       jest-openapi: ^0.14.2
       jose: ^4.9.0
-      knex: ^0.95
+      knex: ^1.0.0
       koa: ^2.13.4
       koa-bodyparser: ^4.3.0
       koa-session: ^6.2.0
@@ -82,12 +82,12 @@ importers:
       ajv: 8.11.0
       axios: 0.27.2
       jose: 4.9.0
-      knex: 0.95.15_pg@8.7.3
+      knex: 1.0.7_pg@8.7.3
       koa: 2.13.4
       koa-bodyparser: 4.3.0
       koa-session: 6.2.0
       node-mocks-http: 1.11.0
-      objection: 3.0.1_knex@0.95.15
+      objection: 3.0.1_knex@1.0.7
       objection-db-errors: 1.1.2_objection@3.0.1
       openapi: link:../openapi
       pg: 8.7.3
@@ -98,10 +98,10 @@ importers:
     devDependencies:
       '@types/jest': 28.1.7
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.7
-      '@types/koa-session': 5.10.6
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
+      '@types/koa-bodyparser': 4.3.7
+      '@types/koa-session': 5.10.6
       '@types/uuid': 8.3.4
       jest-openapi: 0.14.2
       nock: 13.2.9
@@ -129,9 +129,9 @@ importers:
       '@types/bcrypt': ^5.0.0
       '@types/jest': ^28.1.7
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.7
       '@types/koa__cors': ^3.0.2
       '@types/koa__router': ^8.0.11
+      '@types/koa-bodyparser': ^4.3.7
       '@types/lodash': ^4.14.184
       '@types/luxon': ^3.0.0
       '@types/react': ^18.0.17
@@ -236,9 +236,9 @@ importers:
       '@graphql-codegen/typescript-resolvers': 2.7.3_graphql@16.6.0
       '@types/jest': 28.1.7
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.7
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
+      '@types/koa-bodyparser': 4.3.7
       '@types/lodash': 4.14.184
       '@types/luxon': 3.0.0
       '@types/react': 18.0.17
@@ -325,7 +325,7 @@ importers:
     dependencies:
       '@apidevtools/json-schema-ref-parser': 9.0.9
       ajv: 8.11.0
-      ajv-formats: 2.1.1_ajv@8.11.0
+      ajv-formats: 2.1.1
       openapi-default-setter: 12.0.0
       openapi-request-coercer: 12.0.0
       openapi-request-validator: 12.0.0
@@ -2169,7 +2169,7 @@ packages:
       '@types/node': 18.7.6
       chalk: 4.1.2
       cosmiconfig: 7.0.1
-      cosmiconfig-typescript-loader: 2.0.2_nhjjlp4mdozido4npc63jtte4a
+      cosmiconfig-typescript-loader: 2.0.2_hxbm2pyqntnffeffb7yzpexbtu
       lodash: 4.17.21
       resolve-from: 5.0.0
       typescript: 4.7.4
@@ -4496,10 +4496,8 @@ packages:
       indent-string: 4.0.0
     dev: true
 
-  /ajv-formats/2.1.1_ajv@8.11.0:
+  /ajv-formats/2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
     peerDependenciesMeta:
       ajv:
         optional: true
@@ -4658,9 +4656,9 @@ packages:
       '@koa/cors': 3.3.0
       '@types/accepts': 1.3.5
       '@types/koa': 2.13.5
+      '@types/koa__cors': 3.3.0
       '@types/koa-bodyparser': 4.3.7
       '@types/koa-compose': 3.2.5
-      '@types/koa__cors': 3.3.0
       accepts: 1.3.8
       apollo-server-core: 3.10.1_graphql@16.6.0
       apollo-server-types: 3.6.2_graphql@16.6.0
@@ -5709,6 +5707,11 @@ packages:
     engines: {node: '>= 10'}
     dev: false
 
+  /commander/9.4.0:
+    resolution: {integrity: sha512-sRPT+umqkz90UA8M1yqYfnHlZA7fF6nSphDtxeywPZ49ysjxDQybzk13CL+mXekDRG92skbcqCLVovuCusNmFw==}
+    engines: {node: ^12.20.0 || >=14}
+    dev: false
+
   /common-tags/1.8.2:
     resolution: {integrity: sha512-gk/Z852D2Wtb//0I+kRFNKKE9dIIVirjoqPoA1wJU+XePVXZfGeBpk45+A1rKO4Q43prqWBNY/MiIeRLbPWUaA==}
     engines: {node: '>=4.0.0'}
@@ -5812,8 +5815,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
-      JSONStream: 1.3.5
       is-text-path: 1.0.1
+      JSONStream: 1.3.5
       lodash: 4.17.21
       meow: 8.1.2
       split2: 3.2.2
@@ -5886,12 +5889,11 @@ packages:
       '@iarna/toml': 2.2.5
     dev: true
 
-  /cosmiconfig-typescript-loader/2.0.2_nhjjlp4mdozido4npc63jtte4a:
+  /cosmiconfig-typescript-loader/2.0.2_hxbm2pyqntnffeffb7yzpexbtu:
     resolution: {integrity: sha512-KmE+bMjWMXJbkWCeY4FJX/npHuZPNr9XF9q9CIQ/bpFwi1qHfCmSiKarrCcRa0LO4fWjk93pVoeRtJAkTGcYNw==}
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@types/node': '*'
-      cosmiconfig: '>=7'
       typescript: '>=3'
     dependencies:
       '@types/node': 18.7.6
@@ -7591,6 +7593,10 @@ packages:
 
   /getopts/2.2.5:
     resolution: {integrity: sha512-9jb7AW5p3in+IiJWhQiZmmwkpLaR/ccTWdWQCtZM66HJcHHLegowh4q4tSD7gouUyeNvFWRavfK9GXosQHDpFA==}
+    dev: false
+
+  /getopts/2.3.0:
+    resolution: {integrity: sha512-5eDf9fuSXwxBL6q5HX+dhDj+dslFGWzU5thZ9kNKUkcPtaPdatmUFKwHFrLb/uf/WpA4BHET+AX3Scl56cAjpA==}
     dev: false
 
   /git-hooks-list/1.0.3:
@@ -9426,6 +9432,53 @@ packages:
       - supports-color
     dev: false
 
+  /knex/1.0.7_pg@8.7.3:
+    resolution: {integrity: sha512-89jxuRATt4qJMb9ZyyaKBy0pQ4d5h7eOFRqiNFnUvsgU+9WZ2eIaZKrAPG1+F3mgu5UloPUnkVE5Yo2sKZUs6Q==}
+    engines: {node: '>=12'}
+    hasBin: true
+    peerDependencies:
+      '@vscode/sqlite3': '*'
+      better-sqlite3: '*'
+      mysql: '*'
+      mysql2: '*'
+      pg: '*'
+      pg-native: '*'
+      tedious: '*'
+    peerDependenciesMeta:
+      '@vscode/sqlite3':
+        optional: true
+      better-sqlite3:
+        optional: true
+      mysql:
+        optional: true
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      pg-native:
+        optional: true
+      tedious:
+        optional: true
+    dependencies:
+      colorette: 2.0.16
+      commander: 9.4.0
+      debug: 4.3.4
+      escalade: 3.1.1
+      esm: 3.2.25
+      get-package-type: 0.1.0
+      getopts: 2.3.0
+      interpret: 2.2.0
+      lodash: 4.17.21
+      pg: 8.7.3
+      pg-connection-string: 2.5.0
+      rechoir: 0.8.0
+      resolve-from: 5.0.0
+      tarn: 3.0.2
+      tildify: 2.0.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /koa-bodyparser/4.3.0:
     resolution: {integrity: sha512-uyV8G29KAGwZc4q/0WUAjH+Tsmuv9ImfBUF2oZVyZtaeo0husInagyn/JH85xMSxM0hEk/mbCII5ubLDuqW/Rw==}
     engines: {node: '>=8.0.0'}
@@ -10636,7 +10689,7 @@ packages:
       objection: '>= 0.9.1'
     dependencies:
       db-errors: 0.2.3
-      objection: 3.0.1_knex@0.95.15
+      objection: 3.0.1_knex@1.0.7
     dev: false
 
   /objection/3.0.1_knex@0.95.15:
@@ -10648,6 +10701,17 @@ packages:
       ajv: 8.11.0
       db-errors: 0.2.3
       knex: 0.95.15_pg@8.7.3
+    dev: false
+
+  /objection/3.0.1_knex@1.0.7:
+    resolution: {integrity: sha512-rqNnyQE+C55UHjdpTOJEKQHJGZ/BGtBBtgxdUpKG4DQXRUmqxfmgS/MhPWxB9Pw0mLSVLEltr6soD4c0Sddy0Q==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      knex: '>=0.95.0'
+    dependencies:
+      ajv: 8.11.0
+      db-errors: 0.2.3
+      knex: 1.0.7_pg@8.7.3
     dev: false
 
   /oer-utils/5.1.2:
@@ -10721,7 +10785,7 @@ packages:
     resolution: {integrity: sha512-z0K3fRViKbamg80RJgNLzLZik2QBvXVfHgtpK4nGlTQ7qgn06PApFzF1Arc4Fb3aAB26BFBQGzjrojT58XjA3A==}
     dependencies:
       ajv: 8.11.0
-      ajv-formats: 2.1.1_ajv@8.11.0
+      ajv-formats: 2.1.1
       content-type: 1.0.4
       openapi-jsonschema-parameters: 12.0.0
       openapi-types: 12.0.0
@@ -10746,7 +10810,7 @@ packages:
     resolution: {integrity: sha512-5wpFKMoEbUcjiqo16jIen3Cb2+oApSnYZpWn8WQdRO2q/dNQZZl8Pz6ESwCriiyU5AK4i5ZI6+7O3bHQr6+6+g==}
     dependencies:
       ajv: 8.11.0
-      ajv-formats: 2.1.1_ajv@8.11.0
+      ajv-formats: 2.1.1
       lodash.merge: 4.6.2
       openapi-types: 9.3.1
     dev: true
@@ -11489,6 +11553,13 @@ packages:
   /rechoir/0.7.0:
     resolution: {integrity: sha512-ADsDEH2bvbjltXEP+hTIAmeFekTFK0V2BTxMkok6qILyAJEXV0AFfoWcAq4yfll5VdIMd/RVXq0lR+wQi5ZU3Q==}
     engines: {node: '>= 0.10'}
+    dependencies:
+      resolve: 1.22.1
+    dev: false
+
+  /rechoir/0.8.0:
+    resolution: {integrity: sha512-/vxpCXddiX8NGfGO/mTafwjq4aFa/71pvamip0++IQk3zG8cbCj0fifNPrjjF1XMXUne91jL9OoxmdykoEtifQ==}
+    engines: {node: '>= 10.13.0'}
     dependencies:
       resolve: 1.22.1
     dev: false

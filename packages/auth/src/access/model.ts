@@ -17,11 +17,20 @@ export class Access extends BaseModel {
         from: 'accesses.grantId',
         to: 'grants.id'
       }
+    },
+    resourceSet: {
+      relation: Model.HasOneRelation,
+      modelClass: join(__dirname, '../resourceSet/model'),
+      join: {
+        from: 'accesses.resourceId',
+        to: 'resourceSets.id'
+      }
     }
   })
 
   public id!: string
-  public grantId!: string
+  public grantId?: string
+  public resourceId?: string
   public type!: AccessType
   public actions!: Action[]
   public identifier?: string

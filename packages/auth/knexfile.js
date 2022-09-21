@@ -5,8 +5,8 @@ module.exports = {
     client: 'postgresql',
     connection: {
       // The database, user and password here match those in the infrastructure/local/docker-compose.yml file
-      database: 'auth',
-      user: 'auth',
+      database: 'auth_development',
+      user: 'postgres',
       password: 'auth'
     },
     pool: {
