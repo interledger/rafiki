@@ -25,7 +25,7 @@ accounts:
     path: accounts/planex
     postmanEnvVar: planexPaymentPointer
 fees:
-  - fixed: 1
+  - fixed: 100
     percentage: 0.02
     asset: USD
     scale: 2
