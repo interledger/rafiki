@@ -43,7 +43,9 @@ The frontend will host the internal admin interface. The current application is 
 ## Additional packages
 
 ### Mock Account Provider
-The `mock-account-provider` package is a remix application to mimic an account provider. It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments. 
+
+The `mock-account-provider` package is a remix application to mimic an account provider. It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments.
 
 ### Open API
+
 The `openapi` package is a library for validating requests and responses against an OpenAPI spec.
