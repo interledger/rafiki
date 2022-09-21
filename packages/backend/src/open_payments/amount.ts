@@ -17,3 +17,11 @@ export function parseAmount(amount: AmountJSON): Amount {
     assetScale: amount['assetScale']
   }
 }
+
+export function serializeAmount(amount: Amount): AmountJSON {
+  return {
+    value: amount.value.toString(),
+    assetCode: amount.assetCode,
+    assetScale: amount.assetScale
+  }
+}
