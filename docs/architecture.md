@@ -2,11 +2,10 @@
 
 ![Architecture diagram](./img/rafiki-architecture.svg)
 
-Rafiki is a collection of four services that are run together; each one can be scaled horizontally. These services are
+Rafiki is a collection of three services that are run together; each one can be scaled horizontally. These services are
 
 - [`backend`](../packages/backend): The main service, handling business logic and external communication.
 - [`auth`](../packages/auth): The service used for Grant Authorization and authentication. Rafiki provides this as a reference implementation, with the understanding that Rafiki operators can use and deploy their own service for authorization and authentication.
-- [`rates`](../packages/rates): The service is used to calculate Exchange rates and fees for the quoting mechanism. This is an example service provided for testing, and Rafiki operators are expected to deploy their own business logic for applying fees.
 - [`frontend`](../packages/frontend): Internal admin interface, not yet developed. Eventually, Rafiki operators will be able to manage their Rafiki instance with it.
 
 These services rely on four databases:
@@ -37,12 +36,16 @@ The `backend`'s ILP functionality includes:
 
 The `auth` service performs authorization and authentication of incoming requests. For requests from entities that have accounts within the local instance of Rafiki, the `auth` service uses data stored in the auth postgres database. For requests from clients registered with other instances of Rafiki, the auth service resolves the client's public key from its source and uses it to authenticate and authorize the request.
 
-## Rates
-
-The `rates` service in this repo is a placeholder service for providing exchange rates between assets. It is called by the `backend` when
-creating quotes. It is intended for development use while working on Rafiki; anyone deploying Rafiki to production should implement a
-rates service appropriate to their business.
-
 ## Frontend
 
 The frontend will host the internal admin interface. The current application is a placeholder.
+
+## Additional packages
+
+### Mock Account Provider
+
+The `mock-account-provider` package is a [remix](https://remix.run/) application to mimic an account provider. It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments.
+
+### Open API
+
+The `openapi` package is a library for validating requests and responses against an OpenAPI spec.
