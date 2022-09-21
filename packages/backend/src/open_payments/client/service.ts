@@ -1,7 +1,8 @@
 import { Counter, ResolvedPayment } from '@interledger/pay'
-import axios from 'axios'
+import axios, { AxiosRequestHeaders, AxiosResponse } from 'axios'
 import base64url from 'base64url'
 import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
+import { URL } from 'url'
 
 import { Amount, parseAmount } from '../amount'
 import { ConnectionBase, ConnectionJSON } from '../connection/service'
@@ -137,17 +138,39 @@ export async function createOpenPaymentsClientService(
   }
 }
 
+async function getResource({
+  url,
+  accessToken,
+  expectedStatus = 200
+}: {
+  url: string
+  accessToken?: string
+  expectedStatus?: number
+}): Promise<AxiosResponse> {
+  const requestUrl = new URL(url)
+  if (process.env.NODE_ENV === 'development') {
+    requestUrl.protocol = 'http'
+  }
+  const headers: AxiosRequestHeaders = {
+    'Content-Type': 'application/json'
+  }
+  if (accessToken) {
+    headers['Authorization'] = `GNAP ${accessToken}`
+  }
+  return await axios.get(requestUrl.href, {
+    headers,
+    timeout: REQUEST_TIMEOUT,
+    validateStatus: (status) => status === expectedStatus
+  })
+}
+
 async function getConnection(
   deps: ServiceDependencies,
   url: string
 ): Promise<ConnectionJSON | undefined> {
   try {
-    const { status, data } = await axios.get(url, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: REQUEST_TIMEOUT,
-      validateStatus: (status) => status === 200
+    const { status, data } = await getResource({
+      url
     })
     if (
       !deps.validateConnection({
@@ -167,15 +190,10 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   url: string
 ): Promise<IncomingPaymentJSON | undefined> {
-  const requestHeaders = {
-    Authorization: `GNAP ${deps.accessToken}`,
-    'Content-Type': 'application/json'
-  }
   try {
-    const { status, data } = await axios.get(url, {
-      headers: requestHeaders,
-      timeout: REQUEST_TIMEOUT,
-      validateStatus: (status) => status === 200
+    const { status, data } = await getResource({
+      url,
+      accessToken: deps.accessToken
     })
     if (
       !deps.validateIncomingPayment({
