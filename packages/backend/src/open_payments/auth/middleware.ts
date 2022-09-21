@@ -64,9 +64,9 @@ export function createAuthMiddleware({
             trx
           )
         }
-        ctx.grant = grant
-        await next()
       })
+      ctx.grant = grant
+      await next()
     } catch (err) {
       if (err.status === 401) {
         ctx.status = 401

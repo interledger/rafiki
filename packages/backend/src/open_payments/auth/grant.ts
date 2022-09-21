@@ -12,7 +12,6 @@ interface AmountJSON {
 }
 
 export enum AccessType {
-  Account = 'account',
   IncomingPayment = 'incoming-payment',
   OutgoingPayment = 'outgoing-payment',
   Quote = 'quote'
@@ -59,7 +58,10 @@ export interface GrantOptions {
   access?: GrantAccess[]
 }
 
-export type GrantJSON = Omit<GrantOptions, 'access'> & {
+export interface GrantJSON {
+  active: boolean
+  grant: string
+  client_id: string
   access?: GrantAccessJSON[]
 }
 
@@ -102,7 +104,7 @@ export class Grant {
     return {
       active: this.active,
       grant: this.grant,
-      clientId: this.clientId,
+      client_id: this.clientId,
       access: this.access?.map((access) => {
         return {
           ...access,
