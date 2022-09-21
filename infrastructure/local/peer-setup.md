@@ -10,8 +10,8 @@ followed by `pnpm localenv:dbvolumes:remove`).
 ### Load the graphql playgrounds in a browser
 
 The graphql playground is the UI for sending graphql requests to the `backend` services.
-The [graphql playground for the primary Rafiki instance](http://localhost:3001)
-is on port 3001 on localhost. The [graphql playground for the secondary instance](http://localhost:4001)
+The [graphql playground for the primary Rafiki instance](http://localhost:3001/graphql)
+is on port 3001 on localhost. The [graphql playground for the secondary instance](http://localhost:4001/graphql)
 is on port 4001.
 
 ### Create Peers

@@ -110,14 +110,12 @@ describe('Open Payments Payment Pointer Service', (): void => {
       }
     )
 
-    test('Creating a payment pointer creates an SPSP fallback account', async (): Promise<void> => {
+    test('Creating a payment pointer does not create an SPSP fallback account', async (): Promise<void> => {
       const paymentPointer = await paymentPointerService.create(options)
       assert.ok(!isPaymentPointerError(paymentPointer))
-
-      const accountingService = await deps.use('accountingService')
       await expect(
         accountingService.getBalance(paymentPointer.id)
-      ).resolves.toEqual(BigInt(0))
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -268,7 +266,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
     let paymentPointer: PaymentPointer
 
     beforeEach(async (): Promise<void> => {
-      paymentPointer = await createPaymentPointer(deps)
+      paymentPointer = await createPaymentPointer(deps, {
+        createLiquidityAccount: true
+      })
     })
 
     test.each`
@@ -338,7 +338,12 @@ describe('Open Payments Payment Pointer Service', (): void => {
     beforeEach(async (): Promise<void> => {
       paymentPointers = []
       for (let i = 0; i < 5; i++) {
-        paymentPointers.push(await createPaymentPointer(deps, { asset }))
+        paymentPointers.push(
+          await createPaymentPointer(deps, {
+            asset,
+            createLiquidityAccount: true
+          })
+        )
       }
     })
 

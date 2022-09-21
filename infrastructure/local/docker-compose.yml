@@ -10,7 +10,7 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
-      INTROSPECTION_HTTPSIG: false
+      INTROSPECTION_HTTPSIG: "false"
     depends_on:
       - tigerbeetle
       - database

@@ -9,6 +9,7 @@ import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
+import { GrantReference } from '../../grantReference/model'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incoming_payment.expired',
@@ -78,6 +79,14 @@ export class IncomingPayment
         from: 'incomingPayments.paymentPointerId',
         to: 'paymentPointers.id'
       }
+    },
+    grantRef: {
+      relation: Model.HasOneRelation,
+      modelClass: GrantReference,
+      join: {
+        from: 'incomingPayments.grantId',
+        to: 'grantReferences.id'
+      }
     }
   }
 
@@ -90,6 +99,9 @@ export class IncomingPayment
   public externalRef?: string
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the connectionId. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public connectionId?: string | null
+
+  public grantId?: string
+  public grantRef?: GrantReference
 
   public processAt!: Date | null
 

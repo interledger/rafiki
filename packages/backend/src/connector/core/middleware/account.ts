@@ -20,6 +20,24 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     ctx: ILPContext<AuthState & { streamDestination?: string }>,
     next: () => Promise<void>
   ): Promise<void> {
+    const createLiquidityAccount = async (
+      account: IncomingAccount
+    ): Promise<void> => {
+      try {
+        await ctx.services.accounting.createLiquidityAccount(account)
+      } catch (err) {
+        // Don't complain if liquidity account already exists.
+        if (
+          err instanceof CreateAccountError &&
+          areAllAccountExistsErrors([err.code])
+        ) {
+          // Do nothing.
+        } else {
+          throw err
+        }
+      }
+    }
+
     const { paymentPointers, incomingPayments, peers } = ctx.services
     const incomingAccount = ctx.state.incomingAccount
     if (!incomingAccount) ctx.throw(401, 'unauthorized')
@@ -42,27 +60,18 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           // Create the tigerbeetle account if not exists.
           // The incoming payment state will be PENDING until payments are received.
           if (incomingPayment.state === IncomingPaymentState.Pending) {
-            try {
-              await ctx.services.accounting.createLiquidityAccount(
-                incomingPayment
-              )
-            } catch (err) {
-              // Don't complain if liquidity account already exists.
-              if (
-                err instanceof CreateAccountError &&
-                areAllAccountExistsErrors([err.code])
-              ) {
-                // Do nothing.
-              } else {
-                throw err
-              }
-            }
+            await createLiquidityAccount(incomingPayment)
           }
-
           return incomingPayment
         }
         // Open Payments SPSP fallback account
-        return await paymentPointers.get(ctx.state.streamDestination)
+        const paymentPointer = await paymentPointers.get(
+          ctx.state.streamDestination
+        )
+        if (!paymentPointer.totalEventsAmount) {
+          await createLiquidityAccount(paymentPointer)
+        }
+        return paymentPointer
       }
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(address)

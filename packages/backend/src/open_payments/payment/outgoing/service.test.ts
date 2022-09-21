@@ -42,7 +42,9 @@ import { Amount } from '../../amount'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { GrantReference } from '../../grantReference/model'
 import { Quote } from '../../quote/model'
+import { GrantReferenceService } from '../../grantReference/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -55,6 +57,8 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
+  let grantReferenceService: GrantReferenceService
+  let grantRef: GrantReference
 
   const asset: AssetOptions = {
     scale: 9,
@@ -236,7 +240,7 @@ describe('OutgoingPaymentService', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
-
+    grantReferenceService = await deps.use('grantReferenceService')
     knex = await deps.use('knex')
   })
 
@@ -261,8 +265,14 @@ describe('OutgoingPaymentService', (): void => {
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
+
+    grantRef = await grantReferenceService.create({
+      id: uuid(),
+      clientId: appContainer.clientId
+    })
     const incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId: receiverPaymentPointer.id
+      paymentPointerId: receiverPaymentPointer.id,
+      grantId: grantRef.id
     })
     receiver = incomingPayment.url
 
@@ -441,11 +451,16 @@ describe('OutgoingPaymentService', (): void => {
     test('fails to create if grant is locked', async () => {
       const grant = new Grant({
         active: true,
-        grant: uuid(),
+        clientId: grantRef.clientId,
+        grant: grantRef.id,
         access: [
           {
             type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create, AccessAction.Read]
+            actions: [AccessAction.Create, AccessAction.Read],
+            limits: {
+              receiver,
+              sendAmount
+            }
           }
         ]
       })
@@ -484,7 +499,7 @@ describe('OutgoingPaymentService', (): void => {
     })
     describe('validateGrant', (): void => {
       let quote: Quote
-      let options: CreateOutgoingPaymentOptions
+      let options: Omit<CreateOutgoingPaymentOptions, 'grant'>
       let interval: string
       beforeEach(async (): Promise<void> => {
         quote = await createQuote(deps, {
@@ -505,7 +520,8 @@ describe('OutgoingPaymentService', (): void => {
         const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
         const grant = new Grant({
           active: true,
-          grant: uuid(),
+          clientId: grantRef.clientId,
+          grant: grantRef.id,
           access: [
             {
               type: AccessType.OutgoingPayment,
@@ -532,7 +548,8 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -565,7 +582,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -592,8 +610,8 @@ describe('OutgoingPaymentService', (): void => {
         sendAmount | failed   | description
         ${true}    | ${false} | ${'sendAmount'}
         ${false}   | ${false} | ${'receiveAmount'}
-        ${true}    | ${true}  | ${'sendAmount'}
-        ${false}   | ${true}  | ${'receiveAmount'}
+        ${true}    | ${true}  | ${'sendAmount, failed first payment'}
+        ${false}   | ${true}  | ${'receiveAmount, failed first payment'}
       `(
         'fails if limit was already used up - $description',
         async ({ sendAmount, failed }): Promise<void> => {
@@ -608,7 +626,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -661,7 +680,8 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -706,7 +726,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -1140,11 +1161,56 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
-  describe('getPaymentPointerPage', (): void => {
+  describe.each`
+    client   | description
+    ${false} | ${'without client'}
+    ${true}  | ${'with client'}
+  `('Outgoing payment pagination - $description', ({ client }): void => {
+    let grant: Grant
+    beforeEach(async (): Promise<void> => {
+      grant = new Grant({
+        active: true,
+        clientId: grantRef.clientId,
+        grant: grantRef.id,
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [AccessAction.Create, AccessAction.Read]
+          }
+        ]
+      })
+      if (client) {
+        const secondGrant = new Grant({
+          active: true,
+          clientId: uuid(),
+          grant: uuid(),
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read]
+            }
+          ]
+        })
+        await grantReferenceService.create({
+          id: secondGrant.grant,
+          clientId: secondGrant.clientId
+        })
+        for (let i = 0; i < 10; i++) {
+          await createOutgoingPayment(deps, {
+            paymentPointerId,
+            grant: secondGrant,
+            receiver,
+            sendAmount,
+            validDestination: false
+          })
+        }
+      }
+    })
     getPageTests({
       createModel: () =>
         createOutgoingPayment(deps, {
           paymentPointerId,
+          grant: grant,
           receiver,
           sendAmount,
           validDestination: false
@@ -1152,7 +1218,8 @@ describe('OutgoingPaymentService', (): void => {
       getPage: (pagination: Pagination) =>
         outgoingPaymentService.getPaymentPointerPage(
           paymentPointerId,
-          pagination
+          pagination,
+          client ? grant.clientId : undefined
         )
     })
   })

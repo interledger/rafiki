@@ -22,6 +22,8 @@ import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
+import { GrantReference } from '../../grantReference/model'
+import { GrantReferenceService } from '../../grantReference/service'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -30,6 +32,7 @@ describe('Incoming Payment Service', (): void => {
   let knex: Knex
   let paymentPointerId: string
   let accountingService: AccountingService
+  let grantReferenceService: GrantReferenceService
   const asset = randomAsset()
 
   beforeAll(async (): Promise<void> => {
@@ -37,6 +40,7 @@ describe('Incoming Payment Service', (): void => {
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     knex = await deps.use('knex')
+    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -53,8 +57,8 @@ describe('Incoming Payment Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create/Get IncomingPayment', (): void => {
-    test('An incoming payment can be created and fetched', async (): Promise<void> => {
+  describe('Create IncomingPayment', (): void => {
+    test('An incoming payment can be created', async (): Promise<void> => {
       const incomingPayment = await incomingPaymentService.create({
         paymentPointerId,
         incomingAmount: {
@@ -72,12 +76,31 @@ describe('Incoming Payment Service', (): void => {
         asset,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
-      const retrievedIncomingPayment = await incomingPaymentService.get(
-        incomingPayment.id
-      )
-      if (!retrievedIncomingPayment)
-        throw new Error('incoming payment not found')
-      expect(retrievedIncomingPayment).toEqual(incomingPayment)
+    })
+
+    test('An incoming payment with corresponding grant can be created', async (): Promise<void> => {
+      const grant = await grantReferenceService.create({
+        id: uuid(),
+        clientId: uuid()
+      })
+      const incomingPayment = await incomingPaymentService.create({
+        paymentPointerId,
+        grantId: grant.id,
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        description: 'Test incoming payment',
+        externalRef: '#123'
+      })
+      assert.ok(!isIncomingPaymentError(incomingPayment))
+      expect(incomingPayment).toMatchObject({
+        id: incomingPayment.id,
+        asset,
+        processAt: new Date(incomingPayment.expiresAt.getTime())
+      })
     })
 
     test('Cannot create incoming payment for nonexistent payment pointer', async (): Promise<void> => {
@@ -172,6 +195,56 @@ describe('Incoming Payment Service', (): void => {
 
     test('Cannot fetch a bogus incoming payment', async (): Promise<void> => {
       await expect(incomingPaymentService.get(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Get incoming payment', (): void => {
+    let incomingPayment: IncomingPayment
+    let grantRef: GrantReference
+    beforeEach(async (): Promise<void> => {
+      grantRef = await grantReferenceService.create({
+        id: uuid(),
+        clientId: uuid()
+      })
+      incomingPayment = (await incomingPaymentService.create({
+        paymentPointerId,
+        grantId: grantRef.id,
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        description: 'Test incoming payment',
+        externalRef: '#123'
+      })) as IncomingPayment
+      assert.ok(!isIncomingPaymentError(incomingPayment))
+    })
+    test('get an incoming payment', async (): Promise<void> => {
+      const retrievedIncomingPayment = await incomingPaymentService.get(
+        incomingPayment.id
+      )
+      assert.ok(retrievedIncomingPayment)
+      expect(retrievedIncomingPayment).toEqual(incomingPayment)
+    })
+    test('get an incoming payment for client id', async (): Promise<void> => {
+      const retrievedIncomingPayment = await incomingPaymentService.get(
+        incomingPayment.id,
+        grantRef.clientId
+      )
+      assert.ok(retrievedIncomingPayment)
+      expect(retrievedIncomingPayment).toEqual({
+        ...incomingPayment,
+        grantRef: grantRef
+      })
+    })
+    test('cannot get incoming payment if client id does not match', async (): Promise<void> => {
+      const clientId = uuid()
+      const retrievedIncomingPayment = await incomingPaymentService.get(
+        incomingPayment.id,
+        clientId
+      )
+      expect(retrievedIncomingPayment).toBeUndefined()
     })
   })
 
@@ -409,11 +482,43 @@ describe('Incoming Payment Service', (): void => {
     )
   })
 
-  describe('Incoming payment pagination', (): void => {
+  describe.each`
+    client   | description
+    ${false} | ${'without client'}
+    ${true}  | ${'with client'}
+  `('Incoming payment pagination - $description', ({ client }): void => {
+    let grantRef: GrantReference
+    beforeEach(async (): Promise<void> => {
+      grantRef = await grantReferenceService.create({
+        id: uuid(),
+        clientId: uuid()
+      })
+      if (client) {
+        const secondGrant = await grantReferenceService.create({
+          id: uuid(),
+          clientId: uuid()
+        })
+        for (let i = 0; i < 10; i++) {
+          await createIncomingPayment(deps, {
+            paymentPointerId,
+            grantId: secondGrant.id,
+            incomingAmount: {
+              value: BigInt(789),
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            expiresAt: new Date(Date.now() + 30_000),
+            description: 'IncomingPayment',
+            externalRef: '#456'
+          })
+        }
+      }
+    })
     getPageTests({
       createModel: () =>
         createIncomingPayment(deps, {
           paymentPointerId,
+          grantId: grantRef.id,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -426,7 +531,8 @@ describe('Incoming Payment Service', (): void => {
       getPage: (pagination: Pagination) =>
         incomingPaymentService.getPaymentPointerPage(
           paymentPointerId,
-          pagination
+          pagination,
+          client ? grantRef.clientId : undefined
         )
     })
   })

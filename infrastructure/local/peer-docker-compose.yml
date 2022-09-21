@@ -10,7 +10,7 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://peerauth:peerauth@database/peerauth
-      INTROSPECTION_HTTPSIG: false
+      INTROSPECTION_HTTPSIG: "false"
   peer-backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     restart: always

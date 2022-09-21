@@ -86,23 +86,13 @@ async function createPaymentPointer(
     return PaymentPointerError.InvalidUrl
   }
   const asset = await deps.assetService.getOrCreate(options.asset)
-  return await PaymentPointer.transaction(deps.knex, async (trx) => {
-    const paymentPointer = await PaymentPointer.query(trx)
-      .insertAndFetch({
-        url: options.url,
-        publicName: options.publicName,
-        assetId: asset.id
-      })
-      .withGraphFetched('asset')
-
-    // SPSP fallback account
-    await deps.accountingService.createLiquidityAccount({
-      id: paymentPointer.id,
-      asset: paymentPointer.asset
+  return await PaymentPointer.query(deps.knex)
+    .insertAndFetch({
+      url: options.url,
+      publicName: options.publicName,
+      assetId: asset.id
     })
-
-    return paymentPointer
-  })
+    .withGraphFetched('asset')
 }
 
 async function getPaymentPointer(
