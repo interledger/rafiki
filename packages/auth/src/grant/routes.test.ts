@@ -56,7 +56,7 @@ const BASE_GRANT_REQUEST = {
   access_token: {
     access: [
       {
-        type: AccessType.IncomingPayment,
+        type: AccessType.OutgoingPayment,
         actions: [Action.Create, Action.Read, Action.List],
         identifier: `https://example.com/${v4()}`
       }
@@ -128,6 +128,15 @@ describe('Grant Routes', (): void => {
     const url = '/'
     const method = 'POST'
 
+    const expDate = new Date()
+    expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
+
+    const nbfDate = new Date()
+    nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
+
+    const exp = Math.round(expDate.getTime() / 1000)
+    const nbf = Math.round(nbfDate.getTime() / 1000)
+
     test('accepts json only', async (): Promise<void> => {
       const ctx = createContext(
         {
@@ -169,18 +178,12 @@ describe('Grant Routes', (): void => {
     })
 
     test('Can initiate a grant request', async (): Promise<void> => {
-      const expDate = new Date()
-      expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
-
-      const nbfDate = new Date()
-      nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
+          exp,
+          nbf,
           revoked: false
         })
 
@@ -196,18 +199,7 @@ describe('Grant Routes', (): void => {
         {}
       )
 
-      ctx.request.body = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              type: AccessType.OutgoingPayment,
-              actions: [Action.Create, Action.Read, Action.List],
-              identifier: `https://example.com/${v4()}`
-            }
-          ]
-        }
-      }
+      ctx.request.body = BASE_GRANT_REQUEST
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
@@ -230,18 +222,70 @@ describe('Grant Routes', (): void => {
     })
 
     test('Can get a software-only authorization grant', async (): Promise<void> => {
-      const expDate = new Date()
-      expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
-
-      const nbfDate = new Date()
-      nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
+          exp,
+          nbf,
+          revoked: false
+        })
+
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          url,
+          method
+        },
+        {}
+      )
+      const body = {
+        access_token: {
+          access: [
+            {
+              type: AccessType.IncomingPayment,
+              actions: [Action.Create, Action.Read, Action.List],
+              identifier: `https://example.com/${v4()}`
+            }
+          ]
+        },
+        client: {
+          display: TEST_CLIENT_DISPLAY,
+          key: TEST_CLIENT_KEY
+        }
+      }
+      ctx.request.body = body
+
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(200)
+      expect(ctx.body).toEqual({
+        access_token: {
+          value: expect.any(String),
+          manage: expect.any(String),
+          access: body.access_token.access,
+          expiresIn: 600
+        },
+        continue: {
+          access_token: {
+            value: expect.any(String)
+          },
+          uri: expect.any(String)
+        }
+      })
+
+      scope.isDone()
+    })
+    test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(KID_PATH)
+        .reply(200, {
+          ...TEST_CLIENT_KEY.jwk,
+          exp,
+          nbf,
           revoked: false
         })
 
@@ -257,25 +301,10 @@ describe('Grant Routes', (): void => {
         {}
       )
 
-      ctx.request.body = BASE_GRANT_REQUEST
+      ctx.request.body = { ...BASE_GRANT_REQUEST, interact: undefined }
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.status).toBe(200)
-      expect(ctx.body).toEqual({
-        access_token: {
-          value: expect.any(String),
-          manage: expect.any(String),
-          access: BASE_GRANT_REQUEST.access_token.access,
-          expiresIn: 600
-        },
-        continue: {
-          access_token: {
-            value: expect.any(String)
-          },
-          uri: expect.any(String)
-        }
-      })
+      expect(ctx.status).toBe(400)
 
       scope.isDone()
     })

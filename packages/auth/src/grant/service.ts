@@ -10,8 +10,7 @@ import { AccessService } from '../access/service'
 
 export interface GrantService {
   get(grantId: string): Promise<Grant>
-  initiateGrant(grantRequest: GrantRequest): Promise<Grant>
-  issueNoInteractionGrant(grantRequest: GrantRequest): Promise<Grant>
+  create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteraction(interactId: string): Promise<Grant>
   getByInteractionSession(
     interactId: string,
@@ -37,7 +36,7 @@ export interface GrantRequest {
     access: AccessRequest[]
   }
   client: ClientInfo
-  interact: {
+  interact?: {
     start: StartMethod[]
     finish?: {
       method: FinishMethod
@@ -76,10 +75,8 @@ export async function createGrantService({
   }
   return {
     get: (grantId: string) => get(grantId),
-    initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
-      initiateGrant(deps, grantRequest, true, trx),
-    issueNoInteractionGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
-      initiateGrant(deps, grantRequest, false, trx),
+    create: (grantRequest: GrantRequest, trx?: Transaction) =>
+      create(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
     getByInteractionSession: (interactId: string, interactNonce: string) =>
       getByInteractionSession(interactId, interactNonce),
@@ -115,17 +112,16 @@ async function rejectGrant(
   })
 }
 
-async function initiateGrant(
+async function create(
   deps: ServiceDependencies,
   grantRequest: GrantRequest,
-  interaction: boolean,
   trx?: Transaction
 ): Promise<Grant> {
   const { accessService, knex } = deps
 
   const {
     access_token: { access },
-    interact: { start, finish },
+    interact,
     client: {
       key: {
         jwk: { kid }
@@ -136,15 +132,15 @@ async function initiateGrant(
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grant = await Grant.query(grantTrx).insert({
-      state: interaction ? GrantState.Pending : GrantState.Granted,
-      startMethod: start,
-      finishMethod: finish?.method,
-      finishUri: finish?.uri,
-      clientNonce: finish?.nonce,
+      state: interact ? GrantState.Pending : GrantState.Granted,
+      startMethod: interact?.start,
+      finishMethod: interact?.finish?.method,
+      finishUri: interact?.finish?.uri,
+      clientNonce: interact?.finish?.nonce,
       clientKeyId: kid,
-      interactId: interaction ? v4() : undefined,
-      interactRef: interaction ? v4() : undefined,
-      interactNonce: interaction
+      interactId: interact ? v4() : undefined,
+      interactRef: interact ? v4() : undefined,
+      interactNonce: interact
         ? crypto.randomBytes(8).toString('hex').toUpperCase()
         : undefined, // TODO: factor out nonce generation
       continueId: v4(),

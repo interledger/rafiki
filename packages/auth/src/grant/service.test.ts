@@ -109,7 +109,7 @@ describe('Grant Service', (): void => {
         }
       }
 
-      const grant = await grantService.initiateGrant(grantRequest)
+      const grant = await grantService.create(grantRequest)
 
       expect(grant).toMatchObject({
         state: GrantState.Pending,
@@ -145,19 +145,17 @@ describe('Grant Service', (): void => {
               type: AccessType.IncomingPayment
             }
           ]
-        }
+        },
+        interact: undefined
       }
 
-      const grant = await grantService.issueNoInteractionGrant(grantRequest)
+      const grant = await grantService.create(grantRequest)
 
       expect(grant).toMatchObject({
         state: GrantState.Granted,
         continueId: expect.any(String),
         continueToken: expect.any(String),
-        finishMethod: FinishMethod.Redirect,
-        finishUri: BASE_GRANT_REQUEST.interact.finish.uri,
-        clientKeyId: BASE_GRANT_REQUEST.client.key.jwk.kid,
-        startMethod: expect.arrayContaining([StartMethod.Redirect])
+        clientKeyId: BASE_GRANT_REQUEST.client.key.jwk.kid
       })
 
       await expect(

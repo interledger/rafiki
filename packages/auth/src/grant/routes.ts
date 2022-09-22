@@ -96,7 +96,7 @@ async function createGrantInitiation(
       })
       .every((el) => el === true)
   ) {
-    const grant = await grantService.issueNoInteractionGrant(body)
+    const grant = await grantService.create(body)
     const accessToken = await deps.accessTokenService.create(grant.id)
     const access = await deps.accessService.getByGrant(grant.id)
     ctx.status = 200
@@ -109,7 +109,15 @@ async function createGrantInitiation(
     return
   }
 
-  const grant = await grantService.initiateGrant(body)
+  if (!body.interact) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'interaction_required'
+    }
+    return
+  }
+
+  const grant = await grantService.create(body)
   ctx.status = 200
   ctx.body = {
     interact: {

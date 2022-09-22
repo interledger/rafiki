@@ -2,8 +2,8 @@ exports.up = function (knex) {
   return knex.schema.createTable('grants', function (table) {
     table.uuid('id').notNullable().primary()
 
-    table.string('state').notNullable()
-    table.specificType('startMethod', 'text[]').notNullable()
+    table.string('state')
+    table.specificType('startMethod', 'text[]')
 
     table.string('continueToken').notNullable().unique()
     table.string('continueId').notNullable().unique()
