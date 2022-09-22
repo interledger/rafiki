@@ -211,7 +211,7 @@ describe('Grant Routes', (): void => {
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.status).toBe(201)
+      expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual({
         interact: {
           redirect: expect.any(String),
@@ -260,20 +260,20 @@ describe('Grant Routes', (): void => {
       ctx.request.body = BASE_GRANT_REQUEST
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      // expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual({
         access_token: {
           value: expect.any(String),
           manage: expect.any(String),
           access: BASE_GRANT_REQUEST.access_token.access,
-          continue: {
-            access_token: {
-              value: expect.any(String)
-            },
-            uri: expect.any(String)
-          },
           expiresIn: 600
+        },
+        continue: {
+          access_token: {
+            value: expect.any(String)
+          },
+          uri: expect.any(String)
         }
       })
 
@@ -803,13 +803,13 @@ describe('Grant Routes', (): void => {
               type: 'incoming-payment'
             }
           ]),
-          continue: {
-            access_token: {
-              value: expect.any(String)
-            },
-            uri: expect.any(String)
-          },
           expiresIn: 600
+        },
+        continue: {
+          access_token: {
+            value: expect.any(String)
+          },
+          uri: expect.any(String)
         }
       })
     })

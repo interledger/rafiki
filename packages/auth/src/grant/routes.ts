@@ -110,7 +110,7 @@ async function createGrantInitiation(
   }
 
   const grant = await grantService.initiateGrant(body)
-  ctx.status = 201
+  ctx.status = 200
   ctx.body = {
     interact: {
       redirect: config.authServerDomain + `/interact/${grant.interactId}`,
@@ -410,13 +410,13 @@ function createGrantBody(
       value: accessToken.value,
       manage: domain + `/token/${accessToken.managementId}`,
       access: access.map((a: Access) => accessToBody(a)),
-      expiresIn: accessToken.expiresIn,
-      continue: {
-        access_token: {
-          value: grant.continueToken
-        },
-        uri: domain + `continue/${grant.continueId}`
-      }
+      expiresIn: accessToken.expiresIn
+    },
+    continue: {
+      access_token: {
+        value: grant.continueToken
+      },
+      uri: domain + `continue/${grant.continueId}`
     }
   }
 }
