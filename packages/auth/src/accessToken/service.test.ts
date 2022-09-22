@@ -223,8 +223,9 @@ describe('Access Token Service', (): void => {
       await token.$query(trx).delete()
       const result = await accessTokenService.revoke(token.id)
       expect(result).toBeUndefined()
-      token = (await AccessToken.query(trx).findById(token.id)) as AccessToken
-      expect(token).toBeUndefined()
+      await expect(
+        AccessToken.query(trx).findById(token.id)
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -264,10 +265,11 @@ describe('Access Token Service', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       const result = await accessTokenService.rotate(token.managementId)
       expect(result.success).toBe(true)
-      token = (await AccessToken.query(trx).findOne({
+      const rotatedToken = await AccessToken.query(trx).findOne({
         managementId: result.success && result.managementId
-      })) as AccessToken
-      expect(token.value).not.toBe(originalTokenValue)
+      })
+      expect(rotatedToken).toBeDefined()
+      expect(rotatedToken?.value).not.toBe(originalTokenValue)
     })
     test('Cannot rotate nonexistent token', async (): Promise<void> => {
       const result = await accessTokenService.rotate(v4())
