@@ -15,7 +15,7 @@ export enum EventType {
 
 export interface WebHook {
   id: string
-  eventType: EventType
+  type: EventType
   data: Record<string, unknown>
 }
 
@@ -26,11 +26,10 @@ export interface Amount {
 }
 
 export async function action({ request }: ActionArgs) {
-  const payload = await request.json()
-  console.log('received webhook: ', JSON.stringify(payload))
+  const wh: WebHook = await request.json()
+  console.log('received webhook: ', JSON.stringify(wh))
 
-  const wh: WebHook = JSON.parse(payload)
-  switch (wh.eventType) {
+  switch (wh.type) {
     case EventType.OutgoingPaymentCreated:
       return handleOutgoingPaymentCreated(wh)
     case EventType.OutgoingPaymentCompleted:
@@ -45,17 +44,18 @@ export async function action({ request }: ActionArgs) {
 
 export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
   if (
-    wh.eventType !== EventType.OutgoingPaymentCompleted &&
-    wh.eventType !== EventType.OutgoingPaymentFailed
+    wh.type !== EventType.OutgoingPaymentCompleted &&
+    wh.type !== EventType.OutgoingPaymentFailed
   ) {
     assert.fail('invalid event type')
   }
-  const pp = wh.data['paymentPointerId'] as string
+  const payment = wh.data['payment']
+  const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
   assert.ok(acc)
 
-  const amtSend = wh.data['sendAmount'] as Amount
-  const amtSent = wh.data['sentAmount'] as Amount
+  const amtSend = payment['sendAmount'] as Amount
+  const amtSent = payment['sentAmount'] as Amount
 
   const toVoid = amtSend.value - amtSent.value
 
@@ -64,16 +64,19 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
     await mockAccounts.voidPendingDebit(acc.id, toVoid)
   }
 
+  // TODO: withdraw remaining liquidity
+
   return json(undefined, { status: 200 })
 }
 
 export async function handleOutgoingPaymentCreated(wh: WebHook) {
-  assert.equal(wh.eventType, EventType.OutgoingPaymentCreated)
-  const pp = wh.data['paymentPointerId'] as string
+  assert.equal(wh.type, EventType.OutgoingPaymentCreated)
+  const payment = wh.data['payment']
+  const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
   assert.ok(acc)
 
-  const amt = wh.data['sendAmount'] as Amount
+  const amt = payment['sendAmount'] as Amount
   await mockAccounts.pendingDebit(acc.id, amt.value)
 
   // notify rafiki
@@ -94,7 +97,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
       }
     })
     .then((query): LiquidityMutationResponse => {
-      if (!query.data) {
+      if (query.data) {
         return query.data.depositEventLiquidity
       } else {
         throw new Error('Data was empty')
@@ -105,12 +108,13 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
 }
 
 export async function handleIncomingPaymentCompleted(wh: WebHook) {
-  assert.equal(wh.eventType, EventType.IncomingPaymentCompleted)
-  const pp = wh.data['paymentPointerId'] as string
+  assert.equal(wh.type, EventType.IncomingPaymentCompleted)
+  const payment = wh.data['incomingPayment']
+  const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
   assert.ok(acc)
 
-  const amt = wh.data['receiveAmount'] as Amount
+  const amt = payment['receiveAmount'] as Amount
   await mockAccounts.credit(acc.id, amt.value, false)
 
   await apolloClient
@@ -130,7 +134,7 @@ export async function handleIncomingPaymentCompleted(wh: WebHook) {
       }
     })
     .then((query): LiquidityMutationResponse => {
-      if (!query.data) {
+      if (query.data) {
         return query.data.withdrawEventLiquidity
       } else {
         throw new Error('Data was empty')
